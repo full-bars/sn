@@ -1,0 +1,817 @@
+{
+ "checks": [
+  {
+   "actor": "contract",
+   "id": "chain-id",
+   "claim": "EVM chain ID is 945",
+   "expected": "0x3b1",
+   "observed": "0x3b1",
+   "pass": true,
+   "method": "eth_chainId",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "contract",
+   "id": "netuid-vault",
+   "claim": "settlement vault is bound to netuid 521",
+   "expected": "521",
+   "observed": "521",
+   "pass": true,
+   "method": "eth_call netuid()",
+   "tier": "T1",
+   "whitepaper": "\u00a73"
+  },
+  {
+   "actor": "contract",
+   "id": "netuid-coord",
+   "claim": "coordinator is bound to netuid 521",
+   "expected": "521",
+   "observed": "521",
+   "pass": true,
+   "method": "eth_call netuid()",
+   "tier": "T1",
+   "whitepaper": "\u00a73"
+  },
+  {
+   "actor": "contract",
+   "id": "sha-epoch309-paid-clai",
+   "claim": "evidence bundle epoch309-paid-claims-20260912.json sha256",
+   "expected": "2aa27bfb3efa15bb87f93fc9fbe6adbd8d64a1e57e5ff68fab6d5a1a2deb18ec",
+   "observed": "2aa27bfb3efa15bb87f93fc9fbe6adbd8d64a1e57e5ff68fab6d5a1a2deb18ec",
+   "pass": true,
+   "method": "sha256 of file on disk",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "contract",
+   "id": "sha-onchain-receipts-2",
+   "claim": "evidence bundle onchain-receipts-20260912.json sha256",
+   "expected": "4e491a2d543e13c17ba1fdf44fb766bc2b3b838e9f4b2ea650ec3e47a7da59de",
+   "observed": "4e491a2d543e13c17ba1fdf44fb766bc2b3b838e9f4b2ea650ec3e47a7da59de",
+   "pass": true,
+   "method": "sha256 of file on disk",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "contract",
+   "id": "sha-reserve-alpha-2026",
+   "claim": "evidence bundle reserve-alpha-20260912T220217Z.json sha256",
+   "expected": "cf8963f7603cbb09909a36ea944004295dbe920dc36ec39030984642258ca061",
+   "observed": "cf8963f7603cbb09909a36ea944004295dbe920dc36ec39030984642258ca061",
+   "pass": true,
+   "method": "sha256 of file on disk",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "contract",
+   "id": "sha-retained-ledger-ca",
+   "claim": "evidence bundle retained-ledger-capacity-20260912.json sha256",
+   "expected": "e61e6d64347f8dde98d08d52464440a1a03104c874526e59a3c6056a453f3ea2",
+   "observed": "e61e6d64347f8dde98d08d52464440a1a03104c874526e59a3c6056a453f3ea2",
+   "pass": true,
+   "method": "sha256 of file on disk",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "contract",
+   "id": "sha-short-run-correcti",
+   "claim": "evidence bundle short-run-corrections-20260912.json sha256",
+   "expected": "e6372f5bd2bb5de16d4e911f8a1b2a254e8ac3c237c0ef3b7eb3c98f1f98e5f7",
+   "observed": "e6372f5bd2bb5de16d4e911f8a1b2a254e8ac3c237c0ef3b7eb3c98f1f98e5f7",
+   "pass": true,
+   "method": "sha256 of file on disk",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "contract",
+   "id": "sha-native1404-1405-hi",
+   "claim": "evidence bundle native1404-1405-historical-weights.json sha256",
+   "expected": "6373f2a7d8b2d6c8c1dcedcf28d0dba5ee6bb9d339d8fdcd9d66d7faaf102592",
+   "observed": "6373f2a7d8b2d6c8c1dcedcf28d0dba5ee6bb9d339d8fdcd9d66d7faaf102592",
+   "pass": true,
+   "method": "sha256 of file on disk",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "contract",
+   "id": "proxy-impl",
+   "claim": "coordinator proxy implementation",
+   "expected": "0x40e5abde2bc4ba84d966842cbab98c0c88894aaf",
+   "observed": "0x40e5abde2bc4ba84d966842cbab98c0c88894aaf",
+   "pass": true,
+   "method": "EIP-1967 slot read",
+   "tier": "T1",
+   "whitepaper": "\u00a76.4"
+  },
+  {
+   "actor": "contract",
+   "id": "impl-codehash",
+   "claim": "activated implementation runtime keccak",
+   "expected": "0xc8837dcf6ebb607277f140677c73ad91f3359ef25bfda17e578ad52e2d4f5179",
+   "observed": "0xc8837dcf6ebb607277f140677c73ad91f3359ef25bfda17e578ad52e2d4f5179",
+   "pass": true,
+   "method": "local keccak256 of eth_getCode",
+   "tier": "T1",
+   "whitepaper": "\u00a76.4"
+  },
+  {
+   "actor": "contract",
+   "id": "nonupgradeable-vault",
+   "claim": "vault has no EIP-1967 implementation slot (non-upgradeable)",
+   "expected": "0",
+   "observed": "0",
+   "pass": true,
+   "method": "EIP-1967 slot read",
+   "tier": "T1",
+   "whitepaper": "\u00a76.4"
+  },
+  {
+   "actor": "contract",
+   "id": "nonupgradeable-reserve-sink",
+   "claim": "reserve-sink has no EIP-1967 implementation slot (non-upgradeable)",
+   "expected": "0",
+   "observed": "0",
+   "pass": true,
+   "method": "EIP-1967 slot read",
+   "tier": "T1",
+   "whitepaper": "\u00a76.4"
+  },
+  {
+   "actor": "contract",
+   "id": "policy-count",
+   "claim": "number of policy versions ever scheduled on chain",
+   "expected": "2",
+   "observed": "2",
+   "pass": true,
+   "method": "eth_call policyCount()",
+   "tier": "T1",
+   "whitepaper": "\u00a75"
+  },
+  {
+   "actor": "contract",
+   "id": "epoch-blocks",
+   "claim": "active policy epoch length (blocks)",
+   "expected": "300",
+   "observed": "300",
+   "pass": true,
+   "method": "eth_call policyByIndex()",
+   "tier": "T1",
+   "whitepaper": "\u00a75"
+  },
+  {
+   "actor": "contract",
+   "id": "wp-cadence",
+   "claim": "whitepaper \u00a75 testnet cadence (360/60/180/6) scheduled on chain",
+   "expected": "True",
+   "observed": "False",
+   "pass": false,
+   "method": "enumerate all on-chain policy versions",
+   "tier": "T1",
+   "whitepaper": "\u00a75"
+  },
+  {
+   "actor": "validator",
+   "id": "hp-tempo",
+   "claim": "tempo",
+   "expected": "360",
+   "observed": "360",
+   "pass": true,
+   "method": "subnetInfo_getSubnetHyperparamsV2",
+   "tier": "T1",
+   "whitepaper": "\u00a715.1"
+  },
+  {
+   "actor": "validator",
+   "id": "hp-uids",
+   "claim": "max_allowed_uids",
+   "expected": "256",
+   "observed": "256",
+   "pass": true,
+   "method": "SubtensorModule::MaxAllowedUids storage",
+   "tier": "T1",
+   "whitepaper": "\u00a715.1"
+  },
+  {
+   "actor": "validator",
+   "id": "hp-cr",
+   "claim": "commit_reveal_weights_enabled",
+   "expected": "True",
+   "observed": "True",
+   "pass": true,
+   "method": "runtime API",
+   "tier": "T1",
+   "whitepaper": "\u00a715.1"
+  },
+  {
+   "actor": "validator",
+   "id": "hp-la",
+   "claim": "liquid_alpha_enabled",
+   "expected": "True",
+   "observed": "True",
+   "pass": true,
+   "method": "runtime API",
+   "tier": "T1",
+   "whitepaper": "\u00a715.1"
+  },
+  {
+   "actor": "validator",
+   "id": "hp-maw",
+   "claim": "min_allowed_weights",
+   "expected": "1",
+   "observed": "1",
+   "pass": true,
+   "method": "runtime API",
+   "tier": "T1",
+   "whitepaper": "\u00a715.1"
+  },
+  {
+   "actor": "validator",
+   "id": "hp-imm",
+   "claim": "immunity_period > commit_reveal_period x tempo",
+   "expected": "True",
+   "observed": "True",
+   "pass": true,
+   "method": "runtime API",
+   "tier": "T1",
+   "whitepaper": "\u00a715.1"
+  },
+  {
+   "actor": "validator",
+   "id": "hp-maxval",
+   "claim": "max_allowed_validators <= 56 target",
+   "expected": "True",
+   "observed": "False",
+   "pass": false,
+   "method": "runtime API",
+   "tier": "T1",
+   "whitepaper": "\u00a715.1"
+  },
+  {
+   "actor": "contract",
+   "id": "receipts",
+   "claim": "EVM receipts with status=0x1 at the claimed height",
+   "expected": "41",
+   "observed": "41",
+   "pass": true,
+   "method": "eth_getTransactionReceipt for all 41 cited transactions",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "contract",
+   "id": "canonical",
+   "claim": "cited EVM block hashes canonical at that height",
+   "expected": "8",
+   "observed": "8",
+   "pass": true,
+   "method": "eth_getBlockByNumber",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "contract",
+   "id": "cap-697",
+   "claim": "totalCaptured @7,990,697",
+   "expected": "103320655354",
+   "observed": "103320655354",
+   "pass": true,
+   "method": "eth_call at historical block",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "contract",
+   "id": "paid-697",
+   "claim": "totalPaid @7,990,697",
+   "expected": "0",
+   "observed": "0",
+   "pass": true,
+   "method": "eth_call at historical block",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "contract",
+   "id": "liab-697",
+   "claim": "outstandingLiability @7,990,697",
+   "expected": "103320655354",
+   "observed": "103320655354",
+   "pass": true,
+   "method": "eth_call",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "contract",
+   "id": "cap-906",
+   "claim": "totalCaptured @7,990,906",
+   "expected": "103320655354",
+   "observed": "103320655354",
+   "pass": true,
+   "method": "eth_call",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "contract",
+   "id": "paid-906",
+   "claim": "totalPaid @7,990,906",
+   "expected": "103320655346",
+   "observed": "103320655346",
+   "pass": true,
+   "method": "eth_call",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "contract",
+   "id": "liab-906",
+   "claim": "outstandingLiability @7,990,906",
+   "expected": "8",
+   "observed": "8",
+   "pass": true,
+   "method": "eth_call",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "contract",
+   "id": "esc-906",
+   "claim": "escrowAccounted @7,990,906",
+   "expected": "8",
+   "observed": "8",
+   "pass": true,
+   "method": "eth_call",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "contract",
+   "id": "cons-906",
+   "claim": "conservationHolds @7,990,906",
+   "expected": "1",
+   "observed": "1",
+   "pass": true,
+   "method": "eth_call",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "contract",
+   "id": "conserve",
+   "claim": "captured - paid == outstandingLiability",
+   "expected": "8",
+   "observed": "8",
+   "pass": true,
+   "method": "arithmetic identity on chain state",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "miner",
+   "id": "merkle-root-1",
+   "claim": "operator 1 payout root rebuilt from leaves (local keccak256)",
+   "expected": "0x9bbab5462796712a3af4dafc5b32086842d7a72eca97b263154c8dbc8f32262b",
+   "observed": "0x9bbab5462796712a3af4dafc5b32086842d7a72eca97b263154c8dbc8f32262b",
+   "pass": true,
+   "method": "rebuild OZ double-hash sorted-pair tree locally",
+   "tier": "T1",
+   "whitepaper": "\u00a711.2"
+  },
+  {
+   "actor": "operator",
+   "id": "shares-1",
+   "claim": "operator 1 leaf shares sum to 10,000 bps",
+   "expected": "10000",
+   "observed": "10000",
+   "pass": true,
+   "method": "sum artifact leaves",
+   "tier": "T1",
+   "whitepaper": "\u00a78.2"
+  },
+  {
+   "actor": "operator",
+   "id": "content-hash-1",
+   "claim": "operator 1 artifact content hash recomputes",
+   "expected": "sha256:c5fe8a8e28157016987ed64171d62a63f98bf4007a55065a9f0f6f02204fecef",
+   "observed": "sha256:c5fe8a8e28157016987ed64171d62a63f98bf4007a55065a9f0f6f02204fecef",
+   "pass": true,
+   "method": "sha256 of canonical unsigned JSON",
+   "tier": "T1",
+   "whitepaper": "\u00a711.1"
+  },
+  {
+   "actor": "operator",
+   "id": "sig-1",
+   "claim": "operator 1 artifact signature recovers to declared signer",
+   "expected": "0xd255a91442f8c4f72513bcf6a211dd7d4ae3bcdc",
+   "observed": "0xd255a91442f8c4f72513bcf6a211dd7d4ae3bcdc",
+   "pass": true,
+   "method": "local secp256k1 ECDSA recovery",
+   "tier": "T1",
+   "whitepaper": "\u00a711.1"
+  },
+  {
+   "actor": "operator",
+   "id": "window-1",
+   "claim": "operator 1 artifact epoch window matches coordinator",
+   "expected": "7988074-7988374",
+   "observed": "7988074-7988374",
+   "pass": true,
+   "method": "eth_call epochStartBlock/epochEndBlock",
+   "tier": "T1",
+   "whitepaper": "\u00a75.2"
+  },
+  {
+   "actor": "miner",
+   "id": "merkle-root-2",
+   "claim": "operator 2 payout root rebuilt from leaves (local keccak256)",
+   "expected": "0xdc36a9982c1d53e90fdf5bb431fe92610a505dc92da07096bd3126d3748a6376",
+   "observed": "0xdc36a9982c1d53e90fdf5bb431fe92610a505dc92da07096bd3126d3748a6376",
+   "pass": true,
+   "method": "rebuild OZ double-hash sorted-pair tree locally",
+   "tier": "T1",
+   "whitepaper": "\u00a711.2"
+  },
+  {
+   "actor": "operator",
+   "id": "shares-2",
+   "claim": "operator 2 leaf shares sum to 10,000 bps",
+   "expected": "10000",
+   "observed": "10000",
+   "pass": true,
+   "method": "sum artifact leaves",
+   "tier": "T1",
+   "whitepaper": "\u00a78.2"
+  },
+  {
+   "actor": "operator",
+   "id": "content-hash-2",
+   "claim": "operator 2 artifact content hash recomputes",
+   "expected": "sha256:e55d709f29f57ef75e4880e3e358f180720f8f4f58706e8aa5f6de676170e707",
+   "observed": "sha256:e55d709f29f57ef75e4880e3e358f180720f8f4f58706e8aa5f6de676170e707",
+   "pass": true,
+   "method": "sha256 of canonical unsigned JSON",
+   "tier": "T1",
+   "whitepaper": "\u00a711.1"
+  },
+  {
+   "actor": "operator",
+   "id": "sig-2",
+   "claim": "operator 2 artifact signature recovers to declared signer",
+   "expected": "0xbe37b9d50617dd03082df18700b2d8ca7bed95a9",
+   "observed": "0xbe37b9d50617dd03082df18700b2d8ca7bed95a9",
+   "pass": true,
+   "method": "local secp256k1 ECDSA recovery",
+   "tier": "T1",
+   "whitepaper": "\u00a711.1"
+  },
+  {
+   "actor": "operator",
+   "id": "window-2",
+   "claim": "operator 2 artifact epoch window matches coordinator",
+   "expected": "7988074-7988374",
+   "observed": "7988074-7988374",
+   "pass": true,
+   "method": "eth_call epochStartBlock/epochEndBlock",
+   "tier": "T1",
+   "whitepaper": "\u00a75.2"
+  },
+  {
+   "actor": "miner",
+   "id": "merkle-proofs",
+   "claim": "every epoch309 leaf Merkle proof verifies against the rebuilt root",
+   "expected": "16",
+   "observed": "16",
+   "pass": true,
+   "method": "local proof folding",
+   "tier": "T1",
+   "whitepaper": "\u00a711.2"
+  },
+  {
+   "actor": "miner",
+   "id": "share-to-payment",
+   "claim": "on-chain ClaimPaid reproduced as floor(share_bps x entitlement / 10000)",
+   "expected": "16",
+   "observed": "16",
+   "pass": true,
+   "method": "recompute from artifact leaf + on-chain entitlement",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "miner",
+   "id": "sum-paid",
+   "claim": "sum of 16 ClaimPaid equals contract lifetime totalPaid",
+   "expected": "103320655346",
+   "observed": "103320655346",
+   "pass": true,
+   "method": "sum decoded events",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "miner",
+   "id": "gas",
+   "claim": "claim gas total (sum gasUsed x effectiveGasPrice)",
+   "expected": "49882627183941739",
+   "observed": "49882627183941739",
+   "pass": true,
+   "method": "sum from receipts",
+   "tier": "T1",
+   "whitepaper": null
+  },
+  {
+   "actor": "miner",
+   "id": "residue",
+   "claim": "largest-remainder rounding residue equals contract outstandingLiability",
+   "expected": "8",
+   "observed": "8",
+   "pass": true,
+   "method": "arithmetic from artifact shares",
+   "tier": "T1",
+   "whitepaper": "\u00a78.3"
+  },
+  {
+   "actor": "validator",
+   "id": "native-extrinsics",
+   "claim": "native weight extrinsics located in claimed blocks by BLAKE2b-256",
+   "expected": "3",
+   "observed": "3",
+   "pass": true,
+   "method": "hash every extrinsic in the block",
+   "tier": "T1",
+   "whitepaper": "\u00a75.1"
+  },
+  {
+   "actor": "validator",
+   "id": "weights-1401",
+   "claim": "native 1401 applied weight row at block 7,986,519",
+   "expected": "[(7, 65534), (8, 65535)]",
+   "observed": "[(7, 65534), (8, 65535)]",
+   "pass": true,
+   "method": "SubtensorModule::Weights storage at historical block",
+   "tier": "T1",
+   "whitepaper": "\u00a710"
+  },
+  {
+   "actor": "validator",
+   "id": "single-1401",
+   "claim": "only one validator set weights at block 7,986,519",
+   "expected": "1",
+   "observed": "1",
+   "pass": true,
+   "method": "scan all 256 UID weight rows",
+   "tier": "T1",
+   "whitepaper": "\u00a79"
+  },
+  {
+   "actor": "validator",
+   "id": "weights-1404",
+   "claim": "native 1404 applied weight row at block 7,987,601",
+   "expected": "[(3, 65517), (4, 65535), (7, 24071), (8, 32094)]",
+   "observed": "[(3, 65517), (4, 65535), (7, 24071), (8, 32094)]",
+   "pass": true,
+   "method": "SubtensorModule::Weights storage at historical block",
+   "tier": "T1",
+   "whitepaper": "\u00a710"
+  },
+  {
+   "actor": "validator",
+   "id": "single-1404",
+   "claim": "only one validator set weights at block 7,987,601",
+   "expected": "1",
+   "observed": "1",
+   "pass": true,
+   "method": "scan all 256 UID weight rows",
+   "tier": "T1",
+   "whitepaper": "\u00a79"
+  },
+  {
+   "actor": "validator",
+   "id": "weights-1405",
+   "claim": "native 1405 applied weight row at block 7,988,052",
+   "expected": "[(7, 65534), (8, 65535)]",
+   "observed": "[(7, 65534), (8, 65535)]",
+   "pass": true,
+   "method": "SubtensorModule::Weights storage at historical block",
+   "tier": "T1",
+   "whitepaper": "\u00a710"
+  },
+  {
+   "actor": "validator",
+   "id": "single-1405",
+   "claim": "only one validator set weights at block 7,988,052",
+   "expected": "1",
+   "observed": "1",
+   "pass": true,
+   "method": "scan all 256 UID weight rows",
+   "tier": "T1",
+   "whitepaper": "\u00a79"
+  },
+  {
+   "actor": "validator",
+   "id": "theta",
+   "claim": "head/tail weight split matches governed theta = 3/10",
+   "expected": "True",
+   "observed": "True",
+   "pass": true,
+   "method": "pool UIDs from vault.pools(); ratio of head to total weight",
+   "tier": "T1",
+   "whitepaper": "\u00a78.5"
+  },
+  {
+   "actor": "validator",
+   "id": "reserve-replay",
+   "claim": "recorded reserve-census storage queries replay byte-identical",
+   "expected": "8",
+   "observed": "8",
+   "pass": true,
+   "method": "replay each recorded RPC against the live node",
+   "tier": "T1",
+   "whitepaper": "\u00a77.4"
+  },
+  {
+   "actor": "validator",
+   "id": "reserve-total",
+   "claim": "256-UID alpha census total decoded from raw storage",
+   "expected": "80409602927411",
+   "observed": "80409602927411",
+   "pass": true,
+   "method": "decode SubtensorModule::Keys + TotalHotkeyAlpha",
+   "tier": "T1",
+   "whitepaper": "\u00a77.4"
+  },
+  {
+   "actor": "validator",
+   "id": "reserve-uid254",
+   "claim": "reserve hotkey (UID254) alpha",
+   "expected": "49410992336897",
+   "observed": "49410992336897",
+   "pass": true,
+   "method": "decode raw storage",
+   "tier": "T1",
+   "whitepaper": "\u00a77.4"
+  },
+  {
+   "actor": "validator",
+   "id": "reserve-min",
+   "claim": "reserve share >= 60% minimum",
+   "expected": "True",
+   "observed": "True",
+   "pass": true,
+   "method": "arithmetic",
+   "tier": "T1",
+   "whitepaper": "\u00a77.4"
+  },
+  {
+   "actor": "validator",
+   "id": "reserve-target",
+   "claim": "reserve share >= 65% repair target",
+   "expected": "True",
+   "observed": "False",
+   "pass": false,
+   "method": "arithmetic",
+   "tier": "T1",
+   "whitepaper": "\u00a77.4"
+  }
+ ],
+ "meta": {
+  "endpoint": "http://192.168.1.162:9944",
+  "eth_chainId": "0x3b1",
+  "system_chain": "Bittensor",
+  "head": 7994996,
+  "genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+  "policyCount": 2,
+  "currentEpoch": 332,
+  "policies": [
+   {
+    "policyHash": "0x2cbb4cdd991d9463f321f0de7f7bd77d028da611c2b5eb656626eac31ab5a356",
+    "effectiveEpoch": 0,
+    "epochBlocks": 300,
+    "rootCommitWindowBlocks": 50,
+    "finalizeOffsetBlocks": 150,
+    "closeGraceBlocks": 5,
+    "claimTTLEpochs": 8
+   },
+   {
+    "policyHash": "0x1526b242cf4908cc31f7e58006664bce6064003c69fd8452eab2d49122fef277",
+    "effectiveEpoch": 50,
+    "epochBlocks": 300,
+    "rootCommitWindowBlocks": 50,
+    "finalizeOffsetBlocks": 150,
+    "closeGraceBlocks": 5,
+    "claimTTLEpochs": 8
+   }
+  ],
+  "hyperparams": {
+   "rho": 2560,
+   "kappa": 32767,
+   "immunity_period": 50000,
+   "min_allowed_weights": 1,
+   "max_weights_limit": 65535,
+   "tempo": 360,
+   "min_difficulty": 10000000,
+   "max_difficulty": 4611686018427387903,
+   "weights_version": 1,
+   "weights_rate_limit": 100,
+   "adjustment_interval": 100,
+   "activity_cutoff": 5000,
+   "registration_allowed": true,
+   "target_regs_per_interval": 2,
+   "min_burn": 500000,
+   "max_burn": 100000000000,
+   "bonds_moving_avg": 900000,
+   "max_regs_per_block": 1,
+   "serving_rate_limit": 50,
+   "max_validators": 64,
+   "adjustment_alpha": 0,
+   "difficulty": 10000000,
+   "commit_reveal_period": 1,
+   "commit_reveal_weights_enabled": true,
+   "alpha_high": 58982,
+   "alpha_low": 45875,
+   "liquid_alpha_enabled": true,
+   "max_allowed_uids": 256
+  },
+  "vault_7990697": {
+   "totalCaptured()": 103320655354,
+   "totalPaid()": 0,
+   "pendingFunding()": 0,
+   "outstandingLiability()": 103320655354,
+   "escrowAccounted()": 103320655354,
+   "conservationHolds()": 1
+  },
+  "vault_7990906": {
+   "totalCaptured()": 103320655354,
+   "totalPaid()": 103320655346,
+   "pendingFunding()": 0,
+   "outstandingLiability()": 8,
+   "escrowAccounted()": 8,
+   "conservationHolds()": 1
+  },
+  "vault_latest": {
+   "totalCaptured()": 103320655354,
+   "totalPaid()": 103320655346,
+   "pendingFunding()": 0,
+   "outstandingLiability()": 8,
+   "escrowAccounted()": 8,
+   "conservationHolds()": 1
+  },
+  "theta_observed": 0.29999946586047205,
+  "weight_rows": {
+   "1401": {
+    "255": [
+     [
+      7,
+      65534
+     ],
+     [
+      8,
+      65535
+     ]
+    ]
+   },
+   "1404": {
+    "255": [
+     [
+      3,
+      65517
+     ],
+     [
+      4,
+      65535
+     ],
+     [
+      7,
+      24071
+     ],
+     [
+      8,
+      32094
+     ]
+    ]
+   },
+   "1405": {
+    "255": [
+     [
+      7,
+      65534
+     ],
+     [
+      8,
+      65535
+     ]
+    ]
+   }
+  },
+  "reserve_share": 0.614491186848694
+ }
+}
