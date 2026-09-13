@@ -1,0 +1,39 @@
+release_phase_capture() {
+  cd "$sn_repo"
+  capture_tests='^Test(FinalArchive|FinalCompositeArchive|ArchivePreflight|FinalClaimQueueCapture|FinalCollected(Bundle|File|Chain)|FinalSemantic(PublicCapture|LaunchFoundation)|FinalContractCleanupCapture|VerifyFinalCollected|FleetLifecycle|CanonicalRPCReceiptLogs|ScenarioProcessLogGate|ReleaseAndProductionScenariosRequireProcessLogGate|ScenarioCompletion|ScenarioRunner(WritesCompleteEvidenceOnlyOnPass|FailureHasNoCompleteMarker)|PublishedScenarioCandidateKeepsFrozenHashWhenClockAdvances|PublishedCompletionCommits|CampaignEvidence|DirectScenarioCompletion|EvidenceFileHashes|ArchiveCurrentDeploymentPublication|VerifyPublishedEvidenceOrigin|ReleaseCandidateCampaign|ProductionCampaignCompletion|ReleaseCampaignGate|ExactReleaseCampaignGate|ScenarioCampaignAttempt|ProductionHandoff|InitialScenarioFailure|ProductionPolicyEvidence|PrepareSignedAttemptStateNamespace|ClassifyValidatorAttemptState|ValidatorStateNamespace|QualificationLauncher|SimulatorAttemptCutV2|ProducerGateStateSelection|ProducerGateCustodySelection|ProducerGateCaptureSelection|FinalCaptureV2|FinalCaptureCapacity|ScenarioNativeWarmupV2|ScenarioNativeObservationV2|StrictHistoryAdoption|FleetRenewal|OwnedRPC|CoordinatorRepairCarry)'
+  # This is deliberately capture-only: typed semantic reconstruction, public
+  # replay, supplement publication and FINAL.md rendering run post-capture.
+  go test ./sim-testnet -run "$capture_tests" -count=1 -skip '^(TestCampaignEvidence.*|TestFinalCaptureV2(ReadsActualRenderedSetupAndRejectsChangedSource|PendingPriorClosesOriginalAuthority|PendingPriorRejectsRehashedSourceAndMissingCensus|PendingPriorRejectsWrongHandoffAndSemanticRelabel|PendingJobIsImmutableAndNeverAccepted|PendingPriorRejectsWrongGateBeforeWrites|PendingPriorArtifactCensusHasNoSemanticOutputs)|TestVerifyFinalCollectedPriorPhaseBytesRejectsReopenedHandoffSubstitution|TestFleetLifecycleRenewalDescriptorsKeepLaterWaves|Test(FleetRenewal(Budget(AccountsAllSignedAttemptsAndNonceGaps|DoesNotChargeRetiredGasTwice)|CLIRequiresExactImportedApproval|ExactEVMRecoveryDoesNotResignOrRebroadcast|FeeQuoteUsesExactApprovedCeiling|HistoricalScopeExcludesFundingAndUnrelatedActions|Pipeline(JoinsCanceledWorkers|SubmitsExactNoncesBeforeFinality)|PlansExpiredAndLiveMixedGenerations|RejectsChangedPrestateAndPreservesApproval)|FleetLifecycleRenewalAdmitsOnlyApprovedSuccessor)|TestFleetRenewalRevision(PreservesApprovedRoundsAndChargesOnce|RefusesCustodyFeeOrLiabilityChanges))$' -timeout 5m
+  go test -race ./sim-testnet -run "$capture_tests" -count=1 -skip '^(TestCampaignEvidence.*|TestFinalCaptureV2(ReadsActualRenderedSetupAndRejectsChangedSource|PendingPriorClosesOriginalAuthority|PendingPriorRejectsRehashedSourceAndMissingCensus|PendingPriorRejectsWrongHandoffAndSemanticRelabel|PendingJobIsImmutableAndNeverAccepted|PendingPriorRejectsWrongGateBeforeWrites|PendingPriorArtifactCensusHasNoSemanticOutputs)|TestVerifyFinalCollectedPriorPhaseBytesRejectsReopenedHandoffSubstitution|TestFleetLifecycleRenewalDescriptorsKeepLaterWaves|Test(FleetRenewal(Budget(AccountsAllSignedAttemptsAndNonceGaps|DoesNotChargeRetiredGasTwice)|CLIRequiresExactImportedApproval|ExactEVMRecoveryDoesNotResignOrRebroadcast|FeeQuoteUsesExactApprovedCeiling|HistoricalScopeExcludesFundingAndUnrelatedActions|Pipeline(JoinsCanceledWorkers|SubmitsExactNoncesBeforeFinality)|PlansExpiredAndLiveMixedGenerations|RejectsChangedPrestateAndPreservesApproval)|FleetLifecycleRenewalAdmitsOnlyApprovedSuccessor)|TestFleetRenewalRevision(PreservesApprovedRoundsAndChargesOnce|RefusesCustodyFeeOrLiabilityChanges))$' -timeout 10m
+}
+release_gate_start capture release_phase_capture
+
+# The serial evidence codecs and complete renewal fixtures exhausted capture's
+# shared package clock before queued parallel roots could run. Keep these
+# disjoint source cohorts in independently admitted processes. Every root and
+# descendant retains the same normal/race deadline and count; the metadata,
+# population, lifecycle, private and prior owners remain separate.
+release_phase_capture_evidence() {
+  cd "$sn_repo"
+  capture_evidence_tests='^TestCampaignEvidence.*$'
+  go test ./sim-testnet -run "$capture_evidence_tests" -count=1 -skip '^TestCampaignEvidence(CapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|PopulationV2StreamsPhaseCensusWithBoundedOwners)$' -timeout 5m
+  go test -race ./sim-testnet -run "$capture_evidence_tests" -count=1 -skip '^TestCampaignEvidence(CapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|PopulationV2StreamsPhaseCensusWithBoundedOwners)$' -timeout 10m
+}
+release_gate_start capture-evidence release_phase_capture_evidence
+
+release_phase_capture_renewal() {
+  cd "$sn_repo"
+  capture_renewal_tests='^Test(FleetRenewal(Budget(AccountsAllSignedAttemptsAndNonceGaps|DoesNotChargeRetiredGasTwice)|CLIRequiresExactImportedApproval|ExactEVMRecoveryDoesNotResignOrRebroadcast|FeeQuoteUsesExactApprovedCeiling|HistoricalScopeExcludesFundingAndUnrelatedActions|Pipeline(JoinsCanceledWorkers|SubmitsExactNoncesBeforeFinality)|PlansExpiredAndLiveMixedGenerations|RejectsChangedPrestateAndPreservesApproval)|FleetLifecycleRenewalAdmitsOnlyApprovedSuccessor)$'
+  go test ./sim-testnet -run "$capture_renewal_tests" -count=1 -timeout 5m
+  go test -race ./sim-testnet -run "$capture_renewal_tests" -count=1 -timeout 10m
+}
+release_gate_start capture-renewal release_phase_capture_renewal
+
+release_phase_capture_revision() {
+  cd "$sn_repo"
+  capture_revision_tests='^TestFleetRenewalRevision(PreservesApprovedRoundsAndChargesOnce|RefusesCustodyFeeOrLiabilityChanges)$'
+  go test ./sim-testnet -run "$capture_revision_tests" -count=1 -timeout 5m
+  go test -race ./sim-testnet -run "$capture_revision_tests" -count=1 -timeout 10m
+}
+release_gate_start capture-revision release_phase_capture_revision
+

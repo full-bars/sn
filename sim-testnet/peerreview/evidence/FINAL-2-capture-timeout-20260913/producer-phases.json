@@ -1,0 +1,134 @@
+{
+  "source_revision": "0dcb5c85408f2020adeae94fe5dd912722eaf63d",
+  "outer_exit": 143,
+  "stop_reason": "Root stopped the superseded failed producer to release CPU for the reviewed scheduler correction",
+  "phase_joins": [
+    {
+      "phase": "compile",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "evidence-native",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "runtime",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "seed",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "evm-identity",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "driver",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "framing",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "sim-seed",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "isolation-regressions",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "adversarial",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "semantic-public-scenario",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "semantic-fleet-projection",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "semantic",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "semantic-runtime-configs",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "semantic-pool-registration",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "semantic-build-artifacts",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "capture-lifecycle",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "capture",
+      "exit": 1,
+      "classification": "failed"
+    },
+    {
+      "phase": "capture-private",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "settlement",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "capture-prior",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "capture-population",
+      "exit": 0,
+      "classification": "passed"
+    },
+    {
+      "phase": "evidence-simulator",
+      "exit": 143,
+      "classification": "interrupted"
+    },
+    {
+      "phase": "solidity",
+      "exit": 143,
+      "classification": "interrupted"
+    },
+    {
+      "phase": "capture-metadata",
+      "exit": 143,
+      "classification": "interrupted"
+    }
+  ],
+  "outer_stdout_sha256": "0e005a199ddea75128d22959700adc5c363285b9feaa3595aecc5b1f912591de",
+  "not_a_gate_pass": true
+}

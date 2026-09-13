@@ -218,6 +218,70 @@ excluded from its scope, not reported as passing. The original four errors
 remain recorded. No node or gateway deployment change follows from this test
 correction.
 
+The producer gate on `0dcb5c8` hit another **10-minute capture race-package
+timeout at 11:17 UTC**. Its 443 selected roots had passed normally. At the
+alarm, `TestFleetRenewalRevisionRefusesCustodyFeeOrLiabilityChanges` was active
+and 43 roots were still waiting at `t.Parallel`; the log records runnable
+signature verification, with no preceding assertion failure or race warning.
+The failed producer was stopped and joined at **11:34 UTC**: 21 phases passed,
+one failed, and three were interrupted. The interrupted phases do not establish
+test verdicts. [Original timeout](peerreview/evidence/FINAL-2-capture-timeout-20260913/capture.log),
+[failure record](peerreview/evidence/FINAL-2-capture-timeout-20260913/failure.json),
+[actual phase outcomes](peerreview/evidence/FINAL-2-capture-timeout-20260913/producer-phases.json).
+
+Correction `b78b672` changes only the producer's scheduling and its existing
+coverage guards. It assigns the affected 443 roots to four disjoint groups of
+**343, 87, 11 and 2**, retaining their five-minute normal and ten-minute race
+deadlines. All four groups passed normally and under race, with the native
+owner exiting 0 at **12:06:50 UTC** and identical source checks before and
+after. The compiled inventory still contains exactly **454 roots**; the eleven
+unchanged separately owned roots retain their prior qualification and remain
+in the complete gate. They were not re-executed as part of this focused run.
+All twelve affected coverage guards also passed normally and under race.
+[Exact four-group commands](peerreview/evidence/FINAL-2-capture-qualification-20260913/affected443/capture-affected443.native.sh),
+[compiled inventory](peerreview/evidence/FINAL-2-capture-qualification-20260913/affected443/capture-list.actual.txt),
+[native exit](peerreview/evidence/FINAL-2-capture-qualification-20260913/affected443/native.status),
+[normal guard results](peerreview/evidence/FINAL-2-capture-qualification-20260913/guards12-normal-p1-source-v2/report.json),
+[race guard results](peerreview/evidence/FINAL-2-capture-qualification-20260913/guards12-race-p1-source-v2/report.json).
+The active timeout root and all four of its subtests completed three fresh,
+sequential successful race executions on the same source and binary SHA-256
+`9a027c38dd93146086026039d58856889a0f8b22f40dc1e8dfe11406627c9f17`.
+Every outer and test owner exited 0, with unchanged source checks. The last
+confirmation completed at **12:23 UTC**.
+[Confirmation 1](peerreview/evidence/FINAL-2-capture-qualification-20260913/active-revision1-race-p1-source-v2/report.json),
+[confirmation 2](peerreview/evidence/FINAL-2-capture-qualification-20260913/active-revision1-race-p2-source-v2/report.json),
+[confirmation 3](peerreview/evidence/FINAL-2-capture-qualification-20260913/active-revision1-race-p3-source-v2/report.json).
+
+The concurrent aggregate on `0dcb5c8` was stopped and joined at **12:14:51 UTC**
+to replace the superseded candidate. Ten phases had passed; its simulator race
+and complete Connect normal phases were interrupted with exit 143. No actual
+aggregate test failure had been observed at the stop, but the incomplete gate
+does not establish an aggregate pass. [Raw phase joins](peerreview/evidence/FINAL-2-superseded-aggregate-20260913/outer.stdout),
+[actual outer exit](peerreview/evidence/FINAL-2-superseded-aggregate-20260913/outer.exit).
+
+After publication of the qualified `b78b672` correction, its clean native
+executable applied the reviewed release lock with exit 0, confirmed at
+**12:25 UTC**. The resulting YAML SHA-256 is
+`776f6cf9d57d1c8427ac981f3cf2222ddc1441371c90cbded2789d8ea1299767`.
+Only `repositories.protocol_source_hash` changed, to
+`sha256:83f8fd02ccd0cb8333bade3124aeab1bb3f480a008ceaaa3e74287a3b0d67ceb`;
+production Go, runtime, EVM artifact, interface and infrastructure digests
+remain unchanged. This was a local file update and sent no chain transaction.
+[Actual invocation and result](peerreview/evidence/FINAL-2-capture-lock-20260913/RESULT.json).
+The replacement complete gates, final executable build and fresh bound setup
+plans are the next steps; none of these local results establishes live acceptance.
+
+A fresh complete 256-UID reserve census at **11:25 UTC**, finalized native
+block **7,996,371**, found **82,639.777928818 alpha** of registered stake and
+**50,180.168141913 alpha** at reserve UID 254: **60.7215670220%**. The block hash
+is `0x878ff4aeb7cb63cf858b1287d834cf23c705bdbeee85da1d497ebe90b3e56f15`.
+At that snapshot, the approved 3,750-alpha transfer between registered hotkeys,
+allowing one alpha-rao of rounding, projects **65.2593333302%**. This is a
+projection, not a credited repair or a current target pass; ongoing emissions
+change the denominator. A finalized debit/credit and another complete census
+remain necessary. [Raw requests and responses](peerreview/evidence/FINAL-2-reserve-before-20260913/rpc.json),
+[decoded census and calculation](peerreview/evidence/FINAL-2-reserve-before-20260913/SUMMARY.json).
+
 The next run must retain both complete gate results on its final candidate,
 five accelerated epochs, the activated production policy and three consecutive
 complete production epochs, both validators' fresh native applications,

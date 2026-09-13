@@ -46,6 +46,33 @@ Retain the approved 6,000-alpha repair allowance, 35,000-alpha lifetime limit,
 180 EVM within 200 total TAO, 262 registrations and zero new subnets. Use
 `192.168.1.162:9944` without RPC rate limits. Full acceptance remains pending.
 
+Latest checkpoint, 2026-09-13 12:25 UTC: correction `b78b672` is published.
+Its affected 443 capture roots and twelve coverage guards pass normally and
+under race. The sole root active at the prior capture timeout, including all
+four subtests, completed three fresh sequential race confirmations on identical
+binary bytes and unchanged source. The eleven unchanged separately owned
+capture roots retain their prior scoped qualification. Both corrected complete
+gates still include the full selections.
+
+The `0dcb5c8` producer remains a failed gate (21 passed phases, one failure,
+three interrupted); its superseded aggregate was stopped with ten phases passed
+and two interrupted, without an observed test failure. Their actual outer exits
+are 143 following owned cleanup. All owners are joined and source is released.
+Neither incomplete gate is reported as passing. See the portable raw outcomes
+and qualification evidence in [report 2](sim-testnet/FINAL-2.md).
+
+The clean, pushed `b78b672` native executable applied exactly the reviewed lock
+with exit 0. YAML SHA-256 is
+`776f6cf9d57d1c8427ac981f3cf2222ddc1441371c90cbded2789d8ea1299767`;
+only the protocol-script digest changed. Final publication is followed by both
+complete gates and the final stamped CLI build in parallel, then two fresh
+matching setup plans. Producer success can admit the approved reserve repair
+while a clean aggregate continues; both gates remain necessary for acceptance.
+There has still been no new reserve transfer, renewal, continuation, adoption
+or fleet launch. At the latest full census (11:25 UTC, block 7,996,371), reserve
+share was 60.7215670220%; the approved repair projected 65.2593333302% at that
+snapshot. The actual credit and a fresh target census are still pending.
+
 Current checkpoint, 2026-09-13: the user explicitly approved raising the
 lifetime cap from 31,250 to 35,000 alpha for one additional 3,750-alpha reserve
 repair. The vault change is committed and pushed at

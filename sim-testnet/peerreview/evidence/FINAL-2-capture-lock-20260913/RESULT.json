@@ -1,0 +1,25 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-capture-serial-owners-20260913/runtime-bootstrap-cli-b78b672-20260913T1150Z/bin/sim-testnet-b78b672-bootstrap",
+    "release-lock",
+    "--config",
+    "sim-testnet/testnet.yml",
+    "--apply"
+  ],
+  "cwd": "/home/by/urnetwork/sn",
+  "binary_sha256": "b564ac656f0d1a9ceeb67f6ed5cfc4896e69fe198312f9366fc897a533ba9402",
+  "required_published_revision": "b78b672c37db0076513b25c613d5102cc0d16574",
+  "reviewed_candidate_sha256": "776f6cf9d57d1c8427ac981f3cf2222ddc1441371c90cbded2789d8ea1299767",
+  "kind": "reversible local release-lock update",
+  "chain_writes": false,
+  "status": "Applied and independently reviewed",
+  "started_at": "2026-09-13 12:24:47 UTC",
+  "completed_observed_at": "2026-09-13 12:25:29 UTC",
+  "exit": 0,
+  "applied_lock_sha256": "776f6cf9d57d1c8427ac981f3cf2222ddc1441371c90cbded2789d8ea1299767",
+  "only_dirty_path_after_apply": "deploy/testnet/release.lock.yml",
+  "changed_fields": [
+    "repositories.protocol_source_hash"
+  ],
+  "source_clean_and_published_before_apply": true
+}

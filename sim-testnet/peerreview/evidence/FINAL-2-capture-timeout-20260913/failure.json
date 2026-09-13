@@ -1,0 +1,19 @@
+{
+  "observed_at": "2026-09-13T11:21:14.483552+00:00",
+  "source_revision": "0dcb5c85408f2020adeae94fe5dd912722eaf63d",
+  "raw_log": "/home/by/urnetwork/temp/sn-final-gates-final2-prepared-20260913T100221Z/producer/tmp/urnetwork-release-gate.1oVROCFv/logs/capture.log",
+  "raw_sha256": "7e68d96a5a1b4720810ea679ce20e84b3b5e8fe6fd453ce4baa63b80102783b2",
+  "native_phase": "capture",
+  "native_phase_exit": 1,
+  "normal_package_seconds": 254.402,
+  "race_package_seconds": 600.45,
+  "timeout_seconds": 600,
+  "active_root": "TestFleetRenewalRevisionRefusesCustodyFeeOrLiabilityChanges",
+  "active_root_seconds": 45,
+  "active_subtest": "custody",
+  "active_subtest_seconds": 5,
+  "result": "actual package timeout; many parallel roots queued; no assertion failure or race warning recorded",
+  "launch_admitted": false,
+  "fix_owner": "/root/astra_short_run_fixes",
+  "execution_owner": "/root/terra_producer_gate"
+}
