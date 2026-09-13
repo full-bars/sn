@@ -244,11 +244,12 @@ func TestScenarioCampaignAttemptSuccessionBothRuntimeEntryPoints(t *testing.T) {
 		f := newCampaignSuccessionFixture(t)
 		installCampaignSuccessionLogFixture(t, f)
 		ctx, cancel := context.WithCancel(t.Context()); cancel()
-		// The real entry point must reach its native-owner admission after
-		// succession. This fixture has no live native transport to borrow.
+		// The real entry point creates its owned successor before opening the
+		// shared execution transport. The fixture deliberately supplies no RPC
+		// endpoint, so it must stop there without inheriting preparation.
 		err := runScenarioCampaignAttemptWithTimeout(ctx, f.cfg, f.stateDir, "release-1.0", f.journal, &Executor{plan: f.current}, nil, 0)
 		next, readErr := readScenarioCampaignAttempt(f.cfg, f.stateDir, f.roles, f.current.PlanHash, "release-1.0")
-		if err == nil || !strings.Contains(err.Error(), "campaign native owner differs from the approved executor") || readErr != nil || next.payload.Succession == nil || next.payload.PreparationComplete { t.Fatalf("single-phase succession did not reach the real native-owner boundary: error=%v read=%v", err, readErr) }
+		if err == nil || !strings.Contains(err.Error(), "open campaign executor through shared EVM egress: execution RPC configuration: invalid RPC endpoint") || readErr != nil || next.payload.Succession == nil || next.payload.PreparationComplete { t.Fatalf("single-phase succession did not reach the real execution-owner boundary: error=%v read=%v", err, readErr) }
 	})
 }
 
