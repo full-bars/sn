@@ -1905,7 +1905,7 @@ func TestReleaseSourceFreezeRequiresWarpProvenance(t *testing.T) {
 	}
 	runTestGit(t, warpRoot, "add", "README.md")
 	runTestGit(t, warpRoot, "commit", "-qm", "unpublished Warp source")
-	run("differs from origin/main")
+	run("is not reachable from origin/main")
 }
 
 // Cleanliness and provenance must be established before a tracked verifier can
@@ -1951,15 +1951,14 @@ func TestReleaseSourceFreezeRejectsWrongOrigin(t *testing.T) {
 	}
 }
 
-// A cached origin ref is not proof that the release checkout matches GitHub.
-// Advance the fixture remote without updating the release checkout and require
-// the source-freeze check to fetch and reject the stale local revision.
+// SN must still match the current canonical branch. A stale local tracking
+// ref cannot authorize the older executable when the remote has advanced.
 func TestReleaseSourceFreezeRefreshesRemoteBeforeAcceptingRevision(t *testing.T) {
 	workspace := releaseSourceFreezeFixture(t)
-	advanceRoot := filepath.Join(t.TempDir(), "config-advance")
-	command := exec.Command("git", "clone", "-q", "git@github.com:urnetwork/config.git", advanceRoot)
+	advanceRoot := filepath.Join(t.TempDir(), "sn-advance")
+	command := exec.Command("git", "clone", "-q", "git@github.com:urfoundation/sn.git", advanceRoot)
 	if output, err := command.CombinedOutput(); err != nil {
-		t.Fatalf("clone fixture config remote: %v\n%s", err, output)
+		t.Fatalf("clone fixture SN remote: %v\n%s", err, output)
 	}
 	runTestGit(t, advanceRoot, "config", "user.email", "sim-testnet@example.invalid")
 	runTestGit(t, advanceRoot, "config", "user.name", "sim-testnet")
@@ -1970,8 +1969,77 @@ func TestReleaseSourceFreezeRefreshesRemoteBeforeAcceptingRevision(t *testing.T)
 	runTestGit(t, advanceRoot, "commit", "-qm", "advance authoritative remote")
 	runTestGit(t, advanceRoot, "push", "-q", "origin", "HEAD:refs/heads/main")
 	output, err := exec.Command("../scripts/check-release-source-freeze.sh", workspace).CombinedOutput()
-	if err == nil || !strings.Contains(string(output), "config revision") || !strings.Contains(string(output), "differs from origin/main") {
-		t.Fatalf("remote-ahead repository was accepted: %v\n%s", err, output)
+	if err == nil || !strings.Contains(string(output), "sn revision") || !strings.Contains(string(output), "differs from origin/main") {
+		t.Fatalf("stale SN executable source was accepted: %v\n%s", err, output)
+	}
+}
+
+// A dependency's tested commit remains the snapshot identity after upstream
+// advances, but fresh canonical history must still contain that exact commit.
+func TestReleaseSourceFreezeRetainsPublishedDependencyWhenUpstreamAdvances(t *testing.T) {
+	workspace := releaseSourceFreezeFixture(t)
+	freeze := func() string {
+		t.Helper()
+		var stderr strings.Builder
+		command := exec.Command("../scripts/check-release-source-freeze.sh", workspace)
+		command.Stderr = &stderr
+		output, err := command.Output()
+		if err != nil {
+			t.Fatalf("published dependency source freeze: %v\n%s", err, stderr.String())
+		}
+		return string(output)
+	}
+	revision := func(root, ref string) string {
+		t.Helper()
+		return strings.TrimSpace(string(testGitOutput(t, root, "rev-parse", ref)))
+	}
+	baseline := freeze()
+	for _, repository := range []struct{ name, branch string }{{"config", "main"}, {"glog", "master"}} {
+		root := filepath.Join(workspace, repository.name)
+		tested := revision(root, "HEAD")
+		advanceRoot := filepath.Join(t.TempDir(), repository.name)
+		origin := "git@github.com:urnetwork/" + repository.name + ".git"
+		if output, err := exec.Command("git", "clone", "-q", origin, advanceRoot).CombinedOutput(); err != nil {
+			t.Fatalf("clone dependency remote: %v\n%s", err, output)
+		}
+		runTestGit(t, advanceRoot, "config", "user.email", "sim-testnet@example.invalid")
+		runTestGit(t, advanceRoot, "config", "user.name", "sim-testnet")
+		remoteFile := filepath.Join(advanceRoot, "remote.yml")
+		if err := os.WriteFile(remoteFile, []byte("advanced\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		runTestGit(t, advanceRoot, "add", "remote.yml")
+		runTestGit(t, advanceRoot, "commit", "-qm", "advance dependency upstream")
+		runTestGit(t, advanceRoot, "push", "-q", "origin", "HEAD:refs/heads/"+repository.branch)
+		if got := freeze(); got != baseline || revision(root, "HEAD") != tested {
+			t.Fatalf("upstream advancement changed the exact tested %s snapshot", repository.name)
+		}
+		if revision(root, "origin/"+repository.branch) != revision(advanceRoot, "HEAD") {
+			t.Fatalf("%s ancestry admission did not refresh its canonical upstream", repository.name)
+		}
+		// A formerly published commit becomes inadmissible when canonical
+		// history is rewound past it or rewritten onto a divergent child.
+		runTestGit(t, root, "reset", "--hard", "origin/"+repository.branch)
+		runTestGit(t, advanceRoot, "push", "-q", "--force", "origin", tested+":refs/heads/"+repository.branch)
+		for _, history := range []string{"rewound", "divergent"} {
+			if history == "divergent" {
+				runTestGit(t, advanceRoot, "reset", "--hard", tested)
+				if err := os.WriteFile(remoteFile, []byte("divergent\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				runTestGit(t, advanceRoot, "add", "remote.yml")
+				runTestGit(t, advanceRoot, "commit", "-qm", "replace dependency history")
+				runTestGit(t, advanceRoot, "push", "-q", "--force", "origin", "HEAD:refs/heads/"+repository.branch)
+			}
+			output, err := exec.Command("../scripts/check-release-source-freeze.sh", workspace).CombinedOutput()
+			if err == nil || !strings.Contains(string(output), repository.name+" revision") || !strings.Contains(string(output), "is not reachable from origin/"+repository.branch) {
+				t.Fatalf("%s %s history admitted an excluded commit: %v\n%s", repository.name, history, err, output)
+			}
+		}
+		runTestGit(t, root, "reset", "--hard", tested)
+	}
+	if got := freeze(); got != baseline {
+		t.Fatal("dependency admission replaced the retained snapshot after canonical history changed")
 	}
 }
 
@@ -2030,7 +2098,7 @@ func TestReleaseSourceFreezeRejectsDirtyUntrackedAndUnsynchronizedRepositories(t
 	}
 	runTestGit(t, filepath.Join(workspace, "config"), "add", "reviewed.yml")
 	runTestGit(t, filepath.Join(workspace, "config"), "commit", "-qm", "advance without upstream")
-	if output, err := run(); err == nil || !strings.Contains(output, "differs from origin/main") {
+	if output, err := run(); err == nil || !strings.Contains(output, "is not reachable from origin/main") {
 		t.Fatalf("unsynchronized source was accepted: %v\n%s", err, output)
 	}
 }

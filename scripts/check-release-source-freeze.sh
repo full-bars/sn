@@ -131,8 +131,16 @@ snapshot_release_repositories() {
       fi
     fi
     upstream_revision="$(git -C "$root" rev-parse --verify "$upstream^{commit}")"
-    if [[ "$revision" != "$upstream_revision" ]]; then
-      echo "release repository $repo revision $revision differs from $upstream at $upstream_revision" >&2
+    # SN remains the current published entry point. Dependencies may retain
+    # the exact tested commit while their canonical upstream advances.
+    # Both enclosing snapshots still record the checked-out commit itself.
+    if [[ "$repo" == sn ]]; then
+      if [[ "$revision" != "$upstream_revision" ]]; then
+        echo "release repository $repo revision $revision differs from $upstream at $upstream_revision" >&2
+        return 1
+      fi
+    elif ! git -C "$root" merge-base --is-ancestor "$revision" "$upstream_revision"; then
+      echo "release repository $repo revision $revision is not reachable from $upstream at $upstream_revision" >&2
       return 1
     fi
     printf '%s\t%s\t%s\t%s\n' "$repo" "$revision" "$upstream" "$origin"
