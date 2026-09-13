@@ -1,0 +1,5 @@
+checked 41 transactions; 41 receipts found
+FAILURES: 0
+stage 1: 32/34 checks passed
+   FAIL: wp-cadence whitepaper §5 testnet cadence (360/60/180/6) scheduled on chain expected True observed False
+   FAIL: hp-maxval max_allowed_validators <= 56 target expected True observed False

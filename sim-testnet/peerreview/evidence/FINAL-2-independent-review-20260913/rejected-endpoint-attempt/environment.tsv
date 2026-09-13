@@ -1,0 +1,3 @@
+SN_RPC_URL=https://test.finney.opentensor.ai:19
+PYTHON=/home/by/.pyenv/shims/python3
+CWD=/home/by/urnetwork/temp/sn-peerreview-580831d-20260913T065800Z/source/sim-testnet/peerreview/verify

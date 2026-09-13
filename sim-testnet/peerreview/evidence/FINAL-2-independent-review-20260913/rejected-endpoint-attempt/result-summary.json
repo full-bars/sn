@@ -1,0 +1,152 @@
+{
+  "checks": 62,
+  "passed": 59,
+  "failed": [
+    {
+      "id": "wp-cadence",
+      "expected": "True",
+      "observed": "False"
+    },
+    {
+      "id": "hp-maxval",
+      "expected": "True",
+      "observed": "False"
+    },
+    {
+      "id": "reserve-target",
+      "expected": "True",
+      "observed": "False"
+    }
+  ],
+  "meta": {
+    "endpoint": "http://192.168.1.162:9944",
+    "eth_chainId": "0x3b1",
+    "system_chain": "Bittensor",
+    "head": 7994996,
+    "genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+    "policyCount": 2,
+    "currentEpoch": 332,
+    "policies": [
+      {
+        "policyHash": "0x2cbb4cdd991d9463f321f0de7f7bd77d028da611c2b5eb656626eac31ab5a356",
+        "effectiveEpoch": 0,
+        "epochBlocks": 300,
+        "rootCommitWindowBlocks": 50,
+        "finalizeOffsetBlocks": 150,
+        "closeGraceBlocks": 5,
+        "claimTTLEpochs": 8
+      },
+      {
+        "policyHash": "0x1526b242cf4908cc31f7e58006664bce6064003c69fd8452eab2d49122fef277",
+        "effectiveEpoch": 50,
+        "epochBlocks": 300,
+        "rootCommitWindowBlocks": 50,
+        "finalizeOffsetBlocks": 150,
+        "closeGraceBlocks": 5,
+        "claimTTLEpochs": 8
+      }
+    ],
+    "hyperparams": {
+      "rho": 2560,
+      "kappa": 32767,
+      "immunity_period": 50000,
+      "min_allowed_weights": 1,
+      "max_weights_limit": 65535,
+      "tempo": 360,
+      "min_difficulty": 10000000,
+      "max_difficulty": 4611686018427387903,
+      "weights_version": 1,
+      "weights_rate_limit": 100,
+      "adjustment_interval": 100,
+      "activity_cutoff": 5000,
+      "registration_allowed": true,
+      "target_regs_per_interval": 2,
+      "min_burn": 500000,
+      "max_burn": 100000000000,
+      "bonds_moving_avg": 900000,
+      "max_regs_per_block": 1,
+      "serving_rate_limit": 50,
+      "max_validators": 64,
+      "adjustment_alpha": 0,
+      "difficulty": 10000000,
+      "commit_reveal_period": 1,
+      "commit_reveal_weights_enabled": true,
+      "alpha_high": 58982,
+      "alpha_low": 45875,
+      "liquid_alpha_enabled": true,
+      "max_allowed_uids": 256
+    },
+    "vault_7990697": {
+      "totalCaptured()": 103320655354,
+      "totalPaid()": 0,
+      "pendingFunding()": 0,
+      "outstandingLiability()": 103320655354,
+      "escrowAccounted()": 103320655354,
+      "conservationHolds()": 1
+    },
+    "vault_7990906": {
+      "totalCaptured()": 103320655354,
+      "totalPaid()": 103320655346,
+      "pendingFunding()": 0,
+      "outstandingLiability()": 8,
+      "escrowAccounted()": 8,
+      "conservationHolds()": 1
+    },
+    "vault_latest": {
+      "totalCaptured()": 103320655354,
+      "totalPaid()": 103320655346,
+      "pendingFunding()": 0,
+      "outstandingLiability()": 8,
+      "escrowAccounted()": 8,
+      "conservationHolds()": 1
+    },
+    "theta_observed": 0.29999946586047205,
+    "weight_rows": {
+      "1401": {
+        "255": [
+          [
+            7,
+            65534
+          ],
+          [
+            8,
+            65535
+          ]
+        ]
+      },
+      "1404": {
+        "255": [
+          [
+            3,
+            65517
+          ],
+          [
+            4,
+            65535
+          ],
+          [
+            7,
+            24071
+          ],
+          [
+            8,
+            32094
+          ]
+        ]
+      },
+      "1405": {
+        "255": [
+          [
+            7,
+            65534
+          ],
+          [
+            8,
+            65535
+          ]
+        ]
+      }
+    },
+    "reserve_share": 0.614491186848694
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "observed_at": "2026-09-13T06:52:22.033287+00:00",
+  "requests_per_endpoint": 20,
+  "identical_result_fields": [
+    "chain_id",
+    "genesis",
+    "block_7988226",
+    "carry_1_7988226",
+    "carry_2_7988226",
+    "block_7988227",
+    "carry_1_7988227",
+    "carry_2_7988227",
+    "block_7988526",
+    "carry_1_7988526",
+    "carry_2_7988526",
+    "block_7988527",
+    "carry_1_7988527",
+    "carry_2_7988527",
+    "settlement_logs",
+    "entitlement_309_1",
+    "entitlement_309_2",
+    "root_missed_1_receipt",
+    "root_missed_2_receipt"
+  ],
+  "different_result_fields": [],
+  "file_sha256": {
+    "owned": "920e4ed410faf4b0c36395d4337b4ba1a52995ae05012e90a0ab5f785fb897a7",
+    "public": "54df05a0a81efe56243eb70e214c0131f2e49b310a2e5133207179b79278215c"
+  },
+  "final_acceptance": false
+}

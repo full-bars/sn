@@ -1,0 +1,64 @@
+Traceback (most recent call last):
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/urllib/request.py", line 1320, in do_open
+    h.request(req.get_method(), req.selector, req.data, headers,
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              encode_chunked=req.has_header('Transfer-encoding'))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/http/client.py", line 1386, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/http/client.py", line 1432, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/http/client.py", line 1381, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/http/client.py", line 1141, in _send_output
+    self.send(msg)
+    ~~~~~~~~~^^^^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/http/client.py", line 1085, in send
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/http/client.py", line 1520, in connect
+    super().connect()
+    ~~~~~~~~~~~~~~~^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/http/client.py", line 1051, in connect
+    self.sock = self._create_connection(
+                ~~~~~~~~~~~~~~~~~~~~~~~^
+        (self.host,self.port), self.timeout, self.source_address)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/socket.py", line 874, in create_connection
+    raise exceptions[0]
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/socket.py", line 859, in create_connection
+    sock.connect(sa)
+    ~~~~~~~~~~~~^^^^
+TimeoutError: timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/by/urnetwork/temp/sn-peerreview-580831d-20260913T065800Z/source/sim-testnet/peerreview/verify/verify_all.py", line 9, in <module>
+    from decode import decode_log
+  File "/home/by/urnetwork/temp/sn-peerreview-580831d-20260913T065800Z/source/sim-testnet/peerreview/verify/decode.py", line 17, in <module>
+    topics = batch([("web3_sha3",["0x"+sig(e).encode().hex()]) for (_n,e) in allev])
+  File "/home/by/urnetwork/temp/sn-peerreview-580831d-20260913T065800Z/source/sim-testnet/peerreview/verify/rpc.py", line 48, in batch
+    with urllib.request.urlopen(req, timeout=TIMEOUT * 2) as r:
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/urllib/request.py", line 187, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/urllib/request.py", line 487, in open
+    response = self._open(req, data)
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/urllib/request.py", line 504, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/urllib/request.py", line 464, in _call_chain
+    result = func(*args)
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/urllib/request.py", line 1368, in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        context=self._context)
+                        ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/by/.pyenv/versions/3.14.7/lib/python3.14/urllib/request.py", line 1323, in do_open
+    raise URLError(err)
+urllib.error.URLError: <urlopen error timed out>

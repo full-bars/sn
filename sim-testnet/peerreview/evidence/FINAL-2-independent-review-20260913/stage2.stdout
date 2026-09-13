@@ -1,0 +1,11 @@
+checked 41 transactions; 41 receipts found
+FAILURES: 0
+total: 59/62 checks passed
+
+FAILING (each is a finding, not an error):
+   [contract] wp-cadence: whitepaper §5 testnet cadence (360/60/180/6) scheduled on chain
+        expected True  observed False
+   [validator] hp-maxval: max_allowed_validators <= 56 target
+        expected True  observed False
+   [validator] reserve-target: reserve share >= 65% repair target
+        expected True  observed False

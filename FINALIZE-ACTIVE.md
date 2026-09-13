@@ -4,11 +4,27 @@ Updated 2026-09-13. The user has requested full finalization and fixes for
 previously ignored failures, flakiness and issues exposed by the shortened run.
 The full requirements in [FINALIZE.md](FINALIZE.md) govern completion again.
 The user explicitly confirmed SN testnet finalization under `sn/FINALIZE.md`;
-all qualification and the canonical report at `sn/sim-testnet/FINAL.md` concern
+all qualification and the current report at `sn/sim-testnet/FINAL-2.md` concern
 this simulator and its runtime dependencies. Other simulation references were
 mistaken and do not add work to this goal.
 The earlier shortened-run instructions below are retained as historical scope
 for those attempts, whose `final_acceptance=false` results remain unchanged.
+
+Reports are numbered at the user's request: `sim-testnet/FINAL.md` remains
+report 1, `sim-testnet/FINAL-2.md` covers this full finalization, and later
+finalizations use `FINAL-3.md`, `FINAL-4.md`, and so on. Preserve each earlier
+report and its underlying evidence. The [report 2 closure table](sim-testnet/FINAL-2.md)
+tracks the first report's peer-review findings. A compatibility exception,
+historical replay, pending check or artifact-only assertion is not proof that
+the next run met an on-chain target.
+
+The user explicitly directed execution against the real chain limits after
+the peer review: retain runtime 455's root-controlled
+`max_allowed_validators=64`. Lowering it to 56 is not a prerequisite for this
+testnet run. The existing compatibility policy already requires exactly 64;
+prove the 200-head topology against actual UID occupancy, permits and native
+selection under that value. Report the difference from the whitepaper's ≤56
+target explicitly, without treating a permit limit as a fixed UID partition.
 
 Current work:
 

@@ -19,8 +19,20 @@ and the exact `--plan-hash` are supplied.
 ## Agent execution policy
 
 This harness owns SN testnet finalization under [../FINALIZE.md](../FINALIZE.md).
-Write the final report to [FINAL.md](FINAL.md), with its committed on-chain
-evidence in `peerreview/evidence/`. Qualification covers this simulator and its
+Number finalization reports: [FINAL.md](FINAL.md) is report 1; the current
+finalization uses [FINAL-2.md](FINAL-2.md), followed by `FINAL-3.md`, `FINAL-4.md`,
+and so on. Preserve earlier reports and their evidence; record later corrections
+in the next numbered report with a link to the original. Commit on-chain
+evidence in `peerreview/evidence/`, using distinct names for each report's new
+captures. The [independent review scripts](peerreview/verify/README.md) reproduce
+report 1. Their pinned historical checks retain that scope after a new run;
+fresh acceptance needs the new run's policy, epochs, receipts and state.
+For this testnet finalization, the user has accepted the real, root-controlled
+`max_allowed_validators=64` constraint. Preserve that existing exact compatibility
+check and validate the 200-head topology under actual UID and permit assignments.
+Reaching the whitepaper's ≤56 target is not a prerequisite for this run; report
+the difference explicitly.
+Qualification covers this simulator and its
 runtime dependencies; separate calibration exercises are outside this scope.
 
 An existing provisional V2 namespace can enter strict startup only through an

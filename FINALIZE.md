@@ -15,7 +15,14 @@ Terra (`gpt-5.6-terra`, reasoning effort `max`) executes tests and reruns.
 Astra (`gpt-6-astra`, reasoning effort `max`) diagnoses and fixes failures
 and flakiness. The [harness execution policy](sim-testnet/README.md#agent-execution-policy)
 defines the handoff. [FINALIZE-ACTIVE.md](FINALIZE-ACTIVE.md) tracks current
-work. The canonical final report is [sim-testnet/FINAL.md](sim-testnet/FINAL.md).
+work. Reports are numbered: [sim-testnet/FINAL.md](sim-testnet/FINAL.md) is
+report 1; the current full finalization uses
+[sim-testnet/FINAL-2.md](sim-testnet/FINAL-2.md). Subsequent finalizations use
+`FINAL-3.md`, `FINAL-4.md`, and so on, preserving earlier reports and evidence.
+Report 2 tracks closure of the first report's peer-review findings: actual
+production cadence and three complete epochs, the validator-limit exception,
+reserve target, operator-specific emission carry, signer authorization, and
+independent reproduction with explicit limits for off-chain claims.
 Existing custody, approved spending limits and the unlimited owned LAN
 RPC at `192.168.1.162:9944` remain in force. Full acceptance is not yet achieved.
 
