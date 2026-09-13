@@ -1,0 +1,16 @@
+=== RUN   TestFinalCaptureV2PendingPriorClosesOriginalAuthority
+=== PAUSE TestFinalCaptureV2PendingPriorClosesOriginalAuthority
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites
+=== PAUSE TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs
+=== PAUSE TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs
+=== NAME  
+=== CONT  TestFinalCaptureV2PendingPriorClosesOriginalAuthority
+=== CONT  TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs
+=== CONT  TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites
+--- PASS: TestFinalCaptureV2PendingPriorClosesOriginalAuthority (7.52s)
+--- PASS: TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites (7.60s)
+--- PASS: TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs (8.20s)
+PASS

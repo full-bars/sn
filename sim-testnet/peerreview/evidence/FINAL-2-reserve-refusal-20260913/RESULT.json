@@ -1,0 +1,37 @@
+{
+  "schema": "sn-native-readonly-refusal-v1",
+  "status": "REFUSED",
+  "exit_code": 1,
+  "started_at": "2026-09-13T17:11:35.329494371Z",
+  "finished_at": "2026-09-13T17:14:23.011772741Z",
+  "read_only": true,
+  "apply": false,
+  "source_revision": "cd036cee961cf8eefcba6b89f7f0cc51bea96183",
+  "error": "sim-testnet: repair reserve-validator majority: reserve-validator target needs 23944705008 rao but cumulative alpha limit 35000000000000 has no repair capacity after 35000000000000 rao",
+  "files": {
+    "invocation.json": {
+      "sha256": "feec42e48339f421f5f42284c0d3980a25e8fa529be190c29b2c07b24d579a67",
+      "bytes": 880
+    },
+    "stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "stderr": {
+      "sha256": "48e4af0adce76fb6f8f82adce1be92165dde39024f5d333285fcda2b2fa14916",
+      "bytes": 602
+    },
+    "started-at": {
+      "sha256": "e5830566753cce59885d31dbbb3db2bdf8c9da1fb05221a9930b2a0690d1da29",
+      "bytes": 31
+    },
+    "finished-at": {
+      "sha256": "5c5ae183a064087adddf8caaf8aef224a92998f6b233e1c9285789dd60251813",
+      "bytes": 31
+    },
+    "exit": {
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    }
+  }
+}

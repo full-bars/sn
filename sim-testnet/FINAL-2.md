@@ -6,6 +6,16 @@ full finalization of testnet chain **945**, subnet **521**, under
 reserve repair, renewal or campaign transaction has been made during the current
 preparation. Successful historical payments do not establish full acceptance.
 
+At **18:18 UTC on 2026-09-13**, the reserve-succession fix has passed its
+30-root normal/race qualification, and the private-fixture fix has passed all
+seven selected roots normally and under race plus the required three normal
+confirmations for each timeout root. Two of the three separate aggregate race
+confirmations have passed; the third is running on unchanged source and binary.
+The combined candidate still needs its current release gates. The user approved
+**37,250 alpha lifetime for one 6,000-alpha replacement** of the unsubmitted
+3,750-alpha repair. That configuration is published, but no repair has been
+submitted. The prior plan and transaction journal remain retained.
+
 [FINAL.md](FINAL.md) remains report 1, preserved at SHA-256
 `489fe5a367af6ce17541a0626fc052455f373d7792316593cc752d501cefd996`.
 Later finalizations will use `FINAL-3.md`, `FINAL-4.md`, and so on. This report
@@ -33,7 +43,7 @@ reproduction of the findings, not an all-check pass.
 | --- | --- | --- |
 | Production cadence was never scheduled | The first run used 300/50/150/5. A `production_cadence` YAML entry does not prove scheduling or activation. | Retain the successful policy-scheduling transaction, effective epoch, finalized policy state showing **360/60/180/6**, and **three consecutive fully observed epochs** under that active policy. The five accelerated epochs remain a separate prerequisite. Pending. |
 | `max_allowed_validators=64`, target ≤56 | The [whitepaper](../WHITEPAPER.md) calls this root-controlled/runtime-dependent. The [compatibility policy](../deploy/testnet/hyperparams.yml) already requires exactly 64. The user has explicitly directed this run to work with the real limit. | **Use 64; reaching 56 is not a testnet prerequisite.** Retain finalized value, actual permits, UID occupancy and 200-head selection evidence from the run. Report the difference from the whitepaper target without claiming ≤56 compliance. No parameter change is needed. |
-| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. The old repair is already credited. | Apply the approved additional **3,750 alpha** only through the bound plan, then retain its finalized debit/credit and a new complete stake census proving ≥65%. Continue monitoring the 60% floor and report the end-of-run share separately. Pending; the approved lifetime limit is **35,000 alpha**, with **6,000 per repair**. |
+| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. The old repair is already credited. | The unsubmitted **3,750-alpha** repair became insufficient at the 17:10 UTC snapshot. The user approved replacing it with **one 6,000-alpha repair within 37,250 alpha lifetime**. The allowance is published; native plan adoption and transfer remain pending. Retain the finalized debit/credit and a complete census proving ≥65%, monitor the 60% floor, and report the end-of-run share separately. |
 | Epoch 309 paid despite capturing zero | `RootMissed(308)` carried each operator's funded amount into its own epoch-309 entitlement. | The missing historical transition is reproduced below from both nodes. Every new paid epoch must similarly explain its funding source, carry, payments and remainder per operator. Historical reporting omission closed; fresh-run accounting pending. |
 | Artifact signers differ from registered root signers | A recoverable artifact signature establishes provenance. The coordinator authorizes the root commitment transaction using the epoch's registered `rootSigner`; these are separate checks. | Preserve each recovered artifact signer, committed artifact hash/root, transaction sender and epoch-specific registered root signer. The collector/verifier correction is integrated into candidate `4fda909` and its affected tests passed normally and under race; retained keys and old signatures stay unchanged. Fresh-run evidence remains pending. |
 | Chain verification cannot establish off-chain usage or lifecycle | A committed hash authenticates bytes, not the truth of usage, restart or gate assertions within them. | Label chain-reproduced, independently recomputed, artifact-only, and locally executed evidence separately. Link exact artifacts, executable/source identity, commands, actual exits, process generations and shutdown outcomes. Pending full-run evidence. |
@@ -312,7 +322,24 @@ This establishes complete selection, not execution of all those tests.
 [compiled inventory result](peerreview/evidence/FINAL-2-aggregate-supplement-qualification-20260913/compiled2186/status.json),
 [exact execution plan](peerreview/evidence/FINAL-2-aggregate-supplement-qualification-20260913/QUALIFICATION-PLAN-v2.txt).
 The four interrupted roots' three sequential uncached race confirmations
-continue on the same isolated source and binary. Preparation omits a duplicate
+continue on the same isolated source and binary. The first full confirmation
+passed all four roots with outer and suite exits 0, in **4,001.935 seconds**.
+Its 35 parsed events contain exactly four root passes, and its before/after
+source records match at SHA-256
+`e59585ab1e7068b3f2b77d9806324e4d6ec64fa1d67eeaa50b791373760a5615`.
+The retained executable SHA-256 is
+`f7df8d9246db832cfcafe3bb4466500535bebc2750dac4e5ea5e1ee8b388700c`.
+The second confirmation completed at **17:54:07 UTC** with outer, native body
+and evidence-replay exits 0, all four roots passing, and **3,976.640 seconds**
+of body execution. Its before/after source records match, and the executable
+hash is the same as the first pass. The third began at **17:57:09 UTC** and is
+still running; the sequence remains incomplete until its actual terminal result.
+[Second confirmation events](peerreview/evidence/FINAL-2-focused-corrections-20260913/e999/active4-race-p2/events.stdout),
+[second confirmation exits](peerreview/evidence/FINAL-2-focused-corrections-20260913/e999/active4-race-p2/outer.exit),
+[first confirmation report](peerreview/evidence/FINAL-2-supplement-race-confirmations-20260913/p1/report.json),
+[raw events](peerreview/evidence/FINAL-2-supplement-race-confirmations-20260913/p1/suite-active4-race-p1-events.stdout),
+[actual outer exit](peerreview/evidence/FINAL-2-supplement-race-confirmations-20260913/p1/outer/outer.exit).
+Preparation omits a duplicate
 2,181-root execution; the next full aggregate owns that broad coverage.
 Three earlier correction launch attempts were refused during source verification,
 before compilation or any test body. Their error matches the helper's internal
@@ -330,10 +357,32 @@ Only the protocol-script digest changed, to
 `sha256:f21b86f2ad38ab2aea7698190ed69cc6ac0fd19ab1e883720ab98a0529eb57c8`.
 The runtime code, chain pins, other repository digests and spending limits
 remain unchanged. This local update sent no chain transaction. A final stamped
-CLI and corrected complete gates will use the resulting publication.
+CLI and corrected complete gates use the resulting publication, `cd036cee`,
+which was pushed at **15:53:56 UTC**. The producer started at **15:57:41 UTC**
+and the aggregate at **16:01:22 UTC** on that source with private test services.
+Both were subsequently stopped and joined after the producer's actual failure
+and the necessary reserve-repair source correction described below. Neither
+gate passed on this candidate.
 [Bootstrap build result](peerreview/evidence/FINAL-2-supplement-lock-20260913/bootstrap/RESULT-BOOTSTRAP-CLI-BUILD.json),
 [reviewed candidate](peerreview/evidence/FINAL-2-supplement-lock-20260913/review/candidate.yml),
 [native apply result](peerreview/evidence/FINAL-2-supplement-lock-20260913/apply/RESULT.json).
+
+The final `cd036cee` native CLI build completed with build and outer exits 0 at
+**16:00:37 UTC**. Its SHA-256 is
+`3b76bbf3f43034ddc8c23d6248aa4e272bbbb44580e589df533ba27b6573d482`.
+The executable carries that clean VCS revision; all 12 repository observations
+match before and after. Two read-only setup reconstructions completed with
+exit 0 at **16:07:16 UTC** and agree on plan
+`0x814d362c650dcdb86f1a57e4f266acd789e6be5703c9e65ad753576199bc3358`.
+Their only pair difference is generation time. All 2,309 actions, spending
+ceilings and limits match the preceding plan, including the approved 3,750-alpha
+repair. This plan remains **unapplied**. The later 17:14 UTC native refusal
+supersedes its earlier reserve feasibility; it is not currently executable.
+These reads sent no transaction.
+[Build result](peerreview/evidence/FINAL-2-native-admission-cd036ce-20260913/cli/RESULT-FINAL-CLI-BUILD.json),
+[actual outer exit](peerreview/evidence/FINAL-2-native-admission-cd036ce-20260913/cli/capture/outer.exit),
+[VCS build information](peerreview/evidence/FINAL-2-native-admission-cd036ce-20260913/cli/meta/cli.buildinfo.txt),
+[exact setup comparison](peerreview/evidence/FINAL-2-native-admission-cd036ce-20260913/REVIEW-SETUP-PAIR.json).
 
 The preceding `90f67b1` native CLI build completed with actual build and outer exits 0 at
 **12:31:52 UTC**. Its SHA-256 is
@@ -396,8 +445,133 @@ found **83,213.547287627 alpha** registered and **50,410.350083881 alpha**
 at reserve UID 254: **60.5794990444%**. The still-unapplied approved transfer
 projects **65.0859768022%** at this snapshot. It remains a projection, with
 the same finalized-credit and complete post-repair census requirements.
-[Latest raw census](peerreview/evidence/FINAL-2-reserve-before-1510-20260913/rpc.json),
+[Raw 15:10 census](peerreview/evidence/FINAL-2-reserve-before-1510-20260913/rpc.json),
 [values and projection](peerreview/evidence/FINAL-2-reserve-before-1510-20260913/SUMMARY.json).
+
+At **16:09:29 UTC**, the complete 256-UID census at block **7,997,791**, hash
+`0x2ba78a99ee6ccdd6311b0628e9f4baadb89e01f39cd77a5c877ec2461928a0d4`,
+found **83,404.906730330 alpha** registered and **50,487.020157029 alpha** at the
+reserve: **60.5324340452%**. The approved repair projected **65.0285723985%**
+after allowing one alpha-rao of rounding. This narrow margin is a snapshot,
+not assurance that a later transfer reaches the target. Native planning and
+signing check the fresh projection, and the finalized postcondition requires
+65%. The 60% operating floor does not satisfy the repair target. There is no
+additional spending authority beyond the then-approved 35,000-alpha lifetime cap.
+[Raw 16:09 census](peerreview/evidence/FINAL-2-reserve-before-1609-20260913/rpc.json),
+[values and projection](peerreview/evidence/FINAL-2-reserve-before-1609-20260913/SUMMARY.json).
+
+A fresh feasibility read at **16:43:28 UTC**, block **7,997,961**, hash
+`0x965aad0dc92e4370a83b7f44e73c1eddafa487373a2da1ba3bd7cc60e8901f27`,
+found the same stake values and projection. The approved repair was still
+sufficient at that snapshot. [Raw read](peerreview/evidence/FINAL-2-reserve-before-1643-20260913/rpc.json),
+[snapshot feasibility](peerreview/evidence/FINAL-2-reserve-before-1643-20260913/SUMMARY.json).
+
+At **17:10:00 UTC**, finalized block **7,998,093**, hash
+`0xee143397cadcb2346644daf53bb47ef2d7d7f29f90fc1ed17fe632b66fac8498`,
+the complete 256-UID census found **83,596.318926064 alpha** registered and
+**50,563.662596936 alpha** at the reserve: **60.4855132935%**. After the
+approved 3,750-alpha transfer with one alpha-rao of credit allowance, the
+projection is **64.9713567471%**, below the 65% repair target. The minimum
+single transfer at that snapshot is **3,773.944705007 alpha**. These are
+finalized-node reads and arithmetic, not a submitted transfer or replayed
+storage-proof result.
+[Raw 17:10 census](peerreview/evidence/FINAL-2-reserve-before-1710-20260913/rpc.json),
+[complete values and projection](peerreview/evidence/FINAL-2-reserve-before-1710-20260913/SUMMARY.json).
+
+A fresh native read-only setup ran from **17:11:35.329494371** to
+**17:14:23.011772741 UTC** and exited **1**. It refused an additional
+23,944,705,008 alpha-rao after reserving the existing pending transfer against
+the 35,000-alpha lifetime ceiling. Its one-alpha-rao rounding margin explains
+the difference from the single-transfer minimum above. No `--apply` or plan
+adoption was requested, and the original journal remained unchanged.
+[Exact native invocation and refusal](peerreview/evidence/FINAL-2-reserve-refusal-20260913/RESULT.json),
+[stderr](peerreview/evidence/FINAL-2-reserve-refusal-20260913/stderr).
+
+Source review also found a repair-revision defect: if the pending 3,750-alpha
+repair becomes insufficient, the planner carries it unchanged and may append
+another repair after it when a larger allowance is available. The first repair
+still independently requires 65% before signing, so that dependency can prevent
+the later repair from executing. The pending repair has no journal entries;
+a narrow correction, `6311cb8`, removes only an insufficient terminal repair
+with no journal entry from the active replacement chain. The original plan,
+intent and history remain archived; any matching action-ID or intent-hash
+journal row prevents retirement. Credited liabilities remain charged and new
+repair IDs are never reused. The old source plus the regression produced the
+expected native body exit 1, with the literal failure that the insufficient,
+never-started repair still blocked the revised chain. The corrected source
+passed all **30 selected roots and 12 subtests**, normally and under race;
+outer and native suite exits were 0, and the source snapshots were unchanged.
+The race qualification closed at **17:48:04 UTC**. Two earlier launch attempts
+were refused before compilation because of private-path and vault-projection
+mismatches; those records are retained and executed zero tests. Deployment of
+the qualified correction remains pending. The original journal and credited
+transfer have not been changed.
+[Causal result](peerreview/evidence/FINAL-2-reserve-succession-qualification-20260913/captures/causal1-normal-p1-retry2/report.json),
+[normal result](peerreview/evidence/FINAL-2-reserve-succession-qualification-20260913/captures/integration30-normal-p1-retry2/report.json),
+[race result](peerreview/evidence/FINAL-2-reserve-succession-qualification-20260913/captures/integration30-race-p1-retry2/report.json),
+[complete evidence manifest](peerreview/evidence/FINAL-2-reserve-succession-qualification-20260913/MANIFEST.sha256).
+
+The user subsequently approved **37,250 alpha lifetime**, permitting **one
+6,000-alpha replacement instead of the unsubmitted 3,750-alpha repair**.
+The prior charge is 31,250 alpha; the per-repair maximum remains 6,000 alpha
+and the source minimum remains 2,000 alpha. The one-setting vault change is
+committed and pushed at `8b2f481dbe87092d0c1742274712a6f805c1c375`.
+It was prepared in an independent checkout so the running race confirmation's
+old source remained unchanged. At the 17:10 census, a 6,000-alpha transfer
+allowing one alpha-rao of rounding projects **67.6628628193%** reserve share.
+That projection is not a transfer or target pass: a fresh native plan, actual
+finalized debit/credit and complete post-transfer census remain required.
+[Approval and published setting receipt](peerreview/evidence/FINAL-2-approved-reserve-allowance-20260913/CHANGE.json).
+
+The producer on `cd036cee` timed out in its **capture-private normal** phase
+after **300.104 seconds**, at **17:13:49 UTC**. Three of seven selected roots
+were active in `fsync` while creating thousands of tiny private fixture files.
+The other four outcomes are unclassified in the nonverbose output; the race
+command was never dispatched. The test-only correction `f6cfd797` preserves
+all 1,000 miners and real manifest, mode, content and archive checks, while
+removing unnecessary durable commits for opaque temporary placeholders.
+Production writes and both deadlines remain unchanged. All **seven selected
+roots passed normally and under race**, with outer/native exits 0, unchanged
+source and 59 parsed events in each run. Normal body time was **99.711 seconds**;
+race body time was **121.477 seconds**. The first normal run supplies the first
+confirmation for the three timeout roots. Those three roots then passed two
+further sequential executions on the same normal binary, closing at
+**17:52:24 UTC** and **17:56:25 UTC**. Source snapshots match before/after;
+the retained mapping explains the equivalent JSON and TSV snapshot formats.
+This closes the fixture correction's scoped qualification; the combined
+candidate still needs the full release gates.
+[Normal result](peerreview/evidence/FINAL-2-focused-corrections-20260913/f6/capture7-normal/report.json),
+[race result](peerreview/evidence/FINAL-2-focused-corrections-20260913/f6/capture7-race/report.json),
+[second confirmation events](peerreview/evidence/FINAL-2-focused-corrections-20260913/f6/active3/p2/events.stdout),
+[third confirmation events](peerreview/evidence/FINAL-2-focused-corrections-20260913/f6/active3/p3/events.stdout),
+[source-format mapping](peerreview/evidence/FINAL-2-focused-corrections-20260913/f6/active3/SOURCE-FORMAT-MAPPING.json).
+[Original timeout](peerreview/evidence/FINAL-2-producer-cd036ce-20260913/capture-private.log),
+[selected failure scope](peerreview/evidence/FINAL-2-producer-cd036ce-20260913/RESULT.json).
+
+After that failure and identification of the required production correction,
+both superseded gates were stopped through their owned cleanup. The producer
+joined at **17:19:25 UTC**, outer exit **143**, with **23 passed phases, one
+failed phase and three interrupted phases**. The aggregate joined at
+**17:19:27 UTC**, outer exit **143**, with **five passed phases and two
+interrupted phases**; no aggregate product failure had been observed.
+Intentional interruptions are not new failed-test confirmation obligations.
+These incomplete gates are preserved and do not qualify the next candidate.
+[Producer raw joins](peerreview/evidence/FINAL-2-producer-cd036ce-20260913/capture/outer.stdout),
+[aggregate raw joins and terminal classification](peerreview/evidence/FINAL-2-aggregate-cd036ce-20260913/RESULT.json).
+
+The current published SN upstream also brings matching Server, Connect and SDK
+dependencies. Server's module graph now requires Warp. The reviewed integration
+`02ba4c7` adds Warp to current source admission and the explicit local module
+replacement while preserving archived lock formats. The current graph therefore
+has **13 repositories and 16 live Go modules**. Terra's formatting inspection
+was clean. Module reconciliation found one metadata-only omission in Proxy:
+the indirect qpack requirement and its two checksum rows. Those three additions
+are published at `6204ae7df2a9868bbb3a7b61231917a36e4f5c9f`; all 16 module
+metadata checks are now clean. The exact 24-root normal/race integration and
+the final candidate's release lock, executable and complete gates remain open.
+Earlier qualification results retain their recorded source/dependency scope.
+[Proxy reconciliation and publication](peerreview/evidence/FINAL-2-proxy-module-reconciliation-20260913/PUBLISHED.json),
+[exact metadata diff](peerreview/evidence/FINAL-2-proxy-module-reconciliation-20260913/proxy-module.diff).
 
 The next run must retain both complete gate results on its final candidate,
 five accelerated epochs, the activated production policy and three consecutive

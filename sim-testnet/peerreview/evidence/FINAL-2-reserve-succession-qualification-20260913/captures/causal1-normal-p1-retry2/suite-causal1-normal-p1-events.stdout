@@ -1,0 +1,12 @@
+{"Time":"2026-09-13T17:42:33.51965062Z","Action":"start","Package":"github.com/urfoundation/sn/sim-testnet"}
+{"Time":"2026-09-13T17:42:33.519861453Z","Action":"run","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable"}
+{"Time":"2026-09-13T17:42:33.519872276Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable","Output":"=== RUN   TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable\n"}
+{"Time":"2026-09-13T17:42:33.519910683Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable","Output":"=== PAUSE TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable\n"}
+{"Time":"2026-09-13T17:42:33.519915708Z","Action":"pause","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable"}
+{"Time":"2026-09-13T17:42:33.519920677Z","Action":"cont","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable"}
+{"Time":"2026-09-13T17:42:33.51992441Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable","Output":"=== CONT  TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable\n"}
+{"Time":"2026-09-13T17:42:33.519928717Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable","Output":"    reserve_repair_succession_test.go:129: insufficient never-started repair still blocks the revised native chain\n"}
+{"Time":"2026-09-13T17:42:33.519946953Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable","Output":"--- FAIL: TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable (2.79s)\n"}
+{"Time":"2026-09-13T17:42:33.519952038Z","Action":"fail","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable","Elapsed":2.79}
+{"Time":"2026-09-13T17:42:33.519966815Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Output":"FAIL\n"}
+{"Time":"2026-09-13T17:42:33.519974342Z","Action":"fail","Package":"github.com/urfoundation/sn/sim-testnet","Elapsed":0}

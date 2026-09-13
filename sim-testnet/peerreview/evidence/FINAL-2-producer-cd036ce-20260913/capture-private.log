@@ -1,0 +1,110 @@
+[env]glog not configured from command line. Using default configuration.
+I0913 17:08:49.885540  116357 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0913 17:08:49.885816  116357 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0913 17:08:49.885919  116357 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0913 17:08:49.885951  116357 env.go:67] [env]settings = map[]
+panic: test timed out after 5m0s
+	running tests:
+		TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs (2m26s)
+		TestFinalCaptureV2PendingPriorClosesOriginalAuthority (2m26s)
+		TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites (2m26s)
+
+goroutine 187 [running]:
+testing.(*M).startAlarm.func1()
+	/usr/local/go/src/testing/testing.go:2802 +0x354
+created by time.goFunc
+	/usr/local/go/src/time/sleep.go:215 +0x2d
+
+goroutine 1 [chan receive, 1 minutes]:
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:1993 +0x445
+testing.tRunner(0x19ddcf618248, 0x19ddcf8ddc20)
+	/usr/local/go/src/testing/testing.go:2042 +0x123
+testing.runTests({0x3e9874b, 0x1a}, {0x3ef7a19, 0x26}, 0x19ddcef45008, {0x6e6ba20, 0x88a, 0x88a}, {0xc2a1d453756e8ab6, 0x45dd016bad, ...})
+	/usr/local/go/src/testing/testing.go:2583 +0x505
+testing.(*M).Run(0x19ddcf6241e0)
+	/usr/local/go/src/testing/testing.go:2443 +0x6ac
+github.com/urfoundation/sn/sim-testnet.TestMain(0x19ddcf6241e0)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/main_test.go:26 +0x85
+main.main()
+	_testmain.go:4418 +0xa5
+
+goroutine 38 [select]:
+github.com/urnetwork/glog.(*fileSink).flushDaemon(0x7050818)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/glog/glog_file.go:461 +0xb6
+created by github.com/urnetwork/glog.init.1 in goroutine 1
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/glog/glog_file.go:225 +0x1ee
+
+goroutine 197 [syscall]:
+syscall.Syscall(0x4a, 0x8, 0x0, 0x0)
+	/usr/local/go/src/syscall/syscall_linux.go:74 +0x25
+syscall.Fsync(0x1000000080000?)
+	/usr/local/go/src/syscall/zsyscall_linux_amd64.go:463 +0x25
+internal/poll.(*FD).Fsync.func1(...)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:18
+internal/poll.ignoringEINTR(...)
+	/usr/local/go/src/internal/poll/fd_posix.go:74
+internal/poll.(*FD).Fsync(0x4e9f9e?)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:17 +0xe7
+os.(*File).Sync(0x19ddd0f06480)
+	/usr/local/go/src/os/file_posix.go:167 +0x3b
+github.com/urfoundation/sn/sim-testnet.atomicWrite({0x19ddd0203770, 0xe5}, {0x19ddcfc303c0, 0x23, 0x30}, 0x180)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/state.go:63 +0x213
+github.com/urfoundation/sn/sim-testnet.newFinalPendingPriorV2TestFixture(0x19ddcf619448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:127 +0x15ae
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureV2PendingPriorClosesOriginalAuthority(0x19ddcf619448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:204 +0x34
+testing.tRunner(0x19ddcf619448, 0x46b4450)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 201 [syscall]:
+syscall.Syscall(0x4a, 0x4, 0x0, 0x0)
+	/usr/local/go/src/syscall/syscall_linux.go:74 +0x25
+syscall.Fsync(0x19ddd0204c68?)
+	/usr/local/go/src/syscall/zsyscall_linux_amd64.go:463 +0x25
+internal/poll.(*FD).Fsync.func1(...)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:18
+internal/poll.ignoringEINTR(...)
+	/usr/local/go/src/internal/poll/fd_posix.go:74
+internal/poll.(*FD).Fsync(0x0?)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:17 +0xe7
+os.(*File).Sync(0x19ddd0439d80)
+	/usr/local/go/src/os/file_posix.go:167 +0x3b
+github.com/urfoundation/sn/sim-testnet.atomicWrite({0x19ddd02082d0, 0xe5}, {0x19ddd16212fc, 0x1e, 0x20}, 0x180)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/state.go:50 +0x165
+github.com/urfoundation/sn/sim-testnet.newFinalPendingPriorV2TestFixture(0x19ddcf619d48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:127 +0x15ae
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites(0x19ddcf619d48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:344 +0x37
+testing.tRunner(0x19ddcf619d48, 0x46b4460)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 202 [syscall]:
+syscall.Syscall(0x4a, 0x7, 0x0, 0x0)
+	/usr/local/go/src/syscall/syscall_linux.go:74 +0x25
+syscall.Fsync(0x19ddd0204ac8?)
+	/usr/local/go/src/syscall/zsyscall_linux_amd64.go:463 +0x25
+internal/poll.(*FD).Fsync.func1(...)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:18
+internal/poll.ignoringEINTR(...)
+	/usr/local/go/src/internal/poll/fd_posix.go:74
+internal/poll.(*FD).Fsync(0x0?)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:17 +0xe7
+os.(*File).Sync(0x19ddd0439d78)
+	/usr/local/go/src/os/file_posix.go:167 +0x3b
+github.com/urfoundation/sn/sim-testnet.atomicWrite({0x19ddd0203d10, 0xe9}, {0x19ddcee55114, 0x1c, 0x20}, 0x180)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/state.go:50 +0x165
+github.com/urfoundation/sn/sim-testnet.newFinalPendingPriorV2TestFixture(0x19ddcefa4488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:127 +0x15ae
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs(0x19ddcefa4488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:364 +0x37
+testing.tRunner(0x19ddcefa4488, 0x46b4448)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+FAIL	github.com/urfoundation/sn/sim-testnet	300.104s
+FAIL

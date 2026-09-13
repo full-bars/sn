@@ -1,0 +1,7 @@
+=== RUN   TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable
+=== PAUSE TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable
+=== NAME  
+=== CONT  TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable
+    reserve_repair_succession_test.go:129: insufficient never-started repair still blocks the revised native chain
+--- FAIL: TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable (2.79s)
+FAIL

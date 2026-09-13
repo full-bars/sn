@@ -1,0 +1,145 @@
+=== RUN   TestReserveShareRepairTermsRejectsMixedOrForeignModes
+--- PASS: TestReserveShareRepairTermsRejectsMixedOrForeignModes (0.00s)
+=== NAME  
+=== RUN   TestAlphaTransferCapacityAppliesEveryRuntimeRestriction
+--- PASS: TestAlphaTransferCapacityAppliesEveryRuntimeRestriction (0.00s)
+=== NAME  
+=== RUN   TestAlphaTransferPrebroadcastRejectsPriceDriftAndRegistrationDrift
+--- PASS: TestAlphaTransferPrebroadcastRejectsPriceDriftAndRegistrationDrift (0.00s)
+=== NAME  
+=== RUN   TestAlphaTransferPrebroadcastRejectsLockedOrReservedSourceAlpha
+--- PASS: TestAlphaTransferPrebroadcastRejectsLockedOrReservedSourceAlpha (0.00s)
+=== NAME  
+=== RUN   TestReserveTransferPrebroadcastRequiresLiveMajority
+--- PASS: TestReserveTransferPrebroadcastRequiresLiveMajority (0.00s)
+=== NAME  
+=== RUN   TestJournalHashChainAndExclusiveLock
+--- PASS: TestJournalHashChainAndExclusiveLock (0.07s)
+=== NAME  
+=== RUN   TestRemainingPlanSpendSubtractsVerifiedWritesButPreservesReserves
+--- PASS: TestRemainingPlanSpendSubtractsVerifiedWritesButPreservesReserves (0.00s)
+=== NAME  
+=== RUN   TestJournalMakesVerifiedIntentTerminal
+--- PASS: TestJournalMakesVerifiedIntentTerminal (0.01s)
+=== NAME  
+=== RUN   TestJournalRejectsMultipleIntentsForOnePlannedAction
+--- PASS: TestJournalRejectsMultipleIntentsForOnePlannedAction (0.02s)
+=== NAME  
+=== RUN   TestJournalRejectsMixedDeploymentButScopesOneIntentByPlan
+--- PASS: TestJournalRejectsMixedDeploymentButScopesOneIntentByPlan (0.07s)
+=== NAME  
+=== RUN   TestPlanRevisionReconcilesFinalizedAlphaAndAddsOnlyMinimumRepair
+--- PASS: TestPlanRevisionReconcilesFinalizedAlphaAndAddsOnlyMinimumRepair (0.91s)
+=== NAME  
+=== RUN   TestPlanRevisionNeverReconcilesVerifiedOrNonAlphaTransactions
+=== RUN   TestPlanRevisionNeverReconcilesVerifiedOrNonAlphaTransactions/verified_alpha
+--- PASS: TestPlanRevisionNeverReconcilesVerifiedOrNonAlphaTransactions/verified_alpha (0.23s)
+=== NAME  TestPlanRevisionNeverReconcilesVerifiedOrNonAlphaTransactions
+=== RUN   TestPlanRevisionNeverReconcilesVerifiedOrNonAlphaTransactions/non-alpha
+--- PASS: TestPlanRevisionNeverReconcilesVerifiedOrNonAlphaTransactions/non-alpha (0.19s)
+=== NAME  TestPlanRevisionNeverReconcilesVerifiedOrNonAlphaTransactions
+--- PASS: TestPlanRevisionNeverReconcilesVerifiedOrNonAlphaTransactions (0.61s)
+=== NAME  
+=== RUN   TestPlanRevisionV5AlphaApprovalIsStableAcrossEmissions
+--- PASS: TestPlanRevisionV5AlphaApprovalIsStableAcrossEmissions (1.22s)
+=== NAME  
+=== RUN   TestPlanRevisionRepairsLiveReserveMajorityWithoutReplayingBootstrap
+--- PASS: TestPlanRevisionRepairsLiveReserveMajorityWithoutReplayingBootstrap (3.16s)
+=== NAME  
+=== RUN   TestPlanRevisionReserveMajorityRepairHonorsCumulativeAlphaLimit
+--- PASS: TestPlanRevisionReserveMajorityRepairHonorsCumulativeAlphaLimit (0.90s)
+=== NAME  
+=== RUN   TestPlanRevisionReserveMajorityRepairRetainsCapacityAfterSupersededSpend
+--- PASS: TestPlanRevisionReserveMajorityRepairRetainsCapacityAfterSupersededSpend (1.10s)
+=== NAME  
+=== RUN   TestPlanBudgetRejectsReserveShareRepairEnvelopeTampering
+--- PASS: TestPlanBudgetRejectsReserveShareRepairEnvelopeTampering (1.21s)
+=== NAME  
+=== RUN   TestPlanRevisionCarriesOnlyExactVerifiedUnchangedV6ValidatorAlphaIntoV7
+--- PASS: TestPlanRevisionCarriesOnlyExactVerifiedUnchangedV6ValidatorAlphaIntoV7 (1.05s)
+=== NAME  
+=== RUN   TestPlanRevisionRejectsDifferentDeploymentIdentity
+--- PASS: TestPlanRevisionRejectsDifferentDeploymentIdentity (0.18s)
+=== NAME  
+=== RUN   TestPlanRevisionIdentityDoesNotReencodeAuthenticatedLegacyWireFormat
+--- PASS: TestPlanRevisionIdentityDoesNotReencodeAuthenticatedLegacyWireFormat (0.70s)
+=== NAME  
+=== RUN   TestPlanHashBindsResolvedVaultLaunchInputs
+--- PASS: TestPlanHashBindsResolvedVaultLaunchInputs (0.32s)
+=== NAME  
+=== RUN   TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable
+=== PAUSE TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable
+=== NAME  
+=== RUN   TestPlanRevisionReserveRepairSuccessionPreservesOriginalBytes
+=== PAUSE TestPlanRevisionReserveRepairSuccessionPreservesOriginalBytes
+=== NAME  
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== PAUSE TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== NAME  
+=== RUN   TestPlanRevisionReserveRepairSuccessionKeepsCreditedLiabilities
+=== PAUSE TestPlanRevisionReserveRepairSuccessionKeepsCreditedLiabilities
+=== NAME  
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesInsufficientNonterminalRepair
+=== PAUSE TestPlanRevisionReserveRepairSuccessionRefusesInsufficientNonterminalRepair
+=== NAME  
+=== RUN   TestPlanRevisionReserveRepairSuccessionNeverReusesRetiredSequence
+=== PAUSE TestPlanRevisionReserveRepairSuccessionNeverReusesRetiredSequence
+=== NAME  
+=== RUN   TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche
+=== PAUSE TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche
+=== NAME  
+=== RUN   TestPlanRevisionReserveRepairSuccessionEmptyChainKeepsOriginalAdmission
+=== PAUSE TestPlanRevisionReserveRepairSuccessionEmptyChainKeepsOriginalAdmission
+=== NAME  
+=== RUN   TestPlanRevisionReserveRepairSuccessionRequiresDurableIntentBeforeDispatch
+=== PAUSE TestPlanRevisionReserveRepairSuccessionRequiresDurableIntentBeforeDispatch
+=== NAME  
+=== CONT  TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable
+=== CONT  TestPlanRevisionReserveRepairSuccessionNeverReusesRetiredSequence
+=== CONT  TestPlanRevisionReserveRepairSuccessionEmptyChainKeepsOriginalAdmission
+=== CONT  TestPlanRevisionReserveRepairSuccessionRequiresDurableIntentBeforeDispatch
+--- PASS: TestPlanRevisionReserveRepairSuccessionEmptyChainKeepsOriginalAdmission (0.65s)
+=== CONT  TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche
+=== RUN   TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche/lifetime
+--- PASS: TestPlanRevisionReserveRepairSuccessionRequiresDurableIntentBeforeDispatch (2.07s)
+=== CONT  TestPlanRevisionReserveRepairSuccessionKeepsCreditedLiabilities
+--- PASS: TestPlanRevisionReserveRepairSuccessionMakesReplacementExecutable (2.80s)
+=== CONT  TestPlanRevisionReserveRepairSuccessionRefusesInsufficientNonterminalRepair
+--- PASS: TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche/lifetime (2.41s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche
+=== RUN   TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche/tranche
+--- PASS: TestPlanRevisionReserveRepairSuccessionNeverReusesRetiredSequence (3.65s)
+=== CONT  TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/intent
+--- PASS: TestPlanRevisionReserveRepairSuccessionKeepsCreditedLiabilities (1.80s)
+=== CONT  TestPlanRevisionReserveRepairSuccessionPreservesOriginalBytes
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesInsufficientNonterminalRepair (1.74s)
+--- PASS: TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche/tranche (1.86s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche
+--- PASS: TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche (4.27s)
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/intent (1.73s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/failed
+--- PASS: TestPlanRevisionReserveRepairSuccessionPreservesOriginalBytes (2.64s)
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/failed (1.63s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/broadcast
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/broadcast (2.10s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/included
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/included (1.85s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/finalized
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/finalized (1.68s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/foreign_plan
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/foreign_plan (1.76s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/different_intent
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/different_intent (1.77s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+=== RUN   TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/aliased_intent
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent/aliased_intent (1.62s)
+=== NAME  TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent
+--- PASS: TestPlanRevisionReserveRepairSuccessionRefusesAnyStartedOrAmbiguousIntent (14.16s)
+PASS

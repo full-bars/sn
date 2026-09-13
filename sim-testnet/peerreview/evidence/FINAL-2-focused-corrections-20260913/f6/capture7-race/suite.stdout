@@ -1,0 +1,36 @@
+=== RUN   TestFinalCaptureV2ReadsActualRenderedSetupAndRejectsChangedSource
+=== PAUSE TestFinalCaptureV2ReadsActualRenderedSetupAndRejectsChangedSource
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorClosesOriginalAuthority
+=== PAUSE TestFinalCaptureV2PendingPriorClosesOriginalAuthority
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorRejectsRehashedSourceAndMissingCensus
+=== PAUSE TestFinalCaptureV2PendingPriorRejectsRehashedSourceAndMissingCensus
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorRejectsWrongHandoffAndSemanticRelabel
+=== PAUSE TestFinalCaptureV2PendingPriorRejectsWrongHandoffAndSemanticRelabel
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingJobIsImmutableAndNeverAccepted
+=== PAUSE TestFinalCaptureV2PendingJobIsImmutableAndNeverAccepted
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites
+=== PAUSE TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs
+=== PAUSE TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs
+=== NAME  
+=== CONT  TestFinalCaptureV2PendingPriorRejectsRehashedSourceAndMissingCensus
+=== CONT  TestFinalCaptureV2PendingJobIsImmutableAndNeverAccepted
+=== CONT  TestFinalCaptureV2PendingPriorClosesOriginalAuthority
+=== CONT  TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs
+--- PASS: TestFinalCaptureV2PendingPriorClosesOriginalAuthority (21.42s)
+=== CONT  TestFinalCaptureV2ReadsActualRenderedSetupAndRejectsChangedSource
+--- PASS: TestFinalCaptureV2PendingJobIsImmutableAndNeverAccepted (21.47s)
+=== CONT  TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites
+--- PASS: TestFinalCaptureV2PendingPriorRejectsRehashedSourceAndMissingCensus (22.66s)
+=== CONT  TestFinalCaptureV2PendingPriorRejectsWrongHandoffAndSemanticRelabel
+--- PASS: TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs (25.79s)
+--- PASS: TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites (11.03s)
+--- PASS: TestFinalCaptureV2PendingPriorRejectsWrongHandoffAndSemanticRelabel (11.63s)
+--- PASS: TestFinalCaptureV2ReadsActualRenderedSetupAndRejectsChangedSource (98.66s)
+PASS

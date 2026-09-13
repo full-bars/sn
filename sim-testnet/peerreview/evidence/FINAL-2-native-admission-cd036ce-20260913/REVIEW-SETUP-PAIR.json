@@ -1,0 +1,110 @@
+{
+  "status": "Reviewed two matching read-only plans; unapplied pending current producer PASS and no actual current aggregate failure",
+  "reviewed_at": "2026-09-13T16:13:50.201233+00:00",
+  "source_revision": "cd036cee961cf8eefcba6b89f7f0cc51bea96183",
+  "binary_sha256": "3b76bbf3f43034ddc8c23d6248aa4e272bbbb44580e589df533ba27b6573d482",
+  "plan_hash": "0x814d362c650dcdb86f1a57e4f266acd789e6be5703c9e65ad753576199bc3358",
+  "release_lock_hash": "0xb75e389e713d2157725b5a0479dd67d2020f8e159d05b2003a1ea7305d774b4c",
+  "release_lock_file_sha256": "bd5e492077edc01acfa452d67ce1e437deec6d5e1add7ed8eab41dfd722b254f",
+  "actions": 2309,
+  "chain_id": 945,
+  "genesis_hash": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+  "netuid": 521,
+  "owned_rpc_authority": "192.168.1.162:9944",
+  "plan_pair_differences": [
+    "generated_at"
+  ],
+  "pair_explanation": "All other plan values byte-equivalent as decoded JSON, including action objects/live observations. Native hash excludes generated_at; no duplicated matching-plan replay is needed solely for clock movement.",
+  "source_plan_comparison": {
+    "previous_plan_hash": "0xd4525b8da2da4f786f4990beb2285ac09b42e033c3c7fdd3c45473a7c9336507",
+    "actions_unchanged": true,
+    "maximum_spend_unchanged": true,
+    "superseded_spend_unchanged": true,
+    "limits_unchanged": true,
+    "added_prior_plan_hashes": [
+      "0xd4525b8da2da4f786f4990beb2285ac09b42e033c3c7fdd3c45473a7c9336507"
+    ],
+    "other_changes": "new release-lock hash/plan hash and fresh generation/head/alpha observations only"
+  },
+  "limits": {
+    "tao_rao": 200000000000,
+    "alpha_rao": 35000000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0
+  },
+  "maximum_spend": {
+    "tao_rao": 185748236000,
+    "alpha_rao": 34498306443274,
+    "evm_gas_wei": 167549500000000000000,
+    "registrations": 259,
+    "subnet_creations": 0
+  },
+  "superseded_spend": {
+    "tao_rao": 0,
+    "alpha_rao": 501693556726,
+    "evm_gas_wei": 12450500000000000000,
+    "registrations": 3,
+    "subnet_creations": 0
+  },
+  "total_spend_ceilings": {
+    "tao_rao": 185748236000,
+    "alpha_rao": 35000000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0
+  },
+  "repair": {
+    "id": "alpha.repair.validator.1.6",
+    "kind": "substrate-extrinsic",
+    "target": "validator:1",
+    "description": "spend the remaining approved cumulative alpha tranche to restore the reserve-validator target after live-emission dilution",
+    "parameters": {
+      "approved_alpha_price_q9": "568309",
+      "campaign_requirement_rao": "0",
+      "cumulative_alpha_before_repair_rao": "31250000000000",
+      "cumulative_alpha_limit_rao": "35000000000000",
+      "exact_amount_rao": "3750000000000",
+      "maximum_destination_rounding_shortfall_rao": "1",
+      "maximum_reserve_repair_tranche_rao": "6000000000000",
+      "minimum_alpha_at_approved_price_rao": "193556675",
+      "minimum_destination_credit_rao": "3749999999999",
+      "minimum_tao_equivalent_margin_bps": "1000",
+      "repair_for_action": "alpha.transfer.validator.1",
+      "reserve_minimum_share_bps": "6000",
+      "reserve_share_repair": "true",
+      "reserve_target_share_bps": "6500",
+      "runtime_default_min_transfer_tao_rao": "100000"
+    },
+    "maximum_spend": {
+      "tao_rao": 0,
+      "alpha_rao": 3750000000000,
+      "evm_gas_wei": 0,
+      "registrations": 0,
+      "subnet_creations": 0
+    },
+    "depends_on": [
+      "alpha.repair.validator.1.5"
+    ],
+    "intent_hash": "0xc3affd0b416f27480c44de00bfebf143669f0b1f028b2ad5d9df3e5d91153f61"
+  },
+  "execution": {
+    "a": {
+      "started_at": "2026-09-13T16:03:25.117393+00:00",
+      "ended_at": "2026-09-13T16:07:16.663824+00:00",
+      "exit": 0,
+      "stdout_sha256": "24b4667abb9c2e6d731163e98f1c1fa7c55cff3344fbc4917fcee049cf696a20",
+      "stderr_sha256": "b631cbd75657d54037e398605079b1b2b2755b2d9153a78aeaf587d27303d040"
+    },
+    "b": {
+      "started_at": "2026-09-13T16:03:25.142481+00:00",
+      "ended_at": "2026-09-13T16:07:16.273177+00:00",
+      "exit": 0,
+      "stdout_sha256": "e7d27b476fdcdb8a1c7345dbbc9999cf2da7feb066d9af6fd34ca5cd0cc05ac5",
+      "stderr_sha256": "eb80123d2cfb6f0d08bdd463155089ff052f6040bd01269cf11656bfc55483fc"
+    }
+  },
+  "apply_prerequisite": "Current producer actualPASS and no actual current aggregatefailure; use current reviewed binary/plan and fresh native preconditions. Bothfullgates/R3/liveacceptance remain mandatory. No repairs have been submitted.",
+  "additional_spending_approval_required": false,
+  "chain_writes": false
+}

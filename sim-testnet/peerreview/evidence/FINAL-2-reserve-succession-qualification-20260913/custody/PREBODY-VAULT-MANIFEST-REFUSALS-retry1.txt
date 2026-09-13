@@ -1,0 +1,4 @@
+2026-09-13T17:31:06Z retry1 causal1-normal, integration30-normal, and integration30-race all reached the helper source fence but refused before capture/compiler/list/body.
+Exact shared error: source hash mismatch for workspace-physical/vault/.gitignore.
+The independent d4ea vault clone lacked the established git-crypt filter/unlock and held the 67-byte ciphertext SHA256 414df77bf35b35ddfbedb94de7f8b71f40b055940d5301e73402be69d67508f0 rather than the accepted unlocked 45-byte SHA256 3ebf1598ebc6876321552ad3a08c9b1a85288cd7a732cc89dac0c816c0c0bfe0.
+No capture directory, compiler, list, test binary, body, event conversion, replay, or service started. Retry2 replaces only the independent physical vault root with a verified unlocked d4ea clean copy; retry1 outer records remain intact.

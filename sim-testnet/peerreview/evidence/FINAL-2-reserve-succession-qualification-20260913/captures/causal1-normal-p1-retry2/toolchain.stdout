@@ -1,0 +1,13 @@
+{
+	"CC": "gcc",
+	"CGO_ENABLED": "1",
+	"CXX": "g++",
+	"GOARCH": "amd64",
+	"GOCACHE": "/home/by/urnetwork/temp/sn-reserve-repair-succession-qualification-20260913/runtime/gocache/causal1-normal-p1-retry2",
+	"GOMODCACHE": "/home/by/go/pkg/mod",
+	"GOOS": "linux",
+	"GOPATH": "/home/by/go",
+	"GOROOT": "/usr/local/go",
+	"GOTOOLDIR": "/usr/local/go/pkg/tool/linux_amd64",
+	"GOVERSION": "go1.26.6"
+}

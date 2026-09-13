@@ -42,11 +42,77 @@ Current work:
    reconcile on-chain outcomes, public replay, the final report and shutdown.
    Reuse valid completed evidence; unrun, failed and waived checks are not passes.
 
-Retain the approved 6,000-alpha repair allowance, 35,000-alpha lifetime limit,
+Retain the approved 6,000-alpha repair allowance, 37,250-alpha lifetime limit,
 180 EVM within 200 total TAO, 262 registrations and zero new subnets. Use
 `192.168.1.162:9944` without RPC rate limits. Full acceptance remains pending.
 
-Latest checkpoint, 2026-09-13 15:45 UTC: the producer gate on published
+Latest checkpoint, 2026-09-13 18:18 UTC: the soak remains stopped. The user
+approved one 6,000-alpha replacement for the unsubmitted 3,750-alpha repair,
+within 37,250 alpha lifetime. The single-setting vault change is published at
+`8b2f481dbe87092d0c1742274712a6f805c1c375` in the independent final candidate
+checkout. Preserve the primary vault unchanged until the active race owner
+closes. No additional repair transaction has been submitted.
+
+The reserve-succession correction's causal check and 30-root normal/race
+qualification are complete. The private-fixture correction passed all seven
+selected roots normally and under race; its three timeout roots also completed
+all three required normal confirmations on unchanged binary bytes. Two e999
+race confirmations have passed, and the third has been running since 17:57:09
+UTC. Reuse those closed scopes; do not start another development test campaign.
+
+The matching current upstream dependencies require Warp in source admission.
+The reviewed `02ba4c7` integration preserves archived lock formats and extends
+the current graph to 13 repositories and 16 live modules. Formatting and module
+metadata are clean after the three-line Proxy reconciliation published at
+`6204ae7df2a9868bbb3a7b61231917a36e4f5c9f`. Terra owns the exact 24-root
+normal/race integration and concurrent preparation of the final executable and
+both complete gates. The older `cd036cee` executable and unapplied plan are
+historical; fresh native planning must use the qualified current candidate and
+approved replacement. Producer success can admit that repair while a clean
+aggregate continues; both complete gates remain required for acceptance.
+The [report and portable evidence](sim-testnet/FINAL-2.md) distinguish actual
+passes, historical failures and remaining work.
+
+Previous checkpoint, 2026-09-13 17:32 UTC: the soak remains stopped. The complete
+`cd036cee` producer timed out in capture-private normal after 300.104 seconds.
+Both superseded gates were stopped and joined: producer outer 143 at 17:19:25
+with 23 passed phases, one failed and three interrupted; aggregate outer 143
+at 17:19:27 with five passed and two interrupted, without an observed aggregate
+product failure. The one-file fixture correction `f6cfd797` preserves all 1,000
+miners and actual publication checks. Terra is preparing its exact seven-root
+normal/race qualification and three sequential normal confirmations for the
+three actual timeout roots. The separate e999 race confirmations continue on
+unchanged source and binary; their first pass is complete.
+
+The finalized 17:10 census at block 7,998,093 found 60.4855132935% reserve;
+the approved 3,750-alpha repair now projects only 64.9713567471%. Native
+read-only setup refused it with exit 1 at 17:14:23 UTC. The approved lifetime
+cap remains 35,000 alpha. Correction `6311cb8` permits a provably unsubmitted,
+insufficient terminal repair to be replaced through a new plan while preserving
+the original history and all started or credited liabilities. Its focused
+qualification is being launched independently. Neither correction is deployed,
+the original journal is unchanged and no repair transaction has been submitted.
+
+Previous checkpoint, 2026-09-13 16:25 UTC: clean publication `cd036cee` contains
+the qualified scheduling correction and reviewed release lock. Its complete
+producer and aggregate gates started at 15:57:41 and 16:01:22 UTC with private
+test services; both are still running with no observed phase failure. Keep
+their complete source and dependency snapshots unchanged. The final native
+CLI built with exit 0 and unchanged observations of all 12 repositories;
+two read-only setup reconstructions completed with exit 0 and agree on plan
+`0x814d362c650dcdb86f1a57e4f266acd789e6be5703c9e65ad753576199bc3358`.
+All actions and approved spending ceilings are unchanged. The plan remains
+unapplied; the fleet and soak are stopped. The four interrupted roots'
+required confirmations continue on their isolated source.
+
+The 16:09:29 UTC complete reserve census at block 7,997,791 found
+60.5324340452%; the approved 3,750-alpha repair projected 65.0285723985%.
+Fresh native admission must still establish that the repair reaches 65%.
+The 60% operating floor does not replace that target. If the approved amount
+becomes insufficient, preserve the native refusal and do not exceed the
+35,000-alpha lifetime cap. No new transfer has been submitted.
+
+Previous checkpoint, 2026-09-13 15:45 UTC: the producer gate on published
 `90f67b1` passed at 14:30:28 UTC with all 36 native phase joins exiting 0.
 The aggregate's simulator race complement subsequently timed out after
 90 minutes; its separate population race phase passed. The aggregate finished
@@ -75,7 +141,7 @@ locally. After the aggregate failure, setup was interrupted and joined at
 journal contains no new-plan or reserve-repair entries. Preserve the adopted
 plan and prior history for supported recovery; no additional reserve transfer,
 renewal, continuation, adoption or fleet launch has occurred.
-At the latest complete census (15:10:42 UTC, block 7,997,497), the reserve was
+At the then-current complete census (15:10:42 UTC, block 7,997,497), the reserve was
 60.5794990444%; the unapplied approved repair projected 65.0859768022% at that
 snapshot. Actual finalized credit and a fresh target census remain required.
 See the exact native results and public evidence locators in
@@ -107,11 +173,13 @@ The historical 11:25 UTC census at block 7,996,371 found 60.7215670220% reserve
 share and projected 65.2593333302% after the approved repair. The later
 observation above supersedes that moving projection.
 
-Current checkpoint, 2026-09-13: the user explicitly approved raising the
+Earlier approval, 2026-09-13: the user explicitly approved raising the
 lifetime cap from 31,250 to 35,000 alpha for one additional 3,750-alpha reserve
 repair. The vault change is committed and pushed at
-`d4ea0cbdf49630d8e1afc3e2184858cb58940fd3`. No additional spending approval is
-pending for this repair. The per-repair maximum remains 6,000 alpha.
+`d4ea0cbdf49630d8e1afc3e2184858cb58940fd3`. This approval remains valid but
+the pending amount is insufficient at the later snapshot above. It does not
+authorize exceeding 35,000 alpha lifetime. The per-repair maximum remains
+6,000 alpha.
 
 Two actual read-only setup builds on SN `3af4251` completed successfully at
 01:48:04 and 01:58:00 UTC, both with plan hash

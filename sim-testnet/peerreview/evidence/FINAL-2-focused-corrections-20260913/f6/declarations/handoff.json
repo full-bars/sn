@@ -1,0 +1,118 @@
+{
+  "changed_files": {
+    "sim-testnet/final_semantic_pending_prior_v2_test.go": {
+      "bytes": 20081,
+      "mode": "0o664",
+      "sha256": "469056b2fb9660de7bdb8cfcba17b700741731e6a763917de0474f0f3c2c052e"
+    }
+  },
+  "commit": "f6cfd7979c95b1f9c2e4134a7a7e75b3e8f32b57",
+  "files": {
+    "README.md": {
+      "bytes": 2871,
+      "sha256": "6e087bc6c906c8ef4a7f0aa7e4c4d1605751166b5939eb9cdf1791210ada0d14"
+    },
+    "active3.literals.tsv": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "active3.outcomes.tsv": {
+      "bytes": 193,
+      "sha256": "06b79e32cd0300ea18d964dde74d8bd80d74a9172f247ba8fa442798344af827"
+    },
+    "active3.roots.txt": {
+      "bytes": 178,
+      "sha256": "b2df6c5847e4333b6d529f15c85cfd39c3e9d53442363cc625bafbc9f7c47d97"
+    },
+    "active3.selector.txt": {
+      "bytes": 182,
+      "sha256": "2d31e194fd0939973b5d5306c5aa4336115f2cebae2b60e55ee8e88330a319c5"
+    },
+    "capture-private-seeding.patch": {
+      "bytes": 4145,
+      "sha256": "10a38dd8c86c2d0aa74c2198af2ec288c5a72beb3e35aaa9ce83636196315e9a"
+    },
+    "capture7.literals.tsv": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "capture7.outcomes.tsv": {
+      "bytes": 471,
+      "sha256": "513d783424168e23ab7de334f804ddf14aa7b62a5cde11cb23059932e6fe8c99"
+    },
+    "capture7.roots.txt": {
+      "bytes": 436,
+      "sha256": "805ee05eb4c4c9acdc9f6de6d7d2be4a3513e19df64462a2e379592a1c8c055b"
+    },
+    "capture7.selector.txt": {
+      "bytes": 440,
+      "sha256": "d78deb0bdebe1cc7b2e148130c641182400159afb877495abbcafe7168ca0d8c"
+    },
+    "original-gate-source.tsv": {
+      "bytes": 1081,
+      "sha256": "ff6c6d9e5e4a071eeb81440e48cc735e6af144fa78729256d9e6cdcb68b43792"
+    }
+  },
+  "groups": {
+    "active3": {
+      "descendants": [],
+      "literals": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/handoff-v2/active3.literals.tsv",
+      "outcome_count": 3,
+      "outcomes": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/handoff-v2/active3.outcomes.tsv",
+      "root_count": 3,
+      "roots": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/handoff-v2/active3.roots.txt",
+      "selector": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/handoff-v2/active3.selector.txt"
+    },
+    "capture7": {
+      "descendants": [],
+      "literals": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/handoff-v2/capture7.literals.tsv",
+      "outcome_count": 7,
+      "outcomes": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/handoff-v2/capture7.outcomes.tsv",
+      "root_count": 7,
+      "roots": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/handoff-v2/capture7.roots.txt",
+      "selector": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/handoff-v2/capture7.selector.txt"
+    }
+  },
+  "original_failure": {
+    "active_roots": {
+      "TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs": "2m26s",
+      "TestFinalCaptureV2PendingPriorClosesOriginalAuthority": "2m26s",
+      "TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites": "2m26s"
+    },
+    "mode": "normal",
+    "other_selected_outcomes": "unclassified",
+    "package_seconds": 300.104,
+    "package_timeout_seconds": 300,
+    "race": "not started",
+    "raw_path": "/home/by/urnetwork/temp/sn-final-gate-launch-prepared-20260913T090446Z/producer/tmp/urnetwork-release-gate.QLwUM8Bl/logs/capture-private.log",
+    "sha256": "cff3358b35c18e32f33c151b1c8df9597300bebbd406b66f96ba9637a8b52a03",
+    "source": "cd036cee961cf8eefcba6b89f7f0cc51bea96183"
+  },
+  "package": "github.com/urfoundation/sn/sim-testnet",
+  "parent": "6311cb824b7fd36b76a400f984009db4c3efaa9a",
+  "prior_handoff_preserved": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/handoff-v1/handoff.json",
+  "production_change_in_incremental_patch": false,
+  "qualification": {
+    "active3": {
+      "integration_may_count_as_p1": true,
+      "mode": "normal",
+      "same_source_and_binary": true,
+      "sequential_completions": 3
+    },
+    "capture7": [
+      "normal",
+      "race"
+    ],
+    "count": 1,
+    "guard_delta": false,
+    "new_descendant_count": 0,
+    "new_root_count": 0,
+    "normal_timeout_seconds": 300,
+    "parallel": 4,
+    "race_timeout_seconds": 600
+  },
+  "replaces_unselected_commit": "d0b32577902e8caddd76f784f43b82941d511863",
+  "schema": "sn-capture-private-seeding-handoff-v2",
+  "source_repo": "/home/by/urnetwork/temp/sn-capture-private-seeding-20260913/sn-behavior-only",
+  "status": "SOURCE_FROZEN_UNEXECUTED"
+}

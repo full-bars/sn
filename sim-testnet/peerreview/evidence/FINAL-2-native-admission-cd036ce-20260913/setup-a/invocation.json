@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-final-cli-cd036ce-20260913T1555Z/bin/sim-testnet-cd036cee961cf8eefcba6b89f7f0cc51bea96183-final",
+    "setup",
+    "--config",
+    "sim-testnet/testnet.yml",
+    "--state-dir",
+    "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+    "--vault-repo",
+    "/home/by/urnetwork/vault",
+    "--owned-rpc-authority",
+    "192.168.1.162:9944",
+    "--format",
+    "json"
+  ],
+  "cwd": "/home/by/urnetwork/sn",
+  "revision": "cd036cee961cf8eefcba6b89f7f0cc51bea96183",
+  "binary_sha256": "3b76bbf3f43034ddc8c23d6248aa4e272bbbb44580e589df533ba27b6573d482",
+  "purpose": "Two fresh matching read-only setup reconstructions while complete gates run",
+  "read_only": true,
+  "concurrency_basis": "Existing reviewed runMutation dry-run path returns before journal mutation; neither invocation has apply or adoption flags.",
+  "started_at": "2026-09-13T16:03:25.117393+00:00",
+  "environment_overrides": {
+    "GOMAXPROCS": "1"
+  }
+}

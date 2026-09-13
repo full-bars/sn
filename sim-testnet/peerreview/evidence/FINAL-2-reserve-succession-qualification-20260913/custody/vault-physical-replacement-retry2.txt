@@ -1,0 +1,8 @@
+timestamp=2026-09-13T17:36:06Z
+old_clone=d4ea0cbdf49630d8e1afc3e2184858cb58940fd3
+new_clone=d4ea0cbdf49630d8e1afc3e2184858cb58940fd3
+old_gitignore=414df77bf35b35ddfbedb94de7f8b71f40b055940d5301e73402be69d67508f0
+new_gitignore=3ebf1598ebc6876321552ad3a08c9b1a85288cd7a732cc89dac0c816c0c0bfe0
+mode=664 size=45 path=/home/by/urnetwork/temp/sn-reserve-repair-succession-qualification-20260913/workspace-physical/vault/.gitignore
+mode=775 size=4096 path=/home/by/urnetwork/temp/sn-reserve-repair-succession-qualification-20260913/workspace-physical/vault
+manifest=5774f351b7480b1ff7f4c0c165f7e4ee8939aeb42c4d7875834a02414e914173

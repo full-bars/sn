@@ -1,0 +1,76 @@
+{
+  "schema": "sn-stopped-full-gate-outcomes-v1",
+  "source_revision": "cd036cee961cf8eefcba6b89f7f0cc51bea96183",
+  "outer_exit": 143,
+  "started_at": "2026-09-13T16:01:22Z",
+  "finished_at": "2026-09-13T17:19:27Z",
+  "joins": [
+    {
+      "phase": "isolation-regressions",
+      "exit": 0
+    },
+    {
+      "phase": "sn-go",
+      "exit": 0
+    },
+    {
+      "phase": "sn-core-race",
+      "exit": 0
+    },
+    {
+      "phase": "sn-validator-race",
+      "exit": 0
+    },
+    {
+      "phase": "sn-all-normal",
+      "exit": 0
+    },
+    {
+      "phase": "sn-simulator-race",
+      "exit": 143
+    },
+    {
+      "phase": "sn-simulator-populations-race",
+      "exit": 143
+    }
+  ],
+  "passed": 5,
+  "failed": 0,
+  "interrupted": 2,
+  "complete_gate_pass": false,
+  "stop_reason": "Superseded candidate after actual producer capture-private normal timeout and necessary native reserve-repair source correction.",
+  "files": {
+    "capture/launcher.sha256": {
+      "sha256": "16c2b4841dc675bbff7c4c43e3f18a7f57f30dcf09ce6df0702874e21fe1ff53",
+      "bytes": 494
+    },
+    "capture/launcher.stat": {
+      "sha256": "791826d9bcade453a50e423aec24c601e888152bb90fd53e7185599e9cc0ebbc",
+      "bytes": 349
+    },
+    "capture/outer.exit": {
+      "sha256": "9d9b18720961e9b4689fd763b85e7b6f36160ccd3a8a1c9ddc5103bb0f66c396",
+      "bytes": 4
+    },
+    "capture/outer.finished-at": {
+      "sha256": "8de31e3abca9f8edc1cb32c0c7ed9a1183df9bbcb74988a5b8c8782a85babde9",
+      "bytes": 21
+    },
+    "capture/outer.pid": {
+      "sha256": "3b6b8afd9d48aad808e48f9bd25d62f7671967bbdad2a48c8dc69c15762ca2c8",
+      "bytes": 8
+    },
+    "capture/outer.started-at": {
+      "sha256": "88a192607265ed36ff6035b7c7e3c08521638e697cfeafdb9d85002ef60d1320",
+      "bytes": 21
+    },
+    "capture/outer.stderr": {
+      "sha256": "51625aff943d2893ac4eef09304ee3e8e2742d135f7f4fa1867c6a54b8c67716",
+      "bytes": 1500
+    },
+    "capture/outer.stdout": {
+      "sha256": "58e4aef8a6404a7232159f7a9f9c2eaeb6fca02232a4831c6146430b7687213d",
+      "bytes": 6617
+    }
+  }
+}

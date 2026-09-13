@@ -1,0 +1,36 @@
+=== RUN   TestFinalCaptureV2ReadsActualRenderedSetupAndRejectsChangedSource
+=== PAUSE TestFinalCaptureV2ReadsActualRenderedSetupAndRejectsChangedSource
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorClosesOriginalAuthority
+=== PAUSE TestFinalCaptureV2PendingPriorClosesOriginalAuthority
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorRejectsRehashedSourceAndMissingCensus
+=== PAUSE TestFinalCaptureV2PendingPriorRejectsRehashedSourceAndMissingCensus
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorRejectsWrongHandoffAndSemanticRelabel
+=== PAUSE TestFinalCaptureV2PendingPriorRejectsWrongHandoffAndSemanticRelabel
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingJobIsImmutableAndNeverAccepted
+=== PAUSE TestFinalCaptureV2PendingJobIsImmutableAndNeverAccepted
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites
+=== PAUSE TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites
+=== NAME  
+=== RUN   TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs
+=== PAUSE TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs
+=== NAME  
+=== CONT  TestFinalCaptureV2ReadsActualRenderedSetupAndRejectsChangedSource
+=== CONT  TestFinalCaptureV2PendingJobIsImmutableAndNeverAccepted
+=== CONT  TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs
+=== CONT  TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites
+--- PASS: TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites (9.92s)
+=== CONT  TestFinalCaptureV2PendingPriorRejectsRehashedSourceAndMissingCensus
+--- PASS: TestFinalCaptureV2PendingJobIsImmutableAndNeverAccepted (9.95s)
+=== CONT  TestFinalCaptureV2PendingPriorRejectsWrongHandoffAndSemanticRelabel
+--- PASS: TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs (10.59s)
+=== CONT  TestFinalCaptureV2PendingPriorClosesOriginalAuthority
+--- PASS: TestFinalCaptureV2PendingPriorRejectsWrongHandoffAndSemanticRelabel (9.99s)
+--- PASS: TestFinalCaptureV2PendingPriorRejectsRehashedSourceAndMissingCensus (10.19s)
+--- PASS: TestFinalCaptureV2PendingPriorClosesOriginalAuthority (10.06s)
+--- PASS: TestFinalCaptureV2ReadsActualRenderedSetupAndRejectsChangedSource (99.62s)
+PASS

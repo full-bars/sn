@@ -1,0 +1,4 @@
+2026-09-13T17:28Z causal1-normal-p1, integration30-normal-p1, and integration30-race-p1 each returned outer exit 125 before outer/capture creation.
+Cause: the sealed wrappers referenced runtime/{tmp,gotmp,gocache}/<label>-p1 while preparation had created only names without the -p1 suffix.
+No source fence, compiler, compiled list, test binary, body, event conversion, replay, or service process started. Source worktrees and captured handoff inputs remain unchanged.
+Fresh retry1 owners use newly created matching 0700 private paths and distinct outer/capture/body command paths.

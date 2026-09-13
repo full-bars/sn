@@ -1,0 +1,27 @@
+{
+  "schema": "sn-reserve-before-approved-repair-v1",
+  "observed_at": "2026-09-13T17:10:00.038153+00:00",
+  "read_only": true,
+  "endpoint": "http://192.168.1.162:9944",
+  "finalized_block": 7998093,
+  "finalized_hash": "0xee143397cadcb2346644daf53bb47ef2d7d7f29f90fc1ed17fe632b66fac8498",
+  "genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+  "runtime": 455,
+  "uid_count": 256,
+  "registered_alpha_rao": "83596318926064",
+  "reserve": {
+    "uid": 254,
+    "hotkey": "0x6873c28d2f449235f1a7a30b211880826d04c2ce1a1454ec6e4e499aebd6005e",
+    "alpha_rao": "50563662596936"
+  },
+  "reserve_share_percent": "60.4855132935417516514250220766270872794949",
+  "approved_repair_rao": "3750000000000",
+  "projected_share_if_internal_transfer_minimum_credit_percent": "64.9713567471460344139912332794564294601284",
+  "projection_only": true,
+  "post_repair_finalized_credit_and_complete_census_still_required": true,
+  "storage_proof_replayed": false,
+  "rpc_sha256": "e341bc07ead56c2f4e522db72883e668f82c0cd3b19aabd958ebb61ff33c3587",
+  "minimum_transfer_rao_for_target_at_snapshot_with_one_rao_shortfall": "3773944705007",
+  "approved_transfer_reaches_target_at_snapshot": false,
+  "purpose": "Fresh native-admission feasibility snapshot; not an apply or a qualification replay."
+}

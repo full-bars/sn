@@ -1,0 +1,24 @@
+{
+  "schema": "sn-reserve-before-approved-repair-v1",
+  "observed_at": "2026-09-13T16:09:29.538049+00:00",
+  "read_only": true,
+  "endpoint": "http://192.168.1.162:9944",
+  "finalized_block": 7997791,
+  "finalized_hash": "0x2ba78a99ee6ccdd6311b0628e9f4baadb89e01f39cd77a5c877ec2461928a0d4",
+  "genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+  "runtime": 455,
+  "uid_count": 256,
+  "registered_alpha_rao": "83404906730330",
+  "reserve": {
+    "uid": 254,
+    "hotkey": "0x6873c28d2f449235f1a7a30b211880826d04c2ce1a1454ec6e4e499aebd6005e",
+    "alpha_rao": "50487020157029"
+  },
+  "reserve_share_percent": "60.5324340452376679585439969183175235596472",
+  "approved_repair_rao": "3750000000000",
+  "projected_share_if_internal_transfer_minimum_credit_percent": "65.0285723984927543735711026201482275326483",
+  "projection_only": true,
+  "post_repair_finalized_credit_and_complete_census_still_required": true,
+  "storage_proof_replayed": false,
+  "rpc_sha256": "c4b1236bf39c4f239547106fc3f0776420b76d2e0522af010e4f614e74fd3660"
+}

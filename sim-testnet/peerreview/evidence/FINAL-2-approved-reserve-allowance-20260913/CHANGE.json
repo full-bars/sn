@@ -1,0 +1,23 @@
+{
+  "schema": "sn-approved-alpha-37250-v1",
+  "prepared_at": "2026-09-13T18:04:34.401631+00:00",
+  "approval": "User explicitly approved 37,250 alpha lifetime for one 6,000-alpha repair replacing the unsubmitted 3,750-alpha repair.",
+  "repository": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+  "parent_revision": "bdf6185abe328c5ba9da1120a960e18e02f4439e",
+  "file": "main/st.yml",
+  "old_limit_alpha_rao": "35000000000000",
+  "new_limit_alpha_rao": "37250000000000",
+  "one_replacement_alpha_rao": "6000000000000",
+  "prior_chargeable_alpha_rao": "31250000000000",
+  "old_public_setting": "testnet-spending-limit-alpha-rao: 35000000000000    # User-approved 35,000-alpha lifetime ceiling, including historical spend and one additional 3,750-alpha repair; per-repair maximum remains 6,000 alpha and source minimum remains 2,000 alpha",
+  "new_public_setting": "testnet-spending-limit-alpha-rao: 37250000000000    # User-approved 37,250-alpha lifetime ceiling: prior 31,250 plus one 6,000-alpha replacement for the unsubmitted 3,750-alpha repair; source minimum remains 2,000 alpha",
+  "old_file_sha256": "f7842932cb4a2776f14fad53f920f3d038f0f71412efba31913e0f414b50eeb2",
+  "new_file_sha256": "e9df844c616f48c8653e0e753183b7171fedd22085f3f68382720d3ab86b237d",
+  "primary_unchanged_for_active_race_owner": true,
+  "plan_applied": false,
+  "chain_transactions": 0,
+  "published_revision": "8b2f481dbe87092d0c1742274712a6f805c1c375",
+  "publication_confirmed_at": "2026-09-13T18:09:01.166330+00:00",
+  "status": "COMMITTED_AND_PUSHED_IN_FINAL_CANDIDATE_VAULT",
+  "staged_git_blob_encryption_verified": true
+}

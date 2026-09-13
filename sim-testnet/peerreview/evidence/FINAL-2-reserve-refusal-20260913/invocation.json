@@ -1,0 +1,17 @@
+{
+  "purpose": "One fresh native read-only admission after finalized reserve census showed the approved pending repair insufficient",
+  "revision": "cd036cee961cf8eefcba6b89f7f0cc51bea96183",
+  "binary_sha256": "3b76bbf3f43034ddc8c23d6248aa4e272bbbb44580e589df533ba27b6573d482",
+  "cwd": "/home/by/urnetwork/sn",
+  "argv": [
+    "/home/by/urnetwork/temp/sn-final-cli-cd036ce-20260913T1555Z/bin/sim-testnet-cd036cee961cf8eefcba6b89f7f0cc51bea96183-final",
+    "setup", "--config", "sim-testnet/testnet.yml", "--state-dir",
+    "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+    "--vault-repo", "/home/by/urnetwork/vault",
+    "--owned-rpc-authority", "192.168.1.162:9944", "--format", "json"
+  ],
+  "environment_overrides": {"GOMAXPROCS": "1"},
+  "read_only": true,
+  "apply": false,
+  "source_census": "../reserve-before-20260913T171000Z/SUMMARY.json"
+}

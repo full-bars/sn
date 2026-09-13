@@ -1,0 +1,159 @@
+{
+  "base": "cd036cee961cf8eefcba6b89f7f0cc51bea96183",
+  "changed_files": {
+    "sim-testnet/plan_revision.go": {
+      "bytes": 208052,
+      "mode": "0o664",
+      "sha256": "b6e14b47ec5ce36701f43fc0d71581c79a4fd99ec3be9ab880395f531ceb0f0b"
+    },
+    "sim-testnet/reserve_repair_succession_test.go": {
+      "bytes": 16218,
+      "mode": "0o664",
+      "sha256": "47c6680f6f990874cc660f39e40b4af42672dd036af681595a144520eee9c569"
+    }
+  },
+  "commit": "6311cb824b7fd36b76a400f984009db4c3efaa9a",
+  "constraints": [
+    "no primary/gate/e999/vault mutation",
+    "no spending/target changes",
+    "any matching journal row forbids retirement",
+    "only insufficient terminal reserve-share repair eligible",
+    "original plan/journal/intent bytes retained",
+    "all credited/signed/dispatched liabilities retained"
+  ],
+  "files": {
+    "README.md": {
+      "bytes": 3226,
+      "sha256": "af9ef135ddb7452814c3b5e17824d06cbdcebbb18c3aec8ba61076f5fa021118"
+    },
+    "adjacent21.literals.tsv": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "adjacent21.outcomes.tsv": {
+      "bytes": 1489,
+      "sha256": "1cb8a63e366d49f8dcc0840916e4b44bf6ea3687fb0013b326530d2a332c0407"
+    },
+    "adjacent21.roots.txt": {
+      "bytes": 1225,
+      "sha256": "32b1bf972d09e3aefd6b800536b8b13588496f599b1a972db8a5c104edb9cf9b"
+    },
+    "adjacent21.selector.txt": {
+      "bytes": 1229,
+      "sha256": "c4b9d9c84ddbb6f6b4f6d9391caf1d1ec4f9c04ff4a48b86e6a320f07ad580b7"
+    },
+    "causal-test-overlay.patch": {
+      "bytes": 16865,
+      "sha256": "5b1bb65029f47d97963ea2bd095fc1a77bb3e8dbdf0c83751def377e94187d5a"
+    },
+    "causal1.literals.tsv": {
+      "bytes": 138,
+      "sha256": "374341d6dbb81839cbe276d842da025521420c665be83288abdac446ab403682"
+    },
+    "causal1.outcomes.tsv": {
+      "bytes": 71,
+      "sha256": "68ff0726529f81c6b6e7438dbbfb2497d9df86ab3d740c15a5c27390517208ff"
+    },
+    "causal1.roots.txt": {
+      "bytes": 66,
+      "sha256": "5b9c23478ef91611538610c0a98f5af7e459bbc8bb63c72251bd6728d9786f7e"
+    },
+    "causal1.selector.txt": {
+      "bytes": 70,
+      "sha256": "9c3c517a557061e574bb73cce931d41297cd6786aa974820701255031381e1c5"
+    },
+    "integration30.literals.tsv": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "integration30.outcomes.tsv": {
+      "bytes": 3037,
+      "sha256": "9e47068cb450105cfcf4b6b71567f5954495336400df1dc471f9d52fd305be36"
+    },
+    "integration30.roots.txt": {
+      "bytes": 1847,
+      "sha256": "37e3d2a71d64e7d91d400e5cb13bceab39017306e3c3ac1b067e980e7cd74b32"
+    },
+    "integration30.selector.txt": {
+      "bytes": 1851,
+      "sha256": "28f7765b125d95869d5e1e31589ac09e4b14b8269f1eb4bfbc4716c392636be3"
+    },
+    "new9.literals.tsv": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "new9.outcomes.tsv": {
+      "bytes": 1548,
+      "sha256": "63aa741978884c579d15ac89c112bdd41762468c8b10b38194e900f1014c4366"
+    },
+    "new9.roots.txt": {
+      "bytes": 622,
+      "sha256": "01025859ccfb1494705e216bf5e3a5de1db979c934a398fbae459e9f47fbe12e"
+    },
+    "new9.selector.txt": {
+      "bytes": 626,
+      "sha256": "ac1facddcef0760c4c793b839b253dfbd6079f5f4379e61d09a019cc1ac26c7a"
+    },
+    "reserve-repair-succession.patch": {
+      "bytes": 22889,
+      "sha256": "e1096f72f5da3872021843578371a7977b1245360caec945f94d19c5c7157ddd"
+    }
+  },
+  "groups": {
+    "adjacent21": {
+      "expected": "PASS",
+      "literals": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/adjacent21.literals.tsv",
+      "outcome_count": 23,
+      "outcomes": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/adjacent21.outcomes.tsv",
+      "root_count": 21,
+      "roots": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/adjacent21.roots.txt",
+      "selector": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/adjacent21.selector.txt"
+    },
+    "causal1": {
+      "expected": "FAIL",
+      "literals": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/causal1.literals.tsv",
+      "outcome_count": 1,
+      "outcomes": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/causal1.outcomes.tsv",
+      "root_count": 1,
+      "roots": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/causal1.roots.txt",
+      "selector": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/causal1.selector.txt"
+    },
+    "integration30": {
+      "expected": "PASS",
+      "literals": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/integration30.literals.tsv",
+      "outcome_count": 42,
+      "outcomes": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/integration30.outcomes.tsv",
+      "root_count": 30,
+      "roots": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/integration30.roots.txt",
+      "selector": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/integration30.selector.txt"
+    },
+    "new9": {
+      "expected": "PASS",
+      "literals": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/new9.literals.tsv",
+      "outcome_count": 19,
+      "outcomes": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/new9.outcomes.tsv",
+      "root_count": 9,
+      "roots": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/new9.roots.txt",
+      "selector": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/handoff-v1/new9.selector.txt"
+    }
+  },
+  "package": "github.com/urfoundation/sn/sim-testnet",
+  "qualification": {
+    "count": 1,
+    "format_owner": "Terra",
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "parallel": 4,
+    "preferred_groups": [
+      "new9",
+      "adjacent21"
+    ],
+    "repeat_debt": "none newly observed; do not reset completed unrelated obligations",
+    "test_timeout_seconds": 600
+  },
+  "schema": "sn-reserve-repair-succession-handoff-v1",
+  "source_repo": "/home/by/urnetwork/temp/sn-reserve-repair-succession-20260913/sn",
+  "status": "SOURCE_FROZEN_UNEXECUTED"
+}

@@ -3955,7 +3955,9 @@ That candidate remains NOT YET QUALIFIED until every required check passes:
    build products, and secrets.
 2. Fetch and pull/rebase each changed repository, resolve semantically, rerun
    conflict-adjacent tests, and push.
-3. Verify all twelve release roots are clean and `HEAD == @{upstream}`.
+3. Verify all thirteen current release roots, including Warp, are clean and
+   `HEAD == @{upstream}`. The live module census contains sixteen modules;
+   archived release locks retain their original serialized format.
 4. From SN, build a fresh `-trimpath -buildvcs=true` executable into a unique
    sibling `temp/` directory, record `sha256sum` and `go version -m`, and invoke
    that exact absolute nonsymlink path for `release-lock --apply`. The driver
@@ -3967,7 +3969,7 @@ That candidate remains NOT YET QUALIFIED until every required check passes:
 5. Commit and push the release lock plus the reconciled handoff documents.
 6. Start both strict gates after the locked checkpoint is pushed. Each calls
    `scripts/check-release-source-freeze.sh "$WORKSPACE"` before admitting test
-   bodies; record each exact twelve-repository output. An extra standalone
+   bodies; record each exact thirteen-repository output. An extra standalone
    invocation is not a prerequisite. The final-revision CLI rebuild is also
    independent of gate startup and may run in an isolated output directory
    within the remaining resource budget. It must finish and pass its identity

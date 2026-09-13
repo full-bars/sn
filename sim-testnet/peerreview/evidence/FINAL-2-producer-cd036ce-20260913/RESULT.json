@@ -1,0 +1,175 @@
+{
+  "schema": "sn-stopped-full-gate-outcomes-v1",
+  "source_revision": "cd036cee961cf8eefcba6b89f7f0cc51bea96183",
+  "outer_exit": 143,
+  "started_at": "2026-09-13T15:57:41Z",
+  "finished_at": "2026-09-13T17:19:25Z",
+  "joins": [
+    {
+      "phase": "compile",
+      "exit": 0
+    },
+    {
+      "phase": "evidence-native",
+      "exit": 0
+    },
+    {
+      "phase": "runtime",
+      "exit": 0
+    },
+    {
+      "phase": "seed",
+      "exit": 0
+    },
+    {
+      "phase": "evm-identity",
+      "exit": 0
+    },
+    {
+      "phase": "driver",
+      "exit": 0
+    },
+    {
+      "phase": "framing",
+      "exit": 0
+    },
+    {
+      "phase": "sim-seed",
+      "exit": 0
+    },
+    {
+      "phase": "adversarial",
+      "exit": 0
+    },
+    {
+      "phase": "isolation-regressions",
+      "exit": 0
+    },
+    {
+      "phase": "semantic-public-scenario",
+      "exit": 0
+    },
+    {
+      "phase": "semantic-fleet-projection",
+      "exit": 0
+    },
+    {
+      "phase": "semantic",
+      "exit": 0
+    },
+    {
+      "phase": "semantic-runtime-configs",
+      "exit": 0
+    },
+    {
+      "phase": "semantic-pool-registration",
+      "exit": 0
+    },
+    {
+      "phase": "semantic-build-artifacts",
+      "exit": 0
+    },
+    {
+      "phase": "capture-evidence",
+      "exit": 0
+    },
+    {
+      "phase": "capture",
+      "exit": 0
+    },
+    {
+      "phase": "capture-renewal",
+      "exit": 0
+    },
+    {
+      "phase": "capture-revision",
+      "exit": 0
+    },
+    {
+      "phase": "capture-lifecycle",
+      "exit": 0
+    },
+    {
+      "phase": "settlement",
+      "exit": 0
+    },
+    {
+      "phase": "capture-private",
+      "exit": 1
+    },
+    {
+      "phase": "capture-prior",
+      "exit": 0
+    },
+    {
+      "phase": "capture-population",
+      "exit": 143
+    },
+    {
+      "phase": "solidity",
+      "exit": 143
+    },
+    {
+      "phase": "capture-metadata",
+      "exit": 143
+    }
+  ],
+  "passed": 23,
+  "failed": 1,
+  "interrupted": 3,
+  "complete_gate_pass": false,
+  "stop_reason": "Superseded candidate after actual producer capture-private normal timeout and necessary native reserve-repair source correction.",
+  "files": {
+    "capture/launcher.sha256": {
+      "sha256": "d4fd57b51338160521bc73d9bc2897aa78341892e718e51988a10936bb996358",
+      "bytes": 481
+    },
+    "capture/launcher.stat": {
+      "sha256": "50e832e4cdb7e17d089ed3a24626e529cc9be5b8ff9c9cf73f0c7f16e0182917",
+      "bytes": 336
+    },
+    "capture/outer.exit": {
+      "sha256": "9d9b18720961e9b4689fd763b85e7b6f36160ccd3a8a1c9ddc5103bb0f66c396",
+      "bytes": 4
+    },
+    "capture/outer.finished-at": {
+      "sha256": "efa45b519ce35bdb9c448eee3c754a55c87db4328e22b92e051eea3c2a9340ff",
+      "bytes": 21
+    },
+    "capture/outer.pid": {
+      "sha256": "833573248ac5516eb25bf0756d4733ef74ee58b6e5232a7f96e5225595781bd3",
+      "bytes": 8
+    },
+    "capture/outer.started-at": {
+      "sha256": "1a3a4046ccded5a7cf5ee30f2d4ad9a4907ed8546f5f9f06ece756e41915e00b",
+      "bytes": 21
+    },
+    "capture/outer.stderr": {
+      "sha256": "412008aacdcae9b5f17d0fb7b3400be4923b4ba3ec99e758f68710f9f802d14b",
+      "bytes": 1495
+    },
+    "capture/outer.stdout": {
+      "sha256": "3b391882075975c823354a5057eb6434b0950f4d2c2fabb33de07fb3a0870794",
+      "bytes": 12219
+    },
+    "capture-private.log": {
+      "sha256": "cff3358b35c18e32f33c151b1c8df9597300bebbd406b66f96ba9637a8b52a03",
+      "bytes": 6428
+    }
+  },
+  "failure": {
+    "phase": "capture-private",
+    "mode": "normal",
+    "package_seconds": 300.104,
+    "timeout_seconds": 300,
+    "selected_roots": 7,
+    "active_roots": [
+      "TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs",
+      "TestFinalCaptureV2PendingPriorClosesOriginalAuthority",
+      "TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites"
+    ],
+    "other_selected_outcomes": "unclassified",
+    "race": "not dispatched",
+    "normal_confirmations_required_per_active_root": 3
+  }
+}
