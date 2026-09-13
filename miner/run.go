@@ -360,6 +360,23 @@ func testEgressDialContext(opts docopt.Opts) (*connect.DialContextSettings, erro
 	return settings, nil
 }
 
+// applyProviderMemoryTarget divides an explicitly configured process target
+// across its devices. An absent target deliberately preserves the SDK's
+// positive per-device default: replacing it with zero would make unrelated
+// SOCKS-backed providers share Connect's process-wide transport budget.
+func applyProviderMemoryTarget(
+	settings *sdk.DeviceLocalSettings,
+	maxMemory connect.ByteCount,
+	providerCount int,
+) {
+	if maxMemory <= 0 {
+		return
+	}
+	settings.MemoryTargetByteCount = sdk.ByteCount(
+		maxMemory / connect.ByteCount(max(1, providerCount)),
+	)
+}
+
 func provide(opts docopt.Opts) {
 	port, _ := opts.Int("--port")
 
@@ -415,10 +432,6 @@ func provide(opts docopt.Opts) {
 	providerCount := len(allProxySettings)
 	if providerCount == 0 {
 		providerCount = 1
-	}
-	providerMemoryTarget := maxMemory
-	if 0 < providerMemoryTarget {
-		providerMemoryTarget /= connect.ByteCount(providerCount)
 	}
 
 	provideWithProxy := func(proxySettings *connect.ProxySettings) {
@@ -495,7 +508,7 @@ func provide(opts docopt.Opts) {
 		// the role would activate under a new key every launch and the
 		// operator would revoke the old one as fast as it publishes it.
 		settings.KeyMaterial.SetExtenderKeySeed(extenderKeySeed)
-		settings.MemoryTargetByteCount = sdk.ByteCount(providerMemoryTarget)
+		applyProviderMemoryTarget(settings, maxMemory, providerCount)
 		settings.ProviderDialContextSettings = testEgressDialer
 		instanceId := sdk.NewId()
 		device, err := sdk.NewDeviceLocal(

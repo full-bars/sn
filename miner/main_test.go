@@ -14,8 +14,39 @@ import (
 
 	"github.com/docopt/docopt-go"
 	"github.com/urnetwork/connect"
+	"github.com/urnetwork/sdk"
 	"golang.org/x/net/proxy"
 )
+
+// TestProviderMemoryTargetPreservesPerDeviceDefaultWithoutFlag pins the
+// urnetwork/connect#211 provider regression. With many SOCKS devices and no
+// --max-memory flag, zeroing this field moved every device back onto one
+// sixteen-carrier process budget and triggered an H1/Auto-H3 preemption loop.
+func TestProviderMemoryTargetPreservesPerDeviceDefaultWithoutFlag(t *testing.T) {
+	settings := sdk.DefaultDeviceLocalSettings()
+	want := settings.MemoryTargetByteCount
+	if want <= 0 {
+		t.Fatalf("SDK per-device memory target = %d, want positive", want)
+	}
+	applyProviderMemoryTarget(settings, 0, 200)
+	if settings.MemoryTargetByteCount != want {
+		t.Fatalf(
+			"unset process target changed per-device target from %d to %d",
+			want,
+			settings.MemoryTargetByteCount,
+		)
+	}
+}
+
+// TestProviderMemoryTargetDividesExplicitLimit verifies that the opt-in
+// process memory limit retains its established per-provider allocation.
+func TestProviderMemoryTargetDividesExplicitLimit(t *testing.T) {
+	settings := sdk.DefaultDeviceLocalSettings()
+	applyProviderMemoryTarget(settings, 64*1024*1024, 4)
+	if want := sdk.ByteCount(16 * 1024 * 1024); settings.MemoryTargetByteCount != want {
+		t.Fatalf("per-device target = %d, want %d", settings.MemoryTargetByteCount, want)
+	}
+}
 
 func TestProviderClientJwtPathIsStableAndSecretFree(t *testing.T) {
 	home := t.TempDir()
