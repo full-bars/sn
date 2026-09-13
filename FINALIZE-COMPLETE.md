@@ -1,9 +1,11 @@
 # Release 1.0 testnet completion handoff
 
 Current full-finalization status is in [FINALIZE-ACTIVE.md](FINALIZE-ACTIVE.md)
-and [report 2](sim-testnet/FINAL-2.md). At 19:25 UTC on 2026-09-13, all retained
+and [report 2](sim-testnet/FINAL-2.md). At 19:32 UTC on 2026-09-13, all retained
 focused failure confirmations are closed. The 24-root Warp integration and
 12-root dependency source-freeze correction pass normally and under race.
+The current bootstrap driver and native release-lock apply have passed. The
+locked candidate is ready for concurrent complete gates and final driver build.
 The fleet and soak remain stopped; the current complete gates and live campaign
 remain pending. The September 11 shortened override below is historical; the
 current full scope in [FINALIZE.md](FINALIZE.md) governs this run.

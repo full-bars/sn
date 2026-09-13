@@ -1,0 +1,25 @@
+{
+  "kind": "native-release-lock-apply",
+  "started_at": "2026-09-13T19:32:01.266398+00:00",
+  "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+  "argv": [
+    "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime-bootstrap-cli-ancestry-prepared-20260913T1925Z/bin/sim-testnet-29be68f-bootstrap",
+    "release-lock",
+    "--config",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/testnet.yml",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/config",
+    "--apply"
+  ],
+  "binary_sha256": "723be7b9c88a2ef834d56a5b7e1d2c8b8431940df73b7dae4d32855867a74658",
+  "expected_candidate_sha256": "ddb22d0e1e525affac5b87cbba29cc70cb8d3e4afb9668507033d6fee907b51c",
+  "chain_transactions": 0
+}

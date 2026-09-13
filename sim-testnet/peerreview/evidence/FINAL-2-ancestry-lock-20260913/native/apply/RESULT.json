@@ -1,0 +1,8 @@
+{
+  "started_at": "2026-09-13T19:32:01.266398+00:00",
+  "finished_at": "2026-09-13T19:32:03.937719+00:00",
+  "exit": 0,
+  "applied_lock_sha256": "ddb22d0e1e525affac5b87cbba29cc70cb8d3e4afb9668507033d6fee907b51c",
+  "exact_reviewed_candidate_installed": true,
+  "chain_transactions": 0
+}

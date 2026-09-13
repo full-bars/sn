@@ -1,0 +1,10 @@
+{
+  "kind": "publish-qualified-ancestry-candidate",
+  "started_at": "2026-09-13T19:28:08.687748+00:00",
+  "parent": "c4185f7686175b834a5bd16ee346defc862d61f0",
+  "candidate": "29be68fdf1e201f9622aedb5caef6fa180ff8fe5",
+  "prior_origin": "e0a454248051a24d81c11d166054570cb4d20b5e",
+  "qualification_source": "17286251723b05a00717a642a6b5141cb02c2e12",
+  "qualified_scope": "12normal/race and retained prior closed scopes; complete gates pending",
+  "chain_transactions": 0
+}

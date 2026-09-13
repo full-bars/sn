@@ -46,7 +46,7 @@ Retain the approved 6,000-alpha repair allowance, 37,250-alpha lifetime limit,
 180 EVM within 200 total TAO, 262 registrations and zero new subnets. Use
 `192.168.1.162:9944` without RPC rate limits. Full acceptance remains pending.
 
-Latest checkpoint, 2026-09-13 19:25 UTC: the soak remains stopped. The user
+Latest checkpoint, 2026-09-13 19:32 UTC: the soak remains stopped. The user
 approved one 6,000-alpha replacement for the unsubmitted 3,750-alpha repair,
 within 37,250 alpha lifetime. The single-setting vault change is published at
 `8b2f481dbe87092d0c1742274712a6f805c1c375` in the independent final candidate
@@ -74,8 +74,12 @@ dependency heads remain clean published ancestors. Astra's two-file correction
 retains those exact commits as upstream advances, keeping SN's exact current-main
 check and all before/after source checks. Its 12 affected checks passed normally
 at 19:24:06 and under race at 19:25:14 UTC, with actual outer/native exits 0 and
-unchanged 13-repository observations. Terra owns the prepared current-driver
-build and full gates; the refreshed native release lock is next.
+unchanged 13-repository observations. Candidate `29be68f` is published. Its
+stamped bootstrap driver built at 19:30:10 UTC, and native lock apply succeeded
+at 19:32:03 UTC with exact reviewed SHA-256
+`ddb22d0e1e525affac5b87cbba29cc70cb8d3e4afb9668507033d6fee907b51c`.
+Publish the lock and start Terra's prepared full producer, aggregate and final
+driver build concurrently. Preserve the final source snapshot throughout.
 The older `cd036cee` executable and unapplied plan are
 historical; fresh native planning must use the qualified current candidate and
 approved replacement. Producer success can admit that repair while a clean

@@ -1,0 +1,59 @@
+{
+  "reviewed_at": "2026-09-13T19:32:01.265990+00:00",
+  "source_revision": "29be68fdf1e201f9622aedb5caef6fa180ff8fe5",
+  "old_lock_sha256": "bd5e492077edc01acfa452d67ce1e437deec6d5e1add7ed8eab41dfd722b254f",
+  "candidate_sha256": "ddb22d0e1e525affac5b87cbba29cc70cb8d3e4afb9668507033d6fee907b51c",
+  "changed_fields": {
+    "connect_go_source_hash": {
+      "before": "sha256:b5281e8a33e2613c8b2f8303351e1fa19a37c1fac725209a30065cbd8c636043",
+      "after": "sha256:6ebf5459512953075e1c67ad1bb932cf99c0c653c8cbb180546870795248f895"
+    },
+    "operator_proxy_commit": {
+      "before": "714f10f06bcc0b02420454310f335a835a0a5aa3",
+      "after": "448369740c70eb2e642bde9d36f3708fe9ad4b5d"
+    },
+    "operator_proxy_go_source_hash": {
+      "before": "sha256:abfcde63ffe3e4b89e3b4068850c63c8b673ab43c6f5fb1c415976e39329f244",
+      "after": "sha256:3abc595cf0bb9f2d2b701020a8aa573b87a263e3169063a55a5998ddeefa5414"
+    },
+    "protocol_source_hash": {
+      "before": "sha256:f21b86f2ad38ab2aea7698190ed69cc6ac0fd19ab1e883720ab98a0529eb57c8",
+      "after": "sha256:6c520961b8de9e45c45cfe00675602ca10bdc5f3b699243961110db673dc56bd"
+    },
+    "proxy_go_source_hash": {
+      "before": "sha256:a6cf429d2306344c7913b08244e87c12029442a4c3c1c377dc5d3c15d8709d02",
+      "after": "sha256:e8be796d7c683556b155e6993018f61b62c4278d052d28060f11ec78c5f13ab8"
+    },
+    "sdk_go_source_hash": {
+      "before": "sha256:20e267883bc1795ff34922377c453f64294a0f7b4bdbcf69d0547bec3f66ba9c",
+      "after": "sha256:5cbe111d703ab888d704d2d08950bb3aef0abd0336b99ce3026414bb115c6575"
+    },
+    "sdk_mobile_build_tree_hash": {
+      "before": "sha256:23e5affa73ea186f5cebdcaba3d00ce7f5bb523f20ca7db1ec763f2253fbf6c6",
+      "after": "sha256:62d09e3553d744f681f4e0bd0fa640a4e7019367a73dae0ea616b45b27f27aa4"
+    },
+    "server_go_source_hash": {
+      "before": "sha256:83029a9aa2f1bae7728f4a39aea7b843d90cd1a2daaee8fe12a842a656837c57",
+      "after": "sha256:8e457202b1adeb9bd3421272c95b8d26ecb52f0b9acdfd4bf1a3e0ae4e0ac2f9"
+    },
+    "sn_go_source_hash": {
+      "before": "sha256:e22f400ed6aefbc88a064deff29cc52d935fa391cd67a1215c74a0fdc60cde11",
+      "after": "sha256:a7e75a43466135293d90d26804a92d7104ac90a17724b767c11ca5e03aecb8af"
+    }
+  },
+  "explanation": {
+    "sn": "Qualified reserve-succession and Warp-admission changes composed with the matching published miner upstream.",
+    "protocol": "Reviewed Warp addition to current release source/module/gate inventories.",
+    "connect_server_sdk": "Matching published upstream commits 2a0f603e, 93bc8c59, and 0dc2fb0f; current 16-module metadata and 24-root normal/race admission passed. Broader release gates remain required.",
+    "proxy": "Published6204ae7 adds exactly one indirect qpack requirement and two checksums.",
+    "operator_proxy": "Published4483697 current module metadata and exact commit.",
+    "sdk_mobile_build": "Current published SDK build tree, included in the 16-module metadata reconciliation."
+  },
+  "all_other_bytes_unchanged": true,
+  "evm_runtime_artifact_interface_and_infrastructure_fields_unchanged": true,
+  "chain_transactions": 0,
+  "full_gate_qualification": "pending",
+  "binary_sha256": "723be7b9c88a2ef834d56a5b7e1d2c8b8431940df73b7dae4d32855867a74658",
+  "exact_candidate_bytes_match_prior_review": true,
+  "scope_note": "Current29be native preview reproduces the same nine reviewed source/commit-field changes. The two-file source-freeze correction and docs do not change the native rendered lock. Full gates remain pending."
+}

@@ -6,15 +6,16 @@ full finalization of testnet chain **945**, subnet **521**, under
 reserve repair, renewal or campaign transaction has been made during the current
 preparation. Successful historical payments do not establish full acceptance.
 
-At **19:25 UTC on 2026-09-13**, the reserve-succession fix has passed its
+At **19:32 UTC on 2026-09-13**, the reserve-succession fix has passed its
 30-root normal/race qualification, and the private-fixture fix has passed all
 seven selected roots normally and under race plus the required three normal
 confirmations for each timeout root. All three separate aggregate race
 confirmations have now passed on unchanged source and binary. The Warp
 integration's 24 roots also pass normally and under race. The bootstrap driver
 is built. A subsequent dependency source-freeze correction passes all 12
-affected checks normally and under race; its current driver, final release
-lock and complete gates remain pending.
+affected checks normally and under race. Its current bootstrap driver and
+native release-lock apply are complete; the final driver rebuild and both
+complete gates are next.
 The user approved
 **37,250 alpha lifetime for one 6,000-alpha replacement** of the unsubmitted
 3,750-alpha repair. That configuration is published, but no repair has been
@@ -613,8 +614,8 @@ at **19:24:06 UTC**, race at **19:25:14 UTC**; their bodies took **20.504** and
 `ac3fda7c5435d35880008337d5b7b808af607dd97c80161c2abf7c00c5f45ff8`.
 The new behavioral control covers canonical main/master advancement without
 changing the recorded candidate, and rejects unpublished, divergent or
-rewound-out dependency history. The final locked driver and both complete
-gates remain pending. No chain transaction resulted from this preparation.
+rewound-out dependency history. No chain transaction resulted from this
+qualification.
 [Normal correction report](peerreview/evidence/FINAL-2-dependency-ancestry-qualification-20260913/normal/report.json),
 [race correction report](peerreview/evidence/FINAL-2-dependency-ancestry-qualification-20260913/race/report.json),
 [exact patch and declarations](peerreview/evidence/FINAL-2-dependency-ancestry-qualification-20260913/handoff/handoff.json),
@@ -623,6 +624,23 @@ gates remain pending. No chain transaction resulted from this preparation.
 [reviewed preview](peerreview/evidence/FINAL-2-lock-preparation-e0a4542-20260913/release-lock-e0a4542-20260913T185435Z/REVIEW.json),
 [actual apply refusal](peerreview/evidence/FINAL-2-lock-preparation-e0a4542-20260913/release-lock-e0a4542-20260913T185435Z/apply/RESULT.json),
 [canonical ancestry observations](peerreview/evidence/FINAL-2-lock-preparation-e0a4542-20260913/private-canonical-tracking-20260913T1908Z/ANCESTOR-TRACKING.json).
+
+Candidate `29be68fdf1e201f9622aedb5caef6fa180ff8fe5` was published cleanly at
+**19:28:12 UTC**. Its fresh stamped bootstrap driver built with exit 0 at
+**19:30:10 UTC**, SHA-256
+`723be7b9c88a2ef834d56a5b7e1d2c8b8431940df73b7dae4d32855867a74658`.
+The 13 before/after repository records match. Native preview reproduced the
+same nine reviewed repository fields, and **native lock apply exited 0 at
+19:32:03 UTC**, installing exactly
+`ddb22d0e1e525affac5b87cbba29cc70cb8d3e4afb9668507033d6fee907b51c`.
+Runtime, contract artifacts, interfaces and infrastructure fields are unchanged.
+This local lock update sent no chain transaction. Publish this lock, rebuild
+the driver at the final commit and run both complete gates concurrently; no
+complete-gate pass or live acceptance is asserted yet.
+[Published candidate](peerreview/evidence/FINAL-2-ancestry-lock-20260913/publication/RESULT.json),
+[driver build and identity](peerreview/evidence/FINAL-2-ancestry-lock-20260913/bootstrap/RESULT-BOOTSTRAP-CLI-BUILD.json),
+[exact lock review](peerreview/evidence/FINAL-2-ancestry-lock-20260913/native/REVIEW.json),
+[actual native apply](peerreview/evidence/FINAL-2-ancestry-lock-20260913/native/apply/RESULT.json).
 
 The next run must retain both complete gate results on its final candidate,
 five accelerated epochs, the activated production policy and three consecutive
