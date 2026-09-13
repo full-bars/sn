@@ -105,7 +105,7 @@ func finalPayoutArtifactTestBuild(t *testing.T, fixture *finalPayoutArtifactFixt
 // artifact while keeping provider rows outside the trusted expectation.
 func finalPayoutArtifactTestExpectation(artifact *payoutartifact.Artifact) *finalPayoutArtifactExpectation {
 	return &finalPayoutArtifactExpectation{
-		ArtifactSigner: artifact.Signer,
+		ArtifactSigner:   artifact.Signer,
 		NoID:             artifact.NoID,
 		Epoch:            artifact.Epoch,
 		UsageBytes:       artifact.TotalUsageBytes,

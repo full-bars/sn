@@ -15,13 +15,13 @@ import (
 // rewritten. The signed successor pins those original bytes, not their verdict
 // as accepted evidence, and owns its own preparation and acceptance boundary.
 type scenarioCampaignSuccession struct {
-	Schema                 string `json:"schema"`
-	PriorPlanHash          string `json:"prior_plan_hash"`
-	PriorRunID             string `json:"prior_run_id"`
-	PriorAttemptSHA256     string `json:"prior_attempt_sha256"`
-	PriorResultSHA256      string `json:"prior_result_sha256"`
-	PriorPlanSHA256        string `json:"prior_plan_sha256"`
-	ApprovedPlanSHA256     string `json:"approved_plan_sha256"`
+	Schema             string `json:"schema"`
+	PriorPlanHash      string `json:"prior_plan_hash"`
+	PriorRunID         string `json:"prior_run_id"`
+	PriorAttemptSHA256 string `json:"prior_attempt_sha256"`
+	PriorResultSHA256  string `json:"prior_result_sha256"`
+	PriorPlanSHA256    string `json:"prior_plan_sha256"`
+	ApprovedPlanSHA256 string `json:"approved_plan_sha256"`
 }
 
 func scenarioCampaignSuccessorPath(stateDir string) string {

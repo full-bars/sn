@@ -587,7 +587,11 @@ func TestFinalSemanticEvidenceBuildRenderAndArtifacts(t *testing.T) {
 	for _, field := range []string{"committer", "root-signer"} {
 		candidate := finalSemanticClone(t, &source)
 		pool := &candidate.Validators[0].Cycles[0].Pools[0]
-		if field == "committer" { pool.RootCommitter = pool.ArtifactSigner } else { pool.RootSigner = pool.ArtifactSigner }
+		if field == "committer" {
+			pool.RootCommitter = pool.ArtifactSigner
+		} else {
+			pool.RootSigner = pool.ArtifactSigner
+		}
 		if _, err := BuildFinalSemanticEvidence(*candidate); err == nil || !strings.Contains(err.Error(), "root authority") {
 			t.Fatalf("artifact key substituted for %s authority: %v", field, err)
 		}

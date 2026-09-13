@@ -445,9 +445,9 @@ func verifyReleaseSemanticExecutionOwners(script string, selected []string) erro
 		{phase: "semantic", job: "semantic", variable: "semantic_integrity_tests", selector: releaseSemanticIntegritySelector, skip: releaseGateSemanticOwnerSkip},
 		{phase: "semantic_public_scenario", job: "semantic-public-scenario", variable: "semantic_public_scenario_tests", selector: "^" + releaseGateSemanticPublicScenarioRoot + "$"},
 		{phase: "semantic_fleet_projection", job: "semantic-fleet-projection", variable: "semantic_fleet_projection_tests", selector: "^" + releaseGateSemanticFleetProjectionRoot + "$"},
-        {phase: "semantic_runtime_configs", job: "semantic-runtime-configs", variable: "semantic_runtime_configs_tests", selector: "^" + releaseGateSemanticRuntimeConfigsRoot + "$"},
-        {phase: "semantic_build_artifacts", job: "semantic-build-artifacts", variable: "semantic_build_artifacts_tests", selector: "^" + releaseGateSemanticBuildArtifactsRoot + "$"},
-        {phase: "semantic_pool_registration", job: "semantic-pool-registration", variable: "semantic_pool_registration_tests", selector: "^" + releaseGateSemanticPoolRegistrationRoot + "$"},
+		{phase: "semantic_runtime_configs", job: "semantic-runtime-configs", variable: "semantic_runtime_configs_tests", selector: "^" + releaseGateSemanticRuntimeConfigsRoot + "$"},
+		{phase: "semantic_build_artifacts", job: "semantic-build-artifacts", variable: "semantic_build_artifacts_tests", selector: "^" + releaseGateSemanticBuildArtifactsRoot + "$"},
+		{phase: "semantic_pool_registration", job: "semantic-pool-registration", variable: "semantic_pool_registration_tests", selector: "^" + releaseGateSemanticPoolRegistrationRoot + "$"},
 	} {
 		function := "release_phase_" + group.phase
 		pattern := regexp.MustCompile("(?ms)^[\\t ]*" + function + "\\(\\) \\{\\n(.*?)^[\\t ]*\\}[\\t ]*$")
@@ -699,9 +699,9 @@ func TestProducerGatePinsSemanticIntegrityRegressions(t *testing.T) {
 		{phase: "semantic", job: "semantic", variable: "semantic_integrity_tests"},
 		{phase: "semantic_public_scenario", job: "semantic-public-scenario", variable: "semantic_public_scenario_tests"},
 		{phase: "semantic_fleet_projection", job: "semantic-fleet-projection", variable: "semantic_fleet_projection_tests"},
-        {phase: "semantic_runtime_configs", job: "semantic-runtime-configs", variable: "semantic_runtime_configs_tests"},
-        {phase: "semantic_build_artifacts", job: "semantic-build-artifacts", variable: "semantic_build_artifacts_tests"},
-        {phase: "semantic_pool_registration", job: "semantic-pool-registration", variable: "semantic_pool_registration_tests"},
+		{phase: "semantic_runtime_configs", job: "semantic-runtime-configs", variable: "semantic_runtime_configs_tests"},
+		{phase: "semantic_build_artifacts", job: "semantic-build-artifacts", variable: "semantic_build_artifacts_tests"},
+		{phase: "semantic_pool_registration", job: "semantic-pool-registration", variable: "semantic_pool_registration_tests"},
 	} {
 		start := "release_gate_start " + owner.job + " release_phase_" + owner.phase
 		for _, replacement := range []string{"# " + start, start + "\n" + start, "if false; then\n" + start + "\nfi", "release_phase_unused() {\n" + start + "\n}"} {

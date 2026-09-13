@@ -4863,7 +4863,7 @@ func verifyFinalPathProofArtifact(proof *FinalValidatorPathProofEvidence, data [
 // Carries the independently authenticated commitment and, when a validator
 // audited demand, the exact source interval signed into that decision.
 type finalPayoutArtifactExpectation struct {
-	ArtifactSigner common.Address
+	ArtifactSigner   common.Address
 	NoID             uint64
 	Epoch            uint64
 	UsageBytes       uint64
