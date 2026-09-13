@@ -18,7 +18,8 @@ const releaseGateCapturePopulationRoot = "TestCampaignEvidencePopulationV2Stream
 
 const releaseGateCapturePrivatePattern = "TestFinalCaptureV2(ReadsActualRenderedSetupAndRejectsChangedSource|PendingPriorClosesOriginalAuthority|PendingPriorRejectsRehashedSourceAndMissingCensus|PendingPriorRejectsWrongHandoffAndSemanticRelabel|PendingJobIsImmutableAndNeverAccepted|PendingPriorRejectsWrongGateBeforeWrites|PendingPriorArtifactCensusHasNoSemanticOutputs)"
 const releaseGateCapturePriorRoot = "TestVerifyFinalCollectedPriorPhaseBytesRejectsReopenedHandoffSubstitution"
-const releaseGateCaptureOwnerSkip = " -skip '^(TestCampaignEvidence(CapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|PopulationV2StreamsPhaseCensusWithBoundedOwners)|" + releaseGateCapturePrivatePattern + "|" + releaseGateCapturePriorRoot + ")$'"
+const releaseGateCaptureLifecycleRoot = "TestFleetLifecycleRenewalDescriptorsKeepLaterWaves"
+const releaseGateCaptureOwnerSkip = " -skip '^(TestCampaignEvidence(CapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|PopulationV2StreamsPhaseCensusWithBoundedOwners)|" + releaseGateCapturePrivatePattern + "|" + releaseGateCapturePriorRoot + "|" + releaseGateCaptureLifecycleRoot + ")$'"
 
 // Inspect the gates' bounded line-oriented registry grammar, after removing
 // declarations. Exact calls inside an extra branch are not admitted jobs.
@@ -85,6 +86,7 @@ func verifyReleaseGateCaptureMetadataIsolation(script string) error {
 		{phase: "capture", job: "capture", variable: "capture_tests", skip: releaseGateCaptureOwnerSkip, raceTimeout: "10m"},
 		{phase: "capture_private", job: "capture-private", variable: "capture_private_tests", selector: "^" + releaseGateCapturePrivatePattern + "$", raceTimeout: "10m"},
 		{phase: "capture_prior", job: "capture-prior", variable: "capture_prior_tests", selector: "^" + releaseGateCapturePriorRoot + "$", raceTimeout: "10m"},
+		{phase: "capture_lifecycle", job: "capture-lifecycle", variable: "capture_lifecycle_tests", selector: "^" + releaseGateCaptureLifecycleRoot + "$", raceTimeout: "10m"},
 		{phase: "capture_population", job: "capture-population", variable: "capture_population_tests", raceTimeout: "10m"},
 		{phase: "capture_metadata", job: "capture-metadata", variable: "capture_metadata_tests", raceTimeout: "45m"},
 	} {
@@ -107,6 +109,7 @@ func verifyReleaseGateCaptureMetadataIsolation(script string) error {
 		}{
 			{root: fullRoot, phase: "capture_metadata"},
 			{root: releaseGateCapturePopulationRoot, phase: "capture_population"},
+			{root: releaseGateCaptureLifecycleRoot, phase: "capture_lifecycle"},
 		} {
 			selected, err := regexp.MatchString(selector, stress.root)
 			wantSelected := group.phase == "capture" || group.phase == stress.phase
@@ -205,7 +208,7 @@ func TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift(t *testing.T)
 			t.Fatal("capture accepted altered metadata partition", pair.changed)
 		}
 	}
-	for _, variable := range []string{"capture_tests", "capture_private_tests", "capture_prior_tests", "capture_population_tests", "capture_metadata_tests"} {
+	for _, variable := range []string{"capture_tests", "capture_private_tests", "capture_prior_tests", "capture_lifecycle_tests", "capture_population_tests", "capture_metadata_tests"} {
 		for _, race := range []bool{false, true} {
 			command := "go test"
 			timeout := "5m"
@@ -339,7 +342,7 @@ func TestProducerGateCaptureSelectionRequiresIndependentPopulation(t *testing.T)
 		t.Fatal(err)
 	}
 	selectors := map[string]*regexp.Regexp{}
-	for _, variable := range []string{"capture_population_tests", "capture_metadata_tests", "capture_private_tests", "capture_prior_tests"} {
+	for _, variable := range []string{"capture_population_tests", "capture_metadata_tests", "capture_private_tests", "capture_prior_tests", "capture_lifecycle_tests"} {
 		value, err := releaseConnectPolicySelectorAssignment(script, variable)
 		if err != nil {
 			t.Fatal(err)
@@ -365,7 +368,7 @@ func TestProducerGateCaptureSelectionRequiresIndependentPopulation(t *testing.T)
 			t.Fatalf("capture source %s has %d execution owners, want exactly one", name, owners)
 		}
 	}
-	if counts["capture_population_tests"] != 1 || counts["capture_metadata_tests"] != 1 || counts["capture_private_tests"] != len(releaseCapturePrivateFixtureRoots) || counts["capture_prior_tests"] != 1 || len(ordinaryOwners)+len(releaseCapturePrivateFixtureRoots)+3 != len(selected) {
+	if counts["capture_population_tests"] != 1 || counts["capture_metadata_tests"] != 1 || counts["capture_private_tests"] != len(releaseCapturePrivateFixtureRoots) || counts["capture_prior_tests"] != 1 || counts["capture_lifecycle_tests"] != 1 || len(ordinaryOwners)+len(releaseCapturePrivateFixtureRoots)+4 != len(selected) {
 		t.Fatalf("capture partition changed its complete source census: ordinary=%d separate=%v selected=%d", len(ordinaryOwners), counts, len(selected))
 	}
 	for _, root := range releaseCapturePrivateFixtureRoots {
@@ -375,6 +378,9 @@ func TestProducerGateCaptureSelectionRequiresIndependentPopulation(t *testing.T)
 	}
 	if !slices.Contains(selected, releaseGateCapturePriorRoot) {
 		t.Fatal("capture prior source lost its separate owner")
+	}
+	if !slices.Contains(selected, releaseGateCaptureLifecycleRoot) {
+		t.Fatal("capture lifecycle source lost its separate owner")
 	}
 	for _, name := range []string{
 		"TestCampaignEvidencePopulationV2AdmitsFullConfiguredMetadataCensus",
@@ -442,6 +448,7 @@ func TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift(t *testing.
 	}{
 		{phase: "capture_private", job: "capture-private", variable: "capture_private_tests", selector: "^" + releaseGateCapturePrivatePattern + "$"},
 		{phase: "capture_prior", job: "capture-prior", variable: "capture_prior_tests", selector: "^" + releaseGateCapturePriorRoot + "$"},
+		{phase: "capture_lifecycle", job: "capture-lifecycle", variable: "capture_lifecycle_tests", selector: "^" + releaseGateCaptureLifecycleRoot + "$"},
 	} {
 		start := "release_gate_start " + owner.job + " release_phase_" + owner.phase
 		assignment := owner.variable + "='" + owner.selector + "'"
