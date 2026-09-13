@@ -685,9 +685,15 @@ func TestReleaseGateIsolationPinsPrivateResourcesAndFinalJoins(t *testing.T) {
 	}
 }
 
-// Reuse the gate source guards' exact phase/admission grammar. Full packages
-// have no selector variable: require their actual complete command and owned
-// working directory, with no extra shell branch that could skip execution.
+// Reuse the gate source guards' exact phase/admission grammar. Require actual
+// complete commands and owned working directories, with no extra shell branch
+// that could skip execution.
+// The simulator's two complementary owners retain its complete race census.
+const releaseGateSimulatorPopulationSelector = "^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$"
+const releaseGateSimulatorRaceCommand = "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1"
+const releaseGateSimulatorOrdinaryRaceCommand = releaseGateSimulatorRaceCommand + " -skip '" + releaseGateSimulatorPopulationSelector + "'"
+const releaseGateSimulatorPopulationRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorPopulationSelector + "'"
+
 func verifyReleaseGateFullValidatorRace(script string) error {
 	phaseDefinitions := regexp.MustCompile(`(?ms)^[\t ]*release_phase_[a-z0-9_]+\(\) \{\n.*?^[\t ]*\}[\t ]*$`)
 	registry := phaseDefinitions.ReplaceAllString(script, "")
@@ -699,7 +705,8 @@ func verifyReleaseGateFullValidatorRace(script string) error {
 		{phase: "sn_all_normal", job: "sn-all-normal", command: "go test -parallel=4 -timeout 90m ./... -count=1"},
 		{phase: "sn_core_race", job: "sn-core-race", command: "go test -race ./crv4 ./miner/... ./protocol -count=1"},
 		{phase: "sn_validator_race", job: "sn-validator-race", command: "go test -race -parallel=4 -timeout 90m ./validator -count=1"},
-		{phase: "sn_simulator_race", job: "sn-simulator-race", command: "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1"},
+		{phase: "sn_simulator_race", job: "sn-simulator-race", command: releaseGateSimulatorOrdinaryRaceCommand},
+		{phase: "sn_simulator_populations_race", job: "sn-simulator-populations-race", command: releaseGateSimulatorPopulationRaceCommand},
 	}
 	for _, group := range groups {
 		function := "release_phase_" + group.phase
@@ -744,6 +751,83 @@ func TestReleaseGateJobsRequireIndependentCompleteValidatorRace(t *testing.T) {
 	}
 	if err := verifyReleaseGateFullValidatorRace(string(encoded)); err != nil {
 		t.Fatalf("full validator race phase is not independently budgeted: %v", err)
+	}
+}
+
+// Reproduce the exhausted single-package clock's original ownership, then
+// reject omissions, overlaps, hidden owners and changes to either allowance.
+func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
+	t.Parallel()
+	encoded, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(encoded)
+	sources := map[string]string{"population_test.go": "package main\nimport \"testing\"\n" +
+		"func TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier(t *testing.T) {}\n" +
+		"func TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners(t *testing.T) {}\n" +
+		"func TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwnersFuture(t *testing.T) {}\n" +
+		"func TestOrdinaryControl(t *testing.T) {}\n"}
+	if err := verifyReleaseGateSimulatorRaceCensus(script, sources); err != nil {
+		t.Fatal(err)
+	}
+	const start = "release_gate_start sn-simulator-populations-race release_phase_sn_simulator_populations_race"
+	const definition = "release_phase_sn_simulator_populations_race() {\n  cd \"$sn_repo\"\n  " + releaseGateSimulatorPopulationRaceCommand + "\n}"
+	old := strings.Replace(script, releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorRaceCommand, 1)
+	old = strings.Replace(old, definition, "", 1)
+	old = strings.Replace(old, start, "", 1)
+	if err := verifyReleaseGateSimulatorRaceCensus(old, sources); err == nil {
+		t.Fatal("aggregate restored the serial population in one exhausted package clock")
+	}
+	for _, command := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand} {
+		for _, replacement := range []string{
+			releaseGateSimulatorRaceCommand,
+			strings.Replace(command, " -race", "", 1),
+			strings.Replace(command, " -count=1", "", 1),
+			strings.Replace(command, "-parallel=4", "-parallel=8", 1),
+			strings.Replace(command, "-timeout 90m", "-timeout 180m", 1),
+			strings.Replace(command, "-timeout 90m", "-timeout 45m", 1),
+			strings.Replace(command, "-timeout 90m", "-timeout 0", 1),
+			strings.Replace(command, ")$'", ")'", 1),
+			strings.Replace(command, "TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|", "", 1),
+			strings.Replace(command, "-skip", "-run", 1),
+			strings.Replace(command, "-run", "-skip", 1),
+			"# " + command,
+			command + " -run '^$'",
+			command + " || true",
+			command + "\n  " + command,
+		} {
+			if replacement == command {
+				continue
+			}
+			if strings.Count(script, command) != 1 {
+				t.Fatal("mutation does not identify one simulator owner command")
+			}
+			if err := verifyReleaseGateSimulatorRaceCensus(strings.Replace(script, command, replacement, 1), sources); err == nil {
+				t.Fatalf("aggregate accepted changed simulator execution: %s", replacement)
+			}
+		}
+	}
+	for _, admission := range []string{start, "release_gate_start sn-simulator-race release_phase_sn_simulator_race"} {
+		for _, replacement := range []string{
+			"# " + admission,
+			admission + "\n" + admission,
+			"if false; then\n" + admission + "\nfi",
+			"release_phase_unused() {\n" + admission + "\n}",
+		} {
+			if err := verifyReleaseGateSimulatorRaceCensus(strings.Replace(script, admission, replacement, 1), sources); err == nil {
+				t.Fatalf("aggregate accepted changed simulator admission: %s", replacement)
+			}
+		}
+	}
+	for _, omitted := range []string{
+		"func TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier(t *testing.T) {}\n",
+		"func TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners(t *testing.T) {}\n",
+	} {
+		changed := map[string]string{"population_test.go": strings.Replace(sources["population_test.go"], omitted, "", 1)}
+		if err := verifyReleaseGateSimulatorRaceCensus(script, changed); err == nil {
+			t.Fatal("aggregate population owner admitted a missing required root")
+		}
 	}
 }
 
@@ -818,7 +902,8 @@ var releaseGateUncachedCommands = []struct {
 	{phase: "sn_all_normal", command: "go test -parallel=4 -timeout 90m ./... -count=1"},
 	{phase: "sn_core_race", command: "go test -race ./crv4 ./miner/... ./protocol -count=1"},
 	{phase: "sn_validator_race", command: "go test -race -parallel=4 -timeout 90m ./validator -count=1"},
-	{phase: "sn_simulator_race", command: "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1"},
+	{phase: "sn_simulator_race", command: releaseGateSimulatorOrdinaryRaceCommand},
+	{phase: "sn_simulator_populations_race", command: releaseGateSimulatorPopulationRaceCommand},
 	{phase: "server_unit", command: "go test . -run '^Test(PgResourcesRedirectMaintenancePoolAndRestore|DatabaseTimeMatchesPostgresPrecision)$' -count=1"},
 	{phase: "server_unit", command: "go test ./st ./startifact -count=1"},
 	{phase: "server_unit", command: "go test ./controller -run '^Test(CoreStClient(BlockHashes|FinalizedHead|Epoch)|CoreStClientBindingsAt|DecodeStRPCBlockIdentity|StatsAlphaPriceURLIsMainnetOnly|StatsGaugeVecReplaceDeletesStaleSeries|StConfig|StCompute|StBuild|StDeposit|StEstimate|StReplacement|StDecode|StEvent|StBroadcast|StClientStub|StTransactionCancellation|VerifyEvidenceRange|VerifyKeyRotation|VerifySyntheticSeedId|VerifyUsesUrForwardedAddress|VerifyIgnoresLegacyForwardedAddress|VerifyClampM|VerifyCachedResponseRoundTrip|VerifySeedRejectsMissingSignature|StripeReconcileCredentialsRequireNonblankAPIToken|AppleReconcileCredentialsRequireCompleteServerAPIIdentity|PlayReconcileCredentialsRequireOAuthPackageAndSKUs|SolanaReconcileCredentialsRequireNonblankHeliusAPIKey)' -count=1"},

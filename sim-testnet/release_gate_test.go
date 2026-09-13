@@ -1563,18 +1563,80 @@ func TestReleaseGatesPreflightBindingToolBeforeLongWork(t *testing.T) {
 	}
 }
 
-// Keep enough deadline headroom for the complete launch-scale race suite. The
-// three focused integrity shards exceed 62 minutes when serialized, before the
-// rest of the package and concurrent live-campaign load. A 90-minute deadline
-// retains deterministic headroom without changing test selection.
+// The original complete race package exhausted its 90-minute shared clock
+// before its parallel roots could finish. The exact population/complement
+// owners retain that deadline and every source root, including future roots.
 func TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite(t *testing.T) {
 	scriptBytes, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(scriptBytes), "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1") {
-		t.Fatal("local release gate lacks the reviewed 90-minute full simulator race deadline")
+	paths, err := filepath.Glob("*_test.go")
+	if err != nil || len(paths) == 0 {
+		t.Fatalf("aggregate simulator source census is absent: %v", err)
 	}
+	sources := map[string]string{}
+	for _, path := range paths {
+		encoded, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sources[path] = string(encoded)
+	}
+	if err := verifyReleaseGateSimulatorRaceCensus(string(scriptBytes), sources); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Verify actual admitted commands before projecting their complementary root
+// sets. AST declarations exclude TestMain and test-shaped text inside fixtures.
+// Whole-root selectors retain all descendants without a second subtest census.
+func verifyReleaseGateSimulatorRaceCensus(script string, sources map[string]string) error {
+	if err := verifyReleaseGateFullValidatorRace(script); err != nil {
+		return err
+	}
+	population := regexp.MustCompile(releaseGateSimulatorPopulationSelector)
+	seen := map[string]bool{}
+	ordinaryCount, populationCount := 0, 0
+	for path, source := range sources {
+		parsed, err := parser.ParseFile(token.NewFileSet(), path, source, 0)
+		if err != nil {
+			return err
+		}
+		for _, declaration := range parsed.Decls {
+			function, ok := declaration.(*ast.FuncDecl)
+			if !ok || function.Recv != nil || !strings.HasPrefix(function.Name.Name, "Test") || function.Name.Name == "TestMain" {
+				continue
+			}
+			if function.Type.Params == nil || len(function.Type.Params.List) != 1 {
+				continue
+			}
+			pointer, ok := function.Type.Params.List[0].Type.(*ast.StarExpr)
+			if !ok {
+				continue
+			}
+			parameter, ok := pointer.X.(*ast.SelectorExpr)
+			if !ok || parameter.Sel.Name != "T" {
+				continue
+			}
+			name := function.Name.Name
+			if seen[name] {
+				return fmt.Errorf("aggregate simulator root is duplicated: %s", name)
+			}
+			seen[name] = true
+			// The guarded ordinary command has no -run filter: its sole -skip
+			// is exactly the population command's anchored -run expression.
+			if population.MatchString(name) {
+				populationCount++
+			} else {
+				ordinaryCount++
+			}
+		}
+	}
+	if populationCount != 2 || ordinaryCount == 0 || len(seen) != ordinaryCount+populationCount {
+		return fmt.Errorf("aggregate simulator census has %d population and %d ordinary roots", populationCount, ordinaryCount)
+	}
+	return nil
 }
 
 // Keeps the additive contract-lane diagnostic in both release paths instead

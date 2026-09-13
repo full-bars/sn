@@ -310,13 +310,14 @@ func TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak(t *testing.T)
 	if err := verifyReleaseGateFullValidatorRace(localScript); err != nil {
 		t.Fatalf("metadata budget changed an independent full-package owner: %v", err)
 	}
-	const fullRace = "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1"
-	if strings.Count(localScript, fullRace) != 1 {
-		t.Fatal("full simulator race command is not uniquely executable")
-	}
-	changedFull := strings.Replace(localScript, fullRace, strings.Replace(fullRace, "90m", "45m", 1), 1)
-	if err := verifyReleaseGateFullValidatorRace(changedFull); err == nil {
-		t.Fatal("metadata race budget replaced the independent full-simulator allowance")
+	for _, fullRace := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand} {
+		if strings.Count(localScript, fullRace) != 1 {
+			t.Fatal("full simulator race owner is not uniquely executable")
+		}
+		changedFull := strings.Replace(localScript, fullRace, strings.Replace(fullRace, "90m", "45m", 1), 1)
+		if err := verifyReleaseGateFullValidatorRace(changedFull); err == nil {
+			t.Fatal("metadata race budget replaced an independent full-simulator allowance")
+		}
 	}
 }
 

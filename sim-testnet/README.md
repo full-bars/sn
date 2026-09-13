@@ -458,6 +458,16 @@ budget provides about 47% wall-time headroom. The complete aggregate simulator
 race budget remains 90 minutes. No census, byte bound, hash/signature check or
 production deadline changes.
 
+The aggregate simulator race census uses two independently admitted owners:
+the exact full metadata and 900-object publication roots together, and their
+complete complement. Both retain `-parallel=4`, `-count=1` and the existing
+90-minute aggregate allowance; the ordinary full-package run and producer
+budgets stay unchanged. The original aggregate alarm left four roots active
+for at most 2m15s and 195 parallel roots queued after the serial prefix. Its
+failed package remains recorded. Exact source guards reject missing or
+duplicated population owners, changed selectors, and deadline changes. This
+partition retains every complete population, descendant and remaining root.
+
 The original full-metadata ten-minute race timeout remains a failure. Its
 profiled 90-minute diagnostic completion is not qualification. Require three
 fresh sequential unprofiled confirmations on the same source/binary under the

@@ -101,12 +101,9 @@ release_phase_sn_go() {
   validator_lifecycle_tests='^Test(TunnelAttemptCloseJoinsPumpBeforeGenerator|TunnelAttemptCloseReleasesPartialConstruction)$'
   go test ./validator -run "$validator_lifecycle_tests" -count=1
   go test -race ./validator -run "$validator_lifecycle_tests" -count=1
-  # Keep the launch-scale simulator isolated so its package deadline and any
-  # race report remain attributable without weakening the 1,000-miner tests.
-  # Three isolated launch-integrity shards require more than 62m when summed,
-  # before the rest of the package and concurrent live-campaign load. Keep
-  # deterministic headroom for the complete package and slower CI hosts; this
-  # changes only the harness deadline, never the test selection.
+  # The complete simulator race union below retains every launch-scale test.
+  # Its two finite population roots have their own admitted package clock so
+  # their serial work cannot consume the parallel roots' execution allowance.
 }
 release_gate_start sn-go release_phase_sn_go
 
@@ -127,12 +124,21 @@ release_phase_sn_validator_race() {
 }
 release_phase_sn_simulator_race() {
   cd "$sn_repo"
-  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1
+  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -skip '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$'
+}
+# The retained 90-minute aggregate alarm left four newly active roots and 195
+# parallel roots queued after the serial prefix. Keep the complete 1,191,936
+# metadata slots and 900-object publication together in one independent owner;
+# the exact complementary selectors omit and duplicate no aggregate race root.
+release_phase_sn_simulator_populations_race() {
+  cd "$sn_repo"
+  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$'
 }
 release_gate_start sn-all-normal release_phase_sn_all_normal
 release_gate_start sn-core-race release_phase_sn_core_race
 release_gate_start sn-validator-race release_phase_sn_validator_race
 release_gate_start sn-simulator-race release_phase_sn_simulator_race
+release_gate_start sn-simulator-populations-race release_phase_sn_simulator_populations_race
 
 echo "[release-1.0] deployable Solidity static analysis"
 release_phase_solidity_static() {
