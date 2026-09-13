@@ -166,7 +166,7 @@ release_gate_preflight_status() {
 # the original strict source checker necessarily stops at the first one.
 release_gate_diagnostic_inventory() {
   local repo result=0
-  for repo in sn server operator-proxy connect sdk glog goidenticons proxy userwireguard vault xops config; do
+  for repo in sn server operator-proxy connect sdk glog goidenticons proxy userwireguard warp vault xops config; do
     if [[ ! -d "$workspace/$repo" ]]; then
       printf 'incomplete diagnostic repository directory: %s\n' "$repo" >&2
       result=1

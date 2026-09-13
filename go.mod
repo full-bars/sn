@@ -195,6 +195,9 @@ replace github.com/urnetwork/connect => ../connect
 
 replace github.com/urnetwork/server => ../server
 
+// The server module also imports Warp; dependency replaces are not inherited.
+replace github.com/urnetwork/warp => ../warp
+
 replace github.com/urnetwork/operator-proxy => ../operator-proxy
 
 replace github.com/urnetwork/proxy => ../proxy

@@ -180,7 +180,7 @@ func releaseObservationRepositories(cfg *ResolvedConfig) ([]releaseRepository, e
 		{Name: "vault", Root: cfg.Repos.Vault},
 		{Name: "platform-config", Root: cfg.Repos.PlatformConfig},
 	}
-	for _, name := range []string{"connect", "sdk", "glog", "goidenticons", "proxy", "userwireguard"} {
+	for _, name := range []string{"connect", "sdk", "glog", "goidenticons", "proxy", "userwireguard", "warp"} {
 		root, err := moduleRoot(parent, name)
 		if err != nil {
 			return nil, err

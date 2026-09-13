@@ -4,7 +4,7 @@ set -euo pipefail
 sn_repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 workspace="${1:-$(dirname "$sn_repo")}"
 
-release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard vault xops config)
+release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard warp vault xops config)
 live_modules=(
   connect
   glog
@@ -19,6 +19,7 @@ live_modules=(
   sn
   sn/third_party/npipe
   userwireguard
+  warp
   xops/echo
   xops/router
 )
@@ -31,7 +32,7 @@ non_release_modules=(server/connect/sim-latency/baseline)
 expected_upstream() {
   case "$1" in
     glog | userwireguard) printf 'origin/master\n' ;;
-    sn | server | operator-proxy | connect | sdk | goidenticons | proxy | vault | xops | config) printf 'origin/main\n' ;;
+    sn | server | operator-proxy | connect | sdk | goidenticons | proxy | warp | vault | xops | config) printf 'origin/main\n' ;;
     *) return 1 ;;
   esac
 }
@@ -47,6 +48,7 @@ expected_origin() {
     goidenticons) printf 'github.com/urnetwork/goidenticons\n' ;;
     proxy) printf 'github.com/urnetwork/proxy\n' ;;
     userwireguard) printf 'github.com/urnetwork/userwireguard\n' ;;
+    warp) printf 'github.com/urnetwork/warp\n' ;;
     vault) printf 'github.com/urnetwork/vault\n' ;;
     xops) printf 'github.com/urnetwork/xops\n' ;;
     config) printf 'github.com/urnetwork/config\n' ;;

@@ -1331,7 +1331,7 @@ func TestLocalReleaseGateRechecksCompleteWorkspaceAtEnd(t *testing.T) {
 	if err := verifyReleaseGatePrivateServiceProfile(script); err != nil {
 		t.Fatal(err)
 	}
-	const repositories = "release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard vault xops config)"
+	const repositories = "release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard warp vault xops config)"
 	if !strings.Contains(script, repositories) || !strings.Contains(script, `for repo in "${release_repos[@]}"`) {
 		t.Fatal("local release gate does not check every release repository")
 	}
@@ -1700,7 +1700,7 @@ func assertOperatorProxyReleaseGate(t *testing.T, scriptPath, heading string) {
 		t.Fatal(err)
 	}
 	script := string(scriptBytes)
-	const repositories = "release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard vault xops config)"
+	const repositories = "release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard warp vault xops config)"
 	if strings.Count(script, repositories) != 1 || !strings.Contains(script, `for repo in "${release_repos[@]}"`) {
 		t.Fatalf("%s does not fence the complete release repository set", scriptPath)
 	}
@@ -1737,7 +1737,7 @@ func assertOperatorProxyReleaseGate(t *testing.T, scriptPath, heading string) {
 	}
 }
 
-// Construct all twelve repositories and every classified Go module without
+// Construct all thirteen repositories and every classified Go module without
 // making ordinary tests depend on the developer's current dirty worktree.
 func releaseSourceFreezeFixture(t *testing.T) string {
 	t.Helper()
@@ -1750,18 +1750,18 @@ func releaseSourceFreezeFixture(t *testing.T) string {
 	branches := map[string]string{
 		"sn": "main", "server": "main", "operator-proxy": "main", "connect": "main",
 		"sdk": "main", "glog": "master", "goidenticons": "main", "proxy": "main",
-		"userwireguard": "master", "vault": "main", "xops": "main", "config": "main",
+		"userwireguard": "master", "warp": "main", "vault": "main", "xops": "main", "config": "main",
 	}
 	origins := map[string]string{
 		"sn": "urfoundation/sn", "server": "urnetwork/server", "operator-proxy": "urnetwork/operator-proxy",
 		"connect": "urnetwork/connect", "sdk": "urnetwork/sdk", "glog": "urnetwork/glog",
 		"goidenticons": "urnetwork/goidenticons", "proxy": "urnetwork/proxy", "userwireguard": "urnetwork/userwireguard",
-		"vault": "urnetwork/vault", "xops": "urnetwork/xops", "config": "urnetwork/config",
+		"warp": "urnetwork/warp", "vault": "urnetwork/vault", "xops": "urnetwork/xops", "config": "urnetwork/config",
 	}
 	modules := []string{
 		"connect", "glog", "goidenticons", "operator-proxy", "proxy", "sdk", "sdk/build",
 		"sdk/cgo", "sdk/js", "server", "server/connect/sim-latency/baseline", "sn",
-		"sn/third_party/npipe", "userwireguard", "xops/echo", "xops/router",
+		"sn/third_party/npipe", "userwireguard", "warp", "xops/echo", "xops/router",
 	}
 	for repo, branch := range branches {
 		root := filepath.Join(workspace, repo)
@@ -1828,7 +1828,7 @@ func releaseSourceFreezeFixture(t *testing.T) string {
 }
 
 // The freeze command accepts a complete clean fixture and emits an exact
-// twelve-repository revision/upstream snapshot.
+// thirteen-repository revision/upstream snapshot.
 func TestReleaseSourceFreezeRecordsCompleteCleanWorkspace(t *testing.T) {
 	workspace := releaseSourceFreezeFixture(t)
 	command := exec.Command("../scripts/check-release-source-freeze.sh", workspace)
@@ -1837,22 +1837,75 @@ func TestReleaseSourceFreezeRecordsCompleteCleanWorkspace(t *testing.T) {
 		t.Fatalf("clean source freeze: %v", err)
 	}
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-	if len(lines) != 12 {
-		t.Fatalf("source freeze recorded %d repositories, want 12: %s", len(lines), output)
+	if len(lines) != 13 {
+		t.Fatalf("source freeze recorded %d repositories, want 13: %s", len(lines), output)
 	}
 	expectedOrigins := map[string]string{
 		"sn": "github.com/urfoundation/sn", "server": "github.com/urnetwork/server", "operator-proxy": "github.com/urnetwork/operator-proxy",
 		"connect": "github.com/urnetwork/connect", "sdk": "github.com/urnetwork/sdk", "glog": "github.com/urnetwork/glog",
 		"goidenticons": "github.com/urnetwork/goidenticons", "proxy": "github.com/urnetwork/proxy", "userwireguard": "github.com/urnetwork/userwireguard",
-		"vault": "github.com/urnetwork/vault", "xops": "github.com/urnetwork/xops", "config": "github.com/urnetwork/config",
+		"warp": "github.com/urnetwork/warp", "vault": "github.com/urnetwork/vault", "xops": "github.com/urnetwork/xops", "config": "github.com/urnetwork/config",
 	}
+	seen := map[string]bool{}
 	for _, line := range lines {
 		fields := strings.Split(line, "\t")
 		if len(fields) != 4 || !regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(fields[1]) ||
 			!strings.HasPrefix(fields[2], "origin/") || fields[3] != expectedOrigins[fields[0]] {
-			t.Errorf("non-canonical source freeze record %q", line)
+			t.Fatalf("non-canonical source freeze record %q", line)
+		}
+		if seen[fields[0]] {
+			t.Fatalf("duplicate source freeze record %q", line)
+		}
+		seen[fields[0]] = true
+	}
+	for name := range expectedOrigins {
+		if !seen[name] {
+			t.Errorf("source freeze omitted %s", name)
 		}
 	}
+}
+
+// Warp is needed by the server's full module graph even when the simulator
+// does not launch the separate server/alt entry point.
+func TestReleaseSourceFreezeRequiresWarpProvenance(t *testing.T) {
+	workspace := releaseSourceFreezeFixture(t)
+	warpRoot := filepath.Join(workspace, "warp")
+	run := func(want string) {
+		t.Helper()
+		output, err := exec.Command("../scripts/check-release-source-freeze.sh", workspace).CombinedOutput()
+		if err == nil || !strings.Contains(string(output), want) {
+			t.Fatalf("Warp source admission wanted %q: %v\n%s", want, err, output)
+		}
+	}
+	retained := filepath.Join(workspace, ".retained-warp")
+	if err := os.Rename(warpRoot, retained); err != nil {
+		t.Fatal(err)
+	}
+	run("release repository is missing or not a Git checkout: " + warpRoot)
+	output, err := exec.Command("bash", "-c", `set -euo pipefail; source ../scripts/release-gate-jobs.sh; workspace="$1"; release_gate_diagnostic_inventory`, "bash", workspace).CombinedOutput()
+	if err == nil || !strings.Contains(string(output), "incomplete diagnostic Git checkout: warp") {
+		t.Fatalf("diagnostic inventory omitted the missing Warp checkout: %v\n%s", err, output)
+	}
+	if err := os.Rename(retained, warpRoot); err != nil {
+		t.Fatal(err)
+	}
+	readme := filepath.Join(warpRoot, "README.md")
+	if err := os.WriteFile(readme, []byte("modified\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	run("tracked, staged, or untracked changes: warp")
+	if err := os.WriteFile(readme, []byte("fixture\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runTestGit(t, warpRoot, "config", "remote.origin.url", "git@github.com:attacker/warp.git")
+	run("origin github.com/attacker/warp, want github.com/urnetwork/warp")
+	runTestGit(t, warpRoot, "config", "remote.origin.url", "git@github.com:urnetwork/warp.git")
+	if err := os.WriteFile(readme, []byte("unpublished\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runTestGit(t, warpRoot, "add", "README.md")
+	runTestGit(t, warpRoot, "commit", "-qm", "unpublished Warp source")
+	run("differs from origin/main")
 }
 
 // Cleanliness and provenance must be established before a tracked verifier can

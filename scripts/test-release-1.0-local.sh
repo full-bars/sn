@@ -6,7 +6,7 @@ export WARP_TEST_ENV_FAIL_FAST=1
 
 sn_repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 workspace="$(dirname "$sn_repo")"
-release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard vault xops config)
+release_repos=(sn server operator-proxy connect sdk glog goidenticons proxy userwireguard warp vault xops config)
 source "$sn_repo/scripts/release-gate-jobs.sh"
 release_gate_jobs_init
 

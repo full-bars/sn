@@ -258,6 +258,91 @@ func TestCleanReleaseRepositorySnapshotRejectsDirtyAndMissingWorktrees(t *testin
 	}
 }
 
+// The current build includes admission-only local modules in its source
+// snapshot without adding required fields to retained release-lock bytes.
+func TestReleaseLockObservationFencesAdmissionOnlyWarp(t *testing.T) {
+	workspace := t.TempDir()
+	for _, relative := range []string{
+		"sn", "server", "operator-proxy", "vault", "config", "connect", "sdk", "glog",
+		"goidenticons", "proxy", "userwireguard", "warp", "xops", "sn/evm/lib/forge-std",
+		"sn/evm/lib/openzeppelin-contracts", "sn/evm/lib/openzeppelin-contracts-upgradeable",
+	} {
+		root := filepath.Join(workspace, filepath.FromSlash(relative))
+		if err := os.MkdirAll(root, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		module := "module github.com/urnetwork/" + filepath.Base(root) + "\n"
+		if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte(module), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if relative == "sn" {
+			if err := os.WriteFile(filepath.Join(root, ".gitignore"), []byte("evm/lib/\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+		}
+		runTestGit(t, root, "init", "-q")
+		runTestGit(t, root, "config", "user.email", "sim-testnet@example.invalid")
+		runTestGit(t, root, "config", "user.name", "sim-testnet")
+		runTestGit(t, root, "add", ".")
+		runTestGit(t, root, "commit", "-qm", "review local source")
+	}
+	cfg := &ResolvedConfig{Repos: RepoPaths{
+		SN: filepath.Join(workspace, "sn"), Server: filepath.Join(workspace, "server"),
+		OperatorProxy: filepath.Join(workspace, "operator-proxy"), Vault: filepath.Join(workspace, "vault"),
+		PlatformConfig: filepath.Join(workspace, "config"),
+	}}
+	repositories, err := releaseObservationRepositories(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	warpRoot := filepath.Join(workspace, "warp")
+	found := false
+	for _, repository := range repositories {
+		if repository.Name == "warp" && repository.Root == warpRoot {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("current release observation omitted the server's local Warp dependency")
+	}
+	before, err := cleanReleaseRepositorySnapshot(repositories)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(workspace, "release.lock.yml")
+	original := []byte("retained lock bytes\n")
+	if err := os.WriteFile(path, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	update := &preparedReleaseLockUpdate{Path: path, Original: original, Candidate: []byte("candidate\n"), Mode: 0o600, Snapshot: before}
+	writes := 0
+	writer := func(string, []byte, os.FileMode) error {
+		writes++
+		return nil
+	}
+	if err := os.WriteFile(filepath.Join(warpRoot, "services.go"), []byte("package warp\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if written, err := applyReleaseLockUpdate(cfg, update, writer); err == nil || written || writes != 0 || !strings.Contains(err.Error(), "release repository warp:") {
+		t.Fatalf("dirty Warp reached lock publication: written=%t writes=%d error=%v", written, writes, err)
+	}
+	runTestGit(t, warpRoot, "add", "services.go")
+	runTestGit(t, warpRoot, "commit", "-qm", "change Warp after observation")
+	if written, err := applyReleaseLockUpdate(cfg, update, writer); err == nil || written || writes != 0 || !strings.Contains(err.Error(), "warp changed during observation") {
+		t.Fatalf("changed Warp commit reached lock publication: written=%t writes=%d error=%v", written, writes, err)
+	}
+	retained, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(original, retained) {
+		t.Fatalf("refused Warp change modified retained lock bytes: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(warpRoot, "go.mod"), []byte("module example.invalid/warp\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := releaseObservationRepositories(cfg); err == nil || !strings.Contains(err.Error(), "github.com/urnetwork/warp") {
+		t.Fatalf("wrong Warp module identity was accepted: %v", err)
+	}
+}
+
 func TestConfiguredReleaseLockPathRejectsSymlinkAndEscape(t *testing.T) {
 	snRoot := t.TempDir()
 	configDir := filepath.Join(snRoot, "sim-testnet")
