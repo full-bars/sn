@@ -361,6 +361,12 @@ func validateFleetGenerationOneSupersession(
 // generation-1 action. Absence of a refresh retains ordinary live checking;
 // any partial or malformed successor fails closed.
 func (self *Executor) fleetGenerationOneActionSuperseded(action Action, verified JournalEntry, record *ActionPostcondition) (bool, error) {
+	return self.fleetGenerationOneActionSupersededWithPostconditions(action, verified, record, self.readPersistedPostcondition)
+}
+
+// The carried-history owner may supply the exact postconditions it already
+// authenticated before this phase. Ordinary callers still reopen the files.
+func (self *Executor) fleetGenerationOneActionSupersededWithPostconditions(action Action, verified JournalEntry, record *ActionPostcondition, readPostcondition func(JournalEntry) (*ActionPostcondition, error)) (bool, error) {
 	if self == nil {
 		return false, errors.New("fleet generation-1 successor context is unavailable")
 	}
@@ -396,12 +402,12 @@ func (self *Executor) fleetGenerationOneActionSuperseded(action Action, verified
 	}
 	installRecord := record
 	if !coordinates.Install {
-		installRecord, err = self.readPersistedPostcondition(installEntry)
+		installRecord, err = readPostcondition(installEntry)
 		if err != nil {
 			return false, fmt.Errorf("fleet generation-1 install postcondition: %w", err)
 		}
 	}
-	refreshRecord, err := self.readPersistedPostcondition(refreshEntry)
+	refreshRecord, err := readPostcondition(refreshEntry)
 	if err != nil {
 		return false, fmt.Errorf("fleet generation-2 refresh postcondition: %w", err)
 	}

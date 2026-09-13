@@ -102,7 +102,7 @@ func newExecutorWithTransport(ctx context.Context, authorizedCfg, runtimeCfg *Re
 	}
 	var s *SubstrateManager
 	if nativeOwner != nil {
-		if nativeOwner.cfg == nil || nativeOwner.cfg.Public == nil || nativeOwner.substrate == nil || nativeOwner.stateDir != stateDir || nativeOwner.plan != p || nativeOwner.journal != j || nativeOwner.cfg.ConfigHash != authorizedCfg.ConfigHash || nativeOwner.cfg.PolicyHash != authorizedCfg.PolicyHash || nativeOwner.cfg.ChainID != runtimeCfg.ChainID || nativeOwner.cfg.Netuid != runtimeCfg.Netuid || nativeOwner.cfg.OperationalRPCMode != runtimeCfg.OperationalRPCMode || nativeOwner.cfg.OperationalSubstrate != runtimeCfg.OperationalSubstrate || nativeOwner.cfg.Public.Chain.SubstratePublicReadEndpoint != runtimeCfg.Public.Chain.SubstratePublicReadEndpoint || (independentRPCRequired(runtimeCfg) && nativeOwner.independentSubstrate == nil) {
+		if nativeOwner.cfg == nil || nativeOwner.cfg.Public == nil || nativeOwner.substrate == nil || nativeOwner.stateDir != stateDir || nativeOwner.plan != p || nativeOwner.journal != j || nativeOwner.cfg.ConfigHash != authorizedCfg.ConfigHash || nativeOwner.cfg.PolicyHash != authorizedCfg.PolicyHash || nativeOwner.cfg.ChainID != runtimeCfg.ChainID || nativeOwner.cfg.Netuid != runtimeCfg.Netuid || nativeOwner.cfg.OperationalRPCMode != runtimeCfg.OperationalRPCMode || nativeOwner.cfg.OperationalSubstrate != runtimeCfg.OperationalSubstrate || verificationSubstrateEndpoint(nativeOwner.cfg) != verificationSubstrateEndpoint(runtimeCfg) || (independentRPCRequired(runtimeCfg) && nativeOwner.independentSubstrate == nil) {
 			return nil, errors.New("campaign native owner differs from the approved executor")
 		}
 		s = nativeOwner.substrate
@@ -193,7 +193,7 @@ func newExecutorWithTransport(ctx context.Context, authorizedCfg, runtimeCfg *Re
 			return nil, fmt.Errorf("independent Substrate RPC: %w", err)
 		}
 	}
-	e.independentEVM, err = dialConfiguredEVMClient(ctx, runtimeCfg, runtimeCfg.Public.Chain.EVMPublicReadEndpoint)
+	e.independentEVM, err = dialConfiguredEVMClient(ctx, runtimeCfg, verificationEVMEndpoint(runtimeCfg))
 	if err != nil {
 		e.Close()
 		return nil, fmt.Errorf("independent EVM RPC: %w", err)
@@ -4459,8 +4459,8 @@ func RenderRuntimeConfigs(cfg *ResolvedConfig, stateDir string, roles *RoleSecre
 	if cfg == nil || cfg.Public == nil {
 		return errors.New("runtime config public manifest is unavailable")
 	}
-	publicRPCURL := strings.TrimSpace(cfg.Public.Chain.EVMPublicReadEndpoint)
-	if publicRPCURL == "" || publicRPCURL != cfg.Public.Chain.EVMPublicReadEndpoint {
+	publicRPCURL := strings.TrimSpace(verificationEVMEndpoint(cfg))
+	if publicRPCURL == "" || publicRPCURL != verificationEVMEndpoint(cfg) {
 		return errors.New("runtime config public testnet EVM RPC URL is missing or non-canonical")
 	}
 	contracts, err := loadContractDeployment(stateDir)

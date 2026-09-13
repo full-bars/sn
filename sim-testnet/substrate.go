@@ -697,7 +697,7 @@ func DialSubstrateManager(cfg *ResolvedConfig, stateDir string, j *Journal) (*Su
 }
 
 func DialIndependentSubstrateManager(cfg *ResolvedConfig) (*SubstrateManager, error) {
-	chain, _, err := dialReleaseSubstrateChain(cfg, cfg.Public.Chain.SubstratePublicReadEndpoint)
+	chain, _, err := dialReleaseSubstrateChain(cfg, verificationSubstrateEndpoint(cfg))
 	if err != nil {
 		return nil, err
 	}

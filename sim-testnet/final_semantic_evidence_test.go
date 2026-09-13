@@ -886,6 +886,54 @@ func TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins(t *test
 	if baseline == nil {
 		t.Fatal("sealed fixture has no public verification")
 	}
+	// A new owned-node transcript must name its actual observation profile,
+	// while an old public transcript retains exactly its original wire hash.
+	baselineBytes, err := json.Marshal(baseline)
+	if err != nil || bytes.Contains(baselineBytes, []byte("rpc_observation_profile")) {
+		t.Fatalf("legacy public transcript changed its wire profile: %v", err)
+	}
+	if err := verifyFinalPublicChainVerification(baseline, sealed.ChainID, sealed.GenesisHash); err != nil {
+		t.Fatal(err)
+	}
+	var owned FinalPublicChainVerification
+	if err := json.Unmarshal(baselineBytes, &owned); err != nil {
+		t.Fatal(err)
+	}
+	owned.RPCObservationProfile = finalSemanticOwnedRPCTransport
+	owned.SubstrateRPC, owned.EVMRPC = "ws://192.168.1.162:9944", "http://192.168.1.162:9944"
+	if err := finalizePublicChainVerification(&owned, testnetChainID, testnetGenesis); err != nil {
+		t.Fatalf("explicit owned-node transcript rejected: %v", err)
+	}
+	if owned.TranscriptHash == baseline.TranscriptHash || !finalJSONEqual(owned.Exchanges, baseline.Exchanges) {
+		t.Fatal("owned observation profile failed to bind its identity or changed retained RPC evidence")
+	}
+	if err := verifyFinalPublicChainVerification(&owned, testnetChainID, testnetGenesis); err != nil {
+		t.Fatal(err)
+	}
+	for _, fault := range []string{"unlabeled-LAN", "different-node", "changed-response", "wrong-chain", "wrong-genesis"} {
+		candidate := owned
+		chainID, genesis := testnetChainID, testnetGenesis
+		switch fault {
+		case "unlabeled-LAN":
+			candidate.RPCObservationProfile = ""
+		case "different-node":
+			candidate.EVMRPC = "http://192.168.1.163:9944"
+		case "changed-response":
+			candidate.Exchanges = append([]FinalRPCExchange(nil), owned.Exchanges...)
+			candidate.Exchanges[0].ResponseHash = finalTestHex(77)
+		case "wrong-chain":
+			chainID++
+		case "wrong-genesis":
+			genesis = finalTestHex(78)
+		}
+		if err := finalizePublicChainVerification(&candidate, chainID, genesis); err == nil {
+			t.Fatalf("%s owned transcript was accepted", fault)
+		}
+	}
+	after, err := json.Marshal(baseline)
+	if err != nil || !bytes.Equal(baselineBytes, after) {
+		t.Fatal("owned transcript validation changed retained public provenance")
+	}
 	mutations := []struct {
 		name string
 		edit func(*FinalPublicChainVerification)

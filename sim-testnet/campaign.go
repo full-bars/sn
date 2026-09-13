@@ -1043,7 +1043,7 @@ func validateScenarioCampaignResult(cfg *ResolvedConfig, result *ScenarioResult,
 		return errors.New("non-release scenario unexpectedly contains release lineage")
 	}
 	adversaries := result.Adversaries
-	adversaryConfig := cfg.Config.Scenarios.Adversaries
+	adversaryConfig := effectiveAdversaryConfig(cfg)
 	wantSampleGapMillis := int64(adversaryConfig.SampleIntervalMilliseconds + 2*adversaryConfig.RequestTimeoutMilliseconds)
 	if adversaries.Schema != "urnetwork-adversary-campaign-v1" || adversaries.Release != "1.0" || adversaries.Status != "stopped" || !strings.EqualFold(adversaries.MatrixHash, definition.AdversarialMatrixHash) || adversaries.Seed != adversaryConfig.Seed || adversaries.MinimumSamplesPerActor != adversaryConfig.MinimumSamplesPerActor || adversaries.MaximumActorErrorRatePPM != adversaryConfig.MaximumActorErrorRatePPM || adversaries.MaximumP99Milliseconds != adversaryConfig.MaximumP99LatencyMilliseconds || adversaries.MaximumAttackControlRatio != adversaryConfig.MaximumAttackControlP95Ratio || adversaries.MaximumSampleGapMillis != wantSampleGapMillis || adversaries.OperatorRequestCeilingQPS != adversaryConfig.MaximumOperatorRequestsPerSec || adversaries.RPCRequestCeilingQPS != adversaryConfig.MaximumRPCRequestsPerSec {
 		return errors.New("release campaign adversary evidence does not match the approved limits")

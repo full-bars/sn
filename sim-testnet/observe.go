@@ -1804,6 +1804,17 @@ func adoptPublicManifest(ctx context.Context, cfg *ResolvedConfig, source string
 	if err := validatePublicEvidenceManifestTransportAgainstConfig(cfg, public); err != nil {
 		return err
 	}
+	if public.OperationalRPCMode == rpcModeOwnedNode {
+		if public.IndependentRPC || public.ChainID != testnetChainID || !strings.EqualFold(public.GenesisHash, testnetGenesis) {
+			return errors.New("owned-node deployment manifest has invalid testnet assurance")
+		}
+		if err := validateOwnedRPCObservationEndpoints(public.SubstrateRPC, public.EVMRPC); err != nil {
+			return err
+		}
+		cfg.ownedRPCAuthority = strings.TrimPrefix(public.SubstrateRPC, "ws://")
+		cfg.OperationalRPCMode = rpcModeOwnedNode
+		cfg.OperationalSubstrate, cfg.OperationalEVM = public.SubstrateRPC, public.EVMRPC
+	}
 	cfg.Netuid = public.Netuid
 	cfg.ChainID = public.ChainID
 	cfg.Public.Chain.EVMPublicReadEndpoint = public.EVMRPC

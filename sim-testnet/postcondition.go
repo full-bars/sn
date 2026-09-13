@@ -464,12 +464,12 @@ func validateActionPostconditionV4(record *ActionPostcondition) error {
 		if !record.IndependentRPC {
 			return errors.New("private-authority action postcondition does not attest independent RPC reads")
 		}
-	case rpcModePublicOverride:
+	case rpcModePublicOverride, rpcModeOwnedNode:
 		if record.IndependentRPC {
-			return errors.New("public-override action postcondition falsely attests independent RPC reads")
+			return errors.New("single-node action postcondition falsely attests independent RPC reads")
 		}
 		if record.SubstrateFinalized != record.IndependentSubstrateFinalized || record.EVMFinalized != record.IndependentEVMFinalized || !finalJSONEqual(record.Observed, record.IndependentObserved) {
-			return errors.New("public-override action postcondition does not preserve the shared-provider observation")
+			return errors.New("single-node action postcondition does not preserve the shared-provider observation")
 		}
 	default:
 		return fmt.Errorf("action postcondition v4 has unsupported operational RPC mode %q", record.OperationalRPCMode)

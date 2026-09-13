@@ -511,7 +511,7 @@ func observeValidatorEvidenceCarry(ctx context.Context, cfg *ResolvedConfig, sta
 	defer client.Close()
 	var independent *ethclient.Client
 	if independentRPCRequired(cfg) {
-		independent, err = dialConfiguredEVMClient(ctx, cfg, cfg.Public.Chain.EVMPublicReadEndpoint)
+		independent, err = dialConfiguredEVMClient(ctx, cfg, verificationEVMEndpoint(cfg))
 		if err != nil {
 			return nil, err
 		}

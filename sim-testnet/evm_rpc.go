@@ -515,6 +515,9 @@ func dialEVMClient(ctx context.Context, endpoint string, requestsPerMinute int) 
 }
 
 func configuredEVMRequestsPerMinute(cfg *ResolvedConfig, endpoint string) int {
+	if ownedRPCOnly(cfg) {
+		return 0
+	}
 	if cfg == nil || cfg.Config == nil || cfg.Public == nil || cfg.Config.LaunchInputs.PublicEVMMaximumRequestsPerMinute == 0 {
 		return 0
 	}
@@ -526,5 +529,8 @@ func configuredEVMRequestsPerMinute(cfg *ResolvedConfig, endpoint string) int {
 }
 
 func dialConfiguredEVMClient(ctx context.Context, cfg *ResolvedConfig, endpoint string) (*ethclient.Client, error) {
+	if err := validateOwnedRPCDialEndpoint(cfg, endpoint); err != nil {
+		return nil, err
+	}
 	return dialEVMClient(ctx, endpoint, configuredEVMRequestsPerMinute(cfg, endpoint))
 }

@@ -1,8 +1,8 @@
 package main
 
 // Historical receipts retain the assurance of their original approval. An
-// owned strict continuation may authenticate that original label, but every
-// live replay still uses the current strict executor and independent reader.
+// owned continuation authenticates that original label and replays the exact
+// checkpoints through its currently approved observation profile.
 import (
 	"errors"
 	"fmt"
@@ -19,7 +19,8 @@ func historicalPostconditionRPCIdentity(stateDir string, cfg *ResolvedConfig, sc
 	if record.OperationalRPCMode == cfg.OperationalRPCMode && record.IndependentRPC == independentRPCRequired(cfg) {
 		return nil
 	}
-	if !ownedRPCUpgradesHistoricalAssurance(cfg, record) || cfg.provisionalRPCAuthority != "" || !scope.allowedPlanHashes()[record.PlanHash] {
+	ownedHistorical := ownedRPCOnly(cfg) && record.OperationalRPCMode == rpcModePublicOverride && !record.IndependentRPC
+	if (!ownedRPCUpgradesHistoricalAssurance(cfg, record) && !ownedHistorical) || cfg.provisionalRPCAuthority != "" || !scope.allowedPlanHashes()[record.PlanHash] {
 		return errors.New("historical postcondition RPC assurance differs from its approved source")
 	}
 	// A campaign executor uses the exact owned EVM hop, while its authorization

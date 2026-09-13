@@ -3,9 +3,9 @@ package main
 // This file separates the signed public RPC identity embedded in FINAL.md
 // from the narrow transport route used to obtain those bytes. During a live
 // public-RPC campaign the EVM dial may use only the fixed supervised egress;
-// every other route dials the signed endpoint itself. Substrate calls are
-// paced and retried below gsrpc so indirect event-decoder reads cannot bypass
-// the same policy.
+// every other route dials the signed endpoint itself. Public Substrate calls
+// are paced and retried below gsrpc; an explicitly signed owned-node profile
+// keeps retries and cancellation while removing request pacing.
 
 import (
 	"context"
@@ -30,6 +30,7 @@ import (
 const (
 	finalSemanticCanonicalRPCTransport  = "canonical-public-rpc-v1"
 	finalSemanticSupervisedRPCTransport = "supervised-public-evm-egress-v1"
+	finalSemanticOwnedRPCTransport      = "owned-node-rpc-v1"
 
 	finalSemanticDefaultEVMRequestsPerMinute       = 40
 	finalSemanticDefaultSubstrateRequestsPerSecond = 2
@@ -56,6 +57,14 @@ type finalSemanticRPCTransport struct {
 func canonicalFinalSemanticRPCTransport(public *PublicDeploymentManifest, evmRequestsPerMinute, substrateRequestsPerSecond int) (finalSemanticRPCTransport, error) {
 	if public == nil {
 		return finalSemanticRPCTransport{}, errors.New("canonical final semantic RPC manifest is missing")
+	}
+	if public.OperationalRPCMode == rpcModeOwnedNode {
+		transport := finalSemanticRPCTransport{
+			profile: finalSemanticOwnedRPCTransport,
+			canonicalSubstrateRPC: public.SubstrateRPC, canonicalEVMRPC: public.EVMRPC,
+			dialSubstrateRPC: public.SubstrateRPC, dialEVMRPC: public.EVMRPC,
+		}
+		return transport, validateFinalSemanticRPCTransport(public, transport)
 	}
 	transport := finalSemanticRPCTransport{
 		profile:               finalSemanticCanonicalRPCTransport,
@@ -85,6 +94,18 @@ func validateFinalSemanticRPCTransport(public *PublicDeploymentManifest, transpo
 	}
 	if transport.canonicalSubstrateRPC != public.SubstrateRPC || transport.canonicalEVMRPC != public.EVMRPC {
 		return errors.New("final semantic RPC canonical endpoints differ from the authenticated manifest")
+	}
+	if transport.profile == finalSemanticOwnedRPCTransport {
+		if public.OperationalRPCMode != rpcModeOwnedNode || public.IndependentRPC || public.ChainID != testnetChainID || !strings.EqualFold(public.GenesisHash, testnetGenesis) {
+			return errors.New("owned-node RPC transport requires an explicit single-node testnet manifest")
+		}
+		if transport.dialSubstrateRPC != public.SubstrateRPC || transport.dialEVMRPC != public.EVMRPC || transport.evmRequestsPerMinute != 0 || transport.substrateRequestsPerSecond != 0 {
+			return errors.New("owned-node RPC transport must retain its exact LAN endpoints without request limits")
+		}
+		return validateOwnedRPCObservationEndpoints(public.SubstrateRPC, public.EVMRPC)
+	}
+	if public.OperationalRPCMode == rpcModeOwnedNode {
+		return errors.New("owned-node manifest cannot select a public RPC transport")
 	}
 	if transport.dialSubstrateRPC != transport.canonicalSubstrateRPC {
 		return errors.New("final semantic Substrate dial endpoint must remain canonical")
@@ -117,8 +138,11 @@ func finalSemanticRPCTransportForConfig(ctx context.Context, cfg *ResolvedConfig
 	if ctx == nil || cfg == nil || cfg.Config == nil || cfg.Public == nil || public == nil {
 		return finalSemanticRPCTransport{}, errors.New("configured final semantic RPC transport context is incomplete")
 	}
-	if public.SubstrateRPC != cfg.Public.Chain.SubstratePublicReadEndpoint || public.EVMRPC != cfg.Public.Chain.EVMPublicReadEndpoint {
+	if public.SubstrateRPC != verificationSubstrateEndpoint(cfg) || public.EVMRPC != verificationEVMEndpoint(cfg) {
 		return finalSemanticRPCTransport{}, errors.New("authenticated public RPC endpoints differ from the canonical configuration")
+	}
+	if ownedRPCOnly(cfg) {
+		return canonicalFinalSemanticRPCTransport(public, 0, 0)
 	}
 	substrateQPS := cfg.Config.Scenarios.Adversaries.MaximumRPCRequestsPerSec
 	active, err := supervisedCampaignEgressActive(ctx, stateDir)
@@ -146,13 +170,13 @@ func finalSemanticRPCTransportForConfig(ctx context.Context, cfg *ResolvedConfig
 // seam. The caller has already authenticated both files and the captured plan
 // (including ResolvedInputsHash) through the owner-signed closed capture. A
 // peer-review host cannot inherit the producer's loopback supervisor, so this
-// path always dials the signed canonical endpoints through its own bounded
-// gates. It deliberately performs no state-root read or live-state lookup.
+// path always dials the signed endpoints under their declared public or owned
+// policy. It deliberately performs no state-root read or live-state lookup.
 func finalSemanticRPCTransportForCapturedFiles(cfg *ResolvedConfig, public *PublicDeploymentManifest, files map[string][]byte) (finalSemanticRPCTransport, error) {
 	if cfg == nil || cfg.Config == nil || cfg.Public == nil || public == nil || len(files) == 0 {
 		return finalSemanticRPCTransport{}, errors.New("captured final semantic RPC transport context is incomplete")
 	}
-	if public.SubstrateRPC != cfg.Public.Chain.SubstratePublicReadEndpoint || public.EVMRPC != cfg.Public.Chain.EVMPublicReadEndpoint {
+	if public.SubstrateRPC != verificationSubstrateEndpoint(cfg) || public.EVMRPC != verificationEVMEndpoint(cfg) {
 		return finalSemanticRPCTransport{}, errors.New("captured public RPC endpoints differ from the configuration-bound canonical endpoints")
 	}
 	if cfg.OperationalRPCMode == rpcModePublicOverride && cfg.OperationalEVM != public.EVMRPC {
@@ -379,9 +403,13 @@ func (client *resilientFinalSemanticSubstrateClient) Close() {
 }
 
 func dialFinalSemanticSubstrate(ctx context.Context, transport finalSemanticRPCTransport, policy finalSemanticRPCRetryPolicy) (*gsrpc.SubstrateAPI, gsrpctypes.Hash, error) {
-	gate, err := sharedFinalSemanticSubstrateRequestGate(transport.canonicalSubstrateRPC, transport.substrateRequestsPerSecond)
-	if err != nil {
-		return nil, gsrpctypes.Hash{}, err
+	var gate *rpcRequestGate
+	var err error
+	if transport.profile != finalSemanticOwnedRPCTransport {
+		gate, err = sharedFinalSemanticSubstrateRequestGate(transport.canonicalSubstrateRPC, transport.substrateRequestsPerSecond)
+		if err != nil {
+			return nil, gsrpctypes.Hash{}, err
+		}
 	}
 	var raw *gsrpcgeth.Client
 	err = retryFinalSemanticRPCCall(ctx, nil, policy, func(attemptCtx context.Context) error {

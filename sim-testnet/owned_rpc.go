@@ -3,7 +3,7 @@ package main
 // A strict continuation may move its operational transport to an explicitly
 // approved owned node without rewriting the configuration which authenticated
 // existing activation consents. The plan binds the selected route separately;
-// public comparison readers remain independent and retain their own policy.
+// new observations use only that node and do not assert backend independence.
 import (
 	"errors"
 	"fmt"
@@ -64,7 +64,7 @@ func prepareOwnedRPCConfiguration(cfg *ResolvedConfig, authority string) (*Resol
 	}
 	resolved := *cfg
 	resolved.ownedRPCAuthority = authority
-	resolved.OperationalRPCMode = rpcModePrivateAuthority
+	resolved.OperationalRPCMode = rpcModeOwnedNode
 	resolved.OperationalSubstrate = "ws://" + authority
 	resolved.OperationalEVM = "http://" + authority
 	if err := validateExecutionRPCConfiguration(&resolved); err != nil {
@@ -80,10 +80,59 @@ func validateOwnedRPCRouting(cfg *ResolvedConfig) error {
 	if err := validateOwnedRPCAuthority(cfg.ownedRPCAuthority); err != nil {
 		return err
 	}
-	if cfg.OperationalRPCMode != rpcModePrivateAuthority || cfg.OperationalSubstrate != "ws://"+cfg.ownedRPCAuthority || cfg.OperationalEVM != "http://"+cfg.ownedRPCAuthority {
+	if cfg.OperationalRPCMode != rpcModeOwnedNode || cfg.OperationalSubstrate != "ws://"+cfg.ownedRPCAuthority || cfg.OperationalEVM != "http://"+cfg.ownedRPCAuthority {
 		return errors.New("owned operational RPC routing differs from its selected authority")
 	}
 	return nil
+}
+
+// Keep the canonical public configuration as historical provenance. Every
+// current observation selects the approved owned endpoint instead.
+func ownedRPCOnly(cfg *ResolvedConfig) bool {
+	return cfg != nil && cfg.ownedRPCAuthority != "" && cfg.OperationalRPCMode == rpcModeOwnedNode
+}
+
+func verificationSubstrateEndpoint(cfg *ResolvedConfig) string {
+	if ownedRPCOnly(cfg) {
+		return "ws://" + cfg.ownedRPCAuthority
+	}
+	return cfg.Public.Chain.SubstratePublicReadEndpoint
+}
+
+func verificationEVMEndpoint(cfg *ResolvedConfig) string {
+	if ownedRPCOnly(cfg) {
+		return "http://" + cfg.ownedRPCAuthority
+	}
+	return cfg.Public.Chain.EVMPublicReadEndpoint
+}
+
+func effectiveAdversaryConfig(cfg *ResolvedConfig) AdversaryConfig {
+	config := cfg.Config.Scenarios.Adversaries
+	if ownedRPCOnly(cfg) {
+		config.MaximumRPCRequestsPerSec = 0
+	}
+	return config
+}
+
+func validateOwnedRPCObservationEndpoints(substrate, evm string) error {
+	authority := strings.TrimPrefix(substrate, "ws://")
+	if substrate != "ws://"+authority || evm != "http://"+authority {
+		return errors.New("owned-node observations must use one explicit LAN authority over WS/HTTP")
+	}
+	return validateOwnedRPCAuthority(authority)
+}
+
+func validateOwnedRPCDialEndpoint(cfg *ResolvedConfig, endpoint string) error {
+	if !ownedRPCOnly(cfg) {
+		return nil
+	}
+	if endpoint == "ws://"+cfg.ownedRPCAuthority || endpoint == "http://"+cfg.ownedRPCAuthority {
+		return nil
+	}
+	if endpoint == "http://"+campaignEVMAuthority() && endpoint == cfg.OperationalEVM {
+		return nil
+	}
+	return errors.New("owned-node RPC cannot dial an endpoint outside its approved LAN route")
 }
 
 func validateOwnedRPCPlan(cfg *ResolvedConfig, plan *SetupPlan) error {

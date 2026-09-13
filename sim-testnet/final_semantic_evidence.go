@@ -1287,10 +1287,10 @@ func verifyFinalTopology(evidence *FinalSemanticEvidence) error {
 				return fmt.Errorf("head tournament transition %d precedes transition %d", i+1, i)
 			}
 		}
-		if (transition.OperationalRPCMode != rpcModePrivateAuthority && transition.OperationalRPCMode != rpcModePublicOverride) || transition.IndependentRPC != (transition.OperationalRPCMode == rpcModePrivateAuthority) {
+		if (transition.OperationalRPCMode != rpcModePrivateAuthority && transition.OperationalRPCMode != rpcModePublicOverride && transition.OperationalRPCMode != rpcModeOwnedNode) || transition.IndependentRPC != (transition.OperationalRPCMode == rpcModePrivateAuthority) {
 			return fmt.Errorf("head tournament transition %d has an invalid RPC mode", i+1)
 		}
-		if transition.OperationalRPCMode == rpcModePublicOverride && (transition.Snapshot != transition.IndependentSnapshot || transition.EVMSnapshot != transition.IndependentEVMSnapshot) {
+		if !transition.IndependentRPC && (transition.Snapshot != transition.IndependentSnapshot || transition.EVMSnapshot != transition.IndependentEVMSnapshot) {
 			return fmt.Errorf("head tournament transition %d public-override checkpoints differ", i+1)
 		}
 		for _, checkpoint := range []struct {
@@ -5546,6 +5546,9 @@ func RenderFinalSemanticEvidenceMarkdown(evidence *FinalSemanticEvidence) ([]byt
 	}
 	var out strings.Builder
 	fmt.Fprintf(&out, "## External semantic evidence\n\n")
+	if evidence.PublicVerification.RPCObservationProfile == finalSemanticOwnedRPCTransport {
+		fmt.Fprintf(&out, "RPC observation profile: owned-node-only (`%s`). Current operational, historical and verification reads use the same approved LAN node without request pacing. Backend independence is not asserted; retained original receipts keep their original provenance. Reproduction requires access to that LAN node.\n\n", finalSemanticOwnedRPCTransport)
+	}
 	fmt.Fprintf(&out, "Evidence `%s` binds current %s run `%s`, result `%s`, deployment `%s`, plan `%s`, config `%s`, policy `%s`, native genesis `%s`, EVM chain %d, and netuid %d. The adversarial EVM campaign begins at %d/`%s`; the accepted EVM window is epochs %d–%d (blocks %d–%d, terminal %d); the native proof window is %d–%d.\n\n",
 		evidence.EvidenceHash, finalMarkdown(evidence.Phase), finalMarkdown(evidence.RunID), evidence.ResultHash, finalMarkdown(evidence.DeploymentID), evidence.PlanHash, evidence.ConfigHash, evidence.PolicyHash, evidence.GenesisHash, evidence.ChainID, evidence.Netuid,
 		evidence.EVMCampaignStartHead.Number, evidence.EVMCampaignStartHead.Hash,

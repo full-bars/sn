@@ -42,6 +42,7 @@ type FinalPublicChainVerification struct {
 	Schema                   string `json:"schema"`
 	SubstrateRPC             string `json:"substrate_rpc"`
 	EVMRPC                   string `json:"evm_rpc"`
+	RPCObservationProfile    string `json:"rpc_observation_profile,omitempty"`
 	EvidenceTransportProfile string `json:"evidence_transport_profile"`
 	// EvidenceURI is the immutable authenticated deployment-manifest discovery
 	// URI. It is not the semantic object's own URI, which is assigned only by
@@ -566,6 +567,9 @@ func executeFinalSemanticOnChain(ctx context.Context, evidence *FinalSemanticEvi
 		return nil, fmt.Errorf("public coordinator chronology projection: %w", err)
 	}
 	verification := &FinalPublicChainVerification{Schema: finalPublicChainVerificationSchema, SubstrateRPC: substrateRPC, EVMRPC: evmRPC, EvidenceTransportProfile: transportProfile, EvidenceURI: manifestURI, OperatorEvidenceOrigins: origins, PublicManifestHash: reader.PublicManifestHash(), FleetAudit: fleetAudit, FleetGenerationAudit: fleetGenerationAudit, ChronologyAudit: chronologyAudit, NativePayoutAudit: nativePayoutAudit}
+	if profiled, ok := reader.(interface{ RPCObservationProfile() string }); ok {
+		verification.RPCObservationProfile = profiled.RPCObservationProfile()
+	}
 	appendExchanges := func(chain string, head ChainHead, exchanges []FinalRPCExchange) error {
 		if len(exchanges) == 0 {
 			return fmt.Errorf("%s public RPC verification at %d returned no transcript", chain, head.Number)
@@ -1363,11 +1367,23 @@ func finalizePublicChainVerification(verification *FinalPublicChainVerification,
 	if verification == nil || verification.Schema != finalPublicChainVerificationSchema || len(verification.Exchanges) == 0 {
 		return errors.New("public chain verification transcript is incomplete")
 	}
-	if err := verifyFinalPublicEndpoint("Substrate", verification.SubstrateRPC, "wss", "https"); err != nil {
-		return err
-	}
-	if err := verifyFinalPublicEndpoint("EVM", verification.EVMRPC, "https", "wss"); err != nil {
-		return err
+	switch verification.RPCObservationProfile {
+	case "":
+		if err := verifyFinalPublicEndpoint("Substrate", verification.SubstrateRPC, "wss", "https"); err != nil {
+			return err
+		}
+		if err := verifyFinalPublicEndpoint("EVM", verification.EVMRPC, "https", "wss"); err != nil {
+			return err
+		}
+	case finalSemanticOwnedRPCTransport:
+		if chainID != testnetChainID || !strings.EqualFold(genesisHash, testnetGenesis) {
+			return errors.New("owned-node verification requires the pinned testnet")
+		}
+		if err := validateOwnedRPCObservationEndpoints(verification.SubstrateRPC, verification.EVMRPC); err != nil {
+			return err
+		}
+	default:
+		return errors.New("final verification has an unsupported RPC observation profile")
 	}
 	if err := verifyFinalEvidenceURI("public deployment manifest", verification.EvidenceURI, verification.EvidenceTransportProfile, chainID, genesisHash); err != nil {
 		return err

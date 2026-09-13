@@ -4879,7 +4879,7 @@ func runScenarioCampaignAttemptWithTimeout(ctx context.Context, cfg *ResolvedCon
 		if actorErr != nil {
 			return actorErr
 		}
-		liveCampaign, campaignErr := newAdversaryCampaign(cfg.Config.Scenarios.Adversaries, matrix, actors)
+		liveCampaign, campaignErr := newAdversaryCampaign(effectiveAdversaryConfig(cfg), matrix, actors)
 		if campaignErr != nil {
 			return campaignErr
 		}

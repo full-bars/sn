@@ -124,7 +124,7 @@ release_phase_sn_validator_race() {
 }
 release_phase_sn_simulator_race() {
   cd "$sn_repo"
-  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -skip '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$'
+  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -skip '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica|TestFinal.*|Test(Fleet|Historical|Runtime|Scenario).*)$'
 }
 # The retained 90-minute aggregate alarm left four newly active roots and 195
 # parallel roots queued after the serial prefix. Keep the complete 1,191,936
@@ -142,12 +142,25 @@ release_phase_sn_simulator_supplements_race() {
   cd "$sn_repo"
   go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^(TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$'
 }
+# The remaining package clock expired with four 25--68 second roots active.
+# Admit complete final-evidence and history/campaign families separately; the
+# ordinary complement still includes every other and future test root.
+release_phase_sn_simulator_final_race() {
+  cd "$sn_repo"
+  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^TestFinal.*$' -skip '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$'
+}
+release_phase_sn_simulator_history_race() {
+  cd "$sn_repo"
+  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^Test(Fleet|Historical|Runtime|Scenario).*$'
+}
 release_gate_start sn-all-normal release_phase_sn_all_normal
 release_gate_start sn-core-race release_phase_sn_core_race
 release_gate_start sn-validator-race release_phase_sn_validator_race
 release_gate_start sn-simulator-race release_phase_sn_simulator_race
 release_gate_start sn-simulator-populations-race release_phase_sn_simulator_populations_race
 release_gate_start sn-simulator-supplements-race release_phase_sn_simulator_supplements_race
+release_gate_start sn-simulator-final-race release_phase_sn_simulator_final_race
+release_gate_start sn-simulator-history-race release_phase_sn_simulator_history_race
 
 echo "[release-1.0] deployable Solidity static analysis"
 release_phase_solidity_static() {

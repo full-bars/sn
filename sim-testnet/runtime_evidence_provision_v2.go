@@ -156,7 +156,7 @@ func (self *Executor) runtimeEvidenceActivationChainV2(ctx context.Context) (*va
 	}
 	endpoint := self.cfg.OperationalEVM
 	if self.independentEVM != nil && self.keeper.client == self.independentEVM {
-		endpoint = self.cfg.Public.Chain.EVMPublicReadEndpoint
+		endpoint = verificationEVMEndpoint(self.cfg)
 	}
 	return validatorcomponent.DialReleaseChainContext(ctx, []string{endpoint}, self.plan.ValidatorEvidence.Coordinator)
 }

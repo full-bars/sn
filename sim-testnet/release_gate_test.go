@@ -1568,8 +1568,8 @@ func TestReleaseGatesPreflightBindingToolBeforeLongWork(t *testing.T) {
 
 // The original complete race package exhausted its 90-minute shared clock
 // before its parallel roots could finish. The later complement also exhausted
-// its clock during full supplement publication. All three owners retain that
-// deadline and every source root, including future roots.
+// its clock during full supplement publication and later short history roots.
+// All five owners retain that deadline and every root, including future roots.
 func TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite(t *testing.T) {
 	scriptBytes, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
 	if err != nil {
@@ -1602,8 +1602,11 @@ func verifyReleaseGateSimulatorRaceCensus(script string, sources map[string]stri
 	population := regexp.MustCompile(releaseGateSimulatorPopulationSelector)
 	supplement := regexp.MustCompile(releaseGateSimulatorSupplementSelector)
 	separate := regexp.MustCompile(releaseGateSimulatorSeparateSelector)
+	final := regexp.MustCompile(releaseGateSimulatorFinalSelector)
+	history := regexp.MustCompile(releaseGateSimulatorHistorySelector)
+	partitioned := regexp.MustCompile(releaseGateSimulatorPartitionedSelector)
 	seen := map[string]bool{}
-	ordinaryCount, populationCount, supplementCount := 0, 0, 0
+	ordinaryCount, populationCount, supplementCount, finalCount, historyCount := 0, 0, 0, 0, 0
 	for path, source := range sources {
 		parsed, err := parser.ParseFile(token.NewFileSet(), path, source, 0)
 		if err != nil {
@@ -1633,20 +1636,31 @@ func verifyReleaseGateSimulatorRaceCensus(script string, sources map[string]stri
 			// The guarded ordinary command has no -run filter: its sole -skip
 			// is exactly the disjoint union of the other anchored -run sets.
 			isPopulation, isSupplement := population.MatchString(name), supplement.MatchString(name)
-			if isPopulation && isSupplement || separate.MatchString(name) != (isPopulation || isSupplement) {
+			isFinal, isHistory := final.MatchString(name) && !separate.MatchString(name), history.MatchString(name)
+			owners := 0
+			for _, selected := range []bool{isPopulation, isSupplement, isFinal, isHistory, !partitioned.MatchString(name)} {
+				if selected {
+					owners++
+				}
+			}
+			if owners != 1 || separate.MatchString(name) != (isPopulation || isSupplement) {
 				return fmt.Errorf("aggregate simulator root has overlapping or missing ownership: %s", name)
 			}
 			if isPopulation {
 				populationCount++
 			} else if isSupplement {
 				supplementCount++
+			} else if isFinal {
+				finalCount++
+			} else if isHistory {
+				historyCount++
 			} else {
 				ordinaryCount++
 			}
 		}
 	}
-	if populationCount != 2 || supplementCount != 3 || ordinaryCount == 0 || len(seen) != ordinaryCount+populationCount+supplementCount {
-		return fmt.Errorf("aggregate simulator census has %d population, %d supplement and %d ordinary roots", populationCount, supplementCount, ordinaryCount)
+	if populationCount != 2 || supplementCount != 3 || ordinaryCount == 0 || finalCount == 0 || historyCount == 0 || len(seen) != ordinaryCount+populationCount+supplementCount+finalCount+historyCount {
+		return fmt.Errorf("aggregate simulator census has %d population, %d supplement, %d final, %d history and %d ordinary roots", populationCount, supplementCount, finalCount, historyCount, ordinaryCount)
 	}
 	return nil
 }
@@ -2508,7 +2522,7 @@ func TestProducerGatePinsRuntime455ArtifactAndEncodingRegressions(t *testing.T) 
 	script := string(raw)
 	group := releaseEvidenceV2GateGroup{
 		phase: "runtime", variable: "runtime455_tests", packages: []string{"./sim-testnet"},
-		sources:  map[string][]string{"./sim-testnet": releaseEvidenceV2GateSources(t, []string{"runtime_identity_455_test.go"})},
+		sources:  map[string][]string{"./sim-testnet": releaseEvidenceV2GateSources(t, []string{"runtime_identity_455_test.go", "fleet_history_batch_test.go", "final_semantic_rpc_transport_test.go"})},
 		commands: []string{`go test ./sim-testnet -run "$runtime455_tests" -count=1`, `go test -race ./sim-testnet -run "$runtime455_tests" -count=1`},
 	}
 	if err := verifyReleaseEvidenceV2GateGroup(script, group); err != nil {
@@ -2524,10 +2538,12 @@ func TestProducerGatePinsRuntime455ArtifactAndEncodingRegressions(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	changedSelector := strings.Replace(selector, "Runtime455|", "", 1)
-	changed := strings.Replace(script, group.variable+"='"+selector+"'", group.variable+"='"+changedSelector+"'", 1)
-	if changed == script || verifyReleaseEvidenceV2GateGroup(changed, group) == nil {
-		t.Fatal("current artifact family can disappear from its actual producer job")
+	for _, family := range []string{"Runtime455|", "CarriedFleetHistory|", "FinalSemanticRPC|"} {
+		changedSelector := strings.Replace(selector, family, "", 1)
+		changed := strings.Replace(script, group.variable+"='"+selector+"'", group.variable+"='"+changedSelector+"'", 1)
+		if changed == script || verifyReleaseEvidenceV2GateGroup(changed, group) == nil {
+			t.Fatal("current runtime/history/transport family can disappear from its actual producer job")
+		}
 	}
 	runtimeSelector, err := releaseConnectPolicySelectorAssignment(script, "runtime_client_tests")
 	if err != nil {

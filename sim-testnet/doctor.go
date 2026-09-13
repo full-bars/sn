@@ -263,11 +263,14 @@ func runDoctor(ctx context.Context, cfg *ResolvedConfig, approved *doctorPlanBud
 	independenceDetail := "operational and postcondition RPC endpoints are distinct"
 	if !independentHard {
 		independenceDetail = "public override intentionally shares the operational and postcondition RPC provider; backend independence is not asserted"
+		if ownedRPCOnly(cfg) {
+			independenceDetail = "owned-node-only verification; operational and historical reads use the approved LAN node, without backend independence"
+		}
 	}
 	r.add("config/independent-rpcs", independentHard, validateIndependentRPCEndpoints(cfg), independenceDetail)
 	checkBlobConfig(ctx, &r, cfg)
 	if err := ctx.Err(); err == nil {
-		if sameRPCEndpoint(cfg.OperationalSubstrate, cfg.Public.Chain.SubstratePublicReadEndpoint) {
+		if sameRPCEndpoint(cfg.OperationalSubstrate, verificationSubstrateEndpoint(cfg)) {
 			start := len(r.Checks)
 			checkSubstrate(&r, cfg, true)
 			aliasSameEndpointChecks(&r, start, map[string]string{
@@ -335,10 +338,10 @@ func runDoctor(ctx context.Context, cfg *ResolvedConfig, approved *doctorPlanBud
 	return r
 }
 
-// Public override mode is deliberately a preliminary testnet assurance level;
-// mainnet promotion still requires a separately operated observation backend.
+// Explicit public-override and owned-node testnet modes record one observer;
+// private-authority mode still requires a separately operated backend.
 func independentRPCRequired(cfg *ResolvedConfig) bool {
-	return cfg == nil || cfg.OperationalRPCMode != rpcModePublicOverride
+	return cfg == nil || (cfg.OperationalRPCMode != rpcModePublicOverride && cfg.OperationalRPCMode != rpcModeOwnedNode)
 }
 
 // sameRPCEndpoint recognizes syntactically equivalent URLs without treating
@@ -667,7 +670,7 @@ func finalizedEVMEventLogProbe(headBlock uint64) ethereum.FilterQuery {
 
 func checkSubstrate(r *DoctorReport, cfg *ResolvedConfig, operational bool) {
 	name := "public"
-	endpoint := cfg.Public.Chain.SubstratePublicReadEndpoint
+	endpoint := verificationSubstrateEndpoint(cfg)
 	if operational {
 		name = "operational"
 		endpoint = cfg.OperationalSubstrate
@@ -956,13 +959,13 @@ func checkSubstrateTopology(cfg *ResolvedConfig) substrateTopologyChecks {
 		return substrateTopologyChecks{ReadinessErr: err, IndependenceErr: err}
 	}
 	defer operationalChain.API.Client.Close()
-	if sameRPCEndpoint(cfg.OperationalSubstrate, cfg.Public.Chain.SubstratePublicReadEndpoint) {
+	if sameRPCEndpoint(cfg.OperationalSubstrate, verificationSubstrateEndpoint(cfg)) {
 		result := substrateTopologyChecks{}
 		result.ReadinessDetail, result.ReadinessErr = checkSubstrateReadiness(operationalChain, operationalChain, uint64(cfg.Policy.Safety.MaximumFinalizedHeadLagBlocks))
 		result.IndependenceDetail, result.IndependenceErr = checkSubstratePeerIndependence(operationalChain, operationalChain)
 		return result
 	}
-	publicChain, _, err := dialReleaseSubstrateChain(cfg, cfg.Public.Chain.SubstratePublicReadEndpoint)
+	publicChain, _, err := dialReleaseSubstrateChain(cfg, verificationSubstrateEndpoint(cfg))
 	if err != nil {
 		err = fmt.Errorf("public RPC: %w", err)
 		return substrateTopologyChecks{ReadinessErr: err, IndependenceErr: err}
@@ -1234,7 +1237,7 @@ func validateIndependentRPCEndpoints(cfg *ResolvedConfig) error {
 	if err != nil {
 		return err
 	}
-	publicSubstrate, err := host(cfg.Public.Chain.SubstratePublicReadEndpoint)
+	publicSubstrate, err := host(verificationSubstrateEndpoint(cfg))
 	if err != nil {
 		return err
 	}
@@ -1242,7 +1245,7 @@ func validateIndependentRPCEndpoints(cfg *ResolvedConfig) error {
 	if err != nil {
 		return err
 	}
-	publicEVM, err := host(cfg.Public.Chain.EVMPublicReadEndpoint)
+	publicEVM, err := host(verificationEVMEndpoint(cfg))
 	if err != nil {
 		return err
 	}
@@ -1284,7 +1287,7 @@ func validateOperationalRPCRouting(cfg *ResolvedConfig) error {
 func checkEVM(parent context.Context, r *DoctorReport, cfg *ResolvedConfig) {
 	start := len(r.Checks)
 	checkEVMEndpoint(parent, r, cfg, "operational", cfg.OperationalEVM, evmEventLogCheckRequired(cfg, "operational"))
-	if sameRPCEndpoint(cfg.OperationalEVM, cfg.Public.Chain.EVMPublicReadEndpoint) {
+	if sameRPCEndpoint(cfg.OperationalEVM, verificationEVMEndpoint(cfg)) {
 		aliasSameEndpointChecks(r, start, map[string]string{
 			"rpc/evm-operational":                 "rpc/evm-public",
 			"rpc/evm-operational-eth_getLogs":     "rpc/evm-public-eth_getLogs",
@@ -1296,7 +1299,7 @@ func checkEVM(parent context.Context, r *DoctorReport, cfg *ResolvedConfig) {
 		})
 		return
 	}
-	checkEVMEndpoint(parent, r, cfg, "public", cfg.Public.Chain.EVMPublicReadEndpoint, evmEventLogCheckRequired(cfg, "public"))
+	checkEVMEndpoint(parent, r, cfg, "public", verificationEVMEndpoint(cfg), evmEventLogCheckRequired(cfg, "public"))
 }
 
 // Keeps the operational index source hard while an independent public reader

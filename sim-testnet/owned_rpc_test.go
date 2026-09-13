@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -46,11 +48,19 @@ func TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport(t *testing
 	if err != nil || string(before) != string(after) || cfg.ConfigHash != source.ConfigHash || cfg.PolicyHash != source.PolicyHash || cfg.Authority != source.Authority || cfg.Config != source.Config || cfg.Public != source.Public {
 		t.Fatal("strict owned selection changed authenticated configuration, public comparison, or custody")
 	}
-	if cfg.OperationalSubstrate != "ws://192.168.1.162:9944" || cfg.OperationalEVM != "http://192.168.1.162:9944" || !independentRPCRequired(cfg) || provisionalResumeEnabled(cfg) {
-		t.Fatal("owned route did not retain strict independent admission")
+	if cfg.OperationalSubstrate != "ws://192.168.1.162:9944" || cfg.OperationalEVM != "http://192.168.1.162:9944" || cfg.OperationalRPCMode != rpcModeOwnedNode || independentRPCRequired(cfg) || provisionalResumeEnabled(cfg) {
+		t.Fatal("owned route did not record its exact single-node assurance")
 	}
-	if configuredEVMRequestsPerMinute(cfg, cfg.OperationalEVM) != 0 || configuredEVMRequestsPerMinute(cfg, cfg.Public.Chain.EVMPublicReadEndpoint) != 40 {
-		t.Fatal("owned operational quota or independent public quota is incorrect")
+	if verificationSubstrateEndpoint(cfg) != cfg.OperationalSubstrate || verificationEVMEndpoint(cfg) != cfg.OperationalEVM || configuredEVMRequestsPerMinute(cfg, cfg.OperationalEVM) != 0 || configuredEVMRequestsPerMinute(cfg, verificationEVMEndpoint(cfg)) != 0 {
+		t.Fatal("owned verification did not retain the unpaced LAN route")
+	}
+	if client, err := dialConfiguredEVMClient(t.Context(), cfg, source.Public.Chain.EVMPublicReadEndpoint); err == nil {
+		client.Close()
+		t.Fatal("owned execution retained a public EVM fallback")
+	}
+	if chain, _, err := dialReleaseSubstrateChain(cfg, source.Public.Chain.SubstratePublicReadEndpoint); err == nil {
+		chain.API.Client.Close()
+		t.Fatal("owned execution retained a public native fallback")
 	}
 	stopped, err := selectReadOnlyRPCConfig(cfg, false)
 	if err != nil || stopped != cfg || stopped.OperationalEVM != "http://192.168.1.162:9944" {
@@ -84,6 +94,80 @@ func TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport(t *testing
 	}
 	if len(wantUpstream) != 0 || validatorPollSeconds(cfg) >= 60 || claimPollSeconds(cfg) >= 60 {
 		t.Fatal("strict owned runtime retained a public-provider proxy or polling policy")
+	}
+	roles, err := BuildRoleSecrets(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	labels := make([]string, 0, len(roles.Clients))
+	for label := range roles.Clients {
+		labels = append(labels, label)
+	}
+	sort.Strings(labels)
+	for index, label := range labels {
+		role := roles.Clients[label]
+		role.ClientIDHex = fmt.Sprintf("%032x", index+1)
+		roles.Clients[label] = role
+	}
+	actors, err := newLiveAdversaryActors(runtime, t.TempDir(), roles)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rpcActors := 0
+	for _, actor := range actors {
+		var gate *adversaryRequestGate
+		switch typed := actor.(type) {
+		case *rpcAdversary:
+			gate = typed.http.gate
+		case *custodyAdversary:
+			gate = typed.rpcHTTP.gate
+		}
+		if gate != nil {
+			rpcActors++
+			for range 3 {
+				if delay := gate.reserveSlots(time.Unix(100, 0), 1000); delay != 0 {
+					t.Fatalf("owned adversary RPC batch was paced by %s", delay)
+				}
+			}
+		}
+	}
+	matrix, err := loadAdversarialMatrix(cfg.Repos.SN, cfg.Config.Scenarios.Adversaries.Matrix)
+	if err != nil {
+		t.Fatal(err)
+	}
+	campaign, err := newAdversaryCampaign(effectiveAdversaryConfig(cfg), matrix, actors)
+	if err != nil || rpcActors != 2 {
+		t.Fatalf("owned adversary actor admission: count=%d err=%v", rpcActors, err)
+	}
+	campaign.started = true
+	if snapshot := campaign.Snapshot(); snapshot.RPCRequestCeilingQPS != 0 || snapshot.OperatorRequestCeilingQPS != source.Config.Scenarios.Adversaries.MaximumOperatorRequestsPerSec || source.Config.Scenarios.Adversaries.MaximumRPCRequestsPerSec != 2 {
+		t.Fatal("owned adversary evidence misstated RPC pacing or changed canonical/operator limits")
+	}
+	public := &PublicDeploymentManifest{ChainID: cfg.ChainID, GenesisHash: testnetGenesis, OperationalRPCMode: rpcModeOwnedNode,
+		SubstrateRPC: verificationSubstrateEndpoint(cfg), EVMRPC: verificationEVMEndpoint(cfg)}
+	transport, err := finalSemanticRPCTransportForConfig(t.Context(), cfg, t.TempDir(), public)
+	if err != nil || transport.profile != finalSemanticOwnedRPCTransport || transport.dialSubstrateRPC != cfg.OperationalSubstrate || transport.dialEVMRPC != cfg.OperationalEVM || transport.evmRequestsPerMinute != 0 || transport.substrateRequestsPerSecond != 0 {
+		t.Fatalf("final verification did not retain the declared unpaced LAN profile: %+v %v", transport, err)
+	}
+	for _, fault := range []string{"public-fallback", "other-node", "false-independence", "pacing", "other-chain"} {
+		t.Run(fault, func(t *testing.T) {
+			manifest, route := *public, transport
+			switch fault {
+			case "public-fallback":
+				route.dialEVMRPC = source.Public.Chain.EVMPublicReadEndpoint
+			case "other-node":
+				route.dialSubstrateRPC = "ws://192.168.1.163:9944"
+			case "false-independence":
+				manifest.IndependentRPC = true
+			case "pacing":
+				route.substrateRequestsPerSecond = 2
+			case "other-chain":
+				manifest.ChainID++
+			}
+			if err := validateFinalSemanticRPCTransport(&manifest, route); err == nil {
+				t.Fatal("owned verification accepted substituted route or assurance")
+			}
+		})
 	}
 	for name, mutate := range map[string]func(*ResolvedConfig){
 		"operational EVM":    func(c *ResolvedConfig) { c.OperationalEVM = source.OperationalEVM },

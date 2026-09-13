@@ -688,14 +688,19 @@ func TestReleaseGateIsolationPinsPrivateResourcesAndFinalJoins(t *testing.T) {
 // Reuse the gate source guards' exact phase/admission grammar. Require actual
 // complete commands and owned working directories, with no extra shell branch
 // that could skip execution.
-// The simulator's three complementary owners retain its complete race census.
+// The simulator's five complementary owners retain its complete race census.
 const releaseGateSimulatorPopulationSelector = "^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$"
 const releaseGateSimulatorSupplementSelector = "^(TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$"
 const releaseGateSimulatorSeparateSelector = "^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$"
+const releaseGateSimulatorFinalSelector = "^TestFinal.*$"
+const releaseGateSimulatorHistorySelector = "^Test(Fleet|Historical|Runtime|Scenario).*$"
+const releaseGateSimulatorPartitionedSelector = "^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica|TestFinal.*|Test(Fleet|Historical|Runtime|Scenario).*)$"
 const releaseGateSimulatorRaceCommand = "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1"
-const releaseGateSimulatorOrdinaryRaceCommand = releaseGateSimulatorRaceCommand + " -skip '" + releaseGateSimulatorSeparateSelector + "'"
+const releaseGateSimulatorOrdinaryRaceCommand = releaseGateSimulatorRaceCommand + " -skip '" + releaseGateSimulatorPartitionedSelector + "'"
 const releaseGateSimulatorPopulationRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorPopulationSelector + "'"
 const releaseGateSimulatorSupplementRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorSupplementSelector + "'"
+const releaseGateSimulatorFinalRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorFinalSelector + "' -skip '" + releaseGateSimulatorSeparateSelector + "'"
+const releaseGateSimulatorHistoryRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorHistorySelector + "'"
 
 func verifyReleaseGateFullValidatorRace(script string) error {
 	phaseDefinitions := regexp.MustCompile(`(?ms)^[\t ]*release_phase_[a-z0-9_]+\(\) \{\n.*?^[\t ]*\}[\t ]*$`)
@@ -711,6 +716,8 @@ func verifyReleaseGateFullValidatorRace(script string) error {
 		{phase: "sn_simulator_race", job: "sn-simulator-race", command: releaseGateSimulatorOrdinaryRaceCommand},
 		{phase: "sn_simulator_populations_race", job: "sn-simulator-populations-race", command: releaseGateSimulatorPopulationRaceCommand},
 		{phase: "sn_simulator_supplements_race", job: "sn-simulator-supplements-race", command: releaseGateSimulatorSupplementRaceCommand},
+		{phase: "sn_simulator_final_race", job: "sn-simulator-final-race", command: releaseGateSimulatorFinalRaceCommand},
+		{phase: "sn_simulator_history_race", job: "sn-simulator-history-race", command: releaseGateSimulatorHistoryRaceCommand},
 	}
 	for _, group := range groups {
 		function := "release_phase_" + group.phase
@@ -775,6 +782,7 @@ func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
 		"func TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper(t *testing.T) {}\n" +
 		"func TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica(t *testing.T) {}\n" +
 		"func TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamperFuture(t *testing.T) {}\n" +
+		"func TestRuntimeFutureControl(t *testing.T) {}\n" +
 		"func TestOrdinaryControl(t *testing.T) {}\n"}
 	if err := verifyReleaseGateSimulatorRaceCensus(script, sources); err != nil {
 		t.Fatal(err)
@@ -795,7 +803,7 @@ func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
 	if err := verifyReleaseGateSimulatorRaceCensus(old, sources); err == nil {
 		t.Fatal("aggregate restored the serial population in one exhausted package clock")
 	}
-	for _, command := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand, releaseGateSimulatorSupplementRaceCommand} {
+	for _, command := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand, releaseGateSimulatorSupplementRaceCommand, releaseGateSimulatorFinalRaceCommand, releaseGateSimulatorHistoryRaceCommand} {
 		for _, replacement := range []string{
 			releaseGateSimulatorRaceCommand,
 			strings.Replace(command, " -race", "", 1),
@@ -826,7 +834,7 @@ func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
 			}
 		}
 	}
-	for _, admission := range []string{start, supplementStart, "release_gate_start sn-simulator-race release_phase_sn_simulator_race"} {
+	for _, admission := range []string{start, supplementStart, "release_gate_start sn-simulator-race release_phase_sn_simulator_race", "release_gate_start sn-simulator-final-race release_phase_sn_simulator_final_race", "release_gate_start sn-simulator-history-race release_phase_sn_simulator_history_race"} {
 		for _, replacement := range []string{
 			"# " + admission,
 			admission + "\n" + admission,
@@ -1010,6 +1018,8 @@ var releaseGateUncachedCommands = []struct {
 	{phase: "sn_simulator_race", command: releaseGateSimulatorOrdinaryRaceCommand},
 	{phase: "sn_simulator_populations_race", command: releaseGateSimulatorPopulationRaceCommand},
 	{phase: "sn_simulator_supplements_race", command: releaseGateSimulatorSupplementRaceCommand},
+	{phase: "sn_simulator_final_race", command: releaseGateSimulatorFinalRaceCommand},
+	{phase: "sn_simulator_history_race", command: releaseGateSimulatorHistoryRaceCommand},
 	{phase: "server_unit", command: "go test . -run '^Test(PgResourcesRedirectMaintenancePoolAndRestore|DatabaseTimeMatchesPostgresPrecision)$' -count=1"},
 	{phase: "server_unit", command: "go test ./st ./startifact -count=1"},
 	{phase: "server_unit", command: "go test ./controller -run '^Test(CoreStClient(BlockHashes|FinalizedHead|Epoch)|CoreStClientBindingsAt|DecodeStRPCBlockIdentity|StatsAlphaPriceURLIsMainnetOnly|StatsGaugeVecReplaceDeletesStaleSeries|StConfig|StCompute|StBuild|StDeposit|StEstimate|StReplacement|StDecode|StEvent|StBroadcast|StClientStub|StTransactionCancellation|VerifyEvidenceRange|VerifyKeyRotation|VerifySyntheticSeedId|VerifyUsesUrForwardedAddress|VerifyIgnoresLegacyForwardedAddress|VerifyClampM|VerifyCachedResponseRoundTrip|VerifySeedRejectsMissingSignature|StripeReconcileCredentialsRequireNonblankAPIToken|AppleReconcileCredentialsRequireCompleteServerAPIIdentity|PlayReconcileCredentialsRequireOAuthPackageAndSKUs|SolanaReconcileCredentialsRequireNonblankHeliusAPIKey)' -count=1"},

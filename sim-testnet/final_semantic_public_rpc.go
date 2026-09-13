@@ -42,6 +42,7 @@ type PublicFinalSemanticChainReader struct {
 	manifestHash          string
 	canonicalSubstrateRPC string
 	canonicalEVMRPC       string
+	rpcObservationProfile string
 	native                *gsrpc.SubstrateAPI
 	evm                   *rpc.Client
 	evmRetry              finalSemanticRPCRetryPolicy
@@ -74,14 +75,16 @@ func newPublicFinalSemanticChainReaderWithTransport(ctx context.Context, public 
 	if err := verifyFinalSemanticEvidence(evidence, false); err != nil {
 		return nil, err
 	}
-	if err := verifyFinalPublicEndpoint("Substrate", public.SubstrateRPC, "wss", "https"); err != nil {
-		return nil, err
-	}
-	if err := verifyFinalPublicEndpoint("EVM", public.EVMRPC, "https", "wss"); err != nil {
-		return nil, err
-	}
 	if err := validateFinalSemanticRPCTransport(public, transport); err != nil {
 		return nil, err
+	}
+	if transport.profile != finalSemanticOwnedRPCTransport {
+		if err := verifyFinalPublicEndpoint("Substrate", public.SubstrateRPC, "wss", "https"); err != nil {
+			return nil, err
+		}
+		if err := verifyFinalPublicEndpoint("EVM", public.EVMRPC, "https", "wss"); err != nil {
+			return nil, err
+		}
 	}
 	if err := validatePublicCampaignOperatorOrigins(public); err != nil {
 		return nil, fmt.Errorf("authenticated public manifest operator transport: %w", err)
@@ -155,6 +158,9 @@ func newPublicFinalSemanticChainReaderWithTransport(ctx context.Context, public 
 		},
 		runtimeCodeHash: strings.ToLower(public.RuntimeCodeHash), runtimeMetadataHash: strings.ToLower(public.RuntimeMetadataHash),
 	}
+	if transport.profile == finalSemanticOwnedRPCTransport {
+		reader.rpcObservationProfile = finalSemanticOwnedRPCTransport
+	}
 	var chainID string
 	if err := retryFinalSemanticRPCCall(ctx, nil, retryPolicy, func(attemptCtx context.Context) error {
 		chainID = ""
@@ -217,6 +223,10 @@ func (self *PublicFinalSemanticChainReader) Endpoints() (string, string, string)
 		return "", "", ""
 	}
 	return self.canonicalSubstrateRPC, self.canonicalEVMRPC, self.evidenceURI
+}
+
+func (self *PublicFinalSemanticChainReader) RPCObservationProfile() string {
+	return self.rpcObservationProfile
 }
 
 func (self *PublicFinalSemanticChainReader) PublicManifestHash() string {

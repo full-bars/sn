@@ -147,7 +147,7 @@ func observeAdversaryCommitRevealRuntime(ctx context.Context, cfg *ResolvedConfi
 		return adversaryCommitRevealObservation{}, adversaryCommitRevealObservation{}, 0, fmt.Errorf("operational substrate: %w", err)
 	}
 	defer operational.API.Client.Close()
-	public, err := adversaryDialRuntimeChain(cfg, cfg.Public.Chain.SubstratePublicReadEndpoint)
+	public, err := adversaryDialRuntimeChain(cfg, verificationSubstrateEndpoint(cfg))
 	if err != nil {
 		return adversaryCommitRevealObservation{}, adversaryCommitRevealObservation{}, 0, fmt.Errorf("public substrate: %w", err)
 	}
@@ -179,7 +179,7 @@ func observeAdversaryCommitRevealRuntime(ctx context.Context, cfg *ResolvedConfi
 	if err != nil {
 		return left, adversaryCommitRevealObservation{}, 0, fmt.Errorf("operational commit/reveal storage: %w", err)
 	}
-	right, err := adversaryCommitRevealAt(ctx, cfg, cfg.Public.Chain.SubstratePublicReadEndpoint, public, common, publicHash)
+	right, err := adversaryCommitRevealAt(ctx, cfg, verificationSubstrateEndpoint(cfg), public, common, publicHash)
 	if err != nil {
 		return left, right, 0, fmt.Errorf("public commit/reveal storage: %w", err)
 	}

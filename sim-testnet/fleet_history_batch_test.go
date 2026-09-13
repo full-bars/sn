@@ -377,6 +377,46 @@ func TestCarriedFleetHistoryBatchCachesOnlyExactVerifiedAction(t *testing.T) {
 	if rpcFixture.httpRequests != 3 || rpcFixture.blockBatchRequests != 1 || rpcFixture.contractBatchRequests != 1 {
 		t.Fatalf("integration HTTP/header/contract requests=%d/%d/%d, want 3/1/1", rpcFixture.httpRequests, rpcFixture.blockBatchRequests, rpcFixture.contractBatchRequests)
 	}
+	// The owner has already authenticated these two exact source receipts.
+	// Subsequent preparation must use that input without reopening the same
+	// original plans for every member; fresh RPC proofs still run in full.
+	collected := []carriedActionAudit{audit}
+	for _, source := range []struct {
+		action Action
+		entry  JournalEntry
+	}{
+		{action: supersession.installAction, entry: supersession.installEntry},
+		{action: supersession.refreshAction, entry: supersession.refreshEntry},
+	} {
+		record, err := executor.readPersistedPostcondition(source.entry)
+		if err != nil {
+			t.Fatal(err)
+		}
+		collected = append(collected, carriedActionAudit{action: source.action, entry: source.entry, record: record})
+		if err := os.Remove(stateDir + "/" + source.entry.PostconditionPath); err != nil {
+			t.Fatal(err)
+		}
+	}
+	keys, err = executor.verifyCarriedFleetGenerationOneHistory(t.Context(), collected)
+	if err != nil || len(keys) != 1 || !keys[key] || rpcFixture.httpRequests != 6 || rpcFixture.blockBatchRequests != 2 || rpcFixture.contractBatchRequests != 2 {
+		t.Fatalf("collected source receipts did not retain complete fresh RPC verification: keys=%v err=%v requests=%d/%d/%d", keys, err, rpcFixture.httpRequests, rpcFixture.blockBatchRequests, rpcFixture.contractBatchRequests)
+	}
+	if _, err := executor.verifyCarriedFleetGenerationOneHistory(t.Context(), []carriedActionAudit{audit}); err == nil {
+		t.Fatal("another invocation reused source receipts that it had not authenticated")
+	}
+	changed := supersession.installEntry
+	changed.Sequence++
+	reader := carriedFleetHistoryPostconditionReader(collected, executor.readPersistedPostcondition)
+	if _, err := reader(changed); err == nil {
+		t.Fatal("a changed journal row inherited collected postcondition authority")
+	}
+	corrupt := *collected[1].record
+	corrupt.ActionID = supersession.refreshAction.ID
+	changedCollection := append([]carriedActionAudit(nil), collected...)
+	changedCollection[1].record = &corrupt
+	if _, err := executor.verifyCarriedFleetGenerationOneHistory(t.Context(), changedCollection); err == nil {
+		t.Fatal("changed collected receipt bytes inherited the original journal hash")
+	}
 	executor.carriedFleetHistoryKeys = keys
 	cancelled, cancel := context.WithCancel(context.Background())
 	cancel()

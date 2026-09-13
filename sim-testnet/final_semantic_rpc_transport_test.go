@@ -364,4 +364,19 @@ func TestFinalSemanticCapturedReplayUsesPortableCanonicalTransport(t *testing.T)
 	if _, err := finalSemanticRPCTransportForCapturedFiles(&tamperedConfig, public, files); err == nil {
 		t.Fatal("captured replay accepted a substituted operational endpoint")
 	}
+	owned, err := prepareOwnedRPCConfiguration(ownedRPCSourceConfigTest(t), "192.168.1.162:9944")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownedPublic := &PublicDeploymentManifest{ChainID: testnetChainID, GenesisHash: testnetGenesis, OperationalRPCMode: rpcModeOwnedNode,
+		SubstrateRPC: owned.OperationalSubstrate, EVMRPC: owned.OperationalEVM}
+	ownedTransport, err := finalSemanticRPCTransportForCapturedFiles(owned, ownedPublic, files)
+	if err != nil || ownedTransport.profile != finalSemanticOwnedRPCTransport || ownedTransport.dialSubstrateRPC != owned.OperationalSubstrate || ownedTransport.dialEVMRPC != owned.OperationalEVM || ownedTransport.evmRequestsPerMinute != 0 || ownedTransport.substrateRequestsPerSecond != 0 {
+		t.Fatalf("captured owned replay lost its exact unpaced LAN authority: %+v %v", ownedTransport, err)
+	}
+	withoutAuthority := *owned
+	withoutAuthority.ownedRPCAuthority = ""
+	if _, err := finalSemanticRPCTransportForCapturedFiles(&withoutAuthority, ownedPublic, files); err == nil {
+		t.Fatal("an unbound captured mode label selected the LAN-only route")
+	}
 }

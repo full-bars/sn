@@ -452,9 +452,13 @@ func (self *Executor) verifyHistoricalFleetGenerationOneCalls(ctx context.Contex
 func (self *Executor) verifyCarriedFleetGenerationOneHistory(ctx context.Context, audits []carriedActionAudit) (map[string]bool, error) {
 	verifiedKeys := map[string]bool{}
 	calls := make([]historicalFleetGenerationOneCall, 0)
+	readPostcondition := carriedFleetHistoryPostconditionReader(audits, self.readPersistedPostcondition)
 	batchCtx, cancel := context.WithTimeout(ctx, carriedFleetHistoryBatchTimeout)
 	defer cancel()
 	for _, audit := range audits {
+		if err := batchCtx.Err(); err != nil {
+			return nil, err
+		}
 		coordinates, applicable, err := fleetGenerationOneCoordinates(self.cfg, audit.action)
 		if err != nil {
 			return nil, fmt.Errorf("action %s generation-1 coordinates: %w", audit.action.ID, err)
@@ -462,7 +466,7 @@ func (self *Executor) verifyCarriedFleetGenerationOneHistory(ctx context.Context
 		if !applicable || coordinates.Install {
 			continue
 		}
-		superseded, err := self.fleetGenerationOneActionSuperseded(audit.action, audit.entry, audit.record)
+		superseded, err := self.fleetGenerationOneActionSupersededWithPostconditions(audit.action, audit.entry, audit.record, readPostcondition)
 		if err != nil {
 			return nil, fmt.Errorf("action %s generation-1 successor: %w", audit.action.ID, err)
 		}
@@ -489,4 +493,26 @@ func (self *Executor) verifyCarriedFleetGenerationOneHistory(ctx context.Context
 	}
 	fmt.Fprintf(os.Stderr, "sim-testnet: batched historical fleet audit %d/%d\n", len(calls), len(calls))
 	return verifiedKeys, nil
+}
+
+// Collection has authenticated these exact journal rows and their original
+// approval inputs. Reuse them only within this invocation; otherwise every
+// member rereads the same install/refresh plans under the batch RPC deadline.
+// A new or changed row still requires the ordinary persisted reader.
+func carriedFleetHistoryPostconditionReader(audits []carriedActionAudit, read func(JournalEntry) (*ActionPostcondition, error)) func(JournalEntry) (*ActionPostcondition, error) {
+	collected := make(map[JournalEntry]*ActionPostcondition, len(audits))
+	for _, audit := range audits {
+		collected[audit.entry] = audit.record
+	}
+	return func(entry JournalEntry) (*ActionPostcondition, error) {
+		record, ok := collected[entry]
+		if !ok {
+			return read(entry)
+		}
+		hash, err := canonicalHashHex(record)
+		if record == nil || err != nil || hash != entry.PostconditionHash {
+			return nil, stateMismatchError(err, "action %s collected postcondition differs from its verified journal hash", entry.ActionID)
+		}
+		return record, nil
+	}
 }

@@ -389,6 +389,9 @@ func verifyReleaseHistoryFinalizedExtrinsicContext(ctx context.Context, chain *c
 // Dial one release endpoint, authenticate genesis, then bind metadata and all
 // runtime versions from a single finalized hash.
 func dialReleaseSubstrateChain(cfg *ResolvedConfig, endpoint string) (*crv4.Chain, authenticatedRuntimeMetadata, error) {
+	if err := validateOwnedRPCDialEndpoint(cfg, endpoint); err != nil {
+		return nil, authenticatedRuntimeMetadata{}, err
+	}
 	if cfg == nil || cfg.Public == nil {
 		return nil, authenticatedRuntimeMetadata{}, errors.New("release public manifest is unavailable")
 	}

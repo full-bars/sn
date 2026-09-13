@@ -33,6 +33,7 @@ const (
 	releaseProfile                       = "release-1.0"
 	rpcModePrivateAuthority              = "private-authority"
 	rpcModePublicOverride                = "public-override"
+	rpcModeOwnedNode                     = "owned-node"
 	testnetChainID                       = uint64(945)
 	testnetGenesis                       = "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105"
 	testnetBootstrapImmunityPeriodBlocks = uint64(50_000)

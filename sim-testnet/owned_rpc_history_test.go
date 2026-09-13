@@ -184,10 +184,9 @@ func TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts(t
 	}
 }
 
-// A successful read of the historical label never substitutes for the fresh
-// independent RPC result. Both actual HTTP readers replay the original block;
-// disagreement, missing readers and a noncanonical peer all reject acceptance.
-func TestOwnedRPCHistoryReplaysOriginalFundingThroughBothCurrentReaders(t *testing.T) {
+// The owned node replays the original block and balance. A separately supplied
+// public reader must never receive a request or lend authority to a bad result.
+func TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode(t *testing.T) {
 	fixture := newOwnedRPCHistoryTest(t, false)
 	e := fixture.executor
 	record, err := e.readPersistedPostcondition(fixture.entry)
@@ -201,15 +200,15 @@ func TestOwnedRPCHistoryReplaysOriginalFundingThroughBothCurrentReaders(t *testi
 	wei := func(rao uint64) *big.Int {
 		return new(big.Int).Mul(new(big.Int).SetUint64(rao), new(big.Int).SetUint64(evmWeiPerRao))
 	}
-	for _, fault := range []string{"none", "missing-independent", "peer-balance", "peer-reorg"} {
+	for _, fault := range []string{"none", "missing-operational", "owned-balance", "owned-reorg"} {
 		t.Run(fault, func(t *testing.T) {
 			first := &historicalFundingRPCFixture{t: t, finalized: testEVMHead(12, 0x12), historical: record.EVMFinalized, currentWei: wei(1), historicalWei: wei(usable + 100)}
 			second := &historicalFundingRPCFixture{t: t, finalized: testEVMHead(12, 0x12), historical: record.EVMFinalized, currentWei: wei(1), historicalWei: wei(usable + 100)}
-			if fault == "peer-balance" {
-				second.historicalWei = wei(usable + 101)
+			if fault == "owned-balance" {
+				first.historicalWei = wei(usable + 101)
 			}
-			if fault == "peer-reorg" {
-				second.historical.Hash = testEVMHead(10, 0x44).Hash
+			if fault == "owned-reorg" {
+				first.historical.Hash = testEVMHead(10, 0x44).Hash
 			}
 			firstServer, secondServer := httptest.NewServer(first), httptest.NewServer(second)
 			defer firstServer.Close()
@@ -226,16 +225,19 @@ func TestOwnedRPCHistoryReplaysOriginalFundingThroughBothCurrentReaders(t *testi
 			defer secondClient.Close()
 			current := *e
 			current.deployer, current.independentEVM = &EvmTxManager{client: firstClient}, secondClient
-			if fault == "missing-independent" {
-				current.independentEVM = nil
+			if fault == "missing-operational" {
+				current.deployer = nil
 			}
 			err = current.verifyConsumedActionHistory(t.Context(), fixture.action, fixture.entry, record, nil)
+			if len(second.balanceBlocks) != 0 {
+				t.Fatal("owned-only historical replay queried the public comparison reader")
+			}
 			if fault == "none" {
-				if err != nil || len(first.balanceBlocks) != 1 || len(second.balanceBlocks) != 1 || first.balanceBlocks[0] != "0xa" || second.balanceBlocks[0] != "0xa" {
-					t.Fatalf("strict original funding replay did not use both current observers: %v", err)
+				if err != nil || len(first.balanceBlocks) != 1 || first.balanceBlocks[0] != "0xa" {
+					t.Fatalf("owned original funding replay did not use the exact original checkpoint: %v", err)
 				}
 			} else if err == nil {
-				t.Fatalf("%s independent conflict was accepted", fault)
+				t.Fatalf("%s invalid owned observation was accepted", fault)
 			}
 		})
 	}
@@ -250,12 +252,12 @@ func TestOwnedRPCHistoryNativeReplayCannotBorrowOneReader(t *testing.T) {
 	}
 	for _, shared := range []bool{false, true} {
 		current := *e
-		current.substrate = &SubstrateManager{}
+		current.substrate = nil
 		if shared {
-			current.independentSubstrate = current.substrate
+			current.independentSubstrate = &SubstrateManager{}
 		}
-		if err := current.verifyConsumedActionHistory(t.Context(), fixture.action, fixture.entry, record, nil); err == nil || !strings.Contains(err.Error(), "independent Substrate reader") {
-			t.Fatalf("one native reader could upgrade original public assurance: %v", err)
+		if err := current.verifyConsumedActionHistory(t.Context(), fixture.action, fixture.entry, record, nil); err == nil || !strings.Contains(err.Error(), "Substrate transaction evidence is incomplete") {
+			t.Fatalf("missing owned native proof borrowed another reader or changed assurance: %v", err)
 		}
 	}
 }

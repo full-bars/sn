@@ -624,7 +624,7 @@ func mevShieldFinalityEraExpiryModel(finalized, best, period uint64) (lag uint64
 func (self *rpcAdversary) Sample(ctx context.Context, phase adversarySamplePhase, sequence uint64) adversarySampleResult {
 	started := time.Now()
 	privateEndpoint := self.cfg.OperationalEVM
-	publicEndpoint := self.cfg.Public.Chain.EVMPublicReadEndpoint
+	publicEndpoint := verificationEVMEndpoint(self.cfg)
 	if phase == adversaryControlPhase {
 		privateChain, privateErr := self.call(ctx, privateEndpoint, "eth_chainId", []any{}, sequence*2+1)
 		publicChain, publicErr := self.call(ctx, publicEndpoint, "eth_chainId", []any{}, sequence*2+2)
@@ -2688,6 +2688,9 @@ func newLiveAdversaryActors(cfg *ResolvedConfig, stateDir string, roles *RoleSec
 	rpcGate, err := newAdversaryRequestGate(cfg.Config.Scenarios.Adversaries.MaximumRPCRequestsPerSec)
 	if err != nil {
 		return nil, err
+	}
+	if ownedRPCOnly(cfg) {
+		rpcGate.interval = 0
 	}
 	timeout := time.Duration(cfg.Config.Scenarios.Adversaries.RequestTimeoutMilliseconds) * time.Millisecond
 	faultWindow := newAdversaryFaultWindow(timeout)

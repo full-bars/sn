@@ -820,7 +820,7 @@ func (self *Executor) verifyFleetInstallPinnedState(ctx context.Context, action 
 	}
 	observer, endpoint := "operational", self.cfg.OperationalEVM
 	if self.independentEVM != nil && self.oracle.client == self.independentEVM {
-		observer, endpoint = "independent", self.cfg.Public.Chain.EVMPublicReadEndpoint
+		observer, endpoint = "independent", verificationEVMEndpoint(self.cfg)
 	}
 	_, err = self.withHistoricalAuditCache(ctx, "fleet-install-pinned-state-v1", struct {
 		Action     Action                       `json:"action"`
