@@ -1,0 +1,45 @@
+{
+  "capture": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-e3d3539-20260913T214545Z",
+  "exit_code": 1,
+  "finished_at": "2026-09-13T22:09:06.576883Z",
+  "requires_post_apply_receipt_review": true,
+  "started_at": "2026-09-13T21:45:45.059059Z",
+  "state_after": {
+    "journal.jsonl": {
+      "bytes": 7399401,
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73"
+    },
+    "plan.json": {
+      "bytes": 1469230,
+      "sha256": "0261c38b37670633b2fa7ee854dbec02056bc600f9380f8b5644125cccedd7e2"
+    },
+    "supervisor.json": {
+      "bytes": 43887,
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815"
+    },
+    "supervisor.state.json": {
+      "bytes": 8829,
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4"
+    }
+  },
+  "state_before": {
+    "journal.jsonl": {
+      "bytes": 7399401,
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73"
+    },
+    "plan.json": {
+      "bytes": 1469161,
+      "sha256": "dabe55aea03f531f055dad828f6e2967b5ad8c0d6461b428f24ea6fd431b4913"
+    },
+    "supervisor.json": {
+      "bytes": 43887,
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815"
+    },
+    "supervisor.state.json": {
+      "bytes": 8829,
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4"
+    }
+  },
+  "stderr_sha256": "420dd7f8a899b6ffd173b1a88cf734933882dbdfbdf21651733ac159d9ef42f1",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

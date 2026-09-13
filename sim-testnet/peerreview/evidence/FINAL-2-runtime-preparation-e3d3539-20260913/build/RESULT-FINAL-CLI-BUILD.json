@@ -1,0 +1,11 @@
+{
+  "kind":"final-stamped-sim-testnet-cli-build",
+  "build_exit":0,
+  "repos_before_after_identical":true,
+  "repos_before_sha256":"87e65fa4b2dc696b9c9ef3f57da1c1a4719eb8f2af85ae13a9ed04ae065e4b29",
+  "repos_after_sha256":"87e65fa4b2dc696b9c9ef3f57da1c1a4719eb8f2af85ae13a9ed04ae065e4b29",
+  "artifact":{"path":"/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime-final-cli-prepared-unbound-20260913T1851Z/bin/sim-testnet-final","sha256":"c363685779f723b99befa4b143764769f26848781f4da825985898e8073c6c0b","bytes":140480048,"mode":"0700"},
+  "vcs":{"revision":"e3d3539dd761f3e04d2c28e281b01735fa297f9c","trimpath":true,"buildvcs":true,"modified":false},
+  "warm_gocache":"/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/gocache/normal",
+  "private_gomodcache":"/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/cache-prep-current16-v2/modcache"
+}

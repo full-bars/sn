@@ -23,8 +23,13 @@ Report 2 tracks closure of the first report's peer-review findings: actual
 production cadence and three complete epochs, the validator-limit exception,
 reserve target, operator-specific emission carry, signer authorization, and
 independent reproduction with explicit limits for off-chain claims.
-Existing custody, approved spending limits and the unlimited owned LAN
-RPC at `192.168.1.162:9944` remain in force. Full acceptance is not yet achieved.
+Existing custody and approved spending limits remain in force. The user's
+latest instruction on 2026-09-13 requires **all actual testnet RPC** to use
+`192.168.1.162:9944`, including historical checks, doctor, adversaries and final
+verification, without RPC pacing or public fallback. New evidence must identify
+the owned node and record `independent_rpc=false`. Retain old public-node
+receipts and their original provenance; fresh public-node comparison is no
+longer a prerequisite for this run. Full acceptance is not yet achieved.
 
 ## Historical shortened-run override — 2026-09-11 07:48 UTC
 

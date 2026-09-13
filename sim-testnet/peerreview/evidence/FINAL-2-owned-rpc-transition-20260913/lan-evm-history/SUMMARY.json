@@ -1,0 +1,41 @@
+{
+  "endpoint": "http://192.168.1.162:9944",
+  "block": 7897285,
+  "block_hash": "0x50da2dcc4425b9ce8d33fcba3d04fb4fa01b77a687ba8e968e1c80bb1db50eb9",
+  "elapsed_seconds": 0.237,
+  "capture": "/home/by/urnetwork/temp/sn-full-finalization-20260912/lan-historical-state-20260913T223721Z",
+  "response_sha256": "9147874820f183596a33b991535626c16318008488950212d3ee733a59aa8c88",
+  "results": [
+    {
+      "id": 1,
+      "result": "0x3b1",
+      "error": null
+    },
+    {
+      "id": 2,
+      "result": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+      "error": null
+    },
+    {
+      "id": 3,
+      "result": {
+        "code_bytes": 130,
+        "code_sha256": "51c6e3a1c26b195cbe4fa03c7afcc7e49b3189d35f999cc3c1be738c5a467f61"
+      },
+      "error": null
+    },
+    {
+      "id": 4,
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000006",
+      "error": null
+    },
+    {
+      "id": 5,
+      "result": null,
+      "error": {
+        "code": 4003,
+        "message": "Client error: UnknownBlock: Header was not found in the database: 0x50da2dcc4425b9ce8d33fcba3d04fb4fa01b77a687ba8e968e1c80bb1db50eb9"
+      }
+    }
+  ]
+}

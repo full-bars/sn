@@ -1,0 +1,27 @@
+{
+  "started_at": "2026-09-13T19:41:00.105945+00:00",
+  "finished_at": "2026-09-13T19:45:38.385921+00:00",
+  "exit": 0,
+  "child_pid": 537646,
+  "state_files_unchanged": true,
+  "state_after": {
+    "plan.json": {
+      "sha256": "dabe55aea03f531f055dad828f6e2967b5ad8c0d6461b428f24ea6fd431b4913",
+      "bytes": 1469161
+    },
+    "journal.jsonl": {
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+      "bytes": 7399401
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    }
+  },
+  "stdout_sha256": "ba9a19819c2b77f37bc5d31f425257afe50555c17523c88f6cf11b5e316a62d4",
+  "chain_transactions": 0
+}

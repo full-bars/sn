@@ -1,0 +1,130 @@
+{
+  "action_count": 2309,
+  "added_action": {
+    "depends_on": [
+      "alpha.repair.validator.1.5"
+    ],
+    "description": "spend the remaining approved cumulative alpha tranche to restore the reserve-validator target after live-emission dilution",
+    "id": "alpha.repair.validator.1.7",
+    "intent_hash": "0xb6152bd0f270076c274704c90a4c676d29ae7554fdd16c671046a8f63ce52480",
+    "kind": "substrate-extrinsic",
+    "maximum_spend": {
+      "alpha_rao": 6000000000000,
+      "evm_gas_wei": 0,
+      "registrations": 0,
+      "subnet_creations": 0,
+      "tao_rao": 0
+    },
+    "parameters": {
+      "approved_alpha_price_q9": "568309",
+      "campaign_requirement_rao": "0",
+      "cumulative_alpha_before_repair_rao": "31250000000000",
+      "cumulative_alpha_limit_rao": "37250000000000",
+      "exact_amount_rao": "6000000000000",
+      "maximum_destination_rounding_shortfall_rao": "1",
+      "maximum_reserve_repair_tranche_rao": "6000000000000",
+      "minimum_alpha_at_approved_price_rao": "193556675",
+      "minimum_destination_credit_rao": "5999999999999",
+      "minimum_tao_equivalent_margin_bps": "1000",
+      "repair_for_action": "alpha.transfer.validator.1",
+      "reserve_minimum_share_bps": "6000",
+      "reserve_share_repair": "true",
+      "reserve_target_share_bps": "6500",
+      "runtime_default_min_transfer_tao_rao": "100000"
+    },
+    "target": "validator:1"
+  },
+  "apply_prerequisite": "Root verifies final-source producer native terminal PASS; aggregate may continue. Native setup apply rechecks current balances and majority before transfer.",
+  "chain_transactions": 0,
+  "changed_read_action": {
+    "depends_on": [
+      "alpha.repair.validator.1.7",
+      "alpha.transfer.validator.2"
+    ],
+    "description": "verify the reserve validator retains the configured majority of all registered subnet alpha",
+    "id": "validator.reserve-majority",
+    "intent_hash": "0x96e23ae3fba82dcbaed5a4b67ff3f43bce9e4b325c77d37a34de14225e62274e",
+    "kind": "substrate-read",
+    "maximum_spend": {
+      "alpha_rao": 0,
+      "evm_gas_wei": 0,
+      "registrations": 0,
+      "subnet_creations": 0,
+      "tao_rao": 0
+    },
+    "parameters": {
+      "minimum_share_bps": "6000"
+    },
+    "target": "reserve-validator:1"
+  },
+  "custody_and_deployments_unchanged": true,
+  "journal_rows": 10258,
+  "journal_sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+  "limits": {
+    "alpha_rao": 37250000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0,
+    "tao_rao": 200000000000
+  },
+  "matching_journal_rows": {
+    "alpha.repair.validator.1.6": 0,
+    "alpha.repair.validator.1.7": 0
+  },
+  "maximum_and_superseded_spend": {
+    "alpha_rao": 37250000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0,
+    "tao_rao": 185748236000
+  },
+  "minimum_source_remaining_alpha_rao": 2000000000000,
+  "native_cli_sha256": "c363685779f723b99befa4b143764769f26848781f4da825985898e8073c6c0b",
+  "native_setup_exit": 0,
+  "native_setup_finished_at": "2026-09-13T19:45:38.385921+00:00",
+  "native_setup_stdout_sha256": "ba9a19819c2b77f37bc5d31f425257afe50555c17523c88f6cf11b5e316a62d4",
+  "old_plan_archival_link_retained": true,
+  "other_retained_spend_unchanged": true,
+  "replacement_plan_hash": "0xdbeb584008bbdbc6607a49a5118c1c82fdfa18a15ca8fe5b5c8cea9d2775c37a",
+  "retired_action": {
+    "depends_on": [
+      "alpha.repair.validator.1.5"
+    ],
+    "description": "spend the remaining approved cumulative alpha tranche to restore the reserve-validator target after live-emission dilution",
+    "id": "alpha.repair.validator.1.6",
+    "intent_hash": "0xc3affd0b416f27480c44de00bfebf143669f0b1f028b2ad5d9df3e5d91153f61",
+    "kind": "substrate-extrinsic",
+    "maximum_spend": {
+      "alpha_rao": 3750000000000,
+      "evm_gas_wei": 0,
+      "registrations": 0,
+      "subnet_creations": 0,
+      "tao_rao": 0
+    },
+    "parameters": {
+      "approved_alpha_price_q9": "568309",
+      "campaign_requirement_rao": "0",
+      "cumulative_alpha_before_repair_rao": "31250000000000",
+      "cumulative_alpha_limit_rao": "35000000000000",
+      "exact_amount_rao": "3750000000000",
+      "maximum_destination_rounding_shortfall_rao": "1",
+      "maximum_reserve_repair_tranche_rao": "6000000000000",
+      "minimum_alpha_at_approved_price_rao": "193556675",
+      "minimum_destination_credit_rao": "3749999999999",
+      "minimum_tao_equivalent_margin_bps": "1000",
+      "repair_for_action": "alpha.transfer.validator.1",
+      "reserve_minimum_share_bps": "6000",
+      "reserve_share_repair": "true",
+      "reserve_target_share_bps": "6500",
+      "runtime_default_min_transfer_tao_rao": "100000"
+    },
+    "target": "validator:1"
+  },
+  "reviewed_at": "2026-09-13T19:55:15.139879+00:00",
+  "sizing_snapshot_note": "Plan live_facts intentionally retains original sizing census and adds already-spent alpha back into capacity for deterministic reconstruction (plan_revision.go preserveAlphaSizingFacts and spentAlpha normalization). These are not a current live reserve census; final post-repair credit/census is still required.",
+  "source_commit": "e3d3539dd761f3e04d2c28e281b01735fa297f9c",
+  "source_plan_hash": "0xd4525b8da2da4f786f4990beb2285ac09b42e033c3c7fdd3c45473a7c9336507",
+  "state_files_unchanged": true,
+  "status": "reviewed; awaiting producer gate before apply",
+  "unchanged_action_count": 2307
+}

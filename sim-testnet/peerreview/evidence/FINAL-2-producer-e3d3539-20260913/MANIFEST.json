@@ -1,0 +1,578 @@
+{
+  "entries": [
+    {
+      "bytes": 1613,
+      "mode": 384,
+      "path": "commands/capture-producer-gate.sh",
+      "role": "command/capture-wrapper",
+      "sha256": "4491bc8861825353626bd69391ddd32665461844dc5a32610220254606166e8e",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture-producer-gate.sh"
+    },
+    {
+      "bytes": 799,
+      "mode": 384,
+      "path": "commands/producer-gate.command",
+      "role": "command/native-gate",
+      "sha256": "e6d7637acb6dffb072f967ab9c989a82eed58df4a07f579ce60b7ea7f7101d22",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/producer-gate.command"
+    },
+    {
+      "bytes": 7,
+      "mode": 384,
+      "path": "capture/outer.pid",
+      "role": "capture/outer.pid",
+      "sha256": "5498d06d330e232345158d988986bdff972391b7831b5aafec320387fb0aec95",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture/outer.pid"
+    },
+    {
+      "bytes": 21,
+      "mode": 384,
+      "path": "capture/outer.started-at",
+      "role": "capture/outer.started-at",
+      "sha256": "5f93f09e42fb7b930da9adf7bfba3b2428278ad1bf6fd260b53e31e32cdef48f",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture/outer.started-at"
+    },
+    {
+      "bytes": 21,
+      "mode": 384,
+      "path": "capture/outer.finished-at",
+      "role": "capture/outer.finished-at",
+      "sha256": "b131270d144019bb5c1017d998422b866e359d706854e59d6c6cd7bac2b2f7d5",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture/outer.finished-at"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "capture/outer.exit",
+      "role": "capture/outer.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture/outer.exit"
+    },
+    {
+      "bytes": 16356,
+      "mode": 384,
+      "path": "capture/outer.stdout",
+      "role": "capture/outer.stdout",
+      "sha256": "7ec8e97482d1483b44e5411b0a29f102a29a8ecf959971f6426e1d697659e371",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture/outer.stdout"
+    },
+    {
+      "bytes": 2500,
+      "mode": 384,
+      "path": "capture/outer.stderr",
+      "role": "capture/outer.stderr",
+      "sha256": "7fa353f614c25b0691e36fa0efe201233904613bfab0e92608efa7253f306fe0",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture/outer.stderr"
+    },
+    {
+      "bytes": 550,
+      "mode": 384,
+      "path": "capture/launcher.sha256",
+      "role": "capture/launcher.sha256",
+      "sha256": "b77c075c8dec5ea48b135eb586dd504e37ce7237688f4dd8e25b26e704ea8f88",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture/launcher.sha256"
+    },
+    {
+      "bytes": 405,
+      "mode": 384,
+      "path": "capture/launcher.stat",
+      "role": "capture/launcher.stat",
+      "sha256": "81b72fee8542662f76da64352b6f9e74938852480a77f4dbccc295b90ca48631",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture/launcher.stat"
+    },
+    {
+      "bytes": 3830,
+      "mode": 384,
+      "path": "source/source-pair-e3d3539.tsv",
+      "role": "source-pair",
+      "sha256": "87e65fa4b2dc696b9c9ef3f57da1c1a4719eb8f2af85ae13a9ed04ae065e4b29",
+      "source": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/final-source-sync-e3d3539-20260913T1935Z/source-pair-e3d3539.tsv"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/binding-toolchain/exit",
+      "role": "preflight/binding-toolchain/exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/binding-toolchain/exit"
+    },
+    {
+      "bytes": 29,
+      "mode": 384,
+      "path": "preflights/binding-toolchain/stdout",
+      "role": "preflight/binding-toolchain/stdout",
+      "sha256": "b4068f8c05e1035121100c14a22cdd7366680b4e8ddff4b57f9dbd4b6204ac8a",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/binding-toolchain/stdout"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/binding-toolchain/stderr",
+      "role": "preflight/binding-toolchain/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/binding-toolchain/stderr"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/final-source-freeze/exit",
+      "role": "preflight/final-source-freeze/exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/final-source-freeze/exit"
+    },
+    {
+      "bytes": 1165,
+      "mode": 384,
+      "path": "preflights/final-source-freeze/stdout",
+      "role": "preflight/final-source-freeze/stdout",
+      "sha256": "d7eeca85c0dc43cfc1652885c1621026a37fa662523157c186a426ee11c81845",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/final-source-freeze/stdout"
+    },
+    {
+      "bytes": 516,
+      "mode": 384,
+      "path": "preflights/final-source-freeze/stderr",
+      "role": "preflight/final-source-freeze/stderr",
+      "sha256": "209a408a4c0a946f80a8f5289fd46ea70fdde4e1ca5aeaea11054814300a3e90",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/final-source-freeze/stderr"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/private-services/exit",
+      "role": "preflight/private-services/exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/private-services/exit"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/private-services/stdout",
+      "role": "preflight/private-services/stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/private-services/stdout"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/private-services/stderr",
+      "role": "preflight/private-services/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/private-services/stderr"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/runtime-metadata/exit",
+      "role": "preflight/runtime-metadata/exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/runtime-metadata/exit"
+    },
+    {
+      "bytes": 2884,
+      "mode": 384,
+      "path": "preflights/runtime-metadata/stdout",
+      "role": "preflight/runtime-metadata/stdout",
+      "sha256": "436f3cc0d9b62ff78ba8aba5b90f29bc58cf084ee471f3bd12931a1bdfe27c98",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/runtime-metadata/stdout"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/runtime-metadata/stderr",
+      "role": "preflight/runtime-metadata/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/runtime-metadata/stderr"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/runtime-source/exit",
+      "role": "preflight/runtime-source/exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/runtime-source/exit"
+    },
+    {
+      "bytes": 205,
+      "mode": 384,
+      "path": "preflights/runtime-source/stdout",
+      "role": "preflight/runtime-source/stdout",
+      "sha256": "eb1e50ff6523e8f1399e0f36de5d69d557800d1a8489fa2bcac31942495ba3ce",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/runtime-source/stdout"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/runtime-source/stderr",
+      "role": "preflight/runtime-source/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/runtime-source/stderr"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/source-freeze/exit",
+      "role": "preflight/source-freeze/exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/source-freeze/exit"
+    },
+    {
+      "bytes": 1165,
+      "mode": 384,
+      "path": "preflights/source-freeze/stdout",
+      "role": "preflight/source-freeze/stdout",
+      "sha256": "d7eeca85c0dc43cfc1652885c1621026a37fa662523157c186a426ee11c81845",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/source-freeze/stdout"
+    },
+    {
+      "bytes": 516,
+      "mode": 384,
+      "path": "preflights/source-freeze/stderr",
+      "role": "preflight/source-freeze/stderr",
+      "sha256": "209a408a4c0a946f80a8f5289fd46ea70fdde4e1ca5aeaea11054814300a3e90",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/source-freeze/stderr"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/source-integrity/exit",
+      "role": "preflight/source-integrity/exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/source-integrity/exit"
+    },
+    {
+      "bytes": 63,
+      "mode": 384,
+      "path": "preflights/source-integrity/stdout",
+      "role": "preflight/source-integrity/stdout",
+      "sha256": "fe254b8e94377e05ad0ff4048c43102c19a39b97592b605fd60234498dd89a61",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/source-integrity/stdout"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/source-integrity/stderr",
+      "role": "preflight/source-integrity/stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/preflights/source-integrity/stderr"
+    },
+    {
+      "bytes": 617,
+      "mode": 384,
+      "path": "phase-joins.tsv",
+      "role": "phase-joins",
+      "sha256": "8b222379cb2b1e3fe31243c7264e4b88b0fc7200c9a5f5dc274c69278d627f86",
+      "source": "generated from /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/capture/outer.stdout"
+    },
+    {
+      "bytes": 238,
+      "mode": 384,
+      "path": "phase-logs/compile.log",
+      "role": "phase-log/compile",
+      "sha256": "23bdc767d1413d0e48cfc556d571d5ecab6fe77d321600c48743fc56e09e53a4",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/compile.log"
+    },
+    {
+      "bytes": 88,
+      "mode": 384,
+      "path": "phase-logs/evidence-native.log",
+      "role": "phase-log/evidence-native",
+      "sha256": "99f2f9a2040dbe63572c6f269b1951b1a88b0b75552d02e07f098eff1b994848",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/evidence-native.log"
+    },
+    {
+      "bytes": 378,
+      "mode": 384,
+      "path": "phase-logs/runtime.log",
+      "role": "phase-log/runtime",
+      "sha256": "6575e4e5f45cc97f6cbab8441db8704f4646098a3ad6236453a9b95721ad9c82",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/runtime.log"
+    },
+    {
+      "bytes": 276,
+      "mode": 384,
+      "path": "phase-logs/seed.log",
+      "role": "phase-log/seed",
+      "sha256": "e680147a74b30241dd4758aad5e37d20ff1abe7af90dcf0e5ad5294f8f025da6",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/seed.log"
+    },
+    {
+      "bytes": 298,
+      "mode": 384,
+      "path": "phase-logs/evm-identity.log",
+      "role": "phase-log/evm-identity",
+      "sha256": "a14f896cc3709fbd2e71f75ee5314e5398fd72a0c172a9bccdb1d2039973ced3",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/evm-identity.log"
+    },
+    {
+      "bytes": 102,
+      "mode": 384,
+      "path": "phase-logs/driver.log",
+      "role": "phase-log/driver",
+      "sha256": "b6938e8c8d8d625965d1c59ff4a73235df4bb8107c2468a8941b220a1b1f603e",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/driver.log"
+    },
+    {
+      "bytes": 386,
+      "mode": 384,
+      "path": "phase-logs/framing.log",
+      "role": "phase-log/framing",
+      "sha256": "f706e4ba8015530ba08de88478abb8575445bc5b1117291f9bde7fcaef34091a",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/framing.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/sim-seed.log",
+      "role": "phase-log/sim-seed",
+      "sha256": "d45e5ce80cb02e1578a51dca7a80fa91e42f98b43d4228b263f6578a0c41e1a2",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/sim-seed.log"
+    },
+    {
+      "bytes": 103,
+      "mode": 384,
+      "path": "phase-logs/adversarial.log",
+      "role": "phase-log/adversarial",
+      "sha256": "41f2de13af8d45b1abdbc5bf7404ed85a3e02388e079a0c80512f566238980c2",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/adversarial.log"
+    },
+    {
+      "bytes": 311,
+      "mode": 384,
+      "path": "phase-logs/isolation-regressions.log",
+      "role": "phase-log/isolation-regressions",
+      "sha256": "1e48560926683b2dfdcb483a344545af1249e69b71d0627c993855748288c31b",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/isolation-regressions.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/semantic-public-scenario.log",
+      "role": "phase-log/semantic-public-scenario",
+      "sha256": "e671651ffe4852ffea6c20e78813641bbcd9fbe2aacf22715a46a665a8f5102a",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-public-scenario.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/semantic-fleet-projection.log",
+      "role": "phase-log/semantic-fleet-projection",
+      "sha256": "d994698141771c695e550d5d9aee3f3a1f49cc8819f42ec972e9797987cd2cb9",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-fleet-projection.log"
+    },
+    {
+      "bytes": 107,
+      "mode": 384,
+      "path": "phase-logs/semantic.log",
+      "role": "phase-log/semantic",
+      "sha256": "fe8ff290836ef3299c98c07035fc2558cf737178c178f4ad46f7e52669dd9ccf",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/semantic-runtime-configs.log",
+      "role": "phase-log/semantic-runtime-configs",
+      "sha256": "1f3a94fd5b6e5ccf51616db8d62e9f5a91d3e152186b43726f19554f12ffe286",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-runtime-configs.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/semantic-pool-registration.log",
+      "role": "phase-log/semantic-pool-registration",
+      "sha256": "f3f1d1e56cf1e1b0c43af5c9f3db6dc95ec3174496caaecef2d2bb21415bb09d",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-pool-registration.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/semantic-build-artifacts.log",
+      "role": "phase-log/semantic-build-artifacts",
+      "sha256": "393130df4d04bcb8a00faa0a3383ec91a29c56169ffe09a557ff8a57f22916fd",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-build-artifacts.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-evidence.log",
+      "role": "phase-log/capture-evidence",
+      "sha256": "8dc01bf5238bc6ff6db1b609c02752755e08626c0cccb4c3055b291b820491e9",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-evidence.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-renewal.log",
+      "role": "phase-log/capture-renewal",
+      "sha256": "e063a76a264360088238c8a1285bc0d994dcf872d49a505c1525bf33940dbe14",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-renewal.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/capture.log",
+      "role": "phase-log/capture",
+      "sha256": "2cb17946838bcf970836b4d1aeee9df809b830e2a4c73759db6f248819642da3",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture.log"
+    },
+    {
+      "bytes": 104,
+      "mode": 384,
+      "path": "phase-logs/settlement.log",
+      "role": "phase-log/settlement",
+      "sha256": "a12b733cd39e53df04db2b6b2745988f7d7463fbc45e040601065cc1ed1bec76",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/settlement.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-revision.log",
+      "role": "phase-log/capture-revision",
+      "sha256": "d154644e507a0905684af2c0f3e133d91e8587f6d0a76f45a27d06206167bc22",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-revision.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-lifecycle.log",
+      "role": "phase-log/capture-lifecycle",
+      "sha256": "a7166467ed87992788f22abde0252188fd466f51939ccbdb46b21b4e5833d097",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-lifecycle.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/capture-private.log",
+      "role": "phase-log/capture-private",
+      "sha256": "78b4be37c82f8714643116ca4956f19b4483c62f4f342b6643192a813030fd4e",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-private.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-prior.log",
+      "role": "phase-log/capture-prior",
+      "sha256": "2424b67d39eefceb01c64aade364866406471fd71552e5b8e5b52ef96200f7a6",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-prior.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/capture-population.log",
+      "role": "phase-log/capture-population",
+      "sha256": "2fb78d27290ff2154da649ef36162482f790f752c1034ed6c9786028e35c0f53",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-population.log"
+    },
+    {
+      "bytes": 32820,
+      "mode": 384,
+      "path": "phase-logs/solidity.log",
+      "role": "phase-log/solidity",
+      "sha256": "bc4765c119a31bdc8ae511c2add9bd07fb4c1346746364f479e8ffd27c1aa500",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/solidity.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/evidence-simulator.log",
+      "role": "phase-log/evidence-simulator",
+      "sha256": "5fff965cec36d1003826d3d24bab815e867667efc13b5f73695b479b6ebd9a24",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/evidence-simulator.log"
+    },
+    {
+      "bytes": 625,
+      "mode": 384,
+      "path": "phase-logs/server-unit.log",
+      "role": "phase-log/server-unit",
+      "sha256": "1b90468a9b6b57fc03a36c095950b887718ca6f606bb400e33b6a9ac9d05e8e9",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/server-unit.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/evidence-simulator-slow.log",
+      "role": "phase-log/evidence-simulator-slow",
+      "sha256": "60b85599f31cd5252afb009348c89924b547f8c33ff505bc691a0d1438fa7a7c",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/evidence-simulator-slow.log"
+    },
+    {
+      "bytes": 611,
+      "mode": 384,
+      "path": "phase-logs/connect.log",
+      "role": "phase-log/connect",
+      "sha256": "a01c7426423c77a4096e5a8654a1281748d060d07bce73c8a0888b7899fce173",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/connect.log"
+    },
+    {
+      "bytes": 148,
+      "mode": 384,
+      "path": "phase-logs/sdk.log",
+      "role": "phase-log/sdk",
+      "sha256": "2f2d4d00ced764fd7e0fc35ffcb75482aac5e7f587df8fae9d8b18908b056efb",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/sdk.log"
+    },
+    {
+      "bytes": 1194,
+      "mode": 384,
+      "path": "phase-logs/operator-proxy.log",
+      "role": "phase-log/operator-proxy",
+      "sha256": "4c3d853e99810baf3b12bed784f99cd0ae3800e771e9e7ffa80f7e6339ed6ea9",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/operator-proxy.log"
+    },
+    {
+      "bytes": 107,
+      "mode": 384,
+      "path": "phase-logs/capture-metadata.log",
+      "role": "phase-log/capture-metadata",
+      "sha256": "fe7d058df8799cc3e88c4d70d0b2b55607be66dcb005f4150234b9862cd81db0",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-metadata.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/server-history-shared.log",
+      "role": "phase-log/server-history-shared",
+      "sha256": "f984c23cf48c1aa07e2ecae0ff5c4188b94c34717a6e3e6eaac160e12556d345",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/server-history-shared.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/server-history-distinct.log",
+      "role": "phase-log/server-history-distinct",
+      "sha256": "053bab1d8351f22a42db22137e3fb9d1c29785ab73157563a2314ad4e4874588",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/server-history-distinct.log"
+    },
+    {
+      "bytes": 726,
+      "mode": 384,
+      "path": "phase-logs/server-db.log",
+      "role": "phase-log/server-db",
+      "sha256": "f1af388942db35917ec2d783857d8a73dc740d66575461a02eba24a4254bba78",
+      "source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/server-db.log"
+    },
+    {
+      "bytes": 1148,
+      "mode": 384,
+      "path": "source/identity.json",
+      "role": "source-lock-identity",
+      "sha256": "8f334dac7290c892bff7d6caf05d95af786ccd4b664af64f11be09f206cc69be",
+      "source": "generated from final source-freeze, source pair, release lock, and capture"
+    }
+  ],
+  "exclusions": [
+    "no test binaries",
+    "no Go caches or module caches",
+    "no source manifests or source contents",
+    "no vault contents",
+    "no service environment or runtime data"
+  ],
+  "schema": "final-producer-gate-evidence-v1",
+  "scope": {
+    "phase_joins": 36,
+    "phase_nonzero": 0,
+    "source": "e3d3539dd761f3e04d2c28e281b01735fa297f9c",
+    "verdict": "PASS"
+  }
+}

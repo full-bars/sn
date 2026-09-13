@@ -1,0 +1,8 @@
+{
+  "endpoint": "http://192.168.1.162:9944",
+  "native_block": 7897285,
+  "native_hash": "0x81767bd645a94a686e567776bb3914ca5ce933a630981993903575dc1696e2c6",
+  "storage_value": "0x0001",
+  "scope": "Substrate archive capability at its own native block hash; separate from the EVM checkpoint",
+  "capture": "/home/by/urnetwork/temp/sn-full-finalization-20260912/lan-native-historical-state-20260913T224123Z"
+}

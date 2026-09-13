@@ -1,0 +1,41 @@
+{
+  "kind": "native-readonly-setup",
+  "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+  "argv": [
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime-final-cli-prepared-unbound-20260913T1851Z/bin/sim-testnet-final",
+    "setup",
+    "--config",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/testnet.yml",
+    "--state-dir",
+    "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/config",
+    "--owned-rpc-authority",
+    "192.168.1.162:9944",
+    "--format",
+    "json"
+  ],
+  "state_dir": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+  "state_files": [
+    "plan.json",
+    "journal.jsonl",
+    "supervisor.state.json",
+    "supervisor.json"
+  ],
+  "binary_sha256": "c363685779f723b99befa4b143764769f26848781f4da825985898e8073c6c0b",
+  "source_revision": "e3d3539dd761f3e04d2c28e281b01735fa297f9c",
+  "apply": false,
+  "chain_writes": false,
+  "environment_overrides": {
+    "GOMAXPROCS": "2",
+    "PATH_prefix": "/home/by/.foundry/bin"
+  }
+}

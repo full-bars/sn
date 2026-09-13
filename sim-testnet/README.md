@@ -117,21 +117,24 @@ substitution, duplicate test process, or bypassed gate.
 Strict operation through an owned LAN node uses
 `--owned-rpc-authority 192.168.1.162:9944`. This invocation option preserves the
 original configuration/policy hashes and signed activation inputs. Its exact
-authority and resolved operational URLs are bound into the setup plan, so
-changing or omitting the route requires a reviewed plan revision. It admits
-only an explicit private IPv4 host and port. Planning and setup dial that node
-directly while the topology is stopped; the generated campaign proxies use
-the same node. Owned EVM clients, proxies and workers have no request ceiling.
-Independent public comparison endpoints remain separate, retain their public
-quota, and remain required by strict admission. This option cannot be combined
-with provisional continuation.
+authority, resolved URLs and `owned-node` assurance profile are bound into the
+setup plan; changing or omitting them requires a reviewed plan revision.
+Planning and setup dial the node directly; generated campaign proxies use the
+same node. Operational, historical, adversary and final-verification RPC
+reads use that LAN node without RPC request pacing. Operator HTTP limits and
+all transaction, nonce, balance, signature, deadline and custody checks remain.
+New evidence records `independent_rpc=false` and final verification identifies
+`owned-node-rpc-v1`; it does not claim a distinct public observer. Reproduction
+requires access to the recorded LAN node. Provisional continuation cannot be
+combined with this option.
 
-Retained public-RPC receipts keep their original assurance labels and bytes.
-Strict owned continuation authenticates their source plan and recomputes the
-source's resolved-input hash before reading them. Fresh EVM replay still uses
-both current readers; consumed native transfers also prove their finalized
-inclusion and success through the independent native reader. A missing source,
-changed historical endpoint identity, or conflicting comparison is an error.
+Retained public-RPC receipts preserve their original assurance labels and bytes.
+Owned continuation authenticates their source plans and original resolved-input
+hashes, then replays their exact historical checkpoints through the current
+owned node. A missing source, changed historical identity, noncanonical block,
+or conflicting state is an error. Already authenticated install/refresh
+receipts are reused only inside the current carried-history invocation; new
+invocations and changed journal rows must authenticate their own inputs.
 
 After locking the tested release, retain the original configuration and use
 the owned route with `doctor`, then `setup --format json` to emit the current
@@ -464,15 +467,16 @@ budget provides about 47% wall-time headroom. The complete aggregate simulator
 race budget remains 90 minutes. No census, byte bound, hash/signature check or
 production deadline changes.
 
-The aggregate simulator race census uses two independently admitted owners:
-the exact full metadata and 900-object publication roots together, and their
-complete complement. Both retain `-parallel=4`, `-count=1` and the existing
-90-minute aggregate allowance; the ordinary full-package run and producer
-budgets stay unchanged. The original aggregate alarm left four roots active
-for at most 2m15s and 195 parallel roots queued after the serial prefix. Its
-failed package remains recorded. Exact source guards reject missing or
-duplicated population owners, changed selectors, and deadline changes. This
-partition retains every complete population, descendant and remaining root.
+The aggregate simulator race census uses five independently admitted owners:
+426 final-evidence roots, 370 fleet/history/runtime/scenario roots, their 1,397-root
+ordinary complement, two complete population roots and three complete supplement
+roots. Their exact disjoint union is all 2,198 roots, including all descendants.
+Every owner retains race instrumentation, count=1, parallel=4 and the existing
+90-minute test deadline under the existing effective jobs/resource bound. The
+retained 90-minute alarm had four roots active for 25, 58, 30 and 68 seconds;
+queued roots had not completed and are not classified as assertion failures.
+The original failed package stays recorded. Source guards and the actual compiled
+list must agree on complete, non-overlapping ownership; no root is omitted.
 
 The original full-metadata ten-minute race timeout remains a failure. Its
 profiled 90-minute diagnostic completion is not qualification. Require three

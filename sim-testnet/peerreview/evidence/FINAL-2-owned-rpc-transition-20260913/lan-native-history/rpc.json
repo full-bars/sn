@@ -1,0 +1,35 @@
+[
+  {
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "chain_getBlockHash",
+      "params": [
+        7897285
+      ]
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": "0x81767bd645a94a686e567776bb3914ca5ce933a630981993903575dc1696e2c6"
+    },
+    "elapsed_seconds": 0.042
+  },
+  {
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "state_getStorage",
+      "params": [
+        "0x658faa385070e074c85bf6b568cf0555a1048e9d244171852dfe8db314dc68ca0902",
+        "0x81767bd645a94a686e567776bb3914ca5ce933a630981993903575dc1696e2c6"
+      ]
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": "0x0001"
+    },
+    "elapsed_seconds": 0.007
+  }
+]

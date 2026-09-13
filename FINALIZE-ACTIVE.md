@@ -39,14 +39,43 @@ Current work:
    failures have completed their scoped confirmations. Keep the original failed
    and interrupted results visible; focused passes do not replace full gates.
 4. Complete the required real release campaign and production soak, then
-   reconcile on-chain outcomes, public replay, the final report and shutdown.
+   reconcile on-chain outcomes, LAN-node replay, the final report and shutdown.
    Reuse valid completed evidence; unrun, failed and waived checks are not passes.
 
 Retain the approved 6,000-alpha repair allowance, 37,250-alpha lifetime limit,
 180 EVM within 200 total TAO, 262 registrations and zero new subnets. Use
 `192.168.1.162:9944` without RPC rate limits. Full acceptance remains pending.
 
-Latest checkpoint, 2026-09-13 19:32 UTC: the soak remains stopped. The user
+Latest checkpoint, 2026-09-13 23:04 UTC: the soak remains stopped. The full
+producer on `e3d3539` passed with 36/36 phase joins at 21:44 UTC. Its native
+setup apply adopted plan `0xdbeb584008bbdbc6607a49a5118c1c82fdfa18a15ca8fe5b5c8cea9d2775c37a`
+but failed at 22:09 UTC during carried-history verification, before action
+execution. The journal and both supervisor files are unchanged; the approved
+6,000-alpha repair is still unsubmitted. Do not retry the old executable.
+
+The user now requires every actual testnet RPC call to use the LAN node,
+including historical and final verification, with no RPC request pacing.
+The `7de62c7` correction introduces the explicit owned-node observation profile
+and reuses already authenticated historical inputs within an invocation.
+Historical receipts retain their original labels. New evidence identifies
+`independent_rpc=false`; public-node verification is no longer required for
+this run. Read-only LAN probes have returned the tested historical EVM and
+native storage successfully. Terra's focused qualification is pending.
+
+The original aggregate remains live, with three recorded failures: cumulative
+simulator race-package timeout, missing server migration-monitor entries and
+a context deadline in the full 1,000-client registration cohort. The corrected aggregate partitions all
+2,198 simulator roots among five disjoint owners. Server candidate `b67ea7a`
+reuses the already published monitor correction and adds a real PostgreSQL
+regression. Astra is diagnosing the separate cohort deadline in an isolated
+successor. Keep the original aggregate running and preserve its results.
+SN main also advanced independently to `928b7d5`; its provider memory-budget
+fix is included in the next integrated candidate. Complete focused checks,
+publish one coherent release and start both final gates. Then use one native
+setup preview/review and exact hash-bound apply, followed by renewal and launch.
+No duplicate preview or standalone full partition diagnostic is required.
+
+Previous checkpoint, 2026-09-13 19:32 UTC: the soak remains stopped. The user
 approved one 6,000-alpha replacement for the unsubmitted 3,750-alpha repair,
 within 37,250 alpha lifetime. The single-setting vault change is published at
 `8b2f481dbe87092d0c1742274712a6f805c1c375` in the independent final candidate

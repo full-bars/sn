@@ -1,0 +1,4 @@
+ok  	github.com/urfoundation/sn/validator	0.019s [no tests to run]
+ok  	github.com/urfoundation/sn/sim-testnet	0.073s [no tests to run]
+ok  	github.com/urfoundation/sn/sim-testnet	0.138s
+ok  	github.com/urfoundation/sn/sim-testnet	1.423s

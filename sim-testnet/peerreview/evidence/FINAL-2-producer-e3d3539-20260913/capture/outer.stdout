@@ -1,0 +1,135 @@
+[release gate] private state /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF; ready jobs=3; CPUs/job=4
+[release-1.0 producer] source-freeze preflight
+sn	e3d3539dd761f3e04d2c28e281b01735fa297f9c	origin/main	github.com/urfoundation/sn
+server	93bc8c592797da0335f4201c5027a2b52906790e	origin/main	github.com/urnetwork/server
+operator-proxy	448369740c70eb2e642bde9d36f3708fe9ad4b5d	origin/main	github.com/urnetwork/operator-proxy
+connect	2a0f603e8076224fdab4d9f56e5a0a557ed513d9	origin/main	github.com/urnetwork/connect
+sdk	0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b	origin/main	github.com/urnetwork/sdk
+glog	892ade4a6be396b32ea82a550f243190b5992180	origin/master	github.com/urnetwork/glog
+goidenticons	325750b38314313dc5f44c880ab6f12f6c1ecb3c	origin/main	github.com/urnetwork/goidenticons
+proxy	6204ae7df2a9868bbb3a7b61231917a36e4f5c9f	origin/main	github.com/urnetwork/proxy
+userwireguard	85fb1ca4086fa5dbfcda526bec7a17a894e691b9	origin/master	github.com/urnetwork/userwireguard
+warp	7498864c7cd3605aad3c43eabfab9008ed7f7228	origin/main	github.com/urnetwork/warp
+vault	8b2f481dbe87092d0c1742274712a6f805c1c375	origin/main	github.com/urnetwork/vault
+xops	a9d2eb4bfbdf72d61243908a71659adff0fb8160	origin/main	github.com/urnetwork/xops
+config	268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc	origin/main	github.com/urnetwork/config
+[release-1.0 producer] simulator source-integrity preflight
+ok  	github.com/urfoundation/sn/sim-testnet/sourceguard	0.006s
+[release-1.0 producer] generated binding toolchain preflight
+abigen version 1.17.0-stable
+[release-1.0 producer] runtime 454 source attestation
+runtime source verified tag=v454 commit=14cde6410fe8ec81a940e290c56f94a632a0988d files=29 metadata_files=15
+runtime source verified ref_kind=commit commit=67dcf7f791dc495064c293f080a0702cb433e51e files=31
+[release-1.0 producer] exact runtime metadata artifact attestation
+runtime metadata verified sdk_revision=cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a spec_name=node-subtensor spec_version=451 transaction_version=1 state_version=1 metadata_version=14 code_size=2514870 metadata_size=334487 code_sha256=0x7a16d39f2c1f7c9984834a7cede18baf1d08306707bc8aeb0e2409324b2ec56f code_blake2b_256=0xf3554a22dfcefa9b42b3a0a5e58c1e6c871795ecc9ea9da78bf0900e23e57c08 metadata_sha256=0x39787898474fa5d27ce07097c30f1c7ba1472abdcb2c88b7957039eba1144ba7 metadata_blake2b_256=0xeecd7e7c00377caec23c3dc754fd621963cc456fa5d02a4f66ff267b0494bd9d
+runtime metadata verified sdk_revision=cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a spec_name=node-subtensor spec_version=452 transaction_version=1 state_version=1 metadata_version=14 code_size=2515476 metadata_size=334487 code_sha256=0x05616e9ddf330e4c0f880fff1fb155162b7837bb4171b7ffc779680379eb9d8b code_blake2b_256=0x40a8c3c99a47d6739b086236308535fab26d5fd4cc5c88eb83f6a3c8b928f7cc metadata_sha256=0x79fc9235a87651a0cd5b93856d4b5696ffb8a0bd26c6f30a1f1402ac8aaad195 metadata_blake2b_256=0x2e1d4f992a978fdd58652c8cf434c26bb8f89170e6a0fdbc9362b29e8fe8a835
+runtime metadata verified sdk_revision=cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a spec_name=node-subtensor spec_version=453 transaction_version=1 state_version=1 metadata_version=14 code_size=2515038 metadata_size=334667 code_sha256=0x9e51859faf28a69365005e7dd7f152f239a305c468869b2f54303aba938d840e code_blake2b_256=0xabe169cc148e2a63068772788c191fa6566f02aa2ea9afb80cdeb28217bab4d4 metadata_sha256=0x99380e7d01eccc41ffa1304e782658c86b38ba9986acefa371e79ad367f76658 metadata_blake2b_256=0xb00e7e0188d537136a973df4d5c5f2c86ef903ffff49c1cf8d129dabc98b07ce
+runtime metadata verified sdk_revision=cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a spec_name=node-subtensor spec_version=454 transaction_version=1 state_version=1 metadata_version=14 code_size=2515968 metadata_size=334642 code_sha256=0xa55e76b4f4620bcdb4c787e499c87a35abb9913ba4cde001b08a00d1945ac4db code_blake2b_256=0x725e3d1eca8d5c29c1f0fa6476d5360661b852f52aebad979d6636e227a431ef metadata_sha256=0xb592bafacd0f3cce1340a91f237f82a531968bd833cbd27339328c80ce92b1cf metadata_blake2b_256=0x4d17516b694ef8d18f8a565dcb2df0117e7a0018a3ffa40812c91a1621225702
+runtime metadata verified sdk_revision=cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a spec_name=node-subtensor spec_version=455 transaction_version=1 state_version=1 metadata_version=14 code_size=2516332 metadata_size=334642 code_sha256=0x232bfc0d65ec2dbe4280b152e23f13879df9692d2286dd08c6ba14483deee00f code_blake2b_256=0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a metadata_sha256=0x74c4067de4bf2eba95156e8a46c793b52fcd9862dfeb28502632e46416979ec7 metadata_blake2b_256=0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc
+runtime metadata artifacts verified versions=451,452,453,454,455 sdk_revision=cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a
+[release gate] started isolation-regressions (pid 546978)
+[release-1.0 producer] compile complete simulator and validator graph
+[release gate] started compile (pid 547222)
+[release-1.0 producer] exact runtime client and cancellation boundaries
+[release gate] started runtime (pid 547405)
+[release gate] joined compile (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/compile.log
+[release gate] started evidence-native (pid 570193)
+[release-1.0 producer] non-replacing validator and hotkey seed custody
+[release gate] joined evidence-native (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/evidence-native.log
+[release gate] started seed (pid 570581)
+[release-1.0 producer] raw simulator client-key custody
+[release gate] joined runtime (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/runtime.log
+[release gate] started sim-seed (pid 571942)
+[release-1.0 producer] synthetic EVM block identity and canonical recovery
+[release gate] joined seed (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/seed.log
+[release gate] started evm-identity (pid 572295)
+[release-1.0 producer] authenticated release driver
+[release gate] joined evm-identity (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/evm-identity.log
+[release gate] started driver (pid 574528)
+[release-1.0 producer] strict proof and configuration framing
+[release gate] joined driver (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/driver.log
+[release gate] started framing (pid 584991)
+[release-1.0 producer] signed validator evidence and settlement
+[release gate] joined framing (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/framing.log
+[release gate] started settlement (pid 586084)
+[release-1.0 producer] concurrent adversarial actor and metric closure
+[release gate] joined sim-seed (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/sim-seed.log
+[release gate] started adversarial (pid 595200)
+[release-1.0 producer] exact native, EVM, and ordinary-fleet semantic replay
+[release gate] joined adversarial (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/adversarial.log
+[release gate] started semantic (pid 597548)
+[release gate] joined isolation-regressions (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/isolation-regressions.log
+[release gate] started semantic-public-scenario (pid 603024)
+[release gate] joined semantic-public-scenario (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-public-scenario.log
+[release gate] started semantic-fleet-projection (pid 630168)
+[release gate] joined semantic-fleet-projection (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-fleet-projection.log
+[release gate] started semantic-runtime-configs (pid 653165)
+[release gate] joined semantic (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic.log
+[release gate] started semantic-build-artifacts (pid 654312)
+[release gate] joined semantic-runtime-configs (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-runtime-configs.log
+[release gate] started semantic-pool-registration (pid 662888)
+[release-1.0 producer] lossless capture, completion, and publication
+[release gate] joined semantic-pool-registration (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-pool-registration.log
+[release gate] started capture (pid 671938)
+[release gate] joined semantic-build-artifacts (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/semantic-build-artifacts.log
+[release gate] started capture-evidence (pid 673557)
+[release gate] joined capture-evidence (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-evidence.log
+[release gate] started capture-renewal (pid 682675)
+[release gate] joined capture-renewal (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-renewal.log
+[release gate] started capture-revision (pid 688179)
+[release gate] joined capture (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture.log
+[release gate] started capture-lifecycle (pid 690032)
+[release gate] joined settlement (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/settlement.log
+[release gate] started capture-private (pid 692962)
+[release gate] joined capture-revision (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-revision.log
+[release gate] started capture-prior (pid 695121)
+[release gate] joined capture-lifecycle (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-lifecycle.log
+[release gate] started capture-population (pid 697001)
+[release gate] joined capture-private (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-private.log
+[release gate] started capture-metadata (pid 700227)
+[release-1.0 producer] exact deployable contract behavior
+[release gate] joined capture-prior (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-prior.log
+[release gate] started solidity (pid 705039)
+[release gate] joined capture-population (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-population.log
+[release gate] started evidence-simulator (pid 709934)
+[release gate] joined solidity (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/solidity.log
+[release gate] started evidence-simulator-slow (pid 720615)
+[release-1.0 producer] operator proof and artifact APIs
+[release gate] joined evidence-simulator (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/evidence-simulator.log
+[release gate] started server-unit (pid 726862)
+[release gate] joined server-unit (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/server-unit.log
+[release gate] started connect (pid 733308)
+[release gate] joined evidence-simulator-slow (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/evidence-simulator-slow.log
+[release gate] started sdk (pid 737163)
+[release-1.0 producer] operator-proxy source and behavior
+[release gate] joined connect (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/connect.log
+[release gate] started operator-proxy (pid 740461)
+[release-1.0 producer] isolated PostgreSQL/Redis evidence path
+[release gate] joined sdk (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/sdk.log
+[release gate] started server-db (pid 741604)
+[release gate] joined operator-proxy (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/operator-proxy.log
+[release gate] started server-history-shared (pid 744588)
+[release gate] joined capture-metadata (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/capture-metadata.log
+[release gate] started server-history-distinct (pid 761011)
+[release gate] joined server-history-shared (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/server-history-shared.log
+[release gate] joined server-history-distinct (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/server-history-distinct.log
+[release gate] joined server-db (exit 0); log /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF/logs/server-db.log
+[release-1.0 producer] source and release-lock fence
+ok  	github.com/urfoundation/sn/sim-testnet	0.121s
+ok  	github.com/urfoundation/sn/sim-testnet	1.614s
+[release-1.0 producer] final source-freeze checkout
+sn	e3d3539dd761f3e04d2c28e281b01735fa297f9c	origin/main	github.com/urfoundation/sn
+server	93bc8c592797da0335f4201c5027a2b52906790e	origin/main	github.com/urnetwork/server
+operator-proxy	448369740c70eb2e642bde9d36f3708fe9ad4b5d	origin/main	github.com/urnetwork/operator-proxy
+connect	2a0f603e8076224fdab4d9f56e5a0a557ed513d9	origin/main	github.com/urnetwork/connect
+sdk	0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b	origin/main	github.com/urnetwork/sdk
+glog	892ade4a6be396b32ea82a550f243190b5992180	origin/master	github.com/urnetwork/glog
+goidenticons	325750b38314313dc5f44c880ab6f12f6c1ecb3c	origin/main	github.com/urnetwork/goidenticons
+proxy	6204ae7df2a9868bbb3a7b61231917a36e4f5c9f	origin/main	github.com/urnetwork/proxy
+userwireguard	85fb1ca4086fa5dbfcda526bec7a17a894e691b9	origin/master	github.com/urnetwork/userwireguard
+warp	7498864c7cd3605aad3c43eabfab9008ed7f7228	origin/main	github.com/urnetwork/warp
+vault	8b2f481dbe87092d0c1742274712a6f805c1c375	origin/main	github.com/urnetwork/vault
+xops	a9d2eb4bfbdf72d61243908a71659adff0fb8160	origin/main	github.com/urnetwork/xops
+config	268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc	origin/main	github.com/urnetwork/config
+[release-1.0 producer] launch-critical gate passed
+[release gate] retained private logs/state: /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/producer/tmp/urnetwork-release-gate.PdcxPQKF

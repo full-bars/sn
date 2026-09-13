@@ -1,0 +1,65 @@
+{
+  "ready": true,
+  "generated_at": "2026-09-13T19:41:13Z",
+  "checks": 64,
+  "ok": 64,
+  "failed": [],
+  "selected": [
+    {
+      "name": "config/independent-rpcs",
+      "ok": true,
+      "hard": true,
+      "detail": "operational and postcondition RPC endpoints are distinct"
+    },
+    {
+      "name": "config/operational-rpcs",
+      "ok": true,
+      "hard": true,
+      "detail": "mode=private-authority substrate=ws://192.168.1.162:9944 evm=http://192.168.1.162:9944"
+    },
+    {
+      "name": "release-lock",
+      "ok": true,
+      "hard": true,
+      "detail": "1.0"
+    },
+    {
+      "name": "rpc/substrate-operational-readiness",
+      "ok": true,
+      "hard": true,
+      "detail": "peers=18 syncing=false operational_finalized=7998850 public_finalized=7998850 checkpoint=7998850"
+    },
+    {
+      "name": "rpc/substrate-physical-independence",
+      "ok": true,
+      "hard": true,
+      "detail": "operational=12D3KooWMXdqCurb3rvEP5AianFS69LHs37cDDc8SooQzcEJkVM2 public=12D3KooWKnUU8xZHRVye3eKED3WHxCiNq82c3Mk2nU5qSYKg5feD"
+    },
+    {
+      "name": "state/approved-plan-journal",
+      "ok": true,
+      "hard": true,
+      "detail": "plan_hash=0xd4525b8da2da4f786f4990beb2285ac09b42e033c3c7fdd3c45473a7c9336507 remaining_registrations=3"
+    },
+    {
+      "name": "vault/budgets",
+      "ok": true,
+      "hard": true,
+      "detail": "tao_rao=200000000000 alpha_rao=37250000000000 evm_gas_wei=180000000000000000000"
+    },
+    {
+      "name": "wallet/finalized-alpha-source",
+      "ok": true,
+      "hard": true,
+      "detail": "source=0xa20080205804bba26541104cbac4def8a0eba26f7a86f6f1e7d16ad37f0cd658 alpha_rao=20377435305556 transferable_alpha_rao=20377435305556 stored_lock_rao=0 position_collateral_rao=0 coldkey_collateral_rao=0 burn_rao=500000 existential_deposit_rao=500 finalized=7998852"
+    },
+    {
+      "name": "wallet/setup-budget-and-balance",
+      "ok": true,
+      "hard": true,
+      "detail": "tao_rao=3492003000/200000000000 alpha_rao=3750000000000/35000000000000 gas_wei=70514000000000000000/180000000000000000000 registrations=3/262"
+    }
+  ],
+  "result_sha256": "9b3cf86f61c29d5132cde35f0c6714df958b9b654efddbcb654c6667fb1c4309",
+  "stdout_sha256": "39abd21b2a9ed210ace5be92222ac3528f333fcf0402695f64f6c181ea24be51"
+}

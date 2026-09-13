@@ -6,23 +6,32 @@ full finalization of testnet chain **945**, subnet **521**, under
 reserve repair, renewal or campaign transaction has been made during the current
 preparation. Successful historical payments do not establish full acceptance.
 
-At **19:32 UTC on 2026-09-13**, the reserve-succession fix has passed its
-30-root normal/race qualification, and the private-fixture fix has passed all
-seven selected roots normally and under race plus the required three normal
-confirmations for each timeout root. All three separate aggregate race
-confirmations have now passed on unchanged source and binary. The Warp
-integration's 24 roots also pass normally and under race. The bootstrap driver
-is built. A subsequent dependency source-freeze correction passes all 12
-affected checks normally and under race. Its current bootstrap driver and
-native release-lock apply are complete; the final driver rebuild and both
-complete gates are next.
-The user approved
-**37,250 alpha lifetime for one 6,000-alpha replacement** of the unsubmitted
-3,750-alpha repair. That configuration is published, but no repair has been
-submitted. The prior plan and transaction journal remain retained.
-After the final race owner closed, the primary vault also adopted the exact
-approved commit `8b2f481dbe87092d0c1742274712a6f805c1c375`.
-[Primary adoption receipt](peerreview/evidence/FINAL-2-approved-reserve-allowance-20260913/PRIMARY-ADOPTION.json).
+At **23:04 UTC on 2026-09-13**, the full producer gate on `e3d3539` has
+passed with **36/36 phase joins and outer exit 0**, ending at 21:44 UTC.
+[Exact producer commands, logs and source identities](peerreview/evidence/FINAL-2-producer-e3d3539-20260913/MANIFEST.json).
+The original aggregate is still running. It has recorded a cumulative simulator
+race-package timeout, missing server migration-monitor entries, and a context
+deadline in the full 1,000-client registration cohort. Neither gate nor live acceptance is claimed
+for the corrected candidate while its qualification is pending.
+
+The user approved **37,250 alpha lifetime for one 6,000-alpha replacement**
+of the unsubmitted 3,750-alpha repair. Native setup adopted replacement plan
+`0xdbeb584008bbdbc6607a49a5118c1c82fdfa18a15ca8fe5b5c8cea9d2775c37a`,
+then failed at **22:09 UTC** during historical verification, before action
+execution. The transaction journal and both supervisor files remained
+byte-identical; **no repair transaction was submitted**.
+[Native result and before/after state hashes](peerreview/evidence/FINAL-2-owned-rpc-transition-20260913/failed-native-apply/RESULT.json),
+[original error](peerreview/evidence/FINAL-2-owned-rpc-transition-20260913/failed-native-apply/stderr).
+The earlier driver, doctor and dry-run receipts remain
+[preparation evidence](peerreview/evidence/FINAL-2-runtime-preparation-e3d3539-20260913/README.md).
+
+The user's latest instruction requires **all actual testnet RPC** to use
+`192.168.1.162:9944`, including historical and final verification, with no RPC
+pacing. The corrected candidate records `owned-node` and `independent_rpc=false`;
+new observations do not claim an independently operated backend. Old public-node
+evidence below retains its original scope and provenance. The tested historical
+EVM state and native storage are available on the LAN node.
+[Raw capability probes and the corrected native hash namespace](peerreview/evidence/FINAL-2-owned-rpc-transition-20260913/README.md).
 
 [FINAL.md](FINAL.md) remains report 1, preserved at SHA-256
 `489fe5a367af6ce17541a0626fc052455f373d7792316593cc752d501cefd996`.
@@ -51,7 +60,7 @@ reproduction of the findings, not an all-check pass.
 | --- | --- | --- |
 | Production cadence was never scheduled | The first run used 300/50/150/5. A `production_cadence` YAML entry does not prove scheduling or activation. | Retain the successful policy-scheduling transaction, effective epoch, finalized policy state showing **360/60/180/6**, and **three consecutive fully observed epochs** under that active policy. The five accelerated epochs remain a separate prerequisite. Pending. |
 | `max_allowed_validators=64`, target ≤56 | The [whitepaper](../WHITEPAPER.md) calls this root-controlled/runtime-dependent. The [compatibility policy](../deploy/testnet/hyperparams.yml) already requires exactly 64. The user has explicitly directed this run to work with the real limit. | **Use 64; reaching 56 is not a testnet prerequisite.** Retain finalized value, actual permits, UID occupancy and 200-head selection evidence from the run. Report the difference from the whitepaper target without claiming ≤56 compliance. No parameter change is needed. |
-| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. The old repair is already credited. | The unsubmitted **3,750-alpha** repair became insufficient at the 17:10 UTC snapshot. The user approved replacing it with **one 6,000-alpha repair within 37,250 alpha lifetime**. The allowance is published; native plan adoption and transfer remain pending. Retain the finalized debit/credit and a complete census proving ≥65%, monitor the 60% floor, and report the end-of-run share separately. |
+| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. The old repair is already credited. | The unsubmitted **3,750-alpha** repair became insufficient at the 17:10 UTC snapshot. The user approved replacing it with **one 6,000-alpha repair within 37,250 alpha lifetime**. The allowance is published and the replacement plan was adopted; the transfer remains pending after the failed historical preflight. Retain the finalized debit/credit and a complete census proving ≥65%, monitor the 60% floor, and report the end-of-run share separately. |
 | Epoch 309 paid despite capturing zero | `RootMissed(308)` carried each operator's funded amount into its own epoch-309 entitlement. | The missing historical transition is reproduced below from both nodes. Every new paid epoch must similarly explain its funding source, carry, payments and remainder per operator. Historical reporting omission closed; fresh-run accounting pending. |
 | Artifact signers differ from registered root signers | A recoverable artifact signature establishes provenance. The coordinator authorizes the root commitment transaction using the epoch's registered `rootSigner`; these are separate checks. | Preserve each recovered artifact signer, committed artifact hash/root, transaction sender and epoch-specific registered root signer. The collector/verifier correction is integrated into candidate `4fda909` and its affected tests passed normally and under race; retained keys and old signatures stay unchanged. Fresh-run evidence remains pending. |
 | Chain verification cannot establish off-chain usage or lifecycle | A committed hash authenticates bytes, not the truth of usage, restart or gate assertions within them. | Label chain-reproduced, independently recomputed, artifact-only, and locally executed evidence separately. Link exact artifacts, executable/source identity, commands, actual exits, process generations and shutdown outcomes. Pending full-run evidence. |
@@ -128,15 +137,22 @@ operator's carry when finalizing its next entitlement.
 
 ## Independent reproduction and its limits
 
-The committed review suite requires Python 3.9+ and an archive RPC. Its default
-endpoint is the public Opentensor service. Run stages in order in an isolated
-copy because they write `results.json` and `topics.json`:
+The committed review suite requires Python 3.9+ and an archive RPC. Its original
+default remains the public Opentensor service. For this finalization, explicitly
+select the LAN node for both stages. Run in order in an isolated copy because
+they write `results.json` and `topics.json`:
 
 ```sh
 cd sim-testnet/peerreview/verify
-SN_RPC_URL=https://test.finney.opentensor.ai python3 verify_all.py
-SN_RPC_URL=https://test.finney.opentensor.ai python3 verify2.py
+export SN_RPC_URL=http://192.168.1.162:9944
+python3 verify_all.py
+python3 verify2.py
 ```
+
+These commands replay report 1's fixed historical assertions. The successful
+07:08 UTC public-node run below is retained evidence; it need not be repeated
+for the current run. A new LAN replay must be labeled as owned-node-only, and
+calling the same node through a second alias does not establish independence.
 
 Retain the two actual exits, exact source revision, endpoint and complete check
 IDs. A zero process exit does not mean all assertions passed. The expected

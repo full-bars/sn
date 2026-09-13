@@ -1,0 +1,7 @@
+[env]glog not configured from command line. Using default configuration.
+I0913 21:45:46.023552  791384 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0913 21:45:46.023738  791384 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0913 21:45:46.023796  791384 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0913 21:45:46.023816  791384 env.go:67] [env]settings = map[]
+sim-testnet: batched historical fleet audit 0/1000
+sim-testnet: carried plan history preflight: prepare carried fleet history: independent historical fleet audit: historical EVM checkpoints: Post "https://test.chain.opentensor.ai": context deadline exceeded

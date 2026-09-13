@@ -1,0 +1,46 @@
+[
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "eth_chainId",
+    "params": []
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "chain_getBlockHash",
+    "params": [
+      0
+    ]
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "eth_getCode",
+    "params": [
+      "0x8e7d2f9a77fec95c7e4875b0bd858d5de2b6def8",
+      "0x7880c5"
+    ]
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "eth_call",
+    "params": [
+      {
+        "to": "0x8e7d2f9a77fec95c7e4875b0bd858d5de2b6def8",
+        "data": "0x76671808"
+      },
+      "0x7880c5"
+    ]
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "state_getStorage",
+    "params": [
+      "0x658faa385070e074c85bf6b568cf0555a1048e9d244171852dfe8db314dc68ca0902",
+      "0x50da2dcc4425b9ce8d33fcba3d04fb4fa01b77a687ba8e968e1c80bb1db50eb9"
+    ]
+  }
+]
