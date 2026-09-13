@@ -1,0 +1,13 @@
+{
+	"CC": "gcc",
+	"CGO_ENABLED": "1",
+	"CXX": "g++",
+	"GOARCH": "amd64",
+	"GOCACHE": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/gocache/normal",
+	"GOMODCACHE": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/cache-prep-current16-v2/modcache",
+	"GOOS": "linux",
+	"GOPATH": "/home/by/go",
+	"GOROOT": "/usr/local/go",
+	"GOTOOLDIR": "/usr/local/go/pkg/tool/linux_amd64",
+	"GOVERSION": "go1.26.6"
+}

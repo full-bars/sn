@@ -1,0 +1,4 @@
+[release gate] private state /home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/tmp/normal/urnetwork-release-gate.Mo4AIMXw; ready jobs=1; CPUs/job=4
+[release gate] started qualification (pid 489441)
+[release gate] joined qualification (exit 0); log /home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/tmp/normal/urnetwork-release-gate.Mo4AIMXw/logs/qualification.log
+[release gate] retained private logs/state: /home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/tmp/normal/urnetwork-release-gate.Mo4AIMXw

@@ -95,6 +95,12 @@ evidence for its recorded source and dependencies. Later revisions run affected
 integration checks; a newly observed failure opens a new confirmation obligation.
 Do not relabel retained passes as executions on a later revision or automatically
 repeat every completed historical streak after an integration.
+Release gates record the exact clean commits of all thirteen repositories.
+SN must match freshly observed canonical `main`; dependencies may retain a
+reviewed commit that remains reachable from freshly fetched canonical
+`main`/`master`. The same recorded checkout snapshot must survive the whole
+gate. Later upstream development does not require importing unrelated changes
+into the candidate or repeating completed qualification on unchanged inputs.
 Retain the original failure, add deterministic root-cause and adjacent controls,
 and rerun affected integration coverage. Three later passes do not retroactively
 pass a failed full gate: final acceptance still requires both complete gates

@@ -1,0 +1,7 @@
+{
+  "finished_at": "2026-09-13T18:51:44.988977+00:00",
+  "exit": 1,
+  "source_lock_unchanged": true,
+  "candidate_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "47b15b976d8d395c70f4b1b53e3d0276239100c44ba2129638000773e5ef63f8"
+}

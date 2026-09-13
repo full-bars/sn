@@ -1,0 +1,9 @@
+Both direct v2 owner invocations returned exit 125 before either outer or capture directory was created.
+Cause: the v2 wrapper's plan variable retained a nonexistent base/plans/integration24-*-p1-v2.json path instead of Astra's immutable external corrected-plan path.
+No source fence, compiler, list, test body, event, replay, service, or capture ran.
+Affected owner inputs are retained unchanged:
+- commands/capture-integration24-normal-p1-v2.sh
+- commands/capture-integration24-race-p1-v2.sh
+- commands/integration24-normal-p1-v2.command
+- commands/integration24-race-p1-v2.command
+Corrected immutable plans are under ../qualification-warp-admission-plan-correction-v2/.

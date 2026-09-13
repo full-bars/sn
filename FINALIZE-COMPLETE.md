@@ -1,5 +1,13 @@
 # Release 1.0 testnet completion handoff
 
+Current full-finalization status is in [FINALIZE-ACTIVE.md](FINALIZE-ACTIVE.md)
+and [report 2](sim-testnet/FINAL-2.md). At 19:25 UTC on 2026-09-13, all retained
+focused failure confirmations are closed. The 24-root Warp integration and
+12-root dependency source-freeze correction pass normally and under race.
+The fleet and soak remain stopped; the current complete gates and live campaign
+remain pending. The September 11 shortened override below is historical; the
+current full scope in [FINALIZE.md](FINALIZE.md) governs this run.
+
 ## Execution override — 2026-09-11 07:48 UTC
 
 The user has directed us to stop preparation tests and run the actual testnet
@@ -3956,8 +3964,12 @@ That candidate remains NOT YET QUALIFIED until every required check passes:
 2. Fetch and pull/rebase each changed repository, resolve semantically, rerun
    conflict-adjacent tests, and push.
 3. Verify all thirteen current release roots, including Warp, are clean and
-   `HEAD == @{upstream}`. The live module census contains sixteen modules;
-   archived release locks retain their original serialized format.
+   track their canonical main/master branch. SN must equal current `origin/main`.
+   Dependencies may retain their exact reviewed commit if it is reachable from
+   the freshly fetched canonical branch. Record every tested HEAD and require
+   that same snapshot after the gate; later upstream work does not change the
+   candidate. The live module census contains sixteen modules; archived release
+   locks retain their original serialized format.
 4. From SN, build a fresh `-trimpath -buildvcs=true` executable into a unique
    sibling `temp/` directory, record `sha256sum` and `go version -m`, and invoke
    that exact absolute nonsymlink path for `release-lock --apply`. The driver

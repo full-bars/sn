@@ -1,0 +1,35 @@
+{
+  "time_utc": "2026-09-13T18:53:31.862527+00:00",
+  "kind": "materialize-existing-release-locked-solidity-dependencies",
+  "repositories": [
+    {
+      "name": "forge-std",
+      "source": "/home/by/urnetwork/sn/evm/lib/forge-std",
+      "destination": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/evm/lib/forge-std",
+      "revision": "bf647bd6046f2f7da30d0c2bf435e5c76a780c1b",
+      "origin": "https://github.com/foundry-rs/forge-std.git",
+      "clean": true
+    },
+    {
+      "name": "openzeppelin-contracts",
+      "source": "/home/by/urnetwork/sn/evm/lib/openzeppelin-contracts",
+      "destination": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/evm/lib/openzeppelin-contracts",
+      "revision": "5fd1781b1454fd1ef8e722282f86f9293cacf256",
+      "origin": "https://github.com/OpenZeppelin/openzeppelin-contracts.git",
+      "clean": true
+    },
+    {
+      "name": "openzeppelin-contracts-upgradeable",
+      "source": "/home/by/urnetwork/sn/evm/lib/openzeppelin-contracts-upgradeable",
+      "destination": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/evm/lib/openzeppelin-contracts-upgradeable",
+      "revision": "7bf4727aacdbfaa0f36cbd664654d0c9e1dc52bf",
+      "origin": "https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable.git",
+      "clean": true
+    }
+  ],
+  "sn_revision_unchanged": true,
+  "sn_clean": true,
+  "git_objects_physically_copied": true,
+  "source_repo_mutations": false,
+  "chain_transactions": 0
+}

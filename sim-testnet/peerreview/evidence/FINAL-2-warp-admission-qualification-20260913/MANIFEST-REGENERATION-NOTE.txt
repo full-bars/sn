@@ -1,0 +1,1 @@
+The first SHA256SUMS generation used package-relative paths while its process ran outside the package root and therefore wrote no valid entries. The empty attempt is retained as SHA256SUMS-v1-invalid-relative-path. SHA256SUMS is the corrected manifest generated from inside the package root.

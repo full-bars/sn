@@ -1,0 +1,323 @@
+{
+  "schema": "aggregate-supplement-owner-handoff-v1",
+  "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/sn",
+  "commit": "e99954acd70bdae9612dd3de2861fbbf39ef8161",
+  "parent": "90f67b1859368d34b0404870f46819f012712674",
+  "package": "github.com/urfoundation/sn/sim-testnet",
+  "changed_files": [
+    {
+      "path": "scripts/test-release-1.0-local.sh",
+      "sha256": "3e3ab728bdddb7065ac043f7b31174fb869eb604248d1108ca9270b1cd337e8e",
+      "mode": "0775"
+    },
+    {
+      "path": "sim-testnet/release_gate_capture_metadata_test.go",
+      "sha256": "2109d4813a166d80a5c929353440bf93d4bea46007835669fa6512a00e5a3dc8",
+      "mode": "0664"
+    },
+    {
+      "path": "sim-testnet/release_gate_jobs_test.go",
+      "sha256": "18918800fa70d07644264430845fd82b1a5dd315367af6f7fc0a61fe89dc7114",
+      "mode": "0664"
+    },
+    {
+      "path": "sim-testnet/release_gate_test.go",
+      "sha256": "6a11c9e8e6cc5e6aeaaa37ff3826d2371d02cdc74479b60e0687c325bf63a92e",
+      "mode": "0664"
+    }
+  ],
+  "dependency_scope": "The other11 exact sources from admitted F remain unchanged; xops=a9d2eb4bfbdf72d61243908a71659adff0fb8160. Replace only SN in the existing physical source world; retain actual manifests for other11, including physical sibling server.",
+  "test_body_scope": "No production Go, test bodies outside existing scheduling guards, test roots, dependencies, limits or payloads changed. Root census remains2186.",
+  "failure": {
+    "raw_path": "/home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/logs/sn-simulator-race.log",
+    "raw_sha256": "cbff6627f505ff8c4c68c6e0722eaba0655132de2c24f19c55c0604e355ae606",
+    "mode": "race",
+    "package_seconds": 5401.403,
+    "assertion_failures": 0,
+    "active_ages_seconds": {
+      "TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage": 1165,
+      "TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper": 1040,
+      "TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica": 1162,
+      "TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding": 0
+    },
+    "queued_count": 188,
+    "active_stacks": "Three supplemental roots runnable in full local BlobStore capacity scans during immutable publication; transport root just entered4-byte atomicWrite/fsync. Queued roots waitingT.Parallel.",
+    "retained_files": "Each supplement has1905 derived artifacts. Store routes at alarm2590 retry,2160 publishes,2549 default (excluding private lock); latest store writes are2.5\u20133.5minutes old, so17\u201319minute body ages include graph construction/verification."
+  },
+  "phases": {
+    "sn_simulator_race": {
+      "count": 2181,
+      "command": "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -skip '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$'",
+      "selector_mode": "skip",
+      "package_timeout_seconds": 5400,
+      "parallel": 4,
+      "test_count": 1,
+      "mode": "race",
+      "source_root_list": {
+        "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_race.source-roots.txt",
+        "sha256": "e4c9fb486db35ae5d63d6ef394730bd9f375d2dd527bbd44a093f34ba3714387",
+        "bytes": 132106
+      },
+      "selector": {
+        "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_race.selector.txt",
+        "sha256": "8b00a37c9f89475cdca289fbfc063e0d3cbf39953bcb02ad911afd2761015819",
+        "bytes": 366
+      }
+    },
+    "sn_simulator_populations_race": {
+      "count": 2,
+      "command": "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$'",
+      "selector_mode": "run",
+      "package_timeout_seconds": 5400,
+      "parallel": 4,
+      "test_count": 1,
+      "mode": "race",
+      "source_root_list": {
+        "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_populations_race.source-roots.txt",
+        "sha256": "ca9fb34423d302bad34f9555e82ba470488e139f1e30c64a9dbc36b06fc4d5b5",
+        "bytes": 147
+      },
+      "selector": {
+        "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_populations_race.selector.txt",
+        "sha256": "2d57251ef47876636db81aa1b5962b1dd5ff8b966ee37b6cbcf6ba35455064f6",
+        "bytes": 151
+      }
+    },
+    "sn_simulator_supplements_race": {
+      "count": 3,
+      "command": "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^(TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$'",
+      "selector_mode": "run",
+      "package_timeout_seconds": 5400,
+      "parallel": 4,
+      "test_count": 1,
+      "mode": "race",
+      "source_root_list": {
+        "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_supplements_race.source-roots.txt",
+        "sha256": "1b12075c42d64df1e16d606317ecad71e581edfee05a4f3d31f01b0e74af4221",
+        "bytes": 215
+      },
+      "selector": {
+        "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_supplements_race.selector.txt",
+        "sha256": "209a0bc5cab56b52505905565543d4f932824805dfc60463252aac6777a4d237",
+        "bytes": 219
+      }
+    }
+  },
+  "qualification": {
+    "guards": "guards10 normal once +race once; source guard assertions/census only. No new failure streak.",
+    "active": "All4 active roots each require3 sequential fresh uncached RACE completions on the same corrected source and exact retained physical binary. None has t.Run descendants in frozen source. A matching complete partition pass may count as p1; do not count original interrupted roots as passed.",
+    "remaining": "Complete changed ordinary2181 +supplement3 race owners once under original90m/parallel4/count1.188queued roots have no3pass debt. Reuse unchanged population2 PASS1967.533s and normal/producer/scoped completed evidence where root accepts the unchanged scope.",
+    "limits": "Native90m race package and existing release-gate owner/ACK/join/resource admission unchanged. Guard focused allowance stays600s package/660s owner. Use actual parent warm cache paths or existing script-managed caches; no invented path prerequisite.",
+    "source_manifest_format": "SHA256 two spaces repository-relative name; execute hash checks from the corresponding physical source root. Only new SN manifest supplied; other11 retain actual admitted F manifests."
+  },
+  "declarations": {
+    "TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage": {
+      "path": "sim-testnet/final_semantic_commit_test.go",
+      "line": 416,
+      "descendants": []
+    },
+    "TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper": {
+      "path": "sim-testnet/final_semantic_commit_test.go",
+      "line": 190,
+      "descendants": []
+    },
+    "TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite": {
+      "path": "sim-testnet/release_gate_test.go",
+      "line": 1573,
+      "descendants": []
+    },
+    "TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak": {
+      "path": "sim-testnet/release_gate_capture_metadata_test.go",
+      "line": 279,
+      "descendants": []
+    },
+    "TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies": {
+      "path": "sim-testnet/release_gate_jobs_test.go",
+      "line": 1107,
+      "descendants": []
+    },
+    "TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions": {
+      "path": "sim-testnet/release_gate_jobs_test.go",
+      "line": 941,
+      "descendants": []
+    },
+    "TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift": {
+      "path": "sim-testnet/release_gate_jobs_test.go",
+      "line": 763,
+      "descendants": []
+    },
+    "TestReleaseGateJobsRequireIndependentCompleteValidatorRace": {
+      "path": "sim-testnet/release_gate_jobs_test.go",
+      "line": 750,
+      "descendants": []
+    },
+    "TestReleaseGateJobsRequireUncachedAggregateBodies": {
+      "path": "sim-testnet/release_gate_jobs_test.go",
+      "line": 1094,
+      "descendants": []
+    },
+    "TestReleaseSemanticCensusPinsSettlementClosureRegressions": {
+      "path": "sim-testnet/release_gate_closure_test.go",
+      "line": 49,
+      "descendants": []
+    },
+    "TestReleaseSemanticCensusRejectsIncompleteSettlementClosureOwners": {
+      "path": "sim-testnet/release_gate_closure_test.go",
+      "line": 195,
+      "descendants": []
+    },
+    "TestReleaseSemanticCensusRequiresCompleteSettlementClosureOwners": {
+      "path": "sim-testnet/release_gate_closure_test.go",
+      "line": 157,
+      "descendants": []
+    },
+    "TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica": {
+      "path": "sim-testnet/final_semantic_commit_test.go",
+      "line": 623,
+      "descendants": []
+    },
+    "TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding": {
+      "path": "sim-testnet/evidence_carry_test.go",
+      "line": 562,
+      "descendants": []
+    }
+  },
+  "files": {
+    "guards10.roots.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/guards10.roots.txt",
+      "sha256": "5c1d582b96b2ebc02ec16927bdca7fe76d84d64072e7093b9d402384f116023e",
+      "bytes": 589
+    },
+    "guards10.selector.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/guards10.selector.txt",
+      "sha256": "84c0ec63737c4791f8e79d6ff7c497d967a692546851d0447a976654cd665db4",
+      "bytes": 593
+    },
+    "guards10.outcomes.tsv": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/guards10.outcomes.tsv",
+      "sha256": "1e0140b066f3e31068e08ac2276a671baa66d5f17a37d4d559bef6af81f44ce8",
+      "bytes": 639
+    },
+    "guards10.literals.tsv": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/guards10.literals.tsv",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "active4.roots.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/active4.roots.txt",
+      "sha256": "57d82a41672f2484e98c23cf74b6bb6e67978cdbaef5afe6b3d16613dacc953a",
+      "bytes": 278
+    },
+    "active4.selector.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/active4.selector.txt",
+      "sha256": "1a4db792584384e6a94ca5c173338d46951701012faf6ebf80b0dd693b83313d",
+      "bytes": 282
+    },
+    "active4.outcomes.tsv": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/active4.outcomes.tsv",
+      "sha256": "567bba309848423e957e1f025a789ee2852e926518ddb4caddde7bab1dfeca21",
+      "bytes": 298
+    },
+    "active4.literals.tsv": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/active4.literals.tsv",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "supplements3.roots.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/supplements3.roots.txt",
+      "sha256": "1b12075c42d64df1e16d606317ecad71e581edfee05a4f3d31f01b0e74af4221",
+      "bytes": 215
+    },
+    "supplements3.selector.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/supplements3.selector.txt",
+      "sha256": "209a0bc5cab56b52505905565543d4f932824805dfc60463252aac6777a4d237",
+      "bytes": 219
+    },
+    "supplements3.outcomes.tsv": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/supplements3.outcomes.tsv",
+      "sha256": "b1e16652ce5064ce8da4903ae070763e655a06c768948c305e5dd23af4d01cd1",
+      "bytes": 230
+    },
+    "supplements3.literals.tsv": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/supplements3.literals.tsv",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "transport1.roots.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/transport1.roots.txt",
+      "sha256": "743c492b4f697593b2afd933491909a1a3bb2cc7fc4121ad29c9e26827165b73",
+      "bytes": 63
+    },
+    "transport1.selector.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/transport1.selector.txt",
+      "sha256": "0e4e292edbd74c64281d92aa2ebba7c785e7dcc925aaa4885b9d33ed4d8bc97d",
+      "bytes": 67
+    },
+    "transport1.outcomes.tsv": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/transport1.outcomes.tsv",
+      "sha256": "03ba2303c1eb3c12d46cc07432787a47b2a6a8fe57b87be223a283ea29cc3e88",
+      "bytes": 68
+    },
+    "transport1.literals.tsv": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/transport1.literals.tsv",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "all2186.source-roots.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/all2186.source-roots.txt",
+      "sha256": "6fd7093a8121b06c4cf892df4d524172ba9fe3dca1173d65e4158d5d3ed8f213",
+      "bytes": 132468
+    },
+    "sn_simulator_race.source-roots.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_race.source-roots.txt",
+      "sha256": "e4c9fb486db35ae5d63d6ef394730bd9f375d2dd527bbd44a093f34ba3714387",
+      "bytes": 132106
+    },
+    "sn_simulator_race.selector.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_race.selector.txt",
+      "sha256": "8b00a37c9f89475cdca289fbfc063e0d3cbf39953bcb02ad911afd2761015819",
+      "bytes": 366
+    },
+    "sn_simulator_populations_race.source-roots.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_populations_race.source-roots.txt",
+      "sha256": "ca9fb34423d302bad34f9555e82ba470488e139f1e30c64a9dbc36b06fc4d5b5",
+      "bytes": 147
+    },
+    "sn_simulator_populations_race.selector.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_populations_race.selector.txt",
+      "sha256": "2d57251ef47876636db81aa1b5962b1dd5ff8b966ee37b6cbcf6ba35455064f6",
+      "bytes": 151
+    },
+    "sn_simulator_supplements_race.source-roots.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_supplements_race.source-roots.txt",
+      "sha256": "1b12075c42d64df1e16d606317ecad71e581edfee05a4f3d31f01b0e74af4221",
+      "bytes": 215
+    },
+    "sn_simulator_supplements_race.selector.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn_simulator_supplements_race.selector.txt",
+      "sha256": "209a0bc5cab56b52505905565543d4f932824805dfc60463252aac6777a4d237",
+      "bytes": 219
+    },
+    "aggregate-simulator-phases.native.sh": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/aggregate-simulator-phases.native.sh",
+      "sha256": "4e8d004bdbaed48a6204ecd84d12cfca1f991b5fab6645f1c8d26dca16f97659",
+      "bytes": 1391
+    },
+    "original-queued188.txt": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/original-queued188.txt",
+      "sha256": "949e71640b2d41d1b6399fc9731a55b5d6cd8a4c6cbf610b2bee72cb71aa04de",
+      "bytes": 12159
+    },
+    "sn-e99954a.source.manifest": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn-e99954a.source.manifest",
+      "sha256": "e07e8d2a38672f90c08ae077183b9a0475380d0a7ce8f07047c3ac13df047e71",
+      "bytes": 144709
+    },
+    "aggregate-supplement-owners.patch": {
+      "path": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/aggregate-supplement-owners.patch",
+      "sha256": "d6a61335c8ffd7339f0711f032ac0063b357e05e1c4b19d685e97459f7e3bf6f",
+      "bytes": 17643
+    }
+  },
+  "execution": "Astra performed source review, source-derived metadata projection and git diff --check only. No Go/build/list/test/formatter/evidence replay executed."
+}

@@ -1,0 +1,37 @@
+=== RUN   TestReleaseSourceFreezeRecordsCompleteCleanWorkspace
+--- PASS: TestReleaseSourceFreezeRecordsCompleteCleanWorkspace (2.08s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeRequiresWarpProvenance
+--- PASS: TestReleaseSourceFreezeRequiresWarpProvenance (2.12s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeRejectsDirtyVerifierBeforeExecution
+--- PASS: TestReleaseSourceFreezeRejectsDirtyVerifierBeforeExecution (0.88s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeDoesNotRequireAssociativeArrays
+--- PASS: TestReleaseSourceFreezeDoesNotRequireAssociativeArrays (0.00s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeRejectsWrongOrigin
+--- PASS: TestReleaseSourceFreezeRejectsWrongOrigin (0.99s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeRefreshesRemoteBeforeAcceptingRevision
+--- PASS: TestReleaseSourceFreezeRefreshesRemoteBeforeAcceptingRevision (1.08s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeRetainsPublishedDependencyWhenUpstreamAdvances
+--- PASS: TestReleaseSourceFreezeRetainsPublishedDependencyWhenUpstreamAdvances (7.52s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeIgnoresIgnoredRuntimeModules
+--- PASS: TestReleaseSourceFreezeIgnoresIgnoredRuntimeModules (2.01s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeRejectsDirtyUntrackedAndUnsynchronizedRepositories
+--- PASS: TestReleaseSourceFreezeRejectsDirtyUntrackedAndUnsynchronizedRepositories (2.57s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeRejectsUnclassifiedGoModule
+--- PASS: TestReleaseSourceFreezeRejectsUnclassifiedGoModule (1.60s)
+=== NAME  
+=== RUN   TestReleaseSourceFreezeExcludesNonReleaseDatasetQualification
+--- PASS: TestReleaseSourceFreezeExcludesNonReleaseDatasetQualification (0.00s)
+=== NAME  
+=== RUN   TestReleaseGatesBracketWorkWithExactSourceFreezeSnapshots
+--- PASS: TestReleaseGatesBracketWorkWithExactSourceFreezeSnapshots (0.00s)
+=== NAME  
+PASS

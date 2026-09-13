@@ -1,0 +1,12 @@
+36706cc3b4c8590bdf84845010d5c9b15122b3a8db9fe7821b145e8397ca10fa  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/commands/integration24-normal-p1.command
+3c9cc3f37c491afd87470c81ca6a7b0236b978e4c415b2b8fdd4ce60b81dc703  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/plans/integration24-normal-p1.json
+8e26a5b238eee49f46c490d2f82ae501842302d9bb190c1d66b835fd4fff7bb7  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/sn-02ba4c7.source.manifest
+8cd75f3f9c8ad4cd3b25a2db3ceae466d5d5bd3324304ab2f8e7300d67168db5  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/source-roots-13.tsv
+e1638dc5817c0e0c15b86ed5ea3d56ec72a1b210c1811aeadd02fd3107879b70  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/source-manifests.sha256
+0f31ff88d495c4bd230c86bd6650eedfc1f86c50003fbe93551fe98923860b4c  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/config-qualification-bounded-manifest.json
+b8c55650239e6ad252eb3064e1c77f20038b482529ce2fc2cdc990f9827ba55c  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/input/handoff.json
+2ac90a765a01f60d0f12a60307cdb79e0468ddae8251b8ef17c41115f1821347  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/input/integration24.roots.txt
+e049dd5481777e5d5c5f9dbfb022050c874c5da01351e7148f8113dcabaa24f2  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/input/integration24.selector.txt
+553c8c6ada65960b39d7660d7fa8be71f4e6fb3c0b4527ff9b8505a8a7ddf01e  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/input/integration24.outcomes.tsv
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/input/integration24.literals.tsv
+88eb3ab05fc03d5444ef1196ea577a5cec8ad69b5f2f28138a9f184f1e693867  /home/by/urnetwork/temp/sn-initial-six-qualification-20260913/helper-go-tools-ebe70a/runtime/bin/qualification-ebe70a

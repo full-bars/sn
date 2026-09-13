@@ -6,15 +6,22 @@ full finalization of testnet chain **945**, subnet **521**, under
 reserve repair, renewal or campaign transaction has been made during the current
 preparation. Successful historical payments do not establish full acceptance.
 
-At **18:18 UTC on 2026-09-13**, the reserve-succession fix has passed its
+At **19:25 UTC on 2026-09-13**, the reserve-succession fix has passed its
 30-root normal/race qualification, and the private-fixture fix has passed all
 seven selected roots normally and under race plus the required three normal
-confirmations for each timeout root. Two of the three separate aggregate race
-confirmations have passed; the third is running on unchanged source and binary.
-The combined candidate still needs its current release gates. The user approved
+confirmations for each timeout root. All three separate aggregate race
+confirmations have now passed on unchanged source and binary. The Warp
+integration's 24 roots also pass normally and under race. The bootstrap driver
+is built. A subsequent dependency source-freeze correction passes all 12
+affected checks normally and under race; its current driver, final release
+lock and complete gates remain pending.
+The user approved
 **37,250 alpha lifetime for one 6,000-alpha replacement** of the unsubmitted
 3,750-alpha repair. That configuration is published, but no repair has been
 submitted. The prior plan and transaction journal remain retained.
+After the final race owner closed, the primary vault also adopted the exact
+approved commit `8b2f481dbe87092d0c1742274712a6f805c1c375`.
+[Primary adoption receipt](peerreview/evidence/FINAL-2-approved-reserve-allowance-20260913/PRIMARY-ADOPTION.json).
 
 [FINAL.md](FINAL.md) remains report 1, preserved at SHA-256
 `489fe5a367af6ce17541a0626fc052455f373d7792316593cc752d501cefd996`.
@@ -322,7 +329,7 @@ This establishes complete selection, not execution of all those tests.
 [compiled inventory result](peerreview/evidence/FINAL-2-aggregate-supplement-qualification-20260913/compiled2186/status.json),
 [exact execution plan](peerreview/evidence/FINAL-2-aggregate-supplement-qualification-20260913/QUALIFICATION-PLAN-v2.txt).
 The four interrupted roots' three sequential uncached race confirmations
-continue on the same isolated source and binary. The first full confirmation
+are complete on the same isolated source and binary. The first full confirmation
 passed all four roots with outer and suite exits 0, in **4,001.935 seconds**.
 Its 35 parsed events contain exactly four root passes, and its before/after
 source records match at SHA-256
@@ -332,8 +339,16 @@ The retained executable SHA-256 is
 The second confirmation completed at **17:54:07 UTC** with outer, native body
 and evidence-replay exits 0, all four roots passing, and **3,976.640 seconds**
 of body execution. Its before/after source records match, and the executable
-hash is the same as the first pass. The third began at **17:57:09 UTC** and is
-still running; the sequence remains incomplete until its actual terminal result.
+hash is the same as the first pass. The third ran from **17:57:09 to 19:05:50
+UTC**, with outer, list, body, events and replay exits **0**. All four roots
+passed, with **4,110.962 seconds** of body execution and the same executable.
+Its before/after source SHA-256 is
+`6611f683e1e685a506a061537e229087e65f3222cea10daae43a29f008d471c2`.
+This closes the three-pass confirmation obligation at its recorded scope;
+the final candidate still needs a complete aggregate pass.
+[Third confirmation terminal summary](peerreview/evidence/FINAL-2-supplement-race-p3-20260913/TERMINAL-SUMMARY.json),
+[raw body](peerreview/evidence/FINAL-2-supplement-race-p3-20260913/e999/active4-race-p3/body.stdout),
+[evidence replay](peerreview/evidence/FINAL-2-supplement-race-p3-20260913/e999/active4-race-p3/replay.stdout).
 [Second confirmation events](peerreview/evidence/FINAL-2-focused-corrections-20260913/e999/active4-race-p2/events.stdout),
 [second confirmation exits](peerreview/evidence/FINAL-2-focused-corrections-20260913/e999/active4-race-p2/outer.exit),
 [first confirmation report](peerreview/evidence/FINAL-2-supplement-race-confirmations-20260913/p1/report.json),
@@ -567,11 +582,47 @@ has **13 repositories and 16 live Go modules**. Terra's formatting inspection
 was clean. Module reconciliation found one metadata-only omission in Proxy:
 the indirect qpack requirement and its two checksum rows. Those three additions
 are published at `6204ae7df2a9868bbb3a7b61231917a36e4f5c9f`; all 16 module
-metadata checks are now clean. The exact 24-root normal/race integration and
-the final candidate's release lock, executable and complete gates remain open.
+metadata checks are now clean. The exact **24-root integration passed in both
+modes**: normal closed at **18:40:04 UTC**, race at **18:41:54 UTC**, each with
+24 root passes, zero descendants, 99 events and native/outer exits 0. The
+before/after 13-repository observations match. Their actual bodies took
+14.103 and 16.258 seconds; these are selected integration results.
+[Normal report](peerreview/evidence/FINAL-2-warp-admission-qualification-20260913/normal/report.json),
+[race report](peerreview/evidence/FINAL-2-warp-admission-qualification-20260913/race/report.json),
+[portable manifest](peerreview/evidence/FINAL-2-warp-admission-qualification-20260913/SHA256SUMS).
 Earlier qualification results retain their recorded source/dependency scope.
 [Proxy reconciliation and publication](peerreview/evidence/FINAL-2-proxy-module-reconciliation-20260913/PUBLISHED.json),
 [exact metadata diff](peerreview/evidence/FINAL-2-proxy-module-reconciliation-20260913/proxy-module.diff).
+
+Published candidate `e0a454248051a24d81c11d166054570cb4d20b5e` includes those
+qualified corrections and their evidence. Its clean, VCS-stamped bootstrap
+driver built with exit 0 at **18:48:57 UTC**, SHA-256
+`732e34ede35692082c3d4f87c4e03553c5fc75ad92b58d2d11208aa416667de4`.
+A native release-lock preview passed at **18:54:36 UTC**. The apply attempt
+refused the private SN checkout's detached upstream metadata before changing
+the lock. Repairing that metadata and fetching canonical branches exposed
+newer unrelated dependency commits; the qualified local source bytes remain
+unchanged and are proven ancestors of their canonical branches. The narrow
+source-freeze correction `17286251723b05a00717a642a6b5141cb02c2e12`, integrated
+as `c4185f7`, qualifies those recorded dependency commits while preserving exact
+current-main attestation for SN and exact before/after source snapshots.
+All **12 affected checks passed normally and under race**, with outer/native
+exits 0, 12 root passes, zero descendants and 51 events per mode. Normal closed
+at **19:24:06 UTC**, race at **19:25:14 UTC**; their bodies took **20.504** and
+**22.211 seconds**. All four before/after source records have SHA-256
+`ac3fda7c5435d35880008337d5b7b808af607dd97c80161c2abf7c00c5f45ff8`.
+The new behavioral control covers canonical main/master advancement without
+changing the recorded candidate, and rejects unpublished, divergent or
+rewound-out dependency history. The final locked driver and both complete
+gates remain pending. No chain transaction resulted from this preparation.
+[Normal correction report](peerreview/evidence/FINAL-2-dependency-ancestry-qualification-20260913/normal/report.json),
+[race correction report](peerreview/evidence/FINAL-2-dependency-ancestry-qualification-20260913/race/report.json),
+[exact patch and declarations](peerreview/evidence/FINAL-2-dependency-ancestry-qualification-20260913/handoff/handoff.json),
+[source and evidence manifest](peerreview/evidence/FINAL-2-dependency-ancestry-qualification-20260913/PORTABLE-MANIFEST.json).
+[Bootstrap result](peerreview/evidence/FINAL-2-bootstrap-e0a4542-20260913/RESULT-BOOTSTRAP-CLI-BUILD.json),
+[reviewed preview](peerreview/evidence/FINAL-2-lock-preparation-e0a4542-20260913/release-lock-e0a4542-20260913T185435Z/REVIEW.json),
+[actual apply refusal](peerreview/evidence/FINAL-2-lock-preparation-e0a4542-20260913/release-lock-e0a4542-20260913T185435Z/apply/RESULT.json),
+[canonical ancestry observations](peerreview/evidence/FINAL-2-lock-preparation-e0a4542-20260913/private-canonical-tracking-20260913T1908Z/ANCESTOR-TRACKING.json).
 
 The next run must retain both complete gate results on its final candidate,
 five accelerated epochs, the activated production policy and three consecutive

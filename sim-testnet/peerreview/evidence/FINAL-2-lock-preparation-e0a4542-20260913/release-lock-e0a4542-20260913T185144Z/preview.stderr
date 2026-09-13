@@ -1,0 +1,6 @@
+[env]glog not configured from command line. Using default configuration.
+I0913 18:51:44.954098  444234 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0913 18:51:44.954431  444234 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0913 18:51:44.954533  444234 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0913 18:51:44.954563  444234 env.go:67] [env]settings = map[]
+sim-testnet: resolve release repository forge-std: lstat /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/evm/lib: no such file or directory

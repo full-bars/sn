@@ -1,0 +1,11 @@
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/commands/capture-integration24-normal-p1.sh: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/commands/capture-integration24-race-p1.sh: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/commands/integration24-normal-p1.command: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/commands/integration24-race-p1.command: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/plans/integration24-normal-p1.json: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/plans/integration24-race-p1.json: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/source-roots-13.tsv: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/source-manifests.sha256: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/config-qualification-bounded-manifest.json: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/input/SHA256SUMS: OK
+/home/by/urnetwork/temp/sn-initial-six-qualification-20260913/helper-go-tools-ebe70a/runtime/bin/qualification-ebe70a: OK

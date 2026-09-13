@@ -1,0 +1,55 @@
+{
+  "accepted_plan": "/home/by/urnetwork/temp/sn-reserve-repair-succession-qualification-20260913/runtime/plans/integration30-normal-p1.json",
+  "accepted_plan_sha256": "3fa1fda18426b1c8883dad70f144afe16edd933ba2757029033362366bee4dda",
+  "cause": "v1 omitted packages, source_root and limits; missing packages triggered the cardinality validator. Existing helper permits up to 256 sources.",
+  "helper_binary": "/home/by/urnetwork/temp/sn-initial-six-qualification-20260913/helper-go-tools-ebe70a/runtime/bin/qualification-ebe70a",
+  "helper_binary_sha256": "88eb3ab05fc03d5444ef1196ea577a5cec8ad69b5f2f28138a9f184f1e693867",
+  "helper_config_matches_ebe70a": true,
+  "not_executed": [
+    "Go",
+    "build",
+    "formatter",
+    "test",
+    "helper validation",
+    "replay"
+  ],
+  "owner_fields": "Terra creates fresh v2 body commands/outers/captures, references these immutable plans, and includes the new plan/body/wrapper hashes in fresh PREPARED records. Retain v1 inputs, outputs and refusals. Reuse unchanged source manifests/declarations and existing prepared temp/cache paths only when idle; do not require a new source or binary.",
+  "plans": {
+    "normal": {
+      "added_fields": [
+        "source_root",
+        "limits",
+        "packages"
+      ],
+      "failure_literals_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_plan": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/plans/integration24-normal-p1.json",
+      "original_plan_sha256": "3c9cc3f37c491afd87470c81ca6a7b0236b978e4c415b2b8fdd4ce60b81dc703",
+      "outcomes_sha256": "553c8c6ada65960b39d7660d7fa8be71f4e6fb3c0b4527ff9b8505a8a7ddf01e",
+      "package_count": 1,
+      "plan": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-plan-correction-v2/integration24-normal-p1-v2.json",
+      "plan_sha256": "393f7ba1e97b5ee063e3f056d91b8df95670c0078d8bbbb0fe31c981398af6b6",
+      "source_count": 13,
+      "suite_count": 1
+    },
+    "race": {
+      "added_fields": [
+        "source_root",
+        "limits",
+        "packages"
+      ],
+      "failure_literals_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_plan": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/plans/integration24-race-p1.json",
+      "original_plan_sha256": "12e4b87f0fc054662e2e92d1f810e3f518394fa8f0322237dab133f71371c0ea",
+      "outcomes_sha256": "553c8c6ada65960b39d7660d7fa8be71f4e6fb3c0b4527ff9b8505a8a7ddf01e",
+      "package_count": 1,
+      "plan": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-plan-correction-v2/integration24-race-p1-v2.json",
+      "plan_sha256": "b64edfa600191ffc8b5cc73fb53eeb43625024b1f36d6661fb5e283416ab9c64",
+      "source_count": 13,
+      "suite_count": 1
+    }
+  },
+  "scope": "external plan metadata only; original refusals retained; no source/helper/limits/census changes",
+  "source_manifest": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/sn-02ba4c7.source.manifest",
+  "source_root": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+  "unchanged_helper_config_sha256": "b20a01c14b567558a33a5b4cebcee77c10dca11eda937107171025344ebedfeb"
+}

@@ -1,0 +1,138 @@
+{
+  "changed_files": {
+    "scripts/check-release-source-freeze.sh": {
+      "bytes": 6851,
+      "mode": "775",
+      "sha256": "443349a05cc3dc1350da181178e00273cde59969474b02a41618b72cb40d2335"
+    },
+    "sim-testnet/release_gate_test.go": {
+      "bytes": 138582,
+      "mode": "664",
+      "sha256": "3786ba13f56702fdc48d222db868c5de5a1d7d5722187e61a5710df134ab0e49"
+    }
+  },
+  "checkout": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/sn",
+  "commit": "17286251723b05a00717a642a6b5141cb02c2e12",
+  "executed": {
+    "build": false,
+    "formatter": false,
+    "git_diff_check": true,
+    "go": false,
+    "test": false
+  },
+  "files": {
+    "README.md": {
+      "bytes": 3667,
+      "mode": "600",
+      "sha256": "10456c999aede00246f2fd22ee5e022c8f8c3a1a7d398714933cba55d9a6a707"
+    },
+    "changed-files.sha256": {
+      "bytes": 204,
+      "mode": "600",
+      "sha256": "e5bcf8393a244c066aab9102415dbbaac0945718183360a850ce819ca0b5eb5f"
+    },
+    "dependency-ancestry-admission.patch": {
+      "bytes": 8094,
+      "mode": "600",
+      "sha256": "236f44bc63b05251d9f4ea41ea2c54bb8e912694dc33f2c0cca042438615d365"
+    },
+    "integration12.literals.tsv": {
+      "bytes": 0,
+      "mode": "600",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "integration12.outcomes.tsv": {
+      "bytes": 744,
+      "mode": "600",
+      "sha256": "042592628a1391a6901f1506189d555279a098c1f944589152678474a71afd32"
+    },
+    "integration12.roots.txt": {
+      "bytes": 684,
+      "mode": "600",
+      "sha256": "55a5f623264325acbbce0e051afad4876526bde44e22f043f4af13f7cfdf748c"
+    },
+    "integration12.selector.txt": {
+      "bytes": 688,
+      "mode": "600",
+      "sha256": "c98aeff28de668f1794d1dd8ceb2cc936ad5593127498fc979ae27e727d6fd3b"
+    },
+    "new1.literals.tsv": {
+      "bytes": 0,
+      "mode": "600",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "new1.outcomes.tsv": {
+      "bytes": 75,
+      "mode": "600",
+      "sha256": "96f28d7b56f63a495faa2858eca222661ae08bde7c4801cac0d9609e1fca3345"
+    },
+    "new1.roots.txt": {
+      "bytes": 70,
+      "mode": "600",
+      "sha256": "05da477adc2aa6456a11a928f0b35749c0b697f656cc72afa4c0f6a656f23ff2"
+    },
+    "new1.selector.txt": {
+      "bytes": 74,
+      "mode": "600",
+      "sha256": "7d022832ce71242f1cd8b5d569595d1d781ade3eb32c40f4af6ea4c1127708f6"
+    }
+  },
+  "groups": {
+    "integration12": {
+      "descendants": [],
+      "literals": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/handoff-v1/integration12.literals.tsv",
+      "outcome_count": 12,
+      "outcomes": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/handoff-v1/integration12.outcomes.tsv",
+      "root_count": 12,
+      "roots": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/handoff-v1/integration12.roots.txt",
+      "selector": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/handoff-v1/integration12.selector.txt",
+      "source_lines": {
+        "TestReleaseGatesBracketWorkWithExactSourceFreezeSnapshots": 2148,
+        "TestReleaseSourceFreezeDoesNotRequireAssociativeArrays": 1932,
+        "TestReleaseSourceFreezeExcludesNonReleaseDatasetQualification": 2130,
+        "TestReleaseSourceFreezeIgnoresIgnoredRuntimeModules": 2048,
+        "TestReleaseSourceFreezeRecordsCompleteCleanWorkspace": 1832,
+        "TestReleaseSourceFreezeRefreshesRemoteBeforeAcceptingRevision": 1956,
+        "TestReleaseSourceFreezeRejectsDirtyUntrackedAndUnsynchronizedRepositories": 2069,
+        "TestReleaseSourceFreezeRejectsDirtyVerifierBeforeExecution": 1913,
+        "TestReleaseSourceFreezeRejectsUnclassifiedGoModule": 2108,
+        "TestReleaseSourceFreezeRejectsWrongOrigin": 1944,
+        "TestReleaseSourceFreezeRequiresWarpProvenance": 1870,
+        "TestReleaseSourceFreezeRetainsPublishedDependencyWhenUpstreamAdvances": 1979
+      }
+    },
+    "new1": {
+      "descendants": [],
+      "literals": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/handoff-v1/new1.literals.tsv",
+      "outcome_count": 1,
+      "outcomes": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/handoff-v1/new1.outcomes.tsv",
+      "root_count": 1,
+      "roots": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/handoff-v1/new1.roots.txt",
+      "selector": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/handoff-v1/new1.selector.txt",
+      "source_lines": {
+        "TestReleaseSourceFreezeRetainsPublishedDependencyWhenUpstreamAdvances": 1979
+      }
+    }
+  },
+  "native_additional_dependency_head_equality_barrier": false,
+  "native_current_sn_rule_unchanged": true,
+  "package": "github.com/urfoundation/sn/sim-testnet",
+  "parent": "e0a454248051a24d81c11d166054570cb4d20b5e",
+  "qualification": {
+    "build_seconds": 1200,
+    "count": 1,
+    "dependency_graph": "reuse exact current qualified physical13; newly fetched upstream tips are ancestry witnesses only",
+    "gomaxprocs": 4,
+    "group": "integration12",
+    "jobs": 1,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "new_r3_obligations": [],
+    "owner_seconds": 660,
+    "parallel": 4,
+    "test_seconds": 600
+  },
+  "schema": "dependency-ancestry-admission-handoff-v1"
+}

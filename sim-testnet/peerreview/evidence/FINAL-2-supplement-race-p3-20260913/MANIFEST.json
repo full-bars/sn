@@ -1,0 +1,337 @@
+{
+  "base_manifest_sha256": "1e1f7398d18f18df2736159a82e8951fae90f08c39212c9ce5a7698572ba2c42",
+  "base_package": "/home/by/urnetwork/temp/sn-final2-focused-evidence-20260913",
+  "entries": [
+    {
+      "bytes": 8449,
+      "mode": 384,
+      "path": "SOURCE-MAP.tsv",
+      "role": "source-map",
+      "sha256": "470ffca5596e16e38872bc8d6931a532040628308539eead56e50b2a6078a1c1",
+      "source": "generated at P3 terminal closure"
+    },
+    {
+      "bytes": 1658,
+      "mode": 384,
+      "path": "TERMINAL-SUMMARY.json",
+      "role": "terminal-summary",
+      "sha256": "1ccbeb66004d6636de9c25ce72ff44212bb3c9a4804f3a65675d5bec2758cd8a",
+      "source": "generated at P3 terminal closure"
+    },
+    {
+      "bytes": 3966,
+      "mode": 384,
+      "path": "e999/active4-race-p3/INPUTS.sha256",
+      "role": "e999-p3/INPUTS.sha256",
+      "sha256": "6c8081e9e83de2ff5ecdd8934420afb1592ec827d54e60c0caa0e82b250b1a15",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/INPUTS.sha256"
+    },
+    {
+      "bytes": 216,
+      "mode": 384,
+      "path": "e999/active4-race-p3/binary.after.sha256",
+      "role": "e999-p3/binary.after.sha256",
+      "sha256": "ce514f7845653eafbe74cb65f3c2eb651516fb9f346012d7aa18f952661af697",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/binary.after.sha256"
+    },
+    {
+      "bytes": 164,
+      "mode": 384,
+      "path": "e999/active4-race-p3/binary.after.stat",
+      "role": "e999-p3/binary.after.stat",
+      "sha256": "029b7836f250d2ba1a3c67bb0c13cb703f8acfddd019ab531006ccdf07a1432f",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/binary.after.stat"
+    },
+    {
+      "bytes": 216,
+      "mode": 384,
+      "path": "e999/active4-race-p3/binary.before.sha256",
+      "role": "e999-p3/binary.before.sha256",
+      "sha256": "ce514f7845653eafbe74cb65f3c2eb651516fb9f346012d7aa18f952661af697",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/binary.before.sha256"
+    },
+    {
+      "bytes": 164,
+      "mode": 384,
+      "path": "e999/active4-race-p3/binary.before.stat",
+      "role": "e999-p3/binary.before.stat",
+      "sha256": "029b7836f250d2ba1a3c67bb0c13cb703f8acfddd019ab531006ccdf07a1432f",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/binary.before.stat"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "e999/active4-race-p3/body.outer.exit",
+      "role": "e999-p3/body.outer.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/body.outer.exit"
+    },
+    {
+      "bytes": 118,
+      "mode": 384,
+      "path": "e999/active4-race-p3/body.result.json",
+      "role": "e999-p3/body.result.json",
+      "sha256": "70c565437b4376f8775e055534d09efcfd677078fef6a76f8a7fdc5417f0b73f",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/body.result.json"
+    },
+    {
+      "bytes": 417,
+      "mode": 384,
+      "path": "e999/active4-race-p3/body.stderr",
+      "role": "e999-p3/body.stderr",
+      "sha256": "a5dabd959709361f661c9f8db01ad2c5d6aa7794f12184dbf4e31341e534a53b",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/body.stderr"
+    },
+    {
+      "bytes": 1383,
+      "mode": 384,
+      "path": "e999/active4-race-p3/body.stdout",
+      "role": "e999-p3/body.stdout",
+      "sha256": "9723fbeae91a701133d33413329badc11624c2f132426077d42d5a553fbb2448",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/body.stdout"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "e999/active4-race-p3/events.outer.exit",
+      "role": "e999-p3/events.outer.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/events.outer.exit"
+    },
+    {
+      "bytes": 115,
+      "mode": 384,
+      "path": "e999/active4-race-p3/events.result.json",
+      "role": "e999-p3/events.result.json",
+      "sha256": "9b6c591ddcb875bf0cf58281ac90c330d829b7d509fb285439e7f67d2c3d1fd8",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/events.result.json"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "e999/active4-race-p3/events.stderr",
+      "role": "e999-p3/events.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/events.stderr"
+    },
+    {
+      "bytes": 7978,
+      "mode": 384,
+      "path": "e999/active4-race-p3/events.stdout",
+      "role": "e999-p3/events.stdout",
+      "sha256": "7552072cd07ebfd729349214fe11ef0c642fe476606ce19d2ca2be1e04d2a570",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/events.stdout"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "e999/active4-race-p3/list.outer.exit",
+      "role": "e999-p3/list.outer.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/list.outer.exit"
+    },
+    {
+      "bytes": 114,
+      "mode": 384,
+      "path": "e999/active4-race-p3/list.result.json",
+      "role": "e999-p3/list.result.json",
+      "sha256": "3a015f3b7a9a361d2b381f79b920710841b4b20730dff4dfce52facaf810728e",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/list.result.json"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "e999/active4-race-p3/literals.tsv",
+      "role": "e999-p3/literals.tsv",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/literals.tsv"
+    },
+    {
+      "bytes": 298,
+      "mode": 384,
+      "path": "e999/active4-race-p3/outcomes.tsv",
+      "role": "e999-p3/outcomes.tsv",
+      "sha256": "567bba309848423e957e1f025a789ee2852e926518ddb4caddde7bab1dfeca21",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/outcomes.tsv"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "e999/active4-race-p3/outer.exit",
+      "role": "e999-p3/outer.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/outer/active4-race-p3.exit"
+    },
+    {
+      "bytes": 21,
+      "mode": 384,
+      "path": "e999/active4-race-p3/outer.finished-at",
+      "role": "e999-p3/outer.finished-at",
+      "sha256": "fc804e87b82fbae7cc409b14bf7b43475e3e86d12d3ccfd35a05613544b88ea0",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/outer/active4-race-p3.finished-at"
+    },
+    {
+      "bytes": 1182,
+      "mode": 384,
+      "path": "e999/active4-race-p3/outer.inputs.sha256",
+      "role": "e999-p3/outer.inputs.sha256",
+      "sha256": "4dd6b4a52b93bdfb64eecd19533bb8a94bb1ea172b8c66c7b2c5fcec67af4e68",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/outer/active4-race-p3.inputs.sha256"
+    },
+    {
+      "bytes": 21,
+      "mode": 384,
+      "path": "e999/active4-race-p3/outer.started-at",
+      "role": "e999-p3/outer.started-at",
+      "sha256": "2c8c4602afc5bf9a7ef25186b81461376283dcf944a6233bf81c584abb4b1a7f",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/outer/active4-race-p3.started-at"
+    },
+    {
+      "bytes": 2071,
+      "mode": 384,
+      "path": "e999/active4-race-p3/p1.proofs.sha256",
+      "role": "e999-p3/p1.proofs.sha256",
+      "sha256": "4ce82ef7f6ee77ec0f5a0876bc2a637ebd115a4daefe8d9a9dae578e01b9ad82",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/p1.proofs.sha256"
+    },
+    {
+      "bytes": 3314,
+      "mode": 384,
+      "path": "e999/active4-race-p3/p2.proofs.sha256",
+      "role": "e999-p3/p2.proofs.sha256",
+      "sha256": "c07f4a7d2721368344485c7e44913eea093ac91b02841a3524852f5e8ff6f75c",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/p2.proofs.sha256"
+    },
+    {
+      "bytes": 1587,
+      "mode": 384,
+      "path": "e999/active4-race-p3/parent-proof.json",
+      "role": "e999-p3/parent-proof.json",
+      "sha256": "eed4c368f98ef24785605bc8a18ede2bf2ebbf23db9193e2d9ec6dc5aa6a6bb3",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/parent-proof.json"
+    },
+    {
+      "bytes": 1405,
+      "mode": 384,
+      "path": "e999/active4-race-p3/parent-proofs.sha256",
+      "role": "e999-p3/parent-proofs.sha256",
+      "sha256": "b2b4f460b89da2c600ff43127c90d886bf4d76a5fd28898a39f4c9ac56758123",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/parent-proofs.sha256"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "e999/active4-race-p3/replay.exit",
+      "role": "e999-p3/replay.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/replay.exit"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "e999/active4-race-p3/replay.stderr",
+      "role": "e999-p3/replay.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/replay.stderr"
+    },
+    {
+      "bytes": 236,
+      "mode": 384,
+      "path": "e999/active4-race-p3/replay.stdout",
+      "role": "e999-p3/replay.stdout",
+      "sha256": "f3d6e616c64a0878395941f8afe76e283e0445484874d63998fd9343dc2afecd",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/replay.stdout"
+    },
+    {
+      "bytes": 5,
+      "mode": 384,
+      "path": "e999/active4-race-p3/result",
+      "role": "e999-p3/result",
+      "sha256": "9f56e761d79bfdb34304a012586cb04d16b435ef6130091a97702e559260a2f2",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/result"
+    },
+    {
+      "bytes": 278,
+      "mode": 384,
+      "path": "e999/active4-race-p3/roots.txt",
+      "role": "e999-p3/roots.txt",
+      "sha256": "57d82a41672f2484e98c23cf74b6bb6e67978cdbaef5afe6b3d16613dacc953a",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/roots.txt"
+    },
+    {
+      "bytes": 282,
+      "mode": 384,
+      "path": "e999/active4-race-p3/selector.txt",
+      "role": "e999-p3/selector.txt",
+      "sha256": "1a4db792584384e6a94ca5c173338d46951701012faf6ebf80b0dd693b83313d",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/selector.txt"
+    },
+    {
+      "bytes": 3379,
+      "mode": 384,
+      "path": "e999/active4-race-p3/source.after.tsv",
+      "role": "e999-p3/source.after.tsv",
+      "sha256": "6611f683e1e685a506a061537e229087e65f3222cea10daae43a29f008d471c2",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/source.after.tsv"
+    },
+    {
+      "bytes": 3379,
+      "mode": 384,
+      "path": "e999/active4-race-p3/source.before.tsv",
+      "role": "e999-p3/source.before.tsv",
+      "sha256": "6611f683e1e685a506a061537e229087e65f3222cea10daae43a29f008d471c2",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/runtime/active4-race-confirmations-e999-v1/confirmations/active4-race-p3/source.before.tsv"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "e999/declarations/active4.literals.tsv",
+      "role": "e999-declaration/active4.literals.tsv",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/active4.literals.tsv"
+    },
+    {
+      "bytes": 298,
+      "mode": 384,
+      "path": "e999/declarations/active4.outcomes.tsv",
+      "role": "e999-declaration/active4.outcomes.tsv",
+      "sha256": "567bba309848423e957e1f025a789ee2852e926518ddb4caddde7bab1dfeca21",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/active4.outcomes.tsv"
+    },
+    {
+      "bytes": 278,
+      "mode": 384,
+      "path": "e999/declarations/active4.roots.txt",
+      "role": "e999-declaration/active4.roots.txt",
+      "sha256": "57d82a41672f2484e98c23cf74b6bb6e67978cdbaef5afe6b3d16613dacc953a",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/active4.roots.txt"
+    },
+    {
+      "bytes": 282,
+      "mode": 384,
+      "path": "e999/declarations/active4.selector.txt",
+      "role": "e999-declaration/active4.selector.txt",
+      "sha256": "1a4db792584384e6a94ca5c173338d46951701012faf6ebf80b0dd693b83313d",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/active4.selector.txt"
+    },
+    {
+      "bytes": 17044,
+      "mode": 384,
+      "path": "e999/declarations/handoff.json",
+      "role": "e999-declaration/handoff.json",
+      "sha256": "7144545aa9adec70be49d3bb31881b54b07e1804d0650bd0c83cc78e084e6de8",
+      "source": "/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/handoff.json"
+    }
+  ],
+  "exclusions": [
+    "no test binary",
+    "no Go cache or module cache",
+    "no source manifest or source contents",
+    "no vault contents",
+    "no live runtime process artifacts"
+  ],
+  "schema": "final2-focused-qualification-evidence-supplement-v1",
+  "scope": {
+    "e999": "closed active4 race p3, completing p1-p3 same-source/same-binary confirmation streak"
+  }
+}

@@ -1,0 +1,14 @@
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/commands/capture-integration24-normal-p1-v5.sh: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/commands/capture-integration24-race-p1-v5.sh: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/commands/integration24-normal-p1-v5.command: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/commands/integration24-race-p1-v5.command: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-plan-correction-v2/integration24-normal-p1-v2.json: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-plan-correction-v2/integration24-race-p1-v2.json: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/source-roots-13.tsv: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/source-manifests.sha256: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/custody/config-qualification-bounded-manifest.json: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/input/SHA256SUMS: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/cache-prep-current16-v2/module-restored-before-offline.sha256: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/cache-prep-current16-v2/module-restored-after-offline.sha256: OK
+/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/cache-prep-current16-v2/restored-offline-list.exit: OK
+/home/by/urnetwork/temp/sn-initial-six-qualification-20260913/helper-go-tools-ebe70a/runtime/bin/qualification-ebe70a: OK

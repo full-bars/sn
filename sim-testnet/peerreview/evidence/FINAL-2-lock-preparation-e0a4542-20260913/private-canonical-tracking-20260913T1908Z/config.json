@@ -1,0 +1,54 @@
+{
+  "repo": "config",
+  "started_at": "2026-09-13T19:06:41.163492+00:00",
+  "canonical_branch": "main",
+  "before_head": "268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc",
+  "before_status": "",
+  "before_branch": {
+    "argv": [
+      "symbolic-ref",
+      "--quiet",
+      "--short",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "codex/sim-testnet-final-20260913\n",
+    "stderr": ""
+  },
+  "fetch": {
+    "argv": [
+      "fetch",
+      "--no-tags",
+      "origin",
+      "refs/heads/main:refs/remotes/origin/main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "From github.com:urnetwork/config\n * [new branch]      main       -> origin/main\n"
+  },
+  "remote_head": "268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc",
+  "accepted_head_matches_remote": true,
+  "set_upstream": {
+    "argv": [
+      "branch",
+      "--set-upstream-to=origin/main"
+    ],
+    "exit": 0,
+    "stdout": "branch 'codex/sim-testnet-final-20260913' set up to track 'origin/main'.\n",
+    "stderr": ""
+  },
+  "after_head": "268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc",
+  "after_status": "",
+  "after_upstream": {
+    "argv": [
+      "rev-parse",
+      "--abbrev-ref",
+      "@{u}"
+    ],
+    "exit": 0,
+    "stdout": "origin/main\n",
+    "stderr": ""
+  },
+  "source_unchanged": true,
+  "finished_at": "2026-09-13T19:06:42.046847+00:00"
+}

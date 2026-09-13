@@ -1,0 +1,55 @@
+{
+  "repo": "server",
+  "started_at": "2026-09-13T19:06:29.033583+00:00",
+  "canonical_branch": "main",
+  "before_head": "93bc8c592797da0335f4201c5027a2b52906790e",
+  "before_status": "",
+  "before_branch": {
+    "argv": [
+      "symbolic-ref",
+      "--quiet",
+      "--short",
+      "HEAD"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "fetch": {
+    "argv": [
+      "fetch",
+      "--no-tags",
+      "origin",
+      "refs/heads/main:refs/remotes/origin/main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "From github.com:urnetwork/server\n   cb2d08de..1c16ef52  main       -> origin/main\n"
+  },
+  "remote_head": "1c16ef52fad4504a2e241a3ef1aa63c6b8296775",
+  "accepted_head_matches_remote": false,
+  "unexpected_remote_commits": {
+    "argv": [
+      "log",
+      "--oneline",
+      "HEAD..origin/main"
+    ],
+    "exit": 0,
+    "stdout": "1c16ef52 perfvar: the lane rule joins the feature dimension, both polarities\n15e4c8c8 perfvar: the relay-stall exports are lifetime maxima, read from the lifetime block\nf6f50098 perfvar: the readout carries the relay-stall exports as maxima per run\n6503815e perfvar: record the relay-stall exports, the cumulative-ack gap and the timer's round trip\naa2655a2 perfvar: flightgate can pass extra arguments to every run, for verbose reproductions\n1aa6471a perfvar: flightgate can repeat one seed, for a fixed-seed reproduction\n0b6780c6 perfvar: the readout keeps three decimals for sub-megabit goodput\na310897a perfvar: the readout shows the latency-under-load primary, probe latency and delivery under load\n0ea78b28 perfvar: the send-route wrapper exposes its carrier type; the readout folds the unlabelled relay and reports goodput over every correct run\nc62b5bc0 perfvar: the deferred-retransmit delta comes from the by-name counters so older arms build\n463f3356 perfvar: record the deferred-retransmit count, read by name so every arm builds\nf99c8614 perfvar: the feature test reads its settings by name so it builds on every arm\n36e2eef3 perfvar: features apply by name in both polarities so every arm builds\n3b0056f4 perfvar: a feature dimension for the settings that ship off by default\n0088a269 perfvar: flightgate arms may name their own SDK tree\nae6ad515 perfvar: sample runtime and pool memory per run as the MEMSTEADY guardrail\n1279c883 perfvar: the carrier boundary ignores the unreliable-carrier ack age, a clock, when judging stability\n474c6be4 perfvar: flightgate shell entry passes the subcommand before -server\ne81caabc perfvar: document the mixed routes and add the flightgate campaign driver and readout\nbc55a9f5 perfvar: mixed P2P+H1 routes, direct-lane profiles, scoped events, progress windows\nfa1bd422 perfvar: record the FLIGHTGATEFIX attribution counters\n2796f34f Monitor: dns alias signal, host power and probe cleanup\n381eafe3 Expand monitor topology coverage\n24294159 Preserve fixed multihop test discovery\n37a39c0c Classify monitor errors before rendering alerts\n522d3401 Cover Circle admission capability in Grafana\nac74caac extender dns: pin the batch that creates every set in an empty zone\n",
+    "stderr": ""
+  },
+  "after_head": "93bc8c592797da0335f4201c5027a2b52906790e",
+  "after_status": "",
+  "after_upstream": {
+    "argv": [
+      "rev-parse",
+      "--abbrev-ref",
+      "@{u}"
+    ],
+    "exit": 128,
+    "stdout": "",
+    "stderr": "fatal: HEAD does not point to a branch\n"
+  },
+  "source_unchanged": true,
+  "finished_at": "2026-09-13T19:06:30.581960+00:00"
+}

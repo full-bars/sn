@@ -1,0 +1,293 @@
+{
+  "finished_at": "2026-09-13T19:08:22.878857+00:00",
+  "kind": "attach-canonical-upstream-at-proven-published-ancestor",
+  "rows": [
+    {
+      "repo": "server",
+      "ancestry": {
+        "argv": [
+          "merge-base",
+          "--is-ancestor",
+          "HEAD",
+          "origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "before_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "93bc8c592797da0335f4201c5027a2b52906790e\n",
+        "stderr": ""
+      },
+      "branch": {
+        "argv": [
+          "switch",
+          "-c",
+          "sim-testnet/final-gates-20260913"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'sim-testnet/final-gates-20260913'\n"
+      },
+      "upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'sim-testnet/final-gates-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "93bc8c592797da0335f4201c5027a2b52906790e\n",
+        "stderr": ""
+      },
+      "after_status": {
+        "argv": [
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "repo": "connect",
+      "ancestry": {
+        "argv": [
+          "merge-base",
+          "--is-ancestor",
+          "HEAD",
+          "origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "before_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "2a0f603e8076224fdab4d9f56e5a0a557ed513d9\n",
+        "stderr": ""
+      },
+      "branch": {
+        "argv": [
+          "switch",
+          "-c",
+          "sim-testnet/final-gates-20260913"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'sim-testnet/final-gates-20260913'\n"
+      },
+      "upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'sim-testnet/final-gates-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "2a0f603e8076224fdab4d9f56e5a0a557ed513d9\n",
+        "stderr": ""
+      },
+      "after_status": {
+        "argv": [
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "repo": "sdk",
+      "ancestry": {
+        "argv": [
+          "merge-base",
+          "--is-ancestor",
+          "HEAD",
+          "origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "before_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b\n",
+        "stderr": ""
+      },
+      "branch": {
+        "argv": [
+          "switch",
+          "-c",
+          "sim-testnet/final-gates-20260913"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'sim-testnet/final-gates-20260913'\n"
+      },
+      "upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'sim-testnet/final-gates-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b\n",
+        "stderr": ""
+      },
+      "after_status": {
+        "argv": [
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "repo": "vault",
+      "ancestry": {
+        "argv": [
+          "merge-base",
+          "--is-ancestor",
+          "HEAD",
+          "origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "before_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "8b2f481dbe87092d0c1742274712a6f805c1c375\n",
+        "stderr": ""
+      },
+      "upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'main' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "8b2f481dbe87092d0c1742274712a6f805c1c375\n",
+        "stderr": ""
+      },
+      "after_status": {
+        "argv": [
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "repo": "xops",
+      "ancestry": {
+        "argv": [
+          "merge-base",
+          "--is-ancestor",
+          "HEAD",
+          "origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "before_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "a9d2eb4bfbdf72d61243908a71659adff0fb8160\n",
+        "stderr": ""
+      },
+      "upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'codex/sim-testnet-final-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": {
+        "argv": [
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "a9d2eb4bfbdf72d61243908a71659adff0fb8160\n",
+        "stderr": ""
+      },
+      "after_status": {
+        "argv": [
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ],
+  "product_check_not_yet_changed": true,
+  "chain_transactions": 0
+}

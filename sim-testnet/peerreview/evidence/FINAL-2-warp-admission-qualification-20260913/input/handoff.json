@@ -1,0 +1,278 @@
+{
+  "base": "bce9f2dfb22b7de48c4fd8ed8746a997ea5d3dfe",
+  "changed_files": {
+    "go.mod": {
+      "bytes": 10279,
+      "mode": "664",
+      "sha256": "c703461ed6d15c0119423b94dc3a6e543c71935fee0559213a3fabd68063b9b0"
+    },
+    "scripts/check-release-source-freeze.sh": {
+      "bytes": 6361,
+      "mode": "775",
+      "sha256": "8531edd8a5a8466fa637547295e4b068191d892fed82ed5ff02b2c46b81ccb28"
+    },
+    "scripts/release-gate-jobs.sh": {
+      "bytes": 20429,
+      "mode": "664",
+      "sha256": "07e53f818dbb777bfefae32b860b1f52ea7b680e147999522e176c34bb243ad5"
+    },
+    "scripts/test-release-1.0-local.sh": {
+      "bytes": 34953,
+      "mode": "775",
+      "sha256": "00bfc8d6a16934fae80ad10e5690874bcf9f70b4aeba208ac3d3c340568b4aaa"
+    },
+    "scripts/test-release-1.0-producer-gate.sh": {
+      "bytes": 43588,
+      "mode": "775",
+      "sha256": "877fe4c12ea5d48c9db81f63af38e95fa309e196d70088efe64b68a8f5f36aa6"
+    },
+    "sim-testnet/release_gate_test.go": {
+      "bytes": 135103,
+      "mode": "664",
+      "sha256": "2831d9a71369a814624dcc610f7074f2182331624e955e473dff51877741b7f7"
+    },
+    "sim-testnet/release_lock_render.go": {
+      "bytes": 20650,
+      "mode": "664",
+      "sha256": "0785f0976603f29db7bd07ec8dbf5d1b7da525147e4fa3c1b6ca4d770b76c1d1"
+    },
+    "sim-testnet/release_lock_render_test.go": {
+      "bytes": 16911,
+      "mode": "664",
+      "sha256": "6e484aa96b4a2c44e5d021979118f3ab573dbf522629aef409cde4e2660da4cb"
+    }
+  },
+  "checkout": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/sn",
+  "commit": "02ba4c743d812a35248b28f070a9e839358d22ab",
+  "composition": [
+    {
+      "composed": "bb90872175eab68021b152dab6a3d627bbc3aef0",
+      "original": "6311cb824b7fd36b76a400f984009db4c3efaa9a"
+    },
+    {
+      "composed": "2e7b67a33b27c38677878be9474f496eca286589",
+      "original": "f6cfd7979c95b1f9c2e4134a7a7e75b3e8f32b57"
+    }
+  ],
+  "executed": {
+    "build": false,
+    "formatter": false,
+    "git_diff_check": true,
+    "go": false,
+    "tests": false
+  },
+  "files": {
+    "README.md": {
+      "bytes": 3739,
+      "mode": "600",
+      "sha256": "b7dad075dc8099a3c2528eebab75f4496046f725fc299cf8bec5bd9f21b9a1ca"
+    },
+    "changed-files.sha256": {
+      "bytes": 787,
+      "mode": "600",
+      "sha256": "94ffa765ac0cc7055cef9f7340d4626f7f3d81dd4e3aa1364ce15f1cb6ff9524"
+    },
+    "integration24.literals.tsv": {
+      "bytes": 0,
+      "mode": "600",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "integration24.outcomes.tsv": {
+      "bytes": 1479,
+      "mode": "600",
+      "sha256": "553c8c6ada65960b39d7660d7fa8be71f4e6fb3c0b4527ff9b8505a8a7ddf01e"
+    },
+    "integration24.roots.txt": {
+      "bytes": 1359,
+      "mode": "600",
+      "sha256": "2ac90a765a01f60d0f12a60307cdb79e0468ddae8251b8ef17c41115f1821347"
+    },
+    "integration24.selector.txt": {
+      "bytes": 1363,
+      "mode": "600",
+      "sha256": "e049dd5481777e5d5c5f9dbfb022050c874c5da01351e7148f8113dcabaa24f2"
+    },
+    "new2.literals.tsv": {
+      "bytes": 0,
+      "mode": "600",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "new2.outcomes.tsv": {
+      "bytes": 106,
+      "mode": "600",
+      "sha256": "5556dbeedb13150740a4d657431a9a261bce280f0e209c5ce2ea5c21efc6aff0"
+    },
+    "new2.roots.txt": {
+      "bytes": 96,
+      "mode": "600",
+      "sha256": "30e94b50d6a80e0709efea83d75453a7168a71bd29a9cb56da759de2acc9405e"
+    },
+    "new2.selector.txt": {
+      "bytes": 100,
+      "mode": "600",
+      "sha256": "5c6dfd004b7cb1428160417cf11153c820e9ce1ee12ce2a912edcdb79df98c92"
+    },
+    "reviewed-source-targets.tsv": {
+      "bytes": 1165,
+      "mode": "600",
+      "sha256": "249fd0075bdbb4c9759fd237716a9cd57228b0e0cc0d4855e85c8a12d0f699b0"
+    },
+    "warp-admission.patch": {
+      "bytes": 17006,
+      "mode": "600",
+      "sha256": "f71f5b8ad95c943d757879860eb884b69d1debf70593724ba5ad93ba18af3583"
+    }
+  },
+  "groups": {
+    "integration24": {
+      "descendants": [],
+      "literals": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/handoff-v1/integration24.literals.tsv",
+      "outcome_count": 24,
+      "outcomes": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/handoff-v1/integration24.outcomes.tsv",
+      "root_count": 24,
+      "roots": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/handoff-v1/integration24.roots.txt",
+      "roots_by_source": {
+        "TestCanonicalReleaseLockRenderingIsStableAndRoundTrips": {
+          "line": 168,
+          "path": "sim-testnet/release_lock_render_test.go"
+        },
+        "TestCleanReleaseRepositorySnapshotRejectsDirtyAndMissingWorktrees": {
+          "line": 224,
+          "path": "sim-testnet/release_lock_render_test.go"
+        },
+        "TestConfiguredReleaseLockPathRejectsSymlinkAndEscape": {
+          "line": 346,
+          "path": "sim-testnet/release_lock_render_test.go"
+        },
+        "TestLocalReleaseGateCoversCompleteOperatorProxyModule": {
+          "line": 2498,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestLocalReleaseGateRechecksCompleteWorkspaceAtEnd": {
+          "line": 1324,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestModuleRootRequiresExactModuleIdentity": {
+          "line": 618,
+          "path": "sim-testnet/release_lock_test.go"
+        },
+        "TestProducerReleaseGateCoversCompleteOperatorProxyModule": {
+          "line": 2502,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseGatesBracketWorkWithExactSourceFreezeSnapshots": {
+          "line": 2080,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseLockFixtureRetainsRuntimeAndBuildDriftRejection": {
+          "line": 89,
+          "path": "sim-testnet/release_lock_render_test.go"
+        },
+        "TestReleaseLockFixtureUsesReviewedCurrentRuntimeWithoutRewritingLock": {
+          "line": 59,
+          "path": "sim-testnet/release_lock_render_test.go"
+        },
+        "TestReleaseLockObservationFencesAdmissionOnlyWarp": {
+          "line": 263,
+          "path": "sim-testnet/release_lock_render_test.go"
+        },
+        "TestReleaseLockObservationRejectsMissingAndAdditionalFields": {
+          "line": 149,
+          "path": "sim-testnet/release_lock_render_test.go"
+        },
+        "TestReleaseLockRenderingReplacesStaleObservedValuesWithoutSelfReference": {
+          "line": 198,
+          "path": "sim-testnet/release_lock_render_test.go"
+        },
+        "TestReleaseSourceFreezeDoesNotRequireAssociativeArrays": {
+          "line": 1932,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseSourceFreezeExcludesNonReleaseDatasetQualification": {
+          "line": 2062,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseSourceFreezeIgnoresIgnoredRuntimeModules": {
+          "line": 1980,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseSourceFreezeRecordsCompleteCleanWorkspace": {
+          "line": 1832,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseSourceFreezeRefreshesRemoteBeforeAcceptingRevision": {
+          "line": 1957,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseSourceFreezeRejectsDirtyUntrackedAndUnsynchronizedRepositories": {
+          "line": 2001,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseSourceFreezeRejectsDirtyVerifierBeforeExecution": {
+          "line": 1913,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseSourceFreezeRejectsUnclassifiedGoModule": {
+          "line": 2040,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseSourceFreezeRejectsWrongOrigin": {
+          "line": 1944,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestReleaseSourceFreezeRequiresWarpProvenance": {
+          "line": 1870,
+          "path": "sim-testnet/release_gate_test.go"
+        },
+        "TestWriteReleaseLockUpdateIsAtomicAndRejectsChangedInput": {
+          "line": 371,
+          "path": "sim-testnet/release_lock_render_test.go"
+        }
+      },
+      "selector": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/handoff-v1/integration24.selector.txt"
+    },
+    "new2": {
+      "descendants": [],
+      "literals": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/handoff-v1/new2.literals.tsv",
+      "outcome_count": 2,
+      "outcomes": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/handoff-v1/new2.outcomes.tsv",
+      "root_count": 2,
+      "roots": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/handoff-v1/new2.roots.txt",
+      "roots_by_source": {
+        "TestReleaseLockObservationFencesAdmissionOnlyWarp": {
+          "line": 263,
+          "path": "sim-testnet/release_lock_render_test.go"
+        },
+        "TestReleaseSourceFreezeRequiresWarpProvenance": {
+          "line": 1870,
+          "path": "sim-testnet/release_gate_test.go"
+        }
+      },
+      "selector": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/handoff-v1/new2.selector.txt"
+    }
+  },
+  "live_module_count": 16,
+  "non_release_module_count": 1,
+  "package": "github.com/urfoundation/sn/sim-testnet",
+  "parent": "2e7b67a33b27c38677878be9474f496eca286589",
+  "qualification": {
+    "build_seconds": 1200,
+    "count": 1,
+    "fresh_three_pass_obligations": [],
+    "gomaxprocs": 4,
+    "group": "integration24",
+    "jobs": 1,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "owner_seconds": 660,
+    "parallel": 4,
+    "terra_module_reconciliation_required": true,
+    "test_seconds": 600
+  },
+  "repository_count": 13,
+  "reviewed_source_targets": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/handoff-v1/reviewed-source-targets.tsv",
+  "reviewed_source_targets_are_completed_gate_receipt": false,
+  "schema": "warp-admission-source-handoff-v1"
+}

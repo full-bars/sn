@@ -1,0 +1,21 @@
+=== RUN   TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding
+=== PAUSE TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding
+=== NAME  
+=== RUN   TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper
+=== PAUSE TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper
+=== NAME  
+=== RUN   TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage
+=== PAUSE TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage
+=== NAME  
+=== RUN   TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica
+=== PAUSE TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica
+=== NAME  
+=== CONT  TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding
+=== CONT  TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper
+=== CONT  TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica
+=== CONT  TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage
+--- PASS: TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding (0.03s)
+--- PASS: TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica (3305.87s)
+--- PASS: TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage (3518.40s)
+--- PASS: TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper (4108.89s)
+PASS

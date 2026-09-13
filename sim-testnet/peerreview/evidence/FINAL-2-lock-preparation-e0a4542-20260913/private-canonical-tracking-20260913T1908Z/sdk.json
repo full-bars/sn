@@ -1,0 +1,55 @@
+{
+  "repo": "sdk",
+  "started_at": "2026-09-13T19:06:33.081712+00:00",
+  "canonical_branch": "main",
+  "before_head": "0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b",
+  "before_status": "",
+  "before_branch": {
+    "argv": [
+      "symbolic-ref",
+      "--quiet",
+      "--short",
+      "HEAD"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "fetch": {
+    "argv": [
+      "fetch",
+      "--no-tags",
+      "origin",
+      "refs/heads/main:refs/remotes/origin/main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "From github.com:urnetwork/sdk\n   6970c5a..15f89e7  main       -> origin/main\n"
+  },
+  "remote_head": "15f89e7a5fec3fc7f61b130a3da167b3f3bcd445",
+  "accepted_head_matches_remote": false,
+  "unexpected_remote_commits": {
+    "argv": [
+      "log",
+      "--oneline",
+      "HEAD..origin/main"
+    ],
+    "exit": 0,
+    "stdout": "15f89e7 Transfer diagnostic seam: a runtime override for the reliable-lane rule\na1f4a13 Re-baseline the mobile RTT envelope for the deleted direct-lane window\n2f66f92 Diagnostic seam: report the Go runtime's memory classes\n38721b4 Debug-only Go heap profile seam for the device rig\n5c8cf22 Count the per-sequence round-trip windows in the mobile envelope\nde17a10 Mobile sizing invariants: the flight ceilings' trade and the 24 MiB envelope\n3f6c8e4 Transfer diagnostic seam: a runtime override for the deferred timeout resend\n1e55c1a Transfer diagnostic seam: a memory part for the MEMSTEADY device block\n553c853 Device ICE UDP socket buffers: 512 KiB per socket\nebcec39 Transfer diagnostic seam: relay-only control\nf3e8511 Transfer diagnostic seam for the physical p2p rig\n",
+    "stderr": ""
+  },
+  "after_head": "0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b",
+  "after_status": "",
+  "after_upstream": {
+    "argv": [
+      "rev-parse",
+      "--abbrev-ref",
+      "@{u}"
+    ],
+    "exit": 128,
+    "stdout": "",
+    "stderr": "fatal: HEAD does not point to a branch\n"
+  },
+  "source_unchanged": true,
+  "finished_at": "2026-09-13T19:06:34.150073+00:00"
+}

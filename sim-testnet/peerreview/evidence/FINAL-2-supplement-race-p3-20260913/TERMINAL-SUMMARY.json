@@ -1,0 +1,41 @@
+{
+  "binary_before_after_sha256": "f7df8d9246db832cfcafe3bb4466500535bebc2750dac4e5ea5e1ee8b388700c",
+  "binary_mode_size": "0755/197479072",
+  "event_root_passes": 4,
+  "exclusions": [
+    "no test binary",
+    "no Go cache or module cache",
+    "no source manifest or source contents",
+    "no vault contents",
+    "no live runtime process artifacts"
+  ],
+  "mode": "race",
+  "outer": {
+    "exit": "0",
+    "finished_at": "2026-09-13T19:05:50Z",
+    "started_at": "2026-09-13T17:57:09Z"
+  },
+  "package": "github.com/urfoundation/sn/sim-testnet",
+  "predecessor_proof_sha256": {
+    "p1.proofs.sha256": "4ce82ef7f6ee77ec0f5a0876bc2a637ebd115a4daefe8d9a9dae578e01b9ad82",
+    "p2.proofs.sha256": "c07f4a7d2721368344485c7e44913eea093ac91b02841a3524852f5e8ff6f75c",
+    "parent-proofs.sha256": "b2b4f460b89da2c600ff43127c90d886bf4d76a5fd28898a39f4c9ac56758123"
+  },
+  "roots": [
+    "TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage",
+    "TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper",
+    "TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica",
+    "TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding"
+  ],
+  "schema": "final2-focused-qualification-evidence-supplement-v1",
+  "scope": "e999 active4 race p3 terminal evidence; closes same-source/same-binary p1-p3 confirmation streak",
+  "source_actual_before_after_sha256": "6611f683e1e685a506a061537e229087e65f3222cea10daae43a29f008d471c2",
+  "source_commit": "e99954acd70bdae9612dd3de2861fbbf39ef8161",
+  "terminal_exits": {
+    "body": "0",
+    "events": "0",
+    "list": "0",
+    "replay": "0",
+    "result": "pass"
+  }
+}

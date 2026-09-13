@@ -1,0 +1,64 @@
+{
+  "repo": "sn",
+  "started_at": "2026-09-13T19:06:27.796885+00:00",
+  "canonical_branch": "main",
+  "before_head": "e0a454248051a24d81c11d166054570cb4d20b5e",
+  "before_status": "",
+  "before_branch": {
+    "argv": [
+      "symbolic-ref",
+      "--quiet",
+      "--short",
+      "HEAD"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "fetch": {
+    "argv": [
+      "fetch",
+      "--no-tags",
+      "origin",
+      "refs/heads/main:refs/remotes/origin/main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "remote_head": "e0a454248051a24d81c11d166054570cb4d20b5e",
+  "accepted_head_matches_remote": true,
+  "attach_branch": {
+    "argv": [
+      "switch",
+      "-c",
+      "sim-testnet/final-gates-20260913"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "Switched to a new branch 'sim-testnet/final-gates-20260913'\n"
+  },
+  "set_upstream": {
+    "argv": [
+      "branch",
+      "--set-upstream-to=origin/main"
+    ],
+    "exit": 0,
+    "stdout": "branch 'sim-testnet/final-gates-20260913' set up to track 'origin/main'.\n",
+    "stderr": ""
+  },
+  "after_head": "e0a454248051a24d81c11d166054570cb4d20b5e",
+  "after_status": "",
+  "after_upstream": {
+    "argv": [
+      "rev-parse",
+      "--abbrev-ref",
+      "@{u}"
+    ],
+    "exit": 0,
+    "stdout": "origin/main\n",
+    "stderr": ""
+  },
+  "source_unchanged": true,
+  "finished_at": "2026-09-13T19:06:29.033168+00:00"
+}

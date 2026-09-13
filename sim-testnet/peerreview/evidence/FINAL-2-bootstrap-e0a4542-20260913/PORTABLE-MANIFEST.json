@@ -1,0 +1,140 @@
+{
+  "kind": "copied-native-operational-records",
+  "entries": [
+    {
+      "path": "PREPARED.sha256",
+      "bytes": 738,
+      "sha256": "422a89f51e6847138a7770b088ec881a408ce643dee91a44e101cc2dfd373aa2"
+    },
+    {
+      "path": "RESULT-BOOTSTRAP-CLI-BUILD.json",
+      "bytes": 997,
+      "sha256": "df01ff496c2dd11a9c00762e44723ab69e7334cc2d82215657892a66b9cf65d0"
+    },
+    {
+      "path": "RESULT-BOOTSTRAP-CLI-BUILD.json.sha256",
+      "bytes": 209,
+      "sha256": "b6ebd061e93c324c42caee4a52964e407af42588eb7e2c2024ddb2162aafbdd2"
+    },
+    {
+      "path": "capture/launcher.sha256",
+      "bytes": 595,
+      "sha256": "e3bb016241681a97267e6990f67749d2cb01b5745667cdbe4bbef75d54f3d252"
+    },
+    {
+      "path": "capture/launcher.stat",
+      "bytes": 452,
+      "sha256": "f81b20fa193899dc4bdf5780d68a144de65d7d31e68cd3e341ed7ce8a96fcd7e"
+    },
+    {
+      "path": "capture/outer.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "capture/outer.finished-at",
+      "bytes": 21,
+      "sha256": "df874be33916fdae78228eebb77aa5f2e714e7306a997ce79621c0d9f65f12fa"
+    },
+    {
+      "path": "capture/outer.pid",
+      "bytes": 7,
+      "sha256": "b6bd0d016556c0e7fa360a9680ba2600a195cbf226d487e84a25e51c8052348c"
+    },
+    {
+      "path": "capture/outer.started-at",
+      "bytes": 21,
+      "sha256": "f4679a0f03af3778ce17f07c581bf08247cb50039a0093ccf6e8b5a873bcdd56"
+    },
+    {
+      "path": "capture/outer.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "capture/outer.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "capture/private-gomodcache.before.stat",
+      "bytes": 164,
+      "sha256": "13eb2ef7cd0a1211f5d72c7ffeb57490ec20aca3cb3cec22457ed1acb2859494"
+    },
+    {
+      "path": "capture/warm-gocache.before.stat",
+      "bytes": 146,
+      "sha256": "936c0524935ee67dbb159fa889598c3a9f08f6d72b101c3216824bb2f91a9cd0"
+    },
+    {
+      "path": "capture-bootstrap-cli-build.sh",
+      "bytes": 2188,
+      "sha256": "b7aed36235c83261a646ec2a9b7607bcedd3be26634ad2d789366f00be4f1916"
+    },
+    {
+      "path": "commands/bootstrap-cli-build.command",
+      "bytes": 4356,
+      "sha256": "f0014cda5008dc16a9f7fc40c6e03222fad4018036aecfbfecfc4f56bd4876ed"
+    },
+    {
+      "path": "logs/build.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "logs/build.finished-at",
+      "bytes": 21,
+      "sha256": "8d0369e83247a0eee0b37ad3d37f77ec5905dd77073924c17f6b0430c55dba57"
+    },
+    {
+      "path": "logs/build.started-at",
+      "bytes": 21,
+      "sha256": "ff17d0f8e9dc0b214393f7ad1dbd21c1b52a5b50ebf5d66be918f46cc528ec97"
+    },
+    {
+      "path": "logs/build.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/build.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "meta/cli.buildinfo.txt",
+      "bytes": 16204,
+      "sha256": "952218ca71455adebb60ca1e37f3bab5a432b119981142e9af2b5d316b52842d"
+    },
+    {
+      "path": "meta/cli.sha256",
+      "bytes": 211,
+      "sha256": "f043ccb96ec802b57a3f577e47e8af7a348dbbbdc1fc327980d4a9d0241c2bdf"
+    },
+    {
+      "path": "meta/cli.stat",
+      "bytes": 168,
+      "sha256": "2b29b81a61470261c353d1d434a981c9f0a8d367c01898a6e3537fe4bf6c7085"
+    },
+    {
+      "path": "meta/repos.after.sha256",
+      "bytes": 198,
+      "sha256": "c447c469d2779b44a3456fd6cc1904f5f208dde7c379ae321464c8cc28fee691"
+    },
+    {
+      "path": "meta/repos.after.tsv",
+      "bytes": 3830,
+      "sha256": "ad39029bcc3f1293e8deac448b1335a073080fffdfc7b716f3be714e729aae5d"
+    },
+    {
+      "path": "meta/repos.before.sha256",
+      "bytes": 199,
+      "sha256": "09444670562edc8b224ecca1b83c7d8cc1b6c936e0d11cb573b865ddb014081b"
+    },
+    {
+      "path": "meta/repos.before.tsv",
+      "bytes": 3830,
+      "sha256": "ad39029bcc3f1293e8deac448b1335a073080fffdfc7b716f3be714e729aae5d"
+    }
+  ]
+}

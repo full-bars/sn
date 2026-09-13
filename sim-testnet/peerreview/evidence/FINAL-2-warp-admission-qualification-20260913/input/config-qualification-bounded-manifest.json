@@ -1,0 +1,23 @@
+{
+  "bounded_manifest": "/home/by/urnetwork/temp/sn-initial-six-qualification-20260913/custody/config.qualification.source.manifest",
+  "bounded_manifest_sha256": "7e1175b569ce4de60b1c9a2e064e46dc40867a656d8d77537913482b71740749",
+  "excluded_clean_tracked_files": [
+    {
+      "bytes": 1531504244,
+      "relative_path": "all/mmdb/2026.7.2/ip-ipinfo.mmdb",
+      "sha256": "4ce34ae285de80f6b1c53e4ecb0a115a78335f0523aaa23d930a6a15f60dcc22"
+    },
+    {
+      "bytes": 1397024537,
+      "relative_path": "all/mmdb/2026.7.2/ip.mmdb",
+      "sha256": "e8194b2e78d917fcd66b4f0d941af874bb7cdd8cc51dcfcda4ac5a39156326b5"
+    }
+  ],
+  "full_manifest": "/home/by/urnetwork/temp/sn-initial-six-qualification-20260913/custody/config.source.manifest",
+  "full_manifest_sha256": "56709b876a3d5b05add5cee5abf5e87be56784c7c57b9b73376eb3b358b93e3a",
+  "head": "268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc",
+  "kind": "qualification bounded source manifest",
+  "reason": "the qualification runner rejects regular files larger than its 1GiB retained-file proof bound; full immutable source custody remains in config.source.manifest and completed source-freeze outer capture",
+  "source_changes": "none",
+  "source_root": "/home/by/urnetwork/temp/sn-initial-six-qualification-20260913/workspace/config"
+}

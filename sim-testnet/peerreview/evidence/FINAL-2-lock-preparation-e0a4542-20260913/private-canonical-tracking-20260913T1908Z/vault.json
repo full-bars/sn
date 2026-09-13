@@ -1,0 +1,55 @@
+{
+  "repo": "vault",
+  "started_at": "2026-09-13T19:06:37.779661+00:00",
+  "canonical_branch": "main",
+  "before_head": "8b2f481dbe87092d0c1742274712a6f805c1c375",
+  "before_status": "",
+  "before_branch": {
+    "argv": [
+      "symbolic-ref",
+      "--quiet",
+      "--short",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "main\n",
+    "stderr": ""
+  },
+  "fetch": {
+    "argv": [
+      "fetch",
+      "--no-tags",
+      "origin",
+      "refs/heads/main:refs/remotes/origin/main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "From github.com:urnetwork/vault\n   8b2f481..29c4391  main       -> origin/main\n"
+  },
+  "remote_head": "29c439107dc3d6c3cab77d6b4a3f24bb5373d4da",
+  "accepted_head_matches_remote": false,
+  "unexpected_remote_commits": {
+    "argv": [
+      "log",
+      "--oneline",
+      "HEAD..origin/main"
+    ],
+    "exit": 0,
+    "stdout": "29c4391 update\n",
+    "stderr": ""
+  },
+  "after_head": "8b2f481dbe87092d0c1742274712a6f805c1c375",
+  "after_status": "",
+  "after_upstream": {
+    "argv": [
+      "rev-parse",
+      "--abbrev-ref",
+      "@{u}"
+    ],
+    "exit": 0,
+    "stdout": "origin/main\n",
+    "stderr": ""
+  },
+  "source_unchanged": true,
+  "finished_at": "2026-09-13T19:06:39.104885+00:00"
+}

@@ -1,0 +1,747 @@
+{
+  "kind": "canonical-private-clone-tracking-repair",
+  "finished_at": "2026-09-13T19:06:42.047185+00:00",
+  "all_source_unchanged": true,
+  "all_remote_matches": false,
+  "rows": [
+    {
+      "repo": "sn",
+      "started_at": "2026-09-13T19:06:27.796885+00:00",
+      "canonical_branch": "main",
+      "before_head": "e0a454248051a24d81c11d166054570cb4d20b5e",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "remote_head": "e0a454248051a24d81c11d166054570cb4d20b5e",
+      "accepted_head_matches_remote": true,
+      "attach_branch": {
+        "argv": [
+          "switch",
+          "-c",
+          "sim-testnet/final-gates-20260913"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'sim-testnet/final-gates-20260913'\n"
+      },
+      "set_upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'sim-testnet/final-gates-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": "e0a454248051a24d81c11d166054570cb4d20b5e",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/main\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:29.033168+00:00"
+    },
+    {
+      "repo": "server",
+      "started_at": "2026-09-13T19:06:29.033583+00:00",
+      "canonical_branch": "main",
+      "before_head": "93bc8c592797da0335f4201c5027a2b52906790e",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "From github.com:urnetwork/server\n   cb2d08de..1c16ef52  main       -> origin/main\n"
+      },
+      "remote_head": "1c16ef52fad4504a2e241a3ef1aa63c6b8296775",
+      "accepted_head_matches_remote": false,
+      "unexpected_remote_commits": {
+        "argv": [
+          "log",
+          "--oneline",
+          "HEAD..origin/main"
+        ],
+        "exit": 0,
+        "stdout": "1c16ef52 perfvar: the lane rule joins the feature dimension, both polarities\n15e4c8c8 perfvar: the relay-stall exports are lifetime maxima, read from the lifetime block\nf6f50098 perfvar: the readout carries the relay-stall exports as maxima per run\n6503815e perfvar: record the relay-stall exports, the cumulative-ack gap and the timer's round trip\naa2655a2 perfvar: flightgate can pass extra arguments to every run, for verbose reproductions\n1aa6471a perfvar: flightgate can repeat one seed, for a fixed-seed reproduction\n0b6780c6 perfvar: the readout keeps three decimals for sub-megabit goodput\na310897a perfvar: the readout shows the latency-under-load primary, probe latency and delivery under load\n0ea78b28 perfvar: the send-route wrapper exposes its carrier type; the readout folds the unlabelled relay and reports goodput over every correct run\nc62b5bc0 perfvar: the deferred-retransmit delta comes from the by-name counters so older arms build\n463f3356 perfvar: record the deferred-retransmit count, read by name so every arm builds\nf99c8614 perfvar: the feature test reads its settings by name so it builds on every arm\n36e2eef3 perfvar: features apply by name in both polarities so every arm builds\n3b0056f4 perfvar: a feature dimension for the settings that ship off by default\n0088a269 perfvar: flightgate arms may name their own SDK tree\nae6ad515 perfvar: sample runtime and pool memory per run as the MEMSTEADY guardrail\n1279c883 perfvar: the carrier boundary ignores the unreliable-carrier ack age, a clock, when judging stability\n474c6be4 perfvar: flightgate shell entry passes the subcommand before -server\ne81caabc perfvar: document the mixed routes and add the flightgate campaign driver and readout\nbc55a9f5 perfvar: mixed P2P+H1 routes, direct-lane profiles, scoped events, progress windows\nfa1bd422 perfvar: record the FLIGHTGATEFIX attribution counters\n2796f34f Monitor: dns alias signal, host power and probe cleanup\n381eafe3 Expand monitor topology coverage\n24294159 Preserve fixed multihop test discovery\n37a39c0c Classify monitor errors before rendering alerts\n522d3401 Cover Circle admission capability in Grafana\nac74caac extender dns: pin the batch that creates every set in an empty zone\n",
+        "stderr": ""
+      },
+      "after_head": "93bc8c592797da0335f4201c5027a2b52906790e",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: HEAD does not point to a branch\n"
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:30.581960+00:00"
+    },
+    {
+      "repo": "operator-proxy",
+      "started_at": "2026-09-13T19:06:30.582370+00:00",
+      "canonical_branch": "main",
+      "before_head": "448369740c70eb2e642bde9d36f3708fe9ad4b5d",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "remote_head": "448369740c70eb2e642bde9d36f3708fe9ad4b5d",
+      "accepted_head_matches_remote": true,
+      "attach_branch": {
+        "argv": [
+          "switch",
+          "-c",
+          "sim-testnet/final-gates-20260913"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'sim-testnet/final-gates-20260913'\n"
+      },
+      "set_upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'sim-testnet/final-gates-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": "448369740c70eb2e642bde9d36f3708fe9ad4b5d",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/main\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:31.445989+00:00"
+    },
+    {
+      "repo": "connect",
+      "started_at": "2026-09-13T19:06:31.446389+00:00",
+      "canonical_branch": "main",
+      "before_head": "2a0f603e8076224fdab4d9f56e5a0a557ed513d9",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "From github.com:urnetwork/connect\n   a91c389..cbad1c0  main       -> origin/main\n"
+      },
+      "remote_head": "cbad1c0fab6e23736a19499ab57d98f39267efb3",
+      "accepted_head_matches_remote": false,
+      "unexpected_remote_commits": {
+        "argv": [
+          "log",
+          "--oneline",
+          "HEAD..origin/main"
+        ],
+        "exit": 0,
+        "stdout": "cbad1c0 Report: the lane rule's wedge rate at a third arm, and the wedge classification\n4206043 Preserve flight-gate merge resolutions after rebase\n48248d5 Final report on the flight-gate program: the tests, the findings, the fixes\n9702f1b Net http transport tests: cover the address-family dial paths\ne6dc8f7 flightgate-devices: a memsteady-attribute readout for the 24 MiB ceiling\n3c738b0 FLIGHTGATEFIX.md \u00a736: add what the submitted PR costs, and what of it is still live\nfda9d87 Decide a reliable lane's timer by position on that lane, not by its silence\n2904d6a FLIGHTGATEFIX.md \u00a736: the merged tree measured, and an inventory of every deterministic test this program added\n2eaed65 Row 14: reach \u00a734.2's receiver drop, and find the wedge is not rule-attributable here\n0858b6f FLIGHTGATEFIX.md \u00a734: the proof chain is not always reachable; unconditional re-arm is unsound; the sound bound is lane position\nd0b9667 FLIGHTGATEFIX.md \u00a733.10 and a root-cause row: a silent lane must still drain; the campaign's wedge does not reproduce in process\n67e5841 FLIGHTGATEFIX.md \u00a733.9: state the wedged run's environment exactly; it carried no impairment beyond 1 per cent loss\ncd2e2c4 FLIGHTGATEFIX.md \u00a733.9: the wedge reached the loss storm cell and failed a run; the rule's release condition is unreachable from the state it creates\n0a73d7e FLIGHTGATEFIX.md \u00a733.7-33.8: the suppression covers every recovery category; name what the next round needs\n8931a30 FLIGHTGATEFIX.md \u00a732: keep the default pre-registration and record that the re-run went the other way\n107dbfb Revert \"Turn the reliable lane rule on by default\"\nfc5ba26 FLIGHTGATEFIX.md \u00a733: the re-run kept the tail; the tail is a wedge the lane rule's suppression holds\n713500b Turn the reliable lane rule on by default\n3cfcdaf Lane rule: re-arm on the round-trip scale, probe the head on the cold cadence, attribute acknowledgements to one lane only\nf8faa55 FLIGHTGATEFIX.md \u00a732: silence is not load-bearing for recovery; it is load-bearing for re-establishment, on the liveness scale\nc8ff077 Expose a dead route's unacknowledged duration and retained count, and pin the hang\n9e351d1 FLIGHTGATEFIX.md \u00a731.5: the hang's account closed unconditionally, and where it belongs in the report\ndda28d0 FLIGHTGATEFIX.md \u00a731: the exchange-h3 hang is merged's on every step; \u00a713.1 is not reached; the missing bound is the multi-client's\n15bd161 flightgate-devices: N arms that may share a build and differ only by a runtime setting\nf5850bf Ratchet the default's lossless-stall writes, bound the lane rule's\ne4fc9b7 The metric matrix: a root-cause test per metric, run against merged\nb1c9154 FLIGHTGATEFIX.md \u00a730: the ordering correction, the audit of my own claims, and the columns that remain\n5ef1d62 Probe a lane's one tail, keep the head-only probe set, stop retaining the off ring\n938b2b6 FLIGHTGATEFIX.md \u00a729: the exhaustion of row 7, its closure by the lone-tail probe, and the matrix's irreducible columns\nc4be9b7 Drop the deferral's limit and since-last rule for reliable-carried items\n2ddae75 FLIGHTGATEFIX.md \u00a728: row 1's deferrals are irreducible, its writes are the deferral's own bounds, redundant under the lane rule\n49b02eb Make the lane precedence exact, export the stall onset, and add the contract\n1bc0f25 Read a reliable lane's silence by lane, as a candidate, off\ndf89ff2 FLIGHTGATEFIX.md \u00a727: the collapsing seed is the second firing; the prediction for the lane rule and its root-cause contract\n0961e61 FLIGHTGATEFIX.md \u00a726: silence is a lane event the path can read by lane; the landing and the follow-up list\na0df78d RFC 6298's deviation term as a candidate, off, and the stall it does not cover\nae7c907 FLIGHTGATEFIX.md \u00a725: the 2.0 s read is the cold floor, a deviation term beside the backoff, and what the calibration retracts\n50651cb A deferral backs off like the rewrite it replaces\n2a759b7 FLIGHTGATEFIX.md \u00a724: the residue is two storm runs, the deferral re-fires without backoff, total recovery writes as the primary\n378581c Make F11b's grace and the retransmit timer agree, behind a flag, off\n5c75101 Attribute gap writes to deferred items and count route generations\n62bce09 FLIGHTGATEFIX.md \u00a723: assessment of the residue, the evidence needed first, and the honest landing\n45c104c Bound reliable-lane admission by delivered bytes, measured and left off\n43ed735 FLIGHTGATEFIX.md \u00a722: admission is unbounded on a reliable lane in both trees; bound it by delivered bytes\ne9aa739 Reproduce the relay queue inflation in process, before any fix\nbe3f254 FLIGHTGATEFIX.md \u00a721: the deferral removed merged's accidental throttle; a deferral pauses reliable-lane admission\neb0660a Move the watchdog and hybrid-affinity tests behind the tag\n922b7ff Remove the mixed-lane mechanisms: the recovery path returns to merged's\n4bc9063 Remove the fast path's liveness reporter, its wire payload and size-aware admission\n16d8c23 FLIGHTGATEFIX.md \u00a720: the reporter on the direct route, the relay storm, and a landing of merged plus the deferred retransmit\ne88f1db Resolve the arrival lane only for the scoreboard, not for the Pack handoff\ndfc5f1f The arrival lane of an acknowledgement reaches the scoreboard\n93667ef FLIGHTGATEFIX.md \u00a719.7: D2 withdrawn for route churn, D4's deferral bounded\n872778f Key the retransmit clock to the acknowledgement path, not the carrier\ne2c09d5 FLIGHTGATEFIX.md \u00a719: fix design for the low-bar and mild-loss regressions\n05abf6e Mixed-lane instrument: the campaign's burst-loss chain, and stalls as a result\n491314a flightgate-devices: a relay-only series, so alternating builds measure the exchange path alone\n055dbb5 Lane classification test: the latch must hold steady under sustained loss\nd169572 flightgate-devices: alternate two builds run by run for a before/after, reinstalling in place\n52c28fc Build the direct lane's round-trip window in the hand-built test sequence\n3a210be FLIGHTGATEFIX.md: the device memory finding as a follow-up, and the lane-loss contract\n00640c4 One lane-loss signal drives the window, the replies and the timeouts\n5d9bb7f Lane contracts: what mixed-lane behaviour must be, in both regimes\nd83f5f6 Mixed-lane instrument: lane bandwidth, multi-flow load, per-window rate and lane carriage\n4e73015 FLIGHTGATEFIX.md \u00a716: the lossy-cell regression, the unfloored grace and the loss escape\n1e06c69 The grace is what the carrying lane could deliver, and it is withdrawn from a lane that is losing\n5b85376 flightgate-devices: heap profiles at the end of a MEMSTEADY block, and diagnostic builds with a nonzero memprofilerate\ne60a423 FLIGHTGATEFIX.md: 15.2 landed, and what the envelope test cannot guard\n06e0a26 The direct lane gets its own round-trip estimate\na33f235 FLIGHTGATEFIX.md \u00a715.5: the sizing invariants and what each catches\nd9e0c54 Sizing invariants for the transfer window, the floor and the carrier derivation\n2f3b049 FLIGHTGATEFIX.md: the \u00a714 trade, and \u00a715 under the strict memory ceiling\n1de7604 Defer the retransmit of a window a live lane is still draining, by default\nc48c20e flightgate-devices: a defer-timeout-resend command for the 13.5 A/B\n928c7eb flightgate-devices: a run recorded before the validity check is unknown, not invalid\n2339a30 FLIGHTGATEFIX.md \u00a714: the mixed-route gap-resend regression, root cause and fix\n0505550 Later acks from a faster lane are not evidence that this item was lost\nfaa7448 flightgate-devices: a lost provider registration retries instead of burning a run\nd608697 flightgate-devices: a run is valid only if the tunnel carried the workload\nd97f5e7 flightgate-devices: memsteady series over builds, and connect waits for the tunnel\n8e28d1a Race-commit bytes handed to the removal worker are returned at teardown; report payload reused\n6a43ebb flightgate-devices: MEMSTEADY block, per-commit item builds\n6787392 MEMSTEADY gate for \u00a713: allocation-free item paths and the progress report built in place\n4410e77 FLIGHTGATEFIX.md: 13.6 and 13.7 landed, sweep numbers\n1dada7f Size-aware admission on the native fast path, off by default\n7e30ac7 FLIGHTGATEFIX.md: 13.5 landed\nd29b5b8 Defer the whole-window RTO of a reliable-carried item while the cumulative ack advances\ne5fa0d0 FLIGHTGATEFIX.md: 13.4 landed\n190899e Race-commit responses reach the consumer through the removal receive worker\n80723b4 FLIGHTGATEFIX.md: 13.3 landed\n5bd486a A fast path that delivers nothing is retired\ne14c468 FLIGHTGATEFIX.md: 13.2 landed\na2b57df Replies keep a healthy unreliable lane and leave a full or stale one\n5ea3fbc FLIGHTGATEFIX.md: 13.1 landed\n8d262d2 RTO of a tracked item forgets it from the unreliable flight instead of acknowledging it\n87bed78 FLIGHTGATEFIX.md: device controls, relay-only beats stock on phones\nc891351 FLIGHTGATEFIX.md: forget subtracts against the controller's own byte count\n2554167 FLIGHTGATEFIX.md \u00a713: fix design on the merged tree, for review\nc756d96 Flight gate tests on the merged tree: finding 1 red against the PR's RTO release; M3 settles its first phase before the real-drop phase\nf755b5f p2p diagnostics: selected ICE candidate pair types; rig relay-only control and interleaved campaigns\ncc68d0d Flight gate allocation test: use an independent writer for the destination\n1a15d94 Receive stats: per-carrier ack maps only once a carrier has written\n16850b6 flightgate-devices: campaign and series-report commands, chunked-line join, in-place install\n336910a Flight gate benchmarks: cumulative acks on the contiguous prefix, bounded ack wait; counters allocation check\nccad045 Flight gate test: count only waits after the reliable route exists\nd3c5846 Deterministic reproductions of the pinned-provider collapse (FLIGHTGATEFIX \u00a75, \u00a76.1)\n1b7c5da Physical p2p rig: window client transfer stats accessor and the flightgate-devices tool\n195b24d Attribution counters for the pinned-provider collapse (FLIGHTGATEFIX \u00a78)\n840595d Resolve address families and configured resolvers on the client api and websocket dials\n",
+        "stderr": ""
+      },
+      "after_head": "2a0f603e8076224fdab4d9f56e5a0a557ed513d9",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: HEAD does not point to a branch\n"
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:33.081261+00:00"
+    },
+    {
+      "repo": "sdk",
+      "started_at": "2026-09-13T19:06:33.081712+00:00",
+      "canonical_branch": "main",
+      "before_head": "0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "From github.com:urnetwork/sdk\n   6970c5a..15f89e7  main       -> origin/main\n"
+      },
+      "remote_head": "15f89e7a5fec3fc7f61b130a3da167b3f3bcd445",
+      "accepted_head_matches_remote": false,
+      "unexpected_remote_commits": {
+        "argv": [
+          "log",
+          "--oneline",
+          "HEAD..origin/main"
+        ],
+        "exit": 0,
+        "stdout": "15f89e7 Transfer diagnostic seam: a runtime override for the reliable-lane rule\na1f4a13 Re-baseline the mobile RTT envelope for the deleted direct-lane window\n2f66f92 Diagnostic seam: report the Go runtime's memory classes\n38721b4 Debug-only Go heap profile seam for the device rig\n5c8cf22 Count the per-sequence round-trip windows in the mobile envelope\nde17a10 Mobile sizing invariants: the flight ceilings' trade and the 24 MiB envelope\n3f6c8e4 Transfer diagnostic seam: a runtime override for the deferred timeout resend\n1e55c1a Transfer diagnostic seam: a memory part for the MEMSTEADY device block\n553c853 Device ICE UDP socket buffers: 512 KiB per socket\nebcec39 Transfer diagnostic seam: relay-only control\nf3e8511 Transfer diagnostic seam for the physical p2p rig\n",
+        "stderr": ""
+      },
+      "after_head": "0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: HEAD does not point to a branch\n"
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:34.150073+00:00"
+    },
+    {
+      "repo": "glog",
+      "started_at": "2026-09-13T19:06:34.150444+00:00",
+      "canonical_branch": "master",
+      "before_head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "codex/sim-testnet-final-20260913\n",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/master:refs/remotes/origin/master"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "From github.com:urnetwork/glog\n * [new branch]      master     -> origin/master\n"
+      },
+      "remote_head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "accepted_head_matches_remote": true,
+      "set_upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/master"
+        ],
+        "exit": 0,
+        "stdout": "branch 'codex/sim-testnet-final-20260913' set up to track 'origin/master'.\n",
+        "stderr": ""
+      },
+      "after_head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/master\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:35.085530+00:00"
+    },
+    {
+      "repo": "goidenticons",
+      "started_at": "2026-09-13T19:06:35.086213+00:00",
+      "canonical_branch": "main",
+      "before_head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "codex/sim-testnet-final-20260913\n",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "From github.com:urnetwork/goidenticons\n * [new branch]      main       -> origin/main\n"
+      },
+      "remote_head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "accepted_head_matches_remote": true,
+      "set_upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'codex/sim-testnet-final-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/main\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:35.924520+00:00"
+    },
+    {
+      "repo": "proxy",
+      "started_at": "2026-09-13T19:06:35.924891+00:00",
+      "canonical_branch": "main",
+      "before_head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "codex/sim-testnet-final-20260913\n",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "remote_head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "accepted_head_matches_remote": true,
+      "set_upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'codex/sim-testnet-final-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/main\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:36.840680+00:00"
+    },
+    {
+      "repo": "userwireguard",
+      "started_at": "2026-09-13T19:06:36.841026+00:00",
+      "canonical_branch": "master",
+      "before_head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "codex/sim-testnet-final-20260913\n",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/master:refs/remotes/origin/master"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "From github.com:urnetwork/userwireguard\n * [new branch]      master     -> origin/master\n"
+      },
+      "remote_head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "accepted_head_matches_remote": true,
+      "set_upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/master"
+        ],
+        "exit": 0,
+        "stdout": "branch 'codex/sim-testnet-final-20260913' set up to track 'origin/master'.\n",
+        "stderr": ""
+      },
+      "after_head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/master\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:37.779292+00:00"
+    },
+    {
+      "repo": "vault",
+      "started_at": "2026-09-13T19:06:37.779661+00:00",
+      "canonical_branch": "main",
+      "before_head": "8b2f481dbe87092d0c1742274712a6f805c1c375",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "main\n",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "From github.com:urnetwork/vault\n   8b2f481..29c4391  main       -> origin/main\n"
+      },
+      "remote_head": "29c439107dc3d6c3cab77d6b4a3f24bb5373d4da",
+      "accepted_head_matches_remote": false,
+      "unexpected_remote_commits": {
+        "argv": [
+          "log",
+          "--oneline",
+          "HEAD..origin/main"
+        ],
+        "exit": 0,
+        "stdout": "29c4391 update\n",
+        "stderr": ""
+      },
+      "after_head": "8b2f481dbe87092d0c1742274712a6f805c1c375",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/main\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:39.104885+00:00"
+    },
+    {
+      "repo": "warp",
+      "started_at": "2026-09-13T19:06:39.105579+00:00",
+      "canonical_branch": "main",
+      "before_head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "remote_head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "accepted_head_matches_remote": true,
+      "attach_branch": {
+        "argv": [
+          "switch",
+          "-c",
+          "sim-testnet/final-gates-20260913"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "Switched to a new branch 'sim-testnet/final-gates-20260913'\n"
+      },
+      "set_upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'sim-testnet/final-gates-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/main\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:40.188274+00:00"
+    },
+    {
+      "repo": "xops",
+      "started_at": "2026-09-13T19:06:40.188633+00:00",
+      "canonical_branch": "main",
+      "before_head": "a9d2eb4bfbdf72d61243908a71659adff0fb8160",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "codex/sim-testnet-final-20260913\n",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "From github.com:urnetwork/xops\n * [new branch]      main       -> origin/main\n"
+      },
+      "remote_head": "ae0053db793eec43d1940f2e8d68837c0bc3c9ca",
+      "accepted_head_matches_remote": false,
+      "unexpected_remote_commits": {
+        "argv": [
+          "log",
+          "--oneline",
+          "HEAD..origin/main"
+        ],
+        "exit": 0,
+        "stdout": "ae0053d Converge Planetoid runtime power policy\n",
+        "stderr": ""
+      },
+      "after_head": "a9d2eb4bfbdf72d61243908a71659adff0fb8160",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/codex/sim-testnet-final-20260913\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:41.163123+00:00"
+    },
+    {
+      "repo": "config",
+      "started_at": "2026-09-13T19:06:41.163492+00:00",
+      "canonical_branch": "main",
+      "before_head": "268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc",
+      "before_status": "",
+      "before_branch": {
+        "argv": [
+          "symbolic-ref",
+          "--quiet",
+          "--short",
+          "HEAD"
+        ],
+        "exit": 0,
+        "stdout": "codex/sim-testnet-final-20260913\n",
+        "stderr": ""
+      },
+      "fetch": {
+        "argv": [
+          "fetch",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/remotes/origin/main"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "From github.com:urnetwork/config\n * [new branch]      main       -> origin/main\n"
+      },
+      "remote_head": "268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc",
+      "accepted_head_matches_remote": true,
+      "set_upstream": {
+        "argv": [
+          "branch",
+          "--set-upstream-to=origin/main"
+        ],
+        "exit": 0,
+        "stdout": "branch 'codex/sim-testnet-final-20260913' set up to track 'origin/main'.\n",
+        "stderr": ""
+      },
+      "after_head": "268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc",
+      "after_status": "",
+      "after_upstream": {
+        "argv": [
+          "rev-parse",
+          "--abbrev-ref",
+          "@{u}"
+        ],
+        "exit": 0,
+        "stdout": "origin/main\n",
+        "stderr": ""
+      },
+      "source_unchanged": true,
+      "finished_at": "2026-09-13T19:06:42.046847+00:00"
+    }
+  ],
+  "primary_vault_untouched": true,
+  "chain_transactions": 0
+}

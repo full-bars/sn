@@ -1,0 +1,14 @@
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/commands/capture-source-freeze12-race-p1.sh: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/commands/source-freeze12-race-p1.command: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/plans/source-freeze12-race-p1.json: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/custody/sn-1728625.source.manifest: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/custody/source-roots-13.tsv: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/custody/source-manifests.sha256: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/custody/config-qualification-bounded-manifest.json: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/input/handoff.json: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/input/ANCESTOR-TRACKING.json: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/input/integration12.roots.txt: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/input/integration12.selector.txt: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/input/integration12.outcomes.tsv: OK
+/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/runtime/qualification-source-freeze-v1/input/integration12.literals.tsv: OK
+/home/by/urnetwork/temp/sn-initial-six-qualification-20260913/helper-go-tools-ebe70a/runtime/bin/qualification-ebe70a: OK

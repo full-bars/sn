@@ -1,0 +1,19 @@
+{
+  "kind": "primary-vault-adopts-already-approved-published-cap",
+  "started_at": "2026-09-13T19:16:31.295781+00:00",
+  "finished_at": "2026-09-13T19:16:32.814454+00:00",
+  "before_head": "d4ea0cbdf49630d8e1afc3e2184858cb58940fd3",
+  "after_head": "8b2f481dbe87092d0c1742274712a6f805c1c375",
+  "canonical_main": "29c439107dc3d6c3cab77d6b4a3f24bb5373d4da",
+  "canonical_ancestor_proved": true,
+  "clean": true,
+  "approved_alpha_lifetime": 37250,
+  "approved_replacement_alpha": 6000,
+  "primary_source_hold_released_at": "2026-09-13T19:05:50Z",
+  "changes": [
+    "main/extender.yml",
+    "main/services.yml",
+    "main/st.yml"
+  ],
+  "chain_transactions": 0
+}

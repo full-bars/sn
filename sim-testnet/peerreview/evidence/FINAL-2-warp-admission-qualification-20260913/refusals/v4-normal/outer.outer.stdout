@@ -1,0 +1,1 @@
+{"state":"failed","finished":2,"total":2,"failed":["build-sim-testnet-normal","suite-integration24-normal-p1"],"source_unchanged":true,"error":"qualification did not complete with exact passing evidence","report":"/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/runtime/qualification-warp-admission-v1/captures/integration24-normal-p1-v4/report.json"}

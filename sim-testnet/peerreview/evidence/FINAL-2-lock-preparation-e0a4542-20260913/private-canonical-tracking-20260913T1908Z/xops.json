@@ -1,0 +1,55 @@
+{
+  "repo": "xops",
+  "started_at": "2026-09-13T19:06:40.188633+00:00",
+  "canonical_branch": "main",
+  "before_head": "a9d2eb4bfbdf72d61243908a71659adff0fb8160",
+  "before_status": "",
+  "before_branch": {
+    "argv": [
+      "symbolic-ref",
+      "--quiet",
+      "--short",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "codex/sim-testnet-final-20260913\n",
+    "stderr": ""
+  },
+  "fetch": {
+    "argv": [
+      "fetch",
+      "--no-tags",
+      "origin",
+      "refs/heads/main:refs/remotes/origin/main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "From github.com:urnetwork/xops\n * [new branch]      main       -> origin/main\n"
+  },
+  "remote_head": "ae0053db793eec43d1940f2e8d68837c0bc3c9ca",
+  "accepted_head_matches_remote": false,
+  "unexpected_remote_commits": {
+    "argv": [
+      "log",
+      "--oneline",
+      "HEAD..origin/main"
+    ],
+    "exit": 0,
+    "stdout": "ae0053d Converge Planetoid runtime power policy\n",
+    "stderr": ""
+  },
+  "after_head": "a9d2eb4bfbdf72d61243908a71659adff0fb8160",
+  "after_status": "",
+  "after_upstream": {
+    "argv": [
+      "rev-parse",
+      "--abbrev-ref",
+      "@{u}"
+    ],
+    "exit": 0,
+    "stdout": "origin/codex/sim-testnet-final-20260913\n",
+    "stderr": ""
+  },
+  "source_unchanged": true,
+  "finished_at": "2026-09-13T19:06:41.163123+00:00"
+}
