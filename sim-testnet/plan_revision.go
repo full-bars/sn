@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"math"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -3563,6 +3564,61 @@ func priorReserveValidatorRepairChain(revised, prior *SetupPlan, entries []Journ
 	return repairs, nil
 }
 
+// Retire only an insufficient final reserve-share repair which never entered
+// execution. Execute fsyncs StageIntent before dispatch, including before the
+// native signer persists raw bytes. Any journal row for this action or intent
+// therefore prevents retirement, even a failed or foreign-lineage row. Apply
+// rebuilds this revision while holding the existing deployment journal lock.
+// The original action remains in the archived predecessor plan; only its
+// unspent reservation leaves the active set used by retirement accounting.
+func retainExecutableReserveValidatorRepairChain(cfg *ResolvedConfig, prior *SetupPlan, current *SetupFacts, entries []JournalEntry, repairs []Action) ([]Action, error) {
+	if len(repairs) == 0 {
+		return repairs, nil
+	}
+	if cfg == nil || cfg.Config == nil || prior == nil || current == nil || current.RegisteredAlphaRao == 0 || current.ReserveValidatorAlphaRao > current.RegisteredAlphaRao {
+		return nil, errors.New("reserve-validator repair succession context is unavailable")
+	}
+	prospective := current.ReserveValidatorAlphaRao
+	for index, action := range repairs {
+		if exactVerifiedPlanAction(prior, entries, action.ID) {
+			continue
+		}
+		target, minimum, shareRepair, err := reserveShareRepairTerms(action)
+		if err != nil {
+			return nil, err
+		}
+		if encoded := action.Parameters[alphaRepairMinimumDestinationParameter]; encoded != "" {
+			floor, parseErr := strconv.ParseUint(encoded, 10, 64)
+			if parseErr != nil || floor == 0 || floor > current.RegisteredAlphaRao {
+				return nil, fmt.Errorf("prior reserve-validator repair %s has an invalid absolute target", action.ID)
+			}
+			prospective = max64(prospective, floor)
+			continue
+		}
+		credit, creditErr := alphaTransferMinimumCreditRao(action.Spend.AlphaRao)
+		after, addOK := checkedAdd(prospective, credit)
+		if creditErr != nil || !addOK || after > current.RegisteredAlphaRao {
+			return nil, stateMismatchError(creditErr, "prior reserve-validator repair %s prospective stake is invalid", action.ID)
+		}
+		if shareRepair && !alphaShareMeets(current.RegisteredAlphaRao, after, target) {
+			if target != cfg.Config.ValidatorBootstrap.ReserveTargetShareBPS || minimum != cfg.Config.ValidatorBootstrap.ReserveMinimumShareBPS {
+				return nil, fmt.Errorf("insufficient reserve-validator repair %s differs from the active share bounds", action.ID)
+			}
+			if index != len(repairs)-1 {
+				return nil, fmt.Errorf("insufficient reserve-validator repair %s has a later repair; its chain cannot be replaced", action.ID)
+			}
+			for _, entry := range entries {
+				if entry.ActionID == action.ID || entry.IntentHash == action.IntentHash {
+					return nil, fmt.Errorf("insufficient reserve-validator repair %s has journal history; it cannot be replaced", action.ID)
+				}
+			}
+			return append([]Action(nil), repairs[:index]...), nil
+		}
+		prospective = after
+	}
+	return repairs, nil
+}
+
 // Carry every prior validator-1 repair in its original order and, when live
 // emissions have diluted the reserve below its configured target, append one
 // fixed repair which consumes only the remaining cumulative alpha ceiling.
@@ -3663,10 +3719,19 @@ func applyReserveValidatorMajorityRepair(cfg *ResolvedConfig, revised, prior *Se
 			return stateMismatchError(creditErr, "fixed reserve-validator repair %d cannot reach %d bps from %d/%d", exact, cfg.Config.ValidatorBootstrap.ReserveTargetShareBPS, prospectiveReserve, current.RegisteredAlphaRao)
 		}
 		baseID := "alpha.repair.validator.1"
-		repairID := baseID + ".2"
-		for sequence := 3; usedIDs[repairID]; sequence++ {
-			repairID = fmt.Sprintf("%s.%d", baseID, sequence)
+		// Never reuse a gap left by a retired, never-started predecessor.
+		nextSequence := 2
+		for id := range usedIDs {
+			if !strings.HasPrefix(id, baseID+".") {
+				continue
+			}
+			sequence, parseErr := strconv.Atoi(strings.TrimPrefix(id, baseID+"."))
+			if parseErr != nil || sequence < 2 || sequence == math.MaxInt {
+				return fmt.Errorf("reserve-validator repair %s has no next sequence", id)
+			}
+			nextSequence = max(nextSequence, sequence+1)
 		}
+		repairID := fmt.Sprintf("%s.%d", baseID, nextSequence)
 		parameters := alphaTransferActionParameters(exact, 0, minimumTransfer, &revised.LiveFacts, revised.AlphaTransferMarginBPS)
 		parameters[alphaRepairForActionParameter] = base.ID
 		parameters[alphaRepairReserveShareParameter] = "true"
@@ -4188,6 +4253,10 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 	reserveRepairs, err := priorReserveValidatorRepairChain(revised, prior, entries)
 	if err != nil {
 		return nil, fmt.Errorf("retain reserve-validator repair chain: %w", err)
+	}
+	reserveRepairs, err = retainExecutableReserveValidatorRepairChain(cfg, prior, current, entries, reserveRepairs)
+	if err != nil {
+		return nil, fmt.Errorf("retain executable reserve-validator repair chain: %w", err)
 	}
 	activeAlphaActions := append(append([]Action(nil), revised.Actions...), reserveRepairs...)
 	supersededSpend.AlphaRao, err = retiredVerifiedAlphaSpend(stateDir, prior, activeAlphaActions, entries, supersededSpend.AlphaRao)
