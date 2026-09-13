@@ -111,6 +111,7 @@ type scenarioCampaignAttemptPayload struct {
 	ConfigHash              string                              `json:"config_hash"`
 	PolicyHash              string                              `json:"policy_hash"`
 	PlanHash                string                              `json:"plan_hash"`
+	Succession              *scenarioCampaignSuccession         `json:"succession,omitempty"`
 	PriorRelease            *ReleaseCampaignGate                `json:"prior_release,omitempty"`
 	HandoffAuthenticated    bool                                `json:"handoff_authenticated,omitempty"`
 	PreparationComplete     bool                                `json:"preparation_complete,omitempty"`
@@ -352,6 +353,11 @@ func validateScenarioCampaignAttemptPayload(cfg *ResolvedConfig, planHash, phase
 	if cfg == nil || cfg.Config == nil || payload == nil || payload.Schema != scenarioCampaignAttemptSchema || payload.Phase != phase || payload.RunID == "" || !strings.EqualFold(payload.ConfigHash, cfg.ConfigHash) || !strings.EqualFold(payload.PolicyHash, cfg.PolicyHash) || !strings.EqualFold(payload.PlanHash, planHash) || !validCanonicalHashHex(payload.PlanHash) {
 		return errors.New("scenario campaign attempt differs from the approved phase, configuration, policy, or plan")
 	}
+	if s := payload.Succession; s != nil {
+		if phase != "release-1.0" || s.Schema != "urnetwork-sim-campaign-succession-v1" || !validCanonicalHashHex(s.PriorPlanHash) || s.PriorPlanHash == planHash || s.PriorRunID == "" || s.PriorRunID == payload.RunID || !validSHA256String(s.PriorAttemptSHA256) || !validSHA256String(s.PriorResultSHA256) || !validSHA256String(s.PriorPlanSHA256) || !validSHA256String(s.ApprovedPlanSHA256) {
+			return errors.New("scenario campaign attempt has an invalid signed succession")
+		}
+	}
 	started, err := time.Parse(time.RFC3339Nano, payload.StartedAt)
 	if err != nil || payload.RunID != fmt.Sprintf("%s-%s", started.UTC().Format("20060102T150405.000000000Z"), phase) {
 		return errors.New("scenario campaign attempt has a noncanonical stable run identity")
@@ -389,38 +395,69 @@ func validateScenarioCampaignAttemptPayload(cfg *ResolvedConfig, planHash, phase
 }
 
 func readScenarioCampaignAttempt(cfg *ResolvedConfig, stateDir string, roles *RoleSecrets, planHash, phase string) (*scenarioCampaignAttempt, error) {
-	if roles == nil {
-		return nil, errors.New("scenario campaign attempt has no owner roles")
+	path := scenarioCampaignAttemptPath(stateDir, phase)
+	if phase == "release-1.0" {
+		if _, err := os.Lstat(scenarioCampaignSuccessorPath(stateDir)); err == nil {
+			path = scenarioCampaignSuccessorPath(stateDir)
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
 	}
-	owner, ok := roles.EVM["testnet-owner"]
-	if !ok {
-		return nil, errors.New("scenario campaign attempt has no testnet owner")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(owner.PrivateKeyHex, "0x"))
+	attempt, _, err := readScenarioCampaignAttemptAt(cfg, stateDir, roles, planHash, phase, path)
 	if err != nil {
 		return nil, err
 	}
+	if path == scenarioCampaignSuccessorPath(stateDir) {
+		if err := validateScenarioCampaignSuccession(attempt); err != nil {
+			return nil, err
+		}
+	} else if attempt.payload.Succession != nil {
+		return nil, errors.New("scenario succession is outside its immutable successor namespace")
+	}
+	return attempt, nil
+}
+
+func readScenarioCampaignAttemptAt(cfg *ResolvedConfig, stateDir string, roles *RoleSecrets, planHash, phase, path string) (*scenarioCampaignAttempt, []byte, error) {
+	if roles == nil {
+		return nil, nil, errors.New("scenario campaign attempt has no owner roles")
+	}
+	owner, ok := roles.EVM["testnet-owner"]
+	if !ok {
+		return nil, nil, errors.New("scenario campaign attempt has no testnet owner")
+	}
+	key, err := crypto.HexToECDSA(strings.TrimPrefix(owner.PrivateKeyHex, "0x"))
+	if err != nil {
+		return nil, nil, err
+	}
+	relative, err := filepath.Rel(stateDir, path)
+	if err != nil {
+		return nil, nil, err
+	}
+	raw, err := readValidatorEvidenceHistoricalFile(stateDir, filepath.ToSlash(relative), maximumCampaignEvidenceRawFileBytes)
+	if err != nil {
+		return nil, nil, err
+	}
 	var envelope ReleaseEvidenceEnvelope
-	if err := decodeStrictJSONFile(scenarioCampaignAttemptPath(stateDir, phase), &envelope); err != nil {
-		return nil, err
+	if err := decodeStrictJSONBytes(raw, &envelope); err != nil {
+		return nil, nil, err
 	}
 	if err := verifyEvidence(&envelope, &key.PublicKey); err != nil {
-		return nil, fmt.Errorf("scenario campaign attempt signature: %w", err)
+		return nil, nil, fmt.Errorf("scenario campaign attempt signature: %w", err)
 	}
 	if envelope.Kind != scenarioCampaignAttemptEvidenceKind || envelope.DeploymentID != cfg.Config.Deployment.DeploymentID || envelope.ChainID != cfg.ChainID || envelope.Netuid != cfg.Netuid || !strings.EqualFold(envelope.GenesisHash, cfg.Public.Chain.GenesisHash) {
-		return nil, errors.New("scenario campaign attempt envelope has the wrong deployment identity")
+		return nil, nil, errors.New("scenario campaign attempt envelope has the wrong deployment identity")
 	}
 	var payload scenarioCampaignAttemptPayload
 	if err := decodeStrictJSONBytes(envelope.Payload, &payload); err != nil {
-		return nil, fmt.Errorf("scenario campaign attempt payload: %w", err)
+		return nil, nil, fmt.Errorf("scenario campaign attempt payload: %w", err)
 	}
 	if envelope.RunID != payload.RunID {
-		return nil, errors.New("scenario campaign attempt envelope run differs from its payload")
+		return nil, nil, errors.New("scenario campaign attempt envelope run differs from its payload")
 	}
 	if err := validateScenarioCampaignAttemptPayload(cfg, planHash, phase, &payload); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return &scenarioCampaignAttempt{payload: payload, cfg: cfg, stateDir: stateDir, roles: roles}, nil
+	return &scenarioCampaignAttempt{payload: payload, cfg: cfg, stateDir: stateDir, roles: roles}, raw, nil
 }
 
 func writeScenarioCampaignAttempt(attempt *scenarioCampaignAttempt) error {
@@ -435,10 +472,10 @@ func writeScenarioCampaignAttempt(attempt *scenarioCampaignAttempt) error {
 	if err != nil {
 		return err
 	}
-	return writePublicJSON(scenarioCampaignAttemptPath(attempt.stateDir, attempt.payload.Phase), envelope)
+	return writePublicJSON(attempt.path(), envelope)
 }
 
-func loadOrCreateScenarioCampaignAttempt(cfg *ResolvedConfig, stateDir string, roles *RoleSecrets, planHash, phase string, prior *ReleaseCampaignGate, now time.Time) (*scenarioCampaignAttempt, error) {
+func loadOrCreateScenarioCampaignAttempt(cfg *ResolvedConfig, stateDir string, roles *RoleSecrets, planHash, phase string, prior *ReleaseCampaignGate, now time.Time, owners ...*Journal) (*scenarioCampaignAttempt, error) {
 	var result *scenarioCampaignAttempt
 	err := withScenarioCampaignAttemptLock(stateDir, phase, func() error {
 		attempt, err := readScenarioCampaignAttempt(cfg, stateDir, roles, planHash, phase)
@@ -449,7 +486,21 @@ func loadOrCreateScenarioCampaignAttempt(cfg *ResolvedConfig, stateDir string, r
 			result = attempt
 			return nil
 		}
-		if !errors.Is(err, os.ErrNotExist) {
+		// A missing dependency of an existing signed record is not an absent
+		// attempt. It must never enter the ordinary new-record overwrite path.
+		existing := false
+		for _, path := range []string{scenarioCampaignAttemptPath(stateDir, phase), scenarioCampaignSuccessorPath(stateDir)} {
+			if _, statErr := os.Lstat(path); statErr == nil {
+				existing = true
+			} else if !errors.Is(statErr, os.ErrNotExist) {
+				return statErr
+			}
+		}
+		if !errors.Is(err, os.ErrNotExist) || existing && phase == "release-1.0" {
+			if phase != "release-1.0" || prior != nil || len(owners) != 1 {
+				return err
+			}
+			result, err = createScenarioCampaignSuccessor(cfg, stateDir, roles, planHash, now, owners[0])
 			return err
 		}
 		started := now.UTC()
@@ -702,7 +753,7 @@ func (attempt *scenarioCampaignAttempt) bindAcceptanceBoundary(runDir, processSe
 			return err
 		}
 		attempt.payload = current.payload
-		encoded, err := os.ReadFile(scenarioCampaignAttemptPath(attempt.stateDir, attempt.payload.Phase))
+		encoded, err := os.ReadFile(attempt.path())
 		if err != nil {
 			return fmt.Errorf("read signed scenario campaign start marker: %w", err)
 		}

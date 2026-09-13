@@ -158,7 +158,7 @@ func runReleaseCandidateCampaignWithAnalyzer(ctx context.Context, cfg *ResolvedC
 		}
 	}
 
-	releaseAttempt, err := loadOrCreateScenarioCampaignAttempt(cfg, stateDir, roles, executor.plan.PlanHash, "release-1.0", nil, time.Now().UTC())
+	releaseAttempt, err := loadOrCreateScenarioCampaignAttempt(cfg, stateDir, roles, executor.plan.PlanHash, "release-1.0", nil, time.Now().UTC(), journal)
 	if err != nil {
 		return fmt.Errorf("open durable release-1.0 attempt: %w", err)
 	}

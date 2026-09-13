@@ -4818,7 +4818,7 @@ func runScenarioCampaignAttemptWithTimeout(ctx context.Context, cfg *ResolvedCon
 			loaded, loadErr := readScenarioCampaignAttempt(cfg, stateDir, roles, executor.plan.PlanHash, name)
 			if loadErr == nil {
 				attempt = loaded
-			} else if !errors.Is(loadErr, os.ErrNotExist) {
+			} else if !errors.Is(loadErr, os.ErrNotExist) && name != "release-1.0" {
 				return fmt.Errorf("load scenario campaign attempt: %w", loadErr)
 			} else {
 				var prior *ReleaseCampaignGate
@@ -4828,7 +4828,7 @@ func runScenarioCampaignAttemptWithTimeout(ctx context.Context, cfg *ResolvedCon
 						return fmt.Errorf("load production release predecessor: %w", loadErr)
 					}
 				}
-				attempt, loadErr = loadOrCreateScenarioCampaignAttempt(cfg, stateDir, roles, executor.plan.PlanHash, name, prior, time.Now().UTC())
+				attempt, loadErr = loadOrCreateScenarioCampaignAttempt(cfg, stateDir, roles, executor.plan.PlanHash, name, prior, time.Now().UTC(), journal)
 				if loadErr != nil {
 					return fmt.Errorf("create scenario campaign attempt: %w", loadErr)
 				}
