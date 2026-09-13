@@ -190,8 +190,8 @@ release_phase_semantic() {
     exit 1
   fi
   diff -u "$semantic_integrity_census" <(printf '%s\n' "$semantic_integrity_actual")
-  go test ./sim-testnet -run "$semantic_integrity_tests" -count=1 -skip '^(TestPublicScenarioBundleRequiresReplicatedOwnerCompletionCommit|TestFinalSemanticFleetAuditProjectionBindsTheExistingArtifact)$' -parallel=4 -timeout 15m
-  go test -race ./sim-testnet -run "$semantic_integrity_tests" -count=1 -skip '^(TestPublicScenarioBundleRequiresReplicatedOwnerCompletionCommit|TestFinalSemanticFleetAuditProjectionBindsTheExistingArtifact)$' -parallel=4 -timeout 25m
+  go test ./sim-testnet -run "$semantic_integrity_tests" -count=1 -skip '^(TestPublicScenarioBundleRequiresReplicatedOwnerCompletionCommit|TestFinalSemanticFleetAuditProjectionBindsTheExistingArtifact|TestFinalSemanticDeploymentBoundaryRuntimeConfigsAreAcceptedByReleaseLoaders|TestFinalSemanticEvidenceBuildRenderAndArtifacts|TestFinalSemanticPoolRegistrationUsesEVMReceiptAndNativeSnapshot)$' -parallel=4 -timeout 15m
+  go test -race ./sim-testnet -run "$semantic_integrity_tests" -count=1 -skip '^(TestPublicScenarioBundleRequiresReplicatedOwnerCompletionCommit|TestFinalSemanticFleetAuditProjectionBindsTheExistingArtifact|TestFinalSemanticDeploymentBoundaryRuntimeConfigsAreAcceptedByReleaseLoaders|TestFinalSemanticEvidenceBuildRenderAndArtifacts|TestFinalSemanticPoolRegistrationUsesEVMReceiptAndNativeSnapshot)$' -parallel=4 -timeout 25m
 }
 release_gate_start semantic release_phase_semantic
 
@@ -212,6 +212,33 @@ release_phase_semantic_fleet_projection() {
   go test -race ./sim-testnet -run "$semantic_fleet_projection_tests" -count=1 -parallel=4 -timeout 25m
 }
 release_gate_start semantic-fleet-projection release_phase_semantic_fleet_projection
+
+# The 2026-09-13 race census exhausted the shared 25-minute package clock
+# while these full replays were still making progress. Give each the same
+# original mode budgets under the existing bounded gate owner and join path.
+release_phase_semantic_runtime_configs() {
+  cd "$sn_repo"
+  semantic_runtime_configs_tests='^TestFinalSemanticDeploymentBoundaryRuntimeConfigsAreAcceptedByReleaseLoaders$'
+  go test ./sim-testnet -run "$semantic_runtime_configs_tests" -count=1 -parallel=4 -timeout 15m
+  go test -race ./sim-testnet -run "$semantic_runtime_configs_tests" -count=1 -parallel=4 -timeout 25m
+}
+release_gate_start semantic-runtime-configs release_phase_semantic_runtime_configs
+
+release_phase_semantic_build_artifacts() {
+  cd "$sn_repo"
+  semantic_build_artifacts_tests='^TestFinalSemanticEvidenceBuildRenderAndArtifacts$'
+  go test ./sim-testnet -run "$semantic_build_artifacts_tests" -count=1 -parallel=4 -timeout 15m
+  go test -race ./sim-testnet -run "$semantic_build_artifacts_tests" -count=1 -parallel=4 -timeout 25m
+}
+release_gate_start semantic-build-artifacts release_phase_semantic_build_artifacts
+
+release_phase_semantic_pool_registration() {
+  cd "$sn_repo"
+  semantic_pool_registration_tests='^TestFinalSemanticPoolRegistrationUsesEVMReceiptAndNativeSnapshot$'
+  go test ./sim-testnet -run "$semantic_pool_registration_tests" -count=1 -parallel=4 -timeout 15m
+  go test -race ./sim-testnet -run "$semantic_pool_registration_tests" -count=1 -parallel=4 -timeout 25m
+}
+release_gate_start semantic-pool-registration release_phase_semantic_pool_registration
 
 echo "[release-1.0 producer] lossless capture, completion, and publication"
 release_phase_capture() {

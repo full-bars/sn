@@ -425,10 +425,13 @@ func TestProducerGatePinsSyntheticEVMIdentityRegressions(t *testing.T) {
 // issue the first shared-testnet mutation.
 const releaseGateSemanticPublicScenarioRoot = "TestPublicScenarioBundleRequiresReplicatedOwnerCompletionCommit"
 const releaseGateSemanticFleetProjectionRoot = "TestFinalSemanticFleetAuditProjectionBindsTheExistingArtifact"
-const releaseGateSemanticOwnerSkip = " -skip '^(" + releaseGateSemanticPublicScenarioRoot + "|" + releaseGateSemanticFleetProjectionRoot + ")$'"
+const releaseGateSemanticRuntimeConfigsRoot = "TestFinalSemanticDeploymentBoundaryRuntimeConfigsAreAcceptedByReleaseLoaders"
+const releaseGateSemanticBuildArtifactsRoot = "TestFinalSemanticEvidenceBuildRenderAndArtifacts"
+const releaseGateSemanticPoolRegistrationRoot = "TestFinalSemanticPoolRegistrationUsesEVMReceiptAndNativeSnapshot"
+const releaseGateSemanticOwnerSkip = " -skip '^(" + releaseGateSemanticPublicScenarioRoot + "|" + releaseGateSemanticFleetProjectionRoot + "|" + releaseGateSemanticRuntimeConfigsRoot + "|" + releaseGateSemanticBuildArtifactsRoot + "|" + releaseGateSemanticPoolRegistrationRoot + ")$'"
 
-// Bind the existing source census to three finite jobs with the original mode
-// budgets. The two full replays cannot consume the ordinary package's clock.
+// Bind the existing source census to six finite jobs with the original mode
+// budgets. Full replays cannot consume the ordinary package's clock.
 func verifyReleaseSemanticExecutionOwners(script string, selected []string) error {
 	ownerCounts := map[string]int{}
 	skip := regexp.MustCompile(strings.TrimSuffix(strings.TrimPrefix(releaseGateSemanticOwnerSkip, " -skip '"), "'"))
@@ -442,6 +445,9 @@ func verifyReleaseSemanticExecutionOwners(script string, selected []string) erro
 		{phase: "semantic", job: "semantic", variable: "semantic_integrity_tests", selector: releaseSemanticIntegritySelector, skip: releaseGateSemanticOwnerSkip},
 		{phase: "semantic_public_scenario", job: "semantic-public-scenario", variable: "semantic_public_scenario_tests", selector: "^" + releaseGateSemanticPublicScenarioRoot + "$"},
 		{phase: "semantic_fleet_projection", job: "semantic-fleet-projection", variable: "semantic_fleet_projection_tests", selector: "^" + releaseGateSemanticFleetProjectionRoot + "$"},
+        {phase: "semantic_runtime_configs", job: "semantic-runtime-configs", variable: "semantic_runtime_configs_tests", selector: "^" + releaseGateSemanticRuntimeConfigsRoot + "$"},
+        {phase: "semantic_build_artifacts", job: "semantic-build-artifacts", variable: "semantic_build_artifacts_tests", selector: "^" + releaseGateSemanticBuildArtifactsRoot + "$"},
+        {phase: "semantic_pool_registration", job: "semantic-pool-registration", variable: "semantic_pool_registration_tests", selector: "^" + releaseGateSemanticPoolRegistrationRoot + "$"},
 	} {
 		function := "release_phase_" + group.phase
 		pattern := regexp.MustCompile("(?ms)^[\\t ]*" + function + "\\(\\) \\{\\n(.*?)^[\\t ]*\\}[\\t ]*$")
@@ -495,7 +501,7 @@ func verifyReleaseSemanticExecutionOwners(script string, selected []string) erro
 				count++
 			}
 		}
-		if group.phase != "semantic" && count != 1 || group.phase == "semantic" && count != len(selected)-2 {
+		if group.phase != "semantic" && count != 1 || group.phase == "semantic" && count != len(selected)-5 {
 			return fmt.Errorf("semantic %s execution differs from its complete source census", group.phase)
 		}
 	}
@@ -508,7 +514,7 @@ func verifyReleaseSemanticExecutionOwners(script string, selected []string) erro
 }
 
 // The full source census and both original executable modes remain mandatory,
-// including the two exact full replay owners and adjacent new regressions.
+// including all five exact full replay owners and adjacent new regressions.
 func TestProducerGatePinsSemanticIntegrityRegressions(t *testing.T) {
 	scriptBytes, err := os.ReadFile("../scripts/test-release-1.0-producer-gate.sh")
 	if err != nil {
@@ -693,6 +699,9 @@ func TestProducerGatePinsSemanticIntegrityRegressions(t *testing.T) {
 		{phase: "semantic", job: "semantic", variable: "semantic_integrity_tests"},
 		{phase: "semantic_public_scenario", job: "semantic-public-scenario", variable: "semantic_public_scenario_tests"},
 		{phase: "semantic_fleet_projection", job: "semantic-fleet-projection", variable: "semantic_fleet_projection_tests"},
+        {phase: "semantic_runtime_configs", job: "semantic-runtime-configs", variable: "semantic_runtime_configs_tests"},
+        {phase: "semantic_build_artifacts", job: "semantic-build-artifacts", variable: "semantic_build_artifacts_tests"},
+        {phase: "semantic_pool_registration", job: "semantic-pool-registration", variable: "semantic_pool_registration_tests"},
 	} {
 		start := "release_gate_start " + owner.job + " release_phase_" + owner.phase
 		for _, replacement := range []string{"# " + start, start + "\n" + start, "if false; then\n" + start + "\nfi", "release_phase_unused() {\n" + start + "\n}"} {
