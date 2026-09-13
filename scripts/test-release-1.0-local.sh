@@ -102,8 +102,8 @@ release_phase_sn_go() {
   go test ./validator -run "$validator_lifecycle_tests" -count=1
   go test -race ./validator -run "$validator_lifecycle_tests" -count=1
   # The complete simulator race union below retains every launch-scale test.
-  # Its two finite population roots have their own admitted package clock so
-  # their serial work cannot consume the parallel roots' execution allowance.
+  # The finite populations and full supplement publications have independent
+  # package clocks so their work cannot consume the remaining roots' allowance.
 }
 release_gate_start sn-go release_phase_sn_go
 
@@ -124,7 +124,7 @@ release_phase_sn_validator_race() {
 }
 release_phase_sn_simulator_race() {
   cd "$sn_repo"
-  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -skip '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$'
+  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -skip '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$'
 }
 # The retained 90-minute aggregate alarm left four newly active roots and 195
 # parallel roots queued after the serial prefix. Keep the complete 1,191,936
@@ -134,11 +134,20 @@ release_phase_sn_simulator_populations_race() {
   cd "$sn_repo"
   go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$'
 }
+# The later complement alarm left three full supplement publications active
+# for 17--19 minutes after a long serial prefix, with 188 roots still queued.
+# Keep their complete derived files, immutable writes and replica readback in
+# one independently admitted 90-minute owner; every other root stays above.
+release_phase_sn_simulator_supplements_race() {
+  cd "$sn_repo"
+  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^(TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$'
+}
 release_gate_start sn-all-normal release_phase_sn_all_normal
 release_gate_start sn-core-race release_phase_sn_core_race
 release_gate_start sn-validator-race release_phase_sn_validator_race
 release_gate_start sn-simulator-race release_phase_sn_simulator_race
 release_gate_start sn-simulator-populations-race release_phase_sn_simulator_populations_race
+release_gate_start sn-simulator-supplements-race release_phase_sn_simulator_supplements_race
 
 echo "[release-1.0] deployable Solidity static analysis"
 release_phase_solidity_static() {

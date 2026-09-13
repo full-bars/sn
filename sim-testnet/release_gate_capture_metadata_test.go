@@ -320,7 +320,7 @@ func TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak(t *testing.T)
 	if err := verifyReleaseGateFullValidatorRace(localScript); err != nil {
 		t.Fatalf("metadata budget changed an independent full-package owner: %v", err)
 	}
-	for _, fullRace := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand} {
+	for _, fullRace := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand, releaseGateSimulatorSupplementRaceCommand} {
 		if strings.Count(localScript, fullRace) != 1 {
 			t.Fatal("full simulator race owner is not uniquely executable")
 		}

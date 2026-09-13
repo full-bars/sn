@@ -1567,8 +1567,9 @@ func TestReleaseGatesPreflightBindingToolBeforeLongWork(t *testing.T) {
 }
 
 // The original complete race package exhausted its 90-minute shared clock
-// before its parallel roots could finish. The exact population/complement
-// owners retain that deadline and every source root, including future roots.
+// before its parallel roots could finish. The later complement also exhausted
+// its clock during full supplement publication. All three owners retain that
+// deadline and every source root, including future roots.
 func TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite(t *testing.T) {
 	scriptBytes, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
 	if err != nil {
@@ -1599,8 +1600,10 @@ func verifyReleaseGateSimulatorRaceCensus(script string, sources map[string]stri
 		return err
 	}
 	population := regexp.MustCompile(releaseGateSimulatorPopulationSelector)
+	supplement := regexp.MustCompile(releaseGateSimulatorSupplementSelector)
+	separate := regexp.MustCompile(releaseGateSimulatorSeparateSelector)
 	seen := map[string]bool{}
-	ordinaryCount, populationCount := 0, 0
+	ordinaryCount, populationCount, supplementCount := 0, 0, 0
 	for path, source := range sources {
 		parsed, err := parser.ParseFile(token.NewFileSet(), path, source, 0)
 		if err != nil {
@@ -1628,16 +1631,22 @@ func verifyReleaseGateSimulatorRaceCensus(script string, sources map[string]stri
 			}
 			seen[name] = true
 			// The guarded ordinary command has no -run filter: its sole -skip
-			// is exactly the population command's anchored -run expression.
-			if population.MatchString(name) {
+			// is exactly the disjoint union of the other anchored -run sets.
+			isPopulation, isSupplement := population.MatchString(name), supplement.MatchString(name)
+			if isPopulation && isSupplement || separate.MatchString(name) != (isPopulation || isSupplement) {
+				return fmt.Errorf("aggregate simulator root has overlapping or missing ownership: %s", name)
+			}
+			if isPopulation {
 				populationCount++
+			} else if isSupplement {
+				supplementCount++
 			} else {
 				ordinaryCount++
 			}
 		}
 	}
-	if populationCount != 2 || ordinaryCount == 0 || len(seen) != ordinaryCount+populationCount {
-		return fmt.Errorf("aggregate simulator census has %d population and %d ordinary roots", populationCount, ordinaryCount)
+	if populationCount != 2 || supplementCount != 3 || ordinaryCount == 0 || len(seen) != ordinaryCount+populationCount+supplementCount {
+		return fmt.Errorf("aggregate simulator census has %d population, %d supplement and %d ordinary roots", populationCount, supplementCount, ordinaryCount)
 	}
 	return nil
 }
