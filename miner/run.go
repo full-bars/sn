@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -486,8 +487,14 @@ func provide(opts docopt.Opts) {
 
 		seed, _ := readProviderClientKeySeed()
 		certPem, keyPem, _ := readProviderTlsCertAndKey()
+		extenderKeySeed, _ := readProviderExtenderKeySeed()
 		settings := sdk.DefaultDeviceLocalSettings()
 		settings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(seed, certPem, keyPem)
+		// the extender identity of this provider (connect/EXTENDER.md B1, G2).
+		// The space keeps no local state, so the seed lives here: without it
+		// the role would activate under a new key every launch and the
+		// operator would revoke the old one as fast as it publishes it.
+		settings.KeyMaterial.SetExtenderKeySeed(extenderKeySeed)
 		settings.MemoryTargetByteCount = sdk.ByteCount(providerMemoryTarget)
 		settings.ProviderDialContextSettings = testEgressDialer
 		instanceId := sdk.NewId()
@@ -524,9 +531,22 @@ func provide(opts docopt.Opts) {
 				fmt.Printf("provider tls cert/key save failed: %s\n", err)
 			}
 		}
+		// the role generates an identity when there was none to pass in, so
+		// the seed is read back and kept for the next launch
+		if extenderKeySeed = keyMaterial.GetExtenderKeySeed(); 0 < len(extenderKeySeed) {
+			if err := writeProviderExtenderKeySeed(extenderKeySeed); err != nil {
+				fmt.Printf("provider extender key save failed: %s\n", err)
+			}
+		}
 
 		fmt.Printf("client_id: %s\n", clientId)
 		fmt.Printf("instance_id: %s\n", instanceId)
+		printProviderExtenderIdentity(extenderKeySeed)
+		// one line per change, so the activation prints once it settles and
+		// nothing repeats while it holds (connect/EXTENDER.md F3, G3)
+		extenderStatusSub := device.AddExtenderProvideStatusChangeListener(
+			newProviderExtenderStatusListener())
+		defer extenderStatusSub.Close()
 
 		select {
 		case <-proxyCtx.Done():
@@ -678,6 +698,122 @@ func writeProviderClientKeySeed(seed []byte) error {
 		return err
 	}
 	return os.WriteFile(p, seed, 0600)
+}
+
+// readProviderExtenderKeySeed loads the ed25519 seed of this provider's
+// extender identity from `~/.urnetwork/.provider.extender.key`
+// (connect/EXTENDER.md B1). Returns (nil, nil) when the file does not exist --
+// a provider that has not been an extender yet. The file is the raw 32-byte
+// seed; no encoding, exactly as the client key seed beside it.
+func readProviderExtenderKeySeed() ([]byte, error) {
+	p, err := providerStatePath(".provider.extender.key")
+	if err != nil {
+		return nil, err
+	}
+	b, err := os.ReadFile(p)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	return b, err
+}
+
+// writeProviderExtenderKeySeed persists the extender identity seed to
+// `~/.urnetwork/.provider.extender.key` with 0600 permissions (sensitive
+// material -- anyone with this file can present this host's extender identity
+// to the mesh and to the operator).
+func writeProviderExtenderKeySeed(extenderKeySeed []byte) error {
+	p, err := providerStatePath(".provider.extender.key")
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(p), 0700); err != nil {
+		return err
+	}
+	return os.WriteFile(p, extenderKeySeed, 0600)
+}
+
+// Prints the extender public key this provider activates under, which is what
+// the operator's records name and what the mesh peer id is derived from (B1).
+func printProviderExtenderIdentity(extenderKeySeed []byte) {
+	if len(extenderKeySeed) == 0 {
+		return
+	}
+	publicKey, err := connect.ExtenderPublicKeyFromSeed(extenderKeySeed)
+	if err != nil {
+		fmt.Printf("provider extender key is not readable: %s\n", err)
+		return
+	}
+	fmt.Printf("extender_public_key: %s\n", hex.EncodeToString(publicKey))
+}
+
+// providerExtenderStatusListener prints the provider extender status whenever
+// it changes (connect/EXTENDER.md F3, G3), so one line lands when the
+// activation settles and nothing repeats while it holds. The sdk already
+// coalesces these callbacks to at most one per second.
+type providerExtenderStatusListener struct {
+	stateLock sync.Mutex
+	line      string
+}
+
+func newProviderExtenderStatusListener() *providerExtenderStatusListener {
+	return &providerExtenderStatusListener{}
+}
+
+func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(
+	status *sdk.ExtenderProvideStatus,
+) {
+	line := providerExtenderStatusLine(status)
+	changed := func() bool {
+		self.stateLock.Lock()
+		defer self.stateLock.Unlock()
+		if self.line == line {
+			return false
+		}
+		self.line = line
+		return true
+	}()
+	if changed {
+		fmt.Printf("extender: %s\n", line)
+	}
+}
+
+// One extender status as a line, carrying only what changes: whether the
+// carriers bound, which families are activated and where, and the newest
+// failure either half is standing on.
+func providerExtenderStatusLine(status *sdk.ExtenderProvideStatus) string {
+	if status == nil || !status.Enabled {
+		return "off"
+	}
+	parts := []string{}
+	if status.Listening {
+		parts = append(parts, "listening")
+	} else {
+		parts = append(parts, "not listening")
+	}
+	if status.ListenError != "" {
+		parts = append(parts, "carriers "+status.ListenError)
+	}
+	for _, family := range []struct {
+		name      string
+		activated bool
+		ip        string
+	}{
+		{name: "v4", activated: status.ActivatedV4, ip: status.Ipv4},
+		{name: "v6", activated: status.ActivatedV6, ip: status.Ipv6},
+	} {
+		if family.activated {
+			parts = append(parts, fmt.Sprintf("%s activated at %s", family.name, family.ip))
+		} else {
+			parts = append(parts, family.name+" not activated")
+		}
+	}
+	if status.LastActivationError != "" {
+		parts = append(parts, "last error "+status.LastActivationError)
+	}
+	if status.RevokedTime != 0 {
+		parts = append(parts, "revoked")
+	}
+	return strings.Join(parts, ", ")
 }
 
 // readProviderTlsCertAndKey loads the sequence-level TLS server cert

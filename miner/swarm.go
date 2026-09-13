@@ -401,11 +401,8 @@ func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed fu
 	logoutSub := api.AddAuthLogoutListener(clientauth.AuthLogoutListenerFunc(func() {
 		failed(errors.New("provider authentication was rejected"))
 	}))
-	deviceSettings := sdk.DefaultDeviceLocalSettings()
-	deviceSettings.ClientSettings.ClientKeyRegistrationRequired = true
-	deviceSettings.KeyMaterial = sdk.NewDeviceLocalKeyMaterial(seed, certificatePEM, keyPEM)
-	deviceSettings.ProviderDialContextSettings = dialSettings
-	deviceSettings.DnsPumpHost = member.DNSPumpHost
+	deviceSettings := swarmMemberDeviceSettings(
+		member, sdk.NewDeviceLocalKeyMaterial(seed, certificatePEM, keyPEM), dialSettings)
 	device, err := sdk.NewDeviceLocal(networkSpace, byClientJWT, "provider swarm "+runtime.GOOS+" "+RequireVersion(), "", RequireVersion(), sdk.NewId(), deviceSettings)
 	if err != nil {
 		refreshSub.Close()
@@ -425,6 +422,26 @@ func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed fu
 		return nil, err
 	}
 	return &providerSwarmInstance{networkSpace: networkSpace, device: device, refreshSub: refreshSub, logoutSub: logoutSub, cancel: memberCancel}, nil
+}
+
+// The device settings of one swarm member. Named rather than inlined so a test
+// can read what the swarm asks of the sdk without standing up a member.
+func swarmMemberDeviceSettings(
+	member ProviderSwarmMember,
+	keyMaterial *sdk.DeviceLocalKeyMaterial,
+	dialSettings *connect.DialContextSettings,
+) *sdk.DeviceLocalSettings {
+	deviceSettings := sdk.DefaultDeviceLocalSettings()
+	deviceSettings.ClientSettings.ClientKeyRegistrationRequired = true
+	// One process runs every swarm member, and a host holds one extender
+	// identity and binds the carrier ports once, so no member runs the
+	// provider extender role (connect/EXTENDER.md G1, G2). A standalone
+	// provider is the shape that becomes an extender.
+	deviceSettings.ProvideExtenderEnabled = false
+	deviceSettings.KeyMaterial = keyMaterial
+	deviceSettings.ProviderDialContextSettings = dialSettings
+	deviceSettings.DnsPumpHost = member.DNSPumpHost
+	return deviceSettings
 }
 
 func NewProviderSwarm(config *ProviderSwarmConfig) (*ProviderSwarm, error) {
