@@ -5,7 +5,7 @@ from local cryptography -- no value is taken from the report on trust."""
 import json, hashlib, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 _HERE = os.path.dirname(os.path.abspath(__file__))
-from rpc import rpc, batch, h2i
+from rpc import rpc, batch, h2i, N
 from decode import decode_log
 from keccak import keccak256
 from ecrec import recover, addr
@@ -20,7 +20,7 @@ def chk(actor, cid, claim, expected, observed, method, tier, whitepaper=None):
     return ok
 
 # ---------- node identity ----------
-R["meta"]["endpoint"]="http://192.168.1.162:9944"
+R["meta"]["endpoint"]=N
 R["meta"]["eth_chainId"]=rpc("eth_chainId")
 R["meta"]["system_chain"]=rpc("system_chain")
 R["meta"]["head"]=h2i(rpc("eth_blockNumber"))
