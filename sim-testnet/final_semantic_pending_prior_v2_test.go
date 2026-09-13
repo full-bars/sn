@@ -121,10 +121,21 @@ func newFinalPendingPriorV2TestFixture(t *testing.T) *finalPendingPriorV2TestFix
 	if err != nil {
 		t.Fatal(err)
 	}
+	// These missing files contain only their own names, not rendered configs
+	// or signed evidence. Seed the complete private fixture before publishing
+	// its real manifest; thousands of per-placeholder durable commits do not
+	// exercise a capture boundary. Existing original files remain untouched.
 	for name, mode := range expected {
 		path := filepath.Join(stateRoot, filepath.FromSlash(name))
 		if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-			if err := atomicWrite(path, []byte(name+"\n"), mode); err != nil {
+			if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(path, []byte(name+"\n"), mode); err != nil {
+				t.Fatal(err)
+			}
+			// Match the renderer's exact modes independently of the test umask.
+			if err := os.Chmod(path, mode); err != nil {
 				t.Fatal(err)
 			}
 		} else if err != nil {
@@ -362,6 +373,20 @@ func TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites(t *testing.T) {
 func TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs(t *testing.T) {
 	t.Parallel()
 	fixture := newFinalPendingPriorV2TestFixture(t)
+	// The cheaper private seeding still materializes every full-topology
+	// source. This verifier also reopens the original V2 references against
+	// their preexisting byte/hash bounds, so seeding cannot overwrite them.
+	if fixture.cfg.Config.Topology.Miners != 1000 {
+		t.Fatal("pending prior fixture reduced its original miner census")
+	}
+	expected, err := expectedRuntimeConfigFiles(fixture.cfg, fixture.stateRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	verified, err := verifyRuntimeConfigManifest(fixture.cfg, fixture.stateRoot)
+	if err != nil || verified.FileCount != len(expected) || verified.FileCount < 3*fixture.cfg.Config.Topology.Miners {
+		t.Fatalf("pending prior fixture lost exact runtime sources: %+v %v", verified, err)
+	}
 	raw, err := json.Marshal(fixture.prior)
 	if err != nil {
 		t.Fatal(err)
@@ -379,5 +404,43 @@ func TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs(t *testing
 		if !found || reference.Kind != locator.Kind || reference.ContentHash != locator.ContentHash || reference.Size != locator.SizeBytes {
 			t.Fatalf("pending source vanished from public archive: %+v", locator)
 		}
+	}
+	// A seeded source is still subject to the actual manifest's byte, mode
+	// and complete-file checks. Restore the same bytes after each control.
+	relative := "runtime/miner-1000/claim-daemon.yml"
+	path := filepath.Join(fixture.stateRoot, filepath.FromSlash(relative))
+	original, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(original, []byte(relative+"\n")) {
+		t.Fatalf("last miner's original placeholder is incomplete: %q %v", original, err)
+	}
+	if err := os.WriteFile(path, []byte("changed source\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := verifyRuntimeConfigManifest(fixture.cfg, fixture.stateRoot); err == nil {
+		t.Fatal("seeded runtime source escaped its byte commitment")
+	}
+	if err := os.WriteFile(path, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(path, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := verifyRuntimeConfigManifest(fixture.cfg, fixture.stateRoot); err == nil {
+		t.Fatal("seeded runtime source escaped its private mode commitment")
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := verifyRuntimeConfigManifest(fixture.cfg, fixture.stateRoot); err == nil {
+		t.Fatal("seeded runtime source escaped the complete file census")
+	}
+	if err := os.WriteFile(path, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(path, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := verifyRuntimeConfigManifest(fixture.cfg, fixture.stateRoot); err != nil {
+		t.Fatalf("restored exact runtime source did not verify: %v", err)
 	}
 }
