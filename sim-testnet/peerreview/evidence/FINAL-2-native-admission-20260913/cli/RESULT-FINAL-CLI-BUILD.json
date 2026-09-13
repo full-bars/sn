@@ -1,0 +1,10 @@
+{
+  "kind":"final-stamped-sim-testnet-cli-build",
+  "build_exit":0,
+  "repos_before_after_identical":true,
+  "repos_before_sha256":"fd7c867e868a85f22ccca83b909721d5287223ca39eee1b78f375c7f34e89fcc",
+  "repos_after_sha256":"fd7c867e868a85f22ccca83b909721d5287223ca39eee1b78f375c7f34e89fcc",
+  "artifact":{"path":"/home/by/urnetwork/temp/sn-capture-serial-owners-20260913/runtime-final-cli-90f67b-20260913T1226Z/bin/sim-testnet-90f67b-final","sha256":"9b42372c2ff768a21d7d117d716dcb4dfe00be422c8570880a423708a8a3d6e2","bytes":130429272,"mode":"0700"},
+  "vcs":{"revision":"90f67b1859368d34b0404870f46819f012712674","trimpath":true,"buildvcs":true,"modified":false},
+  "warm_gocache":"/home/by/urnetwork/temp/sn-final-execution-20260912/runtime-bootstrap-cli-a59c41c-20260913T035448Z/gocache"
+}

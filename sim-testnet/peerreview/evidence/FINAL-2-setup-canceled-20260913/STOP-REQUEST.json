@@ -1,0 +1,9 @@
+{
+  "requested_at": "2026-09-13T15:00:54.755348+00:00",
+  "native_pid": 4002098,
+  "signal": "SIGINT",
+  "reason": "Actual current aggregate sn-simulator-race exit1 after90m timeout; no further writes admitted on failed candidate",
+  "new_plan_journal_rows_at_stop": 0,
+  "repair_rows_at_stop": [],
+  "aggregate_failure_log": "/home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/logs/sn-simulator-race.log"
+}

@@ -1,0 +1,20 @@
+[env]glog not configured from command line. Using default configuration.
+I0913 14:32:17.222441 4002098 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0913 14:32:17.222690 4002098 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0913 14:32:17.222809 4002098 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0913 14:32:17.222841 4002098 env.go:67] [env]settings = map[]
+sim-testnet: batched historical fleet audit 0/1000
+sim-testnet: batched historical fleet audit 1000/1000
+sim-testnet: carried action audit 50/2246
+sim-testnet: carried action audit 100/2246
+sim-testnet: carried action audit 150/2246
+sim-testnet: carried action audit 200/2246
+sim-testnet: carried action audit 250/2246
+sim-testnet: carried action audit 300/2246
+sim-testnet: carried action audit 350/2246
+sim-testnet: carried action audit 400/2246
+sim-testnet: carried action audit 450/2246
+sim-testnet: carried action audit 500/2246
+sim-testnet: carried action audit 550/2246
+sim-testnet: carried action audit 600/2246
+sim-testnet: carried plan history preflight: action fleet.fund-hotkey.164: historical postcondition: independent historical native replay: authenticate finalized extrinsic runtime at 0x333f986183e289587562936f8b940d4865c59382fff922cb47935bed0c3888b4: context canceled

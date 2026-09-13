@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-09-13T15:09:49.704283+00:00",
+  "persisted_plan_hash": "0xd4525b8da2da4f786f4990beb2285ac09b42e033c3c7fdd3c45473a7c9336507",
+  "journal_rows": 10258,
+  "new_plan_journal_rows": 0,
+  "repair_6_journal_rows": 0,
+  "journal_sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+  "native_pid_still_exists": false,
+  "fleet_stopped": null,
+  "note": "Post-stop read-only closure; plan adoption is local. Setup exited1 due to context cancellation. No current-plan actions or repair6 entries."
+}

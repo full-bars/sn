@@ -1,0 +1,22 @@
+{
+  "source_revision": "90f67b1859368d34b0404870f46819f012712674",
+  "failed_phase": "sn-simulator-race",
+  "native_phase_exit": 1,
+  "package_seconds": "5401.403",
+  "alarm": "1h30m0s",
+  "failure_observed_at": "2026-09-13T14:59:30Z",
+  "active_roots": {
+    "TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage": "19m25s",
+    "TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper": "17m20s",
+    "TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica": "19m22s",
+    "TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding": "0s"
+  },
+  "queued_roots_reported_by_astra": 188,
+  "raw_log_sha256": "cbff6627f505ff8c4c68c6e0722eaba0655132de2c24f19c55c0604e355ae606",
+  "aggregate_outer_status": "FAILED; actual outer exit1",
+  "scope": "Actual timeout. Active work progressed; three full supplement publication stacks and one newly entered fixture write. No assertion failure before alarm reported.",
+  "aggregate_finished_at": "2026-09-13T15:40:56Z",
+  "aggregate_native_phase_joins": 22,
+  "aggregate_passed_phases": 21,
+  "final_source_freeze_exit": 0
+}

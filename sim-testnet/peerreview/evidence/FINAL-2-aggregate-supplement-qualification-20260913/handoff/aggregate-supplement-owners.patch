@@ -1,0 +1,241 @@
+From e99954acd70bdae9612dd3de2861fbbf39ef8161 Mon Sep 17 00:00:00 2001
+From: Bitprecipice <bitprecipice@proton.me>
+Date: Sun, 13 Sep 2026 15:10:06 +0000
+Subject: [PATCH] Give full semantic supplement race tests an independent
+ aggregate owner
+
+---
+ scripts/test-release-1.0-local.sh             | 15 ++++++--
+ .../release_gate_capture_metadata_test.go     |  2 +-
+ sim-testnet/release_gate_jobs_test.go         | 34 +++++++++++++++----
+ sim-testnet/release_gate_test.go              | 23 +++++++++----
+ 4 files changed, 57 insertions(+), 17 deletions(-)
+
+diff --git a/scripts/test-release-1.0-local.sh b/scripts/test-release-1.0-local.sh
+index 8238136..b74da23 100755
+--- a/scripts/test-release-1.0-local.sh
++++ b/scripts/test-release-1.0-local.sh
+@@ -102,8 +102,8 @@ release_phase_sn_go() {
+   go test ./validator -run "$validator_lifecycle_tests" -count=1
+   go test -race ./validator -run "$validator_lifecycle_tests" -count=1
+   # The complete simulator race union below retains every launch-scale test.
+-  # Its two finite population roots have their own admitted package clock so
+-  # their serial work cannot consume the parallel roots' execution allowance.
++  # The finite populations and full supplement publications have independent
++  # package clocks so their work cannot consume the remaining roots' allowance.
+ }
+ release_gate_start sn-go release_phase_sn_go
+ 
+@@ -124,7 +124,7 @@ release_phase_sn_validator_race() {
+ }
+ release_phase_sn_simulator_race() {
+   cd "$sn_repo"
+-  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -skip '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$'
++  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -skip '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$'
+ }
+ # The retained 90-minute aggregate alarm left four newly active roots and 195
+ # parallel roots queued after the serial prefix. Keep the complete 1,191,936
+@@ -134,11 +134,20 @@ release_phase_sn_simulator_populations_race() {
+   cd "$sn_repo"
+   go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$'
+ }
++# The later complement alarm left three full supplement publications active
++# for 17--19 minutes after a long serial prefix, with 188 roots still queued.
++# Keep their complete derived files, immutable writes and replica readback in
++# one independently admitted 90-minute owner; every other root stays above.
++release_phase_sn_simulator_supplements_race() {
++  cd "$sn_repo"
++  go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1 -run '^(TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$'
++}
+ release_gate_start sn-all-normal release_phase_sn_all_normal
+ release_gate_start sn-core-race release_phase_sn_core_race
+ release_gate_start sn-validator-race release_phase_sn_validator_race
+ release_gate_start sn-simulator-race release_phase_sn_simulator_race
+ release_gate_start sn-simulator-populations-race release_phase_sn_simulator_populations_race
++release_gate_start sn-simulator-supplements-race release_phase_sn_simulator_supplements_race
+ 
+ echo "[release-1.0] deployable Solidity static analysis"
+ release_phase_solidity_static() {
+diff --git a/sim-testnet/release_gate_capture_metadata_test.go b/sim-testnet/release_gate_capture_metadata_test.go
+index aae263e..fc86fde 100644
+--- a/sim-testnet/release_gate_capture_metadata_test.go
++++ b/sim-testnet/release_gate_capture_metadata_test.go
+@@ -320,7 +320,7 @@ func TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak(t *testing.T)
+ 	if err := verifyReleaseGateFullValidatorRace(localScript); err != nil {
+ 		t.Fatalf("metadata budget changed an independent full-package owner: %v", err)
+ 	}
+-	for _, fullRace := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand} {
++	for _, fullRace := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand, releaseGateSimulatorSupplementRaceCommand} {
+ 		if strings.Count(localScript, fullRace) != 1 {
+ 			t.Fatal("full simulator race owner is not uniquely executable")
+ 		}
+diff --git a/sim-testnet/release_gate_jobs_test.go b/sim-testnet/release_gate_jobs_test.go
+index 3afb0b5..335144d 100644
+--- a/sim-testnet/release_gate_jobs_test.go
++++ b/sim-testnet/release_gate_jobs_test.go
+@@ -688,11 +688,14 @@ func TestReleaseGateIsolationPinsPrivateResourcesAndFinalJoins(t *testing.T) {
+ // Reuse the gate source guards' exact phase/admission grammar. Require actual
+ // complete commands and owned working directories, with no extra shell branch
+ // that could skip execution.
+-// The simulator's two complementary owners retain its complete race census.
++// The simulator's three complementary owners retain its complete race census.
+ const releaseGateSimulatorPopulationSelector = "^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners)$"
++const releaseGateSimulatorSupplementSelector = "^(TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$"
++const releaseGateSimulatorSeparateSelector = "^(TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners|TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper|TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica)$"
+ const releaseGateSimulatorRaceCommand = "go test -race -parallel=4 -timeout 90m ./sim-testnet -count=1"
+-const releaseGateSimulatorOrdinaryRaceCommand = releaseGateSimulatorRaceCommand + " -skip '" + releaseGateSimulatorPopulationSelector + "'"
++const releaseGateSimulatorOrdinaryRaceCommand = releaseGateSimulatorRaceCommand + " -skip '" + releaseGateSimulatorSeparateSelector + "'"
+ const releaseGateSimulatorPopulationRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorPopulationSelector + "'"
++const releaseGateSimulatorSupplementRaceCommand = releaseGateSimulatorRaceCommand + " -run '" + releaseGateSimulatorSupplementSelector + "'"
+ 
+ func verifyReleaseGateFullValidatorRace(script string) error {
+ 	phaseDefinitions := regexp.MustCompile(`(?ms)^[\t ]*release_phase_[a-z0-9_]+\(\) \{\n.*?^[\t ]*\}[\t ]*$`)
+@@ -707,6 +710,7 @@ func verifyReleaseGateFullValidatorRace(script string) error {
+ 		{phase: "sn_validator_race", job: "sn-validator-race", command: "go test -race -parallel=4 -timeout 90m ./validator -count=1"},
+ 		{phase: "sn_simulator_race", job: "sn-simulator-race", command: releaseGateSimulatorOrdinaryRaceCommand},
+ 		{phase: "sn_simulator_populations_race", job: "sn-simulator-populations-race", command: releaseGateSimulatorPopulationRaceCommand},
++		{phase: "sn_simulator_supplements_race", job: "sn-simulator-supplements-race", command: releaseGateSimulatorSupplementRaceCommand},
+ 	}
+ 	for _, group := range groups {
+ 		function := "release_phase_" + group.phase
+@@ -755,7 +759,7 @@ func TestReleaseGateJobsRequireIndependentCompleteValidatorRace(t *testing.T) {
+ }
+ 
+ // Reproduce the exhausted single-package clock's original ownership, then
+-// reject omissions, overlaps, hidden owners and changes to either allowance.
++// reject omissions, overlaps, hidden owners and changes to any allowance.
+ func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
+ 	t.Parallel()
+ 	encoded, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
+@@ -767,19 +771,31 @@ func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
+ 		"func TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier(t *testing.T) {}\n" +
+ 		"func TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners(t *testing.T) {}\n" +
+ 		"func TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwnersFuture(t *testing.T) {}\n" +
++		"func TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage(t *testing.T) {}\n" +
++		"func TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper(t *testing.T) {}\n" +
++		"func TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica(t *testing.T) {}\n" +
++		"func TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamperFuture(t *testing.T) {}\n" +
+ 		"func TestOrdinaryControl(t *testing.T) {}\n"}
+ 	if err := verifyReleaseGateSimulatorRaceCensus(script, sources); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	const start = "release_gate_start sn-simulator-populations-race release_phase_sn_simulator_populations_race"
+ 	const definition = "release_phase_sn_simulator_populations_race() {\n  cd \"$sn_repo\"\n  " + releaseGateSimulatorPopulationRaceCommand + "\n}"
++	const supplementStart = "release_gate_start sn-simulator-supplements-race release_phase_sn_simulator_supplements_race"
++	const supplementDefinition = "release_phase_sn_simulator_supplements_race() {\n  cd \"$sn_repo\"\n  " + releaseGateSimulatorSupplementRaceCommand + "\n}"
++	previous := strings.Replace(script, releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorRaceCommand+" -skip '"+releaseGateSimulatorPopulationSelector+"'", 1)
++	previous = strings.Replace(previous, supplementDefinition, "", 1)
++	previous = strings.Replace(previous, supplementStart, "", 1)
++	if err := verifyReleaseGateSimulatorRaceCensus(previous, sources); err == nil {
++		t.Fatal("aggregate restored the timed-out supplement/complement package clock")
++	}
+ 	old := strings.Replace(script, releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorRaceCommand, 1)
+ 	old = strings.Replace(old, definition, "", 1)
+ 	old = strings.Replace(old, start, "", 1)
+ 	if err := verifyReleaseGateSimulatorRaceCensus(old, sources); err == nil {
+ 		t.Fatal("aggregate restored the serial population in one exhausted package clock")
+ 	}
+-	for _, command := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand} {
++	for _, command := range []string{releaseGateSimulatorOrdinaryRaceCommand, releaseGateSimulatorPopulationRaceCommand, releaseGateSimulatorSupplementRaceCommand} {
+ 		for _, replacement := range []string{
+ 			releaseGateSimulatorRaceCommand,
+ 			strings.Replace(command, " -race", "", 1),
+@@ -790,6 +806,8 @@ func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
+ 			strings.Replace(command, "-timeout 90m", "-timeout 0", 1),
+ 			strings.Replace(command, ")$'", ")'", 1),
+ 			strings.Replace(command, "TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|", "", 1),
++			strings.Replace(command, "TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage|", "", 1),
++			strings.Replace(command, "TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper", "TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper.*", 1),
+ 			strings.Replace(command, "-skip", "-run", 1),
+ 			strings.Replace(command, "-run", "-skip", 1),
+ 			"# " + command,
+@@ -808,7 +826,7 @@ func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
+ 			}
+ 		}
+ 	}
+-	for _, admission := range []string{start, "release_gate_start sn-simulator-race release_phase_sn_simulator_race"} {
++	for _, admission := range []string{start, supplementStart, "release_gate_start sn-simulator-race release_phase_sn_simulator_race"} {
+ 		for _, replacement := range []string{
+ 			"# " + admission,
+ 			admission + "\n" + admission,
+@@ -823,10 +841,13 @@ func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
+ 	for _, omitted := range []string{
+ 		"func TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier(t *testing.T) {}\n",
+ 		"func TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners(t *testing.T) {}\n",
++		"func TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage(t *testing.T) {}\n",
++		"func TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper(t *testing.T) {}\n",
++		"func TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica(t *testing.T) {}\n",
+ 	} {
+ 		changed := map[string]string{"population_test.go": strings.Replace(sources["population_test.go"], omitted, "", 1)}
+ 		if err := verifyReleaseGateSimulatorRaceCensus(script, changed); err == nil {
+-			t.Fatal("aggregate population owner admitted a missing required root")
++			t.Fatal("aggregate separate owner admitted a missing required root")
+ 		}
+ 	}
+ }
+@@ -988,6 +1009,7 @@ var releaseGateUncachedCommands = []struct {
+ 	{phase: "sn_validator_race", command: "go test -race -parallel=4 -timeout 90m ./validator -count=1"},
+ 	{phase: "sn_simulator_race", command: releaseGateSimulatorOrdinaryRaceCommand},
+ 	{phase: "sn_simulator_populations_race", command: releaseGateSimulatorPopulationRaceCommand},
++	{phase: "sn_simulator_supplements_race", command: releaseGateSimulatorSupplementRaceCommand},
+ 	{phase: "server_unit", command: "go test . -run '^Test(PgResourcesRedirectMaintenancePoolAndRestore|DatabaseTimeMatchesPostgresPrecision)$' -count=1"},
+ 	{phase: "server_unit", command: "go test ./st ./startifact -count=1"},
+ 	{phase: "server_unit", command: "go test ./controller -run '^Test(CoreStClient(BlockHashes|FinalizedHead|Epoch)|CoreStClientBindingsAt|DecodeStRPCBlockIdentity|StatsAlphaPriceURLIsMainnetOnly|StatsGaugeVecReplaceDeletesStaleSeries|StConfig|StCompute|StBuild|StDeposit|StEstimate|StReplacement|StDecode|StEvent|StBroadcast|StClientStub|StTransactionCancellation|VerifyEvidenceRange|VerifyKeyRotation|VerifySyntheticSeedId|VerifyUsesUrForwardedAddress|VerifyIgnoresLegacyForwardedAddress|VerifyClampM|VerifyCachedResponseRoundTrip|VerifySeedRejectsMissingSignature|StripeReconcileCredentialsRequireNonblankAPIToken|AppleReconcileCredentialsRequireCompleteServerAPIIdentity|PlayReconcileCredentialsRequireOAuthPackageAndSKUs|SolanaReconcileCredentialsRequireNonblankHeliusAPIKey)' -count=1"},
+diff --git a/sim-testnet/release_gate_test.go b/sim-testnet/release_gate_test.go
+index 9878344..d910aa0 100644
+--- a/sim-testnet/release_gate_test.go
++++ b/sim-testnet/release_gate_test.go
+@@ -1567,8 +1567,9 @@ func TestReleaseGatesPreflightBindingToolBeforeLongWork(t *testing.T) {
+ }
+ 
+ // The original complete race package exhausted its 90-minute shared clock
+-// before its parallel roots could finish. The exact population/complement
+-// owners retain that deadline and every source root, including future roots.
++// before its parallel roots could finish. The later complement also exhausted
++// its clock during full supplement publication. All three owners retain that
++// deadline and every source root, including future roots.
+ func TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite(t *testing.T) {
+ 	scriptBytes, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
+ 	if err != nil {
+@@ -1599,8 +1600,10 @@ func verifyReleaseGateSimulatorRaceCensus(script string, sources map[string]stri
+ 		return err
+ 	}
+ 	population := regexp.MustCompile(releaseGateSimulatorPopulationSelector)
++	supplement := regexp.MustCompile(releaseGateSimulatorSupplementSelector)
++	separate := regexp.MustCompile(releaseGateSimulatorSeparateSelector)
+ 	seen := map[string]bool{}
+-	ordinaryCount, populationCount := 0, 0
++	ordinaryCount, populationCount, supplementCount := 0, 0, 0
+ 	for path, source := range sources {
+ 		parsed, err := parser.ParseFile(token.NewFileSet(), path, source, 0)
+ 		if err != nil {
+@@ -1628,16 +1631,22 @@ func verifyReleaseGateSimulatorRaceCensus(script string, sources map[string]stri
+ 			}
+ 			seen[name] = true
+ 			// The guarded ordinary command has no -run filter: its sole -skip
+-			// is exactly the population command's anchored -run expression.
+-			if population.MatchString(name) {
++			// is exactly the disjoint union of the other anchored -run sets.
++			isPopulation, isSupplement := population.MatchString(name), supplement.MatchString(name)
++			if isPopulation && isSupplement || separate.MatchString(name) != (isPopulation || isSupplement) {
++				return fmt.Errorf("aggregate simulator root has overlapping or missing ownership: %s", name)
++			}
++			if isPopulation {
+ 				populationCount++
++			} else if isSupplement {
++				supplementCount++
+ 			} else {
+ 				ordinaryCount++
+ 			}
+ 		}
+ 	}
+-	if populationCount != 2 || ordinaryCount == 0 || len(seen) != ordinaryCount+populationCount {
+-		return fmt.Errorf("aggregate simulator census has %d population and %d ordinary roots", populationCount, ordinaryCount)
++	if populationCount != 2 || supplementCount != 3 || ordinaryCount == 0 || len(seen) != ordinaryCount+populationCount+supplementCount {
++		return fmt.Errorf("aggregate simulator census has %d population, %d supplement and %d ordinary roots", populationCount, supplementCount, ordinaryCount)
+ 	}
+ 	return nil
+ }
+-- 
+2.43.0
+

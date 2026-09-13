@@ -268,8 +268,105 @@ Only `repositories.protocol_source_hash` changed, to
 production Go, runtime, EVM artifact, interface and infrastructure digests
 remain unchanged. This was a local file update and sent no chain transaction.
 [Actual invocation and result](peerreview/evidence/FINAL-2-capture-lock-20260913/RESULT.json).
-The replacement complete gates, final executable build and fresh bound setup
-plans are the next steps; none of these local results establishes live acceptance.
+The replacement complete gates started at **12:29:35 UTC** on published SN
+`90f67b1859368d34b0404870f46819f012712674`. The **producer passed at
+14:30:28 UTC**, with all 36 native phase joins exiting 0 and its final source
+and release-lock checks passing. This includes the previously failing capture
+phase, which completed in 167.019 seconds normally and 579.892 seconds under
+race. [Complete producer output](peerreview/evidence/FINAL-2-producer-90f67b1-20260913/capture/outer.stdout),
+[actual exit](peerreview/evidence/FINAL-2-producer-90f67b1-20260913/capture/outer.exit),
+[finish time](peerreview/evidence/FINAL-2-producer-90f67b1-20260913/capture/outer.finished-at).
+
+The aggregate's complementary simulator race phase **failed its 90-minute
+deadline**, with native exit 1 observed at **14:59 UTC**. Its separate two-root
+population phase had passed in 1,967.533 seconds. At the alarm, three full
+supplement publication roots had been active for 19m25s, 17m20s and 19m22s;
+the fourth active root had just entered its transport-bound fixture. Astra's
+stack census found 188 roots still queued for parallel execution. The active
+publication stacks were traversing local artifact stores, and retained file
+timestamps show progressing writes. The alarm does not establish a 90-minute
+hang in any one test. The aggregate finished with **exit 1 at 15:40:56 UTC**:
+21 native phases passed and only the simulator race phase failed. Its final
+source check passed, and the owned processes and private services were joined.
+The gate remains failed. [Actual aggregate output](peerreview/evidence/FINAL-2-aggregate-timeout-20260913/capture/outer.stdout),
+[actual exit](peerreview/evidence/FINAL-2-aggregate-timeout-20260913/capture/outer.exit),
+[original timeout output](peerreview/evidence/FINAL-2-aggregate-timeout-20260913/sn-simulator-race.log),
+[failure and active-root record](peerreview/evidence/FINAL-2-aggregate-timeout-20260913/failure.json).
+
+Correction `e99954a`, published at **15:44 UTC**, gives those three whole
+publication roots a separate
+package clock and retains the complete disjoint race census: **2,181 ordinary,
+three publication and two population roots**. It changes scheduling and
+existing ownership guards, preserving test bodies, payloads, cryptography,
+parallelism, uncached execution and 90-minute deadlines. Qualification and a
+successful complete aggregate remain pending for the interrupted roots.
+The correction's ten affected scheduling guards passed normally and under
+race, with actual outer exits 0 at **15:37:34** and **15:39:58 UTC**, respectively.
+Both retained source checks match before and after. The actual compiled
+inventory also passed: the 2,186-name list, declared inventory and three-group
+union are byte-identical at SHA-256
+`6fd7093a8121b06c4cf892df4d524172ba9fe3dca1173d65e4158d5d3ed8f213`.
+This establishes complete selection, not execution of all those tests.
+[Normal guards](peerreview/evidence/FINAL-2-aggregate-supplement-qualification-20260913/guards10-normal-p1-v2/report.json),
+[race guards](peerreview/evidence/FINAL-2-aggregate-supplement-qualification-20260913/guards10-race-p1-v2/report.json),
+[compiled inventory result](peerreview/evidence/FINAL-2-aggregate-supplement-qualification-20260913/compiled2186/status.json),
+[exact execution plan](peerreview/evidence/FINAL-2-aggregate-supplement-qualification-20260913/QUALIFICATION-PLAN-v2.txt).
+The four interrupted roots' three sequential uncached race confirmations
+continue on the same isolated source and binary. Preparation omits a duplicate
+2,181-root execution; the next full aggregate owns that broad coverage.
+Three earlier correction launch attempts were refused during source verification,
+before compilation or any test body. Their error matches the helper's internal
+30-second Git-command deadline; the specific operation was not recorded.
+Staggered persistent-session launches passed the same source checks without
+changing source, plans or limits. These attempts executed zero tests and are
+preserved as refusals. [Original launch records](peerreview/evidence/FINAL-2-aggregate-supplement-qualification-20260913/prebody-refusals/).
+
+The clean, published `e99954a` bootstrap CLI built successfully at **15:47:04
+UTC**, with unchanged observations of all 12 repositories. Its native
+release-lock review and apply both exited 0; apply completed at **15:49:37 UTC**
+and installed exactly the reviewed YAML, SHA-256
+`bd5e492077edc01acfa452d67ce1e437deec6d5e1add7ed8eab41dfd722b254f`.
+Only the protocol-script digest changed, to
+`sha256:f21b86f2ad38ab2aea7698190ed69cc6ac0fd19ab1e883720ab98a0529eb57c8`.
+The runtime code, chain pins, other repository digests and spending limits
+remain unchanged. This local update sent no chain transaction. A final stamped
+CLI and corrected complete gates will use the resulting publication.
+[Bootstrap build result](peerreview/evidence/FINAL-2-supplement-lock-20260913/bootstrap/RESULT-BOOTSTRAP-CLI-BUILD.json),
+[reviewed candidate](peerreview/evidence/FINAL-2-supplement-lock-20260913/review/candidate.yml),
+[native apply result](peerreview/evidence/FINAL-2-supplement-lock-20260913/apply/RESULT.json).
+
+The preceding `90f67b1` native CLI build completed with actual build and outer exits 0 at
+**12:31:52 UTC**. Its SHA-256 is
+`9b42372c2ff768a21d7d117d716dcb4dfe00be422c8570880a423708a8a3d6e2`;
+its clean VCS stamp names that revision, and all 12 repository observations
+match before and after the build. [Build result](peerreview/evidence/FINAL-2-native-admission-20260913/cli/RESULT-FINAL-CLI-BUILD.json),
+[actual outer exit](peerreview/evidence/FINAL-2-native-admission-20260913/cli/capture/outer.exit),
+[before](peerreview/evidence/FINAL-2-native-admission-20260913/cli/meta/repos.before.tsv)
+and [after](peerreview/evidence/FINAL-2-native-admission-20260913/cli/meta/repos.after.tsv).
+
+Two read-only setup reconstructions completed with exit 0 at **12:36:58** and
+**12:37:00 UTC**. Both bind plan
+`0xd4525b8da2da4f786f4990beb2285ac09b42e033c3c7fdd3c45473a7c9336507`
+and contain the same 2,309 action objects, including the approved 3,750-alpha
+repair. Their only pair differences are generation time and observations of
+adjacent finalized heads; the native plan hash explicitly excludes those
+moving fields and apply rechecks them. Their total spend ceilings, including
+superseded actions, are 185.748236 TAO, 35,000 alpha, 180 EVM TAO and 262
+registrations, with no subnet creation. These are approved ceilings, not new
+spending. [Exact comparison and native execution records](peerreview/evidence/FINAL-2-native-admission-20260913/REVIEW-SETUP-PAIR.json).
+Setup apply started at **14:32:17 UTC**, after the producer passed. It adopted
+this plan locally at **14:36:28 UTC** and began authenticating carried history.
+After the aggregate failure, the operator interrupted it at **15:00:54 UTC**;
+the process joined with exit 1 and an explicit `context canceled` error.
+The post-stop journal still contains 10,258 entries, with **zero entries for
+this plan or the additional reserve repair**. No new transaction or repair
+credit resulted. Preserve the adopted plan and all prior history for supported
+recovery. The original invocation's preparation label is retained; its actual
+start, terminal result and cancellation records establish what ran.
+[Native result](peerreview/evidence/FINAL-2-setup-canceled-20260913/RESULT.json),
+[stop reason](peerreview/evidence/FINAL-2-setup-canceled-20260913/STOP-REQUEST.json),
+[stderr](peerreview/evidence/FINAL-2-setup-canceled-20260913/setup.stderr),
+[post-stop journal observation](peerreview/evidence/FINAL-2-setup-canceled-20260913/POST-STOP.json).
 
 A fresh complete 256-UID reserve census at **11:25 UTC**, finalized native
 block **7,996,371**, found **82,639.777928818 alpha** of registered stake and
@@ -281,6 +378,26 @@ projection, not a credited repair or a current target pass; ongoing emissions
 change the denominator. A finalized debit/credit and another complete census
 remain necessary. [Raw requests and responses](peerreview/evidence/FINAL-2-reserve-before-20260913/rpc.json),
 [decoded census and calculation](peerreview/evidence/FINAL-2-reserve-before-20260913/SUMMARY.json).
+
+
+A later complete census at **12:41:51 UTC**, native block **7,996,753**,
+found **82,830.982610680 alpha** of registered stake and
+**50,256.924044690 alpha** at the reserve: **60.6740647771%**. At that
+snapshot the same approved transfer projects **65.2013562347%** after allowing
+one alpha-rao of rounding. It is still unapplied; neither observation proves
+the 65% repair target. The observations use the LAN node at one finalized hash
+per census and do not include replayed storage proofs.
+[Raw later census](peerreview/evidence/FINAL-2-reserve-before-1241-20260913/rpc.json),
+[decoded values and projection](peerreview/evidence/FINAL-2-reserve-before-1241-20260913/SUMMARY.json).
+
+A fresh complete census at **15:10:42 UTC**, native block **7,997,497**, hash
+`0xa27f1b7924405971de344e295faafdc80c8c0454c1b1a2a659b2e923900a8104`,
+found **83,213.547287627 alpha** registered and **50,410.350083881 alpha**
+at reserve UID 254: **60.5794990444%**. The still-unapplied approved transfer
+projects **65.0859768022%** at this snapshot. It remains a projection, with
+the same finalized-credit and complete post-repair census requirements.
+[Latest raw census](peerreview/evidence/FINAL-2-reserve-before-1510-20260913/rpc.json),
+[values and projection](peerreview/evidence/FINAL-2-reserve-before-1510-20260913/SUMMARY.json).
 
 The next run must retain both complete gate results on its final candidate,
 five accelerated epochs, the activated production policy and three consecutive

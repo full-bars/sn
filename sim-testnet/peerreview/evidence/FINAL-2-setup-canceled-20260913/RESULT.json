@@ -1,0 +1,9 @@
+{
+  "started_at": "2026-09-13T14:32:17.165093+00:00",
+  "ended_at": "2026-09-13T15:00:54.783839+00:00",
+  "pid": 4002098,
+  "exit": 1,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "74829b80eabb5a88d274c1dd3d3fd03b091fe4ad30b16ae069b58482a5805113",
+  "capture": "/home/by/urnetwork/temp/sn-full-finalization-20260912/live-operations-90f67b1-20260913/setup-apply"
+}

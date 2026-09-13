@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-e999-bootstrap-cli-20260913T1545Z/bin/sim-testnet-e99954a-bootstrap",
+    "release-lock",
+    "--config",
+    "sim-testnet/testnet.yml"
+  ],
+  "cwd": "/home/by/urnetwork/sn",
+  "read_only": true,
+  "started_at": "2026-09-13T15:48:50.104300+00:00",
+  "revision": "e99954acd70bdae9612dd3de2861fbbf39ef8161"
+}

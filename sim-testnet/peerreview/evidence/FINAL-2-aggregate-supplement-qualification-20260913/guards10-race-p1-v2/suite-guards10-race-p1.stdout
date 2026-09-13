@@ -1,0 +1,47 @@
+=== RUN   TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak
+=== PAUSE TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak
+=== NAME  
+=== RUN   TestReleaseSemanticCensusPinsSettlementClosureRegressions
+--- PASS: TestReleaseSemanticCensusPinsSettlementClosureRegressions (2.17s)
+=== NAME  
+=== RUN   TestReleaseSemanticCensusRequiresCompleteSettlementClosureOwners
+=== PAUSE TestReleaseSemanticCensusRequiresCompleteSettlementClosureOwners
+=== NAME  
+=== RUN   TestReleaseSemanticCensusRejectsIncompleteSettlementClosureOwners
+=== PAUSE TestReleaseSemanticCensusRejectsIncompleteSettlementClosureOwners
+=== NAME  
+=== RUN   TestReleaseGateJobsRequireIndependentCompleteValidatorRace
+=== PAUSE TestReleaseGateJobsRequireIndependentCompleteValidatorRace
+=== NAME  
+=== RUN   TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift
+=== PAUSE TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift
+=== NAME  
+=== RUN   TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions
+=== PAUSE TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions
+=== NAME  
+=== RUN   TestReleaseGateJobsRequireUncachedAggregateBodies
+=== PAUSE TestReleaseGateJobsRequireUncachedAggregateBodies
+=== NAME  
+=== RUN   TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies
+=== PAUSE TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies
+=== NAME  
+=== RUN   TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite
+--- PASS: TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite (3.73s)
+=== NAME  
+=== CONT  TestReleaseSemanticCensusRequiresCompleteSettlementClosureOwners
+=== CONT  TestReleaseGateJobsRequireIndependentCompleteValidatorRace
+=== CONT  TestReleaseGateJobsRequireUncachedAggregateBodies
+=== CONT  TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions
+--- PASS: TestReleaseGateJobsRequireUncachedAggregateBodies (0.55s)
+=== CONT  TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift
+--- PASS: TestReleaseGateJobsRequireIndependentCompleteValidatorRace (0.57s)
+=== CONT  TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies
+--- PASS: TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions (7.55s)
+=== CONT  TestReleaseSemanticCensusRejectsIncompleteSettlementClosureOwners
+--- PASS: TestReleaseSemanticCensusRequiresCompleteSettlementClosureOwners (8.46s)
+=== CONT  TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak
+--- PASS: TestReleaseSemanticCensusRejectsIncompleteSettlementClosureOwners (4.71s)
+--- PASS: TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak (11.31s)
+--- PASS: TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift (34.47s)
+--- PASS: TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies (119.09s)
+PASS

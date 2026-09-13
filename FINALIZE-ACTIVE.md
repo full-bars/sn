@@ -46,7 +46,42 @@ Retain the approved 6,000-alpha repair allowance, 35,000-alpha lifetime limit,
 180 EVM within 200 total TAO, 262 registrations and zero new subnets. Use
 `192.168.1.162:9944` without RPC rate limits. Full acceptance remains pending.
 
-Latest checkpoint, 2026-09-13 12:25 UTC: correction `b78b672` is published.
+Latest checkpoint, 2026-09-13 15:45 UTC: the producer gate on published
+`90f67b1` passed at 14:30:28 UTC with all 36 native phase joins exiting 0.
+The aggregate's simulator race complement subsequently timed out after
+90 minutes; its separate population race phase passed. The aggregate finished
+with exit 1 at 15:40:56 UTC: 21 phases passed, one timed out, and its final source
+check passed. All owned processes and private services are joined.
+Correction `e99954a`, now pulled and pushed, separates the three full supplement publication roots
+from the complement, preserving all 2,186 race roots and existing limits.
+The ten affected guards now pass normally and under race; the compiled inventory
+confirms all 2,186 roots. Terra continues three sequential race confirmations
+for each of the four active timeout roots on unchanged isolated source. Prepare
+the refreshed lock, final native CLI and corrected full gates concurrently with
+those confirmations. The next full aggregate supplies broad
+integration; an extra full development rerun is omitted.
+
+The published `e99954a` bootstrap CLI applied the reviewed release lock with
+exit 0 at 15:49:37 UTC. YAML SHA-256 is
+`bd5e492077edc01acfa452d67ce1e437deec6d5e1add7ed8eab41dfd722b254f`;
+only the protocol-script digest changed. The final CLI and corrected complete
+gates follow publication of that lock and the updated evidence. Spending
+limits and runtime code are unchanged; this update sent no chain transaction.
+
+Setup began after the producer pass and adopted plan
+`0xd4525b8da2da4f786f4990beb2285ac09b42e033c3c7fdd3c45473a7c9336507`
+locally. After the aggregate failure, setup was interrupted and joined at
+15:00:54 UTC with exit 1 and explicit context cancellation. The post-stop
+journal contains no new-plan or reserve-repair entries. Preserve the adopted
+plan and prior history for supported recovery; no additional reserve transfer,
+renewal, continuation, adoption or fleet launch has occurred.
+At the latest complete census (15:10:42 UTC, block 7,997,497), the reserve was
+60.5794990444%; the unapplied approved repair projected 65.0859768022% at that
+snapshot. Actual finalized credit and a fresh target census remain required.
+See the exact native results and public evidence locators in
+[report 2](sim-testnet/FINAL-2.md).
+
+Previous checkpoint, 2026-09-13 12:25 UTC: correction `b78b672` is published.
 Its affected 443 capture roots and twelve coverage guards pass normally and
 under race. The sole root active at the prior capture timeout, including all
 four subtests, completed three fresh sequential race confirmations on identical
@@ -68,10 +103,9 @@ only the protocol-script digest changed. Final publication is followed by both
 complete gates and the final stamped CLI build in parallel, then two fresh
 matching setup plans. Producer success can admit the approved reserve repair
 while a clean aggregate continues; both gates remain necessary for acceptance.
-There has still been no new reserve transfer, renewal, continuation, adoption
-or fleet launch. At the latest full census (11:25 UTC, block 7,996,371), reserve
-share was 60.7215670220%; the approved repair projected 65.2593333302% at that
-snapshot. The actual credit and a fresh target census are still pending.
+The historical 11:25 UTC census at block 7,996,371 found 60.7215670220% reserve
+share and projected 65.2593333302% after the approved repair. The later
+observation above supersedes that moving projection.
 
 Current checkpoint, 2026-09-13: the user explicitly approved raising the
 lifetime cap from 31,250 to 35,000 alpha for one additional 3,750-alpha reserve

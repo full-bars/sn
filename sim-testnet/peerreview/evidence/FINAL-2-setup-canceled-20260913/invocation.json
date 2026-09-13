@@ -1,0 +1,27 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-capture-serial-owners-20260913/runtime-final-cli-90f67b-20260913T1226Z/bin/sim-testnet-90f67b-final",
+    "setup",
+    "--config",
+    "sim-testnet/testnet.yml",
+    "--state-dir",
+    "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+    "--vault-repo",
+    "/home/by/urnetwork/vault",
+    "--owned-rpc-authority",
+    "192.168.1.162:9944",
+    "--format",
+    "json",
+    "--apply",
+    "--plan-hash",
+    "0xd4525b8da2da4f786f4990beb2285ac09b42e033c3c7fdd3c45473a7c9336507"
+  ],
+  "cwd": "/home/by/urnetwork/sn",
+  "revision": "90f67b1859368d34b0404870f46819f012712674",
+  "binary_sha256": "9b42372c2ff768a21d7d117d716dcb4dfe00be422c8570880a423708a8a3d6e2",
+  "purpose": "Apply the reviewed setup plan after producer PASS within existing spending approval",
+  "read_only": false,
+  "review": "/home/by/urnetwork/temp/sn-full-finalization-20260912/readonly-admission-90f67b1-20260913T1229Z/REVIEW-SETUP-PAIR.json",
+  "status": "Prepared; not executed",
+  "started_at": "2026-09-13T14:32:17.165093+00:00"
+}

@@ -1,0 +1,2701 @@
+[env]glog not configured from command line. Using default configuration.
+I0913 13:29:09.306904 3884491 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0913 13:29:09.307280 3884491 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0913 13:29:09.307503 3884491 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0913 13:29:09.307601 3884491 env.go:67] [env]settings = map[]
+2026/09/13 13:37:28 http: proxy error: context canceled
+2026/09/13 13:38:24 http: proxy error: context canceled
+null
+sim-testnet: carried action audit 40/40
+sim-testnet: carried action audit 39/39
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet release 1.0
+
+Usage: sim-testnet <command> [options]
+
+Commands:
+  doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
+  release-lock  render or atomically refresh observed release-lock fields from clean repositories
+  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  history-adoption  capture a source-pinned request for strict startup after retained V2 history
+  relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
+  setup    converge the existing subnet and install contracts (dry-run unless approved)
+  launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  resume   reconcile the journal and continue an interrupted approved action
+  coordinator-repair  apply one bounded provisional coordinator implementation correction
+  fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  status   show process and finalized on-chain state
+  inspect  emit the complete public live-state view
+  analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
+  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  tail     multiplex structured process logs
+  stop     stop local processes only; preserves keys, evidence, and chain state
+  retire   plan future-effective operator retirement; dry-run by default
+
+Common options:
+  --config PATH       harness config (default sim-testnet/testnet.yml)
+  --state-dir PATH    persistent state root (default <config-dir>/runs)
+  --sn-repo PATH      repository discovery override
+  --server-repo PATH  repository discovery override
+  --operator-proxy-repo PATH  repository discovery override
+  --vault-repo PATH   repository discovery override
+  --platform-config-repo PATH  platform config repository override
+  --format human|json
+  --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
+  --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-continuation-plan PATH  exact saved continuation plan for adoption
+  --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
+  --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
+  --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
+  --repair-artifact PATH --repair-artifact-sha256 HASH  exact reviewed Foundry coordinator artifact
+  --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
+  --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
+  --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
+  --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
+  --detach            persistent supervisor mode for launch
+  --name NAME         scenario name
+  --manifest PATH     public manifest for secretless inspect/analyze
+  --run-id ID         exact signed campaign run for public analyze
+sim-testnet release 1.0
+
+Usage: sim-testnet <command> [options]
+
+Commands:
+  doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
+  release-lock  render or atomically refresh observed release-lock fields from clean repositories
+  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  history-adoption  capture a source-pinned request for strict startup after retained V2 history
+  relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
+  setup    converge the existing subnet and install contracts (dry-run unless approved)
+  launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  resume   reconcile the journal and continue an interrupted approved action
+  coordinator-repair  apply one bounded provisional coordinator implementation correction
+  fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  status   show process and finalized on-chain state
+  inspect  emit the complete public live-state view
+  analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
+  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  tail     multiplex structured process logs
+  stop     stop local processes only; preserves keys, evidence, and chain state
+  retire   plan future-effective operator retirement; dry-run by default
+
+Common options:
+  --config PATH       harness config (default sim-testnet/testnet.yml)
+  --state-dir PATH    persistent state root (default <config-dir>/runs)
+  --sn-repo PATH      repository discovery override
+  --server-repo PATH  repository discovery override
+  --operator-proxy-repo PATH  repository discovery override
+  --vault-repo PATH   repository discovery override
+  --platform-config-repo PATH  platform config repository override
+  --format human|json
+  --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
+  --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-continuation-plan PATH  exact saved continuation plan for adoption
+  --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
+  --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
+  --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
+  --repair-artifact PATH --repair-artifact-sha256 HASH  exact reviewed Foundry coordinator artifact
+  --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
+  --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
+  --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
+  --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
+  --detach            persistent supervisor mode for launch
+  --name NAME         scenario name
+  --manifest PATH     public manifest for secretless inspect/analyze
+  --run-id ID         exact signed campaign run for public analyze
+sim-testnet release 1.0
+
+Usage: sim-testnet <command> [options]
+
+Commands:
+  doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
+  release-lock  render or atomically refresh observed release-lock fields from clean repositories
+  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  history-adoption  capture a source-pinned request for strict startup after retained V2 history
+  relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
+  setup    converge the existing subnet and install contracts (dry-run unless approved)
+  launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  resume   reconcile the journal and continue an interrupted approved action
+  coordinator-repair  apply one bounded provisional coordinator implementation correction
+  fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  status   show process and finalized on-chain state
+  inspect  emit the complete public live-state view
+  analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
+  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  tail     multiplex structured process logs
+  stop     stop local processes only; preserves keys, evidence, and chain state
+  retire   plan future-effective operator retirement; dry-run by default
+
+Common options:
+  --config PATH       harness config (default sim-testnet/testnet.yml)
+  --state-dir PATH    persistent state root (default <config-dir>/runs)
+  --sn-repo PATH      repository discovery override
+  --server-repo PATH  repository discovery override
+  --operator-proxy-repo PATH  repository discovery override
+  --vault-repo PATH   repository discovery override
+  --platform-config-repo PATH  platform config repository override
+  --format human|json
+  --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
+  --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-continuation-plan PATH  exact saved continuation plan for adoption
+  --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
+  --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
+  --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
+  --repair-artifact PATH --repair-artifact-sha256 HASH  exact reviewed Foundry coordinator artifact
+  --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
+  --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
+  --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
+  --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
+  --detach            persistent supervisor mode for launch
+  --name NAME         scenario name
+  --manifest PATH     public manifest for secretless inspect/analyze
+  --run-id ID         exact signed campaign run for public analyze
+1.0
+1.0
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestProvisionalResumeRecordsActualDriverBeforeJournalAndKeepsInp3085861476/001/provisional-resumes/invocation-3336011296/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestProvisionalResumeRecordsActualDriverBeforeJournalAndKeepsInp3085861476/001/provisional-resumes/invocation-1350705480/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestProvisionalResumeReusesCurrentAndAncestorVerifiedWithoutDisp962146249/001/provisional-resumes/invocation-585939007/provenance.json
+sim-testnet: provisional resume authenticated 1 verified local receipts; current topology readiness remains required
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestProvisionalResumeReusesCurrentAndAncestorVerifiedWithoutDisp962146249/002/provisional-resumes/invocation-4239785140/provenance.json
+sim-testnet: provisional resume authenticated 1 verified local receipts; current topology readiness remains required
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestProvisionalResumeTamperedReceiptFailsWithoutDispatch1999633894/001/provisional-resumes/invocation-1729608403/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestProvisionalResumeKeepsDependenciesTopologyAndPendingStages662376595/001/provisional-resumes/invocation-3174518794/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestProvisionalResumeKeepsDependenciesTopologyAndPendingStages662376595/002/provisional-resumes/invocation-2335978247/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestProvisionalResumeHonestBuildAndNoFinalAcceptance3485631692/001/provisional-resumes/invocation-3042190520/provenance.json
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 2/3 swarms; wave miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provider startup ready 2/3 swarms; wave miner-1,miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 2/3 swarms; wave miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provider startup ready 2/3 swarms; wave miner-1,miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestSupervisorStartupProviderWavesRespectRPCModeAndProvisionalAd148144276/001/provisional-resumes/invocation-3442248510/provenance.json
+sim-testnet: provider startup ready 2/20 swarms; wave miner-1,miner-2
+sim-testnet: provider startup ready 4/20 swarms; wave miner-3,miner-4
+sim-testnet: provider startup ready 6/20 swarms; wave miner-5,miner-6
+sim-testnet: provider startup ready 8/20 swarms; wave miner-7,miner-8
+sim-testnet: provider startup ready 10/20 swarms; wave miner-9,miner-10
+sim-testnet: provider startup ready 12/20 swarms; wave miner-11,miner-12
+sim-testnet: provider startup ready 14/20 swarms; wave miner-13,miner-14
+sim-testnet: provider startup ready 16/20 swarms; wave miner-15,miner-16
+sim-testnet: provider startup ready 18/20 swarms; wave miner-17,miner-18
+sim-testnet: provider startup ready 20/20 swarms; wave miner-19,miner-20
+I0913 14:20:33.856091 3884491 env.go:770] [env]try /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli1567566800/001/runtime/operator-1/vault, [tls 127.0.1.1 127.0.1.1.crt]
+I0913 14:20:33.856267 3884491 env.go:770] [env]try /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli1567566800/001/runtime/operator-1/vault/tls, [127.0.1.1 127.0.1.1.crt]
+I0913 14:20:33.856371 3884491 env.go:770] [env]try /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli1567566800/001/runtime/operator-1/vault/tls/127.0.1.1, [127.0.1.1.crt]
+I0913 14:20:33.856945 3884491 env.go:770] [env]try /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli1567566800/001/runtime/operator-1/vault, [tls 127.0.1.1 127.0.1.1.key]
+I0913 14:20:33.857083 3884491 env.go:770] [env]try /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli1567566800/001/runtime/operator-1/vault/tls, [127.0.1.1 127.0.1.1.key]
+I0913 14:20:33.857193 3884491 env.go:770] [env]try /home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli1567566800/001/runtime/operator-1/vault/tls/127.0.1.1, [127.0.1.1.key]
+panic: test timed out after 1h30m0s
+	running tests:
+		TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage (19m25s)
+		TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper (17m20s)
+		TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica (19m22s)
+		TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding (0s)
+
+goroutine 13441 [running]:
+testing.(*M).startAlarm.func1()
+	/usr/local/go/src/testing/testing.go:2802 +0x605
+created by time.goFunc
+	/usr/local/go/src/time/sleep.go:215 +0x45
+
+goroutine 1 [chan receive, 35 minutes]:
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:1993 +0x9ad
+testing.tRunner(0xc000dda248, 0xc000e77a80)
+	/usr/local/go/src/testing/testing.go:2042 +0x256
+testing.runTests({0x5faea94, 0x1a}, {0x600e055, 0x26}, 0xc0001e00c0, {0x9abf0c0, 0x88a, 0x88a}, {0xc2a1cc6f540a0ab7, 0x4e95a821c4a, ...})
+	/usr/local/go/src/testing/testing.go:2583 +0x9ea
+testing.(*M).Run(0xc00084f7c0)
+	/usr/local/go/src/testing/testing.go:2443 +0xf4c
+github.com/urfoundation/sn/sim-testnet.TestMain(0xc00084f7c0)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/main_test.go:26 +0xef
+main.main()
+	_testmain.go:4418 +0x172
+
+goroutine 20 [select]:
+github.com/urnetwork/glog.(*fileSink).flushDaemon(0x9ca9fb8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/glog/glog_file.go:461 +0x175
+created by github.com/urnetwork/glog.init.1 in goroutine 1
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/glog/glog_file.go:225 +0x318
+
+goroutine 5666 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c0488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureV2PendingJobIsImmutableAndNeverAccepted(0xc0014c0488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:289 +0x3f
+testing.tRunner(0xc0014c0488, 0x67ca860)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8898 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012ab8c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversActualStartupOwnersV2(0xc0012ab8c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_startup_owner_v2_test.go:14 +0x3f
+testing.tRunner(0xc0012ab8c8, 0x67cc390)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5602 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00019a6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalNativeRewardV2ReadsExactHistoricalVectorsAndUIDStake(0xc00019a6c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_native_reward_read_v2_test.go:219 +0x3f
+testing.tRunner(0xc00019a6c8, 0x67cab78)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 555 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001008488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestSimulatorAttemptCutV2StoreReplicasUseRealTypedStorage(0xc001008488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/attempt_replicas_test.go:54 +0x3f
+testing.tRunner(0xc001008488, 0x67cd5f0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2667 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000dda6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceCanonicalStreamMatchesRawMessageByteOracle(0xc000dda6c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_canonical_stream_test.go:110 +0x3f
+testing.tRunner(0xc000dda6c8, 0x67c9d18)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5969 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0005d8908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticEpochDepositUsesSettlementEpochNotSourceEpoch(0xc0005d8908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_receipt_payload_test.go:346 +0x47
+testing.tRunner(0xc0005d8908, 0x67caee8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2670 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ddb448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceCanonicalStreamPreservesIndependentSignaturesAndMutableInputs(0xc000ddb448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_canonical_stream_test.go:162 +0x3f
+testing.tRunner(0xc000ddb448, 0x67c9d20)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 557 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001008908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestSimulatorAttemptCutV2StoreReplicasEnforcePublicOrigins(0xc001008908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/attempt_replicas_test.go:142 +0x3f
+testing.tRunner(0xc001008908, 0x67cd5d0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 7503 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012d7d48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPlanCompatibilityFixtureAuthenticatesCompleteOriginalReleaseSource(0xc0012d7d48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/plan_compatibility_fixture_test.go:38 +0x3f
+testing.tRunner(0xc0012d7d48, 0x67cbfe8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 858 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ab8b48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCoordinatorRepairCarryRetainedBudgetWireKeepsSignedAuthority(0xc000ab8b48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/coordinator_repair_budget_document_test.go:15 +0x3f
+testing.tRunner(0xc000ab8b48, 0x67ca1f0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 711 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00153e248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticCampaignArtifactReferencesOwnDecodedInput(0xc00153e248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_artifact_references_test.go:39 +0x3f
+testing.tRunner(0xc00153e248, 0x67cadf8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12051 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019f3688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadManifestBindsEveryLimit(0xc0019f3688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:209 +0x3f
+testing.tRunner(0xc0019f3688, 0x67cd210)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3353 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ab86c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2RejectsActualReplicaCloseFailure(0xc000ab86c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_readback_v2_test.go:204 +0x3f
+testing.tRunner(0xc000ab86c8, 0x67c9f60)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2669 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ddb208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceCanonicalStreamBoundsWritesAcrossChunkEdges(0xc000ddb208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_canonical_stream_test.go:148 +0x3c
+testing.tRunner(0xc000ddb208, 0x67c9d08)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5210 [runnable]:
+path/filepath.walkDir({0xc02dfb6b40, 0x1cf}, {0x682dc30, 0xc02d3d3a80}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:310 +0x43b
+path/filepath.walkDir({0xc02ab08ea0, 0x189}, {0x682dc30, 0xc02c85e880}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02d3af980, 0x162}, {0x682dc30, 0xc02c85e840}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc029ecd340, 0x14b}, {0x682dc30, 0xc02c85e800}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc029ecd080, 0x147}, {0x682dc30, 0xc02c85e7c0}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc01ef492c0, 0x128}, {0x682dc30, 0xc02b8a03c0}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00bccad80, 0x120}, {0x682dc30, 0xc02b8a0340}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00bccab40, 0x117}, {0x682dc30, 0xc02b8a0300}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00bcca900, 0x114}, {0x682dc30, 0xc02b8a02c0}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00bcca6c0, 0x111}, {0x682dc30, 0xc02b8a0280}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00bcca480, 0x106}, {0x682dc30, 0xc02b8a0240}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02a31d950, 0xe7}, {0x682dc30, 0xc02b8a0200}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02c36e1c0, 0xdb}, {0x682dc30, 0xc02b8a0180}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc029325880, 0xd6}, {0x682e528, 0xc01d1c3830}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.WalkDir({0xc029325880, 0xd6}, 0xc000a6ebb0)
+	/usr/local/go/src/path/filepath/path.go:401 +0x8a
+github.com/urnetwork/server.(*localBlobStore).usageBytesAtRootWithContext(0xc008cc0000, {0x682dc68, 0xac0a1a0}, {0xc029325880, 0xd6})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:973 +0xd4
+github.com/urnetwork/server.(*localBlobStore).putFileAtCapacity(0xc008cc0000, {0x682dc68, 0xac0a1a0}, {0xc0058c5ae0, 0x9e}, {0xc0058c5cc0, 0xa0}, {0x683eee8, 0xc02c36a270}, 0x1, ...)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:832 +0x477
+github.com/urnetwork/server.(*localBlobStore).putFile(0xc008cc0000, {0x682dc68, 0xac0a1a0}, {0xc0058c5ae0, 0x9e}, {0xc0058c5cc0, 0xa0}, 0x1)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:805 +0x3ba
+github.com/urnetwork/server.(*localBlobStore).PutIfAbsent(0xc008cc0000, {0x682dc68, 0xac0a1a0}, {0xc0058c5ae0, 0x9e}, {0xc0058c5cc0, 0xa0}, {0x4a1769?, 0xc000a6f200?})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:773 +0x85
+github.com/urnetwork/server/startifact.putImmutableFromFile({0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc008cc0000}, {0xc0058c5ae0, 0x9e}, {0xc0058c5cc0, 0xa0}, {0xc02877d500, 0x953, ...})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/startifact/artifact.go:131 +0xc2
+github.com/urnetwork/server/startifact.putImmutable({0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc008cc0000}, {0xc0058c5ae0, 0x9e}, {0xc02877d500, 0x953, 0x953})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/startifact/artifact.go:125 +0x29a
+github.com/urnetwork/server/startifact.(*PreparedEvidence).Publish(0xc02265d880, {0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc008cc0000})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/startifact/evidence_prepared.go:81 +0x337
+github.com/urfoundation/sn/sim-testnet.publishAndReadBackFinalSemanticEnvelope({0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc008cc0000}, 0xc01dfa9080)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_commit.go:1440 +0x72
+github.com/urfoundation/sn/sim-testnet.publishOrResumeFinalSemanticSupplement({0x682dc68, 0xac0a1a0}, 0xc01f9b6400, 0xc0125738c0, {0xc00815e000, 0xc9}, {0xc015323600, 0xf5}, 0xc000291a00, {0xc007276ec0, ...})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_commit.go:219 +0x2345
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticSupplementFailedReplicaDoesNotCommitAndRetryReusesStage(0xc0014fc008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_commit_test.go:422 +0x49b
+testing.tRunner(0xc0014fc008, 0x67cb308)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 714 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00153e908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticCampaignArtifactReferencesJoinEveryRecord(0xc00153e908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_artifact_references_test.go:154 +0x3f
+testing.tRunner(0xc00153e908, 0x67cade8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11730 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000feb448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2RejectsPartialAndCompetingProgress(0xc000feb448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_v2_test.go:287 +0x3f
+testing.tRunner(0xc000feb448, 0x67cd188)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2616 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ddab48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryHistoricalFilesRejectSameOwnerAliases(0xc000ddab48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_custody_test.go:95 +0x3f
+testing.tRunner(0xc000ddab48, 0x67cdaa8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5750 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0005d86c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalPublicValidatorSourcesV2BoundsRejectPartialReadResults(0xc0005d86c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_public_rpc_v2_test.go:408 +0x3f
+testing.tRunner(0xc0005d86c8, 0x67cac80)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 558 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001008b48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestSimulatorAttemptCutV2StoreReplicasDetachConfiguration(0xc001008b48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/attempt_replicas_test.go:171 +0x3f
+testing.tRunner(0xc001008b48, 0x67cd5c8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 738 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006ca488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticReplicatedEnvelopeRechecksCurrentIdentity(0xc0006ca488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_replica_verification_test.go:166 +0x3f
+testing.tRunner(0xc0006ca488, 0x67cb298)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5704 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fd688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProduceFinalSemanticOutputsScannerCannotMutateVerifiedBytes(0xc0014fd688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_producer_test.go:145 +0x47
+testing.tRunner(0xc0014fd688, 0x67cc270)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 741 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006cab48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody(0xc0006cab48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:171 +0x3c
+testing.tRunner(0xc0006cab48, 0x67cd438)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 559 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001008d88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestSimulatorAttemptCutV2StoreReplicasPreserveIndependentBounds(0xc001008d88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/attempt_replicas_test.go:196 +0x3f
+testing.tRunner(0xc001008d88, 0x67cd5d8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12053 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019f3b08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadConfigRequiresOwnedBoundedFile(0xc0019f3b08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:276 +0x3f
+testing.tRunner(0xc0019f3b08, 0x67cd1f0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3356 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ab8fc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2BodyPreservesExactAndOneOverBounds(0xc000ab8fc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_readback_v2_test.go:263 +0x3f
+testing.tRunner(0xc000ab8fc8, 0x67c9ee8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8521 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012d6b48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak(0xc0012d6b48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:280 +0x3f
+testing.tRunner(0xc0012d6b48, 0x67cc2a0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12059 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0018366c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadManifestOwnsGeneratedOperatorConfigs(0xc0018366c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:460 +0x3f
+testing.tRunner(0xc0018366c8, 0x67cd218)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 740 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006ca908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionPreservesFailureAndRestartsPreparation(0xc0006ca908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:132 +0x3f
+testing.tRunner(0xc0006ca908, 0x67cd428)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 560 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001008fc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestSimulatorAttemptCutV2StoreReplicasPropagateFailure(0xc001008fc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/attempt_replicas_test.go:241 +0x3f
+testing.tRunner(0xc001008fc8, 0x67cd5e0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 713 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00153e6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticCampaignArtifactReferencesKeepDocumentAndDepthBounds(0xc00153e6c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_artifact_references_test.go:115 +0x3f
+testing.tRunner(0xc00153e6c8, 0x67cadf0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 562 [select, 29 minutes]:
+github.com/urnetwork/server.(*localBlobStore).reapLoop(0xc000958f00, {0x682dc68, 0xac0a1a0})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:1175 +0x239
+created by github.com/urnetwork/server.(*localBlobStore).SetLifecycle.func1 in goroutine 561
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:1161 +0xe5
+
+goroutine 710 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00153e008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticCampaignArtifactReferencesDecodeEachByteOnce(0xc00153e008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_artifact_references_test.go:15 +0x3f
+testing.tRunner(0xc00153e008, 0x67cade0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 720 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006ca008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticReplicatedEnvelopeVerifiesOwnedBytesOnce(0xc0006ca008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_replica_verification_test.go:59 +0x3f
+testing.tRunner(0xc0006ca008, 0x67cb2a0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 739 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006ca6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticReplicatedEnvelopeHonorsCancellationAfterRead(0xc0006ca6c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_replica_verification_test.go:219 +0x3f
+testing.tRunner(0xc0006ca6c8, 0x67cb288)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 712 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00153e488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticCampaignArtifactReferencesPreserveJSONValues(0xc00153e488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_artifact_references_test.go:67 +0x3f
+testing.tRunner(0xc00153e488, 0x67cae00)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 721 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006ca248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticReplicatedEnvelopePreservesEveryRejection(0xc0006ca248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_replica_verification_test.go:93 +0x3f
+testing.tRunner(0xc0006ca248, 0x67cb290)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 742 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006cad88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors(0xc0006cad88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:238 +0x3c
+testing.tRunner(0xc0006cad88, 0x67cd430)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 743 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006cafc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources(0xc0006cafc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:300 +0x3c
+testing.tRunner(0xc0006cafc8, 0x67cd440)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 744 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006cb208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionRequiresExclusiveDeploymentOwner(0xc0006cb208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:333 +0x3c
+testing.tRunner(0xc0006cb208, 0x67cd448)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 745 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006cb448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionBothRuntimeEntryPoints(0xc0006cb448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:382 +0x27
+testing.tRunner(0xc0006cb448, 0x67cd420)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 746 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006cb688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionAcceptanceUsesSuccessorBytes(0xc0006cb688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:418 +0x3f
+testing.tRunner(0xc0006cb688, 0x67cd418)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 7557 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001940008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPersistedV4ReplacementPlanAndJournalReplayRejectsBoundaryDrift(0xc001940008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/plan_revision_probe_persisted_test.go:77 +0x47
+testing.tRunner(0xc001940008, 0x67cbfd0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8849 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019418c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRejectSubtensorInfrastructureScopeDrift(0xc0019418c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:884 +0x3f
+testing.tRunner(0xc0019418c8, 0x67ccb30)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5596 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00019a488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalPublicValidatorSourcesV2NativeCheckpointAuthenticatesExactPublicState(0xc00019a488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_public_checkpoint_v2_test.go:27 +0x47
+testing.tRunner(0xc00019a488, 0x67caca0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11695 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000fead88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2ClosedAncestorAttemptsAuthenticateOldApproval(0xc000fead88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_history_v2_test.go:211 +0x47
+testing.tRunner(0xc000fead88, 0x67cd158)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5500 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0005d8488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalFleetRenewalPublicReplayAndArchiveRejectSubstitutions(0xc0005d8488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_fleet_renewal_test.go:72 +0x47
+testing.tRunner(0xc0005d8488, 0x67caa58)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5604 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4c6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalNativeRewardV2HonorsRPCContextAndSharedConnectionOwnership(0xc001b4c6c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_native_reward_read_v2_test.go:276 +0x3f
+testing.tRunner(0xc001b4c6c8, 0x67cab70)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 6148 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012ab208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticDishonestDepositDecisionsAndPublicReplay(0xc0012ab208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_source_builder_test.go:1079 +0x3f
+testing.tRunner(0xc0012ab208, 0x67caed8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3358 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ab9688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2PayoutReaderJoinsCloseFailures(0xc000ab9688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_readback_v2_test.go:314 +0x3f
+testing.tRunner(0xc000ab9688, 0x67c9f50)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2668 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ddafc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceCanonicalStreamMatchesAllStringByteVariants(0xc000ddafc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_canonical_stream_test.go:119 +0x3c
+testing.tRunner(0xc000ddafc8, 0x67c9d10)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2671 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ddb688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceCanonicalStreamRejectsInvalidGrammarBeforeDigest(0xc000ddb688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_canonical_stream_test.go:232 +0x3f
+testing.tRunner(0xc000ddb688, 0x67c9d30)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 6111 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00081b448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticOutputsRemainOutsideClosedCampaignFileSet(0xc00081b448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_scenario_test.go:12 +0x47
+testing.tRunner(0xc00081b448, 0x67cb178)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8525 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f24b48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRejectsPrivateFixtureSchedulingDrift(0xc001f24b48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:722 +0x3f
+testing.tRunner(0xc001f24b48, 0x67cc2b0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2614 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000dda488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryRevisionBindsFreshActivationAndRelayOwners(0xc000dda488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_activation_test.go:27 +0x47
+testing.tRunner(0xc000dda488, 0x67cdb10)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2673 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ddbb08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceCanonicalStreamRequiresExactCanonicalWire(0xc000ddbb08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_canonical_stream_test.go:278 +0x3f
+testing.tRunner(0xc000ddbb08, 0x67c9d38)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2672 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ddb8c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceCanonicalStreamPropagatesWriterFailures(0xc000ddb8c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_canonical_stream_test.go:260 +0x3f
+testing.tRunner(0xc000ddb8c8, 0x67c9d28)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5663 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012abd48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureV2PendingPriorClosesOriginalAuthority(0xc0012abd48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:203 +0x3f
+testing.tRunner(0xc0012abd48, 0x67ca870)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5267 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0006cbd48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticDeploymentRejectsMutuallyConsistentSubstitutedRuntime(0xc0006cbd48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_deployment_anchor_test.go:67 +0x47
+testing.tRunner(0xc0006cbd48, 0x67caeb0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2617 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ddad88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryHistoricalFilesRejectSpecialComponents(0xc000ddad88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_custody_test.go:155 +0x3f
+testing.tRunner(0xc000ddad88, 0x67cdab0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2618 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ddbd48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryPublicOverrideRequiresCompleteClonedHeads(0xc000ddbd48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_custody_test.go:189 +0x3f
+testing.tRunner(0xc000ddbd48, 0x67cdae0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2621 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4c908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryHistoricalAncestorsRemainReadOnly(0xc001b4c908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_repair_test.go:110 +0x3f
+testing.tRunner(0xc001b4c908, 0x67cda88)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2622 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4cb48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryHistoricalActionRecovery(0xc001b4cb48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_repair_test.go:158 +0x47
+testing.tRunner(0xc001b4cb48, 0x67cda80)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2623 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4cd88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryHistoricalCommitmentRecovery(0xc001b4cd88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_repair_test.go:202 +0x3f
+testing.tRunner(0xc001b4cd88, 0x67cda98)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2624 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4cfc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryHistoricalCaptureCensus(0xc001b4cfc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_repair_test.go:244 +0x3f
+testing.tRunner(0xc001b4cfc8, 0x67cda90)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2625 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4d208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryHistoricalCoordinatorBaseline(0xc001b4d208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_repair_test.go:304 +0x3f
+testing.tRunner(0xc001b4d208, 0x67cdaa0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2690 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4d448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryAuthenticatesOriginalApprovalAndRuntime(0xc001b4d448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:28 +0x3f
+testing.tRunner(0xc001b4d448, 0x67cda68)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2691 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4d688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryRejectsIncompleteOriginalJournal(0xc001b4d688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:51 +0x3f
+testing.tRunner(0xc001b4d688, 0x67cdb00)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2692 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4d8c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryRefusesArchivedSourceSubstitution(0xc001b4d8c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:97 +0x3f
+testing.tRunner(0xc001b4d8c8, 0x67cdae8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2693 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4db08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryRejectsConflictingFinalizedHTTPHistory(0xc001b4db08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:148 +0x3f
+testing.tRunner(0xc001b4db08, 0x67cdaf8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2694 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001b4dd48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryOriginalSignedEnvelopesRemainExact(0xc001b4dd48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:166 +0x47
+testing.tRunner(0xc001b4dd48, 0x67cdad8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2695 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001194008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryRevisionRetainsOriginalActionsAndSpend(0xc001194008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:270 +0x3f
+testing.tRunner(0xc001194008, 0x67cdb18)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2696 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001194248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryExecutorNeverRedeploysOrReanchors(0xc001194248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:320 +0x3f
+testing.tRunner(0xc001194248, 0x67cda78)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2697 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001194488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryNonceSuffixIsConsumedExactlyOnce(0xc001194488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:369 +0x3f
+testing.tRunner(0xc001194488, 0x67cdac8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2698 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0011946c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryObservedUpgradeAndContinuationPreserveOriginalJournal(0xc0011946c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:423 +0x3f
+testing.tRunner(0xc0011946c8, 0x67cdad0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2699 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001194908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarryCanceledReadReturnsNoAuthority(0xc001194908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:525 +0x3f
+testing.tRunner(0xc001194908, 0x67cda70)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 2700 [syscall]:
+syscall.Syscall(0x4a, 0xb, 0x0, 0x0)
+	/usr/local/go/src/syscall/syscall_linux.go:74 +0x2b
+syscall.Fsync(0xb)
+	/usr/local/go/src/syscall/zsyscall_linux_amd64.go:463 +0x39
+internal/poll.(*FD).Fsync.func1(...)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:18
+internal/poll.ignoringEINTR(...)
+	/usr/local/go/src/internal/poll/fd_posix.go:74
+internal/poll.(*FD).Fsync(0xc02d6e6180)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:17 +0x19b
+os.(*File).Sync(0xc000102ef8)
+	/usr/local/go/src/os/file_posix.go:167 +0x74
+github.com/urfoundation/sn/sim-testnet.atomicWrite({0xc02c36f0a0, 0xd8}, {0xc02d6dac8c, 0x4, 0x4}, 0x180)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/state.go:50 +0x1e5
+github.com/urfoundation/sn/sim-testnet.TestValidatorEvidenceCarrySourceTransportBoundsPrecedeDecoding(0xc001194b48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_carry_test.go:568 +0x265
+testing.tRunner(0xc001194b48, 0x67cdb20)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5208 [runnable]:
+path/filepath.walkDir({0xc02df53a40, 0x1cf}, {0x682dc30, 0xc02d4a2dc0}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:310 +0x43b
+path/filepath.walkDir({0xc02a318820, 0x189}, {0x682dc30, 0xc02cc67280}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02d177b00, 0x162}, {0x682dc30, 0xc02cc67240}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02d17a000, 0x14b}, {0x682dc30, 0xc02cc67200}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc027255b80, 0x147}, {0x682dc30, 0xc02cc671c0}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc01f0a1040, 0x128}, {0x682dc30, 0xc02c375a00}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00a5a10e0, 0x120}, {0x682dc30, 0xc02c375980}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00a5a0ea0, 0x117}, {0x682dc30, 0xc02c375940}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00a5a0c60, 0x114}, {0x682dc30, 0xc02c375900}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00a5a0900, 0x111}, {0x682dc30, 0xc02c3758c0}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc00a5a06c0, 0x106}, {0x682dc30, 0xc02c375880}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02c37a960, 0xe7}, {0x682dc30, 0xc02c375840}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02c36eee0, 0xdb}, {0x682dc30, 0xc02c3757c0}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02c36e620, 0xd6}, {0x682e528, 0xc01d1c38e0}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.WalkDir({0xc02c36e620, 0xd6}, 0xc000924840)
+	/usr/local/go/src/path/filepath/path.go:401 +0x8a
+github.com/urnetwork/server.(*localBlobStore).usageBytesAtRootWithContext(0xc0350e6d00, {0x682dc68, 0xac0a1a0}, {0xc02c36e620, 0xd6})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:973 +0xd4
+github.com/urnetwork/server.(*localBlobStore).putFileAtCapacity(0xc0350e6d00, {0x682dc68, 0xac0a1a0}, {0xc007da1cc0, 0x9e}, {0xc007da1ea0, 0x9f}, {0x683eee8, 0xc02c36ca90}, 0x1, ...)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:832 +0x477
+github.com/urnetwork/server.(*localBlobStore).putFile(0xc0350e6d00, {0x682dc68, 0xac0a1a0}, {0xc007da1cc0, 0x9e}, {0xc007da1ea0, 0x9f}, 0x1)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:805 +0x3ba
+github.com/urnetwork/server.(*localBlobStore).PutIfAbsent(0xc0350e6d00, {0x682dc68, 0xac0a1a0}, {0xc007da1cc0, 0x9e}, {0xc007da1ea0, 0x9f}, {0x4a1769?, 0xc000924e90?})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:773 +0x85
+github.com/urnetwork/server/startifact.putImmutableFromFile({0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc0350e6d00}, {0xc007da1cc0, 0x9e}, {0xc007da1ea0, 0x9f}, {0xc02776ea80, 0x926, ...})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/startifact/artifact.go:131 +0xc2
+github.com/urnetwork/server/startifact.putImmutable({0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc0350e6d00}, {0xc007da1cc0, 0x9e}, {0xc02776ea80, 0x926, 0x926})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/startifact/artifact.go:125 +0x29a
+github.com/urnetwork/server/startifact.(*PreparedEvidence).Publish(0xc000649ce0, {0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc0350e6d00})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/startifact/evidence_prepared.go:81 +0x337
+github.com/urfoundation/sn/sim-testnet.publishAndReadBackFinalSemanticEnvelope({0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc0350e6d00}, 0xc01cf47200)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_commit.go:1440 +0x72
+github.com/urfoundation/sn/sim-testnet.publishOrResumeFinalSemanticSupplement({0x682dc68, 0xac0a1a0}, 0xc000cc4200, 0xc01048cac0, {0xc028e5cd00, 0xc9}, {0xc01def9300, 0xf5}, 0xc00a7e0200, {0xc0398242e0, ...})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_commit.go:219 +0x2345
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticSupplementPublishesResumesAndRejectsLooseTamper(0xc00153fb08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_commit_test.go:194 +0x26f
+testing.tRunner(0xc00153fb08, 0x67cb328)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11984 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019f2fc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadStrictHarnessBudget(0xc0019f2fc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:113 +0x3f
+testing.tRunner(0xc0019f2fc8, 0x67cd240)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5656 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012aa488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalPayoutArtifactRejectsResignedProviderOmissionAgainstSignedMeasurement(0xc0012aa488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_payout_domain_test.go:267 +0x47
+testing.tRunner(0xc0012aa488, 0x67cac30)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8922 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012ab448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateIsolationRejectsPrivateFixtureCoverageOmissions(0xc0012ab448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_suite_fixture_test.go:61 +0x3f
+testing.tRunner(0xc0012ab448, 0x67cca38)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11985 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019f3208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadPreservesUnprovisionedPlanningWire(0xc0019f3208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:147 +0x3c
+testing.tRunner(0xc0019f3208, 0x67cd230)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5749 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0005d8248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalPublicValidatorSourcesV2CancelsAndJoinsActiveTransport(0xc0005d8248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_public_rpc_v2_test.go:360 +0x3f
+testing.tRunner(0xc0005d8248, 0x67cac88)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5665 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c0248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureV2PendingPriorRejectsWrongHandoffAndSemanticRelabel(0xc0014c0248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:254 +0x3f
+testing.tRunner(0xc0014c0248, 0x67ca888)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12008 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c14b48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceProvisionV2RetainsActualFilesAndResolvesSameTemplate(0xc000c14b48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_provision_v2_test.go:192 +0x3f
+testing.tRunner(0xc000c14b48, 0x67cd148)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8667 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f25208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversEvidenceV2ValidatorSources(0xc001f25208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:177 +0x3f
+testing.tRunner(0xc001f25208, 0x67cc400)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3294 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001009208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2CanonicalFilesRejectFreshAuthorityMutations(0xc001009208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_public_file_v2_test.go:256 +0x3f
+testing.tRunner(0xc001009208, 0x67c9f28)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 6044 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c06c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalCollectorIncludesCompletedSettlementTail(0xc0014c06c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_settlement_tail_test.go:80 +0x47
+testing.tRunner(0xc0014c06c8, 0x67ca920)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5551 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f24248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema(0xc001f24248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_prior_carrier_decode_v2_test.go:243 +0x3f
+testing.tRunner(0xc001f24248, 0x67ca798)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3295 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001009448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2CanonicalFilesRetainBase64Grammar(0xc001009448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_public_file_v2_test.go:355 +0x3f
+testing.tRunner(0xc001009448, 0x67c9f30)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3357 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ab9208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2BodyRejectsInvalidOwnersAndLimits(0xc000ab9208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_readback_v2_test.go:288 +0x3f
+testing.tRunner(0xc000ab9208, 0x67c9ef8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 4517 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000fea6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPublicDeploymentManifestIsPortableAndIdempotent(0xc000fea6c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_test.go:1138 +0x47
+testing.tRunner(0xc000fea6c8, 0x67cc620)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12060 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001836908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadManifestRejectsGeneratedConfigOmissionAndTamper(0xc001836908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:506 +0x3f
+testing.tRunner(0xc001836908, 0x67cd220)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3296 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001009688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2CanonicalFilesJoinEveryCloseAndCancellation(0xc001009688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_public_file_v2_test.go:443 +0x3f
+testing.tRunner(0xc001009688, 0x67c9f10)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5748 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000bdd8c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalPublicValidatorSourcesV2KeepsNativeClockAndNullStorage(0xc000bdd8c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_public_rpc_v2_test.go:283 +0x3f
+testing.tRunner(0xc000bdd8c8, 0x67cac98)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8668 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f25688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversEvidenceV2ContractAndInstallerSources(0xc001f25688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:186 +0x3f
+testing.tRunner(0xc001f25688, 0x67cc3f0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 7404 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f24008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignFinalSemanticEvidenceRequiresExactlyOneClosedObject(0xc001f24008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/observe_test.go:719 +0x47
+testing.tRunner(0xc001f24008, 0x67c9fc0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8879 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012aab48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRejectProducerSettlementBudgetOmissions(0xc0012aab48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_settlement_budget_test.go:75 +0x3f
+testing.tRunner(0xc0012aab48, 0x67ccb20)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 4450 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fcd88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestEvidenceRelayTransactionStateDirectoryCustody(0xc0014fcd88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_relay_transaction_test.go:322 +0x3f
+testing.tRunner(0xc0014fcd88, 0x67ca600)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5664 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c0008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureV2PendingPriorRejectsRehashedSourceAndMissingCensus(0xc0014c0008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:220 +0x3f
+testing.tRunner(0xc0014c0008, 0x67ca878)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3359 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ab9b08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2PayoutReaderObservesRejectedCloseCancellation(0xc000ab9b08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_readback_v2_test.go:328 +0x3f
+testing.tRunner(0xc000ab9b08, 0x67c9f58)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11692 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00081a008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2ClosedAncestorAttemptsKeepOriginalSetup(0xc00081a008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_history_v2_test.go:88 +0x3f
+testing.tRunner(0xc00081a008, 0x67cd160)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 4518 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000fea908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPublicDeploymentManifestPublishesAuthenticatedReplacementProbe(0xc000fea908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_test.go:1501 +0x47
+testing.tRunner(0xc000fea908, 0x67cc628)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3354 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ab8908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2BodyJoinsReadAndCloseFailures(0xc000ab8908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_readback_v2_test.go:238 +0x3f
+testing.tRunner(0xc000ab8908, 0x67c9ee0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12050 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019f3448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadRenderRefusesInvalidBeforeMutation(0xc0019f3448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:172 +0x3f
+testing.tRunner(0xc0019f3448, 0x67cd238)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5681 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001009d48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalPublicValidatorSourcesV2KeepsDetachedEvidenceAuthority(0xc001009d48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_public_rpc_v2_test.go:113 +0x3f
+testing.tRunner(0xc001009d48, 0x67cac90)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8848 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001941688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(0xc001941688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:760 +0x3f
+testing.tRunner(0xc001941688, 0x67ccb28)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5603 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00153f208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalNativeRewardV2CancellationJoinsHistoricalBatch(0xc00153f208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_native_reward_read_v2_test.go:241 +0x3f
+testing.tRunner(0xc00153f208, 0x67cab68)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 3355 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000ab8d88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignEvidenceReadbackV2BodyRejectsCancellationDuringClose(0xc000ab8d88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/evidence_readback_v2_test.go:250 +0x3f
+testing.tRunner(0xc000ab8d88, 0x67c9ef0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 4858 [syscall, 78 minutes]:
+os/signal.signal_recv()
+	/usr/local/go/src/runtime/sigqueue.go:152 +0x98
+os/signal.loop()
+	/usr/local/go/src/os/signal/signal_unix.go:23 +0x1d
+created by os/signal.Notify.func1.1 in goroutine 4868
+	/usr/local/go/src/os/signal/signal.go:152 +0x47
+
+goroutine 5703 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fd448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProduceFinalSemanticOutputsScansBeforeCreatingFiles(0xc0014fd448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_producer_test.go:119 +0x47
+testing.tRunner(0xc0014fd448, 0x67cc278)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11731 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000febb08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2RejectsChangedReceiptAndSignedTransaction(0xc000febb08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_v2_test.go:321 +0x3f
+testing.tRunner(0xc000febb08, 0x67cd178)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12012 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c15448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceProvisionV2NoImplicitBudgetOrFabricatedReferences(0xc000c15448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_provision_v2_test.go:303 +0x3c
+testing.tRunner(0xc000c15448, 0x67cd140)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8883 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001941d48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRequireUncachedAggregateBodies(0xc001941d48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:1073 +0x2f
+testing.tRunner(0xc001941d48, 0x67ccb48)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8523 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012d7b08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift(0xc0012d7b08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:417 +0x3f
+testing.tRunner(0xc0012d7b08, 0x67cc2a8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5668 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c0908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureV2PendingPriorRejectsWrongGateBeforeWrites(0xc0014c0908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:343 +0x3f
+testing.tRunner(0xc0014c0908, 0x67ca880)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11694 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f25448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2ClosedAncestorAttemptsRejectTransactionMetadata(0xc001f25448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_history_v2_test.go:183 +0x3f
+testing.tRunner(0xc001f25448, 0x67cd168)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5669 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c0b48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureV2PendingPriorArtifactCensusHasNoSemanticOutputs(0xc0014c0b48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_pending_prior_v2_test.go:363 +0x3f
+testing.tRunner(0xc0014c0b48, 0x67ca868)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12052 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019f38c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadManifestRejectsRehashedSettings(0xc0019f38c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:245 +0x3f
+testing.tRunner(0xc0019f38c8, 0x67cd228)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5119 [runnable]:
+path/filepath.walkDir({0xc02e018600, 0x175}, {0x682dc30, 0xc02d0ebb80}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:310 +0x43b
+path/filepath.walkDir({0xc005258500, 0x12f}, {0x682dc30, 0xc02c2d4640}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc005b61cc0, 0x128}, {0x682dc30, 0xc02c2d45c0}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc0083a0ea0, 0x120}, {0x682dc30, 0xc02c2d4580}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc0083a0b40, 0x117}, {0x682dc30, 0xc02c2d4540}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc0083a0900, 0x114}, {0x682dc30, 0xc02c2d4500}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc0083a06c0, 0x111}, {0x682dc30, 0xc02c2d44c0}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc0083a0480, 0x106}, {0x682dc30, 0xc02c2d4480}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02927d680, 0xe7}, {0x682dc30, 0xc02c2d4440}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02635dc00, 0xdb}, {0x682dc30, 0xc02c2d43c0}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.walkDir({0xc02635d340, 0xd6}, {0x682e528, 0xc02b2732a0}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:333 +0x39f
+path/filepath.WalkDir({0xc02635d340, 0xd6}, 0xc0011f4c58)
+	/usr/local/go/src/path/filepath/path.go:401 +0x8a
+github.com/urnetwork/server.(*localBlobStore).usageBytesAtRootWithContext(0xc008cc0580, {0x682dc68, 0xac0a1a0}, {0xc02635d340, 0xd6})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:973 +0xd4
+github.com/urnetwork/server.(*localBlobStore).putFileAtCapacity(0xc008cc0580, {0x682dc68, 0xac0a1a0}, {0xc0206a1800, 0xf8}, {0xc00aa18dc0, 0xa0}, {0x683eee8, 0xc02d0ca000}, 0x1, ...)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:832 +0x477
+github.com/urnetwork/server.(*localBlobStore).putFile(0xc008cc0580, {0x682dc68, 0xac0a1a0}, {0xc0206a1800, 0xf8}, {0xc00aa18dc0, 0xa0}, 0x1)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:805 +0x3ba
+github.com/urnetwork/server.(*localBlobStore).PutIfAbsent(0xc008cc0580, {0x682dc68, 0xac0a1a0}, {0xc0206a1800, 0xf8}, {0xc00aa18dc0, 0xa0}, {0x4a1769?, 0xc0011f52a8?})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/blob.go:773 +0x85
+github.com/urnetwork/server/startifact.putImmutableFromFile({0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc008cc0580}, {0xc0206a1800, 0xf8}, {0xc00aa18dc0, 0xa0}, {0xc025228a80, 0x953, ...})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/startifact/artifact.go:131 +0xc2
+github.com/urnetwork/server/startifact.putImmutable({0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc008cc0580}, {0xc0206a1800, 0xf8}, {0xc025228a80, 0x953, 0x953})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/startifact/artifact.go:125 +0x29a
+github.com/urnetwork/server/startifact.(*PreparedEvidence).Publish(0xc009e99260, {0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc008cc0580})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/server/startifact/evidence_prepared.go:81 +0x337
+github.com/urfoundation/sn/sim-testnet.publishAndReadBackFinalSemanticEnvelope({0x682dc68, 0xac0a1a0}, {0x68489d8, 0xc008cc0580}, 0xc016c68f00)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_commit.go:1440 +0x72
+github.com/urfoundation/sn/sim-testnet.publishOrResumeFinalSemanticSupplement({0x682dc68, 0xac0a1a0}, 0xc007c40c00, 0xc01cf91dc0, {0xc000cc2750, 0xc9}, {0xc006021200, 0xf5}, 0xc0011b8400, {0xc000148000, ...})
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_commit.go:219 +0x2345
+github.com/urfoundation/sn/sim-testnet.TestValidateFinalSemanticSupplementDefaultCapturedStoresRequiresEveryReplica(0xc0012d6008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_commit_test.go:626 +0x246
+testing.tRunner(0xc0012d6008, 0x67cda28)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5747 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000bdd448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalPublicValidatorSourcesV2RefusesWritesUnpinnedAndConflictingReads(0xc000bdd448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_public_rpc_v2_test.go:234 +0x3f
+testing.tRunner(0xc000bdd448, 0x67caca8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 7602 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c0fc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestUnusedReplacementProbeRefreshRejectsProgressAndAuthorityDrift(0xc0014c0fc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/plan_revision_probe_release_test.go:168 +0x3f
+testing.tRunner(0xc0014c0fc8, 0x67cd9f0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8884 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00197e008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies(0xc00197e008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:1086 +0x3f
+testing.tRunner(0xc00197e008, 0x67ccb10)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5702 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fd208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProduceFinalSemanticOutputsWritesOneSealedPair(0xc0014fd208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_producer_test.go:81 +0x47
+testing.tRunner(0xc0014fd208, 0x67cc280)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8522 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012d78c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRequiresIndependentPopulation(0xc0012d78c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:337 +0x3f
+testing.tRunner(0xc0012d78c8, 0x67cc2c0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8805 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019406c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessRejectsMalformedIdentityRecords(0xc0019406c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:116 +0x3f
+testing.tRunner(0xc0019406c8, 0x67ccb00)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5746 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000bdc008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalPublicValidatorSourcesV2RetainsRealBatchesAndCanonicalHeads(0xc000bdc008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_public_rpc_v2_test.go:169 +0x3f
+testing.tRunner(0xc000bdc008, 0x67cacb0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12010 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c14fc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceProvisionV2ChangedInputCannotBeRehashedIntoAuthority(0xc000c14fc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_provision_v2_test.go:273 +0x3f
+testing.tRunner(0xc000c14fc8, 0x67cd118)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 6056 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fdb08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticPoolRegistrationUsesEVMReceiptAndNativeSnapshot(0xc0014fdb08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_registration_test.go:175 +0x47
+testing.tRunner(0xc0014fdb08, 0x67cb1b0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 5499 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0005d8008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalFleetRenewalLineageRequiresEveryApprovedGenerationAndRevocation(0xc0005d8008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/final_semantic_fleet_renewal_test.go:23 +0x3f
+testing.tRunner(0xc0005d8008, 0x67caa50)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11977 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c158c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceLaunchV2TemplateRejectsMissingAndForeignCreation(0xc000c158c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_launch_config_test.go:294 +0x3f
+testing.tRunner(0xc000c158c8, 0x67cd108)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8882 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001941b08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions(0xc001941b08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:921 +0x3f
+testing.tRunner(0xc001941b08, 0x67ccb18)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8802 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fc6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessRejectsInvalidIdentifiers(0xc0014fc6c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:50 +0x3c
+testing.tRunner(0xc0014fc6c8, 0x67ccaf8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12020 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019f2008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2ReservedRendererRejectsMissingOrChangedSetup(0xc0019f2008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_reserved_render_test.go:209 +0x3f
+testing.tRunner(0xc0019f2008, 0x67cd2b8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 10486 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000feb688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestFinalSemanticDeploymentBoundaryRuntimeConfigsAreAcceptedByReleaseLoaders(0xc000feb688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/render_test.go:126 +0x27
+testing.tRunner(0xc000feb688, 0x67cae90)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8750 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012aa6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionPartitionsSimulatorEvidenceExactly(0xc0012aa6c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_simulator_evidence_test.go:143 +0x3f
+testing.tRunner(0xc0012aa6c8, 0x67cc4d0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8670 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f25b08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2PreservesEveryOldFamily(0xc001f25b08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:207 +0x3f
+testing.tRunner(0xc001f25b08, 0x67cc480)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8672 [chan receive, 35 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c0d88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage(0xc0014c0d88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:263 +0x3f
+testing.tRunner(0xc0014c0d88, 0x67cc478)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8722 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c1448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RejectsDisconnectedPhases(0xc0014c1448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:317 +0x3f
+testing.tRunner(0xc0014c1448, 0x67cc488)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8520 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fd8c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionPinsMeasuredMetadataRaceBudget(0xc0014fd8c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:258 +0x3c
+testing.tRunner(0xc0014fd8c8, 0x67cc290)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8518 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fcb48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRequiresIndependentMetadata(0xc0014fcb48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:162 +0x3c
+testing.tRunner(0xc0014fcb48, 0x67cc2b8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8671 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f25d48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RejectsEveryNewFamilyOmission(0xc001f25d48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:232 +0x3f
+testing.tRunner(0xc001f25d48, 0x67cc490)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8751 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012aafc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionRejectsSimulatorEvidencePartitionDrift(0xc0012aafc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_simulator_evidence_test.go:168 +0x3f
+testing.tRunner(0xc0012aafc8, 0x67cc510)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8723 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c1688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RejectsSelectorOwnershipDrift(0xc0014c1688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:341 +0x3f
+testing.tRunner(0xc0014c1688, 0x67cc4a0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8445 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f24d88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseSemanticCensusRequiresCompleteSettlementClosureOwners(0xc001f24d88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_closure_test.go:158 +0x3f
+testing.tRunner(0xc001f24d88, 0x67ccd00)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12014 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c15b08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2ReservedCreationRetainsOriginalSourceOnRestart(0xc000c15b08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_reserved_creation_test.go:95 +0x3c
+testing.tRunner(0xc000c15b08, 0x67cd2a0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 7504 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f24488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPlanCompatibilityFixtureProjectsExactHistoricalOwnership(0xc001f24488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/plan_compatibility_fixture_test.go:97 +0x47
+testing.tRunner(0xc001f24488, 0x67cbff8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8524 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0010098c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling(0xc0010098c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:713 +0x2f
+testing.tRunner(0xc0010098c8, 0x67cc2c8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12058 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001836488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadApplyAdmitsConfiguredJournalBoundary(0xc001836488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:432 +0x3f
+testing.tRunner(0xc001836488, 0x67cd1d0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8803 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001940248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessPreservesLiveIdentity(0xc001940248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:62 +0x3c
+testing.tRunner(0xc001940248, 0x67ccaf0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8878 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012aa908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRequireProducerSettlementAggregateBudget(0xc0012aa908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_settlement_budget_test.go:62 +0x2f
+testing.tRunner(0xc0012aa908, 0x67ccb40)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8673 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c1208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RejectsMissingExecutableModes(0xc0014c1208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:300 +0x3f
+testing.tRunner(0xc0014c1208, 0x67cc498)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 7460 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012d6d88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPublicScenarioBundleRequiresReplicatedOwnerCompletionCommit(0xc0012d6d88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/observe_test.go:1566 +0x47
+testing.tRunner(0xc0012d6d88, 0x67cc7b0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8577 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fc488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessAbsenceIsQuietAndRefused(0xc0014fc488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:41 +0x3c
+testing.tRunner(0xc0014fc488, 0x67ccae8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 7505 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f246c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPlanCompatibilityFixtureKeepsCurrentCompanionRelocationClosed(0xc001f246c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/plan_compatibility_fixture_test.go:180 +0x3f
+testing.tRunner(0xc001f246c8, 0x67cbff0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8804 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001940488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessSignalTrapPreservesIdentity(0xc001940488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:82 +0x3c
+testing.tRunner(0xc001940488, 0x67ccb08)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8921 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012aad88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateIsolationIncludesCompletePrivateFixtureTool(0xc0012aad88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_suite_fixture_test.go:46 +0x3c
+testing.tRunner(0xc0012aad88, 0x67cca28)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12011 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c15208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceProvisionV2SignedForeignSourceIsRefusedBeforeFiles(0xc000c15208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_provision_v2_test.go:289 +0x3f
+testing.tRunner(0xc000c15208, 0x67cd150)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8669 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f258c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources(0xc001f258c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:197 +0x3f
+testing.tRunner(0xc001f258c8, 0x67cc3f8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8847 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001941448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRequireIndependentCompleteValidatorRace(0xc001941448)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:747 +0x34
+testing.tRunner(0xc001941448, 0x67ccb38)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12160 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001d32fc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestStrictHistoryAdoptionCapturesOriginalSourceAndBindsExactLaunch(0xc001d32fc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/strict_history_adoption_test.go:44 +0x3f
+testing.tRunner(0xc001d32fc8, 0x67cd770)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12017 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012abb08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2ReservedCreationSeparatesReorgFromFinalConflict(0xc0012abb08)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_reserved_creation_test.go:209 +0x3f
+testing.tRunner(0xc0012abb08, 0x67cd2a8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8886 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00197e488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionRejectsLaunchServerCoverageOmissions(0xc00197e488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_launch_source_test.go:63 +0x3f
+testing.tRunner(0xc00197e488, 0x67cc500)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 10487 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000feb8c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProvisionalRuntimeConfigsAllowUnsignedTestnetWallet(0xc000feb8c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/render_test.go:131 +0x27
+testing.tRunner(0xc000feb8c8, 0x67cc5f8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8519 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014fcfc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift(0xc0014fcfc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:184 +0x3f
+testing.tRunner(0xc0014fcfc8, 0x67cc298)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8446 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001f24fc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseSemanticCensusRejectsIncompleteSettlementClosureOwners(0xc001f24fc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_closure_test.go:196 +0x3f
+testing.tRunner(0xc001f24fc8, 0x67ccce8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8877 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012aa248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionFundedRelayRetainsAuthenticatedOwners(0xc0012aa248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_relay_horizon_test.go:47 +0x3f
+testing.tRunner(0xc0012aa248, 0x67cc4b0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8724 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0014c18c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RequiresCompleteSourceCensus(0xc0014c18c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:365 +0x3f
+testing.tRunner(0xc0014c18c8, 0x67cc4a8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8701 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000fea488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionRequiresIsolatedHistoryPopulations(0xc000fea488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_history_population_test.go:141 +0x3f
+testing.tRunner(0xc000fea488, 0x67cc518)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12016 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012ab688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2ReservedCreationRejectsMissingOrChangedSources(0xc0012ab688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_reserved_creation_test.go:142 +0x3f
+testing.tRunner(0xc0012ab688, 0x67cd290)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8702 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000feab48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionRejectsHistoryPopulationPartitionDrift(0xc000feab48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_history_population_test.go:165 +0x3f
+testing.tRunner(0xc000feab48, 0x67cc4f8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8885 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00197e248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversLaunchServerSourcesInBothGates(0xc00197e248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_launch_source_test.go:47 +0x3f
+testing.tRunner(0xc00197e248, 0x67cc428)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8887 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00197e6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversNativeSourceCommitmentJob(0xc00197e6c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_launch_source_test.go:100 +0x3f
+testing.tRunner(0xc00197e6c8, 0x67cc440)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8888 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00197e908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionKeepsColdFixturesInSemanticJob(0xc00197e908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_launch_source_test.go:125 +0x3f
+testing.tRunner(0xc00197e908, 0x67cc4b8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8889 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00197eb48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversRegistrationReadinessInBothGates(0xc00197eb48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_launch_source_test.go:233 +0x3f
+testing.tRunner(0xc00197eb48, 0x67cc458)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8890 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00197ed88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionRejectsRegistrationReadinessOmissions(0xc00197ed88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_launch_source_test.go:251 +0x3f
+testing.tRunner(0xc00197ed88, 0x67cc508)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8876 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012aa008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversFundedRelayHorizon(0xc0012aa008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/release_gate_relay_horizon_test.go:16 +0x3f
+testing.tRunner(0xc0012aa008, 0x67cc408)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12013 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c15688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceProvisionV2FreshSetupPreservesExistingDiskHistory(0xc000c15688)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_provision_v2_test.go:317 +0x3f
+testing.tRunner(0xc000c15688, 0x67cd128)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12007 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c14908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceProvisionV2HeaderCapacityMatchesPublicReader(0xc000c14908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_provision_v2_test.go:173 +0x3f
+testing.tRunner(0xc000c14908, 0x67cd130)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11975 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c146c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender(0xc000c146c8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_launch_config_test.go:109 +0x3f
+testing.tRunner(0xc000c146c8, 0x67cd100)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11983 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019f2d88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadBudgetAdmissionOwnsExactValues(0xc0019f2d88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:60 +0x3f
+testing.tRunner(0xc0019f2d88, 0x67cd1e0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12158 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001d32908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestSolidityStaticGateRejectsOmittedOrCommentOnlyEvidenceRoot(0xc001d32908)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/solidity_static_census_test.go:74 +0x3f
+testing.tRunner(0xc001d32908, 0x67cd710)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12006 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c14488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceProvisionV2FixedPlanBoundsAllFourKeeperActions(0xc000c14488)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_provision_v2_test.go:138 +0x3f
+testing.tRunner(0xc000c14488, 0x67cd120)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12009 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c14d88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceProvisionV2InterruptedLastSourceResumesExactConsents(0xc000c14d88)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_provision_v2_test.go:236 +0x3f
+testing.tRunner(0xc000c14d88, 0x67cd138)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12015 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000c15d48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2ReservedCreationRejectsForgedIntentAndForeignDeployment(0xc000c15d48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_reserved_creation_test.go:113 +0x3f
+testing.tRunner(0xc000c15d48, 0x67cd288)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12018 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0005d8b48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2ReservedCreationRequiresOriginalPredecessorCarry(0xc0005d8b48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_reserved_creation_test.go:244 +0x3f
+testing.tRunner(0xc0005d8b48, 0x67cd298)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11697 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000feb208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2RejectsForeignLineageAndDomain(0xc000feb208)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_v2_test.go:248 +0x3f
+testing.tRunner(0xc000feb208, 0x67cd180)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11693 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00081bd48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2ClosedAncestorAttemptsRejectUnfinishedProgress(0xc00081bd48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_history_v2_test.go:136 +0x3f
+testing.tRunner(0xc00081bd48, 0x67cd170)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12057 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001836248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadApplyRefusesBeforeJournalOwnership(0xc001836248)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:411 +0x3f
+testing.tRunner(0xc001836248, 0x67cd1d8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12056 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001836008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadDispatchRefusesBeforePayloadRecovery(0xc001836008)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:392 +0x3f
+testing.tRunner(0xc001836008, 0x67cd1f8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12055 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000febd48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadLaunchRefusesBeforeMigration(0xc000febd48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:363 +0x3f
+testing.tRunner(0xc000febd48, 0x67cd208)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12054 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0019f3d48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadConfigRequiresExactProfileAndYAML(0xc0019f3d48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:329 +0x3f
+testing.tRunner(0xc0019f3d48, 0x67cd1e8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12061 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001836b48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2AttemptUploadGeneratedConfigRejectsExtraFiles(0xc001836b48)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_v2_upload_test.go:563 +0x3f
+testing.tRunner(0xc001836b48, 0x67cd200)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11696 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc000d8d040)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000feafc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2ResolvesOriginalFilesAfterSourceRevision(0xc000feafc8)
+	/home/by/urnetwork/temp/sn-private-services-qualification-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_v2_test.go:198 +0x3f
+testing.tRunner(0xc000feafc8, 0x67cd190)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+FAIL	github.com/urfoundation/sn/sim-testnet	5401.403s
+FAIL

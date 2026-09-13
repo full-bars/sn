@@ -1,0 +1,35 @@
+supersedes=QUALIFICATION-PLAN-v1.txt
+candidate_sn=e99954acd70bdae9612dd3de2861fbbf39ef8161
+candidate_parent=90f67b1859368d34b0404870f46819f012712674
+physical_workspace=/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/qualification-e999/workspace-physical
+handoff=/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/handoff.json
+handoff_sha256=7144545aa9adec70be49d3bb31881b54b07e1804d0650bd0c83cc78e084e6de8
+raw_timeout=/home/by/urnetwork/temp/sn-final-gates-b78-prepared-20260913T1216Z/aggregate/tmp/urnetwork-release-gate.J4VQlRTn/logs/sn-simulator-race.log
+raw_timeout_sha256=cbff6627f505ff8c4c68c6e0722eaba0655132de2c24f19c55c0604e355ae606
+formatter=read-only gofmt -l on the three changed Go files: empty
+sn_manifest=/home/by/urnetwork/temp/sn-aggregate-supplement-owners-20260913/handoff-v1/sn-e99954a.source.manifest
+sn_manifest_sha256=e07e8d2a38672f90c08ae077183b9a0475380d0a7ce8f07047c3ac13df047e71
+sn_manifest_check=1337 entries passed in the independent physical workspace
+
+execution_order:
+1. Before and after each owner, record all 12 local HEAD/status/manifests; require the e999 SN and unchanged admitted 11 source records to compare byte-for-byte.
+2. Compile/list the complete race census and compare actual sorted identities with ordinary2181, supplements3, populations2, and all2186 source projections. Require 2181+3+2=2186 and no overlap. This is a census only.
+3. Run guards10 normal once and race once through the established qualification runner (600s package / 660s owner / parallel4 / GOMAXPROCS4).
+4. Run the four actual active roots as one race selection p1, p2, then p3. Each is a fresh count=1 body under the native 90m race deadline and existing resource settings. Retain the p1 binary and require p2/p3 to have the same source, package/mode, binary SHA, and before/after source fence before extending the streak.
+5. Preserve the original timeout. Seal raw compiled-list output, source fences, runner logs/events/replay, exits, and binary SHA/mode for guards and all three active runs.
+
+explicit_nonexecution:
+- ordinary2181 is not run as a focused development body.
+- supplements3 is not run separately as a broad integration body.
+- populations2 remains accepted prior evidence and is not rerun.
+- The next corrected aggregate gate executes full2186 integration once.
+
+resource_limit:
+- Each owner reserves 4 CPU.
+- Guards may use two lanes. The active p1->p2->p3 chain uses one lane and is strictly sequential.
+- Current aggregate reservation remains 8 CPU; total never exceeds 24 CPU.
+- Active roots retain the existing native 90m race package/owner ceiling. No deadline, CPU, job, or cache-policy relaxation is requested.
+
+timing:
+- Source custody and the revised plan are ready now.
+- Upon fresh admission, guards and active p1 can launch within three minutes. Active p2/p3 launch immediately after their predecessor joins.
