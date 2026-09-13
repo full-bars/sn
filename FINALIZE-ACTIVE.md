@@ -28,14 +28,16 @@ target explicitly, without treating a permit limit as a fixed UID partition.
 
 Current work:
 
-1. Compose the retained campaign fixes and current source in one isolated
-   candidate. Preserve the existing deployment, wallets, approvals and journals.
+1. The retained campaign, signer-authority and gate corrections are composed
+   and published; their focused qualification and required failure confirmations
+   are complete. Preserve the existing deployment, wallets, approvals and journals.
 2. Use Terra (`gpt-5.6-terra`, reasoning effort `max`) for all tests and gate
    execution. Use Astra (`gpt-6-astra`, reasoning effort `max`) to diagnose and
    fix failures and flakiness, then return corrected source to Terra for reruns.
-3. Correct the actual validator, native-receipt and scenario-anomaly failures.
-   Complete both full gates on the final candidate with private test services;
-   keep their original failed and interrupted results visible.
+3. Complete both full gates on the candidate with the refreshed release lock
+   and private test services. The earlier validator, native-receipt and scenario
+   failures have completed their scoped confirmations. Keep the original failed
+   and interrupted results visible; focused passes do not replace full gates.
 4. Complete the required real release campaign and production soak, then
    reconcile on-chain outcomes, public replay, the final report and shutdown.
    Reuse valid completed evidence; unrun, failed and waived checks are not passes.

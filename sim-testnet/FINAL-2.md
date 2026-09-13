@@ -174,9 +174,9 @@ failed normal scopes completed their required confirmations on their recorded
 sources. All **37 adjacent campaign/attempt/analyzer roots** then passed normally
 and under race on `4fda909`. The lifecycle, runtime-configuration,
 pool-registration and full-artifact race confirmation streaks all closed.
-The aggregate's four roots that were active at its timeout are completing
-their confirmations on the same retained binary. The scheduling correction
-is isolated from those running tests: it splits the two whole-population
+The aggregate's four roots that were active at its timeout completed all
+three race confirmations on the same retained binary at **09:49 UTC**.
+The scheduling correction splits the two whole-population
 tests from the complete complementary selection, retaining the 90-minute
 timeout, parallelism and every selected root.
 
@@ -187,6 +187,14 @@ roots and their 2,184-root complement, with no omissions or duplicates. This
 inventory check did not execute the complete suite; the final aggregate must
 still run both selections. The corresponding xops test correction is
 `a9d2eb4`.
+
+At **10:01 UTC**, the clean, pushed `58b251f` native CLI installed the reviewed
+release-lock bytes with exit 0. Their SHA-256 is
+`ddfd939ac49a465957e3aeaac3ecb49ddd892a2cf6d1821ad9d5d3a583c69249`.
+Only the simulator production-source and protocol-script digests changed;
+the runtime, EVM artifact, interface and infrastructure pins stayed unchanged.
+This local lock update sent no chain transactions. Both final gates and the
+live campaign remain pending.
 
 The aggregate alarm occurred while its four active roots had run for only
 **37 seconds, 39 seconds, 2 minutes 15 seconds, and 45 seconds**. The log contains
