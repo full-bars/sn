@@ -1,0 +1,54 @@
+{
+  "schema": "sim-testnet-real-limits-readonly-v1",
+  "read_only": true,
+  "netuid": 521,
+  "native_finalized_hash": "0xe046f55170e00ee58aab564a71cbeb540cd021248477d136adcfb56f311cc821",
+  "both_endpoint_results_identical": true,
+  "observations": {
+    "owned": {
+      "endpoint": "http://192.168.1.162:9944",
+      "raw_sha256": "0d9d2672ba6d854be283a43e4c407e61641f89595f65838cb0667c00b1096dd1",
+      "native_block": 7995269,
+      "genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+      "chain_id": 945,
+      "runtime": 455,
+      "MaxAllowedValidators": 64,
+      "MaxAllowedUids": 256,
+      "SubnetworkN": 256,
+      "permit_vector_length": 256,
+      "permit_uids": [
+        0,
+        2,
+        7,
+        8,
+        50,
+        52,
+        254,
+        255
+      ]
+    },
+    "public": {
+      "endpoint": "https://test.finney.opentensor.ai",
+      "raw_sha256": "ea43ac4684307bafe250238beb3b2e21ea66a41cf6a74dac24a48915184fe77d",
+      "native_block": 7995269,
+      "genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+      "chain_id": 945,
+      "runtime": 455,
+      "MaxAllowedValidators": 64,
+      "MaxAllowedUids": 256,
+      "SubnetworkN": 256,
+      "permit_vector_length": 256,
+      "permit_uids": [
+        0,
+        2,
+        7,
+        8,
+        50,
+        52,
+        254,
+        255
+      ]
+    }
+  },
+  "scope": "Finalized current limits and permit census only; does not establish full campaign acceptance or 200-head selection."
+}

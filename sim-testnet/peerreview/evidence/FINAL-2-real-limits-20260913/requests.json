@@ -1,0 +1,66 @@
+{
+  "anchor_request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "chain_getFinalizedHead",
+    "params": []
+  },
+  "anchor_response": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": "0xe046f55170e00ee58aab564a71cbeb540cd021248477d136adcfb56f311cc821"
+  },
+  "block_hash": "0xe046f55170e00ee58aab564a71cbeb540cd021248477d136adcfb56f311cc821",
+  "storage_names": [
+    "MaxAllowedValidators",
+    "MaxAllowedUids",
+    "SubnetworkN",
+    "ValidatorPermit"
+  ],
+  "requests": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "chain_getHeader",
+      "params": [
+        "0xe046f55170e00ee58aab564a71cbeb540cd021248477d136adcfb56f311cc821"
+      ]
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "chain_getBlockHash",
+      "params": [
+        0
+      ]
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "eth_chainId",
+      "params": []
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "method": "state_getRuntimeVersion",
+      "params": [
+        "0xe046f55170e00ee58aab564a71cbeb540cd021248477d136adcfb56f311cc821"
+      ]
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "method": "state_queryStorageAt",
+      "params": [
+        [
+          "0x658faa385070e074c85bf6b568cf0555741b883d2519eed91857993bfd4df0ba0902",
+          "0x658faa385070e074c85bf6b568cf0555fabe6b131d9fa6e6d6cacbe7586c3b8a0902",
+          "0x658faa385070e074c85bf6b568cf0555a1048e9d244171852dfe8db314dc68ca0902",
+          "0x658faa385070e074c85bf6b568cf055556af5b07ace59da2c9d7f0d48bc931430902"
+        ],
+        "0xe046f55170e00ee58aab564a71cbeb540cd021248477d136adcfb56f311cc821"
+      ]
+    }
+  ]
+}
