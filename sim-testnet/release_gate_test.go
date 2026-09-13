@@ -1347,6 +1347,9 @@ func TestLocalReleaseGateRechecksCompleteWorkspaceAtEnd(t *testing.T) {
 			t.Fatalf("SN release gate includes unrelated calibration qualification: %s", unrelated)
 		}
 	}
+	if err := verifyReleaseGateSubtensorInfrastructureScope(script); err != nil {
+		t.Fatal(err)
+	}
 	// A mapfile process substitution masks go-list/grep failure even under
 	// `set -euo pipefail`, potentially turning a broken package census into an
 	// empty successful compile gate. Materialize and validate the pipeline

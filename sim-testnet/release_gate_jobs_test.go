@@ -831,6 +831,90 @@ func TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(t *testing.T) {
 	}
 }
 
+// The complete node module owns future Subtensor regressions too. The exact
+// shared gateway method adds its security assertions without making unrelated
+// Grafana/edge/backup repositories part of the SN release source inventory.
+func verifyReleaseGateSubtensorInfrastructureScope(script string) error {
+	const function = "release_phase_xops"
+	pattern := regexp.MustCompile(`(?ms)^release_phase_xops\(\) \{\n(.*?)^\}[\t ]*$`)
+	definitions := pattern.FindAllStringSubmatch(script, -1)
+	if len(definitions) != 1 {
+		return fmt.Errorf("SN infrastructure requires one xops owner")
+	}
+	var commands []string
+	for _, line := range strings.Split(definitions[0][1], "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" && !strings.HasPrefix(line, "#") {
+			commands = append(commands, line)
+		}
+	}
+	expected := []string{
+		`cd "$workspace/xops"`,
+		`python3 -m unittest \`,
+		`main/ansible/tests/test_subtensor_playbook.py \`,
+		`main.ansible.tests.test_vulnscan2_resolved.Vulnscan2ResolvedInfrastructureTests.test_vs2_011_subtensor_local_rpc_and_restricted_gateway_render`,
+	}
+	if len(commands) != len(expected) {
+		return fmt.Errorf("SN infrastructure changed its complete node/gateway command")
+	}
+	for index, command := range expected {
+		if commands[index] != command {
+			return fmt.Errorf("SN infrastructure command %d differs from its node/gateway scope", index)
+		}
+	}
+	const start = "release_gate_start xops " + function
+	invocation := regexp.MustCompile(`(?m)^` + regexp.QuoteMeta(start) + `[\t ]*$`)
+	phaseDefinitions := regexp.MustCompile(`(?ms)^[\t ]*release_phase_[a-z0-9_]+\(\) \{\n.*?^[\t ]*\}[\t ]*$`)
+	registry := phaseDefinitions.ReplaceAllString(script, "")
+	calls := invocation.FindAllStringIndex(script, -1)
+	definition := pattern.FindStringIndex(script)
+	if len(calls) != 1 || len(invocation.FindAllString(registry, -1)) != 1 || calls[0][0] < definition[1] {
+		return fmt.Errorf("SN infrastructure has no unique admitted owner")
+	}
+	conditions, err := releaseGateRegistrationConditions(script, start)
+	if err != nil || len(conditions) != 0 {
+		return fmt.Errorf("SN infrastructure admission is conditional: %v %v", conditions, err)
+	}
+	return nil
+}
+
+// Reproduce the whole-repository scan that required absent Warp/Grafana source,
+// while rejecting the adjacent mistake of omitting the actual gateway check.
+func TestReleaseGateJobsRejectSubtensorInfrastructureScopeDrift(t *testing.T) {
+	t.Parallel()
+	raw, err := os.ReadFile("../scripts/test-release-1.0-local.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(raw)
+	if err := verifyReleaseGateSubtensorInfrastructureScope(script); err != nil {
+		t.Fatal(err)
+	}
+	const gateway = "main.ansible.tests.test_vulnscan2_resolved.Vulnscan2ResolvedInfrastructureTests.test_vs2_011_subtensor_local_rpc_and_restricted_gateway_render"
+	const node = "main/ansible/tests/test_subtensor_playbook.py"
+	const start = "release_gate_start xops release_phase_xops"
+	for _, change := range []struct{ old, replacement string }{
+		{gateway, "main/ansible/tests/test_vulnscan2_resolved.py"},
+		{gateway, ""},
+		{gateway, gateway + " || true"},
+		{gateway, gateway + " main/ansible/tests/test_vulnscan2_resolved.py"},
+		{node, ""},
+		{node, "main.ansible.tests.test_subtensor_playbook.SubtensorPlaybookTests.test_gateway_binds_and_verifies_every_restricted_management_address"},
+		{"python3 -m unittest", "# python3 -m unittest"},
+		{start, "# " + start},
+		{start, start + "\n" + start},
+		{start, "if false; then\n" + start + "\nfi"},
+		{start, "release_phase_unused() {\n" + start + "\n}"},
+	} {
+		if strings.Count(script, change.old) != 1 {
+			t.Fatalf("scope mutation is ambiguous: %s", change.old)
+		}
+		if err := verifyReleaseGateSubtensorInfrastructureScope(strings.Replace(script, change.old, change.replacement, 1)); err == nil {
+			t.Fatalf("SN infrastructure accepted changed scope: %s", change.replacement)
+		}
+	}
+}
+
 // Commented, narrowed, disconnected or duplicated text cannot certify the
 // actual phase; a validator allowance cannot silently fund other core packages.
 func TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions(t *testing.T) {
