@@ -60,7 +60,14 @@ func newCampaignSuccessionFixture(t *testing.T) *campaignSuccessionFixture {
 	f.writeCurrent(t)
 	f.journal = openCampaignTestJournal(t, f.stateDir)
 	action := actionByID(t, f.prior, "config.render")
-	if err := f.journal.Append(JournalEntry{DeploymentID: f.prior.DeploymentID, PlanHash: f.prior.PlanHash, ActionID: action.ID, IntentHash: action.IntentHash, Stage: StageVerified}); err != nil { t.Fatal(err) }
+	head := ChainHead{Number: 10, Hash: "0x" + strings.Repeat("ab", 32)}
+	record := &ActionPostcondition{Schema: "urnetwork-sim-action-postcondition-v4", DeploymentID: f.prior.DeploymentID, PlanHash: f.prior.PlanHash, ActionID: action.ID, IntentHash: action.IntentHash,
+		OperationalRPCMode: f.cfg.OperationalRPCMode, IndependentRPC: independentRPCRequired(f.cfg), SubstrateFinalized: head, EVMFinalized: head, EVMHashDomain: "evm-rpc", Observed: map[string]any{"verified": true},
+		IndependentSubstrateFinalized: head, IndependentEVMFinalized: head, IndependentEVMHashDomain: "evm-rpc", IndependentObserved: map[string]any{"verified": true}}
+	executor := &Executor{cfg: f.cfg, stateDir: f.stateDir, plan: f.prior, journal: f.journal}
+	postconditionPath, postconditionHash, err := executor.persistActionPostcondition(record)
+	if err != nil { t.Fatal(err) }
+	if err := f.journal.Append(JournalEntry{DeploymentID: f.prior.DeploymentID, PlanHash: f.prior.PlanHash, ActionID: action.ID, IntentHash: action.IntentHash, Stage: StageVerified, PostconditionPath: postconditionPath, PostconditionHash: postconditionHash}); err != nil { t.Fatal(err) }
 	return f
 }
 
