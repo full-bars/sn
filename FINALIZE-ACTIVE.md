@@ -51,8 +51,8 @@ failures are being corrected. Jobs joined with exit 143 during cleanup are
 recorded as interrupted, not completed test verdicts. [Producer receipt](../temp/sn-final-execution-20260912/runtime/producer-gate/capture/RESULT.json),
 [aggregate receipt](../temp/sn-final-execution-20260912/aggregate-gate-prepared-20260912T2254Z/capture/RESULT.json).
 
-Terra is qualifying the frozen corrections in parallel while Astra diagnoses
-actual failures. The Go 1.26 qualification launcher correction passed its four
+The previously pending focused qualifications are now complete on their
+recorded immutable sources. The Go 1.26 qualification launcher correction passed its four
 regression roots normally and under race. Corrected CRV4 and server artifact
 test binaries subsequently exited 0 in both modes, but their captures failed
 because expected-outcome files omitted legitimate subtests. Existing offline
@@ -67,11 +67,27 @@ and under race on SN `ebe70a3` and server `e2358826`. Their previously failed
 normal roots have three fresh passing confirmations on the recorded immutable
 binaries. [Sealed scoped qualification](../temp/sn-private-services-qualification-20260913/runtime/RESULT-service-monitor-cache-corrected.json)
 (`sha256:c98dbe1e98943cf2eb7087e362b4c0b17e08ec08006007d87c21ef2b39d493cf`).
-The reviewed release-lock refresh changes only protocol, SN and server source
-hashes; its complete YAML hash is
-`sha256:e392f2f1fd2c212a053cd24e6d0c461edf1f54ed7136e380e5561bb57126b5d2`.
-The stamped executable still needs rebuilding against the final published source.
-Completed historical qualification remains reusable within its recorded scope.
+Connect's actual plain-WebSocket resolver bypass is corrected at `3d29e1f`.
+Its 15-root integration passed normally and under race; all eight previously
+failed roots completed three sequential passes in each mode on the same
+recorded binaries. The remaining 18 simulator normal confirmations, both
+CRV4 roots in both modes, three private-capture normal confirmations and the
+seven-root private-capture race integration also passed. Earlier simulator,
+validator, stabi, service, monitor and cache results retain their original
+source scope. See the [current qualification evidence](sim-testnet/FINAL.md).
+
+The integrated source includes server `bbfe4296`, Connect `3d29e1f`, SDK
+`169d4c2c`, operator-proxy `714f10f0`, proxy `c11c7eb4` and xops `ec84346`.
+All 15 live modules passed dependency validation. The xops update leaves all
+15 Subtensor infrastructure lock inputs unchanged; the normal infrastructure
+gate still covers its affected inputs. The new release-lock YAML hash is
+`sha256:ddcd0ec9f44f11c86c22b6b9ff73a31a09c0d0b910e07a1d8b966a8c7af40923`.
+The native stamped `5a79b62` renderer applied exactly the reviewed bytes with
+exit 0. Runtime, EVM, interface and infrastructure lock fields are unchanged.
+The final stamped CLI build and both full gates follow this publication in
+parallel, using the existing physical workspace and separate private services.
+Completed historical qualification remains reusable within its recorded scope;
+the complete current candidate still needs both full-gate results.
 
 The fleet and soak remain stopped. There has been no new reserve transfer,
 renewal, relay continuation or live campaign during this preparation. The
