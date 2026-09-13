@@ -46,7 +46,7 @@ Retain the approved 6,000-alpha repair allowance, 37,250-alpha lifetime limit,
 180 EVM within 200 total TAO, 262 registrations and zero new subnets. Use
 `192.168.1.162:9944` without RPC rate limits. Full acceptance remains pending.
 
-Latest checkpoint, 2026-09-13 23:04 UTC: the soak remains stopped. The full
+Latest checkpoint, 2026-09-13 23:48 UTC: the soak remains stopped. The full
 producer on `e3d3539` passed with 36/36 phase joins at 21:44 UTC. Its native
 setup apply adopted plan `0xdbeb584008bbdbc6607a49a5118c1c82fdfa18a15ca8fe5b5c8cea9d2775c37a`
 but failed at 22:09 UTC during carried-history verification, before action
@@ -60,15 +60,25 @@ and reuses already authenticated historical inputs within an invocation.
 Historical receipts retain their original labels. New evidence identifies
 `independent_rpc=false`; public-node verification is no longer required for
 this run. Read-only LAN probes have returned the tested historical EVM and
-native storage successfully. Terra's focused qualification is pending.
+native storage successfully. The seven source/routing guards pass normally
+and under race; the 33 historical-input checks pass normally. All four roots
+active at the original race timeout have completed their three sequential
+race confirmations on the same binary. Other affected checks remain pending.
 
-The original aggregate remains live, with three recorded failures: cumulative
-simulator race-package timeout, missing server migration-monitor entries and
-a context deadline in the full 1,000-client registration cohort. The corrected aggregate partitions all
-2,198 simulator roots among five disjoint owners. Server candidate `b67ea7a`
-reuses the already published monitor correction and adds a real PostgreSQL
-regression. Astra is diagnosing the separate cohort deadline in an isolated
-successor. Keep the original aggregate running and preserve its results.
+The original aggregate closed with outer exit 1 at 23:14:29 UTC: all 23 phases
+joined, with 20 passes and three failures. These were the cumulative simulator
+race-package timeout, missing server migration-monitor entries and a context
+deadline in the full 1,000-client registration cohort. Its final source check
+also refused because canonical SN main advanced during execution. The
+[complete original capture](sim-testnet/peerreview/evidence/FINAL-2-aggregate-e3d3539-20260913/README.md)
+is retained; do not restart the old gate.
+The corrected aggregate partitions all 2,198 simulator roots among five
+disjoint owners. Server candidate `0f095a6` includes the published monitor
+correction, a real PostgreSQL regression and one synced publication source
+shared by both immutable writes. It keeps the original 1,000-client population
+and 30-second operation deadline. Terra's qualification remains pending;
+the diagnostic passed without reproducing the original deadline, so it is
+not evidence that the correction closes that failure.
 SN main also advanced independently to `928b7d5`; its provider memory-budget
 fix is included in the next integrated candidate. Complete focused checks,
 publish one coherent release and start both final gates. Then use one native

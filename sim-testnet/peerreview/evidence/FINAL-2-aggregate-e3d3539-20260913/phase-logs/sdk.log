@@ -1,0 +1,12 @@
+ok  	github.com/urnetwork/sdk	0.033s
+ok  	github.com/urnetwork/sdk	1.165s
+ok  	github.com/urnetwork/sdk	0.020s [no tests to run]
+ok  	github.com/urnetwork/sdk/sn/evm	0.005s [no tests to run]
+ok  	github.com/urnetwork/sdk/sn/merkle	0.003s [no tests to run]
+ok  	github.com/urnetwork/sdk/sn/protocol	0.003s [no tests to run]
+ok  	github.com/urnetwork/sdk/sn/ss58	0.003s [no tests to run]
+ok  	github.com/urnetwork/sdk	0.026s
+ok  	github.com/urnetwork/sdk	6.014s
+ok  	github.com/urnetwork/sdk	7.621s
+ok  	github.com/urnetwork/sdk	0.160s
+ok  	github.com/urnetwork/sdk	1.368s

@@ -1,0 +1,43 @@
+verify tidy Go module: connect
+verify tidy Go module: glog
+verify tidy Go module: goidenticons
+verify tidy Go module: operator-proxy
+verify tidy Go module: proxy
+verify tidy Go module: sdk
+verify tidy Go module: sdk/build
+verify tidy Go module: sdk/cgo
+verify tidy Go module: sdk/js
+verify tidy Go module: server
+verify tidy Go module: sn
+verify tidy Go module: sn/third_party/npipe
+verify tidy Go module: userwireguard
+verify tidy Go module: warp
+verify tidy Go module: xops/echo
+verify tidy Go module: xops/router
+[release gate preflight] source-freeze exit=0; retained /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/preflights/source-freeze
+[release gate preflight] source-integrity exit=0; retained /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/preflights/source-integrity
+[release gate preflight] binding-toolchain exit=0; retained /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/preflights/binding-toolchain
+[release gate preflight] runtime-source exit=0; retained /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/preflights/runtime-source
+[release gate preflight] runtime-metadata exit=0; retained /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/preflights/runtime-metadata
+[release gate preflight] private-services exit=0; retained /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/preflights/private-services
+release repository sn revision e3d3539dd761f3e04d2c28e281b01735fa297f9c differs from origin/main at 928b7d5179fd42ad419892a0676413875b6ca9c4
+[release gate preflight] final-source-freeze exit=1; retained /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/preflights/final-source-freeze
+release source revisions changed while the gate was running
+--- /dev/fd/63	2026-09-13 23:14:29.315869871 +0000
++++ /dev/fd/62	2026-09-13 23:14:29.315869871 +0000
+@@ -1,13 +1 @@
+-sn	e3d3539dd761f3e04d2c28e281b01735fa297f9c	origin/main	github.com/urfoundation/sn
+-server	93bc8c592797da0335f4201c5027a2b52906790e	origin/main	github.com/urnetwork/server
+-operator-proxy	448369740c70eb2e642bde9d36f3708fe9ad4b5d	origin/main	github.com/urnetwork/operator-proxy
+-connect	2a0f603e8076224fdab4d9f56e5a0a557ed513d9	origin/main	github.com/urnetwork/connect
+-sdk	0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b	origin/main	github.com/urnetwork/sdk
+-glog	892ade4a6be396b32ea82a550f243190b5992180	origin/master	github.com/urnetwork/glog
+-goidenticons	325750b38314313dc5f44c880ab6f12f6c1ecb3c	origin/main	github.com/urnetwork/goidenticons
+-proxy	6204ae7df2a9868bbb3a7b61231917a36e4f5c9f	origin/main	github.com/urnetwork/proxy
+-userwireguard	85fb1ca4086fa5dbfcda526bec7a17a894e691b9	origin/master	github.com/urnetwork/userwireguard
+-warp	7498864c7cd3605aad3c43eabfab9008ed7f7228	origin/main	github.com/urnetwork/warp
+-vault	8b2f481dbe87092d0c1742274712a6f805c1c375	origin/main	github.com/urnetwork/vault
+-xops	a9d2eb4bfbdf72d61243908a71659adff0fb8160	origin/main	github.com/urnetwork/xops
+-config	268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc	origin/main	github.com/urnetwork/config
++
+release gate failed: phases/cleanup=1 source-fences=1

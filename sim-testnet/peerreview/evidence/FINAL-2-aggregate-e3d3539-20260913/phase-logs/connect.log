@@ -1,0 +1,28 @@
+ok  	github.com/urnetwork/connect	1.392s
+ok  	github.com/urnetwork/connect	2.761s
+ok  	github.com/urnetwork/connect	0.012s [no tests to run]
+ok  	github.com/urnetwork/connect/blocker	0.009s [no tests to run]
+ok  	github.com/urnetwork/connect/connectctl	0.014s [no tests to run]
+ok  	github.com/urnetwork/connect/emoji	0.005s [no tests to run]
+ok  	github.com/urnetwork/connect/extender	0.010s [no tests to run]
+ok  	github.com/urnetwork/connect/gossip	0.012s [no tests to run]
+?   	github.com/urnetwork/connect/protocol	[no test files]
+ok  	github.com/urnetwork/connect/scripts/extender_spoof	0.008s [no tests to run]
+ok  	github.com/urnetwork/connect/security	0.005s [no tests to run]
+ok  	github.com/urnetwork/connect	0.023s
+ok  	github.com/urnetwork/connect	1.254s
+ok  	github.com/urnetwork/connect	1.906s
+ok  	github.com/urnetwork/connect	0.016s
+ok  	github.com/urnetwork/connect	1.052s
+ok  	github.com/urnetwork/connect	0.012s
+ok  	github.com/urnetwork/connect	1.049s
+ok  	github.com/urnetwork/connect	6.118s
+ok  	github.com/urnetwork/connect	45.572s
+ok  	github.com/urnetwork/connect/blocker	2.141s
+ok  	github.com/urnetwork/connect/security	0.596s
+ok  	github.com/urnetwork/connect/blocker	35.120s
+ok  	github.com/urnetwork/connect/security	14.074s
+ok  	github.com/urnetwork/connect	1.388s
+ok  	github.com/urnetwork/connect	2.478s
+ok  	github.com/urnetwork/connect	0.982s
+ok  	github.com/urnetwork/connect	4.432s

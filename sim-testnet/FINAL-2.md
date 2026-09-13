@@ -6,13 +6,20 @@ full finalization of testnet chain **945**, subnet **521**, under
 reserve repair, renewal or campaign transaction has been made during the current
 preparation. Successful historical payments do not establish full acceptance.
 
-At **23:04 UTC on 2026-09-13**, the full producer gate on `e3d3539` has
+At **23:48 UTC on 2026-09-13**, the full producer gate on `e3d3539` has
 passed with **36/36 phase joins and outer exit 0**, ending at 21:44 UTC.
 [Exact producer commands, logs and source identities](peerreview/evidence/FINAL-2-producer-e3d3539-20260913/MANIFEST.json).
-The original aggregate is still running. It has recorded a cumulative simulator
-race-package timeout, missing server migration-monitor entries, and a context
-deadline in the full 1,000-client registration cohort. Neither gate nor live acceptance is claimed
-for the corrected candidate while its qualification is pending.
+The original aggregate **failed**, ending at **23:14:29 UTC with outer exit 1**.
+All 23 phases joined: **20 passed and three failed**. The failures were a
+cumulative simulator race-package timeout, missing server migration-monitor
+entries, and a context deadline in the full 1,000-client registration cohort.
+Its final source check separately refused because canonical SN `main` advanced
+independently to `928b7d5` during execution.
+[Original aggregate commands, complete phase logs and refusal](peerreview/evidence/FINAL-2-aggregate-e3d3539-20260913/README.md),
+[byte manifest](peerreview/evidence/FINAL-2-aggregate-e3d3539-20260913/MANIFEST.json).
+The corrected source is still being qualified. Later focused passes do not
+change the original aggregate's failure; neither complete gate nor live
+acceptance is claimed for the new candidate.
 
 The user approved **37,250 alpha lifetime for one 6,000-alpha replacement**
 of the unsubmitted 3,750-alpha repair. Native setup adopted replacement plan

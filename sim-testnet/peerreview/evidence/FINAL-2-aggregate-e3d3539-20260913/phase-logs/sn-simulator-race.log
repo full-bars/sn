@@ -1,0 +1,958 @@
+[env]glog not configured from command line. Using default configuration.
+I0913 20:41:56.691794  677116 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0913 20:41:56.692064  677116 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0913 20:41:56.692407  677116 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0913 20:41:56.692534  677116 env.go:67] [env]settings = map[]
+2026/09/13 20:50:07 http: proxy error: context canceled
+2026/09/13 20:51:04 http: proxy error: context canceled
+null
+sim-testnet: carried action audit 40/40
+sim-testnet: carried action audit 39/39
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet release 1.0
+
+Usage: sim-testnet <command> [options]
+
+Commands:
+  doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
+  release-lock  render or atomically refresh observed release-lock fields from clean repositories
+  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  history-adoption  capture a source-pinned request for strict startup after retained V2 history
+  relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
+  setup    converge the existing subnet and install contracts (dry-run unless approved)
+  launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  resume   reconcile the journal and continue an interrupted approved action
+  coordinator-repair  apply one bounded provisional coordinator implementation correction
+  fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  status   show process and finalized on-chain state
+  inspect  emit the complete public live-state view
+  analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
+  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  tail     multiplex structured process logs
+  stop     stop local processes only; preserves keys, evidence, and chain state
+  retire   plan future-effective operator retirement; dry-run by default
+
+Common options:
+  --config PATH       harness config (default sim-testnet/testnet.yml)
+  --state-dir PATH    persistent state root (default <config-dir>/runs)
+  --sn-repo PATH      repository discovery override
+  --server-repo PATH  repository discovery override
+  --operator-proxy-repo PATH  repository discovery override
+  --vault-repo PATH   repository discovery override
+  --platform-config-repo PATH  platform config repository override
+  --format human|json
+  --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
+  --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-continuation-plan PATH  exact saved continuation plan for adoption
+  --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
+  --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
+  --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
+  --repair-artifact PATH --repair-artifact-sha256 HASH  exact reviewed Foundry coordinator artifact
+  --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
+  --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
+  --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
+  --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
+  --detach            persistent supervisor mode for launch
+  --name NAME         scenario name
+  --manifest PATH     public manifest for secretless inspect/analyze
+  --run-id ID         exact signed campaign run for public analyze
+sim-testnet release 1.0
+
+Usage: sim-testnet <command> [options]
+
+Commands:
+  doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
+  release-lock  render or atomically refresh observed release-lock fields from clean repositories
+  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  history-adoption  capture a source-pinned request for strict startup after retained V2 history
+  relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
+  setup    converge the existing subnet and install contracts (dry-run unless approved)
+  launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  resume   reconcile the journal and continue an interrupted approved action
+  coordinator-repair  apply one bounded provisional coordinator implementation correction
+  fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  status   show process and finalized on-chain state
+  inspect  emit the complete public live-state view
+  analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
+  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  tail     multiplex structured process logs
+  stop     stop local processes only; preserves keys, evidence, and chain state
+  retire   plan future-effective operator retirement; dry-run by default
+
+Common options:
+  --config PATH       harness config (default sim-testnet/testnet.yml)
+  --state-dir PATH    persistent state root (default <config-dir>/runs)
+  --sn-repo PATH      repository discovery override
+  --server-repo PATH  repository discovery override
+  --operator-proxy-repo PATH  repository discovery override
+  --vault-repo PATH   repository discovery override
+  --platform-config-repo PATH  platform config repository override
+  --format human|json
+  --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
+  --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-continuation-plan PATH  exact saved continuation plan for adoption
+  --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
+  --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
+  --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
+  --repair-artifact PATH --repair-artifact-sha256 HASH  exact reviewed Foundry coordinator artifact
+  --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
+  --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
+  --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
+  --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
+  --detach            persistent supervisor mode for launch
+  --name NAME         scenario name
+  --manifest PATH     public manifest for secretless inspect/analyze
+  --run-id ID         exact signed campaign run for public analyze
+sim-testnet release 1.0
+
+Usage: sim-testnet <command> [options]
+
+Commands:
+  doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
+  release-lock  render or atomically refresh observed release-lock fields from clean repositories
+  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  history-adoption  capture a source-pinned request for strict startup after retained V2 history
+  relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
+  setup    converge the existing subnet and install contracts (dry-run unless approved)
+  launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  resume   reconcile the journal and continue an interrupted approved action
+  coordinator-repair  apply one bounded provisional coordinator implementation correction
+  fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  status   show process and finalized on-chain state
+  inspect  emit the complete public live-state view
+  analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
+  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  tail     multiplex structured process logs
+  stop     stop local processes only; preserves keys, evidence, and chain state
+  retire   plan future-effective operator retirement; dry-run by default
+
+Common options:
+  --config PATH       harness config (default sim-testnet/testnet.yml)
+  --state-dir PATH    persistent state root (default <config-dir>/runs)
+  --sn-repo PATH      repository discovery override
+  --server-repo PATH  repository discovery override
+  --operator-proxy-repo PATH  repository discovery override
+  --vault-repo PATH   repository discovery override
+  --platform-config-repo PATH  platform config repository override
+  --format human|json
+  --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
+  --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-continuation-plan PATH  exact saved continuation plan for adoption
+  --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
+  --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
+  --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
+  --repair-artifact PATH --repair-artifact-sha256 HASH  exact reviewed Foundry coordinator artifact
+  --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
+  --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
+  --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
+  --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
+  --detach            persistent supervisor mode for launch
+  --name NAME         scenario name
+  --manifest PATH     public manifest for secretless inspect/analyze
+  --run-id ID         exact signed campaign run for public analyze
+1.0
+1.0
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestProvisionalResumeRecordsActualDriverBeforeJournalAndKeepsInp2438977464/001/provisional-resumes/invocation-1752423273/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestProvisionalResumeRecordsActualDriverBeforeJournalAndKeepsInp2438977464/001/provisional-resumes/invocation-2609375667/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestProvisionalResumeReusesCurrentAndAncestorVerifiedWithoutDisp755193438/001/provisional-resumes/invocation-3412486594/provenance.json
+sim-testnet: provisional resume authenticated 1 verified local receipts; current topology readiness remains required
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestProvisionalResumeReusesCurrentAndAncestorVerifiedWithoutDisp755193438/002/provisional-resumes/invocation-85680957/provenance.json
+sim-testnet: provisional resume authenticated 1 verified local receipts; current topology readiness remains required
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestProvisionalResumeTamperedReceiptFailsWithoutDispatch3066448273/001/provisional-resumes/invocation-2618640731/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestProvisionalResumeKeepsDependenciesTopologyAndPendingStages230626331/001/provisional-resumes/invocation-1964719338/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestProvisionalResumeKeepsDependenciesTopologyAndPendingStages230626331/002/provisional-resumes/invocation-3427568881/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestProvisionalResumeHonestBuildAndNoFinalAcceptance838667594/001/provisional-resumes/invocation-1349418049/provenance.json
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 2/3 swarms; wave miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provider startup ready 2/3 swarms; wave miner-1,miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 2/3 swarms; wave miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provider startup ready 2/3 swarms; wave miner-1,miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestSupervisorStartupProviderWavesRespectRPCModeAndProvisionalAd3469975780/001/provisional-resumes/invocation-2731662932/provenance.json
+sim-testnet: provider startup ready 2/20 swarms; wave miner-1,miner-2
+sim-testnet: provider startup ready 4/20 swarms; wave miner-3,miner-4
+sim-testnet: provider startup ready 6/20 swarms; wave miner-5,miner-6
+sim-testnet: provider startup ready 8/20 swarms; wave miner-7,miner-8
+sim-testnet: provider startup ready 10/20 swarms; wave miner-9,miner-10
+sim-testnet: provider startup ready 12/20 swarms; wave miner-11,miner-12
+sim-testnet: provider startup ready 14/20 swarms; wave miner-13,miner-14
+sim-testnet: provider startup ready 16/20 swarms; wave miner-15,miner-16
+sim-testnet: provider startup ready 18/20 swarms; wave miner-17,miner-18
+sim-testnet: provider startup ready 20/20 swarms; wave miner-19,miner-20
+I0913 21:32:26.292719  677116 env.go:770] [env]try /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli429185884/001/runtime/operator-1/vault, [tls 127.0.1.1 127.0.1.1.crt]
+I0913 21:32:26.292850  677116 env.go:770] [env]try /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli429185884/001/runtime/operator-1/vault/tls, [127.0.1.1 127.0.1.1.crt]
+I0913 21:32:26.292937  677116 env.go:770] [env]try /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli429185884/001/runtime/operator-1/vault/tls/127.0.1.1, [127.0.1.1.crt]
+I0913 21:32:26.293476  677116 env.go:770] [env]try /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli429185884/001/runtime/operator-1/vault, [tls 127.0.1.1 127.0.1.1.key]
+I0913 21:32:26.293588  677116 env.go:770] [env]try /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli429185884/001/runtime/operator-1/vault/tls, [127.0.1.1 127.0.1.1.key]
+I0913 21:32:26.293697  677116 env.go:770] [env]try /home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9/job-5/tmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli429185884/001/runtime/operator-1/vault/tls/127.0.1.1, [127.0.1.1.key]
+panic: test timed out after 1h30m0s
+	running tests:
+		TestRuntimeEvidenceSetupCarryV2ResolvesOriginalFilesAfterSourceRevision (25s)
+		TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors (58s)
+		TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/changed-result (3s)
+		TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody (30s)
+		TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/wrong-deployment (6s)
+		TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources (1m8s)
+		TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/missing-result (1s)
+
+goroutine 33475 [running]:
+testing.(*M).startAlarm.func1()
+	/usr/local/go/src/testing/testing.go:2802 +0x605
+created by time.goFunc
+	/usr/local/go/src/time/sleep.go:215 +0x45
+
+goroutine 1 [chan receive]:
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:1993 +0x9ad
+testing.tRunner(0xc0007e5d48, 0xc000fc1a80)
+	/usr/local/go/src/testing/testing.go:2042 +0x256
+testing.runTests({0x64c3c58, 0x1a}, {0x6527669, 0x26}, 0xc000329aa0, {0xa3ee1a0, 0x896, 0x896}, {0xc2a1e5cb2b30fead, 0x4e95acf8c29, ...})
+	/usr/local/go/src/testing/testing.go:2583 +0x9ea
+testing.(*M).Run(0xc000ade140)
+	/usr/local/go/src/testing/testing.go:2443 +0xf4c
+github.com/urfoundation/sn/sim-testnet.TestMain(0xc000ade140)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/main_test.go:26 +0xef
+main.main()
+	_testmain.go:4442 +0x172
+
+goroutine 50 [select]:
+github.com/urnetwork/glog.(*fileSink).flushDaemon(0xa5e0818)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/glog/glog_file.go:461 +0x175
+created by github.com/urnetwork/glog.init.1 in goroutine 1
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/glog/glog_file.go:225 +0x318
+
+goroutine 7405 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0016b2248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestCampaignFinalSemanticEvidenceRequiresExactlyOneClosedObject(0xc0016b2248)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/observe_test.go:719 +0x47
+testing.tRunner(0xc0016b2248, 0x6e83760)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 735 [chan receive]:
+testing.(*T).Run(0xc000f6e488, {0x64812a1, 0xe}, 0xc01ea2efa8)
+	/usr/local/go/src/testing/testing.go:2109 +0xb3e
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources(0xc000f6e488)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:302 +0x16b
+testing.tRunner(0xc000f6e488, 0x6e86c40)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 733 [chan receive]:
+testing.(*T).Run(0xc000f6e008, {0x648a7ee, 0x10}, 0xc000329668)
+	/usr/local/go/src/testing/testing.go:2109 +0xb3e
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody(0xc000f6e008)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:173 +0x205
+testing.tRunner(0xc000f6e008, 0x6e86c38)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 734 [chan receive]:
+testing.(*T).Run(0xc000f6e248, {0x6481293, 0xe}, 0xc00c5ee300)
+	/usr/local/go/src/testing/testing.go:2109 +0xb3e
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors(0xc000f6e248)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:240 +0x205
+testing.tRunner(0xc000f6e248, 0x6e86c30)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8686 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012e2488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessAbsenceIsQuietAndRefused(0xc0012e2488)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:41 +0x3c
+testing.tRunner(0xc0012e2488, 0x6e862d0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 33413 [IO wait]:
+internal/poll.runtime_pollWait(0x77a12e9d4200, 0x72)
+	/usr/local/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0xc00ba88fa0, 0x72, 0x0)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:84 +0xb1
+internal/poll.(*pollDesc).waitRead(...)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Read(0xc00ba88f80, {0xc0138f8000, 0x1000, 0x1000})
+	/usr/local/go/src/internal/poll/fd_unix.go:165 +0x499
+net.(*netFD).Read(0xc00ba88f80, {0xc0138f8000, 0x1000, 0x1000})
+	/usr/local/go/src/net/fd_posix.go:68 +0x4b
+net.(*conn).Read(0xc020a9e0b8, {0xc0138f8000, 0x1000, 0x1000})
+	/usr/local/go/src/net/net.go:196 +0xad
+net/http.(*persistConn).Read(0xc015e16640, {0xc0138f8000, 0x1000, 0x1000})
+	/usr/local/go/src/net/http/transport.go:2174 +0x233
+bufio.(*Reader).fill(0xc000696de0)
+	/usr/local/go/src/bufio/bufio.go:113 +0x2a4
+bufio.(*Reader).Peek(0xc000696de0, 0x1)
+	/usr/local/go/src/bufio/bufio.go:152 +0xb0
+net/http.(*persistConn).readLoop(0xc015e16640)
+	/usr/local/go/src/net/http/transport.go:2330 +0x31b
+created by net/http.(*Transport).dialConn in goroutine 33412
+	/usr/local/go/src/net/http/transport.go:1994 +0x2fb1
+
+goroutine 8705 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00175fb08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RejectsDisconnectedPhases(0xc00175fb08)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:317 +0x3f
+testing.tRunner(0xc00175fb08, 0x6e85c70)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 525 [select, 29 minutes]:
+github.com/urnetwork/server.(*localBlobStore).reapLoop(0xc000a24000, {0x6eed298, 0xb540be0})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server/blob.go:1175 +0x239
+created by github.com/urnetwork/server.(*localBlobStore).SetLifecycle.func1 in goroutine 584
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server/blob.go:1161 +0xe5
+
+goroutine 12799 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001778b48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2ReservedCreationSeparatesReorgFromFinalConflict(0xc001778b48)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_reserved_creation_test.go:209 +0x3f
+testing.tRunner(0xc001778b48, 0x6e86aa8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 33414 [select]:
+net/http.(*persistConn).writeLoop(0xc015e16640)
+	/usr/local/go/src/net/http/transport.go:2652 +0x1b5
+created by net/http.(*Transport).dialConn in goroutine 33412
+	/usr/local/go/src/net/http/transport.go:1995 +0x303d
+
+goroutine 33415 [IO wait]:
+internal/poll.runtime_pollWait(0x77a12e50ce00, 0x72)
+	/usr/local/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0xc00ba89020, 0x72, 0x0)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:84 +0xb1
+internal/poll.(*pollDesc).waitRead(...)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Read(0xc00ba89000, {0xc0043b1000, 0x1000, 0x1000})
+	/usr/local/go/src/internal/poll/fd_unix.go:165 +0x499
+net.(*netFD).Read(0xc00ba89000, {0xc0043b1000, 0x1000, 0x1000})
+	/usr/local/go/src/net/fd_posix.go:68 +0x4b
+net.(*conn).Read(0xc020a9e0c0, {0xc0043b1000, 0x1000, 0x1000})
+	/usr/local/go/src/net/net.go:196 +0xad
+net/http.(*connReader).Read(0xc001528000, {0xc0043b1000, 0x1000, 0x1000})
+	/usr/local/go/src/net/http/server.go:812 +0x288
+bufio.(*Reader).fill(0xc000696e40)
+	/usr/local/go/src/bufio/bufio.go:113 +0x2a4
+bufio.(*Reader).Peek(0xc000696e40, 0x4)
+	/usr/local/go/src/bufio/bufio.go:152 +0xb0
+net/http.(*conn).serve(0xc000b26510, {0x6eedbd8, 0xc00d4b31a0})
+	/usr/local/go/src/net/http/server.go:2103 +0x10bb
+created by net/http.(*Server).Serve in goroutine 33221
+	/usr/local/go/src/net/http/server.go:3462 +0x88a
+
+goroutine 33474 [runnable]:
+encoding/json.(*decodeState).scanNext(0xc01ed7f1a8)
+	/usr/local/go/src/encoding/json/decode.go:286 +0x1d5
+encoding/json.(*decodeState).value(0xc01ed7f1a8, {0x5e4f660?, 0xc000711260?, 0x13dacb?})
+	/usr/local/go/src/encoding/json/decode.go:376 +0x152
+encoding/json.(*decodeState).unmarshal(0xc01ed7f1a8, {0x5e4f660, 0xc000711260})
+	/usr/local/go/src/encoding/json/decode.go:183 +0x285
+encoding/json.(*Decoder).Decode(0xc01ed7f180, {0x5e4f660, 0xc000711260})
+	/usr/local/go/src/encoding/json/stream.go:75 +0x39b
+github.com/urfoundation/sn/sim-testnet.decodeOrderedJSONObject({0xc01e894000, 0x14fde7, 0x150000})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/plan.go:143 +0x4ce
+github.com/urfoundation/sn/sim-testnet.persistedSetupPlanHash({0xc01e894000, 0x14fde7, 0x150000}, {0xc00bdcd200, 0x16})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/plan.go:217 +0x6f
+github.com/urfoundation/sn/sim-testnet.decodePersistedPlanWire({0xc01e894000, 0x14fde7, 0x150000})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/executor.go:806 +0x5c5
+github.com/urfoundation/sn/sim-testnet.decodePersistedPlanBytesForHistory({0xc01e894000, 0x14fde7, 0x150000}, 0x0)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/executor.go:782 +0x65
+github.com/urfoundation/sn/sim-testnet.decodePersistedPlanBytes(...)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/executor.go:776
+github.com/urfoundation/sn/sim-testnet.writeRunInputs(0xc017c91a00, {0xc00087ea80, 0xda}, 0xc01e458708, 0xc003e7f980)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/executor.go:835 +0x185
+github.com/urfoundation/sn/sim-testnet.(*campaignSuccessionFixture).writeCurrent(0xc01e6dbd40, 0xc018489448)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:113 +0x285
+github.com/urfoundation/sn/sim-testnet.newCampaignSuccessionFixture(0xc018489448)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:76 +0x1e85
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors.func1(0xc018489448)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:241 +0x54
+testing.tRunner(0xc018489448, 0xc00c5ee300)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 734
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 33409 [runnable]:
+encoding/hex.EncodeToString(...)
+	/usr/local/go/src/encoding/hex/hex.go:129
+github.com/urfoundation/sn/sim-testnet.canonicalHashHex({0x625cbe0, 0xc00841e2d0})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/config.go:1394 +0x1de
+github.com/urfoundation/sn/sim-testnet.actionIntentHash({{0xc01788d450, 0x10}, {0x646c048, 0x8}, {0xc01788d477, 0x9}, {0x6671c51, 0x4e}, 0xc010909950, {0x0, ...}, ...})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/plan.go:615 +0x154
+github.com/urfoundation/sn/sim-testnet.validatePlanBudget(0xc00aea8a08)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/plan.go:2192 +0x5777
+github.com/urfoundation/sn/sim-testnet.buildPlanWithRegistrationGeneration(0xc001f79c00, 0xc016ad4780, {{0xc0148b67b0, 0x2a}, {0xc0148b6810, 0x2a}, {0xc0148b6870, 0x2a}, {0xc0148b6900, 0x2a}, ...}, ...)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/plan.go:1858 +0x20745
+github.com/urfoundation/sn/sim-testnet.buildPlan(...)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/plan.go:803
+github.com/urfoundation/sn/sim-testnet.newCampaignSuccessionFixture(0xc017f25448)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:38 +0x639
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources.func1(0xc017f25448)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:303 +0x57
+testing.tRunner(0xc017f25448, 0xc01ea2efa8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 735
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8875 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00132a488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRequireIndependentCompleteValidatorRace(0xc00132a488)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:751 +0x34
+testing.tRunner(0xc00132a488, 0x6e86320)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 33457 [syscall]:
+syscall.Syscall(0x4a, 0x4, 0x0, 0x0)
+	/usr/local/go/src/syscall/syscall_linux.go:74 +0x2b
+syscall.Fsync(0x4)
+	/usr/local/go/src/syscall/zsyscall_linux_amd64.go:463 +0x39
+internal/poll.(*FD).Fsync.func1(...)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:18
+internal/poll.ignoringEINTR(...)
+	/usr/local/go/src/internal/poll/fd_posix.go:74
+internal/poll.(*FD).Fsync(0xc025c1a540)
+	/usr/local/go/src/internal/poll/fd_fsync_posix.go:17 +0x19b
+os.(*File).Sync(0xc0003051c0)
+	/usr/local/go/src/os/file_posix.go:167 +0x74
+github.com/urfoundation/sn/sim-testnet.atomicWrite({0xc001efe3c0, 0xf0}, {0xc0172fc000, 0x71de7, 0xc1f60}, 0x1a4)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/state.go:50 +0x1e5
+github.com/urfoundation/sn/sim-testnet.writeRunInputs(0xc000ccfa00, {0xc00087f260, 0xd9}, 0xc0151f8e08, 0xc00a28ed40)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/executor.go:869 +0x12a5
+github.com/urfoundation/sn/sim-testnet.(*campaignSuccessionFixture).writeCurrent(0xc0181efbc0, 0xc015376908)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:113 +0x285
+github.com/urfoundation/sn/sim-testnet.TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody.func1(0xc015376908)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/campaign_succession_test.go:188 +0xf3f
+testing.tRunner(0xc015376908, 0xc000329668)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 733
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8902 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0016b2fc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversActualStartupOwnersV2(0xc0016b2fc8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_startup_owner_v2_test.go:14 +0x3f
+testing.tRunner(0xc0016b2fc8, 0x6e85b78)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12797 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0017786c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceV2ReservedCreationRejectsForgedIntentAndForeignDeployment(0xc0017786c8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_reserved_creation_test.go:113 +0x3f
+testing.tRunner(0xc0017786c8, 0x6e86a88)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8730 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00110d8c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionRejectsHistoryPopulationPartitionDrift(0xc00110d8c8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_history_population_test.go:165 +0x3f
+testing.tRunner(0xc00110d8c8, 0x6e85ce0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8703 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00126f448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage(0xc00126f448)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:263 +0x3f
+testing.tRunner(0xc00126f448, 0x6e85c60)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8876 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00132a6c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift(0xc00132a6c8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:764 +0x3f
+testing.tRunner(0xc00132a6c8, 0x6e86310)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11268 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00194b688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPlanRevisionReserveRepairSuccessionRequiresDurableIntentBeforeDispatch(0xc00194b688)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/reserve_repair_succession_test.go:389 +0x3f
+testing.tRunner(0xc00194b688, 0x6e858d0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8491 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001dc7688)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRequiresIndependentPopulation(0xc001dc7688)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:337 +0x3f
+testing.tRunner(0xc001dc7688, 0x6e85aa8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12768 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001dc6008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender(0xc001dc6008)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_launch_config_test.go:109 +0x3f
+testing.tRunner(0xc001dc6008, 0x6e86900)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8487 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001dc6248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRequiresIndependentMetadata(0xc001dc6248)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:162 +0x3c
+testing.tRunner(0xc001dc6248, 0x6e85aa0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8877 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00132a908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRejectSubtensorInfrastructureScopeDrift(0xc00132a908)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:905 +0x3f
+testing.tRunner(0xc00132a908, 0x6e86318)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8881 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00132b208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionCoversLaunchServerSourcesInBothGates(0xc00132b208)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_launch_source_test.go:47 +0x3f
+testing.tRunner(0xc00132b208, 0x6e85c10)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8879 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00132ad88)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRequireUncachedAggregateBodies(0xc00132ad88)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:1095 +0x2f
+testing.tRunner(0xc00132ad88, 0x6e86330)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 4854 [syscall, 78 minutes]:
+os/signal.signal_recv()
+	/usr/local/go/src/runtime/sigqueue.go:152 +0x98
+os/signal.loop()
+	/usr/local/go/src/os/signal/signal_unix.go:23 +0x1d
+created by os/signal.Notify.func1.1 in goroutine 4867
+	/usr/local/go/src/os/signal/signal.go:152 +0x47
+
+goroutine 8571 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00126e008)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseSemanticCensusRequiresCompleteSettlementClosureOwners(0xc00126e008)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_closure_test.go:158 +0x3f
+testing.tRunner(0xc00126e008, 0x6e864f0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12481 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001628248)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2ClosedAncestorAttemptsKeepOriginalSetup(0xc001628248)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_history_v2_test.go:88 +0x3f
+testing.tRunner(0xc001628248, 0x6e86960)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8702 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00126efc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RejectsEveryNewFamilyOmission(0xc00126efc8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:232 +0x3f
+testing.tRunner(0xc00126efc8, 0x6e85c78)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8704 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00175f8c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RejectsMissingExecutableModes(0xc00175f8c8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:300 +0x3f
+testing.tRunner(0xc00175f8c8, 0x6e85c80)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8722 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00175fd48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RejectsSelectorOwnershipDrift(0xc00175fd48)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:341 +0x3f
+testing.tRunner(0xc00175fd48, 0x6e85c88)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11217 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00194afc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPlanRevisionReserveRepairSuccessionNeverReusesRetiredSequence(0xc00194afc8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/reserve_repair_succession_test.go:331 +0x3f
+testing.tRunner(0xc00194afc8, 0x6e858b0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8723 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00110d208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionEvidenceV2RequiresCompleteSourceCensus(0xc00110d208)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_evidence_v2_test.go:365 +0x3f
+testing.tRunner(0xc00110d208, 0x6e85c90)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8492 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc001dc7b08)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift(0xc001dc7b08)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_capture_metadata_test.go:417 +0x3f
+testing.tRunner(0xc001dc7b08, 0x6e85a90)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8687 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012e2908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessRejectsInvalidIdentifiers(0xc0012e2908)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:50 +0x3c
+testing.tRunner(0xc0012e2908, 0x6e862e0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 7473 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00175f448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPlanCompatibilityFixtureProjectsExactHistoricalOwnership(0xc00175f448)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/plan_compatibility_fixture_test.go:97 +0x47
+testing.tRunner(0xc00175f448, 0x6e85798)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8878 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00132ab48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions(0xc00132ab48)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:942 +0x3f
+testing.tRunner(0xc00132ab48, 0x6e86300)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8729 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00110d448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionRequiresIsolatedHistoryPopulations(0xc00110d448)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_history_population_test.go:141 +0x3f
+testing.tRunner(0xc00110d448, 0x6e85d00)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8880 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00132afc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies(0xc00132afc8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_test.go:1108 +0x3f
+testing.tRunner(0xc00132afc8, 0x6e862f8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 11266 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00194b208)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestPlanRevisionReserveRepairSuccessionCannotCreateBudgetOrTranche(0xc00194b208)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/reserve_repair_succession_test.go:351 +0x2f
+testing.tRunner(0xc00194b208, 0x6e85890)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12786 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc000f50fc8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceLaunchV2TemplateRejectsMissingAndForeignCreation(0xc000f50fc8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_launch_config_test.go:294 +0x3f
+testing.tRunner(0xc000f50fc8, 0x6e86908)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8786 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0004a4488)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessRejectsMalformedIdentityRecords(0xc0004a4488)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:116 +0x3f
+testing.tRunner(0xc0004a4488, 0x6e862e8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8689 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012e3d48)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessSignalTrapPreservesIdentity(0xc0012e3d48)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:82 +0x3c
+testing.tRunner(0xc0012e3d48, 0x6e862f0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8688 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc0012e3448)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestReleaseGateJobsProcessPreservesLiveIdentity(0xc0012e3448)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_jobs_process_test.go:62 +0x3c
+testing.tRunner(0xc0012e3448, 0x6e862d8)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 12501 [runnable]:
+encoding/json.stateBeginValueOrEmpty(0xc006226fe8, 0x7b)
+	/usr/local/go/src/encoding/json/scanner.go:206 +0xab
+encoding/json.checkValid({0xc0083d8fb6, 0x6f3, 0x50?}, 0xc006226fe8)
+	/usr/local/go/src/encoding/json/scanner.go:37 +0x16d
+encoding/json.Unmarshal({0xc0083d8fb6, 0x6f3, 0x2e4a}, {0x5b785e0, 0xc0053410e0})
+	/usr/local/go/src/encoding/json/decode.go:107 +0xb9
+github.com/ethereum/go-ethereum/accounts/abi.(*Argument).UnmarshalJSON(0xc006226f30, {0xc0083d8fb6, 0x6f3, 0x2e4a})
+	/home/by/go/pkg/mod/github.com/ethereum/go-ethereum@v1.17.0/accounts/abi/argument.go:48 +0xc9
+encoding/json.(*decodeState).object(0xc006226480, {0x60cfba0?, 0xc006226f30?, 0x90?})
+	/usr/local/go/src/encoding/json/decode.go:610 +0xb47
+encoding/json.(*decodeState).value(0xc006226480, {0x60cfba0?, 0xc006226f30?, 0x0?})
+	/usr/local/go/src/encoding/json/decode.go:380 +0xa5
+encoding/json.(*decodeState).array(0xc006226480, {0x5bd82e0?, 0xc0084c0fe0?, 0xc001804da8?})
+	/usr/local/go/src/encoding/json/decode.go:561 +0x87d
+encoding/json.(*decodeState).value(0xc006226480, {0x5bd82e0?, 0xc0084c0fe0?, 0x3?})
+	/usr/local/go/src/encoding/json/decode.go:370 +0x10e
+encoding/json.(*decodeState).object(0xc006226480, {0x6297600?, 0xc0084c0fa8?, 0x68?})
+	/usr/local/go/src/encoding/json/decode.go:767 +0x151a
+encoding/json.(*decodeState).value(0xc006226480, {0x6297600?, 0xc0084c0fa8?, 0x4?})
+	/usr/local/go/src/encoding/json/decode.go:380 +0xa5
+encoding/json.(*decodeState).array(0xc006226480, {0x5c039a0?, 0xc000f02f48?, 0xc00180548f?})
+	/usr/local/go/src/encoding/json/decode.go:561 +0x87d
+encoding/json.(*decodeState).value(0xc006226480, {0x5c039a0?, 0xc000f02f48?, 0x6b7b25?})
+	/usr/local/go/src/encoding/json/decode.go:370 +0x10e
+encoding/json.(*decodeState).unmarshal(0xc006226480, {0x5c039a0, 0xc000f02f48})
+	/usr/local/go/src/encoding/json/decode.go:183 +0x285
+encoding/json.Unmarshal({0xc0083d8000, 0x2602, 0x3e00}, {0x5c039a0, 0xc000f02f48})
+	/usr/local/go/src/encoding/json/decode.go:113 +0x22f
+github.com/ethereum/go-ethereum/accounts/abi.(*ABI).UnmarshalJSON(0xc01b718b48, {0xc0083d8000, 0x2602, 0x3e00})
+	/home/by/go/pkg/mod/github.com/ethereum/go-ethereum@v1.17.0/accounts/abi/abi.go:160 +0xb3
+encoding/json.(*decodeState).array(0xc014dd2a28, {0x6252c00?, 0xc01b718b48?, 0xc001805b27?})
+	/usr/local/go/src/encoding/json/decode.go:513 +0x683
+encoding/json.(*decodeState).value(0xc014dd2a28, {0x6252c00?, 0xc01b718b48?, 0x2602?})
+	/usr/local/go/src/encoding/json/decode.go:370 +0x10e
+encoding/json.(*decodeState).unmarshal(0xc014dd2a28, {0x6252c00, 0xc01b718b48})
+	/usr/local/go/src/encoding/json/decode.go:183 +0x285
+encoding/json.(*Decoder).Decode(0xc014dd2a00, {0x6252c00, 0xc01b718b48})
+	/usr/local/go/src/encoding/json/stream.go:75 +0x39b
+github.com/ethereum/go-ethereum/accounts/abi.JSON({_, _})
+	/home/by/go/pkg/mod/github.com/ethereum/go-ethereum@v1.17.0/accounts/abi/abi.go:52 +0x185
+github.com/urfoundation/sn/sim-testnet.buildValidatorEvidenceDeploymentFromArtifact(0xc001806b50, 0x3b1, {0x8f, 0x9c, 0xf8, 0x56, 0xbf, 0x55, 0x8a, 0x14, ...}, ...)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/evidence_deployment.go:102 +0x5c6
+github.com/urfoundation/sn/sim-testnet.validatorEvidencePayloadsForPlan(0xc014ea8e08)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/evidence_deployment.go:310 +0xa92
+github.com/urfoundation/sn/sim-testnet.validateValidatorEvidencePlan(0xc014ea8e08)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/evidence_deployment.go:331 +0x8d
+github.com/urfoundation/sn/sim-testnet.validatePlanBudget(0xc014ea8e08)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/plan.go:2023 +0x1b6
+github.com/urfoundation/sn/sim-testnet.decodePersistedPlanBytesForHistory({0xc0159e6000, 0x15c481, 0x15e000}, 0x1)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/executor.go:787 +0x9d
+github.com/urfoundation/sn/sim-testnet.readValidatorEvidenceHistoricalPlan({0xc0168bc620, 0xd9}, {0xc017b51c20, 0x42})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/evidence_carry.go:129 +0x1fb
+github.com/urfoundation/sn/sim-testnet.runtimeEvidenceSetupSourcePlanV2(0xc016b5d200, 0xc015430708, {0xc0168bc620, 0xd9}, 0xc001248840, 0xc0053337a0, {0xc0076f3300, 0x18c4, 0x1980}, 0xc016eb6c30, ...)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_v2.go:33 +0x485
+github.com/urfoundation/sn/sim-testnet.runtimeEvidenceV2ResolvedConfig(0xc016b5d200, {0xc0168bc620, 0xd9})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_inputs_v2.go:227 +0x6be
+github.com/urfoundation/sn/sim-testnet.TestRuntimeEvidenceSetupCarryV2ResolvesOriginalFilesAfterSourceRevision(0xc001628d88)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/runtime_evidence_carry_v2_test.go:229 +0xd68
+testing.tRunner(0xc001628d88, 0x6e86990)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 8884 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00132b8c8)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestProducerGateStateSelectionKeepsColdFixturesInSemanticJob(0xc00132b8c8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/release_gate_launch_source_test.go:125 +0x3f
+testing.tRunner(0xc00132b8c8, 0x6e85ca0)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+
+goroutine 33221 [IO wait]:
+internal/poll.runtime_pollWait(0x77a12eb10600, 0x72)
+	/usr/local/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0xc0091fe8a0, 0x72, 0x0)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:84 +0xb1
+internal/poll.(*pollDesc).waitRead(...)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Accept(0xc0091fe880)
+	/usr/local/go/src/internal/poll/fd_unix.go:613 +0x4ea
+net.(*netFD).accept(0xc0091fe880)
+	/usr/local/go/src/net/fd_unix.go:150 +0x45
+net.(*TCPListener).accept(0xc009f99580)
+	/usr/local/go/src/net/tcpsock_posix.go:159 +0x4e
+net.(*TCPListener).Accept(0xc009f99580)
+	/usr/local/go/src/net/tcpsock.go:387 +0x65
+net/http.(*Server).Serve(0xc002396500, {0x6ee4220, 0xc009f99580})
+	/usr/local/go/src/net/http/server.go:3432 +0x610
+net/http/httptest.(*Server).goServe.func1()
+	/usr/local/go/src/net/http/httptest/server.go:341 +0xb3
+created by net/http/httptest.(*Server).goServe in goroutine 12501
+	/usr/local/go/src/net/http/httptest/server.go:339 +0xa5
+
+goroutine 12952 [chan receive, 36 minutes]:
+testing.(*testState).waitParallel(0xc00097f540)
+	/usr/local/go/src/testing/testing.go:2220 +0x125
+testing.(*T).Parallel(0xc00200a908)
+	/usr/local/go/src/testing/testing.go:1804 +0x533
+github.com/urfoundation/sn/sim-testnet.TestStrictHistoryAdoptionCapturesOriginalSourceAndBindsExactLaunch(0xc00200a908)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/strict_history_adoption_test.go:44 +0x3f
+testing.tRunner(0xc00200a908, 0x6e86f70)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+FAIL	github.com/urfoundation/sn/sim-testnet	5400.838s
+FAIL

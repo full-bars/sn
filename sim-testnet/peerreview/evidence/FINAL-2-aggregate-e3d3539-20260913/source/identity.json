@@ -1,0 +1,34 @@
+{
+  "capture_source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate",
+  "failed_phases": [
+    "sn-simulator-race",
+    "server-unit",
+    "server-db"
+  ],
+  "final_acceptance": false,
+  "final_source_freeze_exit": 1,
+  "final_source_freeze_reason": "Canonical SN origin/main advanced independently to 928b7d5179fd42ad419892a0676413875b6ca9c4; final admission refused e3d before producing a complete final inventory.",
+  "final_source_freeze_stderr_sha256": "82fe4f9bcf264dc50b650d8ff0bda7fca74a14bfe7d8f55e8c93d67be4e1c470",
+  "final_source_freeze_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "final_source_inventory_complete": false,
+  "gate_root_source": "/home/by/urnetwork/temp/sn-warp-admission-final-gates-prepared-20260913T1837Z/aggregate/tmp/urnetwork-release-gate.uilBQZm9",
+  "initial_source_freeze_exit": 0,
+  "initial_source_freeze_sha256": "d7eeca85c0dc43cfc1652885c1621026a37fa662523157c186a426ee11c81845",
+  "outer": {
+    "exit": 1,
+    "finished_at": "2026-09-13T23:14:29Z",
+    "started_at": "2026-09-13T19:37:21Z"
+  },
+  "phase_joins": {
+    "count": 23,
+    "nonzero": 3,
+    "passed": 20
+  },
+  "release_lock_sha256": "ddb22d0e1e525affac5b87cbba29cc70cb8d3e4afb9668507033d6fee907b51c",
+  "schema": "final-aggregate-gate-identity-v1",
+  "sn_commit": "e3d3539dd761f3e04d2c28e281b01735fa297f9c",
+  "source_pair_rows": 13,
+  "source_pair_sha256": "87e65fa4b2dc696b9c9ef3f57da1c1a4719eb8f2af85ae13a9ed04ae065e4b29",
+  "source_pair_source": "/home/by/urnetwork/temp/sn-dependency-ancestry-admission-20260913/final-source-sync-e3d3539-20260913T1935Z/source-pair-e3d3539.tsv",
+  "verdict": "FAIL"
+}

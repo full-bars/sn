@@ -1,0 +1,20 @@
+?   	github.com/urfoundation/sn/cli/miner	[no test files]
+?   	github.com/urfoundation/sn/cli/snclaim	[no test files]
+?   	github.com/urfoundation/sn/cli/validator	[no test files]
+ok  	github.com/urfoundation/sn/clientauth	0.164s
+?   	github.com/urfoundation/sn/cmd/sp2	[no test files]
+ok  	github.com/urfoundation/sn/crv4	192.184s
+ok  	github.com/urfoundation/sn/merkle	0.022s
+ok  	github.com/urfoundation/sn/miner	1.923s
+ok  	github.com/urfoundation/sn/miner/onchain	0.053s
+ok  	github.com/urfoundation/sn/payoutartifact	0.012s
+ok  	github.com/urfoundation/sn/protocol	0.181s
+ok  	github.com/urfoundation/sn/scripts/qualification	0.893s
+ok  	github.com/urfoundation/sn/scripts/server-fixture	6.318s
+ok  	github.com/urfoundation/sn/sim-testnet	2728.346s
+ok  	github.com/urfoundation/sn/sim-testnet/gencontracts	0.044s
+ok  	github.com/urfoundation/sn/sim-testnet/sourceguard	0.008s
+ok  	github.com/urfoundation/sn/ss58	0.004s
+ok  	github.com/urfoundation/sn/stabi	1.571s
+ok  	github.com/urfoundation/sn/stctl	0.087s
+ok  	github.com/urfoundation/sn/validator	1410.753s
