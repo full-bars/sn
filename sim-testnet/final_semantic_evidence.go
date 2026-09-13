@@ -2144,8 +2144,8 @@ func verifyFinalCRv4CycleFrom(evidence *FinalSemanticEvidence, validatorID uint6
 		if !ok || ownership.UID != pool.UID || masked[pool.UID] || seenCandidate[pool.UID] {
 			return fmt.Errorf("pool weight no=%d is not bound to an unmasked owned UID", pool.NoID)
 		}
-		if pool.ObservedAtBlock != cycle.EVMSnapshot.Number || pool.ArtifactSigner != ownership.PayoutRootSigner || pool.RootCommitter != ownership.PayoutRootSigner || pool.RootSigner != ownership.PayoutRootSigner {
-			return fmt.Errorf("pool weight no=%d artifact/root authority or observation checkpoint differs from the active operator version: observed=%d snapshot=%d artifact=%q committer=%q signer=%q want=%q", pool.NoID, pool.ObservedAtBlock, cycle.EVMSnapshot.Number, pool.ArtifactSigner, pool.RootCommitter, pool.RootSigner, ownership.PayoutRootSigner)
+		if pool.ObservedAtBlock != cycle.EVMSnapshot.Number || pool.RootCommitter != ownership.PayoutRootSigner || pool.RootSigner != ownership.PayoutRootSigner {
+			return fmt.Errorf("pool weight no=%d root authority or observation checkpoint differs from the active operator version: observed=%d snapshot=%d artifact=%q committer=%q signer=%q want=%q", pool.NoID, pool.ObservedAtBlock, cycle.EVMSnapshot.Number, pool.ArtifactSigner, pool.RootCommitter, pool.RootSigner, ownership.PayoutRootSigner)
 		}
 		rawScore, eligible, err := verifyFinalPoolWeight(evidence, cycle.SettlementEpoch, cycle.QualityMinimumPPM, cycle.QualityMaximumPPM, pool)
 		if err != nil {
@@ -3518,6 +3518,13 @@ func VerifyFinalSemanticArtifacts(ctx context.Context, evidence *FinalSemanticEv
 	if err != nil {
 		return err
 	}
+	artifactSigners, err := finalOperatorArtifactSigners(pathAuthority.identities, evidence.DeploymentID, evidence.ExpectedOperators)
+	if err != nil {
+		return err
+	}
+	if err := verifyFinalArtifactSignerProvenance(evidence, artifactSigners); err != nil {
+		return err
+	}
 	if len(replayOwners) == 0 {
 		if err := verifyFinalSettlementClosureArtifactsWithAuthority(evidence, cache, pathAuthority); err != nil {
 			return err
@@ -3558,7 +3565,9 @@ func VerifyFinalSemanticArtifacts(ctx context.Context, evidence *FinalSemanticEv
 		}
 		if item.payout != nil {
 			pool := finalPoolByNO(evidence, item.payout.NoID)
-			if err := verifyFinalPayoutArtifact(evidence, pool, item.payout, tiers, policy.Verify.ReliabilityAMin, data); err != nil {
+			expected := *item.payout
+			expected.ArtifactSigner = artifactSigners[item.payout.NoID]
+			if err := verifyFinalPayoutArtifact(evidence, pool, &expected, tiers, policy.Verify.ReliabilityAMin, data); err != nil {
 				return fmt.Errorf("payout artifact %s: %w", item.locator.URI, err)
 			}
 		}
@@ -4854,6 +4863,7 @@ func verifyFinalPathProofArtifact(proof *FinalValidatorPathProofEvidence, data [
 // Carries the independently authenticated commitment and, when a validator
 // audited demand, the exact source interval signed into that decision.
 type finalPayoutArtifactExpectation struct {
+	ArtifactSigner common.Address
 	NoID             uint64
 	Epoch            uint64
 	UsageBytes       uint64
@@ -5140,8 +5150,8 @@ func verifyFinalPayoutArtifact(evidence *FinalSemanticEvidence, pool *FinalPoolU
 	if artifact.DeploymentID != evidence.DeploymentID || artifact.ChainID != evidence.ChainID || artifact.Netuid != evidence.Netuid || !strings.EqualFold(artifact.GenesisHash, evidence.GenesisHash) || !strings.EqualFold(artifact.PolicyHash, evidence.PolicyHash) || !strings.EqualFold(artifact.Coordinator.Hex(), evidence.Deployment.CoordinatorProxy) || !strings.EqualFold(artifact.SettlementVault.Hex(), evidence.Deployment.SettlementVault) || artifact.NoID != expected.NoID || artifact.Epoch != expected.Epoch {
 		return errors.New("payout artifact deployment, policy, operator, or epoch mismatch")
 	}
-	if strings.ToLower(artifact.Signer.Hex()) != pool.PayoutRootSigner {
-		return errors.New("payout artifact signer is not the authorized operator root signer")
+	if pool.NoID != expected.NoID || expected.ArtifactSigner == (common.Address{}) || artifact.Signer != expected.ArtifactSigner {
+		return errors.New("payout artifact signer differs from its authenticated operator artifact identity")
 	}
 	if artifact.ReliabilityAMin != reliabilityAMin {
 		return fmt.Errorf("payout artifact reliability a_min=%d, want signed policy value %d", artifact.ReliabilityAMin, reliabilityAMin)
@@ -5639,7 +5649,7 @@ func RenderFinalSemanticEvidenceMarkdown(evidence *FinalSemanticEvidence) ([]byt
 		fmt.Fprintln(&out)
 	}
 	fmt.Fprintf(&out, "### Deposit, payout, and carry conservation\n\n")
-	fmt.Fprintf(&out, "Every linked payout artifact is canonical and signed by that NO's authorized root signer. Its operator/epoch/policy snapshot, exact provider-census hashes, policy `A_min`, and (where the artifact supplies the next demand audit) source start/end heads are independently replayed; every provider and Merkle leaf joins one exact topology NO and canonical SS58 payout coldkey, with no omitted/extra authenticated rows or duplicate payees. The NO retains the whitepaper's authority over its within-pool allocation; these checks bind the identities and source data to which that choice applies.\n\n")
+	fmt.Fprintf(&out, "Every linked payout artifact is canonical and signed by that NO's configured artifact identity. The registered root signer separately authorizes the exact artifact hash and payout root on chain. Its operator/epoch/policy snapshot, exact provider-census hashes, policy `A_min`, and (where the artifact supplies the next demand audit) source start/end heads are independently replayed; every provider and Merkle leaf joins one exact topology NO and canonical SS58 payout coldkey, with no omitted/extra authenticated rows or duplicate payees. The NO retains the whitepaper's authority over its within-pool allocation; these checks bind the identities and source data to which that choice applies.\n\n")
 	fmt.Fprintf(&out, "| Epoch | NO | Captured | Carry in | Funded | Entitlement total | Claimed | Claim-tx paid | Deferred-credit snapshot | Outstanding | Carry out | Root |\n|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|\n")
 	for _, row := range evidence.Epochs {
 		root := row.RootDisposition

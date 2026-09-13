@@ -299,7 +299,7 @@ func CollectFinalSemanticInputs(ctx context.Context, cfg *ResolvedConfig, stateD
 	sort.Slice(collected.ClosedInputBundles, func(i, j int) bool {
 		return collected.ClosedInputBundles[i].URI < collected.ClosedInputBundles[j].URI
 	})
-	collected.Payouts, collected.LifecyclePayouts, err = collectFinalPayoutArtifacts(ctx, cfg, runRoot, terminal, result.AcceptanceWindow)
+	collected.Payouts, collected.LifecyclePayouts, err = collectFinalPayoutArtifacts(ctx, cfg, runRoot, terminal, result.AcceptanceWindow, pathAuthority.identities)
 	if err != nil {
 		return nil, err
 	}
@@ -1083,7 +1083,17 @@ func verifyFinalLifecyclePayoutArtifact(requirement finalLifecyclePayoutRequirem
 	return nil
 }
 
-func collectFinalPayoutArtifacts(ctx context.Context, cfg *ResolvedConfig, runRoot string, terminal *ScenarioObservation, window *ScenarioAcceptanceWindow) ([]FinalCollectedPayoutArtifact, []FinalCollectedPayoutArtifact, error) {
+func collectFinalPayoutArtifacts(ctx context.Context, cfg *ResolvedConfig, runRoot string, terminal *ScenarioObservation, window *ScenarioAcceptanceWindow, identities *finalPublicIdentities) ([]FinalCollectedPayoutArtifact, []FinalCollectedPayoutArtifact, error) {
+	client := &http.Client{Timeout: time.Duration(cfg.Config.Scenarios.Adversaries.RequestTimeoutMilliseconds) * time.Millisecond}
+	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	return collectFinalPayoutArtifactsWithClient(ctx, cfg, runRoot, terminal, window, identities, client)
+}
+
+func collectFinalPayoutArtifactsWithClient(ctx context.Context, cfg *ResolvedConfig, runRoot string, terminal *ScenarioObservation, window *ScenarioAcceptanceWindow, identities *finalPublicIdentities, client *http.Client) ([]FinalCollectedPayoutArtifact, []FinalCollectedPayoutArtifact, error) {
+	artifactSigners, err := finalOperatorArtifactSigners(identities, cfg.Config.Deployment.DeploymentID, cfg.Config.Topology.Operators)
+	if err != nil {
+		return nil, nil, err
+	}
 	requiredLifecycle, err := finalLifecyclePayoutRequirements(terminal)
 	if err != nil {
 		return nil, nil, err
@@ -1096,8 +1106,6 @@ func collectFinalPayoutArtifacts(ctx context.Context, cfg *ResolvedConfig, runRo
 	for _, operator := range terminal.Operators {
 		operatorObservation[operator.NoID] = operator
 	}
-	client := &http.Client{Timeout: time.Duration(cfg.Config.Scenarios.Adversaries.RequestTimeoutMilliseconds) * time.Millisecond}
-	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	lastEpoch := window.FirstEpoch + window.EpochCount - 1
 	wantFirst := window.FirstEpoch - 1
 	if terminal.DishonestDeposit != nil && terminal.DishonestDepositValid {
@@ -1141,7 +1149,7 @@ func collectFinalPayoutArtifacts(ctx context.Context, cfg *ResolvedConfig, runRo
 			key := fmt.Sprintf("%d/%d", decoded.Epoch, noID)
 			requirement, lifecycleRequired := requiredLifecycle[key]
 			inAcceptanceSource := decoded.Epoch >= wantFirst && decoded.Epoch <= lastEpoch
-			if decoded.NoID != uint64(noID) || decoded.DeploymentID != cfg.Config.Deployment.DeploymentID || decoded.ChainID != cfg.ChainID || decoded.Netuid != cfg.Netuid || !strings.EqualFold(decoded.GenesisHash, cfg.Public.Chain.GenesisHash) || !strings.EqualFold(decoded.PolicyHash, cfg.PolicyHash) || !strings.EqualFold(decoded.Signer.Hex(), view.RootSigner) || decoded.ContentHash != contentHash || !inAcceptanceSource && (!lifecycleRequired || contentHash != requirement.contentHash) {
+			if decoded.NoID != uint64(noID) || decoded.DeploymentID != cfg.Config.Deployment.DeploymentID || decoded.ChainID != cfg.ChainID || decoded.Netuid != cfg.Netuid || !strings.EqualFold(decoded.GenesisHash, cfg.Public.Chain.GenesisHash) || !strings.EqualFold(decoded.PolicyHash, cfg.PolicyHash) || decoded.Signer != artifactSigners[uint64(noID)] || decoded.ContentHash != contentHash || !inAcceptanceSource && (!lifecycleRequired || contentHash != requirement.contentHash) {
 				continue
 			}
 			if inAcceptanceSource && seen[key] {

@@ -1162,6 +1162,7 @@ func TestReleaseSemanticCensusPinsCompleteRegressionSourceGroups(t *testing.T) {
 		{pattern: "final_semantic_public_*v2_test.go", required: "^Test"},
 		{pattern: "final_semantic_native*_test.go", required: "^Test"},
 		{pattern: "final_semantic_registration_test.go", required: "^Test"},
+		{pattern: "final_semantic_artifact_authority_test.go", required: "^Test"},
 		{pattern: "final_semantic_source_builder_test.go", required: "^TestFinalSemanticBuilder"},
 		{pattern: "final_semantic_evidence_test.go", required: "^TestFinal(SemanticArtifactVerificationCache|AttemptFixtureLedger)"},
 		{pattern: "final_semantic_chain_fixture_test.go", required: "^Test"},

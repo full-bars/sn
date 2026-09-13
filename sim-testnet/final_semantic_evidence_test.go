@@ -577,6 +577,21 @@ func attachFinalAttemptCuts(t *testing.T, artifact *validatorpkg.ReleaseMeasurem
 func TestFinalSemanticEvidenceBuildRenderAndArtifacts(t *testing.T) {
 	t.Parallel()
 	source, artifacts := finalSemanticFixture(t)
+	for _, cycle := range source.Validators[0].Cycles {
+		for _, pool := range cycle.Pools {
+			if pool.ArtifactSigner == pool.RootSigner || pool.RootCommitter != pool.RootSigner {
+				t.Fatal("full fixture does not distinguish artifact provenance from root transaction authority")
+			}
+		}
+	}
+	for _, field := range []string{"committer", "root-signer"} {
+		candidate := finalSemanticClone(t, &source)
+		pool := &candidate.Validators[0].Cycles[0].Pools[0]
+		if field == "committer" { pool.RootCommitter = pool.ArtifactSigner } else { pool.RootSigner = pool.ArtifactSigner }
+		if _, err := BuildFinalSemanticEvidence(*candidate); err == nil || !strings.Contains(err.Error(), "root authority") {
+			t.Fatalf("artifact key substituted for %s authority: %v", field, err)
+		}
+	}
 	firstDraft, err := BuildFinalSemanticEvidence(source)
 	if err != nil {
 		t.Fatal(err)
@@ -610,6 +625,9 @@ func TestFinalSemanticEvidenceBuildRenderAndArtifacts(t *testing.T) {
 	markdown, err := RenderFinalSemanticEvidenceMarkdown(first)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !bytes.Contains(markdown, []byte("configured artifact identity")) || !bytes.Contains(markdown, []byte("registered root signer separately authorizes")) || bytes.Contains(markdown, []byte("signed by that NO's authorized root signer")) {
+		t.Fatal("report conflates artifact provenance and root transaction authorization")
 	}
 	firstNativePayout := first.PublicVerification.NativePayouts[0]
 	firstNativeUID := firstNativePayout.UIDs[0]
@@ -2559,12 +2577,18 @@ func buildFinalSemanticFixture(t *testing.T) (FinalSemanticEvidence, map[string]
 	bindingLocator := artifact("fleet-binding-manifest", "fleet-bindings.json", bindingBytes)
 	topology := FinalTopologyEvidence{MinerSDKInstances: 1000, MinerSwarmProcesses: finalMinerSwarmProcessCount, HeadCandidateFleets: 202, HeadSlots: 200, ValidatorProcesses: 2, OperatorPools: 2, MinerManifestHash: minerLocator.ContentHash, MinerManifest: minerLocator, BindingManifestHash: bindingLocator.ContentHash, BindingManifest: bindingLocator}
 	payoutKeys := make([]*ecdsa.PrivateKey, 0, 2)
+	rootKeys := make([]*ecdsa.PrivateKey, 0, 2)
 	for i := 0; i < 2; i++ {
 		key, keyErr := crypto.ToECDSA(bytes.Repeat([]byte{byte(i + 1)}, 32))
 		if keyErr != nil {
 			t.Fatal(keyErr)
 		}
-		payoutKeys = append(payoutKeys, key)
+		rootKeys = append(rootKeys, key)
+		artifactKey, keyErr := crypto.HexToECDSA(strings.TrimPrefix(fixtureSecrets.EVM[fmt.Sprintf("operator-%d-artifact", i+1)].PrivateKeyHex, "0x"))
+		if keyErr != nil {
+			t.Fatal(keyErr)
+		}
+		payoutKeys = append(payoutKeys, artifactKey)
 	}
 	type fixturePayout struct {
 		locator  FinalArtifactLocator
@@ -2705,8 +2729,9 @@ func buildFinalSemanticFixture(t *testing.T) (FinalSemanticEvidence, map[string]
 			value.Pools[i].PayoutRoot = "0x" + hex.EncodeToString(payout.artifact.PayoutRoot[:])
 			authority := strings.ToLower(payout.artifact.Signer.Hex())
 			value.Pools[i].ArtifactSigner = authority
-			value.Pools[i].RootCommitter = authority
-			value.Pools[i].RootSigner = authority
+			rootAuthority := strings.ToLower(crypto.PubkeyToAddress(rootKeys[value.Pools[i].NoID-1].PublicKey).Hex())
+			value.Pools[i].RootCommitter = rootAuthority
+			value.Pools[i].RootSigner = rootAuthority
 			value.Pools[i].SourceStartBlock = payout.artifact.Start.Number
 			value.Pools[i].SourceStartHash = payout.artifact.Start.Hash
 			value.Pools[i].SourceEndBlock = payout.artifact.End.Number
@@ -2996,7 +3021,7 @@ func buildFinalSemanticFixture(t *testing.T) (FinalSemanticEvidence, map[string]
 		pools[i] = FinalPoolUIDEvidence{
 			NoID: uint64(i + 1), UID: uid, Hotkey: ss58Key(0x41, i+1), Coldkey: vaultColdkey, OperatorColdkey: ss58Key(0x42, i+1), Registered: true,
 			Registration: evmReceipt(fmt.Sprintf("pool-registration-%d", i+1), uint64(5+2*i)), Snapshot: ChainHead{Number: 100, Hash: finalTestHex(100)}, FinalCarryRao: "0",
-			DepositHotkey: fmt.Sprintf("5DepositHotkey%d", i+1), DepositSigner: fmt.Sprintf("0x%040x", 0x60+i), PayoutRootSigner: strings.ToLower(crypto.PubkeyToAddress(payoutKeys[i].PublicKey).Hex()),
+			DepositHotkey: fmt.Sprintf("5DepositHotkey%d", i+1), DepositSigner: fmt.Sprintf("0x%040x", 0x60+i), PayoutRootSigner: strings.ToLower(crypto.PubkeyToAddress(rootKeys[i].PublicKey).Hex()),
 			ConvictionReceipt: evmReceipt(fmt.Sprintf("conviction-%d", i+1), uint64(91+2*i)),
 			EffectiveEpoch:    10, VersionCount: 1, Active: true, ServerKeyHistory: []FinalServerKey{{KeyID: 1, PublicKey: "0x" + hex.EncodeToString(operatorServerKeys[i].Public().(ed25519.PublicKey))}},
 			OwnershipArtifact: artifact("native-ownership", fmt.Sprintf("pool-ownership-%d.json", i+1), []byte(fmt.Sprintf("pool ownership %d", i+1))),

@@ -105,6 +105,7 @@ func finalPayoutArtifactTestBuild(t *testing.T, fixture *finalPayoutArtifactFixt
 // artifact while keeping provider rows outside the trusted expectation.
 func finalPayoutArtifactTestExpectation(artifact *payoutartifact.Artifact) *finalPayoutArtifactExpectation {
 	return &finalPayoutArtifactExpectation{
+		ArtifactSigner: artifact.Signer,
 		NoID:             artifact.NoID,
 		Epoch:            artifact.Epoch,
 		UsageBytes:       artifact.TotalUsageBytes,
@@ -304,7 +305,13 @@ func TestFinalPayoutArtifactRejectsResignedProviderOmissionAgainstSignedMeasurem
 	if err != nil {
 		t.Fatal(err)
 	}
-	key, err := crypto.ToECDSA(bytes.Repeat([]byte{byte(original.NoID)}, 32))
+	cfg := testResolvedConfig(t)
+	cfg.Config.Deployment.DeploymentID = original.DeploymentID
+	roles, err := BuildRoleSecrets(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, err := crypto.HexToECDSA(strings.TrimPrefix(roles.EVM[fmt.Sprintf("operator-%d-artifact", original.NoID)].PrivateKeyHex, "0x"))
 	if err != nil {
 		t.Fatal(err)
 	}
