@@ -262,8 +262,10 @@ paths:
         collects the published $20 USD submission fee exactly once before
         forwarding a production admission. A response with `staging: true`
         is fee-free but otherwise enters the same FIFO evaluator. Its score or
-        failure remains embargoed until that staging epoch closes, drains, and
-        finalizes without a winner. An explicitly superseded staging epoch, or
+        full evaluation error remains embargoed until that staging epoch
+        closes, drains, and finalizes without a winner; execution status and a
+        reviewed message-free terminal failure code remain visible. An
+        explicitly superseded staging epoch, or
         one interrupted by production epoch one, exposes only a non-retriable
         staging cleanup reason rather than a measured outcome. Any
         patch operation targeting
@@ -331,7 +333,7 @@ paths:
             format: uuid
       responses:
         "200":
-          description: Current durable processing state; score and failure results are embargoed until post-review epoch finalization.
+          description: Current durable processing state. evaluation_status exposes only the outcome-neutral evaluator lifecycle and a sanitized terminal failure code; score, gates, diagnostics, and full eval_error remain embargoed until post-review epoch finalization.
           content:
             application/json:
               schema:
@@ -873,6 +875,7 @@ components:
         - staging
         - patch_sha256
         - state
+        - evaluation_status
         - submitted_at
         - cache_key
         - evaluator_image_digest
@@ -891,6 +894,13 @@ components:
           $ref: "#/components/schemas/Sha256"
         state:
           $ref: "#/components/schemas/CompetitionJobState"
+        evaluation_status:
+          $ref: "#/components/schemas/CompetitionEvaluationStatus"
+        evaluation_failure:
+          description: Present only when evaluation_status is failed and the terminal kind/code pair is on the reviewed public allowlist. Omitted for unknown codes; never contains the evaluator message, readiness, score, gates, or diagnostics.
+          oneOf:
+            - $ref: "#/components/schemas/CompetitionEvaluationFailure"
+            - type: "null"
         submitted_at:
           type: string
           format: date-time
@@ -928,6 +938,27 @@ components:
       type: string
       description: completed is the outcome-neutral state returned during the result embargo.
       enum: [queued, running, completed, succeeded, failed, canceled]
+
+    CompetitionEvaluationStatus:
+      type: string
+      description: Additive polling lifecycle. completed means evaluation produced a score but reveals no score value, placeability, gate, significance, or diagnostic; failed is terminal and is visible during the result embargo. Legacy servers may omit this field during a rolling deployment, in which case clients can derive queued/running/canceled directly from state but must treat state completed as outcome-neutral.
+      enum: [queued, running, completed, failed, canceled]
+
+    CompetitionEvaluationFailure:
+      type: object
+      additionalProperties: false
+      required: [kind, code, retriable]
+      description: Message-free terminal failure summary. The complete eval_error remains embargoed, and unknown unreviewed code values produce no summary.
+      properties:
+        kind:
+          type: string
+          enum: [submission, infrastructure]
+        code:
+          type: string
+          pattern: "^[a-z][a-z0-9_]{1,63}$"
+        retriable:
+          type: boolean
+          const: false
 
     CompetitionScoreResult:
       type: object
