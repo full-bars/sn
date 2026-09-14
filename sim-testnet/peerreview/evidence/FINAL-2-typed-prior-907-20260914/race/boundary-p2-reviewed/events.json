@@ -1,0 +1,11 @@
+{"Time":"2026-09-14T21:41:38.494507489Z","Action":"start","Package":"github.com/urfoundation/sn/sim-testnet"}
+{"Time":"2026-09-14T21:41:38.494741996Z","Action":"run","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema"}
+{"Time":"2026-09-14T21:41:38.494774976Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema","Output":"=== RUN   TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema\n"}
+{"Time":"2026-09-14T21:41:38.494802175Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema","Output":"=== PAUSE TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema\n"}
+{"Time":"2026-09-14T21:41:38.494809247Z","Action":"pause","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema"}
+{"Time":"2026-09-14T21:41:38.494822778Z","Action":"cont","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema"}
+{"Time":"2026-09-14T21:41:38.494828522Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema","Output":"=== CONT  TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema\n"}
+{"Time":"2026-09-14T21:41:38.494837237Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema","Output":"--- PASS: TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema (146.35s)\n"}
+{"Time":"2026-09-14T21:41:38.494843353Z","Action":"pass","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema","Elapsed":146.35}
+{"Time":"2026-09-14T21:41:38.494860744Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Output":"PASS\n"}
+{"Time":"2026-09-14T21:41:38.494869961Z","Action":"pass","Package":"github.com/urfoundation/sn/sim-testnet","Elapsed":0}

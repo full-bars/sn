@@ -1,0 +1,1 @@
+[{"jsonrpc":"2.0","id":1,"result":{"peers":16,"isSyncing":false,"shouldHavePeers":true}},{"jsonrpc":"2.0","id":2,"result":"0xef8ed25b405dbcf87a43fe070aead1d5e76e90f9593b32eae8cb009410f88f0b"},{"jsonrpc":"2.0","id":3,"result":"0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105"},{"jsonrpc":"2.0","id":4,"result":"0x3b1"}]

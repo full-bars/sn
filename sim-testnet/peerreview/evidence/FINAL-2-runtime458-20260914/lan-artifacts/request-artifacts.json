@@ -1,0 +1,28 @@
+[
+  {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "state_getStorageHash",
+    "params": [
+      "0x3a636f6465",
+      "0xc814242904668bad31b388b36ed31a0c1ffd3b180b173727f5e3d20ea5c8aba4"
+    ]
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "method": "state_getStorage",
+    "params": [
+      "0x3a636f6465",
+      "0xc814242904668bad31b388b36ed31a0c1ffd3b180b173727f5e3d20ea5c8aba4"
+    ]
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "method": "state_getMetadata",
+    "params": [
+      "0xc814242904668bad31b388b36ed31a0c1ffd3b180b173727f5e3d20ea5c8aba4"
+    ]
+  }
+]

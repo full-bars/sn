@@ -1,0 +1,12 @@
+{
+  "kind":"final-stamped-sim-testnet-cli-build",
+  "build_exit":0,
+  "repos_before_after_identical":true,
+  "repos_before_sha256":"b762c4cf828364460d5bef705b066512862d8a015fd546f79fbbbe17dabb846f",
+  "repos_after_sha256":"b762c4cf828364460d5bef705b066512862d8a015fd546f79fbbbe17dabb846f",
+  "artifact":{"path":"/home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/terra-runtime/final-cli-fc908685-canonical/sim-testnet","sha256":"f6af6ad868f7e3e25d5342d382d971cddc47cee3649552800c4892925adf35ff","bytes":140668984,"mode":"0700"},
+  "vcs":{"revision":"fc9086852125227d4e497f4d54b6590a527032ba","trimpath":true,"buildvcs":true,"modified":false},
+  "release_lock_sha256":"76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35",
+  "warm_gocache":"/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/gocache",
+  "gomodcache":"/home/by/go/pkg/mod"
+}

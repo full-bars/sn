@@ -1,0 +1,95 @@
+=== RUN   TestFinalCaptureCapacityPriorCarrierCanonicalV2KeepsTypedSourceBoundary
+--- PASS: TestFinalCaptureCapacityPriorCarrierCanonicalV2KeepsTypedSourceBoundary (0.08s)
+=== RUN   TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsBoundedVerificationAllocation
+--- PASS: TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsBoundedVerificationAllocation (6.04s)
+=== RUN   TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis
+--- PASS: TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis (4.27s)
+=== RUN   TestProducerGateCaptureSelectionRequiresIndependentMetadata
+=== PAUSE TestProducerGateCaptureSelectionRequiresIndependentMetadata
+=== RUN   TestProducerGateCaptureSelectionRequiresIndependentTypedPrior
+=== PAUSE TestProducerGateCaptureSelectionRequiresIndependentTypedPrior
+=== RUN   TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift
+=== PAUSE TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift
+=== RUN   TestProducerGateCaptureSelectionPinsMeasuredMetadataRaceBudget
+=== PAUSE TestProducerGateCaptureSelectionPinsMeasuredMetadataRaceBudget
+=== RUN   TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak
+=== PAUSE TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak
+=== RUN   TestProducerGateCaptureSelectionRequiresIndependentPopulation
+=== PAUSE TestProducerGateCaptureSelectionRequiresIndependentPopulation
+=== RUN   TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources
+=== PAUSE TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources
+=== RUN   TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources
+=== PAUSE TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources
+=== RUN   TestProducerGateCaptureSelectionRejectsSourceCensusDrift
+=== PAUSE TestProducerGateCaptureSelectionRejectsSourceCensusDrift
+=== RUN   TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift
+=== PAUSE TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift
+=== RUN   TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling
+=== PAUSE TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling
+=== RUN   TestProducerGateCaptureSelectionRejectsPrivateFixtureSchedulingDrift
+=== PAUSE TestProducerGateCaptureSelectionRejectsPrivateFixtureSchedulingDrift
+=== RUN   TestProducerGateStateSelectionCoversEvidenceV2ValidatorSources
+=== PAUSE TestProducerGateStateSelectionCoversEvidenceV2ValidatorSources
+=== RUN   TestProducerGateStateSelectionCoversEvidenceV2ContractAndInstallerSources
+=== PAUSE TestProducerGateStateSelectionCoversEvidenceV2ContractAndInstallerSources
+=== RUN   TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources
+=== PAUSE TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources
+=== RUN   TestProducerGateStateSelectionEvidenceV2PreservesEveryOldFamily
+=== PAUSE TestProducerGateStateSelectionEvidenceV2PreservesEveryOldFamily
+=== RUN   TestProducerGateStateSelectionEvidenceV2RejectsEveryNewFamilyOmission
+=== PAUSE TestProducerGateStateSelectionEvidenceV2RejectsEveryNewFamilyOmission
+=== RUN   TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage
+=== PAUSE TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage
+=== RUN   TestProducerGateStateSelectionEvidenceV2RejectsMissingExecutableModes
+=== PAUSE TestProducerGateStateSelectionEvidenceV2RejectsMissingExecutableModes
+=== RUN   TestProducerGateStateSelectionEvidenceV2RejectsDisconnectedPhases
+=== PAUSE TestProducerGateStateSelectionEvidenceV2RejectsDisconnectedPhases
+=== RUN   TestProducerGateStateSelectionEvidenceV2RejectsSelectorOwnershipDrift
+=== PAUSE TestProducerGateStateSelectionEvidenceV2RejectsSelectorOwnershipDrift
+=== RUN   TestProducerGateStateSelectionEvidenceV2RequiresCompleteSourceCensus
+=== PAUSE TestProducerGateStateSelectionEvidenceV2RequiresCompleteSourceCensus
+=== CONT  TestProducerGateCaptureSelectionRequiresIndependentMetadata
+=== CONT  TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling
+=== CONT  TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources
+=== CONT  TestProducerGateStateSelectionEvidenceV2RejectsEveryNewFamilyOmission
+--- PASS: TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling (0.12s)
+=== CONT  TestProducerGateStateSelectionEvidenceV2RequiresCompleteSourceCensus
+--- PASS: TestProducerGateCaptureSelectionRequiresIndependentMetadata (1.43s)
+=== CONT  TestProducerGateStateSelectionEvidenceV2RejectsSelectorOwnershipDrift
+--- PASS: TestProducerGateStateSelectionEvidenceV2RejectsEveryNewFamilyOmission (2.76s)
+=== CONT  TestProducerGateStateSelectionEvidenceV2RejectsDisconnectedPhases
+--- PASS: TestProducerGateStateSelectionEvidenceV2RequiresCompleteSourceCensus (2.87s)
+=== CONT  TestProducerGateStateSelectionEvidenceV2RejectsMissingExecutableModes
+--- PASS: TestProducerGateStateSelectionEvidenceV2RejectsSelectorOwnershipDrift (1.75s)
+=== CONT  TestProducerGateCaptureSelectionRejectsPrivateFixtureSchedulingDrift
+--- PASS: TestProducerGateStateSelectionEvidenceV2RejectsDisconnectedPhases (0.89s)
+=== CONT  TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift
+--- PASS: TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources (6.79s)
+=== CONT  TestProducerGateCaptureSelectionRejectsSourceCensusDrift
+--- PASS: TestProducerGateCaptureSelectionRejectsPrivateFixtureSchedulingDrift (6.18s)
+=== CONT  TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift
+--- PASS: TestProducerGateStateSelectionEvidenceV2RejectsMissingExecutableModes (16.06s)
+=== CONT  TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak
+--- PASS: TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak (12.21s)
+=== CONT  TestProducerGateCaptureSelectionPinsMeasuredMetadataRaceBudget
+--- PASS: TestProducerGateCaptureSelectionPinsMeasuredMetadataRaceBudget (2.59s)
+=== CONT  TestProducerGateCaptureSelectionRequiresIndependentPopulation
+--- PASS: TestProducerGateCaptureSelectionRequiresIndependentPopulation (7.17s)
+=== CONT  TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage
+--- PASS: TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage (6.94s)
+=== CONT  TestProducerGateStateSelectionEvidenceV2PreservesEveryOldFamily
+--- PASS: TestProducerGateStateSelectionEvidenceV2PreservesEveryOldFamily (1.90s)
+=== CONT  TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources
+--- PASS: TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources (0.68s)
+=== CONT  TestProducerGateCaptureSelectionRequiresIndependentTypedPrior
+--- PASS: TestProducerGateCaptureSelectionRequiresIndependentTypedPrior (1.56s)
+=== CONT  TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources
+--- PASS: TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources (7.69s)
+=== CONT  TestProducerGateStateSelectionCoversEvidenceV2ValidatorSources
+--- PASS: TestProducerGateStateSelectionCoversEvidenceV2ValidatorSources (1.14s)
+=== CONT  TestProducerGateStateSelectionCoversEvidenceV2ContractAndInstallerSources
+--- PASS: TestProducerGateStateSelectionCoversEvidenceV2ContractAndInstallerSources (0.77s)
+--- PASS: TestProducerGateCaptureSelectionRejectsSourceCensusDrift (63.48s)
+--- PASS: TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift (69.95s)
+--- PASS: TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift (113.84s)
+PASS

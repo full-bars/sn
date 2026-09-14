@@ -1,0 +1,18 @@
+Read-only active-log observer correction
+
+At approximately 2026-09-14T20:37Z, the observer derived active phase labels from
+release_phase_<label> process arguments but first looked for logs/<label>.log.
+Those paths were absent because gate log filenames replace underscores with hyphens.
+That observation was a missing-path observer defect only; it did not invoke, alter,
+cancel, or rerun any gate command.
+
+The corrected read-only mapping is:
+  release_phase_capture_metadata -> logs/capture-metadata.log
+  release_phase_capture_population -> logs/capture-population.log
+  release_phase_capture_prior -> logs/capture-prior.log
+and equivalently converts every underscore in a phase label to a hyphen.
+
+The successful rescans at approximately 2026-09-14T20:38Z and later read the actual
+active log paths and found no additional FAIL, panic, DATA RACE, timeout, or compiler
+signal. The already-retained capture phase timeout remains separately recorded in
+logs/capture.log and is not a result of this observer correction.

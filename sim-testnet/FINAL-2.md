@@ -2,8 +2,92 @@
 
 **Status: in progress; `final_acceptance=false`.** This report covers the next
 full finalization of testnet chain **945**, subnet **521**, under
-[FINALIZE.md](../FINALIZE.md). At the **18:56 UTC on 2026-09-14** observation
-cutoff, all **1,212 renewal transactions** across **202 fleets** have finalized
+[FINALIZE.md](../FINALIZE.md). At the **22:57 UTC on 2026-09-14** observation
+cutoff, all **1,212 renewal transactions** across **202 fleets** remain
+finalized. The approved **6,000-alpha reserve repair remains unsubmitted** and
+the soak remains stopped. The lifetime approvals remain **37,250 alpha** and
+**180 EVM TAO within 200 total TAO**. No transaction was sent during the runtime
+adoption work below.
+
+The owned LAN node is healthy. The operator reported that nginx's effective
+configuration had no RPC rate-limit directives and its configuration check and
+reload both succeeded at **21:01:55 UTC**. This supersedes the undeployed status
+at the earlier checkpoint below; the remote deployment log itself was not read
+by this agent. A fresh direct-LAN observation ending at **22:20:21 UTC** found
+**16 peers**, `isSyncing=false`, runtime **458/1/1**, chain 945 and finalized
+block **8,006,843**. The reported deployment failure expected runtime **455**;
+it was not a failure to sync or finalize blocks.
+[Operator provenance and raw LAN evidence](peerreview/evidence/FINAL-2-runtime458-20260914/README.md).
+
+At finalized block **8,006,567**, hash
+`0xc814242904668bad31b388b36ed31a0c1ffd3b180b173727f5e3d20ea5c8aba4`,
+the exact on-chain Wasm has BLAKE2b-256
+`2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a`
+and metadata BLAKE2b-256
+`040088e73e34ed5561372aa51b07b56e41cf7f390312837b074434f30452593d`.
+Executing that exact captured Wasm offline reproduced the metadata bytes.
+The upstream source review uses exact commit
+`a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7`; it claims no release tag or mainnet
+proposal. The authenticated upstream CI Wasm is **not byte-identical** to the
+LAN artifact: the reviewed difference is 22 constants in one hash-state
+initializer, consistent with compile-time random seeds. Only the exact LAN
+artifact is admitted. Fresh evidence uses our own node and is **not an
+independent public-node replication**; report 1's historical independent checks
+retain their original scope.
+[Captured replies and bytes](peerreview/evidence/FINAL-2-runtime458-20260914/lan-artifacts/RESULT.json),
+[offline execution](peerreview/evidence/FINAL-2-runtime458-20260914/offline-probe/RESULT.json),
+[compatibility review and provenance limits](../docs/spec/runtime-458-audit.md).
+
+The expected-runtime correction is published on
+[xops main at 446cbdb](https://github.com/urnetwork/xops/commit/446cbdb56e0dc5004b66d7e0cbf05a4d9c49224c).
+Its complete **30-test module passed**, and both affected controls passed two
+additional fresh processes. Restoring only the old expected-runtime value
+caused the expected runtime-control failure while the adjacent network/backend
+control passed. The node image, chain identity, ports and nginx policy are
+unchanged. **The corrected deployment check has not been rerun on the node.**
+[Raw results and exact causal mutation](peerreview/evidence/FINAL-2-runtime458-20260914/xops-qualification/SUMMARY.md).
+
+The FC908 full producer closed at **21:28:46 UTC**, exit **1**, with **36 of 37
+phases passed**. Its sole failure was the ordinary capture race package reaching
+its ten-minute cumulative deadline while the typed-prior 32 MiB boundary test
+was active. Correction `907d18698f3464da8193894a3ad42101184a6a56` gives that
+boundary its own process with the existing workload and deadline. All **26
+affected roots passed normally and under race**; the formerly active boundary
+passed three consecutive fresh race processes on unchanged binary bytes.
+Restoring the old script produced the expected guard failure and two passing
+adjacent controls. These completed results are reused within their recorded
+scope. The original FC908 aggregate is still running: the retained partial
+observation contains **20 passed phases**, no failed phase and no final verdict.
+[Failed full producer](peerreview/evidence/FINAL-2-producer-fc908-20260914/README.md),
+[completed correction](peerreview/evidence/FINAL-2-typed-prior-907-20260914/README.md),
+[explicitly partial aggregate log](peerreview/evidence/FINAL-2-runtime458-20260914/aggregate-fc908-partial.stdout).
+
+Runtime-458 client source `df98472bd88dc8e29856c172fba4731d52a6308d` admits the
+new exact current artifact while retaining 451–455 only for historical
+evidence. It also corrects the shared metadata/authority limit from five to
+**six exact identities**, including the actual simulator history constructor,
+all six hot entries and seventh/duplicate/incomplete rejection. Its **175-root
+affected qualification remains in progress**; implementation and successful
+compilation are not recorded as passing tests.
+
+A readonly runtime-458 CLI built successfully on that source. Its complete
+thirteen-repository before/after observations match. The reviewed combined
+release lock has SHA-256
+`e72b2146a1cbbd59a54b0424a30478aa9a475f8d82369c028c4fe22e8f2d71c2`:
+six runtime fields, two SN source hashes and the node configuration hash changed
+relative to FC908. **All contract hashes and other dependency fields are
+unchanged.** The exact YAML is committed only in the idle integration checkout
+as `151b515be82cedd02cdae7346b9340cb2cef91aa`; it has not changed the active
+campaign plan or the source under qualification. A final canonical stamped CLI,
+both complete release gates, the retained-state setup transition and the actual
+RC/production soak are still required. The earlier FC908 stamped CLI remains
+historical build evidence and cannot authorize runtime-458 writes.
+[Renderer and combined lock evidence](peerreview/evidence/FINAL-2-runtime458-20260914/README.md),
+[earlier stamped CLI and retained build refusals](peerreview/evidence/FINAL-2-final-cli-fc908-20260914/README.md).
+
+## Historical checkpoint: September 14, 18:56 UTC
+
+At that observation cutoff, all **1,212 renewal transactions** across **202 fleets** had finalized
 and passed their native postcondition checks. The approved **6,000-alpha repair
 has not been submitted**, and the soak remains stopped. Earlier published candidate
 `7eab04905dbc274ae6d2546b6802f1097c1fc3fe` includes the qualified historical

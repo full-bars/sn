@@ -1,0 +1,31 @@
+test_runtime_convergence_evaluates_current_pin_and_identity_controls (test_subtensor_playbook.SubtensorPlaybookTests.test_runtime_convergence_evaluates_current_pin_and_identity_controls) ... FAIL
+test_testnet_pins_network_backend_and_container_dns (test_subtensor_playbook.SubtensorPlaybookTests.test_testnet_pins_network_backend_and_container_dns) ... ok
+
+======================================================================
+FAIL: test_runtime_convergence_evaluates_current_pin_and_identity_controls (test_subtensor_playbook.SubtensorPlaybookTests.test_runtime_convergence_evaluates_current_pin_and_identity_controls)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/by/urnetwork/temp/xops-runtime458-pin-20260914/terra-runtime/runtime458-pin-qualification-20260914T222647Z/causal/old-pin-only/worktree/main/ansible/tests/test_subtensor_playbook.py", line 1160, in test_runtime_convergence_evaluates_current_pin_and_identity_controls
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        [
+        ^
+    ...<5 lines>...
+        message,
+        ^^^^^^^^
+    )
+    ^
+AssertionError: Lists differ: ['subtensor_identity_queries.results[3].js[65 chars]int'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'subtensor_identity_queries.results[3].json.result.specVersion | int == subtensor_expected_spec_version | int'
+
++ []
+- ['subtensor_identity_queries.results[3].json.result.specVersion | int == '
+-  'subtensor_expected_spec_version | int'] : subtensor: current runtime
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.717s
+
+FAILED (failures=1)

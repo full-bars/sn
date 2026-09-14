@@ -1,0 +1,17 @@
+{
+  "cause": "The unchanged helper allows one literal per FAIL root. The two adjacent error fragments are one exact contiguous diagnostic, so combine them with the actual colon-space separator. No owner/helper/checker/source/binary changes.",
+  "files": [
+    {
+      "path": "/home/by/urnetwork/temp/sn-prior-carrier-capacity-correction-20260914/terra-runtime/qualification-typed-prior-907d186-streaming/causal-reviewed-v2/normal/failure-literals.single.tsv",
+      "sha256": "4b0d00f283c978c604ce80e8cbcf02c17350e192b4df902736c16baaa2dead78"
+    },
+    {
+      "path": "/home/by/urnetwork/temp/sn-prior-carrier-capacity-correction-20260914/terra-runtime/qualification-typed-prior-907d186-streaming/causal-reviewed-v2/normal/plan.single.env",
+      "sha256": "fdaa426377935cfd0c64dc367dedda95b07bde0692234f2e114cc3ba6ec7e62b"
+    },
+    {
+      "path": "/home/by/urnetwork/temp/sn-prior-carrier-capacity-correction-20260914/terra-runtime/qualification-typed-prior-907d186-streaming/causal-reviewed-v2/reviewed-owner/normal-owner-single-literal.sh",
+      "sha256": "2061af803c59319bc538a01fe3d5f7e1c8a70ee117ded0a33feb837322fcbae4"
+    }
+  ]
+}

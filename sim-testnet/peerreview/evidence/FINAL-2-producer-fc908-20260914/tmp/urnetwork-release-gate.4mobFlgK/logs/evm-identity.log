@@ -1,0 +1,6 @@
+ok  	github.com/urfoundation/sn/miner/onchain	0.035s
+ok  	github.com/urfoundation/sn/miner	0.082s
+ok  	github.com/urfoundation/sn/sim-testnet	0.856s
+ok  	github.com/urfoundation/sn/miner/onchain	1.178s
+ok  	github.com/urfoundation/sn/miner	1.494s
+ok  	github.com/urfoundation/sn/sim-testnet	3.476s

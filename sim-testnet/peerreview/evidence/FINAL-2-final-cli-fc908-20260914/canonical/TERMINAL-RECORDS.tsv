@@ -1,0 +1,9 @@
+record	value
+outer_exit	0
+outer_started_at	2026-09-14T19:20:57Z
+outer_finished_at	2026-09-14T19:21:47Z
+compiler_exit	0
+compiler_started_at	2026-09-14T19:20:57Z
+compiler_finished_at	2026-09-14T19:21:46Z
+source_revision	fc9086852125227d4e497f4d54b6590a527032ba
+release_lock_sha256	76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35

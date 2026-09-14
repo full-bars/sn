@@ -1,6 +1,6 @@
 # Testnet execution plan
 
-Updated 2026-09-13. The user has requested full finalization and fixes for
+Updated 2026-09-14. The user has requested full finalization and fixes for
 previously ignored failures, flakiness and issues exposed by the shortened run.
 The full requirements in [FINALIZE.md](FINALIZE.md) govern completion again.
 The user explicitly confirmed SN testnet finalization under `sn/FINALIZE.md`;
@@ -19,7 +19,7 @@ historical replay, pending check or artifact-only assertion is not proof that
 the next run met an on-chain target.
 
 The user explicitly directed execution against the real chain limits after
-the peer review: retain runtime 455's root-controlled
+the peer review: retain the root-controlled
 `max_allowed_validators=64`. Lowering it to 56 is not a prerequisite for this
 testnet run. The existing compatibility policy already requires exactly 64;
 prove the 200-head topology against actual UID occupancy, permits and native
@@ -46,7 +46,37 @@ Retain the approved 6,000-alpha repair allowance, 37,250-alpha lifetime limit,
 180 EVM within 200 total TAO, 262 registrations and zero new subnets. Use
 `192.168.1.162:9944` without RPC rate limits. Full acceptance remains pending.
 
-Latest checkpoint, 2026-09-14 18:50 UTC: the soak remains stopped and the approved
+Latest checkpoint, 2026-09-14 23:01 UTC: the soak remains stopped and the approved
+6,000-alpha repair remains unsubmitted. The operator verified removal of the
+nginx limits at 21:01:55 UTC. Fresh direct-LAN observations found a synced node
+with 16 peers, runtime 458/1/1 and advancing finalized blocks; the separate
+deployment failure was its stale expected-runtime 455 pin. Correction
+`446cbdb` passed its complete 30-test module, required confirmations and the
+old-pin causal control, and is now pushed to xops main. The corrected deployment
+check has not been rerun on the node. No SSH credential or rollout confirmation
+is needed to continue simulator preparation.
+
+The FC908 producer closed with 36 passes and one cumulative capture race
+timeout. Its typed-prior process correction `907d186` is fully qualified:
+26 affected roots in both modes, three fresh race confirmations of the active
+boundary and the expected old-script causal failure with passing controls.
+Reuse those results. The original FC908 aggregate remains live with 21 phases
+passed and no reported failure; its physical source remains fixed.
+
+Runtime-458 source `df98472` includes exact artifact admission, historical455
+retention, unpaced LAN artifact checks and a six-identity cache/allowlist bound.
+Its 175-root affected qualification is in progress. The readonly CLI build and
+combined release-lock render passed. The exact YAML SHA-256 is
+`e72b2146a1cbbd59a54b0424a30478aa9a475f8d82369c028c4fe22e8f2d71c2`,
+committed only in the idle integration checkout as `151b515`; all contract
+hashes remain unchanged. Finish affected qualification, publish the coherent
+source, then use a genuine canonical stamped CLI and both complete gates.
+Preserve all 3,521 action identities, 1,212 renewals, generation3 custody,
+original signed probe anchor and nonce34 during the one successor setup
+preview. The earlier runtime455 preview was never executed and is obsolete.
+No new plan hash or chain transaction has been produced by this preparation.
+
+Historical checkpoint, 2026-09-14 18:50 UTC: the soak remained stopped and the approved
 6,000-alpha reserve repair remains unsubmitted. All 1,212 renewal transactions
 across 202 fleets have finalized and passed their native postconditions. Two
 setup attempts on the retained approved plan stopped on nginx HTTP 429 before

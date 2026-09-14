@@ -1,0 +1,43 @@
+{
+  "classification": "FAILED",
+  "pass": false,
+  "scope": "complete producer gate on frozen FC908 source",
+  "outer": {
+    "exit": 1,
+    "started_at": "2026-09-14T19:22:34Z",
+    "finished_at": "2026-09-14T21:28:46Z"
+  },
+  "source": {
+    "sn": "fc9086852125227d4e497f4d54b6590a527032ba",
+    "release_lock_sha256": "76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35",
+    "source_pair_sha256": "2a7fdfaa09963e8e2b65a04b5d365a81dec1697f1b71b80011ae56620d63d55c"
+  },
+  "phase_joins": {
+    "total": 37,
+    "exit_0": 36,
+    "exit_1": 1
+  },
+  "only_nonzero_phase": {
+    "name": "capture",
+    "exit": 1,
+    "raw_log": "tmp/urnetwork-release-gate.4mobFlgK/logs/capture.log",
+    "summary": "test timed out after 10m0s"
+  },
+  "fences": {
+    "initial_source_freeze": 0,
+    "source_integrity": 0,
+    "binding_toolchain": 0,
+    "runtime_source": 0,
+    "runtime_metadata": 0,
+    "private_services": 0,
+    "final_source_freeze": 0
+  },
+  "cleanup": {
+    "retained_owner_census": "capture/terminal-owner-census.txt",
+    "gate_owned_processes_observed": 0
+  },
+  "raw": {
+    "outer_stdout_sha256": "4bc166f73c598ccfe1b337155db8f846d29734a74d79f41844d5b263172517cc",
+    "outer_stderr_sha256": "f56da584b445df3cc516ed072fc2de41b9c9eaf9441dd65c8c1d21fdcdfbcfcf"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "endpoint": "http://192.168.1.162:9944",
+  "independent_rpc": false,
+  "read_only": true,
+  "retries": 0,
+  "rpc_rate_limit": null,
+  "purpose": "Post-deployment LAN identity, health and finalized-head observation; runtime version is read next at that returned finalized hash",
+  "expected_chain_id": "0x3b1",
+  "expected_genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+  "operator_verified_at": "2026-09-14T21:01:55Z",
+  "source_runtime_pin": 455,
+  "calls": [
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "eth_chainId",
+      "params": []
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "chain_getFinalizedHead",
+      "params": []
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "chain_getBlockHash",
+      "params": [
+        0
+      ]
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "method": "system_health",
+      "params": []
+    }
+  ]
+}

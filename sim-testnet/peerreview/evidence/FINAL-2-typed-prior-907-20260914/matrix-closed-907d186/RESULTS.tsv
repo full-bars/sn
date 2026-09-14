@@ -1,0 +1,7 @@
+mode	stage	top_roots	top_pass	expected_failures	body_exit	converter_exit	checker_exit	source_manifests	repos_equal	binary_equal	binary_sha256	events
+normal	boundary-p1-reviewed	1	1	0	0	0	0	13	true	true	bf95107d2167bcb9cd778aac20289e7f4c26427faf4e640faf97f88486d4c9e8	11
+normal	guards-reviewed	25	25	0	0	0	0	13	true	true	bf95107d2167bcb9cd778aac20289e7f4c26427faf4e640faf97f88486d4c9e8	191
+race	boundary-p1-reviewed	1	1	0	0	0	0	13	true	true	6d2a8d35e1eb21e1257e221a27b65c6ab8fd56955e3e86930dc0c45cb58e02e3	11
+race	boundary-p2-reviewed	1	1	0	0	0	0	13	true	true	6d2a8d35e1eb21e1257e221a27b65c6ab8fd56955e3e86930dc0c45cb58e02e3	11
+race	boundary-p3-reviewed	1	1	0	0	0	0	13	true	true	6d2a8d35e1eb21e1257e221a27b65c6ab8fd56955e3e86930dc0c45cb58e02e3	11
+race	guards-reviewed	25	25	0	0	0	0	13	true	true	6d2a8d35e1eb21e1257e221a27b65c6ab8fd56955e3e86930dc0c45cb58e02e3	191

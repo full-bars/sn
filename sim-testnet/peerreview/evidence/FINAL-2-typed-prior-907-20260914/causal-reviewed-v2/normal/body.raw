@@ -1,0 +1,13 @@
+=== RUN   TestFinalCaptureCapacityPriorCarrierCanonicalV2KeepsTypedSourceBoundary
+--- PASS: TestFinalCaptureCapacityPriorCarrierCanonicalV2KeepsTypedSourceBoundary (0.02s)
+=== RUN   TestProducerGateCaptureSelectionRequiresIndependentTypedPrior
+=== PAUSE TestProducerGateCaptureSelectionRequiresIndependentTypedPrior
+=== RUN   TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling
+=== PAUSE TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling
+=== CONT  TestProducerGateCaptureSelectionRequiresIndependentTypedPrior
+=== CONT  TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling
+=== NAME  TestProducerGateCaptureSelectionRequiresIndependentTypedPrior
+    release_gate_capture_metadata_test.go:197: typed prior boundary lacks an independent unchanged budget: capture metadata changed capture execution or its scoped budgets
+--- FAIL: TestProducerGateCaptureSelectionRequiresIndependentTypedPrior (0.01s)
+--- PASS: TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling (0.02s)
+FAIL

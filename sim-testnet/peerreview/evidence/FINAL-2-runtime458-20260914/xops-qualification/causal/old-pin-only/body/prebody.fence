@@ -1,0 +1,12 @@
+started_utc=2026-09-14T22:29:02Z
+cwd=/home/by/urnetwork/temp/xops-runtime458-pin-20260914/terra-runtime/runtime458-pin-qualification-20260914T222647Z/causal/old-pin-only/worktree/main/ansible/tests
+source_head=446cbdb56e0dc5004b66d7e0cbf05a4d9c49224c
+source_status_bytes=51
+source_diff_check_bytes=0
+e35cd403734b5252128468b2d82d2ddf0bea314f473ce5315640fcda9840f8b5  /home/by/urnetwork/temp/xops-runtime458-pin-20260914/terra-runtime/runtime458-pin-qualification-20260914T222647Z/causal/old-pin-only/worktree/main/ansible/host_files/snow/subtensor/README.md
+dfa2ccad0b06037922061fdc61062589495571fc4d2f911e75d3ebc1479acd61  /home/by/urnetwork/temp/xops-runtime458-pin-20260914/terra-runtime/runtime458-pin-qualification-20260914T222647Z/causal/old-pin-only/worktree/main/ansible/host_files/snow/subtensor/vars.yml
+494778e6df7706e56e4f8895a2adc3f210e76215f5f78727a7cc7340be863fb3  /home/by/urnetwork/temp/xops-runtime458-pin-20260914/terra-runtime/runtime458-pin-qualification-20260914T222647Z/causal/old-pin-only/worktree/main/ansible/tests/test_subtensor_playbook.py
+5f4016bc51761a8b135d601ed5714a58ce3e74831aea2838d0d72f1be5bd6e6c  /home/by/urnetwork/.virtualenv/brien/bin/python3
+Python 3.14.7
+command_file_sha256=e23be15febf178946909a110158e51aa6036dd9d4a66b51049308e058a9b238c
+command=#!/usr/bin/env bash set -euo pipefail cd /home/by/urnetwork/temp/xops-runtime458-pin-20260914/terra-runtime/runtime458-pin-qualification-20260914T222647Z/causal/old-pin-only/worktree/main/ansible/tests exec env PYTHONDONTWRITEBYTECODE=1 /home/by/urnetwork/.virtualenv/brien/bin/python3 -m unittest -v test_subtensor_playbook.SubtensorPlaybookTests.test_runtime_convergence_evaluates_current_pin_and_identity_controls test_subtensor_playbook.SubtensorPlaybookTests.test_testnet_pins_network_backend_and_container_dns 

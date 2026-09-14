@@ -1,0 +1,28 @@
+bundle_path	origin_record_label	origin_sha256	representation
+canonical/RESULT-FINAL-CLI-BUILD.json	canonical final CLI RESULT	copied; see SHA256SUMS	verbatim public-safe result
+canonical/RESULT-FINAL-CLI-BUILD.json.sha256	canonical final CLI RESULT checksum	copied; see SHA256SUMS	verbatim checksum
+canonical/BUILDINFO.txt	canonical Go build metadata	copied; see SHA256SUMS	verbatim authentic buildinfo
+canonical/CLI.sha256	canonical CLI artifact digest	copied; see SHA256SUMS	verbatim digest record
+canonical/CLI.stat	canonical CLI artifact stat	copied; see SHA256SUMS	verbatim mode/size record
+canonical/RELEASE-LOCK.sha256	canonical reviewed lock digest	copied; see SHA256SUMS	verbatim digest record
+canonical/TERMINAL-RECORDS.tsv	canonical outer/compiler records	multiple closed capture records	derived exact values
+canonical/ARTIFACT-IDENTITY.tsv	canonical artifact/VCS identity	RESULT and buildinfo	derived concise identity
+fences/CANONICAL-13-PAIR.tsv	canonical repository pair	canonical pre-build source pair	sanitized exact 13 rows
+fences/CANONICAL-PRE-POST-FENCES.tsv	canonical pre/post/lock fence	canonical source pair and lock records	derived exact comparison
+rejected/R1-TERMINAL-RECORDS.tsv	linked-worktree r1 terminal records	closed r1 capture	derived exact values
+rejected/R1-RESOLVED-13-PAIR.tsv	linked-worktree r1 source pair	closed r1 source pair	sanitized exact 13 rows
+rejected/R1-BUILDINFO-UNSTAMPED.txt	linked-worktree r1 buildinfo	copied; see SHA256SUMS	verbatim missing-stamp evidence
+rejected/REJECTION.md	linked-worktree rejection explanation	VCS review and closed capture	derived public-safe explanation
+rejected/INITIAL-PREBUILD-ADMISSION-REFUSAL.md	initial path-only refusal	copied; see SHA256SUMS	verbatim refusal
+rejected/INITIAL-PREBUILD-ADMISSION-REFUSAL.md.sha256	initial path-only refusal checksum	copied; see SHA256SUMS	verbatim checksum
+review/CLI-VCS-PRESENTATION-REVIEW.md	Astra read-only VCS review	copied; see SHA256SUMS	verbatim review
+publication/STANDALONE-ADOPTION-BEFORE.tsv	standalone source before adoption	copied; see SHA256SUMS	verbatim table
+publication/STANDALONE-ADOPTION-AFTER.tsv	standalone source after adoption	copied; see SHA256SUMS	verbatim table
+publication/PINNED-LIBRARIES.tsv	standalone pinned libraries	copied; see SHA256SUMS	verbatim table
+references/RAW-HASH-LOCATORS.tsv	excluded closed raw records	multiple; per-row hashes	locator/hash reference only
+README.md	bundle scope	-	derived public-safe instructions
+SUMMARY.md	closed build outcomes	-	derived concise result summary
+HANDOFF.md	publication-ready paragraph	-	derived handoff
+EXCLUSIONS.md	bundle exclusions	-	derived exclusion statement
+SANITIZATION-CHECKS.tsv	sealing checks	-	derived checks
+MANIFEST.tsv	this bundle	-	provenance map

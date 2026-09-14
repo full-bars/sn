@@ -1,0 +1,10 @@
+[
+  {
+    "function_index": 1785,
+    "name": "_ZN83_$LT$wasmi_collections..hash..RandomStateImpl$u20$as$u20$core..default..Default$GT$7default17hd28c85a3377e55f3E",
+    "upstream_bytes": 2656,
+    "onchain_bytes": 2659,
+    "upstream_sha256": "2652c556f0ab2df1f30f7de2c16e1663dd58481dccbf66c16747ef9ded26d740",
+    "onchain_sha256": "ee3ee4fc5ceda7379e31ec47221985d523e33f65206c28d349fc503619b9494f"
+  }
+]

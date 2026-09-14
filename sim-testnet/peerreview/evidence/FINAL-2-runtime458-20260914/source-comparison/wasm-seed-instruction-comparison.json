@@ -1,0 +1,140 @@
+{
+  "function": "wasmi_collections::hash::RandomStateImpl::default",
+  "instruction_count": 1228,
+  "local_declarations_equal": true,
+  "all_other_instructions_and_operands_equal": true,
+  "changed_i64_constants": [
+    {
+      "instruction_index": 16,
+      "opcode": "i64.const",
+      "upstream": "-8383080045965275938",
+      "onchain": "-9020426246457478590"
+    },
+    {
+      "instruction_index": 39,
+      "opcode": "i64.const",
+      "upstream": "491891083",
+      "onchain": "520278402"
+    },
+    {
+      "instruction_index": 44,
+      "opcode": "i64.const",
+      "upstream": "37888",
+      "onchain": "56320"
+    },
+    {
+      "instruction_index": 49,
+      "opcode": "i64.const",
+      "upstream": "5242880",
+      "onchain": "14942208"
+    },
+    {
+      "instruction_index": 54,
+      "opcode": "i64.const",
+      "upstream": "1174405120",
+      "onchain": "2113929216"
+    },
+    {
+      "instruction_index": 82,
+      "opcode": "i64.const",
+      "upstream": "432345564227567616",
+      "onchain": "-6629298651489370112"
+    },
+    {
+      "instruction_index": 89,
+      "opcode": "i64.const",
+      "upstream": "-7047626201874753884",
+      "onchain": "-6669500332268246436"
+    },
+    {
+      "instruction_index": 183,
+      "opcode": "i64.const",
+      "upstream": "-4408757777848637862",
+      "onchain": "8670203591467126826"
+    },
+    {
+      "instruction_index": 320,
+      "opcode": "i64.const",
+      "upstream": "7499270396663067041",
+      "onchain": "-5145202505023243149"
+    },
+    {
+      "instruction_index": 366,
+      "opcode": "i64.const",
+      "upstream": "6813466420957801879",
+      "onchain": "-8339719858657794233"
+    },
+    {
+      "instruction_index": 374,
+      "opcode": "i64.const",
+      "upstream": "-3837721986702562610",
+      "onchain": "-4118376076932131544"
+    },
+    {
+      "instruction_index": 468,
+      "opcode": "i64.const",
+      "upstream": "-5746309716799280724",
+      "onchain": "8624530553113573962"
+    },
+    {
+      "instruction_index": 605,
+      "opcode": "i64.const",
+      "upstream": "7499270396663067041",
+      "onchain": "-5145202505023243149"
+    },
+    {
+      "instruction_index": 651,
+      "opcode": "i64.const",
+      "upstream": "6813466420957801879",
+      "onchain": "-8339719858657794233"
+    },
+    {
+      "instruction_index": 659,
+      "opcode": "i64.const",
+      "upstream": "-5746309716799280724",
+      "onchain": "8624530553113573962"
+    },
+    {
+      "instruction_index": 753,
+      "opcode": "i64.const",
+      "upstream": "-7047626201874753884",
+      "onchain": "-6669500332268246436"
+    },
+    {
+      "instruction_index": 890,
+      "opcode": "i64.const",
+      "upstream": "7499270396663067041",
+      "onchain": "-5145202505023243149"
+    },
+    {
+      "instruction_index": 936,
+      "opcode": "i64.const",
+      "upstream": "6813466420957801879",
+      "onchain": "-8339719858657794233"
+    },
+    {
+      "instruction_index": 944,
+      "opcode": "i64.const",
+      "upstream": "-4408757777848637862",
+      "onchain": "8670203591467126826"
+    },
+    {
+      "instruction_index": 1038,
+      "opcode": "i64.const",
+      "upstream": "-3837721986702562610",
+      "onchain": "-4118376076932131544"
+    },
+    {
+      "instruction_index": 1175,
+      "opcode": "i64.const",
+      "upstream": "7499270396663067041",
+      "onchain": "-5145202505023243149"
+    },
+    {
+      "instruction_index": 1221,
+      "opcode": "i64.const",
+      "upstream": "6813466420957801879",
+      "onchain": "-8339719858657794233"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+ok  	github.com/urfoundation/sn/sim-testnet	155.781s
+[env]glog not configured from command line. Using default configuration.
+I0914 20:21:24.642344 3633955 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 20:21:24.642816 3633955 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 20:21:24.643175 3633955 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 20:21:24.643323 3633955 env.go:67] [env]settings = map[]
+panic: test timed out after 10m0s
+	running tests:
+		TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema (2m34s)
+
+goroutine 2735 [running]:
+testing.(*M).startAlarm.func1()
+	/usr/local/go/src/testing/testing.go:2802 +0x605
+created by time.goFunc
+	/usr/local/go/src/time/sleep.go:215 +0x45
+
+goroutine 1 [chan receive]:
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:1993 +0x9ad
+testing.tRunner(0xc0008cdd48, 0xc000d99a80)
+	/usr/local/go/src/testing/testing.go:2042 +0x256
+testing.runTests({0x6569f63, 0x1a}, {0x65ce0eb, 0x26}, 0xc000be4480, {0xa4ed260, 0x8db, 0x8db}, {0xc2a234472814b0bd, 0x8bc6f59b33, ...})
+	/usr/local/go/src/testing/testing.go:2583 +0x9ea
+testing.(*M).Run(0xc000bfa320)
+	/usr/local/go/src/testing/testing.go:2443 +0xf4c
+github.com/urfoundation/sn/sim-testnet.TestMain(0xc000bfa320)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/main_test.go:26 +0xef
+main.main()
+	_testmain.go:4580 +0x172
+
+goroutine 8 [select]:
+github.com/urnetwork/glog.(*fileSink).flushDaemon(0xa6dff58)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/glog/glog_file.go:461 +0x175
+created by github.com/urnetwork/glog.init.1 in goroutine 1
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/glog/glog_file.go:225 +0x318
+
+goroutine 2068 [runnable]:
+crypto/internal/fips140/sha256.block(0xc0031def50, {0xc014d74000, 0x10000, 0x930001})
+	/usr/local/go/src/crypto/internal/fips140/sha256/sha256block_amd64.go:28 +0x111
+crypto/internal/fips140/sha256.(*Digest).Write(0xc0031def50, {0xc0136a4000, 0x2000001, 0x2000001})
+	/usr/local/go/src/crypto/internal/fips140/sha256/sha256.go:187 +0x2b7
+crypto/sha256.Sum256({0xc0136a4000, 0x2000001, 0x2000001})
+	/usr/local/go/src/crypto/sha256/sha256.go:58 +0xa7
+github.com/urfoundation/sn/sim-testnet.bytesSHA256({0xc0136a4000, 0x2000001, 0x2000001})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/scenario.go:1182 +0x5c
+github.com/urfoundation/sn/sim-testnet.validateCampaignMetadataRawV2({0xc0136a4000?, 0x2000001?, 0xc00baaa480?}, {0xc000cc64e0, 0x5f}, {0xc0136a4000, 0x2000001, 0x2000001})
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/evidence_metadata_v2.go:327 +0x118
+github.com/urfoundation/sn/sim-testnet.verifyFinalPriorCarrierFilePayloadV2({0x6010000000?, 0x123000?, 0xc00baaa480?}, {0x65404ad, 0x13}, {0x64fb86c, 0x3}, {{0xc000cc64e0, 0x5f}, {0xc002e48410, ...}, ...}, ...)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/final_semantic_prior_carrier_decode_v2.go:91 +0x81e
+github.com/urfoundation/sn/sim-testnet.verifyFinalPriorCarrierWireWithObserverV2(0xc002433000, {0x65404ad, 0x13}, {0x64fb86c, 0x3}, {{0xc000cc64e0, 0x5f}, {0xc002e48410, 0x47}, 0x2000001, ...}, ...)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/final_semantic_prior_carrier_v2.go:153 +0xcf9
+github.com/urfoundation/sn/sim-testnet.verifyFinalPriorCarrierWireV2(...)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/final_semantic_prior_carrier_v2.go:103
+github.com/urfoundation/sn/sim-testnet.assertPriorCarrierDecodeTestV2(0xc00169b8c8, {0xc0054638c0, 0x16}, 0xc002433000, {0x65404ad, 0x13}, {{0xc000cc64e0, 0x5f}, {0xc002e48410, 0x47}, ...}, ...)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/final_semantic_prior_carrier_decode_v2_test.go:102 +0x337
+github.com/urfoundation/sn/sim-testnet.TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema(0xc00169b8c8)
+	/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/final_semantic_prior_carrier_decode_v2_test.go:281 +0xd4e
+testing.tRunner(0xc00169b8c8, 0x6f30998)
+	/usr/local/go/src/testing/testing.go:2036 +0x21d
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0xb13
+FAIL	github.com/urfoundation/sn/sim-testnet	600.586s
+FAIL
