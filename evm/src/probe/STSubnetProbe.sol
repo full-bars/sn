@@ -154,7 +154,7 @@ contract STSubnetProbe {
         returns (Battery memory b)
     {
         // --- 0x080c address mapping, via the exact library STSubnet uses ---
-        bool selfMapped;
+        bool selfMapped = false;
         try this.mirrorExt(MIRROR_KAT_ADDR) returns (bytes32 m) {
             b.blakeOk = true;
             b.mirrorKat = m;
