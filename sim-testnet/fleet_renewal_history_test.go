@@ -76,7 +76,7 @@ func (self *fleetHistoricalAliasRpc) ServeHTTP(writer http.ResponseWriter, reque
 		response["result"] = map[string]any{"number": hexutil.EncodeUint64(number), "hash": fleetHistoryBatchBlockHash(number)}
 	case "eth_call":
 		var message struct {
-			Data hexutil.Bytes `json:"data"`
+			Input hexutil.Bytes `json:"input"`
 		}
 		var selector string
 		if len(call.Params) != 2 || json.Unmarshal(call.Params[0], &message) != nil || json.Unmarshal(call.Params[1], &selector) != nil {
@@ -97,7 +97,7 @@ func (self *fleetHistoricalAliasRpc) ServeHTTP(writer http.ResponseWriter, reque
 		if block == self.checkpoint {
 			outputs = self.historicalOutputKVs
 		}
-		output, ok := outputs[hexutil.Encode(message.Data)]
+		output, ok := outputs[hexutil.Encode(message.Input)]
 		if !ok {
 			self.t.Error("historical alias used unexpected contract calldata")
 			return
@@ -121,6 +121,46 @@ func (self *fleetHistoricalAliasRpc) assertReads(t *testing.T, headers []string,
 	if !slices.Equal(self.headerSelectors, headers) || !slices.Equal(self.contractBlocks, blocks) {
 		t.Fatalf("historical reads headers=%v blocks=%v, want %v/%v", self.headerSelectors, self.contractBlocks, headers, blocks)
 	}
+}
+
+// The serial client sends input; retain the full calldata and block selectors.
+func TestFleetRenewalHistoricalAliasRpcDecodesInput(t *testing.T) {
+	fixture := &fleetHistoricalAliasRpc{
+		t: t, checkpoint: 110,
+		historicalOutputKVs: map[string]string{"0x1122334401": "0xa1", "0x1122334402": "0xb1"},
+		currentOutputKVs:    map[string]string{"0x1122334401": "0xa2", "0x1122334402": "0xb2"},
+	}
+	for index, call := range []struct {
+		input  string
+		block  uint64
+		result string
+	}{
+		{input: "0x1122334401", block: 110, result: "0xa1"},
+		{input: "0x1122334402", block: 110, result: "0xb1"},
+		{input: "0x1122334401", block: 112, result: "0xa2"},
+		{input: "0x1122334402", block: 112, result: "0xb2"},
+	} {
+		wire, err := json.Marshal(map[string]any{
+			"jsonrpc": "2.0", "id": index + 1, "method": "eth_call",
+			"params": []any{map[string]string{"input": call.input}, hexutil.EncodeUint64(call.block)},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		response := httptest.NewRecorder()
+		fixture.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/", strings.NewReader(string(wire))))
+		var result struct {
+			Id     int    `json:"id"`
+			Result string `json:"result"`
+		}
+		if err := json.Unmarshal(response.Body.Bytes(), &result); err != nil {
+			t.Fatalf("input %s at block %d did not produce a response: %v", call.input, call.block, err)
+		}
+		if result.Id != index+1 || result.Result != call.result {
+			t.Fatalf("input %s at block %d returned %+v, want %s", call.input, call.block, result, call.result)
+		}
+	}
+	fixture.assertReads(t, nil, []uint64{110, 110, 112, 112})
 }
 
 // Holds authentic synthetic batch artifacts and both legacy alias receipts.
