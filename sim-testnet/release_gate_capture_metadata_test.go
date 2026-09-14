@@ -15,6 +15,9 @@ import (
 	"testing"
 )
 
+// Pin the selected families independently of their growing source population.
+const releaseGateCaptureSelector = "^Test(FinalArchive|FinalCompositeArchive|ArchivePreflight|FinalClaimQueueCapture|FinalCollected(Bundle|File|Chain)|FinalSemantic(PublicCapture|LaunchFoundation)|FinalContractCleanupCapture|VerifyFinalCollected|FleetLifecycle|CanonicalRPCReceiptLogs|ScenarioProcessLogGate|ReleaseAndProductionScenariosRequireProcessLogGate|ScenarioCompletion|ScenarioRunner(WritesCompleteEvidenceOnlyOnPass|FailureHasNoCompleteMarker)|PublishedScenarioCandidateKeepsFrozenHashWhenClockAdvances|PublishedCompletionCommits|CampaignEvidence|DirectScenarioCompletion|EvidenceFileHashes|ArchiveCurrentDeploymentPublication|VerifyPublishedEvidenceOrigin|ReleaseCandidateCampaign|ProductionCampaignCompletion|ReleaseCampaignGate|ExactReleaseCampaignGate|ScenarioCampaignAttempt|ProductionHandoff|InitialScenarioFailure|ProductionPolicyEvidence|PrepareSignedAttemptStateNamespace|ClassifyValidatorAttemptState|ValidatorStateNamespace|QualificationLauncher|SimulatorAttemptCutV2|ProducerGateStateSelection|ProducerGateCustodySelection|ProducerGateCaptureSelection|FinalCaptureV2|FinalCaptureCapacity|ScenarioNativeWarmupV2|ScenarioNativeObservationV2|StrictHistoryAdoption|FleetRenewal|OwnedRPC|CoordinatorRepairCarry)"
+
 const releaseGateCapturePopulationRoot = "TestCampaignEvidencePopulationV2StreamsPhaseCensusWithBoundedOwners"
 
 const releaseGateCapturePrivatePattern = "TestFinalCaptureV2(ReadsActualRenderedSetupAndRejectsChangedSource|PendingPriorClosesOriginalAuthority|PendingPriorRejectsRehashedSourceAndMissingCensus|PendingPriorRejectsWrongHandoffAndSemanticRelabel|PendingJobIsImmutableAndNeverAccepted|PendingPriorRejectsWrongGateBeforeWrites|PendingPriorArtifactCensusHasNoSemanticOutputs)"
@@ -88,7 +91,7 @@ func verifyReleaseGateCaptureMetadataIsolation(script string) error {
 		skip        string
 		raceTimeout string
 	}{
-		{phase: "capture", job: "capture", variable: "capture_tests", skip: releaseGateCaptureOwnerSkip, raceTimeout: "10m"},
+		{phase: "capture", job: "capture", variable: "capture_tests", selector: releaseGateCaptureSelector, skip: releaseGateCaptureOwnerSkip, raceTimeout: "10m"},
 		{phase: "capture_evidence", job: "capture-evidence", variable: "capture_evidence_tests", selector: "^" + releaseGateCaptureEvidencePattern + "$", skip: releaseGateCaptureEvidenceSkip, raceTimeout: "10m"},
 		{phase: "capture_renewal", job: "capture-renewal", variable: "capture_renewal_tests", selector: "^" + releaseGateCaptureRenewalPattern + "$", raceTimeout: "10m"},
 		{phase: "capture_revision", job: "capture-revision", variable: "capture_revision_tests", selector: "^" + releaseGateCaptureRevisionPattern + "$", raceTimeout: "10m"},
@@ -331,32 +334,29 @@ func TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak(t *testing.T)
 	}
 }
 
-// Every source root has exactly one execution owner in each mode. Only the
-// finite reviewed cohorts and stress roots leave ordinary capture.
-func TestProducerGateCaptureSelectionRequiresIndependentPopulation(t *testing.T) {
-	t.Parallel()
-	raw, err := os.ReadFile("../scripts/test-release-1.0-producer-gate.sh")
-	if err != nil {
-		t.Fatal(err)
-	}
-	script := string(raw)
+// Every selected declaration has one owner; open source families may grow,
+// while finite cohorts, exact exclusions and execution budgets stay pinned.
+func verifyReleaseGateCaptureSourceCensus(script string, sources []string) error {
 	if err := verifyReleaseGateCaptureMetadataIsolation(script); err != nil {
-		t.Fatalf("capture population lacks its independently admitted five/ten-minute owner: %v", err)
+		return fmt.Errorf("capture population lacks its independently admitted five/ten-minute owner: %w", err)
 	}
 	selector, err := releaseConnectPolicySelectorAssignment(script, "capture_tests")
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
-	sources := releaseEvidenceV2GateSources(t, []string{"*_test.go"})
 	selected, err := releaseSelectedTestDeclarations(selector, sources)
 	if err != nil {
-		t.Fatal(err)
+		return err
+	}
+	evidenceRoots, err := releaseSelectedTestDeclarations("^"+releaseGateCaptureEvidencePattern+"$", sources)
+	if err != nil {
+		return err
 	}
 	selectors := map[string]*regexp.Regexp{}
 	for _, variable := range []string{"capture_population_tests", "capture_metadata_tests", "capture_private_tests", "capture_prior_tests", "capture_lifecycle_tests", "capture_evidence_tests", "capture_renewal_tests", "capture_revision_tests"} {
 		value, err := releaseConnectPolicySelectorAssignment(script, variable)
 		if err != nil {
-			t.Fatal(err)
+			return err
 		}
 		selectors[variable] = regexp.MustCompile(value)
 	}
@@ -377,37 +377,127 @@ func TestProducerGateCaptureSelectionRequiresIndependentPopulation(t *testing.T)
 			}
 		}
 		if owners != 1 {
-			t.Fatalf("capture source %s has %d execution owners, want exactly one", name, owners)
+			return fmt.Errorf("capture source %s has %d execution owners, want exactly one", name, owners)
 		}
 	}
 	separateOwners := 0
 	for _, count := range counts {
 		separateOwners += count
 	}
-	if counts["capture_population_tests"] != 1 || counts["capture_metadata_tests"] != 1 || counts["capture_private_tests"] != len(releaseCapturePrivateFixtureRoots) || counts["capture_prior_tests"] != 1 || counts["capture_lifecycle_tests"] != 1 || counts["capture_evidence_tests"] != 87 || counts["capture_renewal_tests"] != 11 || counts["capture_revision_tests"] != 2 || len(ordinaryOwners) != 343 || len(selected) != 454 || len(ordinaryOwners)+separateOwners != len(selected) {
-		t.Fatalf("capture partition changed its complete source census: ordinary=%d separate=%v selected=%d", len(ordinaryOwners), counts, len(selected))
+	// The two stress roots have their own owners; every other evidence root
+	// remains in the evidence family, including newly added regressions.
+	if counts["capture_population_tests"] != 1 || counts["capture_metadata_tests"] != 1 || counts["capture_private_tests"] != len(releaseCapturePrivateFixtureRoots) || counts["capture_prior_tests"] != 1 || counts["capture_lifecycle_tests"] != 1 || counts["capture_evidence_tests"] != len(evidenceRoots)-2 || counts["capture_renewal_tests"] != 11 || counts["capture_revision_tests"] != 2 || len(ordinaryOwners) == 0 || len(ordinaryOwners)+separateOwners != len(selected) {
+		return fmt.Errorf("capture partition changed its complete source census: ordinary=%d separate=%v selected=%d", len(ordinaryOwners), counts, len(selected))
 	}
 	for _, root := range releaseCapturePrivateFixtureRoots {
 		if !slices.Contains(selected, root.name) || !selectors["capture_private_tests"].MatchString(root.name) {
-			t.Fatalf("capture private source %s lost its separate owner", root.name)
+			return fmt.Errorf("capture private source %s lost its separate owner", root.name)
 		}
 	}
 	if !slices.Contains(selected, releaseGateCapturePriorRoot) {
-		t.Fatal("capture prior source lost its separate owner")
+		return fmt.Errorf("capture prior source lost its separate owner")
 	}
 	if !slices.Contains(selected, releaseGateCaptureLifecycleRoot) {
-		t.Fatal("capture lifecycle source lost its separate owner")
+		return fmt.Errorf("capture lifecycle source lost its separate owner")
 	}
 	for _, name := range []string{
 		"TestCampaignEvidencePopulationV2AdmitsFullConfiguredMetadataCensus",
 		"TestCampaignEvidenceCapacityV2MetadataCompletionWriteBindsExactSignedObject",
 	} {
 		if !slices.Contains(selected, name) || !selectors["capture_evidence_tests"].MatchString(name) || evidenceSkip.MatchString(name) {
-			t.Fatalf("exact stress partition removed adjacent evidence source %s", name)
+			return fmt.Errorf("exact stress partition removed adjacent evidence source %s", name)
 		}
 	}
-	if !ordinaryOwners["TestFinalCaptureV2PrivateFixtureInputsAreDetached"] {
-		t.Fatal("exact serial partition removed the adjacent ordinary private-fixture guard")
+	for _, name := range []string{
+		"TestFinalCaptureV2PrivateFixtureInputsAreDetached",
+		"TestFleetRenewalOriginalOracleAcceptsCompletedRestore",
+		"TestFleetRenewalOriginalOracleRejectsChangedRouting",
+	} {
+		if !ordinaryOwners[name] {
+			return fmt.Errorf("capture source %s lost its ordinary owner", name)
+		}
+	}
+	return nil
+}
+
+// Keep the complete current source census in exactly one owner per mode.
+func TestProducerGateCaptureSelectionRequiresIndependentPopulation(t *testing.T) {
+	t.Parallel()
+	raw, err := os.ReadFile("../scripts/test-release-1.0-producer-gate.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := verifyReleaseGateCaptureSourceCensus(string(raw), releaseEvidenceV2GateSources(t, []string{"*_test.go"})); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Adding renewal regressions must not invalidate an unchanged owner partition.
+func TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources(t *testing.T) {
+	t.Parallel()
+	raw, err := os.ReadFile("../scripts/test-release-1.0-producer-gate.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sources := releaseEvidenceV2GateSources(t, []string{"*_test.go"})
+	sources = append(sources, "func TestFleetRenewalSyntheticCaptureFirst(t *testing.T) {}\nfunc TestFleetRenewalSyntheticCaptureSecond(t *testing.T) {}\n")
+	if err := verifyReleaseGateCaptureSourceCensus(string(raw), sources); err != nil {
+		t.Fatalf("additional ordinary roots broke complete capture ownership: %v", err)
+	}
+}
+
+// The evidence family's open prefix must also admit future source roots.
+func TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources(t *testing.T) {
+	t.Parallel()
+	raw, err := os.ReadFile("../scripts/test-release-1.0-producer-gate.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sources := releaseEvidenceV2GateSources(t, []string{"*_test.go"})
+	sources = append(sources, "func TestCampaignEvidenceSyntheticCapture(t *testing.T) {}\n")
+	if err := verifyReleaseGateCaptureSourceCensus(string(raw), sources); err != nil {
+		t.Fatalf("additional evidence root broke complete capture ownership: %v", err)
+	}
+}
+
+// Dynamic totals cannot hide a narrowed family, absent retained root or duplicate.
+func TestProducerGateCaptureSelectionRejectsSourceCensusDrift(t *testing.T) {
+	t.Parallel()
+	raw, err := os.ReadFile("../scripts/test-release-1.0-producer-gate.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(raw)
+	sources := releaseEvidenceV2GateSources(t, []string{"*_test.go"})
+	if err := verifyReleaseGateCaptureSourceCensus(script, sources); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{
+		"TestFleetRenewalOriginalOracleAcceptsCompletedRestore",
+		"TestFleetRenewalOriginalOracleRejectsChangedRouting",
+		releaseGateCapturePopulationRoot,
+		"TestFleetRenewalBudgetDoesNotChargeRetiredGasTwice",
+	} {
+		missingSources := slices.Clone(sources)
+		for i, source := range missingSources {
+			missingSources[i] = strings.ReplaceAll(source, "func "+name+"(", "func omitted"+name+"(")
+		}
+		if err := verifyReleaseGateCaptureSourceCensus(script, missingSources); err == nil {
+			t.Fatalf("missing retained source %s escaped complete ownership", name)
+		}
+		duplicateSources := append(slices.Clone(sources), "func "+name+"(t *testing.T) {}\n")
+		if err := verifyReleaseGateCaptureSourceCensus(script, duplicateSources); err == nil || !strings.Contains(err.Error(), "duplicated") {
+			t.Fatalf("duplicate source %s escaped exact declaration membership: %v", name, err)
+		}
+	}
+	for _, family := range []string{"FleetRenewal", "CampaignEvidence", "FinalArchive"} {
+		changed := strings.Replace(script, "capture_tests='"+releaseGateCaptureSelector+"'", "capture_tests='"+strings.Replace(releaseGateCaptureSelector, family+"|", "", 1)+"'", 1)
+		if changed == script {
+			t.Fatalf("capture family %s lost its mutation prerequisite", family)
+		}
+		if err := verifyReleaseGateCaptureSourceCensus(changed, sources); err == nil {
+			t.Fatalf("omitted capture family %s escaped source census", family)
+		}
 	}
 }
 
