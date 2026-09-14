@@ -206,8 +206,18 @@ func TestOwnedRPCPlanApprovalBindsExactRouteWithoutChangingCustody(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if plan.OwnedRPCAuthority != cfg.ownedRPCAuthority || prior.ConfigHash != plan.ConfigHash || prior.PolicyHash != plan.PolicyHash || prior.PlanHash == plan.PlanHash || prior.ResolvedInputsHash == plan.ResolvedInputsHash || !reflect.DeepEqual(prior.Roles, plan.Roles) || !reflect.DeepEqual(prior.Actions, plan.Actions) || prior.MaximumSpend != plan.MaximumSpend || prior.Limits != plan.Limits {
-		t.Fatal("owned route was unbound or changed source actions, custody, or economic limits")
+	if plan.OwnedRPCAuthority != cfg.ownedRPCAuthority || prior.ConfigHash != plan.ConfigHash || prior.PolicyHash != plan.PolicyHash || prior.PlanHash == plan.PlanHash || prior.ResolvedInputsHash == plan.ResolvedInputsHash || !reflect.DeepEqual(prior.Roles, plan.Roles) || prior.MaximumSpend != plan.MaximumSpend || prior.Limits != plan.Limits {
+		t.Fatal("owned route was unbound or changed source identity, custody, or economic limits")
+	}
+	for _, before := range prior.Actions {
+		after := actionByID(t, plan, before.ID)
+		if before.ID == "config.render" {
+			if before.IntentHash == after.IntentHash || after.Parameters["resolved_inputs_hash"] != plan.ResolvedInputsHash || actionAcceptsIntent(after, before.IntentHash) {
+				t.Fatal("owned route reused the prior runtime rendering")
+			}
+		} else if !reflect.DeepEqual(before, after) {
+			t.Fatalf("owned route changed unrelated action %s", before.ID)
+		}
 	}
 	if err := validateOwnedRPCPlan(cfg, plan); err != nil {
 		t.Fatal(err)

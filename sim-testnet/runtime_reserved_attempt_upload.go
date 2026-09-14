@@ -106,6 +106,11 @@ func runtimeReservedAttemptUploads(cfg *ResolvedConfig, stateDir string, contrac
 			}
 		}
 		value.NativeRPCURLs = slices.Clone(value.NativeRPCURLs)
+		if ownedRPCOnly(cfg) {
+			// The approved owned route also governs reserved staging discovery.
+			// Keep the source template unchanged for its original consent hash.
+			value.NativeRPCURLs = []string{verificationSubstrateEndpoint(cfg)}
+		}
 		value.Admission.ActivationContexts = slices.Clone(value.Admission.ActivationContexts)
 	}
 	return result, nil

@@ -1554,9 +1554,12 @@ func buildPlanWithRegistrationGeneration(cfg *ResolvedConfig, facts *SetupFacts,
 		add(Action{ID: runtimeEvidenceActivationBoundaryActionId, Kind: "evm-read", Target: evidenceManifest.Address.Hex(), Description: "retain the common finalized activation boundary and exact fixed source inputs before validator startup", Parameters: map[string]string{"mode": "fresh-v2", "policy_hash": cfg.PolicyHash}, DependsOn: activationDeps})
 		setupDeps = append(setupDeps, runtimeEvidenceActivationBoundaryActionId)
 	}
+	// An owned route preserves consent identity but changes rendered RPC inputs.
+	// Its local action must therefore bind the resolved launch inputs as well.
 	add(Action{ID: "config.render", Kind: "local", Target: cfg.Config.Deployment.DeploymentID, Description: "atomically render isolated operator, miner, validator, and supervisor configs", Parameters: map[string]string{
 		"config_hash": cfg.ConfigHash, "policy_hash": cfg.PolicyHash, "operator_config_overlay": operatorConfigOverlayVersion,
 		"runtime_config_format": runtimeConfigFormatVersion,
+		"resolved_inputs_hash":  resolvedHash,
 	}, DependsOn: setupDeps})
 	add(Action{ID: "accounts.provision", Kind: "local", Target: cfg.Config.Deployment.DeploymentID, Description: "provision stable operator-scoped miner and validator identities", DependsOn: []string{"config.render"}})
 	add(Action{ID: "campaign.voluntary-conviction.1", Kind: "evm-transaction", Target: "no:1", Description: "lock the exact first-tier boundary as voluntary conviction without recording current-epoch demand", Parameters: map[string]string{"no_id": "1", "amount_rao": fmt.Sprint(cfg.Config.Scenarios.VoluntaryConvictionRao), "reserve_runtime_share_transitions": strconv.FormatUint(reserveRuntimeShareTransitionCount, 10), "reserve_rounding_allowance_rao": strconv.FormatUint(reserveRoundingAllowancePerCallRao, 10)}, Spend: Spend{EVMGasWei: voluntaryGas}, DependsOn: []string{"accounts.provision", "campaign.evm-gas-reserve", "alpha.transfer.operator-deposit.1"}})

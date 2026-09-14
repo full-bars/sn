@@ -106,8 +106,24 @@ func retainRuntimeEvidenceLaunchInputsTest(t *testing.T, cfg *ResolvedConfig, st
 // Actual launch capacities must not be replaced by the much smaller generic
 // fixture. Both API destinations and both validator loaders see exact outputs.
 func TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender(t *testing.T) {
+	testRuntimeEvidenceLaunchTemplateRender(t, false)
+}
+
+func TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig(t *testing.T) {
+	testRuntimeEvidenceLaunchTemplateRender(t, true)
+}
+
+func testRuntimeEvidenceLaunchTemplateRender(t *testing.T, owned bool) {
+	t.Helper()
 	t.Parallel()
 	cfg := runtimeEvidenceLaunchConfigTest(t)
+	if owned {
+		var err error
+		cfg, err = prepareOwnedRPCConfiguration(cfg, "192.168.1.162:9944")
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 	approvedHash := cfg.ConfigHash
 	cfg.Repos.PlatformConfig = testOperatorConfigSources(t)
 	cfg.Repos.Vault = filepath.Join(t.TempDir(), "vault")
@@ -155,12 +171,70 @@ func TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	for range 2 {
+	preserved := map[string]string{}
+	for pass := range 2 {
 		if err := RenderRuntimeConfigs(cfg, stateDir, roles); err != nil {
 			t.Fatalf("actual launch template cannot render or restart: %v", err)
 		}
 		if _, err := verifyRuntimeConfigManifest(cfg, stateDir); err != nil {
 			t.Fatal(err)
+		}
+		if owned && pass == 0 {
+			receipt, err := postconditionRelativePath(fixture.plan.PlanHash, validatorEvidenceDeployActionID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, path := range []string{filepath.Join(stateDir, "plan.json"), filepath.Join(stateDir, "journal.jsonl"), filepath.Join(stateDir, receipt),
+				filepath.Join(stateDir, "evidence-v2-setup", "prepared.json"), filepath.Join(stateDir, "evidence-v2-setup", "completed.json"), minerPayoutSeedPath(stateDir, 1)} {
+				hash, err := fileSHA256(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				preserved[path] = hash
+			}
+			// Reproduce the stopped deployment's provisional staging settings.
+			// These changed outputs must fail current verification until rendered.
+			for index, expected := range wantReserved {
+				path := filepath.Join(stateDir, "runtime", fmt.Sprintf("operator-%d", index+1), "vault", "st.yml")
+				wire, err := os.ReadFile(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				root, err := runtimeAttemptUploadYAML(wire)
+				if err != nil {
+					t.Fatal(err)
+				}
+				expected.NativeRPCURLs = slices.Clone(cfg.Config.Artifacts.ReservedAttemptUploads[index].NativeRPCURLs)
+				expected.Admission.ProvisionalSeededDiscoveryOnly = true
+				expected.Admission.ProvisionalRetainedContextAuthority = true
+				for _, validator := range resolved.Config.ValidatorEvidenceV2 {
+					for _, operator := range validator.Evidence.Operators {
+						expected.Admission.ActivationContexts = append(expected.Admission.ActivationContexts, operator.Context)
+					}
+				}
+				for node := 0; node < len(root.Content); node += 2 {
+					if root.Content[node].Value == "testnet-reserved-attempt-upload" {
+						if err := root.Content[node+1].Encode(expected); err != nil {
+							t.Fatal(err)
+						}
+					}
+				}
+				wire, err = yaml.Marshal(root)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := atomicWrite(path, wire, 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if _, err := verifyRuntimeConfigManifest(cfg, stateDir); err == nil || !strings.Contains(err.Error(), "runtime reserved staging differs") {
+				t.Fatalf("stale provisional staging was accepted before native rerender: %v", err)
+			}
+		}
+	}
+	for path, want := range preserved {
+		if got, err := fileSHA256(path); err != nil || got != want {
+			t.Fatalf("local rerender changed preserved plan, journal, receipt, evidence or custody at %s: %v", path, err)
 		}
 	}
 	for index, expected := range wantReserved {

@@ -65,6 +65,12 @@ func TestSimulatorClientSeedCustodyWalletPreservesProvisionedRole(t *testing.T) 
 }
 
 func TestSimulatorClientSeedCustodyWalletRevisionRequiresFreshRender(t *testing.T) {
+	t.Run("legacy-wallet", func(t *testing.T) { testSimulatorRuntimeFormatRevision(t, "") })
+	t.Run("prior-reserved-staging", func(t *testing.T) { testSimulatorRuntimeFormatRevision(t, "signed-provider-wallet-v1") })
+}
+
+func testSimulatorRuntimeFormatRevision(t *testing.T, priorFormat string) {
+	t.Helper()
 	cfg := testResolvedConfig(t)
 	roles, err := derivePublicRoles(cfg)
 	if err != nil {
@@ -80,6 +86,10 @@ func TestSimulatorClientSeedCustodyWalletRevisionRequiresFreshRender(t *testing.
 		action := &prior.Actions[index]
 		if action.ID == "config.render" {
 			delete(action.Parameters, "runtime_config_format")
+			delete(action.Parameters, "resolved_inputs_hash")
+			if priorFormat != "" {
+				action.Parameters["runtime_config_format"] = priorFormat
+			}
 			action.IntentHash, err = actionIntentHash(*action)
 			if err != nil {
 				t.Fatal(err)

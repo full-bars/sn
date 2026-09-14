@@ -147,8 +147,8 @@ func prepareRuntimeReservedRenderTest(t *testing.T, cfg *ResolvedConfig, stateDi
 		crypto.CreateAddress(signer, transaction.Nonce()) != companion.Address || transaction.Value().Sign() != 0 || !bytes.Equal(transaction.Data(), payloads.ValidatorEvidence.Creation) {
 		t.Fatalf("retained renderer creation differs from actual generated signed bytes: %v", err)
 	}
-	if cfg.OperationalRPCMode != rpcModePublicOverride {
-		t.Fatal("renderer source fixture requires the explicit shared-provider test profile")
+	if cfg.OperationalRPCMode != rpcModePublicOverride && !ownedRPCOnly(cfg) {
+		t.Fatal("renderer source fixture requires an explicit shared-provider or owned-node test profile")
 	}
 	executor := &Executor{cfg: cfg, stateDir: stateDir, plan: plan, roles: roles, payloads: payloads, journal: journal, deployer: manager}
 	head := ChainHead{Number: creation.BlockNumber, Hash: creation.BlockHash}
@@ -193,6 +193,12 @@ func prepareRuntimeReservedRenderTest(t *testing.T, cfg *ResolvedConfig, stateDi
 		t.Fatalf("complete generated renderer authority was not admitted: %v", err)
 	}
 	for index, value := range values {
+		if ownedRPCOnly(cfg) {
+			if !slices.Equal(value.NativeRPCURLs, []string{verificationSubstrateEndpoint(cfg)}) {
+				t.Fatal("owned staging retained another native discovery endpoint")
+			}
+			value.NativeRPCURLs = slices.Clone(cfg.Config.Artifacts.ReservedAttemptUploads[index].NativeRPCURLs)
+		}
 		if runtimeReservedAttemptUploadIsTemplate(cfg.Config.Artifacts.ReservedAttemptUploads[index]) {
 			value.Admission.Deployment = validatorpkg.ValidatorUploadDeployment{MaximumSubnetUIDs: value.Admission.Deployment.MaximumSubnetUIDs}
 		}

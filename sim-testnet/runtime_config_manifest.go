@@ -15,9 +15,9 @@ import (
 
 const runtimeConfigManifestSchema = "urnetwork-sim-runtime-config-manifest-v1"
 
-// Changes to required rendered files must invalidate the local render action
-// without changing the policy or configuration identity of chain receipts.
-const runtimeConfigFormatVersion = "signed-provider-wallet-v1"
+// Changes to required files or staging semantics invalidate the local render
+// action without changing policy or configuration identity of chain receipts.
+const runtimeConfigFormatVersion = "strict-reserved-owned-rpc-v2"
 
 // Bind one immutable process input by state-relative path, content and mode.
 type RuntimeConfigFile struct {
