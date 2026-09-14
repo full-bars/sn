@@ -479,7 +479,7 @@ func (e *Executor) verifyFleetRenewalLiveIdentity(ctx context.Context, renewal *
 	if err != nil {
 		return err
 	}
-	if state.Active != renewal.Oracle || state.Immutable != renewal.Oracle || state.Pending != (common.Address{}) || state.PendingEpoch != 0 {
+	if !fleetRenewalOriginalOracleReady(state, renewal.Oracle) {
 		return errors.New("renewal oracle routing changed")
 	}
 	if state.CurrentEpoch >= renewal.ValidFromEpoch {

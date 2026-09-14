@@ -27,6 +27,19 @@ type fleetRenewalObservation struct {
 	Evidence map[[16]byte][]FleetBindingEvidence
 }
 
+// STCoordinator retains an effective oracle schedule in its pending fields.
+// Accept a completed restore to the original oracle, but no future reroute or
+// inconsistent address/epoch pair, during both planning and each new write.
+func fleetRenewalOriginalOracleReady(state fleetRefreshOracleState, original common.Address) bool {
+	if original == (common.Address{}) || state.Immutable != original || state.Active != original {
+		return false
+	}
+	if state.Pending == (common.Address{}) {
+		return state.PendingEpoch == 0
+	}
+	return state.Pending == original && state.PendingEpoch != 0 && state.PendingEpoch <= state.CurrentEpoch
+}
+
 // Every retained binding remains an input. A refresh wrapper changes the wire
 // names, not the underlying dual-signed binding; normalize only that wrapper.
 func readFleetRenewalBindingEvidence(stateDir string) (map[[16]byte][]FleetBindingEvidence, error) {
@@ -309,7 +322,7 @@ func observeFleetRenewal(ctx context.Context, cfg *ResolvedConfig, stateDir stri
 	if err != nil {
 		return result, err
 	}
-	if oracle.Active != common.HexToAddress(oracleRole.Address) || oracle.Immutable != oracle.Active || oracle.Pending != (common.Address{}) || oracle.PendingEpoch != 0 {
+	if !fleetRenewalOriginalOracleReady(oracle, common.HexToAddress(oracleRole.Address)) {
 		return result, errors.New("renewal requires the retained original oracle with no pending reroute")
 	}
 	result.Renewal = FleetRenewal{Round: uint64(len(base.FleetRenewals) + 1), SourcePlanHash: base.PlanHash, JournalHash: entries[len(entries)-1].EntryHash, NativeHead: ChainHead{Number: nativeNumber, Hash: nativeHash.Hex()}, EVMHead: head, ObservedEpoch: oracle.CurrentEpoch, ValidFromEpoch: o.RenewalValidFrom, ValidToEpoch: o.RenewalValidTo, MaximumFeePerGasWei: o.RenewalFeePerGas, Oracle: oracle.Active, Keeper: common.HexToAddress(keeperRole.Address), CampaignLiabilityWei: exposure.Liability, TransactionEvidence: external}
