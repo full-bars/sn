@@ -353,14 +353,14 @@ release_phase_solidity() {
 release_gate_start solidity release_phase_solidity
 
 # The retained 177-root race selection exhausted its ten-minute package clock.
-# Its two unresolved roots passed together in 277.37 seconds. Give that exact
-# pair a separate owner; every other original match keeps both executable modes
-# and the same ten-minute bound. Prefixes continue admitting adjacent roots.
+# Its two unresolved roots retain their separate owner. The later owned-node
+# wrapper performs the same full-population render and has its own owner too;
+# all other matches keep both modes and the same ten-minute package bound.
 release_phase_evidence_simulator() {
   cd "$sn_repo"
   simulator_evidence_tests='^Test(ValidatorEvidence|RuntimeEvidenceV2|RuntimeEvidence|EvidenceRelay|EvmTxManager|ClientKeyHistory)'
-  go test ./sim-testnet -run "$simulator_evidence_tests" -count=1 -skip '^(TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender|TestValidatorEvidenceCarryPublicOverrideRequiresCompleteClonedHeads)$' -timeout 10m
-  go test -race ./sim-testnet -run "$simulator_evidence_tests" -count=1 -skip '^(TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender|TestValidatorEvidenceCarryPublicOverrideRequiresCompleteClonedHeads)$' -timeout 10m
+  go test ./sim-testnet -run "$simulator_evidence_tests" -count=1 -skip '^(TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender|TestValidatorEvidenceCarryPublicOverrideRequiresCompleteClonedHeads|TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig)$' -timeout 10m
+  go test -race ./sim-testnet -run "$simulator_evidence_tests" -count=1 -skip '^(TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender|TestValidatorEvidenceCarryPublicOverrideRequiresCompleteClonedHeads|TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig)$' -timeout 10m
 }
 release_gate_start evidence-simulator release_phase_evidence_simulator
 
@@ -371,6 +371,14 @@ release_phase_evidence_simulator_slow() {
   go test -race ./sim-testnet -run "$simulator_evidence_slow_tests" -count=1 -timeout 10m
 }
 release_gate_start evidence-simulator-slow release_phase_evidence_simulator_slow
+
+release_phase_evidence_simulator_render() {
+  cd "$sn_repo"
+  simulator_evidence_render_tests='^TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig$'
+  go test ./sim-testnet -run "$simulator_evidence_render_tests" -count=1 -timeout 10m
+  go test -race ./sim-testnet -run "$simulator_evidence_render_tests" -count=1 -timeout 10m
+}
+release_gate_start evidence-simulator-render release_phase_evidence_simulator_render
 
 echo "[release-1.0 producer] operator proof and artifact APIs"
 release_phase_server_unit() {
