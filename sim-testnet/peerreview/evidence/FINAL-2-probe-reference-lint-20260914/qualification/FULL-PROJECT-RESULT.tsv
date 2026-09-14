@@ -1,0 +1,2 @@
+command_class	result	exit	finished_utc	suites	passed	failed	skipped	sp1probe_passed	compilation_note	raw_terminal_sha256
+full-forge-test-summary	pass	0	2026-09-14T17:26:30Z	18	215	0	0	19	No files changed; compilation skipped after the completed strict p1 artifact build.	6e6b2f91e5daf54f2601bdd785daf8503a69a12fa9897791e1e16f796b13a949

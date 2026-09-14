@@ -1,0 +1,12 @@
+diff --git a/evm/test/SP1Probe.t.sol b/evm/test/SP1Probe.t.sol
+--- a/evm/test/SP1Probe.t.sol
++++ b/evm/test/SP1Probe.t.sol
+@@ -209,7 +209,7 @@ contract SP1ProbeTest is Test {
+         (bool referenceOk, bytes memory referenceOutput) = address(0x09).staticcall(legacyInput);
+         assertTrue(referenceOk, "the old input is valid EIP-152 in Foundry");
+         assertEq(referenceOutput.length, 64);
+-        assertTrue(_referenceBlake2fMatchesKnownAnswer(referenceOutput), "reference known answer");
++        assertEq(bytes32(referenceOutput), MIRROR_KAT);
+         _runtime455Mapping();
+         (bool legacyOk,) = address(0x09).staticcall(legacyInput);
+         assertFalse(legacyOk, "runtime 455 rejects the old route");

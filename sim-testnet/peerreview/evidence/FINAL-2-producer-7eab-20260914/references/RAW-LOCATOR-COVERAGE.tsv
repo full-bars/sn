@@ -1,0 +1,9 @@
+raw_category	records	indexed_content_handling
+outer_capture	8	hash and locator only
+launcher_command_and_meta	8	hash and locator only
+preflight_streams	21	hash and locator only
+phase_logs	36	hash and locator only
+job_ready_markers	36	hash and locator only
+service_owner_and_cid_records	3	hash and locator only
+excluded_private_service_material	variable	not indexed or copied
+total_indexed_records	112	hash and locator only

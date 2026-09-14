@@ -1,0 +1,11 @@
+source=9e258f816f83ac196ca3b3e7da75fc11437dfe9a
+qualified_source=0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa
+source_scope=No Go/module/release-lock differences between formatted qualification source and published tree; only report and evidence additions.
+pull_exit=0
+push_exit=0
+publication_started_at=2026-09-14T15:06:53.901975073Z
+publication_finished_at=2026-09-14T15:06:56.827227431Z
+physical_exit=0
+physical_started_at=2026-09-14T15:07:50.760520928Z
+physical_finished_at=2026-09-14T15:07:52.936544753Z
+result_sha256=893cea880757e0e85af39ccefa44a9640f88a7b29bce81f128ee765badb79aa1

@@ -1,0 +1,15 @@
+field	value
+source_commit	7eab04905dbc274ae6d2546b6802f1097c1fc3fe
+source_pair_sha256	05d8d9d50e2904ccaeef66a8ffea9f693d8a06e340423a66eb2032c1a473b109
+source_pair_before_after_identical	true
+cli_sha256	feb8890a60efff80cada37a9015b8edeb2d49f20476b1e7ee2c9d4c0a3176b9e
+cli_bytes	140668984
+cli_mode	0700
+trimpath	true
+buildvcs	true
+modified	false
+build_exit	0
+outer_exit	0
+outer_started_at	2026-09-14T15:20:15Z
+outer_finished_at	2026-09-14T15:21:02Z
+result_sha256	9179f1d205f111fc066ca63c619400e410feda447d58599083aef332837cec96

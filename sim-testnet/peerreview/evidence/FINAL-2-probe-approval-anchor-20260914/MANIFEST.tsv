@@ -1,0 +1,28 @@
+bundle_path	origin_record_label	origin_sha256	representation
+source/IDENTITY.tsv	qualification, integration, and final CLI closed records	multiple; see references	derived public-safe identity
+source/PATCH-SUMMARY.tsv	git author/formatter diffs	3b7461b8f0578480b0c696c5b5dcb75da4bd7f817f64193103ad12c44834737e	derived path/count summary
+source/FORMATTER-RECONCILIATION.tsv	formatter capture	9ad58fa9e51abfbb9bd305d71c0e960d1fe8e7d359c0b268882a50a13a99d40d	derived formatter identity
+source/CASE-TO-FAILURE-AND-ADJACENT.tsv	author handoff and five deterministic tests	1b6c45c2992b0167e0f860e32666e88e265ccb4efde5d6649a5435396deb6b57	derived case mapping
+qualification/SELECTOR.txt	author selector	1f4f66b074af22534b73dab3918daca2d8d43e2f0999a73993bfe96a44cd7222	verbatim selector
+qualification/SOURCE-ROOTS.sorted	author source census	5cc431053a12c4d1f7b4fed2a4981ec9eba3ce59ccfdc0e310459c3690d5d2cc	verbatim 40-root census
+qualification/OUTCOME-SUMMARY.tsv	normal/race event validations	2a4cf155426b3f88af520dec5312ca701e40cb644595e7c7ac7ed6a53dc38016;2a4cf155426b3f88af520dec5312ca701e40cb644595e7c7ac7ed6a53dc38016	derived top-level-only summary
+qualification/normal/*	normal closed capture	multiple; see references	selected exact outcomes, compiled roots, validation
+qualification/race/*	race closed capture	multiple; see references	selected exact outcomes, compiled roots, validation
+confirmations/*	normal p2/p3 closed capture	multiple; see references	selected confirmation outcomes and validation
+fences/DEPENDENCY-PROJECTION.tsv	qualification dependency prebuild identity	fec401887fa1d70c5b75f8929501f0a15c9eba86dd3251f5c53dd06accdc0815	derived without paths
+fences/SOURCE-AND-BINARY-FENCES.tsv	qualification and causal identities	multiple; see references	derived fence summary
+causal/CAUSAL-moving-head.patch	author causal patch	14f0747efe4acfc11f07d9b5810264cd84bf6ce45f8cf5f9bd157b2fc06ee394	verbatim one-assignment patch
+causal/OUTCOMES.expected.tsv	transferred causal capture	c6a4fa3db9588e9ab5561dd786f442908f36aa28db3ae1cce9a3ad49d81a686b	verbatim expected outcomes
+causal/OUTCOMES.actual.tsv	transferred causal capture	38d998d19c05afce264b017842fb765ee94cc592fc917fbc61329932daaff886	verbatim actual outcomes
+causal/CLOSURE.RESULT	transferred causal capture	dc2fbbf07fac309e992cd8df27eebd2527be6be294be121605abe00626b12207	verbatim closure record
+causal/CLOSURE.md	transferred causal capture	4bdd0ffe1b1fd54f07777039ab8cc202589a50e085481635e4d10908e1757070	verbatim public-safe closure note
+causal/RESULT-SUMMARY.tsv	transferred causal capture	dc2fbbf07fac309e992cd8df27eebd2527be6be294be121605abe00626b12207	derived concise causal result
+native/ORIGINAL-REFUSAL-REFERENCE.tsv	closed original native refusal	0bb5f6a84cacfe990431b7f21544afbd953e6086cae7a783a347fb3a0f817129	derived selected result fields
+native/HANDOFF-ERRATA.md	author handoff and native RESULT	1b6c45c2992b0167e0f860e32666e88e265ccb4efde5d6649a5435396deb6b57;0bb5f6a84cacfe990431b7f21544afbd953e6086cae7a783a347fb3a0f817129	derived timestamp erratum
+references/RAW-HASH-REFERENCES.tsv	closed raw records	multiple; listed per row	hash references only
+README.md	bundle specification	-	derived public-safe instructions
+SUMMARY.md	closed qualification records	-	derived concise result summary
+HANDOFF.md	bundle specification	-	derived scope/proof limits
+EXCLUSIONS.md	bundle specification	-	derived exclusion statement
+MANIFEST.tsv	this bundle	-	provenance map
+SANITIZATION-CHECKS.tsv	this bundle	-	sealing checks

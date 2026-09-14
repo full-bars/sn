@@ -1,0 +1,9 @@
+source_reference	observation	limit
+sim-testnet/executor.go:62,108-154	NewExecutor/current managers construction	Static source-reading map only
+sim-testnet/evm.go:1139	DialEvmTxManager receives cfg.OperationalEVM	Static source-reading map only
+sim-testnet/owned_rpc.go:49-69,125	Explicit LAN route and dial refusal path	Static source-reading map only
+sim-testnet/evm_rpc.go:490,518-535	Direct ethclient dial; owned request rate is zero with guard; no public retry transport	Static source-reading map only
+sim-testnet/executor.go:1339->1137	Current-state dispatch reaches transaction manager path	Static source-reading map only
+sim-testnet/postcondition.go:876; fleet_renewal_execute.go:653,672-677	Keeper receipt verification path	Static source-reading map only
+sim-testnet/postcondition.go:251	Canonical block and exact receipt read	Static source-reading map only
+sim-testnet/fleet_renewal_history.go	Copied transport managers are retained for current-state renewal action	Static source-reading map only

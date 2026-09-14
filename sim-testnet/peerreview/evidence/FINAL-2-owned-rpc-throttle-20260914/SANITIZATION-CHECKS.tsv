@@ -1,0 +1,11 @@
+check	result	detail
+private_plan_request_stdout_stderr_files_absent	pass	No private plan/config, request, raw stdout, or raw stderr file is retained; raw terminals and native stderr are hash-referenced only.
+signed_payload_key_rlp_journal_identity_absent	pass	No signed payload, key, RLP, journal, or identity data is retained.
+source_render_artifact_labeled	pass	The rendered nginx.conf is source-generated and explicitly not a host configuration capture.
+live_host_and_retry_material_absent	pass	No live host configuration, SSH credential, node operation, or new retry material is included.
+local_nginx_check_limit_labeled	pass	The local nginx binary was unavailable; no nginx -t is claimed.
+earlier_first_429_bundle_untouched	pass	This is a separate follow-up bundle and does not amend the first-429 bundle.
+credential_marker_scan	pass	Completed during sealing.
+forbidden_filename_scan	pass	Completed during sealing.
+no_execution_performed_by_packaging	pass	This task only curated closed records and source-rendered qualification artifacts.
+source_render_restricted_addresses_reviewed	pass	The requested source-rendered nginx artifact retains eight exact restricted-address listener lines; they are source-rendered values, not live-host capture data.

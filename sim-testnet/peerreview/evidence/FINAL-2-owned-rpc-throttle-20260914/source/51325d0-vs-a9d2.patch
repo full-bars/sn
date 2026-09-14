@@ -1,0 +1,186 @@
+diff --git a/main/ansible/host_files/snow/subtensor/README.md b/main/ansible/host_files/snow/subtensor/README.md
+index 6e3b2f6..6ae9530 100644
+--- a/main/ansible/host_files/snow/subtensor/README.md
++++ b/main/ansible/host_files/snow/subtensor/README.md
+@@ -122,6 +122,12 @@ node-health failure cannot strand nginx in its prior failed state. The server
+ finalized index plus server/blob MinIO is still the public, content-addressed
+ release history.
+ 
++Both owned gateway paths accept unpaced calls without per-client request or
++connection quotas. Exact interface binds, source allowlists, safe node methods,
++body-size bounds and WebSocket handling still apply. The node's global
++connection capacity and the gateway's worker capacity are separate resource
++bounds; this ingress change does not restart or reconfigure either node.
++
+ | File | Purpose |
+ |---|---|
+ | `vars.yml` | Digest/source/identity lock, node namespaces, and gateway capacity |
+diff --git a/main/ansible/host_files/snow/subtensor/nginx.conf.j2 b/main/ansible/host_files/snow/subtensor/nginx.conf.j2
+index b4bd291..8f9f7b5 100644
+--- a/main/ansible/host_files/snow/subtensor/nginx.conf.j2
++++ b/main/ansible/host_files/snow/subtensor/nginx.conf.j2
+@@ -6,6 +6,8 @@
+ # The gateway is plaintext only on the restricted LAN and management tunnel.
+ # Nginx source-allowlists those networks, listeners bind only exact interface
+ # addresses, and the external firewall prevents public access to the host.
++# Approved callers share unpaced ingress without per-client request or
++# connection quotas; archive replay must not receive gateway-generated 429s.
+ user nginx;
+ worker_processes auto;
+ 
+@@ -23,13 +25,6 @@ http {
+     client_header_timeout 10s;
+     client_body_timeout 10s;
+ 
+-    limit_req_zone $binary_remote_addr zone=subtensor_rpc_rate:10m rate={{ gateway_requests_per_second }}r/s;
+-    limit_req_zone $binary_remote_addr zone=subtensor_lightnode_rpc_rate:10m rate={{ gateway_requests_per_second }}r/s;
+-    limit_conn_zone $binary_remote_addr zone=subtensor_rpc_connections:10m;
+-    limit_conn_zone $binary_remote_addr zone=subtensor_lightnode_rpc_connections:10m;
+-    limit_req_status 429;
+-    limit_conn_status 429;
+-
+     # WebSocket upgrade passthrough (substrate ws + EVM ws share the RPC port)
+     map $http_upgrade $connection_upgrade {
+         default upgrade;
+@@ -59,8 +54,6 @@ http {
+         deny all;
+ 
+         location / {
+-            limit_req zone=subtensor_rpc_rate burst={{ gateway_request_burst }} nodelay;
+-            limit_conn subtensor_rpc_connections {{ gateway_connections_per_client }};
+             limit_except GET POST {
+                 deny all;
+             }
+@@ -101,8 +94,6 @@ http {
+         deny all;
+ 
+         location / {
+-            limit_req zone=subtensor_lightnode_rpc_rate burst={{ gateway_request_burst }} nodelay;
+-            limit_conn subtensor_lightnode_rpc_connections {{ gateway_connections_per_client }};
+             limit_except GET POST {
+                 deny all;
+             }
+diff --git a/main/ansible/host_files/snow/subtensor/vars.yml b/main/ansible/host_files/snow/subtensor/vars.yml
+index dc90646..f66c6fe 100644
+--- a/main/ansible/host_files/snow/subtensor/vars.yml
++++ b/main/ansible/host_files/snow/subtensor/vars.yml
+@@ -104,8 +104,5 @@ gateway_bind_addresses:
+ gateway_allowed_cidrs:
+   - 172.28.208.0/24
+   - 192.168.1.0/24
+-gateway_requests_per_second: 100
+-gateway_request_burst: 200
+-gateway_connections_per_client: 128
+ gateway_client_max_body_size: 4m
+ gateway_websocket_idle_timeout: 900s
+diff --git a/main/ansible/playbook-subtensor.yml b/main/ansible/playbook-subtensor.yml
+index e008c43..1083616 100644
+--- a/main/ansible/playbook-subtensor.yml
++++ b/main/ansible/playbook-subtensor.yml
+@@ -26,8 +26,6 @@
+               - "'0.0.0.0' not in gateway_bind_addresses"
+               - "'::' not in gateway_bind_addresses"
+               - gateway_allowed_cidrs | length > 0
+-              - gateway_connections_per_client | int > 0
+-              - gateway_requests_per_second | int > 0
+               - subtensor_chain in ['testfinney', 'finney']
+               - subtensor_sync in ['full', 'warp']
+               - subtensor_image is regex('^ghcr\\.io/raofoundation/subtensor@sha256:[0-9a-f]{64}$')
+diff --git a/main/ansible/tests/test_subtensor_playbook.py b/main/ansible/tests/test_subtensor_playbook.py
+index 0187252..01accfd 100644
+--- a/main/ansible/tests/test_subtensor_playbook.py
++++ b/main/ansible/tests/test_subtensor_playbook.py
+@@ -2,6 +2,7 @@ from __future__ import annotations
+ 
+ import importlib.util
+ import json
++import re
+ import sys
+ import unittest
+ from pathlib import Path
+@@ -14,6 +15,32 @@ from jinja2 import Environment, StrictUndefined
+ ANSIBLE_ROOT = Path(__file__).resolve().parents[1]
+ 
+ 
++def render_owned_rpc_gateway_fixture():
++    """Render both real gateway paths with synthetic addresses and ports."""
++    values = {
++        "gateway_port": 19944,
++        "lightnode_gateway_port": 19946,
++        "subtensor_rpc_port": 19945,
++        "subtensor_lightnode_rpc_port": 19947,
++        "gateway_bind_addresses": ["192.0.2.41", "198.51.100.41"],
++        "gateway_allowed_cidrs": ["192.0.2.0/24", "198.51.100.0/24"],
++        "gateway_client_max_body_size": "1m",
++        "gateway_websocket_idle_timeout": "30s",
++        # Keep legacy knobs so the old template fails on rendered throttles,
++        # rather than failing early on an undefined fixture input.
++        "gateway_requests_per_second": 1,
++        "gateway_request_burst": 1,
++        "gateway_connections_per_client": 1,
++    }
++    template = (
++        ANSIBLE_ROOT / "host_files/snow/subtensor/nginx.conf.j2"
++    ).read_text(encoding="utf-8")
++    rendered = (
++        Environment(undefined=StrictUndefined).from_string(template).render(**values)
++    )
++    return values, rendered
++
++
+ def load_subtensor_playbook():
+     return yaml.safe_load(
+         (ANSIBLE_ROOT / "playbook-subtensor.yml").read_text(encoding="utf-8")
+@@ -681,6 +708,52 @@ substrate_sub_libp2p_pending_connections_errors_total{reason="transport-errors"}
+         self.assertIn("'0.0.0.0' not in gateway_bind_addresses", validation)
+         self.assertIn("'::' not in gateway_bind_addresses", validation)
+ 
++    def test_owned_rpc_gateway_has_no_request_or_connection_throttles(self):
++        """Reject every rendered rate/connection directive on either ingress."""
++        _, rendered = render_owned_rpc_gateway_fixture()
++        directives = [
++            line.split("#", 1)[0].strip()
++            for line in rendered.splitlines()
++        ]
++        throttles = [
++            line for line in directives
++            if re.match(r"limit_(?:req|conn)(?:\s|_)", line)
++        ]
++        self.assertEqual(
++            throttles, [], "owned rpc gateway still throttles approved callers"
++        )
++
++    def test_owned_rpc_gateway_keeps_both_restricted_routes(self):
++        """Removing quotas must preserve both exact listeners and access rules."""
++        values, rendered = render_owned_rpc_gateway_fixture()
++        servers = rendered.split("\n    server {")[1:]
++        self.assertEqual(len(servers), 2)
++        routes = (
++            (19944, "subtensor_archive_rpc", 19945),
++            (19946, "subtensor_lightnode_rpc", 19947),
++        )
++        for server, (port, upstream, backend) in zip(servers, routes):
++            self.assertEqual(
++                re.findall(r"\blisten\s+([^;]+);", server),
++                [f"{address}:{port}" for address in values["gateway_bind_addresses"]],
++            )
++            self.assertEqual(
++                re.findall(r"\ballow\s+([^;]+);", server),
++                values["gateway_allowed_cidrs"],
++            )
++            self.assertEqual(server.count("deny all;"), 2)
++            self.assertIn("limit_except GET POST {", server)
++            self.assertIn(f"proxy_pass http://{upstream};", server)
++            self.assertIn(f"server 127.0.0.1:{backend};", rendered)
++            self.assertIn("client_max_body_size 1m;", server)
++            self.assertIn("proxy_http_version 1.1;", server)
++            self.assertRegex(server, r"proxy_set_header\s+Upgrade\s+\$http_upgrade;")
++            self.assertRegex(
++                server, r"proxy_set_header\s+Connection\s+\$connection_upgrade;"
++            )
++            self.assertIn("proxy_buffering off;", server)
++            self.assertIn('return 200 "ok\\n";', server)
++
+     def test_full_host_service_refreshes_are_change_driven(self):
+         playbook = load_subtensor_playbook()
+         tasks = tasks_by_name(playbook)

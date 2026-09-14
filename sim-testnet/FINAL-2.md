@@ -2,26 +2,81 @@
 
 **Status: in progress; `final_acceptance=false`.** This report covers the next
 full finalization of testnet chain **945**, subnet **521**, under
-[FINALIZE.md](../FINALIZE.md). At the **15:04 UTC on 2026-09-14** observation
+[FINALIZE.md](../FINALIZE.md). At the **18:08 UTC on 2026-09-14** observation
 cutoff, all **1,212 renewal transactions** across **202 fleets** have finalized
 and passed their native postcondition checks. The approved **6,000-alpha repair
-has not been submitted**, and the soak remains stopped. The published candidate
-`e982b3fbd74f76c8afe79cd8ef7067b19b044238` includes the qualified historical
-restore correction, runtime-455 battery correction and probe replacement path.
-The cumulative normal and race runs each retain **99 passes and one constructor
-fixture failure**; the final correction subsequently passed all **eight affected
-roots in both modes**, with the required fresh-process confirmations closed.
-Native setup exited **1 at 14:37:49 UTC**, before any transaction, because a
-moving finalized checkpoint changed the plan hash between preview and apply.
-All six retained state-file hashes remain unchanged. Corrected source
-`0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa` now passes all **40 affected normal
-tests**, including five new deterministic regressions. Race qualification,
-fresh-process confirmations and the isolated failure control remain pending.
-The superseded `e982b3f` full gates were canceled and fully joined at
-**14:42:32–33 UTC**, with no test failure reported before cancellation. They
-are not full-gate passes. The correction's release build, native application
-and complete gates remain required. Successful focused checks, renewal and
-historical payments do not establish full acceptance.
+has not been submitted**, and the soak remains stopped. Published candidate
+`7eab04905dbc274ae6d2546b6802f1097c1fc3fe` includes the qualified historical
+restore correction, runtime-455 battery correction, probe replacement path and
+stable plan-approval checkpoint. Its clean release executable has built
+successfully. The latest correction passed all **40 affected tests normally
+and under race detection**, including five new deterministic regressions.
+Three fresh normal executions close the advancing-finality confirmation, and
+restoring the original defect produces the expected failure with three passing
+controls. Earlier failed and canceled attempts remain recorded below.
+
+The new preview completed at **15:25:40 UTC**. Approved setup admitted the exact
+reviewed plan
+`0x2b5527989bd2ca38b58d3046e82f2d7fdb5ab1b5b86f3af74ba58e5957ced95d`.
+It then stopped on an nginx HTTP 429 at **15:47:17 UTC**. An identical-plan,
+identical-build retry stopped on another 429 at **16:09:25 UTC**. Neither sent
+a new transaction. The canonical owned-node gateway template contains matching
+request and connection limits. Their isolated removal passed the related
+**29-test module**, three executions of both new deterministic regressions, and
+the expected old-template failure control. The exact qualified correction is
+published on [the owned-RPC correction branch](https://github.com/urnetwork/xops/tree/sim-testnet/owned-rpc-unpaced-20260914)
+and is now included in [xops main at d33d417](https://github.com/urnetwork/xops/commit/d33d4173767ad9dab2f301bc0b0e040579bee896).
+The Subtensor files match the qualified correction exactly.
+It is **not deployed**: the available SSH key was rejected, and the deployed
+configuration has not been inspected.
+No further setup retry is planned before the gateway correction.
+
+The full producer closed with exit **1** at **17:30:39 UTC**: all **36** phases
+joined, with **34 passes and two failures**. Its final source and release-lock
+checks passed. Strict Solidity compilation rejected a narrowing cast in the
+runtime-455 regression test before any Solidity test body ran. The simulator
+evidence race package also exceeded its unchanged ten-minute deadline after a
+new full-population renderer had been added to its ordinary group. The full
+aggregate is still running on the frozen `7eab049` source. Full producer success
+remains a traffic launch prerequisite, and both complete gates are required for
+acceptance. Successful focused checks, renewal and historical payments do not
+establish full acceptance.
+[Closed producer, exact phase results and original failure locators](peerreview/evidence/FINAL-2-producer-7eab-20260914/SUMMARY.md).
+
+The isolated correction `1e491b61a841c652f3155152bf845c519e2c171a` changes only
+the probe test, producer scheduling script and scheduling regression tests.
+The corrected probe source passed the strict 85-file build and all **215**
+contract tests across **18** suites, including **19** probe tests. Two additional
+fresh strict-lint processes passed; restoring the original assertion reproduces
+the unsafe-typecast failure. New synthetic controls reject short or long
+responses and a change to any byte of the known answer. Generated payload
+comparison and binding verification passed. The earlier binding-check refusal
+is retained: temporary checkout file permissions differed from the canonical
+checkout and were corrected without changing their contents.
+[Strict build, 215-test result, causal lint failure and adjacent controls](peerreview/evidence/FINAL-2-probe-reference-lint-20260914/SUMMARY.md).
+
+The renderer receives a separate normal/race process with the same ten-minute
+limit. Both compiled inventories confirm **193 roots: 190 ordinary, two
+existing slow roots and one renderer**; the two child-package generator tests
+retain separate Solidity-phase coverage. Source-derived guards reject dropped,
+duplicated, conditional or broadened owners and identify future full-launch
+wrappers through helper calls. The 18-root guard matrix then found an adjacent
+source-census defect in both modes: **16 passed and two failed**. An older text
+scanner counted `TestRuntimeEvidenceSyntheticDirect` inside a fixture string
+as an executable declaration. The parser-based correction and four deterministic
+literal/declaration/build-file controls are committed in clean source
+`713eae3fcf83615d81d185fda3f3ec42a441a26b`. Its **81-root normal/race matrix**
+is being prepared for execution with the two failed guards' confirmations.
+
+The first timeout confirmation's raw race body passed all four selected tests,
+with the renderer finishing in **303.93 seconds**. Its outer result remains a
+failure because of capture-metadata checker errors; those original records are
+retained separately from the real guard failures. Further confirmations are
+held for the corrected source and adapter. No corrected full gate or soak
+result is claimed yet. Production Go, contracts, release-lock bytes, approved
+plan and completed renewals are unchanged by the three SN source edits. Adopting
+the qualified gateway source in the next release separately requires refreshed
+infrastructure lock fields and a reviewed successor approval hash.
 
 The earlier published candidate
 `a59294e98ea02d05125015ae02cf32f2c0059c8a` introduced the corrected strict
@@ -289,7 +344,7 @@ passes retain their original source scope. The complete final candidate gates
 are still required.
 [Constructor diagnosis, deterministic cases, adjacent controls and exact outcomes](peerreview/evidence/FINAL-2-precompile-successor-20260914/SUMMARY.md).
 
-The final executable uses clean revision `e982b3f`, SHA-256
+The earlier executable uses clean revision `e982b3f`, SHA-256
 `2977471bafbddc7f1568db84c823f2c169ec1bc83857cc046a72baed2f820c99`, with identical
 before/after observations of all 13 repositories. The source-pair hash is
 `519744ac4ad704e69a8f7e5500f4dddfbb479ca9a8021cea6b66c60d6000ade7`.
@@ -334,9 +389,89 @@ Formatted source `0a94b7d` passed the **40-root normal matrix** from
 outcomes and unchanged source, dependency and binary identities. Its normal
 binary SHA-256 is
 `e67e2f362068e7e8648273e18f6d6f6d206581f048e429950b5d02012343daed`.
-Race qualification, the two additional normal confirmations and the isolated
-moving-head failure control are pending at this cutoff. These scoped results
-do not establish a successful native application.
+The **40-root race matrix** also passed, from **15:17:18 to 15:20:42 UTC**,
+with race binary SHA-256
+`23e7466ce21bc71d14d25a96b41c2aabc3bde264f9080b9fa999538e85702cf2`.
+Each mode has exactly **40 top-level PASS terminals**; the separately recorded
+116 descendant events are not asserted to be 116 descendant passes. All source,
+dependency, binary and membership checks remain exact. Two additional fresh
+normal processes passed the advancing-finality root at **15:04:37** and
+**15:10:44 UTC**. The disposable one-assignment moving-head variant completed
+with **one expected failure and three passing controls**, reproducing the actual
+approval mismatch. These scoped results do not establish repair completion.
+[Exact case-to-failure mapping, outcomes, causal patch and input identities](peerreview/evidence/FINAL-2-probe-approval-anchor-20260914/SUMMARY.md).
+
+The correction was published through `9e258f8`; lock-only successor `7eab049`
+changes only `repositories.sn_go_source_hash` to
+`sha256:5f0b285194e4359b0fd806aa9f136c3656eec1bf480a793c761f88d8e2abd199`.
+The lock file has SHA-256
+`7d77c0016491c85e966797f994b6a7c368ad55800c2cb838156439c71b479f84`.
+Native lock preview and apply both exited 0 and sent no chain transaction.
+The final clean `7eab049` executable built with exit 0 at **15:21:02 UTC**,
+SHA-256 `feb8890a60efff80cada37a9015b8edeb2d49f20476b1e7ee2c9d4c0a3176b9e`.
+All 13 before/after repository observations match, with source-pair SHA-256
+`05d8d9d50e2904ccaeef66a8ffea9f693d8a06e340423a66eb2032c1a473b109`.
+
+The new native preview ran **15:23:41–15:25:40 UTC**, exited 0 and preserved
+all six retained state-file hashes. Its plan retains every action intent and
+all three budget objects from the earlier reviewed replacement plan. It binds
+the original signed checkpoint at EVM block **7,986,580**, hash
+`0xeb101aeb317fee5b3f27c44540b63c4f4eeb46882ead59654e36b37dd57f22f9`,
+while checking current custody and nonce. The same 3,521 action IDs, completed
+1,212 renewals, nonce-34 replacement, native write/restore intents and approved
+6,000-alpha repair remain. Setup application started at **15:27:17 UTC** and
+the installed plan was observed to match the reviewed `0x2b552798...` approval
+at **15:36 UTC**. The two later transport failures below added no journal row
+or repair transaction. Both full gates passed their five preflights. The
+producer later closed with two failures; the aggregate remains live at this
+report's cutoff.
+[Closed release preparation and reviewed preview](peerreview/evidence/FINAL-2-7eab-preparation-20260914/SUMMARY.md).
+
+The first `7eab049` application completed the **1,000/1,000** batched audit and
+reached **2,450/3,455** carried-action checks before exiting **1 at 15:47:17 UTC**.
+The error was `fleet.renew.1.34.bind.2: current postcondition: 429 Too Many Requests`,
+with an nginx HTML body. Only plan/config admission changed; journal,
+supervisors and public identities remained unchanged. All action objects and
+the three nonempty spend/limit objects exactly match the reviewed preview.
+Source tracing keeps the failed path on the guarded owned LAN client. Bounded
+LAN diagnostic reads subsequently returned HTTP 200, chain ID 945 and the
+binding's canonical block/receipt with success status. Those observations were
+retained from the tool transcript; original raw HTTP capture files do not
+exist, and the exact individual request that received 429 is unidentified.
+[Closed first refusal, unchanged custody and diagnostic provenance](peerreview/evidence/FINAL-2-7eab-transport-20260914/SUMMARY.md).
+
+The direct retry used the same admitted plan and executable, with no new
+preview, build or source change. It ran **15:51:31–16:09:25 UTC**, reached
+**2,400/3,455** carried checks, and exited **1** at
+`fleet.renew.1.31.bind.4` with the same nginx HTTP 429. All six retained state-file
+hashes are identical before and after this retry. The journal remains at
+sequence **16,318**, and repair `alpha.repair.validator.1.7` remains unsubmitted.
+
+The follow-up infrastructure review found **100 requests/second**, **burst 200**
+and **128 connections/client** in xops `a9d2eb4`'s canonical snow nginx template,
+with HTTP 429 configured for both limit types on the archive and lightnode
+gateways. This source configuration can produce the observed response; actual
+deployed configuration and request-versus-connection attribution remain
+unverified because SSH rejected the available identity. Isolated xops correction
+`51325d00e18a157b2ceb5d5ac44bb0645550b289` removes those directives, their obsolete
+settings and their playbook assertions. Both exact listeners, source allowlists,
+GET/POST controls, WebSocket paths, body bounds and native node capacity remain.
+The adjacent overlay and node templates contain no request-rate setting.
+
+Terra ran the complete affected Python/Jinja module: **29/29 passed in 3.926s**.
+Both new synthetic renderer tests then passed two more fresh processes on the
+same source/interpreter. Restoring only the old template produces exactly
+**one expected failure and one passing route control**, with no timing or network
+dependency. The rendered configuration has SHA-256
+`6371976bddf174874083f22897bb072977c5218f7b161a95f1e1c02a13edd453`.
+Strict Jinja and route checks passed; a local nginx binary was unavailable, so
+`nginx -t` was not performed. These results qualify the isolated source change;
+they do not establish rollout or cessation of 429 responses. The correction was
+published as branch `sim-testnet/owned-rpc-unpaced-20260914`, then integrated
+over current upstream as `d33d417` and pushed to xops main at **18:03 UTC**.
+The Subtensor contents match the qualified source. The full gates' original
+xops checkout remains unchanged at its recorded pin.
+[Repeated refusal, infrastructure cause, deterministic regressions and rollout limits](peerreview/evidence/FINAL-2-owned-rpc-throttle-20260914/SUMMARY.md).
 
 The canceled `e982b3f` producer ran **14:21:59–14:42:32 UTC**, with **13/13**
 admitted children joined: **10 successful and 3 canceled**. Aggregate ran

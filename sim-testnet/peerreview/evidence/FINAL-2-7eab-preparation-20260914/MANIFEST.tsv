@@ -1,0 +1,19 @@
+bundle_path	origin_record_label	origin_sha256	representation
+publication/SOURCE-PUBLICATION.RESULT	publication/RESULT.json	893cea880757e0e85af39ccefa44a9640f88a7b29bce81f128ee765badb79aa1	derived closed source-publication fields
+publication/LOCK-PUBLICATION.RESULT	lock-publication closure files	multiple; see raw references	derived closed lock-publication fields
+lock/REVIEWED-ONE-FIELD-DELTA.tsv	native-lock-preview/REVIEW.json	9b19479b608baf86dcb43c661437b1f07c48ff4312f3b3594520a62bcd87cd45	derived exact one-field delta
+lock/LIFECYCLE.RESULT	closed lock preview/apply and review	9b19479b608baf86dcb43c661437b1f07c48ff4312f3b3594520a62bcd87cd45	derived lifecycle fields
+cli/FINAL-CLI-IDENTITY.tsv	final-cli/RESULT-FINAL-CLI-BUILD.json	9179f1d205f111fc066ca63c619400e410feda447d58599083aef332837cec96	derived selected identity and exits
+cli/SOURCE-PAIR-SUMMARY.tsv	final-cli/source-pair-final.tsv	05d8d9d50e2904ccaeef66a8ffea9f693d8a06e340423a66eb2032c1a473b109	derived repository/commit/clean-status summary without paths
+setup-preview/CLOSED-PREVIEW.RESULT	native-setup-preview/RESULT.json and REVIEW.json	3e0e8dc321678a8ca6075478eeb2d3a39ea636e0dd4a7edfc8ef399278fc029a;27bbb335483781f120816c50e4664c9c8fbf60b798b5deda4f788b3bd98cfdcd	derived closed read-only preview fields
+setup-preview/REVIEW-ASSERTIONS.tsv	native-setup-preview/REVIEW.json	27bbb335483781f120816c50e4664c9c8fbf60b798b5deda4f788b3bd98cfdcd	derived reviewed action/renewal/budget assertions
+setup-preview/STATE-BEFORE.sha256	native-setup-preview/state.before.sha256	326973224bbf54e3c2810e03dadc60466558bc6f25c86d105cabd44242e45f11	verbatim state fingerprints
+setup-preview/STATE-BEFORE.sizes	native-setup-preview/state.before.sizes	07db7700941fb82679ac88413ae1e7a106f651931355deeeb39cc591d5daf7c1	verbatim state sizes
+LIVE-APPLY-NOT-INCLUDED.md	bundle scope	-	derived live-operation exclusion
+references/RAW-HASH-REFERENCES.tsv	closed raw records	multiple; listed per row	hash references only
+README.md	bundle specification	-	derived usage note
+SUMMARY.md	closed preparation records	-	derived concise summary
+HANDOFF.md	bundle specification	-	derived scope/proof limits
+EXCLUSIONS.md	bundle specification	-	derived exclusion statement
+MANIFEST.tsv	this bundle	-	provenance map
+SANITIZATION-CHECKS.tsv	this bundle	-	sealing checks

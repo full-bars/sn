@@ -1,0 +1,19 @@
+bundle_path	origin_record_label	origin_sha256_or_locator	representation
+failure/CLOSED-REFUSAL.RESULT	closed RESULT.json	d2d651a30274a0572cca7bc0f5d503bbf172cc74072d38a408c090897b74855c	derived public-safe terminal fields including retained error line
+failure/PROGRESS-AND-STATE.tsv	closed RESULT.json	d2d651a30274a0572cca7bc0f5d503bbf172cc74072d38a408c090897b74855c	derived progress and unchanged-state fields
+failure/PLAN-ADMISSION-COMPARISON.tsv	closed PLAN-ADMISSION-COMPARISON.json	32c8b68f511147af113957c6914da1de2e0e0a02691c33d0ea644b21eb67baf3	derived equality assertions
+failure/STATE-FINGERPRINT-COMPARISON.tsv	closed before and after state fingerprint files	326973224bbf54e3c2810e03dadc60466558bc6f25c86d105cabd44242e45f11;65dc79c9963e5e84b27d1aa7e60bb1726e518930406e7d795b169892e1565ed3	derived hash comparison
+constraints/REVIEWED-LIMITS.tsv	closed reviewed setup-preview assertions	27bbb335483781f120816c50e4664c9c8fbf60b798b5deda4f788b3bd98cfdcd	derived exact limits and preservation assertions
+identities/RUN-IDENTITY.tsv	closed failed apply result and prior closed CLI record	d2d651a30274a0572cca7bc0f5d503bbf172cc74072d38a408c090897b74855c;9179f1d205f111fc066ca63c619400e410feda447d58599083aef332837cec96	derived identity tuple
+probes/TRANSCRIPT-DERIVED-OBSERVATIONS.tsv	functions.exec output chunks	chunk502971;chunk74cfb4	transcript-derived safe observations; no original capture file exists
+probes/GUARDED-LAN-ROUTING-SOURCE-MAP.tsv	Astra closed source analysis	7eab source references	derived static source map only
+probes/PROVENANCE-AND-LIMITS.md	Astra closed probe provenance	chunk502971;chunk74cfb4	derived provenance and proof limits
+references/RAW-HASH-REFERENCES.tsv	closed raw records and tool transcripts	per row	hashes and transcript locators only
+SUMMARY.md	closed refusal and probe records	per manifest rows	derived concise narrative
+README.md	bundle scope	-	derived usage note
+HANDOFF.md	bundle scope	-	derived review limits
+EXCLUSIONS.md	bundle scope	-	derived exclusion statement
+LIVE-RETRY-NOT-INCLUDED.md	bundle scope	-	derived live-operation exclusion
+BUNDLE-META.txt	bundle metadata	-	derived seal metadata
+SANITIZATION-CHECKS.tsv	bundle sealing checks	-	derived verification record
+MANIFEST.tsv	this bundle	-	provenance map

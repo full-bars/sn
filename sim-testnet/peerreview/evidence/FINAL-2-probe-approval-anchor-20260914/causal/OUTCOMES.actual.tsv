@@ -1,0 +1,5 @@
+root	expected_action	actual_terminal	literal_required	literal_found
+TestPrecompileProbeApprovalSurvivesAdvancingFinality	fail	fail	advancing finality changed preview/apply approval	True
+TestPrecompileProbeApprovalRejectsChangedSignedAnchor	pass	pass		True
+TestPrecompileProbeApprovalHashBindsAnchor	pass	pass		True
+TestPrecompileProbeApprovalRechecksCurrentCustody	pass	pass		True

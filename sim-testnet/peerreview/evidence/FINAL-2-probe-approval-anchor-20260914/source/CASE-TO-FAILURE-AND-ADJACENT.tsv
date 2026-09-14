@@ -1,0 +1,6 @@
+test_root	production_failure_or_invariant	deterministic_or_adjacent_control
+TestPrecompileProbeApprovalSurvivesAdvancingFinality	The fresh descriptor must retain the signed repair checkpoint so an advancing live head cannot change preview/apply approval.	The one-assignment moving-head causal reproduces only this failure with the approval-mismatch literal.
+TestPrecompileProbeApprovalRejectsChangedSignedAnchor	A changed, missing, future, foreign, nonce-shifted, or already-adopted signed anchor must be refused.	Candidate and causal control both pass this signed-anchor admission boundary.
+TestPrecompileProbeApprovalHashBindsAnchor	The anchor and retained receipt, journal, and runtime fields remain approval-bound.	Each synthetic field change must alter the typed and persisted approval hash.
+TestPrecompileProbeApprovalRechecksCurrentCustody	Before an unconsumed replacement create, current balance and both approved alpha positions are rechecked.	Synthetic current and signed-checkpoint custody changes each refuse admission.
+TestPrecompileProbeApprovalKeepsConsumedCreateCustodyScope	After the create is consumed, custody evaluation remains at the signed historical checkpoint.	Several consumed nonce positions preserve the historical scope without reopening current-custody admission.

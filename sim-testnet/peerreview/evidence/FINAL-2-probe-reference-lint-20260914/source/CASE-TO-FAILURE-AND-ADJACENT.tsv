@@ -1,0 +1,8 @@
+case	original_failure_or_invariant	new_or_adjacent_deterministic_control
+original strict lint boundary	The original full strict build rejected a narrowing bytes-to-bytes32 assertion after Solc had compiled all 85 files; it was not a runtime assertion failure.	The corrected helper requires exactly 64 bytes and ABI-decodes two words before comparing the first digest word.
+test_readBattery_runtime455RejectsLegacyBlake2f	The original EIP-152 reference must still prove the known digest before the runtime-455 route rejects legacy precompile use.	Uses the exact 64-byte helper and preserves the runtime mapping, custody, stake, and battery checks.
+test_referenceBlake2fRejectsShortOutput	A digest-sized or incomplete output must not be treated as an EIP-152 response.	Rejects lengths 0, 31, 32, and 63 with valid-prefix construction.
+test_referenceBlake2fRejectsLongOutput	A valid digest prefix must not hide trailing response bytes.	Rejects lengths 65 and 96 despite a valid 64-byte prefix.
+test_referenceBlake2fRejectsChangedKnownAnswer	The known answer must validate every digest byte.	Flips each of 32 digest bytes independently and rejects every change.
+test_mirrorExt_rejectsMalformedMappingResponses	Production mapping output has a distinct exact-width contract.	Retained adjacent control covers malformed mapping responses of 0, 31, 33, and 64 bytes.
+test_readBattery_failedSelfMappingRetainsOtherChecks	A failed self-mapping may not convert a value-bearing read into a successful custody result.	Retained battery control keeps independent runtime-family checks visible while custody remains unproven.

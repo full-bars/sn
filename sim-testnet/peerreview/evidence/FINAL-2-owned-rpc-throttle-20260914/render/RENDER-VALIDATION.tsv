@@ -1,0 +1,16 @@
+field	value
+rendered_sha256	6371976bddf174874083f22897bb072977c5218f7b161a95f1e1c02a13edd453
+rendered_bytes	3191
+strict_jinja_render	true
+limit_req_present	false
+limit_conn_present	false
+archive_listener_lines_present	true
+lightnode_listener_lines_present	true
+archive_listener_count	2
+lightnode_listener_count	2
+allowlist_count	2
+method_control_get_post	2
+archive_loopback_backend	true
+lightnode_loopback_backend	true
+local_nginx_t	not attempted; nginx binary unavailable
+artifact_kind	source-rendered candidate artifact; not a host configuration capture

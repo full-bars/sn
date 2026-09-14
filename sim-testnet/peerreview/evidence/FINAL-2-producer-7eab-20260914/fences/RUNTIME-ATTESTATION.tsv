@@ -1,0 +1,10 @@
+attestation	value
+runtime_v454_tag	v454
+runtime_v454_commit	14cde6410fe8ec81a940e290c56f94a632a0988d
+runtime_v454_files	29
+runtime_v454_metadata_files	15
+compatibility_ref_kind	commit
+compatibility_commit	67dcf7f791dc495064c293f080a0702cb433e51e
+compatibility_files	33
+metadata_versions	451,452,453,454,455
+sdk_revision	cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a

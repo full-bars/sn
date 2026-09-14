@@ -1,0 +1,9 @@
+record_type	value
+phase	evidence-simulator
+phase_exit	1
+raw_log	logs/evidence-simulator.log
+raw_log_sha256	44da279a8020f89b90b0a9a0e5eb88e1737bd0d1df65af9af2ec2dd99a10eb0b
+normal_segment	ok github.com/urfoundation/sn/sim-testnet 321.601s
+race_terminal	panic: test timed out after 10m0s
+race_package_terminal	FAIL github.com/urfoundation/sn/sim-testnet 600.426s
+classification	active-at-timeout names below are not assertion failures or terminal passes

@@ -1,0 +1,7 @@
+bundle=FINAL-2-7eab-transport-20260914
+scope=closed first 7eab native apply transport refusal and closed diagnostic probes
+status=sealed
+source_commit=7eab04905dbc274ae6d2546b6802f1097c1fc3fe
+final_cli_sha256=feb8890a60efff80cada37a9015b8edeb2d49f20476b1e7ee2c9d4c0a3176b9e
+approved_plan_hash=0x2b5527989bd2ca38b58d3046e82f2d7fdb5ab1b5b86f3af74ba58e5957ced95d
+sealed_utc=2026-09-14T15:57:54Z

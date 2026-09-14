@@ -1,0 +1,6 @@
+phase	source_head	source_manifest_sha256	source_clean	dependency_projection_unchanged	binary_unchanged	compiled_list_exact	fixture_guard	note
+normal	0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa	269922bc1528eac4ae26492b10a2b97566d494211e5379b66f5c2127da068c88	true	true	true	true	package-cwd fixtures present	40 top-level roots
+race	0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa	269922bc1528eac4ae26492b10a2b97566d494211e5379b66f5c2127da068c88	true	true	true	true	package-cwd fixtures present	40 top-level roots
+normal-p2	0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa	269922bc1528eac4ae26492b10a2b97566d494211e5379b66f5c2127da068c88	true	true	true	n/a	package-cwd fixtures present	one root
+normal-p3	0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa	269922bc1528eac4ae26492b10a2b97566d494211e5379b66f5c2127da068c88	true	true	true	n/a	package-cwd fixtures present	one root
+causal-normal	0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa	eff7134d76e5213d8246849838ba28d02a560973276a89a0e16208d02d7b4cb8	parent clean; one declared causal mutation	true	true	true	package-cwd fixtures present	four roots; expected exit 1

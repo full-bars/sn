@@ -1,0 +1,21 @@
+bundle_path	origin_or_derivation	representation
+source/IDENTITY.tsv	candidate source identity	derived public-safe identity
+source/PATCH-SUMMARY.tsv	candidate diff metadata	derived path and line-count summary
+source/FORMATTER-RECONCILIATION.tsv	formatter capture	derived result summary
+source/CASE-TO-FAILURE-AND-ADJACENT.tsv	author handoff and source review	derived deterministic mapping
+source/ADJACENT-REVIEW.tsv	author handoff adjacent analysis	derived review summary
+qualification/SP1PROBE-SOURCE-ROOTS.txt	author source census	verbatim public test names
+qualification/SP1PROBE-COMPILED-ROOTS.sorted	compiled list capture	verbatim public test names
+qualification/SP1PROBE-CENSUS.tsv	source/list comparison	derived exact census
+qualification/STRICT-BUILD-P1.tsv	original and corrected strict build captures	derived outcome summary
+qualification/FULL-PROJECT-SUMMARY.tsv	full Forge terminal	derived 18-suite table
+qualification/SP1PROBE-FULL-PROJECT-OUTCOMES.tsv	full Forge terminal	derived 19-root outcomes
+qualification/FULL-PROJECT-RESULT.tsv	full Forge terminal	derived aggregate outcome
+confirmations/*	strict lint captures	derived p1/p2/p3 and uncredited-observation records
+causal/CAUSAL-original-unsafe-assertion.patch	author causal patch	verbatim declared causal mutation
+causal/OUTCOME.tsv	causal lint capture	derived expected-failure outcome
+admissions/*	admission and filesystem-mode captures	public-safe results and mode matrices
+generation/RESULTS.tsv	generation and binding captures	derived outcome summary
+fences/*	toolchain, dependency, artifact, and mode captures	derived public-safe identities
+references/RAW-HASH-REFERENCES.tsv	closed raw records	hash references only
+README.md,SUMMARY.md,HANDOFF.md,EXCLUSIONS.md	bundle documentation	derived public-safe documentation

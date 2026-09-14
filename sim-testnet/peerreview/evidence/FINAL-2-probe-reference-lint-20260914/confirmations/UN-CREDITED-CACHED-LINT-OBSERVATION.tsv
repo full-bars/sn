@@ -1,0 +1,2 @@
+process	result	exit	credit	why	raw_terminal_sha256
+fresh direct lint with reused cache	pass	0	none	Foundry reported 'No files changed, compilation skipped'; it was preserved but not counted as an exercised lint confirmation.	ebe83663236b4ed5f022b5a7ca1ab749d1980765e47d5347b77a686aa1f21c3c

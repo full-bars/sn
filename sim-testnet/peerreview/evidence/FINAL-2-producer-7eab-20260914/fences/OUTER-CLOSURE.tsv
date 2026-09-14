@@ -1,0 +1,11 @@
+field	value
+outer_capture_id	producer-11355
+outer_pid	2990427
+outer_exit	1
+started_utc	2026-09-14T15:26:05Z
+finished_utc	2026-09-14T17:30:39Z
+duration	2h 04m 34s
+outer_stdout_sha256	b7f6558f0a18bbfc919d4e6cba0b93de0af22ef9fdb682b26355e9325e7b8c83
+outer_stderr_sha256	d69414295c4f5c38f65459b08f7d9508063d0d7933274b30ca20849b06f97e05
+outer_exit_sha256	4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865
+outer_finished_at_sha256	6a94eef711b4ee28504d0cff8d22e9e280d2403dc2494bf6e5180b1d08fe3647

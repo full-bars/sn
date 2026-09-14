@@ -1,0 +1,9 @@
+bundle=FINAL-2-probe-approval-anchor-20260914
+content_class=public-safe-closed-qualification-evidence
+author_candidate=c736a772a0f8680ae8c07df4ae26bc3d6cfeaae7
+formatter_successor=0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa
+final_locked_source=7eab04905dbc274ae6d2546b6802f1097c1fc3fe
+qualified_top_level_roots_per_mode=40
+raw_records=hash-referenced-not-copied
+sealed_at_utc=2026-09-14T15:30:08Z
+content_files_before_checksums=40

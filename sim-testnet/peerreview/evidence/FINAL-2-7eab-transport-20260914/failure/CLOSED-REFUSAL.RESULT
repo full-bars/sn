@@ -1,0 +1,16 @@
+schema=sn-final2-transport-refusal-v1
+source=7eab04905dbc274ae6d2546b6802f1097c1fc3fe
+binary_sha256=feb8890a60efff80cada37a9015b8edeb2d49f20476b1e7ee2c9d4c0a3176b9e
+started_at=2026-09-14T15:27:17.601780774Z
+finished_at=2026-09-14T15:47:17.649733061Z
+outer_exit=1
+approved_plan_hash=0x2b5527989bd2ca38b58d3046e82f2d7fdb5ab1b5b86f3af74ba58e5957ced95d
+admitted_plan_hash=0x2b5527989bd2ca38b58d3046e82f2d7fdb5ab1b5b86f3af74ba58e5957ced95d
+action=fleet.renew.1.34.bind.2
+raw_error=carried plan history preflight: action fleet.renew.1.34.bind.2: current postcondition: 429 Too Many Requests: <html>
+raw_stderr_sha256=6e5f9f9f7f36ae6be304828f62f71a4f7f7f8a3d8e91501fe7a07b5db2d0b7cf
+diagnosis_at_close=Pending; nginx HTML response. No inference yet about the actual endpoint.
+repair_submitted=false
+soak_running=false
+new_journal_rows=0
+new_transactions=0
