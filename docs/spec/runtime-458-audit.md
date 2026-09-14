@@ -128,6 +128,13 @@ probe/native receipts without granting an old signature a new runtime domain.
 Existing final-semantic synthetic 455 cases intentionally remain historical
 decoder controls; current 458 tests are added separately.
 
+The shared native metadata cache and authority-list limit is exactly six:
+current 458 plus the five reviewed predecessors. The same finite constant
+guards runtime authentication, validator identity/schedule and EVM checkpoint
+readers. Tests exercise the actual six-authority reader, all six hot cache
+entries and seventh/duplicate/incomplete refusal, including the simulator's
+real history constructor. No unbounded cache or generic version range is added.
+
 ## Transport and integration boundary
 
 `check-runtime-metadata-artifacts.sh` always performs fresh blockchain reads

@@ -2606,7 +2606,7 @@ func TestProducerGatePinsRuntime458ArtifactAndEncodingRegressions(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := verifyReleaseSourceTestCoverage(runtimeSelector, "^Test", releaseEvidenceV2GateSources(t, []string{"../validator/runtime_identity_458_test.go", "../miner/fleet_runtime_458_test.go", "../crv4/validator_stake_runtime458_test.go"})); err != nil {
+	if err := verifyReleaseSourceTestCoverage(runtimeSelector, "^Test", releaseEvidenceV2GateSources(t, []string{"../validator/runtime_identity_458_test.go", "../miner/fleet_runtime_458_test.go", "../crv4/validator_stake_runtime458_test.go", "../crv4/runtime_identity_test.go", "../crv4/runtime_identity_capacity_test.go"})); err != nil {
 		t.Fatal(err)
 	}
 	nativeSelector, err := releaseConnectPolicySelectorAssignment(script, "native_evidence_tests")

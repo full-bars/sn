@@ -62,9 +62,9 @@ type runtimeMetadataArtifactCache struct {
 	identityEntries map[RuntimeArtifactIdentity]*runtimeMetadataArtifactCacheEntry
 }
 
-// Covers the active runtime plus the four exact historical identities carried
+// Covers the active runtime plus the five exact historical identities carried
 // by one release attempt while retaining a small fail-closed memory bound.
-const maximumRuntimeMetadataArtifactsPerChain = 5
+const maximumRuntimeMetadataArtifactsPerChain = 6
 
 // Creates an empty, hard-bounded per-provider artifact store.
 func newRuntimeMetadataArtifactCache() *runtimeMetadataArtifactCache {

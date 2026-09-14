@@ -4,11 +4,16 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
+	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/urfoundation/sn/crv4"
 	"gopkg.in/yaml.v3"
 )
 
@@ -184,5 +189,26 @@ func TestRuntime458CurrentLockRejectsOfficialSeedVariant(t *testing.T) {
 		RuntimeCodeHash: "0x3708442dc6aae2ea654d827d8b9985d36b6640b2447cfd48125a1a0205c8f1d3", RuntimeMetadataHash: lock.Runtime.MetadataHash}
 	if validatePublishedRuntimeIdentityShape(&public) == nil {
 		t.Fatal("official seed variant became a reviewed public artifact")
+	}
+}
+
+// The actual release-history constructor must reach the artifact reader with
+// all six authorities; a permanent synthetic read error stops before metadata.
+func TestRuntime458HistoryAllowlistReachesArtifactReader(t *testing.T) {
+	cfg := testResolvedConfig(t)
+	want := errors.New("synthetic exact runtime read boundary")
+	calls := 0
+	block := types.Hash{19}
+	client := &releaseRuntimeTestClient{callContext: func(_ context.Context, _ any, method string, args ...any) error {
+		calls++
+		if method != "state_getRuntimeVersion" || len(args) != 1 || args[0] != block.Hex() {
+			return errors.New("release history changed the synthetic exact read")
+		}
+		return want
+	}}
+	chain := &crv4.Chain{API: &gsrpc.SubstrateAPI{Client: client}}
+	_, err := readReleaseHistoryRuntimeMetadataAtContext(context.Background(), chain, cfg, block)
+	if calls != 1 || !errors.Is(err, want) {
+		t.Fatalf("complete release history did not reach its exact artifact reader: calls=%d error=%v", calls, err)
 	}
 }
