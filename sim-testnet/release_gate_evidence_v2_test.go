@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"go/build"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -98,7 +99,7 @@ func verifyReleaseEvidenceV2GateGroup(script string, group releaseEvidenceV2Gate
 }
 
 // Reviewed filename groups also protect a renamed root that escapes its old
-// family prefix. Every matched file is read; no candidate selector filters the
+// family prefix. Every build-eligible file is read; no candidate selector filters the
 // required source census. Fixture-only files do not invent test declarations.
 func releaseEvidenceV2GateSources(t *testing.T, patterns []string) []string {
 	t.Helper()
@@ -114,6 +115,13 @@ func releaseEvidenceV2GateSources(t *testing.T, patterns []string) []string {
 				continue
 			}
 			seen[path] = true
+			matched, err := build.Default.MatchFile(filepath.Dir(path), filepath.Base(path))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !matched {
+				continue
+			}
 			encoded, err := os.ReadFile(path)
 			if err != nil {
 				t.Fatal(err)
@@ -158,7 +166,7 @@ func releaseEvidenceV2GateFixture(t *testing.T) (string, []releaseEvidenceV2Gate
 			`go test ./protocol ./stabi ./sim-testnet/gencontracts -run "$validator_evidence_tests" -count=1`,
 			`go test -race ./protocol ./stabi ./sim-testnet/gencontracts -run "$validator_evidence_tests" -count=1`,
 		}},
-		{phase: "capture", variable: "capture_tests", packages: []string{"./sim-testnet"}, sources: map[string][]string{"./sim-testnet": releaseEvidenceV2GateSources(t, []string{"release_gate_evidence_v2_test.go", "release_gate_simulator_evidence_test.go", "release_gate_capture_metadata_test.go", "release_gate_history_population_test.go", "release_gate_launch_source_test.go", "final_semantic_capture_v2_test.go", "final_semantic_pending_prior_v2_test.go", "evidence_streaming_test.go", "final_semantic_capture_capacity_test.go", "final_semantic_capture_streaming_v2_test.go", "evidence_limits_v2_test.go", "evidence_readback_v2_test.go", "evidence_public_file_v2_test.go", "evidence_population_v2_test.go", "evidence_metadata_row_size_v2_test.go", "evidence_metadata_census_v2_test.go", "evidence_metadata_v2_test.go", "evidence_publication_batch_test.go", "final_semantic_prior_carrier_v2_test.go", "final_semantic_prior_carrier_decode_v2_test.go", "final_semantic_prior_carrier_canonical_v2_test.go", "final_semantic_adoption_v2_test.go", "scenario_native_warmup_v2_test.go", "scenario_v2_observation_test.go", "strict_history_adoption_test.go", "fleet_renewal*_test.go", "owned_rpc*_test.go", "coordinator_repair*_test.go"})}, commands: []string{
+		{phase: "capture", variable: "capture_tests", packages: []string{"./sim-testnet"}, sources: map[string][]string{"./sim-testnet": releaseEvidenceV2GateSources(t, []string{"release_gate_evidence_v2_test.go", "release_gate_simulator_evidence_test.go", "release_gate_source_census_test.go", "release_gate_capture_metadata_test.go", "release_gate_history_population_test.go", "release_gate_launch_source_test.go", "final_semantic_capture_v2_test.go", "final_semantic_pending_prior_v2_test.go", "evidence_streaming_test.go", "final_semantic_capture_capacity_test.go", "final_semantic_capture_streaming_v2_test.go", "evidence_limits_v2_test.go", "evidence_readback_v2_test.go", "evidence_public_file_v2_test.go", "evidence_population_v2_test.go", "evidence_metadata_row_size_v2_test.go", "evidence_metadata_census_v2_test.go", "evidence_metadata_v2_test.go", "evidence_publication_batch_test.go", "final_semantic_prior_carrier_v2_test.go", "final_semantic_prior_carrier_decode_v2_test.go", "final_semantic_prior_carrier_canonical_v2_test.go", "final_semantic_adoption_v2_test.go", "scenario_native_warmup_v2_test.go", "scenario_v2_observation_test.go", "strict_history_adoption_test.go", "fleet_renewal*_test.go", "owned_rpc*_test.go", "coordinator_repair*_test.go"})}, commands: []string{
 			`go test ./sim-testnet -run "$capture_tests" -count=1` + releaseGateCaptureOwnerSkip + ` -timeout 5m`,
 			`go test -race ./sim-testnet -run "$capture_tests" -count=1` + releaseGateCaptureOwnerSkip + ` -timeout 10m`,
 		}},

@@ -123,12 +123,14 @@ func releaseSelectedTestDeclarations(selector string, sources []string) ([]strin
 	if err != nil {
 		return nil, err
 	}
-	testDeclaration := regexp.MustCompile(`(?m)^func (Test[[:alnum:]_]+)\(`)
 	seen := map[string]bool{}
 	selected := []string{}
 	for _, source := range sources {
-		for _, match := range testDeclaration.FindAllStringSubmatch(source, -1) {
-			name := match[1]
+		names, err := releaseSourceTestDeclarations(source)
+		if err != nil {
+			return nil, err
+		}
+		for _, name := range names {
 			if !compiled.MatchString(name) {
 				continue
 			}
@@ -2880,20 +2882,23 @@ func assertReleaseGateAssignmentFilterProfile(t *testing.T, scriptPath, gate str
 	if err != nil || len(files) == 0 {
 		t.Fatalf("enumerate operator controller tests: files=%d err=%v", len(files), err)
 	}
-	testName := regexp.MustCompile(`(?m)^func (TestVerifySimulationAssignmentFilter[[:alnum:]_]+)\(`)
 	selected := 0
 	for _, file := range files {
 		raw, readErr := os.ReadFile(file)
 		if readErr != nil {
 			t.Fatal(readErr)
 		}
-		for _, found := range testName.FindAllSubmatch(raw, -1) {
-			if !selector.Match(found[1]) {
+		names, err := releaseSourceTestDeclarations(string(raw))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, name := range names {
+			if !strings.HasPrefix(name, "TestVerifySimulationAssignmentFilter") || !selector.MatchString(name) {
 				continue
 			}
 			selected++
 			if strings.HasSuffix(file, "_db_test.go") {
-				t.Errorf("pre-profile selector admits database test %s from %s", found[1], file)
+				t.Errorf("pre-profile selector admits database test %s from %s", name, file)
 			}
 		}
 	}
