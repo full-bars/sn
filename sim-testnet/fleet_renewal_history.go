@@ -16,6 +16,12 @@ func fleetRenewalHistoricalActionFleets(cfg *ResolvedConfig, action Action) ([]i
 		return nil, nil
 	}
 	id := action.ID
+	if id == "precompile.commitment-restore" {
+		if action.Kind != "substrate-extrinsic" || action.Target != "head-fleet:1" || action.Parameters["canonical_generation"] != strconv.FormatUint(precompileCanonicalFleetGeneration, 10) || action.Parameters[fleetCommitmentStorageParameter] != fleetCommitmentStorageV2 {
+			return nil, errors.New("renewed historical precompile restore has a foreign fleet or generation")
+		}
+		return []int{1}, nil
+	}
 	if strings.HasPrefix(id, "fleet.refresh.batch.") || strings.HasPrefix(id, "fleet.install.batch.") {
 		batch := suffixInt(id)
 		if batch < 1 {

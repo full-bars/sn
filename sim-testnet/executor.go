@@ -930,6 +930,9 @@ func observedPostconditionMatches(recorded, replayed map[string]any) error {
 // Replay migration aliases in their recorded format; current aliases retain
 // their authenticated batch metadata and ordinary actions keep their reader.
 func (self *Executor) historicalActionPostState(ctx context.Context, action Action, record *ActionPostcondition, evmHead ChainHead) (map[string]any, error) {
+	if action.ID == "precompile.commitment-restore" {
+		return self.verifyHistoricalPrecompileRestorePostState(ctx, action, record)
+	}
 	if action.Parameters["batch_installed"] == "true" && (strings.HasPrefix(action.ID, "fleet.mirror.") || strings.HasPrefix(action.ID, "fleet.bind.")) {
 		kind, err := classifyFleetInstallAliasReceipt(record)
 		if err != nil {

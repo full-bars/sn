@@ -880,19 +880,11 @@ func (e *Executor) verifyPrecompileChainEvidence(ctx context.Context, action Act
 		if err := e.verifySubstrateTransactionEvidence(ctx, evidence.Commitment.RestoreFinalizedHead, evidence.Commitment.RestoreTransactionHash); err != nil {
 			return err
 		}
-		canonical, decodeErr := decodeHex32("precompile canonical commitment", evidence.Commitment.CanonicalHash)
-		if decodeErr != nil || evidence.Commitment.CanonicalGeneration != precompileCanonicalFleetGeneration {
-			return errors.New("precompile restore has no canonical generation-2 commitment")
-		}
 		hotkey, err := roleBytes32(e.roles, fleetHotkeyLabel(1))
 		if err != nil {
 			return err
 		}
-		current, err := e.substrate.fleetCommitmentFinalized(hotkey)
-		if err != nil || current.Hash != canonical || current.CommitmentBlock != evidence.Commitment.RestoreCommitmentBlock {
-			return conformanceMismatch("restored generation-2 commitment is not current finalized state", err)
-		}
-		return nil
+		return verifyPrecompileRestoreState(e.substrate, hotkey, evidence.Commitment, false)
 	case "precompile.read-battery":
 		if err := verifyEVMCheckpoint(ctx, e.deployer.client, head, evidence.Battery.FinalizedHead); err != nil {
 			return err
