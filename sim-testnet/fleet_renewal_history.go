@@ -133,6 +133,7 @@ func (e *Executor) fleetRenewalHistoricalSource(action Action, verified JournalE
 		}
 		copy := *e
 		copy.plan = source
+		copy.fleetCommitmentHistory = &fleetCommitmentHistoryScope{plan: e.plan, fleets: fleets}
 		return &copy, true, nil
 	}
 	return nil, false, nil

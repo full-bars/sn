@@ -53,6 +53,7 @@ type Executor struct {
 	carriedVerificationKeys map[string]bool
 	carriedFleetHistoryKeys map[string]bool
 	auditAuthorizedConfig   *ResolvedConfig
+	fleetCommitmentHistory  *fleetCommitmentHistoryScope
 }
 
 // NewExecutor opens transaction managers only against the canonical endpoint
