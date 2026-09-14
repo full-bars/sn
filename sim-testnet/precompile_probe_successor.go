@@ -402,21 +402,9 @@ func verifyPrecompileProbeSuccessorAt(ctx context.Context, cfg *ResolvedConfig, 
 	if err != nil || len(admissionCode) != 0 {
 		return stateMismatchError(err, "precompile probe successor was occupied at admission")
 	}
-	retired := common.HexToAddress(successor.RetiredProbe)
-	balance, err := client.BalanceAt(ctx, retired, admissionBlock)
-	if err != nil || balance == nil || balance.Sign() != 0 {
-		return stateMismatchError(err, "failed precompile probe retained an EVM balance at admission")
-	}
 	stakeReader := &Executor{cfg: cfg, deployer: &EvmTxManager{client: client}}
-	for _, encoded := range []string{successor.Evidence.SampleHotkey, successor.Evidence.MoveHotkey} {
-		hotkey, err := decodeHex32("failed probe stake hotkey", encoded)
-		if err != nil {
-			return err
-		}
-		stake, err := stakeReader.readStakeAt(ctx, successor.FinalizedHead.Number, hotkey, ss58Mirror(retired))
-		if err != nil || stake != 0 {
-			return stateMismatchError(err, "failed precompile probe retained alpha stake at admission")
-		}
+	if err := verifyPrecompileProbeSuccessorUnfunded(ctx, successor, head, nonce, client.BalanceAt, stakeReader.readStakeAt); err != nil {
+		return err
 	}
 	for _, check := range []struct {
 		address common.Address
@@ -457,6 +445,63 @@ func verifyPrecompileProbeSuccessorAt(ctx context.Context, cfg *ResolvedConfig, 
 		}
 	}
 	return nil
+}
+
+// Admission rechecks current custody as well as the signed historical anchor;
+// later exact create/call recovery keeps its existing historical custody scope.
+func verifyPrecompileProbeSuccessorUnfunded(ctx context.Context, successor *PrecompileProbeSuccessor, current ChainHead, nonce uint64, balanceAt func(context.Context, common.Address, *big.Int) (*big.Int, error), stakeAt func(context.Context, uint64, [32]byte, [32]byte) (uint64, error)) error {
+	checkpoints := []ChainHead{successor.FinalizedHead}
+	if nonce == successor.DeployerNonce && current != successor.FinalizedHead {
+		checkpoints = append(checkpoints, current)
+	}
+	retired := common.HexToAddress(successor.RetiredProbe)
+	for _, checkpoint := range checkpoints {
+		balance, err := balanceAt(ctx, retired, new(big.Int).SetUint64(checkpoint.Number))
+		if err != nil || balance == nil || balance.Sign() != 0 {
+			return stateMismatchError(err, "failed precompile probe retained an EVM balance at custody checkpoint %d", checkpoint.Number)
+		}
+		for _, encoded := range []string{successor.Evidence.SampleHotkey, successor.Evidence.MoveHotkey} {
+			hotkey, err := decodeHex32("failed probe stake hotkey", encoded)
+			if err != nil {
+				return err
+			}
+			stake, err := stakeAt(ctx, checkpoint.Number, hotkey, ss58Mirror(retired))
+			if err != nil || stake != 0 {
+				return stateMismatchError(err, "failed precompile probe retained alpha stake at custody checkpoint %d", checkpoint.Number)
+			}
+		}
+	}
+	return nil
+}
+
+// The source's signed repair checkpoint is stable between preview and apply;
+// the fresh head only establishes that the checkpoint is already finalized.
+func newPrecompileProbeSuccessor(prior *SetupPlan, built *DeploymentPayloads, entries []JournalEntry, evidence *PrecompileConformanceEvidence, head ChainHead) (*PrecompileProbeSuccessor, error) {
+	if prior == nil || prior.CoordinatorRepairCarry == nil || prior.PrecompileProbeSuccessor != nil || built == nil || len(entries) == 0 || !precompileProbeHasOnlyNativeEvidence(evidence) {
+		return nil, errors.New("failed precompile probe successor source is incomplete")
+	}
+	if err := validateCoordinatorRepairCarryPlan(prior); err != nil {
+		return nil, err
+	}
+	anchor := prior.CoordinatorRepairCarry.Result.Result.ObservedHead
+	if anchor.Number == 0 || !validCanonicalHashHex(anchor.Hash) || head.Number < anchor.Number || head.Number == anchor.Number && head.Hash != anchor.Hash {
+		return nil, errors.New("failed precompile probe successor has no finalized signed repair checkpoint")
+	}
+	if prior.CoordinatorUpgrade.DeployerNonce == ^uint64(0) || built.PrecompileProbeNonce != prior.CoordinatorUpgrade.DeployerNonce+1 {
+		return nil, errors.New("failed precompile probe successor changed its signed repair nonce boundary")
+	}
+	write, restore, err := failedPrecompileProbeNativeEntries(prior, entries)
+	if err != nil {
+		return nil, err
+	}
+	last := entries[len(entries)-1]
+	return &PrecompileProbeSuccessor{
+		Schema: "urnetwork-precompile-probe-successor-v1", SourcePlanHash: prior.PlanHash,
+		RetiredProbe: prior.CoordinatorUpgradeBaseline.ReplacementPrecompileProbe, RetiredRuntimeHash: prior.CoordinatorUpgradeBaseline.ReplacementPrecompileProbeHash,
+		Probe: built.PrecompileProbeAddress.Hex(), DeployerNonce: built.PrecompileProbeNonce,
+		RuntimeHash: crypto.Keccak256Hash(built.ExpectedRuntime[built.PrecompileProbeAddress]).Hex(), CreationHash: crypto.Keccak256Hash(built.PrecompileProbe).Hex(),
+		FinalizedHead: anchor, JournalSequence: last.Sequence, JournalHash: last.EntryHash, Write: write, Restore: restore, Evidence: *evidence,
+	}, nil
 }
 
 // Observes only the failed-probe successor of a completed, retained repair.
@@ -509,20 +554,12 @@ func observePrecompileProbeSuccessor(ctx context.Context, cfg *ResolvedConfig, s
 		if err != nil || !precompileProbeHasOnlyNativeEvidence(evidence) {
 			return nil, true, errors.Join(errors.New("failed precompile probe has value or battery evidence"), err)
 		}
-		write, restore, err := failedPrecompileProbeNativeEntries(prior, entries)
-		if err != nil {
-			return nil, true, err
-		}
 		if err := configurePrecompileProbeNonce(built, nonce); err != nil {
 			return nil, true, err
 		}
-		last := entries[len(entries)-1]
-		successor = &PrecompileProbeSuccessor{
-			Schema: "urnetwork-precompile-probe-successor-v1", SourcePlanHash: prior.PlanHash,
-			RetiredProbe: prior.CoordinatorUpgradeBaseline.ReplacementPrecompileProbe, RetiredRuntimeHash: prior.CoordinatorUpgradeBaseline.ReplacementPrecompileProbeHash,
-			Probe: built.PrecompileProbeAddress.Hex(), DeployerNonce: nonce,
-			RuntimeHash: crypto.Keccak256Hash(built.ExpectedRuntime[built.PrecompileProbeAddress]).Hex(), CreationHash: crypto.Keccak256Hash(built.PrecompileProbe).Hex(),
-			FinalizedHead: head, JournalSequence: last.Sequence, JournalHash: last.EntryHash, Write: write, Restore: restore, Evidence: *evidence,
+		successor, err = newPrecompileProbeSuccessor(prior, built, entries, evidence, head)
+		if err != nil {
+			return nil, true, err
 		}
 	}
 	if err := bindPrecompileProbeSuccessorPayloads(built, successor); err != nil {
