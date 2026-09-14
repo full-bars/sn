@@ -1,0 +1,17 @@
+record	retained_record_label	sha256	copied	scope
+lock-preview-request	publication/native-lock-preview/REQUEST.json	1a3816d74b30b7eae5d72f777107b4493c66ac1048b2063d00ff08160d455bcc	false	closed-lock-preview
+lock-preview-stdout	publication/native-lock-preview/stdout	7ff18444b65fb0850f6bdc29316b5a05009a1e7ced7b9590ae1d8dd42a802fa2	false	closed-lock-preview
+lock-preview-stderr	publication/native-lock-preview/stderr	772477e989d35545ba2ebd5ecbde054ad187dc5c6a6d469f55b31ca1bcfa76dd	false	closed-lock-preview
+lock-apply-request	publication/native-lock-apply/REQUEST.json	1237d1599764bd76e912bed90a0cb9164f4432abfd4b0920b538e55e83d6f7b6	false	closed-lock-apply
+lock-apply-stdout	publication/native-lock-apply/stdout	00c1c5273dd1a63a2cb172dccb4ea8901ca0e8ce15c9df04550f7da244dd9f91	false	closed-lock-apply
+lock-apply-stderr	publication/native-lock-apply/stderr	14c2ff1eb27724bb6082510f6c463e547f708565d727e8e808e8020bc0ff8faf	false	closed-lock-apply
+cli-build-result	final-cli/RESULT-FINAL-CLI-BUILD.json	60a731609ca14b909ed485c28f20f6d965d7d3c77caa515dcb132b810c9d4ddf	false	closed-final-cli-build
+cli-build-stdout	final-cli/logs/build.stdout	e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855	false	closed-final-cli-build
+cli-build-stderr	final-cli/logs/build.stderr	e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855	false	closed-final-cli-build
+setup-preview-request	publication/native-setup-preview/REQUEST.json	82d9eb613bbb3f7c318fb15532f73189756c67378f56699bbab78ed16c639446	false	closed-read-only-preview
+setup-preview-output	publication/native-setup-preview/stdout.json	722b968e0e70dba36d15d006c39399491559c792ee83ff120a2f7ab271211f8a	false	closed-read-only-preview
+setup-preview-stderr	publication/native-setup-preview/stderr	566f21401b0c78b9bc7006458b07c2960fe78397ab400eff58bba39ffd40668f	false	closed-read-only-preview
+setup-apply-request	publication/native-approved-repair/REQUEST.json	db88a31c75652498aa4e60e0ae4e23437e35183f5751ee3e087bd9af722a171b	false	closed-pre-application-refusal
+setup-apply-stdout	publication/native-approved-repair/stdout.json	e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855	false	closed-pre-application-refusal
+setup-apply-stderr	publication/native-approved-repair/stderr	39ce6a667205ef75d3d75b69cc5dbb73c8317b60e6315542debdfb5c613723c6	false	closed-pre-application-refusal
+setup-apply-result	publication/native-approved-repair/RESULT.json	0bb5f6a84cacfe990431b7f21544afbd953e6086cae7a783a347fb3a0f817129	false	closed-pre-application-refusal

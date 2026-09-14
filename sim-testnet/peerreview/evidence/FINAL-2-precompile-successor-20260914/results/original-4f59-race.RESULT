@@ -1,0 +1,11 @@
+status=CLOSED_CANDIDATE_FAILURE_RETAINED
+source_head=4f59d3f30f59ba612c67b266e0d1310b9c155ed3
+compiled_top_level_roots=100
+top_level_pass=99
+top_level_fail=1
+failed_root=TestPrecompileProbeSuccessorConstructsOriginalNativeReplay
+descendant_pass=29
+body_exit=1
+owner_exit=1
+finished_at=2026-09-14T13:51:59Z
+binary_sha256=c0df9f690b5aad09112c24e6ab24071a892987a74bdbf16fc04911b5e81f4e11

@@ -2,26 +2,26 @@
 
 **Status: in progress; `final_acceptance=false`.** This report covers the next
 full finalization of testnet chain **945**, subnet **521**, under
-[FINALIZE.md](../FINALIZE.md). At the **13:58 UTC on 2026-09-14** observation
+[FINALIZE.md](../FINALIZE.md). At the **15:04 UTC on 2026-09-14** observation
 cutoff, all **1,212 renewal transactions** across **202 fleets** have finalized
 and passed their native postcondition checks. The approved **6,000-alpha repair
-has not been submitted**, and the soak remains stopped. The last repair attempt
-stopped at the **2,200/3,456** carried-action marker because a historical
-precompile restore was incorrectly required to remain current after an approved
-renewal. That correction has now passed **44 affected roots normally and with
-race detection**, with deterministic pre-fix controls. A separate, previously
-recorded battery failure comes from an unsupported Blake2f precompile assumption
-on runtime 455. Its corrected Solidity checks and causal controls are closed.
-The replacement probe must retain the completed native proof without resending
-it. Cumulative source `4f59d3f30f59ba612c67b266e0d1310b9c155ed3` is frozen locally;
-its **100-root normal and race runs each passed 99 roots and failed the same
-archive-constructor test**. Two further runtime-attestation tests reproduce a
-stale 31-file expectation after the manifest expanded to 33 files. Those failures
-are retained and their corrections are in progress. This candidate is not
-deployed or qualified. The previous `afd7b26` full gates were canceled
-and joined at **11:43:53 UTC**; neither had reported a test failure, and neither
-is a full-gate pass. The full candidate gates and live campaign remain pending.
-Successful renewal and historical payments do not establish full acceptance.
+has not been submitted**, and the soak remains stopped. The published candidate
+`e982b3fbd74f76c8afe79cd8ef7067b19b044238` includes the qualified historical
+restore correction, runtime-455 battery correction and probe replacement path.
+The cumulative normal and race runs each retain **99 passes and one constructor
+fixture failure**; the final correction subsequently passed all **eight affected
+roots in both modes**, with the required fresh-process confirmations closed.
+Native setup exited **1 at 14:37:49 UTC**, before any transaction, because a
+moving finalized checkpoint changed the plan hash between preview and apply.
+All six retained state-file hashes remain unchanged. Corrected source
+`0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa` now passes all **40 affected normal
+tests**, including five new deterministic regressions. Race qualification,
+fresh-process confirmations and the isolated failure control remain pending.
+The superseded `e982b3f` full gates were canceled and fully joined at
+**14:42:32–33 UTC**, with no test failure reported before cancellation. They
+are not full-gate passes. The correction's release build, native application
+and complete gates remain required. Successful focused checks, renewal and
+historical payments do not establish full acceptance.
 
 The earlier published candidate
 `a59294e98ea02d05125015ae02cf32f2c0059c8a` introduced the corrected strict
@@ -191,7 +191,7 @@ finalized at native block **7,983,155** and was verified at journal sequence
 **10,170**, before fleet 1's completed generation-3 renewal. The non-fleet action
 was excluded from renewal-aware historical routing, and its live postcondition
 still demanded the restored generation-2 commitment as current state. The
-required correction and deterministic regressions are in progress. This
+correction and deterministic regressions are described below. This
 diagnosis uses the native refusal, source and retained receipts; it does not
 claim a fresh independent replay of the original restore transaction.
 
@@ -248,7 +248,7 @@ incident; only its unexecuted body was resumed. These local results do not
 establish that the replacement probe is deployed or passes on-chain conformance.
 [Runtime provenance, original static failure, corrected results and causal controls](peerreview/evidence/FINAL-2-precompile-battery-20260914/SUMMARY.md).
 
-The cumulative candidate adds **21 deterministic probe-successor tests**, using
+The cumulative candidate adds **22 deterministic probe-successor tests**, using
 synthetic identities and persisted fixtures under
 [Connect's test policy](../../connect/CODESTYLE.md). They cover preservation of
 the completed native write/restore, exact core artifacts, original signed repair
@@ -269,9 +269,83 @@ stderr was empty, and the race run reported no data race. The same compiled
 normal binary separately reproduced both stale runtime-attestation tests. The
 33-file correction retains the exact historical 29-file runtime-454 census and
 adds synthetic missing-path, duplicate, substitution and digest controls.
-Constructor diagnosis and corrected qualification remain pending; none of
-these failed runs is reported as a candidate pass. The final candidate gates
-and on-chain probe replacement have not started.
+The constructor's source fixture used an empty Go `DecimalUint`, whose signed
+JSON is numeric zero. Reading that archive produces canonical string `"0"`;
+the wire bytes match, but comparison with the unpersisted fixture fails.
+The final correction reloads the complete synthetic persisted plan before
+deriving its successor. It also checks all four adjacent zero-wei native
+actions, preserving their intents and rejecting altered repair/native amounts.
+Production approval and custody checks remain unchanged.
+
+Corrected source `511a09e8c9fad91be09c49ad31327a05c6648568` changes only two test
+files. Its **eight-root normal and race matrices passed**, closing at
+**14:07:03** and **14:11:00 UTC**. The failed constructor completed three fresh
+processes in each mode; the two failed census roots and two restart roots also
+completed their three normal confirmations. The last race confirmation closed
+at **14:16:57 UTC**. A separate four-root causal variant restoring the old
+probe/nonce assumptions produced the exact **two expected failures and two
+passing controls**. The original 100-root failures remain failed runs; unchanged
+passes retain their original source scope. The complete final candidate gates
+are still required.
+[Constructor diagnosis, deterministic cases, adjacent controls and exact outcomes](peerreview/evidence/FINAL-2-precompile-successor-20260914/SUMMARY.md).
+
+The final executable uses clean revision `e982b3f`, SHA-256
+`2977471bafbddc7f1568db84c823f2c169ec1bc83857cc046a72baed2f820c99`, with identical
+before/after observations of all 13 repositories. The source-pair hash is
+`519744ac4ad704e69a8f7e5500f4dddfbb479ca9a8021cea6b66c60d6000ade7`.
+The release lock changes only the probe artifact/runtime and their affected
+source hashes; core deployed artifacts and spending approvals are preserved.
+The read-only preview completed at **14:22:47 UTC**, with all six retained
+state-file hashes unchanged. Reviewed plan
+`0xa0f74d318b11170fc8287560c9aa239000ad7572dfb7dc416d86a8b3c537297a`
+retains all **3,521 action IDs**, the **1,212 completed renewals**, and the
+original native write/restore intents. It binds one probe replacement at
+`0x500c8955E0b76848F1f32C0E67c7e0715c1Ecf00`, using deployer nonce **34**.
+Only eight probe action intents and the EVM campaign gas reserve change.
+Active plus superseded spending remains within **200 TAO**, **180 EVM TAO**,
+**37,250 alpha**, **262 registrations** and **zero subnet creations**.
+The same **6,000-alpha** repair retains its minimum credit of
+**5,999,999,999,999 alpha-rao**. Setup application ran on the owned LAN node from
+**14:35:48 to 14:37:49 UTC** and exited **1**: its recomputed hash was
+`0xee290d52e2ef0bcb0c3d5dfc5c5070f7ef7fc4b25d2e465c42c7cdabea763f6c`,
+so the reviewed approval was refused. No transaction was sent, and all six
+retained state-file hashes remain unchanged. The journal still has zero rows
+for repair `alpha.repair.validator.1.7`.
+[Exact release preparation, preview and closed refusal](peerreview/evidence/FINAL-2-e982-preparation-20260914/SUMMARY.md).
+
+The confirmed cause is the new descriptor's `FinalizedHead`: it was refreshed
+on each invocation and included in the approval hash. The installed source plan
+has no successor until application, so preview and apply constructed different
+descriptors. The refused invocation emitted no rendered plan; a complete field
+comparison against its computed hash is unavailable. The correction binds the
+checkpoint already covered by the original signed coordinator repair result,
+while retaining it inside both typed and persisted approval hashes. Before
+CREATE, it also checks the old probe's EVM balance and both approved alpha
+positions at the fresh head, rejecting funds received since that older anchor.
+Completed CREATE and exact subsequent transaction-prefix recovery keep their
+existing historical custody scope.
+
+The two-file correction adds [five deterministic regressions](precompile_probe_approval_test.go).
+They exercise the production constructor, action binder, actual approval guard
+and persisted hash under advancing finality, plus altered signed checkpoints,
+receipt/journal/runtime identity, fresh custody and completed-CREATE recovery.
+Formatted source `0a94b7d` passed the **40-root normal matrix** from
+**15:01:57 to 15:02:29 UTC**, with body exit **0**, exact expected/actual root
+outcomes and unchanged source, dependency and binary identities. Its normal
+binary SHA-256 is
+`e67e2f362068e7e8648273e18f6d6f6d206581f048e429950b5d02012343daed`.
+Race qualification, the two additional normal confirmations and the isolated
+moving-head failure control are pending at this cutoff. These scoped results
+do not establish a successful native application.
+
+The canceled `e982b3f` producer ran **14:21:59–14:42:32 UTC**, with **13/13**
+admitted children joined: **10 successful and 3 canceled**. Aggregate ran
+**14:23:00–14:42:33 UTC**, with **5/5** joined: **3 successful and 2 canceled**.
+Both outer exits are **143**. All five initial preflights passed for each gate,
+and the **14:46:37 UTC** process census found no remaining matching gate, test
+or service owner. No original test failure preceded cancellation. Full gates
+on the corrected final source are still required.
+[Exact gate commands, joins, cancellation and cleanup evidence](peerreview/evidence/FINAL-2-e982-gates-canceled-20260914/SUMMARY.md).
 
 The prior setup attempt exited 1 at **06:41:20 UTC** because its old refresh
 postcondition expected binding version count 2 while two fleets had later,

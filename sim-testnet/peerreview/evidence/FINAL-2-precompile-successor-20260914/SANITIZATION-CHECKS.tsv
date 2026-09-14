@@ -1,0 +1,5 @@
+check\tresult\tdetail
+raw-binary-log-exclusion\tpass\tno-executable-or-raw-event-log-artifacts
+credential-marker-scan\tpass\tno-sensitive-credential-or-authority-marker
+largest-artifact\tpass\t13019	MANIFEST.tsv
+raw-record-handling\tpass\treferences/RAW-HASH-REFERENCES.tsv-hashes-retained-raw-records-without-copying-them

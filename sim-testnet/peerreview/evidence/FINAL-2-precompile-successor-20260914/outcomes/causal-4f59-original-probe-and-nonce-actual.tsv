@@ -1,0 +1,5 @@
+root	expected_action	actual_terminal	literal_required	literal_found
+TestPrecompileProbeSuccessorKeepsCoreExecutableChecks	fail	fail	explicit probe successor could not retain exact core	True
+TestPrecompileProbeSuccessorRerendersAfterValuePhases	fail	fail	completed value phase lost successor nonce admission	True
+TestPrecompileProbeSuccessorPinsSingleCreateBoundary	pass	pass		True
+TestPrecompileProbeSuccessorNeverResendsNativeDrill	pass	pass		True

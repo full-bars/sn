@@ -1,0 +1,16 @@
+source=e982b3fbd74f76c8afe79cd8ef7067b19b044238
+exit_code=0
+read_only=true
+state_unchanged=true
+plan_hash=0xa0f74d318b11170fc8287560c9aa239000ad7572dfb7dc416d86a8b3c537297a
+preview_sha256=722b968e0e70dba36d15d006c39399491559c792ee83ff120a2f7ab271211f8a
+action_count=3521
+completed_renewals_preserved=1212
+all_action_ids_preserved=true
+original_native_intents_unchanged=true
+repair_intent_unchanged=true
+all_six_state_files_unchanged_after_preview=true
+alpha_cap_rao=37250000000000
+evm_gas_cap_wei=180000000000000000000
+preview_started_at=2026-09-14T14:20:35.440061588Z
+preview_finished_at=2026-09-14T14:22:47.766649417Z

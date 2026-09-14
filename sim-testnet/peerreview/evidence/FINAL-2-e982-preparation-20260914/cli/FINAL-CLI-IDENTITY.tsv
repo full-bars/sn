@@ -1,0 +1,14 @@
+field\tvalue
+source_commit\te982b3fbd74f76c8afe79cd8ef7067b19b044238
+source_pair_sha256\t519744ac4ad704e69a8f7e5500f4dddfbb479ca9a8021cea6b66c60d6000ade7
+source_pair_before_after_identical\ttrue
+cli_sha256\t2977471bafbddc7f1568db84c823f2c169ec1bc83857cc046a72baed2f820c99
+cli_bytes\t140657784
+cli_mode\t0700
+trimpath\ttrue
+buildvcs\ttrue
+modified\tfalse
+build_exit\t0
+outer_exit\t0
+started_at\t2026-09-14T14:18:15Z
+finished_at\t2026-09-14T14:19:05Z

@@ -1,0 +1,6 @@
+status	CLOSED — source-superseded / CANCELED
+reason	confirmed native production defect; e982 gates became ineligible before completion
+producer_nonzero_join_exits	only directed cancellation exit 143 (3 children)
+aggregate_nonzero_join_exits	only directed cancellation exit 143 (2 children)
+original_test_failure_observed	no
+basis	raw outer started/joined records contain no non-143 joined failure; retained phase logs are omitted from this compact bundle

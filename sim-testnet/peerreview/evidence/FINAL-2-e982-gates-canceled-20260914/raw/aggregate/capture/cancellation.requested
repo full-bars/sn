@@ -1,0 +1,5 @@
+requested_at_utc=2026-09-14T14:42:31Z
+reason=source-superseded-confirmed-native-production-defect
+signal=TERM
+inner_pid=2844400
+inner_cmd=bash /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/scripts/test-release-1.0-local.sh 

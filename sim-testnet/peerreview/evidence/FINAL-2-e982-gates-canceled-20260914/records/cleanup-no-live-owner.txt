@@ -1,0 +1,12 @@
+observed_at_utc	2026-09-14T14:46:37Z
+producer_outer_pid	2841851
+producer_outer_finished_at	2026-09-14T14:42:32Z
+aggregate_outer_pid	2844375
+aggregate_outer_finished_at	2026-09-14T14:42:33Z
+producer_admitted_started_joined	13/13
+aggregate_admitted_started_joined	5/5
+expected_inner_gate_pids	2841876,2844400
+expected_outer_capture_pids	2841851,2844375
+admitted_child_pids	2852609,2852676,2852743,2868725,2868963,2870109,2870801,2872261,2875760,2880210,2892252,2897756,2898206,2853979,2854065,2901010,2901567,2908459
+matching_live_gate_test_service_owner_count	0
+result	no matching capture wrapper, inner gate, admitted child, test, or private service owner remains

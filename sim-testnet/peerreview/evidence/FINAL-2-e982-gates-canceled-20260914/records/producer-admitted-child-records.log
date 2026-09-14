@@ -1,0 +1,26 @@
+[release gate] started isolation-regressions (pid 2852609)
+[release gate] started compile (pid 2852676)
+[release gate] started runtime (pid 2852743)
+[release gate] joined compile (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/compile.log
+[release gate] started evidence-native (pid 2868725)
+[release gate] joined evidence-native (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/evidence-native.log
+[release gate] started seed (pid 2868963)
+[release gate] joined runtime (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/runtime.log
+[release gate] started sim-seed (pid 2870109)
+[release gate] joined seed (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/seed.log
+[release gate] started evm-identity (pid 2870801)
+[release gate] joined evm-identity (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/evm-identity.log
+[release gate] started driver (pid 2872261)
+[release gate] joined driver (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/driver.log
+[release gate] started framing (pid 2875760)
+[release gate] joined framing (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/framing.log
+[release gate] started settlement (pid 2880210)
+[release gate] joined sim-seed (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/sim-seed.log
+[release gate] started adversarial (pid 2892252)
+[release gate] joined isolation-regressions (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/isolation-regressions.log
+[release gate] started semantic (pid 2897756)
+[release gate] joined adversarial (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/adversarial.log
+[release gate] started semantic-public-scenario (pid 2898206)
+[release gate] joined settlement (exit 143); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/settlement.log
+[release gate] joined semantic (exit 143); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/semantic.log
+[release gate] joined semantic-public-scenario (exit 143); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/producer-precompile-cumulative-e982/tmp/urnetwork-release-gate.ctJMUoGz/logs/semantic-public-scenario.log

@@ -1,0 +1,11 @@
+bundle=FINAL-2-precompile-successor-20260914
+content_class=public-safe-curated-go-qualification-evidence
+original_cumulative_source=4f59d3f30f59ba612c67b266e0d1310b9c155ed3
+final_fixture_census_source=511a09e8c9fad91be09c49ad31327a05c6648568
+future_destination=sim-testnet/peerreview/evidence/FINAL-2-precompile-successor-20260914
+raw_records=hash-referenced-not-copied
+scope_limit=no-full100-pass-claim-on-final-source;no-cli-native-rpc-or-gate-claim
+sealed_at=2026-09-14T14:35:30Z
+review_artifact_files_excluding_checksum_records=63
+case_to_failure_mapping=CASE-TO-FAILURE-MAPPING.md
+original_selected_root_set=21-successor-plus-1-battery;final511-adds-RetainsCanonicalArchivedAmounts-as-22nd-successor

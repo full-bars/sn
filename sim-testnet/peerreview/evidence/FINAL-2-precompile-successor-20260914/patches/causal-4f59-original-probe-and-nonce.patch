@@ -1,0 +1,12 @@
+--- a/sim-testnet/precompile_probe_successor_calls.go
++++ b/sim-testnet/precompile_probe_successor_calls.go
+@@ -24,2 +24,3 @@
+ func precompileProbeSuccessorPrefix(plan *SetupPlan, entries []JournalEntry, nonce uint64) ([]JournalEntry, error) {
++	if plan != nil && plan.PrecompileProbeSuccessor != nil && nonce > plan.PrecompileProbeSuccessor.DeployerNonce+1 { return nil, errors.New("causal original successor nonce only accepted CREATE") }
+ 	if err := validatePrecompileProbeSuccessorActions(plan); err != nil {
+--- a/sim-testnet/evm.go
++++ b/sim-testnet/evm.go
+@@ -588,2 +588,3 @@
+ func validateCoordinatorUpgradePayloadBaselineWithProbe(baseline CoordinatorUpgradeBaseline, retained ContractDeployment, payloads *DeploymentPayloads, successor *PrecompileProbeSuccessor) error {
++	successor = nil // Causal: original v4 admission has no successor artifact identity.
+ 	if !baseline.isRepeated() {

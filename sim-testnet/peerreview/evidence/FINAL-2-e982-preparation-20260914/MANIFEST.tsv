@@ -1,0 +1,21 @@
+bundle_path	origin_record_label	origin_sha256	representation
+BUNDLE-META.txt	derived closed-record metadata	-	derived public-safe metadata
+SUMMARY.md	closed lock, CLI, preview, and refusal records	-	derived concise outcome summary
+README.md	bundle specification	-	derived usage note
+EXCLUSIONS.md	bundle specification	-	derived exclusion statement
+HANDOFF.md	bundle specification	-	derived scope and proof-limit handoff
+cli/FINAL-CLI-IDENTITY.tsv	final-cli/RESULT-FINAL-CLI-BUILD.json	60a731609ca14b909ed485c28f20f6d965d7d3c77caa515dcb132b810c9d4ddf	derived selected identity and closed exit fields
+cli/SOURCE-PAIR-SUMMARY.tsv	final-cli/source-pair-final.tsv	519744ac4ad704e69a8f7e5500f4dddfbb479ca9a8021cea6b66c60d6000ade7	derived repository names, commits, and clean-status hashes; no paths
+lock/LOCK-LIFECYCLE.RESULT	LOCK-AND-FINAL-CLI.json	987378752335f0588ba7f1912ee36435e334c23b62eabd562ff06a232365b554	derived closed lifecycle fields
+lock/REVIEWED-FIVE-FIELD-CHANGES.tsv	native-lock-preview/REVIEW.json	170d921be7d8690ddd03b731e102225e72c8e7b4390477c20c096063d5ef9c49	derived reviewed five-field delta only
+publication/PUBLICATION.RESULT	publication/RESULT.json and LOCK-AND-FINAL-CLI.json	952033a07aa5cf6e060ddfeb84a2739647a9dd346cda58545acb9b2d00939028;987378752335f0588ba7f1912ee36435e334c23b62eabd562ff06a232365b554	derived distinct pre-lock source-publication and lock-only-publication fields
+setup-preview/REVIEWED-PREVIEW.RESULT	native-setup-preview/RESULT.json and REVIEW.json	392ad96e0300d7017af0871402553df09f6f3c7af2a3c5c8a7936deb1a7b67ae;4f1b21c19790ede2423adbe4a97111e55ff3e3a1a77528d6ad47badd1e25d641	derived reviewed read-only preview fields
+setup-preview/STATE-BEFORE.sha256	native-setup-preview/state.before.sha256	326973224bbf54e3c2810e03dadc60466558bc6f25c86d105cabd44242e45f11	verbatim public state fingerprints
+setup-preview/STATE-BEFORE.sizes	native-setup-preview/state.before.sizes	07db7700941fb82679ac88413ae1e7a106f651931355deeeb39cc591d5daf7c1	verbatim public state file sizes
+native-refusal/CLOSED-REFUSAL.RESULT	native-approved-repair/RESULT.json	0bb5f6a84cacfe990431b7f21544afbd953e6086cae7a783a347fb3a0f817129	derived pre-application refusal fields
+native-refusal/STATE-UNCHANGED.check	native-approved-repair/state.before.check	db8827f79625c94213ec8a04d9d4ab0a2c2fe022276e5c070fffe975d31a03f9	verbatim successful state comparison labels only
+native-refusal/STATE-BEFORE.sha256	native-approved-repair/state.before.sha256	326973224bbf54e3c2810e03dadc60466558bc6f25c86d105cabd44242e45f11	verbatim public state fingerprints
+native-refusal/STATE-BEFORE.sizes	native-approved-repair/state.before.sizes	07db7700941fb82679ac88413ae1e7a106f651931355deeeb39cc591d5daf7c1	verbatim public state file sizes
+references/RAW-HASH-REFERENCES.tsv	closed raw records	multiple; listed per row	hash references only; raw records excluded
+MANIFEST.tsv	this bundle	-	provenance map
+SANITIZATION-CHECKS.tsv	this bundle	-	derived sealing checks

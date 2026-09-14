@@ -1,0 +1,10 @@
+[release gate] started isolation-regressions (pid 2853979)
+[release gate] started sn-go (pid 2854065)
+[release gate] joined sn-go (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/aggregate-precompile-cumulative-e982/tmp/urnetwork-release-gate.Y6ICZdI5/logs/sn-go.log
+[release gate] started sn-all-normal (pid 2901010)
+[release gate] joined isolation-regressions (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/aggregate-precompile-cumulative-e982/tmp/urnetwork-release-gate.Y6ICZdI5/logs/isolation-regressions.log
+[release gate] started sn-core-race (pid 2901567)
+[release gate] joined sn-core-race (exit 0); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/aggregate-precompile-cumulative-e982/tmp/urnetwork-release-gate.Y6ICZdI5/logs/sn-core-race.log
+[release gate] started sn-validator-race (pid 2908459)
+[release gate] joined sn-validator-race (exit 143); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/aggregate-precompile-cumulative-e982/tmp/urnetwork-release-gate.Y6ICZdI5/logs/sn-validator-race.log
+[release gate] joined sn-all-normal (exit 143); log /home/by/urnetwork/temp/sn-precompile-cumulative-causal-20260914/terra-runtime/aggregate-precompile-cumulative-e982/tmp/urnetwork-release-gate.Y6ICZdI5/logs/sn-all-normal.log

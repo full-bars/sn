@@ -1,0 +1,11 @@
+status=CLOSED_PASS
+source_head=511a09e8c9fad91be09c49ad31327a05c6648568
+compiled_roots=8
+top_level_pass=8
+body_exit=0
+owner_exit=0
+finished_at=2026-09-14T14:07:05Z
+binary_sha256=9b0b4e63c585fafaaa6fe529ce1eda8cf54a92623aaaf852367a707de9c3870b
+source_pre_post=clean
+binary_pre_post=identical
+converter_stderr=empty

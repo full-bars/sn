@@ -1,0 +1,8 @@
+status=CLOSED_EXPECTED_2FAIL_2PASS
+base_head=4f59d3f30f59ba612c67b266e0d1310b9c155ed3
+normal_compile_exit=0
+list_exit=0
+body_exit=1
+outer_exit=1
+event_outcomes_exact=true
+source_binary_manifest_fences=true

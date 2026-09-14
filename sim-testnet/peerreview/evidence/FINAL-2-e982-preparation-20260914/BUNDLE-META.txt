@@ -1,0 +1,8 @@
+bundle=FINAL-2-e982-preparation-20260914
+content_class=public-safe-closed-preparation-and-refusal-evidence
+final_cli_source=e982b3fbd74f76c8afe79cd8ef7067b19b044238
+final_cli_sha256=2977471bafbddc7f1568db84c823f2c169ec1bc83857cc046a72baed2f820c99
+closed_native_refusal=setup-apply-exit-1-before-state-or-transaction-change
+raw_records=hash-referenced-not-copied
+sealed_at_utc=2026-09-14T14:52:10Z
+sealed_content_files_before_checksums=20

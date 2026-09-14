@@ -1,0 +1,9 @@
+status=CLOSED_DIAGNOSTIC_FAILURE_RETAINED
+source_head=fdfffaec577de0c112b27671f92a169d4a36e26b
+compiled_roots=1
+root=TestPrecompileProbeSuccessorConstructsOriginalNativeReplay
+body_exit=1
+owner_exit=1
+finished_at=2026-09-14T13:59:05Z
+binary_sha256=2ad7eb92d9d0613872a149fba35936be831f824a5fd8af0529f1c9f77bf1dfa1
+observed_literal=synthetic archived approval changed repair reference: wire_equal=true archive_error=<nil> current_error=<nil>

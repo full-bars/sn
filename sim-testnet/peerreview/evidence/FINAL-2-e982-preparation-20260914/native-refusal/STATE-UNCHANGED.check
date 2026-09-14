@@ -1,0 +1,6 @@
+plan.json: OK
+journal.jsonl: OK
+supervisor.state.json: OK
+supervisor.json: OK
+config.redacted.yml: OK
+public/identities.json: OK
