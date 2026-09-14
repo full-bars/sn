@@ -547,6 +547,11 @@ func newArchivedPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSu
 		t.Fatalf("complete archived source prerequisite: %v", err)
 	}
 	persistFleetCommitmentRecoveryTestPlan(t, fixture.stateDir, source)
+	// Resume consumes persisted approvals, including canonical DecimalUint zeros.
+	source, err = readValidatorEvidenceHistoricalPlan(fixture.stateDir, source.PlanHash)
+	if err != nil {
+		t.Fatal(err)
+	}
 	owner := &Executor{cfg: fixture.cfg, stateDir: fixture.stateDir, plan: source}
 	entries := slices.Clone(fixture.entries)
 	for index := range entries {
@@ -566,6 +571,7 @@ func newArchivedPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSu
 	successor.SourcePlanHash, successor.Write, successor.Restore = source.PlanHash, entries[1], entries[2]
 	successor.JournalSequence = entries[len(entries)-1].Sequence
 	plan := *source
+	plan.validatorEvidenceHistorical = false
 	plan.PlanHash = common.Hash{49}.Hex()
 	plan.PriorPlanHashes = append(slices.Clone(source.PriorPlanHashes), source.PlanHash)
 	plan.Actions = slices.Clone(source.Actions)
@@ -578,6 +584,40 @@ func newArchivedPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSu
 	}
 	fixture.source, fixture.plan, fixture.entries = source, &plan, append(finals, entries...)
 	return fixture
+}
+
+// Canonical zero amounts retain signed identity across the actual archive reader.
+func TestPrecompileProbeSuccessorRetainsCanonicalArchivedAmounts(t *testing.T) {
+	fixture := newArchivedPrecompileProbeSuccessorFixture(t)
+	for _, action := range []Action{
+		fixture.source.CoordinatorRepairCarry.Request.Request.Deploy,
+		fixture.source.CoordinatorRepairCarry.Request.Request.Activate,
+		actionByID(t, fixture.plan, "precompile.commitment-write"),
+		actionByID(t, fixture.plan, "precompile.commitment-restore"),
+	} {
+		if action.Spend.EVMGasWei != "0" {
+			t.Fatalf("archived action %s did not retain canonical zero wei", action.ID)
+		}
+		intent, err := actionIntentHash(action)
+		if err != nil || intent != action.IntentHash {
+			t.Fatalf("archived zero amount changed %s intent: %v", action.ID, err)
+		}
+	}
+	for _, changedPart := range []string{"signed repair", "native action"} {
+		changed := clonePrecompileProbeSuccessorPlan(t, fixture.plan)
+		if changedPart == "signed repair" {
+			changed.CoordinatorRepairCarry.Request.Request.Deploy.Spend.EVMGasWei = "1"
+		} else {
+			for index := range changed.Actions {
+				if changed.Actions[index].ID == "precompile.commitment-write" {
+					changed.Actions[index].Spend.EVMGasWei = "1"
+				}
+			}
+		}
+		if _, err := readPrecompileProbeSuccessorSource(fixture.cfg, fixture.stateDir, changed, fixture.entries); err == nil {
+			t.Fatalf("changed %s amount escaped exact source identity", changedPart)
+		}
+	}
 }
 
 // The actual constructor loads the complete archived approval and persisted

@@ -2214,6 +2214,9 @@ type releaseRuntimeMetadataArtifact struct {
 	MetadataBlake2b256   string  `json:"metadata_blake2b_256"`
 }
 
+// The reviewed455 manifest adds both mapping sources to its prior31 paths.
+const releaseRuntime455SourceFileCount = 33
+
 // Go decision models are useful supplements, but they cannot prove what the
 // deployed FRAME runtime contains. Require both release entry points to hash
 // the exact reviewed upstream Rust sources and execute the exact observed Wasm
@@ -2401,7 +2404,7 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 		"runtime-metadata-static-source.sha256",
 		"runtime-v455-source.sha256",
 		"67dcf7f791dc495064c293f080a0702cb433e51e",
-		"expected_current_files=31",
+		fmt.Sprintf("expected_current_files=%d", releaseRuntime455SourceFileCount),
 		"expected_metadata_files=15",
 		"d78d9cc6a6ee4d805f74a35414baaef8be025a5f",
 		"da06f033663896ef2fdbbfc3ecc68ca908fba0f5",
@@ -2459,8 +2462,8 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 	}
 }
 
-// The exact455 comparison changes only the runtime version and proxy filters.
-// Every previously consumed stake/weight/CRv4 source remains byte-identical.
+// Retains the exact454 comparison and adds the455 mapping implementation and
+// dispatcher consumed by the probe; prior stake/weight/CRv4 sources stay exact.
 func TestReleaseGatesAttestRuntime455SourceCompatibility(t *testing.T) {
 	previousRaw, err := os.ReadFile("../docs/spec/runtime-v454-source.sha256")
 	if err != nil {
@@ -2484,16 +2487,13 @@ func TestReleaseGatesAttestRuntime455SourceCompatibility(t *testing.T) {
 	want["runtime/src/lib.rs"] = "6f27f32d953abd9d575abbce59830f17d0d6e2e46be726967d446490d63c4ec3"
 	want["runtime/src/proxy_filters/call_groups.rs"] = "cee455a93bfa30753473f110d31caf659d3500b4464f9d45c58e1584e97545c6"
 	want["runtime/src/proxy_filters/mod.rs"] = "2f6d18d04f3c333815a254878c51fa018bb794f8f605316b9452f95f8d4ee640"
-	seen := map[string]bool{}
-	for _, row := range strings.Split(strings.TrimSpace(string(currentRaw)), "\n") {
-		fields := strings.Fields(row)
-		if len(fields) != 2 || seen[fields[1]] || want[fields[1]] == "" || want[fields[1]] != fields[0] {
-			t.Fatalf("current source is duplicated, omitted or differs from the reviewed comparison: %q", row)
-		}
-		seen[fields[1]] = true
+	want["precompiles/src/address_mapping.rs"] = "92015242464366decc76c9de0eedddba8ff35793c69401afc4ed45b54e977dd7"
+	want["precompiles/src/lib.rs"] = "9a6b78cdad3aa54d6519c1268515bd83e41ead8e2dd7c416ffb87e55c5f9fb24"
+	if len(want) != releaseRuntime455SourceFileCount {
+		t.Fatalf("reviewed runtime455 source census=%d want%d", len(want), releaseRuntime455SourceFileCount)
 	}
-	if len(seen) != len(want) || len(seen) != 31 {
-		t.Fatalf("current source census=%d want31", len(seen))
+	if err := verifyReleaseRuntimeSourceCensus(string(currentRaw), want); err != nil {
+		t.Fatal(err)
 	}
 	checkerRaw, err := os.ReadFile("../scripts/check-runtime-v454-source.sh")
 	if err != nil {
@@ -2502,12 +2502,55 @@ func TestReleaseGatesAttestRuntime455SourceCompatibility(t *testing.T) {
 	checker := string(checkerRaw)
 	for _, fragment := range []string{
 		"current_commit=\"67dcf7f791dc495064c293f080a0702cb433e51e\"",
-		"expected_current_files=31", "expected_files=29", "expected_metadata_files=15",
+		fmt.Sprintf("expected_current_files=%d", releaseRuntime455SourceFileCount), "expected_files=29", "expected_metadata_files=15",
 		"SUBTENSOR_RUNTIME455_SOURCE", "current_seen_paths", "current_observed", "current_expected",
 		"current_count", "runtime source verified ref_kind=commit",
 	} {
 		if !strings.Contains(checker, fragment) {
 			t.Errorf("current source attestation omits %q", fragment)
+		}
+	}
+}
+
+// Requires every reviewed path and digest exactly once, independently of order.
+func verifyReleaseRuntimeSourceCensus(manifest string, expectedKVs map[string]string) error {
+	seen := map[string]bool{}
+	for _, row := range strings.Split(strings.TrimSpace(manifest), "\n") {
+		fields := strings.Fields(row)
+		if len(fields) != 2 || seen[fields[1]] || expectedKVs[fields[1]] == "" || expectedKVs[fields[1]] != fields[0] {
+			return fmt.Errorf("current source is duplicated, substituted or differs from the reviewed comparison: %q", row)
+		}
+		seen[fields[1]] = true
+	}
+	if len(seen) != len(expectedKVs) {
+		return fmt.Errorf("current source census=%d want%d", len(seen), len(expectedKVs))
+	}
+	return nil
+}
+
+// Synthetic source identities exercise the same validator used by the real gate.
+func TestReleaseGatesAttestRuntimeSourceCensusRejectsDrift(t *testing.T) {
+	dispatcherHash, mapperHash := strings.Repeat("11", 32), strings.Repeat("22", 32)
+	dispatcher := dispatcherHash + "  synthetic/dispatcher.rs"
+	mapper := mapperHash + "  synthetic/address_mapping.rs"
+	expectedKVs := map[string]string{"synthetic/dispatcher.rs": dispatcherHash, "synthetic/address_mapping.rs": mapperHash}
+	for _, manifest := range []string{dispatcher + "\n" + mapper, mapper + "\n" + dispatcher + "\n"} {
+		if err := verifyReleaseRuntimeSourceCensus(manifest, expectedKVs); err != nil {
+			t.Fatalf("complete reviewed source census was refused: %v", err)
+		}
+	}
+	for _, testCase := range []struct{ name, manifest string }{
+		{name: "omitted mapping", manifest: dispatcher},
+		{name: "omitted dispatcher", manifest: mapper},
+		{name: "duplicate in place of mapping", manifest: dispatcher + "\n" + dispatcher},
+		{name: "extra duplicate", manifest: dispatcher + "\n" + mapper + "\n" + mapper},
+		{name: "substituted path", manifest: dispatcher + "\n" + mapperHash + "  synthetic/unreviewed.rs"},
+		{name: "substituted digest", manifest: dispatcher + "\n" + dispatcherHash + "  synthetic/address_mapping.rs"},
+		{name: "extra field", manifest: dispatcher + "\n" + mapper + " extra"},
+		{name: "empty manifest", manifest: ""},
+	} {
+		if err := verifyReleaseRuntimeSourceCensus(testCase.manifest, expectedKVs); err == nil {
+			t.Fatalf("%s escaped reviewed source census", testCase.name)
 		}
 	}
 }
