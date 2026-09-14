@@ -235,7 +235,7 @@ func TestApprovedDoctorFactsAcceptExactPartialPrefixAndRejectAdjacentDrift(t *te
 }
 
 func TestRuntimeVersionIdentityAcceptsAuthoritativeNormalEncoding(t *testing.T) {
-	raw := json.RawMessage(`{"specName":"node-subtensor","implName":"node-subtensor","authoringVersion":1,"specVersion":455,"implVersion":0,"apis":[["0xdf6acb689907609b",4]],"transactionVersion":1,"stateVersion":1}`)
+	raw := json.RawMessage(`{"specName":"node-subtensor","implName":"node-subtensor","authoringVersion":1,"specVersion":458,"implVersion":0,"apis":[["0xdf6acb689907609b",4]],"transactionVersion":1,"stateVersion":1}`)
 	version, err := decodeRuntimeVersionIdentity(raw)
 	if err != nil {
 		t.Fatalf("authoritative runtime version was not decoded: %v", err)
@@ -630,6 +630,7 @@ func TestReviewedHistoricalRuntimeArtifactsAreExactEvidenceOnly(t *testing.T) {
 		{452, "0x40a8c3c99a47d6739b086236308535fab26d5fd4cc5c88eb83f6a3c8b928f7cc", "0x2e1d4f992a978fdd58652c8cf434c26bb8f89170e6a0fdbc9362b29e8fe8a835"},
 		{453, "0xabe169cc148e2a63068772788c191fa6566f02aa2ea9afb80cdeb28217bab4d4", "0xb00e7e0188d537136a973df4d5c5f2c86ef903ffff49c1cf8d129dabc98b07ce"},
 		{spec: 454, codeHash: "0x725e3d1eca8d5c29c1f0fa6476d5360661b852f52aebad979d6636e227a431ef", metadataHash: "0x4d17516b694ef8d18f8a565dcb2df0117e7a0018a3ffa40812c91a1621225702"},
+		{spec: 455, codeHash: "0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a", metadataHash: "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc"},
 	} {
 		version := runtimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: test.spec, TransactionVersion: 1, StateVersion: 1}
 		artifact, ok := reviewedHistoricalRuntimeArtifact(version)
@@ -642,7 +643,7 @@ func TestReviewedHistoricalRuntimeArtifactsAreExactEvidenceOnly(t *testing.T) {
 		{SpecName: "other", SpecVersion: 451, TransactionVersion: 1, StateVersion: 1},
 		{SpecName: "node-subtensor", SpecVersion: 451, TransactionVersion: 2, StateVersion: 1},
 		{SpecName: "node-subtensor", SpecVersion: 452, TransactionVersion: 1, StateVersion: 2},
-		{SpecName: "node-subtensor", SpecVersion: 455, TransactionVersion: 1, StateVersion: 1},
+		{SpecName: "node-subtensor", SpecVersion: 456, TransactionVersion: 1, StateVersion: 1},
 	} {
 		if _, ok := reviewedHistoricalRuntimeArtifact(version); ok {
 			t.Errorf("unreviewed historical identity was accepted: %+v", version)
@@ -652,13 +653,13 @@ func TestReviewedHistoricalRuntimeArtifactsAreExactEvidenceOnly(t *testing.T) {
 
 // The release-history reader needs one bounded provider cache entry for the
 // active runtime and each exact predecessor carried by the attempt journal.
-func TestReleaseHistoryRuntimeArtifactsCoverExactFiveVersionDomain(t *testing.T) {
+func TestReleaseHistoryRuntimeArtifactsCoverExactSixVersionDomain(t *testing.T) {
 	cfg := testResolvedConfig(t)
 	artifacts, err := releaseHistoryRuntimeArtifacts(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantSpecs := []uint32{455, 451, 452, 453, 454}
+	wantSpecs := []uint32{458, 451, 452, 453, 454, 455}
 	if len(artifacts) != len(wantSpecs) {
 		t.Fatalf("history artifacts=%d, want %d", len(artifacts), len(wantSpecs))
 	}
@@ -681,7 +682,7 @@ func TestReleaseHistoryRuntimeArtifactsCoverExactFiveVersionDomain(t *testing.T)
 		}
 	}
 	if artifacts[0].CodeHash != reviewedRuntimeCodeHash || artifacts[0].MetadataHash != reviewedRuntimeMetadataHash {
-		t.Fatalf("active history artifact does not match reviewed v455: %+v", artifacts[0])
+		t.Fatalf("active history artifact does not match reviewed v458: %+v", artifacts[0])
 	}
 }
 

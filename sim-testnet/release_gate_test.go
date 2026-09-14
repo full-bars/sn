@@ -111,7 +111,7 @@ func TestReleaseGatesPinProviderAndTransportRegressions(t *testing.T) {
 
 const releaseAdversarialSelector = "^Test(Adversarial|Adversary|VerifyAdversary|RPCAdversary|ConsensusWeightComparison|Runtime454)"
 
-const releaseRuntimeClientSelector = "^Test(DialChainContext|FinalizedHeadContext|FinalizedBlock|BlockHashContext|BlockIdentityCache|ExactBlockIdentity|AccountNonceContext|ReleaseStateReaders|ReleaseExactBlock|ReleaseSnapshot|ReleaseSteeringSource|VerifyFinalizedExtrinsicContext|LocateFinalizedExtrinsic|FleetCommitmentAtContext|FleetCommitmentInfoRuntime|RuntimeArtifactMetadata|RuntimeMetadataAtContext|FleetRuntime|FleetFinalizedRuntime|BindFleetRuntime|DialFleetNativeContext|ReleaseEpochStartBlockAtContext|ReleaseConfigRequiresExactNativeRuntimeIdentity|InitialReleaseSnapshot|AuthenticatePinnedNativeRuntime|ReleaseNativeEndpointTimeout|ReleaseRuntime455|EVMCheckpoint)"
+const releaseRuntimeClientSelector = "^Test(DialChainContext|FinalizedHeadContext|FinalizedBlock|BlockHashContext|BlockIdentityCache|ExactBlockIdentity|AccountNonceContext|ReleaseStateReaders|ReleaseExactBlock|ReleaseSnapshot|ReleaseSteeringSource|VerifyFinalizedExtrinsicContext|LocateFinalizedExtrinsic|FleetCommitmentAtContext|FleetCommitmentInfoRuntime|RuntimeArtifactMetadata|RuntimeMetadataAtContext|FleetRuntime|FleetFinalizedRuntime|BindFleetRuntime|DialFleetNativeContext|ReleaseEpochStartBlockAtContext|ReleaseConfigRequiresExactNativeRuntimeIdentity|InitialReleaseSnapshot|AuthenticatePinnedNativeRuntime|ReleaseNativeEndpointTimeout|ReleaseRuntime458|EVMCheckpoint)"
 
 const releaseSyntheticEVMIdentitySelector = "^Test(WaitFinalized|EVMBlockIdentity|ClaimReceiptIdentity|FinalizedClaimReceipt|UncertainClaimRetryable|SyntheticEVM|EthEVMBlockReader|EVMFinality|FinalizedEVMHead|BoundFinalizedEVMHead|ReceiptRequiresCanonicalHashAndFinalizedHeight|ProducerGatePinsSyntheticEVMIdentityRegressions)"
 
@@ -657,7 +657,7 @@ func TestProducerGatePinsSemanticIntegrityRegressions(t *testing.T) {
 		"TestSemanticMismatchBranchesNeverWrapPotentiallyNilErrors",
 		"TestFinalEVMLogQueryRangesRespectOfficialInclusiveLimit",
 		"TestFinalCollectedCoordinatorBaselinesRequireInitializerLog",
-		"TestReleaseHistoryRuntimeArtifactsCoverExactFiveVersionDomain",
+		"TestReleaseHistoryRuntimeArtifactsCoverExactSixVersionDomain",
 		"TestProducerGatePinsCompleteAdversarialRegressions",
 		"TestProducerGatePinsSyntheticEVMIdentityRegressions",
 		"TestProducerGatePinsSemanticIntegrityRegressions",
@@ -2200,6 +2200,7 @@ type releaseRuntimeMetadataArtifactManifest struct {
 // Binds one historical observation to its exact source ref, Wasm bytes and
 // runtime-produced metadata bytes.
 type releaseRuntimeMetadataArtifact struct {
+	ObservationRpcUrl    string  `json:"observation_rpc_url,omitempty"`
 	SpecVersion          uint32  `json:"spec_version"`
 	SourceRefKind        string  `json:"source_ref_kind"`
 	SourceRefName        string  `json:"source_ref_name"`
@@ -2283,8 +2284,8 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 		t.Fatal(err)
 	}
 	metadataRows := strings.Split(strings.TrimSpace(string(metadataManifestBytes)), "\n")
-	if len(metadataRows) != 15 {
-		t.Fatalf("runtime metadata source manifest has %d rows, want 15", len(metadataRows))
+	if len(metadataRows) != 18 {
+		t.Fatalf("runtime metadata source manifest has %d rows, want 18", len(metadataRows))
 	}
 	wantMetadataCommits := map[string]string{
 		"head:release-v451": "d78d9cc6a6ee4d805f74a35414baaef8be025a5f",
@@ -2292,6 +2293,7 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 		"tag:v453":          "823bdcbc58a29f60b243be4737a7c72b34ac7d93",
 		"tag:v454":          "14cde6410fe8ec81a940e290c56f94a632a0988d",
 		"commit:67dcf7f791dc495064c293f080a0702cb433e51e": "67dcf7f791dc495064c293f080a0702cb433e51e",
+		"commit:a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7": "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7",
 	}
 	seenMetadataPaths := map[string]bool{}
 	for _, row := range metadataRows {
@@ -2328,8 +2330,8 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 		artifactManifest.PolkadotSDKRevision != "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" {
 		t.Fatalf("runtime metadata artifact manifest identity=%+v", artifactManifest)
 	}
-	if len(artifactManifest.Artifacts) != 5 {
-		t.Fatalf("runtime metadata artifact manifest has %d artifacts, want 5", len(artifactManifest.Artifacts))
+	if len(artifactManifest.Artifacts) != 6 {
+		t.Fatalf("runtime metadata artifact manifest has %d artifacts, want 6", len(artifactManifest.Artifacts))
 	}
 	wantArtifacts := map[uint32]releaseRuntimeMetadataArtifact{
 		451: {
@@ -2373,9 +2375,19 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 			MetadataBlake2b256: "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc",
 		},
 	}
+	wantArtifacts[458] = releaseRuntimeMetadataArtifact{
+		SpecVersion: 458, SourceRefKind: "commit", SourceRefName: "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7", SourceCommit: "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7",
+		ObservationBlock: 8006567, ObservationBlockHash: "0xc814242904668bad31b388b36ed31a0c1ffd3b180b173727f5e3d20ea5c8aba4",
+		ObservationRpcUrl: artifactManifest.Artifacts[5].ObservationRpcUrl,
+		CodeSource: "substrate-storage", CodeSize: 2519192, CodeSHA256: "d763c0210bbd113c065a4e8d538cdd3f5e9b40ba259a5136b77e0a495c364241",
+		CodeBlake2b256: "0x2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a",
+		MetadataSize: 335297, MetadataSHA256: "17ebfa2551978a1567da990ac9650e6f01802f578696c552a7c6f9f4b1391405",
+		MetadataBlake2b256: "0x040088e73e34ed5561372aa51b07b56e41cf7f390312837b074434f30452593d",
+	}
+	wantVersions := []uint32{451, 452, 453, 454, 455, 458}
 	for index, artifact := range artifactManifest.Artifacts {
 		want, ok := wantArtifacts[artifact.SpecVersion]
-		if !ok || artifact.SpecVersion != uint32(451+index) {
+		if !ok || artifact.SpecVersion != wantVersions[index] {
 			t.Fatalf("runtime metadata artifact %d has unexpected version %d", index, artifact.SpecVersion)
 		}
 		if artifact.CodeURL != nil {
@@ -2384,7 +2396,7 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 			if artifact.CodeSource != "github-release" || *artifact.CodeURL != wantURL {
 				t.Fatalf("runtime metadata artifact %d URL/source=%s/%s", artifact.SpecVersion, *artifact.CodeURL, artifact.CodeSource)
 			}
-		} else if (artifact.SpecVersion != 451 && artifact.SpecVersion != 455) || artifact.CodeSource != "substrate-storage" {
+		} else if (artifact.SpecVersion != 451 && artifact.SpecVersion != 455 && artifact.SpecVersion != 458) || artifact.CodeSource != "substrate-storage" {
 			t.Fatalf("runtime metadata artifact %d lacks its release URL", artifact.SpecVersion)
 		}
 		if artifact != want {
@@ -2407,7 +2419,7 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 		"runtime-v455-source.sha256",
 		"67dcf7f791dc495064c293f080a0702cb433e51e",
 		fmt.Sprintf("expected_current_files=%d", releaseRuntime455SourceFileCount),
-		"expected_metadata_files=15",
+		"expected_metadata_files=18",
 		"d78d9cc6a6ee4d805f74a35414baaef8be025a5f",
 		"da06f033663896ef2fdbbfc3ecc68ca908fba0f5",
 		"support/procedural-fork/src/construct_runtime/expand/metadata.rs",
@@ -2440,7 +2452,7 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 		"wait \"${probe_process_ids[$spec_version]}\"",
 		"sha256sum",
 		"runtime metadata artifacts verified",
-		"[451, 452, 453, 454, 455]",
+		"[451, 452, 453, 454, 455, 458]",
 		"455:commit:67dcf7f791dc495064c293f080a0702cb433e51e:67dcf7f791dc495064c293f080a0702cb433e51e:substrate-storage:",
 	} {
 		if !strings.Contains(artifactChecker, required) {
@@ -2504,7 +2516,7 @@ func TestReleaseGatesAttestRuntime455SourceCompatibility(t *testing.T) {
 	checker := string(checkerRaw)
 	for _, fragment := range []string{
 		"current_commit=\"67dcf7f791dc495064c293f080a0702cb433e51e\"",
-		fmt.Sprintf("expected_current_files=%d", releaseRuntime455SourceFileCount), "expected_files=29", "expected_metadata_files=15",
+		fmt.Sprintf("expected_current_files=%d", releaseRuntime455SourceFileCount), "expected_files=29", "expected_metadata_files=18",
 		"SUBTENSOR_RUNTIME455_SOURCE", "current_seen_paths", "current_observed", "current_expected",
 		"current_count", "runtime source verified ref_kind=commit",
 	} {
@@ -2557,9 +2569,9 @@ func TestReleaseGatesAttestRuntimeSourceCensusRejectsDrift(t *testing.T) {
 	}
 }
 
-// Actual source declarations and joined producer commands must include455,
+// Actual source declarations and joined producer commands must include458,
 // not merely compile the new tests without ever selecting their bodies.
-func TestProducerGatePinsRuntime455ArtifactAndEncodingRegressions(t *testing.T) {
+func TestProducerGatePinsRuntime458ArtifactAndEncodingRegressions(t *testing.T) {
 	raw, err := os.ReadFile("../scripts/test-release-1.0-producer-gate.sh")
 	if err != nil {
 		t.Fatal(err)
@@ -2567,7 +2579,7 @@ func TestProducerGatePinsRuntime455ArtifactAndEncodingRegressions(t *testing.T) 
 	script := string(raw)
 	group := releaseEvidenceV2GateGroup{
 		phase: "runtime", variable: "runtime455_tests", packages: []string{"./sim-testnet"},
-		sources:  map[string][]string{"./sim-testnet": releaseEvidenceV2GateSources(t, []string{"runtime_identity_455_test.go", "fleet_history_batch_test.go", "final_semantic_rpc_transport_test.go"})},
+		sources:  map[string][]string{"./sim-testnet": releaseEvidenceV2GateSources(t, []string{"runtime_identity_458_test.go", "release_runtime458_source_test.go", "fleet_history_batch_test.go", "final_semantic_rpc_transport_test.go"})},
 		commands: []string{`go test ./sim-testnet -run "$runtime455_tests" -count=1`, `go test -race ./sim-testnet -run "$runtime455_tests" -count=1`},
 	}
 	if err := verifyReleaseEvidenceV2GateGroup(script, group); err != nil {
@@ -2583,7 +2595,7 @@ func TestProducerGatePinsRuntime455ArtifactAndEncodingRegressions(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, family := range []string{"Runtime455|", "CarriedFleetHistory|", "FinalSemanticRPC|"} {
+	for _, family := range []string{"Runtime458|", "CarriedFleetHistory|", "FinalSemanticRPC|"} {
 		changedSelector := strings.Replace(selector, family, "", 1)
 		changed := strings.Replace(script, group.variable+"='"+selector+"'", group.variable+"='"+changedSelector+"'", 1)
 		if changed == script || verifyReleaseEvidenceV2GateGroup(changed, group) == nil {
@@ -2594,14 +2606,14 @@ func TestProducerGatePinsRuntime455ArtifactAndEncodingRegressions(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := verifyReleaseSourceTestCoverage(runtimeSelector, "^Test", releaseEvidenceV2GateSources(t, []string{"../validator/runtime_identity_455_test.go"})); err != nil {
+	if err := verifyReleaseSourceTestCoverage(runtimeSelector, "^Test", releaseEvidenceV2GateSources(t, []string{"../validator/runtime_identity_458_test.go", "../miner/fleet_runtime_458_test.go", "../crv4/validator_stake_runtime458_test.go"})); err != nil {
 		t.Fatal(err)
 	}
 	nativeSelector, err := releaseConnectPolicySelectorAssignment(script, "native_evidence_tests")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := verifyReleaseSourceTestCoverage(nativeSelector, "^Test", releaseEvidenceV2GateSources(t, []string{"../crv4/source_commitment_runtime455_test.go"})); err != nil {
+	if err := verifyReleaseSourceTestCoverage(nativeSelector, "^Test", releaseEvidenceV2GateSources(t, []string{"../crv4/source_commitment_runtime455_test.go", "../crv4/source_commitment_runtime458_test.go"})); err != nil {
 		t.Fatal(err)
 	}
 }

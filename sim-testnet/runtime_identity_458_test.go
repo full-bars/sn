@@ -1,4 +1,4 @@
-// Runtime455 source provenance and artifact admission preserve historical
+// Runtime458 source provenance and artifact admission preserve historical
 // decoding without inheriting a tag or mainnet proposal from runtime454.
 package main
 
@@ -13,22 +13,22 @@ import (
 )
 
 // Independent literals make a changed source constant fail the admission test.
-func runtime455ReviewedTestLock() *ReleaseLock {
+func runtime458ReviewedTestLock() *ReleaseLock {
 	return &ReleaseLock{SchemaVersion: 1, Release: "1.0", Runtime: ReleaseRuntimeLock{
 		SourceRepository: "https://github.com/RaoFoundation/subtensor",
-		SourceRefKind:    "commit", SourceRefName: "67dcf7f791dc495064c293f080a0702cb433e51e",
-		SourceCommit:         "67dcf7f791dc495064c293f080a0702cb433e51e",
-		CodeHash:             "0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a",
-		MetadataHash:         "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc",
-		CompressedWasmSHA256: "0x232bfc0d65ec2dbe4280b152e23f13879df9692d2286dd08c6ba14483deee00f",
-		SpecVersion:          455, TransactionVersion: 1, StateVersion: 1,
+		SourceRefKind:    "commit", SourceRefName: "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7",
+		SourceCommit:         "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7",
+		CodeHash:             "0x2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a",
+		MetadataHash:         "0x040088e73e34ed5561372aa51b07b56e41cf7f390312837b074434f30452593d",
+		CompressedWasmSHA256: "0xd763c0210bbd113c065a4e8d538cdd3f5e9b40ba259a5136b77e0a495c364241",
+		SpecVersion:          458, TransactionVersion: 1, StateVersion: 1,
 	}}
 }
 
 // Exact commit provenance cannot be expressed as a mutable branch, invented
 // release tag or copied mainnet multisig proposal/timepoint.
-func TestRuntime455CurrentLockSeparatesCommitFromMainnetProposal(t *testing.T) {
-	lock := runtime455ReviewedTestLock()
+func TestRuntime458CurrentLockSeparatesCommitFromMainnetProposal(t *testing.T) {
+	lock := runtime458ReviewedTestLock()
 	if err := validateReviewedRuntimeIdentity(lock); err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestRuntime455CurrentLockSeparatesCommitFromMainnetProposal(t *testing.T) {
 		func(value *ReleaseRuntimeLock) { value.SourceRefKind = "branch" },
 		func(value *ReleaseRuntimeLock) { value.SourceRefName = "testnet" },
 		func(value *ReleaseRuntimeLock) { value.SourceRefKind, value.SourceRefName = "", "" },
-		func(value *ReleaseRuntimeLock) { value.SourceTag = "v455" },
+		func(value *ReleaseRuntimeLock) { value.SourceTag = "v458" },
 		func(value *ReleaseRuntimeLock) { value.SourceCommit = "14cde6410fe8ec81a940e290c56f94a632a0988d" },
 		func(value *ReleaseRuntimeLock) {
 			value.UpstreamReleaseCallHash = "0xa555b212406469b24d3a370ac59675bad303e319274ebd7a7fd0804dede3315b"
@@ -53,8 +53,8 @@ func TestRuntime455CurrentLockSeparatesCommitFromMainnetProposal(t *testing.T) {
 
 // The new optional reference fields round-trip current locks and stay absent
 // from historical bytes. Old tag/proposal fields retain their literal meaning.
-func TestRuntime455CanonicalLockRetainsHistoricalProvenance(t *testing.T) {
-	current := runtime455ReviewedTestLock()
+func TestRuntime458CanonicalLockRetainsHistoricalProvenance(t *testing.T) {
+	current := runtime458ReviewedTestLock()
 	historical := &ReleaseLock{SchemaVersion: 1, Release: "1.0", Runtime: ReleaseRuntimeLock{
 		SourceRepository: "https://github.com/RaoFoundation/subtensor", SourceTag: "v454",
 		SourceCommit:            "14cde6410fe8ec81a940e290c56f94a632a0988d",
@@ -89,20 +89,20 @@ func TestRuntime455CanonicalLockRetainsHistoricalProvenance(t *testing.T) {
 		}
 	}
 	if err := validateReviewedRuntimeIdentity(historical); err == nil {
-		t.Fatal("historical454 lock was reinterpreted as current455")
+		t.Fatal("historical454 lock was reinterpreted as current458")
 	}
 }
 
 // Read-only public history admits each exact reviewed predecessor. The same
 // object cannot become the current launch identity, even with a mutated config.
-func TestRuntime455HistoricalPublicationsRemainEvidenceOnly(t *testing.T) {
+func TestRuntime458HistoricalPublicationsRemainEvidenceOnly(t *testing.T) {
 	cfg := testResolvedConfig(t)
 	artifacts, err := releaseHistoryRuntimeArtifacts(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(artifacts) != 5 || artifacts[0].Version.SpecVersion != 455 {
-		t.Fatal("current455 plus complete451–454 history is absent")
+	if len(artifacts) != 6 || artifacts[0].Version.SpecVersion != 458 {
+		t.Fatal("current458 plus complete451–455 history is absent")
 	}
 	for _, artifact := range artifacts {
 		public := &PublicDeploymentManifest{RuntimeSpec: artifact.Version.SpecVersion, TransactionVersion: artifact.Version.TransactionVersion, StateVersion: artifact.Version.StateVersion, RuntimeCodeHash: artifact.CodeHash, RuntimeMetadataHash: artifact.MetadataHash}
@@ -110,7 +110,7 @@ func TestRuntime455HistoricalPublicationsRemainEvidenceOnly(t *testing.T) {
 			t.Fatalf("reviewed history%d refused: %v", artifact.Version.SpecVersion, err)
 		}
 		currentErr := validatePublishedRuntimeIdentity(public, cfg)
-		if artifact.Version.SpecVersion == 455 {
+		if artifact.Version.SpecVersion == 458 {
 			if currentErr != nil {
 				t.Fatal(currentErr)
 			}
@@ -131,7 +131,7 @@ func TestRuntime455HistoricalPublicationsRemainEvidenceOnly(t *testing.T) {
 
 // Version selection never permits another reviewed artifact's code or metadata
 // hash, a future version, or a changed transaction/state domain.
-func TestRuntime455PublicationsRejectCrossArtifactPairs(t *testing.T) {
+func TestRuntime458PublicationsRejectCrossArtifactPairs(t *testing.T) {
 	artifacts, err := releaseHistoryRuntimeArtifacts(testResolvedConfig(t))
 	if err != nil {
 		t.Fatal(err)
@@ -160,4 +160,21 @@ func TestRuntime455PublicationsRejectCrossArtifactPairs(t *testing.T) {
 			}
 		}
 	}
+}
+
+// The source-linked CI build has different compile-time seeds. Only the exact
+// LAN artifact is current authority; source similarity cannot normalize hashes.
+func TestRuntime458CurrentLockRejectsOfficialSeedVariant(t *testing.T) {
+	lock := runtime458ReviewedTestLock()
+	for _, mutate := range []func(*ReleaseRuntimeLock){
+		func(value *ReleaseRuntimeLock) { value.CodeHash = "0x3708442dc6aae2ea654d827d8b9985d36b6640b2447cfd48125a1a0205c8f1d3" },
+		func(value *ReleaseRuntimeLock) { value.CompressedWasmSHA256 = "0x94e85d3d0ca077a8a8f8e1e65edfe18036895a20313f7195bb17060b145610c6" },
+	} {
+		changed := *lock
+		mutate(&changed.Runtime)
+		if validateReviewedRuntimeIdentity(&changed) == nil { t.Fatal("source-equivalent seed variant acquired exact current authority") }
+	}
+	public := PublicDeploymentManifest{RuntimeSpec: 458, TransactionVersion: 1, StateVersion: 1,
+		RuntimeCodeHash: "0x3708442dc6aae2ea654d827d8b9985d36b6640b2447cfd48125a1a0205c8f1d3", RuntimeMetadataHash: lock.Runtime.MetadataHash}
+	if validatePublishedRuntimeIdentityShape(&public) == nil { t.Fatal("official seed variant became a reviewed public artifact") }
 }

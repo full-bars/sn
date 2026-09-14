@@ -30,7 +30,7 @@ import (
 )
 
 // Reads only artifact identity fields from the independently attested manifest.
-type fleetRuntime455TestArtifact struct {
+type fleetRuntime458TestArtifact struct {
 	SpecVersion    uint32 `json:"spec_version"`
 	SourceRefKind  string `json:"source_ref_kind"`
 	SourceRefName  string `json:"source_ref_name"`
@@ -43,7 +43,7 @@ type fleetRuntime455TestArtifact struct {
 
 // Decompression is limited before hashing; extra members and trailing bytes
 // are refused. The manifest cannot authorize an unbounded fixture allocation.
-func decodeFleetRuntime455TestMetadata(encoded []byte, artifact fleetRuntime455TestArtifact) ([]byte, error) {
+func decodeFleetRuntime458TestMetadata(encoded []byte, artifact fleetRuntime458TestArtifact) ([]byte, error) {
 	if len(encoded) == 0 || len(encoded) > 256*1024 || artifact.MetadataSize <= 0 || artifact.MetadataSize > 1024*1024 {
 		return nil, errors.New("runtime metadata fixture bounds are invalid")
 	}
@@ -74,7 +74,13 @@ func decodeFleetRuntime455TestMetadata(encoded []byte, artifact fleetRuntime455T
 
 // Selects the exact reviewed commit artifact without consulting production
 // constants or the deliberately not-yet-regenerated release lock.
-func fleetRuntime455TestArtifactInputs(t *testing.T) (crv4.RuntimeArtifactIdentity, fleetRuntime455TestArtifact, []byte, []byte) {
+func fleetRuntime458TestArtifactInputs(t *testing.T) (crv4.RuntimeArtifactIdentity, fleetRuntime458TestArtifact, []byte, []byte) {
+	t.Helper()
+	return fleetRuntimeTestArtifactInputs(t, 458, "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7")
+}
+
+// Reads a reviewed version fixture while retaining its independent manifest pin.
+func fleetRuntimeTestArtifactInputs(t *testing.T, spec uint32, commit string) (crv4.RuntimeArtifactIdentity, fleetRuntime458TestArtifact, []byte, []byte) {
 	t.Helper()
 	manifestBytes, err := os.ReadFile(filepath.Join("..", "docs", "spec", "runtime-metadata-artifacts.json"))
 	if err != nil {
@@ -84,27 +90,27 @@ func fleetRuntime455TestArtifactInputs(t *testing.T) (crv4.RuntimeArtifactIdenti
 		RuntimeSpecName    string                        `json:"runtime_spec_name"`
 		TransactionVersion uint32                        `json:"transaction_version"`
 		StateVersion       uint8                         `json:"state_version"`
-		Artifacts          []fleetRuntime455TestArtifact `json:"artifacts"`
+		Artifacts          []fleetRuntime458TestArtifact `json:"artifacts"`
 	}
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	var selected fleetRuntime455TestArtifact
+	var selected fleetRuntime458TestArtifact
 	count := 0
 	for _, artifact := range manifest.Artifacts {
-		if artifact.SpecVersion == 455 {
+		if artifact.SpecVersion == spec {
 			selected = artifact
 			count++
 		}
 	}
-	if count != 1 || selected.SourceRefKind != "commit" || selected.SourceRefName != "67dcf7f791dc495064c293f080a0702cb433e51e" || selected.SourceCommit != selected.SourceRefName {
-		t.Fatal("runtime455 artifact has missing, duplicate or unreviewed source provenance")
+	if count != 1 || selected.SourceRefKind != "commit" || selected.SourceRefName != commit || selected.SourceCommit != selected.SourceRefName {
+		t.Fatal("runtime458 artifact has missing, duplicate or unreviewed source provenance")
 	}
-	encoded, err := os.ReadFile(filepath.Join("testdata", "runtime455-metadata.scale.gz.base64"))
+	encoded, err := os.ReadFile(filepath.Join("testdata", fmt.Sprintf("runtime%d-metadata.scale.gz.base64", spec)))
 	if err != nil {
 		t.Fatal(err)
 	}
-	metadata, err := decodeFleetRuntime455TestMetadata(encoded, selected)
+	metadata, err := decodeFleetRuntime458TestMetadata(encoded, selected)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +123,7 @@ func fleetRuntime455TestArtifactInputs(t *testing.T) (crv4.RuntimeArtifactIdenti
 
 // Owns the real transport and synchronized response state. Synthetic heads
 // are the only admitted state roots; tests cannot accidentally request latest.
-type fleetRuntime455HttpTestFixture struct {
+type fleetRuntime458HttpTestFixture struct {
 	stateLock sync.Mutex
 	version   crv4.RuntimeVersionIdentity
 	calls     []string
@@ -127,9 +133,9 @@ type fleetRuntime455HttpTestFixture struct {
 
 // Serves the actual reviewed bytes and exact-block identity methods through
 // the pinned native Rpc decoder, never through an authentication callback.
-func newFleetRuntime455HttpTestFixture(t *testing.T, expected crv4.RuntimeArtifactIdentity, metadata []byte) *fleetRuntime455HttpTestFixture {
+func newFleetRuntime458HttpTestFixture(t *testing.T, expected crv4.RuntimeArtifactIdentity, metadata []byte) *fleetRuntime458HttpTestFixture {
 	t.Helper()
-	self := &fleetRuntime455HttpTestFixture{version: expected.Version}
+	self := &fleetRuntime458HttpTestFixture{version: expected.Version}
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		defer request.Body.Close()
 		var call struct {
@@ -212,7 +218,7 @@ func newFleetRuntime455HttpTestFixture(t *testing.T, expected crv4.RuntimeArtifa
 // A truthful current source tuple is independently joined to both the actual
 // artifact and public profile. The separate release-lock assertion still runs.
 func TestFleetRuntimeArtifactMatchesReviewedMetadataManifest(t *testing.T) {
-	expected, _, _, _ := fleetRuntime455TestArtifactInputs(t)
+	expected, _, _, _ := fleetRuntime458TestArtifactInputs(t)
 	if observed := fleetReleaseRuntimeArtifact(); observed != expected {
 		t.Fatalf("fleet artifact %+v does not match reviewed metadata manifest %+v", observed, expected)
 	}
@@ -235,11 +241,11 @@ func TestFleetRuntimeArtifactMatchesReviewedMetadataManifest(t *testing.T) {
 	}
 }
 
-// Both the current-head and receipt-block authenticator bind real455 metadata;
+// Both the current-head and receipt-block authenticator bind real458 metadata;
 // only its immutable decoding is reused, never either block's version or code.
-func TestFleetFinalizedRuntime455AuthenticatesIndependentExactHeads(t *testing.T) {
-	expected, _, _, metadata := fleetRuntime455TestArtifactInputs(t)
-	fixture := newFleetRuntime455HttpTestFixture(t, expected, metadata)
+func TestFleetFinalizedRuntime458AuthenticatesIndependentExactHeads(t *testing.T) {
+	expected, _, _, metadata := fleetRuntime458TestArtifactInputs(t)
+	fixture := newFleetRuntime458HttpTestFixture(t, expected, metadata)
 	oldMetadata := types.NewMetadataV14()
 	fixture.chain.Meta = oldMetadata
 	fixture.chain.Runtime = &types.RuntimeVersion{SpecName: expected.Version.SpecName, SpecVersion: 454, TransactionVersion: 1}
@@ -262,11 +268,11 @@ func TestFleetFinalizedRuntime455AuthenticatesIndependentExactHeads(t *testing.T
 	}
 }
 
-// Current455 code and metadata cannot make a historical454 version current;
+// Current458 code and metadata cannot make an unreviewed457 version current;
 // refusal precedes code/metadata reads and leaves the old binding untouched.
-func TestFleetFinalizedRuntime455RejectsPrecedingSpecWithReviewedBytes(t *testing.T) {
-	expected, _, _, metadata := fleetRuntime455TestArtifactInputs(t)
-	fixture := newFleetRuntime455HttpTestFixture(t, expected, metadata)
+func TestFleetFinalizedRuntime458RejectsPrecedingSpecWithReviewedBytes(t *testing.T) {
+	expected, _, _, metadata := fleetRuntime458TestArtifactInputs(t)
+	fixture := newFleetRuntime458HttpTestFixture(t, expected, metadata)
 	fixture.stateLock.Lock()
 	fixture.version.SpecVersion--
 	fixture.stateLock.Unlock()
@@ -280,11 +286,11 @@ func TestFleetFinalizedRuntime455RejectsPrecedingSpecWithReviewedBytes(t *testin
 	}
 }
 
-// A previously cached455 artifact cannot bypass the independently observed
+// A previously cached458 artifact cannot bypass the independently observed
 // receipt block's runtime version, even after a successful current-head bind.
-func TestFleetRuntime455RejectsReceiptRuntimeDriftAfterCurrentAuthentication(t *testing.T) {
-	expected, _, _, metadata := fleetRuntime455TestArtifactInputs(t)
-	fixture := newFleetRuntime455HttpTestFixture(t, expected, metadata)
+func TestFleetRuntime458RejectsReceiptRuntimeDriftAfterCurrentAuthentication(t *testing.T) {
+	expected, _, _, metadata := fleetRuntime458TestArtifactInputs(t)
+	fixture := newFleetRuntime458HttpTestFixture(t, expected, metadata)
 	if _, err := authenticateAndBindFleetRuntimeFinalizedContext(context.Background(), fixture.chain); err != nil {
 		t.Fatal(err)
 	}
@@ -303,27 +309,46 @@ func TestFleetRuntime455RejectsReceiptRuntimeDriftAfterCurrentAuthentication(t *
 // Bounds, framing and both independent digests are checked separately, so a
 // metadata decompression success cannot conceal another authority mismatch.
 func TestFleetRuntimeMetadataFixtureRejectsBoundFramingAndDigestDrift(t *testing.T) {
-	_, artifact, encoded, _ := fleetRuntime455TestArtifactInputs(t)
+	_, artifact, encoded, _ := fleetRuntime458TestArtifactInputs(t)
 	compressed, err := base64.StdEncoding.DecodeString(string(encoded))
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, change := range []func(*fleetRuntime455TestArtifact){
-		func(value *fleetRuntime455TestArtifact) { value.MetadataSize-- },
-		func(value *fleetRuntime455TestArtifact) { value.MetadataSize++ },
-		func(value *fleetRuntime455TestArtifact) { value.MetadataSize = 1024*1024 + 1 },
-		func(value *fleetRuntime455TestArtifact) { value.MetadataSha256 = fmt.Sprintf("%064x", 1) },
-		func(value *fleetRuntime455TestArtifact) { value.MetadataHash = "0x" + fmt.Sprintf("%064x", 2) },
+	for _, change := range []func(*fleetRuntime458TestArtifact){
+		func(value *fleetRuntime458TestArtifact) { value.MetadataSize-- },
+		func(value *fleetRuntime458TestArtifact) { value.MetadataSize++ },
+		func(value *fleetRuntime458TestArtifact) { value.MetadataSize = 1024*1024 + 1 },
+		func(value *fleetRuntime458TestArtifact) { value.MetadataSha256 = fmt.Sprintf("%064x", 1) },
+		func(value *fleetRuntime458TestArtifact) { value.MetadataHash = "0x" + fmt.Sprintf("%064x", 2) },
 	} {
 		mutated := artifact
 		change(&mutated)
-		if _, err := decodeFleetRuntime455TestMetadata(encoded, mutated); err == nil {
+		if _, err := decodeFleetRuntime458TestMetadata(encoded, mutated); err == nil {
 			t.Fatalf("changed metadata authority was accepted: %+v", mutated)
 		}
 	}
 	for _, invalid := range [][]byte{nil, bytes.Repeat([]byte{'A'}, 256*1024+1), []byte("not-base64"), []byte(base64.StdEncoding.EncodeToString(compressed[:len(compressed)-1])), []byte(base64.StdEncoding.EncodeToString(append(bytes.Clone(compressed), compressed...)))} {
-		if _, err := decodeFleetRuntime455TestMetadata(invalid, artifact); err == nil {
+		if _, err := decodeFleetRuntime458TestMetadata(invalid, artifact); err == nil {
 			t.Fatal("invalid metadata encoding or framing was accepted")
 		}
+	}
+}
+
+// The old metadata remains exactly decodable, but cannot authorize a current
+// fleet operation or replace an existing signing binding.
+func TestFleetRuntime458Retains455EvidenceWithoutCurrentAuthority(t *testing.T) {
+	expected, _, _, metadata := fleetRuntimeTestArtifactInputs(t, 455, "67dcf7f791dc495064c293f080a0702cb433e51e")
+	fixture := newFleetRuntime458HttpTestFixture(t, expected, metadata)
+	priorMetadata := types.NewMetadataV14()
+	priorRuntime := &types.RuntimeVersion{SpecName: "synthetic-prior", SpecVersion: 9, TransactionVersion: 3}
+	fixture.chain.Meta, fixture.chain.Runtime = priorMetadata, priorRuntime
+	if _, err := authenticateAndBindFleetRuntimeFinalizedContext(context.Background(), fixture.chain); err == nil {
+		t.Fatal("historical455 artifact acquired current fleet authority")
+	}
+	if fixture.chain.Meta != priorMetadata || fixture.chain.Runtime != priorRuntime {
+		t.Fatal("historical artifact changed the current signing binding")
+	}
+	if _, err := crv4.AuthenticateRuntimeArtifactAtContext(context.Background(), fixture.chain, types.Hash{2}, expected); err != nil {
+		t.Fatalf("explicit historical artifact lost exact metadata decoding: %v", err)
 	}
 }

@@ -30,14 +30,14 @@ const (
 	reviewedRuntimeSourceRepository         = "https://github.com/RaoFoundation/subtensor"
 	reviewedRuntimeSourceTag                = ""
 	reviewedRuntimeSourceRefKind            = "commit"
-	reviewedRuntimeSourceRefName            = "67dcf7f791dc495064c293f080a0702cb433e51e"
-	reviewedRuntimeSourceCommit             = "67dcf7f791dc495064c293f080a0702cb433e51e"
-	reviewedRuntimeCodeHash                 = "0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a"
-	reviewedRuntimeMetadataHash             = "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc"
-	reviewedRuntimeCompressedWasmSHA256     = "0x232bfc0d65ec2dbe4280b152e23f13879df9692d2286dd08c6ba14483deee00f"
+	reviewedRuntimeSourceRefName            = "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7"
+	reviewedRuntimeSourceCommit             = "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7"
+	reviewedRuntimeCodeHash                 = "0x2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a"
+	reviewedRuntimeMetadataHash             = "0x040088e73e34ed5561372aa51b07b56e41cf7f390312837b074434f30452593d"
+	reviewedRuntimeCompressedWasmSHA256     = "0xd763c0210bbd113c065a4e8d538cdd3f5e9b40ba259a5136b77e0a495c364241"
 	reviewedRuntimeUpstreamReleaseCallHash  = ""
 	reviewedRuntimeUpstreamReleaseTimepoint = ""
-	reviewedRuntimeSpecVersion              = uint32(455)
+	reviewedRuntimeSpecVersion              = uint32(458)
 	reviewedRuntimeTransactionVersion       = uint32(1)
 	reviewedRuntimeStateVersion             = uint8(1)
 )
@@ -1009,13 +1009,13 @@ func validateReleaseRepositorySchema(repositories map[string]any) error {
 }
 
 // Bind the operational testnet profile to the source and finalized Wasm
-// independently reviewed for runtime 455. Exact-commit testnet provenance is
+// independently reviewed for runtime 458. Exact-commit testnet provenance is
 // distinct from a tagged mainnet proposal; no such proposal is asserted here.
 // The node image is pinned separately:
 // an older compatible binary may execute this on-chain Wasm while it syncs.
 func validateReviewedRuntimeIdentity(lock *ReleaseLock) error {
 	if lock == nil || lock.Runtime.SourceRepository != reviewedRuntimeSourceRepository || lock.Runtime.SourceTag != reviewedRuntimeSourceTag || lock.Runtime.SourceRefKind != reviewedRuntimeSourceRefKind || lock.Runtime.SourceRefName != reviewedRuntimeSourceRefName || lock.Runtime.SourceCommit != reviewedRuntimeSourceCommit || lock.Runtime.SpecVersion != reviewedRuntimeSpecVersion || lock.Runtime.TransactionVersion != reviewedRuntimeTransactionVersion || lock.Runtime.StateVersion != reviewedRuntimeStateVersion || !strings.EqualFold(lock.Runtime.CodeHash, reviewedRuntimeCodeHash) || !strings.EqualFold(lock.Runtime.MetadataHash, reviewedRuntimeMetadataHash) || !strings.EqualFold(lock.Runtime.CompressedWasmSHA256, reviewedRuntimeCompressedWasmSHA256) || lock.Runtime.UpstreamReleaseCallHash != reviewedRuntimeUpstreamReleaseCallHash || lock.Runtime.UpstreamReleaseTimepoint != reviewedRuntimeUpstreamReleaseTimepoint {
-		return errors.New("release lock runtime identity is not the reviewed testnet runtime 455 release")
+		return errors.New("release lock runtime identity is not the reviewed testnet runtime 458 release")
 	}
 	return nil
 }

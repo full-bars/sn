@@ -16,11 +16,11 @@ import (
 )
 
 const (
-	releaseRuntimeSpecVersion        = uint32(455)
+	releaseRuntimeSpecVersion        = uint32(458)
 	releaseRuntimeTransactionVersion = uint32(1)
 	releaseRuntimeStateVersion       = uint8(1)
-	releaseRuntimeCodeHash           = "0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a"
-	releaseRuntimeMetadataHash       = "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc"
+	releaseRuntimeCodeHash           = "0x2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a"
+	releaseRuntimeMetadataHash       = "0x040088e73e34ed5561372aa51b07b56e41cf7f390312837b074434f30452593d"
 )
 
 func validateReleaseNativeRuntimeConfig(cfg *ReleaseConfig) error {
@@ -30,7 +30,7 @@ func validateReleaseNativeRuntimeConfig(cfg *ReleaseConfig) error {
 		cfg.StateVersion != releaseRuntimeStateVersion ||
 		!strings.EqualFold(cfg.RuntimeCodeHash, releaseRuntimeCodeHash) ||
 		!strings.EqualFold(cfg.RuntimeMetadataHash, releaseRuntimeMetadataHash) {
-		return errors.New("release 1.0 native runtime is not the reviewed node-subtensor/455/1/1 artifact")
+		return errors.New("release 1.0 native runtime is not the reviewed node-subtensor/458/1/1 artifact")
 	}
 	return nil
 }

@@ -37,10 +37,8 @@ type historicalRuntimeArtifactIdentity struct {
 	MetadataHash string
 }
 
-// Carried setup evidence was finalized across the four runtimes immediately
-// preceding v455. These are evidence-only compatibility identities: they may
-// reconcile an already-finalized receipt, but current reads, signing and every
-// broadcast continue to require v455 exactly.
+// Carried setup evidence uses five exact predecessor artifacts. They may
+// reconcile finalized receipts; current reads and signing require v458.
 func reviewedHistoricalRuntimeArtifact(version runtimeVersionIdentity) (historicalRuntimeArtifactIdentity, bool) {
 	if version.SpecName != "node-subtensor" || version.TransactionVersion != 1 || version.StateVersion != 1 {
 		return historicalRuntimeArtifactIdentity{}, false
@@ -65,6 +63,11 @@ func reviewedHistoricalRuntimeArtifact(version runtimeVersionIdentity) (historic
 		return historicalRuntimeArtifactIdentity{
 			CodeHash:     "0x725e3d1eca8d5c29c1f0fa6476d5360661b852f52aebad979d6636e227a431ef",
 			MetadataHash: "0x4d17516b694ef8d18f8a565dcb2df0117e7a0018a3ffa40812c91a1621225702",
+		}, true
+	case 455:
+		return historicalRuntimeArtifactIdentity{
+			CodeHash:     "0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a",
+			MetadataHash: "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc",
 		}, true
 	default:
 		return historicalRuntimeArtifactIdentity{}, false
@@ -145,7 +148,7 @@ func validatePublishedRuntimeIdentityShape(public *PublicDeploymentManifest) err
 		public.RuntimeSpec != reviewedRuntimeSpecVersion ||
 		public.TransactionVersion != reviewedRuntimeTransactionVersion ||
 		public.StateVersion != reviewedRuntimeStateVersion {
-		return errors.New("published runtime version identity is not the reviewed node-subtensor/455/1/1 release")
+		return errors.New("published runtime version identity is not the reviewed node-subtensor/458/1/1 release")
 	}
 	if err := validateRuntimeCodeHash(public.RuntimeCodeHash, reviewedRuntimeCodeHash); err != nil {
 		return fmt.Errorf("published runtime identity: %w", err)
@@ -214,10 +217,10 @@ func currentReleaseRuntimeArtifact(cfg *ResolvedConfig) crv4.RuntimeArtifactIden
 	}, cfg.Release.Runtime.CodeHash, cfg.Release.Runtime.MetadataHash)
 }
 
-// Builds the current artifact plus the three evidence-only predecessor tuples.
+// Builds the current artifact plus the five evidence-only predecessor tuples.
 func releaseHistoryRuntimeArtifacts(cfg *ResolvedConfig) ([]crv4.RuntimeArtifactIdentity, error) {
 	result := []crv4.RuntimeArtifactIdentity{currentReleaseRuntimeArtifact(cfg)}
-	for _, spec := range []uint32{451, 452, 453, 454} {
+	for _, spec := range []uint32{451, 452, 453, 454, 455} {
 		version := runtimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: spec, TransactionVersion: 1, StateVersion: 1}
 		artifact, ok := reviewedHistoricalRuntimeArtifact(version)
 		if !ok {
@@ -322,7 +325,7 @@ func readAuthenticatedRuntimeMetadataAt(chain *crv4.Chain, cfg *ResolvedConfig, 
 }
 
 // Authenticate metadata-driven reads of immutable carried setup evidence.
-// Current v455 is always accepted through the release lock. Only the four exact
+// Current v458 is always accepted through the release lock. Only the five exact
 // historical artifact identities present in the persisted campaign history are
 // admitted as compatibility inputs; this helper must never guard a write.
 func readReleaseHistoryRuntimeMetadataAtContext(ctx context.Context, chain *crv4.Chain, cfg *ResolvedConfig, finalized types.Hash) (authenticatedRuntimeMetadata, error) {

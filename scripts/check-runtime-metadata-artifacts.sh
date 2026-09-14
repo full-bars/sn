@@ -64,11 +64,13 @@ if ! jq -e '
   (.metadata_version == 14) and
   (.runtime_code_storage_key == "0x3a636f6465") and
   (.polkadot_sdk_revision == "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a") and
-  (.artifacts | type == "array" and length == 5 and map(.spec_version) == [451, 452, 453, 454, 455]) and
+  (.artifacts | type == "array" and length == 6 and map(.spec_version) == [451, 452, 453, 454, 455, 458]) and
   all(.artifacts[];
     (type == "object") and
-    (keys == ["code_blake2b_256", "code_sha256", "code_size", "code_source", "code_url", "metadata_blake2b_256", "metadata_sha256", "metadata_size", "observation_block", "observation_block_hash", "source_commit", "source_ref_kind", "source_ref_name", "spec_version"]) and
-    (.spec_version | type == "number" and floor == . and . >= 451 and . <= 455) and
+    (keys == (["code_blake2b_256", "code_sha256", "code_size", "code_source", "code_url", "metadata_blake2b_256", "metadata_sha256", "metadata_size", "observation_block", "observation_block_hash", "source_commit", "source_ref_kind", "source_ref_name", "spec_version"] +
+      (if .spec_version == 458 then ["observation_rpc_url"] else [] end) | sort)) and
+    (if .spec_version == 458 then .observation_rpc_url == "http://192.168.1.162:9944" else (has("observation_rpc_url") | not) end) and
+    (.spec_version | type == "number" and floor == . and (. == 451 or . == 452 or . == 453 or . == 454 or . == 455 or . == 458)) and
     (.source_ref_kind | type == "string") and
     (.source_ref_name | type == "string" and length > 0) and
     (.source_commit | git_commit) and
@@ -88,7 +90,9 @@ if ! jq -e '
   exit 1
 fi
 
-rpc_url="$(jq -r '.substrate_rpc_url' "$manifest")"
+# The manifest URL records historical artifact provenance. Fresh verification
+# always uses the approved owned archive, without redirects or proxy fallback.
+rpc_url="http://192.168.1.162:9944"
 genesis_hash="$(jq -r '.genesis_hash' "$manifest")"
 spec_name="$(jq -r '.runtime_spec_name' "$manifest")"
 transaction_version="$(jq -r '.transaction_version' "$manifest")"
@@ -97,40 +101,28 @@ metadata_version="$(jq -r '.metadata_version' "$manifest")"
 code_storage_key="$(jq -r '.runtime_code_storage_key' "$manifest")"
 sdk_revision="$(jq -r '.polkadot_sdk_revision' "$manifest")"
 
-# Writes one structurally valid JSON-RPC result. Transport and explicit
-# capacity errors receive four bounded attempts; every other RPC error fails.
+# Writes one exact-response result through the owned endpoint. A failed call
+# returns immediately; no retry, request pacing, redirect or alternate provider.
 rpc_call() {
   local method="$1"
   local params="$2"
   local output="$3"
   local request="$work_dir/request.json"
   local candidate="$work_dir/response.json"
-  local attempt
-  local delay=2
   jq -nc --arg method "$method" --argjson params "$params" --argjson id "$rpc_request_id" \
     '{jsonrpc:"2.0", id:$id, method:$method, params:$params}' >"$request"
-  for attempt in 1 2 3 4; do
-    if curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
-      --connect-timeout 10 --max-time 180 --retry 2 --retry-all-errors \
-      --header 'content-type: application/json' --data-binary "@$request" "$rpc_url" >"$candidate"; then
-      if jq -e --argjson id "$rpc_request_id" \
-        '.jsonrpc == "2.0" and .id == $id and has("result") and (has("error") | not)' "$candidate" >/dev/null; then
-        mv "$candidate" "$output"
-        return 0
-      fi
-      if ! jq -er '(.error.message // "") | ascii_downcase | test("rate limit|too many requests|temporarily unavailable|timeout|overload|try again")' "$candidate" >/dev/null; then
-        echo "runtime metadata RPC $method returned a permanent or malformed error" >&2
-        jq -c '{jsonrpc, id, error}' "$candidate" >&2 || true
-        return 1
-      fi
-    fi
-    if [[ "$attempt" -eq 4 ]]; then
-      echo "runtime metadata RPC $method exhausted four attempts" >&2
-      return 1
-    fi
-    sleep "$delay"
-    delay=$((delay * 2))
-  done
+  if ! curl --disable --fail --silent --show-error --proto '=http' --noproxy '*' \
+    --connect-timeout 10 --max-time 180 \
+    --header 'content-type: application/json' --data-binary "@$request" "$rpc_url" >"$candidate"; then
+    echo "runtime metadata owned RPC $method transport failed" >&2
+    return 1
+  fi
+  if ! jq -e --argjson id "$rpc_request_id" \
+    '.jsonrpc == "2.0" and .id == $id and has("result") and (has("error") | not)' "$candidate" >/dev/null; then
+    echo "runtime metadata owned RPC $method returned a malformed or error response" >&2
+    return 1
+  fi
+  mv "$candidate" "$output"
 }
 
 genesis_response="$work_dir/genesis.json"
@@ -173,6 +165,7 @@ while IFS= read -r artifact_json; do
     "453:tag:v453:823bdcbc58a29f60b243be4737a7c72b34ac7d93:github-release:https://github.com/RaoFoundation/subtensor/releases/download/v453/subtensor.wasm") ;;
     "454:tag:v454:14cde6410fe8ec81a940e290c56f94a632a0988d:github-release:https://github.com/RaoFoundation/subtensor/releases/download/v454/subtensor.wasm") ;;
     "455:commit:67dcf7f791dc495064c293f080a0702cb433e51e:67dcf7f791dc495064c293f080a0702cb433e51e:substrate-storage:") ;;
+    "458:commit:a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7:a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7:substrate-storage:") ;;
     *)
       echo "runtime metadata artifact $spec_version has unreviewed source provenance" >&2
       exit 1
@@ -232,7 +225,7 @@ while IFS= read -r artifact_json; do
   probe_process_ids[$spec_version]=$!
 done < <(jq -c '.artifacts[]' "$manifest")
 
-# Runtime compilation/execution is CPU-bound. Run the five immutable probes
+# Runtime compilation/execution is CPU-bound. Run the six immutable probes
 # concurrently, but consume their results in manifest order for stable output.
 for spec_version in "${probe_versions[@]}"; do
   probe_status=0

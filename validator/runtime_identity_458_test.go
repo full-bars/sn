@@ -1,4 +1,4 @@
-// Current455 admission is an exact artifact boundary, not a spec-only upgrade.
+// Current458 admission is an exact artifact boundary, not a spec-only upgrade.
 package validator
 
 import (
@@ -13,31 +13,35 @@ import (
 
 // Expected values are independent literals from the reviewed finalized code
 // and exact-commit artifact; changing production constants cannot bless drift.
-func runtime455ValidatorTestConfig() ReleaseConfig {
+func runtime458ValidatorTestConfig() ReleaseConfig {
 	return ReleaseConfig{
-		RuntimeSpec: 455, TransactionVersion: 1, StateVersion: 1,
-		RuntimeCodeHash:     "0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a",
-		RuntimeMetadataHash: "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc",
+		RuntimeSpec: 458, TransactionVersion: 1, StateVersion: 1,
+		RuntimeCodeHash:     "0x2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a",
+		RuntimeMetadataHash: "0x040088e73e34ed5561372aa51b07b56e41cf7f390312837b074434f30452593d",
 	}
 }
 
-// The one reviewed455 pair is accepted; every adjacent version or artifact
+// The one reviewed458 pair is accepted; every adjacent version or artifact
 // mismatch is refused before its configured bytes can become signing authority.
-func TestReleaseRuntime455RequiresExactReviewedArtifact(t *testing.T) {
-	cfg := runtime455ValidatorTestConfig()
+func TestReleaseRuntime458RequiresExactReviewedArtifact(t *testing.T) {
+	cfg := runtime458ValidatorTestConfig()
 	if err := validateReleaseNativeRuntimeConfig(&cfg); err != nil {
 		t.Fatal(err)
 	}
 	for _, mutate := range []func(*ReleaseConfig){
 		func(value *ReleaseConfig) { value.RuntimeSpec = 454 },
+		func(value *ReleaseConfig) { value.RuntimeSpec = 455 },
 		func(value *ReleaseConfig) { value.RuntimeSpec = 456 },
+		func(value *ReleaseConfig) { value.RuntimeSpec = 457 },
+		func(value *ReleaseConfig) { value.RuntimeSpec = 459 },
+		func(value *ReleaseConfig) { value.RuntimeCodeHash = "0x3708442dc6aae2ea654d827d8b9985d36b6640b2447cfd48125a1a0205c8f1d3" },
 		func(value *ReleaseConfig) { value.TransactionVersion = 2 },
 		func(value *ReleaseConfig) { value.StateVersion = 2 },
 		func(value *ReleaseConfig) {
-			value.RuntimeCodeHash = "0x725e3d1eca8d5c29c1f0fa6476d5360661b852f52aebad979d6636e227a431ef"
+			value.RuntimeCodeHash = "0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a"
 		},
 		func(value *ReleaseConfig) {
-			value.RuntimeMetadataHash = "0x4d17516b694ef8d18f8a565dcb2df0117e7a0018a3ffa40812c91a1621225702"
+			value.RuntimeMetadataHash = "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc"
 		},
 		func(value *ReleaseConfig) { value.RuntimeCodeHash = "" },
 		func(value *ReleaseConfig) { value.RuntimeMetadataHash = "" },
@@ -50,23 +54,23 @@ func TestReleaseRuntime455RequiresExactReviewedArtifact(t *testing.T) {
 	}
 }
 
-// A formerly reviewed release lock is evidence, not authority for new455
+// A formerly reviewed release lock is evidence, not authority for new458
 // steering. Refusal happens before even a public read or chain-binding mutation.
-func TestReleaseRuntime455RejectsHistoricalConfigBeforeRpc(t *testing.T) {
+func TestReleaseRuntime458RejectsHistoricalConfigBeforeRpc(t *testing.T) {
 	calls := 0
 	client := &validatorRuntimeIdentityTestClient{callContext: func(context.Context, any, string, ...any) error {
 		calls++
 		return errors.New("historical current config reached public rpc")
 	}}
 	metadata := types.NewMetadataV14()
-	runtime := &types.RuntimeVersion{SpecName: "retained", SpecVersion: 454, TransactionVersion: 1}
+	runtime := &types.RuntimeVersion{SpecName: "retained", SpecVersion: 455, TransactionVersion: 1}
 	chain := &crv4.Chain{API: &gsrpc.SubstrateAPI{Client: client}, Meta: metadata, Runtime: runtime}
-	cfg := runtime455ValidatorTestConfig()
-	cfg.RuntimeSpec = 454
-	cfg.RuntimeCodeHash = "0x725e3d1eca8d5c29c1f0fa6476d5360661b852f52aebad979d6636e227a431ef"
-	cfg.RuntimeMetadataHash = "0x4d17516b694ef8d18f8a565dcb2df0117e7a0018a3ffa40812c91a1621225702"
+	cfg := runtime458ValidatorTestConfig()
+	cfg.RuntimeSpec = 455
+	cfg.RuntimeCodeHash = "0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a"
+	cfg.RuntimeMetadataHash = "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc"
 	if err := authenticatePinnedNativeRuntimeAtContext(context.Background(), chain, &cfg, types.Hash{9}); err == nil {
-		t.Fatal("historical454 config became current authority")
+		t.Fatal("historical455 config became current authority")
 	}
 	if calls != 0 || chain.Meta != metadata || chain.Runtime != runtime {
 		t.Fatal("refused historical config changed chain state or made a public read")
