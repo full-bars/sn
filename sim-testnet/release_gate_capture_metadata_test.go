@@ -1,6 +1,6 @@
 // Full metadata, publication, private fixtures, prior replay, evidence codecs,
-// renewal fixtures and ordinary capture own scoped budgets. Exact exclusions
-// require admitted successors.
+// typed-source boundaries and renewal fixtures own scoped capture budgets.
+// Exact exclusions require admitted successors.
 package main
 
 import (
@@ -22,12 +22,13 @@ const releaseGateCapturePopulationRoot = "TestCampaignEvidencePopulationV2Stream
 
 const releaseGateCapturePrivatePattern = "TestFinalCaptureV2(ReadsActualRenderedSetupAndRejectsChangedSource|PendingPriorClosesOriginalAuthority|PendingPriorRejectsRehashedSourceAndMissingCensus|PendingPriorRejectsWrongHandoffAndSemanticRelabel|PendingJobIsImmutableAndNeverAccepted|PendingPriorRejectsWrongGateBeforeWrites|PendingPriorArtifactCensusHasNoSemanticOutputs)"
 const releaseGateCapturePriorRoot = "TestVerifyFinalCollectedPriorPhaseBytesRejectsReopenedHandoffSubstitution"
+const releaseGateCaptureTypedPriorRoot = "TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsTypedLimitsAndIntentSchema"
 const releaseGateCaptureLifecycleRoot = "TestFleetLifecycleRenewalDescriptorsKeepLaterWaves"
 const releaseGateCaptureEvidencePattern = "TestCampaignEvidence.*"
 const releaseGateCaptureRenewalPattern = "Test(FleetRenewal(Budget(AccountsAllSignedAttemptsAndNonceGaps|DoesNotChargeRetiredGasTwice)|CLIRequiresExactImportedApproval|ExactEVMRecoveryDoesNotResignOrRebroadcast|FeeQuoteUsesExactApprovedCeiling|HistoricalScopeExcludesFundingAndUnrelatedActions|Pipeline(JoinsCanceledWorkers|SubmitsExactNoncesBeforeFinality)|PlansExpiredAndLiveMixedGenerations|RejectsChangedPrestateAndPreservesApproval)|FleetLifecycleRenewalAdmitsOnlyApprovedSuccessor)"
 const releaseGateCaptureRevisionPattern = "TestFleetRenewalRevision(PreservesApprovedRoundsAndChargesOnce|RefusesCustodyFeeOrLiabilityChanges)"
 const releaseGateCaptureEvidenceSkip = " -skip '^TestCampaignEvidence(CapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|PopulationV2StreamsPhaseCensusWithBoundedOwners)$'"
-const releaseGateCaptureOwnerSkip = " -skip '^(" + releaseGateCaptureEvidencePattern + "|" + releaseGateCapturePrivatePattern + "|" + releaseGateCapturePriorRoot + "|" + releaseGateCaptureLifecycleRoot + "|" + releaseGateCaptureRenewalPattern + "|" + releaseGateCaptureRevisionPattern + ")$'"
+const releaseGateCaptureOwnerSkip = " -skip '^(" + releaseGateCaptureEvidencePattern + "|" + releaseGateCapturePrivatePattern + "|" + releaseGateCapturePriorRoot + "|" + releaseGateCaptureTypedPriorRoot + "|" + releaseGateCaptureLifecycleRoot + "|" + releaseGateCaptureRenewalPattern + "|" + releaseGateCaptureRevisionPattern + ")$'"
 
 // Inspect the gates' bounded line-oriented registry grammar, after removing
 // declarations. Exact calls inside an extra branch are not admitted jobs.
@@ -97,6 +98,7 @@ func verifyReleaseGateCaptureMetadataIsolation(script string) error {
 		{phase: "capture_revision", job: "capture-revision", variable: "capture_revision_tests", selector: "^" + releaseGateCaptureRevisionPattern + "$", raceTimeout: "10m"},
 		{phase: "capture_private", job: "capture-private", variable: "capture_private_tests", selector: "^" + releaseGateCapturePrivatePattern + "$", raceTimeout: "10m"},
 		{phase: "capture_prior", job: "capture-prior", variable: "capture_prior_tests", selector: "^" + releaseGateCapturePriorRoot + "$", raceTimeout: "10m"},
+		{phase: "capture_typed_prior", job: "capture-typed-prior", variable: "capture_typed_prior_tests", selector: "^" + releaseGateCaptureTypedPriorRoot + "$", raceTimeout: "10m"},
 		{phase: "capture_lifecycle", job: "capture-lifecycle", variable: "capture_lifecycle_tests", selector: "^" + releaseGateCaptureLifecycleRoot + "$", raceTimeout: "10m"},
 		{phase: "capture_population", job: "capture-population", variable: "capture_population_tests", raceTimeout: "10m"},
 		{phase: "capture_metadata", job: "capture-metadata", variable: "capture_metadata_tests", raceTimeout: "45m"},
@@ -121,6 +123,7 @@ func verifyReleaseGateCaptureMetadataIsolation(script string) error {
 			{root: fullRoot, phase: "capture_metadata"},
 			{root: releaseGateCapturePopulationRoot, phase: "capture_population"},
 			{root: releaseGateCaptureLifecycleRoot, phase: "capture_lifecycle"},
+			{root: releaseGateCaptureTypedPriorRoot, phase: "capture_typed_prior"},
 		} {
 			selected, err := regexp.MatchString(selector, stress.root)
 			wantSelected := group.phase == "capture" || group.phase == stress.phase || group.phase == "capture_evidence" && (stress.root == fullRoot || stress.root == releaseGateCapturePopulationRoot)
@@ -181,6 +184,46 @@ func TestProducerGateCaptureSelectionRequiresIndependentMetadata(t *testing.T) {
 	}
 }
 
+// The real full-size typed control owns its clock; the other codec and
+// allocation controls retain their ordinary owner and original test bodies.
+func TestProducerGateCaptureSelectionRequiresIndependentTypedPrior(t *testing.T) {
+	t.Parallel()
+	raw, err := os.ReadFile("../scripts/test-release-1.0-producer-gate.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(raw)
+	if err := verifyReleaseGateCaptureMetadataIsolation(script); err != nil {
+		t.Fatalf("typed prior boundary lacks an independent unchanged budget: %v", err)
+	}
+	sources := releaseEvidenceV2GateSources(t, []string{"final_semantic_prior_carrier_decode_v2_test.go", "final_semantic_prior_carrier_canonical_v2_test.go"})
+	names, err := releaseSelectedTestDeclarations("^TestFinalCaptureCapacityPriorCarrier(Canonical|Decode)V2", sources)
+	if err != nil {
+		t.Fatal(err)
+	}
+	typedSelector, err := releaseConnectPolicySelectorAssignment(script, "capture_typed_prior_tests")
+	if err != nil {
+		t.Fatal(err)
+	}
+	separate := regexp.MustCompile(typedSelector)
+	ordinarySkip := regexp.MustCompile(strings.TrimSuffix(strings.TrimPrefix(releaseGateCaptureOwnerSkip, " -skip '"), "'"))
+	for _, name := range names {
+		wantSeparate := name == releaseGateCaptureTypedPriorRoot
+		if separate.MatchString(name) != wantSeparate || ordinarySkip.MatchString(name) != wantSeparate {
+			t.Fatalf("typed prior partition changed adjacent codec ownership for %s", name)
+		}
+	}
+	for _, name := range []string{
+		releaseGateCaptureTypedPriorRoot,
+		"TestFinalCaptureCapacityPriorCarrierDecodeV2KeepsBoundedVerificationAllocation",
+		"TestFinalCaptureCapacityPriorCarrierCanonicalV2KeepsTypedSourceBoundary",
+	} {
+		if !slices.Contains(names, name) {
+			t.Fatalf("typed prior partition lost its adjacent source %s", name)
+		}
+	}
+}
+
 // Recreate the old combined aggregate and adjacent ways an exclusion could
 // become an omitted root, broadened deadline, hidden failure or unowned job.
 func TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift(t *testing.T) {
@@ -219,7 +262,7 @@ func TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift(t *testing.T)
 			t.Fatal("capture accepted altered metadata partition", pair.changed)
 		}
 	}
-	for _, variable := range []string{"capture_tests", "capture_evidence_tests", "capture_renewal_tests", "capture_revision_tests", "capture_private_tests", "capture_prior_tests", "capture_lifecycle_tests", "capture_population_tests", "capture_metadata_tests"} {
+	for _, variable := range []string{"capture_tests", "capture_evidence_tests", "capture_renewal_tests", "capture_revision_tests", "capture_private_tests", "capture_prior_tests", "capture_typed_prior_tests", "capture_lifecycle_tests", "capture_population_tests", "capture_metadata_tests"} {
 		for _, race := range []bool{false, true} {
 			command := "go test"
 			timeout := "5m"
@@ -353,7 +396,7 @@ func verifyReleaseGateCaptureSourceCensus(script string, sources []string) error
 		return err
 	}
 	selectors := map[string]*regexp.Regexp{}
-	for _, variable := range []string{"capture_population_tests", "capture_metadata_tests", "capture_private_tests", "capture_prior_tests", "capture_lifecycle_tests", "capture_evidence_tests", "capture_renewal_tests", "capture_revision_tests"} {
+	for _, variable := range []string{"capture_population_tests", "capture_metadata_tests", "capture_private_tests", "capture_prior_tests", "capture_typed_prior_tests", "capture_lifecycle_tests", "capture_evidence_tests", "capture_renewal_tests", "capture_revision_tests"} {
 		value, err := releaseConnectPolicySelectorAssignment(script, variable)
 		if err != nil {
 			return err
@@ -386,7 +429,7 @@ func verifyReleaseGateCaptureSourceCensus(script string, sources []string) error
 	}
 	// The two stress roots have their own owners; every other evidence root
 	// remains in the evidence family, including newly added regressions.
-	if counts["capture_population_tests"] != 1 || counts["capture_metadata_tests"] != 1 || counts["capture_private_tests"] != len(releaseCapturePrivateFixtureRoots) || counts["capture_prior_tests"] != 1 || counts["capture_lifecycle_tests"] != 1 || counts["capture_evidence_tests"] != len(evidenceRoots)-2 || counts["capture_renewal_tests"] != 11 || counts["capture_revision_tests"] != 2 || len(ordinaryOwners) == 0 || len(ordinaryOwners)+separateOwners != len(selected) {
+	if counts["capture_population_tests"] != 1 || counts["capture_metadata_tests"] != 1 || counts["capture_private_tests"] != len(releaseCapturePrivateFixtureRoots) || counts["capture_prior_tests"] != 1 || counts["capture_typed_prior_tests"] != 1 || counts["capture_lifecycle_tests"] != 1 || counts["capture_evidence_tests"] != len(evidenceRoots)-2 || counts["capture_renewal_tests"] != 11 || counts["capture_revision_tests"] != 2 || len(ordinaryOwners) == 0 || len(ordinaryOwners)+separateOwners != len(selected) {
 		return fmt.Errorf("capture partition changed its complete source census: ordinary=%d separate=%v selected=%d", len(ordinaryOwners), counts, len(selected))
 	}
 	for _, root := range releaseCapturePrivateFixtureRoots {
@@ -396,6 +439,9 @@ func verifyReleaseGateCaptureSourceCensus(script string, sources []string) error
 	}
 	if !slices.Contains(selected, releaseGateCapturePriorRoot) {
 		return fmt.Errorf("capture prior source lost its separate owner")
+	}
+	if !slices.Contains(selected, releaseGateCaptureTypedPriorRoot) {
+		return fmt.Errorf("capture typed prior source lost its separate owner")
 	}
 	if !slices.Contains(selected, releaseGateCaptureLifecycleRoot) {
 		return fmt.Errorf("capture lifecycle source lost its separate owner")
@@ -476,6 +522,7 @@ func TestProducerGateCaptureSelectionRejectsSourceCensusDrift(t *testing.T) {
 		"TestFleetRenewalOriginalOracleAcceptsCompletedRestore",
 		"TestFleetRenewalOriginalOracleRejectsChangedRouting",
 		releaseGateCapturePopulationRoot,
+		releaseGateCaptureTypedPriorRoot,
 		"TestFleetRenewalBudgetDoesNotChargeRetiredGasTwice",
 	} {
 		missingSources := slices.Clone(sources)
@@ -524,6 +571,7 @@ func TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift(t *testing.
 		replacement string
 	}{
 		{name: "old combined evidence and renewal prefix", original: releaseGateCaptureOwnerSkip, replacement: oldCombinedSkip},
+		{name: "typed prior shares ordinary budget", original: releaseGateCaptureOwnerSkip, replacement: strings.Replace(releaseGateCaptureOwnerSkip, "|"+releaseGateCaptureTypedPriorRoot, "", 1)},
 		{name: "old combined population", original: releaseGateCaptureOwnerSkip, replacement: " -skip '^TestCampaignEvidenceCapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier$'"},
 		{name: "old combined private fixtures", original: releaseGateCaptureOwnerSkip, replacement: " -skip '^TestCampaignEvidence(CapacityV2MetadataFullCensusMaterializesFlatWireAndCarrier|PopulationV2StreamsPhaseCensusWithBoundedOwners)$'"},
 		{name: "broader ordinary omission", original: releaseGateCaptureOwnerSkip, replacement: " -skip '^TestCampaignEvidence'"},
@@ -558,6 +606,7 @@ func TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift(t *testing.
 	}{
 		{phase: "capture_private", job: "capture-private", variable: "capture_private_tests", selector: "^" + releaseGateCapturePrivatePattern + "$"},
 		{phase: "capture_prior", job: "capture-prior", variable: "capture_prior_tests", selector: "^" + releaseGateCapturePriorRoot + "$"},
+		{phase: "capture_typed_prior", job: "capture-typed-prior", variable: "capture_typed_prior_tests", selector: "^" + releaseGateCaptureTypedPriorRoot + "$"},
 		{phase: "capture_lifecycle", job: "capture-lifecycle", variable: "capture_lifecycle_tests", selector: "^" + releaseGateCaptureLifecycleRoot + "$"},
 		{phase: "capture_evidence", job: "capture-evidence", variable: "capture_evidence_tests", selector: "^" + releaseGateCaptureEvidencePattern + "$"},
 		{phase: "capture_renewal", job: "capture-renewal", variable: "capture_renewal_tests", selector: "^" + releaseGateCaptureRenewalPattern + "$"},

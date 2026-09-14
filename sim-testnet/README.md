@@ -467,9 +467,12 @@ package's serial prefix. They retain independent configuration, state, signer
 copies and disk stores; all durable writes and assertions are unchanged.
 `capture-prior` runs the exact reopened-handoff substitution root, including
 its complete semantic fixture, sealing and prior closure verification, at the
-same five/ten-minute limits. Ordinary capture excludes only these eight roots
-and the two original stress roots. The six process-wide allocation controls
-and both original stress roots remain serial. The
+same five/ten-minute limits. `capture-typed-prior` independently runs the exact
+full-size prior-carrier typed-source control with those same limits. Its valid
+and invalid 32 MiB + 1 originals still pass through both the independent legacy
+oracle and the current verifier; the other codec roots keep their ordinary owner.
+Ordinary capture excludes each separately admitted cohort. The six process-wide
+allocation controls and both original stress roots remain serial. The
 `capture-metadata` job executes the exact full metadata root in both modes.
 Ordinary capture keeps its five-minute normal and ten-minute race limits;
 full metadata keeps its five-minute normal limit and has a separately
