@@ -90,6 +90,7 @@ type SetupPlan struct {
 	CoordinatorUpgrade           CoordinatorUpgrade         `json:"coordinator_upgrade"`
 	CoordinatorUpgradeBaseline   CoordinatorUpgradeBaseline `json:"coordinator_upgrade_baseline,omitempty"`
 	CoordinatorRepairCarry       *CoordinatorRepairCarry    `json:"coordinator_repair_carry,omitempty"`
+	PrecompileProbeSuccessor *PrecompileProbeSuccessor `json:"precompile_probe_successor,omitempty"`
 	coordinatorRepairObserved    *coordinatorRepairCarryObservation
 	ValidatorEvidence            *ValidatorEvidenceDeployment `json:"validator_evidence,omitempty"`
 	ValidatorEvidenceSource      *ValidatorEvidenceSource     `json:"validator_evidence_source,omitempty"`
@@ -2183,6 +2184,9 @@ func validatePlanBudget(p *SetupPlan) error {
 		}
 		seenPriorPlans[hash] = true
 	}
+	if err := validatePrecompileProbeSuccessorActions(p); err != nil {
+		return err
+	}
 	seenActions := make(map[string]bool, len(p.Actions))
 	seenActionDetails := make(map[string]Action, len(p.Actions))
 	alphaTransferActions := 0
@@ -2215,7 +2219,7 @@ func validatePlanBudget(p *SetupPlan) error {
 		if planUsesContractDeploymentEnvelope(p.Schema) && actionUsesContractDeployment(action) && action.Parameters[deploymentManifestHashParameter] != deploymentHash {
 			return fmt.Errorf("action %s does not bind the approved contract deployment", action.ID)
 		}
-		if p.CoordinatorUpgradeBaseline.Schema == "urnetwork-coordinator-upgrade-baseline-v4" && strings.HasPrefix(action.ID, "precompile.") {
+		if p.PrecompileProbeSuccessor == nil && p.CoordinatorUpgradeBaseline.Schema == "urnetwork-coordinator-upgrade-baseline-v4" && strings.HasPrefix(action.ID, "precompile.") {
 			probe := effectivePrecompileProbe(p.Deployment, p.CoordinatorUpgradeBaseline)
 			runtimeHash := p.Deployment.RuntimeHashes[p.Deployment.PrecompileProbe.Hex()]
 			if p.CoordinatorUpgradeBaseline.Schema == "urnetwork-coordinator-upgrade-baseline-v4" {

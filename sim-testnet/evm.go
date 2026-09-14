@@ -580,7 +580,16 @@ func validateCoordinatorUpgradeBaselineRelease(baseline CoordinatorUpgradeBaseli
 }
 
 func validateCoordinatorUpgradePayloadBaseline(baseline CoordinatorUpgradeBaseline, retained ContractDeployment, payloads *DeploymentPayloads) error {
+	return validateCoordinatorUpgradePayloadBaselineWithProbe(baseline, retained, payloads, nil)
+}
+
+// A separately authenticated failed-probe successor changes only the probe
+// artifact comparison; custody, proxy, and adjacent original CREATE checks stay.
+func validateCoordinatorUpgradePayloadBaselineWithProbe(baseline CoordinatorUpgradeBaseline, retained ContractDeployment, payloads *DeploymentPayloads, successor *PrecompileProbeSuccessor) error {
 	if !baseline.isRepeated() {
+		if successor != nil {
+			return errors.New("precompile probe successor has no retained executable baseline")
+		}
 		return nil
 	}
 	if payloads == nil {
@@ -588,6 +597,14 @@ func validateCoordinatorUpgradePayloadBaseline(baseline CoordinatorUpgradeBaseli
 	}
 	if err := validatePrecompileProbeReplacement(baseline, payloads.Deployer, retained, payloads.CoordinatorUpgrade); err != nil {
 		return err
+	}
+	if successor != nil {
+		if baseline.Schema != "urnetwork-coordinator-upgrade-baseline-v4" || successor.RetiredProbe != baseline.ReplacementPrecompileProbe || successor.RetiredRuntimeHash != baseline.ReplacementPrecompileProbeHash || payloads.PrecompileProbeAddress.Hex() != successor.Probe || payloads.PrecompileProbeNonce != successor.DeployerNonce || crypto.Keccak256Hash(payloads.ExpectedRuntime[payloads.PrecompileProbeAddress]).Hex() != successor.RuntimeHash || crypto.Keccak256Hash(payloads.PrecompileProbe).Hex() != successor.CreationHash {
+			return errors.New("precompile probe successor does not bind old and new executable identities")
+		}
+		if _, err := normalizedSolidityExecutableHash(payloads.ExpectedRuntime[payloads.PrecompileProbeAddress], TestnetPrecompileProbeArtifact); err != nil {
+			return err
+		}
 	}
 	for _, check := range []struct {
 		name     string
@@ -599,6 +616,9 @@ func validateCoordinatorUpgradePayloadBaseline(baseline CoordinatorUpgradeBaseli
 		{"settlement vault", payloads.Manifest.SettlementVault, artifactByName("SettlementVault"), baseline.SettlementVaultExecutableHash},
 		{"precompile probe", payloads.PrecompileProbeAddress, TestnetPrecompileProbeArtifact, baseline.PrecompileProbeExecutableHash},
 	} {
+		if successor != nil && check.name == "precompile probe" {
+			continue
+		}
 		got, err := normalizedSolidityExecutableHash(payloads.ExpectedRuntime[check.address], check.artifact)
 		if err != nil || got != check.want {
 			return stateMismatchError(err, "repeated coordinator upgrade %s executable=%s want=%s", check.name, got, check.want)
@@ -612,7 +632,7 @@ func validateCoordinatorUpgradePayloadBaseline(baseline CoordinatorUpgradeBaseli
 	}
 	if baseline.Schema == "urnetwork-coordinator-upgrade-baseline-v4" {
 		got := crypto.Keccak256Hash(payloads.ExpectedRuntime[payloads.PrecompileProbeAddress]).Hex()
-		if payloads.PrecompileProbeAddress != common.HexToAddress(baseline.ReplacementPrecompileProbe) || payloads.PrecompileProbeNonce != baseline.ReplacementPrecompileProbeNonce || !strings.EqualFold(got, baseline.ReplacementPrecompileProbeHash) || payloads.CoordinatorUpgrade.DeployerNonce == ^uint64(0) || payloads.FleetBatcherNonce != payloads.CoordinatorUpgrade.DeployerNonce+1 || payloads.FleetBatcherAddress != crypto.CreateAddress(payloads.Deployer, payloads.FleetBatcherNonce) {
+		if successor == nil && (payloads.PrecompileProbeAddress != common.HexToAddress(baseline.ReplacementPrecompileProbe) || payloads.PrecompileProbeNonce != baseline.ReplacementPrecompileProbeNonce || !strings.EqualFold(got, baseline.ReplacementPrecompileProbeHash)) || payloads.CoordinatorUpgrade.DeployerNonce == ^uint64(0) || payloads.FleetBatcherNonce != payloads.CoordinatorUpgrade.DeployerNonce+1 || payloads.FleetBatcherAddress != crypto.CreateAddress(payloads.Deployer, payloads.FleetBatcherNonce) {
 			return fmt.Errorf("replacement precompile probe identity=%s/%d/%s want=%s/%d/%s", payloads.PrecompileProbeAddress, payloads.PrecompileProbeNonce, got, baseline.ReplacementPrecompileProbe, baseline.ReplacementPrecompileProbeNonce, baseline.ReplacementPrecompileProbeHash)
 		}
 	}

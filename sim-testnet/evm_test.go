@@ -417,11 +417,12 @@ func replacementPrecompileProbeFixture(t *testing.T) (*ResolvedConfig, *Deployme
 func TestHistoricalPrecompileProbeGenerationRequiresExactReplacement(t *testing.T) {
 	_, payloads, _, baseline, _ := replacementPrecompileProbeFixture(t)
 	current := payloads.ExpectedRuntime[payloads.PrecompileProbeAddress]
-	if len(current) != 7_265 {
-		t.Fatalf("current SubnetProbe runtime length=%d, want 7265", len(current))
+	if len(current) < 2 {
+		t.Fatal("current SubnetProbe runtime is unavailable")
 	}
-	historical := make([]byte, 7_224)
-	if _, err := matchingNormalizedSolidityExecutableHash("precompile probe", historical, current, TestnetPrecompileProbeArtifact); err == nil || !strings.Contains(err.Error(), "SubnetProbe runtime length=7224 want=7265") {
+	historical := make([]byte, len(current)-1)
+	wantLengthError := fmt.Sprintf("SubnetProbe runtime length=%d want=%d", len(historical), len(current))
+	if _, err := matchingNormalizedSolidityExecutableHash("precompile probe", historical, current, TestnetPrecompileProbeArtifact); err == nil || !strings.Contains(err.Error(), wantLengthError) {
 		t.Fatalf("historical normalization mismatch was not reproduced: %v", err)
 	}
 	const historicalExecutable = "0x987d1bdfc26675cbb0e6c8f45c910c877536f307264f7c047a2b1bbcf637c7bc"

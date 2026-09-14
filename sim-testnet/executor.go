@@ -54,6 +54,7 @@ type Executor struct {
 	carriedFleetHistoryKeys map[string]bool
 	auditAuthorizedConfig   *ResolvedConfig
 	fleetCommitmentHistory  *fleetCommitmentHistoryScope
+	precompileHistoryEvidence *PrecompileConformanceEvidence
 }
 
 // NewExecutor opens transaction managers only against the canonical endpoint
@@ -930,6 +931,9 @@ func observedPostconditionMatches(recorded, replayed map[string]any) error {
 // Replay migration aliases in their recorded format; current aliases retain
 // their authenticated batch metadata and ordinary actions keep their reader.
 func (self *Executor) historicalActionPostState(ctx context.Context, action Action, record *ActionPostcondition, evmHead ChainHead) (map[string]any, error) {
+	if action.ID == "precompile.commitment-write" && self.precompileHistoryEvidence != nil {
+		return self.verifyHistoricalPrecompileWrite(ctx, action, record)
+	}
 	if action.ID == "precompile.commitment-restore" {
 		return self.verifyHistoricalPrecompileRestorePostState(ctx, action, record)
 	}
@@ -1264,6 +1268,12 @@ func (e *Executor) fleetInstallBatchSuperseded(action Action) (bool, error) {
 }
 
 func (e *Executor) verifyVerifiedActionStateWithRecord(ctx context.Context, action Action, verified JournalEntry, record *ActionPostcondition, sharedEVMHead, sharedNativeHead *ChainHead) error {
+	if source, handled, err := e.precompileProbeNativeSource(action, verified, record); handled {
+		if err != nil {
+			return err
+		}
+		return source.verifyHistoricalEVMPostcondition(ctx, action, record)
+	}
 	if source, handled, err := e.fleetRenewalHistoricalSource(action, verified, record); err != nil {
 		return err
 	} else if handled {
@@ -2776,6 +2786,14 @@ func (e *Executor) ensurePayloads(ctx context.Context) error {
 				return err
 			}
 		}
+		if e.plan.PrecompileProbeSuccessor != nil {
+			if _, err := readPrecompileProbeSuccessorSource(e.cfg, e.stateDir, e.plan, e.journal.Entries()); err != nil {
+				return err
+			}
+			if err := bindPrecompileProbeSuccessorPayloads(p, e.plan.PrecompileProbeSuccessor); err != nil {
+				return err
+			}
+		}
 		builtHash, err := contractDeploymentIdentityHash(p.Manifest)
 		if err != nil {
 			return err
@@ -2789,7 +2807,7 @@ func (e *Executor) ensurePayloads(ctx context.Context) error {
 			if err := validateCoordinatorUpgradeBaselineRelease(e.plan.CoordinatorUpgradeBaseline, planned, p.Manifest, baselinePayloads.CoordinatorUpgrade); err != nil {
 				return fmt.Errorf("approved coordinator upgrade baseline: %w", err)
 			}
-			if err := validateCoordinatorUpgradePayloadBaseline(e.plan.CoordinatorUpgradeBaseline, planned, baselinePayloads); err != nil {
+			if err := validateCoordinatorUpgradePayloadBaselineWithProbe(e.plan.CoordinatorUpgradeBaseline, planned, baselinePayloads, e.plan.PrecompileProbeSuccessor); err != nil {
 				return fmt.Errorf("approved coordinator executable baseline: %w", err)
 			}
 		}

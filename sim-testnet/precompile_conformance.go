@@ -43,6 +43,7 @@ type PrecompileConformanceEvidence struct {
 	RecoveryColdkey string `json:"recovery_provider_coldkey"`
 
 	Commitment PrecompileCommitmentEvidence `json:"commitment"`
+	CommitmentSource *PrecompileCommitmentSource `json:"commitment_source,omitempty"`
 	Battery    PrecompileBatteryEvidence    `json:"battery"`
 	Seed       PrecompileValueStep          `json:"seed"`
 	Forward    PrecompileMoveStep           `json:"move_forward"`
@@ -258,6 +259,9 @@ func (e *Executor) precompileIdentities(ctx context.Context) (*PrecompileConform
 }
 
 func (e *Executor) executePrecompileConformance(ctx context.Context, action Action) error {
+	if e.plan != nil && e.plan.PrecompileProbeSuccessor != nil && precompileNativeAction(action.ID) {
+		return errors.New("precompile probe successor cannot resend a completed native drill")
+	}
 	parsed, err := e.precompileABI()
 	if err != nil {
 		return err
@@ -271,7 +275,12 @@ func (e *Executor) executePrecompileConformance(ctx context.Context, action Acti
 		evidence = identity
 	} else if err != nil {
 		return err
-	} else if err := validatePrecompileEvidenceIdentity(e.cfg, e.payloads.PrecompileProbeAddress, evidence); err != nil {
+	}
+	evidence, err = precompileProbeSuccessorEvidence(e.plan, identity, evidence)
+	if err != nil {
+		return err
+	}
+	if err := validatePrecompileEvidenceIdentity(e.cfg, e.payloads.PrecompileProbeAddress, evidence); err != nil {
 		return err
 	}
 	probe := e.payloads.PrecompileProbeAddress
@@ -934,6 +943,11 @@ func (e *Executor) verifyPrecompileConformancePostState(ctx context.Context, act
 	}
 	if err := validatePrecompileEvidenceIdentity(e.cfg, e.payloads.PrecompileProbeAddress, evidence); err != nil {
 		return nil, err
+	}
+	if e.plan.PrecompileProbeSuccessor != nil {
+		if _, err := precompileProbeSuccessorEvidence(e.plan, evidence, evidence); err != nil {
+			return nil, err
+		}
 	}
 	passed := false
 	switch action.ID {

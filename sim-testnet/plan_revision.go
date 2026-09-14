@@ -58,6 +58,7 @@ type coordinatorUpgradeMigration struct {
 	Baseline   CoordinatorUpgradeBaseline
 	Upgrade    CoordinatorUpgrade
 	Repair     *coordinatorRepairCarryObservation
+	ProbeSuccessor *PrecompileProbeSuccessor
 }
 
 var abandonableDeploymentActions = []string{
@@ -2152,6 +2153,9 @@ func observeCoordinatorUpgradeMigration(ctx context.Context, cfg *ResolvedConfig
 		}
 	}
 	if prior.coordinatorRepairObserved != nil {
+		if migration, handled, err := observePrecompileProbeSuccessor(ctx, cfg, stateDir, prior, current, entries, built); handled || err != nil {
+			return migration, err
+		}
 		return coordinatorRepairCarryMigration(prior, current, built, entries)
 	}
 	if prior.CoordinatorUpgradeBaseline.Schema == "urnetwork-coordinator-upgrade-baseline-v4" {
@@ -4054,6 +4058,11 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 				return nil, err
 			}
 		}
+		if migration != nil && migration.ProbeSuccessor != nil {
+			if err := bindPrecompileProbeSuccessorPayloads(currentPayloads, migration.ProbeSuccessor); err != nil {
+				return nil, err
+			}
+		}
 		if err := validateValidatorEvidenceRevision(prior, &currentPayloads.ValidatorEvidence.Manifest); err != nil {
 			return nil, err
 		}
@@ -4085,7 +4094,7 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 			if err := validateCoordinatorUpgradeBaselineRelease(migration.Baseline, migration.Deployment, currentPayloads.Manifest, baselinePayloads.CoordinatorUpgrade); err != nil {
 				return nil, err
 			}
-			if err := validateCoordinatorUpgradePayloadBaseline(migration.Baseline, migration.Deployment, baselinePayloads); err != nil {
+			if err := validateCoordinatorUpgradePayloadBaselineWithProbe(migration.Baseline, migration.Deployment, baselinePayloads, migration.ProbeSuccessor); err != nil {
 				return nil, err
 			}
 			normalized.DeployerNonce = existingDeployment.InitialNonce
@@ -4207,6 +4216,11 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 		}
 		if err := preserveVerifiedBaselineDeploymentActions(revised, prior, entries); err != nil {
 			return nil, fmt.Errorf("preserve verified deployment baseline: %w", err)
+		}
+	}
+	if migration != nil && migration.ProbeSuccessor != nil {
+		if err := rebindPrecompileProbeSuccessor(revised, prior, currentPayloads, migration.ProbeSuccessor); err != nil {
+			return nil, fmt.Errorf("retain native proof and replace failed probe: %w", err)
 		}
 	}
 	if err := carryFleetRenewalRevision(revised, prior); err != nil {

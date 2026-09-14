@@ -601,11 +601,7 @@ func (p *liveScenarioProbe) Snapshot(ctx context.Context) (*ScenarioObservation,
 		if status.Contracts == nil || status.Contracts.Deployment == nil {
 			observation.PrecompileConformanceError = "contract deployment is unavailable"
 		} else {
-			baseline := CoordinatorUpgradeBaseline{}
-			if status.Contracts.CoordinatorUpgradeBaseline != nil {
-				baseline = *status.Contracts.CoordinatorUpgradeBaseline
-			}
-			probe := effectivePrecompileProbe(*status.Contracts.Deployment, baseline)
+			probe := contractViewPrecompileProbe(status.Contracts)
 			if validateErr := validatePrecompileEvidenceIdentity(p.cfg, probe, evidence); validateErr != nil {
 				observation.PrecompileConformanceError = validateErr.Error()
 			} else {

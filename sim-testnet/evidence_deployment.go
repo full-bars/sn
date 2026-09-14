@@ -294,7 +294,7 @@ func validatorEvidencePayloadsForPlan(plan *SetupPlan) (*validatorEvidenceDeploy
 	}
 	payloads := &DeploymentPayloads{
 		Deployer: deployer, Manifest: plan.Deployment, CoordinatorUpgrade: plan.CoordinatorUpgrade,
-		PrecompileProbeAddress: effectivePrecompileProbe(plan.Deployment, plan.CoordinatorUpgradeBaseline),
+		PrecompileProbeAddress: approvedPrecompileProbe(plan),
 		FleetBatcherNonce:      fleetNonce, FleetBatcherAddress: crypto.CreateAddress(deployer, fleetNonce),
 	}
 	nonce := fleetNonce + 1

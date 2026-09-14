@@ -76,6 +76,7 @@ type ContractView struct {
 	Deployment                       *ContractDeployment         `json:"deployment,omitempty"`
 	CoordinatorUpgrade               CoordinatorUpgrade          `json:"coordinator_upgrade"`
 	CoordinatorUpgradeBaseline       *CoordinatorUpgradeBaseline `json:"coordinator_upgrade_baseline,omitempty"`
+	PrecompileProbeSuccessor *PrecompileProbeSuccessor `json:"precompile_probe_successor,omitempty"`
 	FinalizedHead                    ChainHead                   `json:"finalized_head"`
 	CurrentEpoch                     uint64                      `json:"current_epoch"`
 	CurrentEpochStart                uint64                      `json:"current_epoch_start_block"`
@@ -1829,7 +1830,9 @@ func inspectContracts(ctx context.Context, cfg *ResolvedConfig, stateDir, manife
 	}
 	upgrade := CoordinatorUpgrade{}
 	baseline := CoordinatorUpgradeBaseline{}
+	var probeSuccessor *PrecompileProbeSuccessor
 	if publicManifest != nil {
+		probeSuccessor = publicManifest.PrecompileProbeSuccessor
 		upgrade = publicManifest.CoordinatorUpgrade
 		if publicManifest.CoordinatorUpgradeBaseline != nil {
 			baseline = *publicManifest.CoordinatorUpgradeBaseline
@@ -1837,6 +1840,7 @@ func inspectContracts(ctx context.Context, cfg *ResolvedConfig, stateDir, manife
 	} else if plan, planErr := readPersistedPlan(stateDir); planErr == nil {
 		upgrade = plan.CoordinatorUpgrade
 		baseline = plan.CoordinatorUpgradeBaseline
+		probeSuccessor = plan.PrecompileProbeSuccessor
 	}
 	endpoint := ""
 	if publicManifest != nil {
@@ -2057,6 +2061,11 @@ func inspectContracts(ctx context.Context, cfg *ResolvedConfig, stateDir, manife
 	if probe != deployment.PrecompileProbe {
 		runtimeDeployment.RuntimeHashes[probe.Hex()] = baseline.ReplacementPrecompileProbeHash
 	}
+	if probeSuccessor != nil {
+		probe := common.HexToAddress(probeSuccessor.Probe)
+		addresses = append(addresses, probe)
+		runtimeDeployment.RuntimeHashes[probe.Hex()] = probeSuccessor.RuntimeHash
+	}
 	if fleetBatcher != (common.Address{}) {
 		runtimeDeployment.RuntimeHashes[fleetBatcher.Hex()] = fleetBatcherRuntimeHash
 	}
@@ -2073,7 +2082,7 @@ func inspectContracts(ctx context.Context, cfg *ResolvedConfig, stateDir, manife
 		copy := baseline
 		baselineView = &copy
 	}
-	return &ContractView{ProvisionalCoordinatorRepairHash: repairHash, Deployment: deployment, CoordinatorUpgrade: upgrade, CoordinatorUpgradeBaseline: baselineView, FinalizedHead: head, CurrentEpoch: currentEpoch, CurrentEpochStart: currentEpochStart, CurrentEpochEnd: currentEpochEnd, CoordinatorOwner: coordinatorOwner.Hex(), OperatorCount: operatorCount, PolicyHash: policyHash, ConservationHolds: conservation, MinimumTransferRao: minimumTransfer, TotalCaptured: totalCaptured, TotalPaid: totalPaid, EscrowAccounted: escrowAccounted, PendingFunding: pendingFunding, Outstanding: outstanding, LiveEscrowStake: liveEscrowStake, ReservePrincipal: principal, ReserveLiveStake: liveStake, RuntimeCodeHashes: hashes, RuntimeCodeMatches: matches, CustodyIdentity: custodyIdentity, Policy: policy, Operators: operators, Epochs: epochs}, nil
+	return &ContractView{ProvisionalCoordinatorRepairHash: repairHash, Deployment: deployment, CoordinatorUpgrade: upgrade, CoordinatorUpgradeBaseline: baselineView, PrecompileProbeSuccessor: probeSuccessor, FinalizedHead: head, CurrentEpoch: currentEpoch, CurrentEpochStart: currentEpochStart, CurrentEpochEnd: currentEpochEnd, CoordinatorOwner: coordinatorOwner.Hex(), OperatorCount: operatorCount, PolicyHash: policyHash, ConservationHolds: conservation, MinimumTransferRao: minimumTransfer, TotalCaptured: totalCaptured, TotalPaid: totalPaid, EscrowAccounted: escrowAccounted, PendingFunding: pendingFunding, Outstanding: outstanding, LiveEscrowStake: liveEscrowStake, ReservePrincipal: principal, ReserveLiveStake: liveStake, RuntimeCodeHashes: hashes, RuntimeCodeMatches: matches, CustodyIdentity: custodyIdentity, Policy: policy, Operators: operators, Epochs: epochs}, nil
 }
 
 func decodeContractCustodyView(results map[string][]any, deployment *ContractDeployment, cfg *ResolvedConfig) (ContractCustodyView, error) {
@@ -2259,20 +2268,28 @@ func loadDeploymentReference(ctx context.Context, stateDir, source string) (*Con
 // signed role directory and immutable deployment lineage.
 func validatePublicPrecompileProbeGeneration(public *PublicDeploymentManifest) error {
 	if public == nil || public.CoordinatorUpgradeBaseline == nil {
+		if public != nil && public.PrecompileProbeSuccessor != nil {
+			return errors.New("public precompile successor has no original baseline")
+		}
 		return nil
 	}
 	if public.Contracts == nil || public.CoordinatorUpgradeBaseline.Schema != "urnetwork-coordinator-upgrade-baseline-v4" {
 		return errors.New("public deployment manifest has an unsupported conformance probe generation")
 	}
 	baseline := *public.CoordinatorUpgradeBaseline
-	if err := validateCoordinatorUpgradeBaseline(baseline, *public.Contracts, public.CoordinatorUpgrade); err != nil {
-		return fmt.Errorf("public deployment manifest conformance probe generation: %w", err)
-	}
 	var identities finalPublicIdentities
 	if err := json.Unmarshal(public.Identities, &identities); err != nil || identities.Schema != "urnetwork-sim-public-identities-v1" || identities.DeploymentID != public.DeploymentID || !common.IsHexAddress(identities.EVM["deployer"]) {
 		return errors.New("public deployment manifest has no authenticated contract deployer")
 	}
-	if err := validatePrecompileProbeReplacement(baseline, common.HexToAddress(identities.EVM["deployer"]), *public.Contracts, public.CoordinatorUpgrade); err != nil {
+	plan, err := publicPrecompileProbePlan(public, identities)
+	if err != nil {
+		return err
+	}
+	upgrade := coordinatorRepairBaselineUpgrade(plan)
+	if err := validateCoordinatorUpgradeBaseline(baseline, *public.Contracts, upgrade); err != nil {
+		return fmt.Errorf("public deployment manifest conformance probe generation: %w", err)
+	}
+	if err := validatePrecompileProbeReplacement(baseline, common.HexToAddress(identities.EVM["deployer"]), *public.Contracts, upgrade); err != nil {
 		return fmt.Errorf("public deployment manifest replacement probe: %w", err)
 	}
 	return nil

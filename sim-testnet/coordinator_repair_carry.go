@@ -375,7 +375,14 @@ func authenticateCoordinatorRepairCarry(ctx context.Context, cfg *ResolvedConfig
 			return nil, stateMismatchError(err, "coordinator repair current custody differs")
 		}
 		nonce, err := client.NonceAt(ctx, r.Deployer, new(big.Int).SetUint64(head.Number))
-		if err != nil || nonce != r.Upgrade.DeployerNonce+1 {
+		if err != nil {
+			return nil, err
+		}
+		if plan.PrecompileProbeSuccessor != nil {
+			if err := verifyPrecompileProbeSuccessorAt(ctx, cfg, stateDir, plan, entries, client, head, nonce); err != nil {
+				return nil, err
+			}
+		} else if nonce != r.Upgrade.DeployerNonce+1 {
 			return nil, stateMismatchError(err, "coordinator repair current deployer boundary differs")
 		}
 		pending, err := client.PendingNonceAt(ctx, r.Deployer)

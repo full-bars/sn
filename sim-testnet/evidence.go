@@ -1513,6 +1513,8 @@ type PublicDeploymentManifest struct {
 	Contracts                  *ContractDeployment          `json:"contracts"`
 	CoordinatorUpgrade         CoordinatorUpgrade           `json:"coordinator_upgrade"`
 	CoordinatorUpgradeBaseline *CoordinatorUpgradeBaseline  `json:"coordinator_upgrade_baseline,omitempty"`
+	CoordinatorRepairCarry *CoordinatorRepairCarry `json:"coordinator_repair_carry,omitempty"`
+	PrecompileProbeSuccessor *PrecompileProbeSuccessor `json:"precompile_probe_successor,omitempty"`
 	ValidatorEvidence          *ValidatorEvidenceDeployment `json:"validator_evidence,omitempty"`
 	Identities                 json.RawMessage              `json:"identities"`
 	SetupEvidence              map[string]json.RawMessage   `json:"setup_evidence"`
@@ -1711,6 +1713,8 @@ func writePublicDeploymentManifest(cfg *ResolvedConfig, stateDir string, plan *S
 	if plan != nil {
 		manifest.PlanHash = plan.PlanHash
 		manifest.CoordinatorUpgrade = plan.CoordinatorUpgrade
+		manifest.CoordinatorRepairCarry = plan.CoordinatorRepairCarry
+		manifest.PrecompileProbeSuccessor = plan.PrecompileProbeSuccessor
 		if planUsesValidatorEvidenceEnvelope(plan.Schema) {
 			if err := validateValidatorEvidencePlan(plan); err != nil {
 				return nil, err

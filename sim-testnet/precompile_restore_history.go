@@ -99,7 +99,7 @@ func (self *Executor) verifyHistoricalPrecompileRestorePostState(ctx context.Con
 	if self.payloads == nil {
 		return nil, errors.New("precompile deployment payloads are unavailable")
 	}
-	evidence, err := loadPrecompileEvidence(self.stateDir)
+	evidence, err := self.historicalPrecompileEvidence()
 	if err != nil {
 		return nil, err
 	}
