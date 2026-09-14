@@ -76,9 +76,9 @@ func TestProducerGateStateSelectionSourceCensusRejectsDeclarationDrift(t *testin
 	t.Parallel()
 	const declared = "func TestSyntheticDeclared(t *testing.T) {}\n"
 	for _, testCase := range []struct {
-		name string
+		name    string
 		sources []string
-		want string
+		want    string
 	}{
 		{name: "duplicate files", sources: []string{declared, declared}, want: "selected test declaration TestSyntheticDeclared is duplicated"},
 		{name: "duplicate declarations", sources: []string{declared + declared}, want: "selected test declaration TestSyntheticDeclared is duplicated"},
@@ -103,7 +103,7 @@ func TestProducerGateStateSelectionSourceCensusReadsCurrentBuildFiles(t *testing
 		foreign = "linux"
 	}
 	for _, testCase := range []struct {
-		name string
+		name   string
 		source string
 	}{
 		{name: "active_test.go", source: "package fixture\nfunc TestSyntheticActive(t *testing.T) {}\n"},
