@@ -13,10 +13,10 @@ import (
 // retain their independent current-artifact and exact-block checks.
 func TestRuntimeArtifactMetadataValidatorScheduleRuntime458(t *testing.T) {
 	for _, example := range []struct {
-		name string
+		name      string
 		threshold uint64
-		eligible bool
-		change func(*testing.T, *validatorStakeTestFixture)
+		eligible  bool
+		change    func(*testing.T, *validatorStakeTestFixture)
 	}{
 		{name: "threshold equality", threshold: 150, eligible: true},
 		{name: "below threshold", threshold: 151, eligible: false},
@@ -63,7 +63,7 @@ func TestRuntimeArtifactMetadataValidatorScheduleRuntime458(t *testing.T) {
 // Layout compatibility does not authorize another artifact or unknown version.
 func TestRuntimeArtifactMetadataValidatorStakeRuntime458RejectsForeignIdentity(t *testing.T) {
 	for _, example := range []struct {
-		name string
+		name   string
 		change func(*validatorIdentityTestFixture)
 	}{
 		{name: "prior authority", change: func(f *validatorIdentityTestFixture) { f.allowed[0].Version.SpecVersion = 455 }},
@@ -72,8 +72,14 @@ func TestRuntimeArtifactMetadataValidatorStakeRuntime458RejectsForeignIdentity(t
 		{name: "unreviewed456", change: func(f *validatorIdentityTestFixture) { f.version.SpecVersion = 456; f.allowed[0].Version = f.version }},
 		{name: "unreviewed457", change: func(f *validatorIdentityTestFixture) { f.version.SpecVersion = 457; f.allowed[0].Version = f.version }},
 		{name: "future459", change: func(f *validatorIdentityTestFixture) { f.version.SpecVersion = 459; f.allowed[0].Version = f.version }},
-		{name: "name", change: func(f *validatorIdentityTestFixture) { f.version.SpecName = "synthetic-foreign"; f.allowed[0].Version = f.version }},
-		{name: "transaction", change: func(f *validatorIdentityTestFixture) { f.version.TransactionVersion = 2; f.allowed[0].Version = f.version }},
+		{name: "name", change: func(f *validatorIdentityTestFixture) {
+			f.version.SpecName = "synthetic-foreign"
+			f.allowed[0].Version = f.version
+		}},
+		{name: "transaction", change: func(f *validatorIdentityTestFixture) {
+			f.version.TransactionVersion = 2
+			f.allowed[0].Version = f.version
+		}},
 		{name: "state", change: func(f *validatorIdentityTestFixture) { f.version.StateVersion = 2; f.allowed[0].Version = f.version }},
 	} {
 		fixture := newValidatorStakeTestFixture(t)

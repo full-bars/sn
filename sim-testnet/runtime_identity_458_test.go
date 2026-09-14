@@ -167,14 +167,22 @@ func TestRuntime458PublicationsRejectCrossArtifactPairs(t *testing.T) {
 func TestRuntime458CurrentLockRejectsOfficialSeedVariant(t *testing.T) {
 	lock := runtime458ReviewedTestLock()
 	for _, mutate := range []func(*ReleaseRuntimeLock){
-		func(value *ReleaseRuntimeLock) { value.CodeHash = "0x3708442dc6aae2ea654d827d8b9985d36b6640b2447cfd48125a1a0205c8f1d3" },
-		func(value *ReleaseRuntimeLock) { value.CompressedWasmSHA256 = "0x94e85d3d0ca077a8a8f8e1e65edfe18036895a20313f7195bb17060b145610c6" },
+		func(value *ReleaseRuntimeLock) {
+			value.CodeHash = "0x3708442dc6aae2ea654d827d8b9985d36b6640b2447cfd48125a1a0205c8f1d3"
+		},
+		func(value *ReleaseRuntimeLock) {
+			value.CompressedWasmSHA256 = "0x94e85d3d0ca077a8a8f8e1e65edfe18036895a20313f7195bb17060b145610c6"
+		},
 	} {
 		changed := *lock
 		mutate(&changed.Runtime)
-		if validateReviewedRuntimeIdentity(&changed) == nil { t.Fatal("source-equivalent seed variant acquired exact current authority") }
+		if validateReviewedRuntimeIdentity(&changed) == nil {
+			t.Fatal("source-equivalent seed variant acquired exact current authority")
+		}
 	}
 	public := PublicDeploymentManifest{RuntimeSpec: 458, TransactionVersion: 1, StateVersion: 1,
 		RuntimeCodeHash: "0x3708442dc6aae2ea654d827d8b9985d36b6640b2447cfd48125a1a0205c8f1d3", RuntimeMetadataHash: lock.Runtime.MetadataHash}
-	if validatePublishedRuntimeIdentityShape(&public) == nil { t.Fatal("official seed variant became a reviewed public artifact") }
+	if validatePublishedRuntimeIdentityShape(&public) == nil {
+		t.Fatal("official seed variant became a reviewed public artifact")
+	}
 }

@@ -34,7 +34,9 @@ func TestReleaseRuntime458RequiresExactReviewedArtifact(t *testing.T) {
 		func(value *ReleaseConfig) { value.RuntimeSpec = 456 },
 		func(value *ReleaseConfig) { value.RuntimeSpec = 457 },
 		func(value *ReleaseConfig) { value.RuntimeSpec = 459 },
-		func(value *ReleaseConfig) { value.RuntimeCodeHash = "0x3708442dc6aae2ea654d827d8b9985d36b6640b2447cfd48125a1a0205c8f1d3" },
+		func(value *ReleaseConfig) {
+			value.RuntimeCodeHash = "0x3708442dc6aae2ea654d827d8b9985d36b6640b2447cfd48125a1a0205c8f1d3"
+		},
 		func(value *ReleaseConfig) { value.TransactionVersion = 2 },
 		func(value *ReleaseConfig) { value.StateVersion = 2 },
 		func(value *ReleaseConfig) {

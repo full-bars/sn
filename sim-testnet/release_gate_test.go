@@ -2379,9 +2379,9 @@ func TestReleaseGatesAttestPinnedRuntime454RustSource(t *testing.T) {
 		SpecVersion: 458, SourceRefKind: "commit", SourceRefName: "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7", SourceCommit: "a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7",
 		ObservationBlock: 8006567, ObservationBlockHash: "0xc814242904668bad31b388b36ed31a0c1ffd3b180b173727f5e3d20ea5c8aba4",
 		ObservationRpcUrl: artifactManifest.Artifacts[5].ObservationRpcUrl,
-		CodeSource: "substrate-storage", CodeSize: 2519192, CodeSHA256: "d763c0210bbd113c065a4e8d538cdd3f5e9b40ba259a5136b77e0a495c364241",
+		CodeSource:        "substrate-storage", CodeSize: 2519192, CodeSHA256: "d763c0210bbd113c065a4e8d538cdd3f5e9b40ba259a5136b77e0a495c364241",
 		CodeBlake2b256: "0x2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a",
-		MetadataSize: 335297, MetadataSHA256: "17ebfa2551978a1567da990ac9650e6f01802f578696c552a7c6f9f4b1391405",
+		MetadataSize:   335297, MetadataSHA256: "17ebfa2551978a1567da990ac9650e6f01802f578696c552a7c6f9f4b1391405",
 		MetadataBlake2b256: "0x040088e73e34ed5561372aa51b07b56e41cf7f390312837b074434f30452593d",
 	}
 	wantVersions := []uint32{451, 452, 453, 454, 455, 458}
