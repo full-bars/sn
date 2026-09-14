@@ -18,7 +18,7 @@ func TestRuntimeArtifactMetadataAuthenticatesCompleteSixIdentityHistory(t *testi
 	var identities []RuntimeArtifactIdentity
 	for _, spec := range []uint32{451, 452, 453, 454, 455, 458} {
 		identities = append(identities, RuntimeArtifactIdentity{
-			Version: RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: spec, TransactionVersion: 1, StateVersion: 1},
+			Version:  RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: spec, TransactionVersion: 1, StateVersion: 1},
 			CodeHash: fmt.Sprintf("0x%064x", spec), MetadataHash: metadataHash,
 		})
 	}
@@ -72,7 +72,10 @@ func TestRuntimeArtifactMetadataAuthenticatesCompleteSixIdentityHistory(t *testi
 			return append(values, extra)
 		},
 		func(values []RuntimeArtifactIdentity) []RuntimeArtifactIdentity { values[5] = values[0]; return values },
-		func(values []RuntimeArtifactIdentity) []RuntimeArtifactIdentity { values[5].MetadataHash = ""; return values },
+		func(values []RuntimeArtifactIdentity) []RuntimeArtifactIdentity {
+			values[5].MetadataHash = ""
+			return values
+		},
 	} {
 		changed := change(append([]RuntimeArtifactIdentity(nil), identities...))
 		before := calls
