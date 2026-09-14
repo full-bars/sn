@@ -1,0 +1,13 @@
+mode	run	test	body_exit	owner_exit	event_outcome	binary_sha256	started_utc	finished_utc	pre_post_fences_equal
+normal	p1	TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources	0	0	PASS	9c3a5b91f8e390fe9a740ed7c5cee910080275eef29659d78a51b93c3205eb17	2026-09-14T18:13:25Z	2026-09-14T18:13:43Z	true
+normal	p1	TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage	0	0	PASS	9c3a5b91f8e390fe9a740ed7c5cee910080275eef29659d78a51b93c3205eb17	2026-09-14T18:13:25Z	2026-09-14T18:13:43Z	true
+normal	p2	TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources	0	0	PASS	9c3a5b91f8e390fe9a740ed7c5cee910080275eef29659d78a51b93c3205eb17	2026-09-14T18:14:20Z	2026-09-14T18:14:26Z	true
+normal	p2	TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage	0	0	PASS	9c3a5b91f8e390fe9a740ed7c5cee910080275eef29659d78a51b93c3205eb17	2026-09-14T18:14:20Z	2026-09-14T18:14:26Z	true
+normal	p3	TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources	0	0	PASS	9c3a5b91f8e390fe9a740ed7c5cee910080275eef29659d78a51b93c3205eb17	2026-09-14T18:15:18Z	2026-09-14T18:15:23Z	true
+normal	p3	TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage	0	0	PASS	9c3a5b91f8e390fe9a740ed7c5cee910080275eef29659d78a51b93c3205eb17	2026-09-14T18:15:18Z	2026-09-14T18:15:23Z	true
+race	p1	TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage	0	0	PASS	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:14:20Z	2026-09-14T18:16:49Z	true
+race	p1	TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources	0	0	PASS	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:14:20Z	2026-09-14T18:16:49Z	true
+race	p2	TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources	0	0	PASS	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:17:16Z	2026-09-14T18:17:30Z	true
+race	p2	TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage	0	0	PASS	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:17:16Z	2026-09-14T18:17:30Z	true
+race	p3	TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources	0	0	PASS	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:22:01Z	2026-09-14T18:22:14Z	true
+race	p3	TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage	0	0	PASS	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:22:01Z	2026-09-14T18:22:14Z	true

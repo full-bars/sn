@@ -1,0 +1,2 @@
+source	mode	runs	roots_per_run	body_exit_all	owner_exit_all	converter_exit_all	validation_exit_all	binary_sha256	pre_post_fences_equal
+713eae3fcf83615d81d185fda3f3ec42a441a26b	race	p1,p2,p3	4	0	0	0	0	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	true

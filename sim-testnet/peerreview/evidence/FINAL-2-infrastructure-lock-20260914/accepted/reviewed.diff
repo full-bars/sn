@@ -1,0 +1,20 @@
+--- /home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/sn/deploy/testnet/release.lock.yml	2026-09-14 18:18:28.940678164 +0000
++++ /home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/lock-preview-physical-libraries/candidate.yml	2026-09-14 18:38:14.290703868 +0000
+@@ -57,7 +57,7 @@
+     operator_proxy_go_source_hash: sha256:3abc595cf0bb9f2d2b701020a8aa573b87a263e3169063a55a5998ddeefa5414
+     platform_config_shared_tree_hash: sha256:6852f0a67ab5e5cd5e61fbe3d53ac367da7d43c92f766c2de6cff43db40c5252
+     platform_config_source_hash: sha256:c69caf2830a1ab8cf9b5f884b2351913bbba19620947176d78fd7eb6b676974a
+-    protocol_source_hash: sha256:457a165ab36ab61db5f654a86600cd0c7ae421133f0e3bdefce6bab7f15c3e75
++    protocol_source_hash: sha256:3e9d2bb768c31c3c3e40ea45cb5a45f21f80caf7a9356aa4e3ce5515d4b79dcb
+     proxy_go_source_hash: sha256:e8be796d7c683556b155e6993018f61b62c4278d052d28060f11ec78c5f13ab8
+     sdk_go_source_hash: sha256:5cbe111d703ab888d704d2d08950bb3aef0abd0336b99ce3026414bb115c6575
+     sdk_mobile_build_tree_hash: sha256:62d09e3553d744f681f4e0bd0fa640a4e7019367a73dae0ea616b45b27f27aa4
+@@ -73,6 +73,6 @@
+ interfaces:
+     precompile_interfaces_source_hash: sha256:7873f48b2ac560880193dfe8e4715f124473bed43a97db8b855da7921effaed3
+ infrastructure:
+-    gateway_config_hash: sha256:4ae50badc69a95782b43b0d590175fe4ac2929fcbd92b8ccfe433294a1af271c
+-    node_config_hash: sha256:ff6395872be71c0569145a80419554b8518ebfba3147a8cefb29031a857c1df3
++    gateway_config_hash: sha256:b9a325dd401f99fefc1438166b49beafe9bafafa5fa381de1b889db56b5a27b9
++    node_config_hash: sha256:fe9fa9e8c72deb9aecfca94f161a01d9d836c4c99497dfc1dc339a1610a799db
+     server_local_config_hash: sha256:4903c4be46f27a1b053acef0693aafe37c587dd29867b7b41e06112104f2f222

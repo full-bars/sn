@@ -1,0 +1,8 @@
+incident	source	mode_or_scope	exact_outcome	interpretation
+launcher_adapter_refusal	1e491b61a841c652f3155152bf845c519e2c171a	normal	build launcher exit 64 before compiler admission	separate command-adapter admission incident
+launcher_adapter_refusal	1e491b61a841c652f3155152bf845c519e2c171a	race	build launcher exit 64 before compiler admission	separate command-adapter admission incident
+per_mode_recovery	1e491b61a841c652f3155152bf845c519e2c171a	normal	compile2 exit 0; binary retained	test body remains independently failed
+per_mode_recovery	1e491b61a841c652f3155152bf845c519e2c171a	race	compile2 exit 0; binary retained	test body remains independently failed
+checker_adapter_refusal	1e491b61a841c652f3155152bf845c519e2c171a	all closed test owners	body.exit pathname supplied where integer required	separate checker invocation defect; raw body exit/events authoritative
+checker_adapter_refusal	1e491b61a841c652f3155152bf845c519e2c171a	all closed test owners	expected outcomes lower-case pass instead of canonical PASS	separate checker invocation defect; raw body exit/events authoritative
+checker_adapter_refusal	1e491b61a841c652f3155152bf845c519e2c171a	all closed test owners	test2json stream lacks Package field for checker	separate checker invocation defect; raw body exit/events authoritative

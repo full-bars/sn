@@ -1,0 +1,3 @@
+TestProducerGateStateSelectionSourceCensusIgnoresFixtureText	fixture text invented a release regression
+TestProducerGateStateSelectionSourceCensusKeepsRealDeclarations	real declaration census
+TestProducerGateStateSelectionSourceCensusRejectsDeclarationDrift	malformed function escaped exact source census

@@ -1,0 +1,23 @@
+category	count	content_handling
+	3	hash_and_locator_only
+admission	8	hash_and_locator_only
+body	10	hash_and_locator_only
+category	1	hash_and_locator_only
+causal	6	hash_and_locator_only
+causal_patch	1	hash_and_locator_only
+closure	2	hash_and_locator_only
+closure_or_admission	3	hash_and_locator_only
+corrected_list	5	hash_and_locator_only
+normal	16	hash_and_locator_only
+normal-failed-p2	5	hash_and_locator_only
+normal-failed-p3	5	hash_and_locator_only
+original_timeout_log	1	hash_and_locator_only
+race	16	hash_and_locator_only
+race-failed-p2	5	hash_and_locator_only
+race-failed-p3	5	hash_and_locator_only
+timeout-timeout-p1	10	hash_and_locator_only
+timeout-timeout-p2	10	hash_and_locator_only
+timeout-timeout-p3	10	hash_and_locator_only
+copied_raw_test_streams	0	derived outcome TSVs and locator hashes only
+copied_binaries	0	SHA-256 identity only
+copied_private_state	0	excluded

@@ -1,0 +1,6 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 18:20:43.600860 3365529 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 18:20:43.601250 3365529 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 18:20:43.601777 3365529 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 18:20:43.601807 3365529 env.go:67] [env]settings = map[]
+sim-testnet: hash glog module: release-lock source root "." is not a directory

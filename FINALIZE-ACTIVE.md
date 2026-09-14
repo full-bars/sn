@@ -46,7 +46,37 @@ Retain the approved 6,000-alpha repair allowance, 37,250-alpha lifetime limit,
 180 EVM within 200 total TAO, 262 registrations and zero new subnets. Use
 `192.168.1.162:9944` without RPC rate limits. Full acceptance remains pending.
 
-Latest checkpoint, 2026-09-13 23:48 UTC: the soak remains stopped. The full
+Latest checkpoint, 2026-09-14 18:50 UTC: the soak remains stopped and the approved
+6,000-alpha reserve repair remains unsubmitted. All 1,212 renewal transactions
+across 202 fleets have finalized and passed their native postconditions. Two
+setup attempts on the retained approved plan stopped on nginx HTTP 429 before
+any new transaction. The qualified unpaced gateway correction is published in
+xops main at `d33d417`; deployment is awaiting an SSH identity accepted by the
+RPC node. Do not retry setup until the deployed gateway has been corrected.
+
+The `7eab049` producer closed with 34 passing and two failed phases. The probe
+test correction passed a strict build, all 215 contract tests and three strict
+lint processes. The combined scheduling/source-census successor `713eae3`
+passed all 81 affected tests normally and under race, three confirmations of
+both failed guards in each mode, and three race confirmations of all four
+timeout roots. Both original-defect causal controls reproduced their expected
+failures with passing adjacent controls. These completed scopes are retained.
+The obsolete aggregate was stopped and joined at 18:49:42 UTC: 14 phases passed,
+the same strict Solidity lint failed, and two Connect phases were canceled.
+Its outer exit was 143; cancellation did not reach the final source fence.
+
+The successor lock was rendered locally with unchanged production Go and
+contract bytes. Its only changes bind the producer scheduling script and both
+gateway/node configuration groups. The reviewed YAML SHA-256 is
+`76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35`.
+Publish the coherent candidate, build one stamped final CLI, and run the full
+37-phase producer and complete aggregate with private services. Producer PASS
+precedes traffic; both gates and the full live campaign/production soak remain
+required for acceptance. Use one subsequent setup preview and reviewed successor
+hash; preserve every completed renewal, receipt, custody record and spend limit.
+See [report 2](sim-testnet/FINAL-2.md) and its linked evidence bundles.
+
+Previous checkpoint, 2026-09-13 23:48 UTC: the soak remains stopped. The full
 producer on `e3d3539` passed with 36/36 phase joins at 21:44 UTC. Its native
 setup apply adopted plan `0xdbeb584008bbdbc6607a49a5118c1c82fdfa18a15ca8fe5b5c8cea9d2775c37a`
 but failed at 22:09 UTC during carried-history verification, before action

@@ -2,14 +2,14 @@
 
 **Status: in progress; `final_acceptance=false`.** This report covers the next
 full finalization of testnet chain **945**, subnet **521**, under
-[FINALIZE.md](../FINALIZE.md). At the **18:08 UTC on 2026-09-14** observation
+[FINALIZE.md](../FINALIZE.md). At the **18:56 UTC on 2026-09-14** observation
 cutoff, all **1,212 renewal transactions** across **202 fleets** have finalized
 and passed their native postcondition checks. The approved **6,000-alpha repair
-has not been submitted**, and the soak remains stopped. Published candidate
+has not been submitted**, and the soak remains stopped. Earlier published candidate
 `7eab04905dbc274ae6d2546b6802f1097c1fc3fe` includes the qualified historical
 restore correction, runtime-455 battery correction, probe replacement path and
 stable plan-approval checkpoint. Its clean release executable has built
-successfully. The latest correction passed all **40 affected tests normally
+successfully. That approval-checkpoint correction passed all **40 affected tests normally
 and under race detection**, including five new deterministic regressions.
 Three fresh normal executions close the advancing-finality confirmation, and
 restoring the original defect produces the expected failure with three passing
@@ -36,9 +36,12 @@ joined, with **34 passes and two failures**. Its final source and release-lock
 checks passed. Strict Solidity compilation rejected a narrowing cast in the
 runtime-455 regression test before any Solidity test body ran. The simulator
 evidence race package also exceeded its unchanged ten-minute deadline after a
-new full-population renderer had been added to its ordinary group. The full
-aggregate is still running on the frozen `7eab049` source. Full producer success
-remains a traffic launch prerequisite, and both complete gates are required for
+new full-population renderer had been added to its ordinary group. The obsolete
+aggregate was stopped and joined at **18:49:42 UTC**, with outer exit **143**:
+**14 phases passed**, the same strict Solidity lint failed, and two Connect
+phases were canceled. All known owners and workers were gone; its final source
+fence was not reached. Full producer success remains a traffic launch
+prerequisite, and both complete gates are required for
 acceptance. Successful focused checks, renewal and historical payments do not
 establish full acceptance.
 [Closed producer, exact phase results and original failure locators](peerreview/evidence/FINAL-2-producer-7eab-20260914/SUMMARY.md).
@@ -65,18 +68,34 @@ source-census defect in both modes: **16 passed and two failed**. An older text
 scanner counted `TestRuntimeEvidenceSyntheticDirect` inside a fixture string
 as an executable declaration. The parser-based correction and four deterministic
 literal/declaration/build-file controls are committed in clean source
-`713eae3fcf83615d81d185fda3f3ec42a441a26b`. Its **81-root normal/race matrix**
-is being prepared for execution with the two failed guards' confirmations.
+`713eae3fcf83615d81d185fda3f3ec42a441a26b`. All **81 affected tests passed
+normally and under race detection**. Both failed guards completed three fresh
+sequential passes in each mode. All four original timeout roots completed
+three sequential race passes on the same corrected binary; the slowest root
+took **303.93, 435.95 and 394.89 seconds**. Source, dependency and binary checks
+matched before and after every accepted execution.
 
-The first timeout confirmation's raw race body passed all four selected tests,
-with the renderer finishing in **303.93 seconds**. Its outer result remains a
-failure because of capture-metadata checker errors; those original records are
-retained separately from the real guard failures. Further confirmations are
-held for the corrected source and adapter. No corrected full gate or soak
-result is claimed yet. Production Go, contracts, release-lock bytes, approved
-plan and completed renewals are unchanged by the three SN source edits. Adopting
-the qualified gateway source in the next release separately requires refreshed
-infrastructure lock fields and a reviewed successor approval hash.
+Restoring only the old declaration scanner produced the expected **three
+failures and three passing controls**. Restoring only the old scheduling script,
+using the retained normal binary, produced **three failures and one passing
+control**. The earlier `1e491` timeout body's four raw passes remain distinct
+from its failed capture-metadata checks and do not count toward the completed
+`713eae3` streak. Compiler, patch-direction and list-adapter admission refusals
+are retained separately from actual test failures.
+[Corrected matrices, confirmations, causal controls and obsolete aggregate closure](peerreview/evidence/FINAL-2-evidence-render-owner-qualification-20260914/README.md).
+
+Production Go, contract artifacts, the installed approved plan and completed
+renewals remain unchanged. The reviewed successor release lock was rendered
+locally with no RPC or native-state mutation. Its only changes are the protocol
+source hash for the producer scheduling script and both gateway/node configuration
+hashes; the YAML SHA-256 is
+`76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35`.
+All sixteen repository/library snapshots and the original lock were stable during
+rendering. This prepares the next canonical build and complete gates; it does
+not establish deployment, a full gate PASS or a soak result. Applying the new
+release requires a reviewed successor setup hash preserving the completed work
+and approved limits.
+[Exact three-field lock diff, source snapshots and retained layout refusals](peerreview/evidence/FINAL-2-infrastructure-lock-20260914/README.md).
 
 The earlier published candidate
 `a59294e98ea02d05125015ae02cf32f2c0059c8a` introduced the corrected strict

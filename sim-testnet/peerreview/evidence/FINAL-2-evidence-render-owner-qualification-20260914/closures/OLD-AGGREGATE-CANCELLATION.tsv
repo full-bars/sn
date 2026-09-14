@@ -1,0 +1,15 @@
+field	value
+scope	old aggregate on superseded 7eab source
+closure_capture	/home/by/urnetwork/temp/sn-probe-approval-anchor-correction-20260914/terra-runtime/aggregate-probe-approval-anchor-7eab/cancellation-source-superseded-713
+outer_pid	2993182
+outer_exit	143
+finished_utc	2026-09-14T18:49:42Z
+admitted_joins	17
+join_outcomes	14 exit0; Solidity exit1 retained; 2 Connect owners canceled143
+preflights	5 initial preflights exit0
+source_fence	final source fence not reached
+db_or_private_service_phase	not admitted
+worker_state	inner and phase workers gone per sealed closure
+reason	source superseded; not a 713 corrected-candidate failure
+closure_summary_sha256	1af983d0f55c1c7a736b4a564db97a44b0508f2e9b296924fad5793cdb8e6048
+closure_bundle_sha256s_sha256	2f8241f594e12c105596f446be9db67938363ab171527cc4ce20c6e440fada10

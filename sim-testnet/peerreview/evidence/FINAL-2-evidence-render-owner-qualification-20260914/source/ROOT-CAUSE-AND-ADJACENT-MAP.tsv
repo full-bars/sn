@@ -1,0 +1,7 @@
+case	original_1e491_observation	correction_or_control	scope
+fixture_text	shared source-text regex treated raw fixture strings such as TestRuntimeEvidenceSyntheticDirect as accepted declarations	AST declaration extraction ignores strings/comments	TestProducerGateStateSelectionSourceCensusIgnoresFixtureText
+real_declarations	regex missed legal declarations hidden by permitted whitespace	AST extraction preserves real build-eligible declarations	TestProducerGateStateSelectionSourceCensusKeepsRealDeclarations
+malformed_text	regex accepted valid-looking declaration text inside syntactically invalid source	AST parser rejects malformed declaration drift	TestProducerGateStateSelectionSourceCensusRejectsDeclarationDrift
+build_file_admission	file acquisition is independently checked	current-build-file control retained under causal mutation	TestProducerGateStateSelectionSourceCensusReadsCurrentBuildFiles
+adjacent_consumers	77 direct same-package extractor callers plus 4 workload-owner guards	81 compiled roots, exact list equality in both modes	AST-CALLER-MAP.tsv and COMPILED-ROOTS-81.sorted
+original_failures	CoversEvidenceV2OwnGuardSources and EvidenceV2KeepsAdjacentSourceCoverage failed in both modes	the same two roots pass p1/p2/p3 in both modes	outcomes/TWO-GUARD-CONFIRMATIONS.tsv
