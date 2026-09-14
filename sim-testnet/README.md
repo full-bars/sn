@@ -88,6 +88,13 @@ complete gate workloads concurrently with independent fixes, using immutable sou
 resources for each admitted job. A failed release preflight is retained as a
 refusal, not counted as executed tests or a release-qualified pass.
 
+When executing a compiled Go test binary, set its working directory to the
+package directory and check required relative fixtures before starting it.
+Retain `-test.v` in every body and confirmation command passed through
+`test2json`; a package-level success without the selected test events does not
+qualify those tests. If the command needs correction, preserve the original
+result and reuse the unchanged binary and source for a fresh execution.
+
 After diagnosis and correction, each failed test must pass three consecutive
 uncached executions on the same source/dependency snapshot in every mode that
 failed. Use a fresh process for each execution and retain its exact root, mode,
