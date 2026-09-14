@@ -1,0 +1,39 @@
+diff --git a/sim-testnet/fleet_commitment_history_test.go b/sim-testnet/fleet_commitment_history_test.go
+index d6aa5d7..455f42b 100644
+--- a/sim-testnet/fleet_commitment_history_test.go
++++ b/sim-testnet/fleet_commitment_history_test.go
+@@ -107,8 +107,12 @@ func TestFleetCommitmentHistoryRejectsAdjacentConsumers(t *testing.T) {
+ 		mutate func(*fleetCommitmentHistoryFixture)
+ 	}{
+ 		{name: "unapproved plan", mutate: func(f *fleetCommitmentHistoryFixture) { f.executor.journal.entries[2].PlanHash = common.Hash{9}.Hex() }},
+-		{name: "changed intent", mutate: func(f *fleetCommitmentHistoryFixture) { f.executor.journal.entries[2].IntentHash = common.Hash{9}.Hex() }},
+-		{name: "other consumer", mutate: func(f *fleetCommitmentHistoryFixture) { f.executor.journal.entries[2].ActionID = "fleet.install.batch.2" }},
++		{name: "changed intent", mutate: func(f *fleetCommitmentHistoryFixture) {
++			f.executor.journal.entries[2].IntentHash = common.Hash{9}.Hex()
++		}},
++		{name: "other consumer", mutate: func(f *fleetCommitmentHistoryFixture) {
++			f.executor.journal.entries[2].ActionID = "fleet.install.batch.2"
++		}},
+ 		{name: "failed consumer", mutate: func(f *fleetCommitmentHistoryFixture) { f.executor.journal.entries[2].Stage = StageFailed }},
+ 		{name: "only finalized", mutate: func(f *fleetCommitmentHistoryFixture) { f.executor.journal.entries[2].Stage = StageFinalized }},
+ 		{name: "missing consumer", mutate: func(f *fleetCommitmentHistoryFixture) { f.executor.journal.entries = f.executor.journal.entries[:2] }},
+@@ -129,13 +133,17 @@ func TestFleetCommitmentHistoryRejectsChangedApproval(t *testing.T) {
+ 		mutate func(*fleetCommitmentHistoryFixture)
+ 	}{
+ 		{name: "missing scope plan", mutate: func(f *fleetCommitmentHistoryFixture) { f.executor.fleetCommitmentHistory.plan = nil }},
+-		{name: "unapproved source", mutate: func(f *fleetCommitmentHistoryFixture) { f.approved.PriorPlanHashes = []string{f.consumerEntry.PlanHash} }},
++		{name: "unapproved source", mutate: func(f *fleetCommitmentHistoryFixture) {
++			f.approved.PriorPlanHashes = []string{f.consumerEntry.PlanHash}
++		}},
+ 		{name: "foreign deployment", mutate: func(f *fleetCommitmentHistoryFixture) { f.approved.DeploymentID = "different-synthetic-deployment" }},
+ 		{name: "changed current intent", mutate: func(f *fleetCommitmentHistoryFixture) { f.approved.Actions[1].IntentHash = common.Hash{9}.Hex() }},
+ 		{name: "missing current consumer", mutate: func(f *fleetCommitmentHistoryFixture) { f.approved.Actions = f.approved.Actions[:1] }},
+ 		{name: "duplicate current consumer", mutate: func(f *fleetCommitmentHistoryFixture) { f.approved.Actions = append(f.approved.Actions, f.consumer) }},
+ 		{name: "missing original consumer", mutate: func(f *fleetCommitmentHistoryFixture) { f.executor.plan.Actions = f.executor.plan.Actions[:1] }},
+-		{name: "duplicate original consumer", mutate: func(f *fleetCommitmentHistoryFixture) { f.executor.plan.Actions = append(f.executor.plan.Actions, f.consumer) }},
++		{name: "duplicate original consumer", mutate: func(f *fleetCommitmentHistoryFixture) {
++			f.executor.plan.Actions = append(f.executor.plan.Actions, f.consumer)
++		}},
+ 	} {
+ 		fixture := newFleetCommitmentHistoryFixture(t, 1, 1)
+ 		change.mutate(&fixture)

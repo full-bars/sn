@@ -1,0 +1,52 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 11:20:02.178376 2498938 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 11:20:02.178594 2498938 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 11:20:02.178683 2498938 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 11:20:02.178712 2498938 env.go:67] [env]settings = map[]
+sim-testnet: batched historical fleet audit 0/1000
+sim-testnet: batched historical fleet audit 1000/1000
+sim-testnet: carried action audit 50/3456
+sim-testnet: carried action audit 100/3456
+sim-testnet: carried action audit 150/3456
+sim-testnet: carried action audit 200/3456
+sim-testnet: carried action audit 250/3456
+sim-testnet: carried action audit 300/3456
+sim-testnet: carried action audit 350/3456
+sim-testnet: carried action audit 400/3456
+sim-testnet: carried action audit 450/3456
+sim-testnet: carried action audit 500/3456
+sim-testnet: carried action audit 550/3456
+sim-testnet: carried action audit 600/3456
+sim-testnet: carried action audit 650/3456
+sim-testnet: carried action audit 700/3456
+sim-testnet: carried action audit 750/3456
+sim-testnet: carried action audit 800/3456
+sim-testnet: carried action audit 850/3456
+sim-testnet: carried action audit 900/3456
+sim-testnet: carried action audit 950/3456
+sim-testnet: carried action audit 1000/3456
+sim-testnet: carried action audit 1050/3456
+sim-testnet: carried action audit 1100/3456
+sim-testnet: carried action audit 1150/3456
+sim-testnet: carried action audit 1200/3456
+sim-testnet: carried action audit 1250/3456
+sim-testnet: carried action audit 1300/3456
+sim-testnet: carried action audit 1350/3456
+sim-testnet: carried action audit 1400/3456
+sim-testnet: carried action audit 1450/3456
+sim-testnet: carried action audit 1500/3456
+sim-testnet: carried action audit 1550/3456
+sim-testnet: carried action audit 1600/3456
+sim-testnet: carried action audit 1650/3456
+sim-testnet: carried action audit 1700/3456
+sim-testnet: carried action audit 1750/3456
+sim-testnet: carried action audit 1800/3456
+sim-testnet: carried action audit 1850/3456
+sim-testnet: carried action audit 1900/3456
+sim-testnet: carried action audit 1950/3456
+sim-testnet: carried action audit 2000/3456
+sim-testnet: carried action audit 2050/3456
+sim-testnet: carried action audit 2100/3456
+sim-testnet: carried action audit 2150/3456
+sim-testnet: carried action audit 2200/3456
+sim-testnet: carried plan history preflight: action precompile.commitment-restore: current postcondition: precompile conformance postcondition precompile.commitment-restore chain evidence: restored generation-2 commitment is not current finalized state

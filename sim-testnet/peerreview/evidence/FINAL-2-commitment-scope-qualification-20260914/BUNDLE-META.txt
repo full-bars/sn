@@ -1,0 +1,4 @@
+sealed_utc=2026-09-14T11:15:07Z
+source_candidate=6271dcfceb1af8257b626aba79a6864eb3b7c986
+qualified_union=102-disjoint-roots-normal-and-race
+policy=public-safe-curated-no-binaries-no-live-material

@@ -1,0 +1,7 @@
+source_root_id	restricted_reference	purpose
+commitment-capture	sn-commitment-scope-correction-20260914/terra-runtime/capture-commitment-scope-20260914T1053Z	A33/B69 normal and race qualification plus constructor confirmations
+causal-capture	sn-commitment-scope-correction-20260914/terra-runtime/causal-restore-source-consumer/run-20260914T1103Z	separate old-predicate causal control
+formatter-capture	sn-commitment-scope-correction-20260914/terra-runtime/format-2129727	formatter-only reconciliation record
+astra-handoff	sn-commitment-scope-correction-20260914/HANDOFF.md	root cause, regressions, and adjacent review
+root-review	sn-commitment-scope-correction-20260914/ROOT-REVIEW.md	production review
+adjacent-1466	sn-commitment-scope-correction-20260914/diagnosis/adjacent-action-review.json	static identity/order analysis

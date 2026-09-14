@@ -1,0 +1,11 @@
+bundle=FINAL-2-afd7-preparation-20260914
+sealed_at=2026-09-14T11:42:17Z
+source_revision=afd7b26c9c1b2847e8f73648e6a6eac13928453e
+final_cli_sha256=dc516d630ace555889e7c0705381ff0ed1d305824f45ad18ddf8d825ed5b46d4
+source_pair_sha256=47b08d8d42383a9b2a4d3def6f21ba22b4fef6a8d431de54e13d158e7e751c2e
+input_records=22
+content_class=public-safe-derived-evidence
+closed_native_refusal_exit=1
+closed_native_refusal_record=public-safe-separate
+resealed_at=2026-09-14T11:48:49Z
+reseal_reason=summary-proof-limits-authoring-correction

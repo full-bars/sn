@@ -1,0 +1,28 @@
+{
+  "observed_at": "2026-09-14T11:43:13.792131+00:00",
+  "exit": 1,
+  "started_at": "2026-09-14T11:20:02.123874+00:00",
+  "finished_at": "2026-09-14T11:41:35.465689+00:00",
+  "plan_hash": "0x3bd2e4ea748c73df475937b81b722c4dd3306fb83ce6e5f29ef3444e0e8abd95",
+  "reviewed_plan_hash_equal": true,
+  "all_actions_equal_to_reviewed_preview": true,
+  "action_count": 3521,
+  "unchanged_state_files": [
+    "journal.jsonl",
+    "supervisor.state.json",
+    "supervisor.json",
+    "public/identities.json"
+  ],
+  "changed_state_files": [
+    "plan.json",
+    "config.redacted.yml"
+  ],
+  "repair_journal_entries": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "060de6c635efff325470a15146b1a5f99a922dfc633719b15135152268a5c8f9",
+  "failure": "sim-testnet: carried plan history preflight: action precompile.commitment-restore: current postcondition: precompile conformance postcondition precompile.commitment-restore chain evidence: restored generation-2 commitment is not current finalized state",
+  "native_pid": 2498938,
+  "native_pid_live": false,
+  "independent_rpc": false,
+  "claim_scope": "Native closed refusal and local state/action identity review; no reserve transfer or new campaign acceptance"
+}

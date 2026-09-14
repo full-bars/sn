@@ -1,0 +1,14 @@
+BUNDLE-META.txt: OK
+EXCLUSIONS.md: OK
+HANDOFF.md: OK
+JOIN.md: OK
+MANIFEST.tsv: OK
+SUMMARY.md: OK
+checks/closed-exits.tsv: OK
+identity/cli-and-source.tsv: OK
+native-refusal/CLOSURE.json: OK
+native-refusal/README.md: OK
+native-refusal/RESULT.json: OK
+native-refusal/stderr: OK
+reviews/native-setup-preview.md: OK
+reviews/release-lock-preview.md: OK

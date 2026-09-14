@@ -2,15 +2,20 @@
 
 **Status: in progress; `final_acceptance=false`.** This report covers the next
 full finalization of testnet chain **945**, subnet **521**, under
-[FINALIZE.md](../FINALIZE.md). At the **10:38 UTC on 2026-09-14** observation
+[FINALIZE.md](../FINALIZE.md). At the **11:44 UTC on 2026-09-14** observation
 cutoff, all **1,212 renewal transactions** across **202 fleets** have finalized
-and passed their native postcondition checks. The corrected candidate is
-published as `abae9a6a8410a54a560335b16888d2ad0d4fc51f`. Its approved reserve
-repair adopted the reviewed plan, then stopped at **10:32:15 UTC** on a separate
-historical-consumption scope defect. The transaction journal is unchanged and
-the repair remains unsubmitted. Both full gates were canceled and joined at
-**10:35:29 UTC** because the candidate requires a production correction.
-The soak remains stopped and the live campaign remains pending.
+and passed their native postcondition checks. The corrected candidate is now
+published as `afd7b26c9c1b2847e8f73648e6a6eac13928453e`. Its historical-consumption
+correction passed **102 affected tests normally and with race detection**, with
+deterministic pre-fix reproductions and adjacent-path controls. The approved
+6,000-alpha repair ran from **11:20:02 to 11:41:35 UTC**, admitted the reviewed
+replacement plan and progressed beyond the previous failure to the
+**2,200/3,456** carried-action marker. It then stopped on an adjacent precompile
+restore check that still requires generation 2 to be current after an approved
+generation-3 renewal. No repair transaction was submitted. Both full gates
+were canceled and joined at **11:43:53 UTC** because another source correction
+is required; neither had reported a test failure. The soak remains stopped and
+the live campaign remains pending.
 Successful renewal and historical payments do not establish full acceptance.
 
 The earlier published candidate
@@ -125,13 +130,76 @@ match the reviewed preview; generation time and live observations differ.
 The adjacent review examined **802 generation-consumer relationships** across
 all **202 fleets** and identified the same defect in **17 generation-1
 commitments**: fleets **34–40 and 91–100**. Every affected consumer has its exact
-intent verified in the approved current ancestry. The production correction
-and deterministic authorized/unauthorized-consumption regressions are pending
-at this cutoff. The canceled `abae9a6` producer retained **13/13 child joins**
+intent verified in the approved current ancestry. At the earlier **10:38 UTC**
+cutoff, the correction and its regressions were still pending. The canceled
+`abae9a6` producer retained **13/13 child joins**
 (10 successful, 3 canceled); aggregate retained **3/3 joins** (1 successful,
 2 canceled). Both outer exits are **143**, and neither is a full-gate pass.
 [Native refusal, exact state changes and adjacent-consumer review](peerreview/evidence/FINAL-2-commitment-scope-refusal-20260914/README.md).
 [Closed gate commands, complete joins and cleanup](peerreview/evidence/FINAL-2-abae-gates-canceled-20260914/README.md).
+
+The qualified correction preserves the original replay plan, observation and
+receipt hash. If that original scope has no completed consumer, an immutable
+scope from the current approved plan can authenticate the exact consumer for a
+fleet whose renewal has completed. It requires the same deployment, approved
+ancestry, unchanged action intent and the persisted verified receipt. It does
+not accept a different consumer through an accepted-prior-intent alias. The
+adjacent review also examined **1,466 verified historical actions**, finding no
+source-intent, persisted-receipt-identity or successor-order discrepancy. The
+**14 unverified future lifecycle actions** are outside that completed-history
+review. These graph checks use retained artifacts; they are not another live
+RPC replay.
+
+Source `6271dcfceb1af8257b626aba79a6864eb3b7c986` completed a disjoint **33 + 69
+test** selection in both modes: normal execution ended by **11:00:41 UTC**, and
+race execution by **11:11:27 UTC**. All seven new top-level regressions passed.
+The constructor-path regression also passed three consecutive fresh normal
+processes on the same source and binary. A disposable variant restoring the
+entire old consumption predicate produced the expected **two failures and two
+passing controls**. Synthetic cases cover authorized descendant completion,
+missing or tampered receipts, foreign plans and deployments, changed or aliased
+intents, missing renewal successors, both readers and adjacent action families.
+These are scoped correction results, distinct from the subsequently canceled
+full gates.
+[Deterministic reproductions, exact test outcomes and adjacent review](peerreview/evidence/FINAL-2-commitment-scope-qualification-20260914/README.md).
+
+The same qualified Go bytes were published in `84b6ca6`, followed by the
+release-lock-only commit `afd7b26`. The final executable has SHA-256
+`dc516d630ace555889e7c0705381ff0ed1d305824f45ad18ddf8d825ed5b46d4`, clean VCS
+revision `afd7b26`, and identical before/after observations across all 13
+repositories, with source-pair SHA-256
+`47b08d8d42383a9b2a4d3def6f21ba22b4fef6a8d431de54e13d158e7e751c2e`.
+The adopted plan
+`0x3bd2e4ea748c73df475937b81b722c4dd3306fb83ce6e5f29ef3444e0e8abd95`
+preserves all **3,521 actions**, all **1,212 completed renewals**, and the
+existing spending limits. The repair remains **6,000 alpha**, with minimum
+credit **5,999,999,999,999 alpha-rao**, within **37,250 alpha lifetime**. Full
+producer success remains a launch prerequisite; the aggregate may overlap the
+live campaign but must also pass for final acceptance.
+[Closed bootstrap, release-lock, publication, final CLI and plan-review evidence](peerreview/evidence/FINAL-2-afd7-preparation-20260914/SUMMARY.md).
+
+The `afd7b26` repair attempt completed the batched **1,000/1,000** checks and
+reached the **2,200/3,456** carried-action progress marker before exiting **1**.
+The failing action is `precompile.commitment-restore`: its original transaction
+`0x39b6517b172e031ee2cda35cf3e2e0ba85119328de1502fb2984a9e66833b126`
+finalized at native block **7,983,155** and was verified at journal sequence
+**10,170**, before fleet 1's completed generation-3 renewal. The non-fleet action
+was excluded from renewal-aware historical routing, and its live postcondition
+still demanded the restored generation-2 commitment as current state. The
+required correction and deterministic regressions are in progress. This
+diagnosis uses the native refusal, source and retained receipts; it does not
+claim a fresh independent replay of the original restore transaction.
+
+The native result preserves the journal, supervisor state/config and public
+identity bytes exactly. Only plan/config admission changed, and all **3,521
+actions** remain equal to the reviewed preview. There are **zero journal
+entries** for repair `alpha.repair.validator.1.7`. The canceled producer retained
+**13/13 joins** (10 successful, 3 canceled); aggregate retained **5/5 joins**
+(3 successful, 2 canceled). Both outer exits are **143**, all owned processes
+and services were reaped, and no original failing test phase was reported.
+These cancellations are not full-gate passes.
+[Exact closed native refusal and unchanged-state record](peerreview/evidence/FINAL-2-afd7-preparation-20260914/native-refusal/README.md),
+[closed gate commands, joins and cleanup](peerreview/evidence/FINAL-2-afd7-gates-canceled-20260914/SUMMARY.md).
 
 The prior setup attempt exited 1 at **06:41:20 UTC** because its old refresh
 postcondition expected binding version count 2 while two fleets had later,
@@ -292,7 +360,7 @@ reproduction of the findings, not an all-check pass.
 | --- | --- | --- |
 | Production cadence was never scheduled | The first run used 300/50/150/5. A `production_cadence` YAML entry does not prove scheduling or activation. | Retain the successful policy-scheduling transaction, effective epoch, finalized policy state showing **360/60/180/6**, and **three consecutive fully observed epochs** under that active policy. The five accelerated epochs remain a separate prerequisite. Pending. |
 | `max_allowed_validators=64`, target ≤56 | The [whitepaper](../WHITEPAPER.md) calls this root-controlled/runtime-dependent. The [compatibility policy](../deploy/testnet/hyperparams.yml) already requires exactly 64. The user has explicitly directed this run to work with the real limit. | **Use 64; reaching 56 is not a testnet prerequisite.** Retain finalized value, actual permits, UID occupancy and 200-head selection evidence from the run. Report the difference from the whitepaper target without claiming ≤56 compliance. No parameter change is needed. |
-| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. The old repair is already credited. | The unsubmitted **3,750-alpha** repair became insufficient at the 17:10 UTC snapshot. The user approved replacing it with **one 6,000-alpha repair within 37,250 alpha lifetime**. Both native attempts stopped before submitting the transfer; the second exposed stale provisional staging configuration at 05:22:14 UTC on 14 September. Retain the finalized debit/credit and a complete census proving ≥65%, monitor the 60% floor, and report the end-of-run share separately. |
+| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. The old repair is already credited. | The unsubmitted **3,750-alpha** repair became insufficient at the 17:10 UTC snapshot. The user approved replacing it with **one 6,000-alpha repair within 37,250 alpha lifetime**. Attempts stopped before submitting that transfer on the preparation defects retained above; the latest exposed the precompile restore check. Retain the eventual finalized debit/credit and a complete census proving ≥65%, monitor the 60% floor, and report the end-of-run share separately. |
 | Epoch 309 paid despite capturing zero | `RootMissed(308)` carried each operator's funded amount into its own epoch-309 entitlement. | The missing historical transition is reproduced below from both nodes. Every new paid epoch must similarly explain its funding source, carry, payments and remainder per operator. Historical reporting omission closed; fresh-run accounting pending. |
 | Artifact signers differ from registered root signers | A recoverable artifact signature establishes provenance. The coordinator authorizes the root commitment transaction using the epoch's registered `rootSigner`; these are separate checks. | Preserve each recovered artifact signer, committed artifact hash/root, transaction sender and epoch-specific registered root signer. The collector/verifier correction is integrated into candidate `4fda909` and its affected tests passed normally and under race; retained keys and old signatures stay unchanged. Fresh-run evidence remains pending. |
 | Chain verification cannot establish off-chain usage or lifecycle | A committed hash authenticates bytes, not the truth of usage, restart or gate assertions within them. | Label chain-reproduced, independently recomputed, artifact-only, and locally executed evidence separately. Link exact artifacts, executable/source identity, commands, actual exits, process generations and shutdown outcomes. Pending full-run evidence. |

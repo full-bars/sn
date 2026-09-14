@@ -1,0 +1,21 @@
+{
+  "reviewed_at": "2026-09-14T11:02:20.137445+00:00",
+  "source": "6271dcfceb1af8257b626aba79a6864eb3b7c986",
+  "normal_explicit_passes": 102,
+  "new_roots": 7,
+  "shards": [
+    {
+      "shard": "a33",
+      "roots": 33,
+      "run_meta": "started_utc=2026-09-14T10:59:37Z\nbody_exit=0\ntee_exit=0\nconverter_exit=0\npost_source_exit=0\npost_binary_exit=0\noutcomes_exit=0\nended_utc=2026-09-14T11:00:28Z\n",
+      "events_sha256": "c76a1e20e3a6b0c9199d1d92504ce865b8aaa78b385dcb518eee565a2a8a5884"
+    },
+    {
+      "shard": "b69",
+      "roots": 69,
+      "run_meta": "started_utc=2026-09-14T10:59:37Z\nbody_exit=0\ntee_exit=0\nconverter_exit=0\npost_source_exit=0\npost_binary_exit=0\noutcomes_exit=0\nended_utc=2026-09-14T11:00:41Z\n",
+      "events_sha256": "19e51fa599536736f52ec1825243ec2f3b65f95b9782ba29b38e78115d22e1be"
+    }
+  ],
+  "normal_only": true
+}

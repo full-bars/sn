@@ -1,0 +1,10 @@
+[release gate] started isolation-regressions (pid 2499622)
+[release gate] started sn-go (pid 2499727)
+[release gate] joined isolation-regressions (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-commitment-scope-globalmodcache/tmp/urnetwork-release-gate.yCfokMoe/logs/isolation-regressions.log
+[release gate] started sn-all-normal (pid 2543723)
+[release gate] joined sn-go (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-commitment-scope-globalmodcache/tmp/urnetwork-release-gate.yCfokMoe/logs/sn-go.log
+[release gate] started sn-core-race (pid 2544193)
+[release gate] joined sn-core-race (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-commitment-scope-globalmodcache/tmp/urnetwork-release-gate.yCfokMoe/logs/sn-core-race.log
+[release gate] started sn-validator-race (pid 2549346)
+[release gate] joined sn-validator-race (exit 143); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-commitment-scope-globalmodcache/tmp/urnetwork-release-gate.yCfokMoe/logs/sn-validator-race.log
+[release gate] joined sn-all-normal (exit 143); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-commitment-scope-globalmodcache/tmp/urnetwork-release-gate.yCfokMoe/logs/sn-all-normal.log

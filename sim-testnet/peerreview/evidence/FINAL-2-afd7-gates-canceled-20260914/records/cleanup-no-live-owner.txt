@@ -1,0 +1,5 @@
+observed_at_utc	2026-09-14T11:46:21Z
+closure_event_utc	2026-09-14T11:43:53Z
+scope	producer-commitment-scope-globalmodcache; aggregate-commitment-scope-globalmodcache
+matching_live_gate_owner_count	0
+result	no matching capture wrapper, inner gate script, release-gate child, or test/service owner remains

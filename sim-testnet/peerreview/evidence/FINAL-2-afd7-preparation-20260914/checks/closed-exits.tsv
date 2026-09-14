@@ -1,0 +1,10 @@
+stage	started_at	finished_at	exit	closed_record
+bootstrap_cli_outer	2026-09-14T11:05:19Z	2026-09-14T11:06:03Z	0	RESULT-BOOTSTRAP-CLI-BUILD.json + outer status records
+bootstrap_cli_build	2026-09-14T11:05:19Z	2026-09-14T11:06:02Z	0	RESULT-BOOTSTRAP-CLI-BUILD.json + build status records
+native_release_lock_preview	2026-09-14T11:08:32.968129+00:00	2026-09-14T11:08:34.571180+00:00	0	RESULT.json
+native_release_lock_apply	2026-09-14T11:08:34.573152+00:00	2026-09-14T11:08:37.390798+00:00	0	RESULT.json
+afd7_publication	2026-09-14T11:09:51.742362+00:00	2026-09-14T11:09:54.878116+00:00	0	RESULT.json
+final_cli_outer	2026-09-14T11:11:19Z	2026-09-14T11:12:09Z	0	RESULT-FINAL-CLI-BUILD.json + outer status records
+final_cli_build	2026-09-14T11:11:20Z	2026-09-14T11:12:08Z	0	RESULT-FINAL-CLI-BUILD.json + build status records
+closed_native_refusal	2026-09-14T11:20:02.123874+00:00	2026-09-14T11:41:35.465689+00:00	1	separately labeled public-safe RESULT/CLOSURE/stderr
+native_setup_preview	2026-09-14T11:13:43.382669+00:00	2026-09-14T11:16:46.791740+00:00	0	RESULT.json

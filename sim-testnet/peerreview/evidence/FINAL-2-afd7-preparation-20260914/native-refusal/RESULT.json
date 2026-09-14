@@ -1,0 +1,59 @@
+{
+  "exit": 1,
+  "started_at": "2026-09-14T11:20:02.123874+00:00",
+  "finished_at": "2026-09-14T11:41:35.465689+00:00",
+  "state_before": {
+    "plan.json": {
+      "sha256": "b4a61f0da24804ba6c7318e9a335dec31f18bbe1a3629b279ab24a4d12299951",
+      "bytes": 5948303
+    },
+    "journal.jsonl": {
+      "sha256": "0f3b7ea89a1cedd3da435be13e26d8b824b22ae4ff0fa4573d17e3ef6d743b5c",
+      "bytes": 11951559
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "0f0c43858807ebdec8bbd60624baf1131b96728dcbcfbb26af6467d4249aa320",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "state_after": {
+    "plan.json": {
+      "sha256": "4f78b35fa856f679ab1243a1a0b0bbd5847f948eddd51249e66937ee0bc8bad4",
+      "bytes": 5948372
+    },
+    "journal.jsonl": {
+      "sha256": "0f3b7ea89a1cedd3da435be13e26d8b824b22ae4ff0fa4573d17e3ef6d743b5c",
+      "bytes": 11951559
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "63b5a79e8c9f62449d5e043d8c33ab7efb451a5f80e86d47c4ede05c2a0ae455",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "060de6c635efff325470a15146b1a5f99a922dfc633719b15135152268a5c8f9"
+}

@@ -1,0 +1,51 @@
+diff --git a/sim-testnet/fleet_commitment_recovery.go b/sim-testnet/fleet_commitment_recovery.go
+index c964995..ba1bc5a 100644
+--- a/sim-testnet/fleet_commitment_recovery.go
++++ b/sim-testnet/fleet_commitment_recovery.go
+@@ -10,7 +10,6 @@ import (
+ 	"fmt"
+ 	"os"
+ 	"path/filepath"
+-	"slices"
+ 	"strconv"
+ 	"strings"
+ )
+@@ -69,37 +68,7 @@ func (self *Executor) consumedFleetCommitmentGeneration(fleet int, generation ui
+ 	if err != nil {
+ 		return "", false, err
+ 	}
+-	if exactVerifiedPlanAction(self.plan, self.journal.Entries(), coordinates.ConsumerID) {
+-		return coordinates.ConsumerID, true, nil
+-	}
+-	scope := self.fleetCommitmentHistory
+-	if scope == nil || !slices.Contains(scope.fleets, fleet) {
+-		return coordinates.ConsumerID, false, nil
+-	}
+-	if scope.plan == nil || !scope.plan.allowedPlanHashes()[self.plan.PlanHash] || scope.plan.DeploymentID != self.plan.DeploymentID {
+-		return coordinates.ConsumerID, false, errors.New("historical fleet consumer scope does not approve its source plan")
+-	}
+-	consumer, err := exactPlanActionByID(self.plan, coordinates.ConsumerID)
+-	if err != nil {
+-		return coordinates.ConsumerID, false, err
+-	}
+-	approvedConsumer, err := exactPlanActionByID(scope.plan, coordinates.ConsumerID)
+-	if err != nil || approvedConsumer.IntentHash != consumer.IntentHash {
+-		return coordinates.ConsumerID, false, errors.New("historical fleet consumer intent differs from approved continuation")
+-	}
+-	// A later revision can complete a consumer which failed in the original
+-	// plan. Only its exact intent and authenticated durable receipt count here.
+-	consumer.AcceptedPriorIntentHashes = nil
+-	authorized := *self
+-	authorized.plan = scope.plan
+-	entry, verified := authorized.verifiedActionEntry(consumer)
+-	if !verified {
+-		return coordinates.ConsumerID, false, nil
+-	}
+-	if _, err := authorized.readPersistedPostcondition(entry); err != nil {
+-		return coordinates.ConsumerID, false, fmt.Errorf("historical fleet consumer %s: %w", coordinates.ConsumerID, err)
+-	}
+-	return coordinates.ConsumerID, true, nil
++	return coordinates.ConsumerID, exactVerifiedPlanAction(self.plan, self.journal.Entries(), coordinates.ConsumerID), nil
+ }
+ 
+ // Parses only canonical initial and refresh action ids from the configured

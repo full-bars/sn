@@ -1,0 +1,14 @@
+6-=== RUN   TestFleetCommitmentHistoryConsumesApprovedDescendant
+7:    fleet_commitment_history_test.go:90: fleet 1 generation 1 descendant consumer: id=fleet.install.batch.1 consumed=false err=<nil>
+8---- FAIL: TestFleetCommitmentHistoryConsumesApprovedDescendant (0.04s)
+--
+10-=== RUN   TestFleetCommitmentHistoryScopeRequiresCompletedRenewal
+11:    fleet_commitment_history_test.go:277: completed renewal lost the descendant consumer: consumed=false err=<nil>
+12---- FAIL: TestFleetCommitmentHistoryScopeRequiresCompletedRenewal (0.99s)
+--
+14-=== RUN   TestFleetCommitmentHistoryScopeRetainsAdjacentActionFamilies
+15:--- PASS: TestFleetCommitmentHistoryScopeRetainsAdjacentActionFamilies (0.00s)
+16-=== NAME  
+17-=== RUN   TestFleetCommitmentConsumptionRequiresTheExactGenerationConsumer
+18:--- PASS: TestFleetCommitmentConsumptionRequiresTheExactGenerationConsumer (0.26s)
+19-=== NAME  
