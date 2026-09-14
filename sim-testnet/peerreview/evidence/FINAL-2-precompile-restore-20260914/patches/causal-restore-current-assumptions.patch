@@ -1,0 +1,35 @@
+--- a/sim-testnet/fleet_renewal_history.go
++++ b/sim-testnet/fleet_renewal_history.go
+@@ -16,12 +16,6 @@
+ 		return nil, nil
+ 	}
+ 	id := action.ID
+-	if id == "precompile.commitment-restore" {
+-		if action.Kind != "substrate-extrinsic" || action.Target != "head-fleet:1" || action.Parameters["canonical_generation"] != strconv.FormatUint(precompileCanonicalFleetGeneration, 10) || action.Parameters[fleetCommitmentStorageParameter] != fleetCommitmentStorageV2 {
+-			return nil, errors.New("renewed historical precompile restore has a foreign fleet or generation")
+-		}
+-		return []int{1}, nil
+-	}
+ 	if strings.HasPrefix(id, "fleet.refresh.batch.") || strings.HasPrefix(id, "fleet.install.batch.") {
+ 		batch := suffixInt(id)
+ 		if batch < 1 {
+--- a/sim-testnet/precompile_restore_history.go
++++ b/sim-testnet/precompile_restore_history.go
+@@ -28,7 +28,7 @@
+ 	if reader == nil {
+ 		return errors.New("precompile restore native reader is unavailable")
+ 	}
+-	if !historical {
++	if true {
+ 		current, err := reader.fleetCommitmentFinalized(hotkey)
+ 		if err != nil || current == nil || current.Hash != canonical || current.CommitmentBlock != commitment.RestoreCommitmentBlock {
+ 			return conformanceMismatch("restored generation-2 commitment is not current finalized state", err)
+@@ -59,7 +59,7 @@
+ 		return nil, errors.New("precompile restore historical observation is unavailable")
+ 	}
+ 	snapshot := *evidence
+-	if record.Observed["evidence_hash"] != evidence.EvidenceHash {
++	if false {
+ 		snapshot.Battery = PrecompileBatteryEvidence{}
+ 		snapshot.Seed = PrecompileValueStep{}
+ 		snapshot.Forward, snapshot.Back = PrecompileMoveStep{}, PrecompileMoveStep{}

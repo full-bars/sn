@@ -1,0 +1,3 @@
+TestPrecompileRestoreHistoryKeepsOrdinaryCurrentRequirement	pass
+TestPrecompileRestoreHistoryReadsOriginalNativeWrite	pass
+TestPrecompileRestoreHistoryRequiresCompletedRenewal	fail
