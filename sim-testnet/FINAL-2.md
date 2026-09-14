@@ -2,20 +2,25 @@
 
 **Status: in progress; `final_acceptance=false`.** This report covers the next
 full finalization of testnet chain **945**, subnet **521**, under
-[FINALIZE.md](../FINALIZE.md). At the **11:44 UTC on 2026-09-14** observation
+[FINALIZE.md](../FINALIZE.md). At the **13:58 UTC on 2026-09-14** observation
 cutoff, all **1,212 renewal transactions** across **202 fleets** have finalized
-and passed their native postcondition checks. The corrected candidate is now
-published as `afd7b26c9c1b2847e8f73648e6a6eac13928453e`. Its historical-consumption
-correction passed **102 affected tests normally and with race detection**, with
-deterministic pre-fix reproductions and adjacent-path controls. The approved
-6,000-alpha repair ran from **11:20:02 to 11:41:35 UTC**, admitted the reviewed
-replacement plan and progressed beyond the previous failure to the
-**2,200/3,456** carried-action marker. It then stopped on an adjacent precompile
-restore check that still requires generation 2 to be current after an approved
-generation-3 renewal. No repair transaction was submitted. Both full gates
-were canceled and joined at **11:43:53 UTC** because another source correction
-is required; neither had reported a test failure. The soak remains stopped and
-the live campaign remains pending.
+and passed their native postcondition checks. The approved **6,000-alpha repair
+has not been submitted**, and the soak remains stopped. The last repair attempt
+stopped at the **2,200/3,456** carried-action marker because a historical
+precompile restore was incorrectly required to remain current after an approved
+renewal. That correction has now passed **44 affected roots normally and with
+race detection**, with deterministic pre-fix controls. A separate, previously
+recorded battery failure comes from an unsupported Blake2f precompile assumption
+on runtime 455. Its corrected Solidity checks and causal controls are closed.
+The replacement probe must retain the completed native proof without resending
+it. Cumulative source `4f59d3f30f59ba612c67b266e0d1310b9c155ed3` is frozen locally;
+its **100-root normal and race runs each passed 99 roots and failed the same
+archive-constructor test**. Two further runtime-attestation tests reproduce a
+stale 31-file expectation after the manifest expanded to 33 files. Those failures
+are retained and their corrections are in progress. This candidate is not
+deployed or qualified. The previous `afd7b26` full gates were canceled
+and joined at **11:43:53 UTC**; neither had reported a test failure, and neither
+is a full-gate pass. The full candidate gates and live campaign remain pending.
 Successful renewal and historical payments do not establish full acceptance.
 
 The earlier published candidate
@@ -200,6 +205,73 @@ and services were reaped, and no original failing test phase was reported.
 These cancellations are not full-gate passes.
 [Exact closed native refusal and unchanged-state record](peerreview/evidence/FINAL-2-afd7-preparation-20260914/native-refusal/README.md),
 [closed gate commands, joins and cleanup](peerreview/evidence/FINAL-2-afd7-gates-canceled-20260914/SUMMARY.md).
+
+The restore correction authenticates the original generation-2 native receipt
+and both recorded observation hashes at their historical checkpoint. Completed,
+authenticated generation-3 renewals supply the scope that permits this historical
+check; ordinary live conformance still requires current generation 2. The
+adjacent evidence-file issue is also covered: later battery/value phases may
+extend the file, while replay reconstructs the exact original restore phase
+without changing the file. Source `52def6334e72f77a0b2e3b655a37ec2d0df8d3fc`
+passed **44 top-level roots and 48 terminal test events in each mode**. The first
+full pass and two further exact 24-parent/28-event runs close the affected
+confirmation sequence. Two isolated old-behavior controls produced respectively
+**three expected failures/two passes** and **one expected dispatch failure/two
+passes**. Incorrect working-directory and missing-verbose-event attempts remain
+recorded separately and are not qualifying passes. The published review material
+contains the causal patches, exact test membership and expected/actual outcome
+tables; retained raw execution files are referenced by hash and are not copied
+into this compact bundle.
+[Restore correction and deterministic qualification](peerreview/evidence/FINAL-2-precompile-restore-20260914/SUMMARY.md).
+
+The battery's original failure was recorded at journal sequence **10,172** on
+**2026-09-11 at 15:22:15 UTC**: `Blake2b: blake2f failed`. Bounded diagnosis on the
+owned LAN node reproduced it at pinned EVM block **0x7a206e**. Runtime 455's
+pinned dispatcher maps address **0x09** to `Bn128Add`, whereas the old library
+assumed Ethereum's Blake2f precompile. Its native address mapping is at
+**0x080c**. The correction uses that mapping with an exact 32-byte result, checks
+a known answer, and refuses missing, failed, malformed or zero self mappings
+without querying zero custody. Other battery diagnostics remain observable.
+These reads share the owned backend (`independent_rpc=false`); they are not an
+independent public-node reproduction.
+
+Battery source `d7142cc` passed **212 Solidity tests across 18 suites**, but its
+static scan found a real Medium finding for the conditionally assigned
+`selfMapped` local. Corrected source `bac57484` explicitly initializes it to
+false: its **16 probe tests**, fresh artifact build and **three probe static
+checks** pass. The other deployable roots' creation and runtime bytes remain
+exact; the probe changes from **7,265 to 6,755 runtime bytes**, with unchanged
+ABI, constructor and storage layout. Isolated old-library/old-probe variants
+reproduce the whole-battery revert, failed-self-mapping revert and zero-custody
+assertion failure. A causal wrapper's early stop is retained as a command
+incident; only its unexecuted body was resumed. These local results do not
+establish that the replacement probe is deployed or passes on-chain conformance.
+[Runtime provenance, original static failure, corrected results and causal controls](peerreview/evidence/FINAL-2-precompile-battery-20260914/SUMMARY.md).
+
+The cumulative candidate adds **21 deterministic probe-successor tests**, using
+synthetic identities and persisted fixtures under
+[Connect's test policy](../../connect/CODESTYLE.md). They cover preservation of
+the completed native write/restore, exact core artifacts, original signed repair
+authority, unchanged spend limits, receipt/evidence substitution, and restart
+after each probe value phase. Adjacent review found that value calls advance the
+deployer nonce beyond CREATE, and that same-plan recovery can record the same
+finalization again. The correction admits only the exact ordered probe-call
+prefix and identical recovery records; gaps, unrelated calls, changed identities
+and resending the native drill remain rejected.
+
+The combined normal body closed with exit **1 at 13:44:28 UTC**, and race with
+exit **1 at 13:51:59 UTC**. Each recorded **99 top-level passes, one failure and
+29 descendant passes**. Their sole failure,
+`TestPrecompileProbeSuccessorConstructsOriginalNativeReplay`, reports that the
+authenticated archive differs from the current fixture's original approval or
+retained custody. Both source/binary identities remained unchanged, conversion
+stderr was empty, and the race run reported no data race. The same compiled
+normal binary separately reproduced both stale runtime-attestation tests. The
+33-file correction retains the exact historical 29-file runtime-454 census and
+adds synthetic missing-path, duplicate, substitution and digest controls.
+Constructor diagnosis and corrected qualification remain pending; none of
+these failed runs is reported as a candidate pass. The final candidate gates
+and on-chain probe replacement have not started.
 
 The prior setup attempt exited 1 at **06:41:20 UTC** because its old refresh
 postcondition expected binding version count 2 while two fleets had later,

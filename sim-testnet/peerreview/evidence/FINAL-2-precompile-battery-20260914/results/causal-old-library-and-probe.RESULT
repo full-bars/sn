@@ -1,0 +1,1 @@
+EXPECTED-FAIL CONTROL PASS: source base bac57484; restoring only afd7 Blake2b.sol and STSubnetProbe.sol produced Forge exit 1 with exact Blake2b: blake2f failed whole-battery revert. This demonstrates the old runtime455 0x09 route failure deterministically.

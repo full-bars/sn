@@ -1,0 +1,691 @@
+diff --git a/docs/spec/runtime-455-audit.md b/docs/spec/runtime-455-audit.md
+index db88c8f..5ccf42c 100644
+--- a/docs/spec/runtime-455-audit.md
++++ b/docs/spec/runtime-455-audit.md
+@@ -40,9 +40,10 @@ upstream mainnet proposal/timepoint fields must be empty. Never reuse454's tag
+ or mainnet timepoint. Historical451–454 artifacts stay available only through
+ their strict evidence/replay identities.
+ 
+-The existing source checker retains its historical454 command name and29-file
+-attestation, adds the exact31-file455 manifest (the former29 plus both changed
+-proxy files), and attests metadata source for all five artifacts. The existing
++The source checker retains its historical454 command name and29-file
++attestation. Its455 manifest now includes33 files: the former29, both changed
++proxy files, and the precompile dispatcher and address-mapping implementation.
++It also attests metadata source for all five artifacts. The existing
+ exact-Wasm checker runs all five finite probes concurrently. The live identity
+ and stake tests remain explicit read-only opt-ins and now pin455.
+ 
+@@ -52,3 +53,33 @@ Original raw Rpc/CI responses, ZIP, digest and probe receipts were retained unde
+ inputs, not the final signed campaign archive or independent storage-trie
+ proofs. The live campaign must retain its own original observations and satisfy
+ the final on-chain and artifact replay requirements.
++
++## Custody mapping correction
++
++Runtime455's [pinned dispatcher](https://github.com/RaoFoundation/subtensor/blob/67dcf7f791dc495064c293f080a0702cb433e51e/precompiles/src/lib.rs#L280-L290)
++routes address `0x09` to BN128 addition. It does not expose Ethereum's EIP-152
++Blake2 compression precompile. A correct 213-byte EIP-152 request therefore
++cannot establish custody on this runtime; Foundry's native Ethereum mapping
++previously hid that mismatch from the local probe tests.
++
++The [address-mapping precompile](https://github.com/RaoFoundation/subtensor/blob/67dcf7f791dc495064c293f080a0702cb433e51e/precompiles/src/address_mapping.rs#L38-L72)
++is at index2060 (`0x080c`). `addressMapping(address)` has selector `0x0494cd9a`
++and returns the runtime's raw32-byte AccountId. The [runtime configuration](https://github.com/RaoFoundation/subtensor/blob/67dcf7f791dc495064c293f080a0702cb433e51e/runtime/src/lib.rs#L1074-L1084)
++uses `HashedAddressMapping<BlakeTwo256>`. The probe keeps the known answer
++`mirror(0x1111111111111111111111111111111111111111)` =
++`0x32f955c958e51189a4921aed41ef00818f7368dfaec8d9969f091006f8066228`,
++and the Go harness independently checks the probe's own coldkey.
++
++`Blake2b.mirror` now calls that runtime mapping and requires exactly32 returned
++bytes. `hash256` remains a local Ethereum reference used by tests and Foundry
++scripts; Subtensor contract custody never falls back to it. A failed mapping
++leaves the battery's custody checks unsuccessful while preserving diagnostics
++from the other precompile families. The full conformance gate still rejects it.
++
++The probe constructor, immutable owner/netuid, storage and battery ABI remain
++the same. Its deployed code is immutable, so an existing failed probe needs a
++new, explicitly bound deployment and fresh battery/value observations. Native
++commitment evidence belongs to its original source/probe generation and must
++be carried with that provenance rather than replayed over a later fleet
++renewal. Release coordinator, reserve, settlement vault and fleet contracts do
++not import this library; this correction does not require replacing them.
+diff --git a/docs/spec/runtime-v455-source.sha256 b/docs/spec/runtime-v455-source.sha256
+index 44ef4c0..0a0f18f 100644
+--- a/docs/spec/runtime-v455-source.sha256
++++ b/docs/spec/runtime-v455-source.sha256
+@@ -22,7 +22,9 @@ af62971c4468d95d4e09d083ee5567eb612b0cb39192096623e1ac9ef6c895b2  pallets/subten
+ d33ab324f36bb8096e9f36e6ea70b73d6d6ee094fa30ec51346d737ad70c696a  pallets/subtensor/src/tests/networks.rs
+ a6816892d623a794fa2cb54c8368935dbaf1decb27da92b7ecb655fd8955016c  pallets/subtensor/src/tests/swap_hotkey_with_subnet.rs
+ a40fc6cc1bb38ed07f0650df7af352152d6ac9941c48b6062133a93c42bd2ca6  pallets/subtensor/src/utils/misc.rs
++92015242464366decc76c9de0eedddba8ff35793c69401afc4ed45b54e977dd7  precompiles/src/address_mapping.rs
+ a58619eadcdf08a000b6d94e7ca01037a181597718268d11e98d4c8a1ce83d15  precompiles/src/balance_transfer.rs
++9a6b78cdad3aa54d6519c1268515bd83e41ead8e2dd7c416ffb87e55c5f9fb24  precompiles/src/lib.rs
+ f5ed6dd377521f7cd2f1d693f3488c4d0a93188b4871815e2effcb82a31d9682  primitives/share-pool/src/lib.rs
+ 6f27f32d953abd9d575abbce59830f17d0d6e2e46be726967d446490d63c4ec3  runtime/src/lib.rs
+ cee455a93bfa30753473f110d31caf659d3500b4464f9d45c58e1584e97545c6  runtime/src/proxy_filters/call_groups.rs
+diff --git a/evm/script/Deploy.s.sol b/evm/script/Deploy.s.sol
+index 2d2451d..436ff42 100644
+--- a/evm/script/Deploy.s.sol
++++ b/evm/script/Deploy.s.sol
+@@ -60,12 +60,12 @@ contract Deploy is Script {
+ 
+         vm.startBroadcast();
+         STReserveSink reserve = new STReserveSink(
+-            cfg.netuid, cfg.reserveHotkey, Blake2b.mirror(deployed.reserveSink), cfg.deployer
++            cfg.netuid, cfg.reserveHotkey, _localMirror(deployed.reserveSink), cfg.deployer
+         );
+         STSettlementVault vault = new STSettlementVault(
+             cfg.netuid,
+             cfg.escrowHotkey,
+-            Blake2b.mirror(deployed.settlementVault),
++            _localMirror(deployed.settlementVault),
+             _minimumClaimTTLBlocks(cfg.policy.epochBlocks, cfg.policy.claimTTLEpochs),
+             cfg.minimumTransferTaoRao,
+             cfg.deployer
+@@ -82,7 +82,7 @@ contract Deploy is Script {
+                     cfg.netuid,
+                     cfg.owner,
+                     cfg.guardian,
+-                    Blake2b.mirror(deployed.coordinatorProxy),
++                    _localMirror(deployed.coordinatorProxy),
+                     vault,
+                     reserve,
+                     cfg.commitmentOracle,
+@@ -108,6 +108,12 @@ contract Deploy is Script {
+         console2.log("STCoordinator proxy:         ", deployed.coordinatorProxy);
+     }
+ 
++    /// @dev Computes constructor inputs in Foundry's local EVM. The live
++    ///      runtime's 0x080c mapping is verified separately by STSubnetProbe.
++    function _localMirror(address account) internal view returns (bytes32) {
++        return Blake2b.hash256(abi.encodePacked(bytes4(0x65766d3a), account));
++    }
++
+     /// Required: ST_NETUID, ST_DEPLOYER, ST_OWNER, ST_GUARDIAN,
+     /// ST_COMMITMENT_ORACLE, ST_RESERVE_HOTKEY, ST_ESCROW_HOTKEY,
+     /// ST_POLICY_HASH, ST_REGISTRATION_BURN_LIMIT_RAO,
+diff --git a/evm/script/SP1Conformance.s.sol b/evm/script/SP1Conformance.s.sol
+index 09468bf..6ea0b9e 100644
+--- a/evm/script/SP1Conformance.s.sol
++++ b/evm/script/SP1Conformance.s.sol
+@@ -16,16 +16,11 @@ import {Blake2b} from "../src/lib/Blake2b.sol";
+ ///         `sim-testnet` owns the release execution; this script is only an
+ ///         interactive developer diagnostic.
+ ///
+-/// @dev Two truths shape this script:
+-///      1. Only **blake2f (0x09)** is a standard EVM precompile forge can
+-///         simulate locally. The subtensor precompiles (0x402 ed25519, 0x802
+-///         metagraph, 0x805 staking) are runtime-only — forge's local EVM
+-///         reverts on them, so this script does NOT call them in-body. It runs
+-///         the local blake2f known-answer sanity (the mirror the whole custody
+-///         model rests on) and then prints the exact `cast` commands that run
+-///         the real battery ON the node against the deployed probe.
+-///      2. The custody assumption is contract-scoped, so the battery must run
+-///         from the deployed `STSubnetProbe`, not from an EOA.
++/// @dev Foundry supplies Ethereum EIP-152 at 0x09, whereas runtime 455 supplies
++///      BN128 addition there. The local hash below is only a reference. Live
++///      custody uses addressMapping(address) at 0x080c and must be checked on
++///      the node together with the other runtime-only precompiles. The full
++///      battery runs from STSubnetProbe so stake reads use contract custody.
+ ///
+ /// Usage:
+ ///   # 1. local blake2f sanity + the playbook (no chain writes, no key needed):
+@@ -48,13 +43,14 @@ contract SP1Conformance is Script {
+     function run() external view {
+         console2.log("=== SP-1 conformance (local blake2f sanity + on-node playbook) ===");
+ 
+-        // --- 0x09 blake2f: the H160 -> ss58 mirror, faithfully simulable ---
+-        bytes32 got = Blake2b.mirror(0x1111111111111111111111111111111111111111);
++        // Local Ethereum hash reference; runtime 455 does not expose EIP-152.
++        bytes32 got = _localMirror(0x1111111111111111111111111111111111111111);
+         bytes32 want = 0x32f955c958e51189a4921aed41ef00818f7368dfaec8d9969f091006f8066228;
+-        console2.log("blake2f (0x09) mirror KAT:", got == want ? "PASS (lib)" : "FAIL");
++        require(got == want, "SP1: local mirror KAT failed");
++        console2.log("Local Ethereum EIP-152 mirror reference:", "PASS");
+         console2.logBytes32(got);
+         console2.log(
+-            "  ^ local forge blake2f. Confirm the NODE's 0x09 with: cast call <probe> \"mirrorExt(address)(bytes32)\" 0x1111111111111111111111111111111111111111 --rpc-url testnet"
++            "  Confirm the NODE's 0x080c mapping with: cast call <probe> \"mirrorExt(address)(bytes32)\" 0x1111111111111111111111111111111111111111 --rpc-url testnet"
+         );
+ 
+         // --- ed25519 (0x402) KAT constants, for a direct node check ---
+@@ -83,7 +79,7 @@ contract SP1Conformance is Script {
+         console2.log("STSubnetProbe deployed:", probe);
+         console2.log("  netuid:", netuid);
+         console2.log("  probe coldkey mirror(this):");
+-        console2.logBytes32(Blake2b.mirror(probe));
++        console2.logBytes32(_localMirror(probe));
+         console2.log("Fund that ss58 mirror with dust TAO to run the value-bearing checks.");
+         console2.log("Read battery (free, on-node):");
+         console2.log(
+@@ -92,4 +88,9 @@ contract SP1Conformance is Script {
+             "\"readBattery(bytes32,bytes32)((bool,bytes32,bool,bytes32,bool,bool,bool,bool,bool,bool,bool,uint16,bytes32,bytes32,bool,bool,uint16,bool,bool,uint256,uint256))\" <sampleHotkey> <knownAbsentHotkey> --rpc-url testnet"
+         );
+     }
++
++    /// @dev Local tooling only; never call Ethereum's 0x09 on Subtensor.
++    function _localMirror(address account) internal view returns (bytes32) {
++        return Blake2b.hash256(abi.encodePacked(bytes4(0x65766d3a), account));
++    }
+ }
+diff --git a/evm/src/STSubnet.sol b/evm/src/STSubnet.sol
+index d20d530..2d78500 100644
+--- a/evm/src/STSubnet.sol
++++ b/evm/src/STSubnet.sol
+@@ -243,8 +243,8 @@ contract STSubnet is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+ 
+     /// @notice Initializer (replaces the st_abi.json v1 constructor — UUPS).
+     /// @param selfColdkey_ bytes32(0) => compute mirror(address(this)) on-chain
+-    ///        via blake2f (0x09); pass an explicit value if 0x09 is unavailable
+-    ///        on the target runtime (SP-1 fallback).
++    ///        via the runtime's address mapping (0x080c); pass an explicit
++    ///        value only under the reviewed owner-gated fallback policy.
+     function initialize(
+         uint16 netuid_,
+         address owner_,
+@@ -764,7 +764,7 @@ contract STSubnet is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+     }
+ 
+     /// @notice SP-1 escape hatch: correct the contract's substrate coldkey if
+-    ///         the on-chain blake2f mirror computation mismatches the runtime.
++    ///         the configured custody mapping mismatches the runtime.
+     ///         Affects future stake measurements only (never finalized claims).
+     function setSelfColdkey(bytes32 selfColdkey_) external onlyOwner {
+         require(selfColdkey_ != bytes32(0), "ST: coldkey 0");
+@@ -859,9 +859,8 @@ contract STSubnet is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+         revert("ST: uid not found");
+     }
+ 
+-    /// @dev H160 -> AccountId32 mirror via blake2f (0x09). Virtual so tests /
+-    ///      an SP-1 fallback build can swap it if blake2f is unavailable on
+-    ///      the live runtime.
++    /// @dev H160 -> AccountId32 via the runtime's address mapping (0x080c).
++    ///      Virtual for tests and the reviewed owner-gated fallback build.
+     function _mirror(address account) internal view virtual returns (bytes32) {
+         return Blake2b.mirror(account);
+     }
+diff --git a/evm/src/lib/Blake2b.sol b/evm/src/lib/Blake2b.sol
+index 868965a..c2de4d8 100644
+--- a/evm/src/lib/Blake2b.sol
++++ b/evm/src/lib/Blake2b.sol
+@@ -1,18 +1,17 @@
+ // SPDX-License-Identifier: MIT
+ pragma solidity 0.8.24;
+ 
+-/// @title Blake2b — minimal single-block blake2b-256 via the EIP-152 `blake2f`
+-///        compression-function precompile (address 0x09, Istanbul+).
++/// @title Subtensor custody mapping and a local EIP-152 hash reference.
+ ///
+ /// @notice Purpose: compute the Subtensor EVM H160 -> AccountId32 "mirror":
+ ///         `mirror(addr) = blake2b_256("evm:" || addr)` (24-byte message), the
+ ///         Frontier `HashedAddressMapping` used by every subtensor precompile
+ ///         to derive the coldkey of an EVM caller (PLAN.md §3.6, D-10).
+ ///
+-/// @dev    Only messages of <= 128 bytes (one compression block) are supported —
+-///         that is all the mirror needs. Whether 0x09 exists on the subtensor
+-///         runtime is UNVERIFIED (SP-1); callers must treat failure as
+-///         "on-chain mirror unavailable" and fall back to the owner-gated path.
++/// @dev    `mirror` uses the runtime's addressMapping precompile at 0x080c.
++///         Runtime 455 maps 0x09 to BN128 addition, not EIP-152. `hash256` is
++///         only a single-block reference for local Ethereum/Foundry tooling;
++///         it must not be used as a Subtensor runtime hashing primitive.
+ library Blake2b {
+     /// @dev blake2b IV (RFC 7693).
+     ///      h[0] is pre-XORed with the parameter block 0x01010020:
+@@ -27,8 +26,9 @@ library Blake2b {
+     uint64 private constant IV7 = 0x5be0cd19137e2179;
+ 
+     address private constant BLAKE2F = address(0x09);
++    address private constant ADDRESS_MAPPING = address(0x080c);
+ 
+-    /// @notice blake2b-256 of `data` (data.length <= 128; unkeyed).
++    /// @notice Local Ethereum EIP-152 reference (unkeyed, data.length <= 128).
+     function hash256(bytes memory data) internal view returns (bytes32 digest) {
+         require(data.length <= 128, "Blake2b: >1 block");
+ 
+@@ -66,10 +66,15 @@ library Blake2b {
+         }
+     }
+ 
+-    /// @notice Subtensor/Frontier H160 -> AccountId32 mirror:
+-    ///         blake2b_256("evm:" || address).
++    /// @notice Runtime H160 -> AccountId32 mapping, checked against the
++    ///         blake2b_256("evm:" || address) known answer by the probe.
++    /// @dev The selector and raw bytes32 result match runtime 455's pinned
++    ///      precompiles/src/address_mapping.rs. Missing/malformed calls fail.
+     function mirror(address account) internal view returns (bytes32) {
+-        return hash256(abi.encodePacked(bytes4(0x65766d3a), account)); // "evm:"
++        (bool ok, bytes memory out) =
++            ADDRESS_MAPPING.staticcall(abi.encodeWithSignature("addressMapping(address)", account));
++        require(ok && out.length == 32, "Blake2b: address mapping failed");
++        return abi.decode(out, (bytes32));
+     }
+ 
+     /// @dev uint64 -> little-endian bytes8.
+diff --git a/evm/src/probe/STSubnetProbe.sol b/evm/src/probe/STSubnetProbe.sol
+index fbc45b4..fc6cffc 100644
+--- a/evm/src/probe/STSubnetProbe.sol
++++ b/evm/src/probe/STSubnetProbe.sol
+@@ -44,7 +44,7 @@ contract STSubnetProbe {
+     // Known-answer vectors (public, auditable — see docs/LAUNCH.md B1)
+     // ------------------------------------------------------------------
+ 
+-    /// @dev blake2f (0x09) KAT: mirror(0x1111...1111). Matches the value
++    /// @dev Runtime address-mapping (0x080c) KAT: mirror(0x1111...1111). Matches the value
+     ///      pinned in evm/test/STSubnet.t.sol (Python hashlib.blake2b).
+     address internal constant MIRROR_KAT_ADDR = 0x1111111111111111111111111111111111111111;
+     bytes32 internal constant MIRROR_KAT = 0x32f955c958e51189a4921aed41ef00818f7368dfaec8d9969f091006f8066228;
+@@ -118,7 +118,8 @@ contract STSubnetProbe {
+     // ------------------------------------------------------------------
+ 
+     struct Battery {
+-        // 0x09 blake2f (the H160 -> ss58 mirror; the whole custody model)
++        // 0x080c address mapping, verified against the blake2b custody KAT.
++        // Keep the existing tuple names/order for archived evidence readers.
+         bool blakeOk;
+         bytes32 mirrorKat; // observed mirror(MIRROR_KAT_ADDR)
+         bool blakeKatMatch; // == MIRROR_KAT
+@@ -152,7 +153,8 @@ contract STSubnetProbe {
+         view
+         returns (Battery memory b)
+     {
+-        // --- 0x09 blake2f, via the exact library STSubnet uses ---
++        // --- 0x080c address mapping, via the exact library STSubnet uses ---
++        bool selfMapped;
+         try this.mirrorExt(MIRROR_KAT_ADDR) returns (bytes32 m) {
+             b.blakeOk = true;
+             b.mirrorKat = m;
+@@ -160,6 +162,7 @@ contract STSubnetProbe {
+         } catch {}
+         try this.mirrorExt(address(this)) returns (bytes32 self) {
+             b.selfColdkey = self;
++            selfMapped = (self != bytes32(0));
+         } catch {}
+ 
+         // --- 0x402 ed25519 verify ---
+@@ -211,11 +214,16 @@ contract STSubnetProbe {
+         } catch {}
+ 
+         // --- 0x805 staking view: the probe's OWN stake at sampleHotkey ---
+-        bytes32 selfCk = Blake2b.mirror(address(this));
+-        try IStaking(ISTAKING_ADDRESS).getStake(sampleHotkey, selfCk, uint256(netuid)) returns (uint256 v) {
+-            b.stakeViewOk = true;
+-            b.sampleSelfStake = v;
+-        } catch {}
++        // Reuse the caught mapping result. A failed custody mapping must
++        // neither revert the whole battery nor query stake under a zero key.
++        if (selfMapped) {
++            try IStaking(ISTAKING_ADDRESS).getStake(sampleHotkey, b.selfColdkey, uint256(netuid)) returns (
++                uint256 v
++            ) {
++                b.stakeViewOk = true;
++                b.sampleSelfStake = v;
++            } catch {}
++        }
+         try IStaking(ISTAKING_ADDRESS).getNominatorMinRequiredStake() returns (uint256 v) {
+             b.nominatorMinimum = v;
+         } catch {}
+diff --git a/evm/test/Registration.t.sol b/evm/test/Registration.t.sol
+index 7cb2d95..218cf0a 100644
+--- a/evm/test/Registration.t.sol
++++ b/evm/test/Registration.t.sol
+@@ -127,7 +127,7 @@ contract RegistrationTest is STBase {
+     }
+ 
+     function test_initialize_explicitSelfColdkeyOverride() public {
+-        // SP-1 fallback: if blake2f is unavailable on the runtime, the mirror
++        // SP-1 fallback: if custody mapping is unavailable on the runtime, the mirror
+         // is passed in instead of computed on-chain
+         STSubnet impl = new STSubnet();
+         bytes32 explicitCk = keccak256("explicit-mirror");
+diff --git a/evm/test/SP1Probe.t.sol b/evm/test/SP1Probe.t.sol
+index 154b050..7a5aed3 100644
+--- a/evm/test/SP1Probe.t.sol
++++ b/evm/test/SP1Probe.t.sol
+@@ -11,6 +11,7 @@ import {IMetagraph_ADDRESS} from "../src/interfaces/metagraph.sol";
+ import {IED25519VERIFY_ADDRESS} from "../src/interfaces/ed25519Verify.sol";
+ import {ISR25519VERIFY_ADDRESS} from "../src/interfaces/sr25519Verify.sol";
+ import {INeuron_ADDRESS} from "../src/interfaces/neuron.sol";
++import {MockAddressMapping} from "./mocks/MockAddressMapping.sol";
+ import {
+     MockStakingV2,
+     MockMetagraph,
+@@ -62,6 +63,7 @@ contract SP1ProbeTest is Test {
+         vm.etch(IED25519VERIFY_ADDRESS, address(new MockEd25519()).code);
+         vm.etch(ISR25519VERIFY_ADDRESS, address(new MockSr25519()).code);
+         vm.etch(INeuron_ADDRESS, address(new MockNeuron()).code);
++        vm.etch(address(0x080c), address(new MockAddressMapping()).code);
+ 
+         vm.prank(deployer);
+         probe = new STSubnetProbe(NETUID);
+@@ -85,8 +87,8 @@ contract SP1ProbeTest is Test {
+ 
+         STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
+ 
+-        // 0x09 blake2f — the custody-model KAT
+-        assertTrue(b.blakeOk, "blake2f callable");
++        // 0x080c runtime mapping — the custody-model KAT
++        assertTrue(b.blakeOk, "address mapping callable");
+         assertEq(b.mirrorKat, MIRROR_KAT, "mirror KAT");
+         assertTrue(b.blakeKatMatch, "mirror KAT matches");
+         assertEq(b.selfColdkey, probeColdkey, "self coldkey = mirror(probe)");
+@@ -125,6 +127,161 @@ contract SP1ProbeTest is Test {
+         assertFalse(b.absentRejected, "absent response must carry canonical zero uid");
+     }
+ 
++    /// @dev Runtime 455 routes 0x09 to BN128 addition, which rejects the
++    ///      canonical EIP-152 input. Explicit mapping answers keep the mock
++    ///      independent of Foundry's different native 0x09 implementation.
++    function _runtime455Mapping() internal {
++        vm.mockCall(
++            address(0x080c),
++            abi.encodeWithSignature(
++                "addressMapping(address)", address(0x1111111111111111111111111111111111111111)
++            ),
++            abi.encode(MIRROR_KAT)
++        );
++        vm.mockCall(
++            address(0x080c),
++            abi.encodeWithSignature("addressMapping(address)", address(probe)),
++            abi.encode(probeColdkey)
++        );
++        vm.mockCallRevert(address(0x09), bytes(""), bytes(""));
++    }
++
++    /// @dev Deterministically reproduces the live old-library failure while
++    ///      the corrected battery still proves the exact mapping and stake.
++    function test_readBattery_runtime455RejectsLegacyBlake2f() public {
++        // Twelve rounds, the blake2b-256 IV, "evm:" plus the known address,
++        // 128-byte padded message, t0=24, t1=0 and final=true: 213 bytes.
++        bytes memory legacyInput = abi.encodePacked(
++            hex"0000000c28c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b",
++            bytes4(0x65766d3a),
++            address(0x1111111111111111111111111111111111111111),
++            new bytes(104),
++            hex"1800000000000000",
++            bytes8(0),
++            uint8(1)
++        );
++        assertEq(legacyInput.length, 213, "canonical EIP-152 input");
++        (bool referenceOk, bytes memory referenceOutput) = address(0x09).staticcall(legacyInput);
++        assertTrue(referenceOk, "the old input is valid EIP-152 in Foundry");
++        assertEq(referenceOutput.length, 64);
++        assertEq(bytes32(referenceOutput), MIRROR_KAT);
++        _runtime455Mapping();
++        (bool legacyOk,) = address(0x09).staticcall(legacyInput);
++        assertFalse(legacyOk, "runtime 455 rejects the old route");
++        staking.setStake(SAMPLE_HOTKEY, probeColdkey, 42);
++
++        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
++        assertTrue(b.blakeOk);
++        assertEq(b.mirrorKat, MIRROR_KAT);
++        assertTrue(b.blakeKatMatch);
++        assertEq(b.selfColdkey, probeColdkey);
++        assertTrue(b.stakeViewOk);
++        assertEq(b.sampleSelfStake, 42);
++        assertTrue(b.edVerifyGood && b.edVerifyBad && b.srVerifyGood && b.srVerifyBad);
++        assertTrue(b.mgOk && b.neuronOk && b.sampleExists && b.absentRejected);
++    }
++
++    /// @dev Every adjacent value-bearing reader must use the same runtime
++    ///      custody mapping, including both moves, dividend reads and recovery.
++    function test_runtime455MappingPreservesValueCustody() public {
++        _runtime455Mapping();
++        bytes32 destination = keccak256("runtime455-recovery-coldkey");
++        vm.startPrank(deployer);
++        probe.seedFromTao(HOTKEY_A, 1_000);
++        assertEq(probe.selfStake(HOTKEY_A), 1_000);
++        probe.moveRoundTrip(HOTKEY_A, HOTKEY_B, 400);
++        assertEq(probe.selfStake(HOTKEY_A), 600);
++        assertEq(probe.selfStake(HOTKEY_B), 400);
++        probe.moveRoundTrip(HOTKEY_B, HOTKEY_A, 400);
++        probe.snapshot(HOTKEY_A);
++        staking.setStake(HOTKEY_A, probeColdkey, 1_050);
++        (uint256 baseline, uint256 current,) = probe.dividendDelta(HOTKEY_A);
++        assertEq(baseline, 1_000);
++        assertEq(current, 1_050);
++        probe.transferOut(destination, HOTKEY_A, 1_050);
++        vm.stopPrank();
++        assertEq(probe.selfStake(HOTKEY_A), 0);
++        assertEq(probe.selfStake(HOTKEY_B), 0);
++        assertEq(staking.stakes(HOTKEY_A, destination), 1_050);
++    }
++
++    /// @dev A correct KAT cannot hide an independently failed self mapping.
++    ///      The former uncaught stake-reader mapping reverted this whole call.
++    function test_readBattery_failedSelfMappingRetainsOtherChecks() public {
++        vm.mockCallRevert(
++            address(0x080c), abi.encodeWithSignature("addressMapping(address)", address(probe)), bytes("")
++        );
++        staking.setStake(SAMPLE_HOTKEY, bytes32(0), 99);
++        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
++        assertTrue(b.blakeOk && b.blakeKatMatch);
++        assertEq(b.selfColdkey, bytes32(0));
++        assertFalse(b.stakeViewOk);
++        assertEq(b.sampleSelfStake, 0, "must not read the zero coldkey");
++        assertEq(b.nominatorMinimum, 1_000);
++        assertTrue(b.edOk && b.srOk && b.mgOk && b.neuronOk);
++    }
++
++    /// @dev A missing runtime mapping is not an Ethereum fallback; the other
++    ///      runtime families remain visible and custody remains unproven.
++    function test_readBattery_missingMappingRetainsOtherChecks() public {
++        vm.etch(address(0x080c), bytes(""));
++        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
++        assertFalse(b.blakeOk);
++        assertFalse(b.blakeKatMatch);
++        assertEq(b.selfColdkey, bytes32(0));
++        assertFalse(b.stakeViewOk);
++        assertTrue(b.edOk && b.srOk && b.mgOk && b.neuronOk);
++        assertEq(b.nominatorMinimum, 1_000);
++    }
++
++    /// @dev A successful call returning a zero self key must not measure an
++    ///      unrelated custody slot and accidentally mark that check passed.
++    function test_readBattery_zeroSelfMappingCannotQueryZeroCustody() public {
++        vm.mockCall(
++            address(0x080c),
++            abi.encodeWithSignature("addressMapping(address)", address(probe)),
++            abi.encode(bytes32(0))
++        );
++        staking.setStake(SAMPLE_HOTKEY, bytes32(0), 99);
++        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
++        assertTrue(b.blakeOk && b.blakeKatMatch);
++        assertEq(b.selfColdkey, bytes32(0));
++        assertFalse(b.stakeViewOk);
++        assertEq(b.sampleSelfStake, 0);
++        assertTrue(b.edOk && b.srOk && b.mgOk && b.neuronOk);
++    }
++
++    /// @dev The preserved KAT must reject a callable but incorrect mapping.
++    function test_readBattery_wrongMappingFailsKnownAnswer() public {
++        vm.mockCall(
++            address(0x080c),
++            abi.encodeWithSignature(
++                "addressMapping(address)", address(0x1111111111111111111111111111111111111111)
++            ),
++            abi.encode(bytes32(uint256(1)))
++        );
++        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
++        assertTrue(b.blakeOk);
++        assertEq(b.mirrorKat, bytes32(uint256(1)));
++        assertFalse(b.blakeKatMatch);
++    }
++
++    /// @dev An ABI bytes32 response has exactly 32 bytes; accepting a prefix
++    ///      would mask the wrong precompile or a malformed runtime response.
++    function test_mirrorExt_rejectsMalformedMappingResponses() public {
++        uint256[4] memory lengths = [uint256(0), 31, 33, 64];
++        for (uint256 i; i < lengths.length; i++) {
++            vm.mockCall(
++                address(0x080c),
++                abi.encodeWithSignature("addressMapping(address)", address(probe)),
++                new bytes(lengths[i])
++            );
++            vm.expectRevert("Blake2b: address mapping failed");
++            probe.mirrorExt(address(probe));
++            vm.clearMockedCalls();
++        }
++    }
++
+     function test_seedFromTao_custodyIsContractColdkey() public {
+         vm.prank(deployer);
+         probe.seedFromTao(HOTKEY_A, 1_000);
+diff --git a/evm/test/STSubnet.t.sol b/evm/test/STSubnet.t.sol
+index 26aa81f..c9d5c0f 100644
+--- a/evm/test/STSubnet.t.sol
++++ b/evm/test/STSubnet.t.sol
+@@ -11,6 +11,7 @@ import {INeuron_ADDRESS} from "../src/interfaces/neuron.sol";
+ import {IMetagraph_ADDRESS} from "../src/interfaces/metagraph.sol";
+ import {IED25519VERIFY_ADDRESS} from "../src/interfaces/ed25519Verify.sol";
+ import {MockStakingV2, MockNeuron, MockMetagraph, MockEd25519} from "./mocks/PrecompileMocks.sol";
++import {MockAddressMapping} from "./mocks/MockAddressMapping.sol";
+ 
+ /// @dev Smoke suite: deploy + init + one happy-path epoch end to end with
+ ///      vm.etch-mocked precompiles, plus buyback-reserve invariants (v0.3/D23),
+@@ -64,6 +65,7 @@ contract STSubnetTest is Test {
+         vm.etch(INeuron_ADDRESS, address(new MockNeuron()).code);
+         vm.etch(IMetagraph_ADDRESS, address(new MockMetagraph()).code);
+         vm.etch(IED25519VERIFY_ADDRESS, address(new MockEd25519()).code);
++        vm.etch(address(0x080c), address(new MockAddressMapping()).code);
+ 
+         STSubnet impl = new STSubnet();
+         ERC1967Proxy proxy = new ERC1967Proxy(
+@@ -80,7 +82,7 @@ contract STSubnetTest is Test {
+                     COMMIT_W,
+                     TRAILS_W,
+                     FINALIZE_OFF,
+-                    bytes32(0) // selfColdkey: compute on-chain via blake2f
++                    bytes32(0) // selfColdkey: compute through the runtime mapping
+                 )
+             )
+         );
+@@ -115,7 +117,7 @@ contract STSubnetTest is Test {
+         assertEq(st.tEpoch(), T_EPOCH);
+         assertEq(st.epoch(), 0);
+         assertEq(st.epochStartBlock(), START_BLOCK);
+-        // initializer computed mirror(proxy) on-chain via blake2f
++        // initializer computed mirror(proxy) through the runtime mapping
+         assertEq(st.selfColdkey(), proxyMirror);
+ 
+         (bytes32 ck, uint16 uid, bytes32 hk, bool active) = st.operators(NO_ID);
+diff --git a/evm/test/mocks/MockAddressMapping.sol b/evm/test/mocks/MockAddressMapping.sol
+new file mode 100644
+index 0000000..674a233
+--- /dev/null
++++ b/evm/test/mocks/MockAddressMapping.sol
+@@ -0,0 +1,13 @@
++// SPDX-License-Identifier: MIT
++pragma solidity 0.8.24;
++
++import {Blake2b} from "../../src/lib/Blake2b.sol";
++
++/// @dev Models runtime 455's 0x080c ABI using Foundry's Ethereum-only EIP-152
++///      reference. Tests that reject 0x09 install explicit 0x080c responses
++///      first, so the production mapping route is tested independently.
++contract MockAddressMapping {
++    function addressMapping(address account) external view returns (bytes32) {
++        return Blake2b.hash256(abi.encodePacked(bytes4(0x65766d3a), account));
++    }
++}
+diff --git a/evm/test/utils/STBase.sol b/evm/test/utils/STBase.sol
+index 5f43720..c43abfe 100644
+--- a/evm/test/utils/STBase.sol
++++ b/evm/test/utils/STBase.sol
+@@ -11,13 +11,14 @@ import {INeuron_ADDRESS} from "../../src/interfaces/neuron.sol";
+ import {IMetagraph_ADDRESS} from "../../src/interfaces/metagraph.sol";
+ import {IED25519VERIFY_ADDRESS} from "../../src/interfaces/ed25519Verify.sol";
+ import {MockStakingV2, MockNeuron, MockMetagraph, MockEd25519} from "../mocks/PrecompileMocks.sol";
++import {MockAddressMapping} from "../mocks/MockAddressMapping.sol";
+ import {MerkleBuilder} from "./MerkleBuilder.sol";
+ 
+ /// @dev Shared harness for the comprehensive STSubnet suite. Mirrors the smoke
+ ///      suite's deployment (test/STSubnet.t.sol) but adds a second operator /
+ ///      validator, arbitrary-size Merkle helpers (MerkleBuilder) and epoch
+ ///      block-math helpers. Precompile mocks are vm.etch'ed at the canonical
+-///      addresses; blake2f (0x09) is served natively by revm.
++///      addresses, including the runtime's 0x080c custody mapping.
+ abstract contract STBase is Test {
+     // epoch params (blocks)
+     uint64 constant T_EPOCH = 100;
+@@ -66,6 +67,7 @@ abstract contract STBase is Test {
+         vm.etch(INeuron_ADDRESS, address(new MockNeuron()).code);
+         vm.etch(IMetagraph_ADDRESS, address(new MockMetagraph()).code);
+         vm.etch(IED25519VERIFY_ADDRESS, address(new MockEd25519()).code);
++        vm.etch(address(0x080c), address(new MockAddressMapping()).code);
+ 
+         STSubnet impl = new STSubnet();
+         ERC1967Proxy proxy = new ERC1967Proxy(
+@@ -82,7 +84,7 @@ abstract contract STBase is Test {
+                     COMMIT_W,
+                     TRAILS_W,
+                     FINALIZE_OFF,
+-                    bytes32(0) // selfColdkey: compute on-chain via blake2f
++                    bytes32(0) // selfColdkey: compute through the runtime mapping
+                 )
+             )
+         );
+diff --git a/scripts/check-runtime-v454-source.sh b/scripts/check-runtime-v454-source.sh
+index a14086b..f32682e 100755
+--- a/scripts/check-runtime-v454-source.sh
++++ b/scripts/check-runtime-v454-source.sh
+@@ -12,7 +12,7 @@ commit="14cde6410fe8ec81a940e290c56f94a632a0988d"
+ expected_files=29
+ expected_metadata_files=15
+ current_commit="67dcf7f791dc495064c293f080a0702cb433e51e"
+-expected_current_files=31
++expected_current_files=33
+ 
+ [[ -f "$manifest" ]] || {
+   echo "runtime 454 source manifest is missing: $manifest" >&2
+diff --git a/sim-testnet/precompile_battery_runtime455_test.go b/sim-testnet/precompile_battery_runtime455_test.go
+new file mode 100644
+index 0000000..a35d047
+--- /dev/null
++++ b/sim-testnet/precompile_battery_runtime455_test.go
+@@ -0,0 +1,44 @@
++// Runtime custody failures must remain blocking even when other precompile
++// families return a complete diagnostic battery.
++package main
++
++import (
++	"math/big"
++	"testing"
++)
++
++// Uses synthetic tuple values to isolate the existing acceptance boundary
++// from any particular probe deployment or source of its custody mapping.
++func TestPrecompileBatteryRejectsEveryFailedCustodyCheck(t *testing.T) {
++	probeColdkey := [32]byte{2}
++	mirrorKat := [32]byte{1}
++	evidence := &PrecompileConformanceEvidence{SampleUID: 2, ProbeColdkey: hexBytesValue(probeColdkey[:])}
++	evidence.Battery.MirrorKAT = hexBytesValue(mirrorKat[:])
++	baseline := precompileBatteryTuple{
++		BlakeOk: true, MirrorKat: mirrorKat, BlakeKatMatch: true, SelfColdkey: probeColdkey,
++		EdOk: true, EdVerifyGood: true, EdVerifyBad: true, SrOk: true, SrVerifyGood: true, SrVerifyBad: true,
++		MgOk: true, UidCount: 3, Uid0Hotkey: [32]byte{4}, Uid0Coldkey: [32]byte{5},
++		NeuronOk: true, SampleExists: true, SampleUid: 2, AbsentRejected: true, StakeViewOk: true,
++		SampleSelfStake: big.NewInt(6), NominatorMinimum: big.NewInt(7),
++	}
++	if !batteryTupleCompatible(evidence, &baseline, 7) {
++		t.Fatal("complete custody and cryptographic controls were rejected")
++	}
++	for _, c := range []struct {
++		name   string
++		mutate func(*precompileBatteryTuple)
++	}{
++		{name: "mapping unavailable", mutate: func(tuple *precompileBatteryTuple) { tuple.BlakeOk = false }},
++		{name: "mapping known answer failed", mutate: func(tuple *precompileBatteryTuple) { tuple.BlakeKatMatch = false }},
++		{name: "mapping answer changed", mutate: func(tuple *precompileBatteryTuple) { tuple.MirrorKat = [32]byte{9} }},
++		{name: "self mapping absent", mutate: func(tuple *precompileBatteryTuple) { tuple.SelfColdkey = [32]byte{} }},
++		{name: "self mapping changed", mutate: func(tuple *precompileBatteryTuple) { tuple.SelfColdkey = [32]byte{9} }},
++		{name: "custody stake unobserved", mutate: func(tuple *precompileBatteryTuple) { tuple.StakeViewOk = false }},
++	} {
++		tuple := baseline
++		c.mutate(&tuple)
++		if batteryTupleCompatible(evidence, &tuple, 7) {
++			t.Errorf("%s passed the conformance gate", c.name)
++		}
++	}
++}

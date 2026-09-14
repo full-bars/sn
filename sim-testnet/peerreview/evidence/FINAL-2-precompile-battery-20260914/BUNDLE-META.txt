@@ -1,0 +1,8 @@
+bundle=FINAL-2-precompile-battery-20260914
+content_class=public-safe-derived-evidence
+status=closed-bounded-solidity-artifact-qualification
+baseline=afd7b26c9c1b2847e8f73648e6a6eac13928453e
+formatted=d7142cc984515d569756a7197ee1588f33a6bddd
+static_fix=bac57484ab290e8f3cc1bb2187a21b99694d7bfe
+generated_successor=2589748336ea52e1654d56b8115d71b108f934b0
+intended_destination=sim-testnet/peerreview/evidence/FINAL-2-precompile-battery-20260914

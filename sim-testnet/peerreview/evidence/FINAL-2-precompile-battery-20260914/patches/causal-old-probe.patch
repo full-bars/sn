@@ -1,0 +1,63 @@
+diff --git a/evm/src/probe/STSubnetProbe.sol b/evm/src/probe/STSubnetProbe.sol
+index 80724c2..fbc45b4 100644
+--- a/evm/src/probe/STSubnetProbe.sol
++++ b/evm/src/probe/STSubnetProbe.sol
+@@ -44,7 +44,7 @@ contract STSubnetProbe {
+     // Known-answer vectors (public, auditable — see docs/LAUNCH.md B1)
+     // ------------------------------------------------------------------
+ 
+-    /// @dev Runtime address-mapping (0x080c) KAT: mirror(0x1111...1111). Matches the value
++    /// @dev blake2f (0x09) KAT: mirror(0x1111...1111). Matches the value
+     ///      pinned in evm/test/STSubnet.t.sol (Python hashlib.blake2b).
+     address internal constant MIRROR_KAT_ADDR = 0x1111111111111111111111111111111111111111;
+     bytes32 internal constant MIRROR_KAT = 0x32f955c958e51189a4921aed41ef00818f7368dfaec8d9969f091006f8066228;
+@@ -118,8 +118,7 @@ contract STSubnetProbe {
+     // ------------------------------------------------------------------
+ 
+     struct Battery {
+-        // 0x080c address mapping, verified against the blake2b custody KAT.
+-        // Keep the existing tuple names/order for archived evidence readers.
++        // 0x09 blake2f (the H160 -> ss58 mirror; the whole custody model)
+         bool blakeOk;
+         bytes32 mirrorKat; // observed mirror(MIRROR_KAT_ADDR)
+         bool blakeKatMatch; // == MIRROR_KAT
+@@ -153,8 +152,7 @@ contract STSubnetProbe {
+         view
+         returns (Battery memory b)
+     {
+-        // --- 0x080c address mapping, via the exact library STSubnet uses ---
+-        bool selfMapped = false;
++        // --- 0x09 blake2f, via the exact library STSubnet uses ---
+         try this.mirrorExt(MIRROR_KAT_ADDR) returns (bytes32 m) {
+             b.blakeOk = true;
+             b.mirrorKat = m;
+@@ -162,7 +160,6 @@ contract STSubnetProbe {
+         } catch {}
+         try this.mirrorExt(address(this)) returns (bytes32 self) {
+             b.selfColdkey = self;
+-            selfMapped = (self != bytes32(0));
+         } catch {}
+ 
+         // --- 0x402 ed25519 verify ---
+@@ -214,16 +211,11 @@ contract STSubnetProbe {
+         } catch {}
+ 
+         // --- 0x805 staking view: the probe's OWN stake at sampleHotkey ---
+-        // Reuse the caught mapping result. A failed custody mapping must
+-        // neither revert the whole battery nor query stake under a zero key.
+-        if (selfMapped) {
+-            try IStaking(ISTAKING_ADDRESS).getStake(sampleHotkey, b.selfColdkey, uint256(netuid)) returns (
+-                uint256 v
+-            ) {
+-                b.stakeViewOk = true;
+-                b.sampleSelfStake = v;
+-            } catch {}
+-        }
++        bytes32 selfCk = Blake2b.mirror(address(this));
++        try IStaking(ISTAKING_ADDRESS).getStake(sampleHotkey, selfCk, uint256(netuid)) returns (uint256 v) {
++            b.stakeViewOk = true;
++            b.sampleSelfStake = v;
++        } catch {}
+         try IStaking(ISTAKING_ADDRESS).getNominatorMinRequiredStake() returns (uint256 v) {
+             b.nominatorMinimum = v;
+         } catch {}

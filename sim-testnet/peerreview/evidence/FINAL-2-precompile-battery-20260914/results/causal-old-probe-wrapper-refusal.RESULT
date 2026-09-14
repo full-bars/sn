@@ -1,0 +1,1 @@
+PARTIAL OWNER REFUSAL: after the first expected nonzero Forge body, the wrapper re-enabled set -e inside its helper and exited before starting the zero-self body. The first raw expected failure is retained; this continuation runs only the unexecuted second body.

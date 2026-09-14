@@ -1,0 +1,1 @@
+FAIL: Slither 0.11.6 found one Medium uninitialized-local detector in STSubnetProbe.readBattery: selfMapped at src/probe/STSubnetProbe.sol:157. This is a candidate static-gate failure.

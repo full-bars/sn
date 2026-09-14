@@ -1,0 +1,1 @@
+EXPECTED-FAIL CONTROL PASS: old probe treats the zero self mapping as a custody lookup instead of suppressing the dependent diagnostic.

@@ -1,0 +1,121 @@
+diff --git a/evm/src/lib/Blake2b.sol b/evm/src/lib/Blake2b.sol
+index c2de4d8..868965a 100644
+--- a/evm/src/lib/Blake2b.sol
++++ b/evm/src/lib/Blake2b.sol
+@@ -1,17 +1,18 @@
+ // SPDX-License-Identifier: MIT
+ pragma solidity 0.8.24;
+ 
+-/// @title Subtensor custody mapping and a local EIP-152 hash reference.
++/// @title Blake2b — minimal single-block blake2b-256 via the EIP-152 `blake2f`
++///        compression-function precompile (address 0x09, Istanbul+).
+ ///
+ /// @notice Purpose: compute the Subtensor EVM H160 -> AccountId32 "mirror":
+ ///         `mirror(addr) = blake2b_256("evm:" || addr)` (24-byte message), the
+ ///         Frontier `HashedAddressMapping` used by every subtensor precompile
+ ///         to derive the coldkey of an EVM caller (PLAN.md §3.6, D-10).
+ ///
+-/// @dev    `mirror` uses the runtime's addressMapping precompile at 0x080c.
+-///         Runtime 455 maps 0x09 to BN128 addition, not EIP-152. `hash256` is
+-///         only a single-block reference for local Ethereum/Foundry tooling;
+-///         it must not be used as a Subtensor runtime hashing primitive.
++/// @dev    Only messages of <= 128 bytes (one compression block) are supported —
++///         that is all the mirror needs. Whether 0x09 exists on the subtensor
++///         runtime is UNVERIFIED (SP-1); callers must treat failure as
++///         "on-chain mirror unavailable" and fall back to the owner-gated path.
+ library Blake2b {
+     /// @dev blake2b IV (RFC 7693).
+     ///      h[0] is pre-XORed with the parameter block 0x01010020:
+@@ -26,9 +27,8 @@ library Blake2b {
+     uint64 private constant IV7 = 0x5be0cd19137e2179;
+ 
+     address private constant BLAKE2F = address(0x09);
+-    address private constant ADDRESS_MAPPING = address(0x080c);
+ 
+-    /// @notice Local Ethereum EIP-152 reference (unkeyed, data.length <= 128).
++    /// @notice blake2b-256 of `data` (data.length <= 128; unkeyed).
+     function hash256(bytes memory data) internal view returns (bytes32 digest) {
+         require(data.length <= 128, "Blake2b: >1 block");
+ 
+@@ -66,15 +66,10 @@ library Blake2b {
+         }
+     }
+ 
+-    /// @notice Runtime H160 -> AccountId32 mapping, checked against the
+-    ///         blake2b_256("evm:" || address) known answer by the probe.
+-    /// @dev The selector and raw bytes32 result match runtime 455's pinned
+-    ///      precompiles/src/address_mapping.rs. Missing/malformed calls fail.
++    /// @notice Subtensor/Frontier H160 -> AccountId32 mirror:
++    ///         blake2b_256("evm:" || address).
+     function mirror(address account) internal view returns (bytes32) {
+-        (bool ok, bytes memory out) =
+-            ADDRESS_MAPPING.staticcall(abi.encodeWithSignature("addressMapping(address)", account));
+-        require(ok && out.length == 32, "Blake2b: address mapping failed");
+-        return abi.decode(out, (bytes32));
++        return hash256(abi.encodePacked(bytes4(0x65766d3a), account)); // "evm:"
+     }
+ 
+     /// @dev uint64 -> little-endian bytes8.
+diff --git a/evm/src/probe/STSubnetProbe.sol b/evm/src/probe/STSubnetProbe.sol
+index 80724c2..fbc45b4 100644
+--- a/evm/src/probe/STSubnetProbe.sol
++++ b/evm/src/probe/STSubnetProbe.sol
+@@ -44,7 +44,7 @@ contract STSubnetProbe {
+     // Known-answer vectors (public, auditable — see docs/LAUNCH.md B1)
+     // ------------------------------------------------------------------
+ 
+-    /// @dev Runtime address-mapping (0x080c) KAT: mirror(0x1111...1111). Matches the value
++    /// @dev blake2f (0x09) KAT: mirror(0x1111...1111). Matches the value
+     ///      pinned in evm/test/STSubnet.t.sol (Python hashlib.blake2b).
+     address internal constant MIRROR_KAT_ADDR = 0x1111111111111111111111111111111111111111;
+     bytes32 internal constant MIRROR_KAT = 0x32f955c958e51189a4921aed41ef00818f7368dfaec8d9969f091006f8066228;
+@@ -118,8 +118,7 @@ contract STSubnetProbe {
+     // ------------------------------------------------------------------
+ 
+     struct Battery {
+-        // 0x080c address mapping, verified against the blake2b custody KAT.
+-        // Keep the existing tuple names/order for archived evidence readers.
++        // 0x09 blake2f (the H160 -> ss58 mirror; the whole custody model)
+         bool blakeOk;
+         bytes32 mirrorKat; // observed mirror(MIRROR_KAT_ADDR)
+         bool blakeKatMatch; // == MIRROR_KAT
+@@ -153,8 +152,7 @@ contract STSubnetProbe {
+         view
+         returns (Battery memory b)
+     {
+-        // --- 0x080c address mapping, via the exact library STSubnet uses ---
+-        bool selfMapped = false;
++        // --- 0x09 blake2f, via the exact library STSubnet uses ---
+         try this.mirrorExt(MIRROR_KAT_ADDR) returns (bytes32 m) {
+             b.blakeOk = true;
+             b.mirrorKat = m;
+@@ -162,7 +160,6 @@ contract STSubnetProbe {
+         } catch {}
+         try this.mirrorExt(address(this)) returns (bytes32 self) {
+             b.selfColdkey = self;
+-            selfMapped = (self != bytes32(0));
+         } catch {}
+ 
+         // --- 0x402 ed25519 verify ---
+@@ -214,16 +211,11 @@ contract STSubnetProbe {
+         } catch {}
+ 
+         // --- 0x805 staking view: the probe's OWN stake at sampleHotkey ---
+-        // Reuse the caught mapping result. A failed custody mapping must
+-        // neither revert the whole battery nor query stake under a zero key.
+-        if (selfMapped) {
+-            try IStaking(ISTAKING_ADDRESS).getStake(sampleHotkey, b.selfColdkey, uint256(netuid)) returns (
+-                uint256 v
+-            ) {
+-                b.stakeViewOk = true;
+-                b.sampleSelfStake = v;
+-            } catch {}
+-        }
++        bytes32 selfCk = Blake2b.mirror(address(this));
++        try IStaking(ISTAKING_ADDRESS).getStake(sampleHotkey, selfCk, uint256(netuid)) returns (uint256 v) {
++            b.stakeViewOk = true;
++            b.sampleSelfStake = v;
++        } catch {}
+         try IStaking(ISTAKING_ADDRESS).getNominatorMinRequiredStake() returns (uint256 v) {
+             b.nominatorMinimum = v;
+         } catch {}

@@ -1,0 +1,1 @@
+REVIEW: only generated sim-testnet/contracts_gen.go changed (5 additions/5 deletions); stabi write/check both exit 0; gencontracts write/check both exit 0; ABI declaration is unchanged; only probe creation/runtime payload, hashes, and immutable offsets refreshed from completed bac57484 artifact graph.
