@@ -133,7 +133,9 @@ contract SP1ProbeTest is Test {
     function _runtime455Mapping() internal {
         vm.mockCall(
             address(0x080c),
-            abi.encodeWithSignature("addressMapping(address)", address(0x1111111111111111111111111111111111111111)),
+            abi.encodeWithSignature(
+                "addressMapping(address)", address(0x1111111111111111111111111111111111111111)
+            ),
             abi.encode(MIRROR_KAT)
         );
         vm.mockCall(
@@ -207,9 +209,7 @@ contract SP1ProbeTest is Test {
     ///      The former uncaught stake-reader mapping reverted this whole call.
     function test_readBattery_failedSelfMappingRetainsOtherChecks() public {
         vm.mockCallRevert(
-            address(0x080c),
-            abi.encodeWithSignature("addressMapping(address)", address(probe)),
-            bytes("")
+            address(0x080c), abi.encodeWithSignature("addressMapping(address)", address(probe)), bytes("")
         );
         staking.setStake(SAMPLE_HOTKEY, bytes32(0), 99);
         STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
@@ -255,7 +255,9 @@ contract SP1ProbeTest is Test {
     function test_readBattery_wrongMappingFailsKnownAnswer() public {
         vm.mockCall(
             address(0x080c),
-            abi.encodeWithSignature("addressMapping(address)", address(0x1111111111111111111111111111111111111111)),
+            abi.encodeWithSignature(
+                "addressMapping(address)", address(0x1111111111111111111111111111111111111111)
+            ),
             abi.encode(bytes32(uint256(1)))
         );
         STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
