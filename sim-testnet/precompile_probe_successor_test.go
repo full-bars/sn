@@ -584,6 +584,26 @@ func newArchivedPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSu
 // receipt, then keeps the native source and original probe independent of today.
 func TestPrecompileProbeSuccessorConstructsOriginalNativeReplay(t *testing.T) {
 	fixture := newArchivedPrecompileProbeSuccessorFixture(t)
+	archived, err := readValidatorEvidenceHistoricalPlan(fixture.stateDir, fixture.plan.PrecompileProbeSuccessor.SourcePlanHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, check := range []struct { name string; archived, current any }{
+		{name: "source plan hash", archived: archived.PlanHash, current: fixture.plan.PrecompileProbeSuccessor.SourcePlanHash},
+		{name: "deployment", archived: archived.Deployment, current: fixture.plan.Deployment},
+		{name: "config hash", archived: archived.ConfigHash, current: fixture.plan.ConfigHash},
+		{name: "policy hash", archived: archived.PolicyHash, current: fixture.plan.PolicyHash},
+		{name: "roles", archived: archived.Roles, current: fixture.plan.Roles},
+		{name: "coordinator upgrade", archived: archived.CoordinatorUpgrade, current: fixture.plan.CoordinatorUpgrade},
+		{name: "coordinator baseline", archived: archived.CoordinatorUpgradeBaseline, current: fixture.plan.CoordinatorUpgradeBaseline},
+		{name: "repair reference", archived: archived.CoordinatorRepairCarry, current: fixture.plan.CoordinatorRepairCarry},
+	} {
+		if !reflect.DeepEqual(check.archived, check.current) {
+			archivedHash, archivedErr := canonicalHashHex(check.archived)
+			currentHash, currentErr := canonicalHashHex(check.current)
+			t.Fatalf("synthetic archived approval changed %s: wire_equal=%t archive_error=%v current_error=%v", check.name, archivedHash == currentHash, archivedErr, currentErr)
+		}
+	}
 	owner := &Executor{cfg: fixture.cfg, stateDir: fixture.stateDir, plan: fixture.plan, payloads: fixture.payloads, journal: &Journal{entries: fixture.entries}}
 	action := actionByID(t, fixture.plan, "precompile.commitment-write")
 	source, handled, err := owner.precompileProbeNativeSource(action, fixture.plan.PrecompileProbeSuccessor.Write, fixture.writeRecord)
