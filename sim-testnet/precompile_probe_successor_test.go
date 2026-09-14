@@ -588,7 +588,10 @@ func TestPrecompileProbeSuccessorConstructsOriginalNativeReplay(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, check := range []struct { name string; archived, current any }{
+	for _, check := range []struct {
+		name              string
+		archived, current any
+	}{
 		{name: "source plan hash", archived: archived.PlanHash, current: fixture.plan.PrecompileProbeSuccessor.SourcePlanHash},
 		{name: "deployment", archived: archived.Deployment, current: fixture.plan.Deployment},
 		{name: "config hash", archived: archived.ConfigHash, current: fixture.plan.ConfigHash},

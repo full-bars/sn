@@ -2539,7 +2539,7 @@ func TestReleaseGatesAttestRuntimeSourceCensusRejectsDrift(t *testing.T) {
 			t.Fatalf("complete reviewed source census was refused: %v", err)
 		}
 	}
-	for _, testCase := range []struct { name, manifest string }{
+	for _, testCase := range []struct{ name, manifest string }{
 		{name: "omitted mapping", manifest: dispatcher},
 		{name: "omitted dispatcher", manifest: mapper},
 		{name: "duplicate in place of mapping", manifest: dispatcher + "\n" + dispatcher},
