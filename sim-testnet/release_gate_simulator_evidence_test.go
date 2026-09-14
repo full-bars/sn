@@ -263,14 +263,14 @@ func TestProducerGateStateSelectionRejectsSimulatorEvidencePartitionDrift(t *tes
 		{start, start + "\n" + start},
 		{start, "if false; then\n" + start + "\nfi"},
 		{start, "release_phase_unused() {\n" + start + "\n}"},
-		{renderRace, "# " + renderRace},
-		{renderRace, strings.Replace(renderRace, "-race ", "", 1)},
-		{renderRace, strings.Replace(renderRace, "10m", "30m", 1)},
-		{renderRace, renderRace + " || true"},
-		{renderStart, "# " + renderStart},
-		{renderStart, renderStart + "\n" + renderStart},
-		{renderStart, "if false; then\n" + renderStart + "\nfi"},
-		{"simulator_evidence_render_tests='" + releaseGateSimulatorEvidenceRenderSelector + "'", "simulator_evidence_render_tests='^TestRuntimeEvidence'"},
+		{old: renderRace, replacement: "# " + renderRace},
+		{old: renderRace, replacement: strings.Replace(renderRace, "-race ", "", 1)},
+		{old: renderRace, replacement: strings.Replace(renderRace, "10m", "30m", 1)},
+		{old: renderRace, replacement: renderRace + " || true"},
+		{old: renderStart, replacement: "# " + renderStart},
+		{old: renderStart, replacement: renderStart + "\n" + renderStart},
+		{old: renderStart, replacement: "if false; then\n" + renderStart + "\nfi"},
+		{old: "simulator_evidence_render_tests='" + releaseGateSimulatorEvidenceRenderSelector + "'", replacement: "simulator_evidence_render_tests='^TestRuntimeEvidence'"},
 	} {
 		if strings.Count(script, mutation.old) != 1 {
 			t.Fatalf("mutation does not identify one boundary: %s", mutation.old)
