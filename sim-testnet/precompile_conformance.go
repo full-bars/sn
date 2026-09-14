@@ -42,15 +42,15 @@ type PrecompileConformanceEvidence struct {
 	MoveHotkey      string `json:"move_hotkey"`
 	RecoveryColdkey string `json:"recovery_provider_coldkey"`
 
-	Commitment PrecompileCommitmentEvidence `json:"commitment"`
-	CommitmentSource *PrecompileCommitmentSource `json:"commitment_source,omitempty"`
-	Battery    PrecompileBatteryEvidence    `json:"battery"`
-	Seed       PrecompileValueStep          `json:"seed"`
-	Forward    PrecompileMoveStep           `json:"move_forward"`
-	Back       PrecompileMoveStep           `json:"move_back"`
-	Snapshot   PrecompileSnapshotStep       `json:"snapshot"`
-	Dividend   PrecompileDividendStep       `json:"dividend"`
-	Transfer   PrecompileTransferStep       `json:"transfer_out"`
+	Commitment       PrecompileCommitmentEvidence `json:"commitment"`
+	CommitmentSource *PrecompileCommitmentSource  `json:"commitment_source,omitempty"`
+	Battery          PrecompileBatteryEvidence    `json:"battery"`
+	Seed             PrecompileValueStep          `json:"seed"`
+	Forward          PrecompileMoveStep           `json:"move_forward"`
+	Back             PrecompileMoveStep           `json:"move_back"`
+	Snapshot         PrecompileSnapshotStep       `json:"snapshot"`
+	Dividend         PrecompileDividendStep       `json:"dividend"`
+	Transfer         PrecompileTransferStep       `json:"transfer_out"`
 
 	Complete     bool   `json:"complete"`
 	EvidenceHash string `json:"evidence_hash"`

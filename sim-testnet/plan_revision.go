@@ -54,10 +54,10 @@ var (
 
 // Carries one finalized compatibility observation into pure revision rendering.
 type coordinatorUpgradeMigration struct {
-	Deployment ContractDeployment
-	Baseline   CoordinatorUpgradeBaseline
-	Upgrade    CoordinatorUpgrade
-	Repair     *coordinatorRepairCarryObservation
+	Deployment     ContractDeployment
+	Baseline       CoordinatorUpgradeBaseline
+	Upgrade        CoordinatorUpgrade
+	Repair         *coordinatorRepairCarryObservation
 	ProbeSuccessor *PrecompileProbeSuccessor
 }
 

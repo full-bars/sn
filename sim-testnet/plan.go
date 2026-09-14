@@ -90,7 +90,7 @@ type SetupPlan struct {
 	CoordinatorUpgrade           CoordinatorUpgrade         `json:"coordinator_upgrade"`
 	CoordinatorUpgradeBaseline   CoordinatorUpgradeBaseline `json:"coordinator_upgrade_baseline,omitempty"`
 	CoordinatorRepairCarry       *CoordinatorRepairCarry    `json:"coordinator_repair_carry,omitempty"`
-	PrecompileProbeSuccessor *PrecompileProbeSuccessor `json:"precompile_probe_successor,omitempty"`
+	PrecompileProbeSuccessor     *PrecompileProbeSuccessor  `json:"precompile_probe_successor,omitempty"`
 	coordinatorRepairObserved    *coordinatorRepairCarryObservation
 	ValidatorEvidence            *ValidatorEvidenceDeployment `json:"validator_evidence,omitempty"`
 	ValidatorEvidenceSource      *ValidatorEvidenceSource     `json:"validator_evidence_source,omitempty"`

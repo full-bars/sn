@@ -19,28 +19,28 @@ import (
 // Binds one empty CREATE boundary and the original, completed native phases.
 // Receipt references retain their source plans; no receipt is reissued.
 type PrecompileProbeSuccessor struct {
-	Schema string `json:"schema"`
-	SourcePlanHash string `json:"source_plan_hash"`
-	RetiredProbe string `json:"retired_probe"`
-	RetiredRuntimeHash string `json:"retired_runtime_hash"`
-	Probe string `json:"probe"`
-	DeployerNonce uint64 `json:"deployer_nonce"`
-	RuntimeHash string `json:"runtime_hash"`
-	CreationHash string `json:"creation_hash"`
-	FinalizedHead ChainHead `json:"finalized_head"`
-	JournalSequence uint64 `json:"journal_sequence"`
-	JournalHash string `json:"journal_hash"`
-	Write JournalEntry `json:"write"`
-	Restore JournalEntry `json:"restore"`
-	Evidence PrecompileConformanceEvidence `json:"evidence"`
+	Schema             string                        `json:"schema"`
+	SourcePlanHash     string                        `json:"source_plan_hash"`
+	RetiredProbe       string                        `json:"retired_probe"`
+	RetiredRuntimeHash string                        `json:"retired_runtime_hash"`
+	Probe              string                        `json:"probe"`
+	DeployerNonce      uint64                        `json:"deployer_nonce"`
+	RuntimeHash        string                        `json:"runtime_hash"`
+	CreationHash       string                        `json:"creation_hash"`
+	FinalizedHead      ChainHead                     `json:"finalized_head"`
+	JournalSequence    uint64                        `json:"journal_sequence"`
+	JournalHash        string                        `json:"journal_hash"`
+	Write              JournalEntry                  `json:"write"`
+	Restore            JournalEntry                  `json:"restore"`
+	Evidence           PrecompileConformanceEvidence `json:"evidence"`
 }
 
 // Labels native proof carried into the replacement's fresh value evidence.
 type PrecompileCommitmentSource struct {
-	PlanHash string `json:"plan_hash"`
-	Probe string `json:"probe"`
-	EvidenceHash string `json:"evidence_hash"`
-	WritePostconditionHash string `json:"write_postcondition_hash"`
+	PlanHash                 string `json:"plan_hash"`
+	Probe                    string `json:"probe"`
+	EvidenceHash             string `json:"evidence_hash"`
+	WritePostconditionHash   string `json:"write_postcondition_hash"`
 	RestorePostconditionHash string `json:"restore_postcondition_hash"`
 }
 
@@ -77,7 +77,7 @@ func publicPrecompileProbePlan(public *PublicDeploymentManifest, identities fina
 	plan := &SetupPlan{
 		PlanHash: public.PlanHash, DeploymentID: public.DeploymentID, ConfigHash: public.ConfigHash, PolicyHash: public.PolicyHash,
 		ChainID: public.ChainID, GenesisHash: public.GenesisHash, Netuid: public.Netuid, Deployment: *public.Contracts,
-		Roles: PublicRoles{Deployer: identities.EVM["deployer"], Owner: identities.EVM["testnet-owner"]},
+		Roles:              PublicRoles{Deployer: identities.EVM["deployer"], Owner: identities.EVM["testnet-owner"]},
 		CoordinatorUpgrade: public.CoordinatorUpgrade, CoordinatorUpgradeBaseline: *public.CoordinatorUpgradeBaseline,
 		CoordinatorRepairCarry: public.CoordinatorRepairCarry, PrecompileProbeSuccessor: public.PrecompileProbeSuccessor,
 	}
@@ -418,7 +418,10 @@ func verifyPrecompileProbeSuccessorAt(ctx context.Context, cfg *ResolvedConfig, 
 			return stateMismatchError(err, "failed precompile probe retained alpha stake at admission")
 		}
 	}
-	for _, check := range []struct { address common.Address; hash string }{
+	for _, check := range []struct {
+		address common.Address
+		hash    string
+	}{
 		{address: common.HexToAddress(successor.RetiredProbe), hash: successor.RetiredRuntimeHash},
 		{address: common.HexToAddress(successor.Probe), hash: successor.RuntimeHash},
 	} {

@@ -20,11 +20,11 @@ import (
 // Represents the already authenticated source consumed by the pure admission
 // layer. Receipt files are persisted and decoded through the production reader.
 type precompileProbeSuccessorFixture struct {
-	cfg *ResolvedConfig
-	source, plan *SetupPlan
-	payloads *DeploymentPayloads
-	entries []JournalEntry
-	stateDir string
+	cfg                        *ResolvedConfig
+	source, plan               *SetupPlan
+	payloads                   *DeploymentPayloads
+	entries                    []JournalEntry
+	stateDir                   string
 	writeRecord, restoreRecord *ActionPostcondition
 }
 
@@ -50,11 +50,13 @@ func newPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSuccessorF
 		ConfigHash: cfg.ConfigHash, PolicyHash: cfg.PolicyHash, ChainID: testnetChainID, GenesisHash: testnetGenesis, Netuid: cfg.Netuid,
 		PlanHash: common.Hash{1}.Hex(), Roles: roles, Deployment: retained, CoordinatorUpgrade: payloads.CoordinatorUpgrade, CoordinatorUpgradeBaseline: baseline,
 		CoordinatorRepairCarry: &CoordinatorRepairCarry{Request: signedCoordinatorRepairRequest{Request: coordinatorRepairRequest{OldUpgrade: oldUpgrade, Upgrade: payloads.CoordinatorUpgrade}}},
-		Limits: Spend{TAORao: 200, AlphaRao: 300, EVMGasWei: "40"}, MaximumSpend: Spend{EVMGasWei: "40"},
+		Limits:                 Spend{TAORao: 200, AlphaRao: 300, EVMGasWei: "40"}, MaximumSpend: Spend{EVMGasWei: "40"},
 	}
 	for _, actionId := range []string{"precompile.probe-deploy", "precompile.commitment-write", "precompile.commitment-restore", "precompile.read-battery", "precompile.seed", "precompile.move-forward", "precompile.move-back", "precompile.snapshot", "precompile.dividend", "precompile.transfer-out", "fleet.refresh.deploy-batcher", "coordinator.repair-carry"} {
 		action := Action{ID: actionId, Kind: "evm-read", Target: "synthetic-phase", Parameters: map[string]string{}}
-		if slices.Contains(precompileProbeSuccessorTransactionIds(), actionId) { action.Kind = "evm-transaction" }
+		if slices.Contains(precompileProbeSuccessorTransactionIds(), actionId) {
+			action.Kind = "evm-transaction"
+		}
 		if strings.HasPrefix(actionId, "precompile.") {
 			action.Parameters[precompileProbeAddressParameter] = baseline.ReplacementPrecompileProbe
 			action.Parameters[precompileProbeRuntimeParameter] = baseline.ReplacementPrecompileProbeHash
@@ -108,7 +110,7 @@ func newPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSuccessorF
 				t.Fatal(err)
 			}
 		}
-		entry := JournalEntry{Sequence: uint64(index+2), DeploymentID: source.DeploymentID, PlanHash: source.PlanHash, ActionID: actionId, IntentHash: action.IntentHash, Stage: StageVerified}
+		entry := JournalEntry{Sequence: uint64(index + 2), DeploymentID: source.DeploymentID, PlanHash: source.PlanHash, ActionID: actionId, IntentHash: action.IntentHash, Stage: StageVerified}
 		observed := map[string]any{"kind": action.Kind, "target": action.Target, "probe": snapshot.ProbeAddress, "evidence_hash": snapshot.EvidenceHash, "complete": false, "canonical_chain_evidence": true}
 		record := testFleetSupersessionPostcondition(cfg, action, entry, 100, observed)
 		entry.PostconditionPath, entry.PostconditionHash, err = owner.persistActionPostcondition(record)
@@ -190,11 +192,16 @@ func TestPrecompileProbeSuccessorRequiresFailedUnfundedHistory(t *testing.T) {
 	for _, change := range []string{"successful battery", "broadcast battery", "missing restore", "foreign native intent", "missing failure"} {
 		entries := slices.Clone(fixture.entries)
 		switch change {
-		case "successful battery": entries[3].Stage = StageVerified
-		case "broadcast battery": entries[3].TransactionHash = common.Hash{11}.Hex()
-		case "missing restore": entries[2].Stage = StageFailed
-		case "foreign native intent": entries[1].IntentHash = common.Hash{11}.Hex()
-		case "missing failure": entries[3].Stage = StageIntent
+		case "successful battery":
+			entries[3].Stage = StageVerified
+		case "broadcast battery":
+			entries[3].TransactionHash = common.Hash{11}.Hex()
+		case "missing restore":
+			entries[2].Stage = StageFailed
+		case "foreign native intent":
+			entries[1].IntentHash = common.Hash{11}.Hex()
+		case "missing failure":
+			entries[3].Stage = StageIntent
 		}
 		if _, _, err := failedPrecompileProbeNativeEntries(fixture.source, entries); err == nil {
 			t.Fatalf("changed %s was admitted", change)
@@ -209,20 +216,34 @@ func TestPrecompileProbeSuccessorRejectsDescriptorDrift(t *testing.T) {
 		plan := clonePrecompileProbeSuccessorPlan(t, fixture.plan)
 		successor := plan.PrecompileProbeSuccessor
 		switch change {
-		case "source": successor.SourcePlanHash = common.Hash{12}.Hex()
-		case "repair": plan.CoordinatorRepairCarry = nil
-		case "nonce": successor.DeployerNonce++
-		case "address": successor.Probe = common.Address{12}.Hex()
-		case "retired probe": successor.RetiredProbe = common.Address{12}.Hex()
-		case "retired hash": successor.RetiredRuntimeHash = common.Hash{12}.Hex()
-		case "head": successor.FinalizedHead.Number = 0
-		case "journal": successor.JournalHash = "changed"
-		case "write": successor.Write.Sequence = successor.Restore.Sequence
-		case "restore": successor.Restore.Stage = StageFailed
-		case "funding": successor.Evidence.Seed.TAORao = 1
-		case "battery": successor.Evidence.Battery.FinalizedHead.Number = 1
-		case "native proof": successor.Evidence.Commitment.RestoreTransactionHash = common.Hash{12}.Hex()
-		case "identity": successor.Evidence.ProbeAddress = successor.Probe
+		case "source":
+			successor.SourcePlanHash = common.Hash{12}.Hex()
+		case "repair":
+			plan.CoordinatorRepairCarry = nil
+		case "nonce":
+			successor.DeployerNonce++
+		case "address":
+			successor.Probe = common.Address{12}.Hex()
+		case "retired probe":
+			successor.RetiredProbe = common.Address{12}.Hex()
+		case "retired hash":
+			successor.RetiredRuntimeHash = common.Hash{12}.Hex()
+		case "head":
+			successor.FinalizedHead.Number = 0
+		case "journal":
+			successor.JournalHash = "changed"
+		case "write":
+			successor.Write.Sequence = successor.Restore.Sequence
+		case "restore":
+			successor.Restore.Stage = StageFailed
+		case "funding":
+			successor.Evidence.Seed.TAORao = 1
+		case "battery":
+			successor.Evidence.Battery.FinalizedHead.Number = 1
+		case "native proof":
+			successor.Evidence.Commitment.RestoreTransactionHash = common.Hash{12}.Hex()
+		case "identity":
+			successor.Evidence.ProbeAddress = successor.Probe
 		}
 		if err := validatePrecompileProbeSuccessor(plan); err == nil {
 			t.Fatalf("changed %s descriptor was admitted", change)
@@ -282,10 +303,14 @@ func TestPrecompileProbeSuccessorRejectsEvidenceSubstitution(t *testing.T) {
 			evidence.CommitmentSource = precompileProbeCommitmentSource(successor)
 		}
 		switch change {
-		case "old write", "new write": evidence.Commitment.WriteTransactionHash = common.Hash{14}.Hex()
-		case "old owner": evidence.Owner = common.Address{14}.Hex()
-		case "new source": evidence.CommitmentSource.Probe = successor.Probe
-		case "new probe": evidence.ProbeAddress = common.Address{14}.Hex()
+		case "old write", "new write":
+			evidence.Commitment.WriteTransactionHash = common.Hash{14}.Hex()
+		case "old owner":
+			evidence.Owner = common.Address{14}.Hex()
+		case "new source":
+			evidence.CommitmentSource.Probe = successor.Probe
+		case "new probe":
+			evidence.ProbeAddress = common.Address{14}.Hex()
 		}
 		if _, err := precompileProbeSuccessorEvidence(fixture.plan, &identity, &evidence); err == nil {
 			t.Fatalf("changed %s was admitted", change)
@@ -356,11 +381,16 @@ func TestPrecompileProbeSuccessorPinsSingleCreateBoundary(t *testing.T) {
 		entries := slices.Clone(fixture.entries)
 		entry, observedNonce := final, nonce+1
 		switch change {
-		case "foreign plan": entry.PlanHash = common.Hash{15}.Hex()
-		case "foreign intent": entry.IntentHash = common.Hash{15}.Hex()
-		case "not finalized": entry.Stage = StageBroadcast
-		case "before admission": entry.Sequence = 3
-		case "extra nonce": observedNonce++
+		case "foreign plan":
+			entry.PlanHash = common.Hash{15}.Hex()
+		case "foreign intent":
+			entry.IntentHash = common.Hash{15}.Hex()
+		case "not finalized":
+			entry.Stage = StageBroadcast
+		case "before admission":
+			entry.Sequence = 3
+		case "extra nonce":
+			observedNonce++
 		}
 		if change != "no receipt" {
 			entries = append(entries, entry)
@@ -437,23 +467,39 @@ func newArchivedPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSu
 	t.Helper()
 	fixture := newPrecompileProbeSuccessorFixture(t)
 	roles, err := BuildRoleSecrets(fixture.cfg)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	payloads, err := buildDeploymentPayloads(fixture.cfg, roles, fixture.source.Deployment.InitialNonce)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	oldUpgrade := fixture.source.CoordinatorRepairCarry.Request.Request.OldUpgrade
-	if err := configureCoordinatorUpgradeNonce(payloads, oldUpgrade.DeployerNonce); err != nil { t.Fatal(err) }
-	if err := configurePrecompileProbeNonce(payloads, fixture.source.CoordinatorUpgradeBaseline.ReplacementPrecompileProbeNonce); err != nil { t.Fatal(err) }
+	if err := configureCoordinatorUpgradeNonce(payloads, oldUpgrade.DeployerNonce); err != nil {
+		t.Fatal(err)
+	}
+	if err := configurePrecompileProbeNonce(payloads, fixture.source.CoordinatorUpgradeBaseline.ReplacementPrecompileProbeNonce); err != nil {
+		t.Fatal(err)
+	}
 	payloads.ExpectedRuntime[payloads.PrecompileProbeAddress] = []byte{0x60, 0x77}
 	facts := *testSetupFacts()
 	facts.DeployerNonce = fixture.source.Deployment.InitialNonce
 	source, err := buildPlan(fixture.cfg, &facts, fixture.source.Roles, time.Unix(1, 0))
-	if err != nil { t.Fatal(err) }
-	if err := rebindPlanDeployment(source, fixture.source.Deployment); err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := rebindPlanDeployment(source, fixture.source.Deployment); err != nil {
+		t.Fatal(err)
+	}
 	source.CoordinatorUpgradeBaseline = fixture.source.CoordinatorUpgradeBaseline
-	if err := rebindPlanCoordinatorUpgrade(source, payloads); err != nil { t.Fatal(err) }
+	if err := rebindPlanCoordinatorUpgrade(source, payloads); err != nil {
+		t.Fatal(err)
+	}
 	source.PriorPlanHashes = []string{common.Hash{40}.Hex()}
 	source.PlanHash, err = source.hash()
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	persistFleetCommitmentRecoveryTestPlan(t, fixture.stateDir, source)
 	beforeRepair := source.PlanHash
 	request := coordinatorRepairRequest{
@@ -461,33 +507,45 @@ func newArchivedPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSu
 		ConfigHash: source.ConfigHash, DeploymentID: source.DeploymentID, ArtifactSHA256: strings.Repeat("41", 32), BudgetSHA256: strings.Repeat("42", 32), IdentityHash: common.Hash{43}.Hex(),
 		Proxy: source.Deployment.CoordinatorProxy, Vault: source.Deployment.SettlementVault, Reserve: source.Deployment.ReserveSink,
 		Owner: common.HexToAddress(source.Roles.Owner), Deployer: common.HexToAddress(source.Roles.Deployer), OldUpgrade: oldUpgrade, Upgrade: fixture.source.CoordinatorUpgrade,
-		Deploy: testFleetSupersessionAction(t, Action{ID: "repair.coordinator-rounding.deploy", Kind: "evm-transaction", Target: fixture.source.CoordinatorUpgrade.Implementation.Hex()}),
+		Deploy:   testFleetSupersessionAction(t, Action{ID: "repair.coordinator-rounding.deploy", Kind: "evm-transaction", Target: fixture.source.CoordinatorUpgrade.Implementation.Hex()}),
 		Activate: testFleetSupersessionAction(t, Action{ID: "repair.coordinator-rounding.activate", Kind: "evm-transaction", Target: source.Deployment.CoordinatorProxy.Hex()}),
 	}
 	ownerRole, err := roles.EVMKey("testnet-owner")
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	ownerKey, err := crypto.HexToECDSA(ownerRole.PrivateKeyHex)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	carry := &CoordinatorRepairCarry{Schema: "urnetwork-coordinator-repair-carry-v1", Request: signedCoordinatorRepairRequest{Request: request}}
 	carry.Request.Hash, carry.Request.Signature, err = coordinatorRepairSignature(request, ownerKey)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	finals := []JournalEntry{}
 	for index, action := range []Action{request.Deploy, request.Activate} {
-		finals = append(finals, JournalEntry{Sequence: uint64(index+1), DeploymentID: source.DeploymentID, PlanHash: beforeRepair, ActionID: action.ID, IntentHash: action.IntentHash, Stage: StageFinalized, TransactionHash: common.Hash{byte(44+index)}.Hex(), BlockNumber: uint64(20+index), BlockHash: common.Hash{byte(46+index)}.Hex()})
+		finals = append(finals, JournalEntry{Sequence: uint64(index + 1), DeploymentID: source.DeploymentID, PlanHash: beforeRepair, ActionID: action.ID, IntentHash: action.IntentHash, Stage: StageFinalized, TransactionHash: common.Hash{byte(44 + index)}.Hex(), BlockNumber: uint64(20 + index), BlockHash: common.Hash{byte(46 + index)}.Hex()})
 	}
 	carry.Result.Result = coordinatorRepairResult{Schema: "urnetwork-provisional-coordinator-repair-result-v1", Provisional: true, RequestHash: carry.Request.Hash, IdentityHash: request.IdentityHash, Deploy: finals[0], Activate: finals[1], ObservedHead: ChainHead{Number: 22, Hash: common.Hash{48}.Hex()}}
 	carry.Result.Hash, carry.Result.Signature, err = coordinatorRepairSignature(carry.Result.Result, ownerKey)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	source.ValidatorEvidenceCarry = &ValidatorEvidenceCarry{
 		Schema: "urnetwork-validator-evidence-carry-v1", SourcePlanHash: beforeRepair, SourceReleaseLockHash: source.ReleaseLockHash,
 		Creation: ValidatorEvidenceCarryReceipt{PlanHash: beforeRepair, IntentHash: actionByID(t, source, validatorEvidenceDeployActionID).IntentHash, TransactionHash: common.Hash{60}.Hex(), BlockNumber: 10, BlockHash: common.Hash{61}.Hex(), PostconditionHash: common.Hash{62}.Hex()},
-		Anchor: ValidatorEvidenceCarryReceipt{PlanHash: beforeRepair, IntentHash: actionByID(t, source, validatorEvidenceAnchorActionID).IntentHash, TransactionHash: common.Hash{63}.Hex(), BlockNumber: 11, BlockHash: common.Hash{64}.Hex(), PostconditionHash: common.Hash{65}.Hex()},
+		Anchor:   ValidatorEvidenceCarryReceipt{PlanHash: beforeRepair, IntentHash: actionByID(t, source, validatorEvidenceAnchorActionID).IntentHash, TransactionHash: common.Hash{63}.Hex(), BlockNumber: 11, BlockHash: common.Hash{64}.Hex(), PostconditionHash: common.Hash{65}.Hex()},
 	}
 	source.CoordinatorRepairCarry, source.CoordinatorUpgrade = carry, request.Upgrade
 	source.PriorPlanHashes = append(source.PriorPlanHashes, beforeRepair)
 	source.PlanHash, err = source.hash()
-	if err != nil { t.Fatal(err) }
-	if err := validatePlanBudget(source); err != nil { t.Fatalf("complete archived source prerequisite: %v", err) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validatePlanBudget(source); err != nil {
+		t.Fatalf("complete archived source prerequisite: %v", err)
+	}
 	persistFleetCommitmentRecoveryTestPlan(t, fixture.stateDir, source)
 	owner := &Executor{cfg: fixture.cfg, stateDir: fixture.stateDir, plan: source}
 	entries := slices.Clone(fixture.entries)
@@ -499,7 +557,9 @@ func newArchivedPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSu
 			record := []*ActionPostcondition{fixture.writeRecord, fixture.restoreRecord}[index-1]
 			record.PlanHash, record.IntentHash = source.PlanHash, action.IntentHash
 			entries[index].PostconditionPath, entries[index].PostconditionHash, err = owner.persistActionPostcondition(record)
-			if err != nil { t.Fatal(err) }
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 	}
 	successor := *fixture.plan.PrecompileProbeSuccessor
@@ -509,9 +569,13 @@ func newArchivedPrecompileProbeSuccessorFixture(t *testing.T) *precompileProbeSu
 	plan.PlanHash = common.Hash{49}.Hex()
 	plan.PriorPlanHashes = append(slices.Clone(source.PriorPlanHashes), source.PlanHash)
 	plan.Actions = slices.Clone(source.Actions)
-	if err := rebindPrecompileProbeSuccessor(&plan, source, fixture.payloads, &successor); err != nil { t.Fatal(err) }
+	if err := rebindPrecompileProbeSuccessor(&plan, source, fixture.payloads, &successor); err != nil {
+		t.Fatal(err)
+	}
 	plan.PlanHash, err = plan.hash()
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	fixture.source, fixture.plan, fixture.entries = source, &plan, append(finals, entries...)
 	return fixture
 }
@@ -545,7 +609,9 @@ func TestPrecompileProbeSuccessorConstructsOriginalNativeReplay(t *testing.T) {
 func TestPrecompileProbeSuccessorPublishesSignedBaselineIdentity(t *testing.T) {
 	fixture := newArchivedPrecompileProbeSuccessorFixture(t)
 	identities, err := json.Marshal(finalPublicIdentities{Schema: "urnetwork-sim-public-identities-v1", DeploymentID: fixture.plan.DeploymentID, EVM: map[string]string{"deployer": fixture.plan.Roles.Deployer, "testnet-owner": fixture.plan.Roles.Owner}})
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	public := &PublicDeploymentManifest{PlanHash: fixture.plan.PlanHash, DeploymentID: fixture.plan.DeploymentID, ConfigHash: fixture.plan.ConfigHash, PolicyHash: fixture.plan.PolicyHash, ChainID: fixture.plan.ChainID, GenesisHash: fixture.plan.GenesisHash, Netuid: fixture.plan.Netuid, Contracts: &fixture.plan.Deployment, Identities: identities, CoordinatorUpgrade: fixture.plan.CoordinatorUpgrade, CoordinatorUpgradeBaseline: &fixture.plan.CoordinatorUpgradeBaseline, CoordinatorRepairCarry: fixture.plan.CoordinatorRepairCarry, PrecompileProbeSuccessor: fixture.plan.PrecompileProbeSuccessor}
 	if err := validatePublicPrecompileProbeGeneration(public); err != nil {
 		t.Fatalf("published successor lost its signed original baseline: %v", err)
@@ -591,7 +657,7 @@ func TestPrecompileProbeSuccessorRoutesCurrentContractView(t *testing.T) {
 // while a detached or stale observation cannot adopt that continuation.
 func TestPrecompileProbeSuccessorRerendersObservedCreateNonce(t *testing.T) {
 	fixture := newPrecompileProbeSuccessorFixture(t)
-	actualNonce := fixture.plan.PrecompileProbeSuccessor.DeployerNonce+1
+	actualNonce := fixture.plan.PrecompileProbeSuccessor.DeployerNonce + 1
 	observed := &coordinatorRepairCarryObservation{reference: *fixture.plan.CoordinatorRepairCarry, deployerNonce: actualNonce}
 	fixture.plan.coordinatorRepairObserved = observed
 	migration := &coordinatorUpgradeMigration{Deployment: fixture.plan.Deployment, Baseline: fixture.plan.CoordinatorUpgradeBaseline, Upgrade: fixture.plan.CoordinatorUpgrade, Repair: observed, ProbeSuccessor: fixture.plan.PrecompileProbeSuccessor}
@@ -602,9 +668,13 @@ func TestPrecompileProbeSuccessorRerendersObservedCreateNonce(t *testing.T) {
 		nonce := actualNonce
 		prior := *fixture.plan
 		switch change {
-		case "old nonce": nonce--
-		case "extra nonce": nonce++
-		case "detached observation": copy := *observed; prior.coordinatorRepairObserved = &copy
+		case "old nonce":
+			nonce--
+		case "extra nonce":
+			nonce++
+		case "detached observation":
+			copy := *observed
+			prior.coordinatorRepairObserved = &copy
 		}
 		if ok, _ := coordinatorUpgradeMigrationNonceMatches(&prior, migration, fixture.payloads, nonce, fixture.entries); ok {
 			t.Fatalf("%s was admitted as a completed observation", change)

@@ -76,7 +76,7 @@ type ContractView struct {
 	Deployment                       *ContractDeployment         `json:"deployment,omitempty"`
 	CoordinatorUpgrade               CoordinatorUpgrade          `json:"coordinator_upgrade"`
 	CoordinatorUpgradeBaseline       *CoordinatorUpgradeBaseline `json:"coordinator_upgrade_baseline,omitempty"`
-	PrecompileProbeSuccessor *PrecompileProbeSuccessor `json:"precompile_probe_successor,omitempty"`
+	PrecompileProbeSuccessor         *PrecompileProbeSuccessor   `json:"precompile_probe_successor,omitempty"`
 	FinalizedHead                    ChainHead                   `json:"finalized_head"`
 	CurrentEpoch                     uint64                      `json:"current_epoch"`
 	CurrentEpochStart                uint64                      `json:"current_epoch_start_block"`
