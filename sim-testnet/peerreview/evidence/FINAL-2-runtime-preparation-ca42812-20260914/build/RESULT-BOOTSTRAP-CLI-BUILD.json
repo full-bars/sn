@@ -1,0 +1,11 @@
+{
+  "kind":"temporary-bootstrap-stamped-sim-testnet-cli-build",
+  "build_exit":0,
+  "repos_before_after_identical":true,
+  "repos_before_sha256":"c692f9026eae377e65b1b937eebb97237fb93b68669d3eb14533c2dc2c88d271",
+  "repos_after_sha256":"c692f9026eae377e65b1b937eebb97237fb93b68669d3eb14533c2dc2c88d271",
+  "artifact":{"path":"/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/final-cli/sim-testnet","sha256":"b440fcaf46821278950cefc85bbcba751397cbd1870380e002b05109f1b2b5d4","bytes":140507544,"mode":"0700"},
+  "vcs":{"revision":"ca4281201077b6e3e9cde1004568efa219d0e12c","trimpath":true,"buildvcs":true,"modified":false},
+  "warm_gocache":"/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/gocache",
+  "private_gomodcache":"/home/by/urnetwork/temp/sn-server-migration-monitor-qualification-20260913/runtime/modcache-v2"
+}

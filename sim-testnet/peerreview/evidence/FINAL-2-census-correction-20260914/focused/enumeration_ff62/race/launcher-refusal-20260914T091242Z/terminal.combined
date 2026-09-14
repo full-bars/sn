@@ -1,0 +1,2 @@
+/bin/bash: -c: line 12: syntax error near unexpected token `else'
+/bin/bash: -c: line 12: `    if test "$entry" = sn; else repo="$physical_dir/$entry"; fi'

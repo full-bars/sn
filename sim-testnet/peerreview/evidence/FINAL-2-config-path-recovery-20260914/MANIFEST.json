@@ -1,0 +1,177 @@
+{
+  "entries": [
+    {
+      "bytes": 1850,
+      "path": "README.md",
+      "role": "scope notes",
+      "sha256": "16a2c2989e41fed24e1e73ce2e16ccce55a3574e8d8dd602a10c6c9ca9b25249"
+    },
+    {
+      "bytes": 790,
+      "path": "SUMMARY.json",
+      "role": "derived outcome scope",
+      "sha256": "064028208fe622d3ed491474c500cfa94c1e8ae4d6486cfadc2f5e3607a17a0d"
+    },
+    {
+      "bytes": 3616,
+      "path": "failed-apply/REQUEST.json",
+      "role": "native capture",
+      "sha256": "48f3fa419e332f1af39b2c58c72ead3c45ecc345bef605d15e9245d5d3d0697d",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/REQUEST.json"
+    },
+    {
+      "bytes": 1599,
+      "path": "failed-apply/RESULT.json",
+      "role": "native capture",
+      "sha256": "14265657be0b1f68308414715ef5f404eaa7fbf845357df39ca97a6f0324fa0d",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/RESULT.json"
+    },
+    {
+      "bytes": 520,
+      "path": "failed-apply/STATE-BEFORE.json",
+      "role": "native capture",
+      "sha256": "828615026038d293a1dbeac71a4dcd9554518be9b526b80437ad34f7c77d176e",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/STATE-BEFORE.json"
+    },
+    {
+      "bytes": 8,
+      "path": "failed-apply/native.pid",
+      "role": "native capture",
+      "sha256": "5bbca3791699ff2a86e3bae2c68cb56fc1f2f321f2c931fe8297f3abe1ba0963",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/native.pid"
+    },
+    {
+      "bytes": 2,
+      "path": "failed-apply/outer.exit",
+      "role": "native capture",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/outer.exit"
+    },
+    {
+      "bytes": 8,
+      "path": "failed-apply/outer.pid",
+      "role": "native capture",
+      "sha256": "1473d7fd358b9e1fce4a9c21f10d84cd939d5dedb25d909b928b589a34e9981f",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/outer.pid"
+    },
+    {
+      "bytes": 28,
+      "path": "failed-apply/outer.started-at",
+      "role": "native capture",
+      "sha256": "0da0bb7c2b06fd2fe94695aefe333ef84077475507499bb20b6f5da93e954c16",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/outer.started-at"
+    },
+    {
+      "bytes": 1607,
+      "path": "failed-apply/stderr",
+      "role": "native capture",
+      "sha256": "951e757bd8aaf334ffb214b39b304ad00260ff2368df97415775dde14dfccec7",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/stderr"
+    },
+    {
+      "bytes": 0,
+      "path": "failed-apply/stdout.json",
+      "role": "native capture",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/stdout.json"
+    },
+    {
+      "bytes": 1664,
+      "path": "review/APPLY-PREPARED.json",
+      "role": "source-backed recovery review",
+      "sha256": "ab89b3d2eb6f51d22a1fd6f9e2357d636d6edfd38ed8967444bfe3bee4db6b72",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/config-path-override-review-20260914/APPLY-PREPARED.json"
+    },
+    {
+      "bytes": 1234,
+      "path": "review/DRY-RUN-REQUEST.json",
+      "role": "source-backed recovery review",
+      "sha256": "153d65e88ae7e6eed67b42cd5b6504f2bc28708441467c9e3a20adc12b0a3e37",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/config-path-override-review-20260914/DRY-RUN-REQUEST.json"
+    },
+    {
+      "bytes": 4589,
+      "path": "review/HANDOFF.md",
+      "role": "source-backed recovery review",
+      "sha256": "bb44fd552f1fa6c8bece34128eb5068fdb09d6ab9646d220e2fa5c159707992a",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/config-path-override-review-20260914/HANDOFF.md"
+    },
+    {
+      "bytes": 7192,
+      "path": "review/REVIEW.json",
+      "role": "source-backed recovery review",
+      "sha256": "8542d15d1cdc60090ddfa80f4b5c8e6929774518d84684b6b6e0dde12dfad5bb",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/config-path-override-review-20260914/REVIEW.json"
+    },
+    {
+      "bytes": 1548,
+      "path": "successful-preview/REQUEST.json",
+      "role": "native capture",
+      "sha256": "05f915c8c470afe8c5f0439c1b03c089f5e52a674c06363f4b978d3e945fb23f",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-config-path-recovery-20260914T050755Z/REQUEST.json"
+    },
+    {
+      "bytes": 1550,
+      "path": "successful-preview/RESULT.json",
+      "role": "native capture",
+      "sha256": "d051acc0421dc94033263aa2c35f42f7020b9765c8fd163a3175700ef69fb59c",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-config-path-recovery-20260914T050755Z/RESULT.json"
+    },
+    {
+      "bytes": 520,
+      "path": "successful-preview/STATE-BEFORE.json",
+      "role": "native capture",
+      "sha256": "c15d4b4db91eab91eb26b1d99d35ef192d5eaf7eeaf234c37fa3934ff7221062",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-config-path-recovery-20260914T050755Z/STATE-BEFORE.json"
+    },
+    {
+      "bytes": 8,
+      "path": "successful-preview/native.pid",
+      "role": "native capture",
+      "sha256": "8ece471e4fff034c14e8029a6c8b69b77bab8c039eaed4376787d2aabc64f66c",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-config-path-recovery-20260914T050755Z/native.pid"
+    },
+    {
+      "bytes": 2,
+      "path": "successful-preview/outer.exit",
+      "role": "native capture",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-config-path-recovery-20260914T050755Z/outer.exit"
+    },
+    {
+      "bytes": 8,
+      "path": "successful-preview/outer.pid",
+      "role": "native capture",
+      "sha256": "5a784eaf56e2cd2398b666e11d0f7d618d9237f605010628c805e96eab0b981b",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-config-path-recovery-20260914T050755Z/outer.pid"
+    },
+    {
+      "bytes": 417,
+      "path": "successful-preview/stderr",
+      "role": "native capture",
+      "sha256": "35c59053bc02ee735ea51d440d0cbcac9e122c4940229d8440f5b05209309af5",
+      "source": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-config-path-recovery-20260914T050755Z/stderr"
+    }
+  ],
+  "schema": "sim-testnet-config-path-recovery-evidence-v1",
+  "scope": {
+    "actions_unchanged": 2309,
+    "actual_rpc_authority": "192.168.1.162:9944",
+    "independent_rpc": false,
+    "new_repair_finalized": false,
+    "original_apply_exit": 1,
+    "original_apply_finished_at": "2026-09-14T02:33:52.972872Z",
+    "original_apply_started_at": "2026-09-14T02:22:23.709381Z",
+    "original_journal_unchanged": true,
+    "original_supervisor_files_unchanged": true,
+    "plan_hash": "0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414",
+    "preview_entire_plan_equal_installed": true,
+    "preview_exit": 0,
+    "preview_finished_at": "2026-09-14T05:08:04.750241Z",
+    "preview_is_not_apply": true,
+    "preview_state_unchanged": true,
+    "preview_stdout_sha256": "9340f672b842138cf8b236011e125bac014001aecce3d85e463d6a521a93e23c",
+    "rebuilds": 0,
+    "source_changes": 0
+  }
+}

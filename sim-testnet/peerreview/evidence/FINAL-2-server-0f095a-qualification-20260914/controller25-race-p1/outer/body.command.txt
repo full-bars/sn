@@ -1,0 +1,1 @@
+/home/by/urnetwork/temp/sn-server-migration-monitor-qualification-20260913/runtime/server-0f095a-v1/controller25-race-p1/capture/controller-race.testbin -test.run=\^TestStClientKey\(RegistrationCohort\|RegistrationReadiness\|Publication\|HistoryActualControl\) -test.v=test2json -test.count=1 -test.parallel=4 -test.timeout=900s

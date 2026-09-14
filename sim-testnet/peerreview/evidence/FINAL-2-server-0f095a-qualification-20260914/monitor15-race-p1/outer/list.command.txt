@@ -1,0 +1,1 @@
+/home/by/urnetwork/temp/sn-server-migration-monitor-qualification-20260913/runtime/server-0f095a-v1/monitor15-race-p1/capture/monitor-race.testbin -test.list=\^Test\(MigrationArtifactCatalog\|MigrationsSignal\)

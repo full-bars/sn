@@ -1,0 +1,4 @@
+=== RUN   TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis
+--- PASS: TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis (0.29s)
+=== NAME  
+PASS

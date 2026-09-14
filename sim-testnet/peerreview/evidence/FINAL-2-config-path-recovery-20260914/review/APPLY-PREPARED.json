@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/final-cli/sim-testnet",
+    "setup",
+    "--config",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/testnet.yml",
+    "--state-dir",
+    "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/config",
+    "--owned-rpc-authority",
+    "192.168.1.162:9944",
+    "--format",
+    "json",
+    "--apply",
+    "--plan-hash",
+    "0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414"
+  ],
+  "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+  "binary_sha256": "b440fcaf46821278950cefc85bbcba751397cbd1870380e002b05109f1b2b5d4",
+  "authorization": "one approved6000 alpha replacement within37250 lifetime",
+  "condition": "Only after native dry-run confirms exact unchanged approved plan hash and budget.",
+  "prior_failed_request": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-20260914T022223Z/REQUEST.json"
+}

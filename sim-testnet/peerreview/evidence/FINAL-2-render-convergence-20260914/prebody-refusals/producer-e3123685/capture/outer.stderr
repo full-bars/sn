@@ -1,0 +1,10 @@
+verify tidy Go module: connect
+go: downloading github.com/rogpeppe/go-internal v1.10.0
+go: github.com/urnetwork/connect/gossip imports
+	github.com/libp2p/go-libp2p/p2p/security/noise imports
+	github.com/flynn/noise tested by
+	github.com/flynn/noise.test imports
+	gopkg.in/check.v1 imports
+	github.com/kr/pretty imports
+	github.com/rogpeppe/go-internal/fmtsort: module lookup disabled by GOPROXY=off
+[release gate preflight] source-freeze exit=1; retained /home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/producer-e3123685/tmp/urnetwork-release-gate.Yburbe4s/preflights/source-freeze

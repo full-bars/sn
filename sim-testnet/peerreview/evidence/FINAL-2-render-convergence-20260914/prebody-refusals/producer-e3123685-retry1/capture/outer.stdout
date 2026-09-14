@@ -1,0 +1,3 @@
+[release gate] private state /home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/producer-e3123685-retry1/tmp/urnetwork-release-gate.Lff2BFaQ; ready jobs=3; CPUs/job=4
+[release-1.0 producer] source-freeze preflight
+[release gate] retained private logs/state: /home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/producer-e3123685-retry1/tmp/urnetwork-release-gate.Lff2BFaQ

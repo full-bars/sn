@@ -1,0 +1,241 @@
+commit 1469b14d52661882d52e062eb96c3a60d5e86100
+Author:     Bitprecipice <bitprecipice@proton.me>
+AuthorDate: Mon Sep 14 05:35:56 2026 +0000
+Commit:     Bitprecipice <bitprecipice@proton.me>
+CommitDate: Mon Sep 14 05:35:56 2026 +0000
+
+    Rerender strict staging for owned RPC continuation
+
+diff --git a/sim-testnet/owned_rpc_test.go b/sim-testnet/owned_rpc_test.go
+index 382da96..436c550 100644
+--- a/sim-testnet/owned_rpc_test.go
++++ b/sim-testnet/owned_rpc_test.go
+@@ -206,8 +206,18 @@ func TestOwnedRPCPlanApprovalBindsExactRouteWithoutChangingCustody(t *testing.T)
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if plan.OwnedRPCAuthority != cfg.ownedRPCAuthority || prior.ConfigHash != plan.ConfigHash || prior.PolicyHash != plan.PolicyHash || prior.PlanHash == plan.PlanHash || prior.ResolvedInputsHash == plan.ResolvedInputsHash || !reflect.DeepEqual(prior.Roles, plan.Roles) || !reflect.DeepEqual(prior.Actions, plan.Actions) || prior.MaximumSpend != plan.MaximumSpend || prior.Limits != plan.Limits {
+-		t.Fatal("owned route was unbound or changed source actions, custody, or economic limits")
++	if plan.OwnedRPCAuthority != cfg.ownedRPCAuthority || prior.ConfigHash != plan.ConfigHash || prior.PolicyHash != plan.PolicyHash || prior.PlanHash == plan.PlanHash || prior.ResolvedInputsHash == plan.ResolvedInputsHash || !reflect.DeepEqual(prior.Roles, plan.Roles) || prior.MaximumSpend != plan.MaximumSpend || prior.Limits != plan.Limits {
++		t.Fatal("owned route was unbound or changed source identity, custody, or economic limits")
++	}
++	for _, before := range prior.Actions {
++		after := actionByID(t, plan, before.ID)
++		if before.ID == "config.render" {
++			if before.IntentHash == after.IntentHash || after.Parameters["resolved_inputs_hash"] != plan.ResolvedInputsHash || actionAcceptsIntent(after, before.IntentHash) {
++				t.Fatal("owned route reused the prior runtime rendering")
++			}
++		} else if !reflect.DeepEqual(before, after) {
++			t.Fatalf("owned route changed unrelated action %s", before.ID)
++		}
+ 	}
+ 	if err := validateOwnedRPCPlan(cfg, plan); err != nil {
+ 		t.Fatal(err)
+diff --git a/sim-testnet/plan.go b/sim-testnet/plan.go
+index d9d61cb..6dd3b16 100644
+--- a/sim-testnet/plan.go
++++ b/sim-testnet/plan.go
+@@ -1554,9 +1554,12 @@ func buildPlanWithRegistrationGeneration(cfg *ResolvedConfig, facts *SetupFacts,
+ 		add(Action{ID: runtimeEvidenceActivationBoundaryActionId, Kind: "evm-read", Target: evidenceManifest.Address.Hex(), Description: "retain the common finalized activation boundary and exact fixed source inputs before validator startup", Parameters: map[string]string{"mode": "fresh-v2", "policy_hash": cfg.PolicyHash}, DependsOn: activationDeps})
+ 		setupDeps = append(setupDeps, runtimeEvidenceActivationBoundaryActionId)
+ 	}
++	// An owned route preserves consent identity but changes rendered RPC inputs.
++	// Its local action must therefore bind the resolved launch inputs as well.
+ 	add(Action{ID: "config.render", Kind: "local", Target: cfg.Config.Deployment.DeploymentID, Description: "atomically render isolated operator, miner, validator, and supervisor configs", Parameters: map[string]string{
+ 		"config_hash": cfg.ConfigHash, "policy_hash": cfg.PolicyHash, "operator_config_overlay": operatorConfigOverlayVersion,
+ 		"runtime_config_format": runtimeConfigFormatVersion,
++		"resolved_inputs_hash":  resolvedHash,
+ 	}, DependsOn: setupDeps})
+ 	add(Action{ID: "accounts.provision", Kind: "local", Target: cfg.Config.Deployment.DeploymentID, Description: "provision stable operator-scoped miner and validator identities", DependsOn: []string{"config.render"}})
+ 	add(Action{ID: "campaign.voluntary-conviction.1", Kind: "evm-transaction", Target: "no:1", Description: "lock the exact first-tier boundary as voluntary conviction without recording current-epoch demand", Parameters: map[string]string{"no_id": "1", "amount_rao": fmt.Sprint(cfg.Config.Scenarios.VoluntaryConvictionRao), "reserve_runtime_share_transitions": strconv.FormatUint(reserveRuntimeShareTransitionCount, 10), "reserve_rounding_allowance_rao": strconv.FormatUint(reserveRoundingAllowancePerCallRao, 10)}, Spend: Spend{EVMGasWei: voluntaryGas}, DependsOn: []string{"accounts.provision", "campaign.evm-gas-reserve", "alpha.transfer.operator-deposit.1"}})
+diff --git a/sim-testnet/runtime_config_manifest.go b/sim-testnet/runtime_config_manifest.go
+index 5994647..d58b75b 100644
+--- a/sim-testnet/runtime_config_manifest.go
++++ b/sim-testnet/runtime_config_manifest.go
+@@ -15,9 +15,9 @@ import (
+ 
+ const runtimeConfigManifestSchema = "urnetwork-sim-runtime-config-manifest-v1"
+ 
+-// Changes to required rendered files must invalidate the local render action
+-// without changing the policy or configuration identity of chain receipts.
+-const runtimeConfigFormatVersion = "signed-provider-wallet-v1"
++// Changes to required files or staging semantics invalidate the local render
++// action without changing policy or configuration identity of chain receipts.
++const runtimeConfigFormatVersion = "strict-reserved-owned-rpc-v2"
+ 
+ // Bind one immutable process input by state-relative path, content and mode.
+ type RuntimeConfigFile struct {
+diff --git a/sim-testnet/runtime_evidence_launch_config_test.go b/sim-testnet/runtime_evidence_launch_config_test.go
+index 01df54a..18d9820 100644
+--- a/sim-testnet/runtime_evidence_launch_config_test.go
++++ b/sim-testnet/runtime_evidence_launch_config_test.go
+@@ -106,8 +106,24 @@ func retainRuntimeEvidenceLaunchInputsTest(t *testing.T, cfg *ResolvedConfig, st
+ // Actual launch capacities must not be replaced by the much smaller generic
+ // fixture. Both API destinations and both validator loaders see exact outputs.
+ func TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender(t *testing.T) {
++	testRuntimeEvidenceLaunchTemplateRender(t, false)
++}
++
++func TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig(t *testing.T) {
++	testRuntimeEvidenceLaunchTemplateRender(t, true)
++}
++
++func testRuntimeEvidenceLaunchTemplateRender(t *testing.T, owned bool) {
++	t.Helper()
+ 	t.Parallel()
+ 	cfg := runtimeEvidenceLaunchConfigTest(t)
++	if owned {
++		var err error
++		cfg, err = prepareOwnedRPCConfiguration(cfg, "192.168.1.162:9944")
++		if err != nil {
++			t.Fatal(err)
++		}
++	}
+ 	approvedHash := cfg.ConfigHash
+ 	cfg.Repos.PlatformConfig = testOperatorConfigSources(t)
+ 	cfg.Repos.Vault = filepath.Join(t.TempDir(), "vault")
+@@ -155,13 +171,71 @@ func TestRuntimeEvidenceLaunchV2TemplateReachesGeneratedSetupAndRender(t *testin
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+-	for range 2 {
++	preserved := map[string]string{}
++	for pass := range 2 {
+ 		if err := RenderRuntimeConfigs(cfg, stateDir, roles); err != nil {
+ 			t.Fatalf("actual launch template cannot render or restart: %v", err)
+ 		}
+ 		if _, err := verifyRuntimeConfigManifest(cfg, stateDir); err != nil {
+ 			t.Fatal(err)
+ 		}
++		if owned && pass == 0 {
++			receipt, err := postconditionRelativePath(fixture.plan.PlanHash, validatorEvidenceDeployActionID)
++			if err != nil {
++				t.Fatal(err)
++			}
++			for _, path := range []string{filepath.Join(stateDir, "plan.json"), filepath.Join(stateDir, "journal.jsonl"), filepath.Join(stateDir, receipt),
++				filepath.Join(stateDir, "evidence-v2-setup", "prepared.json"), filepath.Join(stateDir, "evidence-v2-setup", "completed.json"), minerPayoutSeedPath(stateDir, 1)} {
++				hash, err := fileSHA256(path)
++				if err != nil {
++					t.Fatal(err)
++				}
++				preserved[path] = hash
++			}
++			// Reproduce the stopped deployment's provisional staging settings.
++			// These changed outputs must fail current verification until rendered.
++			for index, expected := range wantReserved {
++				path := filepath.Join(stateDir, "runtime", fmt.Sprintf("operator-%d", index+1), "vault", "st.yml")
++				wire, err := os.ReadFile(path)
++				if err != nil {
++					t.Fatal(err)
++				}
++				root, err := runtimeAttemptUploadYAML(wire)
++				if err != nil {
++					t.Fatal(err)
++				}
++				expected.NativeRPCURLs = slices.Clone(cfg.Config.Artifacts.ReservedAttemptUploads[index].NativeRPCURLs)
++				expected.Admission.ProvisionalSeededDiscoveryOnly = true
++				expected.Admission.ProvisionalRetainedContextAuthority = true
++				for _, validator := range resolved.Config.ValidatorEvidenceV2 {
++					for _, operator := range validator.Evidence.Operators {
++						expected.Admission.ActivationContexts = append(expected.Admission.ActivationContexts, operator.Context)
++					}
++				}
++				for node := 0; node < len(root.Content); node += 2 {
++					if root.Content[node].Value == "testnet-reserved-attempt-upload" {
++						if err := root.Content[node+1].Encode(expected); err != nil {
++							t.Fatal(err)
++						}
++					}
++				}
++				wire, err = yaml.Marshal(root)
++				if err != nil {
++					t.Fatal(err)
++				}
++				if err := atomicWrite(path, wire, 0o600); err != nil {
++					t.Fatal(err)
++				}
++			}
++			if _, err := verifyRuntimeConfigManifest(cfg, stateDir); err == nil || !strings.Contains(err.Error(), "runtime reserved staging differs") {
++				t.Fatalf("stale provisional staging was accepted before native rerender: %v", err)
++			}
++		}
++	}
++	for path, want := range preserved {
++		if got, err := fileSHA256(path); err != nil || got != want {
++			t.Fatalf("local rerender changed preserved plan, journal, receipt, evidence or custody at %s: %v", path, err)
++		}
+ 	}
+ 	for index, expected := range wantReserved {
+ 		path := filepath.Join(stateDir, "runtime", fmt.Sprintf("operator-%d", index+1), "vault", "st.yml")
+diff --git a/sim-testnet/runtime_evidence_reserved_render_test.go b/sim-testnet/runtime_evidence_reserved_render_test.go
+index 73cb5ea..82262c1 100644
+--- a/sim-testnet/runtime_evidence_reserved_render_test.go
++++ b/sim-testnet/runtime_evidence_reserved_render_test.go
+@@ -147,8 +147,8 @@ func prepareRuntimeReservedRenderTest(t *testing.T, cfg *ResolvedConfig, stateDi
+ 		crypto.CreateAddress(signer, transaction.Nonce()) != companion.Address || transaction.Value().Sign() != 0 || !bytes.Equal(transaction.Data(), payloads.ValidatorEvidence.Creation) {
+ 		t.Fatalf("retained renderer creation differs from actual generated signed bytes: %v", err)
+ 	}
+-	if cfg.OperationalRPCMode != rpcModePublicOverride {
+-		t.Fatal("renderer source fixture requires the explicit shared-provider test profile")
++	if cfg.OperationalRPCMode != rpcModePublicOverride && !ownedRPCOnly(cfg) {
++		t.Fatal("renderer source fixture requires an explicit shared-provider or owned-node test profile")
+ 	}
+ 	executor := &Executor{cfg: cfg, stateDir: stateDir, plan: plan, roles: roles, payloads: payloads, journal: journal, deployer: manager}
+ 	head := ChainHead{Number: creation.BlockNumber, Hash: creation.BlockHash}
+@@ -193,6 +193,12 @@ func prepareRuntimeReservedRenderTest(t *testing.T, cfg *ResolvedConfig, stateDi
+ 		t.Fatalf("complete generated renderer authority was not admitted: %v", err)
+ 	}
+ 	for index, value := range values {
++		if ownedRPCOnly(cfg) {
++			if !slices.Equal(value.NativeRPCURLs, []string{verificationSubstrateEndpoint(cfg)}) {
++				t.Fatal("owned staging retained another native discovery endpoint")
++			}
++			value.NativeRPCURLs = slices.Clone(cfg.Config.Artifacts.ReservedAttemptUploads[index].NativeRPCURLs)
++		}
+ 		if runtimeReservedAttemptUploadIsTemplate(cfg.Config.Artifacts.ReservedAttemptUploads[index]) {
+ 			value.Admission.Deployment = validatorpkg.ValidatorUploadDeployment{MaximumSubnetUIDs: value.Admission.Deployment.MaximumSubnetUIDs}
+ 		}
+diff --git a/sim-testnet/runtime_reserved_attempt_upload.go b/sim-testnet/runtime_reserved_attempt_upload.go
+index 4cfdb7b..f912256 100644
+--- a/sim-testnet/runtime_reserved_attempt_upload.go
++++ b/sim-testnet/runtime_reserved_attempt_upload.go
+@@ -106,6 +106,11 @@ func runtimeReservedAttemptUploads(cfg *ResolvedConfig, stateDir string, contrac
+ 			}
+ 		}
+ 		value.NativeRPCURLs = slices.Clone(value.NativeRPCURLs)
++		if ownedRPCOnly(cfg) {
++			// The approved owned route also governs reserved staging discovery.
++			// Keep the source template unchanged for its original consent hash.
++			value.NativeRPCURLs = []string{verificationSubstrateEndpoint(cfg)}
++		}
+ 		value.Admission.ActivationContexts = slices.Clone(value.Admission.ActivationContexts)
+ 	}
+ 	return result, nil
+diff --git a/sim-testnet/runtime_wallet_seed_test.go b/sim-testnet/runtime_wallet_seed_test.go
+index 3a3c837..4c7f66a 100644
+--- a/sim-testnet/runtime_wallet_seed_test.go
++++ b/sim-testnet/runtime_wallet_seed_test.go
+@@ -65,6 +65,12 @@ func TestSimulatorClientSeedCustodyWalletPreservesProvisionedRole(t *testing.T)
+ }
+ 
+ func TestSimulatorClientSeedCustodyWalletRevisionRequiresFreshRender(t *testing.T) {
++	t.Run("legacy-wallet", func(t *testing.T) { testSimulatorRuntimeFormatRevision(t, "") })
++	t.Run("prior-reserved-staging", func(t *testing.T) { testSimulatorRuntimeFormatRevision(t, "signed-provider-wallet-v1") })
++}
++
++func testSimulatorRuntimeFormatRevision(t *testing.T, priorFormat string) {
++	t.Helper()
+ 	cfg := testResolvedConfig(t)
+ 	roles, err := derivePublicRoles(cfg)
+ 	if err != nil {
+@@ -80,6 +86,10 @@ func TestSimulatorClientSeedCustodyWalletRevisionRequiresFreshRender(t *testing.
+ 		action := &prior.Actions[index]
+ 		if action.ID == "config.render" {
+ 			delete(action.Parameters, "runtime_config_format")
++			delete(action.Parameters, "resolved_inputs_hash")
++			if priorFormat != "" {
++				action.Parameters["runtime_config_format"] = priorFormat
++			}
+ 			action.IntentHash, err = actionIntentHash(*action)
+ 			if err != nil {
+ 				t.Fatal(err)

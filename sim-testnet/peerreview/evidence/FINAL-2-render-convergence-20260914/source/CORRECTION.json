@@ -1,0 +1,14 @@
+{
+  "recorded_at": "2026-09-14T05:53:08.832437+00:00",
+  "source_commit": "cf4eae3d70a83277494048e8d7cc44ea099b5c2d",
+  "prior_candidate": "1469b14d52661882d52e062eb96c3a60d5e86100",
+  "failed_normal_capture": "/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z",
+  "failure": "reserved upload native provider requires TLS or literal loopback",
+  "production_correction": "Project owned reserved NativeRPCURLs to the existing ws://127.0.0.10:19946 Substrate proxy before full deployment validation. No server/address-policy changes.",
+  "upstream": "ws://192.168.1.162:9944",
+  "request_limit": 0,
+  "public_fallback": false,
+  "regression_correction": "Full deployment validation retained; actual provisioning ProcessSpec loopback listen, exact owned upstream, absence of pacing/public TLS and selected owned polling checked.",
+  "qualification_status": "Handed to Terra for same seven normal/race selectors; no Astra execution.",
+  "patch_sha256": "e6dfff4cacbcc7dd72a76e475d032415100854b47295a6551eb4ca93e8687b5c"
+}

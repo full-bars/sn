@@ -1,0 +1,6 @@
+[env]glog not configured from command line. Using default configuration.
+I0913 23:57:47.621256 1207614 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0913 23:57:47.621473 1207614 env.go:770] [env]try /home/by/urnetwork/config/local, [settings.yml]
+I0913 23:57:47.621518 1207614 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0913 23:57:47.621876 1207614 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0913 23:57:47.621899 1207614 env.go:67] [env]settings = map[]

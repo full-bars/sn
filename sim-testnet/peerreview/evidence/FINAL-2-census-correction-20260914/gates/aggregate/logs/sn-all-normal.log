@@ -1,0 +1,239 @@
+?   	github.com/urfoundation/sn/cli/miner	[no test files]
+?   	github.com/urfoundation/sn/cli/snclaim	[no test files]
+?   	github.com/urfoundation/sn/cli/validator	[no test files]
+ok  	github.com/urfoundation/sn/clientauth	0.179s
+?   	github.com/urfoundation/sn/cmd/sp2	[no test files]
+ok  	github.com/urfoundation/sn/crv4	192.277s
+ok  	github.com/urfoundation/sn/merkle	0.017s
+ok  	github.com/urfoundation/sn/miner	2.079s
+ok  	github.com/urfoundation/sn/miner/onchain	0.050s
+ok  	github.com/urfoundation/sn/payoutartifact	0.010s
+ok  	github.com/urfoundation/sn/protocol	0.173s
+ok  	github.com/urfoundation/sn/scripts/qualification	0.883s
+ok  	github.com/urfoundation/sn/scripts/server-fixture	5.307s
+[env]glog not configured from command line. Using default configuration.
+I0914 07:33:45.557156 2080011 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 07:33:45.557455 2080011 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 07:33:45.557586 2080011 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 07:33:45.557631 2080011 env.go:67] [env]settings = map[]
+2026/09/14 07:42:40 http: proxy error: context canceled
+2026/09/14 07:42:58 http: proxy error: context canceled
+null
+sim-testnet: carried action audit 40/40
+sim-testnet: carried action audit 39/39
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet release 1.0
+
+Usage: sim-testnet <command> [options]
+
+Commands:
+  doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
+  release-lock  render or atomically refresh observed release-lock fields from clean repositories
+  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  history-adoption  capture a source-pinned request for strict startup after retained V2 history
+  relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
+  setup    converge the existing subnet and install contracts (dry-run unless approved)
+  launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  resume   reconcile the journal and continue an interrupted approved action
+  coordinator-repair  apply one bounded provisional coordinator implementation correction
+  fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  status   show process and finalized on-chain state
+  inspect  emit the complete public live-state view
+  analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
+  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  tail     multiplex structured process logs
+  stop     stop local processes only; preserves keys, evidence, and chain state
+  retire   plan future-effective operator retirement; dry-run by default
+
+Common options:
+  --config PATH       harness config (default sim-testnet/testnet.yml)
+  --state-dir PATH    persistent state root (default <config-dir>/runs)
+  --sn-repo PATH      repository discovery override
+  --server-repo PATH  repository discovery override
+  --operator-proxy-repo PATH  repository discovery override
+  --vault-repo PATH   repository discovery override
+  --platform-config-repo PATH  platform config repository override
+  --format human|json
+  --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
+  --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-continuation-plan PATH  exact saved continuation plan for adoption
+  --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
+  --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
+  --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
+  --repair-artifact PATH --repair-artifact-sha256 HASH  exact reviewed Foundry coordinator artifact
+  --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
+  --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
+  --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
+  --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
+  --detach            persistent supervisor mode for launch
+  --name NAME         scenario name
+  --manifest PATH     public manifest for secretless inspect/analyze
+  --run-id ID         exact signed campaign run for public analyze
+sim-testnet release 1.0
+
+Usage: sim-testnet <command> [options]
+
+Commands:
+  doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
+  release-lock  render or atomically refresh observed release-lock fields from clean repositories
+  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  history-adoption  capture a source-pinned request for strict startup after retained V2 history
+  relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
+  setup    converge the existing subnet and install contracts (dry-run unless approved)
+  launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  resume   reconcile the journal and continue an interrupted approved action
+  coordinator-repair  apply one bounded provisional coordinator implementation correction
+  fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  status   show process and finalized on-chain state
+  inspect  emit the complete public live-state view
+  analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
+  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  tail     multiplex structured process logs
+  stop     stop local processes only; preserves keys, evidence, and chain state
+  retire   plan future-effective operator retirement; dry-run by default
+
+Common options:
+  --config PATH       harness config (default sim-testnet/testnet.yml)
+  --state-dir PATH    persistent state root (default <config-dir>/runs)
+  --sn-repo PATH      repository discovery override
+  --server-repo PATH  repository discovery override
+  --operator-proxy-repo PATH  repository discovery override
+  --vault-repo PATH   repository discovery override
+  --platform-config-repo PATH  platform config repository override
+  --format human|json
+  --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
+  --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-continuation-plan PATH  exact saved continuation plan for adoption
+  --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
+  --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
+  --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
+  --repair-artifact PATH --repair-artifact-sha256 HASH  exact reviewed Foundry coordinator artifact
+  --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
+  --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
+  --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
+  --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
+  --detach            persistent supervisor mode for launch
+  --name NAME         scenario name
+  --manifest PATH     public manifest for secretless inspect/analyze
+  --run-id ID         exact signed campaign run for public analyze
+sim-testnet release 1.0
+
+Usage: sim-testnet <command> [options]
+
+Commands:
+  doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
+  release-lock  render or atomically refresh observed release-lock fields from clean repositories
+  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  history-adoption  capture a source-pinned request for strict startup after retained V2 history
+  relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
+  setup    converge the existing subnet and install contracts (dry-run unless approved)
+  launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  resume   reconcile the journal and continue an interrupted approved action
+  coordinator-repair  apply one bounded provisional coordinator implementation correction
+  fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  status   show process and finalized on-chain state
+  inspect  emit the complete public live-state view
+  analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
+  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  tail     multiplex structured process logs
+  stop     stop local processes only; preserves keys, evidence, and chain state
+  retire   plan future-effective operator retirement; dry-run by default
+
+Common options:
+  --config PATH       harness config (default sim-testnet/testnet.yml)
+  --state-dir PATH    persistent state root (default <config-dir>/runs)
+  --sn-repo PATH      repository discovery override
+  --server-repo PATH  repository discovery override
+  --operator-proxy-repo PATH  repository discovery override
+  --vault-repo PATH   repository discovery override
+  --platform-config-repo PATH  platform config repository override
+  --format human|json
+  --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
+  --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-continuation-plan PATH  exact saved continuation plan for adoption
+  --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
+  --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
+  --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
+  --repair-artifact PATH --repair-artifact-sha256 HASH  exact reviewed Foundry coordinator artifact
+  --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
+  --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
+  --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
+  --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
+  --detach            persistent supervisor mode for launch
+  --name NAME         scenario name
+  --manifest PATH     public manifest for secretless inspect/analyze
+  --run-id ID         exact signed campaign run for public analyze
+1.0
+1.0
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestProvisionalResumeRecordsActualDriverBeforeJournalAndKeepsInp3015894158/001/provisional-resumes/invocation-2216535713/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestProvisionalResumeRecordsActualDriverBeforeJournalAndKeepsInp3015894158/001/provisional-resumes/invocation-1135260966/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestProvisionalResumeReusesCurrentAndAncestorVerifiedWithoutDisp2489153980/001/provisional-resumes/invocation-972033065/provenance.json
+sim-testnet: provisional resume authenticated 1 verified local receipts; current topology readiness remains required
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestProvisionalResumeReusesCurrentAndAncestorVerifiedWithoutDisp2489153980/002/provisional-resumes/invocation-1138295871/provenance.json
+sim-testnet: provisional resume authenticated 1 verified local receipts; current topology readiness remains required
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestProvisionalResumeTamperedReceiptFailsWithoutDispatch476476797/001/provisional-resumes/invocation-1043856319/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestProvisionalResumeKeepsDependenciesTopologyAndPendingStages2358244727/001/provisional-resumes/invocation-1832717911/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestProvisionalResumeKeepsDependenciesTopologyAndPendingStages2358244727/002/provisional-resumes/invocation-997139515/provenance.json
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestProvisionalResumeHonestBuildAndNoFinalAcceptance2342349751/001/provisional-resumes/invocation-2263578160/provenance.json
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 2/3 swarms; wave miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provider startup ready 2/3 swarms; wave miner-1,miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 1/3 swarms; wave miner-1
+sim-testnet: provider startup ready 2/3 swarms; wave miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provider startup ready 2/3 swarms; wave miner-1,miner-2
+sim-testnet: provider startup ready 3/3 swarms; wave miner-3
+sim-testnet: provisional testnet resume; final_acceptance=false; retained plan 0x5656565656565656565656565656565656565656565656565656565656565656; actual driver SHA256 sha256:1212121212121212121212121212121212121212121212121212121212121212; provenance /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestSupervisorStartupProviderWavesRespectRPCModeAndProvisionalAd1590229198/001/provisional-resumes/invocation-341342618/provenance.json
+sim-testnet: provider startup ready 2/20 swarms; wave miner-1,miner-2
+sim-testnet: provider startup ready 4/20 swarms; wave miner-3,miner-4
+sim-testnet: provider startup ready 6/20 swarms; wave miner-5,miner-6
+sim-testnet: provider startup ready 8/20 swarms; wave miner-7,miner-8
+sim-testnet: provider startup ready 10/20 swarms; wave miner-9,miner-10
+sim-testnet: provider startup ready 12/20 swarms; wave miner-11,miner-12
+sim-testnet: provider startup ready 14/20 swarms; wave miner-13,miner-14
+sim-testnet: provider startup ready 16/20 swarms; wave miner-15,miner-16
+sim-testnet: provider startup ready 18/20 swarms; wave miner-17,miner-18
+sim-testnet: provider startup ready 20/20 swarms; wave miner-19,miner-20
+I0914 07:55:17.023546 2080011 env.go:770] [env]try /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli784925616/001/runtime/operator-1/vault, [tls 127.0.1.1 127.0.1.1.crt]
+I0914 07:55:17.023582 2080011 env.go:770] [env]try /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli784925616/001/runtime/operator-1/vault/tls, [127.0.1.1 127.0.1.1.crt]
+I0914 07:55:17.023590 2080011 env.go:770] [env]try /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli784925616/001/runtime/operator-1/vault/tls/127.0.1.1, [127.0.1.1.crt]
+I0914 07:55:17.023704 2080011 env.go:770] [env]try /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli784925616/001/runtime/operator-1/vault, [tls 127.0.1.1 127.0.1.1.key]
+I0914 07:55:17.023717 2080011 env.go:770] [env]try /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli784925616/001/runtime/operator-1/vault/tls, [127.0.1.1 127.0.1.1.key]
+I0914 07:55:17.023723 2080011 env.go:770] [env]try /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/gotmp/TestRenderedOperatorConnectTLSLoadsThroughRealServerAndPinnedCli784925616/001/runtime/operator-1/vault/tls/127.0.1.1, [127.0.1.1.key]
+--- FAIL: TestProducerGateCaptureSelectionRequiresIndependentPopulation (0.49s)
+    release_gate_capture_metadata_test.go:388: capture partition changed its complete source census: ordinary=345 separate=map[capture_evidence_tests:87 capture_lifecycle_tests:1 capture_metadata_tests:1 capture_population_tests:1 capture_prior_tests:1 capture_private_tests:7 capture_renewal_tests:11 capture_revision_tests:2] selected=456
+FAIL
+FAIL	github.com/urfoundation/sn/sim-testnet	2679.330s
+ok  	github.com/urfoundation/sn/sim-testnet/gencontracts	0.043s
+ok  	github.com/urfoundation/sn/sim-testnet/sourceguard	0.006s
+ok  	github.com/urfoundation/sn/ss58	0.003s
+ok  	github.com/urfoundation/sn/stabi	1.592s
+ok  	github.com/urfoundation/sn/stctl	0.093s
+ok  	github.com/urfoundation/sn/validator	1357.427s
+FAIL

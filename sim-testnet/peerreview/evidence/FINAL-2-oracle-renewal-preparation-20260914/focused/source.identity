@@ -1,0 +1,9 @@
+2026-09-14T06:57:44Z
+536dba6541498238a339c958358ab1b4b50e8aac
+M	sim-testnet/fleet_renewal_execute.go
+M	sim-testnet/fleet_renewal_observe.go
+A	sim-testnet/fleet_renewal_oracle_test.go
+ sim-testnet/fleet_renewal_execute.go     |  2 +-
+ sim-testnet/fleet_renewal_observe.go     | 15 +++++-
+ sim-testnet/fleet_renewal_oracle_test.go | 93 ++++++++++++++++++++++++++++++++
+ 3 files changed, 108 insertions(+), 2 deletions(-)

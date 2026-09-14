@@ -1,0 +1,82 @@
+=== RUN   TestMigrationsSignalReportsDeploymentGateWithoutFalseSchemaDrift
+--- PASS: TestMigrationsSignalReportsDeploymentGateWithoutFalseSchemaDrift (0.00s)
+=== NAME  
+=== RUN   TestMigrationsSignalRequiresExactReadyProviderEgressHealthDeadlineIndex
+--- PASS: TestMigrationsSignalRequiresExactReadyProviderEgressHealthDeadlineIndex (0.03s)
+=== NAME  
+=== RUN   TestMigrationsSignalReportsRecordedVersionWithoutArtifact
+--- PASS: TestMigrationsSignalReportsRecordedVersionWithoutArtifact (0.04s)
+=== NAME  
+=== RUN   TestMigrationsSignalHealthyAtCoherentHead
+--- PASS: TestMigrationsSignalHealthyAtCoherentHead (0.03s)
+=== NAME  
+=== RUN   TestMigrationsSignalUsesCurrentServerMigrationCount
+--- PASS: TestMigrationsSignalUsesCurrentServerMigrationCount (0.02s)
+=== NAME  
+=== RUN   TestMigrationsSignalRejectsIncompleteIdentityCatalog
+--- PASS: TestMigrationsSignalRejectsIncompleteIdentityCatalog (0.00s)
+=== NAME  
+=== RUN   TestMigrationsSignalAcceptsLexicallyReturnedCatalogRows
+--- PASS: TestMigrationsSignalAcceptsLexicallyReturnedCatalogRows (0.04s)
+=== NAME  
+=== RUN   TestMigrationsSignalRejectsReorderedIdentityCatalog
+--- PASS: TestMigrationsSignalRejectsReorderedIdentityCatalog (0.04s)
+=== NAME  
+=== RUN   TestMigrationsSignalReportsMissingUnsettledEscrowIndex
+--- PASS: TestMigrationsSignalReportsMissingUnsettledEscrowIndex (0.05s)
+=== NAME  
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/client_reliability_running_window.degraded_classification_version
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/client_reliability_running_window.degraded_classification_version (0.04s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/client_reliability_running_window_classification_write_guard
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/client_reliability_running_window_classification_write_guard (0.03s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/provider_egress_health_TLS_authentication_failure_guard
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/provider_egress_health_TLS_authentication_failure_guard (0.04s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/st_fleet_binding_signature
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/st_fleet_binding_signature (0.03s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/st_epoch_notification
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/st_epoch_notification (0.03s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/network.points_leaderboard_public
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/network.points_leaderboard_public (0.03s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/network.emoji_tag
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/network.emoji_tag (0.03s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard_snapshot
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard_snapshot (0.03s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard (0.04s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard_pos_points
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard_pos_points (0.02s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard_pos_blocks
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard_pos_blocks (0.04s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+=== RUN   TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard_pos_streak
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts/network_points_leaderboard_pos_streak (0.03s)
+=== NAME  TestMigrationsSignalReportsMissingNewPublishedArtifacts
+--- PASS: TestMigrationsSignalReportsMissingNewPublishedArtifacts (0.40s)
+=== NAME  
+=== RUN   TestMigrationsSignalDoesNotRequireFutureLeaderboardArtifactsAtVersion606
+--- PASS: TestMigrationsSignalDoesNotRequireFutureLeaderboardArtifactsAtVersion606 (0.03s)
+=== NAME  
+=== RUN   TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead
+--- PASS: TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead (1.90s)
+=== NAME  
+=== RUN   TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead
+--- PASS: TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead (0.03s)
+=== NAME  
+=== RUN   TestMigrationArtifactCatalogPinsExtenderSchemaShapes
+--- PASS: TestMigrationArtifactCatalogPinsExtenderSchemaShapes (0.06s)
+=== NAME  
+=== RUN   TestMigrationsSignalPreservesBehindGateAtCoherentVersion627
+--- PASS: TestMigrationsSignalPreservesBehindGateAtCoherentVersion627 (0.06s)
+=== NAME  
+PASS

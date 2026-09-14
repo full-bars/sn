@@ -1,0 +1,6 @@
+{
+  "at": "2026-09-14T07:30:04.789527+00:00",
+  "signal": "SIGINT",
+  "pid": 2049799,
+  "reason": "Native new plan and config inputs saved; stop known failing historical audit until fleet renewal is complete"
+}

@@ -1,0 +1,154 @@
+{
+  "created_at": "2026-09-14T05:07:55.260621+00:00",
+  "finding": "Historical platform config path already matches the qualified release-locked config content. Existing --platform-config-repo override makes all existing runtime overlay links exact without source or state edits.",
+  "status": "Read-only diagnosis complete; native dry-run/apply execution remains with root. No tests, builds, formatter or code edits performed.",
+  "qualified_binary_sha256": "b440fcaf46821278950cefc85bbcba751397cbd1870380e002b05109f1b2b5d4",
+  "expected_unchanged_plan_hash": "0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414",
+  "config_repositories": [
+    {
+      "root": "/home/by/urnetwork/temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/config",
+      "head": "b5a7b4d8438e80ebc4e8529ba00a872495717109",
+      "git_status": "",
+      "platform_config_source_hash": "sha256:c69caf2830a1ab8cf9b5f884b2351913bbba19620947176d78fd7eb6b676974a",
+      "platform_config_shared_tree_hash": "sha256:6852f0a67ab5e5cd5e61fbe3d53ac367da7d43c92f766c2de6cff43db40c5252",
+      "local_files": [
+        {
+          "path": "local/brevo.yml",
+          "sha256": "0e9026d52f4b5be7ae6a4c445e6aa276d5b02651aac559001599740d4af4fec7",
+          "filesystem_mode": "0664"
+        },
+        {
+          "path": "local/db.yml",
+          "sha256": "9866a2e3a7042f68053d07281580bc0e185f25a521f829c99ae97b8ebd8cc996",
+          "filesystem_mode": "0664"
+        },
+        {
+          "path": "local/email.yml",
+          "sha256": "075f957e24884809e4be629a0127b2f533683bd5edc001e57add0776b9242b03",
+          "filesystem_mode": "0664"
+        },
+        {
+          "path": "local/redis.yml",
+          "sha256": "9866a2e3a7042f68053d07281580bc0e185f25a521f829c99ae97b8ebd8cc996",
+          "filesystem_mode": "0664"
+        },
+        {
+          "path": "local/settings.yml",
+          "sha256": "4fbe1866f5a5ae0d3bf290e639f642e2b56ac3a55139361c2a8a338c6cc9e937",
+          "filesystem_mode": "0664"
+        },
+        {
+          "path": "local/subsidy.yml",
+          "sha256": "1fd42212ac3e423c968b8e72fef58073e9bbb140215d56c68b8a38c2e48337f6",
+          "filesystem_mode": "0664"
+        },
+        {
+          "path": "local/tls.yml",
+          "sha256": "1aed04883bd2d624b2b849940edc860e1f2d0abeddca506f26ca183eecc4a954",
+          "filesystem_mode": "0664"
+        }
+      ]
+    },
+    {
+      "root": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/config",
+      "head": "268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc",
+      "git_status": "",
+      "platform_config_source_hash": "sha256:c69caf2830a1ab8cf9b5f884b2351913bbba19620947176d78fd7eb6b676974a",
+      "platform_config_shared_tree_hash": "sha256:6852f0a67ab5e5cd5e61fbe3d53ac367da7d43c92f766c2de6cff43db40c5252",
+      "local_files": [
+        {
+          "path": "local/brevo.yml",
+          "sha256": "0e9026d52f4b5be7ae6a4c445e6aa276d5b02651aac559001599740d4af4fec7",
+          "filesystem_mode": "0644"
+        },
+        {
+          "path": "local/db.yml",
+          "sha256": "9866a2e3a7042f68053d07281580bc0e185f25a521f829c99ae97b8ebd8cc996",
+          "filesystem_mode": "0644"
+        },
+        {
+          "path": "local/email.yml",
+          "sha256": "075f957e24884809e4be629a0127b2f533683bd5edc001e57add0776b9242b03",
+          "filesystem_mode": "0644"
+        },
+        {
+          "path": "local/redis.yml",
+          "sha256": "9866a2e3a7042f68053d07281580bc0e185f25a521f829c99ae97b8ebd8cc996",
+          "filesystem_mode": "0644"
+        },
+        {
+          "path": "local/settings.yml",
+          "sha256": "4fbe1866f5a5ae0d3bf290e639f642e2b56ac3a55139361c2a8a338c6cc9e937",
+          "filesystem_mode": "0644"
+        },
+        {
+          "path": "local/subsidy.yml",
+          "sha256": "1fd42212ac3e423c968b8e72fef58073e9bbb140215d56c68b8a38c2e48337f6",
+          "filesystem_mode": "0644"
+        },
+        {
+          "path": "local/tls.yml",
+          "sha256": "1aed04883bd2d624b2b849940edc860e1f2d0abeddca506f26ca183eecc4a954",
+          "filesystem_mode": "0644"
+        }
+      ]
+    }
+  ],
+  "evidence": {
+    "release_lock_config_digests": "sim-testnet/release_lock.go:920-933; digestNamedFiles at161 and cleanGitSubtreeHash at252",
+    "repository_paths_excluded_from_plan_identity": "sim-testnet/plan.go:673-708",
+    "exact_overlay_path_check": "sim-testnet/config_overlay.go:79-97",
+    "carried_render_manifest_postcondition": "sim-testnet/postcondition.go:1998-2017",
+    "actual_rpc_proxy_routes": "sim-testnet/process.go:1409-1458; selectProvisioningServerSpecs at1510",
+    "public_rpc_url_is_metadata": "server/controller/st_controller.go:204-207; only production field use is server/controller/sn_earnings_controller.go:229",
+    "native_rerender_before_full_topology": "sim-testnet/process.go:800"
+  },
+  "dry_run_argv": [
+    "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/final-cli/sim-testnet",
+    "setup",
+    "--config",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/testnet.yml",
+    "--state-dir",
+    "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/config",
+    "--owned-rpc-authority",
+    "192.168.1.162:9944",
+    "--format",
+    "json"
+  ],
+  "approved_apply_argv": [
+    "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/final-cli/sim-testnet",
+    "setup",
+    "--config",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/testnet.yml",
+    "--state-dir",
+    "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/config",
+    "--owned-rpc-authority",
+    "192.168.1.162:9944",
+    "--format",
+    "json",
+    "--apply",
+    "--plan-hash",
+    "0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414"
+  ],
+  "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn"
+}

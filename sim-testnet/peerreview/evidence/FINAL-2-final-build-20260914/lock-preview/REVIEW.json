@@ -1,0 +1,10 @@
+{
+  "reviewed_at": "2026-09-14T10:02:33.921123+00:00",
+  "source": "2a8cf09510ad5473e03ccdcbf50a0d4540669e21",
+  "exact_changed_field": "repositories.sn_go_source_hash",
+  "old": "sha256:739fd37f790c58deb0c6849efeb7a9425a133a1afc4bf3f10a751145be3c4edc",
+  "new": "sha256:6215cfe3b055ef3edc453bc688f6abafe4397f8315631883593d7a1ac1131a98",
+  "all_other_yaml_bytes_identical": true,
+  "candidate_sha256": "40345bafbc6a6fce4b3e8dafec7b1126141f1915c1fc67318ce4beb4f0cdca02",
+  "chain_rpc": false
+}

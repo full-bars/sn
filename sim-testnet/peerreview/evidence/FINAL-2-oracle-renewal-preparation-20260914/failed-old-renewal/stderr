@@ -1,0 +1,6 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 06:47:49.675699 1970856 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 06:47:49.675900 1970856 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 06:47:49.675976 1970856 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 06:47:49.676019 1970856 env.go:67] [env]settings = map[]
+sim-testnet: renewal requires the retained original oracle with no pending reroute

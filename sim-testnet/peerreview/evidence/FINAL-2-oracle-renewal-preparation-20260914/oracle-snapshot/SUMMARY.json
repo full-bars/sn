@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-09-14T06:51:15.492947+00:00",
+  "endpoint": "http://192.168.1.162:9944",
+  "independent_rpc": false,
+  "block": 8002200,
+  "block_hash": "0xefd219a0f812985c190ceda95241545617dceed9c6a06cd77d324b41d2f4e1eb",
+  "current_epoch": 356,
+  "immutable": "0x0422ac5e1ea3997d2a06f8268d4834380609738c",
+  "active": "0x0422ac5e1ea3997d2a06f8268d4834380609738c",
+  "pending": "0x0422ac5e1ea3997d2a06f8268d4834380609738c",
+  "pending_epoch": 273,
+  "rpc_sha256": "e6029721531d2d601fef9db097187df7df702019d39546f0f0a87b426fa740dc"
+}

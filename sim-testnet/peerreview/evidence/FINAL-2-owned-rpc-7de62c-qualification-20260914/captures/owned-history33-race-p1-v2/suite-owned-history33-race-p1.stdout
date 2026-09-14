@@ -1,0 +1,194 @@
+=== RUN   TestIndependentRPCEndpointsMustBeDistinct
+--- PASS: TestIndependentRPCEndpointsMustBeDistinct (0.03s)
+=== NAME  
+=== RUN   TestPublicRPCOverrideCannotClaimIndependentBackendAssurance
+--- PASS: TestPublicRPCOverrideCannotClaimIndependentBackendAssurance (0.02s)
+=== NAME  
+=== RUN   TestSameRPCEndpointNormalizesOnlyEquivalentAuthorities
+--- PASS: TestSameRPCEndpointNormalizesOnlyEquivalentAuthorities (0.00s)
+=== NAME  
+=== RUN   TestSameEndpointCheckAliasesPreserveFailureAndExcludeUnmappedProbes
+--- PASS: TestSameEndpointCheckAliasesPreserveFailureAndExcludeUnmappedProbes (0.00s)
+=== NAME  
+=== RUN   TestExecutionRPCConfigurationKeepsPrivateIndependenceHard
+--- PASS: TestExecutionRPCConfigurationKeepsPrivateIndependenceHard (0.03s)
+=== NAME  
+=== RUN   TestSharedProviderPostStateCloneIsDetached
+--- PASS: TestSharedProviderPostStateCloneIsDetached (0.00s)
+=== NAME  
+=== RUN   TestConfiguredEVMRateLimitAppliesOnlyToPublicRoute
+--- PASS: TestConfiguredEVMRateLimitAppliesOnlyToPublicRoute (0.02s)
+=== NAME  
+=== RUN   TestFinalSemanticSubstrateRetriesTransientCallAndReturnsSuccess
+--- PASS: TestFinalSemanticSubstrateRetriesTransientCallAndReturnsSuccess (0.00s)
+=== NAME  
+=== RUN   TestFinalSemanticSubstrateFailsClosedOnPermanentArchiveError
+--- PASS: TestFinalSemanticSubstrateFailsClosedOnPermanentArchiveError (0.00s)
+=== NAME  
+=== RUN   TestFinalSemanticSubstrateCancellationInterruptsRetry
+--- PASS: TestFinalSemanticSubstrateCancellationInterruptsRetry (0.00s)
+=== NAME  
+=== RUN   TestFinalSemanticRPCRetriesAreBounded
+--- PASS: TestFinalSemanticRPCRetriesAreBounded (0.00s)
+=== NAME  
+=== RUN   TestFinalSemanticRPCTransientClassificationFailsClosed
+=== RUN   TestFinalSemanticRPCTransientClassificationFailsClosed/unexpected_EOF
+--- PASS: TestFinalSemanticRPCTransientClassificationFailsClosed/unexpected_EOF (0.00s)
+=== NAME  TestFinalSemanticRPCTransientClassificationFailsClosed
+=== RUN   TestFinalSemanticRPCTransientClassificationFailsClosed/HTTP_429
+--- PASS: TestFinalSemanticRPCTransientClassificationFailsClosed/HTTP_429 (0.00s)
+=== NAME  TestFinalSemanticRPCTransientClassificationFailsClosed
+=== RUN   TestFinalSemanticRPCTransientClassificationFailsClosed/RPC_capacity
+--- PASS: TestFinalSemanticRPCTransientClassificationFailsClosed/RPC_capacity (0.00s)
+=== NAME  TestFinalSemanticRPCTransientClassificationFailsClosed
+=== RUN   TestFinalSemanticRPCTransientClassificationFailsClosed/archive_beats_generic_code
+--- PASS: TestFinalSemanticRPCTransientClassificationFailsClosed/archive_beats_generic_code (0.00s)
+=== NAME  TestFinalSemanticRPCTransientClassificationFailsClosed
+=== RUN   TestFinalSemanticRPCTransientClassificationFailsClosed/invalid_params
+--- PASS: TestFinalSemanticRPCTransientClassificationFailsClosed/invalid_params (0.00s)
+=== NAME  TestFinalSemanticRPCTransientClassificationFailsClosed
+=== RUN   TestFinalSemanticRPCTransientClassificationFailsClosed/semantic_mismatch
+--- PASS: TestFinalSemanticRPCTransientClassificationFailsClosed/semantic_mismatch (0.00s)
+=== NAME  TestFinalSemanticRPCTransientClassificationFailsClosed
+=== RUN   TestFinalSemanticRPCTransientClassificationFailsClosed/canceled
+--- PASS: TestFinalSemanticRPCTransientClassificationFailsClosed/canceled (0.00s)
+=== NAME  TestFinalSemanticRPCTransientClassificationFailsClosed
+--- PASS: TestFinalSemanticRPCTransientClassificationFailsClosed (0.00s)
+=== NAME  
+=== RUN   TestFinalSemanticSubstrateGateIsSharedAndFIFO
+--- PASS: TestFinalSemanticSubstrateGateIsSharedAndFIFO (0.00s)
+=== NAME  
+=== RUN   TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial
+=== RUN   TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial/substituted_canonical_EVM
+--- PASS: TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial/substituted_canonical_EVM (0.00s)
+=== NAME  TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial
+=== RUN   TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial/unknown_profile
+--- PASS: TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial/unknown_profile (0.00s)
+=== NAME  TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial
+=== RUN   TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial/arbitrary_supervised_EVM
+--- PASS: TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial/arbitrary_supervised_EVM (0.00s)
+=== NAME  TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial
+=== RUN   TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial/substituted_Substrate
+--- PASS: TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial/substituted_Substrate (0.00s)
+=== NAME  TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial
+--- PASS: TestFinalSemanticRPCTransportKeepsCanonicalIdentitySeparateFromDial (0.00s)
+=== NAME  
+=== RUN   TestFinalSemanticRPCTransportForStoppedCampaignUsesCanonicalQuota
+--- PASS: TestFinalSemanticRPCTransportForStoppedCampaignUsesCanonicalQuota (0.03s)
+=== NAME  
+=== RUN   TestFinalSemanticCapturedReplayUsesPortableCanonicalTransport
+--- PASS: TestFinalSemanticCapturedReplayUsesPortableCanonicalTransport (0.04s)
+=== NAME  
+=== RUN   TestHistoricalFleetGenerationOneAuditBatchesDistinctCheckpoints
+--- PASS: TestHistoricalFleetGenerationOneAuditBatchesDistinctCheckpoints (0.09s)
+=== NAME  
+=== RUN   TestHistoricalFleetGenerationOneAuditRejectsTamperedCanonicalBlockBeforeStateReads
+--- PASS: TestHistoricalFleetGenerationOneAuditRejectsTamperedCanonicalBlockBeforeStateReads (0.01s)
+=== NAME  
+=== RUN   TestHistoricalFleetAliasPreparationUsesRecordedBindingCall
+--- PASS: TestHistoricalFleetAliasPreparationUsesRecordedBindingCall (0.10s)
+=== NAME  
+=== RUN   TestCarriedFleetHistoryBatchCachesOnlyExactVerifiedAction
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+sim-testnet: batched historical fleet audit 0/1
+sim-testnet: batched historical fleet audit 1/1
+--- PASS: TestCarriedFleetHistoryBatchCachesOnlyExactVerifiedAction (16.58s)
+=== NAME  
+=== RUN   TestFleetGenerationOneHistoricalReplayAcceptsEveryExactSourceShape
+--- PASS: TestFleetGenerationOneHistoricalReplayAcceptsEveryExactSourceShape (0.13s)
+=== NAME  
+=== RUN   TestFleetGenerationOneHistoricalReplayRejectsAdjacentSuccessors
+--- PASS: TestFleetGenerationOneHistoricalReplayRejectsAdjacentSuccessors (0.30s)
+=== NAME  
+=== RUN   TestFleetGenerationOneAliasRequiresExactInstallReceipt
+--- PASS: TestFleetGenerationOneAliasRequiresExactInstallReceipt (0.12s)
+=== NAME  
+=== RUN   TestFleetGenerationOneHistoricalAliasRequiresBoundedCheckpointAndCompleteFormat
+--- PASS: TestFleetGenerationOneHistoricalAliasRequiresBoundedCheckpointAndCompleteFormat (0.12s)
+=== NAME  
+=== RUN   TestFleetGenerationOneSupersessionClassifiesOnlyCanonicalHeadActions
+--- PASS: TestFleetGenerationOneSupersessionClassifiesOnlyCanonicalHeadActions (0.03s)
+=== NAME  
+=== RUN   TestFleetGenerationOneSupersessionResolverRequiresCompleteVerifiedChain
+--- PASS: TestFleetGenerationOneSupersessionResolverRequiresCompleteVerifiedChain (0.08s)
+=== NAME  
+=== RUN   TestFleetGenerationOneHistoricalPostStateUsesRecordedEVMBlock
+--- PASS: TestFleetGenerationOneHistoricalPostStateUsesRecordedEVMBlock (0.20s)
+=== NAME  
+=== RUN   TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts
+=== RUN   TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/implicit-private
+--- PASS: TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/implicit-private (0.00s)
+=== NAME  TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts
+=== RUN   TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/unbound-origin
+--- PASS: TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/unbound-origin (1.46s)
+=== NAME  TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts
+=== RUN   TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/wrong-authority
+--- PASS: TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/wrong-authority (0.00s)
+=== NAME  TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts
+=== RUN   TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/current-public-receipt
+--- PASS: TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/current-public-receipt (1.62s)
+=== NAME  TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts
+=== RUN   TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/false-independent-clone
+--- PASS: TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/false-independent-clone (1.31s)
+=== NAME  TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts
+=== RUN   TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/unapproved-plan
+--- PASS: TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts/unapproved-plan (0.00s)
+=== NAME  TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts
+--- PASS: TestOwnedRPCHistoryAuthenticatesOriginalApprovalWithoutRelabelingReceipts (18.45s)
+=== NAME  
+=== RUN   TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode
+=== RUN   TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode/none
+--- PASS: TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode/none (0.01s)
+=== NAME  TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode
+=== RUN   TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode/missing-operational
+--- PASS: TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode/missing-operational (0.00s)
+=== NAME  TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode
+=== RUN   TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode/owned-balance
+--- PASS: TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode/owned-balance (0.01s)
+=== NAME  TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode
+=== RUN   TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode/owned-reorg
+--- PASS: TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode/owned-reorg (0.00s)
+=== NAME  TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode
+--- PASS: TestOwnedRPCHistoryReplaysOriginalFundingThroughOwnedNode (3.02s)
+=== NAME  
+=== RUN   TestOwnedRPCHistoryNativeReplayCannotBorrowOneReader
+--- PASS: TestOwnedRPCHistoryNativeReplayCannotBorrowOneReader (3.55s)
+=== NAME  
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/public-fallback
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/public-fallback (0.00s)
+=== NAME  TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/other-node
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/other-node (0.00s)
+=== NAME  TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/false-independence
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/false-independence (0.00s)
+=== NAME  TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/pacing
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/pacing (0.00s)
+=== NAME  TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/other-chain
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/other-chain (0.00s)
+=== NAME  TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/operational_EVM
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/operational_EVM (0.00s)
+=== NAME  TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/operational_native
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/operational_native (0.00s)
+=== NAME  TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/assurance
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/assurance (0.00s)
+=== NAME  TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+=== RUN   TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/authority
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport/authority (0.00s)
+=== NAME  TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport
+--- PASS: TestOwnedRPCStrictRoutePreservesConsentAndUnlimitsOwnedTransport (0.28s)
+=== NAME  
+=== RUN   TestOwnedRPCPlanApprovalBindsExactRouteWithoutChangingCustody
+--- PASS: TestOwnedRPCPlanApprovalBindsExactRouteWithoutChangingCustody (4.67s)
+=== NAME  
+=== RUN   TestOwnedRPCCLIRejectsUnownedAndProvisionalRoutes
+--- PASS: TestOwnedRPCCLIRejectsUnownedAndProvisionalRoutes (0.00s)
+=== NAME  
+PASS

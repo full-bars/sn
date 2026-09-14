@@ -1,0 +1,32 @@
+=== RUN   TestReleaseGateJobsRequireIndependentCompleteValidatorRace
+=== PAUSE TestReleaseGateJobsRequireIndependentCompleteValidatorRace
+=== NAME  
+=== RUN   TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift
+=== PAUSE TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift
+=== NAME  
+=== RUN   TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions
+=== PAUSE TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions
+=== NAME  
+=== RUN   TestReleaseGateJobsRequireUncachedAggregateBodies
+=== PAUSE TestReleaseGateJobsRequireUncachedAggregateBodies
+=== NAME  
+=== RUN   TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies
+=== PAUSE TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies
+=== NAME  
+=== RUN   TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite
+--- PASS: TestLocalReleaseGateAllowsCompleteSimulatorRaceSuite (4.01s)
+=== NAME  
+=== RUN   TestProducerGatePinsRuntime455ArtifactAndEncodingRegressions
+--- PASS: TestProducerGatePinsRuntime455ArtifactAndEncodingRegressions (0.94s)
+=== NAME  
+=== CONT  TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions
+=== CONT  TestReleaseGateJobsRequireUncachedAggregateBodies
+=== CONT  TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift
+=== CONT  TestReleaseGateJobsRequireIndependentCompleteValidatorRace
+--- PASS: TestReleaseGateJobsRequireUncachedAggregateBodies (0.70s)
+=== CONT  TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies
+--- PASS: TestReleaseGateJobsRequireIndependentCompleteValidatorRace (0.90s)
+--- PASS: TestReleaseGateJobsRejectCompleteValidatorRaceBudgetOmissions (7.62s)
+--- PASS: TestReleaseGateJobsRejectSimulatorPopulationPartitionDrift (62.50s)
+--- PASS: TestReleaseGateJobsRejectCachedOrHiddenAggregateBodies (123.76s)
+PASS

@@ -1,0 +1,4 @@
+sealed_utc=2026-09-14T10:35:51Z
+source_candidate=4029396ef34fdea2338152cf70cd69c054f5f484
+production_source_digest=sha256:6215cfe3b055ef3edc453bc688f6abafe4397f8315631883593d7a1ac1131a98
+policy=public-safe-curated-no-binaries-no-live-material

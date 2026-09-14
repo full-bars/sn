@@ -1,0 +1,7 @@
+{"Time":"2026-09-14T09:11:49.250228961Z","Action":"start","Package":"github.com/urfoundation/sn/sim-testnet"}
+{"Time":"2026-09-14T09:11:49.250437088Z","Action":"run","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis"}
+{"Time":"2026-09-14T09:11:49.250451813Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis","Output":"=== RUN   TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis\n"}
+{"Time":"2026-09-14T09:11:49.250478179Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis","Output":"--- PASS: TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis (0.33s)\n"}
+{"Time":"2026-09-14T09:11:49.250485452Z","Action":"pass","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis","Elapsed":0.33}
+{"Time":"2026-09-14T09:11:49.250504596Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Output":"PASS\n"}
+{"Time":"2026-09-14T09:11:49.250513469Z","Action":"pass","Package":"github.com/urfoundation/sn/sim-testnet","Elapsed":0}

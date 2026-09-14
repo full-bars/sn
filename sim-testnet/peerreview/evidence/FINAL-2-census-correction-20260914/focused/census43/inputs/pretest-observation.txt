@@ -1,0 +1,1 @@
+Pre-test observer observation: an initial read reported both intended test paths modified; no retained raw process/cwd/timestamp proves a cause. Subsequent independent reads and formatter verification found clean committed bytes. This is not a test execution or product failure.

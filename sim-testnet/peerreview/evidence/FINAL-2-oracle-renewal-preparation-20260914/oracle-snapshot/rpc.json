@@ -1,0 +1,135 @@
+[
+  {
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "eth_getBlockByNumber",
+      "params": [
+        "finalized",
+        false
+      ]
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "author": "0x0661d1e2a979c579e79a01d4f0ee374db2c94b52",
+        "baseFeePerGas": "0x4b018c943",
+        "difficulty": "0x0",
+        "extraData": "0x",
+        "gasLimit": "0x47868c0",
+        "gasUsed": "0x0",
+        "hash": "0xefd219a0f812985c190ceda95241545617dceed9c6a06cd77d324b41d2f4e1eb",
+        "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "miner": "0x0661d1e2a979c579e79a01d4f0ee374db2c94b52",
+        "nonce": "0x0000000000000000",
+        "number": "0x7a1a98",
+        "parentHash": "0xa91f20edd152571968b51d3d76072b9176e8b26182eb192a794634bb8b7d87f9",
+        "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+        "size": "0x202",
+        "stateRoot": "0x8823389b9fc43eb5c77ecb7fd682f3c55c7166118abeb8f4fdec756d6ef49f98",
+        "timestamp": "0x6aa79948",
+        "totalDifficulty": "0x0",
+        "transactions": [],
+        "transactionsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "uncles": []
+      }
+    }
+  },
+  {
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "eth_call",
+      "params": [
+        {
+          "to": "0x8e7d2f9a77fec95c7e4875b0bd858d5de2b6def8",
+          "data": "0x76671808"
+        },
+        "0x7a1a98"
+      ]
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000164"
+    }
+  },
+  {
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "eth_call",
+      "params": [
+        {
+          "to": "0x8e7d2f9a77fec95c7e4875b0bd858d5de2b6def8",
+          "data": "0x7eb72645"
+        },
+        "0x7a1a98"
+      ]
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": "0x0000000000000000000000000422ac5e1ea3997d2a06f8268d4834380609738c"
+    }
+  },
+  {
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "method": "eth_call",
+      "params": [
+        {
+          "to": "0x8e7d2f9a77fec95c7e4875b0bd858d5de2b6def8",
+          "data": "0x06d902e9"
+        },
+        "0x7a1a98"
+      ]
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "result": "0x0000000000000000000000000422ac5e1ea3997d2a06f8268d4834380609738c"
+    }
+  },
+  {
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "method": "eth_call",
+      "params": [
+        {
+          "to": "0x8e7d2f9a77fec95c7e4875b0bd858d5de2b6def8",
+          "data": "0xc2d94e2a"
+        },
+        "0x7a1a98"
+      ]
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "result": "0x0000000000000000000000000422ac5e1ea3997d2a06f8268d4834380609738c"
+    }
+  },
+  {
+    "request": {
+      "jsonrpc": "2.0",
+      "id": 6,
+      "method": "eth_call",
+      "params": [
+        {
+          "to": "0x8e7d2f9a77fec95c7e4875b0bd858d5de2b6def8",
+          "data": "0x465c2228"
+        },
+        "0x7a1a98"
+      ]
+    },
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 6,
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000111"
+    }
+  }
+]

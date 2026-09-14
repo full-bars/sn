@@ -1,0 +1,12 @@
+ok  	github.com/urnetwork/sdk	0.034s
+ok  	github.com/urnetwork/sdk	1.151s
+ok  	github.com/urnetwork/sdk	(cached) [no tests to run]
+ok  	github.com/urnetwork/sdk/sn/evm	(cached) [no tests to run]
+ok  	github.com/urnetwork/sdk/sn/merkle	(cached) [no tests to run]
+ok  	github.com/urnetwork/sdk/sn/protocol	(cached) [no tests to run]
+ok  	github.com/urnetwork/sdk/sn/ss58	(cached) [no tests to run]
+ok  	github.com/urnetwork/sdk	0.027s
+ok  	github.com/urnetwork/sdk	5.807s
+ok  	github.com/urnetwork/sdk	7.282s
+ok  	github.com/urnetwork/sdk	0.142s
+ok  	github.com/urnetwork/sdk	1.376s

@@ -1,0 +1,28 @@
+ok  	github.com/urnetwork/connect	1.364s
+ok  	github.com/urnetwork/connect	2.686s
+ok  	github.com/urnetwork/connect	(cached) [no tests to run]
+ok  	github.com/urnetwork/connect/blocker	(cached) [no tests to run]
+ok  	github.com/urnetwork/connect/connectctl	(cached) [no tests to run]
+ok  	github.com/urnetwork/connect/emoji	(cached) [no tests to run]
+ok  	github.com/urnetwork/connect/extender	(cached) [no tests to run]
+ok  	github.com/urnetwork/connect/gossip	(cached) [no tests to run]
+?   	github.com/urnetwork/connect/protocol	[no test files]
+ok  	github.com/urnetwork/connect/scripts/extender_spoof	(cached) [no tests to run]
+ok  	github.com/urnetwork/connect/security	(cached) [no tests to run]
+ok  	github.com/urnetwork/connect	0.025s
+ok  	github.com/urnetwork/connect	1.690s
+ok  	github.com/urnetwork/connect	2.566s
+ok  	github.com/urnetwork/connect	0.018s
+ok  	github.com/urnetwork/connect	1.050s
+ok  	github.com/urnetwork/connect	0.011s
+ok  	github.com/urnetwork/connect	1.047s
+ok  	github.com/urnetwork/connect	5.959s
+ok  	github.com/urnetwork/connect	42.063s
+ok  	github.com/urnetwork/connect/blocker	1.951s
+ok  	github.com/urnetwork/connect/security	0.580s
+ok  	github.com/urnetwork/connect/blocker	32.901s
+ok  	github.com/urnetwork/connect/security	14.137s
+ok  	github.com/urnetwork/connect	1.449s
+ok  	github.com/urnetwork/connect	2.058s
+ok  	github.com/urnetwork/connect	1.039s
+ok  	github.com/urnetwork/connect	4.585s

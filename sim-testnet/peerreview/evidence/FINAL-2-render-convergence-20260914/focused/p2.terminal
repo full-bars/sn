@@ -1,0 +1,11 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 06:02:32.736548 1832333 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 06:02:32.736850 1832333 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 06:02:32.736939 1832333 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 06:02:32.737024 1832333 env.go:67] [env]settings = map[]
+=== RUN   TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig
+=== PAUSE TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig
+=== CONT  TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig
+    runtime_evidence_launch_config_test.go:113: open testnet.yml: no such file or directory
+--- FAIL: TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig (0.00s)
+FAIL

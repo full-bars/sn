@@ -1,0 +1,11 @@
+{"Time":"2026-09-13T23:52:10.48965859Z","Action":"start","Package":"github.com/urfoundation/sn/sim-testnet"}
+{"Time":"2026-09-13T23:52:10.489850981Z","Action":"run","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins"}
+{"Time":"2026-09-13T23:52:10.489862975Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins","Output":"=== RUN   TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins\n"}
+{"Time":"2026-09-13T23:52:10.48989183Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins","Output":"=== PAUSE TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins\n"}
+{"Time":"2026-09-13T23:52:10.489898208Z","Action":"pause","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins"}
+{"Time":"2026-09-13T23:52:10.489904267Z","Action":"cont","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins"}
+{"Time":"2026-09-13T23:52:10.489908776Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins","Output":"=== CONT  TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins\n"}
+{"Time":"2026-09-13T23:52:10.489916841Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins","Output":"--- PASS: TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins (357.57s)\n"}
+{"Time":"2026-09-13T23:52:10.489928931Z","Action":"pass","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins","Elapsed":357.57}
+{"Time":"2026-09-13T23:52:10.489946317Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Output":"PASS\n"}
+{"Time":"2026-09-13T23:52:10.489955521Z","Action":"pass","Package":"github.com/urfoundation/sn/sim-testnet","Elapsed":0}

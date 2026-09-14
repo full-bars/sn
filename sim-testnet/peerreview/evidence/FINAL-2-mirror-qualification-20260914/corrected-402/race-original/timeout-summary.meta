@@ -1,0 +1,13 @@
+body_exit=2
+tee_exit=0
+converter_exit=0
+top_level_pass_count=85
+top_level_fail_count=0
+selected_root_count=87
+unresolved_root_count=2
+source_prepost_cmp_exit=0
+binary_prepost_cmp_exit=0
+race_process_present=1
+raw_sha256=50ef22e942483fd4205dc88c66941f38eb356707a96851514df04e18ae6c5a0a
+events_sha256=0dd2ab5f4ed2fa375cddf3d4321b4ead9c73576ca5d2d91f559795b80051f806
+observed_utc=2026-09-14T10:09:36Z

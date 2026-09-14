@@ -1,0 +1,41 @@
+{
+  "commands": [
+    [
+      "git",
+      "-C",
+      "/home/by/urnetwork/sn",
+      "fetch",
+      "origin",
+      "main"
+    ],
+    [
+      "git",
+      "-C",
+      "/home/by/urnetwork/sn",
+      "merge",
+      "--ff-only",
+      "cf4eae3d70a83277494048e8d7cc44ea099b5c2d"
+    ],
+    [
+      "git",
+      "-C",
+      "/home/by/urnetwork/sn",
+      "push",
+      "origin",
+      "HEAD:main"
+    ],
+    [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "fetch",
+      "origin",
+      "main"
+    ]
+  ],
+  "started_at": "2026-09-14T06:04:39.716123+00:00",
+  "candidate": "cf4eae3d70a83277494048e8d7cc44ea099b5c2d",
+  "normal_seven_pass": true,
+  "race_and_confirmation_status": "running; not a completed qualification",
+  "chain_transactions": 0
+}

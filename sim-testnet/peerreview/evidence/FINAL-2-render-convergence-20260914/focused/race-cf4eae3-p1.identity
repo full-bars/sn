@@ -1,0 +1,9 @@
+retained_at=2026-09-14T06:04:28Z
+live_pid=1828932
+live_executable=/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/race-cf4eae3-gotmp/go-build3002791171/b001/sim-testnet.test
+retained_executable=/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/race-cf4eae3-p1.testbin
+sha256=3dd225449b4f60494d63354322de2e17ca319bdd94e4d7bae7421b63be20f10d
+bytes=170104128
+mode=0700
+source_commit=cf4eae3d70a83277494048e8d7cc44ea099b5c2d
+test_list_invocation=retained race executable -test.list exact seven-root selector

@@ -1,0 +1,203 @@
+[
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "2a8cf09510ad5473e03ccdcbf50a0d4540669e21\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "status",
+      "--porcelain=v1"
+    ],
+    "exit": 0,
+    "stdout": " M deploy/testnet/release.lock.yml\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "diff",
+      "--",
+      "deploy/testnet/release.lock.yml"
+    ],
+    "exit": 0,
+    "stdout": "diff --git a/deploy/testnet/release.lock.yml b/deploy/testnet/release.lock.yml\nindex 5065465..549452b 100644\n--- a/deploy/testnet/release.lock.yml\n+++ b/deploy/testnet/release.lock.yml\n@@ -64,7 +64,7 @@ repositories:\n     server_audited_base_commit: 7b5cc6e14115a61ce17e0d6f7a26404cac5f39b4\n     server_go_source_hash: sha256:a0544518a5712457727f773fd50eda9e9d09a2f81f651483af0edfe335afce7d\n     sn_audited_base_commit: 900b973e1a31dff617d420a374eb29e307dd462e\n-    sn_go_source_hash: sha256:739fd37f790c58deb0c6849efeb7a9425a133a1afc4bf3f10a751145be3c4edc\n+    sn_go_source_hash: sha256:6215cfe3b055ef3edc453bc688f6abafe4397f8315631883593d7a1ac1131a98\n     userwireguard_go_source_hash: sha256:f30a610db4807d43c78f97049da3ab14902b6bc5410664c6cf184bb7149d98c9\n     vault_audited_base_commit: 992f69a4ba744dabf43c71401a3f355f05f46428\n dependencies:\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "diff",
+      "--check"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "add",
+      "deploy/testnet/release.lock.yml"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "commit",
+      "-m",
+      "Lock historical fleet receipt replay correction"
+    ],
+    "exit": 0,
+    "stdout": "[sim-testnet/ancestry-candidate-20260913 abae9a6] Lock historical fleet receipt replay correction\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "abae9a6a8410a54a560335b16888d2ad0d4fc51f\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "diff",
+      "--name-only",
+      "HEAD^",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "deploy/testnet/release.lock.yml\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "pull",
+      "--ff-only",
+      "origin",
+      "main"
+    ],
+    "exit": 0,
+    "stdout": "Already up to date.\n",
+    "stderr": "From github.com:urfoundation/sn\n * branch            main       -> FETCH_HEAD\n"
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "abae9a6a8410a54a560335b16888d2ad0d4fc51f\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "push",
+      "origin",
+      "HEAD:main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "To github.com:urfoundation/sn.git\n   2a8cf09..abae9a6  HEAD -> main\n"
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/sn",
+      "status",
+      "--porcelain=v1"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/sn",
+      "pull",
+      "--ff-only",
+      "origin",
+      "main"
+    ],
+    "exit": 0,
+    "stdout": "Updating 2a8cf09..abae9a6\nFast-forward\n deploy/testnet/release.lock.yml | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+    "stderr": "From github.com:urfoundation/sn\n * branch            main       -> FETCH_HEAD\n   2a8cf09..abae9a6  main       -> origin/main\n"
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/sn",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "abae9a6a8410a54a560335b16888d2ad0d4fc51f\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/sn",
+      "status",
+      "--porcelain=v1"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "status",
+      "--porcelain=v1"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

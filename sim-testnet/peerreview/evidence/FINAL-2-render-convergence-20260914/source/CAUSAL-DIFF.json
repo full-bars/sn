@@ -1,0 +1,138 @@
+{
+  "observed_at": "2026-09-14T05:37:19.096125+00:00",
+  "source_root": "/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/sn",
+  "source_commit": "1469b14d52661882d52e062eb96c3a60d5e86100",
+  "base_commit": "ca4281201077b6e3e9cde1004568efa219d0e12c",
+  "failed_native_capture": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-approved-repair-ca42812-config-path-20260914T050951Z",
+  "plan_hash": "0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414",
+  "render_source_journal_entry": {
+    "schema": "urnetwork-sim-journal-v1",
+    "sequence": 10158,
+    "time": "2026-09-11T08:42:25.116559047Z",
+    "deployment_id": "ur-subnet-testnet-v1",
+    "plan_hash": "0x6f3d21b4a3881a23da05148a0bb4d21a24990f2955eb073544b9194b080b1d9c",
+    "action_id": "config.render",
+    "intent_hash": "0x5d31a4512e614ed5c8f9b20836110f5414e36014da06da51d1ef344a47abf7f3",
+    "stage": "postcondition_verified",
+    "postcondition_hash": "0x51f942219f8904a41d05ce7cfdfffef073c643367b31b8e1cde2343fdabf7c1d",
+    "postcondition_path": "receipts/postconditions/6f3d21b4a3881a23da05148a0bb4d21a24990f2955eb073544b9194b080b1d9c/config.render.json",
+    "previous_hash": "0x8e9cc2415fc0a7c9d09f1c8fa3922584f5de9f8c28e13edf25772ef846385ac6",
+    "entry_hash": "0x28a59804b7b6af043840994cbab523bb46ff48d2fddf0bf8540a8d4ea7c02333"
+  },
+  "recorded_runtime_manifest_hash": "0x65286a314971f78437af20e65e4ba7621059c600d1dad8e8ca99637313fab1b5",
+  "receipt_runtime_manifest_hash": "0x65286a314971f78437af20e65e4ba7621059c600d1dad8e8ca99637313fab1b5",
+  "differences": [
+    {
+      "operator": 1,
+      "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/operator-1/vault/st.yml",
+      "actual_sha256": "sha256:1155dec229b1989e9cec4d4d679ab4bd7a7af8bc2a49eb6e3b44caa86dc29481",
+      "manifest_sha256": "sha256:8d476d9fc05430f7bbd987f371905d246d5dd729a33da9aeb45e363e06ff2b1b",
+      "differing_fields": [
+        {
+          "field": "reserved.admission.activation_contexts",
+          "actual": [
+            {
+              "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/validator-1/evidence-v2/no-1/context.json",
+              "bytes": 3367,
+              "sha256": "0x918ed2b2e31c079f2a8954035176e8ea2721fbd30678e16495bdd0173b4ba52e"
+            },
+            {
+              "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/validator-1/evidence-v2/no-2/context.json",
+              "bytes": 3363,
+              "sha256": "0x384e6360cb10f92b4dee7660ec269c465e28a434a9de9a13a58b41d1c6ebb6cd"
+            },
+            {
+              "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/validator-2/evidence-v2/no-1/context.json",
+              "bytes": 3360,
+              "sha256": "0x07ae0d93e74933519d59257466486b44d69aa4b1a8b8849ee5fda88b411a6e78"
+            },
+            {
+              "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/validator-2/evidence-v2/no-2/context.json",
+              "bytes": 3365,
+              "sha256": "0x79852a6fe4aabc59e2b8de37e05d4b98c24f0640d7c6a719aca5aea8cc16f7f1"
+            }
+          ],
+          "expected_before_fix": []
+        },
+        {
+          "field": "reserved.admission.provisional_retained_context_authority",
+          "actual": true,
+          "expected_before_fix": false
+        },
+        {
+          "field": "reserved.admission.provisional_seeded_discovery_only",
+          "actual": true,
+          "expected_before_fix": false
+        }
+      ],
+      "native_rpc_urls_actual_and_before_fix_expected": [
+        "wss://test.finney.opentensor.ai:443"
+      ],
+      "native_rpc_urls_after_fix": [
+        "ws://192.168.1.162:9944"
+      ],
+      "all_capacity_and_deployment_runtime_pins_equal": true
+    },
+    {
+      "operator": 2,
+      "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/operator-2/vault/st.yml",
+      "actual_sha256": "sha256:1b3b096c494ced0eb370aaf03e5b20c50cf041ad5db7c2b522e4f4d434e537d6",
+      "manifest_sha256": "sha256:203bcddc28aa2b88e31faeddd2c58ffeb540586fdd009ad9089282cd29b1b24c",
+      "differing_fields": [
+        {
+          "field": "reserved.admission.activation_contexts",
+          "actual": [
+            {
+              "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/validator-1/evidence-v2/no-1/context.json",
+              "bytes": 3367,
+              "sha256": "0x918ed2b2e31c079f2a8954035176e8ea2721fbd30678e16495bdd0173b4ba52e"
+            },
+            {
+              "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/validator-1/evidence-v2/no-2/context.json",
+              "bytes": 3363,
+              "sha256": "0x384e6360cb10f92b4dee7660ec269c465e28a434a9de9a13a58b41d1c6ebb6cd"
+            },
+            {
+              "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/validator-2/evidence-v2/no-1/context.json",
+              "bytes": 3360,
+              "sha256": "0x07ae0d93e74933519d59257466486b44d69aa4b1a8b8849ee5fda88b411a6e78"
+            },
+            {
+              "path": "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/validator-2/evidence-v2/no-2/context.json",
+              "bytes": 3365,
+              "sha256": "0x79852a6fe4aabc59e2b8de37e05d4b98c24f0640d7c6a719aca5aea8cc16f7f1"
+            }
+          ],
+          "expected_before_fix": []
+        },
+        {
+          "field": "reserved.admission.provisional_retained_context_authority",
+          "actual": true,
+          "expected_before_fix": false
+        },
+        {
+          "field": "reserved.admission.provisional_seeded_discovery_only",
+          "actual": true,
+          "expected_before_fix": false
+        }
+      ],
+      "native_rpc_urls_actual_and_before_fix_expected": [
+        "wss://test.finney.opentensor.ai:443"
+      ],
+      "native_rpc_urls_after_fix": [
+        "ws://192.168.1.162:9944"
+      ],
+      "all_capacity_and_deployment_runtime_pins_equal": true
+    }
+  ],
+  "source_files": [
+    "sim-testnet/owned_rpc_test.go",
+    "sim-testnet/plan.go",
+    "sim-testnet/runtime_config_manifest.go",
+    "sim-testnet/runtime_evidence_launch_config_test.go",
+    "sim-testnet/runtime_evidence_reserved_render_test.go",
+    "sim-testnet/runtime_reserved_attempt_upload.go",
+    "sim-testnet/runtime_wallet_seed_test.go"
+  ],
+  "qualification_status": "Handed to Terra; no tests/build/formatter run by Astra."
+}

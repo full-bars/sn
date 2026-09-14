@@ -1,0 +1,127 @@
+[
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "diff",
+      "--name-only"
+    ],
+    "exit": 0,
+    "stdout": "deploy/testnet/release.lock.yml\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "add",
+      "deploy/testnet/release.lock.yml"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "commit",
+      "-m",
+      "Lock effective oracle restoration support for renewal"
+    ],
+    "exit": 0,
+    "stdout": "[sim-testnet/ancestry-candidate-20260913 a59294e] Lock effective oracle restoration support for renewal\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "a59294e98ea02d05125015ae02cf32f2c0059c8a\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "push",
+      "origin",
+      "HEAD:main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "To github.com:urfoundation/sn.git\n   536dba6..a59294e  HEAD -> main\n"
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "pull",
+      "--ff-only",
+      "origin",
+      "main"
+    ],
+    "exit": 0,
+    "stdout": "Updating 536dba6..a59294e\nFast-forward\n deploy/testnet/release.lock.yml | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+    "stderr": "From github.com:urfoundation/sn\n * branch            main       -> FETCH_HEAD\n   536dba6..a59294e  main       -> origin/main\n"
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "a59294e98ea02d05125015ae02cf32f2c0059c8a\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "a59294e98ea02d05125015ae02cf32f2c0059c8a\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

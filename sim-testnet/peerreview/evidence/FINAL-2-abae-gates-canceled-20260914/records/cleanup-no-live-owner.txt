@@ -1,0 +1,5 @@
+observed_at_utc	2026-09-14T10:40:51Z
+closure_event_utc	2026-09-14T10:35:29Z
+scope	producer-census-correction-globalmodcache; aggregate-census-correction-globalmodcache
+matching_live_gate_owner_count	0
+result	no matching capture wrapper, inner gate script, release-gate child, or test/service owner remains

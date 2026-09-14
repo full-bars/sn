@@ -1,0 +1,6 @@
+=== RUN   TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins
+=== PAUSE TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins
+=== NAME  
+=== CONT  TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins
+--- PASS: TestFinalPublicChainVerificationRequiresTwoCanonicalOperatorOrigins (34.26s)
+PASS

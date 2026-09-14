@@ -1,0 +1,78 @@
+{
+  "accepted_prior_shape": "Accepted e999 v2 used the same helper and read-only source fence, but its plan declared the already-existing primary vault worktree. The current plan correctly retains its independent physical vault; no shared-path substitution is required.",
+  "contract": "sourceFenceContext runs each Git discovery command with an unchanged 30-second timeout and --no-optional-locks; errors.Join returns signal: killed plus context deadline exceeded when that Git command expires. runMatrix creates capture only after the initial source fence.",
+  "correction": "Keep source, helper, plans, manifests and 30-second Git / test / owner deadlines unchanged. Preserve v1/v2 refusals. Terra executes a fresh versioned active4 owner on the now-refreshed private graph; no body rerun or source requalification debt arises from these prebody refusals.",
+  "diagnosis": "The original structured error proves a bounded Git discovery command expired, not a host launcher kill. Vault is the concrete slow repository observed immediately afterward. Copying the unlocked filtered worktree requires Git to recheck its index metadata; ordinary status refreshed that metadata and the same bounded read-only command now completes clean. There was no retained original child trace to name its exact argv retrospectively.",
+  "helper": "/home/by/urnetwork/temp/sn-initial-six-qualification-20260913/helper-go-tools-ebe70a/runtime/bin/qualification-ebe70a",
+  "kind": "prebody_source_git_index_metadata_refusal",
+  "new_test_failure_obligations": 0,
+  "observed_slow_command": {
+    "command": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ],
+    "observation": "Terra observed this ordinary serial probe still running after 46 seconds, after original v2 ended. It subsequently finished clean; exact start was not retained. It refreshed local index metadata, ending with index mtime 2026-09-13T23:10:49.532551720Z.",
+    "root": "/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/workspace-physical/vault"
+  },
+  "original": {
+    "finished-at": {
+      "bytes": 21,
+      "path": "/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/outer/active4-race-p1-v2/finished-at",
+      "sha256": "d34b7ac1adcd24632e3c9e1a328d03f845f9ee87a267408cc4d41bce86f54e1a",
+      "value": "2026-09-13T23:09:08Z"
+    },
+    "input.sha256": {
+      "bytes": 854,
+      "path": "/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/outer/active4-race-p1-v2/input.sha256",
+      "sha256": "d1cae685a1523a0bc1140c2e677dbb99a15ee3064fcdd1115b66ba3b40e15074"
+    },
+    "outer.exit": {
+      "bytes": 2,
+      "path": "/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/outer/active4-race-p1-v2/outer.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "value": "1"
+    },
+    "outer.stderr": {
+      "bytes": 41,
+      "path": "/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/outer/active4-race-p1-v2/outer.stderr",
+      "sha256": "067bf7f805788e363acde1b68a8d66fdd82dced4f37666e22a9d1c4d2aa0ca77"
+    },
+    "outer.stdout": {
+      "bytes": 132,
+      "path": "/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/outer/active4-race-p1-v2/outer.stdout",
+      "sha256": "a01f62245c4f9791a2058fcf9f62ea5f6a5d85618520a80442a109008f44c4ee"
+    },
+    "started-at": {
+      "bytes": 21,
+      "path": "/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/outer/active4-race-p1-v2/started-at",
+      "sha256": "b990be586dad42a21f543f7aa2c0f64364869138cabe673211a5fd714cceb04a",
+      "value": "2026-09-13T23:08:21Z"
+    }
+  },
+  "original_bodies_executed": 0,
+  "read_only_confirmation": {
+    "command": [
+      "git",
+      "--no-pager",
+      "--no-optional-locks",
+      "-c",
+      "core.fsmonitor=false",
+      "-c",
+      "core.untrackedCache=false",
+      "-C",
+      "/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/workspace-physical/vault",
+      "status",
+      "--porcelain=v1",
+      "-z"
+    ],
+    "environment": "Existing helper contract: strip inherited GIT_*; GIT_CONFIG_NOSYSTEM=1, GIT_CONFIG_GLOBAL=/dev/null, GIT_TERMINAL_PROMPT=0.",
+    "exit": 0,
+    "seconds": 0.03775320202112198,
+    "started": "2026-09-13T23:12:34.348909+00:00",
+    "stderr_bytes": 0,
+    "stdout_bytes": 0
+  },
+  "version": 1,
+  "worktree": "4481 manifest files in copied unlocked vault; no vault tracked content, mode or revision change was made for the correction."
+}

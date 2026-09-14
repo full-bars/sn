@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/bootstrap-cli-mirror-replay/sim-testnet",
+    "release-lock",
+    "--config",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/testnet.yml",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/config",
+    "--apply"
+  ],
+  "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+  "started_at": "2026-09-14T10:02:33.921990+00:00",
+  "driver_source": "2a8cf09510ad5473e03ccdcbf50a0d4540669e21",
+  "driver_sha256": "34386ea822c86d5a1965c34ffce6c152ba6f97f7d1484ddffb07b97c32546ab0",
+  "chain_rpc": false
+}

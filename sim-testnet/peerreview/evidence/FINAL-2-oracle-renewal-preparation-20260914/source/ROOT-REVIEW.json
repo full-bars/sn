@@ -1,0 +1,23 @@
+{
+  "reviewed_at": "2026-09-14T07:00:46.356756+00:00",
+  "source": "536dba6541498238a339c958358ab1b4b50e8aac",
+  "base": "e31236859c1012c21aed08034cf5074d85bdb9a6",
+  "scope": [
+    "sim-testnet/fleet_renewal_execute.go",
+    "sim-testnet/fleet_renewal_observe.go",
+    "sim-testnet/fleet_renewal_oracle_test.go"
+  ],
+  "patch_sha256": "8d1c03fb6049905ad700f3e93cd6665859bdee23ea8b341912df8ae27a8ef4ae",
+  "decision": "Minimum shared predicate correction matches retained contract schedule semantics. Both planning and per-action checks use it. Existing native renewal will account for later lifecycle successors; no generic history exception required.",
+  "acceptance": "Exact retained nonzero active and immutable oracle; accept no schedule or already effective same-original schedule. Reject future, foreign, or incomplete schedules.",
+  "qualification": "Pending Terra seven normal/race roots; no pass claimed.",
+  "lock_driver_reuse": {
+    "binary": "/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/final-cli-e3123685/sim-testnet",
+    "sha256": "1efb704db3ca03d2b50a675adb798569f0c883c6274159df6a4fb7e9ba3938ba",
+    "source": "e31236859c1012c21aed08034cf5074d85bdb9a6",
+    "scope": "Only unchanged native release-lock command; it observes the requested clean repository graph. Build one new final runtime CLI after new lock publication."
+  },
+  "native_admission_sequence": "Preview/review exact new setup. Apply natively until new plan saved, then SIGINT/SIGTERM and join; validate new plan+archive/config consistency and unchanged journal/supervisor. Record non-PASS cancellation. Native fleet renewal then full setup audit/approved repair.",
+  "rpc": "http://192.168.1.162:9944",
+  "independent_rpc": false
+}

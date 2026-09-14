@@ -1,0 +1,7 @@
+=== RUN   TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead
+--- PASS: TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead (0.44s)
+=== NAME  
+=== RUN   TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead
+--- PASS: TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead (0.01s)
+=== NAME  
+PASS

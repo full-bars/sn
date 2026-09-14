@@ -1,0 +1,10 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 05:39:50.022640 1789042 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 05:39:50.023145 1789042 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 05:39:50.023297 1789042 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 05:39:50.023341 1789042 env.go:67] [env]settings = map[]
+--- FAIL: TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig (281.84s)
+    runtime_evidence_launch_config_test.go:113: operator 1 cannot perform unchanged full deployment admission: reserved upload native provider requires TLS or literal loopback
+FAIL
+FAIL	github.com/urfoundation/sn/sim-testnet	284.361s
+FAIL

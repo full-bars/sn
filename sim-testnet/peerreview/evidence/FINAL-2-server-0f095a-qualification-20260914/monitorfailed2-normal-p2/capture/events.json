@@ -1,0 +1,11 @@
+{"Time":"2026-09-14T00:04:11.378799385Z","Action":"start","Package":"github.com/urnetwork/server/monitor"}
+{"Time":"2026-09-14T00:04:11.379011507Z","Action":"run","Package":"github.com/urnetwork/server/monitor","Test":"TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead"}
+{"Time":"2026-09-14T00:04:11.379027098Z","Action":"output","Package":"github.com/urnetwork/server/monitor","Test":"TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead","Output":"=== RUN   TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead\n"}
+{"Time":"2026-09-14T00:04:11.379075591Z","Action":"output","Package":"github.com/urnetwork/server/monitor","Test":"TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead","Output":"--- PASS: TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead (0.51s)\n"}
+{"Time":"2026-09-14T00:04:11.379084357Z","Action":"pass","Package":"github.com/urnetwork/server/monitor","Test":"TestMigrationsSignalReportsMissingPublishedArtifacts614ThroughHead","Elapsed":0.51}
+{"Time":"2026-09-14T00:04:11.379102101Z","Action":"run","Package":"github.com/urnetwork/server/monitor","Test":"TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead"}
+{"Time":"2026-09-14T00:04:11.379116408Z","Action":"output","Package":"github.com/urnetwork/server/monitor","Test":"TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead","Output":"=== RUN   TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead\n"}
+{"Time":"2026-09-14T00:04:11.379124473Z","Action":"output","Package":"github.com/urnetwork/server/monitor","Test":"TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead","Output":"--- PASS: TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead (0.01s)\n"}
+{"Time":"2026-09-14T00:04:11.379130303Z","Action":"pass","Package":"github.com/urnetwork/server/monitor","Test":"TestMigrationArtifactCatalogCoversEveryVersion614ThroughHead","Elapsed":0.01}
+{"Time":"2026-09-14T00:04:11.37913605Z","Action":"output","Package":"github.com/urnetwork/server/monitor","Output":"PASS\n"}
+{"Time":"2026-09-14T00:04:11.379144375Z","Action":"pass","Package":"github.com/urnetwork/server/monitor","Elapsed":0}

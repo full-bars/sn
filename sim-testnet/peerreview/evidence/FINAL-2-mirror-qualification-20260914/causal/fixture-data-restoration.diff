@@ -1,0 +1,13 @@
+diff --git a/sim-testnet/fleet_renewal_history_test.go b/sim-testnet/fleet_renewal_history_test.go
+index 7f7014a..06eb9ff 100644
+--- a/sim-testnet/fleet_renewal_history_test.go
++++ b/sim-testnet/fleet_renewal_history_test.go
+@@ -76,7 +76,7 @@ func (self *fleetHistoricalAliasRpc) ServeHTTP(writer http.ResponseWriter, reque
+ 		response["result"] = map[string]any{"number": hexutil.EncodeUint64(number), "hash": fleetHistoryBatchBlockHash(number)}
+ 	case "eth_call":
+ 		var message struct {
+-			Input hexutil.Bytes `json:"input"`
++			Input hexutil.Bytes `json:"data"`
+ 		}
+ 		var selector string
+ 		if len(call.Params) != 2 || json.Unmarshal(call.Params[0], &message) != nil || json.Unmarshal(call.Params[1], &selector) != nil {

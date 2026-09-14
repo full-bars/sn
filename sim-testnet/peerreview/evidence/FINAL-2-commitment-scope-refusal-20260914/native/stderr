@@ -1,0 +1,27 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 10:15:46.184707 2350043 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 10:15:46.184941 2350043 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 10:15:46.185088 2350043 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 10:15:46.185150 2350043 env.go:67] [env]settings = map[]
+sim-testnet: batched historical fleet audit 0/1000
+sim-testnet: batched historical fleet audit 1000/1000
+sim-testnet: carried action audit 50/3456
+sim-testnet: carried action audit 100/3456
+sim-testnet: carried action audit 150/3456
+sim-testnet: carried action audit 200/3456
+sim-testnet: carried action audit 250/3456
+sim-testnet: carried action audit 300/3456
+sim-testnet: carried action audit 350/3456
+sim-testnet: carried action audit 400/3456
+sim-testnet: carried action audit 450/3456
+sim-testnet: carried action audit 500/3456
+sim-testnet: carried action audit 550/3456
+sim-testnet: carried action audit 600/3456
+sim-testnet: carried action audit 650/3456
+sim-testnet: carried action audit 700/3456
+sim-testnet: carried action audit 750/3456
+sim-testnet: carried action audit 800/3456
+sim-testnet: carried action audit 850/3456
+sim-testnet: carried action audit 900/3456
+sim-testnet: carried action audit 950/3456
+sim-testnet: carried plan history preflight: action fleet.commitment.34: operational historical EVM state: fleet 34 generation 1 is not the exact current finalized commitment

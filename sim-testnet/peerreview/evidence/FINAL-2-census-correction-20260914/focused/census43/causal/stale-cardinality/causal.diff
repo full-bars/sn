@@ -1,0 +1,13 @@
+diff --git a/sim-testnet/release_gate_capture_metadata_test.go b/sim-testnet/release_gate_capture_metadata_test.go
+index b7cd62b..afdb776 100644
+--- a/sim-testnet/release_gate_capture_metadata_test.go
++++ b/sim-testnet/release_gate_capture_metadata_test.go
+@@ -386,7 +386,7 @@ func verifyReleaseGateCaptureSourceCensus(script string, sources []string) error
+ 	}
+ 	// The two stress roots have their own owners; every other evidence root
+ 	// remains in the evidence family, including newly added regressions.
+-	if counts["capture_population_tests"] != 1 || counts["capture_metadata_tests"] != 1 || counts["capture_private_tests"] != len(releaseCapturePrivateFixtureRoots) || counts["capture_prior_tests"] != 1 || counts["capture_lifecycle_tests"] != 1 || counts["capture_evidence_tests"] != len(evidenceRoots)-2 || counts["capture_renewal_tests"] != 11 || counts["capture_revision_tests"] != 2 || len(ordinaryOwners) == 0 || len(ordinaryOwners)+separateOwners != len(selected) {
++	if counts["capture_population_tests"] != 1 || counts["capture_metadata_tests"] != 1 || counts["capture_private_tests"] != len(releaseCapturePrivateFixtureRoots) || counts["capture_prior_tests"] != 1 || counts["capture_lifecycle_tests"] != 1 || counts["capture_evidence_tests"] != len(evidenceRoots)-2 || counts["capture_renewal_tests"] != 11 || counts["capture_revision_tests"] != 2 || len(ordinaryOwners) == 0 || len(ordinaryOwners)+separateOwners != len(selected) || counts["capture_evidence_tests"] != 87 || len(ordinaryOwners) != 348 || len(selected) != 459 {
+ 		return fmt.Errorf("capture partition changed its complete source census: ordinary=%d separate=%v selected=%d", len(ordinaryOwners), counts, len(selected))
+ 	}
+ 	for _, root := range releaseCapturePrivateFixtureRoots {

@@ -1,0 +1,1 @@
+env GOMAXPROCS=4 timeout --foreground --kill-after=15s 360s /home/by/urnetwork/temp/sn-capture-census-correction-20260914/terra-runtime/capture-focused-20260914T084049Z/normal/sim-testnet.normal.test -test.v=test2json -test.count=1 -test.parallel=4 -test.timeout=5m -test.run '^TestProducerGateCaptureSelectionRequiresIndependentPopulation$'

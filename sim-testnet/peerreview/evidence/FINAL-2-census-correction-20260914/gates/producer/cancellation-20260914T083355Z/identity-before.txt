@@ -1,0 +1,9 @@
+label=producer
+requested_at=2026-09-14T08:33:55Z
+outer_pid=2022112
+inner_pid=2022151
+expected_command=/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/scripts/test-release-1.0-producer-gate.sh
+outer_pid_file=2022112
+source_pair_sha256=sn_head=a59294e98ea02d05125015ae02cf32f2c0059c8a
+sn_status=2022112 1720561 2022112 Ss+  Mon Sep 14 07:19:17 2026 bash /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-a59294e9-globalmodcache/capture-producer-gate.sh
+2022151 2022112 2022112 S+   Mon Sep 14 07:19:17 2026 bash /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/scripts/test-release-1.0-producer-gate.sh

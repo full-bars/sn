@@ -1,0 +1,9 @@
+{
+  "exit": 0,
+  "finished_at": "2026-09-14T07:14:47.077652+00:00",
+  "source_parent": "536dba6541498238a339c958358ab1b4b50e8aac",
+  "final_source": "a59294e98ea02d05125015ae02cf32f2c0059c8a",
+  "lock_sha256": "ea407397566b247e67c66a318fa647c4151db60cdb923e7583d0f3a16cc9ac2f",
+  "primary_physical_origin_match": true,
+  "qualified_scope": "normal7/race7 PASS on unchanged code536 parent; finalCLI/fullgates pending"
+}

@@ -1,0 +1,14 @@
+{
+  "observed_at": "2026-09-14T00:20:21.598826+00:00",
+  "workspace": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical",
+  "sn": "ca4281201077b6e3e9cde1004568efa219d0e12c",
+  "server": "0f095a639e111f71d231cd6f792a191cbc6b0a69",
+  "source_pair": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/final-source-binding/source-pair-ca42812.tsv",
+  "source_pair_rows": 13,
+  "source_pair_sha256": "c692f9026eae377e65b1b937eebb97237fb93b68669d3eb14533c2dc2c88d271",
+  "release_lock_sha256": "cc6a275dee1a669c7f1f2861715c230609dd45772730326a9cd1e99931dce8ef",
+  "published_sn_tracking_matches": true,
+  "all_thirteen_clean": true,
+  "full_gates_started": false,
+  "final_acceptance": false
+}

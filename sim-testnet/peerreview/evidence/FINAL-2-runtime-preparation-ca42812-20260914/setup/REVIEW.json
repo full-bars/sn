@@ -1,0 +1,120 @@
+{
+  "action_count": 2309,
+  "approved_limits": {
+    "alpha_rao": 37250000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0,
+    "tao_rao": 200000000000
+  },
+  "approved_repair": {
+    "depends_on": [
+      "alpha.repair.validator.1.5"
+    ],
+    "description": "spend the remaining approved cumulative alpha tranche to restore the reserve-validator target after live-emission dilution",
+    "id": "alpha.repair.validator.1.7",
+    "intent_hash": "0xb6152bd0f270076c274704c90a4c676d29ae7554fdd16c671046a8f63ce52480",
+    "kind": "substrate-extrinsic",
+    "maximum_spend": {
+      "alpha_rao": 6000000000000,
+      "evm_gas_wei": 0,
+      "registrations": 0,
+      "subnet_creations": 0,
+      "tao_rao": 0
+    },
+    "parameters": {
+      "approved_alpha_price_q9": "568309",
+      "campaign_requirement_rao": "0",
+      "cumulative_alpha_before_repair_rao": "31250000000000",
+      "cumulative_alpha_limit_rao": "37250000000000",
+      "exact_amount_rao": "6000000000000",
+      "maximum_destination_rounding_shortfall_rao": "1",
+      "maximum_reserve_repair_tranche_rao": "6000000000000",
+      "minimum_alpha_at_approved_price_rao": "193556675",
+      "minimum_destination_credit_rao": "5999999999999",
+      "minimum_tao_equivalent_margin_bps": "1000",
+      "repair_for_action": "alpha.transfer.validator.1",
+      "reserve_minimum_share_bps": "6000",
+      "reserve_share_repair": "true",
+      "reserve_target_share_bps": "6500",
+      "runtime_default_min_transfer_tao_rao": "100000"
+    },
+    "target": "validator:1"
+  },
+  "authorization": "User approved 37250 alpha lifetime for one6000-alpha replacement of unsubmitted3750 repair; no scope/spend increase in this revision.",
+  "binary_sha256": "b440fcaf46821278950cefc85bbcba751397cbd1870380e002b05109f1b2b5d4",
+  "chain_transactions": 0,
+  "changed_actions": 0,
+  "changed_top_level_fields": [
+    "generated_at",
+    "live_facts",
+    "plan_hash",
+    "prior_plan_hashes",
+    "release_lock_hash",
+    "resolved_inputs_hash"
+  ],
+  "independent_rpc": false,
+  "installed_state_unchanged": true,
+  "live_fact_changes": {
+    "alpha_available_rao": {
+      "new": 51508487815560,
+      "old": 51316943523388
+    },
+    "alpha_transferable_rao": {
+      "new": 51508487815560,
+      "old": 51316943523388
+    },
+    "evm_finalized_block": {
+      "new": 8000297,
+      "old": 7999484
+    },
+    "evm_finalized_block_hash": {
+      "new": "0xe116906259be55b09219c8da680cc72f3d6276a9d908e77362cb1275eefbe396",
+      "old": "0xa93301baa14ba948ce07612cf7fedd2beaa443ddd26f4e324fc4b2e2b5dc26f7"
+    },
+    "finalized_block": {
+      "new": 8000297,
+      "old": 7999484
+    },
+    "finalized_block_hash": {
+      "new": "0xba6d72dd35f718639d874f62ad72461ae9f0c9de2fae3f6be16d012451179db7",
+      "old": "0x694d957144a6e38ec9751cdbffe90df27304c03a1977f427f4dcd2f84efe0cd2"
+    },
+    "wallet_netuid_alpha_rao": {
+      "new": 51508487815560,
+      "old": 51316943523388
+    }
+  },
+  "maximum_plus_superseded": {
+    "alpha_rao": 37250000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0,
+    "tao_rao": 185748236000
+  },
+  "maximum_spend": {
+    "alpha_rao": 36748306443274,
+    "evm_gas_wei": 167549500000000000000,
+    "registrations": 259,
+    "subnet_creations": 0,
+    "tao_rao": 185748236000
+  },
+  "owned_rpc_authority": "192.168.1.162:9944",
+  "plan_hash": "0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414",
+  "preview_sha256": "ac2e33f432eea203d57a63c7d1c7773480774603f4d9dab90dfe143312d0b465",
+  "prior_plan_hash": "0xdbeb584008bbdbc6607a49a5118c1c82fdfa18a15ca8fe5b5c8cea9d2775c37a",
+  "release_lock_file_sha256": "cc6a275dee1a669c7f1f2861715c230609dd45772730326a9cd1e99931dce8ef",
+  "reviewed_at": "2026-09-14T00:40:34.398981+00:00",
+  "rpc_rate_limits": false,
+  "source_revision": "ca4281201077b6e3e9cde1004568efa219d0e12c",
+  "spending_envelope_unchanged": true,
+  "status": "reviewed; awaiting complete producer PASS before apply",
+  "superseded_spend": {
+    "alpha_rao": 501693556726,
+    "evm_gas_wei": 12450500000000000000,
+    "registrations": 3,
+    "subnet_creations": 0,
+    "tao_rao": 0
+  },
+  "unchanged_actions": 2309
+}

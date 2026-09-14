@@ -1,0 +1,56 @@
+431-=== RUN   TestProducerGateCaptureSelectionRequiresIndependentMetadata
+432-=== PAUSE TestProducerGateCaptureSelectionRequiresIndependentMetadata
+433-=== NAME  
+434:=== RUN   TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift
+435:=== PAUSE TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift
+436-=== NAME  
+437-=== RUN   TestProducerGateCaptureSelectionPinsMeasuredMetadataRaceBudget
+438-=== PAUSE TestProducerGateCaptureSelectionPinsMeasuredMetadataRaceBudget
+--
+452-=== RUN   TestProducerGateCaptureSelectionRejectsSourceCensusDrift
+453-=== PAUSE TestProducerGateCaptureSelectionRejectsSourceCensusDrift
+454-=== NAME  
+455:=== RUN   TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift
+456:=== PAUSE TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift
+457-=== NAME  
+458-=== RUN   TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling
+459-=== PAUSE TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling
+--
+463-=== NAME  
+464-=== CONT  TestProducerGateCaptureSelectionEnumerationHonorsCanceledContext
+465-=== CONT  TestProducerGateCaptureSelectionRequiresIndependentPopulation
+466:=== CONT  TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift
+467-=== CONT  TestProducerGateCaptureSelectionRejectsSourceCensusDrift
+468---- PASS: TestProducerGateCaptureSelectionEnumerationHonorsCanceledContext (0.00s)
+469-=== CONT  TestEvmTxManagerReadClonePreservesMissingRoles
+--
+480---- PASS: TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling (0.07s)
+481-=== CONT  TestProducerGateCaptureSelectionRejectsPrivateFixtureSchedulingDrift
+482---- PASS: TestProducerGateCaptureSelectionRejectsPrivateFixtureSchedulingDrift (8.50s)
+483:=== CONT  TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift
+484---- PASS: TestProducerGateCaptureSelectionRejectsMetadataRaceBudgetLeak (13.67s)
+485-=== CONT  TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources
+486---- PASS: TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources (9.47s)
+--
+491-=== CONT  TestProducerGateCaptureSelectionEnumerationRejectsEmptySelector
+492---- PASS: TestProducerGateCaptureSelectionEnumerationRejectsEmptySelector (0.00s)
+493---- PASS: TestProducerGateCaptureSelectionRejectsSourceCensusDrift (68.10s)
+494:--- PASS: TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift (61.39s)
+495:panic: test timed out after 10m0s
+496-	running tests:
+497:		TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift (1m29s)
+498-
+499-goroutine 1180 [running]:
+500-testing.(*M).startAlarm.func1()
+--
+533-	/usr/local/go/src/regexp/regexp.go:599 +0x225
+534-regexp.(*Regexp).ReplaceAllString(0xc0011bf680, {0xc000e10000, 0xaacd}, {0x0, 0x0})
+535-	/usr/local/go/src/regexp/regexp.go:557 +0x151
+536:github.com/urfoundation/sn/sim-testnet.releaseGateRegistrationConditions({0xc000e10000, 0xaacd}, {0xc001888550, 0x44})
+537-	<restricted-capture>/sn-mirror-fixture-correction-20260914/sn/sim-testnet/release_gate_capture_metadata_test.go:36 +0x74
+538-github.com/urfoundation/sn/sim-testnet.verifyReleaseGateCaptureMetadataIsolation({0xc000e10000, 0xaacd})
+539-	<restricted-capture>/sn-mirror-fixture-correction-20260914/sn/sim-testnet/release_gate_capture_metadata_test.go:154 +0x1058
+540:github.com/urfoundation/sn/sim-testnet.TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift(0xc00102a908)
+541-	<restricted-capture>/sn-mirror-fixture-correction-20260914/sn/sim-testnet/release_gate_capture_metadata_test.go:250 +0xe2e
+542-testing.tRunner(0xc00102a908, 0x6ec14a8)
+543-	/usr/local/go/src/testing/testing.go:2036 +0x21d

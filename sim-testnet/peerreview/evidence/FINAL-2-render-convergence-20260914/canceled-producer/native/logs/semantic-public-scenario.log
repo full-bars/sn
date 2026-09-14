@@ -1,0 +1,4 @@
+ok  	github.com/urfoundation/sn/sim-testnet	196.921s
+release gate: joining descendants after worker=1963243 exit=None stop=143
+release gate: reaped adopted descendant pid=1969586 exit=143
+release gate: reaped adopted descendant pid=1969846 exit=143

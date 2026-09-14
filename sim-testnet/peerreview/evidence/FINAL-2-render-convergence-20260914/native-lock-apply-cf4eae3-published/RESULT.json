@@ -1,0 +1,10 @@
+{
+  "exit": 0,
+  "started_at": "2026-09-14T06:05:35.162108+00:00",
+  "finished_at": "2026-09-14T06:05:37.679077+00:00",
+  "chain_transactions": 0,
+  "lock_sha256": "ba52cc36320e5c799eb5115ee92fcf6b456b0ad10fafd6252dea11c4daac28f7",
+  "matches_reviewed_candidate": true,
+  "stdout_sha256": "7f6fdad8dfc7cd5b9a290ac9a8d251408775944acffccd7703b770028665dc52",
+  "stderr_sha256": "b1e80d009c0b75b6a6e907e2963e3b6ece98c20478c75f41c239b45ff2d14590"
+}

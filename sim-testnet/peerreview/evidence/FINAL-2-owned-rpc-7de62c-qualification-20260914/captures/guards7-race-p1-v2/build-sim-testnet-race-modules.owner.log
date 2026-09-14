@@ -1,0 +1,4 @@
+[release gate] private state /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/tmp/guards7-race-p1-v2/urnetwork-release-gate.a7C6w3wP; ready jobs=1; CPUs/job=4
+[release gate] started qualification (pid 1095495)
+[release gate] joined qualification (exit 0); log /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/tmp/guards7-race-p1-v2/urnetwork-release-gate.a7C6w3wP/logs/qualification.log
+[release gate] retained private logs/state: /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/tmp/guards7-race-p1-v2/urnetwork-release-gate.a7C6w3wP

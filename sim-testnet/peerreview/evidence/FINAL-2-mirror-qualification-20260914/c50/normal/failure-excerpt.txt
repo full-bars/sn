@@ -1,0 +1,42 @@
+256-=== NAME  
+257-=== RUN   TestFleetRenewalHistoricalAliasReplaysOriginalMirrorAndBinding
+258:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+259-    fleet_renewal_history_test.go:337: fleet.mirror.1 original-format replay: operational historical EVM state: fleet 1 mirror mismatch: EOF
+260:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+261-    fleet_renewal_history_test.go:337: fleet.bind.1.1 original-format replay: operational historical EVM state: fleet 1 member 1 binding postcondition mismatch: EOF
+262:--- FAIL: TestFleetRenewalHistoricalAliasReplaysOriginalMirrorAndBinding (0.43s)
+263-=== NAME  
+264-=== RUN   TestFleetRenewalHistoricalAliasReplaysIndependentCheckpoint
+265:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+266-    fleet_renewal_history_test.go:353: fleet.mirror.1 independent original-format replay: operational historical EVM state: fleet 1 mirror mismatch: EOF
+267:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+268-    fleet_renewal_history_test.go:353: fleet.bind.1.1 independent original-format replay: operational historical EVM state: fleet 1 member 1 binding postcondition mismatch: EOF
+269-    fleet_renewal_history_test.go:357: historical reads headers=[] blocks=[], want [finalized 0x6f finalized 0x6f]/[111 111]
+270:--- FAIL: TestFleetRenewalHistoricalAliasReplaysIndependentCheckpoint (0.16s)
+271-=== NAME  
+272-=== RUN   TestFleetRenewalHistoricalAliasPreservesDerivedReceipt
+--
+277-=== NAME  
+278-=== RUN   TestFleetRenewalHistoricalAliasRejectsChangedObservation
+279:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+280-    fleet_renewal_history_test.go:423: fleet.mirror.1 changed observer=false field=fleet was not hash-rejected: operational historical EVM state: fleet 1 mirror mismatch: EOF
+281:--- FAIL: TestFleetRenewalHistoricalAliasRejectsChangedObservation (0.15s)
+282-=== NAME  
+283-=== RUN   TestFleetRenewalHistoricalAliasRejectsChangedCheckpoint
+284:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+285-    fleet_renewal_history_test.go:446: fleet.mirror.1 invalid observer=true unfinalized=false checkpoint accepted: operational historical EVM state: fleet 1 mirror mismatch: EOF
+286:--- FAIL: TestFleetRenewalHistoricalAliasRejectsChangedCheckpoint (0.15s)
+287-=== NAME  
+288-=== RUN   TestFleetRenewalHistoricalAliasRejectsChangedContractState
+289:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+290:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+291:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+292:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+293:--- FAIL: TestFleetRenewalHistoricalAliasRejectsChangedContractState (0.14s)
+294-=== NAME  
+295-=== RUN   TestFleetRenewalHistoricalAliasRejectsChangedSharedClone
+296:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+297-    fleet_renewal_history_test.go:483: fleet.mirror.1 changed shared clone checkpoint=false was accepted: operational historical EVM state: fleet 1 mirror mismatch: EOF
+298:--- FAIL: TestFleetRenewalHistoricalAliasRejectsChangedSharedClone (0.15s)
+299-=== NAME  
+300-=== RUN   TestFleetRenewalOriginalOracleAcceptsCompletedRestore

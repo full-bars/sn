@@ -1,0 +1,67 @@
+{
+  "old_plan_hash": "0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414",
+  "plan_hash": "0x41c779564bb6593ff7c125d3f109efc7310a89d524dfbaae2a4e0ecc5abf9b4f",
+  "action_count": 2309,
+  "added_actions": [],
+  "removed_actions": [],
+  "changed_actions": [
+    "config.render"
+  ],
+  "changed_action_has_zero_spend": true,
+  "all_other_actions_byte_equivalent_as_json": true,
+  "config_policy_roles_custody_limits_unchanged": true,
+  "original_lineage_retained": true,
+  "repair_action": {
+    "id": "alpha.repair.validator.1.7",
+    "kind": "substrate-extrinsic",
+    "target": "validator:1",
+    "description": "spend the remaining approved cumulative alpha tranche to restore the reserve-validator target after live-emission dilution",
+    "parameters": {
+      "approved_alpha_price_q9": "568309",
+      "campaign_requirement_rao": "0",
+      "cumulative_alpha_before_repair_rao": "31250000000000",
+      "cumulative_alpha_limit_rao": "37250000000000",
+      "exact_amount_rao": "6000000000000",
+      "maximum_destination_rounding_shortfall_rao": "1",
+      "maximum_reserve_repair_tranche_rao": "6000000000000",
+      "minimum_alpha_at_approved_price_rao": "193556675",
+      "minimum_destination_credit_rao": "5999999999999",
+      "minimum_tao_equivalent_margin_bps": "1000",
+      "repair_for_action": "alpha.transfer.validator.1",
+      "reserve_minimum_share_bps": "6000",
+      "reserve_share_repair": "true",
+      "reserve_target_share_bps": "6500",
+      "runtime_default_min_transfer_tao_rao": "100000"
+    },
+    "maximum_spend": {
+      "tao_rao": 0,
+      "alpha_rao": 6000000000000,
+      "evm_gas_wei": 0,
+      "registrations": 0,
+      "subnet_creations": 0
+    },
+    "depends_on": [
+      "alpha.repair.validator.1.5"
+    ],
+    "intent_hash": "0xb6152bd0f270076c274704c90a4c676d29ae7554fdd16c671046a8f63ce52480"
+  },
+  "combined_maximum_and_superseded_spend": {
+    "tao_rao": 185748236000,
+    "alpha_rao": 37250000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0
+  },
+  "limits": {
+    "tao_rao": 200000000000,
+    "alpha_rao": 37250000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0
+  },
+  "endpoint": "http://192.168.1.162:9944",
+  "independent_rpc": false,
+  "binary_sha256": "1efb704db3ca03d2b50a675adb798569f0c883c6274159df6a4fb7e9ba3938ba",
+  "affected_qualification": "/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/affected-qualification.result",
+  "full_source_gates": "pending; running independently; final acceptance remains false"
+}

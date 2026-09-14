@@ -1,0 +1,15 @@
+{
+  "source_root": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/sn",
+  "base": "e31236859c1012c21aed08034cf5074d85bdb9a6",
+  "commit": "536dba6541498238a339c958358ab1b4b50e8aac",
+  "source_clean": true,
+  "files": {
+    "sim-testnet/fleet_renewal_observe.go": "b08ea98bf59846f2cea3a43751e1dac273e2481ab8abe4e4a68ad9cd8ac08190",
+    "sim-testnet/fleet_renewal_execute.go": "946c3a57c7b80b2ca2859fbbf0d7497e830fef1c3458c9b145f7598b22f17fc5",
+    "sim-testnet/fleet_renewal_oracle_test.go": "89dddab743b04553ac961a7ee3143744cafcb881b500a685f1cee0f7400dcc03"
+  },
+  "patch_sha256": "8d1c03fb6049905ad700f3e93cd6665859bdee23ea8b341912df8ae27a8ef4ae",
+  "formatter_owner": "Terra",
+  "test_build_owner": "Terra",
+  "astra_test_build_formatter_execution": false
+}

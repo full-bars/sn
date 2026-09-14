@@ -1,0 +1,48 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 06:25:39.257164 1869302 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 06:25:39.258059 1869302 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 06:25:39.258235 1869302 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 06:25:39.258282 1869302 env.go:67] [env]settings = map[]
+sim-testnet: batched historical fleet audit 0/1000
+sim-testnet: batched historical fleet audit 1000/1000
+sim-testnet: carried action audit 50/2245
+sim-testnet: carried action audit 100/2245
+sim-testnet: carried action audit 150/2245
+sim-testnet: carried action audit 200/2245
+sim-testnet: carried action audit 250/2245
+sim-testnet: carried action audit 300/2245
+sim-testnet: carried action audit 350/2245
+sim-testnet: carried action audit 400/2245
+sim-testnet: carried action audit 450/2245
+sim-testnet: carried action audit 500/2245
+sim-testnet: carried action audit 550/2245
+sim-testnet: carried action audit 600/2245
+sim-testnet: carried action audit 650/2245
+sim-testnet: carried action audit 700/2245
+sim-testnet: carried action audit 750/2245
+sim-testnet: carried action audit 800/2245
+sim-testnet: carried action audit 850/2245
+sim-testnet: carried action audit 900/2245
+sim-testnet: carried action audit 950/2245
+sim-testnet: carried action audit 1000/2245
+sim-testnet: carried action audit 1050/2245
+sim-testnet: carried action audit 1100/2245
+sim-testnet: carried action audit 1150/2245
+sim-testnet: carried action audit 1200/2245
+sim-testnet: carried action audit 1250/2245
+sim-testnet: carried action audit 1300/2245
+sim-testnet: carried action audit 1350/2245
+sim-testnet: carried action audit 1400/2245
+sim-testnet: carried action audit 1450/2245
+sim-testnet: carried action audit 1500/2245
+sim-testnet: carried action audit 1550/2245
+sim-testnet: carried action audit 1600/2245
+sim-testnet: carried action audit 1650/2245
+sim-testnet: carried action audit 1700/2245
+sim-testnet: carried action audit 1750/2245
+sim-testnet: carried action audit 1800/2245
+sim-testnet: carried action audit 1850/2245
+sim-testnet: carried action audit 1900/2245
+sim-testnet: carried action audit 1950/2245
+sim-testnet: carried action audit 2000/2245
+sim-testnet: carried plan history preflight: action fleet.refresh.batch.1: current postcondition: fleet 5 member 1 binding version count=3, want 2

@@ -1,0 +1,7 @@
+started_utc=2026-09-14T09:02:24Z
+ended_utc=2026-09-14T09:02:25Z
+body_exit=1
+converter_exit=0
+source_after_exit=0
+binary_after_exit=0
+expected_body_exit=1

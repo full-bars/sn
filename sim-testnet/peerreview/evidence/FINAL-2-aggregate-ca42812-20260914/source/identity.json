@@ -1,0 +1,13 @@
+{
+  "finished_at": "2026-09-14T04:28:36Z",
+  "initial_final_source_sha256": "aa9d12bf8740a4bf9a73883de6e46a9c841107ab6cd0a3bd8f0dd558dc2eb54a",
+  "live_campaign_acceptance": false,
+  "nonzero_joins": 0,
+  "observed_at_utc": "2026-09-14T05:06:36.442611+00:00",
+  "outer_exit": 0,
+  "phase_joins": 25,
+  "release_lock_sha256": "cc6a275dee1a669c7f1f2861715c230609dd45772730326a9cd1e99931dce8ef",
+  "server": "0f095a639e111f71d231cd6f792a191cbc6b0a69",
+  "sn": "ca4281201077b6e3e9cde1004568efa219d0e12c",
+  "started_at": "2026-09-14T00:26:03Z"
+}

@@ -1,0 +1,9 @@
+label=aggregate
+requested_at=2026-09-14T08:33:55Z
+outer_pid=2026089
+inner_pid=2026114
+expected_command=/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/scripts/test-release-1.0-local.sh
+outer_pid_file=2026089
+source_pair_sha256=sn_head=a59294e98ea02d05125015ae02cf32f2c0059c8a
+sn_status=2026089 1720561 2026089 Ss+  Mon Sep 14 07:21:08 2026 bash /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/capture-aggregate-gate.sh
+2026114 2026089 2026089 S+   Mon Sep 14 07:21:08 2026 bash /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/scripts/test-release-1.0-local.sh

@@ -1,0 +1,44 @@
+{
+  "started_at": "2026-09-14T05:07:55.485183Z",
+  "finished_at": "2026-09-14T05:08:04.750241Z",
+  "exit_code": 0,
+  "capture": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-config-path-recovery-20260914T050755Z",
+  "state_before": {
+    "plan.json": {
+      "bytes": 1469299,
+      "sha256": "9f10b10d46e34e031af7b3156dc8e65848307f49e751e8ed448237b9c5046e59"
+    },
+    "journal.jsonl": {
+      "bytes": 7399401,
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73"
+    },
+    "supervisor.state.json": {
+      "bytes": 8829,
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4"
+    },
+    "supervisor.json": {
+      "bytes": 43887,
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815"
+    }
+  },
+  "state_after": {
+    "plan.json": {
+      "bytes": 1469299,
+      "sha256": "9f10b10d46e34e031af7b3156dc8e65848307f49e751e8ed448237b9c5046e59"
+    },
+    "journal.jsonl": {
+      "bytes": 7399401,
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73"
+    },
+    "supervisor.state.json": {
+      "bytes": 8829,
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4"
+    },
+    "supervisor.json": {
+      "bytes": 43887,
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815"
+    }
+  },
+  "stdout_sha256": "9340f672b842138cf8b236011e125bac014001aecce3d85e463d6a521a93e23c",
+  "stderr_sha256": "35c59053bc02ee735ea51d440d0cbcac9e122c4940229d8440f5b05209309af5"
+}

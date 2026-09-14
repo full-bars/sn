@@ -1,0 +1,36 @@
+{
+  "reviewed_at": "2026-09-14T07:27:06.523465+00:00",
+  "result": "APPROVAL-IDENTICAL SOURCE REVISION",
+  "old_plan_hash": "0x41c779564bb6593ff7c125d3f109efc7310a89d524dfbaae2a4e0ecc5abf9b4f",
+  "new_plan_hash": "0x08ffaa10bb1647ea2f5b7dba5a57358b7e8e05a09d47a6ff8bddedd91b2966a1",
+  "actions": 2309,
+  "added_actions": [],
+  "removed_actions": [],
+  "changed_actions": [],
+  "changed_top_keys": [
+    "generated_at",
+    "live_facts",
+    "plan_hash",
+    "prior_plan_hashes",
+    "release_lock_hash"
+  ],
+  "all_prior_ancestry_retained": true,
+  "combined_maximum_and_superseded_spend": {
+    "tao_rao": 185748236000,
+    "alpha_rao": 37250000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0
+  },
+  "limits": {
+    "tao_rao": 200000000000,
+    "alpha_rao": 37250000000000,
+    "evm_gas_wei": 180000000000000000000,
+    "registrations": 262,
+    "subnet_creations": 0
+  },
+  "repair_intent_hash": "0xb6152bd0f270076c274704c90a4c676d29ae7554fdd16c671046a8f63ce52480",
+  "reviewed_stdout_sha256": "34b9f512ac69be2155606622b9d1f634936fbd24c0bfc46a31176e2445301c6f",
+  "six_state_files_unchanged": true,
+  "next_action": "Native setup admission with exact hash, cancel during carried-history audit before any chain action; join and verify complete native inputs, record CANCELED not PASS."
+}

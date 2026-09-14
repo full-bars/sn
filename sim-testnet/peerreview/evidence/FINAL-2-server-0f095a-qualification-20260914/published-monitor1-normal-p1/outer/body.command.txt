@@ -1,0 +1,1 @@
+/home/by/urnetwork/temp/sn-server-migration-monitor-qualification-20260913/runtime/server-0f095a-v1/published-monitor1-normal-p1/capture/server-normal.testbin -test.run=\^TestPublishedMigrationMonitorExtenderArtifacts\$ -test.v=test2json -test.count=1 -test.parallel=4 -test.timeout=600s

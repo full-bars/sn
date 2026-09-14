@@ -1,0 +1,10 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 06:12:20.345191 1846071 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 06:12:20.345518 1846071 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 06:12:20.345652 1846071 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 06:12:20.345692 1846071 env.go:67] [env]settings = map[]
+=== RUN   TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig
+=== PAUSE TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig
+=== CONT  TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig
+--- PASS: TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig (175.96s)
+PASS

@@ -1,0 +1,20 @@
+source=/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/sn
+base=e31236859c1012c21aed08034cf5074d85bdb9a6
+head=536dba6541498238a339c958358ab1b4b50e8aac
+source_status=clean
+diff_check=clean
+normal_result=PASS all 7 selected roots; package_elapsed=39.724s
+ended_utc=2026-09-14T07:01:39Z
+exit=0
+race_result=PASS all 7 selected roots; package_elapsed=352.899s
+ended_utc=2026-09-14T07:13:15Z
+exit=0
+selector=^(TestFleetRenewalOriginalOracleAcceptsCompletedRestore|TestFleetRenewalOriginalOracleRejectsChangedRouting|TestFleetRefreshOracleStateUsesOnePinnedBatch|TestFleetRenewalPlansExpiredAndLiveMixedGenerations|TestFleetRenewalRejectsChangedPrestateAndPreservesApproval|TestFleetRenewalRevisionPreservesApprovedRoundsAndChargesOnce|TestFleetRenewalPipelineSubmitsExactNoncesBeforeFinality)$
+command_scope=normal and race only; no bootstrap build; no native or chain action
+90c4fa271229134fb1b6f366359a6f6b8c8f2b21cbe68571c6ab26d54dc0f932  /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/capture-focused-20260914T065744Z/source.identity
+2db09a1a061d8b0f485579bb161fda75675832b2613df9585e46c1fd2ff5c197  /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/capture-focused-20260914T065744Z/normal.command
+644b29a7051f827fe448d476e7d61779dd1cc628e6b2623ceaf654f2fb104c35  /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/capture-focused-20260914T065744Z/normal.terminal
+473eccbf5f4bebc1ab9c584db157a105b6715419260be3db70acbbdc41bb13c9  /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/capture-focused-20260914T065744Z/normal.exit
+f43cb9f6dc99ef0b252b2bca559ff50a93d55bf106ded01d5bd70effacbead85  /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/capture-focused-20260914T065744Z/race.command
+2b15367379c0a3d78fd821208e13cfaae0081032e7dc5fb2c8c27862ade9b87d  /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/capture-focused-20260914T065744Z/race.terminal
+50b57fdb941e66ed8e385d254405cfff249c8732295d78d37851da2ecc6001af  /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/capture-focused-20260914T065744Z/race.exit

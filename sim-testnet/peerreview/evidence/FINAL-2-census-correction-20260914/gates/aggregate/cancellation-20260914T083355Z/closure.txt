@@ -1,0 +1,11 @@
+closure_observed_at=2026-09-14T08:35:49Z
+outer_exit=143
+outer_finished_at=2026-09-14T08:33:57Z
+admitted_children=7
+joined_children=7
+source_pair_sha256=3136a9900882718cd012465ae2826108da9c687c2a17b5b1bb361411b5fffe5e
+sn_head_at_closure=a59294e98ea02d05125015ae02cf32f2c0059c8a
+actual_failure=sn-all-normal:1
+canceled_children=sn-simulator-race:143,sn-simulator-populations-race:143
+live_owner_or_service_matches=0
+raw_gate_root=/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-a59294e9-globalmodcache/tmp/urnetwork-release-gate.vrWmbsWA

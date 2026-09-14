@@ -1,0 +1,6 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 07:06:20.913945 2003297 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 07:06:20.914182 2003297 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 07:06:20.914276 2003297 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 07:06:20.914314 2003297 env.go:67] [env]settings = map[]
+sim-testnet: release-lock executable attestation: running executable revision e31236859c1012c21aed08034cf5074d85bdb9a6 differs from SN checkout 536dba6541498238a339c958358ab1b4b50e8aac

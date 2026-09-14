@@ -1,0 +1,11 @@
+{
+  "kind":"temporary-bootstrap-stamped-sim-testnet-cli-build",
+  "build_exit":0,
+  "repos_before_after_identical":true,
+  "repos_before_sha256":"98054b63c1d67e9fce2e9f8a7d22eb13e7060b262b49527cdc01a61a82c8cc1e",
+  "repos_after_sha256":"98054b63c1d67e9fce2e9f8a7d22eb13e7060b262b49527cdc01a61a82c8cc1e",
+  "artifact":{"path":"/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/bootstrap-cli-mirror-replay/sim-testnet","sha256":"34386ea822c86d5a1965c34ffce6c152ba6f97f7d1484ddffb07b97c32546ab0","bytes":140508032,"mode":"0700"},
+  "vcs":{"revision":"2a8cf09510ad5473e03ccdcbf50a0d4540669e21","trimpath":true,"buildvcs":true,"modified":false},
+  "warm_gocache":"/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/gocache",
+  "gomodcache":"/home/by/go/pkg/mod"
+}

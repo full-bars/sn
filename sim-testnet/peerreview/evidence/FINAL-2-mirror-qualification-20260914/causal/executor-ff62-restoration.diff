@@ -1,0 +1,52 @@
+diff --git a/sim-testnet/executor.go b/sim-testnet/executor.go
+index ee5a19b..397a3cb 100644
+--- a/sim-testnet/executor.go
++++ b/sim-testnet/executor.go
+@@ -926,29 +926,6 @@ func observedPostconditionMatches(recorded, replayed map[string]any) error {
+ 	return nil
+ }
+ 
+-// Replay migration aliases in their recorded format; current aliases retain
+-// their authenticated batch metadata and ordinary actions keep their reader.
+-func (self *Executor) historicalActionPostState(ctx context.Context, action Action, record *ActionPostcondition, evmHead ChainHead) (map[string]any, error) {
+-	if action.Parameters["batch_installed"] == "true" && (strings.HasPrefix(action.ID, "fleet.mirror.") || strings.HasPrefix(action.ID, "fleet.bind.")) {
+-		kind, err := classifyFleetInstallAliasReceipt(record)
+-		if err != nil {
+-			return nil, err
+-		}
+-		if kind == fleetInstallAliasReceiptHistoricalRead {
+-			_, fleet, member, err := fleetInstallAliasIndices(self.cfg, action)
+-			if err != nil {
+-				return nil, err
+-			}
+-			state := map[string]any{"kind": action.Kind, "target": action.Target}
+-			if member == 0 {
+-				return self.verifyFleetMirrorPostState(ctx, fleet, evmHead, state)
+-			}
+-			return self.verifyFleetBindingPostState(ctx, fleet, member, evmHead, state)
+-		}
+-	}
+-	return self.actionPostState(ctx, action, evmHead)
+-}
+-
+ // Replays an EVM-dependent point-in-time assertion after a later approved
+ // action intentionally supersedes its live state. V3+ receipts bind the exact
+ // EVM-RPC hash domain, so both finalized observations must remain canonical
+@@ -970,7 +947,7 @@ func (e *Executor) verifyHistoricalEVMPostcondition(ctx context.Context, action
+ 	if err := verifyEVMCheckpoint(ctx, e.deployer.client, finalized, record.EVMFinalized); err != nil {
+ 		return fmt.Errorf("operational historical EVM checkpoint: %w", err)
+ 	}
+-	replayed, err := e.historicalActionPostState(ctx, action, record, record.EVMFinalized)
++	replayed, err := e.actionPostState(ctx, action, record.EVMFinalized)
+ 	if err != nil {
+ 		return fmt.Errorf("operational historical EVM state: %w", err)
+ 	}
+@@ -998,7 +975,7 @@ func (e *Executor) verifyHistoricalEVMPostcondition(ctx context.Context, action
+ 	if err := verifyEVMCheckpoint(ctx, e.independentEVM, independentFinalized, record.IndependentEVMFinalized); err != nil {
+ 		return fmt.Errorf("independent historical EVM checkpoint: %w", err)
+ 	}
+-	independentReplayed, err := observer.historicalActionPostState(ctx, action, record, record.IndependentEVMFinalized)
++	independentReplayed, err := observer.actionPostState(ctx, action, record.IndependentEVMFinalized)
+ 	if err != nil {
+ 		return fmt.Errorf("independent historical EVM state: %w", err)
+ 	}

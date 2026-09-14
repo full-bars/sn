@@ -1,0 +1,55 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/final-cli-census-correction/sim-testnet",
+    "setup",
+    "--config",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/testnet.yml",
+    "--state-dir",
+    "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/config",
+    "--owned-rpc-authority",
+    "192.168.1.162:9944",
+    "--format",
+    "json"
+  ],
+  "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+  "started_at": "2026-09-14T10:06:54.335320+00:00",
+  "source": "abae9a6a8410a54a560335b16888d2ad0d4fc51f",
+  "binary_sha256": "71fca036f0aa6876565fbc38f1d138f0ed2268e19f9488d280eaf95c49ae191e",
+  "read_only": true,
+  "state_before": {
+    "plan.json": {
+      "sha256": "375a0c5b933322d0c9bc5989697486b8661224f53dca4359fd98ca6fa36dd1a7",
+      "bytes": 5948234
+    },
+    "journal.jsonl": {
+      "sha256": "0f3b7ea89a1cedd3da435be13e26d8b824b22ae4ff0fa4573d17e3ef6d743b5c",
+      "bytes": 11951559
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "74b85f37f05de975fb0847185b4ebf7606153dd06613a847b203a44212cd0052",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  }
+}

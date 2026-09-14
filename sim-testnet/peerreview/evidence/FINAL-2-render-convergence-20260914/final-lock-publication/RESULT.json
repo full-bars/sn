@@ -1,0 +1,68 @@
+{
+  "started_at": "2026-09-14T06:07:41.381968+00:00",
+  "finished_at": "2026-09-14T06:07:44.028098+00:00",
+  "steps": [
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+        "diff",
+        "--check"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+        "add",
+        "--",
+        "deploy/testnet/release.lock.yml"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+        "commit",
+        "-m",
+        "Lock strict owned-RPC runtime rendering"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+        "push",
+        "origin",
+        "HEAD:main"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/home/by/urnetwork/sn",
+        "pull",
+        "--ff-only",
+        "origin",
+        "main"
+      ],
+      "exit": 0
+    }
+  ],
+  "exit": 0,
+  "physical_head": "e31236859c1012c21aed08034cf5074d85bdb9a6",
+  "primary_head": "e31236859c1012c21aed08034cf5074d85bdb9a6",
+  "origin_main": "e31236859c1012c21aed08034cf5074d85bdb9a6",
+  "lock_sha256": "ba52cc36320e5c799eb5115ee92fcf6b456b0ad10fafd6252dea11c4daac28f7",
+  "chain_transactions": 0,
+  "qualification_pending": true
+}

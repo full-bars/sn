@@ -1,0 +1,4 @@
+[release gate] private state /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/tmp/owned-history33-normal-p1-v2/urnetwork-release-gate.0e0XXdEm; ready jobs=1; CPUs/job=4
+[release gate] started qualification (pid 1144038)
+[release gate] joined qualification (exit 0); log /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/tmp/owned-history33-normal-p1-v2/urnetwork-release-gate.0e0XXdEm/logs/qualification.log
+[release gate] retained private logs/state: /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/tmp/owned-history33-normal-p1-v2/urnetwork-release-gate.0e0XXdEm

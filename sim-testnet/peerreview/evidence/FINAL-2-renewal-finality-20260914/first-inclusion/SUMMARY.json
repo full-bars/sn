@@ -1,0 +1,21 @@
+{
+  "observed_at": "2026-09-14T07:47:27.863628+00:00",
+  "endpoint": "http://192.168.1.162:9944",
+  "independent_rpc": false,
+  "claim_scope": "First renewal commitment is present at its recorded finalized canonical native block; this does not establish all1212operations or campaign acceptance",
+  "action_id": "fleet.renew.1.9.commitment",
+  "transaction_hash": "0x9be9f4334b44d9c6f4bcddf2285be953e100c6980b63a24432c9c5b583075ce7",
+  "block_number": 8002458,
+  "block_hash": "0xc03a239da6e042b4bfc583854b38e15b7efd2257dbb8ab41f4f4f4a9274b6d3b",
+  "extrinsic_index": 14,
+  "current_finalized_number": 8002481,
+  "current_finalized_hash": "0xbc50d4d933312e33e0f6d2779c02e20854281cf0c26ef864ea15bbe283fb244e",
+  "journal_finalized_sequence": 10289,
+  "journal_finalized_time": "2026-09-14T07:42:51.387134478Z",
+  "journal_postcondition_sequence": 10299,
+  "journal_postcondition_time": "2026-09-14T07:42:51.733065904Z",
+  "postcondition_path": "receipts/postconditions/bf3a911a6e8ccdac1eb9af016d257d7bbac389395b93613e09f753e7a53facc5/fleet.renew.1.9.commitment.json",
+  "postcondition_hash": "0x9569caf7583cb717da011f0fbd4a30a7b56776c17144a96589716c4c69075465",
+  "canonical_inclusion_reproduced": true,
+  "rpc_sha256": "45375963ac2ce6af5403fc61faaf140938998a447d176f5120410f1e6684424d"
+}

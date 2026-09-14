@@ -1,0 +1,6 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 06:22:53.469941 1865368 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 06:22:53.470085 1865368 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 06:22:53.470154 1865368 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 06:22:53.470180 1865368 env.go:67] [env]settings = map[]
+sim-testnet: doctor must pass before revising the plan: doctor hard failures: release-lock

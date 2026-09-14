@@ -1,0 +1,5 @@
+=== RUN   TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis
+    final_semantic_producer_test.go:38: enumerate producer gate capture tests: exec: "go": executable file not found in $PATH
+--- FAIL: TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis (0.00s)
+=== NAME  
+FAIL

@@ -1,0 +1,47 @@
+{
+  "exit": 0,
+  "started_at": "2026-09-14T00:28:02.681119+00:00",
+  "finished_at": "2026-09-14T00:28:41.325298+00:00",
+  "read_only": true,
+  "chain_writes": false,
+  "chain_transactions": 0,
+  "state_before": {
+    "plan.json": {
+      "sha256": "0261c38b37670633b2fa7ee854dbec02056bc600f9380f8b5644125cccedd7e2",
+      "bytes": 1469230
+    },
+    "journal.jsonl": {
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+      "bytes": 7399401
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    }
+  },
+  "state_after": {
+    "plan.json": {
+      "sha256": "0261c38b37670633b2fa7ee854dbec02056bc600f9380f8b5644125cccedd7e2",
+      "bytes": 1469230
+    },
+    "journal.jsonl": {
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+      "bytes": 7399401
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    }
+  },
+  "state_unchanged": true,
+  "stdout_sha256": "84474600f29d84b458bdae28d36a130af88a9b926d865258970d2044815e8090",
+  "stderr_sha256": "1339f967d75d2aca078fd9ee1ff6cc87a4eedfd00e6af7648fc0441025893dcb"
+}

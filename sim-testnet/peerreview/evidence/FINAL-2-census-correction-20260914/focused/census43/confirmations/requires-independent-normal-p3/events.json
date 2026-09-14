@@ -1,0 +1,11 @@
+{"Time":"2026-09-14T08:55:51.75954428Z","Action":"start","Package":"github.com/urfoundation/sn/sim-testnet"}
+{"Time":"2026-09-14T08:55:51.75977842Z","Action":"run","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionRequiresIndependentPopulation"}
+{"Time":"2026-09-14T08:55:51.759796893Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionRequiresIndependentPopulation","Output":"=== RUN   TestProducerGateCaptureSelectionRequiresIndependentPopulation\n"}
+{"Time":"2026-09-14T08:55:51.759831575Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionRequiresIndependentPopulation","Output":"=== PAUSE TestProducerGateCaptureSelectionRequiresIndependentPopulation\n"}
+{"Time":"2026-09-14T08:55:51.759838534Z","Action":"pause","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionRequiresIndependentPopulation"}
+{"Time":"2026-09-14T08:55:51.759845065Z","Action":"cont","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionRequiresIndependentPopulation"}
+{"Time":"2026-09-14T08:55:51.759850129Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionRequiresIndependentPopulation","Output":"=== CONT  TestProducerGateCaptureSelectionRequiresIndependentPopulation\n"}
+{"Time":"2026-09-14T08:55:51.759858569Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionRequiresIndependentPopulation","Output":"--- PASS: TestProducerGateCaptureSelectionRequiresIndependentPopulation (0.82s)\n"}
+{"Time":"2026-09-14T08:55:51.759864469Z","Action":"pass","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionRequiresIndependentPopulation","Elapsed":0.82}
+{"Time":"2026-09-14T08:55:51.759880821Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Output":"PASS\n"}
+{"Time":"2026-09-14T08:55:51.759890712Z","Action":"pass","Package":"github.com/urfoundation/sn/sim-testnet","Elapsed":0}

@@ -1,0 +1,11 @@
+{
+  "kind":"final-stamped-sim-testnet-cli-build",
+  "build_exit":0,
+  "repos_before_after_identical":true,
+  "repos_before_sha256":"3136a9900882718cd012465ae2826108da9c687c2a17b5b1bb361411b5fffe5e",
+  "repos_after_sha256":"3136a9900882718cd012465ae2826108da9c687c2a17b5b1bb361411b5fffe5e",
+  "artifact":{"path":"/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/final-cli-oracle-correction/sim-testnet","sha256":"998777328adfad2c394a3aec9c9df92f3bb477d3c49a7bc509d9457251fc4efd","bytes":140507368,"mode":"0700"},
+  "vcs":{"revision":"a59294e98ea02d05125015ae02cf32f2c0059c8a","trimpath":true,"buildvcs":true,"modified":false},
+  "warm_gocache":"/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/gocache",
+  "private_gomodcache":"/home/by/go/pkg/mod"
+}

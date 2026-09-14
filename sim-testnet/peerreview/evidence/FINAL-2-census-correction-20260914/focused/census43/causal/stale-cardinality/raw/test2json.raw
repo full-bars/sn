@@ -1,0 +1,19 @@
+=== RUN   TestProducerGateCaptureSelectionRequiresIndependentPopulation
+=== PAUSE TestProducerGateCaptureSelectionRequiresIndependentPopulation
+=== NAME  
+=== RUN   TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources
+=== PAUSE TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources
+=== NAME  
+=== RUN   TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources
+=== PAUSE TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources
+=== NAME  
+=== CONT  TestProducerGateCaptureSelectionRequiresIndependentPopulation
+=== CONT  TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources
+    release_gate_capture_metadata_test.go:459: additional evidence root broke complete capture ownership: capture partition changed its complete source census: ordinary=348 separate=map[capture_evidence_tests:88 capture_lifecycle_tests:1 capture_metadata_tests:1 capture_population_tests:1 capture_prior_tests:1 capture_private_tests:7 capture_renewal_tests:11 capture_revision_tests:2] selected=460
+--- FAIL: TestProducerGateCaptureSelectionAdmitsAdditionalEvidenceSources (0.55s)
+=== CONT  TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources
+--- PASS: TestProducerGateCaptureSelectionRequiresIndependentPopulation (0.56s)
+=== NAME  TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources
+    release_gate_capture_metadata_test.go:445: additional ordinary roots broke complete capture ownership: capture partition changed its complete source census: ordinary=350 separate=map[capture_evidence_tests:87 capture_lifecycle_tests:1 capture_metadata_tests:1 capture_population_tests:1 capture_prior_tests:1 capture_private_tests:7 capture_renewal_tests:11 capture_revision_tests:2] selected=461
+--- FAIL: TestProducerGateCaptureSelectionAdmitsAdditionalOrdinarySources (0.60s)
+FAIL

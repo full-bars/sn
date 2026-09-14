@@ -1,0 +1,62 @@
+ok  	github.com/urnetwork/server	3.372s
+ok  	github.com/urnetwork/server	13.514s
+ok  	github.com/urnetwork/server	0.073s
+ok  	github.com/urnetwork/server/st	0.018s
+ok  	github.com/urnetwork/server/startifact	10.652s
+ok  	github.com/urnetwork/server/controller	0.149s
+ok  	github.com/urnetwork/server/controller	0.079s
+ok  	github.com/urnetwork/server/controller	1.304s
+ok  	github.com/urnetwork/server/controller	0.105s
+ok  	github.com/urnetwork/server/controller	1.527s
+ok  	github.com/urnetwork/server/model	0.038s
+ok  	github.com/urnetwork/server/model	1.195s
+ok  	github.com/urnetwork/server/controller	0.828s
+ok  	github.com/urnetwork/server/controller	2.023s
+ok  	github.com/urnetwork/server/session	0.040s
+ok  	github.com/urnetwork/server/router	0.989s
+ok  	github.com/urnetwork/server/model	0.035s
+ok  	github.com/urnetwork/server/taskworker/work	0.078s
+ok  	github.com/urnetwork/server/monitor	13.611s
+ok  	github.com/urnetwork/server/monitor	71.415s
+ok  	github.com/urnetwork/server	0.069s [no tests to run]
+ok  	github.com/urnetwork/server/alt	0.066s [no tests to run]
+ok  	github.com/urnetwork/server/api	0.066s [no tests to run]
+ok  	github.com/urnetwork/server/api/handlers	0.074s [no tests to run]
+ok  	github.com/urnetwork/server/apikey	0.033s [no tests to run]
+ok  	github.com/urnetwork/server/bringyourctl	0.062s [no tests to run]
+?   	github.com/urnetwork/server/cli/alt	[no test files]
+?   	github.com/urnetwork/server/cli/api	[no test files]
+?   	github.com/urnetwork/server/cli/competitiondbinit	[no test files]
+ok  	github.com/urnetwork/server/cli/competitionpatch	0.069s [no tests to run]
+?   	github.com/urnetwork/server/cli/competitionworker	[no test files]
+?   	github.com/urnetwork/server/cli/connect	[no test files]
+?   	github.com/urnetwork/server/cli/gossip	[no test files]
+?   	github.com/urnetwork/server/cli/mcp	[no test files]
+ok  	github.com/urnetwork/server/cli/monitor	0.093s [no tests to run]
+ok  	github.com/urnetwork/server/cli/proxy	0.058s [no tests to run]
+?   	github.com/urnetwork/server/cli/taskworker	[no test files]
+ok  	github.com/urnetwork/server/connect	0.075s [no tests to run]
+ok  	github.com/urnetwork/server/connect/perfvar	0.087s [no tests to run]
+ok  	github.com/urnetwork/server/controller	0.077s [no tests to run]
+ok  	github.com/urnetwork/server/gossip	0.073s [no tests to run]
+ok  	github.com/urnetwork/server/grafana	0.024s [no tests to run]
+ok  	github.com/urnetwork/server/jwt	0.019s [no tests to run]
+ok  	github.com/urnetwork/server/mcp	0.088s [no tests to run]
+ok  	github.com/urnetwork/server/model	0.032s [no tests to run]
+ok  	github.com/urnetwork/server/monitor	0.062s [no tests to run]
+ok  	github.com/urnetwork/server/oauth	0.016s [no tests to run]
+ok  	github.com/urnetwork/server/onboarding	0.015s [no tests to run]
+ok  	github.com/urnetwork/server/probeverdict	0.003s [no tests to run]
+ok  	github.com/urnetwork/server/proxy	0.074s [no tests to run]
+ok  	github.com/urnetwork/server/proxy/acceptance	0.016s [no tests to run]
+?   	github.com/urnetwork/server/proxy/cmd/acceptance-main	[no test files]
+ok  	github.com/urnetwork/server/router	0.040s [no tests to run]
+ok  	github.com/urnetwork/server/search	0.018s [no tests to run]
+ok  	github.com/urnetwork/server/session	0.038s [no tests to run]
+ok  	github.com/urnetwork/server/st	0.017s [no tests to run]
+ok  	github.com/urnetwork/server/startifact	0.019s [no tests to run]
+ok  	github.com/urnetwork/server/stats	0.017s [no tests to run]
+?   	github.com/urnetwork/server/stats/sample	[no test files]
+ok  	github.com/urnetwork/server/task	0.017s [no tests to run]
+ok  	github.com/urnetwork/server/taskworker	0.061s [no tests to run]
+ok  	github.com/urnetwork/server/taskworker/work	0.058s [no tests to run]

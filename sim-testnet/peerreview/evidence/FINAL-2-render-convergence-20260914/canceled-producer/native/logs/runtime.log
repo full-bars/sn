@@ -1,0 +1,8 @@
+ok  	github.com/urfoundation/sn/crv4	0.511s
+ok  	github.com/urfoundation/sn/miner	0.518s
+ok  	github.com/urfoundation/sn/validator	0.408s
+ok  	github.com/urfoundation/sn/crv4	2.563s
+ok  	github.com/urfoundation/sn/miner	4.476s
+ok  	github.com/urfoundation/sn/validator	3.373s
+ok  	github.com/urfoundation/sn/sim-testnet	2.386s
+ok  	github.com/urfoundation/sn/sim-testnet	16.965s

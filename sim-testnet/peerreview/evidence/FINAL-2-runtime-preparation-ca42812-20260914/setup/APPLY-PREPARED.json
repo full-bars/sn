@@ -1,0 +1,58 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/final-cli/sim-testnet",
+    "setup",
+    "--config",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/testnet.yml",
+    "--state-dir",
+    "/home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/config",
+    "--owned-rpc-authority",
+    "192.168.1.162:9944",
+    "--format",
+    "json",
+    "--apply",
+    "--plan-hash",
+    "0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414"
+  ],
+  "authorized_alpha_rao": 6000000000000,
+  "binary_sha256": "b440fcaf46821278950cefc85bbcba751397cbd1870380e002b05109f1b2b5d4",
+  "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+  "independent_rpc": false,
+  "lifetime_alpha_rao": 37250000000000,
+  "owned_rpc_authority": "192.168.1.162:9944",
+  "producer_capture": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture",
+  "requires_producer_terminal_pass": true,
+  "rpc_rate_limits": false,
+  "source_request": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-owned-ca42812-20260914T0027Z/setup/REQUEST.json",
+  "source_review": "/home/by/urnetwork/temp/sn-full-finalization-20260912/native-owned-ca42812-20260914T0027Z/setup/REVIEW.json",
+  "source_revision": "ca4281201077b6e3e9cde1004568efa219d0e12c",
+  "state_before": {
+    "journal.jsonl": {
+      "bytes": 7399401,
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73"
+    },
+    "plan.json": {
+      "bytes": 1469230,
+      "sha256": "0261c38b37670633b2fa7ee854dbec02056bc600f9380f8b5644125cccedd7e2"
+    },
+    "supervisor.json": {
+      "bytes": 43887,
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815"
+    },
+    "supervisor.state.json": {
+      "bytes": 8829,
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4"
+    }
+  },
+  "status": "prepared; not executed"
+}

@@ -1,0 +1,66 @@
+started_utc=2026-09-14T07:03:09Z
+[env]glog not configured from command line. Using default configuration.
+I0914 07:07:22.327784 2004724 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 07:07:22.328148 2004724 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 07:07:22.328321 2004724 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 07:07:22.328396 2004724 env.go:67] [env]settings = map[]
+=== RUN   TestFleetRefreshOracleStateUsesOnePinnedBatch
+--- PASS: TestFleetRefreshOracleStateUsesOnePinnedBatch (0.08s)
+=== RUN   TestFleetRenewalOriginalOracleAcceptsCompletedRestore
+--- PASS: TestFleetRenewalOriginalOracleAcceptsCompletedRestore (0.07s)
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting/foreign_immutable
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting/foreign_active
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting/future_original_schedule
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting/future_foreign_reroute
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting/effective_foreign_reroute
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting/missing_pending_epoch
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting/missing_pending_address
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting/missing_immutable
+=== RUN   TestFleetRenewalOriginalOracleRejectsChangedRouting/missing_active
+--- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting (0.00s)
+    --- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting/foreign_immutable (0.00s)
+    --- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting/foreign_active (0.00s)
+    --- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting/future_original_schedule (0.00s)
+    --- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting/future_foreign_reroute (0.00s)
+    --- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting/effective_foreign_reroute (0.00s)
+    --- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting/missing_pending_epoch (0.00s)
+    --- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting/missing_pending_address (0.00s)
+    --- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting/missing_immutable (0.00s)
+    --- PASS: TestFleetRenewalOriginalOracleRejectsChangedRouting/missing_active (0.00s)
+=== RUN   TestFleetRenewalPipelineSubmitsExactNoncesBeforeFinality
+--- PASS: TestFleetRenewalPipelineSubmitsExactNoncesBeforeFinality (0.22s)
+=== RUN   TestFleetRenewalRevisionPreservesApprovedRoundsAndChargesOnce
+--- PASS: TestFleetRenewalRevisionPreservesApprovedRoundsAndChargesOnce (192.18s)
+=== RUN   TestFleetRenewalPlansExpiredAndLiveMixedGenerations
+=== RUN   TestFleetRenewalPlansExpiredAndLiveMixedGenerations/missing-revoke
+=== RUN   TestFleetRenewalPlansExpiredAndLiveMixedGenerations/unnecessary-revoke
+=== RUN   TestFleetRenewalPlansExpiredAndLiveMixedGenerations/fee
+=== RUN   TestFleetRenewalPlansExpiredAndLiveMixedGenerations/generation
+=== RUN   TestFleetRenewalPlansExpiredAndLiveMixedGenerations/uid
+=== RUN   TestFleetRenewalPlansExpiredAndLiveMixedGenerations/calldata
+=== RUN   TestFleetRenewalPlansExpiredAndLiveMixedGenerations/budget
+--- PASS: TestFleetRenewalPlansExpiredAndLiveMixedGenerations (76.88s)
+    --- PASS: TestFleetRenewalPlansExpiredAndLiveMixedGenerations/missing-revoke (1.47s)
+    --- PASS: TestFleetRenewalPlansExpiredAndLiveMixedGenerations/unnecessary-revoke (1.37s)
+    --- PASS: TestFleetRenewalPlansExpiredAndLiveMixedGenerations/fee (1.32s)
+    --- PASS: TestFleetRenewalPlansExpiredAndLiveMixedGenerations/generation (1.33s)
+    --- PASS: TestFleetRenewalPlansExpiredAndLiveMixedGenerations/uid (1.08s)
+    --- PASS: TestFleetRenewalPlansExpiredAndLiveMixedGenerations/calldata (1.11s)
+    --- PASS: TestFleetRenewalPlansExpiredAndLiveMixedGenerations/budget (7.72s)
+=== RUN   TestFleetRenewalRejectsChangedPrestateAndPreservesApproval
+=== RUN   TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/nonce
+=== RUN   TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/uid
+=== RUN   TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/coldkey
+=== RUN   TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/binding
+=== RUN   TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/epoch
+--- PASS: TestFleetRenewalRejectsChangedPrestateAndPreservesApproval (81.95s)
+    --- PASS: TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/nonce (0.00s)
+    --- PASS: TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/uid (0.00s)
+    --- PASS: TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/coldkey (0.00s)
+    --- PASS: TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/binding (0.01s)
+    --- PASS: TestFleetRenewalRejectsChangedPrestateAndPreservesApproval/epoch (0.00s)
+PASS
+ok  	github.com/urfoundation/sn/sim-testnet	352.899s
+ended_utc=2026-09-14T07:13:15Z
+exit=0

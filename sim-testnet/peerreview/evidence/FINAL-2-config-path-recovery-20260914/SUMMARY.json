@@ -1,0 +1,20 @@
+{
+  "actions_unchanged": 2309,
+  "actual_rpc_authority": "192.168.1.162:9944",
+  "independent_rpc": false,
+  "new_repair_finalized": false,
+  "original_apply_exit": 1,
+  "original_apply_finished_at": "2026-09-14T02:33:52.972872Z",
+  "original_apply_started_at": "2026-09-14T02:22:23.709381Z",
+  "original_journal_unchanged": true,
+  "original_supervisor_files_unchanged": true,
+  "plan_hash": "0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414",
+  "preview_entire_plan_equal_installed": true,
+  "preview_exit": 0,
+  "preview_finished_at": "2026-09-14T05:08:04.750241Z",
+  "preview_is_not_apply": true,
+  "preview_state_unchanged": true,
+  "preview_stdout_sha256": "9340f672b842138cf8b236011e125bac014001aecce3d85e463d6a521a93e23c",
+  "rebuilds": 0,
+  "source_changes": 0
+}

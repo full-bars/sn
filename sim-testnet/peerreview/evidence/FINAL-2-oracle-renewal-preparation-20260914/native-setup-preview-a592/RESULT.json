@@ -1,0 +1,59 @@
+{
+  "exit": 0,
+  "started_at": "2026-09-14T07:19:07.863005+00:00",
+  "finished_at": "2026-09-14T07:21:09.638308+00:00",
+  "state_before": {
+    "plan.json": {
+      "sha256": "4498dc713ce38085f12e94615c63416746ea41ee895fdfa18d2ad0ccbd0f0a81",
+      "bytes": 1469463
+    },
+    "journal.jsonl": {
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+      "bytes": 7399401
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "e5d77c4eec0dfdc674bd6f9a457c0748d1f71faebfa42b74a301def73ddf67e4",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "state_after": {
+    "plan.json": {
+      "sha256": "4498dc713ce38085f12e94615c63416746ea41ee895fdfa18d2ad0ccbd0f0a81",
+      "bytes": 1469463
+    },
+    "journal.jsonl": {
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+      "bytes": 7399401
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "e5d77c4eec0dfdc674bd6f9a457c0748d1f71faebfa42b74a301def73ddf67e4",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "stdout_sha256": "34b9f512ac69be2155606622b9d1f634936fbd24c0bfc46a31176e2445301c6f",
+  "stderr_sha256": "c1bb581b41d20936511e14b445adae14dfe7ce881048fb7076b4c5a6d7e48645"
+}

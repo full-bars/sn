@@ -1,0 +1,6 @@
+command_started_at=2026-09-14T05:36:51Z
+test_binary_started_at=2026-09-14T05:39:49Z
+exit_code=1
+duration_seconds=284.361
+source_commit=1469b14d52661882d52e062eb96c3a60d5e86100
+selector=seven specified bounded normal roots

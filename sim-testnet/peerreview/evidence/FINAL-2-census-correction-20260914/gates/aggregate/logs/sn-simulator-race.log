@@ -1,0 +1,3 @@
+release gate: joining descendants after worker=2154500 exit=None stop=143
+release gate: reaped adopted descendant pid=2154501 exit=143
+release gate: reaped adopted descendant pid=2154869 exit=143

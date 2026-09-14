@@ -1,0 +1,8 @@
+{"Time":"2026-09-14T09:04:41.762947906Z","Action":"start","Package":"github.com/urfoundation/sn/sim-testnet"}
+{"Time":"2026-09-14T09:04:41.763176756Z","Action":"run","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis"}
+{"Time":"2026-09-14T09:04:41.763191428Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis","Output":"=== RUN   TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis\n"}
+{"Time":"2026-09-14T09:04:41.763214666Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis","Output":"    final_semantic_producer_test.go:38: enumerate producer gate capture tests: exec: \"go\": executable file not found in $PATH\n"}
+{"Time":"2026-09-14T09:04:41.763224828Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis","Output":"--- FAIL: TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis (0.00s)\n"}
+{"Time":"2026-09-14T09:04:41.763231135Z","Action":"fail","Package":"github.com/urfoundation/sn/sim-testnet","Test":"TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis","Elapsed":0}
+{"Time":"2026-09-14T09:04:41.763248017Z","Action":"output","Package":"github.com/urfoundation/sn/sim-testnet","Output":"FAIL\n"}
+{"Time":"2026-09-14T09:04:41.763256645Z","Action":"fail","Package":"github.com/urfoundation/sn/sim-testnet","Elapsed":0}

@@ -1,0 +1,12 @@
+{
+  "started_at": "2026-09-14T07:03:45.869577+00:00",
+  "finished_at": "2026-09-14T07:03:49.870623+00:00",
+  "exit": 0,
+  "base": "e31236859c1012c21aed08034cf5074d85bdb9a6",
+  "source": "536dba6541498238a339c958358ab1b4b50e8aac",
+  "primary_physical_origin_match": true,
+  "normal_qualification": "7/7 PASS; body39.724s/outer07:01:39Z",
+  "race_qualification": "running in isolated source; candidate publication is not final acceptance",
+  "scope": "two production oracle checks and one regression file; release lock pending native update",
+  "old_full_gates": "both source-superseded/canceled143 and joined"
+}

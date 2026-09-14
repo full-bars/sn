@@ -1,0 +1,7 @@
+verify tidy Go module: connect
+verify tidy Go module: glog
+go: downloading github.com/google/go-cmp v0.6.0
+go: github.com/urnetwork/glog/internal/logsink tested by
+	github.com/urnetwork/glog/internal/logsink.test imports
+	github.com/google/go-cmp/cmp: module lookup disabled by GOPROXY=off
+[release gate preflight] source-freeze exit=1; retained /home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/producer-e3123685-retry1/tmp/urnetwork-release-gate.Lff2BFaQ/preflights/source-freeze

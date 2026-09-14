@@ -1,0 +1,27 @@
+{
+  "at": "2026-09-14T08:59:36.549851+00:00",
+  "status": "native-renewal-completed",
+  "native_exit": 0,
+  "started_at": "2026-09-14T07:35:36.583743+00:00",
+  "finished_at": "2026-09-14T08:56:04.764211+00:00",
+  "source_head": "a59294e98ea02d05125015ae02cf32f2c0059c8a",
+  "binary_sha256": "998777328adfad2c394a3aec9c9df92f3bb477d3c49a7bc509d9457251fc4efd",
+  "plan_hash": "0xbf3a911a6e8ccdac1eb9af016d257d7bbac389395b93613e09f753e7a53facc5",
+  "valid_from_epoch": 359,
+  "valid_to_epoch": 390,
+  "verified_actions": 1212,
+  "operations": {
+    "bind": 808,
+    "commitment": 202,
+    "mirror": 202
+  },
+  "complete_fleets": 202,
+  "unique_transactions": 1212,
+  "native_stdout_sha256": "277d34bcbd6a332a8ceda3e4b8fb506e1d0153d25e17ee75ffdb9f831d9d96f4",
+  "operations_index_sha256": "af57f9e688781a8e12d89ad075cd16588e54f0375ce56bc3fa71c3c1a314976b",
+  "endpoint": "http://192.168.1.162:9944",
+  "independent_rpc": false,
+  "verification_scope": "Closure/index of the successful native finalized/postcondition receipts; no duplicate RPC audit. The separately retained first-finalized-renewal proves one canonical inclusion directly.",
+  "soak_started": false,
+  "reserve_repair": "automatic procedure active; credit not yet claimed"
+}

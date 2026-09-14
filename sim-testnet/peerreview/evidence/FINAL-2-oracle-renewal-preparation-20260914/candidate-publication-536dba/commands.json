@@ -1,0 +1,150 @@
+[
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "e31236859c1012c21aed08034cf5074d85bdb9a6\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "e31236859c1012c21aed08034cf5074d85bdb9a6\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "fetch",
+      "origin",
+      "main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "From github.com:urfoundation/sn\n * branch            main       -> FETCH_HEAD\n"
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "rev-parse",
+      "origin/main"
+    ],
+    "exit": 0,
+    "stdout": "e31236859c1012c21aed08034cf5074d85bdb9a6\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "merge",
+      "--ff-only",
+      "536dba6541498238a339c958358ab1b4b50e8aac"
+    ],
+    "exit": 0,
+    "stdout": "Updating e312368..536dba6\nFast-forward\n sim-testnet/fleet_renewal_execute.go     |  2 +-\n sim-testnet/fleet_renewal_observe.go     | 15 +++++-\n sim-testnet/fleet_renewal_oracle_test.go | 93 ++++++++++++++++++++++++++++++++\n 3 files changed, 108 insertions(+), 2 deletions(-)\n create mode 100644 sim-testnet/fleet_renewal_oracle_test.go\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "push",
+      "origin",
+      "HEAD:main"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "To github.com:urfoundation/sn.git\n   e312368..536dba6  HEAD -> main\n"
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "pull",
+      "--ff-only",
+      "origin",
+      "main"
+    ],
+    "exit": 0,
+    "stdout": "Updating e312368..536dba6\nFast-forward\n sim-testnet/fleet_renewal_execute.go     |  2 +-\n sim-testnet/fleet_renewal_observe.go     | 15 +++++-\n sim-testnet/fleet_renewal_oracle_test.go | 93 ++++++++++++++++++++++++++++++++\n 3 files changed, 108 insertions(+), 2 deletions(-)\n create mode 100644 sim-testnet/fleet_renewal_oracle_test.go\n",
+    "stderr": "From github.com:urfoundation/sn\n * branch            main       -> FETCH_HEAD\n   e312368..536dba6  main       -> origin/main\n"
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "536dba6541498238a339c958358ab1b4b50e8aac\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/sn",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "536dba6541498238a339c958358ab1b4b50e8aac\n",
+    "stderr": ""
+  },
+  {
+    "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

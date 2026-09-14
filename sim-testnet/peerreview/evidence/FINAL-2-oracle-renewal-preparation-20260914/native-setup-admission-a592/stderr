@@ -1,0 +1,6 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 07:28:27.930193 2049799 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 07:28:27.930374 2049799 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 07:28:27.930431 2049799 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 07:28:27.930451 2049799 env.go:67] [env]settings = map[]
+sim-testnet: Post "http://192.168.1.162:9944": interrupt signal received

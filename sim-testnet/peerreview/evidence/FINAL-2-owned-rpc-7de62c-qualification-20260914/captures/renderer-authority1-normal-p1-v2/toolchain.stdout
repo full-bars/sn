@@ -1,0 +1,13 @@
+{
+	"CC": "gcc",
+	"CGO_ENABLED": "1",
+	"CXX": "g++",
+	"GOARCH": "amd64",
+	"GOCACHE": "/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/gocache/owned-history33-normal-p1-v2",
+	"GOMODCACHE": "/home/by/urnetwork/temp/sn-server-migration-monitor-qualification-20260913/runtime/modcache-v2",
+	"GOOS": "linux",
+	"GOPATH": "/home/by/go",
+	"GOROOT": "/usr/local/go",
+	"GOTOOLDIR": "/usr/local/go/pkg/tool/linux_amd64",
+	"GOVERSION": "go1.26.6"
+}

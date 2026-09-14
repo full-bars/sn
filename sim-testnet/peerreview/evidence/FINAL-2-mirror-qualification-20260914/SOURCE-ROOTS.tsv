@@ -1,0 +1,6 @@
+source_root_id	restricted_reference	purpose
+c50-capture	sn-mirror-replay-correction-20260914/terra-runtime/capture-mirror-replay-20260914T093947Z	original normal failure and canceled race
+corrected-402-capture	sn-mirror-replay-correction-20260914/terra-runtime/capture-mirror-fixture-20260914T095212Z	corrected normal, confirmations, original timeout, recovery
+causal-capture	sn-mirror-replay-correction-20260914/terra-runtime/causal-ff62-executor-data/run-20260914T0958Z	disposable causal controls
+astra-handoff	sn-mirror-fixture-correction-20260914/HANDOFF.md	root cause and adjacent review
+budget-diagnosis	sn-mirror-fixture-correction-20260914/RACE-BUDGET-DIAGNOSIS.md	timeout accounting and bounded recovery rationale

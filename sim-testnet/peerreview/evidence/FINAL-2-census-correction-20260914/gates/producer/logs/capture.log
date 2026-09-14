@@ -1,0 +1,10 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 08:15:12.655520 2149297 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 08:15:12.655788 2149297 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 08:15:12.655869 2149297 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 08:15:12.655894 2149297 env.go:67] [env]settings = map[]
+--- FAIL: TestProducerGateCaptureSelectionRequiresIndependentPopulation (0.40s)
+    release_gate_capture_metadata_test.go:388: capture partition changed its complete source census: ordinary=345 separate=map[capture_evidence_tests:87 capture_lifecycle_tests:1 capture_metadata_tests:1 capture_population_tests:1 capture_prior_tests:1 capture_private_tests:7 capture_renewal_tests:11 capture_revision_tests:2] selected=456
+FAIL
+FAIL	github.com/urfoundation/sn/sim-testnet	156.201s
+FAIL

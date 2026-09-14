@@ -1,0 +1,6 @@
+ok  	github.com/urfoundation/sn/scripts/server-fixture	3.645s
+ok  	github.com/urfoundation/sn/scripts/server-fixture	9.260s
+ok  	github.com/urfoundation/sn/sim-testnet	51.028s
+ok  	github.com/urfoundation/sn/sim-testnet	166.274s
+ok  	github.com/urnetwork/server	32.376s
+ok  	github.com/urnetwork/server	37.566s

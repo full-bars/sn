@@ -1,0 +1,7 @@
+source_root=/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/sn
+source_commit=1469b14d52661882d52e062eb96c3a60d5e86100
+source_status=clean
+base_commit=ca4281201077b6e3e9cde1004568efa219d0e12c
+source_diff_check=pass
+physical_graph=/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical
+physical_graph_status=clean

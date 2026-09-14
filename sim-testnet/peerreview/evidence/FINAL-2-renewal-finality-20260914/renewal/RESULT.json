@@ -1,0 +1,59 @@
+{
+  "exit": 0,
+  "started_at": "2026-09-14T07:35:36.583743+00:00",
+  "finished_at": "2026-09-14T08:56:04.764211+00:00",
+  "state_before": {
+    "plan.json": {
+      "sha256": "b412c80598b7abaaa044e4cbfdd204b5847ed7892c516e74adca923e6d78375a",
+      "bytes": 1469532
+    },
+    "journal.jsonl": {
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+      "bytes": 7399401
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "74b85f37f05de975fb0847185b4ebf7606153dd06613a847b203a44212cd0052",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "state_after": {
+    "plan.json": {
+      "sha256": "375a0c5b933322d0c9bc5989697486b8661224f53dca4359fd98ca6fa36dd1a7",
+      "bytes": 5948234
+    },
+    "journal.jsonl": {
+      "sha256": "0f3b7ea89a1cedd3da435be13e26d8b824b22ae4ff0fa4573d17e3ef6d743b5c",
+      "bytes": 11951559
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "74b85f37f05de975fb0847185b4ebf7606153dd06613a847b203a44212cd0052",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "stdout_sha256": "277d34bcbd6a332a8ceda3e4b8fb506e1d0153d25e17ee75ffdb9f831d9d96f4",
+  "stderr_sha256": "991d61d3f5e256d69aab795d0069bbed6c734a216ad95507feb8b27ca8c82f4a"
+}

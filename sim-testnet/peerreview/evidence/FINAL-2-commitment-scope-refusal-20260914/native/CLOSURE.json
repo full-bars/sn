@@ -1,0 +1,30 @@
+{
+  "batched_history_completed": 1000,
+  "binary_sha256": "71fca036f0aa6876565fbc38f1d138f0ed2268e19f9488d280eaf95c49ae191e",
+  "candidate": "abae9a6a8410a54a560335b16888d2ad0d4fc51f",
+  "carried_total": 3456,
+  "final_acceptance": false,
+  "installed_approval_hash_and_all_actions_match_preview": true,
+  "installed_vs_preview_changed_top_fields": [
+    "generated_at",
+    "live_facts"
+  ],
+  "last_carried_progress": 950,
+  "last_error": "sim-testnet: carried plan history preflight: action fleet.commitment.34: operational historical EVM state: fleet 34 generation 1 is not the exact current finalized commitment",
+  "native_exit": 1,
+  "native_finished_at": "2026-09-14T10:32:15.545688+00:00",
+  "native_process_joined": true,
+  "native_started_at": "2026-09-14T10:15:46.126448+00:00",
+  "observed_at": "2026-09-14T10:36:06.449109+00:00",
+  "only_recorded_state_changes": [
+    "plan.json",
+    "config.redacted.yml"
+  ],
+  "plan_hash": "0xf6348cfdb032e658b8ce46d764ab7c65476250959fdbabc2a658563759e17585",
+  "public_identities_unchanged": true,
+  "repair_transaction_submitted": false,
+  "scope": "closed native setup refusal and unchanged transaction journal",
+  "supervisor_config_unchanged": true,
+  "supervisor_state_unchanged": true,
+  "transaction_journal_unchanged": true
+}

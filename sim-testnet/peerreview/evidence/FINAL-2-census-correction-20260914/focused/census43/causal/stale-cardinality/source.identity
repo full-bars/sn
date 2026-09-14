@@ -1,0 +1,5 @@
+base_head=43cc2b21811d606c58fc5aa4bb3a977ddefaef2f
+status=
+ M sim-testnet/release_gate_capture_metadata_test.go
+mutated_file_sha256=1002d3386ed56ea1a2fc1654c257751f385d7748998cebc3ae47fb5a376f6ba0
+diff_sha256=6f1efc25ae28de6471b0276bf8e147358120d1f53daed9b76a6eb5ebac2e3e16

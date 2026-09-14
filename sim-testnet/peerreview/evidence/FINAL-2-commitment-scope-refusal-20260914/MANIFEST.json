@@ -1,0 +1,48 @@
+{
+  "files": [
+    {
+      "bytes": 2792,
+      "path": "native/REQUEST.json",
+      "sha256": "b385442f28621d247e3b97b00c72fe9ac333a2fd6edd02504754ceb68d46313d",
+      "source": "/home/by/urnetwork/temp/sn-mirror-replay-correction-20260914/native-approved-repair-abae9a6/REQUEST.json"
+    },
+    {
+      "bytes": 2014,
+      "path": "native/RESULT.json",
+      "sha256": "2bed6d13e202458d56b3dc366c1763fb98cccd75d62772e954585c347d4531b0",
+      "source": "/home/by/urnetwork/temp/sn-mirror-replay-correction-20260914/native-approved-repair-abae9a6/RESULT.json"
+    },
+    {
+      "bytes": 1287,
+      "path": "native/CLOSURE.json",
+      "sha256": "c7d394b7b7d1706dfece7d9097db7eb894188a4f23726ee20eb8c235ab75b231",
+      "source": "/home/by/urnetwork/temp/sn-mirror-replay-correction-20260914/native-approved-repair-abae9a6/CLOSURE.json"
+    },
+    {
+      "bytes": 0,
+      "path": "native/stdout.json",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-mirror-replay-correction-20260914/native-approved-repair-abae9a6/stdout.json"
+    },
+    {
+      "bytes": 1513,
+      "path": "native/stderr",
+      "sha256": "9b2e8ad8d470907ec44a1000f6cbb6ff6e70d608542511a12b402014dbbc0649",
+      "source": "/home/by/urnetwork/temp/sn-mirror-replay-correction-20260914/native-approved-repair-abae9a6/stderr"
+    },
+    {
+      "bytes": 2,
+      "path": "native/outer.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source": "/home/by/urnetwork/temp/sn-mirror-replay-correction-20260914/native-approved-repair-abae9a6/outer.exit"
+    },
+    {
+      "bytes": 11520,
+      "path": "generation-consumer-review.json",
+      "sha256": "a7b7631de5d503e05422e59294b48c52d3658c96465046a696cb562d1e3e4a5d",
+      "source": "/home/by/urnetwork/temp/sn-commitment-scope-correction-20260914/diagnosis/generation-consumer-review.json"
+    }
+  ],
+  "scope": "closed native refusal and artifact-only adjacent-consumer review",
+  "sealed_at": "2026-09-14T10:41:49.563687+00:00"
+}

@@ -1,0 +1,47 @@
+{
+  "commands": [
+    [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "diff",
+      "--check"
+    ],
+    [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "add",
+      "--",
+      "deploy/testnet/release.lock.yml"
+    ],
+    [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "commit",
+      "-m",
+      "Lock strict owned-RPC runtime rendering"
+    ],
+    [
+      "git",
+      "-C",
+      "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+      "push",
+      "origin",
+      "HEAD:main"
+    ],
+    [
+      "git",
+      "-C",
+      "/home/by/urnetwork/sn",
+      "pull",
+      "--ff-only",
+      "origin",
+      "main"
+    ]
+  ],
+  "started_at": "2026-09-14T06:07:41.381968+00:00",
+  "expected_lock_sha256": "ba52cc36320e5c799eb5115ee92fcf6b456b0ad10fafd6252dea11c4daac28f7",
+  "qualification_pending": true
+}

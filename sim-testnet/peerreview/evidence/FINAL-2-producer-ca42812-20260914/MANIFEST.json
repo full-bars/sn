@@ -1,0 +1,597 @@
+{
+  "entries": [
+    {
+      "bytes": 1279,
+      "mode": 384,
+      "path": "README.md",
+      "role": "scope and reproduction notes",
+      "sha256": "ef64ce9091e1fe2c9462bdc1cbeec093617e2e841bb8d1ba11a9b7487360cb0d"
+    },
+    {
+      "bytes": 503,
+      "mode": 384,
+      "path": "capture/launcher.sha256",
+      "role": "native outer capture",
+      "sha256": "466e84dc693f30454431a038651726b34a1d7df99f2afd86c1cfaaac5611a79b",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture/launcher.sha256"
+    },
+    {
+      "bytes": 358,
+      "mode": 384,
+      "path": "capture/launcher.stat",
+      "role": "native outer capture",
+      "sha256": "e9821f33d4b7a89370d2b58ab79e50e8ca6c7f6edd679160bca62f4bc20a78f4",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture/launcher.stat"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "capture/outer.exit",
+      "role": "native outer capture",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture/outer.exit"
+    },
+    {
+      "bytes": 21,
+      "mode": 384,
+      "path": "capture/outer.finished-at",
+      "role": "native outer capture",
+      "sha256": "c3d79fbb41b676b954d0afe48c38732e54adc8945c647b589af3ee460522387a",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture/outer.finished-at"
+    },
+    {
+      "bytes": 8,
+      "mode": 384,
+      "path": "capture/outer.pid",
+      "role": "native outer capture",
+      "sha256": "85bcc0f19abc09f97cfc05552110c4f703d39625ab8586f59326b380c78a96dc",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture/outer.pid"
+    },
+    {
+      "bytes": 21,
+      "mode": 384,
+      "path": "capture/outer.started-at",
+      "role": "native outer capture",
+      "sha256": "79273ee66ec653bdc353ac3a7524116f21c711f1084fcfff9df41114bf3f3992",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture/outer.started-at"
+    },
+    {
+      "bytes": 2409,
+      "mode": 384,
+      "path": "capture/outer.stderr",
+      "role": "native outer capture",
+      "sha256": "a897bd5505691c6fb81b56558138b91ee617be5055d32176a196dbf56094d5ba",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture/outer.stderr"
+    },
+    {
+      "bytes": 15898,
+      "mode": 384,
+      "path": "capture/outer.stdout",
+      "role": "native outer capture",
+      "sha256": "337c829f1f34836f335aaff7a75ce7e909e41adb91daa1f6b18a7f70dcfa6dad",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture/outer.stdout"
+    },
+    {
+      "bytes": 1587,
+      "mode": 384,
+      "path": "commands/capture-producer-gate.sh",
+      "role": "command",
+      "sha256": "17edbd5f93598bc6453aca8b17cf2286c4691e36e046e65f32ec89a213b51c6d",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/capture-producer-gate.sh"
+    },
+    {
+      "bytes": 786,
+      "mode": 384,
+      "path": "commands/producer-gate.command",
+      "role": "command",
+      "sha256": "010b615f03f795d5de14598b6684e657110d3ebed5b18eb1d556de6c27263318",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/producer-gate.command"
+    },
+    {
+      "bytes": 628,
+      "mode": 384,
+      "path": "phase-joins.tsv",
+      "role": "derived native join index",
+      "sha256": "f2c3f70f9a692e3e4353568c7b35495a114c9b99b87864398dba2dcf2b18ed18"
+    },
+    {
+      "bytes": 103,
+      "mode": 384,
+      "path": "phase-logs/adversarial.log",
+      "role": "native phase log",
+      "sha256": "6d5df4533e4b2d048e7de679e41795731dae30c7d3cb46a92f2e37e0ef271c98",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/adversarial.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-evidence.log",
+      "role": "native phase log",
+      "sha256": "d2b716da22c74ec722ecbf338c925b43727558610224c01d6cb4416ab2c9c38b",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/capture-evidence.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-lifecycle.log",
+      "role": "native phase log",
+      "sha256": "a1179c60021a4f8502156038760cbb4f73ed865cd51e56fe1fd1ab1545f3e8f4",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/capture-lifecycle.log"
+    },
+    {
+      "bytes": 107,
+      "mode": 384,
+      "path": "phase-logs/capture-metadata.log",
+      "role": "native phase log",
+      "sha256": "93801e6f7f0b8a8603e5ee62131f27327a02a1a53ffef28dbf39bca9e38c2b14",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/capture-metadata.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/capture-population.log",
+      "role": "native phase log",
+      "sha256": "1d41e16849f05822506e6725ae0721ea7a5b879787f4a5c88c3d9debbdbd56c2",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/capture-population.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-prior.log",
+      "role": "native phase log",
+      "sha256": "d3d6389231c27375ebe987bcd092a45e7a8e09ca6f92d726fc3030514ca5c118",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/capture-prior.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-private.log",
+      "role": "native phase log",
+      "sha256": "e52e7ed90a59d3494138e2d2bbd5a93061beffd64ac044e7c67082ec8933ce48",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/capture-private.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-renewal.log",
+      "role": "native phase log",
+      "sha256": "bef92f8b7d1d33ae979b8edde927f8a9bbd606ce74df4d4a600c4ef0368f30bb",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/capture-renewal.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/capture-revision.log",
+      "role": "native phase log",
+      "sha256": "3f395d95bc3e6c7b3e9f9ade60d226372d977825512b1264b392ae7e2efeec86",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/capture-revision.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/capture.log",
+      "role": "native phase log",
+      "sha256": "870eea82d3c368663f65000f04ca6cd92236681d120ec72a431585defe160d36",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/capture.log"
+    },
+    {
+      "bytes": 238,
+      "mode": 384,
+      "path": "phase-logs/compile.log",
+      "role": "native phase log",
+      "sha256": "bd2e5ad13e2b79273594978d897872cdc71f86832833a7d396ca42c4099b6f92",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/compile.log"
+    },
+    {
+      "bytes": 611,
+      "mode": 384,
+      "path": "phase-logs/connect.log",
+      "role": "native phase log",
+      "sha256": "d4b7d4adc79bc4a1b8b7c20d9de45291a4e8cbf4e16d41bdb1f861096c509424",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/connect.log"
+    },
+    {
+      "bytes": 102,
+      "mode": 384,
+      "path": "phase-logs/driver.log",
+      "role": "native phase log",
+      "sha256": "9e712ff379b9cb3307a85686b3af5ff85704c6f1ef76be4645743f10dfb4c41d",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/driver.log"
+    },
+    {
+      "bytes": 88,
+      "mode": 384,
+      "path": "phase-logs/evidence-native.log",
+      "role": "native phase log",
+      "sha256": "8fc8cef7e464fcef90601b46bbab81cae97324d3cd38a1706e0a68b7266bfd89",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/evidence-native.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/evidence-simulator-slow.log",
+      "role": "native phase log",
+      "sha256": "5896134095b3cf0d5f22100bdcfc39353a415c48b908be97c9af56776cbc8e52",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/evidence-simulator-slow.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/evidence-simulator.log",
+      "role": "native phase log",
+      "sha256": "b573dddf0ab994b4f9555c88013a2413a621176810e80e62aca913064a16e9c8",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/evidence-simulator.log"
+    },
+    {
+      "bytes": 298,
+      "mode": 384,
+      "path": "phase-logs/evm-identity.log",
+      "role": "native phase log",
+      "sha256": "cdaf4fb1acc388e104a98a63d286479feb1c8522171bfddf49d97d8453d7b55e",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/evm-identity.log"
+    },
+    {
+      "bytes": 386,
+      "mode": 384,
+      "path": "phase-logs/framing.log",
+      "role": "native phase log",
+      "sha256": "3049161bbf0099e37a6646d3ad122612276de11c6c4d4b390b721bb86b1cfe0d",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/framing.log"
+    },
+    {
+      "bytes": 311,
+      "mode": 384,
+      "path": "phase-logs/isolation-regressions.log",
+      "role": "native phase log",
+      "sha256": "20c10906ccff6e11792d0678cfe8bb86eca551709a7c301f903d21122bcafa8f",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/isolation-regressions.log"
+    },
+    {
+      "bytes": 1194,
+      "mode": 384,
+      "path": "phase-logs/operator-proxy.log",
+      "role": "native phase log",
+      "sha256": "510aa6327454c02f5f624f7730e8a32b16f458cf6691c5203bca4f619c9f7a27",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/operator-proxy.log"
+    },
+    {
+      "bytes": 379,
+      "mode": 384,
+      "path": "phase-logs/runtime.log",
+      "role": "native phase log",
+      "sha256": "524931fb422fa87ed2db818f0067275b9f9add263929767ef58c96463c1df28b",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/runtime.log"
+    },
+    {
+      "bytes": 148,
+      "mode": 384,
+      "path": "phase-logs/sdk.log",
+      "role": "native phase log",
+      "sha256": "71da030d28e78233096be5e62ab5ad7bc2a8929075c44018fcade559e665a014",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/sdk.log"
+    },
+    {
+      "bytes": 276,
+      "mode": 384,
+      "path": "phase-logs/seed.log",
+      "role": "native phase log",
+      "sha256": "8add0876b23b991e6c276c2eee006d9b210e28526494562624995ed4825d1407",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/seed.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/semantic-build-artifacts.log",
+      "role": "native phase log",
+      "sha256": "5698ac7e1043e41338fd8c9c1898fe5c21478c8c8c04cb9bafe14a42ed03f9fd",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/semantic-build-artifacts.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/semantic-fleet-projection.log",
+      "role": "native phase log",
+      "sha256": "fa44a47c2e4c6e13f9292f0097ee8e6f7fd5411bf1633b2cadba0b3f8f77bf5b",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/semantic-fleet-projection.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/semantic-pool-registration.log",
+      "role": "native phase log",
+      "sha256": "6b977a3afd3359d69b4a10d28865e6dfb498a90b661ca80bdd30568a9488e613",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/semantic-pool-registration.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/semantic-public-scenario.log",
+      "role": "native phase log",
+      "sha256": "9ead0ac6efb48d8dabe12a0d9762c338b8bd8d68fc77ab6876e0ab353d4a899d",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/semantic-public-scenario.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/semantic-runtime-configs.log",
+      "role": "native phase log",
+      "sha256": "8acba5181248bb79247a44d4845cf91b0f7070e71d66110c9ea7227c13fa6aeb",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/semantic-runtime-configs.log"
+    },
+    {
+      "bytes": 107,
+      "mode": 384,
+      "path": "phase-logs/semantic.log",
+      "role": "native phase log",
+      "sha256": "26eebd80430c4b69a17875f39610c614a7181f867a0d18a5626d18fecaf5c552",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/semantic.log"
+    },
+    {
+      "bytes": 727,
+      "mode": 384,
+      "path": "phase-logs/server-db.log",
+      "role": "native phase log",
+      "sha256": "6b14351ef8ff922726f5988a468684e1e5dc7acb7d19bc2d430d7789c84cb861",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/server-db.log"
+    },
+    {
+      "bytes": 106,
+      "mode": 384,
+      "path": "phase-logs/server-history-distinct.log",
+      "role": "native phase log",
+      "sha256": "e073fb2bfd81a9b8b5ce2800f2aa478e86262276dd78bb3775ad35b2ec5c0591",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/server-history-distinct.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/server-history-shared.log",
+      "role": "native phase log",
+      "sha256": "ce0707c6ae7355eadcd8934eac36789538afab8216825ade717603d0641cd7c8",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/server-history-shared.log"
+    },
+    {
+      "bytes": 625,
+      "mode": 384,
+      "path": "phase-logs/server-unit.log",
+      "role": "native phase log",
+      "sha256": "b1ba15eb3f4fd4a300b2ad6f30aad380e3519032f1a434568b0ba1296c5591fb",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/server-unit.log"
+    },
+    {
+      "bytes": 104,
+      "mode": 384,
+      "path": "phase-logs/settlement.log",
+      "role": "native phase log",
+      "sha256": "a760756f670fecaac7904dc62c50fc5187393f746f9d54b087ee68b5a49433eb",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/settlement.log"
+    },
+    {
+      "bytes": 105,
+      "mode": 384,
+      "path": "phase-logs/sim-seed.log",
+      "role": "native phase log",
+      "sha256": "9b07acd769bc31e95cf3aec9f64fd972a6c00eeb685b70e4b2b82e8828f49839",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/sim-seed.log"
+    },
+    {
+      "bytes": 32825,
+      "mode": 384,
+      "path": "phase-logs/solidity.log",
+      "role": "native phase log",
+      "sha256": "7327f9038b85d9b98e2c1b508e9c69692f57443e03221a8e2e60282624843cef",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/logs/solidity.log"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/binding-toolchain/exit",
+      "role": "native preflight",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/binding-toolchain/exit"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/binding-toolchain/stderr",
+      "role": "native preflight",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/binding-toolchain/stderr"
+    },
+    {
+      "bytes": 29,
+      "mode": 384,
+      "path": "preflights/binding-toolchain/stdout",
+      "role": "native preflight",
+      "sha256": "b4068f8c05e1035121100c14a22cdd7366680b4e8ddff4b57f9dbd4b6204ac8a",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/binding-toolchain/stdout"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/final-source-freeze/exit",
+      "role": "native preflight",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/final-source-freeze/exit"
+    },
+    {
+      "bytes": 516,
+      "mode": 384,
+      "path": "preflights/final-source-freeze/stderr",
+      "role": "native preflight",
+      "sha256": "209a408a4c0a946f80a8f5289fd46ea70fdde4e1ca5aeaea11054814300a3e90",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/final-source-freeze/stderr"
+    },
+    {
+      "bytes": 1165,
+      "mode": 384,
+      "path": "preflights/final-source-freeze/stdout",
+      "role": "native preflight",
+      "sha256": "aa9d12bf8740a4bf9a73883de6e46a9c841107ab6cd0a3bd8f0dd558dc2eb54a",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/final-source-freeze/stdout"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/private-services/exit",
+      "role": "native preflight",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/private-services/exit"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/private-services/stderr",
+      "role": "native preflight",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/private-services/stderr"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/private-services/stdout",
+      "role": "native preflight",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/private-services/stdout"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/runtime-metadata/exit",
+      "role": "native preflight",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/runtime-metadata/exit"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/runtime-metadata/stderr",
+      "role": "native preflight",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/runtime-metadata/stderr"
+    },
+    {
+      "bytes": 2884,
+      "mode": 384,
+      "path": "preflights/runtime-metadata/stdout",
+      "role": "native preflight",
+      "sha256": "436f3cc0d9b62ff78ba8aba5b90f29bc58cf084ee471f3bd12931a1bdfe27c98",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/runtime-metadata/stdout"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/runtime-source/exit",
+      "role": "native preflight",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/runtime-source/exit"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/runtime-source/stderr",
+      "role": "native preflight",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/runtime-source/stderr"
+    },
+    {
+      "bytes": 205,
+      "mode": 384,
+      "path": "preflights/runtime-source/stdout",
+      "role": "native preflight",
+      "sha256": "eb1e50ff6523e8f1399e0f36de5d69d557800d1a8489fa2bcac31942495ba3ce",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/runtime-source/stdout"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/source-freeze/exit",
+      "role": "native preflight",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/source-freeze/exit"
+    },
+    {
+      "bytes": 516,
+      "mode": 384,
+      "path": "preflights/source-freeze/stderr",
+      "role": "native preflight",
+      "sha256": "209a408a4c0a946f80a8f5289fd46ea70fdde4e1ca5aeaea11054814300a3e90",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/source-freeze/stderr"
+    },
+    {
+      "bytes": 1165,
+      "mode": 384,
+      "path": "preflights/source-freeze/stdout",
+      "role": "native preflight",
+      "sha256": "aa9d12bf8740a4bf9a73883de6e46a9c841107ab6cd0a3bd8f0dd558dc2eb54a",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/source-freeze/stdout"
+    },
+    {
+      "bytes": 2,
+      "mode": 384,
+      "path": "preflights/source-integrity/exit",
+      "role": "native preflight",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/source-integrity/exit"
+    },
+    {
+      "bytes": 0,
+      "mode": 384,
+      "path": "preflights/source-integrity/stderr",
+      "role": "native preflight",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/source-integrity/stderr"
+    },
+    {
+      "bytes": 63,
+      "mode": 384,
+      "path": "preflights/source-integrity/stdout",
+      "role": "native preflight",
+      "sha256": "fe254b8e94377e05ad0ff4048c43102c19a39b97592b605fd60234498dd89a61",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/producer/tmp/urnetwork-release-gate.hCVhY6ym/preflights/source-integrity/stdout"
+    },
+    {
+      "bytes": 736,
+      "mode": 384,
+      "path": "source/BINDING.json",
+      "role": "source binding captured before gates",
+      "sha256": "ee6acc9349751ce4aef66b22d6b9e1bdcc99480f1128b9eb83d8294596eb102c",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/final-source-binding/BINDING.json"
+    },
+    {
+      "bytes": 575,
+      "mode": 384,
+      "path": "source/identity.json",
+      "role": "derived receipt summary",
+      "sha256": "b11132f2848e1fc2c2f7f6476ea81dec733e103066e2e5cc9b0911d225fa07a1"
+    },
+    {
+      "bytes": 3830,
+      "mode": 384,
+      "path": "source/source-pair-ca42812.tsv",
+      "role": "published source pair",
+      "sha256": "c692f9026eae377e65b1b937eebb97237fb93b68669d3eb14533c2dc2c88d271",
+      "source": "/home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/final-source-binding/source-pair-ca42812.tsv"
+    }
+  ],
+  "exclusions": [
+    "no test binaries",
+    "no Go caches or module caches",
+    "no source contents",
+    "no vault contents",
+    "no service environment or runtime data"
+  ],
+  "schema": "final-producer-gate-evidence-v1",
+  "scope": {
+    "aggregate_acceptance": false,
+    "finished_at": "2026-09-14T02:22:22Z",
+    "live_campaign_acceptance": false,
+    "outer_exit": 0,
+    "phase_joins": 36,
+    "phase_nonzero": 0,
+    "server": "0f095a639e111f71d231cd6f792a191cbc6b0a69",
+    "source": "ca4281201077b6e3e9cde1004568efa219d0e12c",
+    "started_at": "2026-09-14T00:22:38Z",
+    "verdict": "PASS"
+  }
+}

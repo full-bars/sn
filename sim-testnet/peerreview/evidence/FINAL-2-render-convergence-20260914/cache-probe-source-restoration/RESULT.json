@@ -1,0 +1,77 @@
+{
+  "observed_at": "2026-09-14T06:24:09.870686+00:00",
+  "cause": "agent standalone go mod download -json all in frozen connect added138 checksums",
+  "restored_only": "connect/go.sum",
+  "accidental_sha256": "ddf203de8ca45b3573a104dca05ae65266ae3910af64da40c3d966bcc6b1f99f",
+  "restored_pinned_sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693",
+  "restored_to_exact_head_bytes": true,
+  "all13_match_final_cli_sourcepair": true,
+  "repositories": [
+    {
+      "repository": "sn",
+      "head": "e31236859c1012c21aed08034cf5074d85bdb9a6",
+      "clean": true
+    },
+    {
+      "repository": "server",
+      "head": "0f095a639e111f71d231cd6f792a191cbc6b0a69",
+      "clean": true
+    },
+    {
+      "repository": "operator-proxy",
+      "head": "448369740c70eb2e642bde9d36f3708fe9ad4b5d",
+      "clean": true
+    },
+    {
+      "repository": "connect",
+      "head": "2a0f603e8076224fdab4d9f56e5a0a557ed513d9",
+      "clean": true
+    },
+    {
+      "repository": "sdk",
+      "head": "0dc2fb0f6f8a7e484e96bbdde09a690ae108dc8b",
+      "clean": true
+    },
+    {
+      "repository": "glog",
+      "head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "clean": true
+    },
+    {
+      "repository": "goidenticons",
+      "head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "clean": true
+    },
+    {
+      "repository": "proxy",
+      "head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "clean": true
+    },
+    {
+      "repository": "userwireguard",
+      "head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "clean": true
+    },
+    {
+      "repository": "vault",
+      "head": "8b2f481dbe87092d0c1742274712a6f805c1c375",
+      "clean": true
+    },
+    {
+      "repository": "xops",
+      "head": "a9d2eb4bfbdf72d61243908a71659adff0fb8160",
+      "clean": true
+    },
+    {
+      "repository": "config",
+      "head": "268f11b7e7d9c43eda3fd6f34447d26c2f0c21dc",
+      "clean": true
+    },
+    {
+      "repository": "warp",
+      "head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "clean": true
+    }
+  ],
+  "no_test_or_build_rerun": true
+}

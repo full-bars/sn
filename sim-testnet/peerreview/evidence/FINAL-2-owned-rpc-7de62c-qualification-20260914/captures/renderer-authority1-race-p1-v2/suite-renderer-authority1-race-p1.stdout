@@ -1,0 +1,13 @@
+=== RUN   TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys
+=== RUN   TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys/runtime-origin
+--- PASS: TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys/runtime-origin (0.17s)
+=== NAME  TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys
+=== RUN   TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys/template-origin
+--- PASS: TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys/template-origin (0.19s)
+=== NAME  TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys
+=== RUN   TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys/original-prepared-pin
+--- PASS: TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys/original-prepared-pin (0.18s)
+=== NAME  TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys
+--- PASS: TestFinalValidatorAuthorityV2ReconstructsOriginalRendererWithoutLiveKeys (139.67s)
+=== NAME  
+PASS

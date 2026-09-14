@@ -1,0 +1,19 @@
+6-=== RUN   TestFleetRenewalHistoricalAliasRpcDecodesInput
+7:    fleet_renewal_history_test.go:102: historical alias used unexpected contract calldata
+8:    fleet_renewal_history_test.go:157: input 0x1122334401 at block 110 did not produce a response: unexpected end of JSON input
+9---- FAIL: TestFleetRenewalHistoricalAliasRpcDecodesInput (0.00s)
+--
+11-=== RUN   TestFleetRenewalHistoricalAliasReplaysOriginalMirrorAndBinding
+12:    fleet_renewal_history_test.go:377: fleet.mirror.1 original-format replay: operational historical EVM state: historical postcondition replay hash 0x0e16e1b3bc2e677dcf73f72a612e278bf51a0eb21fe298f30d9be1d24ba501e3 differs from recorded 0xcd897a7f685150565b14e8b0dec4ff3e0c78a689602bb2a3a6a25610e7109b85
+13:    fleet_renewal_history_test.go:377: fleet.bind.1.1 original-format replay: operational historical EVM state: historical postcondition replay hash 0xee4d50770470457b43caefe338110ddd9743c1fdb3716897c035e576cd58e001 differs from recorded 0x53cbe8354df559d8cd966e065289c9046d9cd205c3b61ea9c138f2aeb793cebd
+14-    fleet_renewal_history_test.go:384: historical reads headers=[finalized 0x6e finalized 0x6e] blocks=[], want [finalized 0x6e finalized 0x6e]/[110 110]
+--
+17-=== RUN   TestFleetRenewalHistoricalAliasReplaysIndependentCheckpoint
+18:    fleet_renewal_history_test.go:393: fleet.mirror.1 independent original-format replay: operational historical EVM state: historical postcondition replay hash 0x6eeec8c0cb6741de0b6cafefc06401bc12626c76acd2636a971ed9c230772f3b differs from recorded 0xcd897a7f685150565b14e8b0dec4ff3e0c78a689602bb2a3a6a25610e7109b85
+19:    fleet_renewal_history_test.go:393: fleet.bind.1.1 independent original-format replay: operational historical EVM state: historical postcondition replay hash 0x32cf553b8a7de2b77cfba569910032b3b69be0542d9d3592a8629a45d12034cf differs from recorded 0x53cbe8354df559d8cd966e065289c9046d9cd205c3b61ea9c138f2aeb793cebd
+20-    fleet_renewal_history_test.go:396: historical reads headers=[finalized 0x6e finalized 0x6e] blocks=[], want [finalized 0x6e finalized 0x6e]/[110 110]
+--
+22-=== NAME  
+23:=== RUN   TestFleetRenewalHistoricalAliasPreservesDerivedReceipt
+24:--- PASS: TestFleetRenewalHistoricalAliasPreservesDerivedReceipt (0.19s)
+25-=== NAME  

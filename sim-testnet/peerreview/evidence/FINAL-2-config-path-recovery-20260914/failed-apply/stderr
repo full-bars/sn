@@ -1,0 +1,23 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 02:22:24.591877 1485906 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 02:22:24.592157 1485906 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 02:22:24.592267 1485906 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 02:22:24.592303 1485906 env.go:67] [env]settings = map[]
+sim-testnet: batched historical fleet audit 0/1000
+sim-testnet: batched historical fleet audit 1000/1000
+sim-testnet: carried action audit 50/2246
+sim-testnet: carried action audit 100/2246
+sim-testnet: carried action audit 150/2246
+sim-testnet: carried action audit 200/2246
+sim-testnet: carried action audit 250/2246
+sim-testnet: carried action audit 300/2246
+sim-testnet: carried action audit 350/2246
+sim-testnet: carried action audit 400/2246
+sim-testnet: carried action audit 450/2246
+sim-testnet: carried action audit 500/2246
+sim-testnet: carried action audit 550/2246
+sim-testnet: carried action audit 600/2246
+sim-testnet: carried action audit 650/2246
+sim-testnet: carried action audit 700/2246
+sim-testnet: carried action audit 750/2246
+sim-testnet: carried plan history preflight: action config.render: current postcondition: operator config link /home/by/urnetwork/sn/sim-testnet/runs/ur-subnet-testnet-v1-attempt-4/runtime/operator-1/config/sim-testnet-op-1 targets /home/by/urnetwork/temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/config/local, want /home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/config/local

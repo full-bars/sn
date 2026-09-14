@@ -1,0 +1,60 @@
+{
+  "exit": 1,
+  "started_at": "2026-09-14T08:56:06.899239+00:00",
+  "finished_at": "2026-09-14T09:10:02.744093+00:00",
+  "queued_at": "2026-09-14T08:05:22.898789+00:00",
+  "state_before": {
+    "plan.json": {
+      "sha256": "375a0c5b933322d0c9bc5989697486b8661224f53dca4359fd98ca6fa36dd1a7",
+      "bytes": 5948234
+    },
+    "journal.jsonl": {
+      "sha256": "0f3b7ea89a1cedd3da435be13e26d8b824b22ae4ff0fa4573d17e3ef6d743b5c",
+      "bytes": 11951559
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "74b85f37f05de975fb0847185b4ebf7606153dd06613a847b203a44212cd0052",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "state_after": {
+    "plan.json": {
+      "sha256": "375a0c5b933322d0c9bc5989697486b8661224f53dca4359fd98ca6fa36dd1a7",
+      "bytes": 5948234
+    },
+    "journal.jsonl": {
+      "sha256": "0f3b7ea89a1cedd3da435be13e26d8b824b22ae4ff0fa4573d17e3ef6d743b5c",
+      "bytes": 11951559
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "74b85f37f05de975fb0847185b4ebf7606153dd06613a847b203a44212cd0052",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "bfc38ce39e4ff15893f70eb6bdb8272c86277cf7ae3f09d6cce5efae0e66502e"
+}

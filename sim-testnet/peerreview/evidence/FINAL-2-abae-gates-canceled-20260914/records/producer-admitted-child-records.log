@@ -1,0 +1,26 @@
+[release gate] started isolation-regressions (pid 2368287)
+[release gate] started compile (pid 2368375)
+[release gate] started runtime (pid 2368447)
+[release gate] joined compile (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/compile.log
+[release gate] started evidence-native (pid 2385490)
+[release gate] joined evidence-native (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/evidence-native.log
+[release gate] started seed (pid 2386028)
+[release gate] joined runtime (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/runtime.log
+[release gate] started sim-seed (pid 2387157)
+[release gate] joined seed (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/seed.log
+[release gate] started evm-identity (pid 2390821)
+[release gate] joined evm-identity (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/evm-identity.log
+[release gate] started driver (pid 2394059)
+[release gate] joined driver (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/driver.log
+[release gate] started framing (pid 2396887)
+[release gate] joined framing (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/framing.log
+[release gate] started settlement (pid 2401342)
+[release gate] joined sim-seed (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/sim-seed.log
+[release gate] started adversarial (pid 2414260)
+[release gate] joined isolation-regressions (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/isolation-regressions.log
+[release gate] started semantic (pid 2415821)
+[release gate] joined adversarial (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/adversarial.log
+[release gate] started semantic-public-scenario (pid 2416448)
+[release gate] joined settlement (exit 143); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/settlement.log
+[release gate] joined semantic-public-scenario (exit 143); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/semantic-public-scenario.log
+[release gate] joined semantic (exit 143); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/producer-census-correction-globalmodcache/tmp/urnetwork-release-gate.DkFvHJuf/logs/semantic.log

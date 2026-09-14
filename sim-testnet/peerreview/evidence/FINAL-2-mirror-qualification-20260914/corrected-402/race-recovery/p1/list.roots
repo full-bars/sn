@@ -1,0 +1,2 @@
+TestProducerGateCaptureSelectionRejectsMetadataPartitionDrift
+TestProducerGateCaptureSelectionRejectsPopulationPartitionDrift

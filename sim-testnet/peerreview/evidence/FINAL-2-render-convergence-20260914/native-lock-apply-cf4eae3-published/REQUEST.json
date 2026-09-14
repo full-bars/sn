@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/bootstrap-cli-physical/sim-testnet",
+    "release-lock",
+    "--config",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn/sim-testnet/testnet.yml",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/config",
+    "--apply"
+  ],
+  "cwd": "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/sn",
+  "started_at": "2026-09-14T06:05:35.162108+00:00",
+  "chain_rpc": false,
+  "expected_candidate_sha256": "ba52cc36320e5c799eb5115ee92fcf6b456b0ad10fafd6252dea11c4daac28f7",
+  "review": "/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/native-lock-preview-cf4eae3/REVIEW.json",
+  "prior_refusal": "/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/native-lock-apply-cf4eae3/RESULT.json",
+  "recovery": "same source and bytes, now published on origin/main"
+}

@@ -1,0 +1,6 @@
+[release gate] started isolation-regressions (pid 2372706)
+[release gate] started sn-go (pid 2372790)
+[release gate] joined isolation-regressions (exit 0); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-census-correction-globalmodcache/tmp/urnetwork-release-gate.oCAR3UFG/logs/isolation-regressions.log
+[release gate] started sn-all-normal (pid 2409814)
+[release gate] joined sn-all-normal (exit 143); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-census-correction-globalmodcache/tmp/urnetwork-release-gate.oCAR3UFG/logs/sn-all-normal.log
+[release gate] joined sn-go (exit 143); log /home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/terra-runtime/aggregate-census-correction-globalmodcache/tmp/urnetwork-release-gate.oCAR3UFG/logs/sn-go.log

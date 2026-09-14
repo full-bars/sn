@@ -2,11 +2,235 @@
 
 **Status: in progress; `final_acceptance=false`.** This report covers the next
 full finalization of testnet chain **945**, subnet **521**, under
-[FINALIZE.md](../FINALIZE.md). The fleet and soak remain stopped. No additional
-reserve repair, renewal or campaign transaction has been made during the current
-preparation. Successful historical payments do not establish full acceptance.
+[FINALIZE.md](../FINALIZE.md). At the **10:38 UTC on 2026-09-14** observation
+cutoff, all **1,212 renewal transactions** across **202 fleets** have finalized
+and passed their native postcondition checks. The corrected candidate is
+published as `abae9a6a8410a54a560335b16888d2ad0d4fc51f`. Its approved reserve
+repair adopted the reviewed plan, then stopped at **10:32:15 UTC** on a separate
+historical-consumption scope defect. The transaction journal is unchanged and
+the repair remains unsubmitted. Both full gates were canceled and joined at
+**10:35:29 UTC** because the candidate requires a production correction.
+The soak remains stopped and the live campaign remains pending.
+Successful renewal and historical payments do not establish full acceptance.
 
-At **23:48 UTC on 2026-09-13**, the full producer gate on `e3d3539` has
+The earlier published candidate
+`a59294e98ea02d05125015ae02cf32f2c0059c8a` introduced the corrected strict
+runtime render and the renewal oracle predicate. An earlier defect treated a
+completed oracle restoration as a pending reroute: at finalized EVM block
+**8,002,200**, the active, immutable and stored pending oracle were the same
+original address, with effective epoch **273** already past at current epoch
+**356**. The contract retains its scheduled fields after activation. The
+correction accepts this completed state while preserving rejection of foreign,
+future or inconsistent schedules. All seven affected roots passed normally and
+with race detection; actual outer completion times were **07:01:39** and
+**07:13:15 UTC**. The final executable built with clean VCS revision `a59294e9`,
+SHA-256 `998777328adfad2c394a3aec9c9df92f3bb477d3c49a7bc509d9457251fc4efd`,
+and identical before/after observations across all 13 repositories.
+[Pinned oracle state, patch, complete focused outputs and final build evidence](peerreview/evidence/FINAL-2-oracle-renewal-preparation-20260914/README.md).
+
+The render correction `cf4eae3` also passed its seven affected roots normally
+and with race detection. The original plain-LAN WebSocket admission failure
+and a separate test-binary working-directory failure remain retained; the latter
+subsequently passed three consecutive executions on the same binary. The
+superseded e312 full gates were canceled at **07:00:33 UTC**, with actual outer
+exit **143**: producer **13/13** admitted owners joined, including three canceled
+owners; aggregate **5/5** joined, including two canceled owners. These are not
+full-gate passes. Their complete outputs, original refusals, correction and
+qualification are preserved in the
+[render convergence bundle](peerreview/evidence/FINAL-2-render-convergence-20260914/README.md).
+
+The a592 producer and aggregate gates both executed a stale test-census
+failure, then were canceled at **08:33:56–57 UTC** with outer exit **143**.
+All **26/26** producer and **7/7** aggregate admitted children joined; canceled
+children remain distinct from the actual failing phases. Neither gate passed.
+The `43cc2b2` correction replaces stale open-family counts and also fixes the
+adjacent evidence-family count. Its original census root completed three normal
+confirmations; deterministic growth controls reproduce the pre-fix failures.
+A separate nested Go-tool enumeration timeout led to `ff62e1c`, which lists the
+already compiled test binary. That correction passed **24/24 normal and 24/24
+race tests**, plus three fresh normal confirmations of the failed root. The
+old binary fails immediately without Go on PATH, proving the removed toolchain
+dependency without relying on a timeout. These are scoped correction results.
+[Complete failed gates, deterministic controls and focused results](peerreview/evidence/FINAL-2-census-correction-20260914/README.md).
+
+The native renewal completed with exit **0** at **08:56:04 UTC**: **202 native
+commitments, 202 EVM mirrors and 808 bindings**, for epochs **359–390**. The
+[closure and transaction index](peerreview/evidence/FINAL-2-renewal-finality-20260914/closure/operations-index.json)
+records each transaction hash, finalized block/hash, finality and verification
+journal positions, and postcondition identity. This closes the native receipts;
+it is not a second independent audit of all 1,212 transactions. The first native
+transaction `0x9be9f4334b44d9c6f4bcddf2285be953e100c6980b63a24432c9c5b583075ce7`
+has a separately reproduced canonical inclusion at block **8,002,458**, index
+**14**, block hash
+`0xc03a239da6e042b4bfc583854b38e15b7efd2257dbb8ab41f4f4f4a9274b6d3b`.
+[Native results, evidence scope and first-inclusion RPC](peerreview/evidence/FINAL-2-renewal-finality-20260914/README.md).
+
+The queued 6,000-alpha repair started after renewal completion and exited **1**
+at **09:10:02 UTC**, before any transaction or runtime-state change. For
+`fleet.mirror.26`, serial historical replay added three modern batch-provenance
+fields to the legacy observation. Adding exactly those fields reproduces the
+recorded mismatch: expected
+`0x10cd341a9cb9993407584399a270792f9cc89fe8cf600d709d2447fbbc165479`, replayed
+`0x7003cbdd3e896e2b69d5fff99bb1c8137c53e868f0858f5e827a7ad24e658ae3`.
+Pinned LAN state at EVM block **7,900,891** matches the historical receipt. The
+correction preserves the recorded format for both mirror and member-binding
+aliases while retaining exact observation hashes, canonical checkpoints and
+both observers. [Exact native refusal and unchanged-state proof](peerreview/evidence/FINAL-2-renewal-finality-20260914/repair-refusal/RESULT.json).
+
+The first correction's normal run exposed a separate fixture error: the fake
+RPC decoded `data`, while the pinned client encodes contract calls as `input`.
+That run retains **80 passes and 6 failures**; its canceled race run is not a
+qualification pass. The corrected source `4029396` adds a direct wire-format
+regression and passed **87/87 normal tests**. Each of the six failed roots also
+passed three fresh normal processes. The combined 87-root race run exhausted
+its unchanged package deadline after **85 explicit terminal passes**, leaving
+two metadata roots unresolved. Those two roots subsequently passed three
+fresh race processes on the same binary, ending at **10:19:30 UTC**, with all
+source, binary, list, execution and conversion checks passing. The original
+timeout remains a failed run. A disposable pre-fix variant reproduces the
+codec error and both historical replay failures while its modern-format
+control passes. Adjacent checks cover member bindings, both observers,
+partial provenance, changed checkpoints and state, shared providers, and the
+separate batch codec. These are scoped regression results; the final complete
+gates remain required.
+[Deterministic reproductions, adjacent coverage and focused qualification](peerreview/evidence/FINAL-2-mirror-qualification-20260914/README.md).
+
+The qualified production and test bytes are included in published `abae9a6`.
+Its final native executable has SHA-256
+`71fca036f0aa6876565fbc38f1d138f0ed2268e19f9488d280eaf95c49ae191e`,
+with clean VCS revision `abae9a6` and identical observations across all 13
+repositories. The source pair has SHA-256
+`f7871bf5e6b53a939b8ea8add2b2b3abbbfd0bf58f9c1bdc3474fd42248b0089`.
+The reviewed replacement plan
+`0xf6348cfdb032e658b8ce46d764ab7c65476250959fdbabc2a658563759e17585`
+preserves all **3,521 actions**, the **1,212 completed renewals**, and all
+spending limits. The repair remains exactly **6,000 alpha**, with minimum
+destination credit **5,999,999,999,999 alpha-rao** and lifetime allowance
+**37,250 alpha**. Adoption and historical replay do not establish a finalized
+transfer or a passing reserve census.
+[Final build, native lock, publication and plan review evidence](peerreview/evidence/FINAL-2-final-build-20260914/README.md).
+
+The replacement repair attempt ran from **10:15:46 to 10:32:15 UTC**, exiting
+**1** after completing the batched **1,000/1,000** historical checks and reaching
+the **950/3,456** carried-action progress marker. For `fleet.commitment.34`,
+historical native state and hashes succeeded, but EVM replay then required its
+generation-1 commitment to remain current. The replay executor had narrowed
+consumption lookup to the original plan: the consumer failed there, then the
+same consumer intent finalized and verified in an approved descendant plan.
+That valid later completion was invisible to the narrowed lookup. Only native
+plan/config admission changed; the journal, supervisor state/config and public
+identities remained byte-identical. The accepted plan hash and every action
+match the reviewed preview; generation time and live observations differ.
+
+The adjacent review examined **802 generation-consumer relationships** across
+all **202 fleets** and identified the same defect in **17 generation-1
+commitments**: fleets **34–40 and 91–100**. Every affected consumer has its exact
+intent verified in the approved current ancestry. The production correction
+and deterministic authorized/unauthorized-consumption regressions are pending
+at this cutoff. The canceled `abae9a6` producer retained **13/13 child joins**
+(10 successful, 3 canceled); aggregate retained **3/3 joins** (1 successful,
+2 canceled). Both outer exits are **143**, and neither is a full-gate pass.
+[Native refusal, exact state changes and adjacent-consumer review](peerreview/evidence/FINAL-2-commitment-scope-refusal-20260914/README.md).
+[Closed gate commands, complete joins and cleanup](peerreview/evidence/FINAL-2-abae-gates-canceled-20260914/README.md).
+
+The prior setup attempt exited 1 at **06:41:20 UTC** because its old refresh
+postcondition expected binding version count 2 while two fleets had later,
+authenticated lifecycle generation-3 bindings. The supported recovery performs
+renewal first, allowing completed successor evidence to authenticate historical
+state at its original checkpoint. Native setup admitted the corrected source
+plan, then was intentionally canceled and joined at **07:30:05 UTC**, before
+action execution. It is recorded as **CANCELED, not PASS**, with the complete
+native input writes verified and journal/supervisor state unchanged. No journal,
+receipt or version-count predicate was manually changed.
+[Original refusal, native admission and exact renewal review](peerreview/evidence/FINAL-2-oracle-renewal-preparation-20260914/README.md).
+
+At the historical **05:22 UTC on 2026-09-14** checkpoint, the published SN candidate was
+`ca4281201077b6e3e9cde1004568efa219d0e12c`. Its complete producer gate has
+**passed: 36/36 phase joins and outer exit 0**, from **00:22:38 to 02:22:22 UTC**.
+Initial and final source-freeze observations are byte-identical across all
+13 repository heads, with SHA-256
+`aa9d12bf8740a4bf9a73883de6e46a9c841107ab6cd0a3bd8f0dd558dc2eb54a`.
+[Current producer commands, logs and source checks](peerreview/evidence/FINAL-2-producer-ca42812-20260914/README.md),
+[byte manifest](peerreview/evidence/FINAL-2-producer-ca42812-20260914/MANIFEST.json).
+The complete aggregate also **passed: 25/25 phase joins and outer exit 0**,
+from **00:26:03 to 04:28:36 UTC**. All seven preflights passed, and its initial
+and final source observations are byte-identical to the producer's observations.
+[Aggregate commands, complete logs and original startup refusal](peerreview/evidence/FINAL-2-aggregate-ca42812-20260914/README.md),
+[byte manifest](peerreview/evidence/FINAL-2-aggregate-ca42812-20260914/MANIFEST.json).
+Its original launch refused before any test body because concurrent Git fetches
+collided on a moving server remote-tracking reference. The successful replacement
+used the same source, lock and workload with fresh output paths; that refusal
+remains separate from test results. These local passes do not establish live
+campaign acceptance.
+
+The corrected components have completed their affected qualification:
+
+- SN `7de62c7`, with server dependency `b67ea7a`: routing/source guards,
+  historical-input checks, observation-profile and renderer checks passed
+  normally and under race. The four roots active at the earlier simulator
+  timeout also passed three sequential race executions on the same binary.
+  [Exact scopes, original attempts and source identities](peerreview/evidence/FINAL-2-owned-rpc-7de62c-qualification-20260914/README.md).
+- Server `0f095a6`, with SN dependency `e3d3539`: all 12 focused captures
+  completed with actual outer, body, verification, source and cleanup exits 0.
+  This includes normal/race publication and controller coverage, the three
+  normal confirmations of the original 1,000-client failure, monitor coverage
+  and confirmations, and the real PostgreSQL migration regression in both
+  modes. [Exact captures and confirmation events](peerreview/evidence/FINAL-2-server-0f095a-qualification-20260914/README.md).
+
+These component passes retain their recorded source scope. The complete
+`ca42812` producer and aggregate results above are separate complete executions.
+The final graph still pins the qualified server `0f095a6` as a published ancestor;
+unrelated newer server commits are not imported into this qualification.
+
+The native executable at that checkpoint built successfully with unchanged before/after
+source observations. Its SHA-256 is
+`b440fcaf46821278950cefc85bbcba751397cbd1870380e002b05109f1b2b5d4`.
+Its LAN-only doctor finished at **00:28:41 UTC**, exit 0 and `ready=true`.
+Exactly **62 of 64** checks have `ok=true`; all hard checks pass. The two soft
+results disclose that the aliases share one physical backend. This is
+`independent_rpc=false`, not a 64/64 independent-observer pass.
+[Native build, doctor and source evidence](peerreview/evidence/FINAL-2-runtime-preparation-ca42812-20260914/README.md).
+
+One setup preview finished at **00:31:58 UTC**, exit 0. The reviewed revision is
+`0xae15ecdd37cac2a223533b4a1b3d9fa6431da33d78cfd9ccac006a98e9d8f414`.
+All **2,309 actions** and all spending limits are unchanged from the adopted
+replacement plan below. Only source/input hashes, prior-plan identity and
+fresh observation/generation fields changed. The approved 6,000-alpha repair
+command started automatically at **02:22:23 UTC**, immediately after the
+complete producer pass and exact reviewed state, source and budget checks.
+It adopted the reviewed `ae15ecdd` plan, then **exited 1 at 02:33:52 UTC** while
+verifying the existing `config.render` action: the operator overlay links named
+the historical config checkout, while this invocation expected the new path.
+The journal and supervisor files remained byte-identical; no transaction was
+submitted.
+[Exact review](peerreview/evidence/FINAL-2-runtime-preparation-ca42812-20260914/setup/REVIEW.json),
+[preview before/after state hashes](peerreview/evidence/FINAL-2-runtime-preparation-ca42812-20260914/setup/RESULT.json).
+
+The supported recovery retains the historical `--platform-config-repo` path.
+All seven release-bound local file contents and both shared trees match the
+qualified checkout exactly. Filesystem permissions differ, but the Git modes
+and locked content digests agree. The release binds the config contents and
+shared tree; resolved plan identity excludes repository paths. The review
+records both distinct config commit IDs rather than relabelling the historical
+checkout as the qualified commit. A native preview **passed at 05:08:04 UTC**,
+returning the identical approved plan and all **2,309 unchanged actions**, with
+all four observed state files unchanged. No code, checkout, link or journal
+edit was needed.
+[Recovery diagnosis and exact native results](peerreview/evidence/FINAL-2-config-path-recovery-20260914/README.md),
+[source-backed path and RPC analysis](peerreview/evidence/FINAL-2-config-path-recovery-20260914/review/HANDOFF.md).
+The approved repair retry ran from **05:09:51 to 05:22:14 UTC** with only that
+path argument changed. It passed the overlay-path check but **exited 1** at the
+next `config.render` check: reserved staging differed from the current approved
+capacity or authority configuration. All four observed state files remained
+byte-identical; the journal still has **10,258 rows** and no entry for
+`alpha.repair.validator.1.7`. The stored configuration retains provisional
+discovery flags and contexts; its ordinary render receipt cannot establish
+current strict configuration. A render-version and owned-discovery routing
+correction was subsequently integrated into the current candidate. The successful preview established
+plan identity, not successful setup. Finalized repair credit and a complete
+reserve census remain pending.
+
+Earlier checkpoint, **23:48 UTC on 2026-09-13**: the full producer gate on `e3d3539` had
 passed with **36/36 phase joins and outer exit 0**, ending at 21:44 UTC.
 [Exact producer commands, logs and source identities](peerreview/evidence/FINAL-2-producer-e3d3539-20260913/MANIFEST.json).
 The original aggregate **failed**, ending at **23:14:29 UTC with outer exit 1**.
@@ -17,9 +241,10 @@ Its final source check separately refused because canonical SN `main` advanced
 independently to `928b7d5` during execution.
 [Original aggregate commands, complete phase logs and refusal](peerreview/evidence/FINAL-2-aggregate-e3d3539-20260913/README.md),
 [byte manifest](peerreview/evidence/FINAL-2-aggregate-e3d3539-20260913/MANIFEST.json).
-The corrected source is still being qualified. Later focused passes do not
-change the original aggregate's failure; neither complete gate nor live
-acceptance is claimed for the new candidate.
+At that checkpoint the corrected source was still being qualified. Later
+focused passes do not change the original aggregate's failure. The later
+`ca42812` producer and aggregate passes have their own source scope;
+live acceptance remains pending.
 
 The user approved **37,250 alpha lifetime for one 6,000-alpha replacement**
 of the unsubmitted 3,750-alpha repair. Native setup adopted replacement plan
@@ -67,7 +292,7 @@ reproduction of the findings, not an all-check pass.
 | --- | --- | --- |
 | Production cadence was never scheduled | The first run used 300/50/150/5. A `production_cadence` YAML entry does not prove scheduling or activation. | Retain the successful policy-scheduling transaction, effective epoch, finalized policy state showing **360/60/180/6**, and **three consecutive fully observed epochs** under that active policy. The five accelerated epochs remain a separate prerequisite. Pending. |
 | `max_allowed_validators=64`, target ≤56 | The [whitepaper](../WHITEPAPER.md) calls this root-controlled/runtime-dependent. The [compatibility policy](../deploy/testnet/hyperparams.yml) already requires exactly 64. The user has explicitly directed this run to work with the real limit. | **Use 64; reaching 56 is not a testnet prerequisite.** Retain finalized value, actual permits, UID occupancy and 200-head selection evidence from the run. Report the difference from the whitepaper target without claiming ≤56 compliance. No parameter change is needed. |
-| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. The old repair is already credited. | The unsubmitted **3,750-alpha** repair became insufficient at the 17:10 UTC snapshot. The user approved replacing it with **one 6,000-alpha repair within 37,250 alpha lifetime**. The allowance is published and the replacement plan was adopted; the transfer remains pending after the failed historical preflight. Retain the finalized debit/credit and a complete census proving ≥65%, monitor the 60% floor, and report the end-of-run share separately. |
+| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. The old repair is already credited. | The unsubmitted **3,750-alpha** repair became insufficient at the 17:10 UTC snapshot. The user approved replacing it with **one 6,000-alpha repair within 37,250 alpha lifetime**. Both native attempts stopped before submitting the transfer; the second exposed stale provisional staging configuration at 05:22:14 UTC on 14 September. Retain the finalized debit/credit and a complete census proving ≥65%, monitor the 60% floor, and report the end-of-run share separately. |
 | Epoch 309 paid despite capturing zero | `RootMissed(308)` carried each operator's funded amount into its own epoch-309 entitlement. | The missing historical transition is reproduced below from both nodes. Every new paid epoch must similarly explain its funding source, carry, payments and remainder per operator. Historical reporting omission closed; fresh-run accounting pending. |
 | Artifact signers differ from registered root signers | A recoverable artifact signature establishes provenance. The coordinator authorizes the root commitment transaction using the epoch's registered `rootSigner`; these are separate checks. | Preserve each recovered artifact signer, committed artifact hash/root, transaction sender and epoch-specific registered root signer. The collector/verifier correction is integrated into candidate `4fda909` and its affected tests passed normally and under race; retained keys and old signatures stay unchanged. Fresh-run evidence remains pending. |
 | Chain verification cannot establish off-chain usage or lifecycle | A committed hash authenticates bytes, not the truth of usage, restart or gate assertions within them. | Label chain-reproduced, independently recomputed, artifact-only, and locally executed evidence separately. Link exact artifacts, executable/source identity, commands, actual exits, process generations and shutdown outcomes. Pending full-run evidence. |
@@ -339,8 +564,9 @@ publication roots a separate
 package clock and retains the complete disjoint race census: **2,181 ordinary,
 three publication and two population roots**. It changes scheduling and
 existing ownership guards, preserving test bodies, payloads, cryptography,
-parallelism, uncached execution and 90-minute deadlines. Qualification and a
-successful complete aggregate remain pending for the interrupted roots.
+parallelism, uncached execution and 90-minute deadlines. At that historical
+checkpoint, the interrupted roots and complete aggregate still needed
+qualification; later results retain their separately stated source scope.
 The correction's ten affected scheduling guards passed normally and under
 race, with actual outer exits 0 at **15:37:34** and **15:39:58 UTC**, respectively.
 Both retained source checks match before and after. The actual compiled
@@ -542,9 +768,9 @@ passed all **30 selected roots and 12 subtests**, normally and under race;
 outer and native suite exits were 0, and the source snapshots were unchanged.
 The race qualification closed at **17:48:04 UTC**. Two earlier launch attempts
 were refused before compilation because of private-path and vault-projection
-mismatches; those records are retained and executed zero tests. Deployment of
-the qualified correction remains pending. The original journal and credited
-transfer have not been changed.
+mismatches; those records are retained and executed zero tests. That qualified
+correction was later included in the published replacement plans described
+above. The original journal and credited transfer were preserved.
 [Causal result](peerreview/evidence/FINAL-2-reserve-succession-qualification-20260913/captures/causal1-normal-p1-retry2/report.json),
 [normal result](peerreview/evidence/FINAL-2-reserve-succession-qualification-20260913/captures/integration30-normal-p1-retry2/report.json),
 [race result](peerreview/evidence/FINAL-2-reserve-succession-qualification-20260913/captures/integration30-race-p1-retry2/report.json),
@@ -598,8 +824,8 @@ These incomplete gates are preserved and do not qualify the next candidate.
 [Producer raw joins](peerreview/evidence/FINAL-2-producer-cd036ce-20260913/capture/outer.stdout),
 [aggregate raw joins and terminal classification](peerreview/evidence/FINAL-2-aggregate-cd036ce-20260913/RESULT.json).
 
-The current published SN upstream also brings matching Server, Connect and SDK
-dependencies. Server's module graph now requires Warp. The reviewed integration
+The September 13 integration also brought matching Server, Connect and SDK
+dependencies. Server's module graph requires Warp. The reviewed integration
 `02ba4c7` adds Warp to current source admission and the explicit local module
 replacement while preserving archived lock formats. The current graph therefore
 has **13 repositories and 16 live Go modules**. Terra's formatting inspection
@@ -657,9 +883,9 @@ same nine reviewed repository fields, and **native lock apply exited 0 at
 19:32:03 UTC**, installing exactly
 `ddb22d0e1e525affac5b87cbba29cc70cb8d3e4afb9668507033d6fee907b51c`.
 Runtime, contract artifacts, interfaces and infrastructure fields are unchanged.
-This local lock update sent no chain transaction. Publish this lock, rebuild
-the driver at the final commit and run both complete gates concurrently; no
-complete-gate pass or live acceptance is asserted yet.
+This local lock update sent no chain transaction. Publication, the final
+driver build and complete gates followed in the later checkpoints above;
+this historical lock record alone establishes none of those results.
 [Published candidate](peerreview/evidence/FINAL-2-ancestry-lock-20260913/publication/RESULT.json),
 [driver build and identity](peerreview/evidence/FINAL-2-ancestry-lock-20260913/bootstrap/RESULT-BOOTSTRAP-CLI-BUILD.json),
 [exact lock review](peerreview/evidence/FINAL-2-ancestry-lock-20260913/native/REVIEW.json),
@@ -669,6 +895,6 @@ The next run must retain both complete gate results on its final candidate,
 five accelerated epochs, the activated production policy and three consecutive
 complete production epochs, both validators' fresh native applications,
 required traffic/proof/adversarial and lifecycle evidence, final accounting,
-independent replay and actual shutdown results. This section will link their
+secretless pinned replay on the owned LAN node and actual shutdown results. This section will link their
 terminal artifacts as they become available. Pending or failed work stays
 visible; this report cannot establish acceptance until that evidence exists.

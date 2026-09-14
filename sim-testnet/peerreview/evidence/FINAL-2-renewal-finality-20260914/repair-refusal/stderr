@@ -1,0 +1,26 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 08:56:06.944368 2220543 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 08:56:06.944527 2220543 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 08:56:06.944588 2220543 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 08:56:06.944610 2220543 env.go:67] [env]settings = map[]
+sim-testnet: batched historical fleet audit 0/1000
+sim-testnet: batched historical fleet audit 1000/1000
+sim-testnet: carried action audit 50/2244
+sim-testnet: carried action audit 100/2244
+sim-testnet: carried action audit 150/2244
+sim-testnet: carried action audit 200/2244
+sim-testnet: carried action audit 250/2244
+sim-testnet: carried action audit 300/2244
+sim-testnet: carried action audit 350/2244
+sim-testnet: carried action audit 400/2244
+sim-testnet: carried action audit 450/2244
+sim-testnet: carried action audit 500/2244
+sim-testnet: carried action audit 550/2244
+sim-testnet: carried action audit 600/2244
+sim-testnet: carried action audit 650/2244
+sim-testnet: carried action audit 700/2244
+sim-testnet: carried action audit 750/2244
+sim-testnet: carried action audit 800/2244
+sim-testnet: carried action audit 850/2244
+sim-testnet: carried action audit 900/2244
+sim-testnet: carried plan history preflight: action fleet.mirror.26: operational historical EVM state: historical postcondition replay hash 0x7003cbdd3e896e2b69d5fff99bb1c8137c53e868f0858f5e827a7ad24e658ae3 differs from recorded 0x10cd341a9cb9993407584399a270792f9cc89fe8cf600d709d2447fbbc165479

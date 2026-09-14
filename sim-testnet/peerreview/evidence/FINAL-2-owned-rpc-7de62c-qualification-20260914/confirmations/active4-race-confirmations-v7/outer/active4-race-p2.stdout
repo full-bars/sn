@@ -1,0 +1,12 @@
+[release gate] private state /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/active4-race-confirmations-v7/tmp/active4-race-p2/urnetwork-release-gate.a33UoQmb; ready jobs=3; CPUs/job=4
+[release gate] started qualification (pid 1160591)
+[release gate] joined qualification (exit 0); log /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/active4-race-confirmations-v7/tmp/active4-race-p2/urnetwork-release-gate.a33UoQmb/logs/qualification.log
+[release gate] retained private logs/state: /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/active4-race-confirmations-v7/tmp/active4-race-p2/urnetwork-release-gate.a33UoQmb
+[release gate] private state /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/active4-race-confirmations-v7/tmp/active4-race-p2/urnetwork-release-gate.AtPkTLBt; ready jobs=3; CPUs/job=4
+[release gate] started qualification (pid 1160721)
+[release gate] joined qualification (exit 0); log /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/active4-race-confirmations-v7/tmp/active4-race-p2/urnetwork-release-gate.AtPkTLBt/logs/qualification.log
+[release gate] retained private logs/state: /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/active4-race-confirmations-v7/tmp/active4-race-p2/urnetwork-release-gate.AtPkTLBt
+[release gate] private state /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/active4-race-confirmations-v7/tmp/active4-race-p2/urnetwork-release-gate.xjjAY9TG; ready jobs=3; CPUs/job=4
+[release gate] started qualification (pid 1163215)
+[release gate] joined qualification (exit 0); log /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/active4-race-confirmations-v7/tmp/active4-race-p2/urnetwork-release-gate.xjjAY9TG/logs/qualification.log
+[release gate] retained private logs/state: /home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/active4-race-confirmations-v7/tmp/active4-race-p2/urnetwork-release-gate.xjjAY9TG

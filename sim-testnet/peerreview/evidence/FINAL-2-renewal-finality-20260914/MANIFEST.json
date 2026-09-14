@@ -1,0 +1,72 @@
+{
+  "created_at": "2026-09-14T09:42:23.757443+00:00",
+  "scope": "closed native renewal receipts, first canonical inclusion and later pre-submission repair refusal",
+  "files": [
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/native-fleet-renewal-apply-a592-F359/RESULT.json",
+      "destination": "renewal/RESULT.json",
+      "sha256": "ff594709fb7c1a0400101be94169fb3f18c72377c43622da6762ddd061705a3f",
+      "bytes": 2013
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/native-fleet-renewal-apply-a592-F359/outer.exit",
+      "destination": "renewal/outer.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/native-fleet-renewal-apply-a592-F359/stdout.json",
+      "destination": "renewal/stdout.json",
+      "sha256": "277d34bcbd6a332a8ceda3e4b8fb506e1d0153d25e17ee75ffdb9f831d9d96f4",
+      "bytes": 245
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/native-fleet-renewal-apply-a592-F359/stderr",
+      "destination": "renewal/stderr",
+      "sha256": "991d61d3f5e256d69aab795d0069bbed6c734a216ad95507feb8b27ca8c82f4a",
+      "bytes": 417
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/finalized-renewal-closure/SUMMARY.json",
+      "destination": "closure/SUMMARY.json",
+      "sha256": "15bbcfcd74146e5bc5103a5d3319d4d60bd294f5fc45a7c078261f4c90b75f38",
+      "bytes": 1237
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/finalized-renewal-closure/operations-index.json",
+      "destination": "closure/operations-index.json",
+      "sha256": "af57f9e688781a8e12d89ad075cd16588e54f0375ce56bc3fa71c3c1a314976b",
+      "bytes": 1173276
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/first-finalized-renewal/SUMMARY.json",
+      "destination": "first-inclusion/SUMMARY.json",
+      "sha256": "5ca69d104d867e9830703d4d76f4b32fe010b843327dd052228e61aa649b9eab",
+      "bytes": 1288
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/first-finalized-renewal/rpc.json",
+      "destination": "first-inclusion/rpc.json",
+      "sha256": "45375963ac2ce6af5403fc61faaf140938998a447d176f5120410f1e6684424d",
+      "bytes": 10948
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/native-approved-repair-a592-after-renewal/RESULT.json",
+      "destination": "repair-refusal/RESULT.json",
+      "sha256": "c27fc6eea96f9278224a516f7c934d672662fe7e540bd58e9b615e2a6a1ab73e",
+      "bytes": 2065
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/native-approved-repair-a592-after-renewal/outer.exit",
+      "destination": "repair-refusal/outer.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "source": "/home/by/urnetwork/temp/sn-renewal-oracle-correction-20260914/native-approved-repair-a592-after-renewal/stderr",
+      "destination": "repair-refusal/stderr",
+      "sha256": "bfc38ce39e4ff15893f70eb6bdb8272c86277cf7ae3f09d6cce5efae0e66502e",
+      "bytes": 1591
+    }
+  ]
+}

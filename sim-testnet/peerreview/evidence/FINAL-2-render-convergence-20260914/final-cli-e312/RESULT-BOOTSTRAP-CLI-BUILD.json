@@ -1,0 +1,11 @@
+{
+  "kind":"temporary-bootstrap-stamped-sim-testnet-cli-build",
+  "build_exit":0,
+  "repos_before_after_identical":true,
+  "repos_before_sha256":"21e9f806cb58d521cf5a0544064d4f981e41b61895edaeda2d84e2e39388d2e4",
+  "repos_after_sha256":"21e9f806cb58d521cf5a0544064d4f981e41b61895edaeda2d84e2e39388d2e4",
+  "artifact":{"path":"/home/by/urnetwork/temp/sn-runtime-render-convergence-20260914/terra-runtime/capture-bounded-20260914T053651Z/final-cli-e3123685/sim-testnet","sha256":"1efb704db3ca03d2b50a675adb798569f0c883c6274159df6a4fb7e9ba3938ba","bytes":140507112,"mode":"0700"},
+  "vcs":{"revision":"e31236859c1012c21aed08034cf5074d85bdb9a6","trimpath":true,"buildvcs":true,"modified":false},
+  "warm_gocache":"/home/by/urnetwork/temp/sn-carried-fleet-qualification-20260913/runtime/gocache",
+  "private_gomodcache":"/home/by/urnetwork/temp/sn-server-migration-monitor-qualification-20260913/runtime/modcache-v2"
+}

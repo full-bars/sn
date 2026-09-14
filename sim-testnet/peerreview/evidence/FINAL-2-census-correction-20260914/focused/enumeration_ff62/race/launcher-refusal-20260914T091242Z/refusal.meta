@@ -1,0 +1,4 @@
+kind=pre-body launcher refusal
+reason=unmatched if/else syntax in the race source-fence loop
+binary_or_test_body_started=false
+recorded_utc=2026-09-14T09:12:42Z

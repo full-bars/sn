@@ -1,0 +1,221 @@
+=== RUN   TestCompareArtifactReaderRequiresExactBytesAndEof
+=== PAUSE TestCompareArtifactReaderRequiresExactBytesAndEof
+=== NAME  
+=== RUN   TestCompareArtifactReaderAcceptsFinalDataWithEof
+=== PAUSE TestCompareArtifactReaderAcceptsFinalDataWithEof
+=== NAME  
+=== RUN   TestCompareArtifactReaderPreservesDataAndTerminalErrors
+=== PAUSE TestCompareArtifactReaderPreservesDataAndTerminalErrors
+=== NAME  
+=== RUN   TestCompareArtifactReaderBoundsAndResetsEmptyProgress
+=== PAUSE TestCompareArtifactReaderBoundsAndResetsEmptyProgress
+=== NAME  
+=== RUN   TestCompareArtifactReaderRejectsMalformedCounts
+=== PAUSE TestCompareArtifactReaderRejectsMalformedCounts
+=== NAME  
+=== RUN   TestCompareArtifactReaderPreservesCancellationAtEveryReturn
+=== PAUSE TestCompareArtifactReaderPreservesCancellationAtEveryReturn
+=== NAME  
+=== RUN   TestCompareArtifactReaderDoesNotAliasBorrowedInputs
+=== PAUSE TestCompareArtifactReaderDoesNotAliasBorrowedInputs
+=== NAME  
+=== RUN   TestCompareArtifactReaderRejectsAbsentOrCanceledOwnersBeforeRead
+=== PAUSE TestCompareArtifactReaderRejectsAbsentOrCanceledOwnersBeforeRead
+=== NAME  
+=== RUN   TestCompareArtifactReaderLeavesCloseWithCaller
+=== PAUSE TestCompareArtifactReaderLeavesCloseWithCaller
+=== NAME  
+=== RUN   TestBuildSignVerifyAndCanonicalRoundTrip
+--- PASS: TestBuildSignVerifyAndCanonicalRoundTrip (0.01s)
+=== NAME  
+=== RUN   TestPublishIsContentAddressedAndImmutable
+--- PASS: TestPublishIsContentAddressedAndImmutable (0.08s)
+=== NAME  
+=== RUN   TestPutImmutableConcurrentWritersKeepTheStoredWinner
+--- PASS: TestPutImmutableConcurrentWritersKeepTheStoredWinner (0.01s)
+=== NAME  
+=== RUN   TestPutImmutableVerifiesBytesAfterCreating
+--- PASS: TestPutImmutableVerifiesBytesAfterCreating (0.01s)
+=== NAME  
+=== RUN   TestReadRejectsAlternateBytesForOneContentIdentity
+--- PASS: TestReadRejectsAlternateBytesForOneContentIdentity (0.04s)
+=== NAME  
+=== RUN   TestEmptyEligibleSetPublishesAuditableMissedRootArtifact
+--- PASS: TestEmptyEligibleSetPublishesAuditableMissedRootArtifact (0.00s)
+=== NAME  
+=== RUN   TestAttemptObjectTypedLocalRoundTrip
+=== PAUSE TestAttemptObjectTypedLocalRoundTrip
+=== NAME  
+=== RUN   TestAttemptObjectCanonicalAdmissionHasNoStorageEffects
+=== PAUSE TestAttemptObjectCanonicalAdmissionHasNoStorageEffects
+=== NAME  
+=== RUN   TestAttemptObjectRejectsNoncanonicalStorePrefix
+=== PAUSE TestAttemptObjectRejectsNoncanonicalStorePrefix
+=== NAME  
+=== RUN   TestAttemptObjectRejectsMissingOverflowAndTypedBounds
+=== PAUSE TestAttemptObjectRejectsMissingOverflowAndTypedBounds
+=== NAME  
+=== RUN   TestAttemptObjectConcurrentPublicationUsesAtomicWinner
+=== PAUSE TestAttemptObjectConcurrentPublicationUsesAtomicWinner
+=== NAME  
+=== RUN   TestAttemptObjectPublicationRejectsConflictingAndCorruptWinner
+=== PAUSE TestAttemptObjectPublicationRejectsConflictingAndCorruptWinner
+=== NAME  
+=== RUN   TestAttemptObjectReadRetainsJoinedEOFAndCloseFailures
+=== PAUSE TestAttemptObjectReadRetainsJoinedEOFAndCloseFailures
+=== NAME  
+=== RUN   TestAttemptObjectReadRejectsCorruptionTruncationAndExcess
+=== PAUSE TestAttemptObjectReadRejectsCorruptionTruncationAndExcess
+=== NAME  
+=== RUN   TestAttemptObjectCancellationOwnsReadAndClose
+=== PAUSE TestAttemptObjectCancellationOwnsReadAndClose
+=== NAME  
+=== RUN   TestAttemptObjectReadBoundsMemoryAndNoProgress
+=== PAUSE TestAttemptObjectReadBoundsMemoryAndNoProgress
+=== NAME  
+=== RUN   TestAttemptObjectPublicationOwnsPrivateTemporaryFile
+=== PAUSE TestAttemptObjectPublicationOwnsPrivateTemporaryFile
+=== NAME  
+=== RUN   TestEvidenceEncodingPreservesLegacyCanonicalBytesAndSignatures
+=== PAUSE TestEvidenceEncodingPreservesLegacyCanonicalBytesAndSignatures
+=== NAME  
+=== RUN   TestEvidenceEncodingRejectsMutableOrUnauthenticatedInputs
+=== PAUSE TestEvidenceEncodingRejectsMutableOrUnauthenticatedInputs
+=== NAME  
+=== RUN   TestEvidenceEncodingSignAndVerifyKeepAllocationBelowPayload
+--- PASS: TestEvidenceEncodingSignAndVerifyKeepAllocationBelowPayload (5.25s)
+=== NAME  
+=== RUN   TestEvidenceEncodingPublicationKeepsOnlyReturnedWire
+--- PASS: TestEvidenceEncodingPublicationKeepsOnlyReturnedWire (1.57s)
+=== NAME  
+=== RUN   TestPreparedEvidenceStreamingPreservesJoinedReadAndCloseFailures
+=== PAUSE TestPreparedEvidenceStreamingPreservesJoinedReadAndCloseFailures
+=== NAME  
+=== RUN   TestPreparedEvidenceStreamingReadbackKeepsAllocationBelowPayload
+--- PASS: TestPreparedEvidenceStreamingReadbackKeepsAllocationBelowPayload (1.40s)
+=== NAME  
+=== RUN   TestPreparedEvidenceDetachesCanonicalWireAndRoutingIdentity
+--- PASS: TestPreparedEvidenceDetachesCanonicalWireAndRoutingIdentity (0.05s)
+=== NAME  
+=== RUN   TestPreparedEvidenceRejectsUnauthenticatedInputs
+--- PASS: TestPreparedEvidenceRejectsUnauthenticatedInputs (0.02s)
+=== NAME  
+=== RUN   TestPreparedEvidenceRejectsCrossReceiptAndChangedReplicaBytes
+--- PASS: TestPreparedEvidenceRejectsCrossReceiptAndChangedReplicaBytes (0.03s)
+=== NAME  
+=== RUN   TestPreparedEvidencePreservesCancellationAndReaderFailures
+--- PASS: TestPreparedEvidencePreservesCancellationAndReaderFailures (0.02s)
+=== NAME  
+=== RUN   TestPreparedEvidenceLegacyAdapterPreservesHistoryAndWire
+--- PASS: TestPreparedEvidenceLegacyAdapterPreservesHistoryAndWire (0.07s)
+=== NAME  
+=== RUN   TestPreparedEvidencePublishSharesOneOwnedStage
+--- PASS: TestPreparedEvidencePublishSharesOneOwnedStage (0.04s)
+=== NAME  
+=== RUN   TestPreparedEvidencePublishSecondRouteFailureCleansStage
+--- PASS: TestPreparedEvidencePublishSecondRouteFailureCleansStage (0.02s)
+=== NAME  
+=== RUN   TestPreparedEvidencePublishCancellationCleansSharedStage
+--- PASS: TestPreparedEvidencePublishCancellationCleansSharedStage (0.04s)
+=== NAME  
+=== RUN   TestPreparedEvidenceReplicasShareOneOwnedStageAndKeepEveryReadback
+--- PASS: TestPreparedEvidenceReplicasShareOneOwnedStageAndKeepEveryReadback (0.02s)
+=== NAME  
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/write
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/write (0.02s)
+=== NAME  TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/collision
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/collision (0.02s)
+=== NAME  TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/winner-read
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/winner-read (0.02s)
+=== NAME  TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/winner-close
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/winner-close (0.02s)
+=== NAME  TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/direct-read
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/direct-read (0.02s)
+=== NAME  TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/direct-close
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/direct-close (0.02s)
+=== NAME  TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/stage-change
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/stage-change (0.02s)
+=== NAME  TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/cancel
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/cancel (0.02s)
+=== NAME  TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+=== RUN   TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/late-cancel
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup/late-cancel (0.02s)
+=== NAME  TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup
+--- PASS: TestPreparedEvidenceReplicasPreserveFailuresCancellationAndStageCleanup (0.18s)
+=== NAME  
+=== RUN   TestPreparedEvidenceReplicasRejectInvalidOwnershipBeforeStorage
+--- PASS: TestPreparedEvidenceReplicasRejectInvalidOwnershipBeforeStorage (0.00s)
+=== NAME  
+=== RUN   TestEvidenceSignVerifyTamperAndHistory
+--- PASS: TestEvidenceSignVerifyTamperAndHistory (0.03s)
+=== NAME  
+=== RUN   TestEvidenceRejectsUnsafeHistorySegments
+--- PASS: TestEvidenceRejectsUnsafeHistorySegments (0.00s)
+=== NAME  
+=== RUN   TestEvidenceReservesDeploymentHistoryRunID
+--- PASS: TestEvidenceReservesDeploymentHistoryRunID (0.00s)
+=== NAME  
+=== RUN   TestEvidencePublishesEmptyRunUnderReservedDeploymentHistory
+--- PASS: TestEvidencePublishesEmptyRunUnderReservedDeploymentHistory (0.02s)
+=== NAME  
+=== RUN   TestEvidenceHistoryRunPrefixAcceptsSignedRunGrammar
+--- PASS: TestEvidenceHistoryRunPrefixAcceptsSignedRunGrammar (0.00s)
+=== NAME  
+=== RUN   TestEvidenceHistoryKeyBindsExactRunAndContentHash
+--- PASS: TestEvidenceHistoryKeyBindsExactRunAndContentHash (0.00s)
+=== NAME  
+=== CONT  TestCompareArtifactReaderRequiresExactBytesAndEof
+=== CONT  TestAttemptObjectConcurrentPublicationUsesAtomicWinner
+=== CONT  TestCompareArtifactReaderRejectsAbsentOrCanceledOwnersBeforeRead
+=== CONT  TestAttemptObjectCanonicalAdmissionHasNoStorageEffects
+--- PASS: TestCompareArtifactReaderRejectsAbsentOrCanceledOwnersBeforeRead (0.00s)
+=== CONT  TestAttemptObjectTypedLocalRoundTrip
+--- PASS: TestAttemptObjectCanonicalAdmissionHasNoStorageEffects (0.00s)
+=== CONT  TestPreparedEvidenceStreamingPreservesJoinedReadAndCloseFailures
+--- PASS: TestAttemptObjectConcurrentPublicationUsesAtomicWinner (0.02s)
+=== CONT  TestEvidenceEncodingRejectsMutableOrUnauthenticatedInputs
+--- PASS: TestEvidenceEncodingRejectsMutableOrUnauthenticatedInputs (0.00s)
+=== CONT  TestEvidenceEncodingPreservesLegacyCanonicalBytesAndSignatures
+--- PASS: TestEvidenceEncodingPreservesLegacyCanonicalBytesAndSignatures (0.01s)
+=== CONT  TestAttemptObjectPublicationOwnsPrivateTemporaryFile
+--- PASS: TestPreparedEvidenceStreamingPreservesJoinedReadAndCloseFailures (0.04s)
+=== CONT  TestAttemptObjectReadBoundsMemoryAndNoProgress
+--- PASS: TestAttemptObjectReadBoundsMemoryAndNoProgress (0.00s)
+=== CONT  TestCompareArtifactReaderLeavesCloseWithCaller
+=== CONT  TestAttemptObjectCancellationOwnsReadAndClose
+--- PASS: TestCompareArtifactReaderLeavesCloseWithCaller (0.00s)
+--- PASS: TestAttemptObjectCancellationOwnsReadAndClose (0.00s)
+=== CONT  TestAttemptObjectReadRejectsCorruptionTruncationAndExcess
+--- PASS: TestAttemptObjectPublicationOwnsPrivateTemporaryFile (0.02s)
+=== CONT  TestAttemptObjectReadRetainsJoinedEOFAndCloseFailures
+--- PASS: TestAttemptObjectReadRetainsJoinedEOFAndCloseFailures (0.00s)
+=== CONT  TestCompareArtifactReaderBoundsAndResetsEmptyProgress
+--- PASS: TestCompareArtifactReaderBoundsAndResetsEmptyProgress (0.00s)
+=== CONT  TestAttemptObjectPublicationRejectsConflictingAndCorruptWinner
+--- PASS: TestAttemptObjectReadRejectsCorruptionTruncationAndExcess (0.02s)
+=== CONT  TestCompareArtifactReaderDoesNotAliasBorrowedInputs
+--- PASS: TestCompareArtifactReaderDoesNotAliasBorrowedInputs (0.00s)
+=== CONT  TestCompareArtifactReaderPreservesCancellationAtEveryReturn
+--- PASS: TestCompareArtifactReaderPreservesCancellationAtEveryReturn (0.00s)
+=== CONT  TestCompareArtifactReaderRejectsMalformedCounts
+--- PASS: TestCompareArtifactReaderRejectsMalformedCounts (0.00s)
+=== CONT  TestCompareArtifactReaderAcceptsFinalDataWithEof
+--- PASS: TestCompareArtifactReaderAcceptsFinalDataWithEof (0.00s)
+=== CONT  TestCompareArtifactReaderPreservesDataAndTerminalErrors
+--- PASS: TestCompareArtifactReaderPreservesDataAndTerminalErrors (0.00s)
+=== CONT  TestAttemptObjectRejectsMissingOverflowAndTypedBounds
+--- PASS: TestCompareArtifactReaderRequiresExactBytesAndEof (0.08s)
+=== CONT  TestAttemptObjectRejectsNoncanonicalStorePrefix
+--- PASS: TestAttemptObjectRejectsNoncanonicalStorePrefix (0.00s)
+--- PASS: TestAttemptObjectRejectsMissingOverflowAndTypedBounds (0.02s)
+--- PASS: TestAttemptObjectPublicationRejectsConflictingAndCorruptWinner (0.04s)
+--- PASS: TestAttemptObjectTypedLocalRoundTrip (0.12s)
+PASS

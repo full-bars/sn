@@ -1,0 +1,1 @@
+{"status":"matched","package":"github.com/urnetwork/server/startifact","verification":{"roots":49,"passed":49,"expected_failures":0,"subtests":9,"subtests_passed":9,"expected_subtest_failures":0,"binary_exit":0,"events":327,"bytes":71576}}

@@ -1,0 +1,9 @@
+{
+  "recorded_at": "2026-09-14T07:35:36.225989+00:00",
+  "classification": "Operator review assumption corrected; no native apply started",
+  "exit": 1,
+  "assertion": "lifecycle.provider.commitment parameters expected unchanged except renewal source binding",
+  "actual": "Both pending future lifecycle commitment generations correctly advance4 to5 after renewed generation4 target/companion; native fleet_lifecycle_renewal authenticates this exact succession",
+  "state_mutation": false,
+  "native_apply_started": false
+}

@@ -1,0 +1,104 @@
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== PAUSE TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== NAME  
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== PAUSE TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== NAME  
+=== RUN   TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+=== PAUSE TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+=== NAME  
+=== RUN   TestRuntimeEvidenceSetupCarryV2ResolvesOriginalFilesAfterSourceRevision
+=== PAUSE TestRuntimeEvidenceSetupCarryV2ResolvesOriginalFilesAfterSourceRevision
+=== NAME  
+=== CONT  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== CONT  TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/unknown-plan
+=== CONT  TestRuntimeEvidenceSetupCarryV2ResolvesOriginalFilesAfterSourceRevision
+=== CONT  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/attempt
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/active
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/active (16.70s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/accepted
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/unknown-plan (18.98s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/same-plan
+--- PASS: TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/attempt (23.02s)
+=== NAME  TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+=== RUN   TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/result
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/accepted (7.61s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/accepted-file
+=== NAME  TestRuntimeEvidenceSetupCarryV2ResolvesOriginalFilesAfterSourceRevision
+    runtime_evidence_carry_v2_test.go:216: evidence.activation-boundary: in-memory evm gas="", archived evm gas="0", unchanged intent=0x4e02d6c965499c1617957a550da28a445b36ee9541456a72361b7b4f7d2a4225
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/same-plan (8.87s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/missing-plan
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/accepted-file (7.26s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/complete-file
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/missing-plan (5.80s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/wrong-deployment
+--- PASS: TestRuntimeEvidenceSetupCarryV2ResolvesOriginalFilesAfterSourceRevision (34.45s)
+--- PASS: TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/result (14.26s)
+=== NAME  TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+=== RUN   TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/prior-plan
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/complete-file (7.44s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/production-attempt
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/wrong-deployment (7.14s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/wrong-owner
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/production-attempt (3.86s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/started-lifecycle
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/wrong-owner (5.54s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/forged-attempt
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/started-lifecycle (7.15s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/passing-result
+--- PASS: TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/prior-plan (13.16s)
+=== NAME  TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+=== RUN   TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/current-plan
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/forged-attempt (6.86s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/missing-roles
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/passing-result (6.61s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/final-acceptance
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/missing-roles (5.23s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/missing-provider
+--- PASS: TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/current-plan (13.20s)
+=== NAME  TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+=== RUN   TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/missing-prior-plan
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/final-acceptance (7.24s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/changed-result
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/missing-provider (6.06s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/unassigned-provider
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/unassigned-provider (5.54s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/duplicate-provider
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/changed-result (6.88s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+=== RUN   TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/future-completion
+--- PASS: TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/missing-prior-plan (12.26s)
+=== NAME  TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+=== RUN   TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/missing-result
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody/duplicate-provider (6.05s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsUnknownLineageAndCustody (76.08s)
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors/future-completion (6.93s)
+=== NAME  TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors
+--- PASS: TestScenarioCampaignAttemptSuccessionRejectsActiveAcceptedAndIncompletePredecessors (77.67s)
+--- PASS: TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/missing-result (15.24s)
+=== NAME  TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+=== RUN   TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/another-plan
+--- PASS: TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/another-plan (14.96s)
+=== NAME  TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources
+--- PASS: TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources (106.11s)
+PASS

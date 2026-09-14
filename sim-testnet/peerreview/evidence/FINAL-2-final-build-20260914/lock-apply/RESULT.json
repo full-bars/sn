@@ -1,0 +1,10 @@
+{
+  "exit": 0,
+  "started_at": "2026-09-14T10:02:33.921990+00:00",
+  "finished_at": "2026-09-14T10:02:36.406206+00:00",
+  "stdout_sha256": "0747b58eb42920d2131f1c70dfee972460eef56fa03eb788b3eb157bb73c73be",
+  "stderr_sha256": "b546f73eda33cfc38939175d8418553456759df75d9abf1a4d90e1e44e20ff8a",
+  "candidate_sha256": "40345bafbc6a6fce4b3e8dafec7b1126141f1915c1fc67318ce4beb4f0cdca02",
+  "installed_exact_reviewed_bytes": true,
+  "only_lock_dirty": true
+}

@@ -1,0 +1,3 @@
+error: cannot lock ref 'refs/remotes/origin/main': is at 53c787597f01fbe4d9be39c64e43aa2fa26f8041 but expected 593a3759ee3a7438d5ca02fe6e6890c372657800
+release repository server could not refresh origin/main
+[release gate preflight] source-freeze exit=1; retained /home/by/urnetwork/temp/sn-owned-node-final-gates-20260914T0005Z/aggregate/tmp/urnetwork-release-gate.MLrYuZwz/preflights/source-freeze

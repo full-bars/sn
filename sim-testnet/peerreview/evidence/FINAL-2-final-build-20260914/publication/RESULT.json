@@ -1,0 +1,13 @@
+{
+  "exit": 0,
+  "finished_at": "2026-09-14T10:03:53.218385+00:00",
+  "final_source": "abae9a6a8410a54a560335b16888d2ad0d4fc51f",
+  "parent": "2a8cf09510ad5473e03ccdcbf50a0d4540669e21",
+  "changed_paths": [
+    "deploy/testnet/release.lock.yml"
+  ],
+  "lock_sha256": "40345bafbc6a6fce4b3e8dafec7b1126141f1915c1fc67318ce4beb4f0cdca02",
+  "production_go_source_hash": "sha256:6215cfe3b055ef3edc453bc688f6abafe4397f8315631883593d7a1ac1131a98",
+  "primary_physical_origin_identical": true,
+  "final_acceptance": false
+}

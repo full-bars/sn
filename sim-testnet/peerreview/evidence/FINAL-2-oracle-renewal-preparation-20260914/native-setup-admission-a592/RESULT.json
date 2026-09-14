@@ -1,0 +1,88 @@
+{
+  "started_at": "2026-09-14T07:28:27.870231+00:00",
+  "finished_at": "2026-09-14T07:30:05.194239+00:00",
+  "native_exit": 1,
+  "classification": "CANCELED \u2014 NOT PASS",
+  "cancellation": {
+    "at": "2026-09-14T07:30:04.789527+00:00",
+    "signal": "SIGINT",
+    "pid": 2049799,
+    "reason": "Native new plan and config inputs saved; stop known failing historical audit until fleet renewal is complete"
+  },
+  "state_before": {
+    "plan.json": {
+      "sha256": "4498dc713ce38085f12e94615c63416746ea41ee895fdfa18d2ad0ccbd0f0a81",
+      "bytes": 1469463
+    },
+    "journal.jsonl": {
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+      "bytes": 7399401
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "e5d77c4eec0dfdc674bd6f9a457c0748d1f71faebfa42b74a301def73ddf67e4",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "state_after": {
+    "plan.json": {
+      "sha256": "b412c80598b7abaaa044e4cbfdd204b5847ed7892c516e74adca923e6d78375a",
+      "bytes": 1469532
+    },
+    "journal.jsonl": {
+      "sha256": "851c9dc64e5fe07dde49acd16b2d59a2bd5ef247a8434d2d373932126e79be73",
+      "bytes": 7399401
+    },
+    "supervisor.state.json": {
+      "sha256": "ff8e0a6c079e69c3dc87ef9ba7ec000d2489e8d8ed6ee28e616b7cffda5a00f4",
+      "bytes": 8829
+    },
+    "supervisor.json": {
+      "sha256": "66b279f192f60805a45e6b49d2f70b7230a878f6f2bd583388cd86065a95a815",
+      "bytes": 43887
+    },
+    "config.redacted.yml": {
+      "sha256": "74b85f37f05de975fb0847185b4ebf7606153dd06613a847b203a44212cd0052",
+      "bytes": 24752
+    },
+    "public/identities.json": {
+      "sha256": "6b6cde3d8949dab03487c2094488cf9f898bb0eec82299cb4260c38fb6517db3",
+      "bytes": 466407
+    }
+  },
+  "archive_snapshots": {
+    "0x08ffaa10bb1647ea2f5b7dba5a57358b7e8e05a09d47a6ff8bddedd91b2966a1": {
+      "sha256": "b412c80598b7abaaa044e4cbfdd204b5847ed7892c516e74adca923e6d78375a",
+      "bytes": 1469532
+    },
+    "0x41c779564bb6593ff7c125d3f109efc7310a89d524dfbaae2a4e0ecc5abf9b4f": {
+      "sha256": "4498dc713ce38085f12e94615c63416746ea41ee895fdfa18d2ad0ccbd0f0a81",
+      "bytes": 1469463
+    }
+  },
+  "checks": {
+    "candidate_adopted": true,
+    "candidate_actions_exact": true,
+    "new_plan_archive_exact": true,
+    "old_plan_archive_exact": true,
+    "redacted_lock_matches": true,
+    "redacted_resolved_matches": true,
+    "journal_unchanged": true,
+    "supervisor_state_unchanged": true,
+    "supervisor_manifest_unchanged": true,
+    "public_identities_unchanged": true
+  },
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e8131dc89dafbf96d10dea37ddb97b032e065b1f3e012f43cf32eba8d1da2181"
+}

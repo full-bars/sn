@@ -1,0 +1,142 @@
+diff --git a/sim-testnet/final_semantic_producer_test.go b/sim-testnet/final_semantic_producer_test.go
+index 4bf3e83..ce9ab5c 100644
+--- a/sim-testnet/final_semantic_producer_test.go
++++ b/sim-testnet/final_semantic_producer_test.go
+@@ -1,3 +1,4 @@
++// Capture guards inspect the compiled test population before semantic publication.
+ package main
+ 
+ import (
+@@ -10,39 +11,69 @@ import (
+ 	"os/exec"
+ 	"path/filepath"
+ 	"regexp"
++	"slices"
+ 	"strings"
+ 	"sync"
+ 	"testing"
+ 	"time"
+ )
+ 
++// List the exact running binary without rebuilding it or starting test bodies.
++// The context owns the direct child through CombinedOutput's completed wait.
++func releaseGateCompiledCaptureTests(ctx context.Context, selection string) ([]string, error) {
++	if selection == "" {
++		return nil, errors.New("compiled capture selection is empty")
++	}
++	executable, err := os.Executable()
++	if err != nil {
++		return nil, fmt.Errorf("locate compiled capture tests: %w", err)
++	}
++	command := exec.CommandContext(ctx, executable, "-test.list="+selection)
++	output, err := command.CombinedOutput()
++	if err != nil {
++		return nil, fmt.Errorf("enumerate producer gate capture tests: %w\n%s", err, output)
++	}
++	selected := []string{}
++	for _, line := range strings.Split(string(output), "\n") {
++		line = strings.TrimSpace(line)
++		if strings.HasPrefix(line, "Test") {
++			selected = append(selected, line)
++		}
++	}
++	slices.Sort(selected)
++	return selected, nil
++}
++
++// Match the complete compiled census to source and retain prelaunch boundaries.
+ func TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis(t *testing.T) {
+ 	scriptPath := filepath.Join("..", "scripts", "test-release-1.0-producer-gate.sh")
+ 	raw, err := os.ReadFile(scriptPath)
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+-	match := regexp.MustCompile(`(?m)^\s*capture_tests='([^'\n]+)'\s*$`).FindSubmatch(raw)
+-	if len(match) != 2 {
+-		t.Fatal("producer gate has no single-quoted capture_tests selection")
++	selection, err := releaseConnectPolicySelectorAssignment(string(raw), "capture_tests")
++	if err != nil {
++		t.Fatal(err)
+ 	}
+-	selection := string(match[1])
+ 	if _, err := regexp.Compile(selection); err != nil {
+ 		t.Fatalf("producer gate capture selection is invalid: %v", err)
+ 	}
+-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
++	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+ 	defer cancel()
+-	command := exec.CommandContext(ctx, "go", "test", "-list", selection, ".")
+-	output, err := command.CombinedOutput()
++	compiledTests, err := releaseGateCompiledCaptureTests(ctx, selection)
+ 	if err != nil {
+-		t.Fatalf("enumerate producer gate capture tests: %v\n%s", err, output)
++		t.Fatal(err)
++	}
++	sourceTests, err := releaseSelectedTestDeclarations(selection, releaseEvidenceV2GateSources(t, []string{"*_test.go"}))
++	if err != nil {
++		t.Fatal(err)
++	}
++	if err := verifyReleaseSemanticCensus(compiledTests, sourceTests); err != nil {
++		t.Fatalf("compiled producer capture census differs from source: %v", err)
+ 	}
+ 	selected := map[string]bool{}
+-	for _, line := range strings.Split(string(output), "\n") {
+-		line = strings.TrimSpace(line)
+-		if strings.HasPrefix(line, "Test") {
+-			selected[line] = true
+-		}
++	for _, name := range compiledTests {
++		selected[name] = true
+ 	}
+ 	for _, required := range []string{
+ 		"TestFinalArchiveRetentionPreflightWritesExactDepthReceipt",
+@@ -77,6 +108,49 @@ func TestProducerGateCaptureSelectionExcludesOfflineSemanticAnalysis(t *testing.
+ 	}
+ }
+ 
++// An empty tool path rejects the original recursive Go invocation immediately;
++// the child marker also makes accidental test execution fail without recursion.
++func TestProducerGateCaptureSelectionListsCurrentBinaryWithoutGoTool(t *testing.T) {
++	const ownerKey = "SN_TEST_CAPTURE_LIST_OWNER"
++	if os.Getenv(ownerKey) == t.Name() {
++		t.Fatal("compiled capture enumeration ran a test body")
++	}
++	t.Setenv(ownerKey, t.Name())
++	t.Setenv("PATH", t.TempDir())
++	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
++	defer cancel()
++	selected, err := releaseGateCompiledCaptureTests(ctx, "^"+regexp.QuoteMeta(t.Name())+"$")
++	if err != nil {
++		t.Fatalf("compiled capture enumeration required a Go tool or ran a test body: %v", err)
++	}
++	if !slices.Equal(selected, []string{t.Name()}) {
++		t.Fatalf("compiled capture enumeration changed exact selection: %v", selected)
++	}
++}
++
++// A canceled owner must return its cancellation without starting a list child.
++func TestProducerGateCaptureSelectionEnumerationHonorsCanceledContext(t *testing.T) {
++	t.Parallel()
++	ctx, cancel := context.WithCancel(t.Context())
++	cancel()
++	selected, err := releaseGateCompiledCaptureTests(ctx, "^"+regexp.QuoteMeta(t.Name())+"$")
++	if !errors.Is(err, context.Canceled) || len(selected) != 0 {
++		t.Fatalf("canceled compiled capture enumeration returned roots=%v error=%v", selected, err)
++	}
++}
++
++// An empty list flag would run tests; reject it before reaching the child.
++// A canceled owner makes removal of this guard fail without executing bodies.
++func TestProducerGateCaptureSelectionEnumerationRejectsEmptySelector(t *testing.T) {
++	t.Parallel()
++	ctx, cancel := context.WithCancel(t.Context())
++	cancel()
++	selected, err := releaseGateCompiledCaptureTests(ctx, "")
++	if err == nil || err.Error() != "compiled capture selection is empty" || len(selected) != 0 {
++		t.Fatalf("empty compiled capture selection reached execution: roots=%v error=%v", selected, err)
++	}
++}
++
+ func TestProduceFinalSemanticOutputsWritesOneSealedPair(t *testing.T) {
+ 	t.Parallel()
+ 	source, artifacts := finalSemanticFixture(t)
