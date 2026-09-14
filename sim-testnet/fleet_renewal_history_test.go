@@ -30,21 +30,21 @@ import (
 // Each observer serves one historical checkpoint and records exact reads.
 // Its lock protects request accounting across the server and test goroutines.
 type fleetHistoricalAliasRpc struct {
-	stateLock sync.Mutex
-	t *testing.T
-	checkpoint uint64
+	stateLock           sync.Mutex
+	t                   *testing.T
+	checkpoint          uint64
 	historicalOutputKVs map[string]string
-	currentOutputKVs map[string]string
-	headerSelectors []string
-	contractBlocks []uint64
+	currentOutputKVs    map[string]string
+	headerSelectors     []string
+	contractBlocks      []uint64
 }
 
 // Reject writes and return changed contract state at every other block.
 func (self *fleetHistoricalAliasRpc) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	defer request.Body.Close()
 	var call struct {
-		Id json.RawMessage `json:"id"`
-		Method string `json:"method"`
+		Id     json.RawMessage   `json:"id"`
+		Method string            `json:"method"`
 		Params []json.RawMessage `json:"params"`
 	}
 	if err := json.NewDecoder(request.Body).Decode(&call); err != nil {
@@ -125,12 +125,12 @@ func (self *fleetHistoricalAliasRpc) assertReads(t *testing.T, headers []string,
 
 // Holds authentic synthetic batch artifacts and both legacy alias receipts.
 type fleetHistoricalAliasFixture struct {
-	executor *Executor
-	actions []Action
-	records []*ActionPostcondition
+	executor    *Executor
+	actions     []Action
+	records     []*ActionPostcondition
 	operational *fleetHistoricalAliasRpc
 	independent *fleetHistoricalAliasRpc
-	batchHash string
+	batchHash   string
 }
 
 // Build signed generation-one local evidence and distinct historical readers.
@@ -258,16 +258,16 @@ func newFleetHistoricalAliasFixture(t *testing.T, independent bool) fleetHistori
 	for index := 0; index < 2; index++ {
 		observer := &fleetHistoricalAliasRpc{t: t, checkpoint: uint64(110 + index), historicalOutputKVs: map[string]string{}, currentOutputKVs: map[string]string{}}
 		for _, call := range []struct {
-			data []byte
-			method string
+			data       []byte
+			method     string
 			historical []any
-			current []any
+			current    []any
 		}{
 			{data: coordinator.PackMirroredCommitments(manifest.Hotkey), method: "mirroredCommitments", historical: []any{commitmentHash, finalizedHash, uint64(9)}, current: []any{[32]byte{0x91}, [32]byte{0x92}, uint64(90)}},
 			{data: coordinator.PackBindingAt(binding.ClientID, big.NewInt(2)), method: "bindingAt", historical: []any{true, stabi.STCoordinatorBindingRecord{Generation: 1, Uid: 7}}, current: []any{true, stabi.STCoordinatorBindingRecord{Generation: 2, Uid: 7}}},
 		} {
 			for _, output := range []struct {
-				values []any
+				values    []any
 				outputKVs map[string]string
 			}{{values: call.historical, outputKVs: observer.historicalOutputKVs}, {values: call.current, outputKVs: observer.currentOutputKVs}} {
 				encoded, err := parsed.Methods[call.method].Outputs.Pack(output.values...)
