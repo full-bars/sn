@@ -60,12 +60,12 @@ contract Deploy is Script {
 
         vm.startBroadcast();
         STReserveSink reserve = new STReserveSink(
-            cfg.netuid, cfg.reserveHotkey, Blake2b.mirror(deployed.reserveSink), cfg.deployer
+            cfg.netuid, cfg.reserveHotkey, _localMirror(deployed.reserveSink), cfg.deployer
         );
         STSettlementVault vault = new STSettlementVault(
             cfg.netuid,
             cfg.escrowHotkey,
-            Blake2b.mirror(deployed.settlementVault),
+            _localMirror(deployed.settlementVault),
             _minimumClaimTTLBlocks(cfg.policy.epochBlocks, cfg.policy.claimTTLEpochs),
             cfg.minimumTransferTaoRao,
             cfg.deployer
@@ -82,7 +82,7 @@ contract Deploy is Script {
                     cfg.netuid,
                     cfg.owner,
                     cfg.guardian,
-                    Blake2b.mirror(deployed.coordinatorProxy),
+                    _localMirror(deployed.coordinatorProxy),
                     vault,
                     reserve,
                     cfg.commitmentOracle,
@@ -106,6 +106,12 @@ contract Deploy is Script {
         console2.log("STSettlementVault:           ", deployed.settlementVault);
         console2.log("STCoordinator implementation:", deployed.coordinatorImplementation);
         console2.log("STCoordinator proxy:         ", deployed.coordinatorProxy);
+    }
+
+    /// @dev Computes constructor inputs in Foundry's local EVM. The live
+    ///      runtime's 0x080c mapping is verified separately by STSubnetProbe.
+    function _localMirror(address account) internal view returns (bytes32) {
+        return Blake2b.hash256(abi.encodePacked(bytes4(0x65766d3a), account));
     }
 
     /// Required: ST_NETUID, ST_DEPLOYER, ST_OWNER, ST_GUARDIAN,

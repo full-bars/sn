@@ -11,13 +11,14 @@ import {INeuron_ADDRESS} from "../../src/interfaces/neuron.sol";
 import {IMetagraph_ADDRESS} from "../../src/interfaces/metagraph.sol";
 import {IED25519VERIFY_ADDRESS} from "../../src/interfaces/ed25519Verify.sol";
 import {MockStakingV2, MockNeuron, MockMetagraph, MockEd25519} from "../mocks/PrecompileMocks.sol";
+import {MockAddressMapping} from "../mocks/MockAddressMapping.sol";
 import {MerkleBuilder} from "./MerkleBuilder.sol";
 
 /// @dev Shared harness for the comprehensive STSubnet suite. Mirrors the smoke
 ///      suite's deployment (test/STSubnet.t.sol) but adds a second operator /
 ///      validator, arbitrary-size Merkle helpers (MerkleBuilder) and epoch
 ///      block-math helpers. Precompile mocks are vm.etch'ed at the canonical
-///      addresses; blake2f (0x09) is served natively by revm.
+///      addresses, including the runtime's 0x080c custody mapping.
 abstract contract STBase is Test {
     // epoch params (blocks)
     uint64 constant T_EPOCH = 100;
@@ -66,6 +67,7 @@ abstract contract STBase is Test {
         vm.etch(INeuron_ADDRESS, address(new MockNeuron()).code);
         vm.etch(IMetagraph_ADDRESS, address(new MockMetagraph()).code);
         vm.etch(IED25519VERIFY_ADDRESS, address(new MockEd25519()).code);
+        vm.etch(address(0x080c), address(new MockAddressMapping()).code);
 
         STSubnet impl = new STSubnet();
         ERC1967Proxy proxy = new ERC1967Proxy(
@@ -82,7 +84,7 @@ abstract contract STBase is Test {
                     COMMIT_W,
                     TRAILS_W,
                     FINALIZE_OFF,
-                    bytes32(0) // selfColdkey: compute on-chain via blake2f
+                    bytes32(0) // selfColdkey: compute through the runtime mapping
                 )
             )
         );

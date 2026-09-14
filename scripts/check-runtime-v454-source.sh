@@ -12,7 +12,7 @@ commit="14cde6410fe8ec81a940e290c56f94a632a0988d"
 expected_files=29
 expected_metadata_files=15
 current_commit="67dcf7f791dc495064c293f080a0702cb433e51e"
-expected_current_files=31
+expected_current_files=33
 
 [[ -f "$manifest" ]] || {
   echo "runtime 454 source manifest is missing: $manifest" >&2

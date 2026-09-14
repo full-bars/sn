@@ -11,6 +11,7 @@ import {IMetagraph_ADDRESS} from "../src/interfaces/metagraph.sol";
 import {IED25519VERIFY_ADDRESS} from "../src/interfaces/ed25519Verify.sol";
 import {ISR25519VERIFY_ADDRESS} from "../src/interfaces/sr25519Verify.sol";
 import {INeuron_ADDRESS} from "../src/interfaces/neuron.sol";
+import {MockAddressMapping} from "./mocks/MockAddressMapping.sol";
 import {
     MockStakingV2,
     MockMetagraph,
@@ -62,6 +63,7 @@ contract SP1ProbeTest is Test {
         vm.etch(IED25519VERIFY_ADDRESS, address(new MockEd25519()).code);
         vm.etch(ISR25519VERIFY_ADDRESS, address(new MockSr25519()).code);
         vm.etch(INeuron_ADDRESS, address(new MockNeuron()).code);
+        vm.etch(address(0x080c), address(new MockAddressMapping()).code);
 
         vm.prank(deployer);
         probe = new STSubnetProbe(NETUID);
@@ -85,8 +87,8 @@ contract SP1ProbeTest is Test {
 
         STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
 
-        // 0x09 blake2f — the custody-model KAT
-        assertTrue(b.blakeOk, "blake2f callable");
+        // 0x080c runtime mapping — the custody-model KAT
+        assertTrue(b.blakeOk, "address mapping callable");
         assertEq(b.mirrorKat, MIRROR_KAT, "mirror KAT");
         assertTrue(b.blakeKatMatch, "mirror KAT matches");
         assertEq(b.selfColdkey, probeColdkey, "self coldkey = mirror(probe)");
@@ -123,6 +125,159 @@ contract SP1ProbeTest is Test {
         neuron.setUidResponse(NETUID, ABSENT_HOTKEY, false, 9);
         STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
         assertFalse(b.absentRejected, "absent response must carry canonical zero uid");
+    }
+
+    /// @dev Runtime 455 routes 0x09 to BN128 addition, which rejects the
+    ///      canonical EIP-152 input. Explicit mapping answers keep the mock
+    ///      independent of Foundry's different native 0x09 implementation.
+    function _runtime455Mapping() internal {
+        vm.mockCall(
+            address(0x080c),
+            abi.encodeWithSignature("addressMapping(address)", address(0x1111111111111111111111111111111111111111)),
+            abi.encode(MIRROR_KAT)
+        );
+        vm.mockCall(
+            address(0x080c),
+            abi.encodeWithSignature("addressMapping(address)", address(probe)),
+            abi.encode(probeColdkey)
+        );
+        vm.mockCallRevert(address(0x09), bytes(""), bytes(""));
+    }
+
+    /// @dev Deterministically reproduces the live old-library failure while
+    ///      the corrected battery still proves the exact mapping and stake.
+    function test_readBattery_runtime455RejectsLegacyBlake2f() public {
+        // Twelve rounds, the blake2b-256 IV, "evm:" plus the known address,
+        // 128-byte padded message, t0=24, t1=0 and final=true: 213 bytes.
+        bytes memory legacyInput = abi.encodePacked(
+            hex"0000000c28c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b",
+            bytes4(0x65766d3a),
+            address(0x1111111111111111111111111111111111111111),
+            new bytes(104),
+            hex"1800000000000000",
+            bytes8(0),
+            uint8(1)
+        );
+        assertEq(legacyInput.length, 213, "canonical EIP-152 input");
+        (bool referenceOk, bytes memory referenceOutput) = address(0x09).staticcall(legacyInput);
+        assertTrue(referenceOk, "the old input is valid EIP-152 in Foundry");
+        assertEq(referenceOutput.length, 64);
+        assertEq(bytes32(referenceOutput), MIRROR_KAT);
+        _runtime455Mapping();
+        (bool legacyOk,) = address(0x09).staticcall(legacyInput);
+        assertFalse(legacyOk, "runtime 455 rejects the old route");
+        staking.setStake(SAMPLE_HOTKEY, probeColdkey, 42);
+
+        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
+        assertTrue(b.blakeOk);
+        assertEq(b.mirrorKat, MIRROR_KAT);
+        assertTrue(b.blakeKatMatch);
+        assertEq(b.selfColdkey, probeColdkey);
+        assertTrue(b.stakeViewOk);
+        assertEq(b.sampleSelfStake, 42);
+        assertTrue(b.edVerifyGood && b.edVerifyBad && b.srVerifyGood && b.srVerifyBad);
+        assertTrue(b.mgOk && b.neuronOk && b.sampleExists && b.absentRejected);
+    }
+
+    /// @dev Every adjacent value-bearing reader must use the same runtime
+    ///      custody mapping, including both moves, dividend reads and recovery.
+    function test_runtime455MappingPreservesValueCustody() public {
+        _runtime455Mapping();
+        bytes32 destination = keccak256("runtime455-recovery-coldkey");
+        vm.startPrank(deployer);
+        probe.seedFromTao(HOTKEY_A, 1_000);
+        assertEq(probe.selfStake(HOTKEY_A), 1_000);
+        probe.moveRoundTrip(HOTKEY_A, HOTKEY_B, 400);
+        assertEq(probe.selfStake(HOTKEY_A), 600);
+        assertEq(probe.selfStake(HOTKEY_B), 400);
+        probe.moveRoundTrip(HOTKEY_B, HOTKEY_A, 400);
+        probe.snapshot(HOTKEY_A);
+        staking.setStake(HOTKEY_A, probeColdkey, 1_050);
+        (uint256 baseline, uint256 current,) = probe.dividendDelta(HOTKEY_A);
+        assertEq(baseline, 1_000);
+        assertEq(current, 1_050);
+        probe.transferOut(destination, HOTKEY_A, 1_050);
+        vm.stopPrank();
+        assertEq(probe.selfStake(HOTKEY_A), 0);
+        assertEq(probe.selfStake(HOTKEY_B), 0);
+        assertEq(staking.stakes(HOTKEY_A, destination), 1_050);
+    }
+
+    /// @dev A correct KAT cannot hide an independently failed self mapping.
+    ///      The former uncaught stake-reader mapping reverted this whole call.
+    function test_readBattery_failedSelfMappingRetainsOtherChecks() public {
+        vm.mockCallRevert(
+            address(0x080c),
+            abi.encodeWithSignature("addressMapping(address)", address(probe)),
+            bytes("")
+        );
+        staking.setStake(SAMPLE_HOTKEY, bytes32(0), 99);
+        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
+        assertTrue(b.blakeOk && b.blakeKatMatch);
+        assertEq(b.selfColdkey, bytes32(0));
+        assertFalse(b.stakeViewOk);
+        assertEq(b.sampleSelfStake, 0, "must not read the zero coldkey");
+        assertEq(b.nominatorMinimum, 1_000);
+        assertTrue(b.edOk && b.srOk && b.mgOk && b.neuronOk);
+    }
+
+    /// @dev A missing runtime mapping is not an Ethereum fallback; the other
+    ///      runtime families remain visible and custody remains unproven.
+    function test_readBattery_missingMappingRetainsOtherChecks() public {
+        vm.etch(address(0x080c), bytes(""));
+        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
+        assertFalse(b.blakeOk);
+        assertFalse(b.blakeKatMatch);
+        assertEq(b.selfColdkey, bytes32(0));
+        assertFalse(b.stakeViewOk);
+        assertTrue(b.edOk && b.srOk && b.mgOk && b.neuronOk);
+        assertEq(b.nominatorMinimum, 1_000);
+    }
+
+    /// @dev A successful call returning a zero self key must not measure an
+    ///      unrelated custody slot and accidentally mark that check passed.
+    function test_readBattery_zeroSelfMappingCannotQueryZeroCustody() public {
+        vm.mockCall(
+            address(0x080c),
+            abi.encodeWithSignature("addressMapping(address)", address(probe)),
+            abi.encode(bytes32(0))
+        );
+        staking.setStake(SAMPLE_HOTKEY, bytes32(0), 99);
+        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
+        assertTrue(b.blakeOk && b.blakeKatMatch);
+        assertEq(b.selfColdkey, bytes32(0));
+        assertFalse(b.stakeViewOk);
+        assertEq(b.sampleSelfStake, 0);
+        assertTrue(b.edOk && b.srOk && b.mgOk && b.neuronOk);
+    }
+
+    /// @dev The preserved KAT must reject a callable but incorrect mapping.
+    function test_readBattery_wrongMappingFailsKnownAnswer() public {
+        vm.mockCall(
+            address(0x080c),
+            abi.encodeWithSignature("addressMapping(address)", address(0x1111111111111111111111111111111111111111)),
+            abi.encode(bytes32(uint256(1)))
+        );
+        STSubnetProbe.Battery memory b = probe.readBattery(SAMPLE_HOTKEY, ABSENT_HOTKEY);
+        assertTrue(b.blakeOk);
+        assertEq(b.mirrorKat, bytes32(uint256(1)));
+        assertFalse(b.blakeKatMatch);
+    }
+
+    /// @dev An ABI bytes32 response has exactly 32 bytes; accepting a prefix
+    ///      would mask the wrong precompile or a malformed runtime response.
+    function test_mirrorExt_rejectsMalformedMappingResponses() public {
+        uint256[4] memory lengths = [uint256(0), 31, 33, 64];
+        for (uint256 i; i < lengths.length; i++) {
+            vm.mockCall(
+                address(0x080c),
+                abi.encodeWithSignature("addressMapping(address)", address(probe)),
+                new bytes(lengths[i])
+            );
+            vm.expectRevert("Blake2b: address mapping failed");
+            probe.mirrorExt(address(probe));
+            vm.clearMockedCalls();
+        }
     }
 
     function test_seedFromTao_custodyIsContractColdkey() public {

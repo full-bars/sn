@@ -11,6 +11,7 @@ import {INeuron_ADDRESS} from "../src/interfaces/neuron.sol";
 import {IMetagraph_ADDRESS} from "../src/interfaces/metagraph.sol";
 import {IED25519VERIFY_ADDRESS} from "../src/interfaces/ed25519Verify.sol";
 import {MockStakingV2, MockNeuron, MockMetagraph, MockEd25519} from "./mocks/PrecompileMocks.sol";
+import {MockAddressMapping} from "./mocks/MockAddressMapping.sol";
 
 /// @dev Smoke suite: deploy + init + one happy-path epoch end to end with
 ///      vm.etch-mocked precompiles, plus buyback-reserve invariants (v0.3/D23),
@@ -64,6 +65,7 @@ contract STSubnetTest is Test {
         vm.etch(INeuron_ADDRESS, address(new MockNeuron()).code);
         vm.etch(IMetagraph_ADDRESS, address(new MockMetagraph()).code);
         vm.etch(IED25519VERIFY_ADDRESS, address(new MockEd25519()).code);
+        vm.etch(address(0x080c), address(new MockAddressMapping()).code);
 
         STSubnet impl = new STSubnet();
         ERC1967Proxy proxy = new ERC1967Proxy(
@@ -80,7 +82,7 @@ contract STSubnetTest is Test {
                     COMMIT_W,
                     TRAILS_W,
                     FINALIZE_OFF,
-                    bytes32(0) // selfColdkey: compute on-chain via blake2f
+                    bytes32(0) // selfColdkey: compute through the runtime mapping
                 )
             )
         );
@@ -115,7 +117,7 @@ contract STSubnetTest is Test {
         assertEq(st.tEpoch(), T_EPOCH);
         assertEq(st.epoch(), 0);
         assertEq(st.epochStartBlock(), START_BLOCK);
-        // initializer computed mirror(proxy) on-chain via blake2f
+        // initializer computed mirror(proxy) through the runtime mapping
         assertEq(st.selfColdkey(), proxyMirror);
 
         (bytes32 ck, uint16 uid, bytes32 hk, bool active) = st.operators(NO_ID);

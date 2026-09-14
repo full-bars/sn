@@ -16,16 +16,11 @@ import {Blake2b} from "../src/lib/Blake2b.sol";
 ///         `sim-testnet` owns the release execution; this script is only an
 ///         interactive developer diagnostic.
 ///
-/// @dev Two truths shape this script:
-///      1. Only **blake2f (0x09)** is a standard EVM precompile forge can
-///         simulate locally. The subtensor precompiles (0x402 ed25519, 0x802
-///         metagraph, 0x805 staking) are runtime-only — forge's local EVM
-///         reverts on them, so this script does NOT call them in-body. It runs
-///         the local blake2f known-answer sanity (the mirror the whole custody
-///         model rests on) and then prints the exact `cast` commands that run
-///         the real battery ON the node against the deployed probe.
-///      2. The custody assumption is contract-scoped, so the battery must run
-///         from the deployed `STSubnetProbe`, not from an EOA.
+/// @dev Foundry supplies Ethereum EIP-152 at 0x09, whereas runtime 455 supplies
+///      BN128 addition there. The local hash below is only a reference. Live
+///      custody uses addressMapping(address) at 0x080c and must be checked on
+///      the node together with the other runtime-only precompiles. The full
+///      battery runs from STSubnetProbe so stake reads use contract custody.
 ///
 /// Usage:
 ///   # 1. local blake2f sanity + the playbook (no chain writes, no key needed):
@@ -48,13 +43,14 @@ contract SP1Conformance is Script {
     function run() external view {
         console2.log("=== SP-1 conformance (local blake2f sanity + on-node playbook) ===");
 
-        // --- 0x09 blake2f: the H160 -> ss58 mirror, faithfully simulable ---
-        bytes32 got = Blake2b.mirror(0x1111111111111111111111111111111111111111);
+        // Local Ethereum hash reference; runtime 455 does not expose EIP-152.
+        bytes32 got = _localMirror(0x1111111111111111111111111111111111111111);
         bytes32 want = 0x32f955c958e51189a4921aed41ef00818f7368dfaec8d9969f091006f8066228;
-        console2.log("blake2f (0x09) mirror KAT:", got == want ? "PASS (lib)" : "FAIL");
+        require(got == want, "SP1: local mirror KAT failed");
+        console2.log("Local Ethereum EIP-152 mirror reference:", "PASS");
         console2.logBytes32(got);
         console2.log(
-            "  ^ local forge blake2f. Confirm the NODE's 0x09 with: cast call <probe> \"mirrorExt(address)(bytes32)\" 0x1111111111111111111111111111111111111111 --rpc-url testnet"
+            "  Confirm the NODE's 0x080c mapping with: cast call <probe> \"mirrorExt(address)(bytes32)\" 0x1111111111111111111111111111111111111111 --rpc-url testnet"
         );
 
         // --- ed25519 (0x402) KAT constants, for a direct node check ---
@@ -83,7 +79,7 @@ contract SP1Conformance is Script {
         console2.log("STSubnetProbe deployed:", probe);
         console2.log("  netuid:", netuid);
         console2.log("  probe coldkey mirror(this):");
-        console2.logBytes32(Blake2b.mirror(probe));
+        console2.logBytes32(_localMirror(probe));
         console2.log("Fund that ss58 mirror with dust TAO to run the value-bearing checks.");
         console2.log("Read battery (free, on-node):");
         console2.log(
@@ -91,5 +87,10 @@ contract SP1Conformance is Script {
             probe,
             "\"readBattery(bytes32,bytes32)((bool,bytes32,bool,bytes32,bool,bool,bool,bool,bool,bool,bool,uint16,bytes32,bytes32,bool,bool,uint16,bool,bool,uint256,uint256))\" <sampleHotkey> <knownAbsentHotkey> --rpc-url testnet"
         );
+    }
+
+    /// @dev Local tooling only; never call Ethereum's 0x09 on Subtensor.
+    function _localMirror(address account) internal view returns (bytes32) {
+        return Blake2b.hash256(abi.encodePacked(bytes4(0x65766d3a), account));
     }
 }

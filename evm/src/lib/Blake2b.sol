@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-/// @title Blake2b — minimal single-block blake2b-256 via the EIP-152 `blake2f`
-///        compression-function precompile (address 0x09, Istanbul+).
+/// @title Subtensor custody mapping and a local EIP-152 hash reference.
 ///
 /// @notice Purpose: compute the Subtensor EVM H160 -> AccountId32 "mirror":
 ///         `mirror(addr) = blake2b_256("evm:" || addr)` (24-byte message), the
 ///         Frontier `HashedAddressMapping` used by every subtensor precompile
 ///         to derive the coldkey of an EVM caller (PLAN.md §3.6, D-10).
 ///
-/// @dev    Only messages of <= 128 bytes (one compression block) are supported —
-///         that is all the mirror needs. Whether 0x09 exists on the subtensor
-///         runtime is UNVERIFIED (SP-1); callers must treat failure as
-///         "on-chain mirror unavailable" and fall back to the owner-gated path.
+/// @dev    `mirror` uses the runtime's addressMapping precompile at 0x080c.
+///         Runtime 455 maps 0x09 to BN128 addition, not EIP-152. `hash256` is
+///         only a single-block reference for local Ethereum/Foundry tooling;
+///         it must not be used as a Subtensor runtime hashing primitive.
 library Blake2b {
     /// @dev blake2b IV (RFC 7693).
     ///      h[0] is pre-XORed with the parameter block 0x01010020:
@@ -27,8 +26,9 @@ library Blake2b {
     uint64 private constant IV7 = 0x5be0cd19137e2179;
 
     address private constant BLAKE2F = address(0x09);
+    address private constant ADDRESS_MAPPING = address(0x080c);
 
-    /// @notice blake2b-256 of `data` (data.length <= 128; unkeyed).
+    /// @notice Local Ethereum EIP-152 reference (unkeyed, data.length <= 128).
     function hash256(bytes memory data) internal view returns (bytes32 digest) {
         require(data.length <= 128, "Blake2b: >1 block");
 
@@ -66,10 +66,15 @@ library Blake2b {
         }
     }
 
-    /// @notice Subtensor/Frontier H160 -> AccountId32 mirror:
-    ///         blake2b_256("evm:" || address).
+    /// @notice Runtime H160 -> AccountId32 mapping, checked against the
+    ///         blake2b_256("evm:" || address) known answer by the probe.
+    /// @dev The selector and raw bytes32 result match runtime 455's pinned
+    ///      precompiles/src/address_mapping.rs. Missing/malformed calls fail.
     function mirror(address account) internal view returns (bytes32) {
-        return hash256(abi.encodePacked(bytes4(0x65766d3a), account)); // "evm:"
+        (bool ok, bytes memory out) =
+            ADDRESS_MAPPING.staticcall(abi.encodeWithSignature("addressMapping(address)", account));
+        require(ok && out.length == 32, "Blake2b: address mapping failed");
+        return abi.decode(out, (bytes32));
     }
 
     /// @dev uint64 -> little-endian bytes8.

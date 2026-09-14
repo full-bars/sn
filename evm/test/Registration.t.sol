@@ -127,7 +127,7 @@ contract RegistrationTest is STBase {
     }
 
     function test_initialize_explicitSelfColdkeyOverride() public {
-        // SP-1 fallback: if blake2f is unavailable on the runtime, the mirror
+        // SP-1 fallback: if custody mapping is unavailable on the runtime, the mirror
         // is passed in instead of computed on-chain
         STSubnet impl = new STSubnet();
         bytes32 explicitCk = keccak256("explicit-mirror");

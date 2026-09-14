@@ -243,8 +243,8 @@ contract STSubnet is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     /// @notice Initializer (replaces the st_abi.json v1 constructor — UUPS).
     /// @param selfColdkey_ bytes32(0) => compute mirror(address(this)) on-chain
-    ///        via blake2f (0x09); pass an explicit value if 0x09 is unavailable
-    ///        on the target runtime (SP-1 fallback).
+    ///        via the runtime's address mapping (0x080c); pass an explicit
+    ///        value only under the reviewed owner-gated fallback policy.
     function initialize(
         uint16 netuid_,
         address owner_,
@@ -764,7 +764,7 @@ contract STSubnet is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /// @notice SP-1 escape hatch: correct the contract's substrate coldkey if
-    ///         the on-chain blake2f mirror computation mismatches the runtime.
+    ///         the configured custody mapping mismatches the runtime.
     ///         Affects future stake measurements only (never finalized claims).
     function setSelfColdkey(bytes32 selfColdkey_) external onlyOwner {
         require(selfColdkey_ != bytes32(0), "ST: coldkey 0");
@@ -859,9 +859,8 @@ contract STSubnet is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         revert("ST: uid not found");
     }
 
-    /// @dev H160 -> AccountId32 mirror via blake2f (0x09). Virtual so tests /
-    ///      an SP-1 fallback build can swap it if blake2f is unavailable on
-    ///      the live runtime.
+    /// @dev H160 -> AccountId32 via the runtime's address mapping (0x080c).
+    ///      Virtual for tests and the reviewed owner-gated fallback build.
     function _mirror(address account) internal view virtual returns (bytes32) {
         return Blake2b.mirror(account);
     }

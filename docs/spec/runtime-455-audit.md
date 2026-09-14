@@ -40,9 +40,10 @@ upstream mainnet proposal/timepoint fields must be empty. Never reuse454's tag
 or mainnet timepoint. Historical451–454 artifacts stay available only through
 their strict evidence/replay identities.
 
-The existing source checker retains its historical454 command name and29-file
-attestation, adds the exact31-file455 manifest (the former29 plus both changed
-proxy files), and attests metadata source for all five artifacts. The existing
+The source checker retains its historical454 command name and29-file
+attestation. Its455 manifest now includes33 files: the former29, both changed
+proxy files, and the precompile dispatcher and address-mapping implementation.
+It also attests metadata source for all five artifacts. The existing
 exact-Wasm checker runs all five finite probes concurrently. The live identity
 and stake tests remain explicit read-only opt-ins and now pin455.
 
@@ -52,3 +53,33 @@ Original raw Rpc/CI responses, ZIP, digest and probe receipts were retained unde
 inputs, not the final signed campaign archive or independent storage-trie
 proofs. The live campaign must retain its own original observations and satisfy
 the final on-chain and artifact replay requirements.
+
+## Custody mapping correction
+
+Runtime455's [pinned dispatcher](https://github.com/RaoFoundation/subtensor/blob/67dcf7f791dc495064c293f080a0702cb433e51e/precompiles/src/lib.rs#L280-L290)
+routes address `0x09` to BN128 addition. It does not expose Ethereum's EIP-152
+Blake2 compression precompile. A correct 213-byte EIP-152 request therefore
+cannot establish custody on this runtime; Foundry's native Ethereum mapping
+previously hid that mismatch from the local probe tests.
+
+The [address-mapping precompile](https://github.com/RaoFoundation/subtensor/blob/67dcf7f791dc495064c293f080a0702cb433e51e/precompiles/src/address_mapping.rs#L38-L72)
+is at index2060 (`0x080c`). `addressMapping(address)` has selector `0x0494cd9a`
+and returns the runtime's raw32-byte AccountId. The [runtime configuration](https://github.com/RaoFoundation/subtensor/blob/67dcf7f791dc495064c293f080a0702cb433e51e/runtime/src/lib.rs#L1074-L1084)
+uses `HashedAddressMapping<BlakeTwo256>`. The probe keeps the known answer
+`mirror(0x1111111111111111111111111111111111111111)` =
+`0x32f955c958e51189a4921aed41ef00818f7368dfaec8d9969f091006f8066228`,
+and the Go harness independently checks the probe's own coldkey.
+
+`Blake2b.mirror` now calls that runtime mapping and requires exactly32 returned
+bytes. `hash256` remains a local Ethereum reference used by tests and Foundry
+scripts; Subtensor contract custody never falls back to it. A failed mapping
+leaves the battery's custody checks unsuccessful while preserving diagnostics
+from the other precompile families. The full conformance gate still rejects it.
+
+The probe constructor, immutable owner/netuid, storage and battery ABI remain
+the same. Its deployed code is immutable, so an existing failed probe needs a
+new, explicitly bound deployment and fresh battery/value observations. Native
+commitment evidence belongs to its original source/probe generation and must
+be carried with that provenance rather than replayed over a later fleet
+renewal. Release coordinator, reserve, settlement vault and fleet contracts do
+not import this library; this correction does not require replacing them.
