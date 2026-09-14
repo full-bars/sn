@@ -78,7 +78,12 @@ or shows suspected flakiness, retain its exact output and assign root-cause
 diagnosis, adjacent-path review, implementation, and the deterministic
 regression to Astra (`gpt-6-astra`) with reasoning effort `max`. Test execution
 stays with Terra while Astra owns debugging and fixes; preserve these roles
-across agent handoffs. Terra then reruns the affected test matrix. Run the two
+across agent handoffs. Follow [Connect's bug-fix and test policy](../../connect/CODESTYLE.md):
+deterministically reproduce the pre-fix failure, verify the corrected behavior
+at the failing layer, and inspect surrounding code, sibling call sites and
+similar patterns. Record the adjacent paths checked. Use synthetic fixtures
+and top-level tests; ordinary case variations use plain table loops.
+Terra then reruns the affected test matrix. Run the two
 complete gate workloads concurrently with independent fixes, using immutable source and private mutable
 resources for each admitted job. A failed release preflight is retained as a
 refusal, not counted as executed tests or a release-qualified pass.
