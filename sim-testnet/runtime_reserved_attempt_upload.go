@@ -95,6 +95,12 @@ func runtimeReservedAttemptUploads(cfg *ResolvedConfig, stateDir string, contrac
 			types.Hash(domain.GenesisHash).Hex() != cfg.Public.Chain.GenesisHash || domain.NativeRuntime != expectedRuntime || domain.DeploymentBlock > creation.BlockNumber {
 			return nil, errors.New("runtime reserved staging pins differ from approved immutable deployment/runtime or complete discovery start")
 		}
+		value.NativeRPCURLs = slices.Clone(value.NativeRPCURLs)
+		if ownedRPCOnly(cfg) {
+			// The existing loopback proxy owns the approved LAN upstream. This
+			// retains staging's TLS-or-loopback policy and the source consent hash.
+			value.NativeRPCURLs = []string{"ws://" + workloadSubstrateRPCAuthority()}
+		}
 		profile := &controller.StConfig{Enabled: true, Profile: "testnet", DeploymentId: plan.DeploymentID, ChainId: plan.ChainID,
 			GenesisHash: domain.GenesisHash, Netuid: uint64(plan.Netuid), NoId: uint64(index + 1), ContractAddress: contracts.CoordinatorProxy, SettlementVault: contracts.SettlementVault}
 		if err := value.Validate(profile); err != nil {
@@ -104,12 +110,6 @@ func runtimeReservedAttemptUploads(cfg *ResolvedConfig, stateDir string, contrac
 			if source.Evidence.UploadIntentSeconds == 0 || source.Evidence.UploadIntentSeconds > value.Admission.MaximumIntentSeconds {
 				return nil, errors.New("runtime reserved staging intent lifetime is absent or exceeds a destination")
 			}
-		}
-		value.NativeRPCURLs = slices.Clone(value.NativeRPCURLs)
-		if ownedRPCOnly(cfg) {
-			// The approved owned route also governs reserved staging discovery.
-			// Keep the source template unchanged for its original consent hash.
-			value.NativeRPCURLs = []string{verificationSubstrateEndpoint(cfg)}
 		}
 		value.Admission.ActivationContexts = slices.Clone(value.Admission.ActivationContexts)
 	}

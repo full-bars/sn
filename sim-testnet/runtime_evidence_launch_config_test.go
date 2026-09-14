@@ -263,13 +263,37 @@ func testRuntimeEvidenceLaunchTemplateRender(t *testing.T, owned bool) {
 		if err != nil || !reflect.DeepEqual(loaded.EvidenceV2, resolved.Config.ValidatorEvidenceV2[validatorId-1].Evidence) {
 			t.Fatalf("validator %d loader changed signed source files or capacity: %v", validatorId, err)
 		}
-		if loaded.PollSeconds != 60 || loaded.Policy.Settlement.EpochBlocks != 300 || loaded.Policy.ProductionCadence.EpochBlocks != 360 {
-			t.Fatal("public polling or approved two-phase cadence changed")
+		if loaded.PollSeconds != validatorPollSeconds(cfg) || !owned && loaded.PollSeconds != 60 || loaded.Policy.Settlement.EpochBlocks != 300 || loaded.Policy.ProductionCadence.EpochBlocks != 360 {
+			t.Fatal("selected polling or approved two-phase cadence changed")
 		}
 		for _, operator := range loaded.Operators {
 			if operator.APIURL != cfg.OperatorAPIOrigins[int(operator.NoID)-1] {
 				t.Fatal("rendered source changed its approved loopback API origin")
 			}
+		}
+	}
+	if owned {
+		specs, err := buildServerSpecs(cfg, stateDir, map[string]string{"sim-testnet": "/fixture/sim-testnet", connectServerBinaryName: "/fixture/connect"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		found := false
+		for _, spec := range selectProvisioningServerSpecs(specs) {
+			if spec.ID != workloadSubstrateProcessID {
+				continue
+			}
+			found = true
+			if !slices.Contains(spec.Args, "--listen="+workloadSubstrateRPCAuthority()) || !slices.Contains(spec.Args, "--upstream=192.168.1.162:9944") {
+				t.Fatalf("rendered staging proxy lost the owned upstream: %v", spec.Args)
+			}
+			for _, arg := range spec.Args {
+				if strings.HasPrefix(arg, "--maximum-requests-per-minute=") || strings.HasPrefix(arg, "--tls-server-name=") {
+					t.Fatalf("owned staging proxy retained pacing or public TLS routing: %v", spec.Args)
+				}
+			}
+		}
+		if !found {
+			t.Fatal("owned staging proxy is absent before temporary operator API startup")
 		}
 	}
 	if err := validateRuntimeEvidenceProvisionTemplateV2(cfg.Config); err != nil || cfg.ConfigHash != approvedHash {

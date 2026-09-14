@@ -194,7 +194,7 @@ func prepareRuntimeReservedRenderTest(t *testing.T, cfg *ResolvedConfig, stateDi
 	}
 	for index, value := range values {
 		if ownedRPCOnly(cfg) {
-			if !slices.Equal(value.NativeRPCURLs, []string{verificationSubstrateEndpoint(cfg)}) {
+			if !slices.Equal(value.NativeRPCURLs, []string{"ws://" + workloadSubstrateRPCAuthority()}) {
 				t.Fatal("owned staging retained another native discovery endpoint")
 			}
 			value.NativeRPCURLs = slices.Clone(cfg.Config.Artifacts.ReservedAttemptUploads[index].NativeRPCURLs)
