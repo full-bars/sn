@@ -18,14 +18,14 @@ import (
 
 // Records which native view the production restore verifier actually reads.
 type precompileRestoreReaderFixture struct {
-	hotkey         [32]byte
-	blockHash      types.Hash
-	historical     *crv4.FinalizedCommitment
-	current        *crv4.FinalizedCommitment
-	historicalErr  error
-	currentErr     error
+	hotkey          [32]byte
+	blockHash       types.Hash
+	historical      *crv4.FinalizedCommitment
+	current         *crv4.FinalizedCommitment
+	historicalErr   error
+	currentErr      error
 	historicalReads int
-	currentReads   int
+	currentReads    int
 }
 
 // The historical reader refuses any substituted hotkey or checkpoint.
@@ -57,7 +57,7 @@ func newPrecompileRestoreReaderFixture() (*precompileRestoreReaderFixture, Preco
 	reader := &precompileRestoreReaderFixture{
 		hotkey: [32]byte{1}, blockHash: blockHash,
 		historical: &crv4.FinalizedCommitment{Hash: [32]byte{2}, CommitmentBlock: 100, FinalizedAt: 100, FinalizedHash: blockHash},
-		current: &crv4.FinalizedCommitment{Hash: [32]byte{3}, CommitmentBlock: 200, FinalizedAt: 201, FinalizedHash: types.Hash{5}},
+		current:    &crv4.FinalizedCommitment{Hash: [32]byte{3}, CommitmentBlock: 200, FinalizedAt: 201, FinalizedHash: types.Hash{5}},
 	}
 	return reader, commitment
 }
