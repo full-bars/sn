@@ -44,6 +44,7 @@ require (
 	github.com/decred/base58 v1.0.4 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
+	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.5 // indirect
 	github.com/fatih/color v1.19.0 // indirect
@@ -141,6 +142,7 @@ require (
 	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
+	github.com/quic-go/webtransport-go v0.12.0 // indirect
 	github.com/redis/go-redis/v9 v9.22.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/cors v1.8.2 // indirect
@@ -191,24 +193,24 @@ require (
 
 // validator (and miner) import connect; connect imports glog. Replaces in a
 // dependency's go.mod are ignored, so the main module declares both.
-replace github.com/urnetwork/connect => ../connect
+replace github.com/urnetwork/connect => /home/klets/h3-workspace/connect
 
-replace github.com/urnetwork/server => ../server
+replace github.com/urnetwork/server => /home/klets/h3-workspace/server
 
 // The server module also imports Warp; dependency replaces are not inherited.
-replace github.com/urnetwork/warp => ../warp
+replace github.com/urnetwork/warp => /home/klets/h3-workspace/warp
 
-replace github.com/urnetwork/operator-proxy => ../operator-proxy
+replace github.com/urnetwork/operator-proxy => /home/klets/h3-workspace/operator-proxy
 
-replace github.com/urnetwork/proxy => ../proxy
+replace github.com/urnetwork/proxy => /home/klets/h3-workspace/proxy
 
-replace github.com/urnetwork/userwireguard => ../userwireguard
+replace github.com/urnetwork/userwireguard => /home/klets/h3-workspace/userwireguard
 
-replace github.com/urnetwork/sdk => ../sdk
+replace github.com/urnetwork/sdk => /home/klets/h3-workspace/sdk
 
-replace github.com/urnetwork/glog => ../glog
+replace github.com/urnetwork/glog => /home/klets/h3-workspace/glog
 
-replace github.com/urnetwork/goidenticons => ../goidenticons
+replace github.com/urnetwork/goidenticons => /home/klets/h3-workspace/goidenticons
 
 // The substrate RPC client still imports the archived npipe module, whose
 // generated Windows syscalls only support 386 and amd64. Keep its narrow API
