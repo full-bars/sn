@@ -1,22 +1,192 @@
 name: Release Binaries
-# DISABLED: provider/ is package provider (library), not package main.
-# This workflow cannot build a standalone provider binary.
-# cmd/urnet-tools/ and cmd/urnet-docker/ do not exist in this repo.
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Why are you triggering this?'
-        required: true
 
 jobs:
-  disabled:
+  build:
+    name: Build Binaries
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
     steps:
-      - name: Workflow disabled
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+
+      - name: Cache Go module download
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-gomod-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gomod-
+
+      - name: Cache Go build cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-gobuild-${{ matrix.goos }}-${{ matrix.goarch }}-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gobuild-
+
+      - name: Build provider
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
         run: |
-          echo "::error::This workflow is disabled for h3-provider."
-          echo "provider/ is package provider (library), not package main."
-          echo "cmd/urnet-tools/ and cmd/urnet-docker/ do not exist."
-          exit 1
+          VERSION=${GITHUB_REF_NAME:-latest}
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 \
+               go build -trimpath \
+               -ldflags "-s -w -X main.Version=${VERSION}" \
+               -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/provider ./cmd/provider/; then
+              echo "Build succeeded"; break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+
+      - name: Upload ${{ matrix.goos }}/${{ matrix.goarch }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/${{ matrix.goos }}/${{ matrix.goarch }}/provider
+
+  create-release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download provider linux amd64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-linux-amd64
+          path: release_tmp/linux/amd64/
+
+      - name: Download provider linux arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-linux-arm64
+          path: release_tmp/linux/arm64/
+
+      - name: Download provider darwin amd64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-darwin-amd64
+          path: release_tmp/darwin/amd64/
+
+      - name: Download provider darwin arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-darwin-arm64
+          path: release_tmp/darwin/arm64/
+
+      - name: Download provider windows amd64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-windows-amd64
+          path: release_tmp/windows/amd64/
+
+      - name: Download provider windows arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-windows-arm64
+          path: release_tmp/windows/arm64/
+
+      - name: Prepare release binaries
+        run: |
+          find release_tmp -name "provider*" -type f -exec chmod +x {} \;
+          mv release_tmp/linux/amd64/provider-linux-amd64 release_tmp/linux/amd64/provider 2>/dev/null || true
+          mv release_tmp/linux/arm64/provider-linux-arm64 release_tmp/linux/arm64/provider 2>/dev/null || true
+          mv release_tmp/darwin/amd64/provider-darwin-amd64 release_tmp/darwin/amd64/provider 2>/dev/null || true
+          mv release_tmp/darwin/arm64/provider-darwin-arm64 release_tmp/darwin/arm64/provider 2>/dev/null || true
+          cp release_tmp/windows/amd64/provider release_tmp/windows/amd64/provider.exe 2>/dev/null || true
+          cp release_tmp/windows/arm64/provider release_tmp/windows/arm64/provider.exe 2>/dev/null || true
+          rm -f release_tmp/windows/amd64/provider release_tmp/windows/arm64/provider
+          echo "Release binaries prepared:"
+          find release_tmp -type f | sort
+
+      - name: VirusTotal scan of release binaries
+        env:
+          VT_API_KEY: ${{ secrets.VIRUS_TOTAL }}
+          VT_FAIL_THRESHOLD: "10"
+          VT_REVIEW_THRESHOLD: "2"
+          VT_SUMMARY_FILE: ${{ github.workspace }}/vt-scan-report.md
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${VT_API_KEY:-}" ]; then
+            if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+              echo "::error::VIRUS_TOTAL secret not set — scan cannot run"
+              exit 1
+            fi
+            echo "VIRUS_TOTAL secret not set on branch run, skipping VirusTotal scan"
+            exit 0
+          fi
+          VERSION=${GITHUB_REF_NAME:-latest}
+          python3 .github/scripts/vt-scan.py \
+            release_tmp/linux/amd64/provider \
+            release_tmp/linux/arm64/provider \
+            release_tmp/darwin/amd64/provider \
+            release_tmp/darwin/arm64/provider \
+            release_tmp/windows/amd64/provider.exe \
+            release_tmp/windows/arm64/provider.exe
+
+      - name: ClamAV scan of release binaries
+        if: always()
+        run: |
+          set -euo pipefail
+          if command -v clamscan >/dev/null 2>&1; then
+            echo "ClamAV already installed"
+          else
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq clamav >/dev/null
+          fi
+          # EICAR self-test: the scanner must actually detect.
+          printf 'X5O!P%%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > /tmp/eicar.txt
+          if clamscan /tmp/eicar.txt 2>/dev/null | grep -q "FOUND"; then
+            echo "EICAR self-test passed (scanner active)"
+          else
+            echo "::warning::EICAR self-test did not FOUND — ClamAV may be broken"
+          fi
+          clamscan --no-summary -r release_tmp/ 2>/dev/null | grep "FOUND" && echo "::error::ClamAV found malware in release artifacts" || echo "ClamAV: clean"
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${GITHUB_REF_NAME:-latest}
+          echo "Creating release for $VERSION"
+
+          # Build release notes
+          NOTES="## URNetwork Provider ${VERSION}"
+          NOTES="${NOTES}\n\n### Binaries"
+          NOTES="${NOTES}\n- \`provider\` — Linux amd64/arm64, macOS amd64/arm64, Windows amd64/arm64"
+
+          # Create release with all binaries
+          gh release create "$VERSION" \
+            --title "URNetwork Provider ${VERSION}" \
+            --notes "$(echo -e "$NOTES")" \
+            release_tmp/linux/amd64/provider#provider-linux-amd64 \
+            release_tmp/linux/arm64/provider#provider-linux-arm64 \
+            release_tmp/darwin/amd64/provider#provider-darwin-amd64 \
+            release_tmp/darwin/arm64/provider#provider-darwin-arm64 \
+            release_tmp/windows/amd64/provider.exe#provider-windows-amd64.exe \
+            release_tmp/windows/arm64/provider.exe#provider-windows-arm64.exe
