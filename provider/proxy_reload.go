@@ -650,7 +650,7 @@ func (r *ProxyReloader) reload() {
 			continue
 		}
 		stableID := resolveProxyID(r.state, settings.Address)
-		_ = stableID
+		setProxyIndex(settings.Address, stableID)
 		tagProxySourceIfUnset(r.state, settings.Address, sourceOf[settings.Address])
 		registerProxyV2026(stableID, settings.Address)
 

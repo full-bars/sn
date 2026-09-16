@@ -19,7 +19,6 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/connect/protocol"
-	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
 // proxyIndexByAddr maps proxy addresses to their stable integer IDs.
@@ -70,6 +69,7 @@ func provide(opts docopt.Opts) {
 	provideSetupMemory(st)
 	provideSetupSignals(st)
 	defer st.cancel()
+	defer flushRetentionEvents()
 	provideLaunchGoroutines(st)
 	provideLauncherLoop(st)
 	provideStatusServer(st)
@@ -135,7 +135,8 @@ func provideSetupMemory(st *provideState) {
 		st.isHotSwapCandidate = true
 		metricsHandoffPending.Store(true)
 		st.hotSwapIPC = ipcFile
-		defer st.hotSwapIPC.Close()
+		// NOTE: IPC handle lifecycle is managed by the hotswap parent/child
+		// handoff in provideWithProxy (candidate ACK), not here.
 		if err := runHotSwapChildHandshake(st.hotSwapIPC, st.opts, st.apiUrl); err != nil {
 			tlog("[hotswap] Candidate pre-flight failed: %v\n", err)
 			st.hotSwapIPC.Close()
@@ -207,7 +208,8 @@ func provideSetupSignals(st *provideState) {
 		}
 	}
 
-	defer flushRetentionEvents()
+	// NOTE: flushRetentionEvents is deferred in provide() scope, not here,
+	// so it runs at process shutdown rather than when provideSetupSignals returns.
 
 	finishControl := bannerPhase("Control state")
 	if loaded, err := loadControlState(); err != nil {
@@ -229,11 +231,9 @@ func provideSetupSignals(st *provideState) {
 		if err != nil {
 			tlog("[control] failed to start control socket, urnet-tools will fall back to file-based overrides: %s\n", err)
 		} else {
-			defer func() {
-				if st.cleanupControlSocket != nil {
-					st.cleanupControlSocket()
-				}
-			}()
+			// NOTE: Control socket cleanup is handled by RegisterCoordinatorCloser
+			// (below) and by closeAllCaches() in provide()'s shutdown path.
+			// No additional defer needed here.
 			unregSocketCloser := RegisterCoordinatorCloser(func() {
 				if st.cleanupControlSocket != nil {
 					st.cleanupControlSocket()
@@ -334,14 +334,16 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		proxyIndex = getProxyIndex(proxySettings.Address)
 	}
 
-	// Wire bandwidth tracking into the dial path.
-	// In v2026 the connect library no longer accepts a bw parameter, so we
-	// wrap DialContextSettings to intercept every TCP connection and count
-	// bytes into ProxyBandwidth (TotalRx/Tx + BillableRx/Tx).
-	bw := RegisterProxyBandwidth(proxyIndex)
-	clientStrategySettings.DialContextSettings = bandwidth.WrapDialContextSettings(
-		clientStrategySettings.DialContextSettings, bw, identityKey,
-	)
+	// Register bandwidth tracker for this proxy (for health/earnings reporting).
+	// DESIGN ADAPTATION: bandwidth.WrapDialContextSettings cannot be used here
+	// because it sets DialContextSettings, which causes connect/net.go to BYPASS
+	// the proxy dialer entirely. In the pinned connect version (4c85408), when
+	// DialContextSettings is non-nil, connect uses its DialContext instead of
+	// ProxySettings.NewDialContext — killing proxy routing. Re-enabling per-byte
+	// tracking requires a PacketConnFactory or proxy-level hook that the pinned
+	// connect version doesn't expose. BillableRx/BillableTx in tracker.go remain
+	// for use when wrapping is re-enabled via a connect update.
+	RegisterProxyBandwidth(proxyIndex)
 
 	clientSettings := connect.DefaultClientSettings()
 	if seed, err := readProviderClientKeySeed(); err == nil && 0 < len(seed) {
@@ -603,7 +605,9 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	defer unregCloser()
 
 	proxyBecameLive()
+	markProxyUp(proxyIndex)
 	defer proxyWentDown()
+	defer markProxyDown(proxyIndex)
 
 	// HotSwap candidate ACK
 	var unregSocketCloser func()
@@ -671,7 +675,8 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	})
 
 	// Note: NewLocalUserNat in v2026 no longer takes a bw parameter.
-	// Bandwidth is tracked via DialContextSettings wrapping (set up above).
+	// Per-byte bandwidth tracking via DialContextSettings wrapping is disabled
+	// because it bypasses proxy routing. See DESIGN ADAPTATION in provideWithProxy.
 	localUserNat := connect.NewLocalUserNat(proxyCtx, clientId.String(), localUserNatSettings)
 	defer localUserNat.Close()
 	// Note: NewRemoteUserNatProvider in v2026 no longer takes a bw parameter.
