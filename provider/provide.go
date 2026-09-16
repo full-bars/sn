@@ -19,6 +19,7 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/connect/protocol"
+	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
 // proxyIndexByAddr maps proxy addresses to their stable integer IDs.
@@ -323,6 +324,25 @@ func provideLaunchGoroutines(st *provideState) {
 func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings *connect.ProxySettings, isNative bool, isURLSourced bool) {
 	clientStrategySettings := connect.DefaultClientStrategySettings()
 	clientStrategySettings.ProxySettings = proxySettings
+
+	// Compute proxy identity early so we can wire bandwidth tracking
+	// before the client strategy (and its DialContext) is created.
+	identityKey := "direct"
+	proxyIndex := 0
+	if proxySettings != nil {
+		identityKey = proxySettings.Address
+		proxyIndex = getProxyIndex(proxySettings.Address)
+	}
+
+	// Wire bandwidth tracking into the dial path.
+	// In v2026 the connect library no longer accepts a bw parameter, so we
+	// wrap DialContextSettings to intercept every TCP connection and count
+	// bytes into ProxyBandwidth (TotalRx/Tx + BillableRx/Tx).
+	bw := RegisterProxyBandwidth(proxyIndex)
+	clientStrategySettings.DialContextSettings = bandwidth.WrapDialContextSettings(
+		clientStrategySettings.DialContextSettings, bw, identityKey,
+	)
+
 	clientSettings := connect.DefaultClientSettings()
 	if seed, err := readProviderClientKeySeed(); err == nil && 0 < len(seed) {
 		clientSettings.ClientKeySeed = seed
@@ -539,13 +559,6 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		return
 	}
 
-	identityKey := "direct"
-	proxyIndex := 0
-	if proxySettings != nil {
-		identityKey = proxySettings.Address
-		proxyIndex = getProxyIndex(proxySettings.Address)
-	}
-
 	instanceId := connect.NewId()
 
 	oob := connect.NewApiOutOfBandControl(proxyCtx, clientStrategy, byClientJwt, st.apiUrl)
@@ -657,10 +670,8 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		RevocationDone: revocationDone,
 	})
 
-	// Register bandwidth (tracks internally, bw not passed to connect in v2026).
-	_ = RegisterProxyBandwidth(proxyIndex)
-
 	// Note: NewLocalUserNat in v2026 no longer takes a bw parameter.
+	// Bandwidth is tracked via DialContextSettings wrapping (set up above).
 	localUserNat := connect.NewLocalUserNat(proxyCtx, clientId.String(), localUserNatSettings)
 	defer localUserNat.Close()
 	// Note: NewRemoteUserNatProvider in v2026 no longer takes a bw parameter.

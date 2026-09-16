@@ -170,6 +170,7 @@ func (c *Conn) Read(b []byte) (int, error) {
 	n, err := c.Conn.Read(b)
 	if n > 0 {
 		c.bw.TotalRx.Add(uint64(n))
+		c.bw.BillableRx.Add(uint64(n))
 	}
 	return n, err
 }
@@ -178,6 +179,7 @@ func (c *Conn) Write(b []byte) (int, error) {
 	n, err := c.Conn.Write(b)
 	if n > 0 {
 		c.bw.TotalTx.Add(uint64(n))
+		c.bw.BillableTx.Add(uint64(n))
 	}
 	return n, err
 }
