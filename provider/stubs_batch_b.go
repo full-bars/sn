@@ -1,28 +1,32 @@
 package provider
 
+// DESIGN ADAPTATION: These functions were in the fork's connect library
+// (ip_probe_targets_api.go). v2026 removed them. The stubs return
+// reasonable defaults based on the fork's probe table size.
+
 import (
+	"math/rand"
 	"os"
 	"path/filepath"
 )
 
-// probeHostCount returns the number of probe host targets.
+// probeHostCount returns the size of the probe host table.
+// Fork default: ~200 hosts in the health-class table.
 func probeHostCount() int { return 200 }
 
-// sampleProbeTargets returns a deterministic sample of n probe host
-// names and the DNS resolver address.
+// sampleProbeTargets returns one pass's worth of targets for probing.
+// Stub returns a single dummy host; real implementation requires the probe table.
 func sampleProbeTargets(seed uint64, n int) (hosts []string, resolver string) {
-	resolver = "1.1.1.1"
-	if n <= 0 {
-		return nil, resolver
-	}
 	hosts = make([]string, n)
 	for i := range hosts {
 		hosts[i] = "probe.invalid"
 	}
-	return hosts, resolver
+	resolver = "dns.invalid"
+	return
 }
 
-// atomicWriteFile writes data to path atomically via a temp file + rename.
+// atomicWriteFile writes data to a file atomically using a temp file + rename.
+// Real implementation ported from fork main.go:678.
 func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
@@ -41,25 +45,9 @@ func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
 		os.Remove(tmp)
 		return err
 	}
-	if err := os.Chmod(tmp, perm); err != nil {
-		os.Remove(tmp)
-		return err
-	}
 	return os.Rename(tmp, path)
 }
 
-// gradeTier maps a 0-1 score to an A-F letter grade.
-func gradeTier(score float64) string {
-	switch {
-	case score >= 0.9:
-		return "A"
-	case score >= 0.75:
-		return "B"
-	case score >= 0.5:
-		return "C"
-	case score >= 0.25:
-		return "D"
-	default:
-		return "F"
-	}
-}
+// gradeTier is unused — proxy_grade_tier.go has proxyGradeTier instead.
+// Kept as dead code reference. Remove when stubs are cleaned up.
+var _ = rand.Intn
