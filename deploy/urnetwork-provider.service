@@ -1,0 +1,20 @@
+[Unit]
+Description=URNetwork Provider
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/provider provide
+Restart=on-failure
+RestartSec=5
+Environment=HOME=/root
+Environment=URNETWORK_RAMLOGS=0
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/root/.urnetwork
+
+[Install]
+WantedBy=multi-user.target
