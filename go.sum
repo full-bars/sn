@@ -111,6 +111,18 @@ github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMo
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
+github.com/full-bars/connect v0.0.0-20260815070426-4c85408b2311 h1:xlMjAZ6F7vp0A3+IW3OmxfByRj/CH2iIXZEKXswohM8=
+github.com/full-bars/connect v0.0.0-20260815070426-4c85408b2311/go.mod h1:mX0CxovqvKFld1UM53AfjymfnbvFiiLMQEvRD+X71ko=
+github.com/full-bars/connect v0.0.0-20260916141202-065bcdd9b85d h1:p9+/5BbpR78G7ozcEaFEARVs6Xzd7YU0hxp89rxBBKs=
+github.com/full-bars/connect v0.0.0-20260916141202-065bcdd9b85d/go.mod h1:mX0CxovqvKFld1UM53AfjymfnbvFiiLMQEvRD+X71ko=
+github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c h1:QSDm4GpjAU16CxcZK4jbQLmCj3QtLHFqxPE38MleXhA=
+github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c/go.mod h1:IHtyYBudQmotM5M7loKNR54hFyzsM0pL+qeD2U8BQzU=
+github.com/full-bars/goidenticons v0.0.0-20260822053141-e6a59cd2e818/go.mod h1:O/Q9lMhKp+Z4BvqRh9eQouMU9ImbTUNieOZF5npKR0o=
+github.com/full-bars/operator-proxy v0.0.0-20260913171122-350b6c0a99f4/go.mod h1:pe6WEihU91y9+m+dDXIphdaUqqoP9bgIBVtqpGXuE8I=
+github.com/full-bars/proxy v0.0.0-20260806184912-319243147855/go.mod h1:ZS6Q8LYls6v2v2mTMCDBZdEGC8gim1Xuhh+WV7kEK7Q=
+github.com/full-bars/sdk v0.0.0-20260906085924-8b87754cd2a3/go.mod h1:N96TQLWCkSr+dhxeJf34wtwUo2N2QUjsWK3G3YkI9cw=
+github.com/full-bars/server v0.0.0-20260604200213-1201b27f79cd/go.mod h1:jIx6QGhv8UTJoWx2m4PGthAx8mpOZ6MOs0v2cBavejc=
+github.com/full-bars/userwireguard v0.0.0-20260420063323-e1979e9d53c9/go.mod h1:4o4/Mpn+ipHHx998wXkRt4yRXZh1bMMl2Ybivh71gLo=
 github.com/gagliardetto/binary v0.8.0 h1:U9ahc45v9HW0d15LoN++vIXSJyqR/pWw8DDlhd7zvxg=
 github.com/gagliardetto/binary v0.8.0/go.mod h1:2tfj51g5o9dnvsc+fL3Jxr22MuWzYXwx9wEoN0XQ7/c=
 github.com/gagliardetto/solana-go v1.21.0 h1:ZswwwDOFuD/7Hk/k3b6dyLetmvEJuyLmQU7xIziCZgo=
@@ -454,6 +466,7 @@ github.com/spf13/cast v1.3.1/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkU
 github.com/streamingfast/logging v0.0.0-20230608130331-f22c91403091/go.mod h1:VlduQ80JcGJSargkRU4Sg9Xo63wZD/l8A5NC/Uo1/uU=
 github.com/streamingfast/logging v0.0.0-20250404134358-92b15d2fbd2e h1:qGVGDR2/bXLyR498un1hvhDQPUJ/m14JBRTJz+c67Bc=
 github.com/streamingfast/logging v0.0.0-20250404134358-92b15d2fbd2e/go.mod h1:VlduQ80JcGJSargkRU4Sg9Xo63wZD/l8A5NC/Uo1/uU=
+github.com/streamingfast/logging v0.0.0-20251216203033-fdad0a00f1ca/go.mod h1:fJ5nP7ZSMB4MQQ6RM7cF+LiSQ43b5cVletcSUNL8z2M=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/objx v0.5.0/go.mod h1:Yh+to48EsGEfYuaHDzXPcE3xhTkx73EhmCGUpEOglKo=

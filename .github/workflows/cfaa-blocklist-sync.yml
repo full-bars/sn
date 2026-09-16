@@ -110,7 +110,6 @@ jobs:
         if: always()
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           if [ -n "$DISCORD_WEBHOOK" ]; then
             python3 .github/scripts/cfaa_sync_notify.py

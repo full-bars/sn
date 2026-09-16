@@ -3,6 +3,7 @@ module github.com/urfoundation/sn
 go 1.26.5
 
 require (
+	github.com/Microsoft/go-winio v0.6.2
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.2.2-0.20240919131012-e3b938563803
 	github.com/consensys/gnark-crypto v0.20.1
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
@@ -11,20 +12,18 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/quic-go/quic-go v0.61.0
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	github.com/urnetwork/connect v0.0.0
-	github.com/urnetwork/sdk v0.0.0
-	github.com/urnetwork/server v0.0.0
+	github.com/urnetwork/connect v0.0.0-20260916141202-065bcdd9b85d
 	github.com/vedhavyas/go-subkey/v2 v2.0.0
 	golang.org/x/crypto v0.54.0
 	golang.org/x/net v0.57.0
 	golang.org/x/sys v0.47.0
 	golang.org/x/term v0.45.0
+	golang.org/x/time v0.15.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	github.com/ChainSafe/go-schnorrkel v1.1.0 // indirect
-	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20251001021608-1fe7b43fc4d6 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/TwiN/go-away v1.8.0 // indirect
@@ -150,7 +149,7 @@ require (
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/streamingfast/logging v0.0.0-20250404134358-92b15d2fbd2e // indirect
+	github.com/streamingfast/logging v0.0.0-20251216203033-fdad0a00f1ca // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/stripe/stripe-go/v82 v82.5.1 // indirect
@@ -162,8 +161,6 @@ require (
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/urnetwork/glog v0.0.0 // indirect
 	github.com/urnetwork/goidenticons v0.0.0 // indirect
-	github.com/urnetwork/operator-proxy v0.0.0 // indirect
-	github.com/urnetwork/proxy v0.0.0 // indirect
 	github.com/urnetwork/userwireguard v0.0.0 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
@@ -181,7 +178,6 @@ require (
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
-	golang.org/x/time v0.15.0 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20241231184526-a9ab2273dd10 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
@@ -193,26 +189,27 @@ require (
 
 // validator (and miner) import connect; connect imports glog. Replaces in a
 // dependency's go.mod are ignored, so the main module declares both.
-replace github.com/urnetwork/connect => /home/klets/h3-workspace/connect
 
-replace github.com/urnetwork/server => /home/klets/h3-workspace/server
+replace github.com/urnetwork/server => github.com/full-bars/server v0.0.0-20260604200213-1201b27f79cd
 
 // The server module also imports Warp; dependency replaces are not inherited.
-replace github.com/urnetwork/warp => /home/klets/h3-workspace/warp
+replace github.com/urnetwork/warp => github.com/full-bars/warp v0.0.0-20260914140309-c600ae774515
 
-replace github.com/urnetwork/operator-proxy => /home/klets/h3-workspace/operator-proxy
+replace github.com/urnetwork/operator-proxy => github.com/full-bars/operator-proxy v0.0.0-20260913171122-350b6c0a99f4
 
-replace github.com/urnetwork/proxy => /home/klets/h3-workspace/proxy
+replace github.com/urnetwork/proxy => github.com/full-bars/proxy v0.0.0-20260806184912-319243147855
 
-replace github.com/urnetwork/userwireguard => /home/klets/h3-workspace/userwireguard
+replace github.com/urnetwork/userwireguard => github.com/full-bars/userwireguard v0.0.0-20260420063323-e1979e9d53c9
 
-replace github.com/urnetwork/sdk => /home/klets/h3-workspace/sdk
+replace github.com/urnetwork/sdk => github.com/full-bars/sdk v0.0.0-20260906085924-8b87754cd2a3
 
-replace github.com/urnetwork/glog => /home/klets/h3-workspace/glog
+replace github.com/urnetwork/glog => github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c
 
-replace github.com/urnetwork/goidenticons => /home/klets/h3-workspace/goidenticons
+replace github.com/urnetwork/goidenticons => github.com/full-bars/goidenticons v0.0.0-20260822053141-e6a59cd2e818
 
 // The substrate RPC client still imports the archived npipe module, whose
 // generated Windows syscalls only support 386 and amd64. Keep its narrow API
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
+
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20260916141202-065bcdd9b85d

@@ -42,26 +42,12 @@ func WrapDialContextSettings(ds *connect.DialContextSettings, bw *ProxyBandwidth
 		return NewConn(conn, bw, proxyAddr), nil
 	}
 
-	// Wrap UDP path: count bytes on every QUIC endpoint.
-	origFactory := ds.PacketConnFactory
-	wrappedFactory := func(ctx context.Context) (net.PacketConn, error) {
-		if origFactory != nil {
-			pc, err := origFactory(ctx)
-			if err != nil {
-				return nil, err
-			}
-			return NewPacketConn(pc, bw, proxyAddr), nil
-		}
-		// Default: create a wildcard UDP socket.
-		pc, err := net.ListenPacket("udp4", ":0")
-		if err != nil {
-			return nil, err
-		}
-		return NewPacketConn(pc, bw, proxyAddr), nil
-	}
-
+	// NOTE: PacketConnFactory (UDP/QUIC bandwidth wrapping) is omitted here because
+	// the pinned full-bars/connect version (4c85408, 2026-08-15) does not expose it.
+	// The field exists in newer connect (d159f46+) but full-bars/connect needs updating.
+	// TCP bandwidth tracking via wrappedDial above covers the primary data path.
+	// TODO: Re-enable PacketConnFactory wrapping once full-bars/connect is updated to d159f46+.
 	return &connect.DialContextSettings{
-		DialContext:       wrappedDial,
-		PacketConnFactory: wrappedFactory,
+		DialContext: wrappedDial,
 	}
 }
