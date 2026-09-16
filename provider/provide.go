@@ -13,7 +13,6 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -53,7 +52,8 @@ type provideState struct {
 	cleanupControlSocket func()
 	ctx                  context.Context
 	cancel               context.CancelFunc
-	cancelSource         atomic.Value // stores string(debug.Stack())
+	cancelSourceOnce     sync.Once
+	cancelSourceVal      string // protected by cancelSourceOnce
 	rawCancel            context.CancelFunc
 	wg                   sync.WaitGroup
 	proxyCancelMu        sync.Mutex
@@ -68,11 +68,22 @@ func provide(opts docopt.Opts) {
 
 	provideSetupMemory(st)
 	provideSetupSignals(st)
+	defer st.cancel()
 	provideLaunchGoroutines(st)
 	provideLauncherLoop(st)
 	provideStatusServer(st)
 
-	st.wg.Wait()
+	done := make(chan struct{})
+	go func() {
+		st.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(30 * time.Second):
+		tlog("[provider] timed out waiting for goroutines to exit\n")
+	}
 
 	tlog("[provider] exiting\n")
 	critLog("PROVIDER EXIT: normal shutdown (code=0)")
@@ -126,13 +137,17 @@ func provideSetupMemory(st *provideState) {
 		defer st.hotSwapIPC.Close()
 		if err := runHotSwapChildHandshake(st.hotSwapIPC, st.opts, st.apiUrl); err != nil {
 			tlog("[hotswap] Candidate pre-flight failed: %v\n", err)
+			st.hotSwapIPC.Close()
 			os.Exit(2)
 		}
 	}
 
 	if !st.isHotSwapCandidate {
 		finishIdentity := bannerPhase("Identity")
-		host, _ := os.Hostname()
+		host, err := os.Hostname()
+		if err != nil || host == "" {
+			host = "unknown"
+		}
 		critLog("STARTUP: version=%s pid=%d host=%s", RequireVersion(), os.Getpid(), host)
 		if VersionStamp != "" {
 			tlog("[startup] version stamp: %s\n", VersionStamp)
@@ -146,7 +161,10 @@ func provideSetupMemory(st *provideState) {
 	home, _ := os.UserHomeDir()
 	if home != "" {
 		jwtPath := filepath.Join(home, ".urnetwork", "jwt")
-		if _, err := os.Stat(jwtPath); err == nil {
+		if info, err := os.Stat(jwtPath); err == nil {
+			if perm := info.Mode().Perm(); perm != 0600 {
+				tlog("[jwt] warn: %s has permissions %04o (expected 0600)\n", jwtPath, perm)
+			}
 			if jwtBytes, err := os.ReadFile(jwtPath); err == nil {
 				if exp := parseJWTExpiryTime(string(jwtBytes)); exp != nil {
 					remaining := time.Until(*exp)
@@ -175,12 +193,11 @@ func provideSetupSignals(st *provideState) {
 	st.rawCancel = rawCancel
 
 	st.cancel = func() {
-		if st.cancelSource.Load() == nil {
-			st.cancelSource.Store(string(debug.Stack()))
-		}
+		st.cancelSourceOnce.Do(func() {
+			st.cancelSourceVal = string(debug.Stack())
+		})
 		st.rawCancel()
 	}
-	defer st.cancel()
 
 	if !st.isHotSwapCandidate {
 		startHotSwapSignalListener(st.ctx, st.cancel, st.opts)
@@ -235,7 +252,7 @@ func provideSetupSignals(st *provideState) {
 
 	go func() {
 		<-st.ctx.Done()
-		source, _ := st.cancelSource.Load().(string)
+		source := st.cancelSourceVal
 		if source == "" {
 			source = "context cancelled by parent (signal or event.Set())"
 		}
@@ -277,7 +294,10 @@ func provideLaunchGoroutines(st *provideState) {
 
 	watcherName := st.nodeName
 	if watcherName == "" {
-		watcherName, _ = os.Hostname()
+		watcherName, err := os.Hostname()
+		if err != nil || watcherName == "" {
+			watcherName = "unknown"
+		}
 		if containerIDRe.MatchString(watcherName) {
 			watcherName = "provider"
 		}
