@@ -7,7 +7,6 @@ package provider
 import (
 	"sync/atomic"
 
-	"github.com/urnetwork/connect"
 	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
@@ -25,9 +24,6 @@ func registerProxyV2026(idx int, addr string) { RegisterProxy(idx, addr) }
 func proxyBandwidthByAddressV2026(addr string) *bandwidth.ProxyBandwidth { return ProxyBandwidthByAddress(addr) }
 
 // ProxyBandwidthV2026 is a stub for the bandwidth info struct removed in v2026.
-type ProxyBandwidthV2026 struct {
-	Clients atomic.Int64
-}
 
 // proxyEarningsScore returns the earnings score for a proxy address.
 
@@ -39,4 +35,3 @@ func unregisterProxyStub(idx interface{}) { if i, ok := idx.(int); ok { Unregist
 var proxyWarmupDone atomic.Bool
 
 // Ensure connect import is used.
-var _ *connect.ProxySettings
