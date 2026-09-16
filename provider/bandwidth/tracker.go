@@ -74,7 +74,39 @@ func (self *ProxyBandwidth) ageLocked() time.Duration {
 	if self.presenceSince.IsZero() {
 		return 0
 	}
+	if len(self.sessions) == 0 && time.Since(self.lastActivity) >= clientPresenceGrace {
+		return 0
+	}
 	return time.Since(self.presenceSince)
+}
+
+// Snapshot returns a detached copy of bw that carries the same
+// latency, byte, and client counters, plus enough internal timing state for
+// MaxAge() to return the correct value. It avoids the fake-AddSession pattern
+// that silently zeroed LatencyNs/SocksLatencyNs on every copy.
+func (bw *ProxyBandwidth) Snapshot() *ProxyBandwidth {
+	if bw == nil {
+		return nil
+	}
+	out := &ProxyBandwidth{}
+	out.TotalRx.Store(bw.TotalRx.Load())
+	out.TotalTx.Store(bw.TotalTx.Load())
+	out.BillableRx.Store(bw.BillableRx.Load())
+	out.BillableTx.Store(bw.BillableTx.Load())
+	out.Clients.Store(bw.Clients.Load())
+	out.LatencyNs.Store(bw.LatencyNs.Load())
+	out.SocksLatencyNs.Store(bw.SocksLatencyNs.Load())
+
+	bw.mu.Lock()
+	out.presenceSince = bw.presenceSince
+	out.lastActivity = bw.lastActivity
+	if bw.sessions != nil && len(bw.sessions) > 0 {
+		out.sessions = make(map[any]time.Time, 1)
+		out.sessions["snapshot"] = time.Now()
+	}
+	bw.mu.Unlock()
+
+	return out
 }
 
 // ProxyRegistry holds per-index bandwidth counters.
