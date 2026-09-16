@@ -1,28 +1,9 @@
 package provider
 
-// DESIGN ADAPTATION: These functions were in the fork's connect library
-// (ip_probe_targets_api.go). v2026 removed them. The stubs return
-// reasonable defaults based on the fork's probe table size.
-
 import (
 	"os"
 	"path/filepath"
 )
-
-// probeHostCount returns the size of the probe host table.
-// Fork default: ~200 hosts in the health-class table.
-func probeHostCount() int { return 200 }
-
-// sampleProbeTargets returns one pass's worth of targets for probing.
-// Stub returns a single dummy host; real implementation requires the probe table.
-func sampleProbeTargets(seed uint64, n int) (hosts []string, resolver string) {
-	hosts = make([]string, n)
-	for i := range hosts {
-		hosts[i] = "probe.invalid"
-	}
-	resolver = "dns.invalid"
-	return
-}
 
 // atomicWriteFile writes data to a file atomically using a temp file + rename.
 // Real implementation ported from fork main.go:678.
