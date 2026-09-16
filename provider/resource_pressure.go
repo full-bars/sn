@@ -1279,66 +1279,9 @@ func writeProxyURLState(s *ProxyURLState) error {
 	return os.WriteFile(path, b, 0600)
 }
 
-const proxyLockStaleAge = 5 * time.Minute
 
-func proxyLockPath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(home, ".urnetwork", "proxy.lock"), nil
-}
 
-func isLockStale(data []byte) bool {
-	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
-	if len(lines) < 2 {
-		return true
-	}
-	ts, err := strconv.ParseInt(lines[1], 10, 64)
-	if err != nil {
-		return true
-	}
-	return time.Since(time.Unix(ts, 0)) > proxyLockStaleAge
-}
 
-func acquireProxyLock() (func(), error) {
-	path, err := proxyLockPath()
-	if err != nil {
-		return nil, err
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return nil, err
-	}
-	if existing, err := os.ReadFile(path); err == nil {
-		if isLockStale(existing) {
-			_ = os.Remove(path)
-		}
-	}
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0600)
-	if err != nil {
-		if errors.Is(err, os.ErrExist) {
-			return nil, fmt.Errorf("reload already in progress — try again in a moment")
-		}
-		return nil, err
-	}
-	fmt.Fprintf(f, "%d\n%d\n", os.Getpid(), time.Now().Unix())
-	f.Close()
-	var once sync.Once
-	return func() { once.Do(func() { _ = os.Remove(path) }) }, nil
-}
-
-func acquireProxyLockWithRetry() (func(), error) {
-	var release func()
-	var err error
-	for i := 0; i < 5; i++ {
-		release, err = acquireProxyLock()
-		if err == nil {
-			return release, nil
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	return nil, err
-}
 
 func proxyTrimPath() (string, error) {
 	home, err := os.UserHomeDir()
@@ -1371,43 +1314,7 @@ func readTrimTarget() (int, error) {
 	return n, nil
 }
 
-func resolveProxyURLMax(startupMax int) int {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return startupMax
-	}
-	path := filepath.Join(home, ".urnetwork", "proxy_url_max")
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return startupMax
-	}
-	v := strings.TrimSpace(string(b))
-	if v == "" {
-		return startupMax
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil || n < 0 {
-		return startupMax
-	}
-	return n
-}
 
-func resolveSelfHealEnabled(startupEnabled bool) bool {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return startupEnabled
-	}
-	path := filepath.Join(home, ".urnetwork", "proxy_self_heal")
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return startupEnabled
-	}
-	v := strings.TrimSpace(string(b))
-	if v == "" {
-		return startupEnabled
-	}
-	return strings.EqualFold(v, "on")
-}
 
 func pressureLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
@@ -1451,33 +1358,16 @@ func (h *proxyFailureHistory) Reset(address string) {
 	delete(h.backoffUntil, address)
 }
 
-func removeDeadProxies(state *ProxyState, addrsBySource map[string][]string) error {
-	release, err := acquireProxyLock()
-	if err != nil {
-		return fmt.Errorf("could not acquire proxy lock: %w", err)
-	}
-	defer release()
 
-	if state == nil || state.Proxies == nil {
-		return nil
+// Eligible returns whether a proxy address is eligible for use
+// (not in backoff). DESIGN ADAPTATION: ported from proxy_failure_history.go
+// in the fork, added here because proxy_reload.go depends on it.
+func (h *proxyFailureHistory) Eligible(address string, now time.Time) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	entry, ok := h.entries[address]
+	if !ok {
+		return true
 	}
-	urlAddrs := addrsBySource["url"]
-	if len(urlAddrs) == 0 {
-		return nil
-	}
-	for _, a := range urlAddrs {
-		delete(state.Proxies, a)
-	}
-	if err := writeProxyState(state); err != nil {
-		return fmt.Errorf("update proxy state: %w", err)
-	}
-
-	urlState, err := readProxyURLState()
-	if err == nil && urlState != nil {
-		for _, a := range urlAddrs {
-			delete(urlState.Cache, a)
-		}
-		_ = writeProxyURLState(urlState)
-	}
-	return nil
+	return now.After(entry.BackoffUntil)
 }
