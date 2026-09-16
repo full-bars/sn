@@ -520,7 +520,7 @@ func recordAndPersist(entry CommandAudit) {
 	globalAuditRing.Append(entry)
 }
 
-func tlog(format string, args ...any) {
+func controlLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
 }
 
@@ -601,7 +601,7 @@ func startControlSocket(ctx context.Context, state *controlState) (func(), error
 				} else if acceptBackoff < time.Second {
 					acceptBackoff *= 2
 				}
-				tlog("⚠️ [control] accept failed, retrying in %s: %v\n", acceptBackoff, err)
+				controlLog("⚠️ [control] accept failed, retrying in %s: %v\n", acceptBackoff, err)
 				time.Sleep(acceptBackoff)
 				continue
 			}
@@ -652,7 +652,7 @@ func handleControlConn(conn net.Conn, state *controlState) {
 		if err := verifyPeerCredentials(uc); err != nil {
 			conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
 			_ = json.NewEncoder(conn).Encode(controlResponse{OK: false, Error: err.Error()})
-			tlog("🔒 [control] rejected connection: %s\n", err)
+			controlLog("🔒 [control] rejected connection: %s\n", err)
 			return
 		}
 	}
@@ -876,7 +876,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		defer state.txMu.Unlock()
 		oldValue, oldMeta, hadOld := state.getWithMeta(req.Key)
 		if err := state.set(req.Key, req.Value); err != nil {
-			tlog("❌ [control] set %s=%s rejected: %s\n", req.Key, req.Value, err)
+			controlLog("❌ [control] set %s=%s rejected: %s\n", req.Key, req.Value, err)
 			return controlResponse{OK: false, Error: err.Error()}
 		}
 		if err := state.persist(); err != nil {
@@ -889,15 +889,15 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 				delete(state.meta, req.Key)
 			}
 			state.mu.Unlock()
-			tlog("❌ [control] set %s=%s failed to persist, rolled back: %s\n", req.Key, req.Value, err)
+			controlLog("❌ [control] set %s=%s failed to persist, rolled back: %s\n", req.Key, req.Value, err)
 			return controlResponse{OK: false, Error: "set applied in memory but failed to persist: " + err.Error()}
 		}
 		if err := applyLiveSideEffect(req.Key, req.Value); err != nil {
-			tlog("⚠️ [control] set %s=%s (was %s) persisted but live apply failed, takes effect on restart: %s\n",
+			controlLog("⚠️ [control] set %s=%s (was %s) persisted but live apply failed, takes effect on restart: %s\n",
 				req.Key, req.Value, formerValue(oldValue, hadOld), err)
 			return controlResponse{OK: false, Error: "persisted, but failed to apply live: " + err.Error()}
 		}
-		tlog("⚙️ [control] set %s=%s (was %s)\n", req.Key, req.Value, formerValue(oldValue, hadOld))
+		controlLog("⚙️ [control] set %s=%s (was %s)\n", req.Key, req.Value, formerValue(oldValue, hadOld))
 		recordAndPersist(CommandAudit{
 			Timestamp: time.Now(),
 			Cmd:       req.Cmd,
@@ -915,7 +915,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		defer state.txMu.Unlock()
 		oldValue, oldMeta, hadOld := state.getWithMeta(req.Key)
 		if err := state.clear(req.Key); err != nil {
-			tlog("❌ [control] clear %s rejected: %s\n", req.Key, err)
+			controlLog("❌ [control] clear %s rejected: %s\n", req.Key, err)
 			return controlResponse{OK: false, Error: err.Error()}
 		}
 		if err := state.persist(); err != nil {
@@ -925,17 +925,17 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 				state.meta[req.Key] = oldMeta
 				state.mu.Unlock()
 			}
-			tlog("❌ [control] clear %s failed to persist, rolled back: %s\n", req.Key, err)
+			controlLog("❌ [control] clear %s failed to persist, rolled back: %s\n", req.Key, err)
 			return controlResponse{OK: false, Error: "clear applied in memory but failed to persist: " + err.Error()}
 		}
 		liveCleared := liveEffectKeys[req.Key]
 		if liveCleared {
 			if err := applyLiveDefault(req.Key); err != nil {
-				tlog("⚠️ [control] clear %s persisted but live default apply failed: %s\n", req.Key, err)
+				controlLog("⚠️ [control] clear %s persisted but live default apply failed: %s\n", req.Key, err)
 				return controlResponse{OK: false, NeedsRestart: true, Error: "cleared, but failed to reapply live default: " + err.Error()}
 			}
 		}
-		tlog("⚙️ [control] cleared %s (was %s)\n", req.Key, formerValue(oldValue, hadOld))
+		controlLog("⚙️ [control] cleared %s (was %s)\n", req.Key, formerValue(oldValue, hadOld))
 		recordAndPersist(CommandAudit{
 			Timestamp: time.Now(),
 			Cmd:       req.Cmd,
@@ -975,7 +975,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		if state.shutdownFn == nil {
 			return controlResponse{OK: false, Error: "shutdown not available (no shutdown function configured)"}
 		}
-		tlog("🛑 [control] shutdown requested via control socket\n")
+		controlLog("🛑 [control] shutdown requested via control socket\n")
 		go func() {
 			time.Sleep(50 * time.Millisecond)
 			state.shutdownFn()
@@ -988,7 +988,7 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		}
 		go func() {
 			if err := hotSwapTrigger(); err != nil {
-				tlog("[hotswap] background handoff failed: %v\n", err)
+				controlLog("[hotswap] background handoff failed: %v\n", err)
 			}
 		}()
 		return controlResponse{OK: true, Value: "hotswap triggered"}
@@ -1024,7 +1024,7 @@ func dialControlSocket(req controlRequest) (controlResponse, error) {
 	return resp, nil
 }
 
-var controlApplyLog = func(format string, args ...any) { tlog(format, args...) }
+var controlApplyLog = func(format string, args ...any) { controlLog(format, args...) }
 
 func applyLiveSideEffect(key, value string) error {
 	switch key {
@@ -1083,7 +1083,7 @@ func applyMetricsLive(value string) error {
 		if err := stopMetrics(); err != nil {
 			return fmt.Errorf("metrics off: %w", err)
 		}
-		tlog("[metrics] stopped Prometheus /metrics\n")
+		controlLog("[metrics] stopped Prometheus /metrics\n")
 	}
 	return nil
 }
@@ -1182,7 +1182,7 @@ func serveMetrics(ln net.Listener) {
 
 	go func() {
 		if err := server.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
-			tlog("[metrics] listener failed: %v\n", err)
+			controlLog("[metrics] listener failed: %v\n", err)
 		}
 	}()
 	if metricsUnregCloser != nil {
@@ -1190,10 +1190,10 @@ func serveMetrics(ln net.Listener) {
 	}
 	metricsUnregCloser = RegisterCoordinatorCloser(func() {
 		if err := stopMetrics(); err != nil {
-			tlog("[metrics] releasing /metrics for hotswap: %v\n", err)
+			controlLog("[metrics] releasing /metrics for hotswap: %v\n", err)
 		}
 	})
-	tlog("[metrics] started Prometheus /metrics on %s\n", ln.Addr())
+	controlLog("[metrics] started Prometheus /metrics on %s\n", ln.Addr())
 }
 
 func stopMetrics() error {
@@ -1242,7 +1242,7 @@ func startMetricsAfterTakeover(state *controlState) {
 	}
 	ln, err := listenMetrics(5 * time.Second)
 	if err != nil {
-		tlog("[metrics] could not bind /metrics after hotswap takeover: %v\n", err)
+		controlLog("[metrics] could not bind /metrics after hotswap takeover: %v\n", err)
 		return
 	}
 	serveMetrics(ln)
@@ -1262,17 +1262,17 @@ func listenOrWait(addr string, wait time.Duration) (net.Listener, error) {
 func applyPersistedRuntimeTuning(state *controlState) {
 	if v, ok := state.get("gomemlimit"); ok && v != "" && !strings.EqualFold(v, "off") {
 		if err := applyLiveSideEffect("gomemlimit", v); err != nil {
-			tlog("[control] failed to apply persisted gomemlimit=%s: %s\n", v, err)
+			controlLog("[control] failed to apply persisted gomemlimit=%s: %s\n", v, err)
 		}
 	}
 	if v, ok := state.get("gogc"); ok && v != "" && !strings.EqualFold(v, "off") {
 		if err := applyLiveSideEffect("gogc", v); err != nil {
-			tlog("[control] failed to apply persisted gogc=%s: %s\n", v, err)
+			controlLog("[control] failed to apply persisted gogc=%s: %s\n", v, err)
 		}
 	}
 	if v, ok := state.get("metrics"); ok && strings.EqualFold(v, "on") && os.Getenv("URNETWORK_METRICS") == "" && !metricsHandoffPending.Load() {
 		if err := applyMetricsLive("on"); err != nil {
-			tlog("[control] failed to apply persisted metrics=on: %s\n", err)
+			controlLog("[control] failed to apply persisted metrics=on: %s\n", err)
 		}
 	}
 }
@@ -1295,7 +1295,7 @@ func waitForControlSocketRelease(timeout time.Duration) {
 		}
 		conn.Close()
 		if time.Now().After(deadline) {
-			tlog("[control] timed out waiting for parent to release control socket after takeover; proceeding anyway\n")
+			controlLog("[control] timed out waiting for parent to release control socket after takeover; proceeding anyway\n")
 			return
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -1406,7 +1406,7 @@ func listenMetrics(wait time.Duration) (net.Listener, error) {
 		ln, err := listenOrWait(net.JoinHostPort(host, fmt.Sprint(port)), portWait)
 		if err != nil {
 			lastErr = err
-			tlog("[metrics] port %d in use, trying next\n", port)
+			controlLog("[metrics] port %d in use, trying next\n", port)
 			continue
 		}
 		if container {
@@ -1532,12 +1532,12 @@ func (m *metricsMultiListener) addTailscale(wait time.Duration) {
 			m.failed[addr] = true
 			m.mu.Unlock()
 			if first {
-				tlog("[metrics] could not serve /metrics on Tailscale address %s: %v\n", addr, err)
+				controlLog("[metrics] could not serve /metrics on Tailscale address %s: %v\n", addr, err)
 			}
 			continue
 		}
 		m.add(ln)
-		tlog("[metrics] serving /metrics on Tailscale address %s\n", addr)
+		controlLog("[metrics] serving /metrics on Tailscale address %s\n", addr)
 	}
 }
 
@@ -1652,9 +1652,9 @@ func logDashboardLabel(description string) {
 		return
 	}
 	if lastDashboardLabel == "" {
-		tlog("🏷️ [identity] dashboard label: %s\n", description)
+		controlLog("🏷️ [identity] dashboard label: %s\n", description)
 	} else {
-		tlog("🏷️ [identity] dashboard label changed: %s -> %s\n", lastDashboardLabel, description)
+		controlLog("🏷️ [identity] dashboard label changed: %s -> %s\n", lastDashboardLabel, description)
 	}
 	lastDashboardLabel = description
 }

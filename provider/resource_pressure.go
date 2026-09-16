@@ -665,7 +665,7 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 			active = append(active, name)
 		}
 	}
-	tlog("[proxy][pressure] monitor started, sensors: %s (self-heal %v)\n",
+	pressureLog("[proxy][pressure] monitor started, sensors: %s (self-heal %v)\n",
 		strings.Join(active, ","), resolveSelfHealEnabled(selfHealEnabled))
 
 	// Initialize the GC governor state: capture baseline once after all
@@ -687,10 +687,10 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 				gcState.baselineGOGC = n
 				debug.SetGCPercent(n)
 			} else {
-				tlog("[proxy][pressure] warn: ignoring invalid URNETWORK_BASELINE_GOGC=%q\n", v)
+				pressureLog("[proxy][pressure] warn: ignoring invalid URNETWORK_BASELINE_GOGC=%q\n", v)
 			}
 		}
-		tlog("[proxy][pressure] gcGovernor armed (baseline GOGC=%d)\n", gcState.baselineGOGC)
+		pressureLog("[proxy][pressure] gcGovernor armed (baseline GOGC=%d)\n", gcState.baselineGOGC)
 	}
 	gcState.currentGOGC = gcState.baselineGOGC
 
@@ -741,7 +741,7 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 		prevGOGC := gcState.currentGOGC
 		gcGovernor(sample.HeapFrac, hostAvailMiB(), comps["psi_cpu"], true, &gcState)
 		if gcState.currentGOGC != prevGOGC {
-			tlog("[proxy][pressure] gcGovernor %s (heap=%.2f go=%d)\n",
+			pressureLog("[proxy][pressure] gcGovernor %s (heap=%.2f go=%d)\n",
 				gcState.lastTightenAction, gcState.lastHeapFrac, gcState.currentGOGC)
 		}
 
@@ -755,7 +755,7 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 
 		writePressureStatus(smoothed, comps, &gcState)
 		if r := pressureRegime(smoothed); r != lastRegime {
-			tlog("[proxy][pressure] %.2f (%s)\n", smoothed, formatComponents(comps))
+			pressureLog("[proxy][pressure] %.2f (%s)\n", smoothed, formatComponents(comps))
 			lastRegime = r
 		}
 	}
@@ -1135,12 +1135,12 @@ func runPoolController(ctx context.Context, configuredMax int, selfHealEnabled b
 		if next != urlState.TargetPoolSize {
 			urlState.TargetPoolSize = next
 			if err := writeProxyURLState(urlState); err != nil {
-				tlog("[proxy][pressure] warn: could not persist target: %v\n", err)
+				pressureLog("[proxy][pressure] warn: could not persist target: %v\n", err)
 			}
 		}
 		release()
 		if next != target {
-			tlog("[proxy][pressure] pool target %d -> %d (pressure=%.2f cache=%d)\n", target, next, pressure, cacheSize)
+			pressureLog("[proxy][pressure] pool target %d -> %d (pressure=%.2f cache=%d)\n", target, next, pressure, cacheSize)
 		}
 
 		if pressure > aimdShrinkAbove {
@@ -1182,15 +1182,15 @@ func shedPoolToTarget(target int) {
 	shed := selectURLProxiesToShed(state, traffic, excess)
 	for _, addr := range shed {
 		if state.Proxies[addr].Health == "up" {
-			tlog("[proxy][pressure] shedding HEALTHY proxy %s (last resort, pool over target)\n", addr)
+			pressureLog("[proxy][pressure] shedding HEALTHY proxy %s (last resort, pool over target)\n", addr)
 		}
 		globalProxyFailureHistory.SetBackoffUntil(addr, time.Now().Add(shedBackoff))
 	}
 	if err := removeDeadProxies(state, map[string][]string{"url": shed}); err != nil {
-		tlog("[proxy][pressure] warn: shed failed: %v\n", err)
+		pressureLog("[proxy][pressure] warn: shed failed: %v\n", err)
 		return
 	}
-	tlog("[proxy][pressure] shed %d url proxies to reach target %d\n", len(shed), target)
+	pressureLog("[proxy][pressure] shed %d url proxies to reach target %d\n", len(shed), target)
 }
 
 // ---------------------------------------------------------------------------
@@ -1474,7 +1474,7 @@ func resolveSelfHealEnabled(startupEnabled bool) bool {
 	return strings.EqualFold(v, "on")
 }
 
-func tlog(format string, args ...any) {
+func pressureLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
 }
 
