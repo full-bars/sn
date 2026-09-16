@@ -1,12 +1,8 @@
 package provider
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
-	"time"
-
-	gojwt "github.com/golang-jwt/jwt/v5"
 )
 
 // probeHostCount returns the number of probe host targets.
@@ -66,20 +62,4 @@ func gradeTier(score float64) string {
 	default:
 		return "F"
 	}
-}
-
-// ErrTokenInvalid is returned when a JWT has expired.
-var ErrTokenInvalid = errors.New("token expired or invalid")
-
-// validateJWTExpiry checks whether a JWT string has expired.
-func validateJWTExpiry(byJwt string) error {
-	expParser := gojwt.NewParser()
-	if tok, _, parseErr := expParser.ParseUnverified(byJwt, gojwt.MapClaims{}); parseErr == nil {
-		if claims, ok := tok.Claims.(gojwt.MapClaims); ok {
-			if exp, ok := claims["exp"].(float64); ok && time.Now().Unix() > int64(exp)+30 {
-				return ErrTokenInvalid
-			}
-		}
-	}
-	return nil
 }
