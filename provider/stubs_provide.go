@@ -103,5 +103,65 @@ func applyStagedSession() {
 	tlog("[session] staged session applied\n")
 }
 
-// paceMonitor tracks proxy warmup progress. Stub: will be fully ported.
-func paceMonitor(_ context.Context) {}
+// paceMonitor logs real-time warmup progress every 30s and flips
+// proxyWarmupDone once the initial file-proxy ramp is judged complete.
+// Ported from fork main.go's paceMonitor: connect.ProxyHealthSnapshot()/
+// connect.ProxyHealthCount() became the package-local ProxyHealthSnapshot()/
+// ProxyHealthCount() (proxy_health.go), which are fully ported and real.
+//
+// Without this, proxyWarmupDone.Store(true) is never called: URL-sourced
+// proxies (proxy_url_source.go:1118) and hot-reloaded proxies
+// (proxy_reload.go:648) both gate on proxyWarmupDone and would wait forever.
+func paceMonitor(ctx context.Context) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+		up, _, _, _, connecting := ProxyHealthSnapshot()
+		total := ProxyHealthCount()
+		if total < 5 {
+			tlog("🔥 [pace] ✓ warmup: %d up, %d total (< 5) — done\n", up, total)
+			proxyWarmupDone.Store(true)
+			signalProxyReloadAfterWarmup()
+			return
+		}
+		pct := float64(up) * 100 / float64(total)
+		connectingN := len(connecting)
+		elapsed := time.Since(provideStartTime)
+		if elapsed > 60*time.Minute {
+			tlog("🔥 [pace] warmup: %d/%d up (%.0f%%), %d connecting — forced done after 60m\n",
+				up, total, pct, connectingN)
+			proxyWarmupDone.Store(true)
+			signalProxyReloadAfterWarmup()
+			return
+		}
+		if pct < 50 && connectingN > 10 {
+			tlog("🔥 [pace] ⚠ warmup: %d/%d up (%.0f%%), %d connecting, %d done\n",
+				up, total, pct, connectingN, total-up-connectingN)
+		} else if pct > 90 && connectingN < 5 {
+			tlog("🔥 [pace] ✓ warmup: %d/%d up (%.0f%%), %d connecting — done\n",
+				up, total, pct, connectingN)
+			proxyWarmupDone.Store(true)
+			signalProxyReloadAfterWarmup()
+			return
+		} else {
+			tlog("🔥 [pace] warmup: %d/%d up (%.0f%%), %d connecting\n",
+				up, total, pct, connectingN)
+		}
+	}
+}
+
+// signalProxyReloadAfterWarmup nudges the URL-sourced proxy loop to pick up
+// now that file-proxy warmup has completed and it is no longer held back by
+// proxyWarmupDone.
+func signalProxyReloadAfterWarmup() {
+	if reloadPath, err := proxyReloadPath(); err == nil {
+		if err := writeReloadTrigger(reloadPath); err != nil {
+			tlog("[proxy] warn: failed to signal proxy reload after warmup (write .reload): %v\n", err)
+		}
+	}
+}

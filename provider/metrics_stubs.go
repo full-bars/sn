@@ -18,32 +18,16 @@ func metricsProviderLog(format string, args ...any) {
 }
 
 // prometheusLabelValue wraps a string for use as a Prometheus label value.
-// In the fork this was connect.PrometheusLabelValue; v2026 connect removed it.
-// The only transformation is quoting special characters.
-//
-// DESIGN ADAPTATION: connect.PrometheusLabelValue was removed in v2026.
-// The function only quoted label values containing special characters.
-// We replicate that behavior locally.
+// Ported from connect's metrics_prometheus.go (connect.PrometheusLabelValue),
+// which v2026 removed. Escapes backslash, double-quote, and newlines per the
+// Prometheus text format spec, and scrubs invalid UTF-8 so a malformed label
+// (e.g. a garbled proxy address) can't corrupt the exposition output.
 func prometheusLabelValue(s string) string {
-	if strings.ContainsAny(s, `"\`) {
-		s = strings.ReplaceAll(s, `\`, `\\`)
-		s = strings.ReplaceAll(s, `"`, `\"`)
-		return `"` + s + `"`
-	}
+	s = strings.ToValidUTF8(s, "�")
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `"`, `\"`)
+	s = strings.ReplaceAll(s, "\n", `\n`)
 	return `"` + s + `"`
-}
-
-// stubMetricsProvider is a no-op extra metrics provider.
-// The fork called connect.SetExtraMetricsProvider(providerExtraMetrics);
-// v2026 connect removed this hook. We call providerExtraMetrics directly
-// from the control socket metrics handler instead.
-//
-// DESIGN ADAPTATION: The fork's SetExtraMetricsProvider let the provider
-// inject custom Prometheus lines into connect's default /metrics handler.
-// v2026 removed this hook. The provider now serves its own /metrics endpoint
-// via metrics_listen.go, so this bridge is no longer needed.
-func stubMetricsProvider() string {
-	return providerExtraMetrics()
 }
 
 // stubSetPersistentErrorFunc is a no-op.
@@ -74,14 +58,17 @@ func initMetricsStubs() {
 // DESIGN ADAPTATION: connect.SetExtraMetricsProvider was removed in v2026.
 func stubSetExtraMetricsProvider(_ func() string) {}
 
-// prometheusHandlerStub returns nil — the fork used connect.PrometheusHandler()
-// which v2026 removed. The provider now serves its own /metrics endpoint
-// via the metricsListen multi-listener.
-//
-// DESIGN ADAPTATION: connect.PrometheusHandler was removed in v2026.
-// The provider serves /metrics directly via metrics_listen.go.
+// prometheusHandlerStub serves providerExtraMetrics(), which is now the
+// complete Prometheus text-format payload (the fork's connect.PrometheusHandler
+// wrote the base metrics and appended the provider's extra lines; v2026 removed
+// that hook, so providerExtraMetrics absorbed the whole payload — see
+// metrics_provider.go). Returning nil here left the http.Server falling back
+// to http.DefaultServeMux, which serves nothing on /metrics.
 func prometheusHandlerStub() http.Handler {
-	return nil
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+		fmt.Fprint(w, providerExtraMetrics())
+	})
 }
 
 // getDohFailureCountStub returns 0.
@@ -95,20 +82,20 @@ func getDohFailureCountStub() int64 {
 }
 
 // PQETotalCounts holds PQE/classical session counts for metrics.
-// The fork's pqeTotalCounts() was from pqe_tracker.go.
-// This is a minimal stub until that module is ported.
-//
-// DESIGN ADAPTATION: pqe_tracker.go hasn't been ported yet.
-// Returns zero values so metrics_provider.go compiles.
+// The fork's pqeTotalCounts() summed connect.PQECounts (transfer_encrypt.go's
+// EncryptionSessionManager.PQECounts(), backed by pqe_tracker.go) across every
+// live encryptionManagers entry. v2026 connect's EncryptionSessionManager
+// (transfer_encrypt.go:3065) carries no PQE/classical session tracker at
+// all — the capability was removed upstream, not just renamed — so there is
+// no live data this package can read. Returns zero values until v2026
+// connect re-exposes per-session PQE accounting.
 type PQETotalCounts struct {
-	ActivePQE, ActiveClas                     int
-	PQELifetime, ClasLifetime                 int
-	PQEHour, PQEDay, PQEWeek                  int
-	ClasHour, ClasDay, ClasWeek               int
+	ActivePQE, ActiveClas       int
+	PQELifetime, ClasLifetime   int
+	PQEHour, PQEDay, PQEWeek    int
+	ClasHour, ClasDay, ClasWeek int
 }
 
 func pqeTotalCounts() PQETotalCounts {
 	return PQETotalCounts{}
 }
-
-

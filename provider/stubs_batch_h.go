@@ -7,10 +7,21 @@ import (
 	"runtime/metrics"
 )
 
-// activeConnectionCount returns the current number of active connections.
-// Stub returns 0; real implementation needs connect.ActiveProxyConnections()
-// which was removed in v2026.
-func activeConnectionCount() int64 { return 0 }
+// activeConnectionCount returns the current number of active client
+// connections across all registered proxies. The fork sourced this from
+// connect.ActiveConnectionCount(), an atomic counter incremented deep in
+// connect's IP-layer code (ip.go); v2026 connect exposes no equivalent.
+// Instead we sum the per-proxy client-session counts that this package
+// already tracks in proxy_health.go/bandwidth for the [health] report and
+// bandwidth_reporter.go, which is the same signal at proxy granularity.
+func activeConnectionCount() int64 {
+	_, _, _, bw, _ := ProxyHealthSnapshot()
+	var total int64
+	for _, b := range bw {
+		total += b.Clients.Load()
+	}
+	return total
+}
 
 // metricBytesToMiB converts a runtime/metrics value to MiB.
 // Real implementation ported from fork main.go:1299.
