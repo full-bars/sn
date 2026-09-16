@@ -87,14 +87,6 @@ func controlLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
 }
 
-func restrictSocketACL(_ string) error {
-	return nil
-}
-
-func verifyPeerCredentials(_ *net.UnixConn) error {
-	return nil
-}
-
 // startControlSocket opens the control socket and serves it until ctx is
 // canceled. Returns once the listener is up and accepting; serving happens
 // on a background goroutine. The returned cleanup func closes the listener

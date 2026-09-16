@@ -789,12 +789,6 @@ func hotswapLog(format string, args ...any) {
 }
 
 
-
-
-// flushRetentionEvents is a stub for the proxy health retention event flush
-// mechanism present in the fork, which is not used in this repo.
-func flushRetentionEvents() {}
-
 // restoreStdioBeforeExec is a no-op when ramlog pipe redirect is not active.
 func restoreStdioBeforeExec() {}
 

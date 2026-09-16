@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -15,18 +14,7 @@ import (
 // - Ported from main to package provider.
 // - Replaced temporary inlined ProxyState / ProxyEntry / readProxyState /
 //   writeProxyState definitions in resource_pressure.go with this canonical module.
-// - Included proxy ID counter management (proxyIDCounter, nextProxyID,
-//   initProxyIDCounter, currentProxyIDCounter) required by resolveProxyID
-//   and ProxyState.NextID.
 // - Atomic temp-file-and-rename writes via writeProxyStateTo.
-
-// proxyIDCounter is the global monotonic proxy ID counter.
-// IDs are never reused — even after removal and re-addition.
-
-// initProxyIDCounter fast-forwards the monotonic counter above highestExistingID
-// so IDs from previous runs stored in proxy.state are never reused.
-
-// currentProxyIDCounter returns the current counter value, for state snapshots.
 
 // proxyStateMu serializes all proxy.state read-modify-write cycles.
 // Held during: heartbeat snapshot goroutine, reload() state write.

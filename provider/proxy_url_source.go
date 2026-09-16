@@ -971,7 +971,7 @@ func runURLProxyReaperOnce(ctx context.Context, apiHost string, apiPort uint16) 
 
 			entry.LastProbe = time.Now()
 
-			liveHealth := connect.ProxyHealthByAddress()
+			liveHealth := proxyHealthByAddressV2026()
 			isLive := false
 			if h, ok := liveHealth[r.addr]; ok && h.Health == "up" {
 				isLive = true

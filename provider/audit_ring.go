@@ -1,10 +1,7 @@
 package provider
 
 import (
-	"crypto/sha256"
-	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -238,10 +235,5 @@ func formatAuditSummary(e CommandAudit) string {
 	}
 	return fmt.Sprintf("%s %s ok=%v src=%s", e.Cmd, e.Key, e.OK, e.Source)
 }
-
-// ---------------------------------------------------------------------------
-// Atomic JSON Persistence Helpers
-// ---------------------------------------------------------------------------
-
 
 

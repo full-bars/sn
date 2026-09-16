@@ -1,39 +1,35 @@
 package provider
 
+// Stubs for symbols referenced by downstream files that are not yet
+// present in the v2026 target workspace.
+
 import (
-	"fmt"
-	"log"
-	"os"
+	"time"
 )
 
-// Stubs for symbols referenced by Batch D+G files that are not yet present
-// in the v2026 target workspace. These will be replaced when the upstream
-// implementations are ported.
+// verifyPeerCredentials is a no-op on non-Linux platforms.
+// On Linux the real implementation lives in peercred_linux.go.
 
-// tlog logs formatted output to stderr. In the fork this routes through a
-// structured logger; here we fall back to fmt.Fprintf for now.
-func tlog(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, format, args...)
+// atomicBool is a simple atomic boolean used by proxyWarmupDone.
+type atomicBool struct{ v int32 }
+
+func (a *atomicBool) Load() bool  { return a.v != 0 }
+func (a *atomicBool) Store(b bool) {
+	if b {
+		a.v = 1
+	} else {
+		a.v = 0
+	}
 }
 
-// shmLogFatal logs a fatal message and exits with the given code. In the
-// fork this writes to shared-memory log regions; here we use log.Fatalf.
-func shmLogFatal(code int, format string, args ...any) {
-	log.Fatalf("fatal [%d]: "+format, append([]any{code}, args...)...)
+// backoffPacerWithDelay returns true after the delay elapses or ctx is done.
+func backoffPacerWithDelay(baseDelay, extraDelay time.Duration, ctx interface{ Done() <-chan struct{} }) bool {
+	select {
+	case <-time.After(baseDelay + extraDelay):
+		return true
+	case <-ctx.Done():
+		return false
+	}
 }
 
 // DefaultConnectUrl is the default WebSocket connect endpoint.
-const DefaultConnectUrl = "wss://connect.bringyour.com"
-
-// defaultAPIHost is the default target for the API reachability probe.
-const defaultAPIHost = "api.bringyour.com"
-
-// defaultAPIPort is the default HTTPS port for the API reachability probe.
-const defaultAPIPort = 443
-
-// triggerProxyReload signals the running provider to reload its proxy
-// configuration. In the fork this writes to a control socket; here it's
-// a no-op stub until control_state integration is complete.
-func triggerProxyReload() {
-	// TODO: wire to control_state reload signal
-}

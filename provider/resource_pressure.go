@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -15,7 +14,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -993,25 +991,6 @@ func aimdStep(target, cacheSize int, pressure float64, ceiling int) int {
 	}
 }
 
-// healthRank orders the shed priority by last-known health (lower = shed first),
-// mirroring the URL pool controller's ranking.
-func healthRank(health string) int {
-	switch health {
-	case "dead":
-		return 0
-	case "inactive":
-		return 1
-	case "long_offline":
-		return 2
-	case "offline":
-		return 3
-	case "recently_offline":
-		return 4
-	default: // "up" and unknown shed last
-		return 5
-	}
-}
-
 // selectURLProxiesToShed ranks URL-sourced proxies for removal under
 // sustained pressure: dead first, then degraded tiers, then healthy ones by
 // ascending traffic — shedding an earning proxy is the last resort, and the
@@ -1209,165 +1188,8 @@ var proxyHealthSnapshot = func() (up int, dead []string, degraded []string, band
 	return 0, nil, nil, nil, nil
 }
 
-
-// ProxyURLState is the on-disk record of configured live proxy URL sources.
-type ProxyURLState struct {
-	Sources                  []string                 `json:"sources"`
-	Cache                    map[string]ProxyURLEntry `json:"cache"`
-	Blacklist                map[string]time.Time     `json:"blacklist,omitempty"`
-	ExcludePatterns          []string                 `json:"exclude_patterns,omitempty"`
-	DegradedCleanupThreshold string                   `json:"degraded_cleanup_threshold,omitempty"`
-	TargetPoolSize           int                      `json:"target_pool_size,omitempty"`
-}
-
-// ProxyURLEntry records the probe/grade state for one address fetched from a URL source.
-type ProxyURLEntry struct {
-	User       string    `json:"user,omitempty"`
-	Password   string    `json:"password,omitempty"`
-	ProbeOK    bool      `json:"probe_ok"`
-	ProbeFails int       `json:"probe_fails,omitempty"`
-	LastProbe  time.Time `json:"last_probe,omitempty"`
-	Score      float64   `json:"score,omitempty"`
-	Graded     bool      `json:"graded,omitempty"`
-	Failed     []string  `json:"failed,omitempty"`
-	LastGraded time.Time `json:"last_graded,omitempty"`
-}
-
-
-func proxyURLStatePath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(home, ".urnetwork", "proxy_url.json"), nil
-}
-
-func readProxyURLState() (*ProxyURLState, error) {
-	path, err := proxyURLStatePath()
-	if err != nil {
-		return nil, err
-	}
-	b, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return &ProxyURLState{Cache: map[string]ProxyURLEntry{}}, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("read proxy_url.json: %w", err)
-	}
-	var s ProxyURLState
-	if err := json.Unmarshal(b, &s); err != nil {
-		return nil, fmt.Errorf("parse proxy_url.json: %w", err)
-	}
-	if s.Cache == nil {
-		s.Cache = map[string]ProxyURLEntry{}
-	}
-	return &s, nil
-}
-
-func writeProxyURLState(s *ProxyURLState) error {
-	path, err := proxyURLStatePath()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return err
-	}
-	b, err := json.Marshal(s)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, b, 0600)
-}
-
-
-
-
-
-func proxyTrimPath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(home, ".urnetwork", "proxy_trim"), nil
-}
-
-func readTrimTarget() (int, error) {
-	path, err := proxyTrimPath()
-	if err != nil {
-		return 0, err
-	}
-	b, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return 0, nil
-		}
-		return 0, err
-	}
-	s := strings.ToLower(strings.TrimSpace(string(b)))
-	if s == "" || s == "off" || s == "0" {
-		return 0, nil
-	}
-	n, err := strconv.Atoi(s)
-	if err != nil || n < 0 {
-		return 0, nil
-	}
-	return n, nil
-}
-
-
-
 func pressureLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
 }
 
-func parseProxyString(s string) (string, string) {
-	parts := strings.SplitN(s, " (", 2)
-	if len(parts) == 2 {
-		return parts[0], strings.TrimRight(parts[1], ")")
-	}
-	return s, ""
-}
 
-type proxyFailureHistory struct {
-	mu           sync.Mutex
-	failures     map[string]int
-	giveUps      map[string]int
-	backoffUntil map[string]time.Time
-}
-
-var globalProxyFailureHistory = &proxyFailureHistory{
-	failures:     map[string]int{},
-	giveUps:      map[string]int{},
-	backoffUntil: map[string]time.Time{},
-}
-
-func (h *proxyFailureHistory) SetBackoffUntil(address string, until time.Time) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	if h.backoffUntil == nil {
-		h.backoffUntil = map[string]time.Time{}
-	}
-	h.backoffUntil[address] = until
-}
-
-func (h *proxyFailureHistory) Reset(address string) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	delete(h.failures, address)
-	delete(h.giveUps, address)
-	delete(h.backoffUntil, address)
-}
-
-
-// Eligible returns whether a proxy address is eligible for use
-// (not in backoff). DESIGN ADAPTATION: ported from proxy_failure_history.go
-// in the fork, added here because proxy_reload.go depends on it.
-func (h *proxyFailureHistory) Eligible(address string, now time.Time) bool {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	entry, ok := h.entries[address]
-	if !ok {
-		return true
-	}
-	return now.After(entry.BackoffUntil)
-}

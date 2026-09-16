@@ -76,21 +76,6 @@ func (s *HotswapParentSession) Wait() error {
 	return s.waitErr
 }
 
-// hotSwapSocketpair creates the parent/candidate socketpair with both
-// descriptors already close-on-exec.
-func hotSwapSocketpair() ([2]int, error) {
-	syscall.ForkLock.RLock()
-	defer syscall.ForkLock.RUnlock()
-
-	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
-	if err != nil {
-		return [2]int{}, err
-	}
-	syscall.CloseOnExec(fds[0])
-	syscall.CloseOnExec(fds[1])
-	return [2]int{fds[0], fds[1]}, nil
-}
-
 // spawnHotSwapCandidate creates an anonymous close-on-exec socketpair,
 // passes descriptor 3 to the child via ExtraFiles, and starts the candidate process.
 func spawnHotSwapCandidate(exe string, args []string) (*HotswapParentSession, error) {

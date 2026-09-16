@@ -107,24 +107,4 @@ func pqeTotalCounts() PQETotalCounts {
 	return PQETotalCounts{}
 }
 
-// proxyGradeTier maps a numeric score to a letter grade.
-// The fork's proxy_grade_paid.go defined this.
-// Stub until that module is ported.
-//
-// DESIGN ADAPTATION: proxy_grade_paid.go hasn't been ported yet.
-func proxyGradeTier(score float64) string {
-	switch {
-	case score >= 0.9:
-		return "A"
-	case score >= 0.7:
-		return "B"
-	case score >= 0.5:
-		return "C"
-	case score >= 0.3:
-		return "D"
-	case score >= 0.1:
-		return "E"
-	default:
-		return "F"
-	}
-}
+
