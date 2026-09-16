@@ -1,0 +1,456 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+      - fix/v3.23-custom
+    tags:
+      - 'v*'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'releases/**'
+    branches:
+      - main
+      - fix/v3.23-custom
+  workflow_dispatch:
+
+# Supersede in-flight PR runs: this is the most expensive workflow in the
+# repo, and without this a quick second push runs the whole suite twice.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_IMAGE_NAME: 3cape/urnetwork-3.23-fix
+
+jobs:
+  test:
+    name: test (shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      # Every shard reports independently: one failing package should not
+      # hide the results of the other two.
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Go (native cache)
+        # cache: true uses setup-go's built-in Go-aware cache (build + module
+        # caches via the actions/cache backend with atomic restore). Replaces
+        # the two manual cache steps, which flaked with tar extraction races
+        # ("Cannot open: File exists") on cache restore.
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Verify shard partition covers every package
+        run: ./.github/scripts/test_shard.sh --verify
+
+      - name: Run Go Unit Tests (shard ${{ matrix.shard }})
+        run: |
+          # Full suite with the race detector, split across shards so the
+          # wall clock is the slowest shard rather than the sum. The slow
+          # transport/transfer integration tests self-skip under -short via
+          # their testing.Short() guards. Package selection comes from
+          # test_shard.sh, which auto-assigns any newly added package and
+          # is verified above, so the suite cannot silently drop coverage.
+          PKGS=$(./.github/scripts/test_shard.sh ${{ matrix.shard }})
+          if [ -z "$PKGS" ]; then
+            echo "shard ${{ matrix.shard }} resolved to no packages"
+            exit 1
+          fi
+          echo "$PKGS" | sed 's/^/  /'
+          for attempt in 1 2 3; do
+            echo "=== go test attempt $attempt/3 ==="
+            set +e
+            # shellcheck disable=SC2086
+            go test -short -race -timeout 600s $PKGS 2>&1 | tee /tmp/gotest.out
+            rc=${PIPESTATUS[0]}
+            set -e
+            if [ "$rc" -eq 0 ]; then
+              echo "go test passed (attempt $attempt)"
+              exit 0
+            fi
+            # Retry ONLY the known cache-restore flake ("Cannot open: File
+            # exists" from a tar extraction race). Retrying a genuine test
+            # failure just burns three full runs before reporting red, so
+            # anything else fails fast.
+            if grep -qE "Cannot open: File exists|tar:.*Cannot open" /tmp/gotest.out; then
+              echo "cache-restore flake detected; clearing build cache and retrying"
+              go clean -cache
+              sleep 5
+              continue
+            fi
+            echo "genuine test failure — not retrying"
+            exit "$rc"
+          done
+          echo "go test still flaking after 3 attempts"
+          exit 1
+
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Go (native cache)
+        # cache: true uses setup-go's built-in Go-aware cache (build + module
+        # caches via the actions/cache backend with atomic restore). Replaces
+        # the two manual cache steps, which flaked with tar extraction races
+        # ("Cannot open: File exists") on cache restore.
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Run go vet
+        run: |
+          go vet .
+          go vet ./provider/...
+
+      - name: Check gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "Files not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Check hot-path verbose logging guards
+        run: |
+          # Tier-1 hot-path files must not grow new unguarded V(n).Inf* calls.
+          # Two invariants:
+          #  1. Every unguarded call must carry a format string from the
+          #     checked-in allowlist (.github/verbose_log_allowlist.txt) - the
+          #     sanctioned Tier-2 per-connection/per-handshake sites that Task 17
+          #     deliberately leaves unguarded.
+          #  2. The allowlist and the guarded sites must be disjoint: an
+          #     allowlisted string used at a guarded site is a blind spot (the
+          #     guard could be silently removed and CI would not notice).
+          # A Tier-2 sweep PR must regenerate the allowlist.
+          python3 - <<'PYEOF'
+          import re, sys
+          sanctioned = set()
+          for line in open('.github/verbose_log_allowlist.txt'):
+              line = line.strip()
+              if line and not line.startswith('#'):
+                  sanctioned.add(line)
+
+          def formats_of(src, pattern):
+              out = []
+              for m in re.finditer(pattern, src):
+                  fm = re.match(r'\s*("(?:[^"\\]|\\.)*")', src[m.end():])
+                  out.append((src.count('\n', 0, m.start()) + 1,
+                              fm.group(1) if fm else '<no format string>'))
+              return out
+
+          bad = []
+          shared = []
+          for f in ('ip.go', 'transfer.go', 'ip_remote_multi_client.go'):
+              src = open(f).read()
+              for line_no, fmt in formats_of(src, r'(?m)^[^\n/]*\.V\(\d+\)\.Inf\w*\('):
+                  if fmt not in sanctioned:
+                      bad.append(f'{f}:{line_no} {fmt[:90]}')
+              for line_no, fmt in formats_of(src, r'(?m)^[^\n/]*\bv\.Inf\w*\('):
+                  if fmt in sanctioned:
+                      shared.append(f'{f}:{line_no} {fmt[:90]}')
+          if bad:
+              print('unguarded V(n).Inf* with a non-allowlisted format string:')
+              print('\n'.join(bad))
+              print("wrap with 'if v := log.V(n); v.Enabled()' or extend the allowlist (Tier-2 sweep only)")
+              sys.exit(1)
+          if shared:
+              print('allowlisted format string is also used at a guarded site - remove it from the allowlist:')
+              print('\n'.join(shared))
+              sys.exit(1)
+          PYEOF
+
+      - name: Run Installer Script Tests
+        run: |
+          chmod +x scripts/test_provider_install.sh
+          ./scripts/test_provider_install.sh
+
+      - name: Run Fallback Logic Tests
+        run: |
+          chmod +x scripts/test_fallback_logic.sh
+          ./scripts/test_fallback_logic.sh
+
+      - name: Docker update-source guard (fork-only release fetches)
+        run: |
+          # The docker self-update scripts must ONLY ever fetch provider
+          # releases from this fork. Any api.github.com/repos/<org>/<repo>
+          # URL in docker/scripts that is NOT full-bars/* is a silent
+          # upstream-replace of the hardened binary, so the guard fails the
+          # build. shellcheck separately covers syntax (errors only; the
+          # pre-existing SC2071/SC2155 warnings live on untouched lines).
+          violations=0
+          for f in docker/scripts/*.sh; do
+            while read -r url; do
+              org_repo="$(printf '%s' "$url" | sed -E 's#.*/repos/([^/"]+/[^/"]+).*#\1#')"
+              case "$org_repo" in
+                full-bars/*) ;;
+                *)
+                  echo "VIOLATION $f: $url"
+                  echo "  -> docker update fetches must target full-bars/* only"
+                  violations=$((violations+1))
+                  ;;
+              esac
+            done < <(grep -oE 'https://api\.github\.com/repos/[^"]+' "$f" || true)
+          done
+          if [ "$violations" -gt 0 ]; then
+            echo "$violations upstream-fetch violation(s) found"
+            exit 1
+          fi
+          chmod +x docker/scripts/test_update_verify.sh
+          ./docker/scripts/test_update_verify.sh
+
+      - name: Pelican egg checks (JSON validity, var contract, updater disabled)
+        run: |
+          # The egg is a user-facing surface: a malformed import or a variable
+          # rename that breaks the pelican_panel.sh contract must fail CI,
+          # not surface as a broken server in someone's panel.
+          egg=pelican/egg-urnetwork-323fix.json
+
+          jq -e '.meta.version == "PLCN_v3"
+                 and (.docker_images | length == 1)
+                 and ([.docker_images[]][0] | test("^ghcr\\.io/full-bars/urnetwork-3.23-fix:latest$"))
+                 and .startup_commands.Default == "sh /app/entrypoint.sh"
+                 and (.config.startup | fromjson | .done == "Provider")' "$egg" >/dev/null \
+            || { echo "FAIL: egg JSON structure invalid"; exit 1; }
+
+          # Required variables with their panel-side roles
+          check_var() {
+            env="$1"; viewable="$2"; editable="$3"; default="$4"
+            jq -e --arg env "$env" --argjson v "$viewable" --argjson e "$editable" \
+                  --arg d "$default" \
+              '[.variables[] | select(.env_variable == $env)][0]
+               and ([.variables[] | select(.env_variable == $env)][0].user_viewable == $v)
+               and ([.variables[] | select(.env_variable == $env)][0].user_editable == $e)
+               and ([.variables[] | select(.env_variable == $env)][0].default_value == $d)' \
+              "$egg" >/dev/null \
+              || { echo "FAIL: variable contract broken: $env"; exit 1; }
+          }
+          check_var BUILD      true  true  'stable'
+          check_var USER_AUTH  true  true  ''
+          check_var PASSWORD   false true  ''
+          check_var AUTHCODE   false true  ''
+          check_var PELICAN    false false 'yes'
+          check_var ENABLE_VNSTAT     false false 'false'
+          check_var ENABLE_IP_CHECKER false false 'false'
+
+          # Under PELICAN=yes no runtime self-update may exist:
+          # nightly bootstrap/watcher gate + urnet-tools do_update refusal.
+          grep -q 'PELICAN' docker/scripts/start_nightly.sh \
+            || { echo "FAIL: nightly update check not PELICAN-gated"; exit 1; }
+          sed -n '/^do_update()/,/^[a-z_]*() {\|^do_update/p' docker/scripts/urnet-tools.sh | head -12 | grep -q 'PELICAN' \
+            || { echo "FAIL: do_update not PELICAN-gated"; exit 1; }
+
+      - name: Pelican panel boot smoke (fake provider binary)
+        run: |
+          chmod +x docker/scripts/test_pelican_smoke.sh
+          ./docker/scripts/test_pelican_smoke.sh
+
+      - name: Pelican gate behavioral tests + egg invariants
+        run: |
+          chmod +x docker/scripts/test_pelican_gates.sh
+          ./docker/scripts/test_pelican_gates.sh
+
+      - name: Shellcheck docker scripts (error severity)
+        run: |
+          # Error-severity gate over every docker script. Pre-existing
+          # findings must be fixed or suppressed inline (# shellcheck
+          # disable=...) with a justification comment — SC2071 in
+          # urnet-tools.sh (intentional uint64 string-compare) is done.
+          sudo apt-get install -y shellcheck >/dev/null 2>&1
+          status=0
+          for f in docker/scripts/*.sh; do
+            if ! shellcheck -S error "$f"; then
+              status=1
+            fi
+          done
+          exit $status
+
+      - name: Run vulnerability check
+        continue-on-error: true
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+  build-and-push:
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to the Container registry
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          # latest=false is LOAD-BEARING, not cosmetic. metadata-action defaults
+          # to flavor: latest=auto, which adds :latest on ANY git tag event, in
+          # addition to and independent of the explicit type=raw rule below.
+          # On 2026-09-08 that default published :latest for
+          # v3.23.0-fix.31.0-rc1 even though the type=raw rule below correctly
+          # evaluated to false for an -rc tag: the gate was closed and the
+          # implicit door was open. With latest=false the type=raw rule is the
+          # ONLY thing that can produce :latest, which is what makes that gate
+          # mean anything. Do not remove.
+          flavor: |
+            latest=false
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ env.DOCKER_IMAGE_NAME }}
+          tags: |
+            # :latest is the STABLE release — only on v3.23.0-fix.* tags.
+            # group=0 keeps the FULL semver tag (v3.23.0-fix.30.2) so
+            # docker pull with the exact release tag works (matches
+            # release notes, the shakedown, and docker.go). group=1
+            # stripped the v3.23.0-fix. prefix and broke those pulls.
+            type=match,pattern=v3\.23\.0-fix\..*,group=0
+            # A pre-release must NOT become :latest. release.yml already marks
+            # the GitHub Release itself pre-release on -rc/-alpha/-beta, but
+            # that gate keys off the SUFFIX while this one keyed off the
+            # PREFIX, so the two disagreed: v3.23.0-fix.31.0-rc1 was hidden
+            # from /releases/latest (protecting native auto-update) yet still
+            # published :latest, silently exposing every Docker node that
+            # pulls it. The suffix checks below make both gates agree, so an
+            # -rc tag is safe to push under the normal naming convention.
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v3.23.0-fix.') && !contains(github.ref, '-rc') && !contains(github.ref, '-alpha') && !contains(github.ref, '-beta') }}
+            # :main (and :sha-<short>) track current main continuously.
+            type=ref,event=branch
+            type=sha,format=short
+
+      - name: Determine version for build
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            # For main branch, get the most recent provider tag. Scoped to
+            # v3.23.0-fix.* so unrelated tag schemes in this repo (e.g. the
+            VERSION=$(git describe --tags --abbrev=0 --match 'v3.23.0-fix.*' 2>/dev/null || echo "v3.23.0-fix.1")
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+
+      # Post-push assertion, NOT a pre-push expectation. The 2026-09-08 incident
+      # happened because the gating logic was reasoned about rather than
+      # observed: the explicit rule evaluated correctly while an implicit
+      # metadata-action default published :latest anyway, and a digest check run
+      # DURING the build (before the push landed) reported a false all-clear.
+      # This step runs after the push has actually happened and asks the
+      # registry what is true, which is the only check that could have caught it.
+      - name: Assert a pre-release did not become :latest
+        if: ${{ github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/') && (contains(github.ref, '-rc') || contains(github.ref, '-alpha') || contains(github.ref, '-beta')) }}
+        run: |
+          set -euo pipefail
+          REPO="full-bars/urnetwork-3.23-fix"
+          TAG="${GITHUB_REF_NAME}"
+          TOK=$(curl -sf "https://ghcr.io/token?scope=repository:${REPO}:pull&service=ghcr.io" \
+                | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+          ACCEPT='application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.docker.distribution.manifest.v2+json'
+          digest_of() {
+            curl -sfI -H "Authorization: Bearer $TOK" -H "Accept: ${ACCEPT}" \
+              "https://ghcr.io/v2/${REPO}/manifests/$1" 2>/dev/null \
+              | grep -i '^docker-content-digest' | tr -d '\r' | awk '{print $2}'
+          }
+          RC_DIGEST=$(digest_of "$TAG")
+          LATEST_DIGEST=$(digest_of latest)
+          echo "pre-release tag $TAG = ${RC_DIGEST:-<none>}"
+          echo ":latest             = ${LATEST_DIGEST:-<none>}"
+          if [ -z "$RC_DIGEST" ]; then
+            echo "::error::could not resolve the digest for $TAG; refusing to pass this check blind"
+            exit 1
+          fi
+          if [ "$LATEST_DIGEST" = "$RC_DIGEST" ]; then
+            echo "::error:::latest now points at pre-release $TAG. Every Docker node pulling :latest is exposed. Restore :latest to the current stable tag before proceeding."
+            exit 1
+          fi
+          echo ":latest does not point at the pre-release - OK"
+
+      - name: Notify Discord on tagged release
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          BUILD_NOTIFY: ${{ secrets.BUILD_NOTIFY }}
+        run: |
+          if [ -z "$BUILD_NOTIFY" ]; then
+            echo "BUILD_NOTIFY secret is not set, skipping notification"
+            exit 0
+          fi
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -sf -H "Content-Type: application/json" -d "$(jq -n \
+            --arg version "$VERSION" \
+            --arg runUrl "$RUN_URL" \
+          '{
+            "embeds": [{
+              "title": ("🐳 Docker Image Published — " + $version),
+              "description": ("**Platforms:** linux/amd64, linux/arm64\n\n**Pull:**\n```\ndocker pull ghcr.io/full-bars/urnetwork-3.23-fix:" + $version + "\n```\n```\ndocker pull 3cape/urnetwork-3.23-fix:" + $version + "\n```\n\n[View build run](" + $runUrl + ")"),
+              "color": 2406797,
+              "footer": { "text": "URNetwork Release Monitor • Docker" }
+            }]
+          }')" "$BUILD_NOTIFY"
