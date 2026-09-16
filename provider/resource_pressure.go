@@ -1209,27 +1209,6 @@ var proxyHealthSnapshot = func() (up int, dead []string, degraded []string, band
 	return 0, nil, nil, nil, nil
 }
 
-// ProxyState is the on-disk record of what the provider is currently running.
-type ProxyState struct {
-	Source    string                `json:"source"`
-	StartedAt time.Time             `json:"started_at"`
-	NextID    int                   `json:"next_id"`
-	Proxies   map[string]ProxyEntry `json:"proxies"`
-}
-
-// ProxyEntry records the stable ID and last-known health for one proxy.
-type ProxyEntry struct {
-	ID           int       `json:"id"`
-	Health       string    `json:"health"`
-	DownSince    string    `json:"down_since,omitempty"`
-	Source       string    `json:"source,omitempty"`
-	AuthFailures int64     `json:"auth_failures,omitempty"`
-	Score        float64   `json:"score,omitempty"`
-	Graded       bool      `json:"graded,omitempty"`
-	Failed       []string  `json:"failed,omitempty"`
-	LastGraded   time.Time `json:"last_graded,omitempty"`
-	Pending      bool      `json:"pending,omitempty"`
-}
 
 // ProxyURLState is the on-disk record of configured live proxy URL sources.
 type ProxyURLState struct {
@@ -1254,50 +1233,6 @@ type ProxyURLEntry struct {
 	LastGraded time.Time `json:"last_graded,omitempty"`
 }
 
-func proxyStatePath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(home, ".urnetwork", "proxy.state"), nil
-}
-
-func readProxyState() (*ProxyState, error) {
-	path, err := proxyStatePath()
-	if err != nil {
-		return nil, err
-	}
-	b, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return &ProxyState{Proxies: map[string]ProxyEntry{}}, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("read proxy.state: %w", err)
-	}
-	var s ProxyState
-	if err := json.Unmarshal(b, &s); err != nil {
-		return nil, fmt.Errorf("parse proxy.state: %w", err)
-	}
-	if s.Proxies == nil {
-		s.Proxies = map[string]ProxyEntry{}
-	}
-	return &s, nil
-}
-
-func writeProxyState(s *ProxyState) error {
-	path, err := proxyStatePath()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return err
-	}
-	b, err := json.Marshal(s)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, b, 0600)
-}
 
 func proxyURLStatePath() (string, error) {
 	home, err := os.UserHomeDir()
