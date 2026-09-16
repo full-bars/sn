@@ -324,30 +324,36 @@ func providerExtraMetrics() string {
 
 	// --- PQE session counts ---
 	pq := pqeTotalCounts()
-	fmt.Fprintf(&b, "# HELP urnet_sessions_pqe Active PQE sessions.\n")
-	fmt.Fprintf(&b, "# TYPE urnet_sessions_pqe gauge\n")
-	fmt.Fprintf(&b, "urnet_sessions_pqe %d\n", pq.ActivePQE)
+	if pq.Measured {
+		fmt.Fprintf(&b, "# HELP urnet_sessions_pqe Active PQE sessions.\n")
+		fmt.Fprintf(&b, "# TYPE urnet_sessions_pqe gauge\n")
+		fmt.Fprintf(&b, "urnet_sessions_pqe %d\n", pq.ActivePQE)
 
-	fmt.Fprintf(&b, "# HELP urnet_sessions_classical Active classical sessions.\n")
-	fmt.Fprintf(&b, "# TYPE urnet_sessions_classical gauge\n")
-	fmt.Fprintf(&b, "urnet_sessions_classical %d\n", pq.ActiveClas)
+		fmt.Fprintf(&b, "# HELP urnet_sessions_classical Active classical sessions.\n")
+		fmt.Fprintf(&b, "# TYPE urnet_sessions_classical gauge\n")
+		fmt.Fprintf(&b, "urnet_sessions_classical %d\n", pq.ActiveClas)
 
-	// Hour/day/week are sliding windows and go down as sessions age out, so
-	// they are gauges. Only the lifetime count is a counter; rate() over a
-	// value that decreases reads every drop as a counter reset.
-	fmt.Fprintf(&b, "# HELP urnet_sessions_opened_total Sessions opened over the provider's lifetime.\n")
-	fmt.Fprintf(&b, "# TYPE urnet_sessions_opened_total counter\n")
-	fmt.Fprintf(&b, "urnet_sessions_opened_total{encryption=\"pqe\"} %d\n", pq.PQELifetime)
-	fmt.Fprintf(&b, "urnet_sessions_opened_total{encryption=\"classical\"} %d\n", pq.ClasLifetime)
+		// Hour/day/week are sliding windows and go down as sessions age out, so
+		// they are gauges. Only the lifetime count is a counter; rate() over a
+		// value that decreases reads every drop as a counter reset.
+		fmt.Fprintf(&b, "# HELP urnet_sessions_opened_total Sessions opened over the provider's lifetime.\n")
+		fmt.Fprintf(&b, "# TYPE urnet_sessions_opened_total counter\n")
+		fmt.Fprintf(&b, "urnet_sessions_opened_total{encryption=\"pqe\"} %d\n", pq.PQELifetime)
+		fmt.Fprintf(&b, "urnet_sessions_opened_total{encryption=\"classical\"} %d\n", pq.ClasLifetime)
 
-	fmt.Fprintf(&b, "# HELP urnet_sessions_opened_recent Sessions opened in the last hour, day, or week.\n")
-	fmt.Fprintf(&b, "# TYPE urnet_sessions_opened_recent gauge\n")
-	fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"hour\",encryption=\"pqe\"} %d\n", pq.PQEHour)
-	fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"day\",encryption=\"pqe\"} %d\n", pq.PQEDay)
-	fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"week\",encryption=\"pqe\"} %d\n", pq.PQEWeek)
-	fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"hour\",encryption=\"classical\"} %d\n", pq.ClasHour)
-	fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"day\",encryption=\"classical\"} %d\n", pq.ClasDay)
-	fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"week\",encryption=\"classical\"} %d\n", pq.ClasWeek)
+		fmt.Fprintf(&b, "# HELP urnet_sessions_opened_recent Sessions opened in the last hour, day, or week.\n")
+		fmt.Fprintf(&b, "# TYPE urnet_sessions_opened_recent gauge\n")
+		fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"hour\",encryption=\"pqe\"} %d\n", pq.PQEHour)
+		fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"day\",encryption=\"pqe\"} %d\n", pq.PQEDay)
+		fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"week\",encryption=\"pqe\"} %d\n", pq.PQEWeek)
+		fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"hour\",encryption=\"classical\"} %d\n", pq.ClasHour)
+		fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"day\",encryption=\"classical\"} %d\n", pq.ClasDay)
+		fmt.Fprintf(&b, "urnet_sessions_opened_recent{window=\"week\",encryption=\"classical\"} %d\n", pq.ClasWeek)
+	} else {
+		fmt.Fprintf(&b, "# HELP urnet_pqe_supported Whether PQE session counting is available.\n")
+		fmt.Fprintf(&b, "# TYPE urnet_pqe_supported gauge\n")
+		fmt.Fprintf(&b, "urnet_pqe_supported 0\n")
+	}
 
 	// --- Resource pressure ---
 	pressure := currentPressure()

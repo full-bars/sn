@@ -609,7 +609,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	var unregSocketCloser func()
 	st.candidateAckOnce.Do(func() {
 		if st.isHotSwapCandidate && st.hotSwapIPC != nil {
-			_ = runHotSwapChildAck(st.hotSwapIPC)
+			_ = runHotSwapChildAck(st.hotSwapIPC) // fire-and-forget IPC ack
 			_ = st.hotSwapIPC.Close()
 			startHotSwapSignalListener(st.ctx, st.cancel, st.opts)
 			hotSwapTrigger = func() error {
@@ -639,7 +639,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				})
 			}
 		}
-		_ = notifySystemdReady()
+		_ = notifySystemdReady() // non-actionable: systemd notify is best-effort
 	})
 	if unregSocketCloser != nil {
 		defer unregSocketCloser()

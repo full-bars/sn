@@ -71,14 +71,16 @@ func prometheusHandlerStub() http.Handler {
 	})
 }
 
-// getDohFailureCountStub returns 0.
+// getDohFailureCountStub returns the provider-level DOH failure count.
 // The fork's connect.GetDohFailureCount tracked DNS-over-HTTPS failures
-// inside the connect package. v2026 removed this counter.
+// inside the connect package. v2026 removed this counter; we maintain a
+// local atomic counter in doh_cache.go (dohFailureCount / IncrDohFailure)
+// so the metric reflects real data when instrumented.
 //
 // DESIGN ADAPTATION: connect.GetDohFailureCount was removed in v2026.
 // The provider tracks its own DOH failures locally via doh_cache.go.
 func getDohFailureCountStub() int64 {
-	return 0
+	return dohFailureCountValue()
 }
 
 // PQETotalCounts holds PQE/classical session counts for metrics.
@@ -87,15 +89,23 @@ func getDohFailureCountStub() int64 {
 // live encryptionManagers entry. v2026 connect's EncryptionSessionManager
 // (transfer_encrypt.go:3065) carries no PQE/classical session tracker at
 // all — the capability was removed upstream, not just renamed — so there is
-// no live data this package can read. Returns zero values until v2026
-// connect re-exposes per-session PQE accounting.
+// no live data this package can read.
+//
+// When Measured is false the remaining fields are zero and must NOT be
+// interpreted as "no sessions" — they mean "not tracked in v2026".
+// Callers (Prometheus, health heartbeat) should suppress or label the
+// metric as unavailable rather than emitting zero.
 type PQETotalCounts struct {
 	ActivePQE, ActiveClas       int
 	PQELifetime, ClasLifetime   int
 	PQEHour, PQEDay, PQEWeek    int
 	ClasHour, ClasDay, ClasWeek int
+	Measured                    bool // false = upstream removed PQE accounting
 }
 
 func pqeTotalCounts() PQETotalCounts {
+	// Measured: false — v2026 connect has no per-session PQE tracker.
+	// All numeric fields remain zero. Callers must check Measured before
+	// interpreting these as actual counts.
 	return PQETotalCounts{}
 }

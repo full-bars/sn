@@ -240,9 +240,9 @@ func runEarningWindows(ctx context.Context) {
 		}
 
 		c := pqeTotalCounts()
-		if c.ActivePQE != 0 || c.ActiveClas != 0 || c.PQEHour != 0 || c.PQEDay != 0 ||
+		if c.Measured && (c.ActivePQE != 0 || c.ActiveClas != 0 || c.PQEHour != 0 || c.PQEDay != 0 ||
 			c.PQEWeek != 0 || c.PQELifetime != 0 || c.ClasHour != 0 || c.ClasDay != 0 ||
-			c.ClasWeek != 0 || c.ClasLifetime != 0 {
+			c.ClasWeek != 0 || c.ClasLifetime != 0) {
 			tlog("🔐 [pqe] direct-e2e tunnels terminated: live pqe=%d classical=%d | since-start: pqe=%d classical=%d | 1h: pqe=%d classical=%d | 24h: pqe=%d classical=%d | 7d: pqe=%d classical=%d\n",
 				c.ActivePQE, c.ActiveClas,
 				c.PQELifetime, c.ClasLifetime,

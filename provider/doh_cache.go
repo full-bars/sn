@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/urnetwork/connect"
@@ -44,6 +45,27 @@ func SharedDohCache() *connect.DohCache {
 	sharedDohCacheMu.Lock()
 	defer sharedDohCacheMu.Unlock()
 	return sharedDohCacheVal
+}
+
+// dohFailureCount tracks DNS-over-HTTPS query failures observed at the
+// provider level. The fork's connect.GetDohFailureCount was removed in
+// v2026 connect; this counter fills the gap so getDohFailureCountStub()
+// returns live data rather than a hardcoded zero.
+//
+// Callers that observe DOH query failures should call IncrDohFailure()
+// to increment. Currently no call sites exist because DOH queries are
+// performed inside the connect module; this counter is wired for future
+// instrumentation or when a provider-level DOH wrapper is added.
+var dohFailureCount atomic.Int64
+
+// IncrDohFailure atomically increments the DOH failure counter.
+func IncrDohFailure() {
+	dohFailureCount.Add(1)
+}
+
+// dohFailureCountValue returns the current DOH failure count.
+func dohFailureCountValue() int64 {
+	return dohFailureCount.Load()
 }
 
 func dohLog(format string, args ...any) {
