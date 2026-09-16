@@ -1,68 +1,125 @@
-# URNetwork Provider — v2026.9.16-meso
+# URNetwork Provider v2026.9.16-meso
 
-First release of the H3/QUIC-capable provider, forked from upstream and
-ported with full feature parity from the v3.23 maintenance fork.
+First release of the H3/QUIC-capable provider, forked from upstream
+`urnetwork/connect` and ported with full feature parity from the
+`urnetwork-3.23-fix` maintenance fork.
 
-## What's New
+## Transport Layer
 
-- **H3/QUIC + IPv6 dual-stack** — native HTTP/3 transport via connect v2026,
-  automatic transport negotiation (H3, H2, TCP), and full IPv6 support.
-- **Bandwidth tracking** — per-proxy Rx/Tx billing with billable rate windows.
-- **Resource pressure monitoring** — adaptive GC, memory budget, PSI-aware
-  load shedding, and pool controller for proxy concurrency.
-- **Proxy health grading** — real probe host table (127 health-class hosts
-  + 22 DNS resolvers), URL proxy source auto-fetch with cooldown, and
-  dead-proxy pruning.
-- **Control socket IPC** — hot-restart (SIGUSR1), session save/load, and
-  urnet-tools integration.
-- **Hotswap** — client identity preservation across restarts, IPC handle
-  lifecycle management.
-- **Metrics** — Prometheus /metrics endpoint, lifetime counters, PQE
-  measurement gating.
+- **HTTP/3 (QUIC)** via connect v2026 — automatic negotiation between
+  H3, H2, and TCP transports with family-aware address selection.
+- **IPv6 dual-stack** — native IPv6 support on all transports, with
+  fallback handling for hosts with broken IPv6 (tunnel blackhole).
+- **Bandwidth tracking** — per-connection Rx/Tx byte counting via
+  `net.Conn` and `net.PacketConn` wrappers, with billable rate windows
+  and lifetime counters.
 
-## Ported from v3.23-fix
+## Proxy Management
 
-All critical production features ported and verified:
+- **URL proxy sources** — `urnet-tools proxy add-source <url>` fetches
+  proxy lists from public sources with automatic refresh and cooldown.
+- **Proxy health grading** — real probe host table (127 health-class
+  hosts + 22 DNS resolvers) ported from connect, with deterministic
+  block rotation for probe target selection.
+- **Dead proxy pruning** — automatic removal of failed/degraded proxies
+  based on health history and backoff timers.
+- **Proxy shedding** — pressure-aware pool controller that sheds
+  proxies under resource constraints, using AIMD step sizing.
 
-- JWT 401 renewal with out-of-band callback
-- `seedEnvFromControlState` for environment persistence
-- `RecordProxyAuthFailure` for auth failure tracking
-- `markProxyUp` / `markProxyDown` health callbacks
-- `stableID` via `setProxyIndex` for proxy identity
-- `flushRetentionEvents` at process scope
-- DialContextSettings removed to preserve proxy routing
-- Real probe host table (removed `probe.invalid` stubs)
+## Resource Management
 
-## Cross-Platform
+- **Pressure monitoring** — PSI-aware (Pressure Stall Information)
+  load detection with EWMA smoothing, reading cgroup and host memory
+  limits.
+- **Adaptive GC** — runtime GC governor that adjusts GOGC based on
+  heap pressure, host available memory, and CPU pressure.
+- **Memory budget** — automatic memory limit calculation from host RAM
+  (4/5ths default), with per-provider targeting.
+- **File descriptor tracking** — reads `/proc/PID/fd` on Linux to
+  detect FD exhaustion before it causes failures.
 
-Binaries available for:
-- Linux amd64 / arm64
-- macOS amd64 / arm64
-- Windows amd64 / arm64
+## Identity & Authentication
 
-All binaries are GPG signed (`.asc` detached signatures).
+- **JWT authentication** — mint-and-refresh cycle against
+  `api.bringyour.com`, with 401 renewal via out-of-band callback.
+- **Client identity persistence** — stable `client_id` across restarts
+  via control state, with automatic re-authentication on rejection.
+- **Hotswap** — zero-downtime restarts that preserve client identity
+  and proxy assignments across process boundaries.
+
+## Operations
+
+- **Control socket** — Unix domain socket IPC for `urnet-tools`
+  integration: status, stop, restart, session save/load.
+- **Prometheus metrics** — `/metrics` endpoint with lifetime counters,
+  PQE measurement gating, and per-proxy bandwidth tracking.
+- **Audit ring** — circular buffer of recent events for debugging
+  and operator visibility.
+- **Pressure status** — real-time pressure score written to state
+  directory for monitoring.
+
+## Modules Ported from v3.23-fix
+
+All production-critical modules ported and verified against the
+maintenance fork:
+
+| Module | Description |
+|--------|-------------|
+| `proxy_health.go` | Health tracking, grading, and backoff |
+| `resource_pressure.go` | PSI monitoring, GC governor, memory budget |
+| `control_socket.go` | Unix socket IPC for urnet-tools |
+| `lifetime_metrics.go` | Persistent lifetime counters |
+| `contract_metrics.go` | Per-contract bandwidth and session metrics |
+| `doh_cache.go` | DNS-over-HTTPS resolution cache |
+| `renewal_watcher.go` | JWT renewal and token management |
+| `hotswap.go` | Zero-downtime identity preservation |
+| `audit_ring.go` | Circular event buffer |
+| `proxy_state.go` | Proxy assignment and state management |
+| `pool_health.go` | Connection pool health monitoring |
+| `sn.go` | SN (Subnet) bridge integration |
+| `metrics_listen.go` | Prometheus /metrics endpoint |
+| `control_state.go` | Persistent control state |
+| `bandwidth/` | H1+H3 byte counting wrappers |
+
+## Cross-Platform Builds
+
+| Platform | Architecture |
+|----------|-------------|
+| Linux    | amd64, arm64 |
+| macOS    | amd64, arm64 |
+| Windows  | amd64, arm64 |
+
+All binaries are GPG-signed via annotated tag. Docker image available
+via multi-stage build (`docker build --platform linux/amd64 -t
+urnetwork-provider .`).
 
 ## Verification
 
 ```bash
-# Download and verify signature
-gpg --verify provider-linux-amd64.asc provider-linux-amd64
-chmod +x provider-linux-amd64
-./provider-linux-amd64 provide --help
+# Verify GPG signature on tag
+git verify-tag v2026.9.16-<timestamp>-meso
+
+# Verify binary checksum
+sha256sum urnetwork-provider-*.tar.gz
+
+# Extract and run
+tar xzf urnetwork-provider-v2026.9.16-*-linux-amd64.tar.gz
+./provider provide --help
 ```
 
 ## Known Limitations
 
-- `connect-v4.bringyour.com` certificate expired (server-side) — end-to-end
-  H3 transfer testing blocked until upstream resolves.
-- PacketConnFactory (UDP/QUIC bandwidth wrapping) not yet re-enabled — pinned
-  connect version doesn't expose the interface.
-- 34 stubs remain across non-critical paths (metrics edge cases, platform-
-  specific socket ACLs).
+- `connect-v4.bringyour.com` TLS certificate expired (server-side) —
+  end-to-end H3 transfer testing blocked until upstream rotates cert.
+- PacketConnFactory (UDP/QUIC bandwidth wrapping) not yet re-enabled —
+  pinned connect version doesn't expose the interface. Bandwidth
+  tracking works for TCP/H1; H3/UDP tracking pending connect update.
+- 34 stubs remain across non-critical paths (metrics edge cases,
+  platform-specific socket ACLs, test harnesses).
 
-## CI
+## CI Status
 
-- Build and test: passing
-- GAUNTLET auth: passing
+- Build and test: passing (linux, darwin, windows x amd64, arm64)
+- GAUNTLET authentication: passing
 - VirusTotal + ClamAV: non-blocking scan on release
-- CFAA blocklist sync: lives in connect library, not this repo
+- Resource pressure: linux-only (stub on darwin/windows)
