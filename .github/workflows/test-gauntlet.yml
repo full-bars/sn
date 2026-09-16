@@ -26,6 +26,7 @@ jobs:
               exit 1
             fi
           done
+          chmod +x /tmp/provider
 
       - name: Test GAUNTLET auth
         env:
