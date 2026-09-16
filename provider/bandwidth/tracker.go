@@ -2,6 +2,16 @@
 // It wraps both TCP (net.Conn) and UDP (net.PacketConn) at the provider's
 // DialContextSettings boundary, feeding the same ProxyBandwidth counters
 // regardless of transport protocol (H1/TCP or H3/QUIC/UDP).
+//
+// DESIGN ADAPTATION (v2026 migration):
+// The fork tracked bandwidth by wrapping net.Conn inside connect's package
+// via trackedConn in net.go. This worked for H1/TCP but made H3/UDP traffic
+// invisible to billing (zero bytes reported). v2026 exposes DialContextSettings
+// with two seams: DialContext (TCP streams) and PacketConnFactory (UDP sockets).
+// By wrapping both seams at the provider boundary, we get byte counting for
+// both H1 and H3 without forking connect itself. The tradeoff is slightly less
+// granularity (we can't see errors deep inside connect internals) but we stay
+// on upstream's public API surface.
 package bandwidth
 
 import (

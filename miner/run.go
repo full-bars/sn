@@ -28,6 +28,7 @@ import (
 
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
+	"github.com/urfoundation/sn/provider/bandwidth"
 
 	"github.com/urfoundation/sn/clientauth"
 )
@@ -383,6 +384,10 @@ func provide(opts docopt.Opts) {
 		panic(err)
 	}
 
+	// Bandwidth registry tracks per-proxy byte counters for billing.
+	// Both TCP (H1) and UDP (H3/QUIC) paths feed the same counters.
+	bwRegistry := bandwidth.NewRegistry()
+
 	event := connect.NewEventWithContext(context.Background())
 	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 
@@ -425,6 +430,17 @@ func provide(opts docopt.Opts) {
 		clientStrategySettings := connect.DefaultClientStrategySettings()
 		clientStrategySettings.ProxySettings = proxySettings
 		clientStrategySettings.DialContextSettings = testEgressDialer
+		// Wrap with bandwidth tracking for billing (H1+H3).
+		bw := bwRegistry.Register(0) // direct connection by default
+		proxyAddr := ""
+		if proxySettings != nil {
+			proxyAddr = proxySettings.Address
+			// Use address hash as proxy index for bandwidth tracking.
+			bw = bwRegistry.Register(int(addressHash(proxyAddr)))
+		}
+		clientStrategySettings.DialContextSettings = bandwidth.WrapDialContextSettings(
+			clientStrategySettings.DialContextSettings, bw, proxyAddr,
+		)
 		networkSpace := sdk.NewNetworkSpaceWithUrls(proxyCtx, apiUrl, connectUrl, clientStrategySettings)
 		defer networkSpace.Close()
 		api := networkSpace.GetApi()
@@ -493,7 +509,12 @@ func provide(opts docopt.Opts) {
 		// operator would revoke the old one as fast as it publishes it.
 		settings.KeyMaterial.SetExtenderKeySeed(extenderKeySeed)
 		applyProviderMemoryTarget(settings, memoryPlan.DeviceMemoryTargetByteCount)
-		settings.ProviderDialContextSettings = testEgressDialer
+		// Wrap ProviderDialContextSettings with bandwidth tracking too.
+		// The SDK copies this into both TcpBufferSettings and UdpBufferSettings
+		// dial paths, so both TCP and QUIC egress get byte-counted.
+		settings.ProviderDialContextSettings = bandwidth.WrapDialContextSettings(
+			testEgressDialer, bw, proxyAddr,
+		)
 		instanceId := sdk.NewId()
 		device, err := sdk.NewDeviceLocal(
 			networkSpace,
@@ -1213,4 +1234,22 @@ func writeProxyConfig(proxyConfig *ProxyConfig) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// addressHash returns a stable uint32 hash of an address string,
+// used as a proxy index for bandwidth tracking in v2026 where
+// ProxySettings has no Index field.
+//
+// DESIGN ADAPTATION: The fork's connect.ProxySettings carried an int Index
+// field assigned at proxy registration time. v2026 removed this —
+// ProxySettings only has Network, Address, Auth. We hash the address to
+// produce a stable integer key for the bandwidth registry. Collisions are
+// acceptable (two proxies sharing a hash just share a counter) and rare
+// for realistic proxy counts.
+func addressHash(addr string) uint32 {
+	var h uint32
+	for i := 0; i < len(addr); i++ {
+		h = h*31 + uint32(addr[i])
+	}
+	return h
 }
