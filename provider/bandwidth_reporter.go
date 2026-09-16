@@ -16,7 +16,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 )
 
 type bandwidthReport struct {
@@ -134,8 +133,6 @@ func resolveReportURL(envFallback string) string {
 	}
 	return envFallback
 }
-
-
 
 // reportIntervalOverridePath returns ~/.urnetwork/report_interval, a file an
 // operator can write at any time to change the report cadence without

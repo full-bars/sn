@@ -405,8 +405,6 @@ func runProxyJWTWatcher(ctx context.Context, cfg proxyJWTWatcherConfig) {
 	}
 }
 
-
-
 // readAccountJWT reads the account (network) JWT from disk. The account-JWT
 // refresher may have rotated it, so renewal reads it fresh on every attempt.
 func readAccountJWT() (string, error) {
@@ -466,7 +464,6 @@ func renewClientJWT(ctx context.Context, apiUrl, byJwt string, clientId connect.
 	return result.Result.ByClientJwt, nil
 }
 
-
 func jwtContainsClientId(byJwt string) bool {
 	parser := jwt.NewParser()
 	tok, _, err := parser.ParseUnverified(byJwt, jwt.MapClaims{})
@@ -524,4 +521,3 @@ func formatDuration(d time.Duration) string {
 	}
 	return fmt.Sprintf("%dh %dm", h, m)
 }
-

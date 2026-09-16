@@ -4,8 +4,8 @@ package provider
 
 import (
 	"fmt"
-	"sync"
 	"golang.org/x/sys/windows"
+	"sync"
 )
 
 // On Windows there is no flock(2). acquirePendingOverridesLock mirrors

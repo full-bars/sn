@@ -12,7 +12,7 @@ import (
 // atomicBool is a simple atomic boolean used by proxyWarmupDone.
 type atomicBool struct{ v int32 }
 
-func (a *atomicBool) Load() bool  { return a.v != 0 }
+func (a *atomicBool) Load() bool { return a.v != 0 }
 func (a *atomicBool) Store(b bool) {
 	if b {
 		a.v = 1

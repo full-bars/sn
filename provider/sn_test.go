@@ -24,8 +24,8 @@ import (
 
 	"github.com/docopt/docopt-go"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/urnetwork/connect"
 	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urnetwork/connect"
 )
 
 func TestParseBytes32Arg(t *testing.T) {

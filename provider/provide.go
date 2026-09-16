@@ -645,16 +645,16 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		IdentityKey:    identityKey,
 		ClientID:       clientId,
 		CurrentJWT:     byClientJwt,
-		Description:     providerDescription(st.nodeName),
-		DescribeFn:      func() string { return providerDescription(st.nodeName) },
-		ApiURL:          st.apiUrl,
-		ClientStrategy:  clientStrategy,
-		OOB:             renewalOOB,
-		Transport:       platformTransport,
-		RenewNow:        renewNow,
-		ProxyIndex:      proxyIndex,
-		InstanceId:      instanceId,
-		RevocationDone:  revocationDone,
+		Description:    providerDescription(st.nodeName),
+		DescribeFn:     func() string { return providerDescription(st.nodeName) },
+		ApiURL:         st.apiUrl,
+		ClientStrategy: clientStrategy,
+		OOB:            renewalOOB,
+		Transport:      platformTransport,
+		RenewNow:       renewNow,
+		ProxyIndex:     proxyIndex,
+		InstanceId:     instanceId,
+		RevocationDone: revocationDone,
 	})
 
 	// Register bandwidth (tracks internally, bw not passed to connect in v2026).
@@ -934,12 +934,12 @@ func provideLauncherLoop(st *provideState) {
 
 	// Start hot-reload watcher.
 	reloader := &ProxyReloader{
-		cancelMap:       st.proxyCancelMap,
-		cancelMapMu:     &st.proxyCancelMu,
-		state:           proxyState,
-		sourcePath:      proxyFile,
-		parentCtx:       st.ctx,
-		wg:              &st.wg,
+		cancelMap:   st.proxyCancelMap,
+		cancelMapMu: &st.proxyCancelMu,
+		state:       proxyState,
+		sourcePath:  proxyFile,
+		parentCtx:   st.ctx,
+		wg:          &st.wg,
 		spawnProxy: func(proxyCtx context.Context, settings *connect.ProxySettings, isNative bool, isURLSourced bool) {
 			provideWithProxy(st, proxyCtx, settings, isNative, isURLSourced)
 		},

@@ -235,5 +235,3 @@ func formatAuditSummary(e CommandAudit) string {
 	}
 	return fmt.Sprintf("%s %s ok=%v src=%s", e.Cmd, e.Key, e.OK, e.Source)
 }
-
-

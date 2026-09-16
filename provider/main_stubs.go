@@ -21,7 +21,9 @@ const DefaultConnectUrl = "wss://connect.bringyour.com"
 func registerProxyV2026(idx int, addr string) { RegisterProxy(idx, addr) }
 
 // proxyBandwidthByAddressV2026 stubs for connect.ProxyBandwidthByAddress removed in v2026.
-func proxyBandwidthByAddressV2026(addr string) *bandwidth.ProxyBandwidth { return ProxyBandwidthByAddress(addr) }
+func proxyBandwidthByAddressV2026(addr string) *bandwidth.ProxyBandwidth {
+	return ProxyBandwidthByAddress(addr)
+}
 
 // ProxyBandwidthV2026 is a stub for the bandwidth info struct removed in v2026.
 
@@ -31,9 +33,13 @@ func proxyBandwidthByAddressV2026(addr string) *bandwidth.ProxyBandwidth { retur
 // DESIGN ADAPTATION: stub until health-by-address is reimplemented.
 func proxyHealthByAddressV2026() map[string]ProxyHealthStatus { return ProxyHealthByAddress() }
 
-func unregisterProxyStub(idx interface{}) { if i, ok := idx.(int); ok { UnregisterProxy(i) } }
+func unregisterProxyStub(idx interface{}) {
+	if i, ok := idx.(int); ok {
+		UnregisterProxy(i)
+	}
+}
+
 var proxyWarmupDone atomic.Bool
 
 // VersionStamp is an alternative version marker embedded as program data.
 var VersionStamp string
-

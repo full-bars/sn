@@ -13,7 +13,6 @@ import (
 	"sync/atomic"
 	"time"
 
-
 	"golang.org/x/time/rate"
 )
 

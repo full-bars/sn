@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/urnetwork/connect"
 	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urnetwork/connect"
 )
 
 // resolveBenchmarkEndpoint returns the SOCKS5 egress-probe target. The

@@ -28,7 +28,6 @@ const (
 	// proxyAPIAccessTimeout bounds the SOCKS5 CONNECT phase (through proxy to api).
 	proxyAPIAccessTimeout = 5 * time.Second
 
-
 	// proxyProbeStagger is the max random jitter before each probe dial,
 	// spreading the initial burst from a batch across a ~100ms window.
 	proxyProbeStagger = 100 * time.Millisecond

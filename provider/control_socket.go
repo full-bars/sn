@@ -82,7 +82,6 @@ type controlResponse struct {
 	MetricsAddrs []string `json:"metrics_addrs,omitempty"`
 }
 
-
 func controlLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
 }
@@ -633,7 +632,7 @@ var (
 	hotSwapTrigger        func() error
 
 	coordinatorClosersMu  sync.Mutex
-	coordinatorCloserSeq uint64
+	coordinatorCloserSeq  uint64
 	coordinatorClosersMap map[uint64]func()
 )
 

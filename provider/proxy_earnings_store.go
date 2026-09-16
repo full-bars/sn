@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/urnetwork/connect"
 	"github.com/urfoundation/sn/provider/bandwidth"
+	"github.com/urnetwork/connect"
 )
 
 // Per-proxy earnings history (design note 2026-09-11).

@@ -29,7 +29,7 @@ type AuthCodeCreateArgs struct{}
 
 // AuthCodeCreateError is the error payload from AuthCodeCreate.
 type AuthCodeCreateError struct {
-	Message             string `json:"message"`
+	Message               string `json:"message"`
 	AuthCodeLimitExceeded bool   `json:"auth_code_limit_exceeded"`
 }
 

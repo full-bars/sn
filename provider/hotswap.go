@@ -788,7 +788,6 @@ func hotswapLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
 }
 
-
 // restoreStdioBeforeExec is a no-op when ramlog pipe redirect is not active.
 func restoreStdioBeforeExec() {}
 

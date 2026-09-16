@@ -6,11 +6,11 @@ package provider
 import (
 	"bufio"
 	"context"
-	"runtime/debug"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"syscall"
 

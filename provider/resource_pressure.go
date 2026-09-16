@@ -1191,5 +1191,3 @@ var proxyHealthSnapshot = func() (up int, dead []string, degraded []string, band
 func pressureLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
 }
-
-

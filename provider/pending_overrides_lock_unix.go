@@ -4,8 +4,8 @@ package provider
 
 import (
 	"fmt"
-	"os"
 	"golang.org/x/sys/unix"
+	"os"
 )
 
 // acquirePendingOverridesLock obtains a blocking, exclusive inter-process lock
