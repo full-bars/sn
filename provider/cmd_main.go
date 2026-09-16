@@ -15,7 +15,7 @@ import (
 
 // main() is the CLI entry point. It dispatches to subcommands (auth,
 // provide, proxy, wallet, sn-status, claim, etc.) via docopt.
-func main() {
+func Main() {
 	// G-M2: sanitize PATH when running as root to prevent hijacking
 	// of exec.Command bare names (systemctl, docker, etc.) via attacker-writable
 	// directories earlier in root's PATH. Filter rather than replace so
