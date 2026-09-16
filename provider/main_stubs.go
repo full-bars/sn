@@ -35,10 +35,8 @@ func proxyHealthByAddressV2026() map[string]ProxyHealthStatus { return ProxyHeal
 func unregisterProxyStub(idx interface{}) { if i, ok := idx.(int); ok { UnregisterProxy(i) } }
 var proxyWarmupDone atomic.Bool
 
-// Ensure connect import is used.
+// VersionStamp is an alternative version marker embedded as program data.
+var VersionStamp string
 
-// provide is the main provider daemon entry point. This stub will be
-// replaced when the full provide() function is ported from main.go.
-func provide(opts docopt.Opts) {
-	panic("provide() not yet ported")
-}
+// Ensure connect import is used.
+var _ = docopt.Opts(nil)
