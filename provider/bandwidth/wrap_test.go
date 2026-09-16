@@ -66,54 +66,8 @@ func TestWrapExistingDialContextSettings(t *testing.T) {
 	}
 }
 
-func TestWrapPacketConnFactory(t *testing.T) {
-	factoryCalled := false
-	origFactory := func(ctx context.Context) (net.PacketConn, error) {
-		factoryCalled = true
-		return newMockPacketConn(), nil
-	}
+// NOTE: PacketConnFactory tests removed — the field does not exist in the pinned
+// full-bars/connect version (4c85408). See wrap.go TODO for re-enablement.
 
-	ds := &connect.DialContextSettings{
-		PacketConnFactory: origFactory,
-	}
-
-	bw := &ProxyBandwidth{}
-	wrapped := WrapDialContextSettings(ds, bw, "proxy-4")
-
-	pc, err := wrapped.PacketConnFactory(context.Background())
-	if err != nil {
-		t.Fatalf("PacketConnFactory: %v", err)
-	}
-	if !factoryCalled {
-		t.Fatal("original factory was not called")
-	}
-
-	bwPC, ok := pc.(*PacketConn)
-	if !ok {
-		t.Fatalf("expected *PacketConn, got %T", pc)
-	}
-	if bwPC.ProxyAddress() != "proxy-4" {
-		t.Fatalf("expected proxy address 'proxy-4', got %q", bwPC.ProxyAddress())
-	}
-}
-
-func TestWrapNilPacketConnFactoryCreatesDefault(t *testing.T) {
-	ds := &connect.DialContextSettings{
-		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return newMockConn(), nil
-		},
-		// PacketConnFactory is nil — should get a default UDP socket.
-	}
-
-	bw := &ProxyBandwidth{}
-	wrapped := WrapDialContextSettings(ds, bw, "proxy-5")
-
-	pc, err := wrapped.PacketConnFactory(context.Background())
-	if err != nil {
-		t.Fatalf("PacketConnFactory: %v", err)
-	}
-	if pc == nil {
-		t.Fatal("expected non-nil PacketConn")
-	}
-	pc.Close()
-}
+// TestWrapNilPacketConnFactoryCreatesDefault removed — PacketConnFactory not available
+// in pinned full-bars/connect version. See wrap.go TODO.
