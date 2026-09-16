@@ -18,9 +18,7 @@ func TestWrapNilDialContextSettings(t *testing.T) {
 	if wrapped.DialContext == nil {
 		t.Fatal("expected non-nil DialContext")
 	}
-	if wrapped.PacketConnFactory == nil {
-		t.Fatal("expected non-nil PacketConnFactory")
-	}
+	// NOTE: PacketConnFactory check removed — field not in pinned full-bars/connect.
 }
 
 func TestWrapExistingDialContextSettings(t *testing.T) {
