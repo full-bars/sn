@@ -486,6 +486,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			authFailures++
 			if proxySettings != nil {
 				globalProxyFailureHistory.RecordFailure(proxySettings.Address)
+				RecordProxyAuthFailure(proxyIndex, err)
 			}
 			if authFailures >= maxAuthFailures {
 				cause := classifyAuthFailureCause(err)
@@ -564,7 +565,12 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	instanceId := connect.NewId()
 
 	oob := connect.NewApiOutOfBandControl(proxyCtx, clientStrategy, byClientJwt, st.apiUrl)
-	connectClient := connect.NewClient(proxyCtx, clientId, oob, clientSettings)
+	// Wrap OOB before handing it to the client so the connect library's
+	// own OOB calls (heartbeat, contract) are intercepted for 401 audit.
+	// This is the v2026 substitute for the fork's built-in Audit401Count
+	// on connect.ApiOutOfBandControl.
+	renewalOOB := WrapRenewalOOB(oob)
+	connectClient := connect.NewClient(proxyCtx, clientId, renewalOOB, clientSettings)
 	defer func() {
 		unregisterEncryptionManager(connectClient.EncryptionSessionManager())
 		connectClient.Close()
@@ -655,8 +661,9 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		go watchReusedIdentityForRevocation(proxyCtx, identityKey, proxyIndex, revocationDone)
 	}
 
-	// In-process client-JWT renewal. Wrap OOB for the renewal watcher.
-	renewalOOB := WrapRenewalOOB(oob)
+	// In-process client-JWT renewal. renewalOOB was created above and
+	// already wired to the connect client; the watcher shares the same
+	// wrapper so its OOB calls are also intercepted for 401 audit.
 	renewNow := make(chan struct{}, 1)
 	go runProxyJWTWatcher(proxyCtx, proxyJWTWatcherConfig{
 		IdentityKey:    identityKey,

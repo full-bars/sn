@@ -51,6 +51,12 @@ func Main() {
 		finishAudit("not long-running")
 	}
 
+	// Seed URNETWORK_PROFILE / URNETWORK_RAMLOGS from persisted control
+	// state BEFORE initGlog(): initGlog reads those env vars for its
+	// one-shot ramlog redirect decision, and provide()'s later
+	// loadControlState() runs far too late to affect them.
+	seedEnvFromControlState()
+
 	finishInit := bannerPhase("Logger init")
 	initGlog()
 	finishInit("glog + stderr")
