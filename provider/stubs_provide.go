@@ -1,5 +1,8 @@
 package provider
 
+// DESIGN ADAPTATION: Stubs for symbols referenced by provide() but not
+// yet ported from main.go. Will be removed when main.go is ported.
+
 import (
 	"context"
 	"os"
@@ -9,8 +12,6 @@ import (
 
 	"github.com/urnetwork/connect"
 )
-
-// Stubs for symbols referenced by provide() but not yet ported from main.go.
 
 // provideStartTime records when provide() began; used for uptime display
 // and warmup pacing.

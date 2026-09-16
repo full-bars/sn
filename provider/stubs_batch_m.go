@@ -1,7 +1,7 @@
 package provider
 
-// Stubs for connect symbols removed in v2026 connect that are referenced
-// by the ported Phase 2+3 collector and heartbeat code.
+// DESIGN ADAPTATION: Stubs for connect symbols removed in v2026 connect
+// that are referenced by the ported Phase 2+3 collector and heartbeat code.
 
 // MessagePoolSummary was connect.MessagePoolSummary() which returned
 // per-pool-size bucket stats. v2026 removed the pool instrumentation.

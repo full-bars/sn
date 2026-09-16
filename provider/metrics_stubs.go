@@ -1,5 +1,9 @@
 package provider
 
+// DESIGN ADAPTATION: Stubs for metrics-related connect symbols removed
+// in v2026. Bridges between the fork's connect metrics hooks and the
+// provider's own metrics_listen.go endpoint.
+
 import (
 	"fmt"
 	"net/http"

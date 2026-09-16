@@ -5,7 +5,6 @@ package provider
 // reasonable defaults based on the fork's probe table size.
 
 import (
-	"math/rand"
 	"os"
 	"path/filepath"
 )
@@ -47,7 +46,3 @@ func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
 	}
 	return os.Rename(tmp, path)
 }
-
-// gradeTier is unused — proxy_grade_tier.go has proxyGradeTier instead.
-// Kept as dead code reference. Remove when stubs are cleaned up.
-var _ = rand.Intn

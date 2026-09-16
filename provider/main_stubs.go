@@ -7,7 +7,6 @@ package provider
 import (
 	"sync/atomic"
 
-	"github.com/docopt/docopt-go"
 	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
@@ -38,5 +37,3 @@ var proxyWarmupDone atomic.Bool
 // VersionStamp is an alternative version marker embedded as program data.
 var VersionStamp string
 
-// Ensure connect import is used.
-var _ = docopt.Opts(nil)
