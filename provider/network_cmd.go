@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/docopt/docopt-go"
 )
 
 // networkPresets maps shorthand names to (api_url, connect_url) pairs so
@@ -26,8 +28,8 @@ var networkPresets = map[string][2]string{
 
 // ChooseNetworkCmd implements `provider choose_network <api_url>
 // <connect_url>` and `provider choose_network --reset`.
-func ChooseNetworkCmd(opts map[string]interface{}) {
-	if reset, _ := opts["--reset"].(bool); reset {
+func chooseNetworkCmd(opts docopt.Opts) {
+	if reset, _ := opts.Bool("--reset"); reset {
 		if err := resetNetworkConfig(); err != nil {
 			fmt.Printf("failed to reset network: %s\n", err)
 			os.Exit(1)
@@ -36,7 +38,7 @@ func ChooseNetworkCmd(opts map[string]interface{}) {
 		return
 	}
 
-	apiUrl, _ := opts["<api_url>"].(string)
+	apiUrl, _ := opts.String("<api_url>")
 	if apiUrl == "" {
 		fmt.Printf("missing <api_url>\n")
 		os.Exit(1)
@@ -47,7 +49,7 @@ func ChooseNetworkCmd(opts map[string]interface{}) {
 	if preset, ok := networkPresets[apiUrl]; ok {
 		// If the user also supplied a connect_url, reject — presets are
 		// self-contained and silently discarding the second arg is confusing.
-		if _, hasConnect := opts["<connect_url>"]; hasConnect {
+		if _, err := opts.String("<connect_url>"); err == nil {
 			fmt.Printf("preset %q includes its own connect_url — pass only the preset name, or use two explicit URLs\n", apiUrl)
 			os.Exit(1)
 		}
@@ -64,7 +66,7 @@ func ChooseNetworkCmd(opts map[string]interface{}) {
 		os.Exit(1)
 	}
 
-	connectUrl, _ := opts["<connect_url>"].(string)
+	connectUrl, _ := opts.String("<connect_url>")
 	if connectUrl == "" {
 		fmt.Printf("missing <connect_url>\n")
 		fmt.Println("tip: use a preset name (main|beta) instead of a URL pair, e.g. `provider choose_network main`")

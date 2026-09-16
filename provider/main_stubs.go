@@ -7,6 +7,7 @@ package provider
 import (
 	"sync/atomic"
 
+	"github.com/docopt/docopt-go"
 	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
@@ -35,3 +36,9 @@ func unregisterProxyStub(idx interface{}) { if i, ok := idx.(int); ok { Unregist
 var proxyWarmupDone atomic.Bool
 
 // Ensure connect import is used.
+
+// provide is the main provider daemon entry point. This stub will be
+// replaced when the full provide() function is ported from main.go.
+func provide(opts docopt.Opts) {
+	panic("provide() not yet ported")
+}

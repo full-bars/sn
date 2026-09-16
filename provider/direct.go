@@ -113,10 +113,10 @@ func clearDirectToggle() error {
 	return os.Remove(path)
 }
 
-// CmdDirect implements `provider direct [<state>]`: toggles the runtime
+// cmdDirect implements `provider direct [<state>]`: toggles the runtime
 // direct-IP toggle and triggers a reload of a running provider, or reports
 // the current direct state if called without arguments or with "status".
-func CmdDirect(opts map[string]interface{}) {
+func cmdDirect(opts map[string]interface{}) {
 	arg, _ := opts["<state>"].(string)
 	switch strings.ToLower(strings.TrimSpace(arg)) {
 	case "on":
