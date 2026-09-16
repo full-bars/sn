@@ -1,0 +1,58 @@
+name: Test Gauntlet Credentials
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-auth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build provider
+        run: |
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            go build -o /tmp/provider ./provider/ && break
+            if [ $attempt -lt 3 ]; then
+              echo "Build failed, retrying in 10s..."
+              sleep 10
+            else
+              echo "Build failed after 3 attempts"
+              exit 1
+            fi
+          done
+
+      - name: Test GAUNTLET auth
+        env:
+          GAUNTLET_USER: ${{ secrets.GAUNTLET_USER }}
+          GAUNTLET_PW: ${{ secrets.GAUNTLET_PW }}
+        run: |
+          mkdir -p /tmp/mint
+          HOME=/tmp/mint /tmp/provider auth \
+            --user_auth="$GAUNTLET_USER" \
+            --password="$GAUNTLET_PW" \
+            --api_url=https://api.bringyour.com -f 2>&1 | head -30 || true
+
+          if [ -s /tmp/mint/.urnetwork/jwt ]; then
+            echo "=== JWT minted successfully ==="
+            # Decode and display account info (not the token itself)
+            JWT=$(cat /tmp/mint/.urnetwork/jwt)
+            PAYLOAD=$(echo "$JWT" | cut -d. -f2)
+            # Add padding
+            PADDED="$PAYLOAD$(printf '%*s' $((4 - ${#PAYLOAD} % 4)) '' | tr ' ' '=')"
+            echo "$PADDED" | base64 -d 2>/dev/null | python3 -c "
+            import json, sys
+            d = json.load(sys.stdin)
+            print('account:', d.get('network_name', 'unknown'))
+            print('expires:', d.get('exp', 'unknown'))
+            " 2>/dev/null || echo "(could not decode JWT payload)"
+          else
+            echo "=== JWT mint FAILED ==="
+            echo "Check GAUNTLET_USER and GAUNTLET_PW secrets"
+            exit 1
+          fi
