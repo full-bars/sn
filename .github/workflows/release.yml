@@ -168,6 +168,34 @@ jobs:
           fi
           clamscan --no-summary -r release_tmp/ 2>/dev/null | grep "FOUND" && echo "::error::ClamAV found malware in release artifacts" || echo "ClamAV: clean"
 
+      - name: GPG sign release binaries
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_RELEASE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GPG_PRIVATE_KEY:-}" ]; then
+            echo "::warning::GPG_RELEASE_KEY secret not set — skipping signing"
+            exit 0
+          fi
+          # Import GPG key
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          # Sign each binary
+          for f in \
+            release_tmp/linux/amd64/provider \
+            release_tmp/linux/arm64/provider \
+            release_tmp/darwin/amd64/provider \
+            release_tmp/darwin/arm64/provider \
+            release_tmp/windows/amd64/provider.exe \
+            release_tmp/windows/arm64/provider.exe; do
+            if [ -f "$f" ]; then
+              gpg --batch --yes --armor --detach-sign "$f"
+              echo "Signed: $f"
+            fi
+          done
+          # List signatures
+          find release_tmp -name "*.sig" -o -name "*.asc" | sort
+
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -180,13 +208,19 @@ jobs:
           NOTES="${NOTES}\n\n### Binaries"
           NOTES="${NOTES}\n- \`provider\` — Linux amd64/arm64, macOS amd64/arm64, Windows amd64/arm64"
 
-          # Create release with all binaries
+          # Create release with all binaries + signatures
           gh release create "$VERSION" \
             --title "URNetwork Provider ${VERSION}" \
             --notes "$(echo -e "$NOTES")" \
             release_tmp/linux/amd64/provider#provider-linux-amd64 \
+            release_tmp/linux/amd64/provider.asc#provider-linux-amd64.asc \
             release_tmp/linux/arm64/provider#provider-linux-arm64 \
+            release_tmp/linux/arm64/provider.asc#provider-linux-arm64.asc \
             release_tmp/darwin/amd64/provider#provider-darwin-amd64 \
+            release_tmp/darwin/amd64/provider.asc#provider-darwin-amd64.asc \
             release_tmp/darwin/arm64/provider#provider-darwin-arm64 \
+            release_tmp/darwin/arm64/provider.asc#provider-darwin-arm64.asc \
             release_tmp/windows/amd64/provider.exe#provider-windows-amd64.exe \
-            release_tmp/windows/arm64/provider.exe#provider-windows-arm64.exe
+            release_tmp/windows/amd64/provider.exe.asc#provider-windows-amd64.exe.asc \
+            release_tmp/windows/arm64/provider.exe#provider-windows-arm64.exe \
+            release_tmp/windows/arm64/provider.exe.asc#provider-windows-arm64.exe.asc
