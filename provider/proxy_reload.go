@@ -426,8 +426,8 @@ func (r *ProxyReloader) reload() {
 				delete(r.cancelMap, directProxyKey)
 				r.cancelMapMu.Unlock()
 			}()
-			defer unregisterProxyStub(0)
-			registerProxyV2026(0, "direct")
+			gen := RegisterProxy(0, "direct")
+			defer UnregisterProxySafe(0, gen)
 			r.spawnProxy(directCtx, nil, true, false)
 		})
 		tlog("[direct] native [direct] transport started (enable)\n")
@@ -653,7 +653,7 @@ func (r *ProxyReloader) reload() {
 		stableID := resolveProxyID(r.state, settings.Address)
 		setProxyIndex(settings.Address, stableID)
 		tagProxySourceIfUnset(r.state, settings.Address, sourceOf[settings.Address])
-		registerProxyV2026(stableID, settings.Address)
+		gen := RegisterProxy(stableID, settings.Address)
 
 		proxyCtx, proxyCancel := context.WithCancel(r.parentCtx)
 		r.cancelMapMu.Lock()
@@ -667,7 +667,7 @@ func (r *ProxyReloader) reload() {
 		r.wg.Add(1)
 		go connect.HandleError(func() {
 			defer r.wg.Done()
-			defer unregisterProxyStub(stableID)
+			defer UnregisterProxySafe(stableID, gen)
 			defer proxyCancel()
 
 			if !backoffPacerWithDelay(baseDelay, staggerDuration, proxyCtx) {

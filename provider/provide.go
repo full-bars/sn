@@ -967,7 +967,6 @@ func provideLauncherLoop(st *provideState) func() {
 			stableID := resolveProxyID(proxyState, ps.Address)
 			setProxyIndex(ps.Address, stableID)
 			tagProxySourceIfUnset(proxyState, ps.Address, proxySourceOf[ps.Address])
-			RegisterProxy(stableID, ps.Address)
 			var user string
 			var password string
 			if ps.Auth != nil {
@@ -991,7 +990,8 @@ func provideLauncherLoop(st *provideState) func() {
 			st.wg.Add(1)
 			go connect.HandleError(func() {
 				defer st.wg.Done()
-				defer UnregisterProxy(stableID)
+				gen := RegisterProxy(stableID, proxySettings.Address)
+				defer UnregisterProxySafe(stableID, gen)
 				defer proxyCancel()
 
 				if !backoffPacerWithDelay(baseDelay, staggerDuration, proxyCtx) {
