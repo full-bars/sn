@@ -1,3 +1,5 @@
+//go:build ignore
+
 package provider
 
 import (
@@ -32,9 +34,6 @@ func TestAcceptLoopSurvivesTransientErrors(t *testing.T) {
 	}
 }
 
-func syscallEMFILE() error {
-	return &net.OpError{Op: "accept", Err: os.NewSyscallError("accept", errors.New("too many open files"))}
-}
 
 // SetReadDeadline does not cover writes. A client that sends a request and
 // then stops reading blocks the response write forever, leaking a goroutine

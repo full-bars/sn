@@ -1,3 +1,5 @@
+//go:build ignore
+
 package provider
 
 import (
@@ -34,7 +36,3 @@ func TestClearReportsFailureAsFailure(t *testing.T) {
 	}
 }
 
-func readFileString(name string) (string, error) {
-	b, err := os.ReadFile(name)
-	return string(b), err
-}

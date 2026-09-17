@@ -27,7 +27,7 @@ import (
 // - Consolidated test suites from hotswap_common_test.go, hotswap_exec_path_test.go,
 //   hotswap_metrics_test.go, and hotswap_test.go into this single test file.
 // - Tagged with //go:build unix.
-// - Defined withTempHomeHotswap for isolated HOME environments.
+// - Defined withTempHome for isolated HOME environments.
 // - Added createFakeJWT and createFakeJWTWithClaims test helpers for constructing
 //   unverified test tokens.
 // - Note: TestClientJWTStoreFlockExclusivity was omitted as client_jwt_store is not part of this repo.
@@ -43,12 +43,6 @@ func createFakeHotswapJWT(exp int64) string {
 	return createFakeHotswapJWTWithClaims(map[string]interface{}{"exp": float64(exp)})
 }
 
-func withTempHomeHotswap(t *testing.T) string {
-	dir := t.TempDir()
-	t.Setenv("HOME", dir)
-	t.Setenv("USERPROFILE", dir)
-	return dir
-}
 
 // ---------------------------------------------------------------------------
 // From hotswap_common_test.go: Framing tests
@@ -301,7 +295,7 @@ func TestInstallPathCapturedAtStartupIsAResolvedFile(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestReadHotswapDeclinesFromDisk(t *testing.T) {
-	withTempHomeHotswap(t)
+	withTempHome(t)
 	stateDir := mustStateDir()
 	if stateDir == "" {
 		t.Skip("mustStateDir returned empty")
@@ -335,7 +329,7 @@ func TestReadHotswapDeclinesFromDisk(t *testing.T) {
 }
 
 func TestReadHotswapDeclinesFromDiskMissing(t *testing.T) {
-	withTempHomeHotswap(t)
+	withTempHome(t)
 	if mustStateDir() == "" {
 		t.Skip("mustStateDir returned empty")
 	}

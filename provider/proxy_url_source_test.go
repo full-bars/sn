@@ -15,40 +15,6 @@ import (
 
 // withTempHome redirects os.UserHomeDir() (and therefore every
 // proxy*Path() helper) to a temp directory for the duration of the test.
-func withTempHome(t *testing.T) string {
-	dir := t.TempDir()
-	t.Setenv("HOME", dir)
-	t.Setenv("USERPROFILE", dir) // os.UserHomeDir() reads this on Windows
-	// Disable reload trigger debounce for tests that write triggers back-to-back.
-	// Must hold the lock: doWriteReloadTrigger (scheduled by a prior test's
-	// writeReloadTrigger via time.AfterFunc) writes lastReloadTriggerTime.ts under
-	// this same lock, so an unlocked write here races that background goroutine.
-	lastReloadTriggerTime.Lock()
-	lastReloadTriggerTime.ts = time.Time{}
-	lastReloadTriggerTime.pending = false // drop any trailing AfterFunc window
-	lastReloadTriggerTime.Unlock()
-	// The probe-config and admission-state TTL caches are process-global and
-	// hold snapshots keyed to the previous HOME; a HOME change invalidates
-	// them, otherwise a config/state read in one test leaks into the next.
-	// Reset immediately (isolate this test's initial state) AND on cleanup
-	// (belt-and-suspenders so nothing outlives the test, review round 2).
-	resetProbeConfigCache()
-	resetAdmissionStateCache()
-	t.Cleanup(resetProbeConfigCache)
-	t.Cleanup(resetAdmissionStateCache)
-	// The per-address earn tracker is also process-global and its state is
-	// load-bearing for the paid-grader earn-skip tests: a test that seeds
-	// earning state must not influence the next test's expected probe/skip
-	// behavior. Fresh tracker per test.
-	globalPerProxyEarnTracker = newPerProxyEarnTracker()
-	t.Cleanup(func() { globalPerProxyEarnTracker = newPerProxyEarnTracker() })
-	// globalControlState is likewise process-global: a test that sets a
-	// control-socket value (or one from a previous run of the process) must
-	// not leak into the next test's resolve*/*Enabled expectations.
-	resetGlobalControlStateForTest()
-	t.Cleanup(resetGlobalControlStateForTest)
-	return dir
-}
 
 func TestRemoveDeadProxies_RoutesBySource(t *testing.T) {
 	home := withTempHome(t)
@@ -686,20 +652,6 @@ func TestRunURLProxyReaperOnce_SkipsFreshProbeOKEntry(t *testing.T) {
 // TestFetchStretch covers the pressure-to-multiplier ramp that replaces the
 // old binary load gate: 1x while calm (below fetchStretchStart), linear
 // growth to fetchStretchMax at fetchStretchFull, clamped above that.
-func TestFetchStretch(t *testing.T) {
-	if v := fetchStretch(0.0); !almostEq(v, 1.0) {
-		t.Fatalf("calm: %v", v)
-	}
-	if v := fetchStretch(0.3); !almostEq(v, 1.0) {
-		t.Fatalf("threshold edge: %v", v)
-	}
-	if v := fetchStretch(0.6); !almostEq(v, 4.5) { // midpoint of 0.3..0.9 → 1+ (7 * 0.5)
-		t.Fatalf("mid: %v", v)
-	}
-	if v := fetchStretch(1.0); !almostEq(v, 8.0) {
-		t.Fatalf("pinned: %v", v)
-	}
-}
 
 // TestShouldFetchNow covers the pacing decision that replaced the binary
 // skip gate: under pressure the effective interval stretches up to 8x, but

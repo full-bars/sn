@@ -16,12 +16,6 @@ import (
 	"time"
 )
 
-func withTempHomeControl(t *testing.T) string {
-	dir := t.TempDir()
-	t.Setenv("HOME", dir)
-	t.Setenv("USERPROFILE", dir)
-	return dir
-}
 
 func resetGlobalControlStateForTest() {
 	globalControlState.txMu.Lock()
@@ -56,7 +50,7 @@ func readFileString(name string) (string, error) {
 }
 
 func TestControlSocket_SetGetClear_EndToEnd(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -101,7 +95,7 @@ func TestControlSocket_SetGetClear_EndToEnd(t *testing.T) {
 }
 
 func TestControlSocket_UnknownKeyRejected(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -122,7 +116,7 @@ func TestControlSocket_UnknownKeyRejected(t *testing.T) {
 }
 
 func TestControlSocket_UnknownCommandRejected(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -143,7 +137,7 @@ func TestControlSocket_UnknownCommandRejected(t *testing.T) {
 }
 
 func TestDialControlSocket_NoProviderRunning(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 
 	_, err := dialControlSocket(controlRequest{Cmd: "get", Key: "node_name"})
 	if err != errNoProvider {
@@ -152,7 +146,7 @@ func TestDialControlSocket_NoProviderRunning(t *testing.T) {
 }
 
 func TestStartControlSocket_RemovesStaleSocketFile(t *testing.T) {
-	home := withTempHomeControl(t)
+	home := withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	dir := filepath.Join(home, ".urnetwork")
@@ -182,7 +176,7 @@ func TestStartControlSocket_RemovesStaleSocketFile(t *testing.T) {
 }
 
 func TestStartControlSocket_RefusesWhenAlreadyListening(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -200,7 +194,7 @@ func TestStartControlSocket_RefusesWhenAlreadyListening(t *testing.T) {
 }
 
 func TestStartControlSocket_SocketFilePermissions(t *testing.T) {
-	home := withTempHomeControl(t)
+	home := withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -222,7 +216,7 @@ func TestStartControlSocket_SocketFilePermissions(t *testing.T) {
 }
 
 func TestControlSocket_PersistFailureRollsBackInMemoryState(t *testing.T) {
-	home := withTempHomeControl(t)
+	home := withTempHome(t)
 	resetGlobalControlStateForTest()
 	globalControlState.set("node_name", "old-value")
 
@@ -242,7 +236,7 @@ func TestControlSocket_PersistFailureRollsBackInMemoryState(t *testing.T) {
 }
 
 func TestControlSocket_ConcurrentSetsMemoryMatchesDisk(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	const writers = 12
@@ -304,7 +298,7 @@ func TestIsTruthyOn(t *testing.T) {
 }
 
 func TestHotRestartEnabled_GuessBooleanForms(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	cases := []struct {
@@ -328,7 +322,7 @@ func TestHotRestartEnabled_GuessBooleanForms(t *testing.T) {
 }
 
 func TestControlSocket_WaitForReleaseUnblocksWhenListenerGone(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	path, err := controlSocketPath()
 	if err != nil {
 		t.Fatalf("controlSocketPath: %v", err)
@@ -362,7 +356,7 @@ func TestControlSocket_WaitForReleaseUnblocksWhenListenerGone(t *testing.T) {
 }
 
 func TestControlSocketLogsSetAndClear(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	s := newControlState()
 
 	out := captureTlog(t, func() {
@@ -397,7 +391,7 @@ func TestControlSocketLogsSetAndClear(t *testing.T) {
 }
 
 func TestControlSocketLogsRejectedSet(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	s := newControlState()
 
 	out := captureTlog(t, func() {
@@ -411,7 +405,7 @@ func TestControlSocketLogsRejectedSet(t *testing.T) {
 }
 
 func TestControlSocketGetIsNotLogged(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	s := newControlState()
 	if err := s.set("node_name", "nyc-1"); err != nil {
 		t.Fatal(err)
@@ -563,7 +557,7 @@ func TestNeedsRestart_AutoComputed(t *testing.T) {
 }
 
 func TestServerSideValidation_RejectsInvalidViaSocket(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -620,7 +614,7 @@ func TestServerSideValidation_RejectsInvalidViaSocket(t *testing.T) {
 }
 
 func TestClearLiveKey_ReappliesDefault(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -687,7 +681,7 @@ func TestClearLiveKey_ReappliesDefault(t *testing.T) {
 }
 
 func TestGogcOff_AppliesLive(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -719,7 +713,7 @@ func TestGogcOff_AppliesLive(t *testing.T) {
 }
 
 func TestProfileAliasCanonicalization(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -768,7 +762,7 @@ func TestEveryControlKeyClassified(t *testing.T) {
 }
 
 func TestStatusCommand(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -836,7 +830,7 @@ func TestStatusCommand(t *testing.T) {
 }
 
 func TestStatusCommand_EmptyState(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -868,7 +862,7 @@ func TestStatusCommand_EmptyState(t *testing.T) {
 }
 
 func TestControlSocket_VersionCommand_ReturnsBuildVersion(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	origVersion := Version
@@ -896,7 +890,7 @@ func TestControlSocket_VersionCommand_ReturnsBuildVersion(t *testing.T) {
 }
 
 func TestControlSocket_VersionCommand_ReturnsDevWhenEmpty(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	origVersion := Version
@@ -1039,7 +1033,7 @@ func TestGogcDisabledIsAcceptedAndDisablesCollection(t *testing.T) {
 }
 
 func TestControlSocketShutdown_Execution(t *testing.T) {
-	withTempHomeControl(t)
+	withTempHome(t)
 	resetGlobalControlStateForTest()
 
 	ctx, cancel := context.WithCancel(context.Background())

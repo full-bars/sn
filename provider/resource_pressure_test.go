@@ -18,12 +18,6 @@ import (
 
 func almostEq(a, b float64) bool { return math.Abs(a-b) < 1e-9 }
 
-func withTempHomePressure(t *testing.T) string {
-	dir := t.TempDir()
-	t.Setenv("HOME", dir)
-	t.Setenv("USERPROFILE", dir)
-	return dir
-}
 
 func TestNormalizeRamp(t *testing.T) {
 	// (value, lo, hi) → 0 below lo, 1 above hi, linear between
@@ -199,7 +193,7 @@ func TestAimdStep(t *testing.T) {
 }
 
 func TestWritePressureStatus(t *testing.T) {
-	home := withTempHomePressure(t)
+	home := withTempHome(t)
 	gc := &gcGovernorState{level: 2, lastHeapFrac: 0.85, gcStateName: "hard"}
 	writePressureStatus(0.42, map[string]float64{"psi_mem": 0.42}, gc)
 	b, err := os.ReadFile(filepath.Join(home, ".urnetwork", "pressure_status"))

@@ -1,4 +1,3 @@
-//go:build ignore
 
 package provider
 
@@ -101,7 +100,7 @@ func newRenewalTestServer(t *testing.T) *renewalTestServer {
 
 // forceOob401 sends one OOB control request through oob and asserts the fake
 // server answers 401 (which bumps oob's Audit401Count).
-func (ts *renewalTestServer) forceOob401(oob *connect.ApiOutOfBandControl) error {
+func (ts *renewalTestServer) forceOob401(oob *RenewalOOB) error {
 	ts.force401.Store(true)
 	defer ts.force401.Store(false)
 	done := make(chan error, 1)
@@ -135,5 +134,22 @@ func (ts *renewalTestServer) assertTotalRequests(t *testing.T, n int32) {
 	t.Helper()
 	if got := ts.totalRequests.Load(); got < n {
 		t.Fatalf("total auth-client requests = %d, want >= %d", got, n)
+	}
+}
+
+// waitForRenewalRequest polls until the auth-client endpoint has handled at
+// least one MORE request than `baseline`, failing after a bounded deadline.
+func (ts *renewalTestServer) waitForRenewalRequest(t *testing.T, baseline int32) {
+	t.Helper()
+	deadline := time.After(5 * time.Second)
+	for {
+		if ts.totalRequests.Load() > baseline {
+			return
+		}
+		select {
+		case <-deadline:
+			t.Fatalf("watcher did not make a renewal request: total auth-client requests = %d, baseline = %d", ts.totalRequests.Load(), baseline)
+		case <-time.After(20 * time.Millisecond):
+		}
 	}
 }

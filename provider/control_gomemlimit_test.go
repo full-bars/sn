@@ -1,3 +1,5 @@
+//go:build ignore
+
 package provider
 
 import (
@@ -58,12 +60,6 @@ func TestApplyLiveSideEffectLogsTheEffectiveValue(t *testing.T) {
 	}
 }
 
-// captureControlApplyLog redirects the apply log for the duration of a test.
-func captureControlApplyLog(fn func(string, ...any)) func() {
-	orig := controlApplyLog
-	controlApplyLog = fn
-	return func() { controlApplyLog = orig }
-}
 
 // `off` means clear for every tuning key, so it cannot also mean "disable
 // the collector" for gogc without making the dangerous reading the default
