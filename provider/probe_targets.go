@@ -185,6 +185,19 @@ var probeResolverIps = []string{
 // probeHostCount returns the size of the health-class hostname table.
 func probeHostCount() int { return len(probeHostNames) }
 
+// ProbeHostCount returns the size of the health-class hostname table
+// without copying it — callers that only need the length should not pay for
+// a full table copy.
+func ProbeHostCount() int { return len(probeHostNames) }
+
+// SampleProbeTargets returns one pass's worth of targets for a provider:
+// n health hostnames and one resolver ip, chosen deterministically from
+// seed. See sampleProbeTargets for the rotation semantics (disjoint blocks,
+// deterministic reproduction).
+func SampleProbeTargets(seed uint64, n int) (hosts []string, resolver string) {
+	return sampleProbeTargets(seed, n)
+}
+
 // sampleProbeTargets returns one pass's worth of targets: n health hostnames
 // and one resolver ip, chosen deterministically from seed.
 //

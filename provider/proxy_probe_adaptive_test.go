@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 import (
@@ -10,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/urnetwork/connect"
 	"golang.org/x/time/rate"
 )
 
@@ -41,7 +38,7 @@ func seedProbeDNSForBlocks(t *testing.T, address string, cfg proxyTableProbeConf
 		if width <= 0 {
 			return
 		}
-		hosts, _ := connect.SampleProbeTargets(blockSeed, width)
+		hosts, _ := SampleProbeTargets(blockSeed, width)
 		for _, h := range hosts {
 			added[h] = true
 			probeDNSCache.m[h] = probeDNSCachedIP{ip: net.ParseIP("93.184.216.34"), at: time.Now()}
@@ -60,7 +57,7 @@ func seedProbeDNSForBlocks(t *testing.T, address string, cfg proxyTableProbeConf
 	// Poison every OTHER table host into the fail-cache so a seeding mistake
 	// fails loudly (Total collapses -> assertion fires) instead of silently
 	// reaching live DNS and passing only on network-dependent boxes.
-	allHosts, _ := connect.SampleProbeTargets(tableProbeSeed(address, pass), connect.ProbeHostCount())
+	allHosts, _ := SampleProbeTargets(tableProbeSeed(address, pass), ProbeHostCount())
 	for _, h := range allHosts {
 		if added[h] {
 			continue
@@ -77,7 +74,7 @@ func seedProbeDNSForBlocks(t *testing.T, address string, cfg proxyTableProbeConf
 		}
 		// Also clear the POISONED entries: they must not leak into later
 		// tests (probeDNSFailTTL is 30s, longer than several tests).
-		allHosts, _ := connect.SampleProbeTargets(tableProbeSeed(address, pass), connect.ProbeHostCount())
+		allHosts, _ := SampleProbeTargets(tableProbeSeed(address, pass), ProbeHostCount())
 		for _, h := range allHosts {
 			delete(probeDNSCache.fail, h)
 		}
@@ -412,7 +409,7 @@ func seedOnlyOneProbeHost(t *testing.T, address string) {
 	if baseW <= 0 || baseW > cfg.SampleWidth {
 		baseW = cfg.SampleWidth
 	}
-	baseHosts, _ := connect.SampleProbeTargets(tableProbeSeed(address, pass), baseW)
+	baseHosts, _ := SampleProbeTargets(tableProbeSeed(address, pass), baseW)
 	if len(baseHosts) == 0 {
 		t.Fatalf("empty base block at width %d for %s", baseW, address)
 	}
@@ -438,7 +435,7 @@ func seedOnlyOneProbeHost(t *testing.T, address string) {
 		}
 	}
 	// Poison every other table host: any block the probe might dial fast-fails.
-	allHosts, _ := connect.SampleProbeTargets(tableProbeSeed(address, pass), connect.ProbeHostCount())
+	allHosts, _ := SampleProbeTargets(tableProbeSeed(address, pass), ProbeHostCount())
 	for _, h := range allHosts {
 		if h != resolvable {
 			delete(probeDNSCache.m, h)
@@ -470,7 +467,7 @@ func TestDisjointGrowthHosts_NoBaseOverlap(t *testing.T) {
 	extra := cfg.MaxSampleWidth - cfg.SampleWidth
 	for p := 0; p < 400; p++ {
 		seed := tableProbeSeed("1.2.3.4:1080", uint64(p))
-		base, _ := connect.SampleProbeTargets(seed, cfg.SampleWidth)
+		base, _ := SampleProbeTargets(seed, cfg.SampleWidth)
 		baseSet := map[string]bool{}
 		for _, h := range base {
 			baseSet[h] = true

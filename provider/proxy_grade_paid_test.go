@@ -1,7 +1,3 @@
-//go:build ignore
-
-// Blocked on SampleProbeTargets (connect library function not in v2026). ProxyBandwidth/RegisterProxyBandwidth exist locally.
-
 package provider
 
 import (

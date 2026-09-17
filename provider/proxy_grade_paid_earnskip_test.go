@@ -1,7 +1,3 @@
-//go:build ignore
-
-// Blocked on SampleProbeTargets (connect library function not in v2026). ProxyBandwidth/RegisterProxyBandwidth exist locally.
-
 package provider
 
 import (
@@ -13,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/urnetwork/connect"
+	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
 // earnTrackerTestSeq supplies a distinct health index per seedEarnTracker
@@ -35,10 +31,10 @@ func seedEarnTracker(t *testing.T, addr string) {
 	t.Cleanup(func() { UnregisterProxy(idx) })
 	key := fmt.Sprintf("proxy[%d] (%s)", idx, addr)
 	// First Update establishes the baseline (prevCum = 0, no delta yet).
-	globalPerProxyEarnTracker.Update(map[string]*ProxyBandwidth{key: bw})
+	globalPerProxyEarnTracker.Update(map[string]*bandwidth.ProxyBandwidth{key: bw})
 	// Second Update advances the counter: a positive delta is now recorded.
 	bw.BillableRx.Store(1024 * 1024)
-	globalPerProxyEarnTracker.Update(map[string]*ProxyBandwidth{key: bw})
+	globalPerProxyEarnTracker.Update(map[string]*bandwidth.ProxyBandwidth{key: bw})
 }
 
 // TestPaidProxyGrader_SkipsEarningProxy pins the earn-skip: a paid proxy
