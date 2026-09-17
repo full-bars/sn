@@ -176,6 +176,35 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 
 ---
 
+## 12. CI Pipeline & Installers
+
+**Purpose**: Restore the full CI surface and installer set that the fresh fork was missing. Seven workflows were disabled stubs claiming their scripts did not exist; the scripts had simply not been ported yet.
+
+**Files**: `scripts/Provider_Install_Mac.sh`, `scripts/Provider_Install_Win32.ps1`, `scripts/Provider_Install_Deps.sh`, `scripts/Provider_Uninstall_Linux.sh`, `scripts/Provider_Uninstall_Win32.ps1`, `scripts/install-urnet-docker.sh`, `.github/scripts/*` (shakedown.sh, docker-shakedown.sh, cfaa_sync.sh, stage-wdsi.py, compact_commit_diff.py, create_pr.sh, write_sync_info.sh), `.github/workflows/{dash-compat,unix-lifecycle,windows-lifecycle,cfaa-blocklist-sync,tool-functional-smoke,functional-soak,docker-multi-container,shakedown,docker-shakedown}.yml`, `cmd/fake-provider/`
+
+**Changes**:
+- All six installers download release assets exclusively from the official `github.com/full-bars/sn` release. No custom mirror is used anywhere in download paths (help-text contact info unchanged).
+- Release pipeline: universal tarball bundles `Provider_Install_Linux.sh` as `urnet-tools`; per-platform tarballs carry their own installer; `urnetwork-monitoring-<ver>.tar.gz` ships the Prometheus/Grafana stack; release body reads `releases/<tag>.md` with auto-generated fallback; VirusTotal + ClamAV run in a parallel non-blocking scan job that posts the verdict and stages Defender submissions.
+- Shakedown workflows trigger on `v2026.*` tags (this repo's scheme), not `v3.23.0-fix.*`.
+- `cmd/fake-provider/` — 123-line CI test double that listens on the control socket; lets the Windows lifecycle workflow exercise start/stop/restart/logs without a real provider binary.
+- Tool smoke CI builds `./cmd/provider/` (the new repo layout).
+
+**Status**: ✅ Shipped
+
+---
+
+## 13. Docker Container Discovery for Renamed Image
+
+**Purpose**: The Go tooling identifies provider containers by image/name substrings (`urnetwork`, `urnet`, `meso`, `miner`). The old image `ghcr.io/full-bars/urnetwork-3.23-fix` matched via `urnetwork`; the new `ghcr.io/full-bars/sn` matched none, so `urnet-tools` could not discover its own containers — breaking daemonized features (status, logs, hotswap, proxy commands) inside Docker.
+
+**Files**: `internal/urnettools/docker.go`
+
+**Change**: `isDockerCandidate` now also matches `full-bars/sn` in the image or container name.
+
+**Status**: ✅ Shipped
+
+---
+
 ## Porting Checklist for Future Upstream Versions
 
 - Verify `syscall.Umask` call sites survive platform splits (`umask_unix.go` / `umask_windows.go`)

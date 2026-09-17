@@ -96,7 +96,21 @@ sn/                                  # Fork root (forked from urfoundation/sn)
 │
 ├── .github/workflows/
 │   ├── build.yml                    # Test + lint + Docker multi-arch build/push (GHCR+DockerHub)
-│   └── release.yml                  # Tagged release binaries (tarballs per platform)
+│   ├── release.yml                  # Tagged release binaries (tarballs + installer bundles)
+│   ├── shakedown.yml                # Pre-release shakedown (v2026.* tags + manual)
+│   ├── docker-shakedown.yml         # Deep Docker test matrix
+│   ├── dash-compat.yml              # Dash/POSIX installer compatibility
+│   ├── unix-lifecycle.yml           # urnet-tools Linux lifecycle (systemd)
+│   ├── windows-lifecycle.yml        # urnet-tools Windows lifecycle (schtasks)
+│   ├── tool-functional-smoke.yml    # Live-API JWT mint + tool smoke
+│   ├── functional-soak.yml          # 3h manual soak
+│   ├── docker-multi-container.yml   # Multi-container targeting + modes
+│   ├── cfaa-blocklist-sync.yml      # CFAA blocklist sync (cron + repo dispatch)
+│   ├── upstream_monitor.yml         # Upstream commit/PR port monitor
+│   ├── codeql.yml                   # CodeQL security analysis (weekly)
+│   ├── pr-labeler.yml               # PR area labels
+│   ├── test-gauntlet.yml            # Manual test gauntlet
+│   └── wiki-sync.yml                # Wiki sync on docs push
 │
 ├── Dockerfile                       # Multi-stage Alpine build (3 binaries), multi-arch
 ├── CHANGELOG.md                     # Release changelog

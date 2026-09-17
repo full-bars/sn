@@ -5,14 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2026.9.17-1789646883-meso] — 2026-09-17
 
 ### Added
-- Docker multi-arch build+push CI (ghcr.io + DockerHub) on tag and main pushes
-- Pelican panel egg (`pelican/egg-urnetwork-h3.json`)
-- CI lint: pelican egg validation, shellcheck, docker update-source guard
+- Seven CI workflows restored (dash-compat, lifecycle x2, CFAA sync, tool smoke, functional soak, docker multi-container) plus pre-release shakedown workflows
+- Release pipeline aligned: installers bundled in tarballs, monitoring bundle, `releases/<tag>.md` notes with auto-fallback, parallel non-blocking security scans
+- Six installers ported (Mac, Win32, Deps, Uninstall x2, install-urnet-docker), all downloads GitHub-official
+- Pelican panel egg with var-contract validation
+- `cmd/fake-provider` CI test double for Windows lifecycle verification
 
-## [v2026.9.17-1789639761-meso] — 2026-09-17
+### Fixed
+- Docker container discovery: `isDockerCandidate` now matches `full-bars/sn` (was silently broken for the new image name)
+- `.dockerignore` excluded the `provider/` source dir (pattern matched the directory, not the binary)
+- `third_party/` copied before `go mod download` (npipe replace target)
+- CI smoke workflow built `./provider/` (new layout is `./cmd/provider/`)
+- docker-multi-container `proxy clear` now passes `-y` for non-interactive CI
+- Shakedown workflows now trigger on `v2026.*` tags (were watching `v3.23.0-fix.*`)
+
+### Docs
+- `FORK_CHANGES.md` and `PROJECT_STRUCTURE.md` added
+- Internal rollout document removed
+
+## [v2026.9.17-1789639761-meso] — 2026-09-17 (superseded)
 
 ### Added
 - UDP/QUIC bandwidth tracking via `H3PacketConnFactory` in platform transport
