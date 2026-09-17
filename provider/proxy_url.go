@@ -174,7 +174,7 @@ func parseProxyURLLine(line string) (address, user, password string, ok bool) {
 	if idx := strings.Index(line, "://"); idx != -1 {
 		scheme := line[:idx]
 		if !strings.EqualFold(scheme, "socks5") {
-			tlog("[proxy][url] unsupported scheme %q (only socks5 is supported); skipping %q\n", scheme, line)
+			tlog("[proxy][url] unsupported scheme %q (only socks5 is supported); skipping %q\n", scheme, sanitizeURLForDisplay(line))
 			return "", "", "", false
 		}
 		rest := line[idx+3:]

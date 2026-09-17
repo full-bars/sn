@@ -21,6 +21,15 @@ func TestIsBlockedSourceIP(t *testing.T) {
 		{"172.16.0.1", true},      // RFC1918
 		{"192.168.1.1", true},     // RFC1918
 		{"169.254.169.254", true}, // link-local (metadata)
+		{"100.64.0.1", true},      // Tailscale CGNAT (100.64.0.0/10)
+		{"100.100.100.100", true}, // Tailscale CGNAT, upper end of range
+		{"100.127.255.255", true}, // Tailscale CGNAT, top of range
+		{"100.63.255.255", false}, // just below the CGNAT range — public
+		{"100.128.0.0", false},    // just above the CGNAT range — public
+		{"198.18.0.1", true},      // RFC 2544 benchmarking (198.18.0.0/15)
+		{"198.19.255.255", true},  // RFC 2544 benchmarking, top of range
+		{"64:ff9b::1", true},      // NAT64 well-known prefix (64:ff9b::/96)
+		{"64:ff9c::1", false},     // just outside the NAT64 prefix — public
 		{"8.8.8.8", false},        // public
 		{"1.1.1.1", false},        // public
 		{".nil.", false},          // invalid -> parsed as public-ish in test, handled by caller

@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/docopt/docopt-go"
+	"github.com/urfoundation/sn/provider/bandwidth"
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/connect/protocol"
 )
@@ -367,15 +368,12 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	}
 
 	// Register bandwidth tracker for this proxy (for health/earnings reporting).
-	// DESIGN ADAPTATION: bandwidth.WrapDialContextSettings cannot be used here
-	// because it sets DialContextSettings, which causes connect/net.go to BYPASS
-	// the proxy dialer entirely. In the pinned connect version (4c85408), when
-	// DialContextSettings is non-nil, connect uses its DialContext instead of
-	// ProxySettings.NewDialContext — killing proxy routing. Re-enabling per-byte
-	// tracking requires a PacketConnFactory or proxy-level hook that the pinned
-	// connect version doesn't expose. BillableRx/BillableTx in tracker.go remain
-	// for use when wrapping is re-enabled via a connect update.
-	RegisterProxyBandwidth(proxyIndex)
+	// Wired at the LocalUserNat buffer settings below (the actual relay-egress
+	// dial path), not here on clientStrategySettings — that only carries the
+	// provider's own control-plane connection to the platform, not client
+	// traffic. See bandwidth.WrapConnectSettings for why the naive
+	// WrapDialContextSettings approach silently bypassed proxy routing.
+	proxyBandwidth := RegisterProxyBandwidth(proxyIndex)
 
 	clientSettings := connect.DefaultClientSettings()
 	if seed, err := readProviderClientKeySeed(); err == nil && 0 < len(seed) {
@@ -407,8 +405,14 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	applyTurboMemoryLimit(profile, st.maxMemory)
 	applyEcoSettings(st.maxMemory)
 	ensureMemoryLimit(st.maxMemory)
-	localUserNatSettings.TcpBufferSettings.ConnectSettings = clientStrategySettings.ConnectSettings
-	localUserNatSettings.UdpBufferSettings.ConnectSettings = clientStrategySettings.ConnectSettings
+	// Wrap the relay-egress ConnectSettings with byte counting. This is a
+	// separate copy from clientStrategySettings.ConnectSettings on purpose —
+	// wrapping in place would also instrument the provider's own
+	// control-plane traffic to the platform API, double-counting it as
+	// billable proxy bandwidth.
+	relayConnectSettings := bandwidth.WrapConnectSettings(clientStrategySettings.ConnectSettings, proxyBandwidth, identityKey)
+	localUserNatSettings.TcpBufferSettings.ConnectSettings = relayConnectSettings
+	localUserNatSettings.UdpBufferSettings.ConnectSettings = relayConnectSettings
 	remoteUserNatProviderSettings := connect.DefaultRemoteUserNatProviderSettings()
 
 	clientStrategy := connect.NewClientStrategy(proxyCtx, clientStrategySettings)
