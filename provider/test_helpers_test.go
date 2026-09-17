@@ -54,5 +54,17 @@ func setRenewalTestHome(t *testing.T) string {
 	if err := os.WriteFile(filepath.Join(urnetworkDir, "jwt"), []byte(accountJwt), 0600); err != nil {
 		t.Fatal(err)
 	}
+	// readAccountJWT() calls os.UserHomeDir() which returns $HOME.
+	// Without this, CI runners read from the real home where the
+	// temp JWT doesn't exist, causing all renewal attempts to fail.
+	origHome, _ := os.LookupEnv("HOME")
+	os.Setenv("HOME", dir)
+	t.Cleanup(func() {
+		if origHome == "" {
+			os.Unsetenv("HOME")
+		} else {
+			os.Setenv("HOME", origHome)
+		}
+	})
 	return dir
 }
