@@ -3,6 +3,7 @@ package bandwidth
 import (
 	"context"
 	"net"
+	"strings"
 	"testing"
 
 	"github.com/urnetwork/connect"
@@ -69,3 +70,81 @@ func TestWrapExistingDialContextSettings(t *testing.T) {
 
 // TestWrapNilPacketConnFactoryCreatesDefault removed — PacketConnFactory not available
 // in pinned full-bars/connect version. See wrap.go TODO.
+
+// TestWrapConnectSettingsPreservesProxyRouting is a regression test for the
+// bug where the provider's relay-egress path never counted bytes because
+// naively setting DialContextSettings makes connect.ConnectSettings.DialContext
+// skip ProxySettings.NewDialContext entirely (see wrap.go doc comment).
+//
+// It dials through the wrapped settings to an arbitrary unreachable
+// destination and asserts the resulting connection error names the PROXY
+// address, not the destination address — proving the SOCKS5 proxy dialer
+// was actually invoked rather than bypassed for a direct connection.
+func TestWrapConnectSettingsPreservesProxyRouting(t *testing.T) {
+	cs := connect.ConnectSettings{
+		ProxySettings: &connect.ProxySettings{
+			Network: "tcp",
+			// Port 1 on loopback: nothing listens there, so the dial fails
+			// fast and deterministically without touching the network.
+			Address: "127.0.0.1:1",
+		},
+	}
+
+	bw := &ProxyBandwidth{}
+	wrapped := WrapConnectSettings(cs, bw, "proxy-1")
+
+	if wrapped.DialContextSettings == nil {
+		t.Fatal("expected DialContextSettings to be set")
+	}
+
+	_, err := wrapped.DialContextSettings.DialContext(context.Background(), "tcp", "10.0.0.1:9999")
+	if err == nil {
+		t.Fatal("expected dial to fail (nothing listens on 127.0.0.1:1)")
+	}
+	// A bypassed dial would attempt "dial tcp 10.0.0.1:9999" directly and
+	// hang/fail on an unreachable address without ever mentioning the proxy.
+	// The SOCKS5 dialer instead fails fast against the proxy itself and
+	// reports that as the underlying cause — proof the proxy hop ran.
+	if !strings.Contains(err.Error(), "dial tcp 127.0.0.1:1") {
+		t.Fatalf("expected dial error to show a failed TCP connect to the proxy address 127.0.0.1:1 (proof the SOCKS5 dialer ran), got: %v", err)
+	}
+}
+
+func TestWrapConnectSettingsCountsBytes(t *testing.T) {
+	cs := connect.ConnectSettings{
+		DialContextSettings: &connect.DialContextSettings{
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return newMockConn(), nil
+			},
+		},
+	}
+
+	bw := &ProxyBandwidth{}
+	wrapped := WrapConnectSettings(cs, bw, "proxy-2")
+
+	conn, err := wrapped.DialContextSettings.DialContext(context.Background(), "tcp", "1.2.3.4:443")
+	if err != nil {
+		t.Fatalf("DialContext: %v", err)
+	}
+
+	data := []byte("hello")
+	if _, err := conn.Write(data); err != nil {
+		t.Fatalf("Write: %v", err)
+	}
+	if bw.BillableTx.Load() != uint64(len(data)) {
+		t.Fatalf("BillableTx: expected %d, got %d", len(data), bw.BillableTx.Load())
+	}
+}
+
+func TestWrapConnectSettingsNilBandwidthIsNoop(t *testing.T) {
+	cs := connect.ConnectSettings{
+		ProxySettings: &connect.ProxySettings{Network: "tcp", Address: "127.0.0.1:1"},
+	}
+	wrapped := WrapConnectSettings(cs, nil, "proxy-1")
+	if wrapped.DialContextSettings != nil {
+		t.Fatal("expected cs to pass through unchanged when bw is nil")
+	}
+	if wrapped.ProxySettings != cs.ProxySettings {
+		t.Fatal("expected ProxySettings to be unchanged")
+	}
+}
