@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/provider provide
+ExecStart=/usr/local/bin/urnetwork provide
 Restart=on-failure
 RestartSec=5
 Environment=HOME=/root
@@ -13,8 +13,6 @@ Environment=URNETWORK_RAMLOGS=0
 
 # Hardening
 NoNewPrivileges=true
-ProtectSystem=strict
-ReadWritePaths=/root/.urnetwork
 
 [Install]
 WantedBy=multi-user.target

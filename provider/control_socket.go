@@ -109,9 +109,9 @@ func startControlSocket(ctx context.Context, state *controlState) (func(), error
 	// by setting umask to 0177 before bind(). This avoids a TOCTOU
 	// window where the file exists with default permissions.
 	// (Unix socket bind() uses mode 0777, so 0777 & ~0177 = 0600.)
-	oldUmask := syscall.Umask(0o177)
+	oldUmask := setUmask(0o177)
 	ln, err := net.Listen("unix", path)
-	syscall.Umask(oldUmask)
+	setUmask(oldUmask)
 	if err != nil {
 		return nil, fmt.Errorf("control socket listen: %w", err)
 	}
@@ -126,9 +126,18 @@ func startControlSocket(ctx context.Context, state *controlState) (func(), error
 		return nil, fmt.Errorf("control socket ACL: %w", err)
 	}
 
+	// cleanOnce ensures the listener close and socket removal happen
+	// exactly once, even when called from both the ctx.Done goroutine
+	// and the returned cleanup function concurrently.
+	var cleanOnce sync.Once
+	doClean := func() {
+		ln.Close()
+		os.Remove(path)
+	}
+
 	go func() {
 		<-ctx.Done()
-		ln.Close()
+		cleanOnce.Do(doClean)
 	}()
 
 	go func() {
@@ -154,8 +163,7 @@ func startControlSocket(ctx context.Context, state *controlState) (func(), error
 	}()
 
 	cleanup := func() {
-		ln.Close()
-		os.Remove(path)
+		cleanOnce.Do(doClean)
 	}
 	return cleanup, nil
 }
@@ -526,11 +534,12 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		return controlResponse{OK: true, Value: "shutting down"}
 
 	case "hotswap":
-		if hotSwapTrigger == nil {
+		trigger := getHotSwapTrigger()
+		if trigger == nil {
 			return controlResponse{OK: false, Error: "hotswap trigger not available"}
 		}
 		go func() {
-			if err := hotSwapTrigger(); err != nil {
+			if err := trigger(); err != nil {
 				controlLog("[hotswap] background handoff failed: %v\n", err)
 			}
 		}()
@@ -637,12 +646,27 @@ var (
 	metricsListener       net.Listener
 	metricsUnregCloser    func()
 	metricsHandoffPending atomic.Bool
+	hotSwapTriggerMu      sync.RWMutex
 	hotSwapTrigger        func() error
 
 	coordinatorClosersMu  sync.Mutex
 	coordinatorCloserSeq  uint64
 	coordinatorClosersMap map[uint64]func()
 )
+
+// setHotSwapTrigger stores the hot-swap trigger function, safe for concurrent use.
+func setHotSwapTrigger(fn func() error) {
+	hotSwapTriggerMu.Lock()
+	defer hotSwapTriggerMu.Unlock()
+	hotSwapTrigger = fn
+}
+
+// getHotSwapTrigger returns the current hot-swap trigger function (nil if unset).
+func getHotSwapTrigger() func() error {
+	hotSwapTriggerMu.RLock()
+	defer hotSwapTriggerMu.RUnlock()
+	return hotSwapTrigger
+}
 
 func RegisterCoordinatorCloser(closer func()) func() {
 	if closer == nil {

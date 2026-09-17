@@ -798,7 +798,7 @@ func restoreStdioBeforeExec() {}
 var lifetimeStore = loadLifetimeMetrics(lifetimeMetricsPath())
 
 func init() {
-	hotSwapTrigger = func() error {
+	setHotSwapTrigger(func() error {
 		return runHotSwapParentHandoff(context.Background(), func() {}, docopt.Opts{})
-	}
+	})
 }

@@ -37,7 +37,7 @@ type headEMAStoreV2Owner struct {
 	// Immutable after authenticated provisional runtime construction. Missing
 	// native attempts have no EMA observation; fold the next actual input once.
 	provisionalEpochGaps bool
-	historyAdoption *releaseHistoryAdoptionV2
+	historyAdoption      *releaseHistoryAdoptionV2
 }
 
 func (self *HeadEMAStore) allowsHeadEMAEpochGaps() bool {

@@ -97,21 +97,50 @@ func TestSimulatorAttemptCutV2StoreReplicasUseRealTypedStorage(t *testing.T) {
 func TestSimulatorAttemptCutV2StoreReplicasRejectInvalidConfiguration(t *testing.T) {
 	t.Parallel()
 	for _, edit := range []func(*ResolvedConfig, map[int]server.BlobStore, *validator.AttemptCutV2Bounds){
-		func(cfg *ResolvedConfig, _ map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { cfg.Public = nil },
-		func(cfg *ResolvedConfig, _ map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { cfg.Config = nil },
+		func(cfg *ResolvedConfig, _ map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) {
+			cfg.Public = nil
+		},
+		func(cfg *ResolvedConfig, _ map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) {
+			cfg.Config = nil
+		},
 		func(cfg *ResolvedConfig, _ map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { cfg.ChainID++ },
-		func(cfg *ResolvedConfig, _ map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { cfg.Config.Topology.Operators = 1 },
-		func(cfg *ResolvedConfig, _ map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { cfg.Config.Deployment.DeploymentID = "other" },
-		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { delete(stores, 2) },
-		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { stores[2] = nil },
-		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { stores[1], stores[2] = stores[2], stores[1] },
-		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { stores[0] = stores[2]; delete(stores, 2) },
-		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) { stores[3] = stores[2] },
-		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) { bounds.MaxHeaderBytes = 0 },
-		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) { bounds.MaxHeaderBytes = 33 },
-		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) { bounds.Records.MaxItems = 0 },
-		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) { bounds.Proofs.MaxItems = 0 },
-		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) { bounds.Records.MaxPageBytes = ^uint64(0) },
+		func(cfg *ResolvedConfig, _ map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) {
+			cfg.Config.Topology.Operators = 1
+		},
+		func(cfg *ResolvedConfig, _ map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) {
+			cfg.Config.Deployment.DeploymentID = "other"
+		},
+		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) {
+			delete(stores, 2)
+		},
+		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) {
+			stores[2] = nil
+		},
+		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) {
+			stores[1], stores[2] = stores[2], stores[1]
+		},
+		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) {
+			stores[0] = stores[2]
+			delete(stores, 2)
+		},
+		func(_ *ResolvedConfig, stores map[int]server.BlobStore, _ *validator.AttemptCutV2Bounds) {
+			stores[3] = stores[2]
+		},
+		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) {
+			bounds.MaxHeaderBytes = 0
+		},
+		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) {
+			bounds.MaxHeaderBytes = 33
+		},
+		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) {
+			bounds.Records.MaxItems = 0
+		},
+		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) {
+			bounds.Proofs.MaxItems = 0
+		},
+		func(_ *ResolvedConfig, _ map[int]server.BlobStore, bounds *validator.AttemptCutV2Bounds) {
+			bounds.Records.MaxPageBytes = ^uint64(0)
+		},
 	} {
 		cfg, stores, bounds := newAttemptReplicaStoreTestConfig(t)
 		originals := [2]server.BlobStore{stores[1], stores[2]}

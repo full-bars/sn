@@ -1,0 +1,37 @@
+# Release tarballs and binaries
+*.tar.gz
+*.tar.xz
+*.zip
+
+# Git
+.git
+.gitignore
+
+# Test data and backup files
+*_test.go
+*.bak
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Documentation (not needed in build)
+*.md
+LICENSE
+
+# IDE / editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+/bin/
+/dist/
+/provider
+/urnet-tools

@@ -82,9 +82,10 @@ func provide(opts docopt.Opts) {
 	defer st.cancel()
 	defer flushRetentionEvents()
 	provideLaunchGoroutines(st)
-	provideLauncherLoop(st)
+	defer provideLauncherLoop(st)()
 	provideStatusServer(st)
 
+	<-st.ctx.Done()
 	done := make(chan struct{})
 	go func() {
 		st.wg.Wait()
@@ -309,7 +310,8 @@ func provideLaunchGoroutines(st *provideState) {
 
 	watcherName := st.nodeName
 	if watcherName == "" {
-		watcherName, err := os.Hostname()
+		var err error
+		watcherName, err = os.Hostname()
 		if err != nil || watcherName == "" {
 			watcherName = "unknown"
 		}
@@ -459,29 +461,32 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				}
 				err = fmt.Errorf("proxy unreachable: %s", proxySettings.Address)
 			} else {
-				admitFailureCount := authFailures
-				if proxySettings != nil {
-					admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Address)
-				}
-				release, waitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
-				if waitErr != nil {
-					return "", connect.Id{}, false, waitErr
-				}
-				defer release()
-
-				if !isURLSourced && authFailures >= maxAuthFailures {
-					select {
-					case slowRetrySemaphore <- struct{}{}:
-						defer func() { <-slowRetrySemaphore }()
-					case <-proxyCtx.Done():
-						return "", connect.Id{}, false, proxyCtx.Err()
+				err = func() error {
+					admitFailureCount := authFailures
+					if proxySettings != nil {
+						admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Address)
 					}
-				}
-				identityKey := "direct"
-				if proxySettings != nil {
-					identityKey = proxySettings.Address
-				}
-				byClientJwt, clientId, reused, err = provideAuth(proxyCtx, clientStrategy, st.apiUrl, st.opts, st.nodeName, identityKey)
+					release, waitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
+					if waitErr != nil {
+						return waitErr
+					}
+					defer release()
+
+					if !isURLSourced && authFailures >= maxAuthFailures {
+						select {
+						case slowRetrySemaphore <- struct{}{}:
+							defer func() { <-slowRetrySemaphore }()
+						case <-proxyCtx.Done():
+							return proxyCtx.Err()
+						}
+					}
+					identityKey := "direct"
+					if proxySettings != nil {
+						identityKey = proxySettings.Address
+					}
+					byClientJwt, clientId, reused, err = provideAuth(proxyCtx, clientStrategy, st.apiUrl, st.opts, st.nodeName, identityKey)
+					return err
+				}()
 				if proxySettings != nil {
 					if err == nil {
 						globalProvenProxies.MarkSucceeded(proxySettings.Address)
@@ -823,9 +828,8 @@ func provideDirectSetup(st *provideState) bool {
 				}
 				st.proxyCancelMu.Unlock()
 			}()
-			defer UnregisterProxy(0)
-
-			RegisterProxy(0, "direct")
+			gen := RegisterProxy(0, "direct")
+			defer UnregisterProxySafe(0, gen)
 			provideWithProxy(st, nativeCtx, nil, true, false)
 		})
 	} else {
@@ -835,8 +839,9 @@ func provideDirectSetup(st *provideState) bool {
 }
 
 // provideLauncherLoop loads proxy state, launches per-proxy goroutines,
-// starts the reloader, and runs URL fetcher goroutines.
-func provideLauncherLoop(st *provideState) {
+// starts the reloader, and runs URL fetcher goroutines. Returns a cleanup
+// function (DoH cache close) that the caller must defer.
+func provideLauncherLoop(st *provideState) func() {
 	// Sentinel goroutine.
 	st.wg.Add(1)
 	go func() {
@@ -932,7 +937,6 @@ func provideLauncherLoop(st *provideState) {
 	}
 
 	_, closeDohCache := initPersistentDohCache(st.ctx)
-	defer closeDohCache()
 
 	globalProxySlowRetryState.Store(LoadProxySlowRetryState())
 	setConfiguredProxyCount(len(allProxySettings))
@@ -1054,6 +1058,8 @@ func provideLauncherLoop(st *provideState) {
 			serveMetrics(ln)
 		}
 	}
+
+	return closeDohCache
 }
 
 // provideStatusServer starts the optional status HTTP server.

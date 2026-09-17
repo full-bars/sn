@@ -95,7 +95,9 @@ func TestReleaseHistoryAdoptionV2PinsConfigNamespaceAndOptions(t *testing.T) {
 			case "provisional":
 				c.ProvisionalDeferClosedNativeInput = true
 			case "mode":
-				if err := os.Chmod(r.CoordinatorStateDir, 0o755); err != nil { t.Fatal(err) }
+				if err := os.Chmod(r.CoordinatorStateDir, 0o755); err != nil {
+					t.Fatal(err)
+				}
 			}
 			if err := r.configure(c, path); err == nil {
 				t.Fatal("changed source authority reached strict startup")
@@ -117,10 +119,14 @@ func TestReleaseHistoryAdoptionV2RetainsExactPrefixAndOneFreshBridge(t *testing.
 	}
 	file := steeringIntentFile{Schema: steeringIntentSchema, History: all[:2], Current: &all[2]}
 	encoded, err := marshalAttemptSettlementV2JSON(t.Context(), &file, 1<<20, true, true)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	request.IntentPrefixCount, request.IntentPrefixSHA256, request.LastNativeEpoch, request.LastArtifactHash = 3, ReleaseMeasurementContentHash(encoded), 1405, all[2].MeasurementArtifactHash
 	owner, err := request.matchPrefix(t.Context(), &file, encoded, 1<<20)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !owner.allowsIntentEdge(&all[0], &all[1]) || !owner.allowsIntentEdge(&all[1], &all[2]) {
 		t.Fatal("exact retained sparse edges were lost")
 	}
@@ -135,7 +141,7 @@ func TestReleaseHistoryAdoptionV2RetainsExactPrefixAndOneFreshBridge(t *testing.
 			t.Fatalf("adoption authorized unapproved first epoch %d", epoch)
 		}
 	}
-	later := SteeringIntent{SubnetEpoch: fresh.SubnetEpoch+2}
+	later := SteeringIntent{SubnetEpoch: fresh.SubnetEpoch + 2}
 	if owner.allowsIntentEdge(&fresh, &later) || validateSteeringIntentSuccessorWithGapsV2(&fresh, &later, owner.allowsIntentEdge(&fresh, &later)) == nil {
 		t.Fatal("first bridge became an unconditional future gap permission")
 	}
@@ -146,18 +152,24 @@ func TestReleaseHistoryAdoptionV2RetainsExactPrefixAndOneFreshBridge(t *testing.
 	for _, fault := range []string{"receipt", "drop", "reorder", "source", "pending"} {
 		copyAll := append([]SteeringIntent(nil), all...)
 		switch fault {
-		case "receipt": copyAll[1].ApplicationBlock++
-		case "drop": copyAll = copyAll[1:]
-		case "reorder": copyAll[0], copyAll[1] = copyAll[1], copyAll[0]
-		case "source": copyAll[1].MeasurementArtifactHash = request.LastArtifactHash
-		case "pending": copyAll[2].Status = "pending"
+		case "receipt":
+			copyAll[1].ApplicationBlock++
+		case "drop":
+			copyAll = copyAll[1:]
+		case "reorder":
+			copyAll[0], copyAll[1] = copyAll[1], copyAll[0]
+		case "source":
+			copyAll[1].MeasurementArtifactHash = request.LastArtifactHash
+		case "pending":
+			copyAll[2].Status = "pending"
 		}
 		changed := steeringIntentFile{Schema: steeringIntentSchema, History: copyAll[:len(copyAll)-1], Current: &copyAll[len(copyAll)-1]}
 		if _, err := request.matchPrefix(t.Context(), &changed, encoded, 1<<20); err == nil {
 			t.Fatalf("%s changed the pinned historical prefix", fault)
 		}
 	}
-	cancelled, cancel := context.WithCancel(t.Context()); cancel()
+	cancelled, cancel := context.WithCancel(t.Context())
+	cancel()
 	if _, err := request.matchPrefix(cancelled, &file, encoded, 1<<20); !errors.Is(err, context.Canceled) {
 		t.Fatalf("prefix ignored cancellation: %v", err)
 	}
@@ -175,7 +187,9 @@ func TestReleaseHistoryAdoptionV2KeepsStrictStartupAuthentication(t *testing.T) 
 		}
 		err := fixture.start(t.Context(), attemptSettlementV2PhysicalIO())
 		if corrupt {
-			if err == nil { t.Fatal("adoption bypassed changed canonical EVM history") }
+			if err == nil {
+				t.Fatal("adoption bypassed changed canonical EVM history")
+			}
 			requireReleaseStartupV2Dormant(t, fixture.disk)
 		} else if err != nil {
 			t.Fatalf("real strict startup rejected exact empty prefix: %v", err)
@@ -187,16 +201,25 @@ func TestReleaseHistoryAdoptionV2RequiresCompleteActualApplicationRow(t *testing
 	t.Parallel()
 	intent := &SteeringIntent{UIDs: []uint16{3, 4, 7, 8}, Values: []uint16{65517, 65535, 24071, 32094}}
 	row := []crv4.WeightPair{{UID: 8, Value: 32094}, {UID: 7, Value: 24071}, {UID: 4, Value: 65535}, {UID: 3, Value: 65517}}
-	if err := matchAdoptedApplicationRowV2(intent, row); err != nil { t.Fatal(err) }
+	if err := matchAdoptedApplicationRowV2(intent, row); err != nil {
+		t.Fatal(err)
+	}
 	for _, fault := range []string{"changed", "missing", "extra", "duplicate", "foreign"} {
 		changed := append([]crv4.WeightPair(nil), row...)
 		switch fault {
-		case "changed": changed[0].Value--
-		case "missing": changed = changed[:len(changed)-1]
-		case "extra": changed = append(changed, crv4.WeightPair{UID: 9, Value: 0})
-		case "duplicate": changed[1] = changed[0]
-		case "foreign": changed[0].UID = types.U16(9)
+		case "changed":
+			changed[0].Value--
+		case "missing":
+			changed = changed[:len(changed)-1]
+		case "extra":
+			changed = append(changed, crv4.WeightPair{UID: 9, Value: 0})
+		case "duplicate":
+			changed[1] = changed[0]
+		case "foreign":
+			changed[0].UID = types.U16(9)
 		}
-		if err := matchAdoptedApplicationRowV2(intent, changed); err == nil { t.Fatalf("%s actual row passed", fault) }
+		if err := matchAdoptedApplicationRowV2(intent, changed); err == nil {
+			t.Fatalf("%s actual row passed", fault)
+		}
 	}
 }

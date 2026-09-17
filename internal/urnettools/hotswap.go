@@ -30,6 +30,12 @@ func isHotSwapSupportedVersion(ver string) bool {
 		return true
 	}
 	ver = strings.TrimPrefix(ver, "v")
+
+	// v2026 releases (tags like v2026.9.16-...) always support HotSwap.
+	if strings.HasPrefix(ver, "2026.") {
+		return true
+	}
+
 	const base = "3.23.0-fix."
 	if !strings.HasPrefix(ver, base) {
 		return false

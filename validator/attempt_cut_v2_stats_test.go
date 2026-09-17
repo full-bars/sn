@@ -210,20 +210,37 @@ func TestAttemptCutV2StatsRejectsAuthorityAndBoundsBeforeIO(t *testing.T) {
 	t.Parallel()
 	fixture := newAttemptCutV2StatsTestFixture(t, 1, 0)
 	for _, edit := range []func(*ReleaseStatsMeasurement, *AttemptCutV2StatsOptions){
-		func(value *ReleaseStatsMeasurement, _ *AttemptCutV2StatsOptions) { value.AttemptCut = &AttemptLedgerCut{} },
-		func(value *ReleaseStatsMeasurement, _ *AttemptCutV2StatsOptions) { value.SettlementTransition = &AttemptSettlementTransition{} },
-		func(_ *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) { options.Replay.VisitRecord = func(AttemptRecord) error { return nil } },
+		func(value *ReleaseStatsMeasurement, _ *AttemptCutV2StatsOptions) {
+			value.AttemptCut = &AttemptLedgerCut{}
+		},
+		func(value *ReleaseStatsMeasurement, _ *AttemptCutV2StatsOptions) {
+			value.SettlementTransition = &AttemptSettlementTransition{}
+		},
+		func(_ *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) {
+			options.Replay.VisitRecord = func(AttemptRecord) error { return nil }
+		},
 		func(_ *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) { options.MaxProviders = 0 },
 		func(_ *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) { options.MaxProviders-- },
 		func(_ *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) { options.MaxEgressHashes = 0 },
 		func(_ *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) { options.MaxEgressHashes-- },
-		func(_ *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) { options.ExpectedConfig.LatRefMillis++ },
-		func(value *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) { value.Config.AMin++; options.ExpectedConfig.AMin++ },
+		func(_ *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) {
+			options.ExpectedConfig.LatRefMillis++
+		},
+		func(value *ReleaseStatsMeasurement, options *AttemptCutV2StatsOptions) {
+			value.Config.AMin++
+			options.ExpectedConfig.AMin++
+		},
 	} {
 		measurement := cloneAttemptCutV2StatsTestMeasurement(t, fixture.measurement)
 		options := fixture.options(t, measurement)
-		options.Replay.ReadMetadata = func(context.Context, string, uint64) ([]byte, error) { t.Fatal("invalid admission reached metadata"); return nil, nil }
-		options.Replay.OpenData = func(context.Context, string, string, uint64) (io.ReadCloser, error) { t.Fatal("invalid admission reached data"); return nil, nil }
+		options.Replay.ReadMetadata = func(context.Context, string, uint64) ([]byte, error) {
+			t.Fatal("invalid admission reached metadata")
+			return nil, nil
+		}
+		options.Replay.OpenData = func(context.Context, string, string, uint64) (io.ReadCloser, error) {
+			t.Fatal("invalid admission reached data")
+			return nil, nil
+		}
 		edit(&measurement, &options)
 		verified, replayed, err := VerifyReleaseStatsMeasurementWithAttemptCutV2(t.Context(), measurement, fixture.cut, fixture.cut.Context, fixture.seal.policy, fixture.seal.bounds, options)
 		if err == nil || verified.Providers != nil || replayed != (AttemptCutV2ReplayResult{}) {

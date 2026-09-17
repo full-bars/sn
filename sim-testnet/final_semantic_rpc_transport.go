@@ -60,7 +60,7 @@ func canonicalFinalSemanticRPCTransport(public *PublicDeploymentManifest, evmReq
 	}
 	if public.OperationalRPCMode == rpcModeOwnedNode {
 		transport := finalSemanticRPCTransport{
-			profile: finalSemanticOwnedRPCTransport,
+			profile:               finalSemanticOwnedRPCTransport,
 			canonicalSubstrateRPC: public.SubstrateRPC, canonicalEVMRPC: public.EVMRPC,
 			dialSubstrateRPC: public.SubstrateRPC, dialEVMRPC: public.EVMRPC,
 		}

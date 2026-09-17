@@ -48,6 +48,7 @@ type proxyHealth struct {
 	failures        ProxyFailureCounters
 	lastError       string
 	lastErrorAt     time.Time // when lastError was recorded (so a stale error reads as such)
+	regen           uint64    // incremented on each RegisterProxy; UnregisterProxy skips if stale
 }
 
 // StagingWindowDuration is the shared duration used by both connectingStaleAfter
@@ -123,10 +124,15 @@ var (
 	proxyLifetimeRecovered int
 	proxyLifetimeLost      int
 	proxyBaselineSet       bool
+
+	// proxyHealthGen is a monotonic counter incremented on each RegisterProxy.
+	// UnregisterProxy receives the value captured at registration and only
+	// cleans up if the entry hasn't been re-registered since.
+	proxyHealthGen atomic.Uint64
 )
 
 // RegisterProxy adds or updates a proxy in the health registry.
-func RegisterProxy(index int, address string) {
+func RegisterProxy(index int, address string) uint64 {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
 	h, ok := proxyHealthByIndex[index]
@@ -160,7 +166,11 @@ func RegisterProxy(index int, address string) {
 	h.lastErrorAt = time.Time{}
 	h.failures = ProxyFailureCounters{}
 
+	gen := proxyHealthGen.Add(1)
+	h.regen = gen
+
 	proxyHealthByAddr[address] = h
+	return gen
 }
 
 // RegisterProxyBandwidth securely retrieves or initializes the proxyBandwidth.
@@ -295,15 +305,39 @@ func ProxyEverUp(index int) bool {
 	return false
 }
 
-// UnregisterProxy removes a proxy from the health registry after its goroutine
-// has fully drained. Must be called after the goroutine exits, not at cancel time.
+// UnregisterProxySafe removes a proxy from the health registry only if the
+// registration generation still matches (no re-registration happened since
+// the goroutine started). Must be called after the goroutine exits.
+func UnregisterProxySafe(id int, gen uint64) {
+	proxyHealthMu.Lock()
+	defer proxyHealthMu.Unlock()
+	h, ok := proxyHealthByIndex[id]
+	if !ok || h.address == "" {
+		delete(proxyHealthByIndex, id)
+		return
+	}
+	// Stale goroutine: the proxy was re-registered since this goroutine
+	// started, so its cleanup must not destroy the fresh entry.
+	if h.regen != gen {
+		return
+	}
+	deleteProxyIndex(h.address)
+	// only drop the addr entry if it still points at this proxy
+	if proxyHealthByAddr[h.address] == h {
+		delete(proxyHealthByAddr, h.address)
+	}
+	delete(proxyHealthByIndex, id)
+}
+
+// UnregisterProxy removes a proxy from the health registry unconditionally.
+// Use UnregisterProxySafe for production goroutines that may race with
+// hot-reload re-registration; this variant is kept for tests and compat
+// wrappers where the generation is unknown.
 func UnregisterProxy(id int) {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
 	if h, ok := proxyHealthByIndex[id]; ok && h.address != "" {
-		// Clean up the address → index mapping to prevent unbounded growth.
 		deleteProxyIndex(h.address)
-		// only drop the addr entry if it still points at this proxy
 		if proxyHealthByAddr[h.address] == h {
 			delete(proxyHealthByAddr, h.address)
 		}
@@ -367,30 +401,25 @@ func ProxyHealthSnapshot() (up int, dead []string, degraded []string, bwMap map[
 	bwMap = make(map[string]*bandwidth.ProxyBandwidth)
 	for _, idx := range sortedIndicesLocked() {
 		h := proxyHealthByIndex[idx]
-		switch {
-		case h.currentlyUp:
+		coarse := classifyProxyHealth(h, now)
+		switch coarse {
+		case "up":
 			up++
-		case h.connectingActive(now):
+		case "connecting":
 			// a re-registered instance reuses the struct and inherits its
 			// predecessor's everUp/downSince, so a fresh `connecting` must win
 			// over `everUp` or a respawning proxy reads as degraded (or dead,
 			// when the inherited downSince is older than 7d) mid-respawn.
 			connecting = append(connecting, formatProxyEntry(idx, h.address))
-		case h.everUp:
-			if !h.downSince.IsZero() && time.Since(h.downSince) >= 7*24*time.Hour {
-				dead = append(dead, formatProxyEntry(idx, h.address))
-			} else {
-				degraded = append(degraded, formatProxyEntry(idx, h.address))
-			}
-		default:
+		case "degraded":
+			degraded = append(degraded, formatProxyEntry(idx, h.address))
+		case "dead":
 			dead = append(dead, formatProxyEntry(idx, h.address))
 		}
 
 		if h.bw != nil {
 			pb := proxyBandwidthSnapshot(h.bw)
-			// Use raw address as key (consistent with ProxyBandwidthByAddress)
-			// instead of formatProxyEntry (M8 fix).
-			bwMap[h.address] = pb
+			bwMap[formatProxyEntry(idx, h.address)] = pb
 		}
 	}
 	return up, dead, degraded, bwMap, connecting
@@ -428,9 +457,7 @@ func ProxyHealthHeartbeat(confirmDead bool) ProxyHealthReport {
 
 		if h.bw != nil {
 			pb := proxyBandwidthSnapshot(h.bw)
-			// Use raw address as key (consistent with ProxyBandwidthByAddress)
-			// instead of formatProxyEntry (M8 fix).
-			r.Bandwidth[h.address] = pb
+			r.Bandwidth[formatProxyEntry(idx, h.address)] = pb
 		}
 
 		if !first {
@@ -529,15 +556,16 @@ func degradedTierFromDuration(d time.Duration) string {
 // classifyProxyHealth returns the coarse health classification for a proxy.
 // This is the single source of truth for the up/connecting/degraded/dead
 // threshold, used by ProxyHealthSnapshot, ProxyHealthByAddress, and the
-// heartbeat's DegradedProxies predicate. The threshold for "dead" is
-// downSince >= 7 days (matching degradedTierFromDuration's "inactive" tier).
+// heartbeat's DegradedProxies predicate.
 //
 // Classification mapping:
 //
 //	"connecting"  — fresh connecting window (connectingStaleAfter)
 //	"up"          — currentlyUp
-//	"degraded"    — everUp but down < 7d, or connecting window stale
-//	"dead"        — never-up, or everUp but down >= 7d
+//	"degraded"    — everUp but down < 7d, or connecting window stale,
+//	               or everUp but down >= 7d (fine-tier "inactive" via
+//	               degradedTierFromDuration in ProxyHealthByAddress)
+//	"dead"        — never-up
 func classifyProxyHealth(h *proxyHealth, now time.Time) string {
 	switch {
 	case h.currentlyUp:
@@ -545,9 +573,6 @@ func classifyProxyHealth(h *proxyHealth, now time.Time) string {
 	case h.connectingActive(now):
 		return "connecting"
 	case h.everUp:
-		if !h.downSince.IsZero() && time.Since(h.downSince) >= 7*24*time.Hour {
-			return "dead"
-		}
 		return "degraded"
 	default:
 		return "dead"

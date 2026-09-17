@@ -38,7 +38,7 @@ func TestFinalCaptureCapacityPriorCarrierCanonicalV2UsesFreshCanonicalOwner(t *t
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, size := range []int{0, 1, 2, 3, 48*1024-1, 48*1024, 48*1024+1, 96*1024+1} {
+	for _, size := range []int{0, 1, 2, 3, 48*1024 - 1, 48 * 1024, 48*1024 + 1, 96*1024 + 1} {
 		payload, encoded, entry := priorCanonicalPayloadTestV2(t, size)
 		canonical, err := canonicalFinalPriorFilePayloadV2(limits, payload.RunID, payload.Scope, entry, encoded)
 		if err != nil || len(canonical) != len(encoded) || &canonical[0] != &encoded[0] || !json.Valid(canonical) {
@@ -135,11 +135,15 @@ func TestFinalCaptureCapacityPriorCarrierCanonicalV2RetainsFreshAuthentication(t
 	entry.EnvelopeHash = envelope.ContentHash
 	assertPriorCarrierDecodeTestV2(t, "initial", cfg, payload.RunID, entry, envelope.Signer, wire, true)
 	for _, mutate := range []func(*ReleaseEvidenceEnvelope){
-		func(value *ReleaseEvidenceEnvelope) { value.Signature = "0x" + strings.Repeat("00", crypto.SignatureLength) },
+		func(value *ReleaseEvidenceEnvelope) {
+			value.Signature = "0x" + strings.Repeat("00", crypto.SignatureLength)
+		},
 		func(value *ReleaseEvidenceEnvelope) { value.ContentHash = "sha256:" + strings.Repeat("0", 64) },
 		func(value *ReleaseEvidenceEnvelope) { value.ChainID++ },
 		func(value *ReleaseEvidenceEnvelope) { value.RunID = "foreign" },
-		func(value *ReleaseEvidenceEnvelope) { value.Payload = bytes.Replace(value.Payload, []byte("AAEC"), []byte("AAED"), 1) },
+		func(value *ReleaseEvidenceEnvelope) {
+			value.Payload = bytes.Replace(value.Payload, []byte("AAEC"), []byte("AAED"), 1)
+		},
 	} {
 		changed := *envelope
 		changed.Payload = bytes.Clone(envelope.Payload)
