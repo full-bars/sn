@@ -31,6 +31,13 @@ jobs:
     name: Area labels (from paths)
     runs-on: ubuntu-latest
     steps:
+      # actions/labeler@v5 reads .github/labeler.yml from a local checkout
+      # when one exists, falling back to a Contents-API fetch by SHA
+      # otherwise. That fallback has been failing outright on every PR
+      # (config-not-found, even once .github/labeler.yml existed on main) —
+      # a real checkout sidesteps it entirely and is what every other job
+      # in this workflow file already does.
+      - uses: actions/checkout@v4
       - uses: actions/labeler@v5
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
