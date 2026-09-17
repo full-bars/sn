@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 )
@@ -134,5 +135,52 @@ func TestProxyAdmissionGate_BoundsInFlightConcurrency(t *testing.T) {
 
 	for _, release := range releases[1:] {
 		release()
+	}
+}
+
+func TestSemaphoreReleasePerAttempt(t *testing.T) {
+	// slowRetrySemaphore is a buffered channel (capacity = slowRetryMaxConcurrent)
+	// used as a semaphore in the provide.go retry loop. Each anonymous function
+	// acquires a token and defers its release, so the semaphore must be fully
+	// released after each attempt — not held across retries.
+
+	// Drain any leftover tokens from concurrent tests.
+	for len(slowRetrySemaphore) > 0 {
+		<-slowRetrySemaphore
+	}
+
+	simulateAttempt := func() bool {
+		select {
+		case slowRetrySemaphore <- struct{}{}:
+			defer func() { <-slowRetrySemaphore }()
+			return true
+		default:
+			return false
+		}
+	}
+
+	// Sequential attempts: each must acquire and release cleanly.
+	for i := 0; i < 10; i++ {
+		if !simulateAttempt() {
+			t.Fatalf("attempt %d: semaphore should be available", i)
+		}
+		if len(slowRetrySemaphore) != 0 {
+			t.Fatalf("attempt %d: semaphore not released, len=%d", i, len(slowRetrySemaphore))
+		}
+	}
+
+	// Concurrent attempts: must not leak beyond max capacity.
+	var wg sync.WaitGroup
+	for i := 0; i < slowRetryMaxConcurrent*2; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			simulateAttempt()
+		}()
+	}
+	wg.Wait()
+
+	if n := len(slowRetrySemaphore); n != 0 {
+		t.Fatalf("semaphore leaked after concurrent attempts, len=%d", n)
 	}
 }

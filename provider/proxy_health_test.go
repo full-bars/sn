@@ -1001,3 +1001,49 @@ func TestConcurrentAccess_Race(t *testing.T) {
 
 	wg.Wait()
 }
+
+func TestUnregisterProxyStaleGeneration(t *testing.T) {
+	resetProxyHealthForTest()
+
+	// Register a proxy and capture its generation.
+	gen1 := RegisterProxy(0, "1.1.1.1:1080")
+	if ProxyHealthCount() != 1 {
+		t.Fatalf("expected 1 proxy after first register, got %d", ProxyHealthCount())
+	}
+
+	// Re-register at the same index with a new address (triggers new generation).
+	gen2 := RegisterProxy(0, "2.2.2.2:1080")
+	if gen2 == gen1 {
+		t.Fatalf("expected different generation on re-register, got gen1=%d gen2=%d", gen1, gen2)
+	}
+
+	// Unregister with the OLD generation — must be a no-op.
+	UnregisterProxySafe(0, gen1)
+
+	// Proxy must still exist.
+	if got := ProxyHealthCount(); got != 1 {
+		t.Fatalf("proxy should still exist after stale unregister, count = %d, want 1", got)
+	}
+	// Address must be the new one.
+	status := ProxyHealthByAddress()
+	if _, ok := status["2.2.2.2:1080"]; !ok {
+		t.Fatal("expected new address 2.2.2.2:1080 to still be registered")
+	}
+}
+
+func TestUnregisterProxyFreshGeneration(t *testing.T) {
+	resetProxyHealthForTest()
+
+	// Register a proxy and capture its generation.
+	gen := RegisterProxy(0, "3.3.3.3:1080")
+	if ProxyHealthCount() != 1 {
+		t.Fatalf("expected 1 proxy, got %d", ProxyHealthCount())
+	}
+
+	// Unregister with the CURRENT generation — should succeed.
+	UnregisterProxySafe(0, gen)
+
+	if got := ProxyHealthCount(); got != 0 {
+		t.Fatalf("proxy should be removed after fresh unregister, count = %d, want 0", got)
+	}
+}

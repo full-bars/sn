@@ -1067,3 +1067,82 @@ func TestControlSocketShutdown_Execution(t *testing.T) {
 		t.Fatal("shutdownFn was not called within 2s")
 	}
 }
+
+func TestCleanOncePreventsDoubleClose(t *testing.T) {
+	withTempHome(t)
+	resetGlobalControlStateForTest()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cleanup, err := startControlSocket(ctx, globalControlState)
+	if err != nil {
+		t.Fatalf("startControlSocket: %v", err)
+	}
+
+	// Cancel ctx — triggers internal goroutine's cleanOnce.Do(doClean).
+	cancel()
+
+	// Call cleanup — second entry into cleanOnce.Do, must be a no-op.
+	// This must not panic or error from double-closing the listener/socket.
+	cleanup()
+
+	// Verify the socket file was removed (by either path).
+	sockPath, err := controlSocketPath()
+	if err != nil {
+		t.Fatalf("controlSocketPath: %v", err)
+	}
+	if _, err := os.Stat(sockPath); !os.IsNotExist(err) {
+		t.Fatalf("expected socket file to be removed, stat err = %v", err)
+	}
+}
+
+func TestGetSetHotSwapTrigger(t *testing.T) {
+	withTempHome(t)
+	// Ensure clean state before and after test.
+	setHotSwapTrigger(nil)
+	t.Cleanup(func() { setHotSwapTrigger(nil) })
+
+	// Initially nil.
+	if got := getHotSwapTrigger(); got != nil {
+		t.Fatal("expected nil trigger initially, got non-nil trigger")
+	}
+
+	// Set a trigger and verify it can be retrieved and called.
+	called := make(chan struct{}, 1)
+	setHotSwapTrigger(func() error {
+		close(called)
+		return nil
+	})
+
+	fn := getHotSwapTrigger()
+	if fn == nil {
+		t.Fatal("expected non-nil trigger after set")
+	}
+	if err := fn(); err != nil {
+		t.Fatalf("trigger returned error: %v", err)
+	}
+	select {
+	case <-called:
+	default:
+		t.Fatal("trigger function was not called")
+	}
+
+	// Unset — should return nil again.
+	setHotSwapTrigger(nil)
+	if got := getHotSwapTrigger(); got != nil {
+		t.Fatal("expected nil after unsetting, got non-nil trigger")
+	}
+
+	// Concurrent set/get must not race (verified by -race detector).
+	var wg sync.WaitGroup
+	const goroutines = 20
+	for i := 0; i < goroutines; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			setHotSwapTrigger(func() error { return nil })
+			_ = getHotSwapTrigger()
+		}(i)
+	}
+	wg.Wait()
+}
