@@ -42,11 +42,9 @@ func WrapDialContextSettings(ds *connect.DialContextSettings, bw *ProxyBandwidth
 		return NewConn(conn, bw, proxyAddr), nil
 	}
 
-	// NOTE: PacketConnFactory (UDP/QUIC bandwidth wrapping) is omitted here because
-	// the pinned full-bars/connect version (4c85408, 2026-08-15) does not expose it.
-	// The field exists in newer connect (d159f46+) but full-bars/connect needs updating.
-	// TCP bandwidth tracking via wrappedDial above covers the primary data path.
-	// TODO: Re-enable PacketConnFactory wrapping once full-bars/connect is updated to d159f46+.
+	// NOTE: UDP/QUIC bandwidth wrapping is handled at the provider level
+	// via PlatformTransportSettings.H3PacketConnFactory (see provide.go),
+	// not here, because DialContextSettings bypasses the proxy dialer.
 	return &connect.DialContextSettings{
 		DialContext: wrappedDial,
 	}

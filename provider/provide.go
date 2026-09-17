@@ -656,7 +656,21 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		InstanceId: instanceId,
 		AppVersion: RequireVersion(),
 	}
-	platformTransport := connect.NewPlatformTransportWithDefaults(proxyCtx, clientStrategy, connectClient.RouteManager(), st.connectUrl, auth)
+	// Wire UDP/QUIC bandwidth tracking via H3PacketConnFactory.
+	// When set, the platform transport calls this instead of raw net.ListenUDP,
+	// allowing us to wrap the PacketConn with byte counters.
+	var platformSettings *connect.PlatformTransportSettings
+	if proxyBandwidth != nil {
+		platformSettings = connect.DefaultPlatformTransportSettings()
+		platformSettings.H3PacketConnFactory = func(ctx context.Context) (net.PacketConn, error) {
+			raw, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
+			if err != nil {
+				return nil, err
+			}
+			return bandwidth.NewPacketConn(raw, proxyBandwidth, identityKey), nil
+		}
+	}
+	platformTransport := connect.NewPlatformTransport(proxyCtx, clientStrategy, connectClient.RouteManager(), st.connectUrl, auth, platformSettings)
 	unregCloser := RegisterCoordinatorCloser(func() {
 		platformTransport.Close()
 	})
