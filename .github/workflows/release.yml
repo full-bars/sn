@@ -235,6 +235,13 @@ jobs:
           cp tool_tmp/darwin/arm64/urnet-tools urnet-tools-darwin-arm64
           cp tool_tmp/windows/amd64/urnet-tools urnet-tools-windows-amd64
           cp tool_tmp/windows/arm64/urnet-tools urnet-tools-windows-arm64
+          # Also copy into release_tmp/ for VT scan
+          cp tool_tmp/linux/amd64/urnet-tools release_tmp/linux/amd64/urnet-tools
+          cp tool_tmp/linux/arm64/urnet-tools release_tmp/linux/arm64/urnet-tools
+          cp tool_tmp/darwin/amd64/urnet-tools release_tmp/darwin/amd64/urnet-tools
+          cp tool_tmp/darwin/arm64/urnet-tools release_tmp/darwin/arm64/urnet-tools
+          cp tool_tmp/windows/amd64/urnet-tools release_tmp/windows/amd64/urnet-tools
+          cp tool_tmp/windows/arm64/urnet-tools release_tmp/windows/arm64/urnet-tools
           # urnet-docker
           cp tool_tmp/linux/amd64/urnet-docker urnet-docker-linux-amd64
           cp tool_tmp/linux/arm64/urnet-docker urnet-docker-linux-arm64
@@ -242,6 +249,13 @@ jobs:
           cp tool_tmp/darwin/arm64/urnet-docker urnet-docker-darwin-arm64
           cp tool_tmp/windows/amd64/urnet-docker urnet-docker-windows-amd64
           cp tool_tmp/windows/arm64/urnet-docker urnet-docker-windows-arm64
+          # Also copy urnet-docker into release_tmp/ for VT scan
+          cp tool_tmp/linux/amd64/urnet-docker release_tmp/linux/amd64/urnet-docker
+          cp tool_tmp/linux/arm64/urnet-docker release_tmp/linux/arm64/urnet-docker
+          cp tool_tmp/darwin/amd64/urnet-docker release_tmp/darwin/amd64/urnet-docker
+          cp tool_tmp/darwin/arm64/urnet-docker release_tmp/darwin/arm64/urnet-docker
+          cp tool_tmp/windows/amd64/urnet-docker release_tmp/windows/amd64/urnet-docker
+          cp tool_tmp/windows/arm64/urnet-docker release_tmp/windows/arm64/urnet-docker
 
       - name: Create provider tarballs
         run: |
