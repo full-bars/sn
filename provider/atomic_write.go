@@ -47,23 +47,23 @@ func atomicWriteJSON(path string, data interface{}) error {
 	}
 	blob = append(blob, '\n')
 
-	tmp := path + ".tmp"
-	f, err := os.Create(tmp)
+	tmpFile, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.tmp")
 	if err != nil {
 		return fmt.Errorf("atomicWriteJSON create tmp: %w", err)
 	}
+	tmp := tmpFile.Name()
 
-	if _, err := f.Write(blob); err != nil {
-		f.Close()
+	if _, err := tmpFile.Write(blob); err != nil {
+		tmpFile.Close()
 		os.Remove(tmp)
 		return fmt.Errorf("atomicWriteJSON write: %w", err)
 	}
-	if err := f.Sync(); err != nil {
-		f.Close()
+	if err := tmpFile.Sync(); err != nil {
+		tmpFile.Close()
 		os.Remove(tmp)
 		return fmt.Errorf("atomicWriteJSON sync: %w", err)
 	}
-	f.Close()
+	tmpFile.Close()
 
 	// Backup last known good (best-effort)
 	os.Remove(path + ".bak")

@@ -16,6 +16,9 @@ import (
 func TestMain(m *testing.M) {
 	// Disable the reload-trigger debounce for the entire test suite so
 	// fetch/merge/reaper tests don't flake from suppressed trigger writes.
+	// Individual tests that need a non-zero debounce (e.g. debounce-behavior
+	// tests) set it locally and restore via t.Cleanup.
+	writeReloadTriggerDebounce = 0
 	os.Exit(m.Run())
 }
 
