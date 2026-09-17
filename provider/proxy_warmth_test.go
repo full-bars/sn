@@ -304,16 +304,16 @@ func TestPrioritizeAndScheduleProxies(t *testing.T) {
 	})
 
 	_ = loadGlobalClientJWTStore().Put("file-warm", clientJWTEntry{
-		ByClientJWT: validJWT, ClientID: testClientId, NetworkID: "net-main",
+		ByClientJWT: validJWT, ClientID: testClientId, NetworkID: "net-main", MintedAt: time.Now(),
 	})
 	_ = loadGlobalClientJWTStore().Put("file-renewable", clientJWTEntry{
-		ByClientJWT: expiredJWT, ClientID: testClientId, NetworkID: "net-main",
+		ByClientJWT: expiredJWT, ClientID: testClientId, NetworkID: "net-main", MintedAt: time.Now(),
 	})
 	_ = loadGlobalClientJWTStore().Put("url-warm", clientJWTEntry{
-		ByClientJWT: validJWT, ClientID: testClientId, NetworkID: "net-main",
+		ByClientJWT: validJWT, ClientID: testClientId, NetworkID: "net-main", MintedAt: time.Now(),
 	})
 	_ = loadGlobalClientJWTStore().Put("url-renewable", clientJWTEntry{
-		ByClientJWT: expiredJWT, ClientID: testClientId, NetworkID: "net-main",
+		ByClientJWT: expiredJWT, ClientID: testClientId, NetworkID: "net-main", MintedAt: time.Now(),
 	})
 
 	proxies := []*connect.ProxySettings{

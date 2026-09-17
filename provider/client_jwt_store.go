@@ -80,6 +80,24 @@ func storeGlobalClientJWTStore(s *clientJWTStore) {
 	clientJWTStoreMu.Unlock()
 }
 
+// pruneStaleEntries returns a copy of entries with anything older than
+// clientJWTStaleAfter dropped. Shared by loadLocked and flushLocked so a
+// flush for one key can never resurrect entries that were already pruned in
+// memory: flushLocked reloads the raw on-disk map (to merge concurrent
+// writers, see its own comment) and, without re-applying this filter, would
+// write every stale entry straight back to disk the next time any other key
+// flushed.
+func pruneStaleEntries(entries map[string]clientJWTEntry) map[string]clientJWTEntry {
+	now := time.Now()
+	pruned := make(map[string]clientJWTEntry, len(entries))
+	for key, entry := range entries {
+		if now.Sub(entry.MintedAt) < clientJWTStaleAfter {
+			pruned[key] = entry
+		}
+	}
+	return pruned
+}
+
 func (s *clientJWTStore) loadLocked() {
 	if s.loaded {
 		return
@@ -107,13 +125,7 @@ func (s *clientJWTStore) loadLocked() {
 	// the previous identity set the operator had before this restart.
 	s.snapshotLocked(data, len(entries))
 
-	now := time.Now()
-	pruned := make(map[string]clientJWTEntry, len(entries))
-	for key, entry := range entries {
-		if now.Sub(entry.MintedAt) < clientJWTStaleAfter {
-			pruned[key] = entry
-		}
-	}
+	pruned := pruneStaleEntries(entries)
 	s.entries = pruned
 
 	// Log how many identities we're carrying forward — gives the operator a
@@ -297,6 +309,13 @@ func (s *clientJWTStore) flushLocked(key string, entry clientJWTEntry, deleted b
 		// entries (merged stays s.entries) rather than failing the flush —
 		// loadLocked already snapshotted the corrupt bytes for recovery.
 	}
+	// Re-apply the same staleness filter loadLocked used at startup. Without
+	// this, the raw on-disk reload above resurrects every entry that was
+	// pruned in memory at load time: this flush is for an unrelated key, but
+	// it writes the whole merged map, so skipping the filter here would
+	// write the stale entries straight back to disk on the next flush of any
+	// key, forever undoing the prune.
+	merged = pruneStaleEntries(merged)
 	if deleted {
 		delete(merged, key)
 	} else {
