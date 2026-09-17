@@ -5,6 +5,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"runtime/metrics"
 	"slices"
 	"strings"
 	"sync"
@@ -458,4 +459,69 @@ func providerExtraMetrics() string {
 	}
 
 	return b.String()
+}
+
+
+// metricBytesToMiB converts a runtime/metrics value to MiB.
+// Real implementation ported from fork main.go:1299.
+func metricBytesToMiB(name string, v metrics.Value) uint64 {
+	switch v.Kind() {
+	case metrics.KindUint64:
+		return v.Uint64() / 1024 / 1024
+	case metrics.KindFloat64:
+		return uint64(v.Float64()) / 1024 / 1024
+	default:
+		tlog("[health] warning: metric %q has unreadable kind %v — check metric name\n", name, v.Kind())
+		return 0
+	}
+}
+
+// messagePoolSummary mirrors connect.MessagePoolSummary(). v2026 removed
+// pool instrumentation — pool sizing is now handled by connect's memory_budget
+// package with no public summary API. Returns nil so the [health][pool]
+// line is skipped. The caller in health_heartbeat.go already handles nil
+// (skips the line).
+func messagePoolSummary() interface{ Len() int } { return nil }
+
+// contractMetricsSnapshotPrev tracks the last cumulative (acquired, denied)
+// totals handed out, so contractMetricsSnapshot can keep returning a
+// since-last-call delta like the fork's swap-and-reset counters did.
+var (
+	contractMetricsSnapshotMu    sync.Mutex
+	contractMetricsSnapshotPrevA int64
+	contractMetricsSnapshotPrevD int64
+)
+
+// contractMetricsSnapshot was connect.ContractMetricsSnapshot(), which read
+// atomics (contractsAcquired, contractsDenied, contractUtilSum) maintained
+// deep in connect's transfer_contract_manager.go and swapped them to zero on
+// each call. v2026 connect removed that instrumentation entirely.
+//
+// acquired/denied are real: this package's own globalContractMetrics
+// registry (contract_metrics.go) already tracks per-proxy contract outcomes
+// for the summary/bandwidth reports, so we diff its cumulative totals since
+// the last call to reproduce the same delta-per-scrape behavior.
+//
+// utilSum (per-contract byte utilization) has no local equivalent — nothing
+// in this codebase tracks contract byte utilization, since that lived
+// entirely inside connect's contract manager. It stays 0 until that signal
+// is ported. The caller in metrics_collectors.go reports "avg_util=n/a"
+// when utilSum is 0 instead of misleading "avg_util=0%".
+func contractMetricsSnapshot() (acquired, denied, utilSum uint64) {
+	a, d := globalContractMetrics.totals()
+
+	contractMetricsSnapshotMu.Lock()
+	deltaA := a - contractMetricsSnapshotPrevA
+	deltaD := d - contractMetricsSnapshotPrevD
+	contractMetricsSnapshotPrevA = a
+	contractMetricsSnapshotPrevD = d
+	contractMetricsSnapshotMu.Unlock()
+
+	if deltaA < 0 {
+		deltaA = 0
+	}
+	if deltaD < 0 {
+		deltaD = 0
+	}
+	return uint64(deltaA), uint64(deltaD), 0
 }

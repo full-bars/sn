@@ -7,12 +7,14 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime/debug"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -118,7 +120,9 @@ func provideSetupMemory(st *provideState) {
 		}
 	}
 	if 0 < maxMemory {
-		ResizeMessagePoolsPerClass(maxMemory / 8)
+		// REMOVED: ResizeMessagePoolsPerClass(maxMemory / 8)
+		// v2026 connect owns pool sizing via its memory_budget package.
+		// Only the GOMEMLIMIT (line below) is needed from our side.
 		debug.SetMemoryLimit(maxMemory)
 	}
 	st.maxMemory = maxMemory
@@ -273,7 +277,9 @@ func provideLaunchGoroutines(st *provideState) {
 		}
 	}
 
-	// Hourly pulse
+	// Hourly pulse — diagnostic logging + stall-recovery check.
+	// REMOVED: TriggerPulse() — was a no-op in v2026 connect which handles
+	// stall recovery internally via its transport reconnection loop.
 	go func() {
 		for {
 			select {
@@ -286,7 +292,7 @@ func provideLaunchGoroutines(st *provideState) {
 					tlog("[hourly-maintenance] reconnecting stalled transports: down=%d dead=%d degraded=%d connecting=%d\n",
 						down, len(dead), len(degraded), len(connecting))
 				}
-				TriggerPulse()
+			// TriggerPulse() removed — v2026 connect handles stall recovery.
 			}
 		}
 	}()
@@ -359,7 +365,9 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	enableProviderEncryption(clientSettings)
 	localUserNatSettings := connect.DefaultLocalUserNatSettings()
 
-	ApplyAutoTuning(clientSettings, localUserNatSettings)
+	// REMOVED: ApplyAutoTuning(clientSettings, localUserNatSettings)
+	// The fork's ApplyAutoTuning auto-sized TCP/UDP buffers from system
+	// resources. v2026 connect owns buffer sizing internally.
 	applyLowmodeSettings(clientSettings, localUserNatSettings)
 	applyTurboSettings(clientSettings, localUserNatSettings)
 
@@ -1060,5 +1068,109 @@ func closeAllCaches(st *provideState) {
 	markCleanShutdown()
 	if st.cleanupControlSocket != nil {
 		st.cleanupControlSocket()
+	}
+}
+
+
+// provideStartTime records when provide() began; used for uptime display
+// and warmup pacing.
+var provideStartTime time.Time
+
+// proxyLaunchCount tracks how many proxy goroutines have passed the stagger
+// delay and entered provideWithProxy. Used by paceMonitor for progress logging.
+var proxyLaunchCount atomic.Int64
+
+// EnableProfiling starts a pprof HTTP listener on addr so that the daemon
+// exposes /debug/pprof/heap, /debug/pprof/goroutine, etc. for live
+// diagnostics. Previously a no-op stub returning nil; wired to Go's
+// standard net/http/pprof since v2026 connect does not provide its own
+// profiling endpoint.
+func EnableProfiling(addr string) error {
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("pprof listen on %s: %w", addr, err)
+	}
+	mux := http.NewServeMux()
+	// Register all pprof handlers on our private mux (avoids polluting
+	// http.DefaultServeMux which could conflict with metrics or other
+	// services).
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	// Named profile endpoints: pprof.Handler returns an http.Handler;
+	// we wrap it into HandleFunc's signature.
+	for _, name := range []string{"allocs", "block", "goroutine", "mutex", "heap", "threadcreate"} {
+		name := name // capture loop var
+		mux.HandleFunc("/debug/pprof/"+name, func(w http.ResponseWriter, r *http.Request) {
+			pprof.Handler(name).ServeHTTP(w, r)
+		})
+	}
+	tlog("[profile] pprof listening on %s\n", addr)
+	go http.Serve(ln, mux) //nolint:errcheck // best-effort diagnostic server
+	return nil
+}
+
+// paceMonitor logs real-time warmup progress every 30s and flips
+// proxyWarmupDone once the initial file-proxy ramp is judged complete.
+// Ported from fork main.go's paceMonitor: connect.ProxyHealthSnapshot()/
+// connect.ProxyHealthCount() became the package-local ProxyHealthSnapshot()/
+// ProxyHealthCount() (proxy_health.go), which are fully ported and real.
+//
+// Without this, proxyWarmupDone.Store(true) is never called: URL-sourced
+// proxies (proxy_url_source.go:1118) and hot-reloaded proxies
+// (proxy_reload.go:648) both gate on proxyWarmupDone and would wait forever.
+func paceMonitor(ctx context.Context) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+		up, _, _, _, connecting := ProxyHealthSnapshot()
+		total := ProxyHealthCount()
+		if total < 5 {
+			tlog("🔥 [pace] ✓ warmup: %d up, %d total (< 5) — done\n", up, total)
+			proxyWarmupDone.Store(true)
+			signalProxyReloadAfterWarmup()
+			return
+		}
+		pct := float64(up) * 100 / float64(total)
+		connectingN := len(connecting)
+		elapsed := time.Since(provideStartTime)
+		if elapsed > 60*time.Minute {
+			tlog("🔥 [pace] warmup: %d/%d up (%.0f%%), %d connecting — forced done after 60m\n",
+				up, total, pct, connectingN)
+			proxyWarmupDone.Store(true)
+			signalProxyReloadAfterWarmup()
+			return
+		}
+		if pct < 50 && connectingN > 10 {
+			tlog("🔥 [pace] ⚠ warmup: %d/%d up (%.0f%%), %d connecting, %d done\n",
+				up, total, pct, connectingN, total-up-connectingN)
+		} else if pct > 90 && connectingN < 5 {
+			tlog("🔥 [pace] ✓ warmup: %d/%d up (%.0f%%), %d connecting — done\n",
+				up, total, pct, connectingN)
+			proxyWarmupDone.Store(true)
+			signalProxyReloadAfterWarmup()
+			return
+		} else {
+			tlog("🔥 [pace] warmup: %d/%d up (%.0f%%), %d connecting\n",
+				up, total, pct, connectingN)
+		}
+	}
+}
+
+// signalProxyReloadAfterWarmup nudges the URL-sourced proxy loop to pick up
+// now that file-proxy warmup has completed and it is no longer held back by
+// proxyWarmupDone.
+func signalProxyReloadAfterWarmup() {
+	if reloadPath, err := proxyReloadPath(); err == nil {
+		if err := writeReloadTrigger(reloadPath); err != nil {
+			tlog("[proxy] warn: failed to signal proxy reload after warmup (write .reload): %v\n", err)
+		}
 	}
 }

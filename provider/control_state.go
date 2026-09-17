@@ -461,3 +461,69 @@ func (s *controlState) persist() error {
 	}
 	return nil
 }
+
+
+// sessionFilesAllowlist mirrors internal/urnettools/session_cmds.go's allowlist
+// so only canonical session files are promoted from staging.
+var sessionFilesAllowlist = map[string]bool{
+	"jwt":              true,
+	"client_id":        true,
+	"client_secret":    true,
+	"provider.key":     true,
+	"provider.cert":    true,
+	".provider.key":    true,
+	".provider.cert":   true,
+	"node_name":        true,
+	"relay_jwt":        true,
+	"provider.json":    true,
+	"relay_client_id":  true,
+	"relay_secret":     true,
+	"relay_client_key": true,
+}
+
+// isSessionFile reports whether name is in the session allowlist.
+func isSessionFile(name string) bool {
+	return sessionFilesAllowlist[name]
+}
+
+// applyStagedSession atomically swaps in identity and proxy-list files
+// from ~/.urnetwork/.session-staging/ if a .session-pending marker exists.
+// Real implementation ported from fork main.go:723.
+func applyStagedSession() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	urNetworkDir := filepath.Join(home, ".urnetwork")
+	stagingDir := filepath.Join(urNetworkDir, ".session-staging")
+	pending := filepath.Join(urNetworkDir, ".session-pending")
+
+	if _, err := os.Stat(pending); os.IsNotExist(err) {
+		return
+	}
+
+	tlog("[session] applying staged session from %s\n", stagingDir)
+
+	entries, err := os.ReadDir(stagingDir)
+	if err != nil {
+		tlog("[session] could not read staging dir: %v\n", err)
+		return
+	}
+	for _, e := range entries {
+		if !isSessionFile(e.Name()) {
+			continue
+		}
+		if info, err := e.Info(); err != nil || !info.Mode().IsRegular() {
+			tlog("[session] skip staged %s: not a regular file\n", e.Name())
+			continue
+		}
+		src := filepath.Join(stagingDir, e.Name())
+		dst := filepath.Join(urNetworkDir, e.Name())
+		if err := os.Rename(src, dst); err != nil {
+			tlog("[session] rename %s -> %s failed: %v\n", src, dst, err)
+		}
+	}
+	os.RemoveAll(stagingDir)
+	os.Remove(pending)
+	tlog("[session] staged session applied\n")
+}

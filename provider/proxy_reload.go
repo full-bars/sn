@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -743,3 +744,6 @@ func (r *ProxyReloader) reload() {
 			len(added), len(removed), reloadDur)
 	}
 }
+
+
+var proxyWarmupDone atomic.Bool

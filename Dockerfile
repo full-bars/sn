@@ -21,7 +21,7 @@ COPY . .
 # Build for the target architecture with version injection
 RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
     go build -trimpath \
-    -ldflags "-s -w -X main.Version=${VERSION}" \
+    -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
     -o provider_bin ./cmd/provider/
 
 # --- Final Stage ---
@@ -31,28 +31,54 @@ ARG TARGETARCH
 ARG VERSION=v.unknown
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies (including vnStat, networking and diagnostic tools)
 RUN apk update && apk add --no-cache \
-    tzdata iputils dos2unix \
+    tzdata iputils vnstat dos2unix \
     jq tar curl htop wget procps \
-    bind-tools ca-certificates \
+    iptables net-tools bind-tools \
+    busybox-extras ca-certificates \
     ca-certificates-bundle bash \
+    gosu \
   && rm -rf /var/cache/apk/*
 
 # Setup directory structure
-RUN mkdir -p /root/.urnetwork
+RUN mkdir -p /app/cgi-bin /root/.urnetwork
 
-# Copy the compiled binary
-COPY --from=builder /app/provider_bin /app/provider
+# Copy scripts from docker/scripts folder
+COPY docker/scripts/*.sh /app/
+COPY docker/scripts/stats /app/cgi-bin/
+
+# Copy compiled binary
+COPY --from=builder /app/provider_bin /app/urnetwork_${TARGETARCH}_stable
 
 # Set permissions
-RUN chmod +x /app/provider
+RUN dos2unix /app/*.sh /app/cgi-bin/stats && chmod +x /app/*.sh /app/cgi-bin/stats
 
-# Expose the provider binary on PATH
-RUN ln -sf /app/provider /usr/local/bin/provider
+# Expose helper tools on PATH
+RUN ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health
+RUN ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic
+RUN ln -sf /app/logs.sh /usr/local/bin/logs
+RUN ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools
+
+# update_verify.sh is sourced by urnet-tools for digest verification
+RUN ln -sf /app/update_verify.sh /usr/local/bin/update_verify.sh
+
+# Expose the provider binary on PATH as `provider` for `docker exec <c> provider <cmd>`
+RUN ln -sf /app/urnetwork_${TARGETARCH}_stable /usr/local/bin/provider
+
+# Configure vnStat
+RUN sed -i \
+  -e 's/^;*TimeSyncWait.*/TimeSyncWait 1/' \
+  -e 's/^;*TrafficlessEntries.*/TrafficlessEntries 1/' \
+  -e 's/^;*UpdateInterval.*/UpdateInterval 15/' \
+  -e 's/^;*PollInterval.*/PollInterval 15/' \
+  -e 's/^;*SaveInterval.*/SaveInterval 1/' \
+  -e 's/^;*UnitMode.*/UnitMode 1/' \
+  -e 's/^;*RateUnit.*/RateUnit 0/' \
+  -e 's/^;*RateUnitMode.*/RateUnitMode 0/' \
+  /etc/vnstat.conf
 
 # Setup volumes
 VOLUME ["/root/.urnetwork"]
 
-ENTRYPOINT ["/app/provider"]
-CMD ["provide"]
+ENTRYPOINT ["/app/entrypoint.sh"]

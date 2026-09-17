@@ -1,0 +1,443 @@
+package urnettools
+
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+)
+
+// rootHint returns a copy-pasteable "see every provider" suggestion, or ""
+// when it doesn't apply (already root, or a platform without sudo). Plain
+// `sudo urnet-tools` doesn't work: the binary installs to a per-user path
+// (~/.local/share/urnetwork-provider/bin), never onto root's $PATH, so root
+// has no "urnet-tools" to find. os.Executable() resolves the actual path
+// this process is running from so the hint is directly runnable.
+func rootHint() string {
+	if runtime.GOOS == "windows" || os.Geteuid() == 0 {
+		return ""
+	}
+	return "sudo " + resolvedExecutablePath()
+}
+
+// resolvedExecutablePath returns this process's own executable path, with
+// symlinks resolved so a `sudo <path>` invocation is valid regardless of how
+// the binary was installed (it always points at the real file, never a symlink
+// that lives on a per-user path root can't traverse).
+func resolvedExecutablePath() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return "urnet-tools"
+	}
+	if resolved, rerr := filepath.EvalSymlinks(exe); rerr == nil {
+		return resolved
+	}
+	return exe
+}
+
+// elevateSelf re-executes this same binary under sudo with the given
+// subcommand arguments, so cross-user and host-scope operations (optimize,
+// and management of another user's provider) run in a single root context
+// instead of asking the operator to hand-craft `sudo /long/path/urnet-tools
+// ...` themselves. The elevated child inherits an env marker so it skips the
+// confirmation it already got pre-elevation (the sudo password prompt is the
+// elevation boundary). Returns the child's exit error; stdin/stdout/stderr are
+// passed through so the sudo password prompt and any output reach the user.
+func elevateSelf(args []string) error {
+	exe := resolvedExecutablePath()
+	sudo, err := exec.LookPath("sudo")
+	if err != nil {
+		return fmt.Errorf("operation requires root, but sudo is unavailable; run directly: sudo %s %s", exe, strings.Join(args, " "))
+	}
+	cmdArgs := append([]string{sudo, exe}, args...)
+	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = append(os.Environ(), urnetElevatedEnv+"=1")
+	if err := cmd.Run(); err != nil {
+		if ee, ok := err.(*exec.ExitError); ok && ee.ExitCode() == 0 {
+			return nil
+		}
+		return fmt.Errorf("elevated %s failed: %w", strings.Join(args, " "), err)
+	}
+	return nil
+}
+
+// urnetElevatedEnv marks the child spawned by elevateSelf so it can skip the
+// confirm prompt it already passed pre-elevation (the sudo password is the
+// boundary). It is intentionally not a user-facing flag: the operator never
+// types it.
+const urnetElevatedEnv = "URNET_TOOLS_ELEVATED"
+
+// elevateSelfFunc is the elevation mechanism as a var seam so tests can stub
+// it (like isPrivileged / stdinIsInteractiveOverride) without ever invoking a
+// real `sudo`. This matters because cmdStatus/cmdLogs/cmdStop etc. re-exec
+// under sudo when the resolved provider belongs to another OS user, and a unit
+// test must never spawn a real sudo.
+var elevateSelfFunc = elevateSelf
+
+// maybeElevateForCrossUser re-executes a command under sudo when its resolved
+// provider belongs to another OS user and the caller is unprivileged — the
+// binary lives on a per-user path, so a plain `sudo urnet-tools ...` would be
+// "command not found", and the operator shouldn't have to hand-craft a
+// `sudo /long/path/urnet-tools ... --user bob` themselves. On success it
+// returns (true, nil): the caller must stop and return nil (the elevated child
+// did the work). Returns (false, nil) to proceed normally when the target is
+// the current user's, the caller is root/elevated, or already elevated. On a
+// failed elevation the error is returned so the operator sees exactly what to
+// run.
+//
+// `sub` is the subcommand name (e.g. "status"); `args` are the remaining
+// arguments exactly as the operator typed them (including any --user bob), so
+// the elevated child re-resolves the same target as root.
+func maybeElevateForCrossUser(sub string, p Provider, args []string, force, dryRun bool) (bool, error) {
+	if isPrivileged() || os.Getenv(urnetElevatedEnv) == "1" {
+		return false, nil
+	}
+	if p.User == "" || p.User == currentUserName() {
+		return false, nil
+	}
+	// Rebuild the argv the elevated child needs: the original args plus
+	// force/dry-run, which parseGlobal stripped before the command ran. Without
+	// them the child would re-prompt for confirmation (double-confirm bug). -n
+	// must NOT elevate at all (a plan needs no root), which callers ensure by
+	// skipping this for dry-run.
+	carry := args
+	if dryRun {
+		carry = append([]string{"-n"}, args...)
+	} else if force {
+		carry = append([]string{"-f"}, args...)
+	}
+	if err := elevateSelfFunc(append([]string{sub}, carry...)); err != nil {
+		return true, err
+	}
+	return true, nil
+}
+
+// printNarrowedNote reports that selectTargetOrSoleAccessible auto-picked
+// the sole provider reachable without root, so the operator knows other
+// providers exist on the box but were skipped rather than acted on. The note
+// points at the actionable inventory instead of dumping a long `/full/path`
+// hunt — multi-user awareness lives in `providers --all`, so that's what the
+// notice leads with.
+func printNarrowedNote(totalFound int, p Provider, what string) {
+	note := fmt.Sprintf("Note: %d providers found; only user=%s is accessible without root — showing its %s.", totalFound, p.User, what)
+	if !isPrivileged() {
+		note += fmt.Sprintf(" To inspect all of them: urnet-tools providers --all (as root)")
+	}
+	fmt.Println(note)
+}
+
+// printLifecycleNarrowedNote is the ACTION variant of printNarrowedNote for
+// start/stop/restart: the sole-accessible auto-pick must be loud on a
+// mutating command (LA1 6b — recovery failed because the operator could not
+// tell whether anything had been targeted at all).
+func printLifecycleNarrowedNote(totalFound int, p Provider, action string) {
+	// Explicit gerund map: action+"ting" would yield "restartting" for
+	// restart (CR #4 typo). Unknown actions fall back to the old heuristic.
+	gerund := map[string]string{
+		"stop":    "stopping",
+		"start":   "starting",
+		"restart": "restarting",
+	}[action]
+	if gerund == "" {
+		gerund = action + "ting"
+	}
+	note := fmt.Sprintf("Note: %d providers found; only user=%s is accessible without root — %s it.", totalFound, p.User, gerund)
+	if !isPrivileged() {
+		note += fmt.Sprintf(" To target another provider by unit/network, or pin a default: urnet-tools default set --network <name> (see 'urnet-tools providers --all')")
+	}
+	fmt.Println(note)
+}
+
+// selectTargets resolves a provider list against targeting criteria and
+// returns the chosen set (one or more providers). It is the batch analogue
+// of selectTarget.
+//
+// Resolution order:
+//  1. include (--include a,b) selects exactly those providers; ambiguous
+//     entries are an error.
+//  2. a single explicit target / the sole provider auto-picks without
+//     prompting; otherwise selection is interactive only on a TTY.
+//  3. no criteria: single provider → that one; multiple → refuse with the
+//     inventory (same guard as selectTarget).
+//
+// exclude (--exclude) subtracts providers from whatever set was chosen; it
+// never expands a set.
+func selectTargets(providers []Provider, t Target, include, exclude []string, interactive bool) ([]Provider, error) {
+	var chosen []Provider
+	var err error
+
+	switch {
+	case t.Unit != "" || t.User != "" || t.Network != "" || t.NetworkID != "" || t.StateDir != "":
+		// A single explicit target still resolves to one provider.
+		p, serr := selectTarget(providers, t)
+		if serr != nil {
+			return nil, serr
+		}
+		chosen = []Provider{p}
+	case len(include) > 0:
+		chosen, err = selectByLabels(providers, include)
+		if err != nil {
+			return nil, err
+		}
+	case interactive:
+		chosen, err = interactivePick(providers)
+		if err != nil {
+			return nil, err
+		}
+	case len(providers) == 1:
+		chosen = providers
+	case len(providers) == 0:
+		return nil, fmt.Errorf("no providers found on this box")
+	default:
+		// An explicitly persisted default provider (default set) resolves the
+		// no-target case with multiple providers, before any other heuristic.
+		// It only fills the "no target at all" gap: explicit --all/--include/
+		// and target flags were already handled above, so they always win.
+		if p, ok := resolveDefaultProvider(providers); ok {
+			// Visible trace that a stored default decided this (not an explicit
+			// flag) — same reason as selectTarget.
+			fmt.Fprintf(os.Stderr, "using persisted default provider: %s\n", providerLabel(p))
+			chosen = []Provider{p}
+			break
+		}
+		// Restore the pre-multi-provider default for unprivileged callers:
+		// act on the single running provider for the current user. Root
+		// falls through to the inventory refusal (root can act on all
+		// providers). Refuse when the default is genuinely ambiguous (two
+		// or more running providers for the current user).
+		var defaultReason string
+		if !isPrivileged() {
+			if p, err := defaultProvider(providers); err == nil {
+				chosen = []Provider{p}
+				break
+			} else {
+				defaultReason = err.Error()
+			}
+		}
+		return nil, ambiguousErrorWithReason(providers, defaultReason)
+	}
+
+	if len(exclude) > 0 {
+		excluded := labelSet(exclude)
+		// Build a NEW slice — filtering in place (chosen[:0]) would write
+		// through to the caller's backing array when chosen aliases
+		// providers (single-provider default path), mutating the input
+		filtered := make([]Provider, 0, len(chosen))
+		for _, p := range chosen {
+			if !excluded[matchKey(p)] && !excluded[p.Unit] && !excluded[p.Network] {
+				filtered = append(filtered, p)
+			}
+		}
+		chosen = filtered
+	}
+	if len(chosen) == 0 {
+		return nil, fmt.Errorf("selection is empty after applying criteria")
+	}
+	return chosen, nil
+}
+
+// selectTargetOrSoleAccessible behaves like selectTarget for a read-only
+// command (logs), except: with no explicit target, multiple providers
+// discovered, and the caller unprivileged (not root, who can reach all of
+// them), it narrows to the providers actually reachable without root
+// (narrowToAccessible) and auto-picks the result if exactly one remains,
+// rather than refusing with the "N providers found" ambiguity guard — the
+// other N-1 are running under accounts the caller has no way to select
+// correctly anyway (see discover_unix.go ghost-provider fix). The guard
+// still applies whenever more than one provider is actually reachable, or
+// when root is asking (who CAN reach all of them and should get the normal
+// refusal + inventory).
+func selectTargetOrSoleAccessible(providers []Provider, t Target, requireRunning bool) (p Provider, narrowed bool, err error) {
+	noTarget := t.Unit == "" && t.User == "" && t.Network == "" && t.NetworkID == "" && t.StateDir == ""
+	// Use the platform privilege seam (isPrivileged), not os.Geteuid() direct:
+	// Geteuid is meaningless on Windows (returns -1) where an elevated Admin
+	// should still get the normal refusal + inventory, not the unprivileged
+	// auto-narrow treatment. Matches target.go and select_multi.go:93.
+	if noTarget && len(providers) > 1 && !isPrivileged() {
+		if requireRunning {
+			// A sole-accessible-but-STOPPED provider must not be auto-targeted
+			// by this path when it drives destructive stop/restart. Mirror
+			// defaultProvider's Running requirement.
+			// Read-only callers (logs/status/summary) pass false so they can
+			// still reach a stopped provider for diagnostics.
+			var accessible []Provider
+			for _, p := range narrowToAccessible(providers) {
+				if p.Running {
+					accessible = append(accessible, p)
+				}
+			}
+			if len(accessible) == 1 {
+				return accessible[0], true, nil
+			}
+		} else if accessible := narrowToAccessible(providers); len(accessible) == 1 {
+			return accessible[0], true, nil
+		}
+	}
+	p, err = selectTarget(providers, t)
+	return p, false, err
+}
+
+// selectByLabels matches providers by unit name, user, or network name —
+// the labels shown in the inventory table. Each label must match exactly
+// one provider.
+func selectByLabels(providers []Provider, labels []string) ([]Provider, error) {
+	var out []Provider
+	seen := map[string]bool{}
+	for _, label := range labels {
+		label = strings.TrimSpace(label)
+		if label == "" {
+			continue
+		}
+		var matches []Provider
+		for _, p := range providers {
+			if p.Unit == label || p.User == label || p.Network == label || matchKey(p) == label {
+				matches = append(matches, p)
+			}
+		}
+		switch len(matches) {
+		case 0:
+			return nil, fmt.Errorf("label %q matches no provider", label)
+		case 1:
+			if !seen[matchKey(matches[0])] {
+				out = append(out, matches[0])
+				seen[matchKey(matches[0])] = true
+			}
+		default:
+			return nil, fmt.Errorf("label %q is ambiguous (%d matches); use unit or network name", label, len(matches))
+		}
+	}
+	if len(out) == 0 {
+		return nil, fmt.Errorf("no providers matched the given labels")
+	}
+	return out, nil
+}
+
+// selectTargetInteractive resolves ONE provider for a read-only command:
+// an explicit target resolves strictly (never prompts), the sole provider is
+// auto-selected without prompting, and multiple providers with no target pop
+// the interactive picker.
+func selectTargetInteractive(providers []Provider, t Target) (Provider, error) {
+	if t.Unit != "" || t.User != "" || t.Network != "" || t.NetworkID != "" || t.StateDir != "" {
+		return selectTarget(providers, t)
+	}
+	switch len(providers) {
+	case 0:
+		return Provider{}, fmt.Errorf("no providers found on this box")
+	case 1:
+		return providers[0], nil
+	default:
+		chosen, err := selectTargets(providers, t, nil, nil, true)
+		if err != nil {
+			return Provider{}, err
+		}
+		if len(chosen) != 1 {
+			return Provider{}, fmt.Errorf("read-only command requires exactly one provider, got %d", len(chosen))
+		}
+		return chosen[0], nil
+	}
+}
+
+// interactivePick shows a numbered list and prompts the operator to choose
+// entries (comma/space separated numbers, "all", or empty for none).
+func interactivePick(providers []Provider) ([]Provider, error) {
+	fmt.Println("Select providers (comma/space separated numbers, or 'all'):")
+	for i, p := range providers {
+		fmt.Printf("  [%d] %s  user=%s  net=%s  state=%s\n",
+			i+1, providerLabel(p), p.User, p.netLabel(), p.StateDir)
+	}
+	line, err := confirmStdinRead("> ")
+	if err != nil {
+		return nil, fmt.Errorf("read selection: %w", err)
+	}
+	line = strings.TrimSpace(line)
+	if line == "" {
+		return nil, fmt.Errorf("no providers selected")
+	}
+	if strings.EqualFold(line, "all") {
+		return providers, nil
+	}
+	var out []Provider
+	seen := map[int]bool{}
+	for _, tok := range strings.FieldsFunc(line, func(r rune) bool { return r == ',' || r == ' ' }) {
+		n, err := strconv.Atoi(tok)
+		if err != nil || n < 1 || n > len(providers) {
+			return nil, fmt.Errorf("invalid selection %q", tok)
+		}
+		if !seen[n-1] {
+			out = append(out, providers[n-1])
+			seen[n-1] = true
+		}
+	}
+	if len(out) == 0 {
+		return nil, fmt.Errorf("no providers selected")
+	}
+	return out, nil
+}
+
+// labelSet builds a lookup set from exclude labels for quick membership.
+func labelSet(labels []string) map[string]bool {
+	m := map[string]bool{}
+	for _, l := range labels {
+		l = strings.TrimSpace(l)
+		if l != "" {
+			m[l] = true
+		}
+	}
+	return m
+}
+
+// matchKey returns a stable unique key for a provider. The state dir is the
+// only field guaranteed unique per provider (two providers CAN share the
+// same network name — e.g. same account on mainnet and beta backends — and
+// even the same user). Unit is preferred when present for readability, but
+// state dir breaks ties.
+func matchKey(p Provider) string {
+	if p.Unit != "" {
+		// Unit names are unique per box, but a user-level unit could exist
+		// for multiple users; state dir disambiguates.
+		if p.StateDir != "" {
+			return p.Unit + "|" + p.StateDir
+		}
+		return p.Unit
+	}
+	if p.StateDir != "" {
+		return p.StateDir
+	}
+	return p.User + "@" + p.Network
+}
+
+// ambiguousErrorWithReason is ambiguousError plus the reason the default
+// selection could not apply, when one exists. Keeps the batch paths (which
+// route through selectTargets) as informative as the single-target path.
+func ambiguousErrorWithReason(providers []Provider, reason string) error {
+	err := ambiguousError(providers)
+	if reason != "" {
+		return fmt.Errorf("%s(%s)", strings.TrimRight(err.Error(), "\n"), reason)
+	}
+	return err
+}
+
+// ambiguousError renders the refusal message with the inventory plus concrete
+// next steps, so an operator who hits "which one?" isn't left guessing at
+// flag syntax — it points at the inventory command, the target flags, and the
+// one-command way to make future runs unambiguous.
+func ambiguousError(providers []Provider) error {
+	var b strings.Builder
+	fmt.Fprintf(&b, "%d providers found — specify a target (--unit / --user / --network / --state-dir) or --include:\n", len(providers))
+	for _, p := range providers {
+		fmt.Fprintf(&b, "  %s  user=%s  net=%s  state=%s\n", providerLabel(p), p.User, p.netLabel(), p.StateDir)
+	}
+	fmt.Fprintf(&b, "Tips:\n")
+	fmt.Fprintf(&b, "  one target:     urnet-tools <cmd> --unit <unit>   (or --user / --network / --state-dir)\n")
+	if !isPrivileged() {
+		fmt.Fprintf(&b, "  make future runs unambiguous: urnet-tools default set --network <name>\n")
+		fmt.Fprintf(&b, "  see every provider on the box: urnet-tools providers --all (as root)\n")
+	}
+	return fmt.Errorf("%s", b.String())
+}

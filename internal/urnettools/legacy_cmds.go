@@ -1,0 +1,1082 @@
+package urnettools
+
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+)
+
+// This file ports the remaining legacy urnet-tools commands — service
+// management (start/stop/restart/logs), reporting config (set/off/install),
+// tuning profiles (turbo/eco/lowmode/ramlogs/auto/optimize), and proxy
+// extras (health/traffic/remove-dead). Unlike the legacy shell tool, every
+// command targets the RESOLVED provider (via targeting) — never a
+// hardcoded $HOME path or a guessed unit.
+
+// unitCommand runs a systemctl command against the provider's owning unit.
+// Unit resolution is provider-aware: system-level units are managed via the
+// system manager; user-level units via the owning user's session.
+func unitCommand(p Provider, action string, extra ...string) error {
+	if p.Unit == "" {
+		return fmt.Errorf("provider %s has no owning systemd unit", providerLabel(p))
+	}
+	// Compute the argv once. unitCommandArgs consults isUserUnit (and
+	// therefore systemctl show) on every call, so the prior implementation
+	// triggered two independent filesystem-/systemd-aware evaluations for a
+	// single command — once for the exec name, once for the rest.
+	args := unitCommandArgs(p, action, extra...)
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// systemctlUserArgs returns the systemctl argv prefix for a user-level unit,
+// using the local session bus when the target user IS the current user and
+// -M <user>@ (machined) otherwise. Same-user invocations must not go through
+// machined because `-M` requires root privileges on journalctl and systemctl.
+func systemctlUserArgs(user string) []string {
+	if user == currentUserName() {
+		return []string{"--user"}
+	}
+	return []string{"--user", "-M", user + "@"}
+}
+
+// unitCommandArgs builds the systemctl argv for an action on the provider's
+// unit: system units use "systemctl <action> <unit>"; user units are scoped
+// to the owning user's session via systemctlUserArgs. The unit name is
+// ALWAYS the final argument — systemctl errors "Too few arguments" without
+// it (gauntlet finding: the pre-fix
+// unitCommandArgs omitted the unit entirely).
+func unitCommandArgs(p Provider, action string, extra ...string) []string {
+	if p.Unit == "" {
+		return []string{"systemctl", action}
+	}
+	if isUserUnit(p.Unit) && p.User != "" {
+		args := append([]string{"systemctl"}, systemctlUserArgs(p.User)...)
+		args = append(args, action, p.Unit)
+		return append(args, extra...)
+	}
+	args := []string{"systemctl", action, p.Unit}
+	return append(args, extra...)
+}
+
+// isUserUnit reports whether a unit name is user-level by asking systemd
+// directly (via `systemctl show -p LoadState`) instead of guessing from
+// filesystem paths. System units are the norm for fleet deployments; user
+// units are the legacy install model. Memoized per-unit for the process
+// lifetime to avoid repeated systemctl calls. The cache is mutex-guarded
+// because batch per-provider loops in this package are trivially
+// parallelizable and the discovery path can already call this concurrently.
+var (
+	isUserUnitCache   = map[string]bool{}
+	isUserUnitCacheMu sync.RWMutex
+)
+
+func isUserUnit(unit string) bool {
+	isUserUnitCacheMu.RLock()
+	cached, ok := isUserUnitCache[unit]
+	isUserUnitCacheMu.RUnlock()
+	if ok {
+		return cached
+	}
+	result := isUserUnitCompute(unit)
+	isUserUnitCacheMu.Lock()
+	isUserUnitCache[unit] = result
+	isUserUnitCacheMu.Unlock()
+	return result
+}
+
+func isUserUnitCompute(unit string) bool {
+	// Ask the system manager if it can load this unit.
+	out, err := exec.Command("systemctl", "show", unit, "-p", "LoadState", "--value").Output()
+	if err == nil {
+		ls := strings.TrimSpace(string(out))
+		// LoadState != "not-found" means the system manager knows this unit.
+		if ls != "not-found" && ls != "" {
+			return false
+		}
+	}
+	// Fall back to the directory heuristic when systemctl is unavailable.
+	for _, dir := range []string{"/etc/systemd/system", "/usr/lib/systemd/system", "/lib/systemd/system"} {
+		if _, err := os.Stat(filepath.Join(dir, unit)); err == nil {
+			return false
+		}
+	}
+	return true
+}
+
+// selectLifecycleTarget factors the shared start/stop/restart prologue: guard
+// the lifecycle args, list the systemd candidates, auto-narrow to a sole
+// accessible RUNNING target, print the narrowed note, and confirm it is a
+// systemd (non-docker) provider. One place to change instead of triplicating it
+// across the destructive lifecycle commands.
+func selectLifecycleTarget(verb string, args []string, force, dryRun bool) (Provider, error) {
+	t, err := guardLifecycleArgs(verb, args)
+	if err != nil {
+		return Provider{}, err
+	}
+	providers := lifecycleCandidates(t)
+	p, narrowed, err := selectTargetOrSoleAccessible(providers, t, true)
+	if err != nil {
+		return Provider{}, err
+	}
+	// Managing another user's provider requires root; re-exec under sudo.
+	// A dry run plans without acting and needs no root, so it never elevates.
+	if !dryRun {
+		if elevated, err := maybeElevateForCrossUser(verb, p, args, force, false); elevated {
+			return Provider{}, err
+		}
+	}
+	if narrowed {
+		printLifecycleNarrowedNote(len(providers), p, verb)
+	}
+	if err := guardSystemdProvider(p); err != nil {
+		return Provider{}, err
+	}
+	return p, nil
+}
+
+// cmdStart starts the provider's owning unit.
+func cmdStart(args []string, force, dryRun bool) error {
+	p, err := selectLifecycleTarget("start", args, force, dryRun)
+	if err != nil {
+		return err
+	}
+	// -n/--dry-run is documented "safe anywhere": print the plan, do
+	// nothing.
+	if dryRun {
+		fmt.Printf("[dry-run] would start %s (unit=%s, user=%s)\n", providerLabel(p), p.Unit, p.User)
+		return nil
+	}
+	if runtime.GOOS == "windows" {
+		return cmdStartWindows(p, force, dryRun)
+	}
+	fmt.Printf("starting %s...\n", providerLabel(p))
+	if err := unitCommand(p, "start"); err != nil {
+		fmt.Printf("FAILED to start %s: %v\n", providerLabel(p), err)
+		return err
+	}
+	fmt.Printf("started %s\n", providerLabel(p))
+	return nil
+}
+func cmdStop(args []string, force, dryRun bool) error {
+	p, err := selectLifecycleTarget("stop", args, force, dryRun)
+	if err != nil {
+		return err
+	}
+	if dryRun {
+		fmt.Printf("[dry-run] would stop %s (unit=%s, user=%s)\n", providerLabel(p), p.Unit, p.User)
+		return nil
+	}
+	if runtime.GOOS == "windows" {
+		return cmdStopWindows(p, force, dryRun)
+	}
+	fmt.Printf("stopping %s...\n", providerLabel(p))
+	if err := unitCommand(p, "stop"); err != nil {
+		fmt.Printf("FAILED to stop %s: %v\n", providerLabel(p), err)
+		return err
+	}
+	fmt.Printf("stopped %s\n", providerLabel(p))
+	return nil
+}
+
+// cmdRestart restarts the provider's owning unit (destructive gate applies).
+func cmdRestart(args []string, force, dryRun bool) error {
+	p, err := selectLifecycleTarget("restart", args, force, dryRun)
+	if err != nil {
+		return err
+	}
+	ok, err := confirmGate("restart "+providerLabel(p), p, force, dryRun)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil // dry-run
+	}
+	if runtime.GOOS == "windows" {
+		return cmdRestartWindows(p, force, dryRun)
+	}
+	fmt.Printf("restarting %s...\n", providerLabel(p))
+	if err := unitCommand(p, "restart"); err != nil {
+		fmt.Printf("FAILED to restart %s: %v\n", providerLabel(p), err)
+		return err
+	}
+	fmt.Printf("restarted %s\n", providerLabel(p))
+	return nil
+}
+
+// discoverDockerFn is the docker-provider discovery function, as a var so
+// errWithDockerHint's docker branch is testable without a live daemon.
+var discoverDockerFn = DiscoverDocker
+
+// discoverSystemdFn is the systemd/process discovery function, as a var so
+// lifecycleCandidates is testable without live processes or units.
+var discoverSystemdFn = Discover
+
+// hasExplicitTarget reports whether the operator named a provider with a
+// flag (--unit / --user / --network / --network-id / --state-dir). A bare
+// positional is NOT an explicit target: guardLifecycleArgs already
+// hard-errors on leftovers before selection runs.
+func hasExplicitTarget(t Target) bool {
+	return t.Unit != "" || t.User != "" || t.Network != "" ||
+		t.NetworkID != "" || t.StateDir != ""
+}
+
+// lifecycleCandidates builds the candidate pool for start/stop/restart.
+//
+// The pool is Discover() (systemd/process providers) ALONE whenever no
+// explicit target was given — that keeps every default-selection path
+// (sole-provider auto-pick, narrowToAccessible, defaultProvider, ambiguity
+// inventory) byte-for-byte identical to pre-#465 behavior, even on boxes
+// running containers alongside host providers.
+//
+// When the operator DID name a target, docker containers join the pool.
+// They can only be selected by an exact match (selectTarget requires it),
+// and any container that matches is then refused by guardSystemdProvider
+// with an actionable "use urnet-docker" error — instead of the old plain
+// not-found. This makes guardSystemdProvider reachable on the lifecycle
+// paths without widening any
+// automatic-selection surface.
+func lifecycleCandidates(t Target) []Provider {
+	providers := discoverSystemdFn()
+	if !hasExplicitTarget(t) {
+		return providers
+	}
+	return append(providers, discoverDockerFn()...)
+}
+
+// errWithDockerHint wraps a no-provider error with a pointer to the docker
+// variant when provider containers exist: the systemd/process tool cannot
+// tail their logs, but `urnet-docker logs` can (its interactive picker
+// lists them). Only fires when systemdProviderCount is ZERO — when systemd
+// providers exist, a selectTarget error is a target problem (typo/
+// ambiguity), not a wrong-tool problem, and pointing at docker would
+// mislead. The count is threaded from the caller (which
+// already fetched Discover()) to avoid re-running the discovery pipeline.
+func errWithDockerHint(err error, systemdProviderCount int) error {
+	if systemdProviderCount > 0 {
+		return err
+	}
+	docker := discoverDockerFn()
+	if len(docker) == 0 {
+		return err
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "%v\n", err)
+	fmt.Fprintf(&b, "provider(s) running in docker (use urnet-docker):\n")
+	for _, p := range docker {
+		fmt.Fprintf(&b, "  %s  net=%s\n", p.Unit, p.netLabel())
+	}
+	fmt.Fprintf(&b, "to view their logs: urnet-docker logs\n")
+	return fmt.Errorf("%s", b.String())
+}
+
+// cmdLogs streams logs for the provider: RAMLOGS-aware (reads the provider's
+// own RAM buffer) when the unit has URNETWORK_RAMLOGS=1 / a RAM profile,
+// else journald. An optional trailing positional N (e.g. `logs --unit foo
+// 500`) sets the number of lines to seed the follow with; default is 250.
+func cmdLogs(args []string) error {
+	t, rest, err := parseTargetFlags(args)
+	if err != nil {
+		return err
+	}
+	lines := 250
+	for _, a := range rest {
+		if n, err := strconv.Atoi(a); err == nil && n > 0 && n < 1000000 {
+			lines = n
+		}
+	}
+	providers := Discover()
+	p, narrowed, err := selectTargetOrSoleAccessible(providers, t, false)
+	if err != nil {
+		return errWithDockerHint(err, len(providers))
+	}
+	// Managing another user's provider requires root; re-exec under sudo.
+	// logs is read-only (no confirm gate), so force/dryRun are irrelevant.
+	if elevated, err := maybeElevateForCrossUser("logs", p, args, false, false); elevated {
+		return err
+	}
+	if narrowed {
+		printNarrowedNote(len(providers), p, "logs")
+	}
+	if providerUsesRamlogs(p) {
+		// The RAM buffer is provider-scoped: each provider gets its own
+		// /dev/shm/<basename>.log so multi-provider boxes don't conflate
+		// outputs (audit M15). Fall back to the legacy shared path only
+		// when the per-provider buffer doesn't exist — that keeps the
+		// transition safe for boxes upgraded mid-flight.
+		ramPath := "/dev/shm/" + filepath.Base(p.Binary) + ".log"
+		if _, err := os.Stat(ramPath); err != nil {
+			ramPath = "/dev/shm/urnetwork.log"
+		}
+		fmt.Printf("Streaming from RAM disk (%s, %d lines) — provider %s\n", ramPath, lines, providerLabel(p))
+		cmd := exec.Command("tail", "-n", strconv.Itoa(lines), "-f", ramPath)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+	// Windows has no systemd/journalctl — print a diagnostic and exit cleanly.
+	if runtime.GOOS == "windows" {
+		fmt.Println("urnet-tools: journalctl is not available on Windows — logs are not supported via this command.")
+		return nil
+	}
+	// journalctl is a standalone binary, not a systemctl verb — calling it
+	// through unitCommand would execute `systemctl journalctl` (invalid).
+	// Scope user units explicitly.
+	//
+	// A cross-user `-M <user>@` query from an unprivileged caller can HANG
+	// waiting on machined/polkit instead of failing fast (LA1 6c:
+	// `logs --user=urnetwork-beta` blocked indefinitely). Bound it to 10s
+	// and turn the timeout into an actionable error.
+	if isUserUnit(p.Unit) && p.User != "" && p.User != currentUserName() && os.Geteuid() != 0 {
+		// Cross-user `journalctl -M <user>@` from an unprivileged caller can
+		// HANG waiting on machined/polkit instead of failing fast (LA1 6c:
+		// `logs --user=urnetwork-beta` blocked indefinitely). Detect that hang
+		// WITHOUT cutting off a legitimately-working follow at a fixed cap:
+		// kill the command only if it produces NO output within the window.
+		// Once logs start streaming it is a real follow and runs until the
+		// user stops it (the prior hard 10s cap cut a
+		// working follow and misreported it as requiring root).
+		produced := make(chan struct{})
+		cmd := exec.Command("journalctl", journalctlArgs(p)...)
+		cmd.Stdout = &firstByteWriter{w: os.Stdout, produced: produced}
+		var errBuf bytes.Buffer
+		cmd.Stderr = &errBuf
+		if err := cmd.Start(); err != nil {
+			return fmt.Errorf("journalctl for %s: %v: %s", providerLabel(p), err, errBuf.String())
+		}
+		waitCh := make(chan error, 1)
+		go func() { waitCh <- cmd.Wait() }()
+		select {
+		case <-produced:
+			// Output started within the window: a real follow. Let it run
+			// until journalctl itself exits (user interrupt / end of match).
+			if err := <-waitCh; err != nil {
+				return fmt.Errorf("journalctl for %s: %v: %s", providerLabel(p), err, errBuf.String())
+			}
+			return nil
+		case err := <-waitCh:
+			// Exited BEFORE producing any output: report the real outcome
+			// instead of mislabeling it a machined/polkit hang — an empty
+			// journal exits 0 immediately and is legitimate.
+			_ = cmd.Process.Kill()
+			if err != nil {
+				return fmt.Errorf("journalctl for %s: %v: %s", providerLabel(p), err, errBuf.String())
+			}
+			return nil
+		case <-time.After(10 * time.Second):
+			// Still running, still silent after the window: genuine
+			// machined/polkit hang.
+			_ = cmd.Process.Kill()
+			<-waitCh
+			hint := ""
+			if h := rootHint(); h != "" {
+				hint = fmt.Sprintf(" Try: %s logs --user=%s", strings.TrimPrefix(h, "sudo "), p.User)
+			}
+			return fmt.Errorf("journal access to user %s produced no output within 10s (machined/polkit hang — this account's journal is not readable without root).%s", p.User, hint)
+		}
+	}
+	cmd := exec.Command("journalctl", journalctlArgs(p)...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// journalctlArgs builds the journalctl argv for following a provider's
+// unit: system units use "-fu <unit>"; user units for the current user
+// use "--user -u <unit> -f"; cross-user user units use "-M <user>@ --user-unit <unit> -f"
+// (as -M requires root privileges, same-user MUST use --user).
+func journalctlArgs(p Provider) []string {
+	if isUserUnit(p.Unit) && p.User != "" {
+		if p.User == currentUserName() {
+			return []string{"--user", "-u", p.Unit, "-f"}
+		}
+		return []string{"-M", p.User + "@", "--user-unit", p.Unit, "-f"}
+	}
+	return []string{"-fu", p.Unit}
+}
+
+// firstByteWriter forwards writes to w and, on the first byte, closes produced
+// (idempotently). Used to tell a genuinely-working cross-user journal follow
+// (produces output) from a machined/polkit hang (no output within a window).
+type firstByteWriter struct {
+	w        io.Writer
+	produced chan struct{}
+	once     sync.Once
+}
+
+func (f *firstByteWriter) Write(p []byte) (int, error) {
+	f.once.Do(func() { close(f.produced) })
+	return f.w.Write(p)
+}
+
+// providerUsesRamlogs reports whether cmdLogs should stream from the
+// provider's RAM buffer instead of journald: true if ramlogs is explicitly
+// on, or a RAM-implying profile (lowmem/eco) is active. Checks the
+// control-socket state — live via the socket if the provider is reachable,
+// else the pending-overrides queue (queryControlOverride's own fallback
+// order) — rather than the systemd unit's Environment, since cmdTune no
+// longer writes profile/ramlogs into a drop-in file. Any error (provider
+// unreachable and nothing queued, no resolvable state dir, etc.) is
+// treated as "no", same as the old version's behavior on a failed
+// systemctl query.
+func providerUsesRamlogs(p Provider) bool {
+	if v, _, found, err := queryControlOverride(p, "ramlogs"); err == nil && found && truthyOn(v) {
+		return true
+	}
+	if v, _, found, err := queryControlOverride(p, "profile"); err == nil && found && (v == "lowmem" || v == "eco") {
+		return true
+	}
+	// Control state is not the only way RAMLOGS gets turned on, and treating
+	// it as the only way made this command lie: a provider whose unit carries
+	// URNETWORK_RAMLOGS=1 in its body or a drop-in, or a container started with
+	// -e URNETWORK_RAMLOGS=1, redirects its output to /dev/shm while this
+	// function answered "no" and the caller streamed an almost-empty journal.
+	// The provider decides from the environment variable; deciding only from
+	// stored state guarantees the two disagree. Note the shell installer
+	// already reads the drop-in for exactly this key.
+	//
+	// Order is deliberate: the file check is the provider's own observable
+	// behavior, so it settles the question regardless of how the redirect was
+	// configured, and it costs one stat.
+	if ramlogFileActive(p) {
+		return true
+	}
+	if env, err := unitEnvironment(p); err == nil && ramlogsEnvEnabled(env) {
+		return true
+	}
+	return false
+}
+
+// truthyOn mirrors provider's isTruthyOn for the boolean-form control values
+// (on/off/1/0/true/false/yes/no) so both the Go CLI and the provider resolve a
+// stored value the same way, regardless of which literal form was written.
+func truthyOn(v string) bool {
+	switch v {
+	case "on", "1", "true", "yes":
+		return true
+	default:
+		return false
+	}
+}
+
+// isELFExecutable reports whether path starts with the ELF magic bytes
+// (0x7f 'E' 'L' 'F'). Used to sanity-check downloaded binaries WITHOUT
+// executing them — running a freshly downloaded, unverified artifact is
+// code execution of a remote file. Linux-only check;
+// see isRecognizedExecutable for the platform-aware form.
+func isELFExecutable(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	var magic [4]byte
+	if _, err := io.ReadFull(f, magic[:]); err != nil {
+		return false
+	}
+	return magic[0] == 0x7f && magic[1] == 'E' && magic[2] == 'L' && magic[3] == 'F'
+}
+
+// isMachOExecutable reports whether path starts with a Mach-O magic (darwin
+// binaries: MH_MAGIC_64 0xFEEDFACF / MH_MAGIC 0xFEEDFACE, plus the byte-
+// swapped and fat-binary forms 0xCEFAEDFE / 0xCFFAEDFE / 0xCAFEBABE /
+// 0xBEBAFECA). The tool cross-compiles for darwin, so a downloaded darwin
+// binary must pass a Mach-O check, not the ELF one.
+func isMachOExecutable(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	var magic [4]byte
+	if _, err := io.ReadFull(f, magic[:]); err != nil {
+		return false
+	}
+	switch {
+	case magic[0] == 0xfe && magic[1] == 0xed && magic[2] == 0xfa && (magic[3] == 0xce || magic[3] == 0xcf):
+		return true // MH_CIGAM / MH_CIGAM_64 (byte-swapped big-endian)
+	case magic[0] == 0xce && magic[1] == 0xfa && magic[2] == 0xed && magic[3] == 0xfe:
+		return true // MH_MAGIC (little-endian on disk)
+	case magic[0] == 0xcf && magic[1] == 0xfa && magic[2] == 0xed && magic[3] == 0xfe:
+		// MH_MAGIC_64 — the little-endian on-disk byte sequence of the
+		// host-order constant. This is the branch real Go darwin/amd64 and
+		// darwin/arm64 binaries hit (verified by cross-compiling and dumping
+		// the first bytes: cf fa ed fe). NOT a big-endian case.
+		return true
+	case magic[0] == 0xca && magic[1] == 0xfe && magic[2] == 0xba && magic[3] == 0xbe:
+		return true // FAT_MAGIC (universal binary)
+	case magic[0] == 0xbe && magic[1] == 0xba && magic[2] == 0xfe && magic[3] == 0xca:
+		return true // FAT_CIGAM (universal binary, swapped)
+	}
+	return false
+}
+
+// isPEExecutable reports whether path starts with the MZ header of a PE
+// (Windows) executable.
+func isPEExecutable(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	var magic [2]byte
+	if _, err := io.ReadFull(f, magic[:]); err != nil {
+		return false
+	}
+	return magic[0] == 'M' && magic[1] == 'Z'
+}
+
+// isRecognizedExecutable is the platform-aware structural check for a
+// downloaded binary: ELF on linux, Mach-O on darwin, PE on windows. It
+// never executes the file — it only confirms the magic matches the platform
+// we are about to install for. A wrong-format artifact (a shell script,
+// a corrupt download, or a binary built for another OS) is refused before
+// it can be swapped into place.
+func isRecognizedExecutable(path string) bool {
+	switch runtime.GOOS {
+	case "darwin":
+		return isMachOExecutable(path)
+	case "windows":
+		return isPEExecutable(path)
+	default:
+		return isELFExecutable(path)
+	}
+}
+
+func runtimeGOARCH() string {
+	return runtime.GOARCH
+}
+
+// cmdTune implements the tuning profile commands (turbo/eco/lowmode/ramlogs/
+// auto) by writing the "profile"/"ramlogs" control-socket key for the
+// targeted provider (applySetOverride — live via the socket if the provider
+// is running, queued in pending_overrides.json otherwise) and then
+// restarting it. Mode names match the legacy tool.
+//
+// profile and ramlogs both require a restart (buffer/worker sizing baked
+// into objects allocated once at startup, and a live stdout/stderr ramlog
+// redirect, respectively — not something the socket can apply without a
+// process restart), but the provider picks up a socket-set value on that
+// restart via seedEnvFromControlState() in its own init(), so writing
+// through the socket instead of hand-editing a drop-in file is safe and
+// gets the operator the single source of truth (`urnet-tools set`/`status`)
+// already used for every other tunable.
+func cmdTune(profile string, args []string, force, dryRun bool) error {
+	if len(args) == 0 {
+		// No mode given — show the current state for the targeted provider.
+		t, _, err := parseTargetFlags(args)
+		if err != nil {
+			return err
+		}
+		p, err := selectTarget(Discover(), t)
+		if err != nil {
+			return err
+		}
+		key := profile
+		if profile != "ramlogs" {
+			key = "profile"
+		}
+		val, _, found, qerr := queryControlOverride(p, key)
+		if qerr != nil {
+			val = ""
+			found = false
+		}
+		if profile == "ramlogs" {
+			if found && truthyOn(val) {
+				fmt.Printf("%s: ramlogs is on\n", providerLabel(p))
+			} else {
+				fmt.Printf("%s: ramlogs is off\n", providerLabel(p))
+			}
+		} else {
+			// profile-based: show current profile or "none"
+			if found && val != "" {
+				fmt.Printf("%s: profile is %s\n", providerLabel(p), val)
+			} else {
+				fmt.Printf("%s: no profile set (default)\n", providerLabel(p))
+			}
+		}
+		return nil
+	}
+	mode := args[0]
+	rest := args[1:]
+
+	// H4 fix: validate mode against per-profile allowlist before doing anything.
+	// Without this, `urnet-tools turbo v8x` silently disables turbo (typo → opposite action).
+	switch profile {
+	case "turbo":
+		if mode != "v4" && mode != "v8" && mode != "off" {
+			return fmt.Errorf("turbo mode must be v4, v8, or off — got %q", mode)
+		}
+	case "ramlogs", "eco", "lowmode", "auto":
+		if mode != "on" && mode != "off" {
+			return fmt.Errorf("%s mode must be on or off — got %q", profile, mode)
+		}
+	default:
+		return fmt.Errorf("unknown profile %q", profile)
+	}
+
+	t, _, err := parseTargetFlags(rest)
+	if err != nil {
+		return err
+	}
+	p, err := selectTarget(Discover(), t)
+	if err != nil {
+		return err
+	}
+	// Task 15: when turning off a profile-based tunable (eco/lowmode/turbo/
+	// auto), tuneControlKeyValue maps "off" to profile=off which clears the
+	// ENTIRE profile — not just the one being toggled. eco off on a turbo-v8
+	// node silently drops turbo too. Include the warning in the confirmGate
+	// prompt so operators see it BEFORE confirming.
+	confirmMsg := fmt.Sprintf("set %s=%s on %s and restart provider", profile, mode, providerLabel(p))
+	if mode == "off" && profile != "ramlogs" {
+		if curVal, _, found, qerr := queryControlOverride(p, "profile"); qerr == nil && found && curVal != "" && curVal != "off" {
+			confirmMsg += fmt.Sprintf("\n  WARNING: current profile is %s; setting profile=off will clear it", curVal)
+		}
+	}
+	ok, err := confirmGate(confirmMsg, p, force, dryRun)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+
+	key, value, err := tuneControlKeyValue(profile, mode)
+	if err != nil {
+		return err
+	}
+
+	if err := applySetOverride(p, key, value, dryRun); err != nil {
+		return err
+	}
+	if dryRun {
+		return nil
+	}
+	fmt.Printf("Restarting %s to apply the change...\n", providerLabel(p))
+	return restartProvider(p)
+}
+
+// tuneControlKeyValue maps a cmdTune (profile, mode) pair to the
+// control-socket key/value applySetOverride should write. Pure — no I/O —
+// so the mapping itself (which is easy to get backwards, e.g. "off"
+// clearing the wrong key) is directly testable without a discovered
+// provider or a real systemd unit.
+func tuneControlKeyValue(profile, mode string) (key, value string, err error) {
+	switch profile {
+	case "ramlogs":
+		if mode == "on" {
+			return "ramlogs", "on", nil
+		}
+		return "ramlogs", "off", nil
+	case "eco":
+		if mode == "on" {
+			return "profile", "eco", nil
+		}
+		return "profile", "off", nil
+	case "lowmode":
+		if mode == "on" {
+			return "profile", "lowmem", nil
+		}
+		return "profile", "off", nil
+	case "turbo":
+		if mode == "v4" || mode == "v8" {
+			return "profile", "turbo-" + mode, nil
+		}
+		return "profile", "off", nil
+	case "auto":
+		if mode == "on" {
+			return "profile", "auto", nil
+		}
+		return "profile", "off", nil
+	default:
+		return "", "", fmt.Errorf("unknown profile %q", profile)
+	}
+}
+
+// cmdOptimize applies golden-fleet kernel/OS limits (best-effort; delegates
+// to the legacy installer script's optimize when present). Platform-aware:
+// Linux uses sysctl, Windows uses netsh/reg (no kernel to tune, but the
+// network stack equivalents matter for proxy-scale connection churn), and
+// macOS uses the BSD net.inet.*/kern.* sysctls via optimizeDarwin.
+//
+// NOTE: optimize is intentionally provider-independent. sysctl/netsh operate
+// on the host kernel, not on a specific provider process. Requiring a
+// discovered provider caused `sudo urnet-tools optimize` to fail with "no
+// providers found" because Discover() runs as root and cannot see user-session
+// units owned by the ubuntu user.
+func cmdOptimize(args []string, force, dryRun bool) error {
+	// Ignore provider target flags — optimize is host-wide. If unknown flags
+	// are present parseTargetFlags will still error on malformed input.
+	_, remaining, err := parseTargetFlags(args)
+	if err != nil {
+		return err
+	}
+	if len(remaining) > 0 {
+		return fmt.Errorf("optimize: unexpected arguments: %v", remaining)
+	}
+	if dryRun {
+		fmt.Fprintln(os.Stderr, "[dry-run] would apply golden-fleet OS/kernel limits — no changes made")
+		return nil
+	}
+
+	// Host-wide kernel tuning requires root. Running the whole operation in ONE
+	// elevated process keeps live+persist atomic (the old code ran sysctl under
+	// sudo but wrote /etc/sysctl.d from the non-root process, half-succeeding).
+	// The confirmation gates both paths: a non-root caller answers "yes" here,
+	// then the sudo password is the second (and only) boundary; a root caller
+	// answers "yes" once too. The already-elevated child (our own re-exec)
+	// skips the prompt because the operator already answered pre-elevation.
+	elevated := os.Getenv(urnetElevatedEnv) == "1"
+	if !force && !elevated {
+		fmt.Fprintln(os.Stderr, "[urnet-tools] apply golden-fleet OS/kernel limits to this host")
+		line, cerr := confirmStdinRead("Type 'yes' to continue: ")
+		if cerr != nil {
+			return fmt.Errorf("read confirmation: %w", cerr)
+		}
+		if strings.TrimSpace(line) != "yes" {
+			return fmt.Errorf("aborted (confirmation did not match)")
+		}
+	}
+	if runtime.GOOS != "windows" && os.Geteuid() != 0 && !elevated {
+		return elevateSelf([]string{"optimize", "--force"})
+	}
+	fmt.Println("optimize: applying golden-fleet network limits")
+	return optimizeFor(runtime.GOOS)()
+}
+
+// optimizeFor returns the platform-appropriate optimize function for goos.
+// Extracted so the dispatch itself is unit-testable without running the
+// (root-requiring, host-mutating) implementations.
+func optimizeFor(goos string) func() error {
+	if goos == "windows" {
+		return optimizeWindows
+	}
+	if goos == "darwin" {
+		return optimizeDarwin
+	}
+	return optimizeLinux
+}
+
+// conntrackMaxForRAM reads /proc/meminfo MemTotal (in kB) and returns the
+// appropriate nf_conntrack_max for this host's RAM. Each conntrack entry
+// consumes ~300 bytes; the table is sized to use ~5% of total RAM.
+func conntrackMaxForRAM() (int, error) {
+	data, err := os.ReadFile("/proc/meminfo")
+	if err != nil {
+		return 0, fmt.Errorf("read /proc/meminfo: %w", err)
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.HasPrefix(line, "MemTotal:") {
+			fields := strings.Fields(line)
+			if len(fields) < 2 {
+				return 0, fmt.Errorf("parse MemTotal: %q", line)
+			}
+			kb, err := strconv.Atoi(fields[1])
+			if err != nil {
+				return 0, fmt.Errorf("parse MemTotal value %q: %w", fields[1], err)
+			}
+			return conntrackMaxForRAMKB(kb), nil
+		}
+	}
+	return 0, fmt.Errorf("MemTotal not found in /proc/meminfo")
+}
+
+// conntrackMaxForRAMKB maps total RAM in kB to nf_conntrack_max.
+// Brackets sized so conntrack uses ~5% of RAM (~300 bytes per entry).
+func conntrackMaxForRAMKB(ramKB int) int {
+	switch {
+	case ramKB < 1*1024*1024: // <1GB
+		return 131072 // 128K entries ~37MB
+	case ramKB < 4*1024*1024: // 1-4GB
+		return 262144 // 256K entries ~75MB
+	case ramKB < 8*1024*1024: // 4-8GB
+		return 524288 // 512K entries ~150MB
+	case ramKB < 16*1024*1024: // 8-16GB
+		return 1048576 // 1M entries ~300MB
+	case ramKB < 32*1024*1024: // 16-32GB
+		return 2097152 // 2M entries ~600MB
+	default: // >32GB
+		return 4194304 // 4M entries ~1.2GB
+	}
+}
+
+func conntrackMaxStr(max int) string {
+	return strconv.Itoa(max)
+}
+
+// isConntrackAvailable probes whether the nf_conntrack module is loaded
+// by trying to read nf_conntrack_max. This is separate from RAM detection
+// so we can distinguish "conntrack not available" from "can't read RAM".
+func isConntrackAvailable() bool {
+	_, err := exec.Command("sysctl", "-n", "net.netfilter.nf_conntrack_max").Output()
+	return err == nil
+}
+
+// sysctlRead reads a single sysctl key. Returns the trimmed value or an error.
+func sysctlRead(key string) (string, error) {
+	out, err := exec.Command("sysctl", "-n", key).Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+func conntrackConfBlock(max int, timeout string) string {
+	if max <= 0 {
+		return ""
+	}
+	return fmt.Sprintf(`
+# Conntrack: scaled to this host's total RAM (~%d MB for %d entries).
+# Idle connections older than %ss are reaped to keep the table clean.
+net.netfilter.nf_conntrack_max = %d
+net.netfilter.nf_conntrack_tcp_timeout_established = %s
+`, max*300/1024/1024, max, timeout, max, timeout)
+}
+
+// optimizeLinux applies the Linux sysctl set: socket buffers, FD limit,
+// ephemeral port pool, TIME_WAIT recycling, and conntrack tuning (scaled
+// to this host's total RAM). Runs as root (cmdOptimize self-elevates to
+// root before calling this on Linux), and is atomic: it loads the current
+// values, applies live sysctls, persists, and only reports success when
+// BOTH live apply and the persist file wrote. If any step fails it rolls
+// the already-applied keys back to their prior values so a failure never
+// leaves a half-tuned host (settings live but not persisted, or a partial
+// sysctl set).
+func optimizeLinux() error {
+	// Phase 1: Check if conntrack is available at all (module loaded, sysctl keys exist).
+	conntrackAvail := isConntrackAvailable()
+
+	// Phase 2: Determine conntrack sizing from RAM. Separate from availability
+	// so a RAM read failure doesn't cause us to drop persisted conntrack config.
+	var conntrackMax int
+	var conntrackErr error
+	if conntrackAvail {
+		conntrackMax, conntrackErr = conntrackMaxForRAM()
+		if conntrackErr != nil {
+			// RAM detection failed — try to preserve existing sysctl value
+			// rather than overwriting with 0.
+			if existing, err := sysctlRead("net.netfilter.nf_conntrack_max"); err == nil && existing != "" {
+				fmt.Fprintf(os.Stderr, "optimize: RAM detection failed (%v), preserving existing nf_conntrack_max=%s\n", conntrackErr, existing)
+				conntrackMax = 0 // don't add to writes — existing value stays
+				conntrackErr = nil
+			} else {
+				fmt.Fprintf(os.Stderr, "optimize: RAM detection failed (%v) and no existing conntrack config; skipping conntrack tuning\n", conntrackErr)
+				conntrackMax = 0
+			}
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "optimize: conntrack module not available; skipping conntrack tuning\n")
+	}
+	timeoutEstablished := "3600" // 1 hour idle timeout
+
+	// Key -> desired live value; order matters: apply in this order, roll back
+	// in reverse. Conntrack entries are appended conditionally below.
+	writes := [][]string{
+		{"net.core.rmem_max", "134217728"},
+		{"net.core.wmem_max", "134217728"},
+		{"fs.file-max", "1000000"},
+		{"net.ipv4.ip_local_port_range", "10240 65535"},
+		{"net.ipv4.tcp_fin_timeout", "15"},
+	}
+	if conntrackMax > 0 {
+		writes = append(writes,
+			[]string{"net.netfilter.nf_conntrack_max", conntrackMaxStr(conntrackMax)},
+			[]string{"net.netfilter.nf_conntrack_tcp_timeout_established", timeoutEstablished},
+		)
+	}
+
+	// The conf file mirrors these exact keys so persist and rollback agree.
+	conf := fmt.Sprintf(`# URNetwork proxy-provider kernel tuning — applied by urnet-tools optimize
+# Scaled to this host's total RAM at time of optimize.
+net.ipv4.ip_local_port_range = 10240 65535
+net.core.rmem_max = 134217728
+net.core.wmem_max = 134217728
+fs.file-max = 1000000
+net.ipv4.tcp_fin_timeout = 15
+%s`, conntrackConfBlock(conntrackMax, timeoutEstablished))
+
+	prior := make(map[string]string, len(writes))
+	// Snapshot current values so rollback restores exactly what was there.
+	for _, w := range writes {
+		if out, err := exec.Command("sysctl", "-n", w[0]).Output(); err == nil {
+			prior[w[0]] = strings.TrimSpace(string(out))
+		} else {
+			// Cannot read the current value — abort rather than risk being
+			// unable to roll back if a later step fails.
+			fmt.Fprintf(os.Stderr, "optimize: cannot read current %s (%v); aborting\n", w[0], err)
+			return fmt.Errorf("optimize: read %s: %w", w[0], err)
+		}
+	}
+
+	// 1. Apply live, tracking what we changed so far for rollback.
+	applied := 0
+	for _, w := range writes {
+		if out, err := exec.Command("sysctl", "-w", w[0]+"="+w[1]).CombinedOutput(); err != nil {
+			fmt.Fprintf(os.Stderr, "optimize: warning: sysctl -w %s failed: %v (%s); rolling back\n", w[0], err, strings.TrimSpace(string(out)))
+			rollbackSysctls(writes[:applied], prior)
+			return fmt.Errorf("optimize: live apply of %s failed: %w", w[0], err)
+		}
+		applied++
+	}
+
+	// 2. Persist. Failure here must roll back the now-live values to their
+	// prior state, not leave a half-success.
+	sysctlConf := "/etc/sysctl.d/99-urnetwork.conf"
+	// Create a temp file in /etc/sysctl.d for the atomic rename.
+	tmpConf := sysctlConf + ".tmp"
+	if err := os.WriteFile(tmpConf, []byte(conf), 0o644); err != nil {
+		rollbackSysctls(writes, prior)
+		return fmt.Errorf("optimize: persist %s failed (%v); rolled back live settings", sysctlConf, err)
+	}
+	if err := os.Rename(tmpConf, sysctlConf); err != nil {
+		os.Remove(tmpConf)
+		rollbackSysctls(writes, prior)
+		return fmt.Errorf("optimize: persist %s failed (%v); rolled back live settings", sysctlConf, err)
+	}
+
+	fmt.Println("optimize: done (live + reboot persisted)")
+	return nil
+}
+
+// rollbackSysctls restores a subset of keys (the ones already applied) to
+// their prior live values. Best-effort: logs any failure rather than masking
+// the original error.
+func rollbackSysctls(writes [][]string, prior map[string]string) {
+	for i := len(writes) - 1; i >= 0; i-- {
+		key := writes[i][0]
+		v, ok := prior[key]
+		if !ok {
+			continue
+		}
+		if out, err := exec.Command("sysctl", "-w", key+"="+v).CombinedOutput(); err != nil {
+			fmt.Fprintf(os.Stderr, "optimize: warning: rollback %s=%s failed: %v (%s)\n", key, v, err, strings.TrimSpace(string(out)))
+		}
+	}
+}
+
+// optimizeWindows applies the Windows network-stack equivalents: a widened
+// ephemeral port pool (netsh dynamicport) and a shorter TIME_WAIT
+// (TcpTimedWaitDelay registry key). These need an elevated shell; failures
+// are logged, never fatal.
+func optimizeWindows() error {
+	// netsh: widen the dynamic client port pool (default ~16k is too small
+	// for a busy proxy box).
+	if out, err := exec.Command("netsh", "int", "ipv4", "set", "dynamicport", "tcp", "start=1025", "num=64510").CombinedOutput(); err != nil {
+		fmt.Fprintf(os.Stderr, "optimize: warning: netsh dynamicport failed: %v (%s)\n", err, strings.TrimSpace(string(out)))
+	}
+	// Registry: shorten TIME_WAIT so closed sockets free their ports faster
+	// (default 120s on Windows). Takes effect after reboot.
+	if out, err := exec.Command("reg", "add", `HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters`,
+		"/v", "TcpTimedWaitDelay", "/t", "REG_DWORD", "/d", "30", "/f").CombinedOutput(); err != nil {
+		fmt.Fprintf(os.Stderr, "optimize: warning: reg TcpTimedWaitDelay failed: %v (%s)\n", err, strings.TrimSpace(string(out)))
+	}
+	fmt.Println("optimize: done (TcpTimedWaitDelay takes effect on reboot)")
+	return nil
+}
+
+// optimizeDarwin applies the macOS (BSD) equivalents of the Linux tuning:
+// socket-buffer sizes (net.inet.tcp.recvspace/sendspace), file-descriptor and
+// per-process limits (kern.maxfiles/kern.maxfilesperproc), the ephemeral port
+// pool (net.inet.ip.portrange.first/.last), and TIME_WAIT recycling
+// (net.inet.tcp.msl). These are the darwin-namespace analogs of the
+// net.core/net.ipv4 keys optimizeLinux sets — the OIDs differ, so the Linux
+// keys must NEVER run on macOS (they don't exist there; previously the darwin
+// build fell through to optimizeLinux, warned on every missing key, and still
+// printed a false "done"). Requires root (or sudo); failures are logged, never
+// fatal. All keys apply immediately with sudo but do NOT persist across
+// reboot — persist them with a LaunchDaemon that runs sysctl -w at boot, not
+// /etc/sysctl.conf (modern macOS ignores it).
+func optimizeDarwin() error {
+	var prefix []string
+	if os.Geteuid() != 0 {
+		if _, err := exec.LookPath("sudo"); err == nil {
+			prefix = []string{"sudo"}
+		} else {
+			self, _ := os.Executable()
+			if self == "" {
+				self = "urnet-tools"
+			}
+			return fmt.Errorf("optimize: sysctl requires root (running as uid %d); run: sudo %s optimize", os.Geteuid(), self)
+		}
+	}
+	for _, args := range [][]string{
+		{"-w", "net.inet.tcp.recvspace=4194304", "net.inet.tcp.sendspace=4194304"},
+		{"-w", "kern.maxfiles=200000", "kern.maxfilesperproc=100000"},
+		{"-w", "net.inet.ip.portrange.first=1024", "net.inet.ip.portrange.last=65535"},
+		{"-w", "net.inet.tcp.msl=2000"},
+	} {
+		cmdArgs := append(prefix, append([]string{"sysctl"}, args...)...)
+		cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+		cmd.Stdin = os.Stdin
+		if out, err := cmd.CombinedOutput(); err != nil {
+			if len(prefix) > 0 && (strings.Contains(string(out), "password") || strings.Contains(string(out), "incorrect") || strings.Contains(string(out), "sudoers")) {
+				self, _ := os.Executable()
+				if self == "" {
+					self = "urnet-tools"
+				}
+				return fmt.Errorf("optimize: sysctl requires root (running as uid %d); run: sudo %s optimize", os.Geteuid(), self)
+			}
+			fmt.Fprintf(os.Stderr, "optimize: warning: sysctl %v failed: %v (%s)\n", args, err, strings.TrimSpace(string(out)))
+		}
+	}
+	fmt.Println("optimize: done (macOS net.inet.*/kern.* equivalents)")
+	return nil
+}
+
+// cmdProxyHealthTarget prints the provider's proxy health state + streams
+// the event log (state files in the provider's state dir). Takes a resolved
+// Provider (targeting happens in the caller).
+func cmdProxyHealthTarget(p Provider) error {
+	state := filepath.Join(p.StateDir, "proxy_health.state")
+	logf := filepath.Join(p.StateDir, "proxy_health.log")
+	if b, err := os.ReadFile(state); err == nil {
+		fmt.Printf("Current proxy health (%s):\n%s\n", state, b)
+	} else {
+		fmt.Printf("No snapshot yet at %s (waiting for first heartbeat?)\n", state)
+	}
+	if _, err := os.Stat(logf); err == nil {
+		fmt.Printf("Streaming proxy health events (%s). Ctrl-C to stop.\n", logf)
+		cmd := exec.Command("tail", "-n", "20", "-f", logf)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+	fmt.Printf("No event log yet at %s.\n", logf)
+	return nil
+}
+
+// cmdProxyTrafficTarget prints the provider's proxy traffic snapshot. Takes
+// a resolved Provider (targeting happens in the caller).
+func cmdProxyTrafficTarget(p Provider) error {
+	state := filepath.Join(p.StateDir, "proxy_traffic.state")
+	if b, err := os.ReadFile(state); err == nil {
+		fmt.Printf("Current proxy traffic (%s):\n%s\n", state, b)
+	} else {
+		fmt.Printf("No traffic snapshot yet at %s.\n", state)
+	}
+	return nil
+}
+
+// cmdProxyRemoveDead delegates remove-dead to the provider binary.
+func cmdProxyRemoveDead(args []string) error {
+	t, rest, err := parseTargetFlags(args)
+	if err != nil {
+		return err
+	}
+	p, err := selectTarget(Discover(), t)
+	if err != nil {
+		return err
+	}
+	return providerSubcommand(p, append([]string{"proxy", "remove-dead"}, rest...)...)
+}

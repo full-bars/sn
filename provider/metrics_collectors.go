@@ -434,11 +434,16 @@ func runProfitHeartbeat(ctx context.Context) {
 			acquired, denied, utilSum := contractMetricsSnapshot()
 			contractFields := ""
 			if acquired+denied > 0 {
-				avgUtil := uint64(0)
-				if acquired > 0 {
-					avgUtil = utilSum / acquired
+				contractFields = fmt.Sprintf(" contracts=%d denied=%d", acquired, denied)
+				// v2026 connect removed contract byte-utilization
+				// instrumentation. utilSum stays 0 — report as n/a
+				// rather than misleading "avg_util=0%".
+				if utilSum > 0 {
+					avgUtil := utilSum / acquired
+					contractFields += fmt.Sprintf(" avg_util=%d%%", avgUtil)
+				} else {
+					contractFields += " avg_util=n/a"
 				}
-				contractFields = fmt.Sprintf(" contracts=%d denied=%d avg_util=%d%%", acquired, denied, avgUtil)
 			}
 			tlog("%s[profit] earning=%s reason=%s clients=%d rate=%s proxies_up=%d serving=%d idle=%d%s\n",
 				profitEmoji, status, reason, clients, fmtRate(float64(delta)/elapsed), proxiesUp, serving, idle, contractFields)

@@ -1,0 +1,244 @@
+package urnettools
+
+import (
+	"errors"
+	"os"
+	"strings"
+	"testing"
+)
+
+func TestTriggerHotSwapInvalidPID(t *testing.T) {
+	p := Provider{
+		PID: -1,
+	}
+	err := triggerHotSwap(p)
+	if err == nil {
+		t.Errorf("expected error for invalid PID, got nil")
+	}
+}
+
+func TestCmdHotswapNotRunning(t *testing.T) {
+	// Targeting non-running provider must error
+	err := cmdHotswap([]string{"--unit", "nonexistent.service"}, true, false)
+	if err == nil {
+		t.Errorf("expected error targeting non-existent provider, got nil")
+	}
+}
+
+func TestCmdHotswapHelp(t *testing.T) {
+	// Running help for hotswap through Run CLI
+	err := Run([]string{"hotswap", "--help"})
+	if err != nil {
+		t.Errorf("expected hotswap --help to succeed, got %v", err)
+	}
+}
+
+func TestHotswapCobraCommandRegistered(t *testing.T) {
+	cmd := buildRootCmd()
+	var found bool
+	for _, c := range cmd.Commands() {
+		if c.Name() == "hotswap" {
+			found = true
+			if !strings.Contains(c.Short, "zero-downtime") {
+				t.Errorf("unexpected short description: %s", c.Short)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Errorf("hotswap command not registered in root command list")
+	}
+}
+
+func TestIsHotSwapSupportedVersion(t *testing.T) {
+	cases := []struct {
+		ver  string
+		want bool
+	}{
+		{"v3.23.0-fix.30.9", false},
+		{"v3.23.0-fix.30.0", false},
+		{"v3.23.0-fix.28.1", false},
+		{"v3.23.0-fix.31.0", true},
+		{"v3.23.0-fix.31.0-alpha1", true},
+		{"v3.23.0-fix.31.0-alpha2", true},
+		{"v3.23.0-fix.32.0", true},
+		{"dev", true},
+		{"", false},
+		{"invalid", false},
+	}
+	for _, tc := range cases {
+		got := isHotSwapSupportedVersion(tc.ver)
+		if got != tc.want {
+			t.Errorf("isHotSwapSupportedVersion(%q) = %v, want %v", tc.ver, got, tc.want)
+		}
+	}
+}
+
+func TestTriggerHotSwapNotCapable(t *testing.T) {
+	p := Provider{
+		PID:     os.Getpid(),
+		Version: "v3.23.0-fix.30.9", // older release without hotswap
+		Running: true,
+	}
+	err := triggerHotSwap(p)
+	if err == nil {
+		t.Errorf("expected error triggering hotswap on provider running v3.23.0-fix.30.9")
+	}
+}
+
+// TestSupportsHotSwapUnitType pins the interaction between version support
+// and systemd unit Type=: a supported version is not enough on its own if
+// the owning unit isn't Type=notify, because provider/hotswap.go silently
+// aborts the in-process handoff for any other unit type (see hotSwapUnitOK
+// for the full mechanism). Getting this backwards either strands
+// pre-existing Type=simple fleet nodes on a permanently-no-op update path
+// (false "yes"), or needlessly denies zero-downtime handoff to units that
+// are genuinely Type=notify (false "no").
+func TestSupportsHotSwapUnitType(t *testing.T) {
+	origUnitType := unitTypeFunc
+	defer func() { unitTypeFunc = origUnitType }()
+
+	const supportedVersion = "v3.23.0-fix.31.0"
+	const unsupportedVersion = "v3.23.0-fix.30.9"
+
+	cases := []struct {
+		name        string
+		version     string
+		unitType    string
+		unitTypeErr error
+		hasUnit     bool
+		want        bool
+	}{
+		{
+			name:     "notify unit + supported version -> supported",
+			version:  supportedVersion,
+			unitType: "notify",
+			hasUnit:  true,
+			want:     true,
+		},
+		{
+			name:     "simple unit + supported version -> NOT supported",
+			version:  supportedVersion,
+			unitType: "simple",
+			hasUnit:  true,
+			want:     false,
+		},
+		{
+			name:     "notify unit + unsupported version -> not supported regardless of unit type",
+			version:  unsupportedVersion,
+			unitType: "notify",
+			hasUnit:  true,
+			want:     false,
+		},
+		{
+			name:     "simple unit + unsupported version -> not supported",
+			version:  unsupportedVersion,
+			unitType: "simple",
+			hasUnit:  true,
+			want:     false,
+		},
+		{
+			name:        "unit type undeterminable -> not supported (safe fallback)",
+			version:     supportedVersion,
+			unitTypeErr: errors.New("systemctl: command not found"),
+			hasUnit:     true,
+			want:        false,
+		},
+		{
+			name:    "no owning unit at all (e.g. Docker PID-1) -> version alone decides",
+			version: supportedVersion,
+			hasUnit: false,
+			want:    true,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			unitTypeFunc = func(Provider) (string, error) {
+				if c.unitTypeErr != nil {
+					return "", c.unitTypeErr
+				}
+				return c.unitType, nil
+			}
+			p := Provider{Version: c.version}
+			if c.hasUnit {
+				p.Unit = "urnetwork.service"
+			}
+			if got := supportsHotSwap(p); got != c.want {
+				t.Errorf("supportsHotSwap(%+v) = %v, want %v", p, got, c.want)
+			}
+		})
+	}
+}
+
+// TestHotSwapPreflightReturnsTheGateSpecificReason pins which sentinel each
+// gate produces, and pins the substrings the pre-release shakedown greps for
+// in `urnet-tools update` output (section V: V1 asserts the VERSION decline,
+// V2 the UNIT TYPE decline and that it names the installer script).
+//
+// This coupling is easy to break silently and was broken once already: a
+// revision that gated the call site on a bool discarded the reason entirely,
+// so the decline printed nothing, section V could not distinguish the two
+// gates, and HotSwap dormancy became invisible to operators. Changing this
+// wording means updating .github/scripts/shakedown.sh section V to match.
+func TestHotSwapPreflightReturnsTheGateSpecificReason(t *testing.T) {
+	const supported = "v3.23.0-fix.31.0"
+
+	t.Run("version gate wins over the unit gate", func(t *testing.T) {
+		unitTypeFunc = func(Provider) (string, error) { return "simple", nil }
+		// Old provider on a non-notify unit: BOTH gates would reject, but the
+		// version reason must surface, because upgrading is the actual remedy.
+		err := hotSwapPreflight(Provider{Version: "v3.23.0-fix.30.9", Unit: "urnetwork.service"})
+		if !errors.Is(err, ErrHotSwapNotSupported) {
+			t.Fatalf("hotSwapPreflight = %v, want ErrHotSwapNotSupported", err)
+		}
+		if !strings.Contains(err.Error(), "below v3.23.0-fix.31.0") {
+			t.Errorf("decline text %q lost the substring shakedown section V1 greps for", err)
+		}
+	})
+
+	t.Run("unit gate reason names the installer script", func(t *testing.T) {
+		unitTypeFunc = func(Provider) (string, error) { return "simple", nil }
+		err := hotSwapPreflight(Provider{Version: supported, Unit: "urnetwork.service"})
+		if !errors.Is(err, ErrHotSwapUnitNotNotify) {
+			t.Fatalf("hotSwapPreflight = %v, want ErrHotSwapUnitNotNotify", err)
+		}
+		for _, want := range []string{"Type=simple", "Provider_Install_Linux.sh"} {
+			if !strings.Contains(err.Error(), want) {
+				t.Errorf("decline text %q lost %q, which shakedown section V2 greps for", err, want)
+			}
+		}
+	})
+
+	t.Run("both gates pass", func(t *testing.T) {
+		unitTypeFunc = func(Provider) (string, error) { return "notify", nil }
+		if err := hotSwapPreflight(Provider{Version: supported, Unit: "urnetwork.service"}); err != nil {
+			t.Fatalf("hotSwapPreflight = %v, want nil", err)
+		}
+	})
+}
+
+// TestHotSwapPreflightDistinguishesAnUnreadableUnitType covers the case where
+// systemctl itself fails (not installed, user bus unreachable, polkit denial).
+// Collapsing that into ErrHotSwapUnitNotNotify would tell the operator to
+// re-run the installer to rewrite a unit whose Type= was never actually read,
+// which is a false diagnosis and the wrong remedy.
+func TestHotSwapPreflightDistinguishesAnUnreadableUnitType(t *testing.T) {
+	queryErr := errors.New("Failed to connect to bus: Permission denied")
+	unitTypeFunc = func(Provider) (string, error) { return "", queryErr }
+
+	err := hotSwapPreflight(Provider{Version: "v3.23.0-fix.31.0", Unit: "urnetwork.service"})
+	if err == nil {
+		t.Fatal("hotSwapPreflight = nil, want the systemd query failure")
+	}
+	if errors.Is(err, ErrHotSwapUnitNotNotify) {
+		t.Errorf("query failure misreported as a Type= mismatch: %v", err)
+	}
+	if !errors.Is(err, queryErr) {
+		t.Errorf("hotSwapPreflight = %v, want it to wrap the underlying query error", err)
+	}
+	// The handoff must still be refused, not attempted, when the gate is unknown.
+	if supportsHotSwap(Provider{Version: "v3.23.0-fix.31.0", Unit: "urnetwork.service"}) {
+		t.Error("supportsHotSwap = true on an unreadable unit type; must fail closed")
+	}
+}

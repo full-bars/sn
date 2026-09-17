@@ -48,7 +48,7 @@ jobs:
             echo "Build attempt $attempt..."
             if GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 \
                go build -trimpath \
-               -ldflags "-s -w -X main.Version=${VERSION}" \
+               -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
                -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/provider ./cmd/provider/; then
               echo "Build succeeded"; break
             fi
@@ -56,11 +56,57 @@ jobs:
             else echo "Build failed after 3 attempts"; exit 1; fi
           done
 
-      - name: Upload ${{ matrix.goos }}/${{ matrix.goarch }}
+      - name: Build urnet-tools
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          VERSION=${GITHUB_REF_NAME:-latest}
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 \
+               go build -trimpath \
+               -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
+               -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/urnet-tools ./cmd/urnet-tools/; then
+              echo "Build succeeded"; break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+
+      - name: Build urnet-docker
+        env:
+          GOPROXY: "https://proxy.golang.org|https://goproxy.io,direct"
+        run: |
+          VERSION=${GITHUB_REF_NAME:-latest}
+          for attempt in 1 2 3; do
+            echo "Build attempt $attempt..."
+            if GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 \
+               go build -trimpath \
+               -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
+               -o bin/${{ matrix.goos }}/${{ matrix.goarch }}/urnet-docker ./cmd/urnet-docker/; then
+              echo "Build succeeded"; break
+            fi
+            if [ $attempt -lt 3 ]; then echo "Build failed, retrying in 10s..."; sleep 10
+            else echo "Build failed after 3 attempts"; exit 1; fi
+          done
+
+      - name: Upload provider artifact
         uses: actions/upload-artifact@v4
         with:
           name: provider-${{ matrix.goos }}-${{ matrix.goarch }}
           path: bin/${{ matrix.goos }}/${{ matrix.goarch }}/provider
+
+      - name: Upload urnet-tools artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: urnet-tools-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/${{ matrix.goos }}/${{ matrix.goarch }}/urnet-tools
+
+      - name: Upload urnet-docker artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: urnet-docker-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/${{ matrix.goos }}/${{ matrix.goarch }}/urnet-docker
 
   create-release:
     name: Create Release
@@ -72,54 +118,172 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Download provider linux amd64 artifact
+      # Download provider artifacts
+      - name: Download provider linux amd64
         uses: actions/download-artifact@v4
         with:
           name: provider-linux-amd64
           path: release_tmp/linux/amd64/
-
-      - name: Download provider linux arm64 artifact
+      - name: Download provider linux arm64
         uses: actions/download-artifact@v4
         with:
           name: provider-linux-arm64
           path: release_tmp/linux/arm64/
-
-      - name: Download provider darwin amd64 artifact
+      - name: Download provider darwin amd64
         uses: actions/download-artifact@v4
         with:
           name: provider-darwin-amd64
           path: release_tmp/darwin/amd64/
-
-      - name: Download provider darwin arm64 artifact
+      - name: Download provider darwin arm64
         uses: actions/download-artifact@v4
         with:
           name: provider-darwin-arm64
           path: release_tmp/darwin/arm64/
-
-      - name: Download provider windows amd64 artifact
+      - name: Download provider windows amd64
         uses: actions/download-artifact@v4
         with:
           name: provider-windows-amd64
           path: release_tmp/windows/amd64/
-
-      - name: Download provider windows arm64 artifact
+      - name: Download provider windows arm64
         uses: actions/download-artifact@v4
         with:
           name: provider-windows-arm64
           path: release_tmp/windows/arm64/
 
-      - name: Prepare release binaries
+      # Download urnet-tools artifacts
+      - name: Download urnet-tools linux amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-tools-linux-amd64
+          path: tool_tmp/linux/amd64/
+      - name: Download urnet-tools linux arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-tools-linux-arm64
+          path: tool_tmp/linux/arm64/
+      - name: Download urnet-tools darwin amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-tools-darwin-amd64
+          path: tool_tmp/darwin/amd64/
+      - name: Download urnet-tools darwin arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-tools-darwin-arm64
+          path: tool_tmp/darwin/arm64/
+      - name: Download urnet-tools windows amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-tools-windows-amd64
+          path: tool_tmp/windows/amd64/
+      - name: Download urnet-tools windows arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-tools-windows-arm64
+          path: tool_tmp/windows/arm64/
+
+      # Download urnet-docker artifacts
+      - name: Download urnet-docker linux amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-docker-linux-amd64
+          path: tool_tmp/linux/amd64/
+      - name: Download urnet-docker linux arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-docker-linux-arm64
+          path: tool_tmp/linux/arm64/
+      - name: Download urnet-docker darwin amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-docker-darwin-amd64
+          path: tool_tmp/darwin/amd64/
+      - name: Download urnet-docker darwin arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-docker-darwin-arm64
+          path: tool_tmp/darwin/arm64/
+      - name: Download urnet-docker windows amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-docker-windows-amd64
+          path: tool_tmp/windows/amd64/
+      - name: Download urnet-docker windows arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: urnet-docker-windows-arm64
+          path: tool_tmp/windows/arm64/
+
+      - name: Prepare binaries
         run: |
+          VERSION=${GITHUB_REF_NAME:-latest}
           find release_tmp -name "provider*" -type f -exec chmod +x {} \;
+          # Rename provider binaries
           mv release_tmp/linux/amd64/provider-linux-amd64 release_tmp/linux/amd64/provider 2>/dev/null || true
           mv release_tmp/linux/arm64/provider-linux-arm64 release_tmp/linux/arm64/provider 2>/dev/null || true
           mv release_tmp/darwin/amd64/provider-darwin-amd64 release_tmp/darwin/amd64/provider 2>/dev/null || true
           mv release_tmp/darwin/arm64/provider-darwin-arm64 release_tmp/darwin/arm64/provider 2>/dev/null || true
           cp release_tmp/windows/amd64/provider release_tmp/windows/amd64/provider.exe 2>/dev/null || true
           cp release_tmp/windows/arm64/provider release_tmp/windows/arm64/provider.exe 2>/dev/null || true
-          rm -f release_tmp/windows/amd64/provider release_tmp/windows/arm64/provider
-          echo "Release binaries prepared:"
-          find release_tmp -type f | sort
+          # Stamp tool binaries as standalone release assets
+          # The Go tool's self-update + installers fetch exactly this name
+          find tool_tmp -type f \( -name "urnet-tools*" -o -name "urnet-docker*" \) -exec chmod +x {} \;
+          # urnet-tools
+          cp tool_tmp/linux/amd64/urnet-tools urnet-tools-linux-amd64
+          cp tool_tmp/linux/arm64/urnet-tools urnet-tools-linux-arm64
+          cp tool_tmp/darwin/amd64/urnet-tools urnet-tools-darwin-amd64
+          cp tool_tmp/darwin/arm64/urnet-tools urnet-tools-darwin-arm64
+          cp tool_tmp/windows/amd64/urnet-tools urnet-tools-windows-amd64
+          cp tool_tmp/windows/arm64/urnet-tools urnet-tools-windows-arm64
+          # urnet-docker
+          cp tool_tmp/linux/amd64/urnet-docker urnet-docker-linux-amd64
+          cp tool_tmp/linux/arm64/urnet-docker urnet-docker-linux-arm64
+          cp tool_tmp/darwin/amd64/urnet-docker urnet-docker-darwin-amd64
+          cp tool_tmp/darwin/arm64/urnet-docker urnet-docker-darwin-arm64
+          cp tool_tmp/windows/amd64/urnet-docker urnet-docker-windows-amd64
+          cp tool_tmp/windows/arm64/urnet-docker urnet-docker-windows-arm64
+
+      - name: Create provider tarballs
+        run: |
+          VERSION=${GITHUB_REF_NAME:-latest}
+
+          # Copy urnet-tools.exe into Windows dirs for universal tarball
+          cp tool_tmp/windows/amd64/urnet-tools release_tmp/windows/amd64/urnet-tools.exe
+          cp tool_tmp/windows/arm64/urnet-tools release_tmp/windows/arm64/urnet-tools.exe
+
+          # Universal tarball
+          cd release_tmp
+          tar -czf "../urnetwork-provider-${VERSION}.tar.gz" linux/ darwin/ windows/
+          cd ..
+
+          # Per-platform tarballs
+          mkdir -p per-platform
+
+          for plat in linux-amd64 linux-arm64; do
+            arch="${plat#linux-}"
+            mkdir -p "per-platform/${plat}"
+            cp "release_tmp/linux/${arch}/provider" "per-platform/${plat}/"
+            cd "per-platform/${plat}" && tar -czf "../../urnetwork-provider-${VERSION}-${plat}.tar.gz" * && cd ../..
+          done
+
+          for plat in darwin-amd64 darwin-arm64; do
+            arch="${plat#darwin-}"
+            mkdir -p "per-platform/${plat}"
+            cp "release_tmp/darwin/${arch}/provider" "per-platform/${plat}/"
+            cd "per-platform/${plat}" && tar -czf "../../urnetwork-provider-${VERSION}-${plat}.tar.gz" * && cd ../..
+          done
+
+          for plat in windows-amd64 windows-arm64; do
+            arch="${plat#windows-}"
+            mkdir -p "per-platform/${plat}"
+            cp "release_tmp/windows/${arch}/provider.exe" "per-platform/${plat}/"
+            cp "tool_tmp/windows/${arch}/urnet-tools" "per-platform/${plat}/urnet-tools.exe"
+            cd "per-platform/${plat}" && tar -czf "../../urnetwork-provider-${VERSION}-${plat}.tar.gz" * && cd ../..
+          done
+
+          rm -rf per-platform
+          echo "Created tarballs:"
+          ls -lh urnetwork-provider-*.tar.gz
 
       - name: VirusTotal scan of release binaries
         env:
@@ -127,6 +291,7 @@ jobs:
           VT_FAIL_THRESHOLD: "10"
           VT_REVIEW_THRESHOLD: "2"
           VT_SUMMARY_FILE: ${{ github.workspace }}/vt-scan-report.md
+          VT_JSON_FILE: ${{ github.workspace }}/vt-scan-results.json
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_RUN_ID: ${{ github.run_id }}
@@ -140,14 +305,25 @@ jobs:
             echo "VIRUS_TOTAL secret not set on branch run, skipping VirusTotal scan"
             exit 0
           fi
-          VERSION=${GITHUB_REF_NAME:-latest}
           python3 .github/scripts/vt-scan.py \
             release_tmp/linux/amd64/provider \
             release_tmp/linux/arm64/provider \
             release_tmp/darwin/amd64/provider \
             release_tmp/darwin/arm64/provider \
             release_tmp/windows/amd64/provider.exe \
-            release_tmp/windows/arm64/provider.exe
+            release_tmp/windows/arm64/provider.exe \
+            release_tmp/linux/amd64/urnet-tools \
+            release_tmp/linux/arm64/urnet-tools \
+            release_tmp/darwin/amd64/urnet-tools \
+            release_tmp/darwin/arm64/urnet-tools \
+            release_tmp/windows/amd64/urnet-tools \
+            release_tmp/windows/arm64/urnet-tools \
+            release_tmp/linux/amd64/urnet-docker \
+            release_tmp/linux/arm64/urnet-docker \
+            release_tmp/darwin/amd64/urnet-docker \
+            release_tmp/darwin/arm64/urnet-docker \
+            release_tmp/windows/amd64/urnet-docker \
+            release_tmp/windows/arm64/urnet-docker
 
       - name: ClamAV scan of release binaries
         if: always()
@@ -159,68 +335,47 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y -qq clamav >/dev/null
           fi
-          # EICAR self-test: the scanner must actually detect.
+          # EICAR self-test
           printf 'X5O!P%%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > /tmp/eicar.txt
           if clamscan /tmp/eicar.txt 2>/dev/null | grep -q "FOUND"; then
             echo "EICAR self-test passed (scanner active)"
           else
             echo "::warning::EICAR self-test did not FOUND — ClamAV may be broken"
           fi
-          clamscan --no-summary -r release_tmp/ 2>/dev/null | grep "FOUND" && echo "::error::ClamAV found malware in release artifacts" || echo "ClamAV: clean"
-
-      - name: GPG sign release binaries
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_RELEASE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: |
-          set -euo pipefail
-          if [ -z "${GPG_PRIVATE_KEY:-}" ]; then
-            echo "::warning::GPG_RELEASE_KEY secret not set — skipping signing"
-            exit 0
-          fi
-          # Import GPG key
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-          # Sign each binary
-          for f in \
-            release_tmp/linux/amd64/provider \
-            release_tmp/linux/arm64/provider \
-            release_tmp/darwin/amd64/provider \
-            release_tmp/darwin/arm64/provider \
-            release_tmp/windows/amd64/provider.exe \
-            release_tmp/windows/arm64/provider.exe; do
-            if [ -f "$f" ]; then
-              gpg --batch --yes --armor --detach-sign "$f"
-              echo "Signed: $f"
-            fi
-          done
-          # List signatures
-          find release_tmp -name "*.sig" -o -name "*.asc" | sort
+          clamscan --no-summary -r release_tmp/ tool_tmp/ urnet-tools-* urnet-docker-* 2>/dev/null | grep "FOUND" && echo "::error::ClamAV found malware in release artifacts" || echo "ClamAV: clean"
 
       - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            urnetwork-provider-*.tar.gz
+            urnet-tools-*
+            urnet-docker-*
+          draft: false
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-alpha') || contains(github.ref, '-beta') }}
+          body_path: ${{ github.workspace }}/RELEASE_NOTES.md
+          generate_release_notes: false
+
+      - name: Notify Discord on tagged release
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_NOTIFY: ${{ secrets.BUILD_NOTIFY }}
         run: |
-          VERSION=${GITHUB_REF_NAME:-latest}
-          echo "Creating release for $VERSION"
-
-          # Build release notes
-          NOTES="## URNetwork Provider ${VERSION}"
-          NOTES="${NOTES}\n\n### Binaries"
-          NOTES="${NOTES}\n- \`provider\` — Linux amd64/arm64, macOS amd64/arm64, Windows amd64/arm64"
-
-          # Create release with all binaries + signatures
-          gh release create "$VERSION" \
-            --title "URNetwork Provider ${VERSION}" \
-            --notes "$(echo -e "$NOTES")" \
-            release_tmp/linux/amd64/provider#provider-linux-amd64 \
-            release_tmp/linux/amd64/provider.asc#provider-linux-amd64.asc \
-            release_tmp/linux/arm64/provider#provider-linux-arm64 \
-            release_tmp/linux/arm64/provider.asc#provider-linux-arm64.asc \
-            release_tmp/darwin/amd64/provider#provider-darwin-amd64 \
-            release_tmp/darwin/amd64/provider.asc#provider-darwin-amd64.asc \
-            release_tmp/darwin/arm64/provider#provider-darwin-arm64 \
-            release_tmp/darwin/arm64/provider.asc#provider-darwin-arm64.asc \
-            release_tmp/windows/amd64/provider.exe#provider-windows-amd64.exe \
-            release_tmp/windows/amd64/provider.exe.asc#provider-windows-amd64.exe.asc \
-            release_tmp/windows/arm64/provider.exe#provider-windows-arm64.exe \
-            release_tmp/windows/arm64/provider.exe.asc#provider-windows-arm64.exe.asc
+          if [ -z "$BUILD_NOTIFY" ]; then
+            echo "BUILD_NOTIFY secret is not set, skipping notification"
+            exit 0
+          fi
+          VERSION="${{ github.ref_name }}"
+          RELEASE_URL="${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          curl -sf -H "Content-Type: application/json" -d "$(jq -n \
+            --arg version "$VERSION" \
+            --arg releaseUrl "$RELEASE_URL" \
+          '{
+            "embeds": [{
+              "title": ("Release " + $version + " is Live"),
+              "description": ("**Binaries:** linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64, windows/arm64\n\n**Update existing install:**\n```\nurnet-tools update\n```\n\n**Linux fresh install:**\n```\ncurl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Linux.sh | sh\n```\n\n[View GitHub Release](" + $releaseUrl + ")"),
+              "color": 3066993,
+              "footer": { "text": "URNetwork Release Monitor" }
+            }]
+          }')" "$BUILD_NOTIFY"

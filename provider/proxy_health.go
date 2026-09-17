@@ -549,3 +549,37 @@ func DegradedProxies() []DegradedProxyEntry {
 
 	return result
 }
+
+
+// activeConnectionCount returns the current number of active client
+// connections across all registered proxies. The fork sourced this from
+// connect.ActiveConnectionCount(), an atomic counter incremented deep in
+// connect's IP-layer code (ip.go); v2026 connect exposes no equivalent.
+// Instead we sum the per-proxy client-session counts that this package
+// already tracks in proxy_health.go/bandwidth for the [health] report and
+// bandwidth_reporter.go, which is the same signal at proxy granularity.
+func activeConnectionCount() int64 {
+	_, _, _, bw, _ := ProxyHealthSnapshot()
+	var total int64
+	for _, b := range bw {
+		total += b.Clients.Load()
+	}
+	return total
+}
+
+// activeProxyConnections returns the count of proxies currently reporting at
+// least one active client. In the fork this was connect.ActiveProxyConnections(),
+// an atomic counter maintained in connect's transport layer (transport.go)
+// as transports were torn up/down; v2026 connect removed it. We derive the
+// same "how many proxies are actively serving traffic" signal from the
+// per-proxy client counts this package already tracks (proxy_health.go).
+func activeProxyConnections() int64 {
+	_, _, _, bw, _ := ProxyHealthSnapshot()
+	var serving int64
+	for _, b := range bw {
+		if b.Clients.Load() > 0 {
+			serving++
+		}
+	}
+	return serving
+}

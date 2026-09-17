@@ -98,10 +98,10 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 		}
 		tlog("%s\n", healthLine)
 
-		// Message-pool heartbeat: v2026 removed pool instrumentation.
-		// messagePoolSummary() always returns nil; the [health][pool] line
-		// is skipped. Retained as a placeholder for future re-instrumentation.
-		// pools := messagePoolSummary()
+		// Message-pool heartbeat: v2026 connect removed pool instrumentation
+		// entirely (now handled by memory_budget package). messagePoolSummary()
+		// always returns nil; the [health][pool] line is permanently skipped.
+		// See stubs_batch_m.go for the decision document.
 
 		if ProxyHealthCount() == 0 {
 			continue // non-proxy mode: no [health][proxies] lines

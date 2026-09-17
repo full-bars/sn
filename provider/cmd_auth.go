@@ -56,7 +56,8 @@ func auth(opts docopt.Opts) {
 		}
 	}
 	if 0 < maxMemory {
-		ResizeMessagePoolsPerClass(maxMemory / 8)
+		// REMOVED: ResizeMessagePoolsPerClass(maxMemory / 8)
+		// v2026 connect owns pool sizing via its memory_budget package.
 		debug.SetMemoryLimit(maxMemory)
 	}
 

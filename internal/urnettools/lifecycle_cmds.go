@@ -1,0 +1,272 @@
+package urnettools
+
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
+)
+
+// This file ports the lifecycle commands: auto-start, auto-update,
+// uninstall, reinstall. Like every command, they operate on the RESOLVED
+// provider — never a hardcoded $HOME path.
+
+// cmdAutoStart toggles whether the provider's unit starts on login.
+// Usage: urnet-tools auto-start on|off
+func cmdAutoStart(args []string, force, dryRun bool) error {
+	if len(args) == 0 {
+		return fmt.Errorf("auto-start requires on|off")
+	}
+	mode := args[0]
+	if mode != "on" && mode != "off" {
+		return fmt.Errorf("invalid value %q: must be on or off", mode)
+	}
+	t, _, err := parseTargetFlags(args[1:])
+	if err != nil {
+		return err
+	}
+	p, err := selectTarget(lifecycleCandidates(t), t)
+	if err != nil {
+		return err
+	}
+	if err := guardSystemdProvider(p); err != nil {
+		return err
+	}
+
+	if dryRun {
+		fmt.Printf("[dry-run] would %s auto-start for %s\n", mode, providerLabel(p))
+		return nil
+	}
+
+	return setAutoStart(p, mode == "on")
+}
+
+// cmdAutoUpdate manages the auto-update timer interval.
+// Usage: urnet-tools auto-update daily|weekly|monthly|off
+func cmdAutoUpdate(args []string, force, dryRun bool) error {
+	if len(args) == 0 {
+		return fmt.Errorf("auto-update requires daily|weekly|monthly|off")
+	}
+	interval := args[0]
+	// Validate the interval BEFORE targeting so an invalid value errors
+	// deterministically without needing a resolvable provider.
+	switch interval {
+	case "off", "daily", "weekly", "monthly":
+	default:
+		return fmt.Errorf("invalid interval %q: daily|weekly|monthly|off", interval)
+	}
+	t, _, err := parseTargetFlags(args[1:])
+	if err != nil {
+		return err
+	}
+	p, err := selectTarget(lifecycleCandidates(t), t)
+	if err != nil {
+		return err
+	}
+	if err := guardSystemdProvider(p); err != nil {
+		return err
+	}
+	label := autoUpdateLabel(p)
+	if dryRun {
+		fmt.Printf("[dry-run] would set auto-update %s for %s (%s)\n", interval, providerLabel(p), label)
+		return nil
+	}
+	return setAutoUpdateSchedule(p, label, interval)
+}
+
+// autoUpdateLabel returns a stable identifier for the auto-update scheduling
+// object (systemd timer on Linux, scheduled task on Windows). Platform-neutral
+// so dry-run output is uniform; the platform implementation derives its own
+// concrete name from it.
+func autoUpdateLabel(p Provider) string {
+	if p.Unit != "" {
+		return strings.TrimSuffix(p.Unit, ".service") + "-update"
+	}
+	return "urnetwork-update"
+}
+
+// cmdUninstall removes the provider: stops/disables the unit, removes the
+// install dir and state. Destructive gate applies.
+func cmdUninstall(args []string, force, dryRun bool) error {
+	// H2 fix: use guardLifecycleArgs to reject leftover positionals
+	// (e.g. `urnet-tools uninstall ps -f` would drop 'ps' and act on default).
+	t, err := guardLifecycleArgs("uninstall", args)
+	if err != nil {
+		return err
+	}
+	p, err := selectTarget(lifecycleCandidates(t), t)
+	if err != nil {
+		return err
+	}
+	if err := guardSystemdProvider(p); err != nil {
+		return err
+	}
+	ok, err := confirmGate("uninstall (remove binary, state, and unit) for "+providerLabel(p), p, force, dryRun)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+
+	if p.Unit != "" {
+		if isUserUnit(p.Unit) && p.User != "" {
+			args := append(systemctlUserArgs(p.User), "disable", "--now", p.Unit)
+			if out, err := exec.Command("systemctl", args...).CombinedOutput(); err != nil {
+				fmt.Fprintf(os.Stderr, "uninstall: warning: disable %s: %v (%s)\n", p.Unit, err, strings.TrimSpace(string(out)))
+			}
+		} else {
+			if out, err := exec.Command("systemctl", "disable", "--now", p.Unit).CombinedOutput(); err != nil {
+				fmt.Fprintf(os.Stderr, "uninstall: warning: disable %s: %v (%s)\n", p.Unit, err, strings.TrimSpace(string(out)))
+			}
+		}
+	}
+	// Clean up platform lifecycle artifacts: on Unix the auto-update timer,
+	// on Windows the scheduled tasks (heavyweight review S7).
+	cleanupLifecycle(p)
+	// Only remove paths that look like real install paths — never "/" or
+	// a bare relative path.
+	// Both guards clean the path so "/" and "/./" are caught identically.
+	// Removal errors are REPORTED, not hidden.
+	removedAny := false
+	hadErrors := false
+	if safeRemoveTarget(p.Binary) {
+		if err := os.Remove(p.Binary); err != nil {
+			fmt.Fprintf(os.Stderr, "uninstall: warning: could not remove binary %s: %v\n", p.Binary, err)
+			hadErrors = true
+		} else {
+			removedAny = true
+		}
+	}
+	if safeRemoveTarget(p.StateDir) {
+		if err := os.RemoveAll(p.StateDir); err != nil {
+			fmt.Fprintf(os.Stderr, "uninstall: warning: could not remove state dir %s: %v\n", p.StateDir, err)
+			hadErrors = true
+		} else {
+			removedAny = true
+		}
+	}
+	if hadErrors {
+		return fmt.Errorf("uninstall %s: partial — some paths could not be removed (see warnings)", providerLabel(p))
+	}
+	if removedAny {
+		fmt.Printf("Uninstalled %s (binary removed, unit disabled)\n", providerLabel(p))
+	} else {
+		fmt.Printf("Uninstall %s: nothing removable found (unit disabled if present)\n", providerLabel(p))
+	}
+	return nil
+}
+
+// safeRemoveTarget reports whether a path is safe to remove. It refuses:
+//   - empty / relative paths
+//   - the filesystem root
+//   - well-known top-level system dirs (/home, /etc, /usr, /var, /opt,
+//     /root, /srv) that would be catastrophic to RemoveAll
+//
+// What it does NOT check: the path's basename or parent structure. A
+// p.StateDir from --state-dir=<path> argv (parsed in discover_unix.go)
+// or a process with HOME=/ is NOT separately validated here — the
+// caller is responsible for not feeding such paths in.
+func safeRemoveTarget(path string) bool {
+	if path == "" {
+		return false
+	}
+	cleaned := filepath.Clean(path)
+	if cleaned == "" || cleaned == "." {
+		return false
+	}
+	if runtime.GOOS == "windows" {
+		vol := filepath.VolumeName(cleaned)
+		if vol != "" && (len(cleaned) == len(vol)+1 || cleaned == vol) {
+			return false
+		}
+		if cleaned == `\\\\` || cleaned == "//" {
+			return false
+		}
+		if !filepath.IsAbs(cleaned) {
+			return false
+		}
+		return true
+	}
+	// Unix: require absolute, not root, and not a top-level system dir.
+	if !strings.HasPrefix(cleaned, "/") || cleaned == "/" {
+		return false
+	}
+	// Refuse well-known system root paths. These are the only paths that
+	// would be catastrophic to RemoveAll — the rest require at least the
+	// user to have been able to write a file there in the first place.
+	switch cleaned {
+	case "/", "/home", "/etc", "/usr", "/var", "/opt", "/root", "/srv":
+		return false
+	}
+	return true
+}
+
+// cmdReinstall delegates to the legacy installer script for a full
+// reinstall of the targeted provider (the installer handles the complete
+// flow; the Go tool resolves which provider/user to target).
+func cmdReinstall(args []string, force, dryRun bool) error {
+	// H2 fix: use guardLifecycleArgs to reject leftover positionals.
+	t, err := guardLifecycleArgs("reinstall", args)
+	if err != nil {
+		return err
+	}
+	p, err := selectTarget(lifecycleCandidates(t), t)
+	if err != nil {
+		return err
+	}
+	if err := guardSystemdProvider(p); err != nil {
+		return err
+	}
+	ok, err := confirmGate("reinstall (rerun installer) for "+providerLabel(p), p, force, dryRun)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+	// Reinstall to the current release by reusing the already-hardened
+	// download + verify + atomic-install + restart path (updateProvider).
+	// This replaces the old behavior that recursively exec'd
+	// "urnet-tools reinstall" (the tool exec'ing itself), which never
+	// actually reinstalled anything and failed with a misleading stdin
+	// error in non-interactive mode. A current-Go-tool "reinstall" is
+	// exactly "re-fetch the provider binary at its canonical path, ensure
+	// the unit, restart" — the same verified flow `update` already uses.
+	// If dryRun, resolve the release (read-only) and report the plan.
+	release, err := latestRelease()
+	if err != nil {
+		return err
+	}
+	cfg := updateConfig{Tag: release.Tag, Digest: release.ProviderDigest, AssetURL: release.URL}
+	if dryRun {
+		fmt.Printf("[dry-run] would reinstall %s from %s (digest %s)\n",
+			providerLabel(p), cfg.Tag, cfg.Digest)
+		return nil
+	}
+	stageDir, err := newStageDir()
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(stageDir)
+	cfg.StageDir = stageDir
+	// Resolve tool asset for staged-restart escalation (best effort).
+	if toolAsset, terr := runningToolAssetName(); terr == nil {
+		cfg.ToolAsset = toolAsset
+		cfg.ToolDigest = digestForAsset(release.Assets, cfg.ToolAsset)
+	}
+	return updateProviderWithRestart(p, cfg, stageToolForEscalation(cfg))
+}
+
+// writeTimerUnitAtomic writes a timer unit file via temp+rename so a crash
+// never leaves a half-written unit. Platform-neutral (pure file I/O), shared
+// by the platform lifecycle implementations and the cross-platform tests.
+func writeTimerUnitAtomic(path string, content string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	// M7 fix: unpredictable temp name + fsync for crash safety.
+	return writeFileAtomic(path, []byte(content), 0o644)
+}
