@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build and Push Docker Image
 
 on:
   push:
@@ -21,6 +21,11 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_IMAGE_NAME: 3cape/sn
 
 jobs:
   test:
@@ -100,8 +105,190 @@ jobs:
             exit 1
           fi
 
+      - name: Docker update-source guard (fork-only release fetches)
+        run: |
+          # The docker self-update scripts must ONLY ever fetch provider
+          # releases from this fork.
+          violations=0
+          for f in docker/scripts/*.sh; do
+            while read -r url; do
+              org_repo="$(printf '%s' "$url" | sed -E 's#.*/repos/([^/"]+/[^/"]+).*#\1#')"
+              case "$org_repo" in
+                full-bars/*) ;;
+                *)
+                  echo "VIOLATION $f: $url"
+                  echo "  -> docker update fetches must target full-bars/* only"
+                  violations=$((violations+1))
+                  ;;
+              esac
+            done < <(grep -oE 'https://api\.github\.com/repos/[^"]+' "$f" || true)
+          done
+          if [ "$violations" -gt 0 ]; then
+            echo "$violations upstream-fetch violation(s) found"
+            exit 1
+          fi
+          chmod +x docker/scripts/test_update_verify.sh
+          ./docker/scripts/test_update_verify.sh
+
+      - name: Pelican egg checks (JSON validity, var contract, updater disabled)
+        run: |
+          egg=pelican/egg-urnetwork-h3.json
+
+          jq -e '.meta.version == "PLCN_v3"
+                 and (.docker_images | length == 1)
+                 and ([.docker_images[]][0] | test("^ghcr\\.io/full-bars/sn:latest$"))
+                 and .startup_commands.Default == "sh /app/entrypoint.sh"
+                 and (.config.startup | fromjson | .done == "Provider")' "$egg" >/dev/null \
+            || { echo "FAIL: egg JSON structure invalid"; exit 1; }
+
+          # Required variables with their panel-side roles
+          check_var() {
+            env="$1"; viewable="$2"; editable="$3"; default="$4"
+            jq -e --arg env "$env" --argjson v "$viewable" --argjson e "$editable" \
+                  --arg d "$default" \
+              '[.variables[] | select(.env_variable == $env)][0]
+               and ([.variables[] | select(.env_variable == $env)][0].user_viewable == $v)
+               and ([.variables[] | select(.env_variable == $env)][0].user_editable == $e)
+               and ([.variables[] | select(.env_variable == $env)][0].default_value == $d)' \
+              "$egg" >/dev/null \
+              || { echo "FAIL: variable contract broken: $env"; exit 1; }
+          }
+          check_var BUILD      true  true  'stable'
+          check_var USER_AUTH  true  true  ''
+          check_var PASSWORD   false true  ''
+          check_var AUTHCODE   false true  ''
+          check_var PELICAN    false false 'yes'
+          check_var ENABLE_VNSTAT     false false 'false'
+          check_var ENABLE_IP_CHECKER false false 'false'
+
+          # Under PELICAN=yes no runtime self-update may exist
+          grep -q 'PELICAN' docker/scripts/start_nightly.sh \
+            || { echo "FAIL: nightly update check not PELICAN-gated"; exit 1; }
+          sed -n '/^do_update()/,/^[a-z_]*() {/^do_update/p' docker/scripts/urnet-tools.sh | head -12 | grep -q 'PELICAN' \
+            || { echo "FAIL: do_update not PELICAN-gated"; exit 1; }
+
+      - name: Pelican panel boot smoke (fake provider binary)
+        run: |
+          chmod +x docker/scripts/test_pelican_smoke.sh
+          ./docker/scripts/test_pelican_smoke.sh
+
+      - name: Pelican gate behavioral tests + egg invariants
+        run: |
+          chmod +x docker/scripts/test_pelican_gates.sh
+          ./docker/scripts/test_pelican_gates.sh
+
+      - name: Shellcheck docker scripts (error severity)
+        run: |
+          sudo apt-get install -y shellcheck >/dev/null 2>&1
+          status=0
+          for f in docker/scripts/*.sh; do
+            if ! shellcheck -S error "$f"; then
+              status=1
+            fi
+          done
+          exit $status
+
       - name: Run vulnerability check
         continue-on-error: true
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
+
+  build-and-push:
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to the Container registry
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          flavor: |
+            latest=false
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ env.DOCKER_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-rc') && !contains(github.ref, '-alpha') && !contains(github.ref, '-beta') }}
+            type=ref,event=branch
+            type=sha,format=short
+
+      - name: Determine version for build
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || echo "dev")
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+
+      - name: Assert a pre-release did not become :latest
+        if: ${{ github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/') && (contains(github.ref, '-rc') || contains(github.ref, '-alpha') || contains(github.ref, '-beta')) }}
+        run: |
+          set -euo pipefail
+          REPO="full-bars/sn"
+          TAG="${GITHUB_REF_NAME}"
+          TOK=$(curl -sf "https://ghcr.io/token?scope=repository:${REPO}:pull&service=ghcr.io" \
+                | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+          ACCEPT='application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.docker.distribution.manifest.v2+json'
+          digest_of() {
+            curl -sfI -H "Authorization: Bearer ***" -H "Accept: ${ACCEPT}" \
+              "https://ghcr.io/v2/${REPO}/manifests/$1" 2>/dev/null \
+              | grep -i '^docker-content-digest' | tr -d '\r' | awk '{print $2}'
+          }
+          RC_DIGEST=$(digest_of "$TAG")
+          LATEST_DIGEST=$(digest_of latest)
+          echo "pre-release tag $TAG = ${RC_DIGEST:-<none>}"
+          echo ":latest             = ${LATEST_DIGEST:-<none>}"
+          if [ -z "$RC_DIGEST" ]; then
+            echo "::error::could not resolve the digest for $TAG; refusing to pass this check blind"
+            exit 1
+          fi
+          if [ "$LATEST_DIGEST" = "$RC_DIGEST" ]; then
+            echo "::error:::latest now points at pre-release $TAG. Restore :latest to the current stable tag before proceeding."
+            exit 1
+          fi
+          echo ":latest does not point at the pre-release - OK"

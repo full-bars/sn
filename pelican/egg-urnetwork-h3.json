@@ -1,0 +1,188 @@
+{
+    "_comment": "UrNetwork provider egg for full-bars/sn (H3/QUIC). Updates are owned by the image (re-pull); runtime self-update is disabled inside the container.",
+    "meta": {
+        "version": "PLCN_v3",
+        "update_url": null
+    },
+    "exported_at": "2026-09-17T00:00:00+00:00",
+    "name": "UrNetwork (full-bars H3/QUIC)",
+    "author": "full-bars",
+    "uuid": "c2e5b3a9-7d08-4f13-ad42-1f6b88e3c9da",
+    "description": "URnetwork provider (H3/QUIC fork). Accepts stable, nightly, or jwt mode. Credentials stay admin-only.",
+    "image": null,
+    "tags": [
+        "urnetwork",
+        "vpn",
+        "provider"
+    ],
+    "features": [],
+    "docker_images": {
+        "UrNetwork H3/QUIC": "ghcr.io/full-bars/sn:latest"
+    },
+    "file_denylist": [],
+    "startup_commands": {
+        "Default": "sh /app/entrypoint.sh"
+    },
+    "config": {
+        "files": "{}",
+        "startup": "{\n    \"done\": \"Provider\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": null,
+            "container": "ghcr.io/pelican-eggs/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "BUILD",
+            "description": "Startup mode. stable = tested release; nightly = development snapshot built from main; jwt = authenticate with an auth code instead of user/password (requires AUTHCODE).",
+            "env_variable": "BUILD",
+            "default_value": "stable",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "in:stable,nightly,jwt"
+            ],
+            "sort": 1
+        },
+        {
+            "name": "Email or phone",
+            "description": "Your URnetwork account email or phone. Required for BUILD=stable and BUILD=nightly. Ignored for BUILD=jwt.",
+            "env_variable": "USER_AUTH",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ],
+            "sort": 2
+        },
+        {
+            "name": "Password",
+            "description": "Account password for USER_AUTH. Required for BUILD=stable and BUILD=nightly. Admin-only: users cannot view this value in the panel.",
+            "env_variable": "PASSWORD",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ],
+            "sort": 3
+        },
+        {
+            "name": "Auth code",
+            "description": "One-time authentication code from https://ur.io for passwordless login. Required when BUILD=jwt. Admin-only.",
+            "env_variable": "AUTHCODE",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ],
+            "sort": 4
+        },
+        {
+            "name": "Proxy URLs",
+            "description": "Comma-separated URLs to proxy lists (e.g. https://example.com/proxies.txt). The provider fetches them at startup and auto-refreshes on the interval set by PROXY_URL_REFRESH. Leave empty to disable URL-sourced proxies.",
+            "env_variable": "PROXY_URL",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ],
+            "sort": 5
+        },
+        {
+            "name": "Proxy file path",
+            "description": "Path to a mounted proxy file inside the container. Mount your proxy list as a volume to this path (e.g. -v /path/to/proxies.txt:/app/proxies.txt). Format: one proxy per line (host:port:user:pass). Leave empty to disable file-based proxies.",
+            "env_variable": "PROXY_FILE",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ],
+            "sort": 6
+        },
+        {
+            "name": "Proxy refresh interval",
+            "description": "How often to re-fetch PROXY_URL sources (e.g. 30m, 1h, 2h). Default 1h.",
+            "env_variable": "PROXY_URL_REFRESH",
+            "default_value": "1h",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ],
+            "sort": 7
+        },
+        {
+            "name": "Max proxies from URLs",
+            "description": "Upper bound on proxies pulled from PROXY_URL sources. Default 500.",
+            "env_variable": "PROXY_URL_MAX",
+            "default_value": "500",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ],
+            "sort": 8
+        },
+        {
+            "name": "Pelican mode",
+            "description": "Signal for the container that it runs under a panel. Do not change: also disables runtime binary updates so the image stays the single source of truth.",
+            "env_variable": "PELICAN",
+            "default_value": "yes",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "string",
+                "in:yes"
+            ],
+            "sort": 9
+        },
+        {
+            "name": "Traffic monitor",
+            "description": "vnStat web UI on port 8080. Disabled by default for security (it exposes fleet traffic without authentication). Enable only via a custom image build.",
+            "env_variable": "ENABLE_VNSTAT",
+            "default_value": "false",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "string",
+                "in:false"
+            ],
+            "sort": 10
+        },
+        {
+            "name": "IP checker",
+            "description": "Diagnostic that prints the container's full public IP to the console at startup. Off by default.",
+            "env_variable": "ENABLE_IP_CHECKER",
+            "default_value": "false",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "string",
+                "in:false"
+            ],
+            "sort": 11
+        }
+    ]
+}
