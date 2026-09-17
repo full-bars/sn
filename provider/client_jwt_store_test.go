@@ -95,6 +95,53 @@ func TestClientJWTStorePruneStaleEntries(t *testing.T) {
 	}
 }
 
+// TestClientJWTStorePruneSurvivesLaterFlush is a regression test: loadLocked
+// prunes stale entries only in the in-memory map. flushLocked reloads the
+// raw on-disk file (to merge concurrent writers) and, without re-applying
+// the same filter, would write the stale entry straight back to disk the
+// next time ANY other key flushed — silently undoing the prune. This puts a
+// stale entry, reloads (pruning it in memory), flushes an unrelated key, and
+// checks a fresh reload from disk still doesn't see the stale entry.
+func TestClientJWTStorePruneSurvivesLaterFlush(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "client_jwts.json")
+	store := newClientJWTStore(path)
+
+	if err := store.Put("stale-proxy", clientJWTEntry{
+		ByClientJWT: "irrelevant",
+		ClientID:    testClientId,
+		MintedAt:    time.Now().Add(-clientJWTStaleAfter - 24*time.Hour),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Reload: loadLocked prunes stale-proxy from this instance's in-memory
+	// map, but the on-disk file still has it (loadLocked never writes).
+	reloaded := newClientJWTStore(path)
+	if _, ok := reloaded.Get("stale-proxy"); ok {
+		t.Fatal("expected stale entry to be pruned on load")
+	}
+
+	// Flush an unrelated key. Before the fix, flushLocked's on-disk reload
+	// pulls stale-proxy back in from disk and writes it out again.
+	if err := reloaded.Put("unrelated-proxy", clientJWTEntry{
+		ByClientJWT: "irrelevant",
+		ClientID:    testClientId,
+		MintedAt:    time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// A third, independent instance reading the same file must not see the
+	// stale entry resurrected by the flush above.
+	final := newClientJWTStore(path)
+	if _, ok := final.Get("stale-proxy"); ok {
+		t.Fatal("stale entry was resurrected on disk by an unrelated flush")
+	}
+	if _, ok := final.Get("unrelated-proxy"); !ok {
+		t.Fatal("expected the unrelated flush's own entry to persist")
+	}
+}
+
 func TestClientJWTStoreDelete(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "client_jwts.json")
 	store := newClientJWTStore(path)
