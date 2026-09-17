@@ -164,7 +164,7 @@ jobs:
           # Under PELICAN=yes no runtime self-update may exist
           grep -q 'PELICAN' docker/scripts/start_nightly.sh \
             || { echo "FAIL: nightly update check not PELICAN-gated"; exit 1; }
-          sed -n '/^do_update()/,/^[a-z_]*() {/^do_update/p' docker/scripts/urnet-tools.sh | head -12 | grep -q 'PELICAN' \
+          sed -n '/^do_update()/,/^[a-z_]/p' docker/scripts/urnet-tools.sh | head -12 | grep -q 'PELICAN' \
             || { echo "FAIL: do_update not PELICAN-gated"; exit 1; }
 
       - name: Pelican panel boot smoke (fake provider binary)
