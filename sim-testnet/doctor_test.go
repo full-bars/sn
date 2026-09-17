@@ -235,7 +235,7 @@ func TestApprovedDoctorFactsAcceptExactPartialPrefixAndRejectAdjacentDrift(t *te
 }
 
 func TestRuntimeVersionIdentityAcceptsAuthoritativeNormalEncoding(t *testing.T) {
-	raw := json.RawMessage(`{"specName":"node-subtensor","implName":"node-subtensor","authoringVersion":1,"specVersion":460,"implVersion":0,"apis":[["0xdf6acb689907609b",4]],"transactionVersion":1,"stateVersion":1}`)
+	raw := json.RawMessage(`{"specName":"node-subtensor","implName":"node-subtensor","authoringVersion":1,"specVersion":461,"implVersion":0,"apis":[["0xdf6acb689907609b",4]],"transactionVersion":1,"stateVersion":1}`)
 	version, err := decodeRuntimeVersionIdentity(raw)
 	if err != nil {
 		t.Fatalf("authoritative runtime version was not decoded: %v", err)
@@ -659,7 +659,7 @@ func TestReleaseHistoryRuntimeArtifactsCoverExactReviewedVersionDomain(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantSpecs := []uint32{460, 451, 452, 453, 454, 455, 458, 459}
+	wantSpecs := []uint32{461, 451, 452, 453, 454, 455, 458, 459, 460}
 	if len(artifacts) != len(wantSpecs) {
 		t.Fatalf("history artifacts=%d, want %d", len(artifacts), len(wantSpecs))
 	}
