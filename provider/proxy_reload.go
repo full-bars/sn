@@ -745,5 +745,4 @@ func (r *ProxyReloader) reload() {
 	}
 }
 
-
 var proxyWarmupDone atomic.Bool

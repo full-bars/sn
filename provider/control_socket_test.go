@@ -16,7 +16,6 @@ import (
 	"time"
 )
 
-
 func resetGlobalControlStateForTest() {
 	globalControlState.txMu.Lock()
 	defer globalControlState.txMu.Unlock()

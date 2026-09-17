@@ -34,7 +34,6 @@ func TestAcceptLoopSurvivesTransientErrors(t *testing.T) {
 	}
 }
 
-
 // SetReadDeadline does not cover writes. A client that sends a request and
 // then stops reading blocks the response write forever, leaking a goroutine
 // and a descriptor per connection.

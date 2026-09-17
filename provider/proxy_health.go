@@ -550,7 +550,6 @@ func DegradedProxies() []DegradedProxyEntry {
 	return result
 }
 
-
 // activeConnectionCount returns the current number of active client
 // connections across all registered proxies. The fork sourced this from
 // connect.ActiveConnectionCount(), an atomic counter incremented deep in

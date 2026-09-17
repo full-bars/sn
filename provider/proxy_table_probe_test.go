@@ -5,7 +5,6 @@ import (
 	"net"
 	"testing"
 	"time"
-
 )
 
 // listenSocks5ConnectOnce starts a TCP listener that answers the SOCKS5

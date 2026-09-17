@@ -60,7 +60,6 @@ func TestApplyLiveSideEffectLogsTheEffectiveValue(t *testing.T) {
 	}
 }
 
-
 // `off` means clear for every tuning key, so it cannot also mean "disable
 // the collector" for gogc without making the dangerous reading the default
 // one. `disabled` is the explicit, self-describing value that reaches

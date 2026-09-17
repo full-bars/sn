@@ -533,6 +533,5 @@ func printNetworkIdCmd(opts docopt.Opts) {
 // ensure docopt import is used (indirect via opts type)
 var _ docopt.Opts
 
-
 // VersionStamp is an alternative version marker embedded as program data.
 var VersionStamp string

@@ -292,7 +292,7 @@ func provideLaunchGoroutines(st *provideState) {
 					tlog("[hourly-maintenance] reconnecting stalled transports: down=%d dead=%d degraded=%d connecting=%d\n",
 						down, len(dead), len(degraded), len(connecting))
 				}
-			// TriggerPulse() removed — v2026 connect handles stall recovery.
+				// TriggerPulse() removed — v2026 connect handles stall recovery.
 			}
 		}
 	}()
@@ -1070,7 +1070,6 @@ func closeAllCaches(st *provideState) {
 		st.cleanupControlSocket()
 	}
 }
-
 
 // provideStartTime records when provide() began; used for uptime display
 // and warmup pacing.

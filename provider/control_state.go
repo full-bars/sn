@@ -462,7 +462,6 @@ func (s *controlState) persist() error {
 	return nil
 }
 
-
 // sessionFilesAllowlist mirrors internal/urnettools/session_cmds.go's allowlist
 // so only canonical session files are promoted from staging.
 var sessionFilesAllowlist = map[string]bool{

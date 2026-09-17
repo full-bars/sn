@@ -18,7 +18,6 @@ import (
 
 func almostEq(a, b float64) bool { return math.Abs(a-b) < 1e-9 }
 
-
 func TestNormalizeRamp(t *testing.T) {
 	// (value, lo, hi) → 0 below lo, 1 above hi, linear between
 	if v := normalizeRamp(5, 10, 60); v != 0 {

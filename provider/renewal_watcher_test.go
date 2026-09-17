@@ -2,14 +2,13 @@ package provider
 
 import (
 	"context"
-	"os"
 	"errors"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/urnetwork/connect"
 )
-
 
 func TestRunProxyJWTWatcherRenewsOnExpiry(t *testing.T) {
 	setRenewalTestHome(t)

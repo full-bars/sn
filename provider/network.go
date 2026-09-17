@@ -117,6 +117,5 @@ func resolveAPIProbeHostPort() (string, uint16) {
 	return apiProbeHostPort(apiUrl)
 }
 
-
 // DefaultConnectUrl is the fallback connect URL.
 const DefaultConnectUrl = "wss://connect.bringyour.com"

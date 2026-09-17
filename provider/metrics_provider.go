@@ -461,7 +461,6 @@ func providerExtraMetrics() string {
 	return b.String()
 }
 
-
 // metricBytesToMiB converts a runtime/metrics value to MiB.
 // Real implementation ported from fork main.go:1299.
 func metricBytesToMiB(name string, v metrics.Value) uint64 {

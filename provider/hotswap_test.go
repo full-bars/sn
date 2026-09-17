@@ -43,7 +43,6 @@ func createFakeHotswapJWT(exp int64) string {
 	return createFakeHotswapJWTWithClaims(map[string]interface{}{"exp": float64(exp)})
 }
 
-
 // ---------------------------------------------------------------------------
 // From hotswap_common_test.go: Framing tests
 // ---------------------------------------------------------------------------

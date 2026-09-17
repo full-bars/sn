@@ -35,4 +35,3 @@ func TestClearReportsFailureAsFailure(t *testing.T) {
 		t.Error("a clear path returns OK:true alongside an Error; callers checking OK see success")
 	}
 }
-

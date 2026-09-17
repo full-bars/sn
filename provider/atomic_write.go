@@ -149,7 +149,6 @@ func tryLoadJSON(path string, target interface{}) (bool, error) {
 	return true, nil
 }
 
-
 // atomicWriteFile writes data to a file atomically using a temp file + rename.
 // Real implementation ported from fork main.go:678.
 func atomicWriteFile(path string, data []byte, perm os.FileMode) error {
