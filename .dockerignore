@@ -33,5 +33,6 @@ Thumbs.db
 # Build artifacts
 /bin/
 /dist/
-/provider
-/urnet-tools
+/provider_bin
+/urnet_tools_bin
+/urnet_docker_bin

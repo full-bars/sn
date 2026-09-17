@@ -12,6 +12,9 @@ RUN apk add --no-cache git gcc musl-dev
 # cacheable layer (only invalidated when go.mod/go.sum change)
 COPY go.mod go.sum ./
 
+# Local replace targets (third_party/npipe) must exist before go mod download
+COPY third_party/ ./third_party/
+
 # Download modules once (cached across builds unless manifests change)
 RUN go mod download
 
