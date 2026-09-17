@@ -5,6 +5,7 @@ import (
 	"net"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/urnetwork/connect"
 )
@@ -81,6 +82,17 @@ func TestWrapExistingDialContextSettings(t *testing.T) {
 // address, not the destination address — proving the SOCKS5 proxy dialer
 // was actually invoked rather than bypassed for a direct connection.
 func TestWrapConnectSettingsPreservesProxyRouting(t *testing.T) {
+	// Bind a local listener so dialing succeeds promptly if the proxy is
+	// bypassed (proving the bypass path would connect to the destination).
+	// The proxy at 127.0.0.1:1 still fails before reaching this listener.
+	lc := net.ListenConfig{}
+	ln, err := lc.Listen(context.Background(), "tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	dest := ln.Addr().String()
+
 	cs := connect.ConnectSettings{
 		ProxySettings: &connect.ProxySettings{
 			Network: "tcp",
@@ -97,14 +109,16 @@ func TestWrapConnectSettingsPreservesProxyRouting(t *testing.T) {
 		t.Fatal("expected DialContextSettings to be set")
 	}
 
-	_, err := wrapped.DialContextSettings.DialContext(context.Background(), "tcp", "10.0.0.1:9999")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err = wrapped.DialContextSettings.DialContext(ctx, "tcp", dest)
 	if err == nil {
 		t.Fatal("expected dial to fail (nothing listens on 127.0.0.1:1)")
 	}
-	// A bypassed dial would attempt "dial tcp 10.0.0.1:9999" directly and
-	// hang/fail on an unreachable address without ever mentioning the proxy.
-	// The SOCKS5 dialer instead fails fast against the proxy itself and
-	// reports that as the underlying cause — proof the proxy hop ran.
+	// A bypassed dial would attempt to connect to the local listener and
+	// succeed — proving the proxy hop was skipped. The SOCKS5 dialer
+	// instead fails fast against 127.0.0.1:1 and reports that as the
+	// underlying cause — proof the proxy hop ran.
 	if !strings.Contains(err.Error(), "dial tcp 127.0.0.1:1") {
 		t.Fatalf("expected dial error to show a failed TCP connect to the proxy address 127.0.0.1:1 (proof the SOCKS5 dialer ran), got: %v", err)
 	}
