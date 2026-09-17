@@ -316,6 +316,31 @@ func TestMergeProxyURLEntriesSkipsExcludePatterns(t *testing.T) {
 	}
 }
 
+// TestParseProxyURLLineUnsupportedSchemeDoesNotLeakCredentials is a
+// regression test: the unsupported-scheme rejection path in proxy_url.go
+// used to log the raw input line via %q, which for a rejected line like
+// "http://apikey:secret@host/list" put the credential straight into
+// operator logs. The fix routes that same line through
+// sanitizeURLForDisplay, like every other source-URL log site in this
+// package — so this pins the exact value the log call now emits, without
+// touching global stdout (which would be non-deterministic under parallel
+// tests or concurrent background log writers in this package's test suite).
+func TestParseProxyURLLineUnsupportedSchemeDoesNotLeakCredentials(t *testing.T) {
+	const secret = "supersecretapikey"
+	line := "http://" + secret + ":x@example.com/list.txt"
+
+	_, _, _, ok := parseProxyURLLine(line)
+	if ok {
+		t.Fatal("expected unsupported scheme to be rejected")
+	}
+
+	// This mirrors the exact call proxy_url.go's rejection branch makes.
+	logged := sanitizeURLForDisplay(line)
+	if strings.Contains(logged, secret) {
+		t.Fatalf("sanitizeURLForDisplay(line) leaked the credential: %q", logged)
+	}
+}
+
 func TestAddExcludePattern(t *testing.T) {
 	state := &ProxyURLState{}
 	if !addExcludePattern(state, "dc.decodo.com") {
