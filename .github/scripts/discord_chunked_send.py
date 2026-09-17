@@ -21,7 +21,7 @@ MAX_CHUNK = 4000  # under Discord's 4096 limit; leaves room for other fields
 
 # Discord's documented User-Agent format for API clients.
 USER_AGENT = (
-    "DiscordBot (https://github.com/full-bars/urnetwork-3.23-fix, 1.0)"
+    "DiscordBot (https://github.com/full-bars/sn, 1.0)"
 )
 
 

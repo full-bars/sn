@@ -1,11 +1,11 @@
 # Area labels, applied automatically from the paths a PR touches.
 # Consumed by .github/workflows/pr-labeler.yml (actions/labeler v5).
 #
-# The workflow was ported from urnetwork-3.23-fix but this mapping file
+# The workflow was ported from the 3.23-fix fork but this mapping file
 # never came with it, so every PR's "area" job has been failing with a
 # labeler config 404 since the workflow was added. This is the missing
 # config, adapted to this repo's own layout (provider + the Bittensor
-# subnet/chain side, which 3.23-fix doesn't have).
+# subnet/chain side, which the 3.23-fix fork doesn't have).
 #
 # Deliberately coarse: the goal is "which part of the repo does this touch"
 # so a PR can be found again later, not a precise taxonomy. A PR touching

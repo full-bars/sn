@@ -77,6 +77,7 @@ func isDockerCandidate(image, name string) bool {
 	il := strings.ToLower(image)
 	nl := strings.ToLower(name)
 	return strings.Contains(il, "urnetwork") || strings.Contains(nl, "urnet") ||
+		strings.Contains(il, "full-bars/sn") || strings.Contains(nl, "full-bars/sn") ||
 		strings.Contains(il, "meso") || strings.Contains(nl, "meso") ||
 		strings.Contains(il, "miner") || strings.Contains(nl, "miner")
 }

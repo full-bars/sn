@@ -466,12 +466,6 @@ show_version ()
     fi
 
     if [ -z "$latest_version" ]; then
-        if latest_version="$(network_fetch "https://dl.fullbars.xyz/latest-version" 2>/dev/null)"; then
-            latest_version="$(printf "%s" "$latest_version" | tr -d '[:space:]')"
-        fi
-    fi
-
-    if [ -z "$latest_version" ]; then
         echo "Latest version: (could not check for updates)"
         return
     fi
@@ -1099,13 +1093,6 @@ do_install ()
         version_to_install="$tag"
     fi
 
-    # Fallback: try dl.fullbars.xyz latest-version endpoint
-    if [ -z "$version_to_install" ]; then
-        if worker_version="$(network_fetch "https://dl.fullbars.xyz/latest-version" 2>/dev/null)"; then
-            version_to_install="$(printf "%s" "$worker_version" | tr -d '[:space:]')"
-        fi
-    fi
-
     if [ -z "$version_to_install" ]; then
         pr_err "Failed to fetch release information for tag: %s" "$tag"
         exit 1
@@ -1164,8 +1151,8 @@ do_install ()
         pr_err "Could not resolve 'latest' tag to a specific version. GitHub API might be unreachable."
         exit 1
     fi
-    dl_url="https://dl.fullbars.xyz/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
-    mirror_url="https://github.com/full-bars/sn/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    dl_url="https://github.com/full-bars/sn/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    mirror_url="$dl_url"
     
     pr_info "Downloading: %s" "$dl_url"
     
@@ -1248,8 +1235,8 @@ do_install ()
     tool_installed=0
     if [ -n "$tag" ] && [ "$tag" != "latest" ]; then
         tool_asset="urnet-tools-linux-$arch"
-        tool_dl_url="https://dl.fullbars.xyz/releases/download/$tag/$tool_asset"
-        tool_mirror_url="https://github.com/full-bars/sn/releases/download/$tag/$tool_asset"
+        tool_dl_url="https://github.com/full-bars/sn/releases/download/$tag/$tool_asset"
+        tool_mirror_url="$tool_dl_url"
 
         # Resolve the digest from the release API. Empty digest = the release
         # predates tool assets (or the asset is missing) → fall back to shell.

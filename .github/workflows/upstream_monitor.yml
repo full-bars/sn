@@ -121,7 +121,7 @@ jobs:
                 gh api \
                   --method POST \
                   -H "Accept: application/vnd.github+json" \
-                  /repos/full-bars/urnetwork-3.23-fix/dispatches \
+                  /repos/full-bars/sn/dispatches \
                   -f event_type=cfaa-sync-request \
                   -f "client_payload[pr_number]=${PR_NUMBER}" \
                   -f "client_payload[pr_title]=${PR_TITLE}" \

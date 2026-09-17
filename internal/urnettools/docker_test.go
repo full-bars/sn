@@ -15,11 +15,11 @@ func TestIsDockerCandidate(t *testing.T) {
 		name  string
 		want  bool
 	}{
-		{"ghcr.io/full-bars/urnetwork-3.23-fix:latest", "urnet", true},
-		{"urnetwork-3.23-fix:stable", "provider1", true},
+		{"ghcr.io/full-bars/sn:latest", "urnet", true},
+		{"urnetwork:stable", "provider1", true},
 		{"nginx:latest", "web", false},
 		{"redis:7", "cache", false},
-		{"ghcr.io/full-bars/urnetwork-3.23-fix:latest", "anything", true},
+		{"ghcr.io/full-bars/sn:latest", "anything", true},
 		{"ubuntu:24.04", "urnet-test", true}, // name match is enough
 	}
 	for _, c := range cases {
@@ -36,7 +36,7 @@ func TestDockerImageVersion(t *testing.T) {
 		image string
 		want  string
 	}{
-		{"ghcr.io/full-bars/urnetwork-3.23-fix:v3.23.0-fix.27.0", "v3.23.0-fix.27.0"},
+		{"ghcr.io/full-bars/sn:v3.23.0-fix.27.0", "v3.23.0-fix.27.0"},
 		{"probe-test:mainnet", ""}, // plain tag, not version-like
 		{"nginx:latest", ""},       // latest is not a version
 		{"redis:7", ""},            // bare digit, not version-like
