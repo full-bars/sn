@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 import (
@@ -9,8 +7,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/urnetwork/connect"
 )
 
 func TestDegradedReaperKeepCount(t *testing.T) {
@@ -42,7 +38,7 @@ func TestDegradedReaperKeepCount(t *testing.T) {
 }
 
 func TestDegradedReaper_ContributionRanking(t *testing.T) {
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "low:1", TotalRxBytes: 100, TotalTxBytes: 50},
 		{Index: 1, Address: "high:1", TotalRxBytes: 10000, TotalTxBytes: 5000},
 		{Index: 2, Address: "mid:1", TotalRxBytes: 1000, TotalTxBytes: 500},
@@ -65,7 +61,7 @@ func TestDegradedReaper_ContributionRanking(t *testing.T) {
 }
 
 func TestDegradedReaper_ContractScoreAddsToTraffic(t *testing.T) {
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "traffic_only:1", TotalRxBytes: 1000, TotalTxBytes: 500},
 		{Index: 1, Address: "contracts_help:1", TotalRxBytes: 1000, TotalTxBytes: 500},
 	}
@@ -92,7 +88,7 @@ func TestDegradedReaper_ContractScoreAddsToTraffic(t *testing.T) {
 }
 
 func TestDegradedReaper_ZeroTraffic(t *testing.T) {
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "zero:1"},
 		{Index: 1, Address: "some:1", TotalRxBytes: 500},
 	}
@@ -107,7 +103,7 @@ func TestDegradedReaper_ZeroTraffic(t *testing.T) {
 }
 
 func TestDegradedReaper_StableSortKeepsEqualScoresStable(t *testing.T) {
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "a:1", TotalRxBytes: 100, TotalTxBytes: 50},
 		{Index: 1, Address: "b:1", TotalRxBytes: 100, TotalTxBytes: 50},
 	}
@@ -122,7 +118,7 @@ func TestDegradedReaper_StableSortKeepsEqualScoresStable(t *testing.T) {
 }
 
 func TestDegradedReaper_SelectKeepsBestContributors(t *testing.T) {
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "worst:1", TotalRxBytes: 10, DownFor: degradedReaperMinDownTime},
 		{Index: 1, Address: "mid:1", TotalRxBytes: 100, DownFor: degradedReaperMinDownTime},
 		{Index: 2, Address: "best:1", TotalRxBytes: 1000, DownFor: degradedReaperMinDownTime},
@@ -153,7 +149,7 @@ func TestDegradedReaper_SelectKeepsBestContributors(t *testing.T) {
 }
 
 func TestDegradedReaper_RespectsMinDownTime(t *testing.T) {
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "above:1", DownFor: degradedReaperMinDownTime + 1},
 		{Index: 1, Address: "below:1", DownFor: 10 * time.Minute},
 		{Index: 2, Address: "far_above:1", DownFor: 60 * time.Minute},
@@ -175,7 +171,7 @@ func TestDegradedReaper_RespectsMinDownTime(t *testing.T) {
 func TestDegradedReaper_MinDownTimeBoundaryIsInclusive(t *testing.T) {
 	// DownFor exactly equal to the threshold must still be reap-eligible —
 	// the production check is `DownFor < minDownTime`, so equality passes.
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "exact:1", DownFor: degradedReaperMinDownTime},
 		{Index: 1, Address: "one_ns_short:1", DownFor: degradedReaperMinDownTime - 1},
 	}
@@ -190,7 +186,7 @@ func TestDegradedReaper_MinDownTimeBoundaryIsInclusive(t *testing.T) {
 }
 
 func TestDegradedReaper_AllAboveThreshold(t *testing.T) {
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "a:1", DownFor: 60 * time.Minute},
 		{Index: 1, Address: "b:1", DownFor: 90 * time.Minute},
 		{Index: 2, Address: "c:1", DownFor: 120 * time.Minute},
@@ -227,7 +223,7 @@ func TestDegradedReaper_EmptyOrSingleDegradedDoesNothing(t *testing.T) {
 }
 
 func TestDegradedReaper_MissingCancelEntry(t *testing.T) {
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "exists:1", TotalRxBytes: 10, DownFor: degradedReaperMinDownTime},
 		{Index: 1, Address: "missing:1", TotalRxBytes: 100, DownFor: degradedReaperMinDownTime},
 	}
@@ -250,7 +246,7 @@ func TestDegradedReaper_MissingCancelEntry(t *testing.T) {
 
 func TestDegradedReaper_LargeScale(t *testing.T) {
 	n := 4001
-	entries := make([]connect.DegradedProxyEntry, n)
+	entries := make([]DegradedProxyEntry, n)
 	cancelMap := make(map[string]context.CancelFunc, n)
 	cancelled := make(map[string]bool, n)
 	var callMu sync.Mutex
@@ -260,7 +256,7 @@ func TestDegradedReaper_LargeScale(t *testing.T) {
 		addr := fmt.Sprintf("p%d:1", i)
 		rx := uint64(rng.Int63n(1 << 40))
 		tx := uint64(rng.Int63n(1 << 40))
-		entries[i] = connect.DegradedProxyEntry{
+		entries[i] = DegradedProxyEntry{
 			Index:        i,
 			Address:      addr,
 			DownFor:      degradedReaperMinDownTime + time.Duration(rng.Intn(360))*time.Minute,
@@ -315,7 +311,7 @@ func TestDegradedReaper_LargeScale(t *testing.T) {
 }
 
 func TestDegradedReaper_AllDegradedUnder30Min(t *testing.T) {
-	entries := []connect.DegradedProxyEntry{
+	entries := []DegradedProxyEntry{
 		{Index: 0, Address: "a:1", DownFor: 5 * time.Minute},
 		{Index: 1, Address: "b:1", DownFor: 10 * time.Minute},
 		{Index: 2, Address: "c:1", DownFor: 20 * time.Minute},
@@ -349,7 +345,7 @@ func TestOnlyCancellableProxies_ExcludesDirect(t *testing.T) {
 	// proxy and can appear in connect.DegradedProxies(), but is deliberately
 	// never added to proxyCancelMap (must be immune to hot-reload deletions)
 	// and must never be reaped.
-	degraded := []connect.DegradedProxyEntry{
+	degraded := []DegradedProxyEntry{
 		{Index: 0, Address: "direct", TotalRxBytes: 999999999}, // best contributor by traffic
 		{Index: 1, Address: "proxy1:1", TotalRxBytes: 10},
 		{Index: 2, Address: "proxy2:1", TotalRxBytes: 20},
@@ -374,7 +370,7 @@ func TestOnlyCancellableProxies_ExcludesDirect(t *testing.T) {
 }
 
 func TestOnlyCancellableProxies_EmptyWhenNoneCancellable(t *testing.T) {
-	degraded := []connect.DegradedProxyEntry{
+	degraded := []DegradedProxyEntry{
 		{Index: 0, Address: "direct", TotalRxBytes: 10},
 	}
 	cancelMap := map[string]context.CancelFunc{}
@@ -391,7 +387,7 @@ func TestDirectNeverReachesReapDecision_EndToEnd(t *testing.T) {
 	// Full pipeline check: even though "direct" is the worst-ish contributor
 	// by score in a naive read, it must never appear in toReap because
 	// onlyCancellableProxies removes it before scoring ever happens.
-	degraded := []connect.DegradedProxyEntry{
+	degraded := []DegradedProxyEntry{
 		{Index: 0, Address: "direct", TotalRxBytes: 0, DownFor: time.Hour}, // worst score, oldest down
 		{Index: 1, Address: "proxy1:1", TotalRxBytes: 10, DownFor: time.Hour},
 		{Index: 2, Address: "proxy2:1", TotalRxBytes: 20, DownFor: time.Hour},
@@ -415,7 +411,7 @@ func TestDirectNeverReachesReapDecision_EndToEnd(t *testing.T) {
 }
 
 func TestReapProxies_SkipsProxyThatRecoveredSinceDecision(t *testing.T) {
-	toReap := []connect.DegradedProxyEntry{
+	toReap := []DegradedProxyEntry{
 		{Index: 0, Address: "recovered:1"},
 		{Index: 1, Address: "still_down:1"},
 	}
@@ -450,7 +446,7 @@ func TestReapProxies_SkipsProxyThatRecoveredSinceDecision(t *testing.T) {
 }
 
 func TestReapProxies_CancelsAndDeletesWhenStillDegraded(t *testing.T) {
-	toReap := []connect.DegradedProxyEntry{
+	toReap := []DegradedProxyEntry{
 		{Index: 0, Address: "stuck:1"},
 	}
 	called := false

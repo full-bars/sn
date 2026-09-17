@@ -1,5 +1,3 @@
-//go:build ignore
-
 // TODO: references creditEarningsAt and withGlobalEarningsStore which are not in h3-provider
 
 package provider
@@ -107,7 +105,7 @@ func TestWarmthStillOutranksEarnings(t *testing.T) {
 		"exp":        float64(time.Now().Add(time.Hour).Unix()),
 		"network_id": "net-main",
 	})
-	_ = globalClientJWTStore.Put("warm-broke", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("warm-broke", clientJWTEntry{
 		ByClientJWT: validJWT, ClientID: testClientId, NetworkID: "net-main",
 	})
 
@@ -197,7 +195,7 @@ func TestWarmURLBeatsColdPromotedURL(t *testing.T) {
 		"exp":        float64(time.Now().Add(time.Hour).Unix()),
 		"network_id": "net-main",
 	})
-	_ = globalClientJWTStore.Put("url-warm", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("url-warm", clientJWTEntry{
 		ByClientJWT: validJWT, ClientID: testClientId, NetworkID: "net-main",
 	})
 
@@ -234,7 +232,7 @@ func TestWarmURLBeatsColdFileProxy(t *testing.T) {
 		"exp":        float64(time.Now().Add(time.Hour).Unix()),
 		"network_id": "net-main",
 	})
-	_ = globalClientJWTStore.Put("url-warm", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("url-warm", clientJWTEntry{
 		ByClientJWT: validJWT, ClientID: testClientId, NetworkID: "net-main",
 	})
 

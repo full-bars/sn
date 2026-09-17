@@ -38,3 +38,14 @@ func backoffPacerWithDelay(baseDelay time.Duration, slotDuration time.Duration, 
 	}
 	return true
 }
+
+// backoffPacer is the legacy v3.23 wrapper kept for test compatibility.
+// It converts integer n and staggerMs into the baseDelay/slotDuration
+// shape that backoffPacerWithDelay expects.
+func backoffPacer(n int, staggerMs int, now time.Time, proxyCtx context.Context) bool {
+	if staggerMs <= 0 {
+		return true
+	}
+	baseDelay := time.Duration(n) * time.Duration(staggerMs) * time.Millisecond
+	return backoffPacerWithDelay(baseDelay, time.Duration(staggerMs)*time.Millisecond, proxyCtx)
+}

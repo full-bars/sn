@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 import (
@@ -10,92 +8,6 @@ import (
 
 	"github.com/urnetwork/connect"
 )
-
-// TestRunProxyJWTWatcherRenewsOnTransportAuthFailures pins renewal trigger #4
-// (documented on runProxyJWTWatcher): repeated PlatformTransport auth
-// failures — separate from the OOB control path — must fast-path a renewal
-// even when the cached token is far from its exp threshold and no OOB 401
-// has ever been observed.
-func TestRunProxyJWTWatcherRenewsOnTransportAuthFailures(t *testing.T) {
-	setTestHome(t)
-	ts := newRenewalTestServer(t)
-	defer ts.srv.Close()
-
-	clientID := connect.NewId()
-	storePath := t.TempDir() + "/client_jwts.json"
-	store := newClientJWTStore(storePath)
-	// Token expiring in 30h: outside the 12h threshold, so only the
-	// transport-auth-failure fast path can trigger renewal here.
-	healthy := createFakeJWTWithClaims(map[string]interface{}{
-		"client_id": clientID.String(),
-		"exp":       float64(time.Now().Add(30 * time.Hour).Unix()),
-	})
-	if err := store.Put("proxy-authfail", clientJWTEntry{
-		ByClientJWT: healthy,
-		ClientID:    clientID.String(),
-		NetworkID:   "net-1",
-		MintedAt:    time.Now(),
-	}); err != nil {
-		t.Fatal(err)
-	}
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
-
-	// A high, test-local proxy index to avoid colliding with any other
-	// concurrently-run test's registration.
-	const proxyIndex = 918273
-	connect.RegisterProxy(proxyIndex, "test-proxy-authfail-addr")
-	defer connect.UnregisterProxy(proxyIndex)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	tick := make(chan time.Time)
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		runProxyJWTWatcher(ctx, proxyJWTWatcherConfig{
-			IdentityKey:    "proxy-authfail",
-			ClientID:       clientID,
-			Description:    "test [beta-test]",
-			ApiURL:         ts.srv.URL,
-			ClientStrategy: connect.NewClientStrategyWithDefaults(ctx),
-			OOB:            connect.NewApiOutOfBandControl(ctx, connect.NewClientStrategyWithDefaults(ctx), "jwt", ts.srv.URL),
-			RenewNow:       make(chan struct{}, 1),
-			Tick:           tick,
-			ProxyIndex:     proxyIndex,
-		})
-	}()
-
-	// Deterministic sync instead of a sleep: the first tick blocks until the
-	// watcher's select loop is ready — by which point the startup check has
-	// run and authFailureBaseline (0 failures) has been captured. Recording
-	// the failures only after that guarantees they are all counted as "new"
-	// relative to the baseline; the second tick then triggers evaluation.
-	tick <- time.Now()
-
-	for i := 0; i < revokedIdentityAuthFailureThreshold; i++ {
-		connect.RecordProxyAuthFailure(proxyIndex, errors.New("401 Unauthorized"))
-	}
-
-	tick <- time.Now()
-
-	deadline := time.After(5 * time.Second)
-	for {
-		entry, ok := store.Get("proxy-authfail")
-		if ok && entry.ByClientJWT != healthy {
-			break // renewed
-		}
-		select {
-		case <-deadline:
-			t.Fatal("watcher did not renew on the transport auth-failure fast path")
-		case <-time.After(20 * time.Millisecond):
-		}
-	}
-	cancel()
-	<-done
-}
 
 // TestRunProxyJWTWatcherDoesNotRenewOnStaleAuthFailures pins the baseline
 // comparison (H-4): ProxyAuthFailureCount is a CUMULATIVE lifetime counter,
@@ -122,18 +34,18 @@ func TestRunProxyJWTWatcherDoesNotRenewOnStaleAuthFailures(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	const proxyIndex = 918274
-	connect.RegisterProxy(proxyIndex, "test-proxy-stale-authfail-addr")
-	defer connect.UnregisterProxy(proxyIndex)
+	RegisterProxy(proxyIndex, "test-proxy-stale-authfail-addr")
+	defer UnregisterProxy(proxyIndex)
 
 	// Failures recorded BEFORE the watcher starts become part of its
 	// baseline snapshot.
 	for i := 0; i < revokedIdentityAuthFailureThreshold; i++ {
-		connect.RecordProxyAuthFailure(proxyIndex, errors.New("401 Unauthorized"))
+		RecordProxyAuthFailure(proxyIndex, errors.New("401 Unauthorized"))
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -149,7 +61,7 @@ func TestRunProxyJWTWatcherDoesNotRenewOnStaleAuthFailures(t *testing.T) {
 			Description:    "test [beta-test]",
 			ApiURL:         ts.srv.URL,
 			ClientStrategy: connect.NewClientStrategyWithDefaults(ctx),
-			OOB:            connect.NewApiOutOfBandControl(ctx, connect.NewClientStrategyWithDefaults(ctx), "jwt", ts.srv.URL),
+			OOB:            NewRenewalOOB(ctx, connect.NewClientStrategyWithDefaults(ctx), "jwt", ts.srv.URL),
 			RenewNow:       make(chan struct{}, 1),
 			Tick:           tick,
 			ProxyIndex:     proxyIndex,

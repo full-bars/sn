@@ -1,16 +1,14 @@
-//go:build ignore
-
 package provider
 
 import (
 	"testing"
 	"time"
 
-	"github.com/urnetwork/connect"
+	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
 // TestEarnTracker_SnapshotKeyFormatMatchesProduction pins the review
-// CRITICAL: connect.ProxyHealthSnapshot keys its bandwidth map with the
+// CRITICAL: ProxyHealthSnapshot keys its bandwidth map with the
 // FORMATTED "proxy[N] (addr)" key (formatProxyEntry), not the raw
 // address. The earn tracker must normalize that key back to the raw
 // address, or EarnedSince(rawAddr) never matches and the paid grader's
@@ -20,13 +18,13 @@ import (
 func TestEarnTracker_SnapshotKeyFormatMatchesProduction(t *testing.T) {
 	const idx = 9001
 	const addr = "198.51.100.7:443"
-	defer connect.UnregisterProxy(idx)
+	defer UnregisterProxy(idx)
 
-	bw := connect.RegisterProxyBandwidth(idx)
-	connect.RegisterProxy(idx, addr)
+	bw := RegisterProxyBandwidth(idx)
+	RegisterProxy(idx, addr)
 
 	// First snapshot establishes the per-address baseline (no delta).
-	_, _, _, snap1, _ := connect.ProxyHealthSnapshot()
+	_, _, _, snap1, _ := ProxyHealthSnapshot()
 	globalPerProxyEarnTracker.Update(snap1)
 	if globalPerProxyEarnTracker.EarnedSince(addr, time.Minute) {
 		t.Fatal("baseline tick must not mark earned (first sight has no prior counter)")
@@ -35,7 +33,7 @@ func TestEarnTracker_SnapshotKeyFormatMatchesProduction(t *testing.T) {
 	// Advance the counter and snapshot again: the positive delta must be
 	// recorded under the RAW address key.
 	bw.BillableRx.Store(1 << 20)
-	_, _, _, snap2, _ := connect.ProxyHealthSnapshot()
+	_, _, _, snap2, _ := ProxyHealthSnapshot()
 	globalPerProxyEarnTracker.Update(snap2)
 
 	if !globalPerProxyEarnTracker.EarnedSince(addr, time.Minute) {
@@ -52,10 +50,10 @@ func TestEarnTracker_SnapshotKeyFormatMatchesProduction(t *testing.T) {
 func TestEarnTracker_RawKeysPassThrough(t *testing.T) {
 	tr := newPerProxyEarnTracker()
 	const addr = "203.0.113.9:443"
-	bw := &connect.ProxyBandwidth{}
-	tr.Update(map[string]*connect.ProxyBandwidth{addr: bw})
+	bw := &bandwidth.ProxyBandwidth{}
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{addr: bw})
 	bw.BillableRx.Store(4096)
-	tr.Update(map[string]*connect.ProxyBandwidth{addr: bw})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{addr: bw})
 	if !tr.EarnedSince(addr, time.Minute) {
 		t.Fatal("raw-address keys must be tracked as-is")
 	}
@@ -69,19 +67,19 @@ func TestEarnTracker_PrunesChurnedAddresses(t *testing.T) {
 	tr := newPerProxyEarnTracker()
 	const a1 = "203.0.113.1:443"
 	const a2 = "203.0.113.2:443"
-	bw1 := &connect.ProxyBandwidth{}
-	bw2 := &connect.ProxyBandwidth{}
+	bw1 := &bandwidth.ProxyBandwidth{}
+	bw2 := &bandwidth.ProxyBandwidth{}
 
 	// a1 earns.
-	tr.Update(map[string]*connect.ProxyBandwidth{a1: bw1})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{a1: bw1})
 	bw1.BillableRx.Store(100)
-	tr.Update(map[string]*connect.ProxyBandwidth{a1: bw1})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{a1: bw1})
 	if !tr.EarnedSince(a1, time.Minute) {
 		t.Fatal("a1 must be marked earned before the churn")
 	}
 
 	// a2 only now: a1 left the live set and must be pruned.
-	tr.Update(map[string]*connect.ProxyBandwidth{a2: bw2})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{a2: bw2})
 	if _, ok := tr.LastEarned(a1); ok {
 		t.Fatal("churned address must be pruned from lastEarned")
 	}
@@ -96,12 +94,12 @@ func TestEarnTracker_PrunesChurnedAddresses(t *testing.T) {
 
 	// a2 advances -> earned; a re-added a1 starts fresh (baseline again).
 	bw2.BillableRx.Store(50)
-	tr.Update(map[string]*connect.ProxyBandwidth{a2: bw2})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{a2: bw2})
 	if !tr.EarnedSince(a2, time.Minute) {
 		t.Fatal("a2 must be marked earned after its counter advances")
 	}
 	bw1.BillableRx.Store(200)
-	tr.Update(map[string]*connect.ProxyBandwidth{a1: bw1})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{a1: bw1})
 	if tr.EarnedSince(a1, time.Minute) {
 		t.Fatal("re-added address must re-establish its baseline before earning")
 	}
@@ -109,7 +107,7 @@ func TestEarnTracker_PrunesChurnedAddresses(t *testing.T) {
 
 // TestProxyKeyAddress_NormalizesFormats pins proxyKeyAddress's contract
 // directly: formatted "proxy[N] (addr)" keys (the shape
-// connect.ProxyHealthSnapshot actually produces) normalize to the raw
+// ProxyHealthSnapshot actually produces) normalize to the raw
 // address, while a raw address (no " (" separator) passes through
 // unchanged.
 func TestProxyKeyAddress_NormalizesFormats(t *testing.T) {
@@ -176,12 +174,12 @@ func TestEarnTracker_MultipleAddressesIndependent(t *testing.T) {
 	tr := newPerProxyEarnTracker()
 	const earning = "203.0.113.10:443"
 	const quiet = "203.0.113.11:443"
-	bwEarning := &connect.ProxyBandwidth{}
-	bwQuiet := &connect.ProxyBandwidth{}
+	bwEarning := &bandwidth.ProxyBandwidth{}
+	bwQuiet := &bandwidth.ProxyBandwidth{}
 
-	tr.Update(map[string]*connect.ProxyBandwidth{earning: bwEarning, quiet: bwQuiet})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{earning: bwEarning, quiet: bwQuiet})
 	bwEarning.BillableTx.Store(2048) // only the "earning" address advances
-	tr.Update(map[string]*connect.ProxyBandwidth{earning: bwEarning, quiet: bwQuiet})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{earning: bwEarning, quiet: bwQuiet})
 
 	if !tr.EarnedSince(earning, time.Minute) {
 		t.Fatal("address with a positive delta must be marked earned")
@@ -197,10 +195,10 @@ func TestEarnTracker_MultipleAddressesIndependent(t *testing.T) {
 func TestEarnTracker_ZeroDeltaTickIsNotEarned(t *testing.T) {
 	tr := newPerProxyEarnTracker()
 	const addr = "203.0.113.12:443"
-	bw := &connect.ProxyBandwidth{}
+	bw := &bandwidth.ProxyBandwidth{}
 	bw.BillableRx.Store(1000)
-	tr.Update(map[string]*connect.ProxyBandwidth{addr: bw}) // baseline at 1000
-	tr.Update(map[string]*connect.ProxyBandwidth{addr: bw}) // still 1000: no delta
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{addr: bw}) // baseline at 1000
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{addr: bw}) // still 1000: no delta
 	if tr.EarnedSince(addr, time.Minute) {
 		t.Fatal("an unchanged cumulative counter must not be treated as earning")
 	}
@@ -214,10 +212,10 @@ func TestEarnTracker_ZeroDeltaTickIsNotEarned(t *testing.T) {
 func TestEarnTracker_EmptySnapshotPrunesAll(t *testing.T) {
 	tr := newPerProxyEarnTracker()
 	const addr = "203.0.113.4:443"
-	bw := &connect.ProxyBandwidth{}
-	tr.Update(map[string]*connect.ProxyBandwidth{addr: bw})
+	bw := &bandwidth.ProxyBandwidth{}
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{addr: bw})
 	bw.BillableRx.Store(1024)
-	tr.Update(map[string]*connect.ProxyBandwidth{addr: bw})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{addr: bw})
 	if !tr.EarnedSince(addr, time.Minute) {
 		t.Fatal("addr must be earning before the empty snapshot")
 	}
@@ -240,16 +238,16 @@ func TestEarnTracker_EmptySnapshotPrunesAll(t *testing.T) {
 func TestEarnTracker_BackwardsCounterIsNotEarned(t *testing.T) {
 	tr := newPerProxyEarnTracker()
 	const addr = "203.0.113.3:443"
-	bw := &connect.ProxyBandwidth{}
-	tr.Update(map[string]*connect.ProxyBandwidth{addr: bw})
+	bw := &bandwidth.ProxyBandwidth{}
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{addr: bw})
 	bw.BillableRx.Store(5000)
-	tr.Update(map[string]*connect.ProxyBandwidth{addr: bw})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{addr: bw})
 	if !tr.EarnedSince(addr, time.Minute) {
 		t.Fatal("positive delta must mark earned")
 	}
 	// Simulate a restart: counters reset to a lower value.
 	bw.BillableRx.Store(0)
-	tr.Update(map[string]*connect.ProxyBandwidth{addr: bw})
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{addr: bw})
 	// LastEarned must still hold the PREVIOUS earn time — a backwards
 	// counter is not an earn event and must not advance the clock to now
 	// in a way that could re-trigger anything; it also must not wipe the

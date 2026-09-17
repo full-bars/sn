@@ -65,8 +65,8 @@ func currentProviderNetworkID() string {
 			}
 		}
 	}
-	if globalClientJWTStore != nil {
-		return globalClientJWTStore.AnyNetworkID()
+	if loadGlobalClientJWTStore() != nil {
+		return loadGlobalClientJWTStore().AnyNetworkID()
 	}
 	return ""
 }
@@ -91,13 +91,13 @@ func evaluateProxyWarmth(address string, currentNetworkID string) ProxyWarmthTie
 	if !hotRestartEnabled() {
 		return WarmthCold
 	}
-	if globalClientJWTStore == nil {
+	if loadGlobalClientJWTStore() == nil {
 		return WarmthCold
 	}
 	if currentNetworkID == "" {
 		currentNetworkID = currentProviderNetworkID()
 	}
-	entry, ok := globalClientJWTStore.Get(address)
+	entry, ok := loadGlobalClientJWTStore().Get(address)
 	if !ok || entry.ByClientJWT == "" || entry.ClientID == "" {
 		return WarmthCold
 	}

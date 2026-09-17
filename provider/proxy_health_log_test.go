@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 import (
@@ -9,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/urnetwork/connect"
+	"github.com/urfoundation/sn/provider/bandwidth"
 )
 
 func TestCapProxyList(t *testing.T) {
@@ -26,7 +24,7 @@ func TestCapProxyList(t *testing.T) {
 }
 
 func TestFormatStateFile(t *testing.T) {
-	r := connect.ProxyHealthReport{
+	r := ProxyHealthReport{
 		Up:                3,
 		Dead:              []string{"proxy[2] (c:1)"},
 		Degraded:          []string{"proxy[1] (b:1)"},
@@ -51,10 +49,10 @@ func TestFormatStateFile(t *testing.T) {
 }
 
 func TestFormatEventLines(t *testing.T) {
-	r := connect.ProxyHealthReport{
-		Recovered:     []connect.ProxyEvent{{Index: 1, Address: "b:1", After: 55*time.Minute + 8*time.Second}},
-		NewlyDegraded: []connect.ProxyEvent{{Index: 3, Address: "d:1"}},
-		NewlyDead:     []connect.ProxyEvent{{Index: 2, Address: "c:1"}},
+	r := ProxyHealthReport{
+		Recovered:     []ProxyEvent{{Index: 1, Address: "b:1", After: 55*time.Minute + 8*time.Second}},
+		NewlyDegraded: []ProxyEvent{{Index: 3, Address: "d:1"}},
+		NewlyDead:     []ProxyEvent{{Index: 2, Address: "c:1"}},
 	}
 	now := time.Date(2026, 6, 2, 16, 5, 11, 0, time.UTC)
 	lines := formatEventLines(r, now)
@@ -72,8 +70,8 @@ func TestFormatEventLines(t *testing.T) {
 }
 
 func TestFormatEventLinesRecoveredWithoutLatency(t *testing.T) {
-	r := connect.ProxyHealthReport{
-		Recovered: []connect.ProxyEvent{{Index: 0, Address: "a:1"}}, // After == 0 -> omit
+	r := ProxyHealthReport{
+		Recovered: []ProxyEvent{{Index: 0, Address: "a:1"}}, // After == 0 -> omit
 	}
 	now := time.Date(2026, 6, 2, 16, 0, 0, 0, time.UTC)
 	lines := formatEventLines(r, now)
@@ -107,10 +105,10 @@ func TestRotateIfNeeded(t *testing.T) {
 
 func TestWriteProxyHealthFiles(t *testing.T) {
 	dir := t.TempDir()
-	r := connect.ProxyHealthReport{
+	r := ProxyHealthReport{
 		Up:        1,
 		Dead:      []string{"proxy[2] (c:1)"},
-		NewlyDead: []connect.ProxyEvent{{Index: 2, Address: "c:1"}},
+		NewlyDead: []ProxyEvent{{Index: 2, Address: "c:1"}},
 	}
 	now := time.Date(2026, 6, 2, 16, 0, 0, 0, time.UTC)
 
@@ -135,7 +133,7 @@ func TestWriteProxyHealthFiles(t *testing.T) {
 
 	// No events -> event log unchanged (no empty append).
 	before, _ := os.ReadFile(filepath.Join(dir, "proxy_health.log"))
-	writeProxyHealthEvents(dir, connect.ProxyHealthReport{}, now)
+	writeProxyHealthEvents(dir, ProxyHealthReport{}, now)
 	after, _ := os.ReadFile(filepath.Join(dir, "proxy_health.log"))
 	if string(before) != string(after) {
 		t.Fatalf("empty report should not append to event log")
@@ -143,18 +141,18 @@ func TestWriteProxyHealthFiles(t *testing.T) {
 }
 
 func TestFormatTrafficStateFile(t *testing.T) {
-	bw1 := &connect.ProxyBandwidth{}
+	bw1 := &bandwidth.ProxyBandwidth{}
 	bw1.BillableTx.Store(1024)
 	bw1.BillableRx.Store(2048)
 	bw1.TotalTx.Store(4096)
 	bw1.TotalRx.Store(8192)
 	bw1.Clients.Store(42)
 
-	bw2 := &connect.ProxyBandwidth{}
+	bw2 := &bandwidth.ProxyBandwidth{}
 	bw2.BillableTx.Store(5000) // bw2 is higher than bw1 so it should be sorted first
 
-	r := connect.ProxyHealthReport{
-		Bandwidth: map[string]*connect.ProxyBandwidth{
+	r := ProxyHealthReport{
+		Bandwidth: map[string]*bandwidth.ProxyBandwidth{
 			"proxy[1] (1.1.1.1:1080)": bw1,
 			"proxy[2] (2.2.2.2:1080)": bw2,
 		},
@@ -194,8 +192,8 @@ func TestFormatTrafficStateFile(t *testing.T) {
 
 func TestWriteProxyTrafficState(t *testing.T) {
 	dir := t.TempDir()
-	r := connect.ProxyHealthReport{
-		Bandwidth: map[string]*connect.ProxyBandwidth{},
+	r := ProxyHealthReport{
+		Bandwidth: map[string]*bandwidth.ProxyBandwidth{},
 	}
 	now := time.Date(2026, 6, 2, 16, 0, 0, 0, time.UTC)
 

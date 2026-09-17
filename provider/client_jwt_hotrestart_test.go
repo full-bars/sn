@@ -17,11 +17,11 @@ import (
 // from the process-wide default (which points at the real ~/.urnetwork).
 func withGlobalStore(t *testing.T, path string) func() {
 	t.Helper()
-	orig := globalClientJWTStore
+	orig := loadGlobalClientJWTStore()
 	// Reset loaded flag on the swapped-in store so the next Get/Put runs
 	// loadLocked against the (temp) path.
-	globalClientJWTStore = newClientJWTStore(path)
-	return func() { globalClientJWTStore = orig }
+	storeGlobalClientJWTStore(newClientJWTStore(path))
+	return func() { storeGlobalClientJWTStore(orig) }
 }
 
 // withHome points os.UserHomeDir-equivalent code at a temp dir by setting
@@ -265,7 +265,7 @@ func TestProvideAuthReusesValidUnexpiredEntry(t *testing.T) {
 		"client_id": testClientId,
 		"exp":       float64(time.Now().Add(time.Hour).Unix()),
 	})
-	_ = globalClientJWTStore.Put("direct", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("direct", clientJWTEntry{
 		ByClientJWT: goodJwt,
 		ClientID:    testClientId,
 		NetworkID:   "net-1", // matches current → reuse
@@ -309,7 +309,7 @@ func TestProvideAuthRenewsOnExpiredEntry(t *testing.T) {
 		"client_id": testClientId,
 		"exp":       float64(time.Now().Add(-time.Hour).Unix()),
 	})
-	_ = globalClientJWTStore.Put("direct", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("direct", clientJWTEntry{
 		ByClientJWT: expiredJwt,
 		ClientID:    testClientId,
 		NetworkID:   "net-1",
@@ -351,7 +351,7 @@ func TestProvideAuthRenewsOnExpiredEntry(t *testing.T) {
 
 	// The renewal must persist the fresh JWT so the next restart reuses it
 	// without going to the network.
-	stored, ok := globalClientJWTStore.Get("direct")
+	stored, ok := loadGlobalClientJWTStore().Get("direct")
 	if !ok {
 		t.Fatal("renewed entry should be in store after Put")
 	}
@@ -386,7 +386,7 @@ func TestProvideAuthFallsThroughOnRenewalFailure(t *testing.T) {
 		NetworkID:   "net-1",
 		MintedAt:    time.Now().Add(-25 * time.Hour),
 	}
-	_ = globalClientJWTStore.Put("direct", originalEntry)
+	_ = loadGlobalClientJWTStore().Put("direct", originalEntry)
 
 	origFn := renewClientJWTFn
 	defer func() { renewClientJWTFn = origFn }()
@@ -406,7 +406,7 @@ func TestProvideAuthFallsThroughOnRenewalFailure(t *testing.T) {
 	}()
 	_, _, _, _ = provideAuth(nil, nil, "", docopt.Opts{}, "node", "direct")
 
-	stored, ok := globalClientJWTStore.Get("direct")
+	stored, ok := loadGlobalClientJWTStore().Get("direct")
 	if !ok {
 		t.Fatal("store entry should still exist (renewal failure must not delete)")
 	}
@@ -438,7 +438,7 @@ func TestProvideAuthMismatchMintsFresh(t *testing.T) {
 		NetworkID:   "net-X", // mismatch
 		MintedAt:    time.Now(),
 	}
-	_ = globalClientJWTStore.Put("direct", originalEntry)
+	_ = loadGlobalClientJWTStore().Put("direct", originalEntry)
 
 	calls := 0
 	origFn := renewClientJWTFn
@@ -458,7 +458,7 @@ func TestProvideAuthMismatchMintsFresh(t *testing.T) {
 	if calls != 0 {
 		t.Errorf("renewal called %d times on mismatch, want 0", calls)
 	}
-	stored, _ := globalClientJWTStore.Get("direct")
+	stored, _ := loadGlobalClientJWTStore().Get("direct")
 	if stored.NetworkID != "net-X" {
 		t.Errorf("store NetworkID changed to %q, mismatch path must not touch store", stored.NetworkID)
 	}
@@ -481,7 +481,7 @@ func TestProvideAuthRejectsCurrentJWTWithoutNetworkID(t *testing.T) {
 		"client_id": testClientId,
 		"exp":       float64(time.Now().Add(time.Hour).Unix()),
 	})
-	_ = globalClientJWTStore.Put("direct", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("direct", clientJWTEntry{
 		ByClientJWT: validJwt,
 		ClientID:    testClientId,
 		NetworkID:   "", // legacy
@@ -525,7 +525,7 @@ func TestProvideAuthFillsMissingNetworkIDFromStore(t *testing.T) {
 		"exp":        float64(time.Now().Add(time.Hour).Unix()),
 		"network_id": "net-1",
 	})
-	_ = globalClientJWTStore.Put("direct", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("direct", clientJWTEntry{
 		ByClientJWT: goodJwt,
 		ClientID:    testClientId,
 		NetworkID:   "net-1",
@@ -567,7 +567,7 @@ func TestProvideAuthSelfHealStampsNetworkID(t *testing.T) {
 		"client_id": testClientId,
 		"exp":       float64(time.Now().Add(time.Hour).Unix()),
 	})
-	_ = globalClientJWTStore.Put("direct", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("direct", clientJWTEntry{
 		ByClientJWT: goodJwt,
 		ClientID:    testClientId,
 		NetworkID:   "", // legacy
@@ -590,7 +590,7 @@ func TestProvideAuthSelfHealStampsNetworkID(t *testing.T) {
 		t.Error("expected reuse")
 	}
 
-	stored, _ := globalClientJWTStore.Get("direct")
+	stored, _ := loadGlobalClientJWTStore().Get("direct")
 	if stored.NetworkID != "net-1" {
 		t.Errorf("self-heal: store NetworkID = %q, want stamped %q", stored.NetworkID, "net-1")
 	}

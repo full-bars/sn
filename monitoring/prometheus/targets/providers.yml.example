@@ -1,0 +1,9 @@
+# Copy to providers.yml, or let ./setup.sh write it for you.
+# One entry per provider. `targets` is the address `urnet-tools metrics status`
+# prints on that node; `instance` is the name shown in Grafana.
+- targets: ["100.64.0.10:9100"]
+  labels:
+    instance: "node-1"
+- targets: ["100.64.0.11:9101"]
+  labels:
+    instance: "node-2"

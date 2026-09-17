@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 import (
@@ -8,13 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/urfoundation/sn/provider/bandwidth"
 	"github.com/urnetwork/connect"
 )
 
 // bwWith builds a bandwidth snapshot entry carrying a cumulative billable
 // total split across rx and tx, the shape the health snapshot produces.
-func bwWith(billable uint64) *ProxyBandwidth {
-	bw := &ProxyBandwidth{}
+func bwWith(billable uint64) *bandwidth.ProxyBandwidth {
+	bw := &bandwidth.ProxyBandwidth{}
 	bw.BillableRx.Store(billable)
 	return bw
 }
@@ -33,7 +32,7 @@ func TestEarningsFirstObservationOnlySetsBaseline(t *testing.T) {
 	// A proxy first seen already carrying a cumulative total must not be
 	// credited with that total: the counter is cumulative for the process,
 	// not earnings observed by this store.
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(5000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(5000)}, now)
 
 	if got := s.Score("a:1080", now); got != 0 {
 		t.Fatalf("score after baseline observation = %v, want 0", got)
@@ -44,8 +43,8 @@ func TestEarningsPositiveDeltaRaisesScore(t *testing.T) {
 	s := newProxyEarningsStore(filepath.Join(t.TempDir(), "earn.json"))
 	now := time.Now()
 
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(1000)}, now)
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(3500)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(1000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(3500)}, now)
 
 	if got := s.Score("a:1080", now); got != 2500 {
 		t.Fatalf("score after 2500-byte delta = %v, want 2500", got)
@@ -56,17 +55,17 @@ func TestEarningsCounterResetContributesNothing(t *testing.T) {
 	s := newProxyEarningsStore(filepath.Join(t.TempDir(), "earn.json"))
 	now := time.Now()
 
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(1000)}, now)
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(4000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(1000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(4000)}, now)
 	// The proxy restarts and its counter resets. A backwards counter is not
 	// negative earnings; it re-baselines.
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(10)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(10)}, now)
 
 	if got := s.Score("a:1080", now); got != 3000 {
 		t.Fatalf("score after counter reset = %v, want 3000 (unchanged)", got)
 	}
 	// And the re-baseline must hold: the next delta is measured from 10.
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(110)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(110)}, now)
 	if got := s.Score("a:1080", now); got != 3100 {
 		t.Fatalf("score after post-reset delta = %v, want 3100", got)
 	}
@@ -76,8 +75,8 @@ func TestEarningsScoreHalvesOverOneHalfLife(t *testing.T) {
 	s := newProxyEarningsStore(filepath.Join(t.TempDir(), "earn.json"))
 	now := time.Now()
 
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(0)}, now)
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(4000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(0)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(4000)}, now)
 
 	got := s.Score("a:1080", now.Add(earningsHalfLife))
 	if got < 1990 || got > 2010 {
@@ -89,13 +88,13 @@ func TestEarningsHistorySurvivesProxyLeavingTheSnapshot(t *testing.T) {
 	s := newProxyEarningsStore(filepath.Join(t.TempDir(), "earn.json"))
 	now := time.Now()
 
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(0)}, now)
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(9000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(0)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(9000)}, now)
 
 	// The proxy goes offline and drops out of the snapshot entirely. Its
 	// earnings history is the whole point of this store and must NOT be
 	// pruned the way the liveness tracker prunes its maps.
-	s.Observe(map[string]*ProxyBandwidth{"b:1080": bwWith(1)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"b:1080": bwWith(1)}, now)
 
 	if got := s.Score("a:1080", now); got != 9000 {
 		t.Fatalf("score after leaving snapshot = %v, want 9000", got)
@@ -107,8 +106,8 @@ func TestEarningsSaveLoadRoundTripsAndDecays(t *testing.T) {
 	now := time.Now()
 
 	s := newProxyEarningsStore(path)
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(0)}, now)
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(8000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(0)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(8000)}, now)
 	if err := s.Save(now); err != nil {
 		t.Fatalf("Save: %v", err)
 	}
@@ -140,12 +139,12 @@ func TestEarningsSaveEvictsLowestScorersBeyondTheCap(t *testing.T) {
 	s.maxEntries = 3
 
 	// Four proxies with distinct scores. Establish baselines, then earn.
-	base := map[string]*ProxyBandwidth{}
+	base := map[string]*bandwidth.ProxyBandwidth{}
 	for _, a := range []string{"a:1", "b:1", "c:1", "d:1"} {
 		base[a] = bwWith(0)
 	}
 	s.Observe(base, now)
-	s.Observe(map[string]*ProxyBandwidth{
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{
 		"a:1": bwWith(10), "b:1": bwWith(20), "c:1": bwWith(30), "d:1": bwWith(40),
 	}, now)
 
@@ -173,8 +172,8 @@ func TestEarningsNormalizesFormattedSnapshotKeys(t *testing.T) {
 
 	// The health snapshot keys by "proxy[N] (addr)"; callers ask by raw
 	// address. Without normalization the score is unreachable.
-	s.Observe(map[string]*ProxyBandwidth{"proxy[7] (a:1080)": bwWith(0)}, now)
-	s.Observe(map[string]*ProxyBandwidth{"proxy[7] (a:1080)": bwWith(600)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"proxy[7] (a:1080)": bwWith(0)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"proxy[7] (a:1080)": bwWith(600)}, now)
 
 	if got := s.Score("a:1080", now); got != 600 {
 		t.Fatalf("score by raw address = %v, want 600", got)
@@ -186,8 +185,8 @@ func TestEarningsMaybeSaveThrottlesWrites(t *testing.T) {
 	s := newProxyEarningsStore(path)
 	now := time.Now()
 
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(0)}, now)
-	s.Observe(map[string]*ProxyBandwidth{"a:1080": bwWith(7000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(0)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"a:1080": bwWith(7000)}, now)
 
 	if !s.MaybeSave(now) {
 		t.Fatal("first MaybeSave did not write")
@@ -277,12 +276,12 @@ func TestEarningsBaselineDoesNotGrowWithChurn(t *testing.T) {
 
 	// One long-lived proxy earns, then a thousand short-lived addresses
 	// pass through, one per tick, the way a churning URL source behaves.
-	s.Observe(map[string]*ProxyBandwidth{"keeper:1080": bwWith(0)}, now)
-	s.Observe(map[string]*ProxyBandwidth{"keeper:1080": bwWith(5000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"keeper:1080": bwWith(0)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"keeper:1080": bwWith(5000)}, now)
 
 	for i := 0; i < 1000; i++ {
 		addr := fmt.Sprintf("churn-%d:1080", i)
-		s.Observe(map[string]*ProxyBandwidth{
+		s.Observe(map[string]*bandwidth.ProxyBandwidth{
 			"keeper:1080": bwWith(5000),
 			addr:          bwWith(1),
 		}, now)
@@ -321,8 +320,8 @@ func TestEarningsSaveNeverEvictsALiveProxy(t *testing.T) {
 
 	// A live proxy earning modestly. Observing it makes it live: after the
 	// baseline prune, prevCum holds exactly the live set.
-	s.Observe(map[string]*ProxyBandwidth{"live-earner:1080": bwWith(0)}, now)
-	s.Observe(map[string]*ProxyBandwidth{"live-earner:1080": bwWith(1000)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"live-earner:1080": bwWith(0)}, now)
+	s.Observe(map[string]*bandwidth.ProxyBandwidth{"live-earner:1080": bwWith(1000)}, now)
 
 	if err := s.Save(now); err != nil {
 		t.Fatalf("Save: %v", err)

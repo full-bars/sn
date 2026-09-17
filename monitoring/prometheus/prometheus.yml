@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 30s
+  # A node with thousands of proxies serves a large (gzipped) scrape; leave
+  # room for a slow link.
+  scrape_timeout: 20s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: urnetwork
+    metrics_path: /metrics
+    # Targets live in targets/*.yml. ./setup.sh adds them; Prometheus picks
+    # up edits within a minute, no restart or reload needed.
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/*.yml
+        refresh_interval: 1m
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

@@ -293,11 +293,11 @@ func runProxyJWTWatcher(ctx context.Context, cfg proxyJWTWatcherConfig) {
 		// restart, silently losing the identity we just renewed.
 		networkID := accountNetworkId(accountJWT)
 		if networkID == "" {
-			if prev, ok := globalClientJWTStore.Get(cfg.IdentityKey); ok {
+			if prev, ok := loadGlobalClientJWTStore().Get(cfg.IdentityKey); ok {
 				networkID = prev.NetworkID
 			}
 		}
-		if err := globalClientJWTStore.Put(cfg.IdentityKey, clientJWTEntry{
+		if err := loadGlobalClientJWTStore().Put(cfg.IdentityKey, clientJWTEntry{
 			ByClientJWT: newJwt,
 			ClientID:    cfg.ClientID.String(),
 			NetworkID:   networkID,
@@ -344,7 +344,7 @@ func runProxyJWTWatcher(ctx context.Context, cfg proxyJWTWatcherConfig) {
 	// be missing due to a store write failure.
 	currentJwt := cfg.CurrentJWT
 	if currentJwt == "" {
-		if entry, ok := globalClientJWTStore.Get(cfg.IdentityKey); ok {
+		if entry, ok := loadGlobalClientJWTStore().Get(cfg.IdentityKey); ok {
 			currentJwt = entry.ByClientJWT
 		}
 	}
@@ -379,7 +379,7 @@ func runProxyJWTWatcher(ctx context.Context, cfg proxyJWTWatcherConfig) {
 		if need {
 			renewalLog("🔁 [jwt-renew] proxy[%d] %s renewal trigger: %s\n", cfg.ProxyIndex, cfg.IdentityKey, reason)
 			if renew() {
-				if entry, ok := globalClientJWTStore.Get(cfg.IdentityKey); ok {
+				if entry, ok := loadGlobalClientJWTStore().Get(cfg.IdentityKey); ok {
 					currentJwt = entry.ByClientJWT
 				}
 				if cfg.ProxyIndex >= 0 {

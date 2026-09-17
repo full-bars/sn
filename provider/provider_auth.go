@@ -254,7 +254,7 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 
 	currentNetworkId, haveCurrentNetworkId := jwtNetworkId(byJwt)
 	if hotRestartEnabled() {
-		if entry, ok := globalClientJWTStore.Get(identityKey); ok {
+		if entry, ok := loadGlobalClientJWTStore().Get(identityKey); ok {
 			// If the account JWT has no network_id claim, fill it in from the stored entry
 			// to reuse/renew the existing client ID instead of minting a fresh one.
 			if !haveCurrentNetworkId && entry.NetworkID != "" {
@@ -279,7 +279,7 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 					renewedJwt, renewErr := renewClientJWTFn(ctx, apiUrl, byJwt, parsedId, description, clientStrategy)
 					if renewErr == nil {
 						tlog("🔥 [hot-restart] %s: stored client JWT expired, renewed identity %s\n", identityKey, parsedId)
-						if putErr := globalClientJWTStore.Put(identityKey, clientJWTEntry{
+						if putErr := loadGlobalClientJWTStore().Put(identityKey, clientJWTEntry{
 							ByClientJWT: renewedJwt,
 							ClientID:    entry.ClientID,
 							NetworkID:   currentNetworkId,
@@ -300,7 +300,7 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 					renewedJwt, renewErr := renewClientJWTFn(ctx, apiUrl, byJwt, parsedId, description, clientStrategy)
 					if renewErr == nil {
 						tlog("🔥 [hot-restart] %s: stored client JWT missing client_id claim, salvaged identity via renewal: %s\n", identityKey, parsedId)
-						if putErr := globalClientJWTStore.Put(identityKey, clientJWTEntry{
+						if putErr := loadGlobalClientJWTStore().Put(identityKey, clientJWTEntry{
 							ByClientJWT: renewedJwt,
 							ClientID:    entry.ClientID,
 							NetworkID:   currentNetworkId,
@@ -326,7 +326,7 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 				// current one — after the first reuse they match, so this
 				// is a one-time write per proxy at startup, not per-auth.
 				if entry.NetworkID != currentNetworkId {
-					if putErr := globalClientJWTStore.Put(identityKey, clientJWTEntry{
+					if putErr := loadGlobalClientJWTStore().Put(identityKey, clientJWTEntry{
 						ByClientJWT: entry.ByClientJWT,
 						ClientID:    entry.ClientID,
 						NetworkID:   currentNetworkId,
@@ -418,7 +418,7 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 	// Always persist client JWTs so the store is ready the moment hot-restart
 	// is enabled — no warmup or re-auth cycle needed. The read/reuse path
 	// remains gated on URNETWORK_HOT_RESTART=1.
-	if putErr := globalClientJWTStore.Put(identityKey, clientJWTEntry{
+	if putErr := loadGlobalClientJWTStore().Put(identityKey, clientJWTEntry{
 		ByClientJWT: byClientJwt,
 		ClientID:    clientIdStr,
 		NetworkID:   currentNetworkId,
@@ -470,7 +470,7 @@ func watchReusedIdentityForRevocation(ctx context.Context, identityKey string, p
 				return
 			default:
 			}
-			if delErr := globalClientJWTStore.Delete(identityKey); delErr != nil {
+			if delErr := loadGlobalClientJWTStore().Delete(identityKey); delErr != nil {
 				tlog("⚠️ [jwt-store] failed to evict possibly-revoked identity for %s: %v\n", identityKey, delErr)
 			} else {
 				tlog("⚠️ [jwt-store] reused client identity for %s never authenticated after %d transport auth failures — evicted, will mint fresh on next retry/restart\n",

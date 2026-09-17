@@ -30,9 +30,9 @@ func TestRunProxyJWTWatcherRenewsOnExpiry(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -98,9 +98,9 @@ func TestRunProxyJWTWatcherRenewsOn401(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -165,9 +165,9 @@ func TestRunProxyJWTWatcherRenewsExpiredAtStartup(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -224,9 +224,9 @@ func TestRunProxyJWTWatcherSkipsHealthyToken(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -284,9 +284,9 @@ func TestRunProxyJWTWatcherKeepsOldTokenOnClientLimitExceeded(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	ts.scriptedResponse.Store(&connect.AuthNetworkClientResult{
 		Error: &connect.AuthNetworkClientError{
@@ -353,9 +353,9 @@ func TestRunProxyJWTWatcherMissingAccountJWTDoesNotPanic(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -412,9 +412,9 @@ func TestRunProxyJWTWatcherRejectsJwtMissingClientId(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	ts.omitClientIdClaim.Store(true)
 
@@ -467,9 +467,9 @@ func TestRunProxyJWTWatcherRetriesOnStorePutFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(roDir, 0700) })
 	brokenStore := newClientJWTStore(roDir + "/client_jwts.json")
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = brokenStore
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(brokenStore)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -533,9 +533,9 @@ func TestRunProxyJWTWatcherRenewsOnTransportAuthFailures(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	const proxyIndex = 918273
 	RegisterProxy(proxyIndex, "test-proxy-authfail-addr")
@@ -599,9 +599,9 @@ func TestRunProxyJWTWatcherMutexSerializesRenewals(t *testing.T) {
 
 	storePath := t.TempDir() + "/client_jwts.json"
 	store := newClientJWTStore(storePath)
-	oldStore := globalClientJWTStore
-	globalClientJWTStore = store
-	defer func() { globalClientJWTStore = oldStore }()
+	oldStore := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	for i := 0; i < n; i++ {
 		clientID := connect.NewId()

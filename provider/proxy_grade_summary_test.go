@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 // Tests for the periodic A-F grade summary (design 2026-08-09): config
@@ -69,15 +67,33 @@ func TestProxyGradesConfig_Disable(t *testing.T) {
 func TestProxyGradesConfig_LiveReRead(t *testing.T) {
 	writeGradesOverride(t, `{"interval_sec": 60}`)
 	resetProxyGradesConfigCache()
+
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
 	if cfg := readProxyGradesConfig(); cfg.interval() != time.Minute {
 		t.Fatalf("first read: %v", cfg.interval())
 	}
 	// Same content: cached.
 	writeGradesOverride(t, `{"interval_sec": 60}`)
 	resetProxyGradesConfigCache()
+
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
 	// Different mtime + content: re-read live.
 	writeGradesOverride(t, `{"interval_sec": 900}`)
 	resetProxyGradesConfigCache()
+
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
 	if cfg := readProxyGradesConfig(); cfg.interval() != 15*time.Minute {
 		t.Fatalf("live re-read failed: %v", cfg.interval())
 	}
@@ -283,6 +299,12 @@ func TestEmitProxyGradeDelta(t *testing.T) {
 	}
 	resetProxyGradesConfigCache()
 
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
+
 	// Same tier: no delta.
 	emitProxyGradeDelta("1.1.1.1:1080", "A", "A", 0.9, 0.91, true)
 	// Not previously graded: no delta. This is the shape where the
@@ -401,6 +423,12 @@ func TestRunProxyGradeSummaryOnceSkipsOnUnreadableState(t *testing.T) {
 	}
 	resetProxyGradesConfigCache()
 
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
+
 	// Make proxy.state unreadable-as-file (a directory): readProxyState
 	// returns a real error, not an empty state.
 	if err := os.Mkdir(filepath.Join(dir, "proxy.state"), 0o700); err != nil {
@@ -435,6 +463,12 @@ func TestRunProxyGradeSummaryOnceSkipsOnCollectorFailure(t *testing.T) {
 		t.Fatal(err)
 	}
 	resetProxyGradesConfigCache()
+
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
 	// A valid state file so tracked>0 would be produced by the real
 	// collector — the fake below reports failure despite that.
 	state := &ProxyState{Proxies: map[string]ProxyEntry{
@@ -478,6 +512,12 @@ func TestRunProxyGradeSummaryOnceSkipsWhenKillSwitchOff(t *testing.T) {
 		t.Fatal(err)
 	}
 	resetProxyGradesConfigCache()
+
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
 	if err := os.WriteFile(filepath.Join(dir, "proxy_probe.json"), []byte(`{"enabled": false}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -507,12 +547,24 @@ func contains(s, sub string) bool {
 func TestSummaryIntervalFromConfig(t *testing.T) {
 	withTempHome(t)
 	resetProxyGradesConfigCache()
+
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
 	if got := summaryIntervalFromConfig(); got != defaultGradeSummaryInterval {
 		t.Fatalf("default: got %v, want %v", got, defaultGradeSummaryInterval)
 	}
 
 	writeGradesOverride(t, `{"interval_sec": 42}`)
 	resetProxyGradesConfigCache()
+
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
 	if got := summaryIntervalFromConfig(); got != 42*time.Second {
 		t.Fatalf("override: got %v, want 42s", got)
 	}
@@ -566,6 +618,12 @@ func TestRunProxyGradeSummaryOnce_WritesSummary(t *testing.T) {
 		t.Fatal(err)
 	}
 	resetProxyGradesConfigCache()
+
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
 
 	state := &ProxyState{Proxies: map[string]ProxyEntry{
 		"1.1.1.1:1080": {Health: "up", Source: "file", Score: 0.95, Graded: true, LastGraded: time.Now()},
@@ -624,6 +682,12 @@ func TestRunProxyGradeSummaryOnce_SkipsWhenDisabled(t *testing.T) {
 		t.Fatal(err)
 	}
 	resetProxyGradesConfigCache()
+
+	// Clear the probe config cache so our {"enabled": false} takes effect.
+	probeConfigCache.Lock()
+	probeConfigCache.cfg = proxyTableProbeConfig{}
+	probeConfigCache.at = time.Time{}
+	probeConfigCache.Unlock()
 
 	state := &ProxyState{Proxies: map[string]ProxyEntry{
 		"1.1.1.1:1080": {Health: "up", Source: "file", Score: 0.95, Graded: true},

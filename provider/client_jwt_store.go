@@ -57,6 +57,8 @@ func newClientJWTStore(path string) *clientJWTStore {
 // NOTE: no tlog here — package-var init runs before output plumbing is
 // set up, so any stdout here would prepend to EVERY invocation's output
 // and break callers that parse it (e.g. '--version 2>&1 | head -1').
+var clientJWTStoreMu sync.RWMutex
+
 var globalClientJWTStore = func() *clientJWTStore {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -64,6 +66,19 @@ var globalClientJWTStore = func() *clientJWTStore {
 	}
 	return newClientJWTStore(filepath.Join(home, ".urnetwork", ".client_jwts.json"))
 }()
+
+func loadGlobalClientJWTStore() *clientJWTStore {
+	clientJWTStoreMu.RLock()
+	s := globalClientJWTStore
+	clientJWTStoreMu.RUnlock()
+	return s
+}
+
+func storeGlobalClientJWTStore(s *clientJWTStore) {
+	clientJWTStoreMu.Lock()
+	globalClientJWTStore = s
+	clientJWTStoreMu.Unlock()
+}
 
 func (s *clientJWTStore) loadLocked() {
 	if s.loaded {

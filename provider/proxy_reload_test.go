@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 import (
@@ -439,8 +437,8 @@ func TestWriteReloadTrigger_DebounceSuppressesRapidWrites(t *testing.T) {
 
 	// Enable debounce at 500ms for fast test
 	writeReloadTriggerDebounce = 500 * time.Millisecond
+	t.Cleanup(func() { writeReloadTriggerDebounce = 0 })
 	lastReloadTriggerTime.ts = time.Time{}
-	t.Cleanup(func() { writeReloadTriggerDebounce = 30 * time.Second })
 
 	// First write succeeds
 	if err := writeReloadTrigger(path); err != nil {
@@ -475,8 +473,8 @@ func TestWriteReloadTrigger_TrailingEdgeFires(t *testing.T) {
 	path := filepath.Join(dir, "proxy.reload")
 
 	writeReloadTriggerDebounce = 100 * time.Millisecond
+	t.Cleanup(func() { writeReloadTriggerDebounce = 0 })
 	lastReloadTriggerTime.ts = time.Time{}
-	t.Cleanup(func() { writeReloadTriggerDebounce = 30 * time.Second })
 
 	// First write
 	if err := writeReloadTrigger(path); err != nil {

@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 import (
@@ -260,9 +258,9 @@ func withTestClientJWTStore(t *testing.T) *clientJWTStore {
 	t.Helper()
 	storePath := t.TempDir() + "/client_jwts.json"
 	store := newClientJWTStore(storePath)
-	old := globalClientJWTStore
-	globalClientJWTStore = store
-	t.Cleanup(func() { globalClientJWTStore = old })
+	old := loadGlobalClientJWTStore()
+	storeGlobalClientJWTStore(store)
+	t.Cleanup(func() { storeGlobalClientJWTStore(old) })
 	return store
 }
 

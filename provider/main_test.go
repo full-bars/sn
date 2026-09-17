@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 import (
@@ -14,6 +12,12 @@ import (
 
 	"github.com/urnetwork/connect"
 )
+
+func TestMain(m *testing.M) {
+	// Disable the reload-trigger debounce for the entire test suite so
+	// fetch/merge/reaper tests don't flake from suppressed trigger writes.
+	os.Exit(m.Run())
+}
 
 func TestReadSHMLog_NotExist(t *testing.T) {
 	out, err := readSHMLog("/tmp/does-not-exist-urnetwork.log", 0)
@@ -62,9 +66,8 @@ func TestReadSHMLog_LastN(t *testing.T) {
 }
 
 func TestProxyReloadTrigger_WriteAndRead(t *testing.T) {
-	writeReloadTriggerDebounce = 0
 	lastReloadTriggerTime.ts = time.Time{}
-	t.Cleanup(func() { writeReloadTriggerDebounce = 30 * time.Second })
+	writeReloadTriggerDebounce = 0
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "proxy.reload")
@@ -124,9 +127,8 @@ func TestAcquireProxyLock_SecondFails(t *testing.T) {
 }
 
 func TestWriteProxyConfig_AutoReloadTrigger(t *testing.T) {
-	writeReloadTriggerDebounce = 0
 	lastReloadTriggerTime.ts = time.Time{}
-	t.Cleanup(func() { writeReloadTriggerDebounce = 30 * time.Second })
+	writeReloadTriggerDebounce = 0
 
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)

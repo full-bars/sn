@@ -465,19 +465,22 @@ func (s *controlState) persist() error {
 // sessionFilesAllowlist mirrors internal/urnettools/session_cmds.go's allowlist
 // so only canonical session files are promoted from staging.
 var sessionFilesAllowlist = map[string]bool{
-	"jwt":              true,
-	"client_id":        true,
-	"client_secret":    true,
-	"provider.key":     true,
-	"provider.cert":    true,
-	".provider.key":    true,
-	".provider.cert":   true,
-	"node_name":        true,
-	"relay_jwt":        true,
-	"provider.json":    true,
-	"relay_client_id":  true,
-	"relay_secret":     true,
-	"relay_client_key": true,
+
+	".client_jwts.json": true,
+
+	"jwt": true,
+
+	"jwt_last_refresh": true,
+
+	".provider.key": true,
+
+	".provider.cert": true,
+
+	"proxy": true,
+
+	"proxy_url.json": true,
+
+	"proxy.state": true,
 }
 
 // isSessionFile reports whether name is in the session allowlist.

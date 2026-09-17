@@ -1,5 +1,3 @@
-//go:build ignore
-
 package provider
 
 import (
@@ -125,49 +123,49 @@ func TestEvaluateProxyWarmth(t *testing.T) {
 	})
 
 	// Preload store entries
-	_ = globalClientJWTStore.Put("proxy-valid", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("proxy-valid", clientJWTEntry{
 		ByClientJWT: validJWTWithClientID,
 		ClientID:    testClientId,
 		NetworkID:   "net-abc",
 		MintedAt:    time.Now(),
 	})
-	_ = globalClientJWTStore.Put("proxy-renewable", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("proxy-renewable", clientJWTEntry{
 		ByClientJWT: expiredJWTWithClientID,
 		ClientID:    testClientId,
 		NetworkID:   "net-abc",
 		MintedAt:    time.Now().Add(-2 * time.Hour),
 	})
-	_ = globalClientJWTStore.Put("proxy-mismatched-network", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("proxy-mismatched-network", clientJWTEntry{
 		ByClientJWT: validJWTWithClientID,
 		ClientID:    testClientId,
 		NetworkID:   "net-other",
 		MintedAt:    time.Now(),
 	})
-	_ = globalClientJWTStore.Put("proxy-empty-fields", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("proxy-empty-fields", clientJWTEntry{
 		ByClientJWT: "",
 		ClientID:    "",
 		NetworkID:   "net-abc",
 	})
-	_ = globalClientJWTStore.Put("proxy-invalid-clientid", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("proxy-invalid-clientid", clientJWTEntry{
 		ByClientJWT: expiredJWTWithClientID,
 		ClientID:    "not-a-valid-uuid",
 		NetworkID:   "net-abc",
 		MintedAt:    time.Now().Add(-2 * time.Hour),
 	})
-	_ = globalClientJWTStore.Put("proxy-no-clientid-in-jwt", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("proxy-no-clientid-in-jwt", clientJWTEntry{
 		ByClientJWT: validJWTWithoutClientID,
 		ClientID:    testClientId,
 		NetworkID:   "net-abc",
 		MintedAt:    time.Now(),
 	})
-	_ = globalClientJWTStore.Put("proxy-expired-no-clientid-in-jwt", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("proxy-expired-no-clientid-in-jwt", clientJWTEntry{
 		ByClientJWT: expiredJWTWithoutClientID,
 		ClientID:    testClientId,
 		NetworkID:   "net-abc",
 		MintedAt:    time.Now().Add(-2 * time.Hour),
 	})
 
-	_ = globalClientJWTStore.Put("proxy-legacy-empty-net", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("proxy-legacy-empty-net", clientJWTEntry{
 		ByClientJWT: validJWTWithClientID,
 		ClientID:    testClientId,
 		NetworkID:   "", // legacy entry
@@ -259,7 +257,7 @@ func TestEvaluateProxyWarmth(t *testing.T) {
 		restoreIso := withGlobalStore(t, filepath.Join(isolatedHome, "store.json"))
 		defer restoreIso()
 
-		_ = globalClientJWTStore.Put("proxy-only-legacy", clientJWTEntry{
+		_ = loadGlobalClientJWTStore().Put("proxy-only-legacy", clientJWTEntry{
 			ByClientJWT: validJWTWithClientID,
 			ClientID:    testClientId,
 			NetworkID:   "", // legacy entry with no network_id anywhere in store
@@ -273,9 +271,9 @@ func TestEvaluateProxyWarmth(t *testing.T) {
 	})
 
 	t.Run("nil globalClientJWTStore returns WarmthCold", func(t *testing.T) {
-		orig := globalClientJWTStore
-		globalClientJWTStore = nil
-		defer func() { globalClientJWTStore = orig }()
+		orig := loadGlobalClientJWTStore()
+		storeGlobalClientJWTStore(nil)
+		defer func() { storeGlobalClientJWTStore(orig) }()
 
 		got := evaluateProxyWarmth("proxy-valid", "net-abc")
 		if got != WarmthCold {
@@ -305,16 +303,16 @@ func TestPrioritizeAndScheduleProxies(t *testing.T) {
 		"network_id": "net-main",
 	})
 
-	_ = globalClientJWTStore.Put("file-warm", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("file-warm", clientJWTEntry{
 		ByClientJWT: validJWT, ClientID: testClientId, NetworkID: "net-main",
 	})
-	_ = globalClientJWTStore.Put("file-renewable", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("file-renewable", clientJWTEntry{
 		ByClientJWT: expiredJWT, ClientID: testClientId, NetworkID: "net-main",
 	})
-	_ = globalClientJWTStore.Put("url-warm", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("url-warm", clientJWTEntry{
 		ByClientJWT: validJWT, ClientID: testClientId, NetworkID: "net-main",
 	})
-	_ = globalClientJWTStore.Put("url-renewable", clientJWTEntry{
+	_ = loadGlobalClientJWTStore().Put("url-renewable", clientJWTEntry{
 		ByClientJWT: expiredJWT, ClientID: testClientId, NetworkID: "net-main",
 	})
 
