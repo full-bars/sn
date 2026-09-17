@@ -442,7 +442,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		authFailures := 0
 
 		if proxySettings != nil && !isURLSourced {
-			if globalProxySlowRetryState.WasDropped(proxySettings.Address) || globalProxySlowRetryState.TimeUntilNextAttempt(proxySettings.Address) > 0 {
+			if globalProxySlowRetryState.Load().WasDropped(proxySettings.Address) || globalProxySlowRetryState.Load().TimeUntilNextAttempt(proxySettings.Address) > 0 {
 				authFailures = maxAuthFailures
 			}
 		}
@@ -486,7 +486,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 					if err == nil {
 						globalProvenProxies.MarkSucceeded(proxySettings.Address)
 						globalProxyFailureHistory.Reset(proxySettings.Address)
-						globalProxySlowRetryState.ClearDropped(proxySettings.Address)
+						globalProxySlowRetryState.Load().ClearDropped(proxySettings.Address)
 					}
 					globalAuthRateLimiter.ReportResultForProxy(err, globalProvenProxies.HasSucceeded(proxySettings.Address))
 				} else {
@@ -528,9 +528,9 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 					return "", connect.Id{}, false, fmt.Errorf("authentication failed after %d attempts — %s: %w", maxAuthFailures, cause, err)
 				}
 				if proxySettings != nil {
-					startedAt := globalProxySlowRetryState.RecordSlowRetryStart(proxySettings.Address)
-					if globalProxySlowRetryState.ShouldDrop(proxySettings.Address) {
-						globalProxySlowRetryState.MarkDropped(proxySettings.Address)
+					startedAt := globalProxySlowRetryState.Load().RecordSlowRetryStart(proxySettings.Address)
+					if globalProxySlowRetryState.Load().ShouldDrop(proxySettings.Address) {
+						globalProxySlowRetryState.Load().MarkDropped(proxySettings.Address)
 						dropAge := time.Since(startedAt)
 						tlog("[proxy][slow-retry] proxy[%d] (%s) dropped after %s of continuous failure (%d total attempts)\n",
 							getProxyIndex(proxySettings.Address), proxySettings.Address, formatDuration(dropAge), authFailures)
@@ -544,8 +544,8 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 						return "", connect.Id{}, false, fmt.Errorf("proxy dropped after %s of continuous failure — %s", formatDuration(dropAge), cause)
 					}
 					slowRetryAttempt := authFailures - maxAuthFailures + 1
-					if slowRetryAttempt > slowRetryRampAttempts && !globalProxySlowRetryState.RecordSlowRetryAttempt(proxySettings.Address) {
-						waitTime := globalProxySlowRetryState.TimeUntilNextAttempt(proxySettings.Address)
+					if slowRetryAttempt > slowRetryRampAttempts && !globalProxySlowRetryState.Load().RecordSlowRetryAttempt(proxySettings.Address) {
+						waitTime := globalProxySlowRetryState.Load().TimeUntilNextAttempt(proxySettings.Address)
 						if waitTime <= 0 {
 							waitTime = 24 * time.Hour
 							tlog("[proxy][slow-retry] proxy[%d] (%s) waitTime was non-positive, clamping to %s\n",
@@ -934,7 +934,7 @@ func provideLauncherLoop(st *provideState) {
 	_, closeDohCache := initPersistentDohCache(st.ctx)
 	defer closeDohCache()
 
-	globalProxySlowRetryState = LoadProxySlowRetryState()
+	globalProxySlowRetryState.Store(LoadProxySlowRetryState())
 	setConfiguredProxyCount(len(allProxySettings))
 
 	finishProxy := bannerPhase("Proxy load")
@@ -975,8 +975,8 @@ func provideLauncherLoop(st *provideState) {
 				if !backoffPacerWithDelay(baseDelay, staggerDuration, proxyCtx) {
 					return
 				}
-				if !isURLSourced && proxySettings != nil && globalProxySlowRetryState.WasDropped(proxySettings.Address) {
-					dropAge := time.Since(globalProxySlowRetryState.DropTime(proxySettings.Address))
+				if !isURLSourced && proxySettings != nil && globalProxySlowRetryState.Load().WasDropped(proxySettings.Address) {
+					dropAge := time.Since(globalProxySlowRetryState.Load().DropTime(proxySettings.Address))
 					tlog("[proxy][slow-retry] proxy[%d] (%s) previously dropped %s ago\n",
 						stableID, proxySettings.Address, formatDuration(dropAge))
 				}
@@ -1095,10 +1095,13 @@ func provideStatusServer(st *provideState) {
 func closeAllCaches(st *provideState) {
 	FlushPersistentErrors()
 	forceAuditPersist()
-	if metricsServer != nil {
+	metricsMu.Lock()
+	srv := metricsServer
+	metricsMu.Unlock()
+	if srv != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
-		metricsServer.Shutdown(ctx)
+		srv.Shutdown(ctx)
 	}
 	markCleanShutdown()
 	if st.cleanupControlSocket != nil {

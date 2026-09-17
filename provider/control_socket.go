@@ -105,10 +105,18 @@ func startControlSocket(ctx context.Context, state *controlState) (func(), error
 		return nil, err
 	}
 
+	// Create the socket with restrictive permissions from the start
+	// by setting umask to 0177 before bind(). This avoids a TOCTOU
+	// window where the file exists with default permissions.
+	// (Unix socket bind() uses mode 0777, so 0777 & ~0177 = 0600.)
+	oldUmask := syscall.Umask(0o177)
 	ln, err := net.Listen("unix", path)
+	syscall.Umask(oldUmask)
 	if err != nil {
 		return nil, fmt.Errorf("control socket listen: %w", err)
 	}
+	// Belt-and-suspenders: ensure owner-only even if umask was
+	// overridden by a parent process or kernel quirk.
 	if err := os.Chmod(path, 0o600); err != nil {
 		ln.Close()
 		return nil, fmt.Errorf("control socket chmod: %w", err)

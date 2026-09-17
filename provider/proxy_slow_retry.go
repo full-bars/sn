@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -67,10 +68,14 @@ const (
 )
 
 var (
-	globalProxySlowRetryState = newProxySlowRetryState()
+	globalProxySlowRetryState atomic.Pointer[proxySlowRetryState]
 	// slowRetrySemaphore limits concurrent slow-retry auth attempts.
 	slowRetrySemaphore = make(chan struct{}, slowRetryMaxConcurrent)
 )
+
+func init() {
+	globalProxySlowRetryState.Store(newProxySlowRetryState())
+}
 
 func newProxySlowRetryState() *proxySlowRetryState {
 	return &proxySlowRetryState{Proxies: make(map[string]*proxySlowRetryEntry)}

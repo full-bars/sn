@@ -18,11 +18,17 @@ RUN go mod download
 # Copy the rest of the source
 COPY . .
 
-# Build for the target architecture with version injection
+# Build all three binaries for the target architecture with version injection
 RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
     go build -trimpath \
     -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
-    -o provider_bin ./cmd/provider/
+    -o provider_bin ./cmd/provider/ \
+    && go build -trimpath \
+    -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
+    -o urnet_tools_bin ./cmd/urnet-tools/ \
+    && go build -trimpath \
+    -ldflags "-s -w -X main.Version=${VERSION} -X main.VersionStamp=URNET_VERSION_STAMP=${VERSION}" \
+    -o urnet_docker_bin ./cmd/urnet-docker/
 
 # --- Final Stage ---
 FROM alpine:latest
@@ -48,8 +54,10 @@ RUN mkdir -p /app/cgi-bin /root/.urnetwork
 COPY docker/scripts/*.sh /app/
 COPY docker/scripts/stats /app/cgi-bin/
 
-# Copy compiled binary
+# Copy compiled binaries
 COPY --from=builder /app/provider_bin /app/urnetwork_${TARGETARCH}_stable
+COPY --from=builder /app/urnet_tools_bin /usr/local/bin/urnet-tools
+COPY --from=builder /app/urnet_docker_bin /usr/local/bin/urnet-docker
 
 # Set permissions
 RUN dos2unix /app/*.sh /app/cgi-bin/stats && chmod +x /app/*.sh /app/cgi-bin/stats
@@ -58,7 +66,8 @@ RUN dos2unix /app/*.sh /app/cgi-bin/stats && chmod +x /app/*.sh /app/cgi-bin/sta
 RUN ln -sf /app/proxy-health.sh /usr/local/bin/proxy-health
 RUN ln -sf /app/proxy-traffic.sh /usr/local/bin/proxy-traffic
 RUN ln -sf /app/logs.sh /usr/local/bin/logs
-RUN ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools
+# Shell wrapper kept as fallback for Docker-specific update logic
+RUN ln -sf /app/urnet-tools.sh /usr/local/bin/urnet-tools-sh
 
 # update_verify.sh is sourced by urnet-tools for digest verification
 RUN ln -sf /app/update_verify.sh /usr/local/bin/update_verify.sh

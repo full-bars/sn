@@ -1,5 +1,3 @@
-// TODO: references creditEarningsAt and withGlobalEarningsStore which are not in h3-provider
-
 package provider
 
 import (

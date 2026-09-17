@@ -192,7 +192,10 @@ func metricsServedAddrs() []string {
 // metrics_listen changed. Nothing to do when metrics is off: the next start
 // reads the new setting.
 func applyMetricsListenLive() error {
-	if metricsServer == nil {
+	metricsMu.Lock()
+	srv := metricsServer
+	metricsMu.Unlock()
+	if srv == nil {
 		return nil
 	}
 	if err := stopMetrics(); err != nil {

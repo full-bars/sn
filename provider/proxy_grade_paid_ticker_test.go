@@ -1,5 +1,3 @@
-// TODO: references writePaidGradeProbeOverride which does not exist in h3-provider
-
 package provider
 
 import (

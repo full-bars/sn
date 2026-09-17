@@ -28,7 +28,8 @@ var ssrfAllowLoopback atomic.Bool
 // isBlockedSourceIP reports whether ip must never be contacted by a fetcher.
 // Blocks: loopback (127.0.0.0/8, ::1), link-local (169.254.0.0/16, fe80::/10),
 // private RFC1918 (10/8, 172.16/12, 192.168/16) + IPv6 ULA (fc00::/7),
-// unspecified, and multicast.
+// Tailscale CGNAT (100.64.0.0/10), benchmarking (198.18.0.0/15),
+// NAT64 well-known prefix (64:ff9b::/96), unspecified, and multicast.
 func isBlockedSourceIP(ip net.IP) bool {
 	if ip == nil {
 		return true // unresolvable — treat as unsafe
@@ -36,13 +37,42 @@ func isBlockedSourceIP(ip net.IP) bool {
 	if ssrfAllowLoopback.Load() && ip.IsLoopback() {
 		return false
 	}
-	return ip.IsLoopback() ||
+	if ip.IsLoopback() ||
 		ip.IsLinkLocalUnicast() ||
 		ip.IsLinkLocalMulticast() ||
 		ip.IsPrivate() ||
 		ip.IsUnspecified() ||
-		ip.IsMulticast()
+		ip.IsMulticast() {
+		return true
+	}
+	// Additional ranges not covered by stdlib helpers.
+	for _, prefix := range blockedSourcePrefixes {
+		if prefix.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }
+
+// blockedSourcePrefixes are CIDR ranges that isBlockedSourceIP blocks beyond
+// what Go's stdlib IP helpers cover: Tailscale CGNAT, benchmarking, and
+// NAT64 well-known prefix.
+var blockedSourcePrefixes = func() []net.IPNet {
+	cidrs := []string{
+		"100.64.0.0/10", // Tailscale CGNAT range
+		"198.18.0.0/15", // RFC 2544 benchmarking range
+		"64:ff9b::/96",  // NAT64 well-known prefix
+	}
+	var nets []net.IPNet
+	for _, cidr := range cidrs {
+		_, n, err := net.ParseCIDR(cidr)
+		if err != nil {
+			continue // skip malformed; tests will catch if import fails
+		}
+		nets = append(nets, *n)
+	}
+	return nets
+}()
 
 // ssrfLookupHost resolves hostname and reports whether it maps to any
 // blocked (non-global) address. A host resolving to a mix of public and

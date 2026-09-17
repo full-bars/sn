@@ -157,7 +157,7 @@ func warnProxySourceFailure(url string, reason string) {
 		return
 	}
 	proxySourceWarnings.lastWarn = now
-	importantLogf("[proxy][url] WARNING: proxy source %s: %s — retrying\n", url, reason)
+	importantLogf("[proxy][url] WARNING: proxy source %s: %s — retrying\n", sanitizeURLForDisplay(url), reason)
 }
 
 // truncateReason shortens a failure reason to maxLen, appending "..." if

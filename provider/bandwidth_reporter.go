@@ -617,6 +617,9 @@ func parseProxyIndex(key string) int {
 
 func newClientForURL(reportURL string) *http.Client {
 	if !strings.HasPrefix(reportURL, "https://") {
+		if strings.HasPrefix(reportURL, "http://") {
+			tlog("[report] WARNING: hub report URL uses plain HTTP (not HTTPS): %s — telemetry is unencrypted\n", reportURL)
+		}
 		return &http.Client{Timeout: 10 * time.Second}
 	}
 
