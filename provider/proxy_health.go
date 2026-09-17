@@ -50,6 +50,15 @@ type proxyHealth struct {
 	lastErrorAt     time.Time // when lastError was recorded (so a stale error reads as such)
 }
 
+// StagingWindowDuration is the shared duration used by both connectingStaleAfter
+// (proxy_health.go) and deadConfirmDelay (health_heartbeat.go, cmd_remove_dead.go).
+// Both must agree: connectingStaleAfter bounds the connecting state from
+// RegisterProxy, while deadConfirmDelay gates the uptime check from provider start.
+// The ~1h staging window promised in docs/Proxy-Management.md depends on these
+// two values matching. If one changes, the other must too — enforced by this
+// shared constant (M7 fix).
+const StagingWindowDuration = 65 * time.Minute
+
 // connectingStaleAfter bounds the connecting state. connecting is cleared only
 // by markProxyUp/markProxyDown, neither of which fires on a failed dial, so a
 // proxy that respawns and can never reconnect would otherwise read "connecting"
@@ -57,16 +66,12 @@ type proxyHealth struct {
 // from the stale downSince), making a hung respawn distinguishable from a fresh
 // one and actionable during an outage.
 //
-// The 65-minute value matches the provider's deadConfirmDelay
-// (provider/main.go), but the two are independent timers with different origins
-// and scopes: deadConfirmDelay runs from provider start (uptime >= 65m) and
-// gates only the NewlyDead log row; connectingStaleAfter runs from each
-// RegisterProxy call and gates state classification. A never-connected proxy
-// reads as "dead" 65m after its own registration and its NewlyDead row appears
-// only once both conditions hold, so the ~1h staging window promised in
-// docs/Proxy-Management.md is preserved without the two clocks being
-// synchronized. If one constant changes, the other must too.
-const connectingStaleAfter = 65 * time.Minute
+// This equals StagingWindowDuration: deadConfirmDelay (provider start) gates
+// only the NewlyDead log row; connectingStaleAfter (per-proxy registration)
+// gates state classification. A never-connected proxy reads as "dead" 65m
+// after its own registration and its NewlyDead row appears only once both
+// conditions hold.
+const connectingStaleAfter = StagingWindowDuration
 
 // connectingActive reports whether the proxy is still in a fresh connecting
 // window (true) or its connecting state has gone stale (false). A stale
@@ -130,23 +135,45 @@ func RegisterProxy(index int, address string) {
 		proxyHealthByIndex[index] = h
 	}
 	if h.address != "" && h.address != address {
+		// Different address at the same index: full reset — the old
+		// proxy instance is being replaced by a different one.
 		delete(proxyHealthByAddr, h.address)
+		h.everUp = false
+		h.currentlyUp = false
+		h.downSince = time.Time{}
+		h.lastSeenUp = false
+		h.deadLogged = false
+		h.lastError = ""
+		h.lastErrorAt = time.Time{}
+		h.failures = ProxyFailureCounters{}
 	}
 	h.address = address
 	h.connecting = true
 	h.connectingSince = time.Now()
+
+	// Reset per-instance error/failure state so a re-registered proxy
+	// starts clean. Live connection state (currentlyUp, everUp) is
+	// preserved: a proxy re-registering during hot-reload may still be
+	// actively serving traffic, and resetting its up state would cause
+	// a spurious "connecting" blip in health reports.
+	h.lastError = ""
+	h.lastErrorAt = time.Time{}
+	h.failures = ProxyFailureCounters{}
+
 	proxyHealthByAddr[address] = h
 }
 
 // RegisterProxyBandwidth securely retrieves or initializes the proxyBandwidth.
+// Returns nil if the proxy has not been registered via RegisterProxy first —
+// callers that run before RegisterProxy will get nil rather than a health
+// entry with an empty address that pollutes the registry (invariant:
+// proxyHealthByIndex and proxyHealthByAddr must stay in sync).
 func RegisterProxyBandwidth(index int) *bandwidth.ProxyBandwidth {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
 	h, ok := proxyHealthByIndex[index]
 	if !ok {
-		// Initialize it if it doesn't exist
-		h = &proxyHealth{address: "", connecting: true}
-		proxyHealthByIndex[index] = h
+		return nil
 	}
 	if h.bw == nil {
 		h.bw = &bandwidth.ProxyBandwidth{}
@@ -188,12 +215,13 @@ func MarkProxyDown(index int) {
 }
 
 // markProxyDown records that the proxy's platform transport went down, stamping
-// downSince when it was previously up (for recovery-latency reporting).
+// downSince when it was previously up or when downSince is zero (for never-up
+// proxies that need accurate inactive classification).
 func markProxyDown(index int) {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
 	if h, ok := proxyHealthByIndex[index]; ok {
-		if h.currentlyUp {
+		if h.downSince.IsZero() || h.currentlyUp {
 			h.downSince = time.Now()
 		}
 		h.currentlyUp = false
@@ -273,6 +301,8 @@ func UnregisterProxy(id int) {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
 	if h, ok := proxyHealthByIndex[id]; ok && h.address != "" {
+		// Clean up the address → index mapping to prevent unbounded growth.
+		deleteProxyIndex(h.address)
 		// only drop the addr entry if it still points at this proxy
 		if proxyHealthByAddr[h.address] == h {
 			delete(proxyHealthByAddr, h.address)
@@ -358,7 +388,9 @@ func ProxyHealthSnapshot() (up int, dead []string, degraded []string, bwMap map[
 
 		if h.bw != nil {
 			pb := proxyBandwidthSnapshot(h.bw)
-			bwMap[formatProxyEntry(idx, h.address)] = pb
+			// Use raw address as key (consistent with ProxyBandwidthByAddress)
+			// instead of formatProxyEntry (M8 fix).
+			bwMap[h.address] = pb
 		}
 	}
 	return up, dead, degraded, bwMap, connecting
@@ -396,7 +428,9 @@ func ProxyHealthHeartbeat(confirmDead bool) ProxyHealthReport {
 
 		if h.bw != nil {
 			pb := proxyBandwidthSnapshot(h.bw)
-			r.Bandwidth[formatProxyEntry(idx, h.address)] = pb
+			// Use raw address as key (consistent with ProxyBandwidthByAddress)
+			// instead of formatProxyEntry (M8 fix).
+			r.Bandwidth[h.address] = pb
 		}
 
 		if !first {
@@ -443,25 +477,21 @@ type ProxyHealthStatus struct {
 
 // ProxyHealthByAddress returns the current health classification for each
 // registered proxy, keyed by address. Used to update proxy.state snapshots.
+// Uses classifyProxyHealth for the coarse classification so the threshold
+// boundaries match ProxyHealthSnapshot and the heartbeat report.
 func ProxyHealthByAddress() map[string]ProxyHealthStatus {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
 	now := time.Now()
 	result := make(map[string]ProxyHealthStatus, len(proxyHealthByIndex))
 	for _, h := range proxyHealthByIndex {
-		health := "dead"
-		switch {
-		case h.currentlyUp:
-			health = "up"
-		case h.connectingActive(now):
-			// a re-registered instance reuses the struct and inherits its predecessor's
-			// everUp/downSince, so a fresh `connecting` must win over `everUp` or a
-			// respawning proxy reads as degraded. Once the connecting window goes stale
-			// (connectingStaleAfter), it falls back to the degraded tier so a hung
-			// respawn stays visible as degraded rather than "connecting" forever.
-			// Mirrors the IsDegraded() guard.
-			health = "connecting"
-		case h.everUp:
+		coarse := classifyProxyHealth(h, now)
+		// For the "degraded" tier, provide fine-grained sub-status via
+		// degradedTierFromDuration so operators can distinguish recent
+		// from long-standing outages. For "dead" and other coarse labels,
+		// use them directly to stay consistent with ProxyHealthSnapshot.
+		health := coarse
+		if coarse == "degraded" {
 			health = degradedTierFromDuration(time.Since(h.downSince))
 		}
 		latencyNs := int64(0)
@@ -493,6 +523,34 @@ func degradedTierFromDuration(d time.Duration) string {
 		return "long_offline"
 	default:
 		return "inactive"
+	}
+}
+
+// classifyProxyHealth returns the coarse health classification for a proxy.
+// This is the single source of truth for the up/connecting/degraded/dead
+// threshold, used by ProxyHealthSnapshot, ProxyHealthByAddress, and the
+// heartbeat's DegradedProxies predicate. The threshold for "dead" is
+// downSince >= 7 days (matching degradedTierFromDuration's "inactive" tier).
+//
+// Classification mapping:
+//
+//	"connecting"  — fresh connecting window (connectingStaleAfter)
+//	"up"          — currentlyUp
+//	"degraded"    — everUp but down < 7d, or connecting window stale
+//	"dead"        — never-up, or everUp but down >= 7d
+func classifyProxyHealth(h *proxyHealth, now time.Time) string {
+	switch {
+	case h.currentlyUp:
+		return "up"
+	case h.connectingActive(now):
+		return "connecting"
+	case h.everUp:
+		if !h.downSince.IsZero() && time.Since(h.downSince) >= 7*24*time.Hour {
+			return "dead"
+		}
+		return "degraded"
+	default:
+		return "dead"
 	}
 }
 

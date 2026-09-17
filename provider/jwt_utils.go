@@ -10,7 +10,11 @@ import (
 // ErrTokenInvalid is returned when a token is invalid or expired.
 var ErrTokenInvalid = errors.New("auth: token is invalid or expired")
 
-// validateJWTExpiry parses the JWT locally to check the 'exp' claim.
+// validateJWTExpiry parses the JWT locally to check the 'exp' claim
+// without signature verification. This is intentional: the JWT is read
+// from local disk and is only used for expiry diagnostics, not for
+// authorization decisions. DO NOT reuse this function on network-supplied
+// JWTs where signature verification is required (M9 security note).
 // It returns ErrTokenInvalid if the token is definitely expired (with 30s leeway).
 func validateJWTExpiry(byJwt string) error {
 	expParser := gojwt.NewParser()

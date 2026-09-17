@@ -492,6 +492,11 @@ func jwtClientId(byJwt string) string {
 	return clientId
 }
 
+// jwtNetworkId extracts the network_id claim from a JWT without signature
+// verification. This is intentional: the JWTs parsed here are read from local
+// disk (~/.urnetwork/) and are used only for diagnostics/routing decisions,
+// not for authorization. DO NOT reuse this function on network-supplied JWTs
+// where signature verification is required (M9 security note).
 func jwtNetworkId(byJwt string) (string, bool) {
 	parser := jwt.NewParser()
 	tok, _, err := parser.ParseUnverified(byJwt, jwt.MapClaims{})

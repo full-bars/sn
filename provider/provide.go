@@ -33,11 +33,20 @@ func setProxyIndex(addr string, idx int) {
 	proxyIndexByAddr.Store(addr, idx)
 }
 
+// deleteProxyIndex removes a proxy address from the index map.
+// Called from UnregisterProxy to prevent unbounded growth.
+func deleteProxyIndex(addr string) {
+	proxyIndexByAddr.Delete(addr)
+}
+
+// getProxyIndex returns the stable integer ID for a proxy address,
+// or -1 if the address was never registered. Callers must check for
+// -1 to avoid misattributing health metrics to the direct proxy (index 0).
 func getProxyIndex(addr string) int {
 	if v, ok := proxyIndexByAddr.Load(addr); ok {
 		return v.(int)
 	}
-	return 0
+	return -1
 }
 
 // provideState holds the shared mutable state used by provide() and its
@@ -91,7 +100,6 @@ func provide(opts docopt.Opts) {
 	tlog("[provider] exiting\n")
 	critLog("PROVIDER EXIT: normal shutdown (code=0)")
 	closeAllCaches(st)
-	os.Exit(0)
 }
 
 // provideSetupMemory handles memory limits, identity staging, hot-swap
@@ -237,14 +245,14 @@ func provideSetupSignals(st *provideState) {
 		} else {
 			// NOTE: Control socket cleanup is handled by RegisterCoordinatorCloser
 			// (below) and by closeAllCaches() in provide()'s shutdown path.
-			// No additional defer needed here.
-			unregSocketCloser := RegisterCoordinatorCloser(func() {
+			// Do NOT defer unregSocketCloser here — the closer must stay
+			// registered for the lifetime of the process.
+			RegisterCoordinatorCloser(func() {
 				if st.cleanupControlSocket != nil {
 					st.cleanupControlSocket()
 					st.cleanupControlSocket = nil
 				}
 			})
-			defer unregSocketCloser()
 		}
 	}
 
@@ -310,15 +318,31 @@ func provideLaunchGoroutines(st *provideState) {
 		}
 	}
 
-	go connect.HandleError(func() { runHealthHeartbeat(st.ctx, provideStartTime, os.Getenv("URNETWORK_PROFILE")) })
+	st.wg.Add(1)
 	go connect.HandleError(func() {
+		defer st.wg.Done()
+		runHealthHeartbeat(st.ctx, provideStartTime, os.Getenv("URNETWORK_PROFILE"))
+	})
+	st.wg.Add(1)
+	go connect.HandleError(func() {
+		defer st.wg.Done()
 		runBandwidthReporter(st.ctx, watcherName, watcherName, os.Getenv("URNETWORK_REPORT_URL"), provideStartTime)
 	})
+	st.wg.Add(1)
 	go connect.HandleError(func() {
+		defer st.wg.Done()
 		runHeartbeatReporter(st.ctx, watcherName, watcherName, os.Getenv("URNETWORK_REPORT_URL"), provideStartTime)
 	})
-	go connect.HandleError(func() { runJWTRefresher(st.ctx, st.apiUrl) })
-	go connect.HandleError(func() { runEarningWindows(st.ctx) })
+	st.wg.Add(1)
+	go connect.HandleError(func() {
+		defer st.wg.Done()
+		runJWTRefresher(st.ctx, st.apiUrl)
+	})
+	st.wg.Add(1)
+	go connect.HandleError(func() {
+		defer st.wg.Done()
+		runEarningWindows(st.ctx)
+	})
 	go connect.HandleError(func() { runLifetimeCollector(st.ctx) })
 	go connect.HandleError(func() { runProfitHeartbeat(st.ctx) })
 	go connect.HandleError(func() { runBillableRateWriter(st.ctx) })
@@ -354,6 +378,8 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	clientSettings := connect.DefaultClientSettings()
 	if seed, err := readProviderClientKeySeed(); err == nil && 0 < len(seed) {
 		clientSettings.ClientKeySeed = seed
+	} else if err != nil {
+		tlog("[encryption] WARNING: could not read provider client key seed: %v — encryption will use a fresh identity\n", err)
 	}
 	if certPem, keyPem, err := readProviderTlsCertAndKey(); err == nil && 0 < len(certPem) && 0 < len(keyPem) {
 		if clientSettings.EncryptionSettings == nil {
@@ -361,6 +387,10 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		}
 		clientSettings.EncryptionSettings.ProvideTlsCertificatePem = certPem
 		clientSettings.EncryptionSettings.ProvideTlsPrivateKeyPem = keyPem
+	} else if err != nil {
+		tlog("[encryption] WARNING: could not read TLS cert/key: %v — encryption downgraded to opportunistic (no PQE)\n", err)
+	} else {
+		tlog("[encryption] WARNING: TLS cert/key not found on disk — encryption downgraded to opportunistic (no PQE)\n")
 	}
 	enableProviderEncryption(clientSettings)
 	localUserNatSettings := connect.DefaultLocalUserNatSettings()
@@ -433,29 +463,25 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				if proxySettings != nil {
 					admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Address)
 				}
+				release, waitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
+				if waitErr != nil {
+					return "", connect.Id{}, false, waitErr
+				}
+				defer release()
+
 				if !isURLSourced && authFailures >= maxAuthFailures {
 					select {
 					case slowRetrySemaphore <- struct{}{}:
+						defer func() { <-slowRetrySemaphore }()
 					case <-proxyCtx.Done():
 						return "", connect.Id{}, false, proxyCtx.Err()
 					}
-				}
-				release, waitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
-				if waitErr != nil {
-					if !isURLSourced && authFailures >= maxAuthFailures {
-						<-slowRetrySemaphore
-					}
-					return "", connect.Id{}, false, waitErr
 				}
 				identityKey := "direct"
 				if proxySettings != nil {
 					identityKey = proxySettings.Address
 				}
 				byClientJwt, clientId, reused, err = provideAuth(proxyCtx, clientStrategy, st.apiUrl, st.opts, st.nodeName, identityKey)
-				release()
-				if !isURLSourced && authFailures >= maxAuthFailures {
-					<-slowRetrySemaphore
-				}
 				if proxySettings != nil {
 					if err == nil {
 						globalProvenProxies.MarkSucceeded(proxySettings.Address)
@@ -509,13 +535,22 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 						tlog("[proxy][slow-retry] proxy[%d] (%s) dropped after %s of continuous failure (%d total attempts)\n",
 							getProxyIndex(proxySettings.Address), proxySettings.Address, formatDuration(dropAge), authFailures)
 						st.proxyCancelMu.Lock()
+						cancel := st.proxyCancelMap[proxySettings.Address]
 						delete(st.proxyCancelMap, proxySettings.Address)
 						st.proxyCancelMu.Unlock()
+						if cancel != nil {
+							cancel()
+						}
 						return "", connect.Id{}, false, fmt.Errorf("proxy dropped after %s of continuous failure — %s", formatDuration(dropAge), cause)
 					}
 					slowRetryAttempt := authFailures - maxAuthFailures + 1
 					if slowRetryAttempt > slowRetryRampAttempts && !globalProxySlowRetryState.RecordSlowRetryAttempt(proxySettings.Address) {
 						waitTime := globalProxySlowRetryState.TimeUntilNextAttempt(proxySettings.Address)
+						if waitTime <= 0 {
+							waitTime = 24 * time.Hour
+							tlog("[proxy][slow-retry] proxy[%d] (%s) waitTime was non-positive, clamping to %s\n",
+								getProxyIndex(proxySettings.Address), proxySettings.Address, formatDuration(waitTime))
+						}
 						tlog("[proxy][slow-retry] proxy[%d] (%s) auth still failing after %d attempts (%s); next check in %s\n",
 							getProxyIndex(proxySettings.Address), proxySettings.Address, authFailures, cause, formatDuration(waitTime))
 						dailyTimer := time.NewTimer(waitTime)

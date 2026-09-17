@@ -93,7 +93,8 @@ func proxyRemoveDead(opts docopt.Opts) {
 	}
 
 	uptime := time.Since(state.StartedAt)
-	const deadConfirmDelay = 65 * time.Minute
+	// Uses the shared constant to stay in sync with connectingStaleAfter (M7 fix).
+	const deadConfirmDelay = StagingWindowDuration
 	if uptime < deadConfirmDelay {
 		shmLogFatal(61, "provider has only been running %s — need %s uptime before dead status is confirmed", formatDuration(uptime), formatDuration(deadConfirmDelay))
 	}

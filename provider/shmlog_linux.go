@@ -238,6 +238,11 @@ func initSHMLogger() {
 	})
 }
 
+// shmLogFatal writes a FATAL message to the shared-memory log and stderr,
+// then calls os.Exit. This intentionally bypasses deferred cleanup (st.cancel,
+// flushRetentionEvents, etc.) because the error is unrecoverable and the
+// process must terminate immediately so an external supervisor (systemd,
+// Docker) can restart with a clean state.
 func shmLogFatal(code int, format string, args ...any) {
 	msg := fmt.Sprintf("FATAL [exit %d]: %s\n", code, fmt.Sprintf(format, args...))
 	if f, err := os.OpenFile(shmLogPath, os.O_WRONLY|os.O_APPEND, 0); err == nil {

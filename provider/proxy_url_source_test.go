@@ -125,10 +125,13 @@ func TestRunProxyURLCleanupOnce_ScopeURL_OnlyTouchesURLSourced(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	state := &ProxyState{Proxies: map[string]ProxyEntry{
-		"4.4.4.4:1080": {Health: "dead", Source: "url"},
-		"3.3.3.3:1080": {Health: "dead", Source: "internal"},
-	}}
+	state := &ProxyState{
+		StartedAt: time.Now().Add(-2 * time.Hour),
+		Proxies: map[string]ProxyEntry{
+			"4.4.4.4:1080": {Health: "dead", Source: "url"},
+			"3.3.3.3:1080": {Health: "dead", Source: "internal"},
+		},
+	}
 	if err := writeProxyState(state); err != nil {
 		t.Fatal(err)
 	}
@@ -552,9 +555,12 @@ func TestRunProxyURLCleanup_UnconditionalImmediateCleanup(t *testing.T) {
 	}}); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeProxyState(&ProxyState{Proxies: map[string]ProxyEntry{
-		"4.4.4.4:1080": {Health: "dead", Source: "url"},
-	}}); err != nil {
+	if err := writeProxyState(&ProxyState{
+		StartedAt: time.Now().Add(-2 * time.Hour),
+		Proxies: map[string]ProxyEntry{
+			"4.4.4.4:1080": {Health: "dead", Source: "url"},
+		},
+	}); err != nil {
 		t.Fatal(err)
 	}
 

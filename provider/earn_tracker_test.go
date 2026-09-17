@@ -8,20 +8,17 @@ import (
 )
 
 // TestEarnTracker_SnapshotKeyFormatMatchesProduction pins the review
-// CRITICAL: ProxyHealthSnapshot keys its bandwidth map with the
-// FORMATTED "proxy[N] (addr)" key (formatProxyEntry), not the raw
-// address. The earn tracker must normalize that key back to the raw
-// address, or EarnedSince(rawAddr) never matches and the paid grader's
-// earn-skip silently never fires — the whole v28.1 paid-savings feature
-// was dead in production for this reason. This test drives the tracker
-// through the REAL snapshot API, not a hand-built map.
+// CRITICAL: ProxyHealthSnapshot and ProxyHealthHeartbeat now key their
+// bandwidth maps by raw address (M8 fix). Historical formatted keys are
+// still handled by proxyKeyAddress for backward compatibility. This test
+// drives the tracker through the REAL snapshot API, not a hand-built map.
 func TestEarnTracker_SnapshotKeyFormatMatchesProduction(t *testing.T) {
 	const idx = 9001
 	const addr = "198.51.100.7:443"
 	defer UnregisterProxy(idx)
 
-	bw := RegisterProxyBandwidth(idx)
 	RegisterProxy(idx, addr)
+	bw := RegisterProxyBandwidth(idx)
 
 	// First snapshot establishes the per-address baseline (no delta).
 	_, _, _, snap1, _ := ProxyHealthSnapshot()

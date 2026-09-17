@@ -757,7 +757,11 @@ func readHotswapDeclinesFromDisk() map[string]int64 {
 	return dc.Counts
 }
 
-// parseJWTExpiryTime extracts the exp claim from a JWT without signature verification.
+// parseJWTExpiryTime extracts the exp claim from a JWT without signature
+// verification. This is intentional: the JWTs parsed here are read from local
+// disk and are used only for hotswap timing diagnostics, not for authorization.
+// DO NOT reuse this function on network-supplied JWTs where signature
+// verification is required (M9 security note).
 func parseJWTExpiryTime(byJwt string) *time.Time {
 	parser := gojwt.NewParser()
 	tok, _, err := parser.ParseUnverified(byJwt, gojwt.MapClaims{})

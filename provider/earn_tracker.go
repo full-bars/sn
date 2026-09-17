@@ -31,15 +31,9 @@ func newPerProxyEarnTracker() *perProxyEarnTracker {
 }
 
 // proxyKeyAddress normalizes a proxy-health key to the raw proxy address.
-// connect.ProxyHealthSnapshot keys its bandwidth map with the FORMATTED
-// key "proxy[N] (addr)" (formatProxyEntry), while the paid grader and the
-// tracker's callers key by the raw address "addr". The tracker must
-// normalize on ingest or EarnedSince(rawAddr) never matches and earn-skip
-// silently never fires — the paid-savings feature would be dead in
-// production. Raw-address keys pass through unchanged
-// (a raw address contains no " (" separator, so parseProxyString returns
-// no address half and the key is used as-is).
-//
+// connect.ProxyHealthSnapshot and ProxyHealthHeartbeat now key their bandwidth
+// maps by raw address (after M8 fix). Historical "proxy[N] (addr)" formatted
+// keys are still handled for backward compatibility with in-flight callers.
 // The native "direct" proxy (proxy[0] (direct)) normalizes to "direct".
 // It never relays billable traffic through the SOCKS5 pipeline, so its
 // billable counters stay zero and it is never marked earning — which is

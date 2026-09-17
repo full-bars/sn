@@ -1151,7 +1151,7 @@ func runProxyURLFetcher(ctx context.Context, urls []string, refreshInterval time
 	// Publish the initial next-fetch estimate WITH the pressure stretch
 	// applied, mirroring the loop's own math below (the
 	// initial estimate was unstretched).
-	initialCache := readURLCacheSize()
+	initialCache, _ := readURLCacheSize()
 	initialNext := activeInterval
 	if initialCache >= 50 {
 		initialNext = time.Duration(float64(activeInterval) * fetchStretch(currentPressure()))
@@ -1187,7 +1187,13 @@ func runProxyURLFetcher(ctx context.Context, urls []string, refreshInterval time
 			// more slowly instead of stopping dead (old binary gate).
 			// currentPressure() is 0 when self-heal is off ⇒ no stretching.
 			pressure := currentPressure()
-			cacheSize := readURLCacheSize()
+			cacheSize, cacheErr := readURLCacheSize()
+			if cacheErr != nil {
+				// Lock contention or unreadable state: treat conservatively
+				// (skip fetch) to avoid amplification under load (M3 fix).
+				tlog("[proxy][url] fetch skipped: cache size unavailable: %v\n", cacheErr)
+				continue
+			}
 			if !shouldFetchNow(time.Since(lastFetch), activeInterval, pressure, cacheSize) {
 				tlog("[proxy][url] fetch deferred: pressure=%.2f stretch=%.1fx elapsed=%s cache=%d\n",
 					pressure, fetchStretch(pressure), formatDuration(time.Since(lastFetch)), cacheSize)
@@ -1225,18 +1231,20 @@ func shouldFetchNow(sinceLast, base time.Duration, pressure float64, cacheSize i
 }
 
 // readURLCacheSize reads the current URL proxy cache size from proxy_url.json.
-// Returns 0 on error (fetch will not be gated).
-func readURLCacheSize() int {
+// Returns an error if the lock cannot be acquired or the state file is unreadable;
+// callers should treat an error as "do not fetch" (conservative) rather than
+// "cache is empty" (aggressive).
+func readURLCacheSize() (int, error) {
 	release, err := acquireProxyLock()
 	if err != nil {
-		return 0
+		return 0, fmt.Errorf("readURLCacheSize: lock: %w", err)
 	}
 	defer release()
 	state, err := readProxyURLState()
 	if err != nil {
-		return 0
+		return 0, fmt.Errorf("readURLCacheSize: read state: %w", err)
 	}
-	return len(state.Cache)
+	return len(state.Cache), nil
 }
 
 // runProxyURLCleanupOnce removes dead/inactive/degraded proxies whose source
@@ -1260,6 +1268,11 @@ func runProxyURLCleanupOnce(scope string) (removed int) {
 	// For degraded cleanup, require the provider to have been running
 	// long enough to avoid killing proxies that just haven't authed yet
 	// during this startup cycle.
+	// Guard against zero time (fresh/corrupted state file) which would
+	// yield ~55 years of uptime and defeat the warmup guard (M5 fix).
+	if state.StartedAt.IsZero() {
+		state.StartedAt = time.Now()
+	}
 	uptime := time.Since(state.StartedAt)
 	const minUptime = 65 * time.Minute
 
@@ -1268,6 +1281,9 @@ func runProxyURLCleanupOnce(scope string) (removed int) {
 	if urlState, err := readProxyURLState(); err == nil && urlState.DegradedCleanupThreshold != "" {
 		if d, err := time.ParseDuration(urlState.DegradedCleanupThreshold); err == nil && d > 0 {
 			degradedThreshold = d
+		} else if err != nil {
+			// Log malformed threshold so operator typos are not silent (M6 fix).
+			tlog("[proxy][cleanup] warning: malformed DegradedCleanupThreshold %q: %v\n", urlState.DegradedCleanupThreshold, err)
 		}
 	}
 
@@ -1312,6 +1328,9 @@ func runProxyURLCleanupOnce(scope string) (removed int) {
 					addrsBySource[e.Source] = append(addrsBySource[e.Source], addr)
 					removed++
 					continue
+				} else if err != nil {
+					// Log malformed DownSince so stale/corrupt entries are not silent (M6 fix).
+					tlog("[proxy][cleanup] warning: malformed DownSince %q for %s: %v\n", e.DownSince, addr, err)
 				}
 			}
 		}
@@ -1352,8 +1371,11 @@ func runProxyURLCleanup(ctx context.Context, scope string, interval time.Duratio
 		if time.Since(lastRun) >= effective {
 			if activeScope := resolveProxyCleanupScope(scope); activeScope == "url" || activeScope == "all" {
 				runProxyURLCleanupOnce(activeScope)
+				// Only advance lastRun when cleanup actually ran, so that
+				// a runtime scope toggle (none→url) takes effect immediately
+				// instead of waiting another full interval (M4 fix).
+				lastRun = time.Now()
 			}
-			lastRun = time.Now()
 		}
 		select {
 		case <-ctx.Done():

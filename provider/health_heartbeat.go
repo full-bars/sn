@@ -45,7 +45,8 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 
 	// deadConfirmDelay gates confirmed-dead event logging until one pulse cycle has
 	// elapsed, so the startup ramp is not recorded as dead.
-	const deadConfirmDelay = 65 * time.Minute
+	// Uses the shared constant to stay in sync with connectingStaleAfter (M7 fix).
+	const deadConfirmDelay = StagingWindowDuration
 
 	// per-proxy byte counts from the previous tick, used to compute rates.
 	prevTick := map[string]trafficBytes{}

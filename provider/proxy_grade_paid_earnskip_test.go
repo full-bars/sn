@@ -27,6 +27,7 @@ var earnTrackerTestSeq atomic.Uint64
 func seedEarnTracker(t *testing.T, addr string) {
 	t.Helper()
 	idx := int(earnTrackerTestSeq.Add(1))
+	RegisterProxy(idx, addr)
 	bw := RegisterProxyBandwidth(idx)
 	t.Cleanup(func() { UnregisterProxy(idx) })
 	key := fmt.Sprintf("proxy[%d] (%s)", idx, addr)
