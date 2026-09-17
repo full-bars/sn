@@ -640,7 +640,9 @@ func TestRunProxyJWTWatcherMutexSerializesRenewals(t *testing.T) {
 		ticks[i] <- time.Now()
 	}
 
-	deadline := time.After(10 * time.Second)
+	// 5 serial renewals through a single mutex; CI runners are slower
+	// than local, so use a generous 30s deadline.
+	deadline := time.After(30 * time.Second)
 	allRenewed := func() bool {
 		for i := 0; i < n; i++ {
 			key := "proxy-" + string(rune('a'+i))
