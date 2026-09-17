@@ -157,8 +157,8 @@ jobs:
 
       - name: urnet-docker proxy clear (flag-targeted)
         run: |
-          /tmp/urnet-docker proxy clear --unit urfix-turbo 
-          /tmp/urnet-docker proxy clear --unit urfix-lowmem 
+          /tmp/urnet-docker proxy clear --unit urfix-turbo -y
+          /tmp/urnet-docker proxy clear --unit urfix-lowmem -y 
 
       - name: Multi-container logs via flag target
         # logs follows by design; bound it with timeout in CI (exit 124
