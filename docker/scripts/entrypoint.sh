@@ -20,8 +20,17 @@ log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') >>> UrNetwork >>> $*"
 }
 
-# Default to "stable" if BUILD is not set
-BUILD="${BUILD:-stable}"
+# Default BUILD: stable, unless an auth code is supplied — a positional JWT
+# argument or URNETWORK_AUTH_CODE means the caller is authenticating with a
+# code (not a user/password), so use jwt mode automatically. An explicit
+# BUILD= overrides this auto-selection.
+if [ -z "${BUILD:-}" ]; then
+  if [ "$#" -gt 0 ] || [ -n "${URNETWORK_AUTH_CODE:-}" ]; then
+    BUILD="jwt"
+  else
+    BUILD="stable"
+  fi
+fi
 BUILD="$(echo "$BUILD" | tr '[:upper:]' '[:lower:]')"
 
 # Translate TURBO=v4|v8 into URNETWORK_PROFILE so the binary picks it up.
@@ -39,7 +48,7 @@ case "$TURBO" in
     ;;
 esac
 
-log "Script version: v3.23.2026"
+log "Script version: v2026"
 #log "Starting with"
 #log "*** *** *** *** *** *** *** *** *** ***"
 #log "USER_AUTH = $USER_AUTH"
