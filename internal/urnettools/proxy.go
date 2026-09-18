@@ -31,13 +31,20 @@ func providerSubcommand(p Provider, args ...string) error {
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	// Wire stdin through ONLY for the interactive `proxy paste` subcommand,
-	// which reads its proxy list from stdin — without this the child sees
-	// /dev/null, readLines gets EOF, and paste always reports "no input
-	// received". Other subcommands must not inherit stdin.
+	// Wire stdin through for interactive subcommands. `proxy paste` reads its
+	// proxy list from stdin and must get it even when piped (no TTY). The
+	// interactive confirm subcommands (`remove-dead`, `remove`, `trim`, ...)
+	// read the terminal through confirm(): without this the child inherits
+	// /dev/null, confirm() hits EOF, and the user's "y" is never read —
+	// "Remove N dead proxies? [y/N] Nothing to remove." with the answer
+	// falling through to the shell. Gate those on stdinIsInteractive so
+	// non-interactive (cron/systemd/pipe) invocations still see EOF and
+	// refuse by default.
 	// The paste dispatch builds args as ["proxy", "paste", ...], so args[1]
 	// is the subcommand name here (args[0] is always "proxy").
 	if len(args) > 0 && args[0] == "paste" || len(args) > 1 && args[0] == "proxy" && args[1] == "paste" {
+		cmd.Stdin = os.Stdin
+	} else if stdinIsInteractive() {
 		cmd.Stdin = os.Stdin
 	}
 	// Run with the provider's HOME so state lands in the right directory.
