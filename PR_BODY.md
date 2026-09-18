@@ -1,14 +1,7 @@
 ## What
 
-Completes the release prep for the queued `v2026.9.17-1789646883-meso` tag. The notes file existed but predated four changes that landed after it was drafted:
+Syncs `.github/scripts/vt-scan.py` with the fixed version (mirrors meso-miner `#95`): adds the `VT_JSON_FILE` machine-readable export — one JSON object per scanned file — and fails the scan when the JSON export cannot be written.
 
-- DoH server-score cache removal (`01b8e5f5`) — live-fleet probe showed it inert under v2026 connect
-- Docker entrypoint jwt build autodetect (`77e215ca`)
-- Installer regression suite port (PR `#6`)
-- Wiki ported into `docs/` (PR `#5`)
+## Why
 
-Updates `releases/v2026.9.17-1789646883-meso.md` (new section 8 + What's Changed + deploy notes), the CHANGELOG entry, and corrects FORK_CHANGES section 9, which claimed the removed cache was shipped.
-
-## Ship plan
-
-After merge: `git tag -s v2026.9.17-1789646883-meso` on main and push — release.yml picks up `releases/<tag>.md`.
+`release.yml` sets `VT_JSON_FILE` and the "Stage WDSI submissions" step consumes `vt-scan-results.json`, but the script never wrote it, so WDSI staging always skipped ("No VT scan results — skipping WDSI staging") and flagged files never got a staged Defender-submission bundle.
