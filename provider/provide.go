@@ -857,8 +857,9 @@ func provideDirectSetup(st *provideState) bool {
 }
 
 // provideLauncherLoop loads proxy state, launches per-proxy goroutines,
-// starts the reloader, and runs URL fetcher goroutines. Returns a cleanup
-// function (DoH cache close) that the caller must defer.
+// starts the reloader, and runs URL fetcher goroutines. Returns a no-op
+// cleanup that the caller must defer (previously closed the DoH cache,
+// which was removed as inert).
 func provideLauncherLoop(st *provideState) func() {
 	// Sentinel goroutine.
 	st.wg.Add(1)
@@ -953,8 +954,6 @@ func provideLauncherLoop(st *provideState) func() {
 	if err := writeProxyState(proxyState); err != nil {
 		tlog("[proxy] warning: could not write proxy.state: %v\n", err)
 	}
-
-	_, closeDohCache := initPersistentDohCache(st.ctx)
 
 	globalProxySlowRetryState.Store(LoadProxySlowRetryState())
 	setConfiguredProxyCount(len(allProxySettings))
@@ -1077,7 +1076,7 @@ func provideLauncherLoop(st *provideState) func() {
 		}
 	}
 
-	return closeDohCache
+	return func() {}
 }
 
 // provideStatusServer starts the optional status HTTP server.

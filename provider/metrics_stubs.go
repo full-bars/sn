@@ -73,14 +73,11 @@ func prometheusHandlerStub() http.Handler {
 
 // getDohFailureCountStub returns the provider-level DOH failure count.
 // The fork's connect.GetDohFailureCount tracked DNS-over-HTTPS failures
-// inside the connect package. v2026 removed this counter; we maintain a
-// local atomic counter in doh_cache.go (dohFailureCount / IncrDohFailure)
-// so the metric reflects real data when instrumented.
-//
-// DESIGN ADAPTATION: connect.GetDohFailureCount was removed in v2026.
-// The provider tracks its own DOH failures locally via doh_cache.go.
+// inside the connect package. v2026 removed this counter, and the provider's
+// inert DoH cache (which held its own local counter) was removed. With no
+// DoH subsystem active this has no live source, so it reports 0.
 func getDohFailureCountStub() int64 {
-	return dohFailureCountValue()
+	return 0
 }
 
 // PQETotalCounts holds PQE/classical session counts for metrics.
