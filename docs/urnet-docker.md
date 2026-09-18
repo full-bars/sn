@@ -5,7 +5,7 @@
 Install with the one-line installer:
 
 ```bash
-curl -fSsL https://dl.fullbars.xyz/urnet-docker.sh | sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/install-urnet-docker.sh | sh
 # GitHub fallback: curl -fSsL https://raw.githubusercontent.com/full-bars/sn/main/scripts/install-urnet-docker.sh | sh
 ```
 

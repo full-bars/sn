@@ -61,7 +61,7 @@ do_update() {
     download_url="$(echo "$release_json" | jq -r '.assets[] | select((.name | contains(".tar.gz")) and (.name | contains("linux-'"$arch"'"))) | .browser_download_url // empty' | head -n1)"
     [ -n "$download_url" ] || { echo "ERROR: no download found for linux-$arch in release $version"; exit 1; }
 
-    primary_url="$(echo "$download_url" | sed 's|https://github.com/full-bars/sn/releases/download/|https://dl.fullbars.xyz/releases/download/|')"
+    primary_url="$download_url"
 
     # Use --version for version check — consistent with the rest of this script.
     # Strip whitespace/newlines for clean comparison.
@@ -116,7 +116,7 @@ do_update() {
             exit 1
         }
     else
-        download_source="dl.fullbars.xyz"
+        download_source="github"
     fi
 
     if ! upd_verify_digest "$tarball" "$expected_digest" "$download_source"; then

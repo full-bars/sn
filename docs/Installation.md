@@ -12,13 +12,13 @@ The provider is designed to run as a **non-privileged user service** for maximum
 Install:
 
 ```bash
-curl -fSsL https://dl.fullbars.xyz/install.sh | sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Linux.sh | sh
 ```
 
 Uninstall:
 
 ```bash
-curl -fSsL https://dl.fullbars.xyz/uninstall.sh | sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Linux.sh | sh
 ```
 
 ### 🔑 Post-Install Authentication
@@ -43,7 +43,7 @@ urnet-tools proxy refresh
 The macOS installer is the equivalent of the Linux installer but uses `launchd` instead of `systemd`:
 
 ```bash
-curl -fSsL https://dl.fullbars.xyz/install-mac.sh | sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Mac.sh | sh
 ```
 
 Uninstall (manual: macOS uninstall script not yet available):
@@ -125,13 +125,13 @@ The installation includes the `urnet-tools` suite for management, a provider-awa
 Install via PowerShell (no admin required):
 
 ```powershell
-powershell -c "irm https://dl.fullbars.xyz/install-win.ps1 | iex"
+powershell -c "irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 | iex"
 ```
 
 Uninstall via PowerShell (no admin required):
 
 ```powershell
-powershell -c "irm https://dl.fullbars.xyz/uninstall-win.ps1 | iex"
+powershell -c "irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Win32.ps1 | iex"
 ```
 
 ### What gets installed
@@ -209,7 +209,7 @@ When the provider starts, it logs a **System Auditor** report that checks kernel
 For Docker-only users who do not want the systemd provider service, run the installer on the host to install the tools:
 
 ```bash
-curl -fSsL https://dl.fullbars.xyz/install.sh | sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Linux.sh | sh
 ```
 
 Then optimize the host:

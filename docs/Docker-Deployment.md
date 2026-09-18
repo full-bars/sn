@@ -12,7 +12,7 @@ This page keeps the copy-paste Docker examples from the README in one place. Use
 Install `urnet-docker` once on the host (SHA-256 verified against the release API):
 
 ```sh
-curl -fSsL https://dl.fullbars.xyz/urnet-docker.sh | sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/install-urnet-docker.sh | sh
 # installs /usr/local/bin/urnet-docker (or ~/.local/bin when not root)
 # GitHub fallback: curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/install-urnet-docker.sh | sh
 ```

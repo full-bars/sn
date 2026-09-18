@@ -120,7 +120,7 @@ if grep -q 'mktemp /tmp/urnetwork-update-XXXXXX.tar.gz' "$SCRIPT_COPY"; then
     exit 1
 fi
 # Anchor the positive check to the ACTUAL executable assignment, not a bare
-# string match that a comment or doc line could also satisfy (coderabbit).
+# string match that a comment or doc line could also satisfy.
 if ! grep -q 'tmpdir="$(mktemp -d /tmp/urnetwork-update-XXXXXX)"' "$SCRIPT_COPY"; then
     echo "❌ FATAL: expected busybox-safe tmpdir mktemp -d assignment not found in script copy (script may have changed)"
     exit 1
@@ -129,7 +129,7 @@ fi
 MOCKBIN="$TEMP_DIR/mockbin"
 mkdir -p "$MOCKBIN"
 
-# Opus hardening: a busybox-enforcing mktemp stub. busybox mktemp requires the
+# A busybox-enforcing mktemp stub. busybox mktemp requires the
 # template to END in XXXXXX; any suffix (e.g. ".tar.gz" or ".new") fails with
 # "Invalid argument". GNU coreutils (the host) accepts both, so without this
 # stub a regressed template in a non-tarball mktemp call (e.g. staged_provider)
@@ -178,23 +178,24 @@ if [ -z "$outfile" ]; then
     exit 0
 fi
 
+# Downloads now target GitHub directly (no CDN). Primary/mirror are
+# distinguished by -o attempt count: the first download is the primary
+# attempt, any later call is the mirror retry. MOCK_PRIMARY_FAIL /
+# MOCK_MIRROR_FAIL then control which attempt(s) fail, and a partial
+# primary write lets tests assert the mirror retry overwrites the same path.
 case "$url" in
-    *dl.fullbars.xyz*)
-        if [ "${MOCK_PRIMARY_FAIL:-0}" = "1" ]; then
-            # Simulate a partial/truncated download: real curl can write
-            # bytes to -o before the transfer dies and it exits non-zero.
-            # This lets tests assert the mirror retry overwrites (not
-            # appends to) whatever primary already wrote to the same path.
-            if [ -n "${MOCK_PRIMARY_PARTIAL_CONTENT:-}" ]; then
-                printf '%s' "$MOCK_PRIMARY_PARTIAL_CONTENT" > "$outfile"
-            fi
-            exit 22
-        fi
-        printf '%s' "${MOCK_TARBALL_CONTENT:-dummy-tarball-bytes}" > "$outfile"
-        exit 0
-        ;;
     *github.com*)
-        [ "${MOCK_MIRROR_FAIL:-0}" = "1" ] && exit 22
+        attempt="$(grep -c -- ' -o ' "$CURL_LOG" 2>/dev/null || echo 0)"
+        if [ "$attempt" = "1" ]; then
+            if [ "${MOCK_PRIMARY_FAIL:-0}" = "1" ]; then
+                if [ -n "${MOCK_PRIMARY_PARTIAL_CONTENT:-}" ]; then
+                    printf '%s' "$MOCK_PRIMARY_PARTIAL_CONTENT" > "$outfile"
+                fi
+                exit 22
+            fi
+        else
+            [ "${MOCK_MIRROR_FAIL:-0}" = "1" ] && exit 22
+        fi
         printf '%s' "${MOCK_TARBALL_CONTENT:-dummy-tarball-bytes}" > "$outfile"
         exit 0
         ;;
@@ -259,7 +260,13 @@ done
 [ "${MOCK_TAR_FAIL:-0}" = "1" ] && exit 1
 
 if [ -n "$tmpdir" ] && [ "${MOCK_TAR_NO_PROVIDER:-0}" != "1" ]; then
-    printf '#!/bin/sh\necho mock-provider\n' > "$tmpdir/provider"
+    # The provider binary's --version must match the update's expected
+    # version (MOCK_VERSION) so the script's post-respawn verification
+    # succeeds on the FIRST loop pass instead of sleeping the full
+    # respawn_timeout (30s) on every run_update. Default to MOCK_PROVIDER
+    # _VERSION when set, else fall back to MOCK_VERSION, else mock-provider.
+    mock_prov_version="${MOCK_PROVIDER_VERSION:-${MOCK_VERSION:-mock-provider}}"
+    printf '#!/bin/sh\necho "%s"\n' "$mock_prov_version" > "$tmpdir/provider"
     chmod +x "$tmpdir/provider"
 fi
 exit 0
@@ -282,7 +289,15 @@ EOF
 
 cat > "$MOCKBIN/pgrep" <<'EOF'
 #!/bin/bash
-# Real pgrep exits non-zero when no process matches; harmless for our mocks.
+# Default: report the provider as running (exit 0, MOCK_PGREP_PID) so the
+# script's post-respawn verification succeeds immediately after an update.
+# The old-pid wait then re-checks kill -0 against the fake pid, fails, and
+# moves on instantly — no 15s shutdown wait either. Set MOCK_PGREP_FOUND=0
+# in a test that wants to exercise the "provider not running" path.
+if [ "${MOCK_PGREP_FOUND:-1}" = "1" ]; then
+    printf '%s\n' "${MOCK_PGREP_PID:-4242}"
+    exit 0
+fi
 exit 1
 EOF
 
@@ -318,6 +333,9 @@ reset_fixture() {
     MOCK_ARCH=x86_64
     MOCK_TARBALL_CONTENT=""
     MOCK_PRIMARY_PARTIAL_CONTENT=""
+    MOCK_PROVIDER_VERSION=""
+    MOCK_PGREP_FOUND=1
+    MOCK_PGREP_PID=4242
     # do_update writes its update-pending marker under "$HOME/.urnetwork".
     # Point HOME at a disposable per-fixture dir so tests never touch the
     # real invoking user's home directory, and so each test starts with a
@@ -342,6 +360,9 @@ run_update() {
         MOCK_TAR_FAIL="${MOCK_TAR_FAIL:-0}" \
         MOCK_TAR_NO_PROVIDER="${MOCK_TAR_NO_PROVIDER:-0}" \
         MOCK_ARCH="${MOCK_ARCH:-x86_64}" \
+        MOCK_PROVIDER_VERSION="${MOCK_PROVIDER_VERSION:-}" \
+        MOCK_PGREP_FOUND="${MOCK_PGREP_FOUND:-1}" \
+        MOCK_PGREP_PID="${MOCK_PGREP_PID:-4242}" \
         MOCK_PRIMARY_PARTIAL_CONTENT="${MOCK_PRIMARY_PARTIAL_CONTENT:-}" \
         CURL_LOG="$CURL_LOG" \
         HOME="${MOCK_HOME:-$TEMP_DIR/home}" \
@@ -572,6 +593,9 @@ run_idle_update() {
         MOCK_MIRROR_FAIL="${MOCK_MIRROR_FAIL:-0}" \
         MOCK_TAR_FAIL="${MOCK_TAR_FAIL:-0}" \
         MOCK_TAR_NO_PROVIDER="${MOCK_TAR_NO_PROVIDER:-0}" \
+        MOCK_PROVIDER_VERSION="${MOCK_PROVIDER_VERSION:-}" \
+        MOCK_PGREP_FOUND="${MOCK_PGREP_FOUND:-1}" \
+        MOCK_PGREP_PID="${MOCK_PGREP_PID:-4242}" \
         MOCK_ARCH="${MOCK_ARCH:-x86_64}" \
         CURL_LOG="$CURL_LOG" \
         HOME="${MOCK_HOME:-$TEMP_DIR/home}" \
@@ -628,6 +652,9 @@ test_idle_update_custom_threshold() {
         MOCK_MIRROR_FAIL="${MOCK_MIRROR_FAIL:-0}" \
         MOCK_TAR_FAIL="${MOCK_TAR_FAIL:-0}" \
         MOCK_TAR_NO_PROVIDER="${MOCK_TAR_NO_PROVIDER:-0}" \
+        MOCK_PROVIDER_VERSION="${MOCK_PROVIDER_VERSION:-}" \
+        MOCK_PGREP_FOUND="${MOCK_PGREP_FOUND:-1}" \
+        MOCK_PGREP_PID="${MOCK_PGREP_PID:-4242}" \
         MOCK_ARCH="${MOCK_ARCH:-x86_64}" \
         CURL_LOG="$CURL_LOG" \
         URNETWORK_PROXY_HEALTH_DIR="$HEALTH_DIR" \
