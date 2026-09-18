@@ -23,6 +23,8 @@ info:
     freezes its exact baseline.json bytes and SHA-256, and reuses that control
     for every candidate in the epoch. Candidate ranking uses absolute raw
     latency; normalized score is display-only.
+    Historical epochs scored before shared controls were introduced retain
+    their original per-job control samples and normalized-score-first ranking.
     Committing production epoch one atomically ends the staging era and cancels
     queued staging work; it refuses to race a running staging evaluation.
   contact:
@@ -105,7 +107,9 @@ paths:
         the same reconciliation shape. Staging epochs are explicitly marked,
         never select a winner, and publish winner_job_id as null. Entries are
         deterministically ordered by absolute raw score ascending, submission
-        time, and job id. Normalized score is display-only. Public rows identify
+        time, and job id for shared-control epochs. Historical per-job-control
+        epochs retain normalized score descending before those tie breakers;
+        their already-published rankings are not rewritten. Public rows identify
         the immutable job and patch, not
         bearer-token principals. An epoch is not published until admission has
         closed, every accepted job is terminal, and finalization commits
