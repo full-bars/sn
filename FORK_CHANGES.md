@@ -135,13 +135,13 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 
 ## 9. DoH Cache & DNS
 
-**Files**: `provider/doh_cache.go`
+**Files**: `provider/doh_cache.go` (removed), `provider/net_http_doh.go`
 
 **Changes**:
-- Persistent DNS-over-HTTPS cache with server-score persistence; cache close scoped to correct function lifetime
+- The persistent DNS-over-HTTPS cache with server-score persistence was ported, then REMOVED (commit `01b8e5f5`): a live-fleet probe (ATL/ATL2/honk) showed the cache did nothing even on the 3.23 line — no `.doh_scores` written, zero to one log lines — because the v2026 connect lookup path no longer calls into it. The DoH resolver itself (`net_http_doh.go`) remains.
 - Uses system cert pool (not LE-only pinning) so all four DoH providers work
 
-**Status**: ✅ Shipped
+**Status**: ⚠️ Partially shipped — resolver active, server-score cache intentionally removed; do not re-add without new evidence the connect layer reads it.
 
 ---
 

@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FORK_CHANGES.md` and `PROJECT_STRUCTURE.md` added
 - Internal rollout document removed
 
+### Changed
+- DoH server-score cache removed after a live-fleet probe showed it inert under v2026 connect; the DoH resolver remains
+- Docker entrypoint auto-selects jwt build mode when an auth code is supplied
+- Six installer/update regression scripts ported (sn tag scheme), all review findings addressed
+- Fork wiki ported into `docs/` with automated wiki sync
+
 ## [v2026.9.17-1789639761-meso] — 2026-09-17 (superseded)
 
 ### Added
