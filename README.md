@@ -18,6 +18,61 @@ subnet's native token — **α**, branded **$UR**.
 The full specification is in [`WHITEPAPER.md`](WHITEPAPER.md); the design rationale versus
 the rest of the Bittensor field is in [`COMPARISON.md`](COMPARISON.md).
 
+> [!NOTE]
+> This fork (`full-bars/sn`) ships the modernized **H3/QUIC provider** built on the
+> current engine. Install and operate it with the commands below; the subnet
+> mechanism documentation that follows still applies to the validator/miner
+> side of the system.
+
+---
+
+## ⚡ Quick Start
+
+### Install
+
+**🐧 Linux**
+
+```sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Linux.sh | sh
+```
+
+**🍎 macOS**
+
+```sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Mac.sh | sh
+```
+
+**🪟 Windows (PowerShell)**
+
+```powershell
+irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Install_Win32.ps1 | iex
+```
+
+**🐋 Docker**
+
+```sh
+docker pull ghcr.io/full-bars/sn:latest
+```
+
+**🔄 Uninstall**
+
+```sh
+curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Linux.sh | sh      # Linux
+irm https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/scripts/Provider_Uninstall_Win32.ps1 | iex     # Windows
+```
+
+After installation, authenticate and start providing:
+
+```bash
+urnetwork auth
+urnet-tools proxy add ~/proxies.txt
+urnet-tools proxy refresh
+urnet-tools auto on
+```
+
+Full guides: [Installation](docs/Installation.md), [Docker Deployment](docs/Docker-Deployment.md),
+[Adding Proxies](docs/Adding-Proxies.md), [urnet-tools](docs/urnet-tools-go.md).
+
 ---
 
 ## Mechanism at a glance
