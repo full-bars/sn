@@ -104,7 +104,7 @@ func TestProducerGateStateSelectionCoversNativeSourceCommitmentJob(t *testing.T)
 	}
 	group := releaseEvidenceV2GateGroup{
 		phase: "evidence_native", job: "evidence-native", variable: "native_evidence_tests", packages: []string{"./crv4"},
-		sources:  map[string][]string{"./crv4": releaseEvidenceV2GateSources(t, []string{"../crv4/source_commitment_test.go", "../crv4/source_commitment_runtime455_test.go"})},
+		sources:  map[string][]string{"./crv4": releaseEvidenceV2GateSources(t, []string{"../crv4/source_commitment_test.go", "../crv4/source_commitment_runtime455_test.go", "../crv4/source_commitment_runtime458_test.go", "../crv4/source_commitment_runtime459_test.go", "../crv4/source_commitment_runtime460_test.go"})},
 		commands: []string{`go test ./crv4 -run "$native_evidence_tests" -count=1`, `go test -race ./crv4 -run "$native_evidence_tests" -count=1`},
 	}
 	script := string(encoded)
@@ -154,11 +154,11 @@ func TestProducerGateStateSelectionKeepsColdFixturesInSemanticJob(t *testing.T) 
 		t.Fatalf("cold fixture declarations differ from their actual source: %v", err)
 	}
 	group := releaseEvidenceV2GateGroup{
-		phase: "semantic", variable: "semantic_integrity_tests", requiredSelector: requiredSelector,
+		phase: "semantic_parallel", job: "semantic-parallel", variable: "semantic_parallel_tests", requiredSelector: requiredSelector,
 		packages: []string{"./sim-testnet"}, sources: map[string][]string{"./sim-testnet": sources},
 		commands: []string{
-			`go test ./sim-testnet -run "$semantic_integrity_tests" -count=1` + releaseGateSemanticOwnerSkip + ` -parallel=4 -timeout 15m`,
-			`go test -race ./sim-testnet -run "$semantic_integrity_tests" -count=1` + releaseGateSemanticOwnerSkip + ` -parallel=4 -timeout 25m`,
+			`go test ./sim-testnet -run "$semantic_parallel_tests" -count=1 -parallel=4 -timeout 15m`,
+			`go test -race ./sim-testnet -run "$semantic_parallel_tests" -count=1 -parallel=4 -timeout 25m`,
 		},
 	}
 	if err := verifyReleaseEvidenceV2GateGroup(script, group); err != nil {

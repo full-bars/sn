@@ -1,0 +1,7 @@
+component	identity
+forge	forge Version: 1.7.1;Commit SHA: 4072e48705af9d93e3c0f6e29e93b5e9a40caed8;Build Timestamp: 2026-05-08T07:50:55.527285345Z (1778226655);Build Profile: dist
+solc	0.8.24 sha256:fb03a29a517452b9f12bcf459ef37d0a543765bb3bbc911e70a87d6a37c30d5f
+abigen	abigen version 1.17.0-stable
+go	go1.26.6
+strict-policy	forge build --deny warnings --sizes
+fresh-lint-policy	forge lint --deny warnings --no-cache test/SP1Probe.t.sol

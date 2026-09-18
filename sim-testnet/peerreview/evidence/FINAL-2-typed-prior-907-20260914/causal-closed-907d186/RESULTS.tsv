@@ -1,0 +1,2 @@
+record	outer_exit	body_exit	converter_exit	checker_exit	compiled_roots	expected_failures	passed	source_manifests	repos_equal	binary_equal	binary_sha256
+script_only_causal	0	1	0	0	3	1	2	13	true	true	bf95107d2167bcb9cd778aac20289e7f4c26427faf4e640faf97f88486d4c9e8

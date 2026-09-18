@@ -1,0 +1,4 @@
+workspace=/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical
+expected_sn=fc9086852125227d4e497f4d54b6590a527032ba
+release_lock_sha256=76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35
+projection=all 13 repositories are direct standalone git directories

@@ -35,6 +35,12 @@ the difference explicitly.
 Qualification covers this simulator and its
 runtime dependencies; separate calibration exercises are outside this scope.
 
+The user's 2026-09-15 direction is to patch failures and retain incremental
+progress. The [incremental recovery policy](#incremental-recovery-and-acceptance)
+below supersedes older requirements to restart both complete gates on every
+revision or obtain three passes for every correction. Full functional coverage
+and the required live acceptance epochs remain completion requirements.
+
 An existing provisional V2 namespace can enter strict startup only through an
 explicit history adoption request after the current approved setup plan is
 finalized. With both validators stopped, `history-adoption --first-native-epoch
@@ -42,6 +48,18 @@ N --format json` reads the original activation source and intent prefix and
 renders the expected validator config bytes without changing runtime state.
 Retain its exact JSON under the state root's private `history-adoptions/`
 directory. Choose `N` only after renewal and qualification timing are known.
+Use the finalized native `SubnetEpochIndex` and its actual schedule, after
+the continuation plan is adopted. `N` identifies the first fresh steering
+decision's epoch; it is not a deadline for the validator process to start.
+The request must advance beyond the retained last native epoch. After startup,
+the submitter waits while the observed epoch is below `N`, permits the first
+decision during `N`, and rejects a missed `N` if that first intent has not
+already been persisted. Both the decision and preparation snapshots must be
+inside `N`; transaction inclusion may cross the boundary and retains its
+actual epoch counters. Allow startup and first-decision preparation before
+the end of `N`. Do not add an extra epoch solely because `N` may begin during
+startup. These are the existing history and submission checks, with all
+required fully observed campaign epochs retained.
 Strict `launch` or `resume` consumes that file with
 `--strict-history-adoption PATH --strict-history-adoption-sha256 sha256:HASH`
 and the ordinary `--apply --plan-hash CURRENT` approval. A changed source,
@@ -55,8 +73,13 @@ If the original evidence relay horizon has elapsed, use the stopped
 approved renewal. It authenticates original activation, all pending public
 subjects, every retained debit and signed transaction, finalized nonces, and
 the complete signed ledger/index prefixes. One explicit plan repartitions the
-same 25.6 TAO allowance from 256 calls at 100 gwei to 512 at 50 gwei, each capped at
-one million gas. Original higher-fee liabilities reduce the new-slot count.
+same 25.6 TAO allowance from 256 calls at 100 gwei to 1,024 at 25 gwei, each capped
+at one million gas. This v3 approval retains every original higher-fee liability;
+each original 100 gwei call consumes four new slots. Existing v2 approvals keep
+their exact 512-call, 50 gwei terms when imported, resumed or revised. An
+authenticated relay can use its approved ceiling when the current base fee plus
+tip fits, even if the usual doubled-base quote is higher. A current inclusion
+price above the ceiling blocks the call within the same allowance.
 It preserves all source storage limits and reserves missing historical closed
 censuses as well as future work. Choose the absolute end only when remaining
 qualification/launch timing is known; retries and later phases cannot move it.
@@ -83,10 +106,12 @@ deterministically reproduce the pre-fix failure, verify the corrected behavior
 at the failing layer, and inspect surrounding code, sibling call sites and
 similar patterns. Record the adjacent paths checked. Use synthetic fixtures
 and top-level tests; ordinary case variations use plain table loops.
-Terra then reruns the affected test matrix. Run the two
-complete gate workloads concurrently with independent fixes, using immutable source and private mutable
-resources for each admitted job. A failed release preflight is retained as a
-refusal, not counted as executed tests or a release-qualified pass.
+Terra then runs the affected test matrix. Collect independent preparation and
+gate failures in one batch, fix them in parallel, and continue unaffected live
+jobs. Mark work blocked by a failed prerequisite as pending and resume it when
+that prerequisite is repaired. Each admitted job keeps immutable source and
+private mutable resources. A failed release preflight is retained as a refusal,
+not counted as executed tests or a release-qualified pass.
 
 When executing a compiled Go test binary, set its working directory to the
 package directory and check required relative fixtures before starting it.
@@ -95,29 +120,121 @@ Retain `-test.v` in every body and confirmation command passed through
 qualify those tests. If the command needs correction, preserve the original
 result and reuse the unchanged binary and source for a fresh execution.
 
-After diagnosis and correction, each failed test must pass three consecutive
-uncached executions on the same source/dependency snapshot in every mode that
-failed. Use a fresh process for each execution and retain its exact root, mode,
-binary/source identity, raw output, actual exit and cleanup result. A failure,
-timeout, skip, missing result or changed input resets the affected streak;
-results from different binaries or revisions cannot be combined. Independent
-roots may run concurrently, but each root's three confirmations are sequential.
-An input change resets an unfinished streak. A completed streak remains scoped
-evidence for its recorded source and dependencies. Later revisions run affected
-integration checks; a newly observed failure opens a new confirmation obligation.
-Do not relabel retained passes as executions on a later revision or automatically
-repeat every completed historical streak after an integration.
-Release gates record the exact clean commits of all thirteen repositories.
-SN must match freshly observed canonical `main`; dependencies may retain a
-reviewed commit that remains reachable from freshly fetched canonical
-`main`/`master`. The same recorded checkout snapshot must survive the whole
-gate. Later upstream development does not require importing unrelated changes
-into the candidate or repeating completed qualification on unchanged inputs.
-Retain the original failure, add deterministic root-cause and adjacent controls,
-and rerun affected integration coverage. Three later passes do not retroactively
-pass a failed full gate: final acceptance still requires both complete gates
-on the final candidate. This division does not authorize a simulator write;
-the normal plan-hash and `--apply` boundaries still control testnet mutations.
+Create each command's private `TMPDIR` and `GOTMPDIR` before execution;
+setting their environment variables does not create them. When a missing
+directory causes a refusal, preserve that attempt, repair the same paths in
+adjacent prepared commands, and retry the affected command with the retained
+binary, plan and history. This operational correction does not require a
+rebuild or a repeated qualification suite.
+
+On this execution host, the added USB data volume is mounted at `/mnt/data`.
+Use `/mnt/data/sn-testnet/qualification/<run-id>` for new qualification captures
+and each run's private `tmp` and `gotmp` directories. The reusable Go build
+cache location is `/mnt/data/sn-testnet/gocache`; set `TMPDIR`, `GOTMPDIR`
+and `GOCACHE` explicitly for the new command owner. Confirm `/mnt/data` is
+actually mounted before creating a run so an absent drive cannot silently
+send test data back to the root filesystem. The private `sn-testnet` parent
+is owned by `by` with mode `0700`. The existing global Go cache was copied
+and checksum-verified there, retaining its metadata; `/home/by/.cache/go-build`
+now links to `/mnt/data/sn-testnet/gocache`. Keep active campaign state, admitted binaries
+and running command captures at their existing paths until their owners join.
+Changing the location of future scratch data does not invalidate completed
+qualification or require rebuilding an already admitted executable.
+
+### Incremental recovery and acceptance
+
+Resume at the first incomplete or invalidated checkpoint. A failed attempt
+does not erase its completed independent phases, finalized transactions,
+adopted approvals, migrations, artifacts or valid preparation results.
+
+For each patch, record its changed files, affected consumers and the checks
+needed to close the observed failure. Default to one uncached passing execution
+of the affected tests in each relevant mode, including every mode that failed,
+with deterministic root-cause and adjacent regressions. Include the failed
+integration phase when the failure involves cumulative work, shared state or
+cross-component behavior. A timeout correction needs representative workload
+and resource conditions; a small focused pass alone cannot close it. Add
+repetitions only for a stated unresolved timing, race or flakiness concern,
+with a bounded selection and stopping rule. Three confirmations are no longer
+automatic. Reuse already completed controls and compile once per changed
+package/mode. A new failure reopens its affected scope, not the whole campaign.
+
+| Change or interruption | Recovery and revalidation |
+| --- | --- |
+| Documentation, report, Git packaging or unrelated upstream change | Review the diff; retain unchanged tests, preparation and admitted runtime build. |
+| Test or fixture correction | Run changed tests and affected shared-fixture consumers; rerun the failed integration phase when relevant. Retain other phase receipts. |
+| Launcher, selector, capture path or result-checker correction | Repair the refused stage; reuse unchanged builds and completed bodies. Replay retained raw results when they suffice, and verify membership if selection changed. |
+| Production code or dependency change | Build affected executables; test changed behavior and affected integrations. Reuse phases whose code, inputs and assumptions are unchanged. |
+| On-chain runtime upgrade | Record the new version, code and metadata at one finalized block; review the changed interfaces and behavior we consume. Refresh current signing and reviewed artifact admission through the supported release path. Retain historical artifacts, finalized actions and unaffected qualification. A new runtime number alone does not establish an ABI break or invalidate prior work. |
+| Expired epoch, fee observation or other time-sensitive prerequisite | Refresh that observation and its dependent plan/window through the supported revision path. Retain immutable history and completed actions. |
+| Stopped continuation horizon exceeds source capacity | Fit the end block to the tightest retained trail, record, byte, file and relay-slot limits while keeping the full required work and capture/import/startup margin. Correct the refused operand and retry that step; retain the completed renewal and existing approvals. |
+| Disk, port, service or transient RPC refusal before submission | Repair the failed operational prerequisite and retry the same approved command in a fresh capture. Retain valid tests, preparation and state; reconcile any uncertain submission before retrying. |
+| Interrupted submission or lost RPC response | Reconcile the persisted intent, signed bytes, nonce and canonical receipt before retrying. An unknown outcome is pending, never a new action. |
+| Failed live scenario or service | Recover the affected process or phase from its journal. Retain other valid phase markers and prior finalized work. |
+
+Acceptance may combine completed phase receipts from earlier candidates with
+affected replacement runs on the patched candidate. Use an existing report or
+a short coverage table: required phase/mode, original source and receipt,
+reused or newly executed, patch impact, and unresolved work. Check the actual
+code, test/helper dependencies, configuration, toolchain and execution mode
+that the phase consumes. A changed Git commit or rebuilt binary alone does not
+invalidate unrelated results. If impact is uncertain, expand that affected
+scope. If a shared prerequisite or corrupted evidence affects every phase,
+rerun those phases; record that concrete reason for a full restart.
+
+Keep an admitted build or test running when a reviewer merely prefers another
+checkout, capture name or reporting layout. Review differences outside that
+job's consumed inputs and retain its result. Stop it only for an actual invalid
+input, required correction or resource conflict. Before compiler admission,
+check that replacement-module directories and private temporary directories
+exist; repair missing workspace links once without discarding valid source or
+completed checks from other packages.
+
+Every required producer and aggregate phase must have valid coverage on the
+release's effective inputs. Complete producer coverage permits the next
+already-authorized launch step; aggregate work can finish in parallel before
+final acceptance. Record combined coverage as **accepted by composition**, with
+links to the retained receipts. Preserve every original failure and exit;
+never rewrite a failed full invocation as a passing invocation or count pending,
+skipped or interrupted work as PASS. A passing child of a timed-out process is
+not automatically an independent completed phase. Keep its cleanup and shared
+state obligations explicit. No new cache service, checker framework or repeated
+whole-repository audit is required to maintain this coverage table.
+
+Freeze source per live job. The existing full gate commands still execute their
+complete workloads and require the recorded clean thirteen-repository snapshot;
+SN matches observed canonical `main`, while dependencies may retain reviewed
+reachable commits. Keep those checkouts and runners untouched until their
+owners join. Prepare patches separately and reuse their reviewed results by
+scope. Do not move canonical `main` while an active gate's final check requires
+it to remain unchanged. Reuse an already admitted runtime executable with its
+matching source checkout when only tests or docs changed; recheck affected
+executable admission if production inputs change. The coverage table is an
+execution-policy decision, not a new resume flag in the full gate scripts.
+
+For live recovery, keep one writer per transaction stream and resume the saved
+plan and signed transaction bytes. Preserve cumulative spend and original
+approval limits across attempts. Use supported plan/history adoption for an
+incompatible patch; migrate only affected state. Reuse fully observed accepted
+phases and immutable artifacts. When a failure interrupts a required continuous
+epoch window, repeat that window and its dependent observations, retaining
+earlier valid phases and financial history. The required five accelerated and
+three consecutive complete production epochs, custody, authorization, finality
+and accounting checks still establish the final claim. A patch does not make
+an incomplete epoch complete. Existing plan-hash and `--apply` boundaries remain.
+
+Choose the next command from the unresolved coverage or runtime checkpoint;
+do not restart setup, re-fund, redeploy contracts or reset the reserve solely
+because a test, observer, process, network connection or agent failed.
+
+Native signatures bind their original runtime version. Reconcile an uncertain
+submission before deciding to rebuild and re-sign it for a successor runtime;
+never relabel old signed bytes. Authenticate historical receipts against the
+runtime at their own block, independently of the current signing runtime.
+The current executable embeds its reviewed runtime authority, so adding a
+runtime still requires an affected release build. This is a harness admission
+constraint, not evidence that the chain's calls became incompatible. It does
+not justify repeating unaffected tests or discarding an adopted checkpoint.
 
 If an assigned agent loses execution capacity, inspect any already-started
 host process through its PID and output before deciding it stopped. A missing
@@ -144,18 +261,35 @@ Retained public-RPC receipts preserve their original assurance labels and bytes.
 Owned continuation authenticates their source plans and original resolved-input
 hashes, then replays their exact historical checkpoints through the current
 owned node. A missing source, changed historical identity, noncanonical block,
-or conflicting state is an error. Already authenticated install/refresh
-receipts are reused only inside the current carried-history invocation; new
-invocations and changed journal rows must authenticate their own inputs.
+or conflicting state is an error. Successful immutable historical proofs can
+be reused across invocations through the authenticated historical-audit cache.
+Each entry binds the executable, exact proof input and its plan, release and
+observer context. Local evidence and fresh canonical/finalized checkpoints
+still authenticate each read; a missing or invalid cache entry is a miss.
+The stopped-ledger capacity cache and carried-action memo remain local to one
+invocation. Journal loading authenticates every row and its hash chain; its
+per-action index bounds historical comparisons without dropping any entries.
 
 After locking the tested release, retain the original configuration and use
-the owned route with `doctor`, then `setup --format json` to emit the current
-plan revision. Review its exact action diff and limits, and apply that revision
-with `setup --apply --plan-hash HASH` and the same config/state/owned-route
-options. Existing revision, receipt and custody checks still apply; a failed
-revision must be resolved before renewal. Once the current plan is admitted,
-use the same owned-route option for renewal planning, exact-plan apply and
-subsequent strict launch. This sequence requires no vault edit or state reset.
+the owned route with `plan --format json` or the existing setup dry-run to
+emit the current plan revision. Review its exact action diff and limits, then
+adopt it once with `setup --apply --plan-hash HASH --prepare-only` and the same
+config/state/owned-route options. Native preparation performs its own doctor
+and carried-history checks; do not add a duplicate doctor or setup invocation.
+Preserve the actual outcome, including a stopped-namespace refusal after the
+reviewed plan was saved. Continuation/history commands require that current
+adopted plan. This sequence requires no vault edit or state reset.
+
+A continuation's end settlement epoch forecasts evidence capacity; it is not
+a minimum campaign duration or a fleet-lease deadline. Keep the full configured
+remaining work and use the native capacity/slot checks when refreshing an
+expired continuation. Separately, the real acceptance baselines must fit five
+accelerated and three production epochs inside the existing fleet leases.
+An evidence forecast beyond the lease end does not alone require another
+renewal. Choose the new end after release revision/adoption, and choose the
+first native epoch after continuation import so preparation does not consume
+those windows prematurely. Actual baseline and final acceptance checks remain
+mandatory.
 
 `fleet-renew` appends a reviewed generation for every existing fleet. Planning
 is read-only and requires an admitted current setup plan, retained client keys,
@@ -305,6 +439,23 @@ descendants; composing those adapters is a prerequisite, not an optional
 fallback to unowned subprocesses. It does not run either full release gate or
 launch a live campaign by itself.
 
+Use resolved absolute output paths outside every source checkout. Check those
+paths before starting a compiler; a quoted literal such as `$capture` is not
+an expanded capture directory. If a wrapper or output-path error occurs after
+a successful compile, preserve the binary before cleanup. Retain the original
+failed invocation, then verify its source/dependency inputs, compiler outcome,
+build metadata and binary hash. A correctly attributed binary may be moved
+byte-for-byte and admitted in a separate corrected receipt. Recompile when the
+artifact or its required provenance is unavailable; a capture-only error does
+not by itself invalidate unchanged compiled source or completed test bodies.
+Inspect cleanup targets against the ownership record before deleting them.
+Record compilation and execution working directories explicitly. Compile from
+the module root with the package argument, then run a compiled test binary from
+that package's directory, matching `go test` behavior. For `./sim-testnet`, these
+are the SN root and `SN_ROOT/sim-testnet` respectively. A corrected body working
+directory reuses its valid binary; retain earlier passing roots and rerun the
+affected failures with a separately recorded invocation.
+
 To repair a checker-only refusal, the same Go tool can replay the immutable
 original inputs without another test or converter run:
 
@@ -324,9 +475,9 @@ long hash inventories or the full historical handoff to an agent. Retain all
 raw evidence on disk and expand any failed or suspicious result for Astra max;
 compact reporting never means ignoring an anomaly or capping its investigation.
 Do not retry a failure blindly or declare a timeout an expected assertion
-failure. After its root cause is resolved, perform the required three-pass
-confirmation above; any recurrence returns to diagnosis and resets that
-root's streak. Keep a short active-work index linking to detailed history.
+failure. After its root cause is resolved, use the affected checks and any
+specifically justified repetitions in the incremental recovery policy above.
+Keep a short active-work index linking to detailed history.
 
 Validate the exact filenames and invocation consumed by the frozen body, not
 only a staging convention: a package-prefixed `sim-testnet.expected.txt` does
@@ -402,8 +553,9 @@ one worker must not reserve the whole host while preparing a later command.
 For development qualification, measured heavy independent roots may run in
 separate exact-membership shards. Prove the disjoint union equals the original
 selection, preserve every assertion and per-process limit, and label the
-result as a selected union. This never replaces either complete final release
-gate. Prepare evidence locators and the final-report checklist concurrently;
+result as a selected union. Such results may close affected phase coverage
+under the incremental recovery policy; preserve any remaining shared-state or
+whole-process obligation. Prepare evidence locators and the final-report checklist concurrently;
 independent analysis of closed captures may overlap later live windows, but
 only the completed verification can support `FINAL.md` success claims.
 
@@ -449,9 +601,9 @@ profiles and separate full-build/static-analysis Foundry outputs and caches.
 Keep that isolation when running them concurrently, and enable the complete
 database profile with `RUN_SERVER_DB_TESTS=1`. Strict release qualification
 requires the clean, pinned source checks; a diagnostic workload run must retain
-any failed attestation and cannot grant release approval. Producer-gate success
-still precedes a live campaign write. Partial parallel prequalification is not
-a full gate certificate.
+any failed attestation. Complete producer coverage, including valid reused
+phases and affected replacements, precedes a live campaign write. Record its
+composed acceptance separately from each full command's actual result.
 
 The producer's ordinary capture, private fixtures, reopened prior replay,
 complete publication population and metadata census use independent admitted
@@ -467,9 +619,12 @@ package's serial prefix. They retain independent configuration, state, signer
 copies and disk stores; all durable writes and assertions are unchanged.
 `capture-prior` runs the exact reopened-handoff substitution root, including
 its complete semantic fixture, sealing and prior closure verification, at the
-same five/ten-minute limits. Ordinary capture excludes only these eight roots
-and the two original stress roots. The six process-wide allocation controls
-and both original stress roots remain serial. The
+same five/ten-minute limits. `capture-typed-prior` independently runs the exact
+full-size prior-carrier typed-source control with those same limits. Its valid
+and invalid 32 MiB + 1 originals still pass through both the independent legacy
+oracle and the current verifier; the other codec roots keep their ordinary owner.
+Ordinary capture excludes each separately admitted cohort. The six process-wide
+allocation controls and both original stress roots remain serial. The
 `capture-metadata` job executes the exact full metadata root in both modes.
 Ordinary capture keeps its five-minute normal and ten-minute race limits;
 full metadata keeps its five-minute normal limit and has a separately
@@ -491,11 +646,11 @@ The original failed package stays recorded. Source guards and the actual compile
 list must agree on complete, non-overlapping ownership; no root is omitted.
 
 The original full-metadata ten-minute race timeout remains a failure. Its
-profiled 90-minute diagnostic completion is not qualification. Require three
-fresh sequential unprofiled confirmations on the same source/binary under the
-corrected 45-minute limit, plus affected normal/race coverage and both strict
-gates; the diagnostic does not count toward that streak. The partition omits
-neither stress root and does not replace a complete gate certificate.
+profiled 90-minute diagnostic completion is not qualification. Retain completed
+unprofiled confirmations under the corrected 45-minute limit and affected
+normal/race coverage. Do not reopen them solely for an unrelated patch. The
+partition omits neither stress root; future corrections use the incremental
+recovery policy and preserve their actual execution limits.
 
 Both gates also run the shared-boundary and distinct-boundary full client-key
 history populations as separate jobs. Their combined measured race runtime
@@ -657,6 +812,13 @@ signing, the harness rechecks price, transferable source capacity, the retained
 source position, and the full live registered-alpha composition at 65%; the
 postcondition proves the same share at the finalized transaction block. A
 separate 60% barrier then protects the remainder of setup from later dilution.
+An exact software-only revision can retain an entirely verified repair chain
+while the live 60% floor still passes. Its complete reconstructed approval must
+match the predecessor after replacing only the release lock and ancestor list;
+all actions, limits and retired spending remain bound. The earlier 65% proof
+stays attached to its finalized transfer block. Initial or unfinished repairs,
+changed economic approvals and a failed live floor keep the ordinary 65%
+target and cumulative-budget checks.
 
 Generation-2 fleet refresh intentionally consumes generation-1 mirror and
 binding live state. Resume accepts an older receipt historically only when the
@@ -770,9 +932,18 @@ shortfall without persisting or broadcasting transaction bytes.
   quic-go's release socket requirement. `doctor` fails closed below that floor;
   on Linux set a 16 MiB margin before launch with
   `sudo sysctl -w net.core.rmem_max=16777216 net.core.wmem_max=16777216`.
-- At least 20 GiB free on the simulator state filesystem. Immediately before a
-  launch/resume can construct a chain-capable executor, the harness also binds
-  every required loopback process port and rejects any unrelated or stale listener.
+- Live launch/resume and native apply commands that run `doctor`, including
+  `fleet-renew --apply`, require at least 20 GiB free on the simulator state
+  filesystem. Budget offline compilation and focused tests separately from
+  their measured footprint and available headroom for running jobs; those
+  bounded jobs may proceed below the live-runtime floor. Recheck that floor
+  before the actual native operation. If capacity must be recovered, remove
+  only identified disposable scratch from terminal owners, keeping source,
+  admitted binaries, result receipts, journals and signed transaction bytes.
+  Retry the refused operation without reopening unrelated passing checks.
+  Immediately before constructing a chain-capable
+  executor, the harness also binds every required loopback process port and
+  rejects any unrelated or stale listener.
 - Docker with direct permission for the invoking user or passwordless `sudo -n
   docker`. The harness prefers direct access and never opens an interactive sudo
   prompt. One isolated PostgreSQL 18 and Redis 8 pair is created per operator from the exact digests in
@@ -940,7 +1111,27 @@ Use the exact hash from the reviewed plan. A changed config, resolved vault inpu
 policy, release lock, role derivation, source checkout, artifact, runtime fact, or
 persisted plan fails closed. Every apply reruns `doctor` and rechecks finalized
 economic facts against the exact unverified remainder. Docker dependencies and
-all release binaries are preflighted before a transaction-capable executor opens.
+all release binaries are preflighted before any setup action executes.
+
+Before a launch attempt, run the approved command with `--prepare-only --format
+json`, for example `launch --apply --plan-hash 0xREVIEWED_PLAN_HASH --prepare-only
+--format json`, retaining the same config, state and RPC options. After capacity
+and plan admission, preparation collects the complete doctor report, available
+host checks, carried action proofs and runtime inputs in one ordered report.
+Independent failures do not stop later batches; unavailable prerequisites name
+their blocked checks and actions. This mode may prepare local role/deployment
+inputs, build binaries and start managed dependencies. It stops explicitly before
+setup actions or topology launch and never signs or submits a chain transaction.
+Missing upload capacity still refuses before journal ownership or host mutation.
+
+Fix the largest coherent batch of reported errors, then repeat preparation on the
+exact captured candidate until its required checks pass. Full launch/resume
+preparation includes signed state namespaces, evidence references, operator
+origins and reserved upload inputs. Setup defers future launch prerequisites
+when its render receipt is already verified or approved setup dependencies are
+still pending, so an approved repair can converge first. Deferred checks are
+reported and must pass before launch; they do not certify future readiness.
+Transactional action execution retains its existing dependency and failure stops.
 
 ```bash
 # Optional: converge chain/contracts/config without starting services.
@@ -1081,6 +1272,27 @@ intent, ceiling, finalized receipt, postcondition and signed evidence record.
   --state-dir "$SIM_TESTNET_STATE_DIR" \
   --apply --plan-hash 0xREVIEWED_PLAN_HASH
 ```
+
+For a stopped deployment with an authenticated strict-history adoption, use
+one owner for resume and the full campaign:
+
+```bash
+"$SIM_TESTNET_BINARY" resume --then-release-candidate \
+  --config sim-testnet/testnet.yml \
+  --state-dir "$SIM_TESTNET_STATE_DIR" \
+  --apply --plan-hash 0xREVIEWED_PLAN_HASH --detach \
+  --strict-history-adoption "$STRICT_HISTORY_ADOPTION" \
+  --strict-history-adoption-sha256 "$STRICT_HISTORY_ADOPTION_SHA256"
+```
+
+Retain the deployment's repository and RPC options. `--detach` applies to the
+managed supervisor; this command remains active until the campaign returns.
+It holds the same journal writer and prepared executor through startup and both
+campaign phases, avoiding a second launch-preparation pass. Failed or cancelled
+startup cannot enter the campaign. All phase, archive, horizon, live-evidence
+and semantic acceptance checks remain required. Do not start a separate
+`scenario --name release-candidate` while the combined command owns the writer.
+The opt-in is incompatible with preparation-only or provisional operation.
 
 `release-candidate` is a resumable orchestration name, not a weaker scenario.
 It runs `release-1.0`, independently reloads and authenticates the signed result,

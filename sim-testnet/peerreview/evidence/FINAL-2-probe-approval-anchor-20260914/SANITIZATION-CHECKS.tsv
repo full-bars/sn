@@ -1,0 +1,6 @@
+check	result	detail
+raw_event_command_and_manifest_files_absent	pass	Raw test streams, commands, and source manifests are hash-referenced only.
+binaries_caches_and_native_material_absent	pass	No executable, cache, native request, plan, configuration, or live capture was retained.
+credential_marker_scan	pass	Completed during sealing.
+forbidden_filename_scan	pass	Completed during sealing.
+no_execution_performed_by_packaging	pass	This task only derived and copied closed public-safe records.

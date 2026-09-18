@@ -1,0 +1,1 @@
+The first render-summary helper counted bare `listen <port>;` strings even though the template intentionally renders exact-address listeners. It produced zero counts without failing the Jinja render or changing source/artifact bytes. `render.validation.result` repeats the same frozen-template render and validates the exact-address listener lines; it is the review result.

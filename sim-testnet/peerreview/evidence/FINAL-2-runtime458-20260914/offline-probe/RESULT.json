@@ -1,0 +1,9 @@
+{
+  "classification": "PASS",
+  "probe_exit": 0,
+  "transport": "offline local file only",
+  "source_commit": "fc9086852125227d4e497f4d54b6590a527032ba",
+  "binary_sha256": "cf9c6a08ba3e1a3b75b842f83553eb40cf84afa83bdb50747e477705d63845be",
+  "wasm_sha256": "d763c0210bbd113c065a4e8d538cdd3f5e9b40ba259a5136b77e0a495c364241",
+  "finished_at": "2026-09-14T21:41:02Z"
+}

@@ -1,0 +1,13 @@
+record_type	value
+phase	solidity
+phase_exit	1
+raw_log	logs/solidity.log
+raw_log_sha256	600c34837a084106bdb7ce5b61688b0e271c7f1b8d9877bde3b50062618086f0
+compiler	Compiling 85 files with Solc 0.8.24
+compiler_result	Solc 0.8.24 finished in 673.32s; Compiler run successful!
+size_table_observation	STCoordinator runtime 24564, init 24778, runtime margin 12, initcode margin 24374
+lint_warning	warning[unsafe-typecast]: typecasts that can truncate values should be checked
+source_location	test/SP1Probe.t.sol:167:18
+expression	assertEq(bytes32(referenceOutput), MIRROR_KAT);
+terminal	Error: Lint failed; aborting due to 1 linter warning(s)
+classification	lint-only failure after successful compilation and sizes output; no Solidity test-body result is asserted here

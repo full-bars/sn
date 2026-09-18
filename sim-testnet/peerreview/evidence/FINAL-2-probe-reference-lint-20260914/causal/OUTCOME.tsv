@@ -1,0 +1,2 @@
+variant	candidate_mutation	command_class	expected_result	actual_result	exit	observed_literals	runtime_claim	raw_terminal_sha256
+original-unsafe-assertion-only	restored only assertEq(bytes32(referenceOutput), MIRROR_KAT)	direct forge lint no-cache	expected lint refusal	unsafe-typecast refusal	1	unsafe-typecast; bytes32(referenceOutput); aborting due to 1 linter warning	no runtime failure claimed	2db55847f2a23534c62b152c3bc1609b88504823c9dd5cacd06a37319b9aa4fc

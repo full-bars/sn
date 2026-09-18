@@ -1,0 +1,11 @@
+field	value
+parent_source	0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa
+patch_sha256	14f0747efe4acfc11f07d9b5810264cd84bf6ce45f8cf5f9bd157b2fc06ee394
+applied_diff_sha256	62638ef81940ec87ee2d8dfdd80430aa34226123da8730296675ef13f4c1491b
+causal_binary_sha256	3cf7f2a8b7f29eea3b29a6198bcb2ac2b1d253782b40b46e9bcc8e611875a66e
+build_exit	0
+list_exit	0
+body_exit	1 expected
+outcome	exactly 1 expected FAIL and 3 PASS
+failing_root	TestPrecompileProbeApprovalSurvivesAdvancingFinality
+required_literal	advancing finality changed preview/apply approval

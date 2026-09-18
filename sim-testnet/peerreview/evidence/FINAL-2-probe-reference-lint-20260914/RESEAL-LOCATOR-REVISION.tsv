@@ -1,0 +1,6 @@
+field	value
+revision	unpublished-raw-locator-index
+prior_sha256sums_external_file	sn-final2-probe-reference-lint-evidence-20260914.pre-raw-locator-SHA256SUMS
+prior_sha256sums_external_sha256	918e9028f6507ce4a8da326854884ff2552929402c9267479b1e6153679c6b53
+new_bundle_content_change	references/RAW-LOCATORS.tsv plus documentation and checksum reseal
+execution_or_source_change	false

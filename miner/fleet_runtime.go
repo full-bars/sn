@@ -1,7 +1,7 @@
 package miner
 
 // fleet_runtime.go binds every release fleet publish and status read to the
-// exact node-subtensor v455 artifact. The fleet CLI has no release-lock input,
+// exact node-subtensor v461 artifact. The fleet CLI has no release-lock input,
 // so this immutable tuple is deliberately local and covered against that lock
 // by fleet_runtime_test.go.
 
@@ -19,11 +19,11 @@ import (
 
 const (
 	fleetReleaseRuntimeSpecName           = "node-subtensor"
-	fleetReleaseRuntimeSpecVersion        = uint32(455)
+	fleetReleaseRuntimeSpecVersion        = crv4.ReviewedRuntimeSpecVersion
 	fleetReleaseRuntimeTransactionVersion = uint32(1)
 	fleetReleaseRuntimeStateVersion       = uint8(1)
-	fleetReleaseRuntimeCodeHash           = "0xbca85925668cabb2880164610d64eda2e4d9bf2777994f9cdfdb9d36253ce74a"
-	fleetReleaseRuntimeMetadataHash       = "0x16da562c347a354c55eb1ad5cd5094343afe7acdc12e5b526bf6c8cb12e866bc"
+	fleetReleaseRuntimeCodeHash           = crv4.ReviewedRuntimeCodeHash
+	fleetReleaseRuntimeMetadataHash       = crv4.ReviewedRuntimeMetadataHash
 	fleetReleaseExpectedBlockSeconds      = 12
 	fleetNativeAuthenticationBlockBudget  = 10
 	fleetNativeEndpointTimeout            = time.Duration(fleetReleaseExpectedBlockSeconds*fleetNativeAuthenticationBlockBudget) * time.Second

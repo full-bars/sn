@@ -1,0 +1,7 @@
+check	result	detail
+raw_request_stdout_stderr_files_absent	pass	No raw request, stdout, or stderr file was retained.
+large_preview_output_absent	pass	The 5.9 MB preview output is referenced by SHA-256 only.
+binaries_caches_and_live_apply_material_absent	pass	No executable, cache, or live native material was retained.
+credential_marker_scan	pass	Completed during sealing.
+forbidden_filename_scan	pass	Completed during sealing.
+no_execution_performed_by_packaging	pass	This task only derived and copied closed public-safe records.

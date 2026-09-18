@@ -1,0 +1,12 @@
+record	value
+outer_exit	1
+outer_started_at	2026-09-14T19:10:09Z
+outer_finished_at	2026-09-14T19:11:01Z
+compiler_exit	0
+compiler_started_at	2026-09-14T19:10:09Z
+compiler_finished_at	2026-09-14T19:10:59Z
+artifact_sha256	231a876cdb5a07eefee320a89d63118aaeea83f802a6bbdd4d67319792cf8e76
+artifact_bytes	140668848
+artifact_mode	700
+pre_post_pair_sha256	b817571275b51965527eb4a2dddad198eed5ae7619138e2adec3cf72fb6dc3de
+pre_post_identical	true

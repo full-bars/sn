@@ -1,0 +1,4 @@
+pass	selector	mode	body_exit	owner_exit	binary_sha256	started_utc	finished_utc	top_level_passes
+p1	TestPrecompileProbeApprovalSurvivesAdvancingFinality within exact 40-root selector	normal	0	0	e67e2f362068e7e8648273e18f6d6f6d206581f048e429950b5d02012343daed	2026-09-14T15:01:57Z	2026-09-14T15:02:20Z	1
+p2	^TestPrecompileProbeApprovalSurvivesAdvancingFinality$	normal	0	0	e67e2f362068e7e8648273e18f6d6f6d206581f048e429950b5d02012343daed	2026-09-14T15:04:32Z	2026-09-14T15:04:37Z	1
+p3	^TestPrecompileProbeApprovalSurvivesAdvancingFinality$	normal	0	0	e67e2f362068e7e8648273e18f6d6f6d206581f048e429950b5d02012343daed	2026-09-14T15:10:38Z	2026-09-14T15:10:44Z	1

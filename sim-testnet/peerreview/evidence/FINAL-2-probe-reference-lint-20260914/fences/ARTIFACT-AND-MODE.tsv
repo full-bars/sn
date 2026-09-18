@@ -1,0 +1,11 @@
+field	value
+strict-p1-artifact-file-count	107
+strict-p1-artifact-manifest-sha256	4f98ba67107c8f4b39b7c87d6c301eeed4c2b0c15dd949d557217186b28dbaa5
+source-sidecar-tree-sha256	cab7e5cdd55aa770998407460f5f70925408c37bf7f9706ceb91a755cd002e6b
+frozen-foundry-lib-fence-sha256	f2e133dc6ddf9e220d65c02e4f33adfa578dc51215cc1aa188fed42f0f8a23af
+go-replacement-fence-sha256	95175db9f682c9db508832d18dc096d3547ddb3c053ee40180173bb5936bbe8c
+mode-before-matrix-sha256	6859fd2741e8482664a4aa9a2b65ef6d4e8ce5e15597d9b673c557d4df7dab8e
+mode-after-matrix-sha256	f77f666fe178995ab85cc5c8f0342bc7f22cdaf5f1e6927ecfa0ebd69c99a7ad
+mode-reconciliation-content-change	false
+mode-reconciliation-git-mode-change	false
+candidate-clean-after-mode-readmission	true

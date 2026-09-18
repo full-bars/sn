@@ -1,0 +1,3 @@
+source	run	mode	outcome	scope
+7eab04905dbc274ae6d2546b6802f1097c1fc3fe	producer evidence-simulator	race	package timeout at 10m; raw phase exit 1	original incident; individual active roots not credited as PASS/FAIL
+7eab04905dbc274ae6d2546b6802f1097c1fc3fe	producer evidence-simulator	normal	ok github.com/urfoundation/sn/sim-testnet 321.601s	original incident context

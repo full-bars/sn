@@ -38,8 +38,9 @@ type cliOptions struct {
 	ProvisionalObservationTimeout                                                                                                   time.Duration
 	ProvisionalRPCAuthority                                                                                                         string
 	OwnedRPCAuthority                                                                                                               string
+	ThenReleaseCandidate                                                                                                            bool
 	Config, SNRepo, ServerRepo, OperatorProxyRepo, VaultRepo, PlatformConfigRepo, StateDir, PlanHash, Name, Manifest, RunID, Format string
-	Apply, Detach, ProvisionalResume                                                                                                bool
+	Apply, Detach, ProvisionalResume, PrepareOnly                                                                                   bool
 }
 
 func usage() {
@@ -76,11 +77,13 @@ Common options:
   --platform-config-repo PATH  platform config repository override
   --format human|json
   --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --prepare-only      approved setup/launch/resume preparation; report all failures and stop before actions
   --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
   --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
   --relay-end-block N  fixed absolute end for read-only relay continuation capture
   --relay-continuation-plan PATH  exact saved continuation plan for adoption
   --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
+  --then-release-candidate  strict detached resume continues the full campaign under the same writer; returns only after the campaign
   --provisional-rpc-authority HOST:PORT  owned private IPv4 RPC route for provisional continuation only
   --owned-rpc-authority HOST:PORT  strict plan-bound owned private IPv4 route; owned RPC has no request ceiling
   --provisional-observation-timeout DURATION  scenario --name epoch --provisional-resume only; 0 keeps the default, maximum 6h
@@ -122,7 +125,9 @@ func parseCLI(args []string) (string, cliOptions, error) {
 	fs.StringVar(&o.Manifest, "manifest", "", "")
 	fs.StringVar(&o.RunID, "run-id", "", "")
 	fs.BoolVar(&o.Apply, "apply", false, "")
+	fs.BoolVar(&o.PrepareOnly, "prepare-only", false, "")
 	fs.BoolVar(&o.Detach, "detach", false, "")
+	fs.BoolVar(&o.ThenReleaseCandidate, "then-release-candidate", false, "")
 	fs.BoolVar(&o.ProvisionalResume, "provisional-resume", false, "")
 	fs.Uint64Var(&o.FirstNativeEpoch, "first-native-epoch", 0, "")
 	fs.StringVar(&o.RelayContinuationPlan, "relay-continuation-plan", "", "")
@@ -161,6 +166,12 @@ func parseCLI(args []string) (string, cliOptions, error) {
 	}
 	if o.Format != "human" && o.Format != "json" {
 		return "", o, errors.New("--format must be human or json")
+	}
+	if err := validateLaunchPreparationOptions(cmd, o); err != nil {
+		return "", o, err
+	}
+	if err := validateStrictResumeCampaignOptions(cmd, o); err != nil {
+		return "", o, err
 	}
 	if o.RunID != "" && (cmd != "analyze" || o.Manifest == "") {
 		return "", o, errors.New("--run-id is valid only for public analyze with --manifest")
@@ -341,18 +352,25 @@ func runMainWithReleaseDependencies(args []string, loadResolved resolvedConfigLo
 		component := args[0]
 		fs := flag.NewFlagSet(component, flag.ContinueOnError)
 		var port, count, batchSize int
-		var tlsDefaultHost string
+		var tlsDefaultHost, workloadProfile string
 		var directH3Loopback bool
 		fs.IntVar(&port, "port", 0, "")
 		fs.IntVar(&count, "count", 8, "")
 		fs.IntVar(&batchSize, "batch_size", 4, "")
 		fs.StringVar(&tlsDefaultHost, "tls-default-host", "", "")
+		fs.StringVar(&workloadProfile, "workload-profile", "", "")
 		fs.BoolVar(&directH3Loopback, "direct-h3-loopback", false, "")
 		if err := fs.Parse(args[1:]); err != nil {
 			return err
 		}
 		if port == 0 || fs.NArg() != 0 {
 			return fmt.Errorf("invalid internal %s invocation", component)
+		}
+		if component != "__server_taskworker" && workloadProfile != "" {
+			return errors.New("workload profile is restricted to the taskworker module")
+		}
+		if component == "__server_taskworker" && servertaskworker.WorkloadProfile(workloadProfile) != servertaskworker.WorkloadProfileSubnetOperator {
+			return errors.New("simulator taskworker requires the subnet-operator workload profile")
 		}
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer cancel()
@@ -375,7 +393,7 @@ func runMainWithReleaseDependencies(args []string, loadResolved resolvedConfigLo
 		if tlsDefaultHost != "" || directH3Loopback {
 			return errors.New("taskworker module cannot set Connect transport options")
 		}
-		return servertaskworker.Run(ctx, servertaskworker.RunOptions{Port: port, Count: count, BatchSize: batchSize})
+		return servertaskworker.Run(ctx, servertaskworker.RunOptions{Port: port, Count: count, BatchSize: batchSize, WorkloadProfile: servertaskworker.WorkloadProfile(workloadProfile)})
 	}
 	if len(args) > 0 && args[0] == "__server_cleanup_contracts" {
 		fs := flag.NewFlagSet(args[0], flag.ContinueOnError)

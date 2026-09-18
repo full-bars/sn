@@ -1,0 +1,8 @@
+preflight	exit	observed_result
+source-freeze	0	initial 13-repository source freeze recorded
+source-integrity	0	sim-testnet/sourceguard passed
+binding-toolchain	0	abigen version 1.17.0-stable recorded
+runtime-source	0	runtime v454 and compatibility source attestations recorded
+runtime-metadata	0	versions 451,452,453,454,455 recorded
+private-services	0	admission preflight passed; content intentionally not copied
+final-source-freeze	0	final 13-repository source freeze recorded

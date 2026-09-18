@@ -15,14 +15,17 @@ import (
 	validatorcomponent "github.com/urfoundation/sn/validator"
 )
 
-const evidenceRelayContinuationSchema = "urnetwork-sim-evidence-relay-continuation-v2"
-const evidenceRelayContinuationSlots uint64 = 512
+const evidenceRelayContinuationSchema = "urnetwork-sim-evidence-relay-continuation-v3"
+const evidenceRelayContinuationRefreshSchema = "urnetwork-sim-evidence-relay-continuation-v4"
+const evidenceRelayContinuationSlots uint64 = 1024
 const evidenceRelayContinuationGas uint64 = 1_000_000
-const evidenceRelayContinuationFee uint64 = 50_000_000_000
+const evidenceRelayContinuationFee uint64 = 25_000_000_000
+const evidenceRelayOriginalSlots uint64 = 256
+const evidenceRelayOriginalFee uint64 = 100_000_000_000
 
-// One approval repartitions the original allowance. It never replaces an
-// activation, forgives an admitted transaction, resets a ledger or moves its
-// end on restart. Capture is a request; apply and runtime replay its sources.
+// Each approval owns a fixed end. A v4 refresh names the immediately preceding
+// approved plan and retains its full liability and activation ancestry. Ordinary
+// restart never moves an end; capture and exact import authenticate a new one.
 type EvidenceRelayContinuation struct {
 	Schema                 string                                                      `json:"schema"`
 	SourcePlanHash         string                                                      `json:"source_plan_hash"`
@@ -68,14 +71,39 @@ type EvidenceRelayContinuationDebit struct {
 	AllowanceWei  DecimalUint `json:"allowance_wei"`
 }
 
-func evidenceRelayContinuationNewSlots(reserve DecimalUint, debits []EvidenceRelayContinuationDebit) (uint64, DecimalUint, error) {
-	remaining, ok := new(big.Int).SetString(string(reserve), 10)
+// The approved wire version fixes both dimensions. An existing v2 approval
+// retains its original fee and count when imported, resumed or revised.
+func (self *EvidenceRelayContinuation) feeTerms() (uint64, uint64, error) {
+	if self == nil {
+		return 0, 0, errors.New("relay continuation fee owner is absent")
+	}
+	switch self.Schema {
+	case "urnetwork-sim-evidence-relay-continuation-v2":
+		return 50_000_000_000, 512, nil
+	case evidenceRelayContinuationSchema, evidenceRelayContinuationRefreshSchema:
+		return evidenceRelayContinuationFee, evidenceRelayContinuationSlots, nil
+	default:
+		return 0, 0, errors.New("relay continuation fee approval version is unsupported")
+	}
+}
+
+// Every old debit retains its full approved cost before division by the new
+// per-call ceiling. Integer division never creates a partly funded call.
+func (self *EvidenceRelayContinuation) remainingSlots() (uint64, DecimalUint, error) {
+	fee, maximum, err := self.feeTerms()
+	if err != nil {
+		return 0, "", err
+	}
+	if uint64(len(self.Debits)) > self.debitLimit() {
+		return 0, "", errors.New("relay continuation exceeds its original debit census")
+	}
+	remaining, ok := new(big.Int).SetString(string(self.OriginalReserve.Spend.EVMGasWei), 10)
 	if !ok || remaining.Sign() <= 0 {
 		return 0, "", errors.New("relay continuation reserve is invalid")
 	}
 	liability := new(big.Int)
 	seen := map[string]bool{}
-	for _, debit := range debits {
+	for _, debit := range self.Debits {
 		amount, ok := new(big.Int).SetString(string(debit.AllowanceWei), 10)
 		if !ok || amount.Sign() <= 0 || !validCanonicalHashHex(debit.PlanHash) || !validCanonicalHashHex("0x"+stringsTrimRelayPrefix(debit.ActionID)) || seen[debit.ActionID] {
 			return 0, "", errors.New("relay continuation original debit identity or allowance differs")
@@ -87,8 +115,8 @@ func evidenceRelayContinuationNewSlots(reserve DecimalUint, debits []EvidenceRel
 	if remaining.Sign() < 0 {
 		return 0, "", errors.New("relay continuation original liabilities exceed their retained reserve")
 	}
-	remaining.Div(remaining, new(big.Int).SetUint64(evidenceRelayContinuationGas*evidenceRelayContinuationFee))
-	if !remaining.IsUint64() || remaining.Uint64() > evidenceRelayContinuationSlots {
+	remaining.Div(remaining, new(big.Int).SetUint64(evidenceRelayContinuationGas*fee))
+	if !remaining.IsUint64() || remaining.Uint64() > maximum {
 		return 0, "", errors.New("relay continuation new slot allowance differs")
 	}
 	return remaining.Uint64(), DecimalUint(liability.String()), nil
@@ -200,16 +228,29 @@ func (c *EvidenceRelayContinuation) requiredSubjects(headers map[[32]byte]protoc
 }
 
 func appendEvidenceRelayContinuationPlan(base *SetupPlan, c EvidenceRelayContinuation) (*SetupPlan, error) {
-	if base == nil || base.EvidenceRelayContinuation != nil || c.SourcePlanHash != base.PlanHash || c.ConfigHash != base.ConfigHash {
-		return nil, errors.New("relay continuation must extend the exact original approved source once")
+	if base == nil || c.SourcePlanHash != base.PlanHash || c.ConfigHash != base.ConfigHash {
+		return nil, errors.New("relay continuation must extend its exact approved predecessor")
 	}
 	original, err := exactPlanActionByID(base, evidenceRelayReserveId)
-	if err != nil || !reflect.DeepEqual(original, c.OriginalReserve) {
-		return nil, errors.Join(errors.New("relay continuation replaced its original reserve"), err)
+	if err != nil {
+		return nil, err
 	}
-	gas, fee, maximum, err := evidenceRelayPlanAllowance(base, original)
-	if err != nil || gas != evidenceRelayContinuationGas || fee != 2*evidenceRelayContinuationFee || maximum != evidenceRelayContinuationSlots/2 {
-		return nil, errors.Join(errors.New("relay continuation is outside the retained256-slot100gwei approval"), err)
+	if base.EvidenceRelayContinuation != nil {
+		if err := validateEvidenceRelayContinuationRefresh(base, &c); err != nil {
+			return nil, err
+		}
+	} else {
+		if c.Schema == evidenceRelayContinuationRefreshSchema || !reflect.DeepEqual(original, c.OriginalReserve) {
+			return nil, errors.Join(errors.New("relay continuation replaced its original reserve"), err)
+		}
+		gas, fee, maximum, err := evidenceRelayPlanAllowance(base, original)
+		if err != nil || gas != evidenceRelayContinuationGas || fee != evidenceRelayOriginalFee || maximum != evidenceRelayOriginalSlots {
+			return nil, errors.Join(errors.New("relay continuation is outside the retained256-slot100gwei approval"), err)
+		}
+	}
+	continuedFee, continuedSlots, err := c.feeTerms()
+	if err != nil {
+		return nil, err
 	}
 	raw, err := json.Marshal(base)
 	if err != nil {
@@ -226,8 +267,8 @@ func appendEvidenceRelayContinuationPlan(base *SetupPlan, c EvidenceRelayContinu
 		if action.ID != evidenceRelayReserveId {
 			continue
 		}
-		action.Parameters["maximum_slots"] = strconv.FormatUint(evidenceRelayContinuationSlots, 10)
-		action.Parameters[evmMaximumFeePerGasParameter] = strconv.FormatUint(evidenceRelayContinuationFee, 10)
+		action.Parameters["maximum_slots"] = strconv.FormatUint(continuedSlots, 10)
+		action.Parameters[evmMaximumFeePerGasParameter] = strconv.FormatUint(continuedFee, 10)
 		action.IntentHash, err = actionIntentHash(*action)
 		if err != nil {
 			return nil, err
@@ -255,7 +296,11 @@ func validateEvidenceRelayContinuationPlan(plan *SetupPlan) error {
 	if err := validateEvidenceRelayContinuationBudget(plan); err != nil {
 		return err
 	}
-	if c.Schema != evidenceRelayContinuationSchema || c.SourcePlanHash == plan.PlanHash || !plan.allowedPlanHashes()[c.SourcePlanHash] || !plan.allowedPlanHashes()[c.ActivationPlanHash] || c.ConfigHash != plan.ConfigHash || !validCanonicalHashHex(c.JournalHash) || len(c.Sources) != 4 || len(c.Retained) > int(evidenceRelayContinuationSlots) || len(c.Debits) > int(evidenceRelayContinuationSlots/2) {
+	continuedFee, continuedSlots, err := c.feeTerms()
+	if err != nil {
+		return err
+	}
+	if c.SourcePlanHash == plan.PlanHash || !plan.allowedPlanHashes()[c.SourcePlanHash] || !plan.allowedPlanHashes()[c.ActivationPlanHash] || c.ConfigHash != plan.ConfigHash || !validCanonicalHashHex(c.JournalHash) || len(c.Sources) != 4 || len(c.Retained) > int(continuedSlots) || uint64(len(c.Debits)) > c.debitLimit() {
 		return errors.New("relay continuation changed its source approval or exact four-source census")
 	}
 	for _, hash := range []string{c.PreparedSHA256, c.CompletedSHA256, c.TransactionsSHA256} {
@@ -268,10 +313,10 @@ func validateEvidenceRelayContinuationPlan(plan *SetupPlan) error {
 		return err
 	}
 	gas, fee, slots, err := evidenceRelayPlanAllowance(plan, reserve)
-	if err != nil || gas != evidenceRelayContinuationGas || fee != evidenceRelayContinuationFee || slots != evidenceRelayContinuationSlots || reserve.Spend != c.OriginalReserve.Spend {
+	if err != nil || gas != evidenceRelayContinuationGas || fee != continuedFee || slots != continuedSlots || reserve.Spend != c.OriginalReserve.Spend {
 		return errors.Join(errors.New("relay continuation changed the existing aggregate monetary allowance"), err)
 	}
-	newSlots, liability, err := evidenceRelayContinuationNewSlots(c.OriginalReserve.Spend.EVMGasWei, c.Debits)
+	newSlots, liability, err := c.remainingSlots()
 	if err != nil || c.NewSlots != newSlots || c.HistoricalLiabilityWei != liability {
 		return errors.Join(errors.New("relay continuation failed to preserve original higher-fee liabilities"), err)
 	}
@@ -328,14 +373,18 @@ func validateEvidenceRelayContinuationBudget(plan *SetupPlan) error {
 		return errors.New("relay continuation budget owner is absent")
 	}
 	c := plan.EvidenceRelayContinuation
-	if c.Schema != evidenceRelayContinuationSchema || c.ConfigHash != plan.ConfigHash || c.SourcePlanHash == plan.PlanHash || !plan.allowedPlanHashes()[c.SourcePlanHash] || plan.MaximumEVMFeePerGasWei != 2*evidenceRelayContinuationFee {
+	continuedFee, continuedSlots, err := c.feeTerms()
+	if err != nil {
+		return err
+	}
+	if c.ConfigHash != plan.ConfigHash || c.SourcePlanHash == plan.PlanHash || !plan.allowedPlanHashes()[c.SourcePlanHash] || plan.MaximumEVMFeePerGasWei != evidenceRelayOriginalFee {
 		return errors.New("relay continuation budget changed original approval identity")
 	}
 	original := *plan
 	original.PlanHash = c.SourcePlanHash
 	original.EvidenceRelayContinuation = nil
 	gas, fee, maximum, err := evidenceRelayPlanAllowance(&original, c.OriginalReserve)
-	if err != nil || gas != evidenceRelayContinuationGas || fee != 2*evidenceRelayContinuationFee || maximum != evidenceRelayContinuationSlots/2 {
+	if err != nil || gas != evidenceRelayContinuationGas || fee != evidenceRelayOriginalFee || maximum != evidenceRelayOriginalSlots {
 		return errors.Join(errors.New("relay continuation budget changed original reserve dimensions"), err)
 	}
 	reserve, err := exactPlanActionByID(plan, evidenceRelayReserveId)
@@ -343,10 +392,10 @@ func validateEvidenceRelayContinuationBudget(plan *SetupPlan) error {
 		return err
 	}
 	gas, fee, maximum, err = evidenceRelayPlanAllowance(plan, reserve)
-	if err != nil || gas != evidenceRelayContinuationGas || fee != evidenceRelayContinuationFee || maximum != evidenceRelayContinuationSlots || reserve.Spend != c.OriginalReserve.Spend {
+	if err != nil || gas != evidenceRelayContinuationGas || fee != continuedFee || maximum != continuedSlots || reserve.Spend != c.OriginalReserve.Spend {
 		return errors.Join(errors.New("relay continuation budget changed aggregate monetary authority"), err)
 	}
-	newSlots, liability, err := evidenceRelayContinuationNewSlots(c.OriginalReserve.Spend.EVMGasWei, c.Debits)
+	newSlots, liability, err := c.remainingSlots()
 	if err != nil || newSlots != c.NewSlots || liability != c.HistoricalLiabilityWei {
 		return errors.Join(errors.New("relay continuation budget omitted original liabilities"), err)
 	}

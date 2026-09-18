@@ -1,0 +1,10 @@
+origin_label	sha256	retained_representation
+closed RESULT.json	d2d651a30274a0572cca7bc0f5d503bbf172cc74072d38a408c090897b74855c	derived refusal fields
+closed PLAN-ADMISSION-COMPARISON.json	32c8b68f511147af113957c6914da1de2e0e0a02691c33d0ea644b21eb67baf3	derived equality fields
+closed raw stderr	6e5f9f9f7f36ae6be304828f62f71a4f7f7f8a3d8e91501fe7a07b5db2d0b7cf	derived raw error line only
+closed state.before.sha256	326973224bbf54e3c2810e03dadc60466558bc6f25c86d105cabd44242e45f11	derived state comparison
+closed state.after.sha256	65dc79c9963e5e84b27d1aa7e60bb1726e518930406e7d795b169892e1565ed3	derived state comparison
+closed reviewed setup preview REVIEW.json	27bbb335483781f120816c50e4664c9c8fbf60b798b5deda4f788b3bd98cfdcd	derived preserved limits
+closed setup preview RESULT.json	3e0e8dc321678a8ca6075478eeb2d3a39ea636e0dd4a7edfc8ef399278fc029a	identity and preview provenance
+functions.exec output chunk502971	not retained as a file	transcript-derived chain-ID observation; checksum is assigned to the derived record only
+functions.exec output chunk74cfb4	not retained as a file	transcript-derived pinned block and receipt observation; checksum is assigned to the derived record only

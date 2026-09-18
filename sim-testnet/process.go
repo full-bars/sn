@@ -444,36 +444,42 @@ func currentSupervisorReady(stateDir string) (bool, error) {
 }
 
 // Recheck the actual requested state filesystem and listeners after local
-// dependencies/builds but before constructing a transaction-capable executor.
+// dependencies/builds but before the setup action gate.
 func preflightReleaseHost(ctx context.Context, stateDir string, cfg *ResolvedConfig, bins map[string]string) error {
+	var failures []error
 	available, err := filesystemFreeBytes(stateDir)
 	if err != nil {
-		return fmt.Errorf("inspect release state filesystem: %w", err)
-	}
-	if err := validateReleaseStateFreeBytes(available); err != nil {
-		return err
+		failures = append(failures, fmt.Errorf("inspect release state filesystem: %w", err))
+	} else if err := validateReleaseStateFreeBytes(available); err != nil {
+		failures = append(failures, err)
 	}
 	if err := validateOperatorConfigOverlays(cfg, stateDir); err != nil {
-		return fmt.Errorf("operator config overlay: %w", err)
+		failures = append(failures, fmt.Errorf("operator config overlay: %w", err))
 	}
-	ready, err := currentSupervisorReady(stateDir)
-	if err != nil {
-		return err
+	ready, readyErr := currentSupervisorReady(stateDir)
+	if readyErr != nil {
+		failures = append(failures, readyErr)
 	}
 	if ready {
-		return nil
+		return errors.Join(failures...)
 	}
-	serverSpecs, err := buildServerSpecs(cfg, stateDir, bins)
-	if err != nil {
-		return err
-	}
-	if err := recoverStaleTemporaryProcesses(ctx, stateDir, cfg.Config.Deployment.DeploymentID, selectProvisioningServerSpecs(serverSpecs)); err != nil {
-		return fmt.Errorf("recover interrupted provisioning helpers: %w", err)
+	serverSpecs, specsErr := buildServerSpecs(cfg, stateDir, bins)
+	if specsErr != nil {
+		failures = append(failures, fmt.Errorf("provisioning helper recovery blocked by process specifications: %w", specsErr))
+	} else if readyErr != nil {
+		failures = append(failures, errors.New("provisioning helper recovery blocked by supervisor identity"))
+	} else if err := recoverStaleTemporaryProcesses(ctx, stateDir, cfg.Config.Deployment.DeploymentID, selectProvisioningServerSpecs(serverSpecs)); err != nil {
+		failures = append(failures, fmt.Errorf("recover interrupted provisioning helpers: %w", err))
 	}
 	if err := validateAvailableListenAddresses(releaseProcessListenAddresses(cfg)); err != nil {
-		return err
+		failures = append(failures, err)
 	}
-	return validateAvailablePacketListenAddressesWithBinary(ctx, bins[connectServerBinaryName], releaseProcessPacketListenAddresses(cfg))
+	if bins[connectServerBinaryName] == "" {
+		failures = append(failures, errors.New("packet listen preflight blocked by connect server binary"))
+	} else if err := validateAvailablePacketListenAddressesWithBinary(ctx, bins[connectServerBinaryName], releaseProcessPacketListenAddresses(cfg)); err != nil {
+		failures = append(failures, err)
+	}
+	return errors.Join(append(failures, ctx.Err())...)
 }
 
 // postTopologyTournamentActions returns the only setup actions which are
@@ -685,13 +691,32 @@ func releaseTopologyReadyWithRestartPolicy(state SupervisorState, wantHash strin
 // earlier attempt. Strict mode rejects restarts; provisional mode permits
 // recovery within the same bounded launch deadline.
 func waitReleaseTopologyReady(ctx context.Context, cfg *ResolvedConfig, stateDir string, want SupervisorFile, supervisorPID int, supervisorStartTimeTicks uint64, baseline map[string]int, processLogs *processLogGate, timeout time.Duration) error {
+	return waitReleaseTopologyReadyWithClock(ctx, cfg, stateDir, want, supervisorPID, supervisorStartTimeTicks, baseline, processLogs, timeout, time.Now, func(ctx context.Context, delay time.Duration) error {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(delay):
+			return nil
+		}
+	})
+}
+
+// Keeps the real proof, process and log readers in deadline tests; only elapsed
+// time and the interruptible poll wait are supplied by the caller.
+func waitReleaseTopologyReadyWithClock(ctx context.Context, cfg *ResolvedConfig, stateDir string, want SupervisorFile, supervisorPID int, supervisorStartTimeTicks uint64, baseline map[string]int, processLogs *processLogGate, timeout time.Duration, now func() time.Time, wait func(context.Context, time.Duration) error) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	wantHash, err := canonicalHashHex(want)
 	if err != nil {
 		return err
 	}
-	deadline := time.Now().Add(timeout)
+	deadline := now().Add(timeout)
 	var lastErr error
-	for time.Now().Before(deadline) {
+	for now().Before(deadline) {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		var state SupervisorState
 		if err := readJSONFile(filepath.Join(stateDir, "supervisor.state.json"), &state); err != nil {
 			lastErr = err
@@ -706,19 +731,17 @@ func waitReleaseTopologyReady(ctx context.Context, cfg *ResolvedConfig, stateDir
 		} else if ready, err := releaseTopologyReadyWithRestartPolicy(state, wantHash, want.Specs, supervisorPID, supervisorStartTimeTicks, baseline, current, provisionalResumeEnabled(cfg)); err != nil {
 			return err
 		} else if ready {
-			return nil
+			return ctx.Err()
 		}
-		remaining := time.Until(deadline)
+		remaining := deadline.Sub(now())
 		if remaining > 500*time.Millisecond {
 			remaining = 500 * time.Millisecond
 		}
 		if remaining <= 0 {
 			break
 		}
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(remaining):
+		if err := wait(ctx, remaining); err != nil {
+			return err
 		}
 	}
 	if lastErr != nil {
@@ -993,13 +1016,15 @@ func buildReleaseBinaries(ctx context.Context, cfg *ResolvedConfig, stateDir str
 	}
 	targets := []struct{ name, dir, pkg string }{{"sim-testnet", cfg.Repos.SN, "./sim-testnet"}, {"server-ctl", cfg.Repos.Server, "./bringyourctl"}}
 	result := map[string]string{}
+	var failures []error
 	for _, t := range targets {
 		path := filepath.Join(out, t.name)
 		if t.name == "sim-testnet" && provisionalResumeEnabled(cfg) {
 			// Keep the retained configuration source while running the exact
 			// explicitly admitted provisional image, including its startup fixes.
 			if err := copyProvisionalSimulatorBinary(cfg, path); err != nil {
-				return nil, err
+				failures = append(failures, fmt.Errorf("prepare %s: %w", t.name, err))
+				continue
 			}
 			result[t.name] = path
 			continue
@@ -1008,30 +1033,34 @@ func buildReleaseBinaries(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		cmd.Dir = t.dir
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			return nil, fmt.Errorf("build %s: %w: %s", t.name, err, redactText(string(output), cfg.WalletSecret, cfg.WalletMaterial, cfg.WalletPasswordSecret, cfg.WalletPassword))
+			failures = append(failures, fmt.Errorf("build %s: %w: %s", t.name, err, redactText(string(output), cfg.WalletSecret, cfg.WalletMaterial, cfg.WalletPasswordSecret, cfg.WalletPassword)))
+			continue
 		}
 		result[t.name] = path
 	}
+	if result["sim-testnet"] == "" {
+		return result, errors.Join(append(failures, errors.New("connect server binary blocked by simulator build"))...)
+	}
 	connectServerBinary := filepath.Join(out, connectServerBinaryName)
 	if err := copyFile(result["sim-testnet"], connectServerBinary, 0o700); err != nil {
-		return nil, fmt.Errorf("prepare private connect server binary: %w", err)
+		return result, errors.Join(append(failures, fmt.Errorf("prepare private connect server binary: %w", err))...)
 	}
 	if err := installConnectBindServiceCapability(ctx, connectServerBinary); err != nil {
-		return nil, err
+		return result, errors.Join(append(failures, err)...)
 	}
 	connectServerHash, err := fileSHA256(connectServerBinary)
 	if err != nil {
-		return nil, err
+		return result, errors.Join(append(failures, err)...)
 	}
 	simulatorHash, err := fileSHA256(result["sim-testnet"])
 	if err != nil {
-		return nil, err
+		return result, errors.Join(append(failures, err)...)
 	}
 	if connectServerHash != simulatorHash {
-		return nil, errors.New("capability-scoped connect binary bytes differ from the release simulator")
+		return result, errors.Join(append(failures, errors.New("capability-scoped connect binary bytes differ from the release simulator"))...)
 	}
 	result[connectServerBinaryName] = connectServerBinary
-	return result, nil
+	return result, errors.Join(failures...)
 }
 
 // startDependencies launches one isolated server/local-compatible PostgreSQL
@@ -1046,15 +1075,18 @@ func startDependencies(ctx context.Context, cfg *ResolvedConfig) error {
 	if err != nil {
 		return err
 	}
+	var failures []error
 	for _, spec := range specs {
 		if err := ensureContainer(ctx, docker, spec); err != nil {
-			return err
+			failures = append(failures, err)
+			continue
 		}
 		if err := waitContainerReady(ctx, docker, spec); err != nil {
-			return err
+			failures = append(failures, err)
+			continue
 		}
 	}
-	return nil
+	return errors.Join(failures...)
 }
 
 // dependencyContainerSpecs mirrors the operational settings in server/local
@@ -1490,6 +1522,9 @@ func buildServerSpecs(cfg *ResolvedConfig, stateDir string, bins map[string]stri
 			}
 			if svc.role == "connect" {
 				args = append(args, "--tls-default-host="+listenIP, "--direct-h3-loopback")
+			}
+			if svc.role == "taskworker" {
+				args = append(args, "--workload-profile=subnet-operator")
 			}
 			spec := ProcessSpec{ID: id, Role: "operator-" + svc.role, Identity: fmt.Sprintf("no:%d", i), Command: bins[svc.bin], Args: args, WorkDir: cfg.Repos.Server, Env: env, StdoutPath: filepath.Join(stateDir, "processes", id+".stdout.log"), StderrPath: filepath.Join(stateDir, "processes", id+".stderr.log"), HealthURL: fmt.Sprintf("http://%s:%d/status", listenIP, svc.port), RestartLimit: 5}
 			if svc.role == "connect" {
@@ -2713,12 +2748,11 @@ func providerStartupWaveSize(cfg *ResolvedConfig) int {
 	return 0
 }
 
-// Real public-RPC validator initialization took about twenty minutes before
-// its first signed trails. Allow bounded warm-up after provider readiness;
-// fresh proofs, signature checks, process ownership and log checks still gate
-// admission. This does not extend campaign windows or per-request deadlines.
+// Retained strict history needs complete signed and public replay before fresh
+// trails on every RPC route. Reuse the bounded public-RPC warm-up allowance;
+// proof, health and log gates, campaign windows and request deadlines stay exact.
 func releaseTopologyStartupReadinessTimeout(cfg *ResolvedConfig) time.Duration {
-	if cfg != nil && cfg.OperationalRPCMode == rpcModePublicOverride {
+	if cfg != nil && (cfg.strictHistoryAdoption != nil || cfg.OperationalRPCMode == rpcModePublicOverride) {
 		return 30 * time.Minute
 	}
 	return 5 * time.Minute

@@ -1,0 +1,3 @@
+check	result	exit	finished_utc	artifact_manifest_sha256	meaning	raw_terminal_sha256
+gencontracts-check	pass	0	2026-09-14T17:34:37Z	4f98ba67107c8f4b39b7c87d6c301eeed4c2b0c15dd949d557217186b28dbaa5	Generated contract payload is semantically current; graph-sensitive metadata differs while locked deployment bytes are preserved.	0803d002b3be648253cbebfadde50cde3353f42b3275b2e752dc5b5eae372aef
+stabi-generate-check-after-mode-readmission	pass	0	2026-09-14T17:43:26Z	4f98ba67107c8f4b39b7c87d6c301eeed4c2b0c15dd949d557217186b28dbaa5	Generated ABI and Go bindings are current and canonical-mode checks pass.	e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855

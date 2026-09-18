@@ -1,0 +1,61 @@
+{
+  "status": "LAN identity, health, finalized runtime and artifact bytes observed; runtime458 adoption required",
+  "endpoint": "http://192.168.1.162:9944",
+  "independent_rpc": false,
+  "operator_nginx_verification": {
+    "at": "2026-09-14T21:01:55Z",
+    "effective_rpc_limit_directives": 0,
+    "nginx_t_exit": 0,
+    "reload_exit": 0,
+    "active": true,
+    "same_master": true,
+    "source": "user report",
+    "log_path": "/Users/brien/urnetwork/monitor/main-ansible-rollout.2WnFJ05z/nginx-verification-v2.60E9StC2/verify-subtensor-nginx.private.log",
+    "log_locally_read": false
+  },
+  "identity": {
+    "chain_id": 945,
+    "genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+    "is_syncing": false,
+    "peers": 16
+  },
+  "finalized": {
+    "number": 8006567,
+    "hash": "0xc814242904668bad31b388b36ed31a0c1ffd3b180b173727f5e3d20ea5c8aba4"
+  },
+  "runtime": {
+    "spec_name": "node-subtensor",
+    "spec_version": 458,
+    "transaction_version": 1,
+    "state_version": 1
+  },
+  "checked_in_pins": {
+    "simulator": 455,
+    "xops": 455
+  },
+  "batches": 3,
+  "jsonrpc_calls": 9,
+  "retries": 0,
+  "all_http_statuses": 200,
+  "all_curl_exits": 0,
+  "artifact_code": {
+    "file": "runtime458.code.wasm",
+    "bytes": 2519192,
+    "sha256": "d763c0210bbd113c065a4e8d538cdd3f5e9b40ba259a5136b77e0a495c364241",
+    "blake2b256": "2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a",
+    "storage_hash": "0x2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a",
+    "storage_hash_matches": true
+  },
+  "artifact_metadata": {
+    "file": "runtime458.metadata.scale",
+    "bytes": 335297,
+    "sha256": "17ebfa2551978a1567da990ac9650e6f01802f578696c552a7c6f9f4b1391405",
+    "blake2b256": "040088e73e34ed5561372aa51b07b56e41cf7f390312837b074434f30452593d"
+  },
+  "artifact_rpc_sha256": "f5d2573e2da0e7da7869322d79a4a8c5f3c58052455a729f93d6f70b264363a6",
+  "source_match": "pending official artifact/source comparison",
+  "offline_wasm_version_metadata_probe": "pending Terra execution",
+  "compatibility": "pending Astra455-to458 relevant staking/call/storage review",
+  "mutations": 0,
+  "note": "Nginx fix is confirmed by operator; these low-volume HTTP200 reads do not independently prove absence of all throttling. Captured :code hash equality proves byte/hash consistency, not upstream source provenance or runtime compatibility."
+}

@@ -1,0 +1,5 @@
+source	mode	body_exit	owner_exit	pass_count	fail_count	failed_root	failure_literal
+1e491b61a841c652f3155152bf845c519e2c171a	normal	1	1	16	2	TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources	evidence gate ./sim-testnet source census: release selector omits source regression TestRuntimeEvidenceSyntheticDirect
+1e491b61a841c652f3155152bf845c519e2c171a	normal	1	1	16	2	TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage	evidence gate ./sim-testnet source census: release selector omits source regression TestRuntimeEvidenceSyntheticDirect
+1e491b61a841c652f3155152bf845c519e2c171a	race	1	1	16	2	TestProducerGateStateSelectionCoversEvidenceV2OwnGuardSources	evidence gate ./sim-testnet source census: release selector omits source regression TestRuntimeEvidenceSyntheticDirect
+1e491b61a841c652f3155152bf845c519e2c171a	race	1	1	16	2	TestProducerGateStateSelectionEvidenceV2KeepsAdjacentSourceCoverage	evidence gate ./sim-testnet source census: release selector omits source regression TestRuntimeEvidenceSyntheticDirect

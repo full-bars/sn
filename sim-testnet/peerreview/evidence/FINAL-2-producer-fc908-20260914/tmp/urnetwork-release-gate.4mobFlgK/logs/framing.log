@@ -1,0 +1,8 @@
+ok  	github.com/urfoundation/sn/protocol	0.017s
+ok  	github.com/urfoundation/sn/miner	0.072s
+ok  	github.com/urfoundation/sn/validator	0.087s
+ok  	github.com/urfoundation/sn/sim-testnet	0.154s
+ok  	github.com/urfoundation/sn/protocol	1.115s
+ok  	github.com/urfoundation/sn/miner	1.285s
+ok  	github.com/urfoundation/sn/validator	1.453s
+ok  	github.com/urfoundation/sn/sim-testnet	2.034s

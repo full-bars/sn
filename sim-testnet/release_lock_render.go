@@ -321,6 +321,12 @@ func validateReleaseLockStatic(lock *ReleaseLock) error {
 	if err := validateReviewedRuntimeIdentity(lock); err != nil {
 		return err
 	}
+	return validateReleaseLockStaticFields(lock)
+}
+
+// Current and archived approvals retain identical image, schema and build
+// checks after their separate runtime identity admission.
+func validateReleaseLockStaticFields(lock *ReleaseLock) error {
 	if !releaseImageDigest.MatchString(lock.Runtime.Image) || strings.Contains(strings.ToLower(lock.Runtime.Image), "placeholder") {
 		return errors.New("runtime image is not digest-pinned")
 	}
@@ -439,6 +445,12 @@ func canonicalReleaseLockBytes(lock *ReleaseLock) ([]byte, error) {
 	if err := validateReleaseLockStatic(lock); err != nil {
 		return nil, err
 	}
+	return canonicalValidatedReleaseLockBytes(lock)
+}
+
+// Callers admit the appropriate current or original runtime first. Both
+// routes retain identical canonical bytes and lossless round-trip checks.
+func canonicalValidatedReleaseLockBytes(lock *ReleaseLock) ([]byte, error) {
 	encoded, err := yaml.Marshal(lock)
 	if err != nil {
 		return nil, err

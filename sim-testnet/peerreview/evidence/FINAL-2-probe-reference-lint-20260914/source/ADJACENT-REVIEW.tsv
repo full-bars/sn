@@ -1,0 +1,6 @@
+review_area	result
+bytes32 output/result/data dynamic narrowing search	The failed assertion was the sole dynamic bytes-to-bytes32 narrowing candidate in evm/test and evm/src.
+other fixed-byte assertions	Use explicit zero or same-width integer values; no matching unsafe dynamic cast was found.
+fleet batcher narrowing	Uses SafeCast before narrowing.
+production Blake2b contract	Requires exactly 64 bytes before reading the first word.
+production runtime mapping	Requires exactly 32 bytes and ABI-decodes the mapping output.

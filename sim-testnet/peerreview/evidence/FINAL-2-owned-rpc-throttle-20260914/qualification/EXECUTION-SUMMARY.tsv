@@ -1,0 +1,5 @@
+execution	exit	terminal_summary	source_and_interpreter_fence
+full29	0	29/29 PASS in 3.926s	candidate clean; pinned interpreter
+focused-p2	0	2/2 PASS in 0.020s	candidate clean; pinned interpreter
+focused-p3	0	2/2 PASS in 0.033s	candidate clean; pinned interpreter
+old-template-causal	1 expected	1 FAIL / 1 PASS in 0.033s	separate one-file mutant; candidate unchanged

@@ -1,0 +1,7 @@
+check	result	detail
+raw_logs_commands_artifacts_absent	pass	Closed raw materials are hash-referenced rather than copied.
+absolute_capture_paths_scoped	pass	Absolute paths appear only in references/RAW-LOCATORS.tsv, which locates retained raw records without copying them.
+credential_marker_scan	pass	No private-key, mnemonic, bearer-token, or cloud-secret marker was found.
+symlink_and_disallowed_binary_scan	pass	No symlink, binary, RLP, key, or PEM file is retained.
+large_file_scan	pass	No retained file exceeds 1 MiB.
+no_execution_performed_by_revision	pass	This revision added locator/provenance records only.

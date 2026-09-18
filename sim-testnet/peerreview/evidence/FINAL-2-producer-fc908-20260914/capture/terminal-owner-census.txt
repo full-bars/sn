@@ -1,0 +1,6 @@
+observed_at_utc=2026-09-14T21:31:09Z
+gate_root=/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/terra-runtime/producer-final37-standalone-fc908685-r1/tmp/urnetwork-release-gate.4mobFlgK
+outer_pid=3496675
+owned_processes_begin
+3799588 3799585       00:00 S    awk -v r=/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/terra-runtime/producer-final37-standalone-fc908685-r1/tmp/urnetwork-release-gate.4mobFlgK $0 ~ r {print}
+owned_processes_end

@@ -1,0 +1,20 @@
+field	value
+causal_source_head	713eae3fcf83615d81d185fda3f3ec42a441a26b
+mutated_path	scripts/test-release-1.0-producer-gate.sh
+forward_patch_sha256	682926cabb360cb715cf101bc98515d94fb655c1629fb52170ea9a167f22fec1
+restored_original_script_sha256	50fc81a5ed6d866ad146e8c7a739a193308dd9cde974a4e9d6e1c70ce5c17034
+normal_binary_sha256	9c3a5b91f8e390fe9a740ed7c5cee910080275eef29659d78a51b93c3205eb17
+list_root_count	4
+list_exit	0
+list_owner_exit	0
+body_started_utc	2026-09-14T18:47:18Z
+body_finished_utc	2026-09-14T18:47:23Z
+body_exit	1
+body_owner_exit	0
+converter_exit	0
+checker_exit	0
+actual_outcomes	3 FAIL; 1 PASS
+required_unique_command_literals	3 matched
+source_dependency_pre_post_fences_equal	true
+forward_apply_check	0
+reverse_apply_check	0

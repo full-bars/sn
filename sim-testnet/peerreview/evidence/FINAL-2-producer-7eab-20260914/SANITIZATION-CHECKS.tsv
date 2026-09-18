@@ -1,0 +1,10 @@
+check	result
+bundle_location	external temp directory; no repository checkout modified
+raw_phase_logs	copied=0; hash/locator records only
+raw_outer_streams	copied=0; hash/locator records only
+private_service_environment_config_vault_keys_certs	copied=0; excluded
+plans_signed_payloads_live_node_material	copied=0; excluded
+artifacts_caches_binaries_fixtures	copied=0; excluded
+service_owner_and_cid_contents	copied=0; hash/locator records only
+live_process_or_container_query	performed=0
+allowed_bundle_content	derived Markdown, TSV, and checksum records

@@ -1,0 +1,8 @@
+fence	value
+source_pair_rows	13
+pre_pair_sha256	b762c4cf828364460d5bef705b066512862d8a015fd546f79fbbbe17dabb846f
+post_pair_sha256	b762c4cf828364460d5bef705b066512862d8a015fd546f79fbbbe17dabb846f
+pre_post_identical	true
+lock_relative_path	deploy/testnet/release.lock.yml
+lock_sha256	76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35
+source_git_presentation	standalone directory-form .git admission

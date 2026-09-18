@@ -386,10 +386,10 @@ func TestRuntimeArtifactMetadataCacheIsHardBounded(t *testing.T) {
 }
 
 // Repeated one-item allowlists cannot evade the per-provider cache bound after
-// five independently authenticated artifacts have been admitted.
-func TestRuntimeArtifactMetadataCacheRejectsSixthSequentialIdentity(t *testing.T) {
-	if maximumRuntimeMetadataArtifactsPerChain != 5 {
-		t.Fatal("reviewed current455 plus historical451–454 requires exactly five bounded artifacts")
+// catalog-bounded independently authenticated artifacts have been admitted.
+func TestRuntimeArtifactMetadataCacheRejectsBeyondReviewedSequentialCapacity(t *testing.T) {
+	if maximumRuntimeMetadataArtifactsPerChain != len(ReviewedRuntimeArtifacts()) {
+		t.Fatal("reviewed history requires one bounded entry per exact catalog artifact")
 	}
 	metadataHex, metadataHash := runtimeIdentityTestMetadata(t)
 	var metadataCalls atomic.Int64
@@ -416,29 +416,29 @@ func TestRuntimeArtifactMetadataCacheRejectsSixthSequentialIdentity(t *testing.T
 		}
 	}}
 	chain := &Chain{API: &gsrpc.SubstrateAPI{Client: client}}
-	for offset := byte(1); offset <= maximumRuntimeMetadataArtifactsPerChain+1; offset++ {
+	for offset := 1; offset <= maximumRuntimeMetadataArtifactsPerChain+1; offset++ {
 		spec := uint32(450) + uint32(offset)
 		identity := RuntimeArtifactIdentity{
 			Version:  RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: spec, TransactionVersion: 1, StateVersion: 1},
 			CodeHash: "0x" + fmt.Sprintf("%064x", spec), MetadataHash: metadataHash,
 		}
-		_, err := AuthenticateRuntimeArtifactAtContext(context.Background(), chain, types.Hash{offset}, identity)
+		_, err := AuthenticateRuntimeArtifactAtContext(context.Background(), chain, types.Hash{byte(offset)}, identity)
 		if offset <= maximumRuntimeMetadataArtifactsPerChain && err != nil {
 			t.Fatalf("artifact %d was rejected before the cache bound: %v", offset, err)
 		}
 		if offset > maximumRuntimeMetadataArtifactsPerChain && err == nil {
-			t.Fatal("sixth sequential runtime artifact bypassed the cache bound")
+			t.Fatal("excess sequential runtime artifact bypassed the cache bound")
 		}
 	}
-	// Hot reads of all five admitted entries still succeed at the hard bound.
-	for offset := byte(1); offset <= maximumRuntimeMetadataArtifactsPerChain; offset++ {
+	// Hot reads of all admitted entries still succeed at the hard bound.
+	for offset := 1; offset <= maximumRuntimeMetadataArtifactsPerChain; offset++ {
 		spec := uint32(450) + uint32(offset)
 		identity := RuntimeArtifactIdentity{Version: RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: spec, TransactionVersion: 1, StateVersion: 1}, CodeHash: "0x" + fmt.Sprintf("%064x", spec), MetadataHash: metadataHash}
-		if _, err := AuthenticateRuntimeArtifactAtContext(context.Background(), chain, types.Hash{offset}, identity); err != nil {
+		if _, err := AuthenticateRuntimeArtifactAtContext(context.Background(), chain, types.Hash{byte(offset)}, identity); err != nil {
 			t.Fatalf("hot artifact %d was lost at the finite cache bound: %v", offset, err)
 		}
 	}
-	if metadataCalls.Load() != maximumRuntimeMetadataArtifactsPerChain {
+	if metadataCalls.Load() != int64(maximumRuntimeMetadataArtifactsPerChain) {
 		t.Fatalf("metadata calls=%d, want %d admitted artifacts", metadataCalls.Load(), maximumRuntimeMetadataArtifactsPerChain)
 	}
 }

@@ -1,0 +1,12 @@
+started_utc=2026-09-14T22:27:48Z
+cwd=/home/by/urnetwork/temp/xops-runtime458-pin-20260914/xops/main/ansible/tests
+source_head=446cbdb56e0dc5004b66d7e0cbf05a4d9c49224c
+source_status_bytes=0
+source_diff_check_bytes=0
+e35cd403734b5252128468b2d82d2ddf0bea314f473ce5315640fcda9840f8b5  /home/by/urnetwork/temp/xops-runtime458-pin-20260914/xops/main/ansible/host_files/snow/subtensor/README.md
+546401d55722c81292418b8b2632428a1c2b7c35b3ffaa3ce3fd3d67f4234869  /home/by/urnetwork/temp/xops-runtime458-pin-20260914/xops/main/ansible/host_files/snow/subtensor/vars.yml
+494778e6df7706e56e4f8895a2adc3f210e76215f5f78727a7cc7340be863fb3  /home/by/urnetwork/temp/xops-runtime458-pin-20260914/xops/main/ansible/tests/test_subtensor_playbook.py
+5f4016bc51761a8b135d601ed5714a58ce3e74831aea2838d0d72f1be5bd6e6c  /home/by/urnetwork/.virtualenv/brien/bin/python3
+Python 3.14.7
+command_file_sha256=4a0680e7f221cff7aaf9c94a75ae7033711a1de3aceffd69aecb87d9929ba874
+command=#!/usr/bin/env bash set -euo pipefail cd /home/by/urnetwork/temp/xops-runtime458-pin-20260914/xops/main/ansible/tests exec env PYTHONDONTWRITEBYTECODE=1 /home/by/urnetwork/.virtualenv/brien/bin/python3 -m unittest -v test_subtensor_playbook.SubtensorPlaybookTests.test_testnet_convergence_pins_deployed_runtime_458 test_subtensor_playbook.SubtensorPlaybookTests.test_runtime_convergence_evaluates_current_pin_and_identity_controls 

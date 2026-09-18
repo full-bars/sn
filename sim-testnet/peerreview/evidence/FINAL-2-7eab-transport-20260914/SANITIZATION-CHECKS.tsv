@@ -1,0 +1,9 @@
+check	result	detail
+raw_request_stdout_stderr_files_absent	pass	No raw request, stdout, or stderr file is retained; the closed error is a derived line and raw stderr is hash-referenced only.
+private_plan_signed_payload_key_rlp_absent	pass	No plan/config payload, signed payload, key, RLP, journal, or identity file is retained.
+binaries_caches_and_live_retry_material_absent	pass	No executable, cache, or live retry material is included.
+probe_provenance_labeled	pass	Transport observations are explicitly transcript-derived; no original HTTP capture file is claimed.
+absolute_paths_absent	pass	No local filesystem path is embedded in the sealed bundle.
+credential_marker_scan	pass	Completed during sealing.
+forbidden_filename_scan	pass	Completed during sealing.
+no_execution_performed_by_packaging	pass	This task only derived public-safe records from closed material.

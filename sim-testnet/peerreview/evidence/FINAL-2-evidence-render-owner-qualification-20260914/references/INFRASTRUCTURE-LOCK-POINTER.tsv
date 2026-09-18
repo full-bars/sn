@@ -1,0 +1,6 @@
+reference	status	capture_or_destination	observed_scope
+FINAL-2-infrastructure-lock-20260914	closed_readonly_preview_0	/home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/lock-preview-physical-libraries	2026-09-14T18:38:10.952454483Z to 2026-09-14T18:38:14.616939991Z; no RPC, native state, or apply
+repositories.protocol_source_hash	changed	3e9d2bb768c31c3c3e40ea45cb5a45f21f80caf7a9356aa4e3ce5515d4b79dcb	one of exactly three previewed lock fields
+infra.gateway	changed	b9a325dd401f99fefc1438166b49beafe9bafafa5fa381de1b889db56b5a27b9	one of exactly three previewed lock fields
+infra.node	changed	fe9fa9e8c72deb9aecfca94f161a01d9d836c4c99497dfc1dc339a1610a799db	one of exactly three previewed lock fields
+candidate_yaml_sha256	observed	76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35	no final commit/build self-reference

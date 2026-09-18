@@ -1,0 +1,8 @@
+check	result
+bundle_location	external temp directory; no repository worktree modified
+raw_events_and_body_streams	copied=0; hash/locator and derived outcome tables only
+binaries	copied=0; SHA-256 identities only
+caches_fixtures_private_state_plans_keys_credentials	copied=0; excluded
+source_patches	copied=public test/script patches only
+live_process_or_session_polling	performed=0
+full_gate_deployment_soak_or_native_claim	present=0

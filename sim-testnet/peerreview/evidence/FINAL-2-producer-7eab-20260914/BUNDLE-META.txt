@@ -1,0 +1,8 @@
+bundle=FINAL-2-producer-7eab-20260914
+intended_destination=sim-testnet/peerreview/evidence/FINAL-2-producer-7eab-20260914
+scope=closed producer-11355 capture only
+source_sn=7eab04905dbc274ae6d2546b6802f1097c1fc3fe
+outer_exit=1
+phase_outcomes=34 exit0;2 exit1;36 starts;36 joins
+raw_content_copied=false
+sealed_with=sha256sum

@@ -146,6 +146,51 @@ contract SP1ProbeTest is Test {
         vm.mockCallRevert(address(0x09), bytes(""), bytes(""));
     }
 
+    /// @dev EIP-152 returns two words; the blake2b-256 answer is the first.
+    ///      Reject malformed lengths before decoding without narrowing bytes.
+    function _referenceBlake2fMatchesKnownAnswer(bytes memory output) internal pure returns (bool) {
+        if (output.length != 64) return false;
+        (bytes32 digest,) = abi.decode(output, (bytes32, bytes32));
+        return digest == MIRROR_KAT;
+    }
+
+    /// @dev A digest-sized or incomplete compression response is not valid.
+    function test_referenceBlake2fRejectsShortOutput() public pure {
+        bytes memory validOutput = abi.encode(MIRROR_KAT, keccak256("synthetic compression remainder"));
+        uint256[4] memory lengths = [uint256(0), 31, 32, 63];
+        for (uint256 index = 0; index < lengths.length; index++) {
+            bytes memory output = new bytes(lengths[index]);
+            for (uint256 offset = 0; offset < output.length; offset++) {
+                output[offset] = validOutput[offset];
+            }
+            assertFalse(_referenceBlake2fMatchesKnownAnswer(output), "short reference response");
+        }
+    }
+
+    /// @dev An exact known-answer prefix cannot hide trailing response bytes.
+    function test_referenceBlake2fRejectsLongOutput() public pure {
+        bytes memory validOutput = abi.encode(MIRROR_KAT, keccak256("synthetic compression remainder"));
+        uint256[2] memory lengths = [uint256(65), 96];
+        for (uint256 index = 0; index < lengths.length; index++) {
+            bytes memory output = new bytes(lengths[index]);
+            for (uint256 offset = 0; offset < validOutput.length; offset++) {
+                output[offset] = validOutput[offset];
+            }
+            assertFalse(_referenceBlake2fMatchesKnownAnswer(output), "long reference response");
+        }
+    }
+
+    /// @dev Every byte of the 256-bit answer is checked independently.
+    function test_referenceBlake2fRejectsChangedKnownAnswer() public pure {
+        bytes memory output = abi.encode(MIRROR_KAT, keccak256("synthetic compression remainder"));
+        assertTrue(_referenceBlake2fMatchesKnownAnswer(output), "exact reference answer");
+        for (uint256 offset = 0; offset < 32; offset++) {
+            output[offset] ^= 0x01;
+            assertFalse(_referenceBlake2fMatchesKnownAnswer(output), "changed reference answer");
+            output[offset] ^= 0x01;
+        }
+    }
+
     /// @dev Deterministically reproduces the live old-library failure while
     ///      the corrected battery still proves the exact mapping and stake.
     function test_readBattery_runtime455RejectsLegacyBlake2f() public {
@@ -164,7 +209,7 @@ contract SP1ProbeTest is Test {
         (bool referenceOk, bytes memory referenceOutput) = address(0x09).staticcall(legacyInput);
         assertTrue(referenceOk, "the old input is valid EIP-152 in Foundry");
         assertEq(referenceOutput.length, 64);
-        assertEq(bytes32(referenceOutput), MIRROR_KAT);
+        assertTrue(_referenceBlake2fMatchesKnownAnswer(referenceOutput), "reference known answer");
         _runtime455Mapping();
         (bool legacyOk,) = address(0x09).staticcall(legacyInput);
         assertFalse(legacyOk, "runtime 455 rejects the old route");

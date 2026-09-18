@@ -22,27 +22,34 @@ func validateRuntimeReservedAttemptUploadCensus(cfg *HarnessConfig) error {
 	if cfg == nil || cfg.Topology.Operators < 2 || cfg.Topology.Validators < 1 || len(cfg.Artifacts.ReservedAttemptUploads) != cfg.Topology.Operators {
 		return errors.New("runtime reserved staging requires explicit capacity for every operator")
 	}
+	var failures []error
 	for index, value := range cfg.Artifacts.ReservedAttemptUploads {
-		domain := value.Admission.Deployment
-		if value.Admission.ReplicaNoID != uint64(index+1) || uint64(cfg.Topology.Validators) > value.Admission.MaximumOwners/uint64(cfg.Topology.Operators) {
-			return errors.New("runtime reserved staging census omits a configured original/destination owner")
-		}
-		if runtimeReservedAttemptUploadIsTemplate(value) {
-			if !cfg.ProvisionValidatorEvidenceV2 || domain.MaximumSubnetUIDs == 0 || domain.MaximumSubnetUIDs > 65535 || value.Admission.ActivationContexts == nil || len(value.Admission.ActivationContexts) != 0 {
-				return errors.New("runtime reserved staging template requires explicit fresh provisioning, native census and empty discovery")
+		err := func() error {
+			domain := value.Admission.Deployment
+			if value.Admission.ReplicaNoID != uint64(index+1) || uint64(cfg.Topology.Validators) > value.Admission.MaximumOwners/uint64(cfg.Topology.Operators) {
+				return errors.New("runtime reserved staging census omits a configured original/destination owner")
 			}
-			if err := value.ValidateCapacity(); err != nil {
+			if runtimeReservedAttemptUploadIsTemplate(value) {
+				if !cfg.ProvisionValidatorEvidenceV2 || domain.MaximumSubnetUIDs == 0 || domain.MaximumSubnetUIDs > 65535 || value.Admission.ActivationContexts == nil || len(value.Admission.ActivationContexts) != 0 {
+					return errors.New("runtime reserved staging template requires explicit fresh provisioning, native census and empty discovery")
+				}
+				if err := value.ValidateCapacity(); err != nil {
+					return err
+				}
+				return nil
+			}
+			profile := &controller.StConfig{Enabled: true, Profile: "testnet", DeploymentId: cfg.Deployment.DeploymentID, ChainId: testnetChainID,
+				GenesisHash: [32]byte(common.HexToHash(testnetGenesis)), Netuid: uint64(domain.Netuid), NoId: uint64(index + 1), ContractAddress: common.Address(domain.Coordinator), SettlementVault: common.Address(domain.SettlementVault)}
+			if err := value.Validate(profile); err != nil {
 				return err
 			}
-			continue
-		}
-		profile := &controller.StConfig{Enabled: true, Profile: "testnet", DeploymentId: cfg.Deployment.DeploymentID, ChainId: testnetChainID,
-			GenesisHash: [32]byte(common.HexToHash(testnetGenesis)), Netuid: uint64(domain.Netuid), NoId: uint64(index + 1), ContractAddress: common.Address(domain.Coordinator), SettlementVault: common.Address(domain.SettlementVault)}
-		if err := value.Validate(profile); err != nil {
-			return err
+			return nil
+		}()
+		if err != nil {
+			failures = append(failures, fmt.Errorf("operator %d reserved staging: %w", index+1, err))
 		}
 	}
-	return nil
+	return errors.Join(failures...)
 }
 
 // Only the independently approved native census is a static capacity field;
@@ -77,41 +84,52 @@ func runtimeReservedAttemptUploads(cfg *ResolvedConfig, stateDir string, contrac
 	expectedRuntime := crv4.RuntimeArtifactIdentity{Version: crv4.RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: cfg.Public.Chain.ExpectedRuntimeSpec,
 		TransactionVersion: cfg.Public.Chain.ExpectedTransactionVersion, StateVersion: cfg.Public.Chain.ExpectedStateVersion}, CodeHash: cfg.Release.Runtime.CodeHash, MetadataHash: cfg.Release.Runtime.MetadataHash}
 	companion := plan.ValidatorEvidence
+	var failures []error
 	for index := range result {
-		value := &result[index]
-		if runtimeReservedAttemptUploadIsTemplate(*value) {
-			genesis, err := decodeHex32("runtime reserved staging native genesis", cfg.Public.Chain.GenesisHash)
-			if err != nil {
-				return nil, err
+		err := func() error {
+			value := &result[index]
+			if runtimeReservedAttemptUploadIsTemplate(*value) {
+				genesis, err := decodeHex32("runtime reserved staging native genesis", cfg.Public.Chain.GenesisHash)
+				if err != nil {
+					return err
+				}
+				value.Admission.Deployment = validatorpkg.ValidatorUploadDeployment{ChainID: plan.ChainID, GenesisHash: genesis, Netuid: plan.Netuid,
+					Coordinator: [20]byte(companion.Coordinator), SettlementVault: [20]byte(companion.SettlementVault), DeploymentIDHash: [32]byte(companion.DeploymentIDHash),
+					Journal: [20]byte(companion.Address), RuntimeHash: [32]byte(companion.RuntimeCodeHash), DeploymentBlock: creation.BlockNumber,
+					NativeRuntime: expectedRuntime, MaximumSubnetUIDs: value.Admission.Deployment.MaximumSubnetUIDs}
 			}
-			value.Admission.Deployment = validatorpkg.ValidatorUploadDeployment{ChainID: plan.ChainID, GenesisHash: genesis, Netuid: plan.Netuid,
-				Coordinator: [20]byte(companion.Coordinator), SettlementVault: [20]byte(companion.SettlementVault), DeploymentIDHash: [32]byte(companion.DeploymentIDHash),
-				Journal: [20]byte(companion.Address), RuntimeHash: [32]byte(companion.RuntimeCodeHash), DeploymentBlock: creation.BlockNumber,
-				NativeRuntime: expectedRuntime, MaximumSubnetUIDs: value.Admission.Deployment.MaximumSubnetUIDs}
-		}
-		domain := value.Admission.Deployment
-		if domain.Netuid != cfg.Netuid || common.Address(domain.Coordinator) != contracts.CoordinatorProxy || common.Address(domain.SettlementVault) != contracts.SettlementVault ||
-			common.Address(domain.Journal) != companion.Address || common.Hash(domain.RuntimeHash) != companion.RuntimeCodeHash || common.Hash(domain.DeploymentIDHash) != companion.DeploymentIDHash ||
-			types.Hash(domain.GenesisHash).Hex() != cfg.Public.Chain.GenesisHash || domain.NativeRuntime != expectedRuntime || domain.DeploymentBlock > creation.BlockNumber {
-			return nil, errors.New("runtime reserved staging pins differ from approved immutable deployment/runtime or complete discovery start")
-		}
-		value.NativeRPCURLs = slices.Clone(value.NativeRPCURLs)
-		if ownedRPCOnly(cfg) {
-			// The existing loopback proxy owns the approved LAN upstream. This
-			// retains staging's TLS-or-loopback policy and the source consent hash.
-			value.NativeRPCURLs = []string{"ws://" + workloadSubstrateRPCAuthority()}
-		}
-		profile := &controller.StConfig{Enabled: true, Profile: "testnet", DeploymentId: plan.DeploymentID, ChainId: plan.ChainID,
-			GenesisHash: domain.GenesisHash, Netuid: uint64(plan.Netuid), NoId: uint64(index + 1), ContractAddress: contracts.CoordinatorProxy, SettlementVault: contracts.SettlementVault}
-		if err := value.Validate(profile); err != nil {
-			return nil, fmt.Errorf("runtime reserved staging resolved deployment: %w", err)
-		}
-		for _, source := range cfg.Config.ValidatorEvidenceV2 {
-			if source.Evidence.UploadIntentSeconds == 0 || source.Evidence.UploadIntentSeconds > value.Admission.MaximumIntentSeconds {
-				return nil, errors.New("runtime reserved staging intent lifetime is absent or exceeds a destination")
+			domain := value.Admission.Deployment
+			if domain.Netuid != cfg.Netuid || common.Address(domain.Coordinator) != contracts.CoordinatorProxy || common.Address(domain.SettlementVault) != contracts.SettlementVault ||
+				common.Address(domain.Journal) != companion.Address || common.Hash(domain.RuntimeHash) != companion.RuntimeCodeHash || common.Hash(domain.DeploymentIDHash) != companion.DeploymentIDHash ||
+				types.Hash(domain.GenesisHash).Hex() != cfg.Public.Chain.GenesisHash || domain.NativeRuntime != expectedRuntime || domain.DeploymentBlock > creation.BlockNumber {
+				return errors.New("runtime reserved staging pins differ from approved immutable deployment/runtime or complete discovery start")
 			}
+			value.NativeRPCURLs = slices.Clone(value.NativeRPCURLs)
+			if ownedRPCOnly(cfg) {
+				// The existing loopback proxy owns the approved LAN upstream. This
+				// retains staging's TLS-or-loopback policy and the source consent hash.
+				value.NativeRPCURLs = []string{"ws://" + workloadSubstrateRPCAuthority()}
+			}
+			profile := &controller.StConfig{Enabled: true, Profile: "testnet", DeploymentId: plan.DeploymentID, ChainId: plan.ChainID,
+				GenesisHash: domain.GenesisHash, Netuid: uint64(plan.Netuid), NoId: uint64(index + 1), ContractAddress: contracts.CoordinatorProxy, SettlementVault: contracts.SettlementVault}
+			if err := value.Validate(profile); err != nil {
+				return fmt.Errorf("runtime reserved staging resolved deployment: %w", err)
+			}
+			var lifetimes []error
+			for _, source := range cfg.Config.ValidatorEvidenceV2 {
+				if source.Evidence.UploadIntentSeconds == 0 || source.Evidence.UploadIntentSeconds > value.Admission.MaximumIntentSeconds {
+					lifetimes = append(lifetimes, fmt.Errorf("validator %d runtime reserved staging intent lifetime is absent or exceeds a destination", source.ValidatorID))
+				}
+			}
+			value.Admission.ActivationContexts = slices.Clone(value.Admission.ActivationContexts)
+			return errors.Join(lifetimes...)
+		}()
+		if err != nil {
+			failures = append(failures, fmt.Errorf("operator %d reserved staging: %w", index+1, err))
 		}
-		value.Admission.ActivationContexts = slices.Clone(value.Admission.ActivationContexts)
+	}
+	if err := errors.Join(failures...); err != nil {
+		return nil, err
 	}
 	return result, nil
 }

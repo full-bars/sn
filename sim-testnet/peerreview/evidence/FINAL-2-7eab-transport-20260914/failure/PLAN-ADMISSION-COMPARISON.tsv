@@ -1,0 +1,12 @@
+field	value	provenance
+installed_plan_hash	0x2b5527989bd2ca38b58d3046e82f2d7fdb5ab1b5b86f3af74ba58e5957ced95d	closed PLAN-ADMISSION-COMPARISON.json
+reviewed_plan_hash	0x2b5527989bd2ca38b58d3046e82f2d7fdb5ab1b5b86f3af74ba58e5957ced95d	closed PLAN-ADMISSION-COMPARISON.json
+plan_hash_matches	true	closed PLAN-ADMISSION-COMPARISON.json
+action_count	3521	closed PLAN-ADMISSION-COMPARISON.json
+all_actions_equal_review	true	closed PLAN-ADMISSION-COMPARISON.json
+successor_equal_review	true	closed PLAN-ADMISSION-COMPARISON.json
+renewal_equal_review	true	closed PLAN-ADMISSION-COMPARISON.json
+spend_fields_present	true	closed PLAN-ADMISSION-COMPARISON.json
+maximum_spend_equal_review	true	closed PLAN-ADMISSION-COMPARISON.json
+superseded_spend_equal_review	true	closed PLAN-ADMISSION-COMPARISON.json
+limits_equal_review	true	closed PLAN-ADMISSION-COMPARISON.json

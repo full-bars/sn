@@ -1,0 +1,13 @@
+run	test	body_exit	owner_exit	event_outcome	elapsed_seconds	binary_sha256	started_utc	finished_utc	pre_post_fences_equal
+timeout-p1	TestRuntimeEvidenceV2AttemptUploadDispatchRefusesBeforePayloadRecovery	0	0	PASS	34.94	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:14:20Z	2026-09-14T18:19:31Z	true
+timeout-p1	TestRuntimeEvidenceV2AttemptUploadLaunchRefusesBeforeMigration	0	0	PASS	51.42	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:14:20Z	2026-09-14T18:19:31Z	true
+timeout-p1	TestRuntimeEvidenceLaunchV2TemplateRejectsMissingAndForeignCreation	0	0	PASS	57.38	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:14:20Z	2026-09-14T18:19:31Z	true
+timeout-p1	TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig	0	0	PASS	303.93	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:14:20Z	2026-09-14T18:19:31Z	true
+timeout-p2	TestRuntimeEvidenceV2AttemptUploadDispatchRefusesBeforePayloadRecovery	0	0	PASS	33.19	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:22:01Z	2026-09-14T18:29:23Z	true
+timeout-p2	TestRuntimeEvidenceV2AttemptUploadLaunchRefusesBeforeMigration	0	0	PASS	49.38	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:22:01Z	2026-09-14T18:29:23Z	true
+timeout-p2	TestRuntimeEvidenceLaunchV2TemplateRejectsMissingAndForeignCreation	0	0	PASS	55.35	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:22:01Z	2026-09-14T18:29:23Z	true
+timeout-p2	TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig	0	0	PASS	435.95	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:22:01Z	2026-09-14T18:29:23Z	true
+timeout-p3	TestRuntimeEvidenceV2AttemptUploadDispatchRefusesBeforePayloadRecovery	0	0	PASS	34.42	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:29:43Z	2026-09-14T18:36:24Z	true
+timeout-p3	TestRuntimeEvidenceV2AttemptUploadLaunchRefusesBeforeMigration	0	0	PASS	50.71	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:29:43Z	2026-09-14T18:36:24Z	true
+timeout-p3	TestRuntimeEvidenceLaunchV2TemplateRejectsMissingAndForeignCreation	0	0	PASS	56.53	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:29:43Z	2026-09-14T18:36:24Z	true
+timeout-p3	TestRuntimeEvidenceOwnedReservedStagingRerenderReplacesProvisionalConfig	0	0	PASS	394.89	405e5fe3a82a62d514435679aae051a1d3acd32ff0be74f85ac4306bb86973cc	2026-09-14T18:29:43Z	2026-09-14T18:36:24Z	true

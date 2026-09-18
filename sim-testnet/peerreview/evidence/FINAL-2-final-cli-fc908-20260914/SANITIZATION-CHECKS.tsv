@@ -1,0 +1,6 @@
+check	result	detail
+explicit_whitelist_only	pass	Only named public-safe records were copied.
+binaries_and_raw_streams_absent	pass	Artifacts and raw stdout/stderr are hash-referenced only.
+commands_caches_and_environment_absent	pass	No command script, cache content, or environment dump was copied.
+native_and_live_gate_material_absent	pass	This bundle carries no native request, plan, state, or live gate material.
+packaging_execution_scope	pass	No test, build, formatter, RPC, source, or canonical-main operation was performed.

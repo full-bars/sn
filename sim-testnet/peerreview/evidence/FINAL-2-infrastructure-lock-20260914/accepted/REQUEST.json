@@ -1,0 +1,44 @@
+{
+  "argv": [
+    "/home/by/urnetwork/temp/sn-probe-approval-anchor-correction-20260914/terra-runtime/final-cli-probe-approval-anchor/sim-testnet",
+    "release-lock",
+    "--config",
+    "/home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/sn/sim-testnet/testnet.yml",
+    "--sn-repo",
+    "/home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/sn",
+    "--server-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/server",
+    "--operator-proxy-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/operator-proxy",
+    "--vault-repo",
+    "/home/by/urnetwork/temp/sn-warp-admission-integration-20260913/workspace-physical/vault",
+    "--platform-config-repo",
+    "/home/by/urnetwork/temp/sn-soak-deadline-20260909T221044Z/finalization-20260911T0215/workspace/config"
+  ],
+  "read_only": true,
+  "apply": false,
+  "rpc_calls_expected": 0,
+  "source": "65af88a5d6ce34f63b36de5fbbda98075eac20bf",
+  "production_go_and_contract_source_equal_to": "7eab04905dbc274ae6d2546b6802f1097c1fc3fe",
+  "xops": "d33d4173767ad9dab2f301bc0b0e040579bee896",
+  "expected_changed_lock_fields": [
+    "repositories.protocol_source_hash",
+    "infrastructure.gateway_config_hash",
+    "infrastructure.node_config_hash"
+  ],
+  "native_state_included": false,
+  "prior_refusals": [
+    {
+      "capture": "/home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/lock-preview",
+      "reason": "symlink module source refused"
+    },
+    {
+      "capture": "/home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/lock-preview-physical",
+      "reason": "capture SHA command used nonexistent lock path; native command not reached"
+    }
+  ],
+  "previous_layout_refusal": "/home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/lock-preview-physical-correct-path",
+  "previous_layout_error": "hash sn module: release-lock source path evm/lib is not a regular file",
+  "layout_change": "Real physical module worktrees and all three Foundry library worktrees; exact unlocked vault and platform-config overrides retained.",
+  "lock_file": "/home/by/urnetwork/temp/sn-infrastructure-release-integration-20260914/sn/deploy/testnet/release.lock.yml"
+}

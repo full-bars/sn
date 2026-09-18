@@ -1,0 +1,7 @@
+bundle=FINAL-2-evidence-render-owner-qualification-20260914
+intended_destination=sim-testnet/peerreview/evidence/FINAL-2-evidence-render-owner-qualification-20260914
+status=CLOSED_BOUNDED_QUALIFICATION
+failed_snapshot=1e491b61a841c652f3155152bf845c519e2c171a
+qualified_snapshot=713eae3fcf83615d81d185fda3f3ec42a441a26b
+scope=source-census guards, render-owner scheduling controls, and bounded timeout roots
+not_asserted=full_gate;deployment;soak;final_cli;native_apply

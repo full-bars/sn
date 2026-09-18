@@ -1,0 +1,11 @@
+bundle=FINAL-2-probe-reference-lint-20260914
+content_class=public-safe-closed-solidity-lint-qualification-evidence
+author_candidate=27ee6297b34a183282ac12e2734d97a558a75209
+source_parent=7eab04905dbc274ae6d2546b6802f1097c1fc3fe
+qualified_sp1probe_roots=19
+full_project_result=215-pass-0-fail-0-skip-across-18-suites
+raw_records=hash-referenced-not-copied
+unpublished_locator_revision=true
+prior_sha256sums_external_sha256=918e9028f6507ce4a8da326854884ff2552929402c9267479b1e6153679c6b53
+content_files_before_checksums=33
+sealed_at_utc=2026-09-14T17:58:53Z

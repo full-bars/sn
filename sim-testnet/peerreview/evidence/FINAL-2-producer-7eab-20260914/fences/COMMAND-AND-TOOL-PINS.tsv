@@ -1,0 +1,15 @@
+subject	value	provenance
+gate_concurrency	RELEASE_GATE_CONCURRENT_GATES=2	outer transcript
+gate_jobs	RELEASE_GATE_JOBS=3	outer transcript
+cpus_per_job	4	outer transcript
+producer_command_sha256	4e5d9a2f201447e02045499a212b5b93f1f5ad73bf224b1252e06f8b5ecbc4b1	capture/launcher.sha256
+capture_wrapper_sha256	978c451a54a049fd9a0d0643c15755ffd68bf123797a42392327dc6b538675d8	capture/launcher.sha256
+producer_gate_script_sha256	50fc81a5ed6d866ad146e8c7a739a193308dd9cde974a4e9d6e1c70ce5c17034	closed gate source pin
+release_gate_jobs_script_sha256	07e53f818dbb777bfefae32b860b1f52ea7b680e147999522e176c34bb243ad5	closed gate source pin
+source_freeze_script_sha256	443349a05cc3dc1350da181178e00273cde59969474b02a41618b72cb40d2335	closed gate source pin
+abigen	1.17.0-stable	binding-toolchain preflight
+solc	0.8.24	solidity phase raw log
+solidity_phase	forge fmt --check; forge build --deny warnings --sizes; forge test --summary; gencontracts --check; stabi --check	producer phase command
+evidence_simulator_normal	go test ./sim-testnet with the recorded simulator evidence selector, count=1, timeout=10m	phase command
+evidence_simulator_race	go test -race ./sim-testnet with the same selector, count=1, timeout=10m	phase command
+gomodcache_record_sha256	139e13031dd2fac4c711c226dd5712f362a92334106a3bb02f7fd89f2512fed0	meta/gomodcache.path

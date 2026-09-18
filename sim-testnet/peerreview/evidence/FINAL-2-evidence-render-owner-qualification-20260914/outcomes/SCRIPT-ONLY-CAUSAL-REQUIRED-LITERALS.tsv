@@ -1,0 +1,3 @@
+TestProducerGateStateSelectionPartitionsSimulatorEvidenceExactly	simulator evidence mode has no unique command
+TestProducerGateStateSelectionRejectsFutureFullLaunchRenderOwner	simulator evidence mode has no unique command
+TestProducerGateStateSelectionRejectsSimulatorEvidencePartitionDrift	simulator evidence mode has no unique command

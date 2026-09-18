@@ -1,0 +1,6 @@
+[env]glog not configured from command line. Using default configuration.
+I0914 18:36:07.309196 3419891 env.go:770] [env]try /home/by/urnetwork/config, [settings.yml]
+I0914 18:36:07.309622 3419891 env.go:770] [env]try /home/by/urnetwork/config/all, [settings.yml]
+I0914 18:36:07.309795 3419891 env.go:770] [env]try /home/by/urnetwork/site, [settings.yml]
+I0914 18:36:07.309837 3419891 env.go:67] [env]settings = map[]
+sim-testnet: hash sn module: release-lock source path "evm/lib" is not a regular file

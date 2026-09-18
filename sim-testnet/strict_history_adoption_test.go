@@ -4,7 +4,9 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,6 +15,59 @@ import (
 	"testing"
 	"time"
 )
+
+// A rendering call using Background still belongs to the admitted invocation.
+// A canceled owner must refuse before it opens even the first history file.
+func TestStrictHistoryAdoptionInvocationCancellationStopsBackgroundPreflight(t *testing.T) {
+	t.Parallel()
+	invocation, stop := context.WithCancel(t.Context())
+	defer stop()
+	state := &strictHistoryAdoptionState{invocationContext: invocation}
+	bound, cleanup := state.preflightContext(context.Background())
+	defer cleanup()
+	stop()
+	select {
+	case <-bound.Done():
+	case <-time.After(5 * time.Second):
+		t.Fatal("rendering retained Background after invocation cancellation")
+	}
+	if !errors.Is(bound.Err(), context.Canceled) {
+		t.Fatal("bound read lost cancellation")
+	}
+	cfg := &ResolvedConfig{strictHistoryAdoption: state}
+	if err := preflightStrictHistoryAdoption(context.Background(), cfg, t.TempDir()); !errors.Is(err, context.Canceled) {
+		t.Fatal("canceled preflight opened history instead of stopping", err)
+	}
+}
+
+// Releasing a completed check detaches its invocation callback and cancels
+// only that check; caller and invocation owners remain independent.
+func TestStrictHistoryAdoptionPreflightCancellationKeepsOwnersIndependent(t *testing.T) {
+	t.Parallel()
+	invocation, stopInvocation := context.WithCancel(t.Context())
+	defer stopInvocation()
+	caller, stopCaller := context.WithCancel(t.Context())
+	defer stopCaller()
+	state := &strictHistoryAdoptionState{invocationContext: invocation}
+	bound, cleanup := state.preflightContext(caller)
+	cleanup()
+	cleanup()
+	if !errors.Is(bound.Err(), context.Canceled) || caller.Err() != nil || invocation.Err() != nil {
+		t.Fatal("completed check canceled an enclosing owner or retained its own context")
+	}
+	bound, cleanup = state.preflightContext(caller)
+	defer cleanup()
+	stopCaller()
+	if !errors.Is(bound.Err(), context.Canceled) || invocation.Err() != nil {
+		t.Fatal("caller cancellation failed to stop only its own check")
+	}
+	stopInvocation()
+	alreadyCanceled, cleanupCanceled := state.preflightContext(context.Background())
+	defer cleanupCanceled()
+	if !errors.Is(alreadyCanceled.Err(), context.Canceled) {
+		t.Fatal("already canceled invocation entered another replay")
+	}
+}
 
 func TestStrictHistoryAdoptionOptionsKeepWritesAndProvisionalSeparate(t *testing.T) {
 	t.Parallel()
@@ -102,6 +157,25 @@ func TestStrictHistoryAdoptionCapturesOriginalSourceAndBindsExactLaunch(t *testi
 	if err := prepareStrictHistoryAdoption(t.Context(), fixture.cfg, fixture.stateDir, options, revised); err != nil {
 		t.Fatal(err)
 	}
+	admitted := fixture.cfg.strictHistoryAdoption
+	resolvedOwner, err := runtimeEvidenceV2ResolvedConfig(fixture.cfg, fixture.stateDir)
+	if err != nil || resolvedOwner.strictHistoryAdoption != admitted {
+		t.Fatal("render resolution lost the invocation's history and capacity owner", err)
+	}
+	if err := prepareStrictHistoryAdoption(t.Context(), fixture.cfg, fixture.stateDir, options, revised); err != nil {
+		t.Fatal(err)
+	}
+	if fixture.cfg.strictHistoryAdoption == admitted {
+		t.Fatal("a new invocation inherited the previous capacity cache owner")
+	}
+	admitted = fixture.cfg.strictHistoryAdoption
+	originalConfigHash := fixture.cfg.ConfigHash
+	fixture.cfg.ConfigHash = "0x" + strings.Repeat("f", 64)
+	changedConfigErr := prepareStrictHistoryAdoption(t.Context(), fixture.cfg, fixture.stateDir, options, revised)
+	fixture.cfg.ConfigHash = originalConfigHash
+	if changedConfigErr == nil || fixture.cfg.strictHistoryAdoption != admitted {
+		t.Fatal("changed config bypassed admission or replaced its successful owner", changedConfigErr)
+	}
 	before = validatorNamespaceTreeSnapshot(t, fixture.stateDir)
 	if err := prepareSignedAttemptStateNamespaces(fixture.cfg, fixture.stateDir); err != nil {
 		t.Fatal(err)
@@ -172,5 +246,8 @@ func TestStrictHistoryAdoptionCapturesOriginalSourceAndBindsExactLaunch(t *testi
 	options.StrictHistoryAdoptionSHA256 = bytesSHA256(bad)
 	if err := prepareStrictHistoryAdoption(t.Context(), fixture.cfg, fixture.stateDir, options, revised); err == nil {
 		t.Fatal("unknown member authority survived canonical bundle admission")
+	}
+	if fixture.cfg.strictHistoryAdoption != admitted {
+		t.Fatal("failed admission replaced a successful invocation owner")
 	}
 }

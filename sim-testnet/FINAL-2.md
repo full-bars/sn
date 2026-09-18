@@ -1,27 +1,1047 @@
 # Sim-testnet finalization report 2
 
+**Current status: in progress; `final_acceptance=false`.** The soak remains
+stopped. The approved **6,000-alpha reserve repair has finalized** and reached
+**65.5997247163%** at the retained preparation snapshot. The latest complete
+LAN census, at block **8,015,417** on September 16, shows **64.9994918065%**:
+above the 60% operating floor and below the 65% repair target. The
+user has approved **205 EVM TAO within 225 total TAO** for the required fleet
+renewal; the 37,250-alpha lifetime limit and 6,000-alpha per-repair limit remain
+unchanged. Earlier checkpoints below retain their historical approvals and
+failures; they do not describe the current repair or allowance status.
+
+**Latest recovery checkpoint, September 16, 13:23 UTC:** runtime 461 is qualified
+at `8edb3167a6261bfd82ecbc5f3c0ac2c787beec7c` and integrated locally. All
+**103 affected tests pass normally and under race detection**. Four causal
+restorations reproduce **nine expected failures and nine passing controls**.
+The exact-Wasm probe passed. Root verified raw results, compiled membership,
+actual exits and unchanged inputs. The batch also fixes retained runtime-460
+companion approval handling; tests preserve original bytes, budgets and signer
+authority. A stale positive test fixture was corrected before compilation.
+
+The [qualification bundle](peerreview/evidence/FINAL-2-runtime461-qualification-20260916/README.md)
+contains those results and source/artifact provenance. Its read-only lock
+preview passed, yielding SHA-256
+`aad35e8488e48190071889b3dec47c184ed9d2deedc30c44e3b52ee6f17afd84` with only the
+two expected observed source-digest changes. Publication and a matching final
+executable precede native recovery. All prior signed history and approvals are
+retained. The managed campaign remains unexecuted; this qualification does not
+establish final acceptance.
+
+**Previous recovery checkpoint, September 16, 12:03 UTC:** the startup and direct
+campaign handoff are published at `1860261`, and the matching executable built
+successfully with SHA-256
+`114bede0b30a9bc9fdb946f3075d1e1f3ff9b3e36daf57d1c084f6144e43bb07`.
+Software planning passed. After a detached-checkout prerequisite was repaired
+without changing source or executable bytes, setup ran **11:43:40–11:57:57** and
+completed all **4,673** carried-action checks. It collected **nine failures**,
+all caused by unreviewed runtime **461/1/1**. Eight hard preparation checks
+passed; one failed with those nine errors. Body, outer and joined exits are one.
+Only the saved plan and redacted configuration changed; the journal, supervisor
+manifest/state, public identities, executable and lock remained unchanged.
+The new software approval is
+`0xf6e8c46e6a6a79c7c67deb8304e387f4bc9821ad96513c0ab6851d954d0d3bc6`.
+
+A separate finalized LAN observation confirmed runtime 461 at block
+**8,018,145**, native hash
+`0x43093d12230005ca09a38835fb1506e7b018fb52233597e68ad50c440c2d7272`
+and EVM hash
+`0xe7570097180720fb03a9d6cf15b7244bdd34e0ec03e9307f7eaaea936b945889`.
+This uses the owned node with `independent_rpc=false`. The runtime check stopped
+before selecting a continuation END or running native capture/import. Four
+temporary helpers passed readiness and then stopped with all actual child and
+owner/join exits zero. The [closed preparation bundle](peerreview/evidence/FINAL-2-runtime461-preparation-20260916/README.md)
+contains exact RPC responses, failed setup output, state comparisons and teardown
+receipts. Runtime 461 compatibility review and affected qualification are in
+progress. The managed campaign has not started; earlier successful qualification
+and approved limits remain retained.
+
+**Previous recovery checkpoint, September 16:** strict managed resume
+session **92055** failed at **10:20:25 UTC**, with body, outer and joined exits
+all **one**. All **1,000 fleet checks** and **4,673 carried-action checks**
+completed. The new supervisor, PID 3676320/start ticks 184001647, reached
+33 healthy processes with zero restarts, but the four validator/operator proof
+domains did not produce fresh completed trails before the five-minute owned-node
+semantic-readiness deadline. The exact error was `release topology semantic
+readiness timeout: every validator must complete a fresh verified trail through
+every operator`. Cleanup stopped all 33 processes. The last process-log gate
+scan, at 10:20:10, had no findings; later shutdown logs are separate evidence.
+The plan, simulator journal, configuration, public identities, executable and
+release lock are unchanged. The release-candidate campaign did not start.
+The [closed failure receipts](peerreview/evidence/FINAL-2-managed-readiness-20260916/README.md)
+retain the actual failed result and changed supervisor state. Root verified all
+27 manifest payloads; the seal is
+`81fd7d5c8140fa02bb58184cdb562906ad7386dcd33a078316f40d42a3a2bc2d`.
+The validators' shutdown diagnostics place both inside retained settlement-history
+replay when the parent cancelled them. The bounded startup correction is
+qualified below; completed historical checks remain retained.
+The complete operator census found **14 new signed attempts** during this
+generation, all with canonical status-1 receipts below native/EVM finalized
+block **8,017,664**. They comprise six emission deferrals and eight missed-root
+finalizations, with no payout root created. Their actual fees total
+**0.029033073172513564 EVM TAO**; maximum signed envelopes total
+**0.090515040996642416 EVM TAO**. The original validator histories are unchanged:
+zero intents for validator 1 and three for validator 2, ending at native epoch
+1,405. No new decision or preparation for epoch 1,488 occurred.
+At **10:35:53 UTC**, root restored the 14 original 178-byte signatures by
+exclusive creation, preserving all 2,272 existing RLP files and all six watched
+state files. The recovery submitted no transaction and changed no database or
+journal status. Body and joined exits are zero. The complete retained transaction
+union now contains **2,532** signatures; all previous 2,518 remain intact.
+The closed census is in `managed-readiness-recovery-census-20260916-r1`, with
+35 verified safe payloads and manifest SHA-256
+`b9070c8ee744b2cfc54d8d24ba8baa38144a3f4aadd1306300b1edc0e5c9da18`.
+The separate restoration capture is
+`native-recovery-20260916-r4/signature-restoration`, with 16 sealed payloads and
+manifest SHA-256 `de3e77ec83fa8b3abc929492a33c23c97f2e8d3896a97c951c4db340ed9f1c95`.
+Both paths are under `/mnt/data/sn-testnet/qualification`. The
+[portable census, restoration and cause evidence](peerreview/evidence/FINAL-2-managed-recovery-census-20260916/README.md)
+preserves all original manifests and exact safe copies. Root verified its
+67 payloads and manifest SHA-256
+`6425b3cfdf0d6fd993a81aeacd73931d8c299982da08d9ede9bd9124a6f4cbcb`.
+
+The narrow startup correction is frozen at
+`8270992eb8fb2b1599a29271ec44426379007306`: retained strict-history startup gets
+the existing 30-minute allowance on every RPC route, and cancellation is checked
+before readiness admission. Fresh-proof, health, generation, restart and log
+requirements remain active. Terra's 11 affected roots pass normally and under
+race, with body, outer and joined exits zero. Each of two causal variants
+reproduces exactly its pinned failure with the other ten roots passing.
+Root independently checked the event streams, selected compiled membership,
+exits and unchanged inputs, then fast-forwarded primary to this qualified
+revision. Physical deployment and the active executable remain on `aeda6abb`;
+the patched managed startup has not run.
+The [closed startup qualification](peerreview/evidence/FINAL-2-retained-startup-qualification-20260916/README.md)
+preserves the successful results, causal controls and earlier compiler refusals.
+Root verified all 70 payloads; manifest SHA-256 is
+`f4c67339990c97bc2cac866bc049074291b6f869891d01a86361e06ce6fd4577`.
+
+The four initial compiler bodies exited zero but their wrappers exited 126:
+a generated literal `$capture/` output path created untracked artifacts inside
+the isolated sources. Those binaries were mistakenly cleaned up before reuse;
+the corrected builds reproduced their exact hashes and passed all input checks.
+The original refusals and cleanup inventories remain recorded. No test body
+ran from the refused captures. The harness now explicitly preserves artifacts
+before cleanup and permits separately evidenced reuse after capture-only errors.
+
+The continuation timing review identified repeated preparation between strict
+resume and the separate campaign command. The maximum supported fresh span is
+8,065 blocks, leaving 495 above the unchanged 7,570-block campaign allowance.
+Measured prior overhead leaves 32m49s for retained replay, campaign preparation
+and handoffs combined. This is a timing estimate, not proof of completion or
+authority to reduce required observations. A narrow explicit same-owner handoff
+from successful strict resume into the full release-candidate campaign is now
+qualified at `e109ac35c5ea5ff5006040c2987118e99627e863` and integrated locally.
+It retains all campaign checks and the completed readiness tests. All 14 new
+or adjacent affected roots pass normally and under race. Normal acceptance
+composes four retained passes, nine corrected-capture passes and one omitted
+root; the causal control reproduces exactly three intended failures and three
+passes. Root independently checked raw events, unique root membership, actual
+exits and unchanged source/dependency/binary inputs. The
+[closed handoff qualification](peerreview/evidence/FINAL-2-resume-campaign-handoff-20260916/README.md)
+preserves the original launcher-generation, compiler-directory, fixture-directory
+and selector errors separately. No production source change was needed for
+those capture errors, and valid binaries and passing roots were reused.
+
+The [read-only lock preview](peerreview/evidence/FINAL-2-retained-startup-release-20260916/README.md)
+ran **11:09:05–11:09:07 UTC**, with root session 84281 body/outer/join exits zero.
+All watched state, executable, installed lock and source fences remained
+unchanged. Its exact candidate changes only the SN source hash and has SHA-256
+`42a48da4d4fd267c496b8558cd9838f68b3f5e4117a9e681352129069df2df22`.
+Those bytes are now installed in the primary checkout. Matching publication,
+build, plan adoption and the actual combined campaign remain pending.
+
+**Earlier recovery checkpoint, September 16 at 09:41 UTC:** both preparation
+fixes and their evidence are published in SN release
+`aeda6abbd2dc0abc92bb0f60975cf89b509e8017`. The matching executable has SHA-256
+`8fc61a65cd0524413a7ba70c61bcdb15962fa87ad7ab347b653abb27f8913f0b`;
+its build exited zero with unchanged source inputs. The native read-only plan
+revision passed at **08:02:31 UTC**. The complete lossless diff preserves all
+**4,733 actions**, approved limits, spending, both renewals, continuation,
+custody, config and policy. Changes are limited to release/plan identity,
+ancestry, generation time and fresh finalized head/balance observations.
+The proposed plan is
+`0x49ddbc495a51c7c089ed5838299d6d65fb40cfb9b35be3ee38cd4ca1de7aa876`.
+The [completed build and plan-review evidence](peerreview/evidence/FINAL-2-preparation-adoption-20260916/README.md)
+contains exact raw receipts and the full lossless diff; root verified its manifest.
+Prepare-only setup/adoption ran **08:12:47–08:27:00 UTC** and exited **zero**,
+with `ready=true`, `prepare_only=true` and `stopped_before_actions=true`.
+All **4,673 carried-action checks** completed. Only the saved plan and redacted
+configuration changed; journal, supervisor, public identities, executable and
+lock hashes are unchanged. All nine hard preparation checks passed;
+launch-runtime-inputs is explicitly deferred to resume. Its capture is in
+`/mnt/data/sn-testnet/qualification/native-recovery-20260916-r3/setup-revision`.
+The four temporary helpers passed readiness. The APIs returned 200 at `/status`;
+their initial incorrect `/healthz` probes are retained as diagnostics. These
+helpers were orphaned processes, so shutdown was witnessed through exact
+PID/start-time and listener observations; terminal exit codes are unavailable.
+A fresh finalized LAN observation at
+**08:27:57 UTC**, native block **8,017,083** with runtime **460/1/1**, selects
+continuation end **8,025,143** and full-work start cutoff **8,017,573**. The
+required work remains **7,570 blocks**. Continuation capture ran
+**08:31:32–08:46:41 UTC** under root session 52913 and exited **one**, without
+emitting a plan. The exact error is `renewal gas accounting is incomplete: role
+operator-1-root nonce 106 has no retained signed transaction`. Captured state,
+executable and release-lock hashes are unchanged. That transaction is among the
+four previously confirmed partial-start writes. The complete census of both
+operator databases verified **230 signed attempts**, including replacements and
+cancellations: 226 were already retained and exactly four were missing.
+Create-only restoration completed at **08:57:55 UTC**, adding four original
+178-byte RLPs while preserving all 2,268 existing files and the six watched
+state files. No transaction was submitted and neither journal nor database
+status was changed. The [portable signature recovery evidence](peerreview/evidence/FINAL-2-signature-recovery-20260916/README.md)
+retains the closed failure, sealed census and separate restoration receipt.
+The four known maximum envelopes total **0.025635775234311880 EVM TAO**, while
+their previously confirmed actual fees total **0.008264277772552846 EVM TAO**.
+A fresh finalized LAN observation at **08:58:59 UTC**, native block **8,017,238**,
+selects continuation end **8,025,298** and full-work start cutoff **8,017,728**.
+The retry ran **09:00:03–09:15:28 UTC** under root session 35694 in
+`native-recovery-20260916-r3/relay-capture-r3` and exited **zero**. All six watched
+state files, executable and lock remain unchanged. The emitted successor is
+`0x17e49d00a7ce6aafac856e81a4ccf9eb37e4714ba7570a24cfa1c97a2d941f37`;
+its exact output SHA-256 is
+`e40de369ee48a5bbc7c4b752295187cdc1f44e49117d2d324744f62b3ad90a48`.
+Root's complete comparison found exactly **27 changed paths**, confined to the
+continuation window/source observations, restored-transaction census/nonces,
+plan identity and ancestry. Astra's independent token-preserving comparison
+agrees; all actions, limits, spending, renewals, custody/config/policy and signed
+ledger history are unchanged. The [portable capture and complete review](peerreview/evidence/FINAL-2-relay-capture-r3-20260916/README.md)
+retain the original receipts and all 27 changes, with large-file omissions hashed.
+Exact import ran **09:19:38–09:35:50 UTC** under root session 30705 and passed,
+reporting **zero chain transactions**. Only the watched plan changed; its saved
+bytes equal the captured successor exactly.
+
+The finalized LAN schedule at **09:36:23 UTC**, block **8,017,425**, selects first
+native epoch **1,488**, spanning **8,017,451–8,017,810**. At selection, 386 blocks
+remain through that epoch and 303 until the full-work start cutoff. History
+capture ran **09:37:02–09:37:28 UTC**, exit zero, with all watched state unchanged
+and both original validator intent prefixes preserved. Its exact 2,201-byte
+bundle is retained under the state-owned `history-adoptions/` directory with
+SHA-256 `f2a7e1a24fc02cb9fbc3ee85af757b5795982ec42731f2b9fd34564485c479c9`.
+Temporary-helper teardown completed at **09:40:08 UTC**: exact identities were
+checked before signals, all four processes disappeared and all six listener
+ports closed. The teardown owner joined zero; helper exit codes are unavailable.
+Two pre-signal wrapper/preflight failures and the original self-referential
+manifest are retained separately from the corrected closed receipt manifest.
+Root independently rechecked process absence and closed ports, then launched
+strict managed resume at **09:41:17 UTC**, session **92055**. Its later semantic
+readiness failure is recorded above. The release campaign remains unexecuted.
+The [closed launch handoff evidence](peerreview/evidence/FINAL-2-launch-handoff-r3-20260916/README.md)
+contains import, complete history/schedule records and witnessed helper teardown.
+Root verified all 93 manifest entries; its seal is
+`be4fcaaf28ff19df7c9834a680f4abab605d1256daedfdbd20301ab5abe4abc3`.
+It excludes the running managed resume and the unstarted campaign.
+Reuse the completed
+affected qualification below; no new full preparation test cycle is required.
+
+**Earlier recovery: the software plan revision stopped at 02:48:30 UTC on September 16.**
+The qualified journal patch and matching executable are ready, but the native
+planner requested another 471,808,849-alpha-rao repair when revising the
+software identity. Current and superseded liabilities already consume the
+approved 37,250-alpha lifetime limit. This read-only command exited 1 with
+unchanged state, executable and lock bytes; no successor plan or transaction
+was created. The completed repair's historical target proof remains valid.
+A bounded correction now retains verified repair history during an exact
+software-only revision while still checking the current operating floor.
+Qualification passes **28 affected roots per mode**, normally and under race,
+by composing retained results with three corrected test roots. The original
+planner reproduces **three expected failures and three passing controls**.
+Failed fixture invocations remain recorded with their actual exits. The
+matching release is published at `541e13cfbe968704fb74c4001506853d2529bfdd`;
+its executable SHA-256 is
+`45455c69687d88287a200979ee914677bf0f39e000274e7fc5fb618339c0fc8a`.
+The native retry passed at **04:06:54 UTC**, preserving all **4,733 actions**,
+limits, spending and renewals without adding a reserve repair. The new plan
+`0x0d24a3f1dfc8ea5bc6a2f59c80a7580a761d9e3410dd4833bda3843304ce6f86`
+is now saved. Setup/adoption completed at **04:30:51 UTC** with
+`ready=true`, `prepare_only=true` and `stopped_before_actions=true`.
+All **4,673 carried-action checks** completed; only the saved plan and
+redacted configuration changed. The journal and supervisor files are unchanged,
+and no setup transaction was submitted. The launch-runtime-inputs check is
+explicitly deferred to resume. The subsequent relay capture ran from
+**04:35:04 to 04:48:52 UTC** and exited **1**, with unchanged state, executable
+and lock bytes and no plan output. Both operator APIs timed out after 30
+seconds streaming the same metadata object; the CLI reported incomplete
+authenticated EOF. Both APIs subsequently returned the complete matching
+157,602-byte object in under one second. Source review found no deterministic
+defect; the original stall's underlying cause remains unproven. A new capture
+started at **04:59:42 UTC** with the same qualified build and fresh end block
+**8,024,100**, and passed at **05:14:43 UTC** with unchanged watched state,
+executable and lock. The complete raw diff preserves all actions, spending,
+renewals and signed history. No timeout or authentication rule changed.
+Import then exited **1 at 05:15:55 UTC**, before mutation: root's report-only
+publication advanced GitHub main beyond the executable's revision. The physical
+checkout now matches `0fd7ffc0`; all Go source, modules and release-lock bytes
+are unchanged. The matched executable, SHA-256
+`d50a4612ed4bd34838bd4a5b24f91b79e5b3d1ff55f76198178c26a76234dfbf`,
+built successfully at **05:21:25 UTC**. Reusing the exact captured plan,
+import passed at **05:39:02 UTC**, adopting
+`0xb7fd2eb5030f73b424b3449d21302e6b3d17cd85142f4ca61b18aa1e0c2b5b17`
+with **zero chain transactions**. Only the saved plan changed; the journal,
+supervisor files, redacted config and public identities are unchanged.
+Strict history capture passed at **05:41:45 UTC** with all watched bytes
+unchanged. At finalized native block **8,016,244**, the actual schedule selects
+first native epoch **1,485**, blocks **8,016,371–8,016,731**. The exact bundle's
+SHA-256 is `e556044d5cf4b584856df3dc7c0a199a582ce14130f5818c09190ac54673eb53`.
+The four temporary helper tool sessions were recorded as joined with exit 0
+in the r2 `temporary-services/STOPPED.json`, with their original PIDs absent.
+Separate raw helper-join results are not in the portable continuation bundle. Managed
+resume started at **05:47:36 UTC** and exited **1 at 06:29:05 UTC**. It processed
+all **4,673 carried-action audits**, rendered runtime inputs and started the
+managed topology. At **06:28:53 UTC**, the process-log gate recorded **four
+blocking classes** in the new generation: each of the two operator taskworkers
+emitted **two unclassified errors and one warning**. Cleanup stopped all **33
+managed processes**. Plan, journal, redacted config, public identity, executable
+and lock bytes are unchanged; the watched supervisor files changed. Unchanged
+deployment-journal bytes alone do not establish that every background actor
+made zero transactions. Read-only reconciliation subsequently found **four new
+operator EVM transactions** in the retained databases. LAN receipts at 06:59 UTC
+show all four succeeded in canonical blocks **8,016,488**, **8,016,489** and
+**8,016,491**, below finalized height **8,016,641**. The hashes are
+`0xa62a69f38c314fce4efdc6cf9084ae5a2efa7178faca0ba25b0c63bd8e5368d9`,
+`0x50cc7f2745b22052f91a3ce124f18fcbbe0fb0d297f59a9f3f9d2bd33e702dd8`,
+`0x62a2464cf084c69c81040d1374abcc20c8a99bb34e4788bd6e8b34cbe804d1df`,
+and `0xe95f3f78dad211d12ced0583a47d9af610b9699d68ab08f73b2fc5c3b7acabd8`.
+Both signers have finalized and pending nonce 107. Their retained database
+states include one mined and two broadcast entries; normal reconciliation must
+retain those exact signed attempts and learn their finalized outcome.
+The [startup transaction evidence](peerreview/evidence/FINAL-2-startup-transactions-20260916/README.md)
+preserves the read-only SQL projection and original LAN RPC requests/responses.
+The first two transactions call `finalizeOperatorEpoch(316,1)` and
+`finalizeOperatorEpoch(316,2)`, each producing `RootMissed(316,noId,0)` and an
+uncommitted-root finalization. The last two call `deferMissedEmission(402,2)`
+and `deferMissedEmission(317,2)`, recording zero-funded missed boundaries while
+leaving stake for a later timely capture. They create no payout root and do
+not capture a multi-epoch stake delta. Their total actual gas fee is
+**0.008264277772552846 EVM TAO**. These startup transactions do not establish
+a completed campaign epoch; `independent_rpc=false`.
+The prepared release-candidate command was **not run**. The taskworker failures
+come from the full production backend workload: geolocation certificate-pin
+rotation errors and fiat-payment warnings for synthetic accounts. An explicit
+operator workload profile is implemented in frozen SN `8e6d56b5` and server
+`6752a8df`, including retained queue and post-hook handling. All **30 affected
+roots pass normally and under race**: nine simulator, eight server task and
+13 taskworker roots. The complete controls reproduce **seven expected failures
+and five passes**. Initial service censuses refused before tests; a subsequent
+disposable-service launcher cleaned up before joining its children. Those
+refusals are preserved. Corrected process ownership allowed the same compiled
+binaries to complete all selected bodies. Service setup and cleanup each exited
+zero; the enclosing owner exited one because it aggregates the expected control
+failures. Accepted composition is recorded separately from that raw exit.
+The preparation-cost candidate `351ece79` now qualifies **32 roots per mode**:
+30 retained unaffected passes plus two passing roots on fixture correction
+`d52028de`, normally and under race. The original 31-pass/one-failure runs and
+the control's two expected failures/six passes remain retained. The exact
+production and fixture changes are integrated locally, with both fixes composed
+at `dc90e4c`. The
+[qualification evidence](peerreview/evidence/FINAL-2-preparation-fixes-20260916/README.md)
+preserves the original failures, raw test events and exact reuse mapping.
+Neither fix is deployed or claimed operationally complete.
+The read-only release-lock preview passed at **07:39:57 UTC**, with unchanged
+deployment state and no transaction. The installed candidate changes only the
+SN and server Go source hashes; runtime, contracts, dependencies and all other
+lock fields remain unchanged. The lock SHA-256 is
+`bf417189d4c0a62f8116606f84f9c5509b3afe2dab611429c9b781998b3198fc`.
+Publication, the matched executable and native recovery retain their own
+pending results. [Exact release-lock receipt](peerreview/evidence/FINAL-2-preparation-release-20260916/README.md).
+Startup and the soak remain pending; no passing readiness or campaign result
+is claimed. Root verified all 115 entries in the private failure bundle;
+the [public failure projection](peerreview/evidence/FINAL-2-managed-start-failure-20260916/README.md)
+retains exact counts, line hashes, original byte comparisons and terminal exits.
+The capture/import/startup receipts are retained locally in
+`/mnt/data/sn-testnet/qualification/native-recovery-20260916-r2`; publication
+will be batched with the qualified code and lock before the next matching
+release build. These are local preparation
+results; they do not establish new on-chain acceptance.
+[Actual refusal and fresh complete census](peerreview/evidence/FINAL-2-release-reserve-recovery-20260916/README.md).
+[Completed build, software revision and setup receipts](peerreview/evidence/FINAL-2-native-adoption-20260916/README.md).
+[Failed relay capture and paired stream errors](peerreview/evidence/FINAL-2-relay-stream-failure-20260916/README.md).
+[Successful continuation and history adoption](peerreview/evidence/FINAL-2-continuation-20260916/README.md).
+
+**Runtime-460 startup stopped at 02:13:45 UTC on September 16.** Its 4,672
+carried-action checks finished, configuration rendering was verified and both
+database migrations completed. The native process then refused the expired
+continuation: block **8,015,211** exceeded the full-work start cutoff
+**8,015,205**. It exited 1 naturally and cleaned up all temporary processes;
+the persistent supervisor and soak did not start. The saved plan and prior
+transactions remain intact, with the completed render recorded at journal
+sequence 22,426. These are local execution receipts, not new on-chain acceptance.
+[Actual startup result and retained progress](peerreview/evidence/FINAL-2-journal-recovery-20260916/native-resume/README.md).
+
+Repeated full-journal validation scanned all earlier rows for every row. The
+repair preserves the existing integrity and rejection checks while limiting
+history comparisons to four witnesses per plan/action. All **15 affected
+tests passed normally and under race**; restoring the original scan produces
+exactly **two expected failures and 13 passing compatibility controls**. A
+44,048-row synthetic replay checks the work bound without a timing threshold.
+The syntax-only keyed-field followup preserves the tested behavior. Earlier
+runtime and release qualification is retained by scope.
+[Affected test receipts and source provenance](peerreview/evidence/FINAL-2-journal-recovery-20260916/README.md).
+
+Recovery can refresh the continuation under existing fleet epochs **393–424**.
+Its capacity forecast may extend beyond 424; the actual five accelerated and
+three production acceptance windows must still fit those leases. No additional
+renewal, spending approval or reduction of required work follows from the
+expired preparation window. The new end and first native epoch are selected
+late through the supported native commands.
+
+**The chain advanced to runtime 460 before the revised launch.** The released 459
+executable's plan attempt stopped at 22:38:46 UTC on September 15. A diagnostic
+doctor reproduced four hard failures, all caused by 460-versus-459 admission at
+the same finalized block. Both commands exited 1; their watched state, binary
+and lock bytes remained unchanged. No new plan was emitted or adopted.
+
+The 460 artifact observed at block **8,014,242** matches upstream CI source
+`8d5f20ec1a5e5d90295d43046dacdefc54aaed06`. The existing offline Wasm verifier
+passed at 23:07:53 UTC. The source delta fixes share-pool accounting while
+preserving the native interfaces we use; the metadata has one changed byte,
+its runtime-version constant. This admission refusal does not demonstrate an
+ABI break. The qualified runtime-460 release was used for the startup attempt
+above; no new live acceptance is claimed. Original runtime histories,
+finalized actions and unchanged completed qualification remain retained.
+[Actual admission failures, pinned 460 provenance and closed probe receipts](peerreview/evidence/FINAL-2-runtime460-20260915/EVIDENCE.md).
+
+Runtime460 qualification completed on effective source `7989fa78`:
+**108 selected roots per mode**, normally and under race (13 CRV4, 16 miner,
+25 validator, 54 simulator), plus **13 expected failures and 11 passing
+compatibility controls**. Acceptance composes unchanged passing results with
+four corrected tests per mode and one corrected compatibility control. The
+original compiler, fixture and control failures remain preserved with their
+actual exits. Root checked exact positive root membership against the selected
+tests. The fixes preserve all native progress and do not establish live soak
+acceptance.
+[Runtime460 test composition and raw receipts](peerreview/evidence/FINAL-2-runtime460-qualification-20260915/README.md).
+
+**Runtime 459 source and artifact review is complete.** The pinned LAN code at
+block 8,013,770 is byte-identical to the upstream CI artifact built from commit
+`70378404b56c12a85bc8cd163aca2f32cf4d1b80`. The retained offline probe reproduced
+its runtime tuple and metadata, with both exits 0. Our native transaction
+formats and selective metagraph interface remain compatible; stake accounting,
+child eligibility, root backing and proxy behavior changed. The candidate signs
+with the new artifact while historical receipts retain their original runtime
+authority. The recovery batch also shares successful signed-ledger replay
+within startup, propagates cancellation, and refreshes a continuation without
+resetting cumulative spending or finalized actions. Qualification is accepted
+by composition: **154 affected roots per mode**, normally and under race,
+including 21 CRV4, 13 miner, 45 validator and 75 simulator roots. The six
+compatibility-control binaries produced their exact **12 expected failures
+and 6 passing controls**. The original failed runs remain failed; three
+test-only corrections required only their affected replacement checks.
+The qualified 459 release was published; its native plan admission then refused
+the chain's new runtime 460, as described above. This does not establish live acceptance.
+[Pinned runtime observations, upstream linkage and offline probe](peerreview/evidence/FINAL-2-runtime459-20260915/README.md).
+[Exact test composition, raw outcomes and preserved failures](peerreview/evidence/FINAL-2-startup-recovery-qualification-20260915/README.md).
+
+**Startup interrupted at 21:30:06 UTC on September 15.** The attempted strict
+resume verified 12 setup postconditions and finalized one native deployer
+funding transaction in block **8,013,647**, extrinsic index 7. Its hash is
+`0x800b72a73f4ce722a6d125541f2bcaf53593a218cfde7327a58171348a5f4279`;
+the owned node's canonical block and a separate BLAKE2b-256 calculation
+reproduce inclusion. Completed funding and earlier renewal actions are retained.
+The supervisor never started. At finalized block **8,013,770**, the adopted
+continuation had **7,472 blocks** left against the full run's **7,570-block**
+requirement, and a pinned runtime query returned **459** against this build's
+458 requirement. Repeated signed-ledger replay also delayed startup, and its
+background context ignored graceful cancellation. The local renderer was
+terminated after confirming its pending configuration-render intent and no
+children; the actual joined result is **137**, not a passing startup. The
+ledger cache, continuation refresh, cancellation and runtime migration are
+being fixed and qualified together. New evidence uses the LAN node and records
+`independent_rpc=false`.
+[Raw chain observations, funding inclusion and interruption receipts](peerreview/evidence/FINAL-2-startup-interruption-20260915/README.md).
+
+**Renewal 2 completed at 19:09:41 UTC on September 15.** The native command
+returned `postcondition_verified`; its body, wrapper and joined process all
+exited 0. The journal records all **1,212 new actions** broadcast and
+postcondition-verified, with **zero failed entries**, covering all **202 fleets**
+for epochs **393–424**. Its exact approved plan
+`0x09ac683bae8bf99362bfc427776987fce951db58b71b3f01966236abbf7c91f1`
+is retained by the adopted relay continuation described below. These completion counts come from the native command and
+retained journal. The public completion bundle includes all **1,212 transaction
+hashes and inclusion blocks**: **202 native commitments and 1,010 EVM mirror or
+binding transactions**.
+[Completion receipts and action list](peerreview/evidence/FINAL-2-renewal-2-completed-20260915/README.md).
+The first separately sampled native commitment is included in block
+**8,012,725**, and the sampled EVM mirror has a successful receipt in block
+**8,012,728**. Canonical block lookups match both; the observed native
+finalized head is **8,012,747**. The full native extrinsic hash also reproduces
+using `b2sum`, separately from the project's implementation. These are two
+verified transaction samples from the completed renewal; their direct RPC
+reproduction covers those two samples.
+[Raw chain evidence, transaction hashes and reproduction inputs](peerreview/evidence/FINAL-2-renewal-2-first-onchain-20260915/README.md).
+
+The repair transaction is
+`0xb6468a8c03886ef4d3c207ba08348b3219267b90d7e569b82d9a81b9da96ebed`,
+included at extrinsic index 6 in native block **8,009,634**, hash
+`0x201b281662dceed0baf5b2d1efae66373867ffa252565417b8c7fb1d4380dbc3`.
+Pinned parent/block storage shows exactly **6,000,000,000,000 alpha-rao**
+debited from the source hotkey and credited to the reserve hotkey. The later
+census at native block **8,010,632** includes all **256 registered UIDs**:
+reserve stake **59,254,248,215,327** divided by registered stake
+**90,326,976,937,105 alpha-rao** gives the percentage above. This establishes
+the preparation snapshot's reserve target, not the eventual end-of-run share.
+[Public RPC requests, responses, transaction inclusion and stake arithmetic](peerreview/evidence/FINAL-2-approved-renewal-and-reserve-20260915/README.md).
+
+The allowance is published in vault commit
+`9651a13062af2fd25dcd9e98db8c8871d148d114` and adopted by native plan
+`0x922e280318f33cb20f5b15082bb6329890e9d8778f1effabf8baae521a57f4ea`.
+Its setup preparation passed all nine hard checks and authenticated all
+**3,449 carried actions**. Full native resume preparation subsequently passed
+**all 18 hard checks** at **13:58:20 UTC**, including both validator namespaces,
+host readiness and runtime inputs; the six recorded campaign-state files
+remained unchanged. The native renewal preview passed for **202 fleets**
+and **2,020 new actions**, capped at **13.13 EVM TAO plus 0.606 native TAO**;
+no renewal transaction was submitted by that preview. Existing keeper/oracle
+balances cover those ceilings. Its F388/T419 window is diagnostic only.
+On source `330ba512`, the producer finished with **39 passing phases and one
+capture-race timeout**; the aggregate finished at **15:05 UTC** with **25/25
+phases passing**, including cleanup and unchanged final source checks. The
+two-test-file correction `03d529b` passes its 30 affected tests normally and
+under race, three fresh confirmations of both defect controls in each mode,
+and the actual **376-parent/140-subtest capture race in 567.382 seconds** under
+the original 600-second limit. Both causal controls reproduce the old repeated
+scan failure. Existing Go verification checks the retained raw results without
+rerunning successful bodies. Two pre-body compiler-owner timeouts and one
+missing-metadata refusal remain recorded. The composed capture's compiled
+membership was checked after admission against its exact retained executable;
+this is disclosed as a capture correction. The original producer remains a
+failed attempt.
+
+The correction changes no production code, scripts, release lock or approved
+native plan identity. The published `c5db71a` producer subsequently completed
+normal capture in 120.920 seconds but its race capture timed out again at
+600.377 seconds on September 15 at 16:14 UTC. The active test was
+`TestScenarioCampaignAttemptSuccessionReopenRejectsChangedAndMissingSources/another-plan`.
+The seven-case parent had run for 90 seconds; the last child was still opening
+its initial fixture. Investigation identifies repeated full-plan fixture work,
+not a demonstrated chain or historical-decoder defect. The test-only correction
+and replacement qualification are described below.
+Both original gates subsequently stopped during agent usage-limit failures.
+At 17:01–17:03 UTC root verified their processes absent; their worker logs record
+stop 143 and joined descendants. No final outer exit or final source receipt
+exists for either interrupted c5 invocation. Producer retained 38 passing phase
+joins, the capture failure and an interrupted server-db phase. Aggregate
+retained five passing joins and two interrupted race bodies. Preserve those
+results and the earlier complete 330ba512 phase receipts; neither c5 invocation
+is a full-gate PASS.
+
+The next actual renewal preview passed at 17:07:03 UTC without sending a chain
+transaction or changing campaign state. Plan
+`0x09ac683bae8bf99362bfc427776987fce951db58b71b3f01966236abbf7c91f1`
+covers epochs 393–424 and all 202 fleets, with 1,212 new actions capped at
+**9.09 EVM TAO plus 0.606 native TAO**. Predecessor expiry removes the need for
+revocations in that window. The exact saved plan entered actual apply at
+17:27:28 UTC through the owned LAN node, after producer coverage was accepted
+by composition. Its native admission rechecks the future window, custody,
+nonces, liabilities and fees. This records dispatch of the apply command, not
+yet successful completion or a new finalized transaction. One journal writer
+retains the exact plan and transaction history for partial recovery. That first
+apply stopped at **17:33:09 UTC** with `host/default-state-disk`: available
+space was below the existing 20 GiB floor. The six campaign-state files,
+runtime binary and release lock remained unchanged; no transaction was sent.
+Cleanup removed only two generated fixture trees owned by a terminal test
+run, recovering **3,681,648,640 bytes** and retaining all 61 parent evidence
+artifacts unchanged. With **22.28 GiB** available, the same approved plan
+resumed in a fresh capture at **17:46:51 UTC** and completed successfully at
+**19:09:41 UTC**, with all 1,212 actions verified. Binary and release-lock
+comparisons remained unchanged; campaign-state changes record the adopted
+plan and completed transactions. The four temporary artifact services supported
+the relay capture and import. The first actual relay-continuation capture, using end block
+**8,021,610**, stopped at **19:18:46 UTC** with
+`relay continuation exceeds unchanged source lifetime or storage bounds`.
+Its campaign-state, binary and release-lock comparisons are unchanged; no
+continuation was adopted. The busiest source retained 16,958 audit trails;
+the unchanged 81,920-trail lifetime limit permits at most 8,065 future blocks
+under the configured forecast. The corrected capture started at **19:28:36 UTC**
+with an **8,060-block horizon**, ending at block **8,021,242**. It retains all
+7,570 required campaign blocks and 490 blocks of capture/import/startup margin.
+The adjacent record, byte, file and relay-slot limits also fit. No production
+code, spending limit or completed renewal action changed. The corrected
+capture completed at **19:44:33 UTC** with unchanged campaign state, binary
+and release lock. Its exact saved output was imported successfully at
+**20:04:13 UTC**, adopting continuation plan
+`0xe128f2988512285a6270f45031f4a8af16e04009ceca385259869af02c50be30`
+through block **8,021,242** with **zero chain transactions**. Both native
+commands and their joined wrappers exited 0. Import changes reflect plan
+adoption; binary and release-lock comparisons remained unchanged.
+[Relay refusal, corrected capture and zero-transaction adoption receipts](peerreview/evidence/FINAL-2-relay-continuation-20260915/README.md).
+
+The final history-adoption capture completed at **20:09:43 UTC**, with all
+state, binary and release-lock comparisons unchanged. The finalized LAN
+schedule at native block **8,013,383** reports epoch **1,476**, tempo **360**,
+last epoch block **8,013,131** and no pending earlier boundary. The saved
+request selects **1,477** as the first fresh steering epoch and has SHA-256
+`554ace3866c4264b821eaa980396ecf19e7836b5fa4f55902bf0d70956c89507`.
+The first decision and preparation snapshots must occur during that epoch;
+startup may finish before or during it. All four temporary services stopped
+and joined with exit 0 before actual strict resume. That first startup attempt
+stopped at **20:12:07 UTC** because its configured private temporary directory
+did not exist. Campaign state, runtime binary and release lock remained
+unchanged. The recovery creates the required directories and retries the same
+plan and saved history; it does not repeat completed preparation or renewal.
+Simulator startup and campaign acceptance remain pending.
+
+The user's September 15 instruction permits incremental recovery and composed
+acceptance. Under the [harness recovery policy](README.md#incremental-recovery-and-acceptance),
+retain unaffected completed phases, native preparation and finalized actions,
+then replace only failed or affected coverage after a patch. Original failed
+gate results remain failed. No blanket three-run confirmation or complete gate
+restart is required solely for a test or documentation change.
+
+At **17:27 UTC**, producer and aggregate coverage are **accepted by composition**.
+The correction at `93f6d352d979c3dfb5fe068d4c07f400a227bc56` changes only
+`campaign_succession_test.go`: it bounds repeated fixture plan decoding while
+retaining all 1,000 provider identities and the authenticated budget, intent,
+history and custody assertions. Its nine affected normal tests and 29 children
+PASS. The complete corrected capture race passes **378/378 tests and 140/140
+subtests in 479.526 seconds**, within the original 600-second deadline. The
+old-fixture control produces the expected deterministic failure: 1,375,813
+encoded bytes and 2,288 actions exceed the new work bound; the corrected
+fixture contains about 151,500 bytes and 136 actions. Actual body, conversion,
+membership and outer results match their expected outcomes; all thirteen
+source comparisons, binary checks and cleanup pass. The complete race cohort
+used four processors and overlapped the short normal body on a lighter host
+load; the earlier simultaneous full-gate load was not recreated.
+[Test qualification and original-result boundaries](peerreview/evidence/FINAL-2-incremental-capture-20260915/README.md).
+
+These replacement runs cover the changed succession fixtures in normal/race
+and close the failed complete capture phase. Unchanged phases retain the
+completed 330ba512 receipts: 39 producer phases and the aggregate's unaffected
+scopes. C5's complete normal result and the earlier qualified scan correction
+retain their unaffected coverage. Every required producer and aggregate phase
+therefore has valid coverage on its effective inputs; neither interrupted c5
+invocation is relabeled as a passing full invocation. Production inputs and
+the release lock are unchanged, so the existing canonical c5 executable runs
+the renewal without repeating the 18 passed native preparation checks.
+
+The complete RC/production campaign, final accounting and shutdown remain outstanding.
+These preparation and qualification claims are local artifact evidence; all
+new chain observations use the owned LAN node and record
+**`independent_rpc=false`**.
+
+## Historical checkpoint: September 15, 02:38 UTC
+
+**Historical status: in progress; `final_acceptance=false`.** At **02:38 UTC on
+2026-09-15**, the soak remains stopped and the approved reserve repair is
+unsubmitted. The runtime configuration-identity correction is qualified. No new
+setup plan or transaction has resulted from this local qualification.
+All 1,212 finalized renewals, 3,521 action identities, generation 3 custody and
+the original signed probe anchor and nonce 34 remain retained.
+
+The migration explicitly preserves the original 455 configuration identity
+while requiring the exact reviewed 458 runtime for current authority. The
+optional public `config_identity_runtime_spec: 455` pin is also bound into the
+new setup plan hash. Existing historical signature and hash comparisons remain
+intact; the original signed archives are not rewritten. Source
+`85c09583ce8a0728b4b33b04b19c9e7d7ea1272a` completed the 70 selected tests in
+both normal and race modes: **69 PASS, one FAIL per mode**. The two adjacent
+50-test groups passed. The sole failed root authenticated the original signed
+repair, then incorrectly compared plans with different RPC routes: its HTTP
+fixture had replaced the approved `OperationalEVM` endpoint after planning.
+
+The one-file fixture correction is
+`5a411d2bf57e03c60a6ea3b3998d1cf401877342`. It preserves the approved endpoint,
+reproduces the original resolved-input hash, and verifies that changing a
+synthetic route changes only the `config.render` action intent. The corrected
+root passed **three consecutive fresh normal runs and three consecutive fresh
+race runs**, with exact one-test lists, seven events per run and all body,
+converter, verifier and outer exits0. All thirteen repository observations
+and each mode's binary remained unchanged. The normal binary SHA-256 is
+`011e9497babf39ee8760a8fcaed7e3921a2403eac9f2ed92e43d2abeb6f77657`;
+the race binary is
+`7dc0224ad65db3cacb61172d0b6fab13e14f10d16c3704de0379372035b1c06c`.
+The final race owner closed at **02:38:10 UTC**. The other 69 test bodies per
+mode are unchanged and retain their original qualified scope. Together these
+provide passing scoped coverage of the 70 affected roots per mode across the
+two named sources; the failed 85c0958 matrices remain failures.
+[Implementation, original failures, corrected confirmations and scoped reuse](peerreview/evidence/FINAL-2-runtime-config-identity-20260915/README.md).
+The portable bundle contains680 checksum entries; its manifest SHA-256 is
+`09713bbd8a396831b926cda1fe1ed758d7fc2b384fdedea1dfade5e186361fe9`.
+Initial event-verifier invocations passed a numeric
+status where the existing verifier requires an absolute `body.exit` path.
+Replaying the retained events with that operand corrected verified all four
+actual outcomes without rerunning any test body.
+
+The separate production control restores only the old runtime hashing. It
+reproduces **three expected failures with two passing controls**: body exit1,
+converter/checker/outer exits0 and 42 events. Source, dependency, binary and
+mutation observations remain equal. Its repair failure occurs at the unchanged
+authentication call before the corrected fixture's planning assertions, so this
+control retains its scope across the one-file fixture correction.
+[Original-hashing control](peerreview/evidence/FINAL-2-runtime-config-identity-20260915/causal-original-runtime-hashing/RESULT.json).
+
+The updated read-only parser built successfully at **01:51:24 UTC**, SHA-256
+`5cee8ea3fe7dd23678d8ee9b646433ee2666390ad61cb1ace833caecebf327e6`.
+It rendered the successor lock at **01:58:24–01:58:28 UTC**, with 19 equal
+repository/library observations and no RPC or campaign-state action. The YAML
+SHA-256 is `c437900d8cb2d29ff0d363ef629b88ceb8ace35976bd28bfd194a2d8dc6eb639`.
+Only `repositories.sn_go_source_hash` changed; all other lock fields are equal.
+The test-only fixture correction does not require another render. Publication,
+the canonical executable, actual setup, both complete gates and the real
+RC/production soak remain outstanding.
+[Parser and exact lock-render receipts](peerreview/evidence/FINAL-2-runtime-config-identity-20260915/final-lock/RESULT.json).
+
+## Historical native attempt: September 15, 01:26 UTC
+
+The runtime455 historical-lock correction is qualified and published at
+`eccfae8a5f4176ccaa6099ce5ce555924057f3d3`. Its next actual setup attempt
+reached a different retained-history check and stopped without changing the
+six recorded campaign-state files or submitting a transaction.
+
+The matching canonical executable built with actual build/outer exits0 at
+**01:24:29 UTC**, a genuine clean eccfae8 Git stamp and equal thirteen-repository
+observations. Its SHA-256 is
+`73264ab8365c6cf538390c53ed0a6a71a39d3972e405b916088559b486218e99`.
+Using the same retained campaign and LAN RPC options, read-only setup ran at
+**01:25:42–01:26:11 UTC** and exited1 with
+`coordinator repair completed source authority: coordinator repair configured
+strict domain differs`. It emitted no new plan. The prior archived-lock refusal
+did not recur.
+
+The refusing comparison is the configuration identity: changing the public
+manifest's expected runtime from 455 to 458 changed ConfigHash. The original
+signed repair, probe and activation evidence still authenticates its previous
+identity. The explicit configuration-identity correction described above
+addresses that comparison while retaining the signed originals, action intents
+and budgets. It has not yet been exercised against the actual retained state.
+
+Once that actual failure proved a production successor was necessary, both
+eccfae8 full-gate attempts were intentionally canceled before any test phase.
+Producer closed143 at **01:32:11 UTC** and aggregate at **01:33:33 UTC**. Both
+passed source-freeze, source-integrity, binding-toolchain and runtime-source
+preflights, then were interrupted during runtime-metadata attestation. Both
+owners and their private process records are gone. These are recorded
+cancellations, not passing full gates or executed-test failures.
+[Canonical build, native refusal and gate cancellation evidence](peerreview/evidence/FINAL-2-eccfae8-native-config-20260915/README.md).
+The 123-entry portable manifest SHA-256 is
+`b6b1dfc4fa43778945fe3c4d1910d5c69bf2ee96654cc2d6c74ad761ab13ce35`.
+
+## Historical checkpoint: September 15, 01:15 UTC
+
+**Current status: in progress; `final_acceptance=false`.** At **01:15 UTC on
+2026-09-15**, the soak remains stopped and the **6,000-alpha repair remains
+unsubmitted**. The next actual setup preview exposed a historical-evidence
+admission defect in the simulator. It did not change the six recorded campaign
+state files or submit a transaction. The **1,212 finalized renewals**,
+**3,521 action identities**, generation3 custody, original signed probe anchor,
+nonce34 and existing spending approvals remain preserved.
+
+The canonical `c572d993` executable built successfully at **00:19:36 UTC**,
+with an authentic clean Git stamp and matching thirteen-repository observations.
+The actual read-only setup ran at **00:24:42–00:24:56 UTC** and exited **1**:
+`validator evidence original release lock: release lock runtime identity is not
+the reviewed testnet runtime 458 release`. No successor plan was produced.
+The archived validator-evidence lock had already matched its original approval
+hash, but the historical reader then applied the current-runtime validator.
+The retained v12 source archives use the exact reviewed **455** identity;
+current activity uses **458**. This is a simulator compatibility failure, not
+evidence that the node stopped syncing.
+[Build, actual preview and unchanged-state receipts](peerreview/evidence/FINAL-2-native-history-458-20260915/README.md).
+
+The narrow correction is frozen at
+`3ffc1277d1acd1e21b908c3b2cfd37612602e07b`. Archived companion locks admit
+their exact reviewed original455 or current458 provenance and retain the common
+structural/build checks. Current lock rendering, final anchors and new runtime
+authority remain458-only. Seven new deterministic regressions cover the actual
+archive and persisted-plan readers, original payloads/actions/budgets, adjacent
+lineage readers and altered approval/runtime rejection. **All 36 affected tests
+pass normally and with race detection.** Both actual archive/restart readers
+also pass three consecutive normal executions on the same source and binary.
+The normal binary SHA-256 is
+`dc3b2ed96df3cfec634ee481b1d4494b51dff2683230a146c3ae3f17b64046dd`;
+the race binary is
+`dce59c07d098f66c0b99a7a7a5c3a6e397a900fd61c52d900e2d7072f080f740`.
+The final race owner closed at **01:13:12 UTC** with all thirteen source and
+dependency observations and its binary unchanged.
+
+In a separate normal control, restoring only the old production dispatch
+reproduces **both original reader failures**, while the static-validation and
+current-authority controls both pass. Its actual body exits1 with exactly
+2 FAIL/2 PASS; event verification and the enclosing owner exit0. This is an
+expected-failure control, not a passing old implementation. Initial control
+setup attempts referenced the wrong handoff path and omitted the existing
+owner's `capture_root` input; both refusals occurred before compilation and
+are retained. No new test or source correction was needed for those operands.
+The earlier181-root runtime qualification retains its original scope.
+[Affected qualification, confirmations and causal evidence](peerreview/evidence/FINAL-2-native-history-458-20260915/README.md).
+The combined portable bundle contains382 checksum entries; its manifest SHA-256
+is `ff16207e3a05ef65785c32d94896648c765bcb58f1ad2967e236a47363158238`.
+
+The two `c572d993` full-gate attempts also ended before phase admission.
+Both passed source-freeze, source-integrity and binding-toolchain preflights,
+then failed the runtime-source preflight with curl exit **28** while downloading
+upstream source from GitHub. Producer ended at **00:21:09 UTC** and aggregate
+at **00:23:59 UTC**; neither started a test phase or service owner. At **00:31 UTC**,
+the exact failed source URL returned HTTP200 and its bytes matched the pinned
+manifest. Exact local upstream checkouts are prepared for the next primary
+source audits. These observations do not pass the failed gates.
+[Closed preflights and recovered source-fetch evidence](peerreview/evidence/FINAL-2-native-history-458-20260915/README.md).
+
+The existing executable rendered the successor lock read-only at
+**00:54:33–00:54:37 UTC**, with all nineteen repository/library observations
+equal. Its YAML SHA-256 is
+`5b8c412454adfde72f2cf51c682b5ce4b9b335a2095eaafc21bf4e92a153a4ab`.
+Only `repositories.sn_go_source_hash` changes from the previous lock, binding
+the historical-reader correction. All contract, runtime, protocol, node/gateway
+and other dependency fields are equal. The exact lock was integrated at
+`628f29a`; it has not changed the retained campaign plan.
+Coherent publication, a matching canonical executable, both
+complete gates and the real RC/production soak remain required.
+[Successor lock and render receipts](peerreview/evidence/FINAL-2-native-history-458-20260915/final-lock/RESULT.json).
+
+## Historical checkpoint: September 15, 00:09 UTC
+
+**Current status: in progress; `final_acceptance=false`.** At **00:09 UTC on
+2026-09-15**, the soak remains stopped and the approved **6,000-alpha reserve
+repair remains unsubmitted**. All **1,212 finalized renewals**, **3,521 action
+identities**, generation3 custody and the original signed probe anchor with
+nonce34 are preserved. The approvals remain **37,250 alpha lifetime** and
+**180 EVM TAO within 200 total TAO**. No new campaign transaction was submitted
+during this qualification.
+
+The fresh owned-node check at **00:03:15 UTC** returned HTTP 200 for both
+direct-LAN batches, **16 peers**, `isSyncing=false`, runtime **458/1/1** and
+chain **945**. Finalized block **8,007,358**, hash
+`0xb6cd48185f3b1587ad9d9a071b6712763d4b50150a7c7f17782d8e6b008c60a9`,
+is later than the previous observation at block 8,006,843. Subtensor is serving
+requests and advancing finality. The stale deployment expectation of runtime
+455 was corrected in xops; **the corrected deployment assertion has not been
+rerun on the node**. These observations use `192.168.1.162:9944`, without
+pacing, retry, proxy, redirect or public fallback; `independent_rpc=false`.
+[Exact requests and raw replies](peerreview/evidence/FINAL-2-runtime458-qualification-20260914/lan-health-20260915T0003Z/).
+
+The composed runtime correction now has **181 selected top-level tests passing
+normally and under race detection**: 100 CRV4, 15 miner and 19 validator tests
+on `df98472`, plus 47 simulator tests on `ade970a`. The relevant client
+source is unchanged between those revisions. Required fresh-process
+confirmations are complete. An earlier simulator run actually failed two of
+41 tests: its semantic inventory still named the five-version test, and its
+RPC mock response/request files overlapped the helper's scratch outputs.
+Correction `ade970a` separates those fixture paths, updates the inventory and
+retains stricter malformed-response and infrastructure-scope controls. The
+original **39 PASS / 2 FAIL** output remains preserved; replaying its events
+does not turn that run into a pass.
+[Qualification scope, raw outcomes and retained failures](peerreview/evidence/FINAL-2-runtime458-qualification-20260914/README.md).
+
+The causal checks for the old five-identity capacity, stale gate inventory and
+public/paced artifact route all produced their expected failures with passing
+adjacent controls. The 13-test production-policy causal also completed with
+exactly **seven expected failures and six passing controls**, across CRV4,
+miner, validator and simulator. Restoring the old current-runtime assumptions
+reproduces rejection of runtime458 while the unaffected controls still pass.
+All four compiled binaries, the exact six-file mutation and dependency
+observations remained stable. The earlier setup and shell-parse refusals are
+preserved separately; neither started a test body.
+
+Both original FC908 full gates have now closed with exit **1**. The producer
+passed **36 of 37 phases**; its typed-prior scheduling correction remains
+qualified as recorded below. The aggregate closed at **23:33:25 UTC on
+September 14**, passing **24 of 25 phases** and its final source/release-lock
+checks. Its single failure came from four obsolete positive nginx quota
+assertions in the xops vulnerability test. Correction
+[`42bfe0b`](https://github.com/urnetwork/xops/commit/42bfe0be2a7a7c51bbda87fb44886424604f509e)
+is pushed to xops main: its complete **17-test module**, two additional
+**seven-test** confirmation processes, and the old-assertion causal control
+completed with the expected results. Earlier projection errors remain in the
+evidence. The aggregate now explicitly retains both gateway regression tests.
+**Neither failed full gate establishes release acceptance.**
+[Closed aggregate and xops correction](peerreview/evidence/FINAL-2-runtime458-qualification-20260914/README.md).
+
+The reviewed final release-lock YAML has SHA-256
+`d11b2a41ca6e836f9267088f8899c4fb0faf53b78b3b9ca8804bab589cd63e7b`
+and is committed in the idle integration checkout at `2b907a4`. Relative to
+the earlier runtime-458 lock, only `repositories.protocol_source_hash` changes,
+binding the aggregate's added gateway regression. All contract, runtime,
+production Go, node/gateway and other dependency fields remain unchanged.
+The existing readonly CLI rendered this lock with matching before/after
+observations; it was not rebuilt. This lock has not been applied to the
+retained campaign. Publication, a canonical stamped CLI, both replacement full
+gates, the retained-state setup transition and the actual RC/production soak
+remain required.
+[Exact final lock and render receipts](peerreview/evidence/FINAL-2-runtime458-qualification-20260914/final-lock/).
+
+## Historical checkpoint: September 14, 22:57 UTC
+
 **Status: in progress; `final_acceptance=false`.** This report covers the next
 full finalization of testnet chain **945**, subnet **521**, under
-[FINALIZE.md](../FINALIZE.md). At the **15:04 UTC on 2026-09-14** observation
-cutoff, all **1,212 renewal transactions** across **202 fleets** have finalized
+[FINALIZE.md](../FINALIZE.md). At the **22:57 UTC on 2026-09-14** observation
+cutoff, all **1,212 renewal transactions** across **202 fleets** remain
+finalized. The approved **6,000-alpha reserve repair remains unsubmitted** and
+the soak remains stopped. The lifetime approvals remain **37,250 alpha** and
+**180 EVM TAO within 200 total TAO**. No transaction was sent during the runtime
+adoption work below.
+
+The owned LAN node is healthy. The operator reported that nginx's effective
+configuration had no RPC rate-limit directives and its configuration check and
+reload both succeeded at **21:01:55 UTC**. This supersedes the undeployed status
+at the earlier checkpoint below; the remote deployment log itself was not read
+by this agent. A fresh direct-LAN observation ending at **22:20:21 UTC** found
+**16 peers**, `isSyncing=false`, runtime **458/1/1**, chain 945 and finalized
+block **8,006,843**. The reported deployment failure expected runtime **455**;
+it was not a failure to sync or finalize blocks.
+[Operator provenance and raw LAN evidence](peerreview/evidence/FINAL-2-runtime458-20260914/README.md).
+
+At finalized block **8,006,567**, hash
+`0xc814242904668bad31b388b36ed31a0c1ffd3b180b173727f5e3d20ea5c8aba4`,
+the exact on-chain Wasm has BLAKE2b-256
+`2fdb28e5c3fe4e79844b25dee09ed960e90004432ea2bd98079aba4c5530c51a`
+and metadata BLAKE2b-256
+`040088e73e34ed5561372aa51b07b56e41cf7f390312837b074434f30452593d`.
+Executing that exact captured Wasm offline reproduced the metadata bytes.
+The upstream source review uses exact commit
+`a7ae07e5dd37b552f27aa8e4d7716c522eef9aa7`; it claims no release tag or mainnet
+proposal. The authenticated upstream CI Wasm is **not byte-identical** to the
+LAN artifact: the reviewed difference is 22 constants in one hash-state
+initializer, consistent with compile-time random seeds. Only the exact LAN
+artifact is admitted. Fresh evidence uses our own node and is **not an
+independent public-node replication**; report 1's historical independent checks
+retain their original scope.
+[Captured replies and bytes](peerreview/evidence/FINAL-2-runtime458-20260914/lan-artifacts/RESULT.json),
+[offline execution](peerreview/evidence/FINAL-2-runtime458-20260914/offline-probe/RESULT.json),
+[compatibility review and provenance limits](../docs/spec/runtime-458-audit.md).
+
+The expected-runtime correction is published on
+[xops main at 446cbdb](https://github.com/urnetwork/xops/commit/446cbdb56e0dc5004b66d7e0cbf05a4d9c49224c).
+Its complete **30-test module passed**, and both affected controls passed two
+additional fresh processes. Restoring only the old expected-runtime value
+caused the expected runtime-control failure while the adjacent network/backend
+control passed. The node image, chain identity, ports and nginx policy are
+unchanged. **The corrected deployment check has not been rerun on the node.**
+[Raw results and exact causal mutation](peerreview/evidence/FINAL-2-runtime458-20260914/xops-qualification/SUMMARY.md).
+
+The FC908 full producer closed at **21:28:46 UTC**, exit **1**, with **36 of 37
+phases passed**. Its sole failure was the ordinary capture race package reaching
+its ten-minute cumulative deadline while the typed-prior 32 MiB boundary test
+was active. Correction `907d18698f3464da8193894a3ad42101184a6a56` gives that
+boundary its own process with the existing workload and deadline. All **26
+affected roots passed normally and under race**; the formerly active boundary
+passed three consecutive fresh race processes on unchanged binary bytes.
+Restoring the old script produced the expected guard failure and two passing
+adjacent controls. These completed results are reused within their recorded
+scope. The original FC908 aggregate is still running: the retained partial
+observation contains **20 passed phases**, no failed phase and no final verdict.
+[Failed full producer](peerreview/evidence/FINAL-2-producer-fc908-20260914/README.md),
+[completed correction](peerreview/evidence/FINAL-2-typed-prior-907-20260914/README.md),
+[explicitly partial aggregate log](peerreview/evidence/FINAL-2-runtime458-20260914/aggregate-fc908-partial.stdout).
+
+Runtime-458 client source `df98472bd88dc8e29856c172fba4731d52a6308d` admits the
+new exact current artifact while retaining 451–455 only for historical
+evidence. It also corrects the shared metadata/authority limit from five to
+**six exact identities**, including the actual simulator history constructor,
+all six hot entries and seventh/duplicate/incomplete rejection. Its **175-root
+affected qualification remains in progress**; implementation and successful
+compilation are not recorded as passing tests.
+
+A readonly runtime-458 CLI built successfully on that source. Its complete
+thirteen-repository before/after observations match. The reviewed combined
+release lock has SHA-256
+`e72b2146a1cbbd59a54b0424a30478aa9a475f8d82369c028c4fe22e8f2d71c2`:
+six runtime fields, two SN source hashes and the node configuration hash changed
+relative to FC908. **All contract hashes and other dependency fields are
+unchanged.** The exact YAML is committed only in the idle integration checkout
+as `151b515be82cedd02cdae7346b9340cb2cef91aa`; it has not changed the active
+campaign plan or the source under qualification. A final canonical stamped CLI,
+both complete release gates, the retained-state setup transition and the actual
+RC/production soak are still required. The earlier FC908 stamped CLI remains
+historical build evidence and cannot authorize runtime-458 writes.
+[Renderer and combined lock evidence](peerreview/evidence/FINAL-2-runtime458-20260914/README.md),
+[earlier stamped CLI and retained build refusals](peerreview/evidence/FINAL-2-final-cli-fc908-20260914/README.md).
+
+## Historical checkpoint: September 14, 18:56 UTC
+
+At that observation cutoff, all **1,212 renewal transactions** across **202 fleets** had finalized
 and passed their native postcondition checks. The approved **6,000-alpha repair
-has not been submitted**, and the soak remains stopped. The published candidate
-`e982b3fbd74f76c8afe79cd8ef7067b19b044238` includes the qualified historical
-restore correction, runtime-455 battery correction and probe replacement path.
-The cumulative normal and race runs each retain **99 passes and one constructor
-fixture failure**; the final correction subsequently passed all **eight affected
-roots in both modes**, with the required fresh-process confirmations closed.
-Native setup exited **1 at 14:37:49 UTC**, before any transaction, because a
-moving finalized checkpoint changed the plan hash between preview and apply.
-All six retained state-file hashes remain unchanged. Corrected source
-`0a94b7d0b2362fe6bdff798be49c3f9eb3013bfa` now passes all **40 affected normal
-tests**, including five new deterministic regressions. Race qualification,
-fresh-process confirmations and the isolated failure control remain pending.
-The superseded `e982b3f` full gates were canceled and fully joined at
-**14:42:32–33 UTC**, with no test failure reported before cancellation. They
-are not full-gate passes. The correction's release build, native application
-and complete gates remain required. Successful focused checks, renewal and
-historical payments do not establish full acceptance.
+has not been submitted**, and the soak remains stopped. Earlier published candidate
+`7eab04905dbc274ae6d2546b6802f1097c1fc3fe` includes the qualified historical
+restore correction, runtime-455 battery correction, probe replacement path and
+stable plan-approval checkpoint. Its clean release executable has built
+successfully. That approval-checkpoint correction passed all **40 affected tests normally
+and under race detection**, including five new deterministic regressions.
+Three fresh normal executions close the advancing-finality confirmation, and
+restoring the original defect produces the expected failure with three passing
+controls. Earlier failed and canceled attempts remain recorded below.
+
+The new preview completed at **15:25:40 UTC**. Approved setup admitted the exact
+reviewed plan
+`0x2b5527989bd2ca38b58d3046e82f2d7fdb5ab1b5b86f3af74ba58e5957ced95d`.
+It then stopped on an nginx HTTP 429 at **15:47:17 UTC**. An identical-plan,
+identical-build retry stopped on another 429 at **16:09:25 UTC**. Neither sent
+a new transaction. The canonical owned-node gateway template contains matching
+request and connection limits. Their isolated removal passed the related
+**29-test module**, three executions of both new deterministic regressions, and
+the expected old-template failure control. The exact qualified correction is
+published on [the owned-RPC correction branch](https://github.com/urnetwork/xops/tree/sim-testnet/owned-rpc-unpaced-20260914)
+and is now included in [xops main at d33d417](https://github.com/urnetwork/xops/commit/d33d4173767ad9dab2f301bc0b0e040579bee896).
+The Subtensor files match the qualified correction exactly.
+It is **not deployed**: the available SSH key was rejected, and the deployed
+configuration has not been inspected.
+No further setup retry is planned before the gateway correction.
+
+The full producer closed with exit **1** at **17:30:39 UTC**: all **36** phases
+joined, with **34 passes and two failures**. Its final source and release-lock
+checks passed. Strict Solidity compilation rejected a narrowing cast in the
+runtime-455 regression test before any Solidity test body ran. The simulator
+evidence race package also exceeded its unchanged ten-minute deadline after a
+new full-population renderer had been added to its ordinary group. The obsolete
+aggregate was stopped and joined at **18:49:42 UTC**, with outer exit **143**:
+**14 phases passed**, the same strict Solidity lint failed, and two Connect
+phases were canceled. All known owners and workers were gone; its final source
+fence was not reached. Full producer success remains a traffic launch
+prerequisite, and both complete gates are required for
+acceptance. Successful focused checks, renewal and historical payments do not
+establish full acceptance.
+[Closed producer, exact phase results and original failure locators](peerreview/evidence/FINAL-2-producer-7eab-20260914/SUMMARY.md).
+
+The isolated correction `1e491b61a841c652f3155152bf845c519e2c171a` changes only
+the probe test, producer scheduling script and scheduling regression tests.
+The corrected probe source passed the strict 85-file build and all **215**
+contract tests across **18** suites, including **19** probe tests. Two additional
+fresh strict-lint processes passed; restoring the original assertion reproduces
+the unsafe-typecast failure. New synthetic controls reject short or long
+responses and a change to any byte of the known answer. Generated payload
+comparison and binding verification passed. The earlier binding-check refusal
+is retained: temporary checkout file permissions differed from the canonical
+checkout and were corrected without changing their contents.
+[Strict build, 215-test result, causal lint failure and adjacent controls](peerreview/evidence/FINAL-2-probe-reference-lint-20260914/SUMMARY.md).
+
+The renderer receives a separate normal/race process with the same ten-minute
+limit. Both compiled inventories confirm **193 roots: 190 ordinary, two
+existing slow roots and one renderer**; the two child-package generator tests
+retain separate Solidity-phase coverage. Source-derived guards reject dropped,
+duplicated, conditional or broadened owners and identify future full-launch
+wrappers through helper calls. The 18-root guard matrix then found an adjacent
+source-census defect in both modes: **16 passed and two failed**. An older text
+scanner counted `TestRuntimeEvidenceSyntheticDirect` inside a fixture string
+as an executable declaration. The parser-based correction and four deterministic
+literal/declaration/build-file controls are committed in clean source
+`713eae3fcf83615d81d185fda3f3ec42a441a26b`. All **81 affected tests passed
+normally and under race detection**. Both failed guards completed three fresh
+sequential passes in each mode. All four original timeout roots completed
+three sequential race passes on the same corrected binary; the slowest root
+took **303.93, 435.95 and 394.89 seconds**. Source, dependency and binary checks
+matched before and after every accepted execution.
+
+Restoring only the old declaration scanner produced the expected **three
+failures and three passing controls**. Restoring only the old scheduling script,
+using the retained normal binary, produced **three failures and one passing
+control**. The earlier `1e491` timeout body's four raw passes remain distinct
+from its failed capture-metadata checks and do not count toward the completed
+`713eae3` streak. Compiler, patch-direction and list-adapter admission refusals
+are retained separately from actual test failures.
+[Corrected matrices, confirmations, causal controls and obsolete aggregate closure](peerreview/evidence/FINAL-2-evidence-render-owner-qualification-20260914/README.md).
+
+Production Go, contract artifacts, the installed approved plan and completed
+renewals remain unchanged. The reviewed successor release lock was rendered
+locally with no RPC or native-state mutation. Its only changes are the protocol
+source hash for the producer scheduling script and both gateway/node configuration
+hashes; the YAML SHA-256 is
+`76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35`.
+All sixteen repository/library snapshots and the original lock were stable during
+rendering. This prepares the next canonical build and complete gates; it does
+not establish deployment, a full gate PASS or a soak result. Applying the new
+release requires a reviewed successor setup hash preserving the completed work
+and approved limits.
+[Exact three-field lock diff, source snapshots and retained layout refusals](peerreview/evidence/FINAL-2-infrastructure-lock-20260914/README.md).
 
 The earlier published candidate
 `a59294e98ea02d05125015ae02cf32f2c0059c8a` introduced the corrected strict
@@ -289,7 +1309,7 @@ passes retain their original source scope. The complete final candidate gates
 are still required.
 [Constructor diagnosis, deterministic cases, adjacent controls and exact outcomes](peerreview/evidence/FINAL-2-precompile-successor-20260914/SUMMARY.md).
 
-The final executable uses clean revision `e982b3f`, SHA-256
+The earlier executable uses clean revision `e982b3f`, SHA-256
 `2977471bafbddc7f1568db84c823f2c169ec1bc83857cc046a72baed2f820c99`, with identical
 before/after observations of all 13 repositories. The source-pair hash is
 `519744ac4ad704e69a8f7e5500f4dddfbb479ca9a8021cea6b66c60d6000ade7`.
@@ -334,9 +1354,89 @@ Formatted source `0a94b7d` passed the **40-root normal matrix** from
 outcomes and unchanged source, dependency and binary identities. Its normal
 binary SHA-256 is
 `e67e2f362068e7e8648273e18f6d6f6d206581f048e429950b5d02012343daed`.
-Race qualification, the two additional normal confirmations and the isolated
-moving-head failure control are pending at this cutoff. These scoped results
-do not establish a successful native application.
+The **40-root race matrix** also passed, from **15:17:18 to 15:20:42 UTC**,
+with race binary SHA-256
+`23e7466ce21bc71d14d25a96b41c2aabc3bde264f9080b9fa999538e85702cf2`.
+Each mode has exactly **40 top-level PASS terminals**; the separately recorded
+116 descendant events are not asserted to be 116 descendant passes. All source,
+dependency, binary and membership checks remain exact. Two additional fresh
+normal processes passed the advancing-finality root at **15:04:37** and
+**15:10:44 UTC**. The disposable one-assignment moving-head variant completed
+with **one expected failure and three passing controls**, reproducing the actual
+approval mismatch. These scoped results do not establish repair completion.
+[Exact case-to-failure mapping, outcomes, causal patch and input identities](peerreview/evidence/FINAL-2-probe-approval-anchor-20260914/SUMMARY.md).
+
+The correction was published through `9e258f8`; lock-only successor `7eab049`
+changes only `repositories.sn_go_source_hash` to
+`sha256:5f0b285194e4359b0fd806aa9f136c3656eec1bf480a793c761f88d8e2abd199`.
+The lock file has SHA-256
+`7d77c0016491c85e966797f994b6a7c368ad55800c2cb838156439c71b479f84`.
+Native lock preview and apply both exited 0 and sent no chain transaction.
+The final clean `7eab049` executable built with exit 0 at **15:21:02 UTC**,
+SHA-256 `feb8890a60efff80cada37a9015b8edeb2d49f20476b1e7ee2c9d4c0a3176b9e`.
+All 13 before/after repository observations match, with source-pair SHA-256
+`05d8d9d50e2904ccaeef66a8ffea9f693d8a06e340423a66eb2032c1a473b109`.
+
+The new native preview ran **15:23:41–15:25:40 UTC**, exited 0 and preserved
+all six retained state-file hashes. Its plan retains every action intent and
+all three budget objects from the earlier reviewed replacement plan. It binds
+the original signed checkpoint at EVM block **7,986,580**, hash
+`0xeb101aeb317fee5b3f27c44540b63c4f4eeb46882ead59654e36b37dd57f22f9`,
+while checking current custody and nonce. The same 3,521 action IDs, completed
+1,212 renewals, nonce-34 replacement, native write/restore intents and approved
+6,000-alpha repair remain. Setup application started at **15:27:17 UTC** and
+the installed plan was observed to match the reviewed `0x2b552798...` approval
+at **15:36 UTC**. The two later transport failures below added no journal row
+or repair transaction. Both full gates passed their five preflights. The
+producer later closed with two failures; the aggregate remains live at this
+report's cutoff.
+[Closed release preparation and reviewed preview](peerreview/evidence/FINAL-2-7eab-preparation-20260914/SUMMARY.md).
+
+The first `7eab049` application completed the **1,000/1,000** batched audit and
+reached **2,450/3,455** carried-action checks before exiting **1 at 15:47:17 UTC**.
+The error was `fleet.renew.1.34.bind.2: current postcondition: 429 Too Many Requests`,
+with an nginx HTML body. Only plan/config admission changed; journal,
+supervisors and public identities remained unchanged. All action objects and
+the three nonempty spend/limit objects exactly match the reviewed preview.
+Source tracing keeps the failed path on the guarded owned LAN client. Bounded
+LAN diagnostic reads subsequently returned HTTP 200, chain ID 945 and the
+binding's canonical block/receipt with success status. Those observations were
+retained from the tool transcript; original raw HTTP capture files do not
+exist, and the exact individual request that received 429 is unidentified.
+[Closed first refusal, unchanged custody and diagnostic provenance](peerreview/evidence/FINAL-2-7eab-transport-20260914/SUMMARY.md).
+
+The direct retry used the same admitted plan and executable, with no new
+preview, build or source change. It ran **15:51:31–16:09:25 UTC**, reached
+**2,400/3,455** carried checks, and exited **1** at
+`fleet.renew.1.31.bind.4` with the same nginx HTTP 429. All six retained state-file
+hashes are identical before and after this retry. The journal remains at
+sequence **16,318**, and repair `alpha.repair.validator.1.7` remains unsubmitted.
+
+The follow-up infrastructure review found **100 requests/second**, **burst 200**
+and **128 connections/client** in xops `a9d2eb4`'s canonical snow nginx template,
+with HTTP 429 configured for both limit types on the archive and lightnode
+gateways. This source configuration can produce the observed response; actual
+deployed configuration and request-versus-connection attribution remain
+unverified because SSH rejected the available identity. Isolated xops correction
+`51325d00e18a157b2ceb5d5ac44bb0645550b289` removes those directives, their obsolete
+settings and their playbook assertions. Both exact listeners, source allowlists,
+GET/POST controls, WebSocket paths, body bounds and native node capacity remain.
+The adjacent overlay and node templates contain no request-rate setting.
+
+Terra ran the complete affected Python/Jinja module: **29/29 passed in 3.926s**.
+Both new synthetic renderer tests then passed two more fresh processes on the
+same source/interpreter. Restoring only the old template produces exactly
+**one expected failure and one passing route control**, with no timing or network
+dependency. The rendered configuration has SHA-256
+`6371976bddf174874083f22897bb072977c5218f7b161a95f1e1c02a13edd453`.
+Strict Jinja and route checks passed; a local nginx binary was unavailable, so
+`nginx -t` was not performed. These results qualify the isolated source change;
+they do not establish rollout or cessation of 429 responses. The correction was
+published as branch `sim-testnet/owned-rpc-unpaced-20260914`, then integrated
+over current upstream as `d33d417` and pushed to xops main at **18:03 UTC**.
+The Subtensor contents match the qualified source. The full gates' original
+xops checkout remains unchanged at its recorded pin.
+[Repeated refusal, infrastructure cause, deterministic regressions and rollout limits](peerreview/evidence/FINAL-2-owned-rpc-throttle-20260914/SUMMARY.md).
 
 The canceled `e982b3f` producer ran **14:21:59–14:42:32 UTC**, with **13/13**
 admitted children joined: **10 successful and 3 canceled**. Aggregate ran
@@ -506,7 +1606,7 @@ reproduction of the findings, not an all-check pass.
 | --- | --- | --- |
 | Production cadence was never scheduled | The first run used 300/50/150/5. A `production_cadence` YAML entry does not prove scheduling or activation. | Retain the successful policy-scheduling transaction, effective epoch, finalized policy state showing **360/60/180/6**, and **three consecutive fully observed epochs** under that active policy. The five accelerated epochs remain a separate prerequisite. Pending. |
 | `max_allowed_validators=64`, target ≤56 | The [whitepaper](../WHITEPAPER.md) calls this root-controlled/runtime-dependent. The [compatibility policy](../deploy/testnet/hyperparams.yml) already requires exactly 64. The user has explicitly directed this run to work with the real limit. | **Use 64; reaching 56 is not a testnet prerequisite.** Retain finalized value, actual permits, UID occupancy and 200-head selection evidence from the run. Report the difference from the whitepaper target without claiming ≤56 compliance. No parameter change is needed. |
-| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. The old repair is already credited. | The unsubmitted **3,750-alpha** repair became insufficient at the 17:10 UTC snapshot. The user approved replacing it with **one 6,000-alpha repair within 37,250 alpha lifetime**. Attempts stopped before submitting that transfer on the preparation defects retained above; the latest exposed the precompile restore check. Retain the eventual finalized debit/credit and a complete census proving ≥65%, monitor the 60% floor, and report the end-of-run share separately. |
+| Reserve 61.449%, below 65% target | The historical 60% floor passed; the repair target did not. | The approved **6,000-alpha** replacement finalized at native block **8,009,634**, with exact equal debit/credit. The complete 256-UID census at **8,010,632** proves **65.5997247163%**, closing the preparation reserve target. [Pinned on-chain proof](peerreview/evidence/FINAL-2-approved-renewal-and-reserve-20260915/README.md). Monitor the 60% floor during the actual campaign and report its end-of-run share separately; final acceptance remains pending. |
 | Epoch 309 paid despite capturing zero | `RootMissed(308)` carried each operator's funded amount into its own epoch-309 entitlement. | The missing historical transition is reproduced below from both nodes. Every new paid epoch must similarly explain its funding source, carry, payments and remainder per operator. Historical reporting omission closed; fresh-run accounting pending. |
 | Artifact signers differ from registered root signers | A recoverable artifact signature establishes provenance. The coordinator authorizes the root commitment transaction using the epoch's registered `rootSigner`; these are separate checks. | Preserve each recovered artifact signer, committed artifact hash/root, transaction sender and epoch-specific registered root signer. The collector/verifier correction is integrated into candidate `4fda909` and its affected tests passed normally and under race; retained keys and old signatures stay unchanged. Fresh-run evidence remains pending. |
 | Chain verification cannot establish off-chain usage or lifecycle | A committed hash authenticates bytes, not the truth of usage, restart or gate assertions within them. | Label chain-reproduced, independently recomputed, artifact-only, and locally executed evidence separately. Link exact artifacts, executable/source identity, commands, actual exits, process generations and shutdown outcomes. Pending full-run evidence. |

@@ -66,8 +66,8 @@ func preflightEvidenceRelayContinuationHistory(ctx context.Context, cfg *Resolve
 	if err != nil {
 		return err
 	}
-	if head.Number < c.EVMHead.Number || head.Number >= c.EndBlock {
-		return errors.New("relay continuation fixed source-capacity runway has expired")
+	if err := validateEvidenceRelayContinuationRunway(c, head.Number); err != nil {
+		return err
 	}
 	resolved, err := runtimeEvidenceV2ResolvedConfig(cfg, stateDir)
 	if err != nil {
@@ -86,7 +86,7 @@ func preflightEvidenceRelayContinuationHistory(ctx context.Context, cfg *Resolve
 		}
 		bounds := resolved.Config.ValidatorEvidenceV2[source.ValidatorID-1].Evidence.Bounds
 		operatorDir := filepath.Join(stateDir, "runtime", fmt.Sprintf("validator-%d", source.ValidatorID), "state", "operators", fmt.Sprintf("no-%d", source.NoID))
-		capacity, err := validatorcomponent.ReadStoppedAttemptLedgerCapacity(ctx, operatorDir, source.Capacity.Identity, source.Capacity.Coordinator, ed25519.PublicKey(source.Activation.VPK[:]), bounds.Disk, source.Capacity.Head)
+		capacity, err := state.capacityCache.Read(ctx, operatorDir, source.Capacity.Identity, source.Capacity.Coordinator, ed25519.PublicKey(source.Activation.VPK[:]), bounds.Disk, source.Capacity.Head)
 		if err != nil {
 			return err
 		}
@@ -94,5 +94,9 @@ func preflightEvidenceRelayContinuationHistory(ctx context.Context, cfg *Resolve
 			return err
 		}
 	}
-	return nil
+	latest, err := finalizedEVMHead(ctx, client)
+	if err != nil {
+		return err
+	}
+	return validateEvidenceRelayContinuationRunway(c, latest.Number)
 }

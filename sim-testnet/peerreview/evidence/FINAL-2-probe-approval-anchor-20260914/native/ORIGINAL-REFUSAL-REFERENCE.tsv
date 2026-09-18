@@ -1,0 +1,11 @@
+field	value
+source	e982b3fbd74f76c8afe79cd8ef7067b19b044238
+result_sha256	0bb5f6a84cacfe990431b7f21544afbd953e6086cae7a783a347fb3a0f817129
+exit_code	1
+failure	plan hash mismatch before application
+started_at_utc	2026-09-14T14:35:48.496499604Z
+finished_at_utc	2026-09-14T14:37:49.704584485Z
+all_six_state_files_unchanged	true
+repair_journal_entries	0
+new_transactions	0
+stderr_sha256	39ce6a667205ef75d3d75b69cc5dbb73c8317b60e6315542debdfb5c613723c6

@@ -1,8 +1,11 @@
 # Testnet execution plan
 
-Updated 2026-09-13. The user has requested full finalization and fixes for
+Updated 2026-09-16. The user has requested full finalization and fixes for
 previously ignored failures, flakiness and issues exposed by the shortened run.
-The full requirements in [FINALIZE.md](FINALIZE.md) govern completion again.
+The full functional requirements in [FINALIZE.md](FINALIZE.md) govern completion.
+The user's 2026-09-15 instruction requires recovery by patching and retaining
+incremental progress. The [harness recovery policy](sim-testnet/README.md#incremental-recovery-and-acceptance)
+supersedes historical full-restart and blanket three-confirmation requirements.
 The user explicitly confirmed SN testnet finalization under `sn/FINALIZE.md`;
 all qualification and the current report at `sn/sim-testnet/FINAL-2.md` concern
 this simulator and its runtime dependencies. Other simulation references were
@@ -19,7 +22,7 @@ historical replay, pending check or artifact-only assertion is not proof that
 the next run met an on-chain target.
 
 The user explicitly directed execution against the real chain limits after
-the peer review: retain runtime 455's root-controlled
+the peer review: retain the root-controlled
 `max_allowed_validators=64`. Lowering it to 56 is not a prerequisite for this
 testnet run. The existing compatibility policy already requires exactly 64;
 prove the 200-head topology against actual UID occupancy, permits and native
@@ -34,19 +37,719 @@ Current work:
 2. Use Terra (`gpt-5.6-terra`, reasoning effort `max`) for all tests and gate
    execution. Use Astra (`gpt-6-astra`, reasoning effort `max`) to diagnose and
    fix failures and flakiness, then return corrected source to Terra for reruns.
-3. Complete both full gates on the candidate with the refreshed release lock
-   and private test services. The earlier validator, native-receipt and scenario
-   failures have completed their scoped confirmations. Keep the original failed
-   and interrupted results visible; focused passes do not replace full gates.
+3. Complete producer and aggregate coverage using valid retained phase results
+   plus failed, missing or patch-affected checks. Collect independent failures
+   in a batch; preserve completed phases when a gate is interrupted.
+   Retain earlier confirmations and every failed or interrupted result. Record
+   accepted composition separately from each gate invocation's actual exit.
 4. Complete the required real release campaign and production soak, then
    reconcile on-chain outcomes, LAN-node replay, the final report and shutdown.
    Reuse valid completed evidence; unrun, failed and waived checks are not passes.
 
 Retain the approved 6,000-alpha repair allowance, 37,250-alpha lifetime limit,
-180 EVM within 200 total TAO, 262 registrations and zero new subnets. Use
+205 EVM within 225 total TAO, 262 registrations and zero new subnets. Use
 `192.168.1.162:9944` without RPC rate limits. Full acceptance remains pending.
 
-Latest checkpoint, 2026-09-13 23:48 UTC: the soak remains stopped. The full
+Latest recovery checkpoint, 2026-09-16 13:23 UTC: the runtime-461 correction is
+qualified and integrated at `8edb3167a6261bfd82ecbc5f3c0ac2c787beec7c`.
+All 103 affected roots pass normally and under race; four causal restorations
+produce exactly nine expected failures and nine passes. Root verified all
+15 raw body streams, exact compiled membership, actual exits and unchanged
+inputs. The exact-Wasm probe also passed. The review caught and fixed the
+adjacent historical companion check that would reject former-current runtime
+460 approvals, plus a stale doctor test fixture before compilation.
+The [closed qualification](sim-testnet/peerreview/evidence/FINAL-2-runtime461-qualification-20260916/README.md)
+retains the complete evidence. The read-only release-lock preview passed;
+the exact candidate, SHA-256
+`aad35e8488e48190071889b3dec47c184ed9d2deedc30c44e3b52ee6f17afd84`, changes only
+observed protocol/SN Go digests beyond the qualified static461 identity.
+Publication, final matching build and native recovery follow. No native owner,
+helper or campaign is running. Current saved plan remains f6e8c46e, retaining
+the original history, limits and completed actions. Reuse unaffected tests.
+
+Previous recovery checkpoint, 2026-09-16 12:03 UTC: startup and direct campaign
+handoff are published at `1860261f524054b3d8132a48f75307ffdb792322`; the matching
+CLI built successfully, SHA-256
+`114bede0b30a9bc9fdb946f3075d1e1f3ff9b3e36daf57d1c084f6144e43bb07`.
+Read-only plan revision passed. The first setup failed before preparation
+because the physical checkout was detached; attaching the same commit to its
+`origin/main` tracking branch repaired that prerequisite without rebuilding.
+The retry ran 11:43:40–11:57:57, completed all 4,673 carried checks, and collected
+nine failures from newly observed runtime 461. Its body/outer/join exits are one.
+Eight hard preparation checks passed; the single hard failure aggregates those
+nine runtime-admission errors. Setup adopted plan `0xf6e8c46e6a6a79c7c67deb8304e387f4bc9821ad96513c0ab6851d954d0d3bc6`
+before stopping; only plan/config changed, with journal, supervisor state and
+manifest, identities, executable and lock preserved. A fresh LAN read confirmed
+461/1/1 at finalized block 8,018,145. No new END or native continuation was
+created. All four temporary helpers stopped and joined with exit zero.
+The [closed preparation evidence](sim-testnet/peerreview/evidence/FINAL-2-runtime461-preparation-20260916/README.md)
+preserves both failures and actual results. Astra is reviewing the 461 artifact,
+consumed interfaces and adjacent admission paths; Terra will qualify the
+affected correction. Reuse completed startup/handoff results and retain all
+approvals, signed history and full campaign requirements. RC remains unexecuted.
+
+Previous recovery checkpoint, 2026-09-16: strict managed resume 92055 failed its
+five-minute owned-node semantic-readiness wait at 10:20:25. Body/outer/join exits
+are 1. All 1,000 fleet and 4,673 carried-action checks completed; the new generation
+reached 33 healthy processes with zero restarts, but all four fresh proof domains
+remained pending. Both validators were still replaying retained settlement
+history when cancellation reached them. Cleanup stopped all 33 processes. The
+last process-log scan at 10:20:10 had no findings; no later log scan is claimed.
+Only watched supervisor manifest/state changed; plan, journal, config, public
+identities, executable and lock are unchanged. RC remains unexecuted. The narrow
+startup correction is qualified below; its deployment remains pending. Reuse
+completed qualification. Reconciliation confirmed all 14 new
+operator attempts have canonical status-1 receipts; actual fees total
+0.029033073172513564 EVM TAO. Both validator prefixes are unchanged and no
+N1488 decision/preparation occurred. Root restored only the 14 original signed
+RLPs at 10:35:53, preserving all 2,272 originals and all six watched files,
+with no broadcast or DB/journal mutation. The complete collector union is now
+2,532 signatures. The separate closed capture is
+`/mnt/data/sn-testnet/qualification/native-recovery-20260916-r4/signature-restoration`.
+Terra qualified candidate `8270992e`: all 11 affected roots pass in normal/race;
+each causal variant has exactly one intended failure and ten passes. Root
+checked raw events, membership, exits and unchanged inputs, then fast-forwarded
+primary to that commit. The retained strict startup allowance is 30 minutes
+across RPC routes; fresh-proof and all other readiness gates remain. Physical
+deployment still uses the `aeda6abb` executable. The explicit handoff from strict
+resume into the full campaign is now qualified and integrated at `e109ac35`.
+All 14 affected roots pass normally and under race; the causal control produces
+exactly three intended failures and three passes. Normal acceptance composes
+four retained passes, nine corrected-capture passes and one previously omitted
+root; every failed invocation remains recorded. The earlier 11 readiness roots
+are reused. Terra will own the combined native command, which retains all full
+campaign checks and avoids a second preparation pass. The
+[closed orchestration qualification](sim-testnet/peerreview/evidence/FINAL-2-resume-campaign-handoff-20260916/README.md)
+records the source, composition and original harness errors.
+The [read-only release-lock preview](sim-testnet/peerreview/evidence/FINAL-2-retained-startup-release-20260916/README.md)
+passed under root session 84281; only the SN source hash changes. Its exact
+candidate lock, SHA-256
+`42a48da4d4fd267c496b8558cd9838f68b3f5e4117a9e681352129069df2df22`, is installed
+in the primary checkout. Matching publication/build and native adoption remain
+pending. R4 native wrappers and four temporary RPC/API helpers are prepared but
+unexecuted; no new plan is adopted yet. Original compiler bodies that wrote literal `$capture/` outputs
+exited zero, while their wrappers exited 126; corrected builds reproduced the
+same hashes. The original failures and premature cleanup inventories remain.
+The [closed startup qualification](sim-testnet/peerreview/evidence/FINAL-2-retained-startup-qualification-20260916/README.md)
+contains 70 verified payloads with manifest SHA-256
+`f4c67339990c97bc2cac866bc049074291b6f869891d01a86361e06ce6fd4577`.
+The [closed failure evidence](sim-testnet/peerreview/evidence/FINAL-2-managed-readiness-20260916/README.md)
+has 27 verified payloads and seal
+`81fd7d5c8140fa02bb58184cdb562906ad7386dcd33a078316f40d42a3a2bc2d`.
+
+Previous checkpoint, 2026-09-16 09:41 UTC: both preparation fixes, their evidence
+and the release lock are published at `aeda6abbd2dc0abc92bb0f60975cf89b509e8017`.
+The matched executable built successfully with SHA-256
+`8fc61a65cd0524413a7ba70c61bcdb15962fa87ad7ab347b653abb27f8913f0b`.
+Physical server remains the qualified `6752a8df`; publication merge `006e71b9`
+preserves that commit. Native read-only planning passed at 08:02:31 with all
+watched state, binary and lock bytes unchanged. Root reviewed the complete
+lossless diff: all 4,733 actions, limits, spending, renewals, continuation,
+custody, config and policy remain unchanged. The successor is
+`0x49ddbc495a51c7c089ed5838299d6d65fb40cfb9b35be3ee38cd4ca1de7aa876`.
+Prepare-only setup/adoption ran 08:12:47–08:27:00 and passed, with root session
+49000 joined zero. All 4,673 carried-action checks completed; only the saved
+plan and redacted config changed. All nine hard preparation checks passed;
+launch-runtime-inputs remains explicitly deferred to resume. All four temporary
+helpers passed readiness; proxy readiness uses `/healthz` and API readiness uses
+`/status`. Initial API probes at the wrong path are retained as diagnostics.
+A finalized LAN observation at 08:27:57, block 8,017,083,
+selects continuation END=8,025,143 and full-work start cutoff=8,017,573, preserving
+the required 7,570 blocks of work. Continuation capture ran 08:31:32–08:46:41
+under root session 52913 and exited one: the nonce census could not find
+operator-1-root nonce 106 in its retained signed-transaction sources. It emitted
+no plan; state, binary and lock hashes are unchanged. The transaction is one
+of the four already finalized partial-start writes documented below. The complete
+census of both operator databases verified all 230 signed attempts, including
+replacements and cancellations: 226 were already retained and exactly four were
+missing. At 08:57:55, create-only restoration added their original 178-byte RLPs
+while preserving all 2,268 existing RLP files and the six watched state files.
+No transaction, journal/DB-status change, additional authority or source rebuild
+was needed. The sealed census is at
+`/mnt/data/sn-testnet/qualification/operator-signed-attempt-census-20260916-r1`;
+root's separate `restore/` receipt records the additions. A fresh finalized LAN
+observation at 08:58:59, block 8,017,238, selects END=8,025,298 and full-work cutoff
+8,017,728. The fresh capture ran 09:00:03–09:15:28 under root session 35694 and
+passed with unchanged state, binary and lock hashes. Its successor plan is
+`0x17e49d00a7ce6aafac856e81a4ccf9eb37e4714ba7570a24cfa1c97a2d941f37`,
+captured in `relay-capture-r3` using `relay-end-restored.env`. The complete
+review found exactly 27 changed paths, confined to continuation window/source
+observations, restored-transaction census/nonces, plan identity and ancestry.
+All 4,733 actions, limits, spending, renewals, custody/config/policy and retained
+signed ledger history remain unchanged. Exact import ran 09:19:38–09:35:50 under
+root session 30705 and passed, reporting zero chain transactions. Only the
+watched saved plan changed; its bytes equal the captured successor exactly.
+A finalized LAN observation at 09:36:23, block 8,017,425, selects first native
+epoch 1,488, spanning blocks 8,017,451 through 8,017,810. It leaves 386 blocks
+for startup/first decisions and 303 until the full-work cutoff. History capture
+passed at 09:37:28 with all watched state unchanged and both original validator
+intent prefixes preserved. Its exact 2,201-byte bundle is stored privately under
+`history-adoptions/native-1488-f2a7e1a24fc02cb9fbc3ee85af757b5795982ec42731f2b9fd34564485c479c9.json`.
+The [closed signature recovery evidence](sim-testnet/peerreview/evidence/FINAL-2-signature-recovery-20260916/README.md)
+preserves the failed capture, all-attempt census and restoration separately.
+Terra stopped all four helpers at 09:40:08. Exact PID/start-time and process/listener
+observations prove termination; their terminal exit codes are unavailable.
+The teardown owner joined zero. Two pre-signal launcher/preflight errors and the
+original invalid receipt manifest remain preserved with a corrected closed seal.
+Root independently checked process absence and port closure, then started strict
+managed resume at 09:41:17 under session 92055. The release-candidate request is
+bound to the same final plan and waits for healthy resume before Terra executes it.
+The [closed launch handoff evidence](sim-testnet/peerreview/evidence/FINAL-2-launch-handoff-r3-20260916/README.md)
+preserves import, history selection and helper teardown. Its 93-file manifest,
+and the [capture/review package](sim-testnet/peerreview/evidence/FINAL-2-relay-capture-r3-20260916/README.md),
+were independently checked by root; neither claims a startup or campaign outcome.
+Captures are in `/mnt/data/sn-testnet/qualification/native-recovery-20260916-r3`.
+The [completed build and plan-review receipts](sim-testnet/peerreview/evidence/FINAL-2-preparation-adoption-20260916/README.md)
+preserve their exact results and lossless comparison; setup has its separate
+terminal receipt under the native capture above.
+Keep publication frozen during these dependent commands. The soak remains
+stopped, and actual managed-startup verification of both fixes is pending.
+
+Previous checkpoint, 2026-09-16: strict resume exited 1 at 06:29:05
+after processing all 4,673 carried-action audits and starting the managed
+topology. Its process-log gate recorded four blocking classes in the new
+generation: each operator taskworker emitted two unclassified errors and one
+warning. Cleanup stopped all 33 managed processes. The saved plan, journal,
+redacted config, public identities, executable and release lock are unchanged;
+the watched supervisor files changed. Preserve this failed invocation and its
+exact generation logs. The release-candidate request was not executed.
+The four classes came from production backend jobs outside this simulator's
+operator workload: geolocation certificate-pin rotation errors and fiat-payment
+warnings for synthetic accounts. The explicit taskworker profile is frozen at
+SN `8e6d56b5` / server `6752a8df`; all 30 affected roots pass normally and
+under race, with seven expected failures/five passes in the controls. Preserve
+the earlier service-census refusals, including a disposable launcher that
+cleaned up before joining its children. Corrected ownership let the unchanged
+binaries complete. The preparation-cost correction now
+qualifies 32 roots normally and under race by composing 30 unaffected passes
+with two fixture-correction passes. Its original two expected failures/six
+passing controls remain retained. Root integrated both exact fixes at
+`dc90e4c`; publication and deployment remain pending. Preparation now removes
+repeated journal scans and historical-plan authentication within one
+collection. The [affected qualification](sim-testnet/peerreview/evidence/FINAL-2-preparation-fixes-20260916/README.md)
+retains the original failed and accepted receipts. All 66 generation log slices are
+retained; root verified the private bundle's 115 sealed entries. See the
+[public failure projection](sim-testnet/peerreview/evidence/FINAL-2-managed-start-failure-20260916/README.md).
+The [read-only lock preview](sim-testnet/peerreview/evidence/FINAL-2-preparation-release-20260916/README.md)
+passed at 07:39:57 UTC. The reviewed candidate changes only SN/server source
+hashes and has SHA-256 `bf417189d4c0a62f8116606f84f9c5509b3afe2dab611429c9b781998b3198fc`.
+Publish the complete source/docs/evidence/lock batch, build one matched CLI,
+then use the prepared native recovery commands in
+`/mnt/data/sn-testnet/qualification/native-recovery-20260916-r3`.
+Partial-start reconciliation found four successful operator EVM writes in
+blocks 8,016,488/489/491, confirmed below finalized height 8,016,641 through the
+LAN node. Preserve their retained signed attempts; the production reconciler
+must update its mined/broadcast rows from canonical receipts before retrying.
+The [portable transaction evidence](sim-testnet/peerreview/evidence/FINAL-2-startup-transactions-20260916/README.md)
+records all four calls, logs and the 0.008264277772552846 EVM TAO gas fee. No full gate
+restart or duplicate funding is authorized by this failure. Refresh the time
+window and first native epoch late through the supported continuation path
+after necessary fixes; the soak and full acceptance remain pending.
+
+Previous checkpoint, 2026-09-16 05:48 UTC: continuation import passed at 05:39:02
+using the matching `0fd7ffc0` executable (SHA-256 `d50a4612ed4bd34838bd4a5b24f91b79e5b3d1ff55f76198178c26a76234dfbf`).
+It adopted plan `0xb7fd2eb5030f73b424b3449d21302e6b3d17cd85142f4ca61b18aa1e0c2b5b17`
+with zero chain transactions; only the saved plan changed. History capture
+passed at 05:41:45 with all watched bytes unchanged. Finalized native block
+8,016,244 selects first native epoch 1,485, spanning blocks 8,016,371–8,016,731.
+The exact history bundle is retained under the state-owned `history-adoptions/`
+directory with SHA-256 `e556044d5cf4b584856df3dc7c0a199a582ce14130f5818c09190ac54673eb53`.
+All four temporary helper tool sessions were recorded as joined with exit 0
+in the r2 `temporary-services/STOPPED.json`, with their original PIDs absent.
+Separate raw helper-join results are not in the portable continuation bundle.
+Strict managed resume
+started at 05:47:36 under root session 97810; join this owner before entering
+the release campaign. END=8,024,100, required work=7,570 and start cutoff=8,016,530
+remain unchanged. Keep publication frozen through dependent native calls.
+The soak and final acceptance remain pending.
+
+Previous checkpoint, 2026-09-16 05:18 UTC: continuation capture passed at 05:14:43
+with unchanged watched state, executable and lock. Root reviewed its complete
+raw diff; all actions, spending, renewals and signed history are unchanged.
+It emitted plan `0xb7fd2eb5030f73b424b3449d21302e6b3d17cd85142f4ca61b18aa1e0c2b5b17`.
+Import then failed before mutation because root's report-only publication had
+advanced GitHub main beyond the executable's revision. Physical source is now
+clean at `0fd7ffc0`, with all Go code/modules and release-lock bytes unchanged.
+Terra is building one matching stamped executable. Reuse the captured plan
+and qualification; do not repeat setup/capture. Freeze further publication
+during the attested apply/resume/RC sequence. Soak and final acceptance remain
+pending; the original HTTP timeout and actual import refusal remain recorded.
+
+Previous checkpoint, 2026-09-16 05:00 UTC: both exact-object reads passed through
+the local APIs in under one second, with identical 157,602-byte bodies and the
+expected content hash. Two source reviews found no deterministic defect; the
+original transfer stall remains unproven. A new capture is running under root
+session 46348 from 04:59:42, in `native-recovery-20260916-r2/relay-capture-r2`.
+It retains the qualified build and saved setup plan. Finalized LAN block
+8,016,040 selects END=8,024,100, full-work cutoff=8,016,530, with unchanged
+7,570-block work and 490-block initial preparation margin. Join this exact
+owner and, on success, import its exact output before late history selection,
+strict resume and RC. The soak remains stopped. No timeout, authentication
+rule, spending limit or required campaign work was weakened.
+[Preserved failure and exact-object diagnostics](sim-testnet/peerreview/evidence/FINAL-2-relay-stream-failure-20260916/README.md).
+
+Previous checkpoint, 2026-09-16 04:55 UTC: relay capture exited 1 at 04:48:52
+without emitting a plan. State, binary and release-lock bytes are unchanged.
+Both operator APIs timed out after 30 seconds while streaming the same
+metadata object; the CLI reported incomplete authenticated EOF. Astra is
+diagnosing the stream path and adjacent timeout handling, while Terra checks
+the exact object through both live local APIs. Preserve the failed command and
+successful setup. No continuation was imported, no new epoch selected and no
+transaction submitted. The soak is stopped. Choose the next capture window
+late after the cause is resolved; do not rerun an unchanged failing command.
+
+Previous checkpoint, 2026-09-16 04:42 UTC: setup/adoption completed successfully
+at 04:30:51 with `ready=true`, `prepare_only=true` and
+`stopped_before_actions=true`. All 4,673 carried-action checks completed;
+only the saved plan and redacted configuration changed. No setup transaction
+was submitted. The launch-runtime-inputs check is explicitly deferred to
+resume. Four temporary artifact helpers are healthy. The existing relay
+capture owner (root session 6586) is processing retained signed history with
+END=8,023,974, selected from finalized LAN block 8,015,914. The full-work
+start cutoff is 8,016,404; native capacity admission still controls the actual
+request. Join that owner, import its exact output, select the first native
+epoch late and capture history, then join the helpers and resume directly into
+the campaign. The soak is still stopped. Captures and prepared commands are
+in `/mnt/data/sn-testnet/qualification/native-recovery-20260916-r2`.
+
+Previous checkpoint, 2026-09-16 04:16 UTC: the reserve-preserving release and lock
+are published at 541e13cf, and its matched CLI built with all fences passing.
+The native plan retry exited 0 at 04:06:54; all watched state, binary and lock
+bytes were unchanged. Root reviewed the full byte-preserving diff: all 4,733
+actions, limits, spending, renewals and continuation are unchanged. The new
+plan is 0x0d24a3f1dfc8ea5bc6a2f59c80a7580a761d9e3410dd4833bda3843304ce6f86.
+Setup has saved that revision and is still checking retained history under
+root session 55890; no new journal entries are observed. Join its actual result,
+retain any stopped-namespace refusal, then continue directly through temporary
+helpers, late continuation capture/import, late native-history adoption,
+strict resume and RC. Do not run another setup or doctor. The operational
+capture is /mnt/data/sn-testnet/qualification/native-recovery-20260916-r2.
+No new continuation end or first native epoch is selected yet; the soak is stopped.
+
+Previous checkpoint, 2026-09-16 03:54 UTC: the exact software-only reserve
+correction is qualified with 28 affected roots normally and under race. Root
+checked both exact accepted sets against raw terminal events. The original
+planner produces three expected failures and three passing controls; failed
+fixture invocations remain preserved. Publish the qualified correction and
+evidence, preview and publish its release lock with the existing CLI, then build
+one final matched executable. Adopt one native revision, select continuation
+and native epoch late, and resume directly into the actual campaign. Do not
+repeat prior qualification or finalized funding. The 60% operating floor,
+historical 65% repair proofs, full approval comparison and all limits remain
+required. Native adoption and soak acceptance remain pending.
+[Qualification and retained refusal](sim-testnet/peerreview/evidence/FINAL-2-release-reserve-recovery-20260916/README.md).
+
+Previous checkpoint, 2026-09-16 02:57 UTC: the journal patch and matched CLI are
+ready on `1270adc`, but the read-only native plan revision exited 1 at 02:48:30.
+Its generic reserve-target step requested another 471,808,849 alpha rao, while
+the approved 37,250-alpha lifetime ceiling is fully committed. No plan was
+adopted, no transaction was submitted and all watched bytes are unchanged.
+The fresh complete census at native block 8,015,417 shows 64.9994918065%:
+the 60% operating floor passes, the current 65% target does not. Retain the
+completed repair's pinned target proof. Astra is preparing a narrowly scoped
+software-only revision correction with deterministic and adjacent controls;
+ordinary initial, unfinished, changed-economic and below-floor planning retain
+the target and budget checks. Then adopt the qualified revision, choose the
+continuation and native epoch late, and resume into the actual campaign.
+The soak remains stopped; no additional allowance is authorized or assumed.
+[Refusal and current reserve evidence](sim-testnet/peerreview/evidence/FINAL-2-release-reserve-recovery-20260916/README.md).
+
+Previous checkpoint, 2026-09-16 02:30 UTC: runtime460 strict resume naturally
+exited 1 at 02:13:45 after its full-work window expired. All 4,672 carried
+checks, configuration verification and migrations completed; temporary
+processes were cleaned up and no soak began. Preserve that failed invocation
+and its verified render. The bounded journal-validation repair passes all
+15 affected roots normally and under race, with two expected failures and
+13 passing controls on the original scan. Retain prior qualification by scope.
+Publish the patch and matched lock/build, adopt one native plan revision,
+refresh the continuation from a late finalized head, then capture history
+with a late first native epoch and resume into the actual campaign.
+The existing fleet leases 393–424 can support this path: a relay capacity
+forecast beyond 424 does not itself require renewal. Actual five/three-epoch
+acceptance guards and all approved economic limits remain unchanged.
+[Startup refusal and journal repair evidence](sim-testnet/peerreview/evidence/FINAL-2-journal-recovery-20260916/README.md).
+
+Previous checkpoint, 2026-09-15 23:52 UTC: runtime460's affected qualification is
+accepted by composition on effective source `7989fa78`: 108 roots per mode
+(13 CRV4, 16 miner, 25 validator, 54 simulator), normally and under race.
+Compatibility controls reproduce 13 expected failures and 11 passing controls.
+Original compiler and fixture failures remain preserved; only the four failed
+roots per mode and one affected causal control reran. Root checked the exact
+passing root unions against the affected selection. Publish the qualified
+source, render and publish its release lock, build the matching executable,
+then revise the saved plan and refresh its continuation/history before native
+resume and the real release-candidate campaign. The soak remains stopped;
+renewal, funding, approvals and unaffected qualification remain retained.
+[Affected qualification and raw receipts](sim-testnet/peerreview/evidence/FINAL-2-runtime460-qualification-20260915/README.md).
+
+Previous checkpoint, 2026-09-15 23:13 UTC: the released 459 executable at
+`36d3093` could not revise the saved plan because the owned chain had advanced
+to 460. The plan attempt and diagnostic doctor joined with exit 1, with all watched state,
+binary and lock bytes unchanged. All four doctor hard failures identify the
+same 460-versus-459 admission mismatch. No intermediate 459 plan was adopted;
+the next qualified release can revise the retained plan directly.
+
+Runtime 460's pinned LAN Wasm equals the authoritative upstream CI artifact.
+The existing exact-Wasm probe passed at 23:07:53 with all exits 0 and unchanged
+inputs. The 459-to-460 source delta fixes share-pool accounting and preserves
+our native call layouts; metadata differs only in its spec-version constant.
+The catalog, current signing and historical replay correction was prepared
+for the affected qualification now completed above. Retain the completed recovery qualification
+below and all 1,212 renewal actions. The 23:05 pinned settlement epoch 396 still
+supports the full proposed continuation under existing 393–424 leases. END and the first native
+epoch remain unchosen until their required late capture. No new funding or
+renewal is part of this recovery, and the soak remains stopped.
+[Runtime460 artifact, compatibility and closed probe receipts](sim-testnet/peerreview/evidence/FINAL-2-runtime460-20260915/EVIDENCE.md).
+
+Previous checkpoint, 2026-09-15 22:23 UTC: the startup recovery batch is qualified
+on effective source `53b0e950` by composition: 154 affected roots normally and
+under race (21 CRV4, 13 miner, 45 validator, 75 simulator). Six compatibility
+control binaries reproduce exactly 12 expected failures and 6 passing controls.
+Preserve the original compiler, test-fixture and interrupted capture failures;
+only their affected replacements reran. Runtime459's exact CI/Wasm/metadata
+review is complete, with original451–455/458 history retained. The same batch
+shares stopped-ledger verification within startup, propagates cancellation,
+checks full-run runway and refreshes the cumulative continuation through v4.
+The stopped native deployment still needs the published release/lock, plan
+revision, fresh continuation window and history, then strict resume and the
+real release-candidate campaign. No completed funding or fleet action is reset.
+Keep native vaultfb1/configb5 and LAN-only RPC. Full acceptance remains false.
+[Runtime459 provenance](sim-testnet/peerreview/evidence/FINAL-2-runtime459-20260915/README.md).
+[Qualified composition and raw test receipts](sim-testnet/peerreview/evidence/FINAL-2-startup-recovery-qualification-20260915/README.md).
+
+Previous checkpoint, 2026-09-15 21:36 UTC: the old strict resume is stopped and
+joined with actual exit 137. It retained 12 verified setup postconditions,
+including one newly finalized native deployer funding transfer in block
+8,013,647, alongside the completed renewal. The plan, supervisor and watched
+configuration/identity files remain unchanged; the journal records progress.
+The LAN node now reports runtime459 at finalized block8,013,770, where the
+adopted continuation leaves only7,472 of the required7,570 full-run blocks.
+The current build cannot complete the full campaign. Two Astra lanes are
+fixing bounded continuation refresh/cancellation and runtime459 compatibility
+in parallel, preserving historical458 authority and all spent allowances.
+Terra's independent14 simulator checks pass normally; the cache's validator
+test exposed an incomplete callback-storage initialization, now included in
+the same correction batch. No full gate restart is required. The soak is
+stopped and final acceptance remains false.
+[Interruption and additional on-chain progress](sim-testnet/peerreview/evidence/FINAL-2-startup-interruption-20260915/README.md).
+
+Previous checkpoint, 2026-09-15 21:23 UTC: strict resume remains active under
+the same owner started at 20:14:29. It authenticated all 1,000 historical
+fleets and 4,660 carried actions, verified both campaign reserve actions, and
+entered `config.render`. The supervisor remains stopped. Source inspection
+and repeated live ledger-descriptor transitions identified nine full signed
+ledger replays before service startup; one observed replay took about twelve
+minutes. Astra's isolated patch gives one startup an in-memory cache of
+successful replays, with fresh hashing of all storage bytes and unchanged
+caller/history/configuration checks. Terra is qualifying 11 validator and
+14 simulator tests normally and under race detection on formatted candidate
+`c9bf5e6`. Those results and deployment are pending. The physical c5 runtime
+and current owner remain unchanged. Preserve completed setup, funding and
+on-chain actions when adopting any required patch; reuse unaffected accepted
+gate coverage. Final acceptance remains false and the soak has not started.
+
+Previous checkpoint, 2026-09-15 20:19 UTC: the renewal completed at 19:09:41,
+with all **1,212 actions** verified across **202 fleets**. The corrected relay
+continuation was adopted at 20:04:13 with zero chain transactions, retaining
+all required work through block **8,021,242**. Final restart history selects
+native epoch **1,477** and is saved with its exact hash. All four temporary
+services stopped and joined cleanly. Actual strict resume is running from
+the retained state, using the admitted c5 executable. Its first attempt
+refused a missing private temporary directory; creating the required
+directories also fixed the adjacent campaign command's preparation. The retry
+started at **20:14:29 UTC**, with no source, approval or plan change.
+Continue directly to `release-candidate` after successful startup; no new
+test suite, preparation gate, renewal or repair is queued. The soak has not
+started and final acceptance remains false.
+[Completed renewal and continuation evidence](sim-testnet/FINAL-2.md).
+
+Storage relief completed at **20:44:30 UTC**: the existing Go build cache was
+copied to the user-mounted `/mnt/data` volume and verified with no checksum
+or metadata differences before removing the original copy. Its old path is
+preserved by a link. This frees about **56 GiB** on `/`, which now has about
+**78 GiB** available. Active simulator state, binaries and command captures
+remain at their existing paths; startup continues under the same owner.
+
+Previous checkpoint, 2026-09-15 17:48 UTC: producer and aggregate coverage are
+**accepted by composition**. The succession fixture correction at `93f6d35`
+passes its nine affected normal tests and 29 children. The complete capture
+race passes all 378 tests and 140 children in 479.526 seconds, within the
+unchanged 600-second limit. The old-fixture control reproduces the expected
+work-bound failure. All actual exits, thirteen-repository source comparisons,
+binary comparisons and cleanup checks pass. These are local test results;
+the original failed and interrupted gates retain their recorded outcomes.
+The full cohort ran with four processors on a lighter host load than the
+previous simultaneous full gates; that execution condition is retained.
+[Replacement qualification receipts](sim-testnet/peerreview/evidence/FINAL-2-incremental-capture-20260915/README.md).
+
+The unchanged 39 producer phases and unchanged aggregate scopes retain their
+complete earlier receipts. No full gate restart or extra confirmation is
+required. The approved exact Q09ac683b fleet renewal apply started at
+17:27:28 UTC using the existing canonical c5 executable and LAN RPC node.
+It stopped at 17:33:09 on the host disk check, before any transaction; campaign
+state, executable and release lock comparisons were unchanged. Removing two
+generated fixture trees from a terminal test owner recovered 3,681,648,640
+bytes and restored free space to 22.28 GiB. All 61 parent evidence artifacts
+remained unchanged. The same exact plan resumed in a fresh capture at
+17:46:51 UTC. One journal writer owns this operation; retain the exact saved
+plan and any persisted transactions on interruption. Completion and new
+finalized actions are not yet claimed. The soak remains stopped, with strict continuation and
+the actual release campaign next. Keep canonical/source c5 frozen while this
+native owner runs; local test and report publication can be prepared separately.
+
+Previous checkpoint, 2026-09-15 17:12 UTC: recover the interrupted c5 gate
+attempts through composed coverage. Root verified both outer processes and
+their test descendants absent; the retained logs record stop143, with no
+final outer exit or final source receipt. Producer retained 38 passing joins,
+the capture failure and one interrupted database phase. Aggregate retained
+five passing joins and two interrupted race bodies. Reuse unchanged phases
+from the earlier completed 330ba512 gates. No full gate restart is planned.
+The test-only succession fixture repair is frozen at `93f6d35`; Terra is
+building the corrected normal/race and old-fixture normal executables for
+the three admitted bodies. Qualification remains pending.
+
+Actual read-only renewal planning passed at 17:07:03 UTC for epochs 393–424:
+plan `0x09ac683bae8bf99362bfc427776987fce951db58b71b3f01966236abbf7c91f1`,
+all 202 fleets, 1,212 new actions, bounded at 9.09 EVM TAO plus 0.606 native TAO.
+Expired predecessor bindings require no revocations. State, executable and
+lock comparisons passed unchanged; no chain transaction was submitted.
+The exact saved plan and apply command are ready. Complete producer coverage
+precedes apply; reuse the existing canonical c5 runtime while its source and
+approved production inputs remain unchanged. The 18 native preparation passes,
+approved allowance and finalized reserve repair remain retained.
+
+Previous checkpoint, 2026-09-15 16:15 UTC: the published `c5db71a` producer's
+capture phase passed normally in 120.920 seconds and timed out under race at
+600.377 seconds. The active succession test repeatedly builds and authenticates
+a full 1,000-provider plan; Astra is correcting that test fixture while Terra
+keeps both full gates collecting their remaining results. The fix is not yet
+qualified. Retain unaffected completed phases, the 18 passing native preparation
+checks, adopted plan and finalized reserve repair. The next qualification is
+the corrected capture scope and affected consumers, not two restarted full
+gates. Renewal is unsubmitted; the soak remains stopped. Publish patches after
+live source owners release their checkouts, and reuse the admitted runtime
+build if its production inputs remain unchanged.
+
+Previous checkpoint, 2026-09-15 15:05 UTC: the user approved the lifetime
+increase to 205 EVM within 225 total TAO for one fleet renewal capped at
+13.13 EVM plus 0.606 native TAO. Alpha limits remain unchanged. The vault
+setting is published at `9651a13062af2fd25dcd9e98db8c8871d148d114`.
+Native plan `0x922e280318f33cb20f5b15082bb6329890e9d8778f1effabf8baae521a57f4ea`
+is adopted: setup preparation passed all nine hard checks and authenticated
+all 3,449 carried actions, without dispatching an action. The complete renewal
+preview passed for 202 fleets and 2,020 new actions within those ceilings.
+Existing keeper and oracle balances cover that maximum; an extra funding
+transfer is not a prerequisite. Its F388/T419 window is diagnostic and must
+not be adopted as the final window.
+
+The approved 6,000-alpha repair finalized in native block 8,009,634. The later
+complete registered-stake census at block 8,010,632 shows a 65.5997247163%
+reserve share, above the 65% target. Do not repeat the repair. Both temporary
+artifact APIs and both RPC proxies stopped and joined cleanly. Full strict
+resume preparation passed all 18 hard checks at 13:58:20 UTC, including both
+validator namespaces, host readiness and runtime inputs. All 1,000 fleet
+records and 3,449 carried actions were authenticated, with unchanged recorded
+campaign state. The soak remains stopped.
+
+On source `330ba512`, the complete producer closed with 39 passing phases and
+one capture-race timeout; its final source checks passed. The complete aggregate
+closed at 15:05 UTC with all 25 phases, cleanup and final source checks passing.
+The two-test-file correction `03d529b` removes repeated whole-script scans.
+Its 30 affected tests pass normally and under race, and the two defect controls
+each complete three fresh passing processes in both modes. The actual 376-test
+capture race, including 140 declared subtests, passes in 567.382 seconds within
+its original 600-second limit. Both causal controls reproduce the old scan
+failure. Existing Go verification reuses the successful raw results; earlier
+compiler-owner and missing-metadata refusals remain recorded. The original
+failed producer remains failed.
+
+Production code, scripts, the release lock and approved native plan identity
+are unchanged by this correction. Publish it with these report updates, build
+one matching CLI and complete the final candidate gates. The producer receives
+16 processors and the aggregate eight, retaining four processors per job and
+all test limits. Start the CLI alongside the producer and admit the aggregate
+when the CLI joins, keeping the combined reservation at or below 24. Reuse the
+completed native preparation. Choose the actual renewal window, final relay
+end and fresh native history epoch immediately before their native apply/resume
+steps. The canonical executable and producer pass still precede chain apply.
+[Approval, adopted allowance, renewal bounds and on-chain repair evidence](sim-testnet/peerreview/evidence/FINAL-2-approved-renewal-and-reserve-20260915/README.md).
+
+Historical checkpoint, 2026-09-15 02:38 UTC: the explicit runtime configuration
+identity correction is frozen at85c0958. Its normal/race70 matrices each have
+69PASS/oneFAIL; both adjacent50 bodies pass. The sole failed root already
+authenticated the original repair but then planned with a temporary mock RPC
+route, correctly changing resolved inputs and config.render intent. The one-file
+fixture correction5a411d2 preserves the approved route and adds a deterministic
+changed-route control. Its three fresh normal passes and three fresh race passes
+are complete with exact one-test lists, seven events each and all outer/body/
+converter/verifier exits0. All13 repository/source observations and per-mode
+binaries remain unchanged; the final owner closed02:38:10UTC. The680-entry
+portable bundle is sealed with manifest SHA-256
+`09713bbd8a396831b926cda1fe1ed758d7fc2b384fdedea1dfade5e186361fe9`.
+Retain the69
+unchanged passing roots per mode and earlier181/36 scopes. All
+four original matrix bodies and their capture-only verifier refusals are saved;
+corrected replay of their retained events passes without body reruns.
+
+The original-hashing control closed3 expectedFAIL/2PASS with body1 and
+converter/checker/outer0; all source/dependency/binary/diff observations match.
+Its failing authentication occurs before the fixture's changed planning section,
+so no new causal compile is needed. The updated read-only parser and lock render
+also closed0; lock SHA-256 is
+`c437900d8cb2d29ff0d363ef629b88ceb8ace35976bd28bfd194a2d8dc6eb639`.
+Only SN's production Go hash changes. Idle integrationf9970d6 includes that lock
+and the qualified fixture correction; it is not published. Seal retained
+evidence and publish. Reuse the accepted
+parser for actual read-only setup while the canonical stamped CLI and both full
+gates run. The canonical executable and producer PASS still gate approved apply.
+Soak stopped; repair unsubmitted; approvals and retained custody unchanged.
+
+Historical checkpoint, 2026-09-15 01:39 UTC: the historical455 lock correction is
+qualified and published at eccfae8a5f4176ccaa6099ce5ce555924057f3d3. Its final
+CLI built cleanly and passed, SHA-256
+`73264ab8365c6cf538390c53ed0a6a71a39d3972e405b916088559b486218e99`.
+Actual read-only setup advanced past that check, then exited1 at01:26:11 with
+`coordinator repair configured strict domain differs`. All six state files,
+binary and lock remained unchanged; no successor plan or transaction resulted.
+
+The public expected runtime455→458 change also changed ConfigHash, while
+original signed repair/probe/activation history retains the previous identity.
+Astra is implementing an explicit reviewed configuration-identity pin, bound
+into the new setup plan while current runtime authority remains exact458.
+The shared hash/admission correction and deterministic transition/adjacent
+controls are not qualified yet. Preserve action intents, ResolvedInputsHash,
+signed originals,1212 finalized renewals,3521 actions, generation3 and nonce34.
+
+Both eccfae8 full gates were intentionally canceled once the native failure
+proved a production successor was required. Producer closed143 at01:32:11;
+aggregate closed143 at01:33:33. Each passed its first four preflights, was
+interrupted during runtime metadata, and admitted zero test phases. All owners
+and private process records are gone. The123-entry portable capture manifest
+is `b6b1dfc4fa43778945fe3c4d1910d5c69bf2ee96654cc2d6c74ad761ab13ce35`.
+These attempts are cancellations, not full-gate passes or executed-test failures.
+An added public manifest field requires an updated parser for the next lock
+render; overlap that one read-only build with the frozen-source qualification.
+Then publish the successor, build the canonical CLI, retry actual setup and run
+both full gates. Producer PASS still gates approved apply; soak remains stopped.
+
+Historical checkpoint, 2026-09-15 01:15 UTC: the canonical c572 build passed.
+The actual read-only setup then exited1 at00:24:56 because the historical
+validator-evidence reader applied current458 lock validation to an authentic
+original455 archive. All six campaign-state hashes, binary and lock were
+unchanged; no plan or transaction was produced. Astra's narrow historical
+admission correction is frozen at3ffc1277d1acd1e21b908c3b2cfd37612602e07b.
+Terra's36-root normal and race matrices pass. Both reader/restart roots have
+three consecutive normal passes on the same binary and source. Restoring only
+the old historical dispatch reproduces both failures while both controls pass;
+all source, dependency and binary fences close unchanged. Reuse the
+completed181-root runtime qualification within its recorded scope.
+
+Both c572 full gates closed with transport preflight exit28 before any phase or
+service owner. Their first three preflights passed; GitHub source downloads
+timed out. The exact source fetch recovered at00:31UTC and matched its pinned
+hash. TF has clean exact v454/v455/v458 source overrides for the next primary
+source loops. No source-fetch feature change or extra transport probes are
+needed.
+
+Root reused the c572 executable for the successor lock render, closed0 at
+00:54:37 with19 equal before/after observations. Exact YAML SHA-256 is
+`5b8c412454adfde72f2cf51c682b5ce4b9b335a2095eaafc21bf4e92a153a4ab`,
+included in the qualified successor after integration628f29a. Only SN's production
+Go hash changes; all other fields are equal. Publish this coherent successor
+and retained evidence, build one matching stamped CLI and launch the full
+producer38/aggregate concurrently with16+4CPU and the prepared source overrides.
+Review one actual retained-state setup preview; producer PASS gates apply.
+Soak stopped, repair unsubmitted, all1212 renewals/3521 action identities,
+generation3, original signed probe anchor/nonce34 and approvals preserved.
+
+Historical checkpoint, 2026-09-15 00:09 UTC: the soak remains stopped and the
+6,000-alpha repair remains unsubmitted. Fresh LAN observations at 00:03:15 UTC
+show a synced node, 16 peers, runtime 458/1/1 and finalized block8,007,358.
+Xops main includes both the runtime-pin correction and qualified quota-test
+correction at `42bfe0b`; the corrected deployment assertion has not been rerun
+on the node. No further rollout confirmation is needed for simulator work.
+
+The composed runtime correction passes 181 selected top-level tests normally
+and under race, with required fresh-process confirmations complete. The old
+capacity, stale gate inventory and public/paced route causal checks closed with
+their expected failures and passing controls. The 13-test production-policy
+causal also closed with exactly seven expected failures and six passing
+controls. The original simulator41 failure remains recorded
+as39PASS/2FAIL; the repaired simulator47 passes both modes. All unchanged client
+and typed-prior qualification is reused within its recorded scope.
+
+Both FC908 gates are closed failed: producer36/37 and aggregate24/25. Their
+known failures are corrected and qualified; replacement complete gates are
+still required. The final exact release-lock SHA-256 is
+`d11b2a41ca6e836f9267088f8899c4fb0faf53b78b3b9ca8804bab589cd63e7b`,
+committed only in the idle integration at `2b907a4`. Publish the coherent
+candidate and report, build one canonical stamped
+CLI, and run producer38 with16CPU alongside the aggregate with4CPU. Producer
+success gates campaign writes. Preserve all3,521 action identities,1,212
+renewals, generation3, original probe anchor and nonce34 in the single successor
+setup preview. The repair and real RC/production soak remain outstanding.
+
+Historical checkpoint, 2026-09-14 23:01 UTC: the soak remains stopped and the approved
+6,000-alpha repair remains unsubmitted. The operator verified removal of the
+nginx limits at 21:01:55 UTC. Fresh direct-LAN observations found a synced node
+with 16 peers, runtime 458/1/1 and advancing finalized blocks; the separate
+deployment failure was its stale expected-runtime 455 pin. Correction
+`446cbdb` passed its complete 30-test module, required confirmations and the
+old-pin causal control, and is now pushed to xops main. The corrected deployment
+check has not been rerun on the node. No SSH credential or rollout confirmation
+is needed to continue simulator preparation.
+
+The FC908 producer closed with 36 passes and one cumulative capture race
+timeout. Its typed-prior process correction `907d186` is fully qualified:
+26 affected roots in both modes, three fresh race confirmations of the active
+boundary and the expected old-script causal failure with passing controls.
+Reuse those results. The original FC908 aggregate remains live with 21 phases
+passed and no reported failure; its physical source remains fixed.
+
+Runtime-458 source `df98472` includes exact artifact admission, historical455
+retention, unpaced LAN artifact checks and a six-identity cache/allowlist bound.
+Its 175-root affected qualification is in progress. The readonly CLI build and
+combined release-lock render passed. The exact YAML SHA-256 is
+`e72b2146a1cbbd59a54b0424a30478aa9a475f8d82369c028c4fe22e8f2d71c2`,
+committed only in the idle integration checkout as `151b515`; all contract
+hashes remain unchanged. Finish affected qualification, publish the coherent
+source, then use a genuine canonical stamped CLI and both complete gates.
+Preserve all 3,521 action identities, 1,212 renewals, generation3 custody,
+original signed probe anchor and nonce34 during the one successor setup
+preview. The earlier runtime455 preview was never executed and is obsolete.
+No new plan hash or chain transaction has been produced by this preparation.
+
+Historical checkpoint, 2026-09-14 18:50 UTC: the soak remained stopped and the approved
+6,000-alpha reserve repair remains unsubmitted. All 1,212 renewal transactions
+across 202 fleets have finalized and passed their native postconditions. Two
+setup attempts on the retained approved plan stopped on nginx HTTP 429 before
+any new transaction. The qualified unpaced gateway correction is published in
+xops main at `d33d417`; deployment is awaiting an SSH identity accepted by the
+RPC node. Do not retry setup until the deployed gateway has been corrected.
+
+The `7eab049` producer closed with 34 passing and two failed phases. The probe
+test correction passed a strict build, all 215 contract tests and three strict
+lint processes. The combined scheduling/source-census successor `713eae3`
+passed all 81 affected tests normally and under race, three confirmations of
+both failed guards in each mode, and three race confirmations of all four
+timeout roots. Both original-defect causal controls reproduced their expected
+failures with passing adjacent controls. These completed scopes are retained.
+The obsolete aggregate was stopped and joined at 18:49:42 UTC: 14 phases passed,
+the same strict Solidity lint failed, and two Connect phases were canceled.
+Its outer exit was 143; cancellation did not reach the final source fence.
+
+The successor lock was rendered locally with unchanged production Go and
+contract bytes. Its only changes bind the producer scheduling script and both
+gateway/node configuration groups. The reviewed YAML SHA-256 is
+`76cd7fa7031ee5566301173a94e1a4369ccbc871542de05119b46bbcb1461f35`.
+Publish the coherent candidate, build one stamped final CLI, and run the full
+37-phase producer and complete aggregate with private services. Producer PASS
+precedes traffic; both gates and the full live campaign/production soak remain
+required for acceptance. Use one subsequent setup preview and reviewed successor
+hash; preserve every completed renewal, receipt, custody record and spend limit.
+See [report 2](sim-testnet/FINAL-2.md) and its linked evidence bundles.
+
+Previous checkpoint, 2026-09-13 23:48 UTC: the soak remains stopped. The full
 producer on `e3d3539` passed with 36/36 phase joins at 21:44 UTC. Its native
 setup apply adopted plan `0xdbeb584008bbdbc6607a49a5118c1c82fdfa18a15ca8fe5b5c8cea9d2775c37a`
 but failed at 22:09 UTC during carried-history verification, before action

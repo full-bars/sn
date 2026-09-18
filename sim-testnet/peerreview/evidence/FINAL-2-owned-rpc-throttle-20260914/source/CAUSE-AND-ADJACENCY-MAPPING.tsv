@@ -1,0 +1,8 @@
+area	old source condition	qualified correction or adjacent finding	proof limit
+archive ingress	request and per-client connection throttles returned configured 429	all template throttle zones/status/directives removed	actual deployed configuration not inspected
+lightnode ingress	request and per-client connection throttles returned configured 429	all template throttle zones/status/directives removed	actual deployed configuration not inspected
+vars and playbook	three quota variables and two related assertions existed	obsolete variables/assertions removed	no playbook/deployment run
+restricted routes	exact binds, allowlists, deny-all, GET/POST controls, loopback backends and WebSocket forwarding existed	new route-preservation renderer root passed in candidate and causal control	Jinja-only source render
+service overlay	exact-address/OpenVPN ordering only	no request limiter found	static adjacent review
+native services	no rpc-rate-limit option found	unchanged; global node and nginx worker capacity remain resource bounds	static adjacent review
+old-template causal	legacy source renders throttle directives with synthetic legacy values	one expected throttle failure and one route-control pass	causal worktree only; not candidate

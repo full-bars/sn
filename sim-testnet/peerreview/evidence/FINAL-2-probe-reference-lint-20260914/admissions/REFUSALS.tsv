@@ -1,0 +1,5 @@
+record	result	exit	classification	resolution	retained_raw_sha256
+initial strict build without ignored lib projection	refusal	1	environment dependency admission	Projected the exact frozen read-only evm/lib tree into the isolated candidate.	19905cc645a994755ecf18e9fc5cb477a0e457cc183a918577ed152bad539c27
+gencontracts without artifact-parent src sidecar	refusal	1	external artifact layout admission	Added read-only src sidecar beside external strict-p1 artifact output.	4e2787b9e31bf6728e02f4697e142581edf14ff598af031c966225d1ce4618a7
+gencontracts with src but without artifact-parent lib sidecar	refusal	1	external artifact layout admission	Added the same frozen read-only lib sidecar beside external strict-p1 artifact output.	557f5be58fc0a651a4751118f775d7e4d9b44e478c36f651319cca19f1a3780a
+stabi check before filesystem-mode readmission	refusal	1	isolated checkout filesystem-mode admission	Canonicalized only the 11 byte-identical generated destinations from 0664 to 0644 and evm/abi from 0775 to 0755.	c5ab03d04971902cc748c127b2ddde637ea58479d19529772f66c766b0e3ad47

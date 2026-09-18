@@ -1,0 +1,3 @@
+observation_id	transcript_locator	utc	operation	safe_result	method_limits
+lan-chain-id	functions.exec output chunk502971	2026-09-14T15:49:01.645160+00:00	direct LAN eth_chainId	HTTP 200; Server nginx; chain ID 945 (0x3b1)	Proxy disabled; redirects refused; 15 second timeout; no retries; no writes; full response body not retained
+lan-binding-block-and-receipt	functions.exec output chunk74cfb4	2026-09-14T15:50:19.177007+00:00	direct LAN batch for pinned block 8002521 and latest fleet.renew.1.34.bind.2 StageFinalized receipt	HTTP 200; Server nginx; both results present; block-hash matches for both; receipt status 0x1	Proxy disabled; redirects refused; 15 second timeout; no retries; no writes; reduced matching/status fields only; full response bodies not retained

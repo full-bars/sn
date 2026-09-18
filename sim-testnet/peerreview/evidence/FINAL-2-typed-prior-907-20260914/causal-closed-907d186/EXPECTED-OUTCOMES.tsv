@@ -1,0 +1,4 @@
+root	expected	actual	note
+TestFinalCaptureCapacityPriorCarrierCanonicalV2KeepsTypedSourceBoundary	PASS	PASS	canonical typed boundary control
+TestProducerGateCaptureSelectionRequiresIndependentTypedPrior	FAIL	FAIL	script-only ownership regression; combined required literal matched
+TestProducerGateCaptureSelectionRequiresPrivateFixtureScheduling	PASS	PASS	private-fixture scheduling control

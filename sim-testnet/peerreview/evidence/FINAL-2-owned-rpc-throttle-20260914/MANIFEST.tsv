@@ -1,0 +1,27 @@
+bundle_path	origin_record_label	origin_sha256_or_locator	representation
+source/51325d0-vs-a9d2.patch	frozen xops parent-to-candidate diff	61bb97b592db34b92876b3c014a7472354752e721cf12302899e7f7be88b933d	verbatim source-only patch
+source/CAUSAL-old-nginx-template.patch	frozen causal patch	84cbae66eab47576592d6e0803a6d9b4cb31619b1182db2af5fa53b4a30b7f42	verbatim one-file causal patch
+source/SOURCE-IDENTITY.tsv	frozen source fence	79edb46335930ee047a2e46b369077a99e621af3ea5f4700000755208b373c8c	derived source and physical identities
+source/CAUSE-AND-ADJACENCY-MAPPING.tsv	Astra handoff	a31f9b98ad6b069ec8298cf4d889e887cd36fd3438a636292898744e299380b0	derived cause and adjacent review map
+qualification/EXPECTED-29-ROOTS.txt	frozen source roots	9c555a0efc01c08802daa1672576712eb393998eda29b362c6585e3d7ef4a035	verbatim membership list
+qualification/FOCUSED-ROOTS.txt	frozen focused roots	730909ba846b5b849996e14ddb4b15c3abec361611d0e3b9e5110933e5168c5f	verbatim membership list
+qualification/OUTCOMES.tsv	closed full/focused/causal terminals	per-row terminal hashes in raw references	derived exact per-root outcomes
+qualification/EXECUTION-SUMMARY.tsv	closed qualification capture	per-row terminal hashes in raw references	derived terminal summary
+qualification/INTERPRETER-IDENTITY.tsv	closed preflight environment	closed preflight record	derived pinned interpreter identity
+qualification/SOURCE-AND-PHYSICAL-FENCE.tsv	closed qualification fence	closed pre/post fence records	verbatim compact source/physical fence
+render/nginx.conf	closed source-rendered candidate artifact	6371976bddf174874083f22897bb072977c5218f7b161a95f1e1c02a13edd453	verbatim source-rendered artifact; not host configuration
+render/RENDER-VALIDATION.tsv	closed strict-Jinja render validation	6371976bddf174874083f22897bb072977c5218f7b161a95f1e1c02a13edd453	derived artifact assertions
+render/INITIAL-CHECK-NOTE.md	closed capture helper note	183c09ba0888faf5cd9068e0ab811143b6b3aae9aa459c6acaef88ba2ff4b7ad	verbatim incident note
+native/SECOND-429.RESULT	closed second refusal RESULT.json	2eac58a22dea7aa8d7e42e7f2ba8f39c545cbb4be96134d8f42ba4b84ab30f03	derived terminal fields including retained error line
+native/SECOND-STATE-FINGERPRINTS.tsv	closed state fingerprints	65dc79c9963e5e84b27d1aa7e60bb1726e518930406e7d795b169892e1565ed3	derived six-state comparison
+native/PROOF-LIMITS.md	closed refusal and deployment boundary	per raw references	derived proof limits
+deployment/NOT-DEPLOYED-BOUNDARY.md	reviewable deployment handoff	4b927e946cb0909e90581fbd813bd522aa3eb4ba47e4d299c78f468c8e35e1b3	derived rollout boundary
+references/RAW-HASH-REFERENCES.tsv	closed source/test/native records	per row	hash references only
+SUMMARY.md	bundle scope	-	derived concise summary
+README.md	bundle scope	-	derived usage note
+HANDOFF.md	bundle scope	-	derived review guidance
+EXCLUSIONS.md	bundle scope	-	derived exclusion statement
+EARLIER-FIRST-429-BUNDLE-NOT-AMENDED.md	bundle scope	-	derived prior-bundle boundary
+BUNDLE-META.txt	bundle metadata	-	derived seal metadata
+SANITIZATION-CHECKS.tsv	bundle sealing checks	-	derived verification record
+MANIFEST.tsv	this bundle	-	provenance map

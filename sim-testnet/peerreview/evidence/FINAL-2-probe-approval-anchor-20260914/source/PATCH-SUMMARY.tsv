@@ -1,0 +1,4 @@
+stage	path	insertions	deletions	purpose
+author	sim-testnet/precompile_probe_successor.go	62	25	pinned signed repair checkpoint in successor descriptor
+author	sim-testnet/precompile_probe_approval_test.go	143	0	deterministic approval and adjacent custody regressions
+formatter	sim-testnet/precompile_probe_approval_test.go	117	46	gofmt-only reconciliation

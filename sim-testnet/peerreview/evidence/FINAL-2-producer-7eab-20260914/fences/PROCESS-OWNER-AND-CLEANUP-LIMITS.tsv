@@ -1,0 +1,11 @@
+claim_or_limit	value
+admitted_phase_starts	36
+phase_joins	36
+unjoined_phases	0
+outer_launcher_evidence	all starts and joins are recorded in phases/PHASE-OUTCOMES.tsv
+service_owner_record	hash-indexed only; contents not copied
+postgres_cid_record	hash-indexed only; contents not copied
+redis_cid_record	hash-indexed only; contents not copied
+independent_post_cleanup_or_container_custody_record	not retained or located
+live_process_or_container_query_for_this_bundle	not performed
+asserted_scope	phase-owner joins only; no service-removal or custody conclusion

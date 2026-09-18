@@ -1,0 +1,11 @@
+--- a/sim-testnet/precompile_probe_successor.go
++++ b/sim-testnet/precompile_probe_successor.go
+@@ -500,7 +500,7 @@
+ 		RetiredProbe: prior.CoordinatorUpgradeBaseline.ReplacementPrecompileProbe, RetiredRuntimeHash: prior.CoordinatorUpgradeBaseline.ReplacementPrecompileProbeHash,
+ 		Probe: built.PrecompileProbeAddress.Hex(), DeployerNonce: built.PrecompileProbeNonce,
+ 		RuntimeHash: crypto.Keccak256Hash(built.ExpectedRuntime[built.PrecompileProbeAddress]).Hex(), CreationHash: crypto.Keccak256Hash(built.PrecompileProbe).Hex(),
+-		FinalizedHead: anchor, JournalSequence: last.Sequence, JournalHash: last.EntryHash, Write: write, Restore: restore, Evidence: *evidence,
++		FinalizedHead: head, JournalSequence: last.Sequence, JournalHash: last.EntryHash, Write: write, Restore: restore, Evidence: *evidence,
+ 	}, nil
+ }
+ 

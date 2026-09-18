@@ -1,0 +1,8 @@
+bundle=FINAL-2-owned-rpc-throttle-20260914
+intended_destination=sim-testnet/peerreview/evidence/FINAL-2-owned-rpc-throttle-20260914
+scope=frozen xops ingress correction, bounded Python/Jinja qualification, and closed second 429 refusal
+status=sealed
+xops_candidate=51325d00e18a157b2ceb5d5ac44bb0645550b289
+xops_parent=a9d2eb4bfbdf72d61243908a71659adff0fb8160
+sn_source=7eab04905dbc274ae6d2546b6802f1097c1fc3fe
+sealed_utc=2026-09-14T16:17:29Z

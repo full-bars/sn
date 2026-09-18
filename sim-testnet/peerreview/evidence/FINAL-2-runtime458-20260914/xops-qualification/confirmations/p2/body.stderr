@@ -1,0 +1,7 @@
+test_testnet_convergence_pins_deployed_runtime_458 (test_subtensor_playbook.SubtensorPlaybookTests.test_testnet_convergence_pins_deployed_runtime_458) ... ok
+test_runtime_convergence_evaluates_current_pin_and_identity_controls (test_subtensor_playbook.SubtensorPlaybookTests.test_runtime_convergence_evaluates_current_pin_and_identity_controls) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.437s
+
+OK

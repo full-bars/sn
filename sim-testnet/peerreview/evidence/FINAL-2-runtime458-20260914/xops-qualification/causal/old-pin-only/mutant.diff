@@ -1,0 +1,13 @@
+diff --git a/main/ansible/host_files/snow/subtensor/vars.yml b/main/ansible/host_files/snow/subtensor/vars.yml
+index d7e0d69..f66c6fe 100644
+--- a/main/ansible/host_files/snow/subtensor/vars.yml
++++ b/main/ansible/host_files/snow/subtensor/vars.yml
+@@ -29,7 +29,7 @@ subtensor_expected_chain_name: "Bittensor"
+ subtensor_expected_genesis_hash: "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105"
+ subtensor_expected_evm_chain_id: "0x3b1"
+ subtensor_expected_spec_name: "node-subtensor"
+-subtensor_expected_spec_version: 458
++subtensor_expected_spec_version: 455
+ subtensor_expected_transaction_version: 1
+ subtensor_reference_rpc_url: "https://test.finney.opentensor.ai"
+ subtensor_base_path: "/data/subtensor"  # on the 4TB SSD

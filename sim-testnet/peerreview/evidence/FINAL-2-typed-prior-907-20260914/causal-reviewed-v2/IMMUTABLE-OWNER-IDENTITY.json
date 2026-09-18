@@ -1,0 +1,51 @@
+{
+  "base_owner_path": "/home/by/urnetwork/temp/sn-prior-carrier-capacity-correction-20260914/terra-runtime/qualification-typed-prior-907d186-streaming/reviewed-owner/test-owner.sh",
+  "base_owner_sha256": "11b04e2580beff1c55ec62574595d2c47fc842fde9db764511818b5e32d7c938",
+  "owner_delta": "The sole source difference from the admitted positive owner is expected body_status1 instead of0; all existing13 streaming manifest fences/exact stage listing/numeric conversion/fixed mode budgets are unchanged.",
+  "files": [
+    {
+      "path": "inputs/CAUSAL-ROOTS.txt",
+      "sha256": "848b6ce10d7bfb297ef2e82ebb937b6b9462825fa659e096390985133babc61e"
+    },
+    {
+      "path": "inputs/CAUSAL-SELECTOR.txt",
+      "sha256": "72f6977bd869761ea70195310ff1883cedca2ac6ec015c68ef7d83be7f990b56"
+    },
+    {
+      "path": "inputs/CAUSAL-corrected-to-fc908-script.patch",
+      "sha256": "b4bf44c4f61082cc87340fe19eb31ceb65317b69b70a959b7a141a3dadf31c38"
+    },
+    {
+      "path": "meta/config.env",
+      "sha256": "28f9b0f274599e1511df823262bbfb6bf7ccf0f780275f8956631e101d16cb30"
+    },
+    {
+      "path": "normal/failure-literals.tsv",
+      "sha256": "0b28a92b1ea79941f24839ab557c835ef80be9cc9672b2a9e92af578cff494fa"
+    },
+    {
+      "path": "normal/outcomes.expected.tsv",
+      "sha256": "d61e84a6d18ceaa0fc120e95f27637e3d0094fa610b02ac69b3b7ffda2e7a4a5"
+    },
+    {
+      "path": "normal/plan.env",
+      "sha256": "5e304cc05b258e02bc505bd5fe98758bc3984488e859b6c4d822a74a34ef997b"
+    },
+    {
+      "path": "reviewed-owner/normal-owner.sh",
+      "sha256": "c6e028a111fe76c23a3225bc26b26ba39533d331d99dd168c4af9a617af0f114"
+    },
+    {
+      "path": "reviewed-owner/test-owner.sh",
+      "sha256": "ee89c05a01c258e94919ba5b494f87e03c727f167c258d94436d14f4036fd162"
+    },
+    {
+      "path": "reviewed-owner/validate-event-inputs.py",
+      "sha256": "6098e487703027dde5ecde48451d204a6aefa8518b6311b0bab1ad49f197a299"
+    },
+    {
+      "path": "scripts/snapshot.sh",
+      "sha256": "df980ec82b83d2c8a0fbe21b2c8df0f626448466abe74fed924ec67be444a0c1"
+    }
+  ]
+}

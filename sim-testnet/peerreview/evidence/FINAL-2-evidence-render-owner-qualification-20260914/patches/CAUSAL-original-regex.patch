@@ -1,0 +1,20 @@
+--- a/sim-testnet/release_gate_test.go
++++ b/sim-testnet/release_gate_test.go
+@@ -123,14 +123,12 @@
+ 	if err != nil {
+ 		return nil, err
+ 	}
++	testDeclaration := regexp.MustCompile(`(?m)^func (Test[[:alnum:]_]+)\(`)
+ 	seen := map[string]bool{}
+ 	selected := []string{}
+ 	for _, source := range sources {
+-		names, err := releaseSourceTestDeclarations(source)
+-		if err != nil {
+-			return nil, err
+-		}
+-		for _, name := range names {
++		for _, match := range testDeclaration.FindAllStringSubmatch(source, -1) {
++			name := match[1]
+ 			if !compiled.MatchString(name) {
+ 				continue
+ 			}

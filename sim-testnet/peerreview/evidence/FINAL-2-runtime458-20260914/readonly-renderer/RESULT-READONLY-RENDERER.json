@@ -1,0 +1,12 @@
+{
+  "kind":"readonly-runtime458-renderer-cli-build",
+  "build_exit":0,
+  "repos_before_after_identical":true,
+  "repos_before_sha256":"e2762c647f13ccb9dcb1b583402bd0d6f1f98dc62fdfc7083b80f8a63b10254f",
+  "repos_after_sha256":"e2762c647f13ccb9dcb1b583402bd0d6f1f98dc62fdfc7083b80f8a63b10254f",
+  "artifact":{"path":"/home/by/urnetwork/temp/sn-runtime458-history-capacity-20260914/terra-runtime/renderer-cli-runtime458-df98472-r2/sim-testnet","sha256":"2b8e0e0695e75d996e29991fd81f15c43c95dc4d6561523235e8311a6d64c0e5","bytes":140668824,"mode":"0700"},
+  "source_head":"df98472bd88dc8e29856c172fba4731d52a6308d",
+  "build_flags":{"trimpath":true,"buildvcs":true},
+  "vcs_attestation_required":false,
+  "native_or_rpc_action":"none"
+}

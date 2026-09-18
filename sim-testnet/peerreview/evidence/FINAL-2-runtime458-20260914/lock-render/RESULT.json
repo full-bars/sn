@@ -1,0 +1,31 @@
+{
+  "status": "rendered_and_reviewed_not_installed",
+  "body_exit": 0,
+  "outer_exit": 0,
+  "finished_at": "2026-09-14T22:48:57Z",
+  "source": "df98472bd88dc8e29856c172fba4731d52a6308d",
+  "xops_source": "446cbdb56e0dc5004b66d7e0cbf05a4d9c49224c",
+  "candidate_sha256": "e72b2146a1cbbd59a54b0424a30478aa9a475f8d82369c028c4fe22e8f2d71c2",
+  "renderer_sha256": "2b8e0e0695e75d996e29991fd81f15c43c95dc4d6561523235e8311a6d64c0e5",
+  "repository_before_after_equal": true,
+  "input_lock_before_after_equal": true,
+  "apply": false,
+  "rpc_calls": 0,
+  "native_state_used": false,
+  "changed_fields_from_df98472": [
+    "repositories.protocol_source_hash",
+    "repositories.sn_go_source_hash",
+    "infrastructure.node_config_hash"
+  ],
+  "additional_changed_fields_from_fc908": [
+    "runtime.source_ref_name",
+    "runtime.source_commit",
+    "runtime.code_hash",
+    "runtime.metadata_hash",
+    "runtime.compressed_wasm_sha256",
+    "runtime.spec_version"
+  ],
+  "gateway_hash_unchanged_reason": "vars.yml belongs only to subtensorNodeReleaseFiles; the four gateway files remain byte-identical",
+  "contracts_and_other_dependency_fields_unchanged": true,
+  "runtime_qualification": "affected 175-root matrix in progress; this rendering is not a qualification verdict"
+}
