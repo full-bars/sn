@@ -187,24 +187,25 @@ func consumeDockerBareTarget(providers []Provider, t Target, rest []string) (Tar
 
 // consumeDockerTrailingTarget promotes a trailing bare positional that matches
 // a discovered container name to the target when no explicit target flag was
-// given. Unlike consumeDockerBareTarget (which stops at the first non-flag
-// positional), this inspects the last non-flag positional, allowing commands
-// with leading positional arguments (such as `auth [<auth-code>] [target]` or
-// `session <save|load> <file> [target]`) to resolve an optional trailing container.
-func consumeDockerTrailingTarget(providers []Provider, t Target, rest []string) (Target, []string) {
+// given, provided there are at least minPositionals non-flag positional
+// arguments present. Commands like `session <save|load> <file> [target]` require
+// 3 non-flag positionals before consuming a trailing target, so a file operand
+// that shares a name with a container (e.g. `session save urnet-test`) is preserved
+// as the file argument rather than stripped as a target.
+func consumeDockerTrailingTarget(providers []Provider, t Target, rest []string, minPositionals int) (Target, []string) {
 	if t.Unit != "" || t.User != "" || t.Network != "" || t.NetworkID != "" || t.StateDir != "" {
 		return t, rest
 	}
-	lastIdx := -1
-	for i := len(rest) - 1; i >= 0; i-- {
-		if !strings.HasPrefix(rest[i], "-") {
-			lastIdx = i
-			break
+	var nonFlags []int
+	for i, a := range rest {
+		if !strings.HasPrefix(a, "-") {
+			nonFlags = append(nonFlags, i)
 		}
 	}
-	if lastIdx < 0 {
+	if len(nonFlags) < minPositionals || len(nonFlags) == 0 {
 		return t, rest
 	}
+	lastIdx := nonFlags[len(nonFlags)-1]
 	for _, p := range providers {
 		if p.Unit == rest[lastIdx] {
 			t.Unit = rest[lastIdx]
@@ -764,7 +765,7 @@ func cmdDockerAuth(args []string) error {
 	if err != nil {
 		return err
 	}
-	t, rest = consumeDockerTrailingTarget(providers, t, rest)
+	t, rest = consumeDockerTrailingTarget(providers, t, rest, 1)
 	p, err := selectTargetInteractive(providers, t)
 	if err != nil {
 		return err
@@ -921,7 +922,7 @@ func cmdDockerSession(args []string) error {
 	if err != nil {
 		return err
 	}
-	t, rest = consumeDockerTrailingTarget(providers, t, rest)
+	t, rest = consumeDockerTrailingTarget(providers, t, rest, 3)
 	p, err := selectTargetInteractive(providers, t)
 	if err != nil {
 		return err

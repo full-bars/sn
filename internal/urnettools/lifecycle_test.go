@@ -409,16 +409,20 @@ func TestConsumeDockerTrailingTarget(t *testing.T) {
 	cases := []struct {
 		name     string
 		rest     []string
+		minPos   int
 		wantUnit string
 		wantRest []string
 	}{
-		{"auth trailing target", []string{"secret-auth-123", "urnet-test"}, "urnet-test", []string{"secret-auth-123"}},
-		{"auth no code target only", []string{"urnet-test"}, "urnet-test", []string{}},
-		{"auth code only no target", []string{"secret-auth-123"}, "", []string{"secret-auth-123"}},
-		{"session save trailing target", []string{"save", "backup.tar.gz", "urfix-auto"}, "urfix-auto", []string{"save", "backup.tar.gz"}},
-		{"session load flags and trailing target", []string{"load", "-f", "backup.tar.gz", "urnet-test"}, "urnet-test", []string{"load", "-f", "backup.tar.gz"}},
-		{"flag after trailing target skipped", []string{"save", "backup.tar.gz", "urnet-test", "--force"}, "urnet-test", []string{"save", "backup.tar.gz", "--force"}},
-		{"already targeted untouched", []string{"save", "backup.tar.gz", "urnet-test"}, "urfix-auto", []string{"save", "backup.tar.gz", "urnet-test"}},
+		{"auth trailing target", []string{"secret-auth-123", "urnet-test"}, 1, "urnet-test", []string{"secret-auth-123"}},
+		{"auth no code target only", []string{"urnet-test"}, 1, "urnet-test", []string{}},
+		{"auth code only no target", []string{"secret-auth-123"}, 1, "", []string{"secret-auth-123"}},
+		{"session save trailing target", []string{"save", "backup.tar.gz", "urfix-auto"}, 3, "urfix-auto", []string{"save", "backup.tar.gz"}},
+		{"session load flags and trailing target", []string{"load", "-f", "backup.tar.gz", "urnet-test"}, 3, "urnet-test", []string{"load", "-f", "backup.tar.gz"}},
+		{"flag after trailing target skipped", []string{"save", "backup.tar.gz", "urnet-test", "--force"}, 3, "urnet-test", []string{"save", "backup.tar.gz", "--force"}},
+		{"already targeted untouched", []string{"save", "backup.tar.gz", "urnet-test"}, 3, "urfix-auto", []string{"save", "backup.tar.gz", "urnet-test"}},
+		{"session save file matching container preserved", []string{"save", "urnet-test"}, 3, "", []string{"save", "urnet-test"}},
+		{"session load file matching container preserved", []string{"load", "urnet-test"}, 3, "", []string{"load", "urnet-test"}},
+		{"session save with 3 operands and matching file", []string{"save", "urnet-test", "urfix-auto"}, 3, "urfix-auto", []string{"save", "urnet-test"}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -426,7 +430,7 @@ func TestConsumeDockerTrailingTarget(t *testing.T) {
 			if c.name == "already targeted untouched" {
 				tgt.Unit = "urfix-auto"
 			}
-			gotT, gotRest := consumeDockerTrailingTarget(providers, tgt, c.rest)
+			gotT, gotRest := consumeDockerTrailingTarget(providers, tgt, c.rest, c.minPos)
 			if gotT.Unit != c.wantUnit {
 				t.Fatalf("Unit = %q, want %q (rest %v)", gotT.Unit, c.wantUnit, c.rest)
 			}
