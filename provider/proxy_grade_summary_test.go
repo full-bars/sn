@@ -377,6 +377,17 @@ func TestPruneGradesLog(t *testing.T) {
 }
 
 func TestGradeSummaryLines(t *testing.T) {
+	gradeSummaryPrevMu.Lock()
+	gradeSummaryPrev = gradeSummary{}
+	gradeSummaryHasPrev = false
+	gradeSummaryPrevMu.Unlock()
+	t.Cleanup(func() {
+		gradeSummaryPrevMu.Lock()
+		gradeSummaryPrev = gradeSummary{}
+		gradeSummaryHasPrev = false
+		gradeSummaryPrevMu.Unlock()
+	})
+
 	s := gradeSummary{
 		running: 3, tracked: 5,
 		tiers:   map[string]int{"A": 1, "B": 1, "F": 1, "ungraded": 1},
@@ -395,7 +406,6 @@ func TestGradeSummaryLines(t *testing.T) {
 	if got := s.changesLine(); !contains(got, "(first snapshot)") {
 		t.Fatalf("changesLine first: %q", got)
 	}
-	gradeSummaryHasPrev = false
 	s2 := gradeSummary{running: 4, tiers: map[string]int{"A": 2, "B": 1}}
 	_ = s2
 }
