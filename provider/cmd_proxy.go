@@ -165,6 +165,23 @@ func proxyAdd(opts docopt.Opts) {
 			}
 		}
 
+		// Credential rotation: purge any existing entry for the same
+		// host:port whose credentials differ, so adding the same address
+		// with new credentials is a ROTATION, not a duplicate. The
+		// reloader diffs by address only (desiredSet[s.Address]), so two
+		// keys for one host:port with different user:pass made re-paste a
+		// no-op — the same address was already "desired", the new creds
+		// were silently dropped, and the running proxy kept the old auth
+		// (LA7 incident 2026-09-18: 100 proxies pasted with new creds,
+		// "added 100" printed, daemon kept dialing the old user).
+		for existing := range proxyConfig.Servers {
+			existingAddress, _, _ := parseProxyAddress(existing)
+			if existingAddress == address && existing != proxyAddress {
+				delete(proxyConfig.Servers, existing)
+				fmt.Printf("rotated credentials for server %s\n", address)
+			}
+		}
+
 		if currentKey, ok := proxyConfig.Servers[proxyAddress]; ok && currentKey != key {
 			if force, _ := opts.Bool("-f"); !force {
 				fmt.Printf(

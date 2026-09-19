@@ -221,7 +221,46 @@ type ProxyReloader struct {
 	directDone      chan struct{}                 // closed when direct goroutine exits; nil when not running
 	drainingProxies map[string]context.CancelFunc // proxies draining active sessions
 	drainMu         sync.Mutex
+
+	// runningAuth tracks the credentials of currently running proxies.
+	// Used for credential rotation: when a proxy's desired settings have
+	// different auth than what's running, we cancel the old goroutine and
+	// relaunch with new credentials in the same reload pass.
+	runningAuth map[string]*connect.ProxySettings
 	networkID       string
+}
+
+// sameAuth reports whether two proxy settings carry identical credentials
+// (both nil auth or identical user+password). Address/network are ignored —
+// those are the diff key; only the credentials decide whether a running
+// proxy needs a rotation.
+func sameAuth(a, b *connect.ProxySettings) bool {
+	switch {
+	case a == nil || b == nil:
+		// A nil-vs-set mismatch means "we don't know what's running" — treat
+		// that as a rotation-needed (different) rather than risk keeping
+		// stale credentials.
+		return a == b
+	case a.Auth == nil && b.Auth == nil:
+		return true
+	case a.Auth == nil || b.Auth == nil:
+		return false
+	default:
+		return a.Auth.User == b.Auth.User && a.Auth.Password == b.Auth.Password
+	}
+}
+
+// runningAuthFor returns the settings the proxy at addr was launched with,
+// or ok=false if it is not running / was started before this tracking existed
+// (e.g. initial startup loop populates cancelMap but not runningAuth).
+func (r *ProxyReloader) runningAuthFor(addr string) (*connect.ProxySettings, bool) {
+	r.cancelMapMu.Lock()
+	defer r.cancelMapMu.Unlock()
+	if r.runningAuth == nil {
+		return nil, false
+	}
+	s, ok := r.runningAuth[addr]
+	return s, ok
 }
 
 func (r *ProxyReloader) isDraining(addr string) bool {
@@ -434,38 +473,61 @@ func (r *ProxyReloader) reload() {
 	}
 
 	// Check emptiness AFTER merging the URL cache — a URL-only deployment
-	// (no --proxy_file, no internal proxies) has desired == 0 but a
-	// non-empty desiredSet, and must not be treated as a source-read error.
-	if len(desiredSet) == 0 {
-		tlog("[proxy] reload skipped: 0 proxies found in source\n")
-		setProxyResolutionStatus(proxyResolutionEmpty, "source returned no usable proxies")
-		return
-	}
-
-	tlog("[proxy] reload: running=%d desired=%d lock_wait=%v\n",
-		len(running), len(desiredSet), lockWait.Round(time.Millisecond))
-
-	var added []*connect.ProxySettings
-	deferredBackoff := 0
-	now := time.Now()
-	for addr, s := range desiredSet {
-		if running[addr] {
-			continue
+		// (no --proxy_file, no internal proxies) has desired == 0 but a
+		// non-empty desiredSet, and must not be treated as a source-read error.
+		if len(desiredSet) == 0 {
+			tlog("[proxy] reload skipped: 0 proxies found in source\n")
+			setProxyResolutionStatus(proxyResolutionEmpty, "source returned no usable proxies")
+			return
 		}
-		// Enforce the URL give-up backoff at launch time: an address whose
-		// next-eligible time has not yet arrived is skipped, not relaunched.
-		// Only URL-sourced proxies ever carry a backoff window, so file and
-		// internal proxies (which never call SetBackoffUntil) are always
-		// eligible here. Without this, the escalating backoff was defeated
-		// because any reload would relaunch every desired-but-not-running
-		// proxy immediately.
-		if !globalProxyFailureHistory.Eligible(addr, now) {
-			deferredBackoff++
-			continue
+
+		tlog("[proxy] reload: running=%d desired=%d lock_wait=%v\n",
+			len(running), len(desiredSet), lockWait.Round(time.Millisecond))
+
+		var added []*connect.ProxySettings
+		deferredBackoff := 0
+		now := time.Now()
+		var rotated []string // addresses whose credentials changed while running
+		for addr, s := range desiredSet {
+			if running[addr] {
+				// Credential rotation: the desired settings carry different
+				// auth than the proxy currently running. The config changed
+				// (re-paste with new credentials) but the address is already
+				// in the cancel map, so the plain diff would silently keep
+				// the old credentials. Rotate by cancelling the running
+				// proxy (via the removed set) and relaunching it in the same
+				// pass with the new auth.
+				if previous, ok := r.runningAuthFor(addr); !ok || !sameAuth(previous, s) {
+					// Add it to BOTH sets: the removal pass cancels the running
+					// goroutine (old credentials) and the add pass relaunches it
+					// with the new auth — one reload, minimal gap.
+					rotated = append(rotated, addr)
+					added = append(added, s)
+					tlog("[proxy] rotating credentials for %s\n", addr)
+					continue
+				}
+				continue
+			}
+			// Enforce the URL give-up backoff at launch time: an address whose
+			// next-eligible time has not yet arrived is skipped, not relaunched.
+			// Only URL-sourced proxies ever carry a backoff window, so file and
+			// internal proxies (which never call SetBackoffUntil) are always
+			// eligible here. Without this, the escalating backoff was defeated
+			// because any reload would relaunch every desired-but-not-running
+			// proxy immediately.
+			if !globalProxyFailureHistory.Eligible(addr, now) {
+				deferredBackoff++
+				continue
+			}
+			added = append(added, s)
 		}
-		added = append(added, s)
-	}
 	var removed []string
+	// The rotated set is appended here: its addresses were already placed in
+	// `added` above (so they relaunch with the new auth in this same pass),
+	// and folding them into `removed` is what cancels the OLD goroutine.
+	for _, addr := range rotated {
+		removed = append(removed, addr)
+	}
 	for addr := range running {
 		if addr == directProxyKey {
 			continue // managed by the direct hot-toggle block above, not the proxy diff
@@ -561,11 +623,14 @@ func (r *ProxyReloader) reload() {
 			continue
 		}
 		r.cancelMapMu.Lock()
-		cancel, ok := r.cancelMap[addr]
-		if ok {
-			delete(r.cancelMap, addr)
-		}
-		r.cancelMapMu.Unlock()
+			cancel, ok := r.cancelMap[addr]
+			if ok {
+				delete(r.cancelMap, addr)
+				// The goroutine for this address has now been cancelled; drop its
+				// recorded auth so a credential change is picked up on relaunch.
+				delete(r.runningAuth, addr)
+			}
+			r.cancelMapMu.Unlock()
 		if !ok {
 			continue
 		}
@@ -656,9 +721,16 @@ func (r *ProxyReloader) reload() {
 		gen := RegisterProxy(stableID, settings.Address)
 
 		proxyCtx, proxyCancel := context.WithCancel(r.parentCtx)
-		r.cancelMapMu.Lock()
-		r.cancelMap[settings.Address] = proxyCancel
-		r.cancelMapMu.Unlock()
+			r.cancelMapMu.Lock()
+			r.cancelMap[settings.Address] = proxyCancel
+			// Record the settings this proxy launched with, so a later reload can
+			// see when its credentials changed and rotate it (see the rotation
+			// branch in reload()).
+			if r.runningAuth == nil {
+				r.runningAuth = make(map[string]*connect.ProxySettings)
+			}
+			r.runningAuth[settings.Address] = settings
+			r.cancelMapMu.Unlock()
 
 		settingsCopy := settings
 		isURLSourced := sourceOf[settings.Address] == "url"
