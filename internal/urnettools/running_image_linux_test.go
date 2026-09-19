@@ -79,8 +79,13 @@ func rewriteVersionStamp(payload []byte, version string) []byte {
 				}
 				return out
 			}
-			// New version longer than the embedded slot: append at end.
-			return append(payload, append([]byte("\n"+versionStampPrefix), []byte(version+"\n")...)...)
+			// New version longer than the embedded slot: append at end. The
+			// scanner returns the FIRST valid stamp, so the original must be
+			// made invalid first (v -> x) or it would win over the appended one.
+			out := make([]byte, len(payload))
+			copy(out, payload)
+			out[start] = 'x'
+			return append(out, append([]byte("\n"+versionStampPrefix), []byte(version+"\n")...)...)
 		}
 		searchFrom = i + 1
 	}

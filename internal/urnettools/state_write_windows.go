@@ -51,6 +51,9 @@ func writeStateFile(stateDir, name string, data []byte, perm os.FileMode) error 
 	return nil
 }
 
+// openNonblockFlag has no Windows equivalent; FIFOs do not exist there.
+const openNonblockFlag = 0
+
 // chownStateFile is a no-op on Windows (no Unix ownership model).
 func chownStateFile(path string, uid, gid int) error {
 	return nil

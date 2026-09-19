@@ -142,3 +142,47 @@ func TestLogsPlatformCheck(t *testing.T) {
 		t.Fatalf("linux with unit: handled=%v err=%v, want continue", handled, err)
 	}
 }
+
+// The root help must describe what `logs` actually accepts: a target and an
+// optional line count. `all`, `dump` and `-i` were documented but never
+// implemented, and cmdLogs rejects them as unexpected arguments.
+func TestRootHelpLogsMatchesCommand(t *testing.T) {
+	if strings.Contains(rootHelpMenu, "logs [all|dump|-i]") {
+		t.Error("root help advertises logs modes (all|dump|-i) that cmdLogs does not implement")
+	}
+	if !helpMenuMentions("logs") || !strings.Contains(rootHelpMenu, "logs [target] [N]") {
+		t.Error("root help must list `logs [target] [N]`, matching the registered command")
+	}
+	if err := cmdLogs([]string{"dump"}); err == nil || !strings.Contains(err.Error(), "unexpected argument") {
+		t.Errorf("cmdLogs(dump) = %v, want an unexpected-argument error", err)
+	}
+}
+
+// readSessionLoadFile opens once and validates the OPENED file.
+func TestReadSessionLoadFile(t *testing.T) {
+	dir := t.TempDir()
+
+	if _, err := readSessionLoadFile(filepath.Join(dir, "missing")); err == nil || !strings.Contains(err.Error(), "not found") {
+		t.Errorf("missing file: got %v, want a not-found error", err)
+	}
+	if _, err := readSessionLoadFile(dir); err == nil || !strings.Contains(err.Error(), "not a regular file") {
+		t.Errorf("directory: got %v, want a not-a-regular-file error", err)
+	}
+	f := filepath.Join(dir, "bundle.enc")
+	if err := os.WriteFile(f, []byte("ciphertext"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	b, err := readSessionLoadFile(f)
+	if err != nil || string(b) != "ciphertext" {
+		t.Errorf("regular file: got %q, %v", b, err)
+	}
+}
+
+// `session load <dir>` must be rejected before provider discovery and must
+// not reach the passphrase prompt.
+func TestSessionLoadRejectsDirectoryBeforeDiscovery(t *testing.T) {
+	err := Run([]string{"session", "load", t.TempDir(), "-n"})
+	if err == nil || !strings.Contains(err.Error(), "not a regular file") {
+		t.Fatalf("session load <dir>: got %v, want a not-a-regular-file error", err)
+	}
+}

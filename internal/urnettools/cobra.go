@@ -31,7 +31,7 @@ Core Commands:
   hotswap                 Zero-downtime in-process binary reload
   self-update             Update this tool binary itself
   status                  Show provider service status
-  logs [all|dump|-i]      Stream logs (all=from start, dump=save, -i=important only)
+  logs [target] [N]       Show recent logs, then follow (N lines, default 250)
   dashboard               Status panel: state, settings, sources, warnings
   history [limit]         Show the provider's command audit trail
 

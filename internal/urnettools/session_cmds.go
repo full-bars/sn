@@ -481,13 +481,18 @@ Examples:
 	// discovery (which can hang when daemons are absent) for a trivially
 	// rejected command. On save, the file is an output target — create
 	// its parent dir eagerly so the dry-run path can report the target.
+	//
+	// The file is opened ONCE here and its bytes read from that descriptor:
+	// os.Stat accepts directories and FIFOs (a FIFO would block the later
+	// read forever), and a second pathname lookup lets the file be swapped
+	// between validation and use.
+	var bundle []byte
 	if action == "load" {
-		if _, err := os.Stat(file); err != nil {
-			if os.IsNotExist(err) {
-				return fmt.Errorf("session file %q not found", file)
-			}
-			return fmt.Errorf("session file %q not accessible: %v", file, err)
+		b, err := readSessionLoadFile(file)
+		if err != nil {
+			return err
 		}
+		bundle = b
 	}
 	p, err := selectTarget(lifecycleCandidates(t), t)
 	if err != nil {
@@ -504,7 +509,7 @@ Examples:
 		// M5 fix: thread dryRun and force into cmdSessionSave.
 		return cmdSessionSave(p, file, dryRun, force)
 	case "load":
-		return cmdSessionLoad(p, file, force, dryRun, allowDiff)
+		return cmdSessionLoad(p, bundle, force, dryRun, allowDiff)
 	default:
 		return fmt.Errorf("session action must be 'save' or 'load' (got %q)", action)
 	}
@@ -659,17 +664,44 @@ func stageSessionFiles(p Provider, files map[string][]byte, allowDiff bool) (str
 	return backupDir, nil
 }
 
+// maxSessionBundleBytes bounds a session bundle read: it holds a handful of
+// small identity files, so anything larger is not a bundle.
+const maxSessionBundleBytes = 64 << 20
+
+// readSessionLoadFile opens path once (non-blocking, so a FIFO cannot hang
+// the open), requires the OPENED file to be a regular file, and reads the
+// bundle from that same descriptor.
+func readSessionLoadFile(path string) ([]byte, error) {
+	f, err := os.OpenFile(path, os.O_RDONLY|openNonblockFlag, 0)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("session file %q not found", path)
+		}
+		return nil, fmt.Errorf("session file %q not accessible: %v", path, err)
+	}
+	defer f.Close()
+	fi, err := f.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("session file %q not accessible: %v", path, err)
+	}
+	if !fi.Mode().IsRegular() {
+		return nil, fmt.Errorf("session file %q is not a regular file", path)
+	}
+	b, err := io.ReadAll(io.LimitReader(f, maxSessionBundleBytes+1))
+	if err != nil {
+		return nil, fmt.Errorf("read session file %q: %v", path, err)
+	}
+	if len(b) > maxSessionBundleBytes {
+		return nil, fmt.Errorf("session file %q is too large (> %d bytes)", path, maxSessionBundleBytes)
+	}
+	return b, nil
+}
+
 // cmdSessionLoad decrypts a session bundle and stages it into the provider's
 // state dir via stageSessionFiles, then prompts to restart so the provider
 // picks the session up at its staged-session apply on startup.
-func cmdSessionLoad(p Provider, inFile string, force, dryRun, allowDiff bool) error {
-	bundle, err := os.ReadFile(inFile)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("session file %q not found", inFile)
-		}
-		return err
-	}
+// bundle is the already-read encrypted file content (see readSessionLoadFile).
+func cmdSessionLoad(p Provider, bundle []byte, force, dryRun, allowDiff bool) error {
 	pass, err := readPassphrase("Enter passphrase: ")
 	if err != nil {
 		return err

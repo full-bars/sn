@@ -90,25 +90,12 @@ func discoverProcesses() []Provider {
 		ownerUser, ownerHome := processOwner(pid)
 		user := resolveProcessOwnerPrecedence(ownerUser, env)
 		// State dir attribution: env HOME is attacker-influenced (a process can
-		// set HOME=/root to redirect root-run state writes). When the kernel
-		// owner's home is known, prefer ownerHome-derived; only honor env HOME
-		// when it lives inside ownerHome (a legitimate subdirectory). When
-		// ownerHome is unknown, fall back to env.
-		// --state-dir argv override is validated later against ownerHome.
-		envStateDir := stateDirFor(env)
-		stateDir := ""
-		if ownerHome != "" {
-			ownerUrnetDir := filepath.Join(ownerHome, ".urnetwork")
-			stateDir = ownerUrnetDir
-			if envStateDir != "" && strings.HasPrefix(envStateDir, ownerHome+string(filepath.Separator)) {
-				// env HOME is inside the owner's home (legit subdirectory);
-				// honor it so providers with non-standard --state-dir argv still
-				// resolve correctly.
-				stateDir = envStateDir
-			}
-		} else if envStateDir != "" {
-			stateDir = envStateDir
-		}
+		// set HOME=/root to redirect root-run state writes), so it is only a
+		// hint that resolveDiscoveredStateDir accepts when it provably stays
+		// inside the kernel-reported owner home. With no trusted owner home
+		// the state dir stays empty.
+		// --state-dir argv override is validated below against ownerHome.
+		stateDir := resolveDiscoveredStateDir(ownerHome, stateDirFor(env))
 		p := Provider{
 			User:          user,
 			StateDir:      stateDir,
@@ -149,16 +136,11 @@ func discoverProcesses() []Provider {
 		// target process itself and are fully attacker-controlled. Also add
 		// a separator guard so /var/lib/ur doesn't match /var/lib/urnetwork-evil.
 		if p.StateDir != "" && p.PID > 0 {
-			if _, home := processOwner(p.PID); home != "" {
-				cleanHome := filepath.Clean(home)
-				cleanState := filepath.Clean(p.StateDir)
-				// Reject the state-dir if it is the owner's HOME itself (an
-				// uninstall RemoveAll would wipe the entire home dir) OR not
-				// under the home at all.
-				if cleanState == cleanHome || !strings.HasPrefix(cleanState, cleanHome+string(filepath.Separator)) {
-					// Invalid or dangerous state-dir (exact home, outside home).
-					p.StateDir = ""
-				}
+			// An owner whose home cannot be resolved has no trusted root to
+			// validate against, so the argv value is rejected, not believed.
+			_, home := processOwner(p.PID)
+			if !stateDirInsideHome(home, p.StateDir) {
+				p.StateDir = ""
 			}
 		}
 		if p.StateDir == "" {
@@ -212,6 +194,69 @@ func discoverProcesses() []Provider {
 		out = append(out, p)
 	}
 	return out
+}
+
+// resolveDiscoveredStateDir picks the state dir to attribute to a discovered
+// process. ownerHome is the home directory the KERNEL's uid maps to; envDir is
+// the process's own HOME-derived candidate, which the process controls.
+//
+//   - No trusted owner home: "" (never attribute a directory the process merely
+//     claims, e.g. HOME=/root from a process whose uid has no passwd entry).
+//   - Otherwise ownerHome/.urnetwork, unless envDir is a strict subdirectory of
+//     the owner home that also stays inside it after symlinks are resolved
+//     (a lexical prefix check alone accepts HOME=/home/alice/link where link
+//     points outside the home).
+func resolveDiscoveredStateDir(ownerHome, envDir string) string {
+	if ownerHome == "" {
+		return ""
+	}
+	if envDir != "" && stateDirInsideHome(ownerHome, envDir) {
+		return envDir
+	}
+	return filepath.Join(ownerHome, ".urnetwork")
+}
+
+// stateDirInsideHome reports whether dir is a strict subdirectory of home,
+// both lexically and after resolving symlinks. Equal to home is rejected (an
+// uninstall RemoveAll would wipe the whole home). An empty home never contains
+// anything. dir need not exist yet: the longest existing ancestor is resolved.
+//
+// The check and the later use are separate pathname lookups, so an owner who
+// swaps a component in between can still redirect a read; file access under
+// the resolved dir goes through the no-follow helpers to limit that to
+// directory components the owner already controls.
+func stateDirInsideHome(home, dir string) bool {
+	if home == "" || dir == "" {
+		return false
+	}
+	cleanHome, cleanDir := filepath.Clean(home), filepath.Clean(dir)
+	sep := string(filepath.Separator)
+	if cleanDir == cleanHome || !strings.HasPrefix(cleanDir, cleanHome+sep) {
+		return false
+	}
+	realHome, err := filepath.EvalSymlinks(cleanHome)
+	if err != nil {
+		return false
+	}
+	realDir := evalExistingPrefix(cleanDir)
+	return realDir != realHome && strings.HasPrefix(realDir, realHome+sep)
+}
+
+// evalExistingPrefix resolves symlinks in the longest existing ancestor of p
+// and re-appends the not-yet-existing remainder.
+func evalExistingPrefix(p string) string {
+	rest := ""
+	for cur := p; ; {
+		if real, err := filepath.EvalSymlinks(cur); err == nil {
+			return filepath.Join(real, rest)
+		}
+		parent := filepath.Dir(cur)
+		if parent == cur {
+			return p
+		}
+		rest = filepath.Join(filepath.Base(cur), rest)
+		cur = parent
+	}
 }
 
 // classifyContainerByNamespaceAndCgroup is the pure decision core of

@@ -73,6 +73,10 @@ func writeStateFile(stateDir, name string, data []byte, perm os.FileMode) error 
 	return nil
 }
 
+// openNonblockFlag is OR-ed into an open used only to inspect a path that may
+// be a FIFO: a plain O_RDONLY open of a FIFO with no writer blocks forever.
+const openNonblockFlag = unix.O_NONBLOCK
+
 // chownStateFile changes ownership of a file without following symlinks.
 // Uses Lchown instead of Chown so a symlink at the target path is not followed.
 func chownStateFile(path string, uid, gid int) error {
