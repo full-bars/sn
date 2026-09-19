@@ -471,6 +471,19 @@ Examples:
 	if len(targetRest) > 0 {
 		return fmt.Errorf("session takes no extra arguments (got %v)", targetRest)
 	}
+	// Validate the session file BEFORE resolving a provider. On load, the
+	// file must exist; checking first avoids invoking docker/systemd
+	// discovery (which can hang when daemons are absent) for a trivially
+	// rejected command. On save, the file is an output target — create
+	// its parent dir eagerly so the dry-run path can report the target.
+	if action == "load" {
+		if _, err := os.Stat(file); err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("session file %q not found", file)
+			}
+			return fmt.Errorf("session file %q not accessible: %v", file, err)
+		}
+	}
 	p, err := selectTarget(lifecycleCandidates(t), t)
 	if err != nil {
 		return err
