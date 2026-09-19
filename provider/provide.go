@@ -1021,13 +1021,13 @@ func provideLauncherLoop(st *provideState) func() {
 
 	// Start hot-reload watcher.
 	reloader := &ProxyReloader{
-		cancelMap:       st.proxyCancelMap,
-		cancelMapMu:     &st.proxyCancelMu,
-		runningAuth:     make(map[string]*connect.ProxySettings),
-		state:           proxyState,
-		sourcePath:      proxyFile,
-		parentCtx:       st.ctx,
-		wg:              &st.wg,
+		cancelMap:   st.proxyCancelMap,
+		cancelMapMu: &st.proxyCancelMu,
+		runningAuth: make(map[string]*connect.ProxySettings),
+		state:       proxyState,
+		sourcePath:  proxyFile,
+		parentCtx:   st.ctx,
+		wg:          &st.wg,
 		spawnProxy: func(proxyCtx context.Context, settings *connect.ProxySettings, isNative bool, isURLSourced bool) {
 			provideWithProxy(st, proxyCtx, settings, isNative, isURLSourced)
 		},
@@ -1035,22 +1035,16 @@ func provideLauncherLoop(st *provideState) func() {
 		directDone:      nil,
 		networkID:       currentNetworkId,
 	}
+	// Seed runningAuth with the STARTUP launch settings BEFORE the watcher and
+	// the first reload(). The startup loop above launched every proxy directly
+	// (before the reloader existed), so an unseeded reload() would see no
+	// recorded auth for any boot-launched proxy and rotate (cancel and
+	// relaunch) all of them at boot. Seeding also has to precede the re-paste
+	// case (LA7 incident: 100 proxies pasted with new creds, "added 100"
+	// printed, daemon kept dialing the old user).
+	reloader.seedRunningAuth(allProxySettings)
 	reloader.StartWatcher(st.ctx)
 	reloader.reload()
-
-	// Seed runningAuth with the STARTUP launch settings. The startup loop
-	// above launched every proxy directly (before the reloader existed), so
-	// without this the rotation branch in reload() would see no recorded
-	// auth for boot-launched proxies, and re-pasting with new credentials
-	// would silently keep the old auth (LA7 incident: 100 proxies pasted
-	// with new creds, "added 100" printed, daemon kept dialing the old
-	// user). Deliberately capture the same *connect.ProxySettings pointers
-	// the goroutines below run against.
-	if len(allProxySettings) > 0 {
-		for _, s := range allProxySettings {
-			reloader.runningAuth[s.Address] = s
-		}
-	}
 
 	// URL fetcher and maintenance goroutines.
 	proxyURLs := resolveProxyURLs(st.opts)
