@@ -347,10 +347,14 @@ const (
 // one descriptor-pinned handle on the state dir instead of re-resolving the
 // pathname for each step.
 func queuePendingOverride(stateDir, op, key, value string) error {
-	if err := os.MkdirAll(stateDir, 0o700); err != nil {
-		return err
-	}
-	h, err := openStateDirHandle(stateDir)
+	return queuePendingOverrideIn("", stateDir, op, key, value)
+}
+
+// queuePendingOverrideIn is queuePendingOverride for a state dir known to lie
+// beneath the trusted home root (Provider.StateHome), which is then walked
+// without following symlinks.
+func queuePendingOverrideIn(root, stateDir, op, key, value string) error {
+	h, err := openStateDirInCreate(root, stateDir)
 	if err != nil {
 		return err
 	}
@@ -476,7 +480,7 @@ func applyControlOverride(p Provider, op, key, value string, dryRun bool) (bool,
 				"provider %s is running (pid %d) but its control socket %s is unreachable — not queuing a change that would never apply; check whether this provider is actually running on this host (docker container misattribution?) or restart it",
 				providerLabel(p), p.PID, sockPath)
 		}
-		if err := queuePendingOverride(p.StateDir, op, canonicalKey, value); err != nil {
+		if err := queuePendingOverrideIn(p.StateHome, p.StateDir, op, canonicalKey, value); err != nil {
 			return false, false, fmt.Errorf("queue pending override: %w", err)
 		}
 		removeLegacyFile(p.StateDir, canonicalKey)

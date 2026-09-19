@@ -98,9 +98,6 @@ func cmdDirectToggle(args []string, force, dryRun bool) error {
 	}
 
 	toggleDir := filepath.Dir(togglePath)
-	if err := os.MkdirAll(toggleDir, 0700); err != nil {
-		return fmt.Errorf("could not create dir for direct toggle: %v", err)
-	}
 	// Write the toggle through a descriptor-pinned handle (the state dir
 	// itself is opened O_NOFOLLOW): the marker and its ownership are set
 	// relative to ONE open directory, so a provider user who swaps the
@@ -108,16 +105,16 @@ func cmdDirectToggle(args []string, force, dryRun bool) error {
 	// lands on the descriptor (writeOwned fchowns from the handle's
 	// fstat), which replaces the two pathname lookups the old code made
 	// (chownLikeStateOwner by path plus writeStateFileOwned).
-	h, err := openStateDirHandle(toggleDir)
+	h, err := openStateDirInCreate(p.StateHome, toggleDir)
 	if err != nil {
-		return fmt.Errorf("could not open direct toggle dir %s: %v", toggleDir, err)
+		return fmt.Errorf("could not create or open direct toggle dir %s: %v", toggleDir, err)
 	}
 	defer h.Close()
 	// The handle takes its owner from toggleDir itself, and a root-run
 	// MkdirAll above leaves a NEW dir owned by root (0700), which would lock
 	// the provider's unprivileged user out of the toggle. Hand the directory
 	// to the state dir's owner first, through the open descriptor.
-	ref, err := openStateDirHandle(p.StateDir)
+	ref, err := openProviderStateDir(p)
 	if err != nil {
 		return fmt.Errorf("could not open state dir %s: %v", p.StateDir, err)
 	}

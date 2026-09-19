@@ -33,6 +33,12 @@ type Provider struct {
 	User string
 	// StateDir is the provider's data directory (usually <home>/.urnetwork).
 	StateDir string
+	// StateHome is the kernel-attributed home directory StateDir was validated
+	// to lie beneath (set by process discovery only; "" otherwise). It is the
+	// trust root for openStateDirIn: the path from StateHome down to StateDir
+	// is walked one component at a time without following symlinks, so a
+	// provider user cannot swap an intermediate directory after validation.
+	StateHome string
 	// Binary is the absolute path of the provider executable.
 	Binary string
 	// Unit is the systemd unit name owning this provider ("" if none /

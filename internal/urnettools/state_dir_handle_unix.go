@@ -56,6 +56,79 @@ func openStateDirHandle(path string) (*stateDirHandle, error) {
 	return &stateDirHandle{fd: fd, path: path, uid: st.Uid, gid: st.Gid}, nil
 }
 
+// openStateDirWithin opens path, which must lie strictly beneath root, by
+// walking the components from root one openat at a time with O_NOFOLLOW.
+// Every step is relative to the descriptor of the step before it, so no
+// component between root and path can be swapped for a symlink or another
+// tree after the walk passes it, and the result is a handle on the real leaf.
+// root itself is opened normally: it is the trust anchor (the kernel-reported
+// home of the process owner), and legitimate roots are often symlinked.
+//
+// With create, a missing component is made with mkdirat (mode 0700) and
+// handed to root's owner through its descriptor, so a directory created by a
+// root-run tool is usable by the unprivileged provider.
+func openStateDirWithin(root, path string, create bool) (*stateDirHandle, error) {
+	cleanRoot, cleanPath := filepath.Clean(root), filepath.Clean(path)
+	rel, ok := strings.CutPrefix(cleanPath, cleanRoot+string(filepath.Separator))
+	if !ok || rel == "" {
+		return nil, fmt.Errorf("state dir %s is not beneath %s", path, root)
+	}
+	fd, err := unix.Open(cleanRoot, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_CLOEXEC, 0)
+	if err != nil {
+		return nil, fmt.Errorf("open %s: %w", root, err)
+	}
+	var rootSt unix.Stat_t
+	if err := unix.Fstat(fd, &rootSt); err != nil {
+		unix.Close(fd)
+		return nil, fmt.Errorf("fstat %s: %w", root, err)
+	}
+	for _, comp := range strings.Split(rel, string(filepath.Separator)) {
+		if err := checkComponent(comp); err != nil {
+			unix.Close(fd)
+			return nil, err
+		}
+		const openDir = unix.O_RDONLY | unix.O_DIRECTORY | unix.O_NOFOLLOW | unix.O_CLOEXEC
+		next, err := unix.Openat(fd, comp, openDir, 0)
+		if err != nil && create && errors.Is(err, unix.ENOENT) {
+			if merr := unix.Mkdirat(fd, comp, 0o700); merr != nil && !errors.Is(merr, unix.EEXIST) {
+				unix.Close(fd)
+				return nil, fmt.Errorf("mkdir %s in %s: %w", comp, path, merr)
+			}
+			// Reopen NOFOLLOW: a directory swapped in after mkdirat is refused.
+			next, err = unix.Openat(fd, comp, openDir, 0)
+			if err == nil {
+				var st unix.Stat_t
+				if serr := unix.Fstat(next, &st); serr != nil {
+					unix.Close(next)
+					unix.Close(fd)
+					return nil, fmt.Errorf("fstat %s: %w", comp, serr)
+				}
+				if st.Uid != rootSt.Uid || st.Gid != rootSt.Gid {
+					if cerr := unix.Fchown(next, int(rootSt.Uid), int(rootSt.Gid)); cerr != nil {
+						unix.Close(next)
+						unix.Close(fd)
+						return nil, fmt.Errorf("chown %s: %w", comp, cerr)
+					}
+				}
+			}
+		}
+		unix.Close(fd)
+		if err != nil {
+			if errors.Is(err, unix.ELOOP) || errors.Is(err, unix.ENOTDIR) {
+				return nil, fmt.Errorf("state dir %s: component %q is not a plain directory (symlink?): %w", path, comp, err)
+			}
+			return nil, fmt.Errorf("open state dir %s: %w", path, err)
+		}
+		fd = next
+	}
+	var st unix.Stat_t
+	if err := unix.Fstat(fd, &st); err != nil {
+		unix.Close(fd)
+		return nil, fmt.Errorf("fstat state dir %s: %w", path, err)
+	}
+	return &stateDirHandle{fd: fd, path: path, uid: st.Uid, gid: st.Gid}, nil
+}
+
 func (h *stateDirHandle) Close() error { return unix.Close(h.fd) }
 
 // Path returns the pathname the handle was opened from, for messages and for

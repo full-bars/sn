@@ -921,7 +921,7 @@ func cmdProfile(args []string) error {
 		if err := validateControlValue("profile", profile); err != nil {
 			return err
 		}
-		if err := queuePendingOverride(p.StateDir, "set", "profile", profile); err != nil {
+		if err := queuePendingOverrideIn(p.StateHome, p.StateDir, "set", "profile", profile); err != nil {
 			return fmt.Errorf("queue pending override: %w", err)
 		}
 		fmt.Printf("Profile set to %s for %s (queued — takes effect on next start)\n", profile, providerLabel(p))

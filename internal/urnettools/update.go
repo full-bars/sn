@@ -1544,12 +1544,12 @@ func migrateUnitToNotify(p Provider) (bool, error) {
 	// through a descriptor-pinned handle (see writeUnitBackup): a user
 	// unit lives in a directory the provider user controls, and this runs
 	// as root.
-	if err := writeUnitBackup(unitPath, content); err != nil {
+	if err := writeUnitBackupIn(p.StateHome, unitPath, content); err != nil {
 		return false, fmt.Errorf("backup unit file %s: %w", unitPath, err)
 	}
 	fmt.Printf("backed up unit file %s -> %s\n", unitPath, unitPath+".bak")
 
-	if err := replaceUnitFile(unitPath, []byte(newContent)); err != nil {
+	if err := replaceUnitFileIn(p.StateHome, unitPath, []byte(newContent)); err != nil {
 		return false, fmt.Errorf("write updated unit file: %w", err)
 	}
 	fmt.Printf("migrated %s from Type=simple to Type=notify\n", unitPath)
@@ -1716,7 +1716,7 @@ func demoteUnitToSimple(p Provider) (bool, error) {
 	if !changed {
 		return false, nil
 	}
-	if err := replaceUnitFile(unitPath, []byte(newContent)); err != nil {
+	if err := replaceUnitFileIn(p.StateHome, unitPath, []byte(newContent)); err != nil {
 		return false, fmt.Errorf("write unit file %s: %w", unitPath, err)
 	}
 	fmt.Printf("restored %s to Type=simple\n", unitPath)
@@ -1732,8 +1732,15 @@ func demoteUnitToSimple(p Provider) (bool, error) {
 // that is a symlink (or is swapped for one) cannot aim a root backup write
 // at another tree.
 func writeUnitBackup(unitPath string, content []byte) error {
+	return writeUnitBackupIn("", unitPath, content)
+}
+
+// writeUnitBackupIn is writeUnitBackup with a trusted home root (see
+// Provider.StateHome): a unit dir beneath it is walked without following
+// symlinks.
+func writeUnitBackupIn(root, unitPath string, content []byte) error {
 	dir, name := filepath.Dir(unitPath), filepath.Base(unitPath)+".bak"
-	h, err := openStateDirHandle(dir)
+	h, err := openStateDirIn(root, dir)
 	if err != nil {
 		return err
 	}
@@ -1749,8 +1756,14 @@ func writeUnitBackup(unitPath string, content []byte) error {
 // rename(2) replaces a symlink at the final path rather than writing through
 // it.
 func replaceUnitFile(unitPath string, content []byte) error {
+	return replaceUnitFileIn("", unitPath, content)
+}
+
+// replaceUnitFileIn is replaceUnitFile with a trusted home root (see
+// Provider.StateHome).
+func replaceUnitFileIn(root, unitPath string, content []byte) error {
 	dir, tmpName := filepath.Dir(unitPath), filepath.Base(unitPath)+".tmp"
-	h, err := openStateDirHandle(dir)
+	h, err := openStateDirIn(root, dir)
 	if err != nil {
 		return err
 	}

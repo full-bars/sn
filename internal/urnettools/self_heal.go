@@ -123,7 +123,7 @@ func writeSelfHeal(state string, targetArgs []string) error {
 		// authority over another tree. Ownership lands on the descriptor
 		// (writeOwned fchowns from the handle's fstat), which is what the
 		// separate chownLikeStateOwner call used to do by path.
-		h, err := openStateDirHandle(p.StateDir)
+		h, err := openProviderStateDir(*p)
 		if err != nil {
 			return err
 		}

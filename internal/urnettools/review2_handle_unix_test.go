@@ -198,3 +198,152 @@ func TestAdoptOwnerOfHandsDirAndFilesToReferenceOwner(t *testing.T) {
 		}
 	}
 }
+
+// The gap this closes: a leaf-only handle accepts a path whose INTERMEDIATE
+// component was swapped for a symlink; the walk from the trusted root refuses.
+func TestOpenStateDirWithinRefusesSwappedIntermediateComponent(t *testing.T) {
+	home, outside := t.TempDir(), t.TempDir()
+	if err := os.Mkdir(filepath.Join(outside, "state"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(home, "a")); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	path := filepath.Join(home, "a", "state")
+
+	// Documents the old behavior: the leaf is a real directory, so the
+	// leaf-only handle follows the swapped ancestor.
+	leaf, err := openStateDirHandle(path)
+	if err != nil {
+		t.Fatalf("leaf-only handle unexpectedly refused: %v", err)
+	}
+	leaf.Close()
+
+	if h, err := openStateDirWithin(home, path, false); err == nil {
+		h.Close()
+		t.Fatal("openStateDirWithin followed a symlinked intermediate component")
+	}
+	if h, err := openStateDirIn(home, path); err == nil {
+		h.Close()
+		t.Fatal("openStateDirIn followed a symlinked intermediate component")
+	}
+	if h, err := openStateDirInCreate(home, path); err == nil {
+		h.Close()
+		t.Fatal("openStateDirInCreate followed a symlinked intermediate component")
+	}
+	if entries, _ := os.ReadDir(filepath.Join(outside, "state")); len(entries) != 0 {
+		t.Fatalf("something was written through the symlink: %v", entries)
+	}
+}
+
+// A real nested path works, including when the trust root itself is reached
+// through a symlink (a home under a symlinked /home is normal).
+func TestOpenStateDirWithinHappyPathAndSymlinkedRoot(t *testing.T) {
+	real := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(real, "u", "state"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	linkRoot := filepath.Join(t.TempDir(), "homelink")
+	if err := os.Symlink(real, linkRoot); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	h, err := openStateDirWithin(linkRoot, filepath.Join(linkRoot, "u", "state"), false)
+	if err != nil {
+		t.Fatalf("openStateDirWithin: %v", err)
+	}
+	defer h.Close()
+	if err := h.writeOwned("f", []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(real, "u", "state", "f")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestOpenStateDirWithinRejectsPathNotBeneathRoot(t *testing.T) {
+	home, other := t.TempDir(), t.TempDir()
+	if h, err := openStateDirWithin(home, other, false); err == nil {
+		h.Close()
+		t.Fatal("accepted a path outside the root")
+	}
+	if h, err := openStateDirWithin(home, home, false); err == nil {
+		h.Close()
+		t.Fatal("accepted the root itself as its own state dir")
+	}
+	// Outside the trusted root, openStateDirIn falls back to a leaf pin.
+	h, err := openStateDirIn(home, other)
+	if err != nil {
+		t.Fatalf("fallback leaf open: %v", err)
+	}
+	h.Close()
+}
+
+// Create mode makes the missing components 0700 under the root.
+func TestOpenStateDirWithinCreatesMissingComponents(t *testing.T) {
+	home := t.TempDir()
+	path := filepath.Join(home, "x", "y", ".urnetwork")
+	h, err := openStateDirInCreate(home, path)
+	if err != nil {
+		t.Fatalf("openStateDirInCreate: %v", err)
+	}
+	defer h.Close()
+	for _, d := range []string{"x", "x/y", "x/y/.urnetwork"} {
+		fi, err := os.Stat(filepath.Join(home, d))
+		if err != nil || !fi.IsDir() || fi.Mode().Perm() != 0o700 {
+			t.Fatalf("%s: %v mode=%v", d, err, fi)
+		}
+	}
+}
+
+// A provider with a trusted home whose state path has a swapped intermediate
+// component is refused end to end, and nothing lands in the link target.
+func TestCmdDirectRefusesSwappedIntermediateUnderTrustedHome(t *testing.T) {
+	base, outside := t.TempDir(), t.TempDir()
+	home := filepath.Join(base, "home", "unt")
+	if err := os.MkdirAll(home, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(home, "x")
+	if err := os.Symlink(outside, link); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	stateDir := filepath.Join(link, ".urnetwork")
+	orig := discoverProcessesFn
+	origStopped := discoverStoppedFn
+	discoverProcessesFn = func() []Provider {
+		return []Provider{{StateDir: stateDir, StateHome: home, Unit: "urnetwork.service", Running: true}}
+	}
+	discoverStoppedFn = func([]Provider) []Provider { return nil }
+	t.Cleanup(func() { discoverProcessesFn, discoverStoppedFn = orig, origStopped })
+
+	if err := cmdDirectToggle([]string{"on", "--state-dir", stateDir}, false, false); err == nil {
+		t.Fatal("cmdDirectToggle wrote through a swapped intermediate component")
+	}
+	if entries, _ := os.ReadDir(outside); len(entries) != 0 {
+		t.Fatalf("link target was modified: %v", entries)
+	}
+}
+
+// Components created under a root-run walk belong to the root dir's owner.
+func TestOpenStateDirWithinCreateOwnership(t *testing.T) {
+	if os.Geteuid() != 0 {
+		t.Skip("needs root to chown across users")
+	}
+	home := t.TempDir()
+	const uid, gid = 4242, 4243
+	if err := os.Chown(home, uid, gid); err != nil {
+		t.Fatal(err)
+	}
+	h, err := openStateDirInCreate(home, filepath.Join(home, "a", ".urnetwork"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer h.Close()
+	for _, d := range []string{"a", "a/.urnetwork"} {
+		fi, _ := os.Lstat(filepath.Join(home, d))
+		st := fi.Sys().(*syscall.Stat_t)
+		if st.Uid != uid || st.Gid != gid {
+			t.Fatalf("%s owner = %d:%d, want %d:%d", d, st.Uid, st.Gid, uid, gid)
+		}
+	}
+}

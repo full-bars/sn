@@ -149,6 +149,11 @@ func discoverProcesses() []Provider {
 				p.StateDir = ""
 			}
 		}
+		if p.StateDir != "" {
+			// Everything that survived the checks above lies inside ownerHome,
+			// which is the trust root the handle walk starts from.
+			p.StateHome = ownerHome
+		}
 		if p.StateDir == "" {
 			// No state dir resolvable (HOME unset). Skip the JWT read
 			// entirely rather than falling through to a relative "jwt"

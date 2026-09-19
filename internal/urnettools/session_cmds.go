@@ -602,7 +602,7 @@ func stageSessionFiles(p Provider, files map[string][]byte, allowDiff bool) (str
 	// any moment, so re-resolving p.StateDir by pathname for each step would
 	// let a swapped symlink redirect root's reads (into a backup the user can
 	// read) and writes/chowns (onto another user's files).
-	root, err := openStateDirHandle(p.StateDir)
+	root, err := openProviderStateDir(p)
 	if err != nil {
 		return "", err
 	}

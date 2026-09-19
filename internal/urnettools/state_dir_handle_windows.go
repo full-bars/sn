@@ -31,6 +31,21 @@ func openStateDirHandle(path string) (*stateDirHandle, error) {
 	return &stateDirHandle{path: path}, nil
 }
 
+// openStateDirWithin checks path lies beneath root and opens it. Windows has
+// no openat, so intermediate components are not pinned; see the unix build.
+func openStateDirWithin(root, path string, create bool) (*stateDirHandle, error) {
+	cleanRoot, cleanPath := filepath.Clean(root), filepath.Clean(path)
+	if rel, ok := strings.CutPrefix(cleanPath, cleanRoot+string(filepath.Separator)); !ok || rel == "" {
+		return nil, fmt.Errorf("state dir %s is not beneath %s", path, root)
+	}
+	if create {
+		if err := os.MkdirAll(path, 0o700); err != nil {
+			return nil, err
+		}
+	}
+	return openStateDirHandle(path)
+}
+
 func (h *stateDirHandle) Close() error { return nil }
 
 func (h *stateDirHandle) Path() string { return h.path }
