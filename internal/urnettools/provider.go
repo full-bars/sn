@@ -180,6 +180,25 @@ func providerVersion(binary string) string {
 	return providerVersionFromExec(binary)
 }
 
+// providerVersionReadOnly resolves a provider version WITHOUT executing the
+// binary: buildinfo first, then the raw stamp scan. Callers that hand this a
+// path derived from /proc/<pid>/exe of an arbitrary discovered process MUST
+// use this variant — exec'ing that path runs whatever ELF the process owner
+// launched under a provider-ish argv[0] (the `exec -a provider ./evil` local
+// privilege escalation), and a magic-byte check is not authorization. The
+// exec fallback lives only in providerVersion, which is for the operator's
+// OWN on-disk provider binary (update reconciliation), never for a path
+// another user can influence.
+func providerVersionReadOnly(binary string) string {
+	if binary == "" {
+		return ""
+	}
+	if v := providerVersionFromBuildinfo(binary); v != "" {
+		return v
+	}
+	return providerVersionFromStamp(binary)
+}
+
 // providerVersionFromBuildinfo extracts the version from Go build info
 // without executing the binary. Returns "" when no version is recorded
 // (e.g. -trimpath builds).

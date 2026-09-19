@@ -552,15 +552,10 @@ func newProxyCmd() *cobra.Command {
 
 func newReportCmd() *cobra.Command {
 	return withHelp(newCobraCmd("report", "set report URL", nil, func(cmd *cobra.Command, args []string) error {
-		rest, err := parseDelegationArgs(args)
-		if err == errHelpShown {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		return cmdReport(rest)
-	}), "Set the report URL for one targeted provider at runtime, or pass \"off\" to disable reporting. This writes an override file the provider's bandwidth reporter re-reads on its next tick, so no restart is needed.", "  urnet-tools report http://192.0.2.10:8080 --unit urnetwork-native.service\n  urnet-tools report off --unit urnetwork-native.service")
+		return parseGlobal(args, func(force, dryRun bool, rest []string) error {
+			return cmdReport(rest, dryRun, force)
+		})
+	}), "Set the report URL for one targeted provider at runtime, or pass \"off\" to disable reporting. This writes an override file the provider's bandwidth reporter re-reads on its next tick, so no restart is needed. Honors -n/--dry-run, which prints the plan and changes nothing.", "  urnet-tools report http://192.0.2.10:8080 --unit urnetwork-native.service\n  urnet-tools report off --unit urnetwork-native.service")
 }
 
 func newReinstallCmd() *cobra.Command {
@@ -662,7 +657,12 @@ func newMetricsCmd() *cobra.Command {
 			if hasHelpFlag(args) {
 				return cmd.Help()
 			}
-			return cmdMetrics(args, false)
+			// M4: command used to force dryRun=false unconditionally, so
+			// `metrics on -n` applied the change. Route through the global
+			// flag parser so -n/--dry-run (and -f) are honored.
+			return parseGlobal(args, func(force, dryRun bool, rest []string) error {
+				return cmdMetrics(rest, dryRun)
+			})
 		},
 	}
 }
@@ -1059,8 +1059,17 @@ func cmdDashboard(args []string) error {
 		fmt.Printf("  %sPID:%s     %d\n", bold, reset, p.PID)
 	}
 
-	// Network identity
-	fmt.Printf("  %sNetwork:%s %s (%s)\n", bold, reset, p.netLabel(), p.NetworkID[:8]+"...")
+	// Network identity — a provider with no readable JWT (ghost/discovered-bare
+	// record, stopped unit, empty identity) has an empty NetworkID; slice it
+	// defensively instead of panicking on ""[:8].
+	netID := p.NetworkID
+	if len(netID) > 8 {
+		netID = netID[:8] + "..."
+	}
+	if netID == "" {
+		netID = "(none)"
+	}
+	fmt.Printf("  %sNetwork:%s %s (%s)\n", bold, reset, p.netLabel(), netID)
 
 	// JWT expiry
 	if !p.JWTExpires.IsZero() {

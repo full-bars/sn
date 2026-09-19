@@ -52,6 +52,16 @@ func cmdIPDetect(args []string) error {
 // to the same location regardless of the --state-dir override.
 func ipDetectDisabledPath(targetArgs []string) (string, error) {
 	if len(targetArgs) == 0 {
+		// No explicit target: resolve the caller's sole/default provider's
+		// state dir instead of blindly using $HOME. The pre-fix behavior
+		// wrote to the CALLER's ~/.urnetwork (e.g. /root/.urnetwork when run
+		// under sudo) no matter which provider existed, so `show-ip off`
+		// silently targeted the wrong account.
+		if providers := Discover(); len(providers) == 1 {
+			if p := providers[0]; p.StateDir != "" {
+				return filepath.Join(p.StateDir, "disable_ip_autodetect"), nil
+			}
+		}
 		home := os.Getenv("HOME")
 		if home == "" {
 			home = os.Getenv("USERPROFILE")
@@ -100,7 +110,11 @@ func disableIPDetection(targetArgs []string, disable bool) error {
 		if err := os.MkdirAll(filepath.Dir(markerPath), 0o700); err != nil {
 			return err
 		}
-		if err := os.WriteFile(markerPath, []byte("1\n"), 0o644); err != nil {
+		// writeStateFile (O_NOFOLLOW) rather than os.WriteFile: the marker
+		// path resolves into a user-owned state dir, and a planted symlink
+		// (…/disable_ip_autodetect -> /etc/shadow) must not let root
+		// truncate an arbitrary file.
+		if err := writeStateFile(filepath.Dir(markerPath), filepath.Base(markerPath), []byte("1\n"), 0o644); err != nil {
 			return err
 		}
 		fmt.Println("show-ip: off (provider won't auto-detect public IP; set URNETWORK_PUBLIC_IP to override)")

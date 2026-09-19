@@ -8,6 +8,18 @@ import (
 	"strings"
 )
 
+// containsAny reports whether args contains any of the given tokens.
+func containsAny(args []string, tokens ...string) bool {
+	for _, a := range args {
+		for _, tok := range tokens {
+			if a == tok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // providerSubcommand runs a provider-binary subcommand against the targeted
 // provider, streaming stdout/stderr. This is the delegation pattern the
 // legacy shell tool uses ("$provider_bin proxy add --proxy_file=X -f") — the
@@ -59,8 +71,11 @@ func providerSubcommand(p Provider, args ...string) error {
 		cmd.Env = os.Environ()
 	}
 	// Also run as that user when we are root, so auth/network files are written
-	// owned by the provider user and remain readable by it.
-	dropPrivilegesTo(p.User, cmd)
+	// owned by the provider user and remain readable by it. A failed drop is
+	// an error, never a silent root fallback (see dropPrivilegesTo).
+	if err := dropPrivilegesTo(p.User, cmd); err != nil {
+		return fmt.Errorf("provider %s: %v", providerLabel(p), err)
+	}
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("provider %s: %v", providerLabel(p), err)
 	}
@@ -284,20 +299,47 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 
 	providers := Discover()
 	var chosen []Provider
-	if all {
-		// --all conflicts with an explicit target — error rather than
-		// silently discarding it.
-		if t.Unit != "" || t.User != "" || t.Network != "" || t.NetworkID != "" || t.StateDir != "" {
-			return fmt.Errorf("--all conflicts with an explicit target (%s); use one or the other", t)
+	// Single-target subcommands (add with URL, add-source, remove-source,
+	// trim, paste, health, traffic, ids, remove-dead) resolve their own
+	// provider inside the dispatch (selectTarget). Pre-selecting here would
+	// pop the interactive multi-select picker on a TTY and then THROW THE
+	// PICK AWAY — the dispatch's selectTarget would refuse after the user
+	// already chose. Only batch subcommands (add <file>, clear,
+	// remove, refresh) act on a chosen SET.
+	//
+	// add <http://url> is single-target (resolves its own provider), so it
+	// must not enter batch mode even though sub == "add" — only file-form
+	// add is batch.
+	batchSub := false
+	if sub == "clear" || sub == "remove" || sub == "refresh" {
+		batchSub = true
+	} else if sub == "add" {
+		// add <file> is batch; add <http://url> is single-target.
+		// If any positional is URL-form, it's not batch.
+		batchSub = true
+		for _, target := range positionals {
+			if strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://") {
+				batchSub = false
+				break
+			}
 		}
-		if len(providers) == 0 {
-			return fmt.Errorf("no providers found on this box")
-		}
-		chosen = providers
-	} else {
-		chosen, err = selectTargets(providers, t, include, exclude, interactive)
-		if err != nil {
-			return err
+	}
+	if batchSub {
+		if all {
+			// --all conflicts with an explicit target — error rather than
+			// silently discarding it.
+			if t.Unit != "" || t.User != "" || t.Network != "" || t.NetworkID != "" || t.StateDir != "" {
+				return fmt.Errorf("--all conflicts with an explicit target (%s); use one or the other", t)
+			}
+			if len(providers) == 0 {
+				return fmt.Errorf("no providers found on this box")
+			}
+			chosen = providers
+		} else {
+			chosen, err = selectTargets(providers, t, include, exclude, interactive)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -379,6 +421,16 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 			opArgs = append([]string{"proxy", "remove"}, positionals...)
 		} else {
 			opArgs = []string{"proxy", "remove", "--all"}
+		}
+		// H6: the dispatcher's parseGlobalFlags consumes -y/--yes as the
+		// GLOBAL force flag before cmdProxy runs, so `proxy remove
+		// --match=X --yes` never forwards the provider's own --yes — the
+		// provider then prompts, and with stdin not passed through it reads
+		// EOF, prints "Aborted." and exits 0 (a silent no-op reported as
+		// success). Re-add --yes when the global force flag was set, exactly
+		// like refresh re-adds --force.
+		if force && !containsAny(opArgs, "--yes", "-y") {
+			opArgs = append(opArgs, "--yes")
 		}
 	case "refresh":
 		opArgs = []string{"proxy", "refresh"}

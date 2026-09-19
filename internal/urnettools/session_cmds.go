@@ -310,13 +310,31 @@ func untarGz(pt []byte) (map[string][]byte, error) {
 func collectSessionFiles(stateDir string) map[string][]byte {
 	out := map[string][]byte{}
 	for _, name := range sessionFiles {
-		b, err := os.ReadFile(filepath.Join(stateDir, name))
+		b, err := readStateFileNoFollow(stateDir, name)
 		if err != nil {
 			continue
 		}
 		out[name] = b
 	}
 	return out
+}
+
+// readStateFileNoFollow reads a state file WITHOUT following symlinks: the
+// provider's state dir is user-owned, so a planted symlink
+// (proxy -> /etc/shadow) would otherwise hand root's credential-adjacent
+// files or arbitrary file contents to the bundling/backup code.
+// Returns an error for symlinks, directories and unreadable files so the
+// caller can refuse or skip explicitly.
+//
+// Uses O_NOFOLLOW open (via openStateFileNoFollow) so the check and the read
+// happen atomically: no TOCTOU window between Lstat and ReadFile.
+func readStateFileNoFollow(stateDir, name string) ([]byte, error) {
+	f, err := openStateFileNoFollow(stateDir, name)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return io.ReadAll(f)
 }
 
 // sessionHasJWT reports whether a decrypted bundle carries a jwt, the
@@ -576,12 +594,12 @@ func stageSessionFiles(p Provider, files map[string][]byte, allowDiff bool) (str
 		return "", err
 	}
 	for _, name := range sessionFiles {
-		b, err := os.ReadFile(filepath.Join(p.StateDir, name))
+		b, err := readStateFileNoFollow(p.StateDir, name)
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue // absent, fine
 			}
-			return "", fmt.Errorf("backup %s: %v", name, err) // unreadable/perm: fail, do not silently skip (MEDIUM)
+			return "", fmt.Errorf("backup %s: %v", name, err) // unreadable/perm/symlink: fail, do not silently skip (MEDIUM)
 		}
 		if err := writeStateFile(backupDir, name, b, 0o600); err != nil {
 			return "", fmt.Errorf("backup %s: %v", name, err)

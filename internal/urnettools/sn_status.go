@@ -145,13 +145,14 @@ func FetchSnStatus(p Provider) (*SnStatusInfo, error) {
 	}
 
 	jwtPath := filepath.Join(stateDir, "jwt")
-	jwtBytes, err := os.ReadFile(jwtPath)
+	jwtBytes, err := readStateFileNoFollow(p.StateDir, "jwt")
 	if errors.Is(err, os.ErrNotExist) {
-		home, err := os.UserHomeDir()
-		if err == nil {
-			jwtPath = filepath.Join(home, ".urnetwork", "jwt")
-			jwtBytes, err = os.ReadFile(jwtPath)
-		}
+		// Do NOT fall back to os.UserHomeDir — under sudo that resolves
+		// to /root, so a missing target JWT would silently send the
+		// OPERATOR's (root's) credential to whatever api_url the target's
+		// state dir names (possibly attacker-controlled). Credentials must
+		// only ever travel with the provider identity they belong to.
+		return nil, fmt.Errorf("no authentication JWT found at %s: %w. Run 'urnet-tools auth' first", jwtPath, err)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("no authentication JWT found at %s: %w. Run 'urnet-tools auth' first", jwtPath, err)

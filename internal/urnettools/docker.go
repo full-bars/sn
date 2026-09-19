@@ -1,7 +1,10 @@
 package urnettools
 
 import (
+	"archive/tar"
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -76,10 +79,12 @@ func discoverDockerContainers() []dockerContainer {
 func isDockerCandidate(image, name string) bool {
 	il := strings.ToLower(image)
 	nl := strings.ToLower(name)
-	return strings.Contains(il, "urnetwork") || strings.Contains(nl, "urnet") ||
-		strings.Contains(il, "full-bars/sn") || strings.Contains(nl, "full-bars/sn") ||
-		strings.Contains(il, "meso") || strings.Contains(nl, "meso") ||
-		strings.Contains(il, "miner") || strings.Contains(nl, "miner")
+	if strings.Contains(il, "urnetwork") || strings.Contains(nl, "urnet") ||
+		strings.Contains(il, "full-bars/sn") || strings.Contains(nl, "full-bars/sn") {
+		return true
+	}
+	return strings.Contains(il, "meso-miner") || strings.Contains(il, "meso_miner") ||
+		strings.Contains(nl, "meso-miner") || strings.Contains(nl, "meso_miner")
 }
 
 // containerStateDir resolves the provider state dir inside the container:
@@ -106,14 +111,53 @@ func containerEnv(c dockerContainer, key string) string {
 	return ""
 }
 
-// containerReadFile runs `docker exec <c> cat <path>` and returns output.
+// containerReadFile reads a file FROM a container. docker exec requires a
+// RUNNING container, which silently dropped stopped providers from
+// DiscoverDocker — making `urnet-docker start <stopped>` untargetable.
+// docker cp works against stopped containers too (it reads the container's
+// filesystem snapshot, no running process needed), so prefer it: copy to a
+// temp file on the host and read that. `docker cp CONTAINER:path -` streams
+// a TAR archive to stdout (not raw file content), which is why the stream
+// is extracted with archive/tar rather than returned verbatim; falling back
+// to docker exec keeps the RUNNING-container edge where cp disagrees.
 func containerReadFile(c dockerContainer, path string) (string, error) {
+	if out, err := exec.Command(dockerCLI(), "cp", c.ID+":"+path, "-").Output(); err == nil {
+		if s, terr := extractSingleFileContent(out); terr == nil {
+			return s, nil
+		}
+	}
 	cmd := exec.Command(dockerCLI(), "exec", c.ID, "cat", path)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("docker exec cat %s: %w (%s)", path, err, strings.TrimSpace(string(out)))
+		return "", fmt.Errorf("docker cp/exec cat %s: %w (%s)", path, err, strings.TrimSpace(string(out)))
 	}
 	return string(out), nil
+}
+
+// extractSingleFileContent pulls the content of the single regular file a
+// `docker cp CONTAINER:path -` tar stream carries. Docker writes exactly one
+// entry per file copy (plus a trailing directory entry for directory
+// sources); anything else is a caller error.
+func extractSingleFileContent(tarBytes []byte) (string, error) {
+	r := bytes.NewReader(tarBytes)
+	tr := tar.NewReader(r)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			return "", fmt.Errorf("docker cp tar stream contained no file entry")
+		}
+		if err != nil {
+			return "", fmt.Errorf("parse docker cp tar stream: %w", err)
+		}
+		if hdr.Typeflag == tar.TypeReg {
+			data, err := io.ReadAll(io.LimitReader(tr, 1<<20)) // 1 MiB cap: identity files are tiny
+			if err != nil {
+				return "", fmt.Errorf("read %s from docker cp tar stream: %w", hdr.Name, err)
+			}
+			return string(data), nil
+		}
+		// Directory / other entry types: keep scanning for the regular file.
+	}
 }
 
 // dockerProvider builds a host-facing Provider from a container by reading

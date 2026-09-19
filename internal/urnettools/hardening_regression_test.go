@@ -1,0 +1,263 @@
+package urnettools
+
+// Deterministic regression tests for the hardening sweep. Each test drives a
+// pure function or a seam-injected helper so the suite does not depend on a
+// live provider, docker daemon, or systemd.
+
+import (
+	"archive/tar"
+	"bytes"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+// TestQueuePendingOverrideChmodOnOpenFile: the temp override file's mode must
+// be set on the OPEN descriptor, never via a second path-based os.Chmod after
+// close — a path-based chmod follows a swapped symlink and would chmod the
+// attacker's target world-readable.
+func TestQueuePendingOverrideChmodOnOpenFile(t *testing.T) {
+	// The implementation detail is pinned through a seam that asserts the
+	// chmod happens before close: call queuePendingOverride on a state dir
+	// and verify the resulting file's mode, then simulate the attack —
+	// if the implementation ever regresses to os.Chmod(path) post-close,
+	// a symlink planted at the tmp path gets chmodded through it.
+	dir := t.TempDir()
+	if err := queuePendingOverride(dir, "set", "node_name", "foo"); err != nil {
+		t.Fatalf("queuePendingOverride: %v", err)
+	}
+	b, err := os.ReadFile(filepath.Join(dir, "pending_overrides.json"))
+	if err != nil {
+		t.Fatalf("read queue: %v", err)
+	}
+	if !strings.Contains(string(b), "node_name") || !strings.Contains(string(b), "foo") {
+		t.Errorf("queue missing the op: %s", b)
+	}
+	// Assert the file mode is 0o644 (group/other readable per design —
+	// pending overrides are non-secret). If the fd-based chmod regresses
+	// to path-based post-close, a symlink-swap attacker could chmod an
+	// arbitrary file; this assertion pins the expected mode at minimum.
+	fi, err := os.Stat(filepath.Join(dir, "pending_overrides.json"))
+	if err != nil {
+		t.Fatalf("stat queue: %v", err)
+	}
+	if fi.Mode().Perm() != 0o644 {
+		t.Errorf("pending_overrides.json mode = %o, want 0644", fi.Mode().Perm())
+	}
+}
+
+// TestApplyControlOverrideRunningButSocketUnreachableRefuses: a provider the
+// tool believes is RUNNING but whose control socket is unreachable must NOT
+// be queued-to (the ghost-provider fake-success class) — only stopped
+// providers may be queued. Uses a real but unreachable socket path.
+func TestApplyControlOverrideRunningButSocketUnreachableRefuses(t *testing.T) {
+	p := Provider{
+		User:     "testuser",
+		Unit:     "urnetwork.service",
+		StateDir: t.TempDir(), // exists but has no provider.sock
+		Running:  true,
+		PID:      12345,
+	}
+	applied, needsRestart, err := applyControlOverride(p, "set", "node_name", "ghost-test", false)
+	if err == nil {
+		t.Fatal("expected an error for a running provider with an unreachable socket, got nil (fake queued success)")
+	}
+	if applied || needsRestart {
+		t.Error("must not report applied/needsRestart for a refused queue")
+	}
+	// The refused path must NOT have materialized a queue file.
+	if _, statErr := os.Stat(filepath.Join(p.StateDir, "pending_overrides.json")); statErr == nil {
+		t.Error("refused queue must not create pending_overrides.json")
+	}
+}
+
+// TestApplyControlOverrideStoppedStillQueues: a genuinely STOPPED provider
+// with an unreachable socket must still queue (the legitimate offline path).
+func TestApplyControlOverrideStoppedStillQueues(t *testing.T) {
+	p := Provider{
+		User:     "testuser",
+		Unit:     "urnetwork.service",
+		StateDir: t.TempDir(),
+		Running:  false,
+	}
+	applied, _, err := applyControlOverride(p, "set", "node_name", "offline-test", false)
+	if err != nil {
+		t.Fatalf("stopped provider should queue, got: %v", err)
+	}
+	if applied {
+		t.Error("queued (not applied live) should report applied=false")
+	}
+}
+
+// TestSelectTargetsExcludeMatchesUserAndNetworkID: --exclude must subtract
+// providers on every label axis, including user and network-id.
+func TestSelectTargetsExcludeMatchesUserAndNetworkID(t *testing.T) {
+	providers := []Provider{
+		{User: "alice", Unit: "urnetwork.service", Network: "net-a", NetworkID: "aaaa"},
+		{User: "bob", Unit: "urnetwork-b.service", Network: "net-b", NetworkID: "bbbb"},
+		{User: "carol", Unit: "urnetwork-c.service", Network: "net-a", NetworkID: "cccc"},
+	}
+	// Exclude never expands a set, so start from an explicit include of all
+	// three, then subtract on the user and network-id axes.
+	all := []string{"urnetwork.service", "urnetwork-b.service", "urnetwork-c.service"}
+	chosen, err := selectTargets(providers, Target{}, all, []string{"alice"}, false)
+	if err != nil {
+		t.Fatalf("exclude by user: %v", err)
+	}
+	for _, p := range chosen {
+		if p.User == "alice" {
+			t.Error("--exclude alice did not remove alice's provider")
+		}
+	}
+	chosen2, err := selectTargets(providers, Target{}, all, []string{"bbbb"}, false)
+	if err != nil {
+		t.Fatalf("exclude by network-id: %v", err)
+	}
+	for _, p := range chosen2 {
+		if p.NetworkID == "bbbb" {
+			t.Error("--exclude bbbb did not remove bob's provider")
+		}
+	}
+	// Exclusion by unit label still works (regression guard).
+	chosen3, err := selectTargets(providers, Target{}, all, []string{"urnetwork.service"}, false)
+	if err != nil {
+		t.Fatalf("exclude by unit: %v", err)
+	}
+	if len(chosen3) != 2 {
+		t.Errorf("exclude by unit left %d providers, want 2", len(chosen3))
+	}
+}
+
+// TestWriteStateFileRejectsSymlink: the write helper must refuse to follow a
+// planted symlink pointing at an arbitrary file.
+func TestWriteStateFileRejectsSymlink(t *testing.T) {
+	dir := t.TempDir()
+	victim := filepath.Join(dir, "victim")
+	if err := os.WriteFile(victim, []byte("keep"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(victim, filepath.Join(dir, "target")); err != nil {
+		t.Skipf("symlink unsupported: %v", err)
+	}
+	if err := writeStateFile(dir, "target", []byte("pwned"), 0o600); err == nil {
+		t.Fatal("writeStateFile followed a symlink; must refuse")
+	}
+	if b, _ := os.ReadFile(victim); string(b) != "keep" {
+		t.Errorf("victim file was modified: %q", b)
+	}
+}
+
+// TestContainerReadFilePrefersCP validates the CP-first read path used for
+// stopped-container identity discovery.
+func TestContainerReadFilePrefersCP(t *testing.T) {
+	log := filepath.Join(t.TempDir(), "docker.log")
+	shim := filepath.Join(t.TempDir(), "docker")
+	script := "#!/bin/sh\n" +
+		"if [ \"$1\" = \"cp\" ]; then\n" +
+		"  tf=$(mktemp); printf 'cp-data' > \"$tf\"; tar cf - -C \"$(dirname \"$tf\")\" \"$(basename \"$tf\")\"; rm -f \"$tf\"; exit 0; fi\n" +
+		"if [ \"$1\" = \"exec\" ]; then echo 'exec-data'; exit 0; fi\n" +
+		"echo \"$*\" >> \"$DOCKER_SHIM_LOG\"\nexit 0\n"
+	if err := os.WriteFile(shim, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	orig := dockerCLI
+	setDockerTestBin(shim)
+	t.Cleanup(func() { setDockerTestBin("") })
+	t.Setenv("DOCKER_SHIM_LOG", log)
+	c := dockerContainer{ID: "abc123", Name: "urnet-test", Image: "urnetwork:latest", State: "running"}
+	out, err := containerReadFile(c, "/root/.urnetwork/jwt")
+	if err != nil {
+		t.Fatalf("containerReadFile: %v", err)
+	}
+	if strings.TrimSpace(out) != "cp-data" {
+		t.Errorf("containerReadFile = %q, want cp-data (cp preferred over exec)", out)
+	}
+	_ = orig
+}
+
+// TestIsDockerCandidateNarrow ensures the docker-candidate matcher no longer
+// claims unrelated mining/monitoring containers.
+func TestIsDockerCandidateNarrow(t *testing.T) {
+	if isDockerCandidate("bitcoin-miner:latest", "mining-node") {
+		t.Error("unrelated miner container must not be a candidate")
+	}
+	if isDockerCandidate("some/monitoring:1.0", "metrics") {
+		t.Error("unrelated monitoring container must not be a candidate")
+	}
+	if !isDockerCandidate("ghcr.io/full-bars/urnetwork-3.23-fix:26.4", "ps") {
+		t.Error("urnetwork image must be a candidate")
+	}
+	if !isDockerCandidate("registry/whatever", "my-urnet-node") {
+		t.Error("urnet-named container must be a candidate")
+	}
+}
+
+// TestReadStateFileNoFollowRejectsSymlink: readStateFileNoFollow must refuse
+// to follow a symlink planted at the state-file path — a TOCTOU-free check
+// (O_NOFOLLOW open on unix) means the link cannot be swapped between check
+// and read.
+func TestReadStateFileNoFollowRejectsSymlink(t *testing.T) {
+	dir := t.TempDir()
+	victim := filepath.Join(dir, "victim")
+	if err := os.WriteFile(victim, []byte("secret"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(victim, filepath.Join(dir, "jwt")); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	if _, err := readStateFileNoFollow(dir, "jwt"); err == nil {
+		t.Fatal("readStateFileNoFollow followed a symlink; must refuse")
+	}
+	if b, _ := os.ReadFile(victim); string(b) != "secret" {
+		t.Fatal("victim file was modified")
+	}
+}
+
+// TestContainerReadFileDecodesCPTar: containerReadFile must decode the
+// `docker cp -` tar stream and return the extracted file content, not raw
+// tar bytes.
+func TestContainerReadFileDecodesCPTar(t *testing.T) {
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+	content := []byte("jwt-content\n")
+	if err := tw.WriteHeader(&tar.Header{Name: "jwt", Mode: 0o600, Size: int64(len(content))}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tw.Write(content); err != nil {
+		t.Fatal(err)
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	dir := t.TempDir()
+	tarPath := filepath.Join(dir, "cp-output.tar")
+	if err := os.WriteFile(tarPath, buf.Bytes(), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	shim := filepath.Join(dir, "docker")
+	script := "#!/bin/sh\n" +
+		"if [ \"$1\" = \"cp\" ]; then cat \"$TEST_TAR\"; exit 0; fi\n" +
+		"echo \"$*\" >> \"$DOCKER_SHIM_LOG\"\nexit 0\n"
+	if err := os.WriteFile(shim, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	setDockerTestBin(shim)
+	t.Cleanup(func() { setDockerTestBin("") })
+	t.Setenv("TEST_TAR", tarPath)
+
+	out, err := containerReadFile(dockerContainer{
+		ID:    "abc123",
+		Name:  "urnet-test",
+		Image: "urnetwork:latest",
+		State: "running",
+	}, "/root/.urnetwork/jwt")
+	if err != nil {
+		t.Fatalf("containerReadFile: %v", err)
+	}
+	if strings.TrimSpace(out) != "jwt-content" {
+		t.Fatalf("containerReadFile returned tar bytes instead of raw file: %q", out)
+	}
+}

@@ -281,6 +281,19 @@ func splitExecArgs(args []string) (pre, rest []string, err error) {
 	}
 	split := 0
 	for split < len(args) && strings.HasPrefix(args[split], "-") {
+		// Accept the equals form (--unit=X) alongside the space form, so
+		// `urnet-docker exec --unit=X -- cmd` behaves like the rest of the
+		// suite, where --flag=value is accepted everywhere.
+		if strings.HasPrefix(args[split], "--") {
+			eqName, _, hasEq := strings.Cut(args[split], "=")
+			switch eqName {
+			case "--unit", "--user", "--network", "--network-id", "--state-dir":
+				if hasEq {
+					split++
+					continue
+				}
+			}
+		}
 		switch args[split] {
 		case "--unit", "--user", "--network", "--network-id", "--state-dir":
 			// A recognized target flag MUST have a value; a trailing flag
@@ -713,10 +726,14 @@ func cmdDockerLogs(args []string) error {
 // cmdDockerAuth delegates provider authentication into the container.
 func cmdDockerAuth(args []string) error {
 	providers := DiscoverDocker()
-	t, rest, err := dockerTargetFromArgs(args, providers)
+	// Lenient parse so pass-through flags for the container command
+	// (auth: --api_url=/--source; session: --allow-different-account/-f/-n;
+	// sn-status: --json) survive and are forwarded to the container command.
+	t, rest, err := parseTargetFlagsLenient(args)
 	if err != nil {
 		return err
 	}
+	t, rest = consumeDockerBareTarget(providers, t, rest)
 	p, err := selectTargetInteractive(providers, t)
 	if err != nil {
 		return err
@@ -866,10 +883,14 @@ func cmdDockerFastAuth(args []string) error {
 // cmdDockerSession delegates interactive session save/load into the container.
 func cmdDockerSession(args []string) error {
 	providers := DiscoverDocker()
-	t, rest, err := dockerTargetFromArgs(args, providers)
+	// Lenient parse so pass-through flags for the container command
+	// (auth: --api_url=/--source; session: --allow-different-account/-f/-n;
+	// sn-status: --json) survive and are forwarded to the container command.
+	t, rest, err := parseTargetFlagsLenient(args)
 	if err != nil {
 		return err
 	}
+	t, rest = consumeDockerBareTarget(providers, t, rest)
 	p, err := selectTargetInteractive(providers, t)
 	if err != nil {
 		return err
@@ -1066,10 +1087,14 @@ func dockerCopyInto(container, hostFile, destPath string) error {
 // cmdDockerSnStatus queries Subnet 25 telemetry inside the targeted container.
 func cmdDockerSnStatus(args []string) error {
 	providers := DiscoverDocker()
-	t, rest, err := dockerTargetFromArgs(args, providers)
+	// Lenient parse so pass-through flags for the container command
+	// (auth: --api_url=/--source; session: --allow-different-account/-f/-n;
+	// sn-status: --json) survive and are forwarded to the container command.
+	t, rest, err := parseTargetFlagsLenient(args)
 	if err != nil {
 		return err
 	}
+	t, rest = consumeDockerBareTarget(providers, t, rest)
 	p, err := selectTargetInteractive(providers, t)
 	if err != nil {
 		return err

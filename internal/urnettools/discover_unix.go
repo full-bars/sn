@@ -40,6 +40,29 @@ func discoverProcesses() []Provider {
 		if len(args) == 0 || !isProviderArg(args[0]) {
 			continue
 		}
+		// Skip processes in a container (different mount namespace revealing a
+		// container runtime cgroup). Containerized providers are the DOCKER
+		// namespace's business (discoverDockerContainers / urnet-docker): they
+		// must not surface here as host providers with a guessed state-dir —
+		// that produced the "ghost root provider" incident (a `ps` docker
+		// container discovered as user=root with a non-existent /root/.urnetwork
+		// on the host, empty network, and a logs command passing an empty
+		// systemd unit to journalctl).
+		//
+		// Detection is namespace-ANCHORED to this tool's own namespaces, not
+		// absolute: a provider genuinely running in the same container as the
+		// tool must still be discovered (it is reachable via the same /proc and
+		// same socket paths). We skip only processes whose mount namespace
+		// differs from ours AND whose cgroup names a container runtime — both
+		// conditions together rule out benign cases:
+		//   - systemd PrivateMounts=yes units get a private mount namespace but
+		//     stay in a systemd cgroup (no container runtime marker) -> kept.
+		//   - unshare'd test harnesses get private namespaces but no runtime
+		//     marker -> kept.
+		//   - a docker/podman/containerd/lxc process has BOTH -> skipped.
+		if inForeignContainer(pid) {
+			continue
+		}
 		exe, err := os.Readlink(fmt.Sprintf("/proc/%d/exe", pid))
 		if err != nil {
 			exe = args[0] // fall back to argv[0]
@@ -55,28 +78,36 @@ func discoverProcesses() []Provider {
 		_, binaryDeleted := strings.CutSuffix(exe, " (deleted)")
 		exe = strings.TrimSuffix(exe, " (deleted)")
 		env := readEnviron(pid)
-		user := env["USER"]
-		if user == "" {
-			user = env["LOGNAME"]
-		}
-		stateDir := stateDirFor(env)
-		if user == "" || stateDir == "" {
-			// environ is unreadable for another user's process (no
-			// permission without root/CAP_SYS_PTRACE) — the common case
-			// on a multi-provider box run by a non-root operator. Fall
-			// back to the /proc/<pid> directory's own ownership, which is
-			// always stat-able cross-user (how `ps`/`top` work without
-			// root), so a provider under a different account is still
-			// identified instead of showing up as an untargetable blank
-			// row (--user/--state-dir would have nothing to match).
-			if ownerUser, ownerHome := processOwner(pid); ownerUser != "" {
-				if user == "" {
-					user = ownerUser
-				}
-				if stateDir == "" && ownerHome != "" {
-					stateDir = filepath.Join(ownerHome, ".urnetwork")
-				}
+		// The process owner is taken from the KERNEL's /proc/<pid> uid, never
+		// from the process's own environment: USER/LOGNAME are just strings the
+		// target process printed, so a local user can launch
+		// `USER=root exec -a provider ./evil` and have discovery attribute the
+		// process to root. processOwner() reads /proc/<pid> ownership, which
+		// cannot be spoofed (it is how ps/top identify other users' processes
+		// without root). The environ is used only as a secondary source when the
+		// kernel uid has no local passwd entry (e.g. an LDAP user) — and even
+		// then only the HOME-derived state dir, never the claimed username.
+		ownerUser, ownerHome := processOwner(pid)
+		user := resolveProcessOwnerPrecedence(ownerUser, env)
+		// State dir attribution: env HOME is attacker-influenced (a process can
+		// set HOME=/root to redirect root-run state writes). When the kernel
+		// owner's home is known, prefer ownerHome-derived; only honor env HOME
+		// when it lives inside ownerHome (a legitimate subdirectory). When
+		// ownerHome is unknown, fall back to env.
+		// --state-dir argv override is validated later against ownerHome.
+		envStateDir := stateDirFor(env)
+		stateDir := ""
+		if ownerHome != "" {
+			ownerUrnetDir := filepath.Join(ownerHome, ".urnetwork")
+			stateDir = ownerUrnetDir
+			if envStateDir != "" && strings.HasPrefix(envStateDir, ownerHome+string(filepath.Separator)) {
+				// env HOME is inside the owner's home (legit subdirectory);
+				// honor it so providers with non-standard --state-dir argv still
+				// resolve correctly.
+				stateDir = envStateDir
 			}
+		} else if envStateDir != "" {
+			stateDir = envStateDir
 		}
 		p := Provider{
 			User:          user,
@@ -168,7 +199,11 @@ func discoverProcesses() []Provider {
 			if v, ok := providerVersionFromSocket(p); ok {
 				p.Version = v
 			} else if handle, err := runningImageHandle(p.PID); err == nil {
-				p.Version = providerVersion(handle)
+				// Read-only, never exec: the handle names /proc/<pid>/exe
+				// of an arbitrary process whose argv[0] merely looked like
+				// a provider — exec'ing it would run an attacker-chosen
+				// ELF as the caller (root). See providerVersionReadOnly.
+				p.Version = providerVersionReadOnly(handle)
 			}
 		}
 		if p.Version == "" {
@@ -177,6 +212,70 @@ func discoverProcesses() []Provider {
 		out = append(out, p)
 	}
 	return out
+}
+
+// classifyContainerByNamespaceAndCgroup is the pure decision core of
+// inForeignContainer: a process is containerized only when it is both in a
+// different mount namespace AND its cgroup path names a container runtime.
+// Neither condition alone suffices (see inForeignContainer for the falsy
+// cases). Kept as a pure function so the classification rule is
+// deterministic and unit-testable.
+func classifyContainerByNamespaceAndCgroup(nsDiffers bool, cgroup string) bool {
+	if !nsDiffers {
+		return false
+	}
+	lower := strings.ToLower(cgroup)
+	for _, marker := range []string{"docker", "containerd", "kubepods", "libpod", "lxc", "nspawn"} {
+		if strings.Contains(lower, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+// inForeignContainer reports whether pid runs in a container from this
+// tool's point of view. Two conditions must BOTH hold so legitimate host
+// processes with private namespaces are never skipped:
+//  1. mount namespace differs from the tool's own (/proc/<pid>/ns/mnt vs
+//     /proc/self/ns/mnt) — every containerized process has its own mount
+//     namespace, and
+//  2. the process's cgroup path names a container runtime (docker,
+//     containerd, kubepods, libpod/podman, lxc, nspawn) — host processes
+//     (including systemd PrivateMounts units and unshare'd test harnesses)
+//     stay in ordinary system.slice/user.slice cgroups.
+//
+// A provider running in the SAME container as the tool fails condition 1
+// (same mount namespace) and is therefore kept, which is correct: it is
+// reachable through the same /proc and socket paths the tool already uses.
+// Any stat failure (process gone mid-scan, permission denied) returns
+// false — never drop a process we cannot classify.
+func inForeignContainer(pid int) bool {
+	ours, err := os.Readlink("/proc/self/ns/mnt")
+	if err != nil {
+		return false
+	}
+	theirs, err := os.Readlink(fmt.Sprintf("/proc/%d/ns/mnt", pid))
+	if err != nil {
+		return false
+	}
+	cg, err := os.ReadFile(fmt.Sprintf("/proc/%d/cgroup", pid))
+	if err != nil {
+		return false
+	}
+	return classifyContainerByNamespaceAndCgroup(ours != theirs, string(cg))
+}
+
+// resolveProcessOwnerPrecedence implements the User attribution rule of
+// discoverProcesses: the kernel /proc/<pid> owner is the ONLY source for the
+// username. When the owner uid has no passwd entry (numeric uid, LDAP-only
+// accounts), User stays empty — the environ's USER/LOGNAME are never
+// consulted, because they are attacker-controlled strings: a process
+// launched as `USER=root exec -a provider ./evil` by an unresolvable uid
+// would otherwise be attributed to root and later exec'd with root
+// privileges. Empty User still leaves the record discoverable via
+// --state-dir/--network targeting. Kept pure for deterministic testing.
+func resolveProcessOwnerPrecedence(ownerUser string, env map[string]string) string {
+	return ownerUser
 }
 
 // processOwner resolves the OS username and home directory that own pid via
