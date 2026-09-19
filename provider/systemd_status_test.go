@@ -39,9 +39,11 @@ func resetProxyCounters(t *testing.T) {
 	t.Helper()
 	proxiesConfigured.Store(0)
 	proxiesAuthenticated.Store(0)
+	resetProxyResolutionStatus()
 	t.Cleanup(func() {
 		proxiesConfigured.Store(0)
 		proxiesAuthenticated.Store(0)
+		resetProxyResolutionStatus()
 	})
 }
 
