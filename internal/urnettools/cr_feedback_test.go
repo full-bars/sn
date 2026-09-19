@@ -124,3 +124,21 @@ func TestFetchSnStatusUsesResolvedStateDir(t *testing.T) {
 		t.Fatalf("error should reference the resolved state dir %q, got: %v", want, err)
 	}
 }
+
+// On Windows `logs` must print its "not supported" notice and succeed even
+// though a Windows provider has no systemd unit; elsewhere a unit-less
+// provider is still refused with the actionable error.
+func TestLogsPlatformCheck(t *testing.T) {
+	noUnit := Provider{User: "someone", StateDir: "/x/.urnetwork"}
+	handled, err := logsPlatformCheck(noUnit, "windows")
+	if !handled || err != nil {
+		t.Fatalf("windows: handled=%v err=%v, want handled=true err=nil", handled, err)
+	}
+	if handled, err := logsPlatformCheck(noUnit, "linux"); handled || err == nil {
+		t.Fatalf("linux no-unit: handled=%v err=%v, want not handled and an error", handled, err)
+	}
+	withUnit := Provider{User: "someone", Unit: "urnetwork.service"}
+	if handled, err := logsPlatformCheck(withUnit, "linux"); handled || err != nil {
+		t.Fatalf("linux with unit: handled=%v err=%v, want continue", handled, err)
+	}
+}

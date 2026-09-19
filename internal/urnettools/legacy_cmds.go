@@ -305,6 +305,26 @@ func validateLogsTarget(p Provider) error {
 	return fmt.Errorf("provider %s has no systemd unit%s", providerLabel(p), hint)
 }
 
+// logsPlatformCheck runs the pre-journalctl checks for cmdLogs. Windows is
+// decided FIRST: it has no systemd/journalctl and its providers never carry a
+// unit, so the no-unit validation below would turn the intended "not
+// supported" notice into a hard error. handled=true means the command is
+// finished (nil error) and the caller must not continue.
+func logsPlatformCheck(p Provider, goos string) (handled bool, err error) {
+	if goos == "windows" {
+		fmt.Println("urnet-tools: journalctl is not available on Windows — logs are not supported via this command.")
+		return true, nil
+	}
+	// No systemd unit = nothing journald can follow. Fail with an
+	// actionable message (docker hint when it's a container provider)
+	// instead of building `journalctl -fu ""`, which journalctl rejects
+	// with a raw "Failed to add filter for units: Invalid argument".
+	if err := validateLogsTarget(p); err != nil {
+		return false, err
+	}
+	return false, nil
+}
+
 // journalctlArgsGuard refuses to build journalctl argv for a provider with an
 // empty unit: journalctl -fu "" errors with "Invalid argument", and the guard
 // must fail fast inside the CLI rather than forward a command journalctl is
@@ -371,17 +391,8 @@ func cmdLogs(args []string) error {
 		cmd.Stderr = os.Stderr
 		return cmd.Run()
 	}
-	// No systemd unit = nothing journald can follow. Fail with an
-	// actionable message (docker hint when it's a container provider)
-	// instead of building `journalctl -fu ""`, which journalctl rejects
-	// with a raw "Failed to add filter for units: Invalid argument".
-	if err := validateLogsTarget(p); err != nil {
+	if handled, err := logsPlatformCheck(p, runtime.GOOS); handled || err != nil {
 		return err
-	}
-	// Windows has no systemd/journalctl — print a diagnostic and exit cleanly.
-	if runtime.GOOS == "windows" {
-		fmt.Println("urnet-tools: journalctl is not available on Windows — logs are not supported via this command.")
-		return nil
 	}
 	// journalctl is a standalone binary, not a systemctl verb — calling it
 	// through unitCommand would execute `systemctl journalctl` (invalid).
