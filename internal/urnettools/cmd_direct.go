@@ -113,6 +113,18 @@ func cmdDirectToggle(args []string, force, dryRun bool) error {
 		return fmt.Errorf("could not open direct toggle dir %s: %v", toggleDir, err)
 	}
 	defer h.Close()
+	// The handle takes its owner from toggleDir itself, and a root-run
+	// MkdirAll above leaves a NEW dir owned by root (0700), which would lock
+	// the provider's unprivileged user out of the toggle. Hand the directory
+	// to the state dir's owner first, through the open descriptor.
+	ref, err := openStateDirHandle(p.StateDir)
+	if err != nil {
+		return fmt.Errorf("could not open state dir %s: %v", p.StateDir, err)
+	}
+	defer ref.Close()
+	if err := h.adoptOwnerOf(ref); err != nil {
+		return fmt.Errorf("could not set owner on direct toggle dir: %v", err)
+	}
 	if err := h.writeOwned("direct", []byte(val), 0o600); err != nil {
 		return fmt.Errorf("could not write direct toggle for %s: %v", providerLabel(p), err)
 	}

@@ -3,6 +3,7 @@ package urnettools
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -100,15 +101,22 @@ func bumpHotswapCounter(stateDir, reason string) {
 	// replaces a symlink at the final path rather than writing through it,
 	// and the owner handoff already happened on the descriptor — the old
 	// separate chownLikeStateOwner by path is gone.
+	// A counter that cannot be recorded is not fatal to the caller, but it must
+	// not vanish without a trace: a state dir that cannot be opened (for
+	// example a symlinked one) would otherwise stop the metric with no signal.
 	h, err := openStateDirHandle(stateDir)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "[hotswap] warn: decline counter %q not recorded: %v\n", reason, err)
 		return
 	}
 	defer h.Close()
 	if err := h.writeOwned(tmp, data, 0o644); err != nil {
+		fmt.Fprintf(os.Stderr, "[hotswap] warn: decline counter %q not recorded: %v\n", reason, err)
 		return
 	}
-	_ = os.Rename(filepath.Join(stateDir, tmp), filepath.Join(stateDir, hotswapCountsFile))
+	if err := h.rename(tmp, hotswapCountsFile); err != nil {
+		fmt.Fprintf(os.Stderr, "[hotswap] warn: decline counter %q not recorded: %v\n", reason, err)
+	}
 }
 
 // readHotswapDeclines reads the outcome counters from the provider's

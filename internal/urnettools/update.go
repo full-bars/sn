@@ -1758,8 +1758,8 @@ func replaceUnitFile(unitPath string, content []byte) error {
 	if err := h.writeOwned(tmpName, content, 0o644); err != nil {
 		return err
 	}
-	if err := os.Rename(filepath.Join(dir, tmpName), unitPath); err != nil {
-		os.Remove(filepath.Join(dir, tmpName))
+	if err := h.rename(tmpName, filepath.Base(unitPath)); err != nil {
+		h.removeAll(tmpName)
 		return err
 	}
 	return nil

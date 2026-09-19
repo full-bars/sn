@@ -129,11 +129,17 @@ func disableIPDetection(targetArgs []string, disable bool) error {
 		if err := os.MkdirAll(filepath.Dir(markerPath), 0o700); err != nil {
 			return err
 		}
-		// writeStateFile (O_NOFOLLOW) rather than os.WriteFile: the marker
-		// path resolves into a user-owned state dir, and a planted symlink
-		// (…/disable_ip_autodetect -> /etc/shadow) must not let root
-		// truncate an arbitrary file.
-		if err := writeStateFile(filepath.Dir(markerPath), filepath.Base(markerPath), []byte("1\n"), 0o644); err != nil {
+		// Written through a descriptor-pinned handle rather than os.WriteFile:
+		// the marker path resolves into a user-owned state dir, and a planted
+		// symlink (…/disable_ip_autodetect -> /etc/shadow) or a swapped
+		// directory must not let root truncate an arbitrary file. The file is
+		// also handed to the directory's owner.
+		h, err := openStateDirHandle(filepath.Dir(markerPath))
+		if err != nil {
+			return err
+		}
+		defer h.Close()
+		if err := h.writeOwned(filepath.Base(markerPath), []byte("1\n"), 0o644); err != nil {
 			return err
 		}
 		fmt.Println("show-ip: off (provider won't auto-detect public IP; set URNETWORK_PUBLIC_IP to override)")

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // stateDirHandle on Windows is a path wrapper. There is no openat/fchown to
@@ -76,4 +77,33 @@ func (h *stateDirHandle) readFile(name string, max int64) ([]byte, error) {
 		return nil, fmt.Errorf("%s exceeds the %d byte state file limit", name, max)
 	}
 	return b, nil
+}
+
+func (h *stateDirHandle) rename(oldName, newName string) error {
+	if err := checkComponent(oldName); err != nil {
+		return err
+	}
+	if err := checkComponent(newName); err != nil {
+		return err
+	}
+	return os.Rename(filepath.Join(h.path, oldName), filepath.Join(h.path, newName))
+}
+
+func (h *stateDirHandle) removeAll(name string) error {
+	if err := checkComponent(name); err != nil {
+		return err
+	}
+	return os.RemoveAll(filepath.Join(h.path, name))
+}
+
+// adoptOwnerOf is a no-op: there is no Unix ownership to hand over.
+func (h *stateDirHandle) adoptOwnerOf(ref *stateDirHandle) error { return nil }
+
+// lockFile takes the exclusive lock on name; the timeout is not applied on
+// Windows, where LockFileEx blocks.
+func (h *stateDirHandle) lockFile(name string, timeout time.Duration) (func(), error) {
+	if err := checkComponent(name); err != nil {
+		return nil, err
+	}
+	return acquireExclusiveLock(filepath.Join(h.path, name))
 }

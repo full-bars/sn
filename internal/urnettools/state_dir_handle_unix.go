@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"golang.org/x/sys/unix"
 )
@@ -24,6 +25,12 @@ import (
 // Ownership handed to files and subdirectories is the owner recorded from
 // fstat on the handle itself, so there is no second pathname lookup to
 // redirect either.
+//
+// Scope of the guarantee: the handle pins the LEAF directory. Ancestors of
+// path are resolved normally when the handle is opened, so a caller that got
+// path from an untrusted source must have validated the whole path (see
+// stateDirInsideHome) and a swap of an ancestor between that validation and
+// openStateDirHandle is not caught here.
 type stateDirHandle struct {
 	fd       int
 	path     string // for messages only; never used to access anything
@@ -143,4 +150,125 @@ func (h *stateDirHandle) readFile(name string, max int64) ([]byte, error) {
 		return nil, fmt.Errorf("%s exceeds the %d byte state file limit", name, max)
 	}
 	return b, nil
+}
+
+// rename renames oldName to newName inside the directory with renameat, so
+// both names resolve against the pinned descriptor. Like rename(2) it
+// replaces a symlink at newName instead of writing through it.
+func (h *stateDirHandle) rename(oldName, newName string) error {
+	if err := checkComponent(oldName); err != nil {
+		return err
+	}
+	if err := checkComponent(newName); err != nil {
+		return err
+	}
+	if err := unix.Renameat(h.fd, oldName, h.fd, newName); err != nil {
+		return fmt.Errorf("rename %s -> %s: %w", filepath.Join(h.path, oldName), newName, err)
+	}
+	return nil
+}
+
+// removeAll removes name and anything under it with unlinkat relative to
+// descriptors, so no symlink is ever followed and a swapped ancestor cannot
+// redirect the removal. A name that does not exist is not an error.
+func (h *stateDirHandle) removeAll(name string) error {
+	if err := checkComponent(name); err != nil {
+		return err
+	}
+	if err := removeAllAt(h.fd, name); err != nil {
+		return fmt.Errorf("remove %s: %w", filepath.Join(h.path, name), err)
+	}
+	return nil
+}
+
+func removeAllAt(dirfd int, name string) error {
+	err := unix.Unlinkat(dirfd, name, 0)
+	if err == nil || errors.Is(err, unix.ENOENT) {
+		return nil
+	}
+	// Linux reports a directory as EISDIR, the BSDs and macOS as EPERM.
+	if !errors.Is(err, unix.EISDIR) && !errors.Is(err, unix.EPERM) {
+		return err
+	}
+	fd, err := unix.Openat(dirfd, name, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+	if err != nil {
+		if errors.Is(err, unix.ENOENT) {
+			return nil
+		}
+		return err
+	}
+	d := os.NewFile(uintptr(fd), name)
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		d.Close()
+		return err
+	}
+	for _, n := range names {
+		if err := removeAllAt(int(d.Fd()), n); err != nil {
+			d.Close()
+			return err
+		}
+	}
+	if err := d.Close(); err != nil {
+		return err
+	}
+	if err := unix.Unlinkat(dirfd, name, unix.AT_REMOVEDIR); err != nil && !errors.Is(err, unix.ENOENT) {
+		return err
+	}
+	return nil
+}
+
+// adoptOwnerOf hands this directory to the owner recorded on ref, through the
+// open descriptor, and makes it the owner applied to everything created
+// under this handle afterwards. Use it for a directory the tool just created
+// as root inside a provider's tree: its own fstat says root, which is not the
+// owner the provider's unprivileged user needs.
+func (h *stateDirHandle) adoptOwnerOf(ref *stateDirHandle) error {
+	if h.uid == ref.uid && h.gid == ref.gid {
+		return nil
+	}
+	if err := unix.Fchown(h.fd, int(ref.uid), int(ref.gid)); err != nil {
+		return fmt.Errorf("chown %s: %w", h.path, err)
+	}
+	h.uid, h.gid = ref.uid, ref.gid
+	return nil
+}
+
+// lockFile opens (creating if needed) the lock file name inside the
+// directory and takes an exclusive flock on it, giving up after timeout
+// (<= 0 blocks). The lock file is handed to the handle's owner so the
+// unprivileged provider can open it for its own merge; a chown failure is
+// reported on stderr rather than failing the lock.
+func (h *stateDirHandle) lockFile(name string, timeout time.Duration) (func(), error) {
+	if err := checkComponent(name); err != nil {
+		return nil, err
+	}
+	full := filepath.Join(h.path, name)
+	fd, err := unix.Openat(h.fd, name, unix.O_RDWR|unix.O_CREAT|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0o600)
+	if err != nil {
+		return nil, fmt.Errorf("open lock file %s: %w", full, err)
+	}
+	var st unix.Stat_t
+	if err := unix.Fstat(fd, &st); err != nil {
+		unix.Close(fd)
+		return nil, fmt.Errorf("fstat lock file %s: %w", full, err)
+	}
+	if st.Mode&unix.S_IFMT != unix.S_IFREG || st.Nlink > 1 {
+		unix.Close(fd)
+		return nil, fmt.Errorf("refusing lock file %s: not a regular file with a single link", full)
+	}
+	if st.Uid != h.uid || st.Gid != h.gid {
+		if err := unix.Fchown(fd, int(h.uid), int(h.gid)); err != nil {
+			fmt.Fprintf(os.Stderr, "warn: could not hand %s to the state dir owner: %v (the provider may be unable to read it)\n", full, err)
+		}
+	}
+	f := os.NewFile(uintptr(fd), full)
+	if err := flockWithTimeout(int(f.Fd()), timeout); err != nil {
+		f.Close()
+		return nil, fmt.Errorf("flock %s: %w", full, err)
+	}
+	return func() {
+		unix.Flock(int(f.Fd()), unix.LOCK_UN)
+		f.Close()
+	}, nil
 }

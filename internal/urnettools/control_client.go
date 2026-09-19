@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net"
 	"net/netip"
 	"os"
@@ -317,35 +318,69 @@ func controlSocketReachable(p Provider) bool {
 	return true
 }
 
+// pendingOverridesLockWait bounds how long a queue update waits for the lock.
+// The critical section is a small JSON read-modify-write, so a wait this long
+// means the holder is stuck or hostile. The lock lives in a directory the
+// provider user owns, so that user can flock it and never let go; without a
+// bound a root-run `urnet-tools set` would hang forever.
+const pendingOverridesLockWait = 30 * time.Second
+
+// pendingOverridesFile and pendingOverridesTmp name the queue and its temp
+// file inside the state dir. The temp name is fixed (not CreateTemp): the
+// cross-process lock serializes writers, and a fixed name lets a stale or
+// planted entry be removed by name before each write.
+const (
+	pendingOverridesFile = "pending_overrides.json"
+	pendingOverridesTmp  = ".pending_overrides.json.tmp"
+)
+
 // queuePendingOverride appends one op to pending_overrides.json in stateDir
 // using atomic temp-file-and-rename. The whole read-modify-write is held
 // under a cross-process lock: without it, two concurrent `urnet-tools`
 // invocations (the provider socket unavailable for both) can each read the
-// same queue, append their own op in memory, and let the last os.Rename win
+// same queue, append their own op in memory, and let the last rename win
 // — both commands report success, but only one op survives to be applied
 // at the provider's next startup.
+//
+// This runs as root against a directory the provider user owns, so the lock,
+// the read, the temp write (with its ownership) and the rename all go through
+// one descriptor-pinned handle on the state dir instead of re-resolving the
+// pathname for each step.
 func queuePendingOverride(stateDir, op, key, value string) error {
 	if err := os.MkdirAll(stateDir, 0o700); err != nil {
 		return err
 	}
-	queueFile := filepath.Join(stateDir, "pending_overrides.json")
+	h, err := openStateDirHandle(stateDir)
+	if err != nil {
+		return err
+	}
+	defer h.Close()
 
-	release, err := acquirePendingOverridesLock(queueFile)
+	release, err := h.lockFile(pendingOverridesFile+".lock", pendingOverridesLockWait)
 	if err != nil {
 		return fmt.Errorf("acquire pending-overrides lock: %w", err)
 	}
 	defer release()
 
 	var ops []pendingOp
-	data, err := os.ReadFile(queueFile)
-	if err == nil && len(data) > 0 {
-		if err := json.Unmarshal(data, &ops); err != nil {
-			// Do NOT discard a malformed queue by rewriting it with only the
-			// new op: every previously-queued override would be lost and the
-			// operator would get a success message. Surface the parse error
-			// and leave the file untouched for inspection/fix instead.
-			return fmt.Errorf("parse %s: %w (fix or remove the file, then retry)", queueFile, err)
+	data, err := h.readFile(pendingOverridesFile, maxStateFileBytes)
+	switch {
+	case err == nil:
+		if len(data) > 0 {
+			if err := json.Unmarshal(data, &ops); err != nil {
+				// Do NOT discard a malformed queue by rewriting it with only the
+				// new op: every previously-queued override would be lost and the
+				// operator would get a success message. Surface the parse error
+				// and leave the file untouched for inspection/fix instead.
+				return fmt.Errorf("parse %s: %w (fix or remove the file, then retry)", filepath.Join(stateDir, pendingOverridesFile), err)
+			}
 		}
+	case errors.Is(err, fs.ErrNotExist):
+		// no queue yet
+	default:
+		// A symlink, FIFO or oversize queue is not silently treated as empty
+		// and overwritten.
+		return fmt.Errorf("read %s: %w", filepath.Join(stateDir, pendingOverridesFile), err)
 	}
 
 	ops = append(ops, pendingOp{Op: op, Key: key, Value: value})
@@ -354,45 +389,22 @@ func queuePendingOverride(stateDir, op, key, value string) error {
 		return err
 	}
 
-	tmp, err := os.CreateTemp(stateDir, ".pending_overrides.json.tmp-*")
-	if err != nil {
+	// Clear any stale or planted entry at the temp name first (unlinkat never
+	// follows a symlink), so a leftover cannot wedge every later call.
+	if err := h.removeAll(pendingOverridesTmp); err != nil {
 		return err
 	}
-	tmpName := tmp.Name()
-	defer os.Remove(tmpName)
-
-	if _, err := tmp.Write(append(encoded, '\n')); err != nil {
-		tmp.Close()
+	// writeOwned sets the mode and the state-dir owner on the open
+	// descriptor, before the file is visible under its final name.
+	if err := h.writeOwned(pendingOverridesTmp, append(encoded, '\n'), 0o644); err != nil {
+		h.removeAll(pendingOverridesTmp)
 		return err
 	}
-	// Set the mode on the OPEN file (f.Chmod) instead of a second
-	// path-based os.Chmod after close: the path-based call follows
-	// symlinks, so a user who swaps tmpName for a symlink between the
-	// close and the chmod (inotify on close makes this winnable) gets any
-	// file chmod'ed world-readable. The open fd names the file we just
-	// created, so f.Chmod cannot be redirected.
-	// Set the mode on the OPEN file (f.Chmod) and chown on the OPEN fd
-	// (fchown) before close: both are fd-based, so a user who swaps tmpName
-	// for a symlink between close and the post-close chown cannot redirect
-	// the operation to an arbitrary file.
-	if err := tmp.Chmod(0o644); err != nil {
-		tmp.Close()
+	// rename the already-owned file into place
+	if err := h.rename(pendingOverridesTmp, pendingOverridesFile); err != nil {
+		h.removeAll(pendingOverridesTmp)
 		return err
 	}
-	if err := chownFdLikeStateOwner(stateDir, int(tmp.Fd())); err != nil {
-		tmp.Close()
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		return err
-	}
-	// rename the already-chowned file into place
-	if err := os.Rename(tmpName, queueFile); err != nil {
-		return err
-	}
-	// File was fchowned on the open fd before close; no post-rename path-based
-	// chown is needed (and path-based chown on the renamed file would re-open
-	// a TOCTOU window).
 	return nil
 }
 

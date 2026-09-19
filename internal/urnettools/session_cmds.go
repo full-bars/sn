@@ -659,11 +659,9 @@ func stageSessionFiles(p Provider, files map[string][]byte, allowDiff bool) (str
 	// Stage the new files; the provider applies .session-staging on its next
 	// start and is told a load is pending via .session-pending.
 	//
-	// The removal is still by pathname (RemoveAll never follows a symlink at
-	// the leaf, so the worst a swapped ancestor does is remove a directory
-	// literally named .session-staging elsewhere). Everything created after
-	// it is descriptor-relative.
-	if err := os.RemoveAll(filepath.Join(p.StateDir, ".session-staging")); err != nil {
+	// The removal is descriptor-relative too (unlinkat, never following a
+	// symlink), so a swapped state dir cannot redirect it.
+	if err := root.removeAll(".session-staging"); err != nil {
 		return "", err
 	}
 	staging, err := root.mkdirOwned(".session-staging")
@@ -696,6 +694,9 @@ func stageSessionFiles(p Provider, files map[string][]byte, allowDiff bool) (str
 func writeSessionBundle(outFile string, bundle []byte) error {
 	f, err := os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|openNoFollowFlag|openNonblockFlag, 0o600)
 	if err != nil {
+		if fi, lerr := os.Lstat(outFile); lerr == nil && fi.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("refusing to write %s: it is a symlink; pass the real destination path", outFile)
+		}
 		return fmt.Errorf("write %s: %v", outFile, err)
 	}
 	fi, err := f.Stat()

@@ -12,13 +12,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// pendingOverridesLockWait bounds how long a queue update waits for the lock.
-// The critical section is a small JSON read-modify-write, so a wait this long
-// means the holder is stuck or hostile. The lock lives in a directory the
-// provider user owns, so that user can flock it and never let go; without a
-// bound a root-run `urnet-tools set` would hang forever.
-const pendingOverridesLockWait = 30 * time.Second
-
 // acquirePendingOverridesLock obtains a blocking, exclusive inter-process
 // lock on stateDir's pending_overrides.json so two concurrent `urnet-tools`
 // invocations (e.g. two operators, or a script looping `set` calls) can't
