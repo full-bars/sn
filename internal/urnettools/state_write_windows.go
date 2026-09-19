@@ -71,16 +71,6 @@ func writeStateFileOwned(stateDir, name string, data []byte, perm os.FileMode, o
 	return writeStateFile(stateDir, name, data, perm)
 }
 
-// chownStateFile is a no-op on Windows (no Unix ownership model).
-func chownStateFile(path string, uid, gid int) error {
-	return nil
-}
-
-// chownStateDir is a no-op on Windows (no Unix ownership model).
-func chownStateDir(path string, uid, gid int) error {
-	return nil
-}
-
 // openStateFileNoFollow opens a state file without following symlinks.
 // Windows has no O_NOFOLLOW, so the path is Lstat'ed, opened, and the open
 // handle is verified to be the same regular file (os.SameFile) so a swap

@@ -118,18 +118,6 @@ const openNonblockFlag = unix.O_NONBLOCK
 // be a symlink.
 const openNoFollowFlag = unix.O_NOFOLLOW
 
-// chownStateFile changes ownership of a file without following symlinks.
-// Uses Lchown instead of Chown so a symlink at the target path is not followed.
-func chownStateFile(path string, uid, gid int) error {
-	return unix.Lchown(path, uid, gid)
-}
-
-// chownStateDir changes ownership of the state directory without following
-// symlinks. Uses Lchown instead of os.Chown.
-func chownStateDir(path string, uid, gid int) error {
-	return unix.Lchown(path, uid, gid)
-}
-
 // openStateFileNoFollow opens a file in stateDir with O_NOFOLLOW so a
 // planted symlink cannot redirect reads or writes. Returns the open *os.File;
 // callers close it. Symlink targets, directories, and permission failures all
