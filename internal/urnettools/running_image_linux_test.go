@@ -64,7 +64,11 @@ func rewriteVersionStamp(payload []byte, version string) []byte {
 			}
 		}
 		old := payload[start:end]
-		if len(old) > 0 && old[0] == 'v' {
+		// Same rule as scanVersionStamp: a stamp value is 'v' then a digit.
+		// A 'v'-then-letter span (the prefix constant sitting next to an
+		// unrelated string in rodata) is not a stamp and must not be the one
+		// overwritten, or the scanner would read a different, later stamp.
+		if len(old) > 1 && old[0] == 'v' && old[1] >= '0' && old[1] <= '9' {
 			// Byte-for-byte overlay within the original span.
 			if len(version) <= len(old) {
 				out := make([]byte, len(payload))
