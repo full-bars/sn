@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -327,7 +328,11 @@ func collectSessionFiles(stateDir string) map[string][]byte {
 // caller can refuse or skip explicitly.
 //
 // Uses O_NOFOLLOW open (via openStateFileNoFollow) so the check and the read
-// happen atomically: no TOCTOU window between Lstat and ReadFile.
+// happen atomically: no TOCTOU window between Lstat and ReadFile. The
+// guarantee covers the FINAL path component only: ancestors of stateDir are
+// followed, because legitimate system paths are often symlinks (macOS /var,
+// /home -> /var/home). stateDir itself comes from discovery, not from
+// attacker-supplied input.
 func readStateFileNoFollow(stateDir, name string) ([]byte, error) {
 	f, err := openStateFileNoFollow(stateDir, name)
 	if err != nil {
@@ -609,7 +614,7 @@ func stageSessionFiles(p Provider, files map[string][]byte, allowDiff bool) (str
 	for _, name := range sessionFiles {
 		b, err := readStateFileNoFollow(p.StateDir, name)
 		if err != nil {
-			if os.IsNotExist(err) {
+			if errors.Is(err, fs.ErrNotExist) {
 				continue // absent, fine
 			}
 			return "", fmt.Errorf("backup %s: %v", name, err) // unreadable/perm/symlink: fail, do not silently skip (MEDIUM)

@@ -33,21 +33,35 @@ func dropPrivilegesTo(username string, cmd *exec.Cmd) error {
 	if err != nil {
 		return fmt.Errorf("resolve user %q: %w", username, err)
 	}
-	uid, err := strconv.Atoi(target.Uid)
+	// 32-bit bound (parseUnixID): Atoi accepts values above uint32 on 64-bit
+	// platforms, and uint32(4294967296) wraps to 0, which would make the
+	// "already the target user" check below pass for root and run the
+	// command as root.
+	uid, err := parseUnixID(target.Uid)
 	if err != nil {
 		return fmt.Errorf("parse uid for %q: %w", username, err)
 	}
-	gid, err := strconv.Atoi(target.Gid)
+	gid, err := parseUnixID(target.Gid)
 	if err != nil {
 		return fmt.Errorf("parse gid for %q: %w", username, err)
 	}
-	if uint32(os.Geteuid()) == uint32(uid) {
+	if uint32(os.Geteuid()) == uid {
 		return nil // already running as the target user
 	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Credential: &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)},
+		Credential: &syscall.Credential{Uid: uid, Gid: gid},
 	}
 	return nil
+}
+
+// parseUnixID parses a decimal uid/gid, rejecting anything that does not fit
+// in uint32 (the width of syscall.Credential's fields).
+func parseUnixID(s string) (uint32, error) {
+	v, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(v), nil
 }
 
 // isRootImpl reports whether the tool runs as uid 0.

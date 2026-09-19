@@ -145,7 +145,7 @@ func FetchSnStatus(p Provider) (*SnStatusInfo, error) {
 	}
 
 	jwtPath := filepath.Join(stateDir, "jwt")
-	jwtBytes, err := readStateFileNoFollow(p.StateDir, "jwt")
+	jwtBytes, err := readStateFileNoFollow(stateDir, "jwt")
 	if errors.Is(err, os.ErrNotExist) {
 		// Do NOT fall back to os.UserHomeDir — under sudo that resolves
 		// to /root, so a missing target JWT would silently send the
@@ -160,7 +160,9 @@ func FetchSnStatus(p Provider) (*SnStatusInfo, error) {
 	byJwt := strings.TrimSpace(string(jwtBytes))
 
 	apiUrl := "https://api.bringyour.com"
-	if urlBytes, err := os.ReadFile(filepath.Join(stateDir, "api_url")); err == nil {
+	// api_url decides where the JWT is sent, so read it without following a
+	// planted symlink too.
+	if urlBytes, err := readStateFileNoFollow(stateDir, "api_url"); err == nil {
 		if trimmed := strings.TrimSpace(string(urlBytes)); trimmed != "" {
 			apiUrl = trimmed
 		}

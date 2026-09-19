@@ -57,8 +57,15 @@ func ipDetectDisabledPath(targetArgs []string) (string, error) {
 		// wrote to the CALLER's ~/.urnetwork (e.g. /root/.urnetwork when run
 		// under sudo) no matter which provider existed, so `show-ip off`
 		// silently targeted the wrong account.
-		if providers := Discover(); len(providers) == 1 {
-			if p := providers[0]; p.StateDir != "" {
+		// With several providers this goes through normal no-target
+		// selection (persisted default, or an ambiguity error) instead of
+		// falling through to $HOME/.urnetwork.
+		if providers := Discover(); len(providers) > 0 {
+			p, err := selectTarget(providers, Target{})
+			if err != nil {
+				return "", err
+			}
+			if p.StateDir != "" {
 				return filepath.Join(p.StateDir, "disable_ip_autodetect"), nil
 			}
 		}

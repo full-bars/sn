@@ -314,15 +314,22 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 	if sub == "clear" || sub == "remove" || sub == "refresh" {
 		batchSub = true
 	} else if sub == "add" {
-		// add <file> is batch; add <http://url> is single-target.
-		// If any positional is URL-form, it's not batch.
-		batchSub = true
+		// add <file> is batch; add <http://url> is single-target. The two
+		// forms select providers differently, so one invocation cannot mix
+		// them: the file form would run against the empty batch selection
+		// and be skipped while the command still reported success.
+		var haveURL, haveFile bool
 		for _, target := range positionals {
 			if strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://") {
-				batchSub = false
-				break
+				haveURL = true
+			} else {
+				haveFile = true
 			}
 		}
+		if haveURL && haveFile {
+			return fmt.Errorf("proxy add cannot mix a proxy file and a URL in one command; run them separately")
+		}
+		batchSub = !haveURL
 	}
 	if batchSub {
 		if all {

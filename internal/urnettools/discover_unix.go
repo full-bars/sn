@@ -224,11 +224,48 @@ func classifyContainerByNamespaceAndCgroup(nsDiffers bool, cgroup string) bool {
 	if !nsDiffers {
 		return false
 	}
-	lower := strings.ToLower(cgroup)
-	for _, marker := range []string{"docker", "containerd", "kubepods", "libpod", "lxc", "nspawn"} {
-		if strings.Contains(lower, marker) {
-			return true
+	for _, line := range strings.Split(strings.ToLower(cgroup), "\n") {
+		// /proc/<pid>/cgroup lines are "hierarchy:controllers:path"; the
+		// path is everything after the second colon.
+		path := line
+		if parts := strings.SplitN(line, ":", 3); len(parts) == 3 {
+			path = parts[2]
 		}
+		for _, comp := range strings.Split(path, "/") {
+			if isContainerCgroupComponent(comp) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// isContainerCgroupComponent reports whether one cgroup path component is a
+// container-runtime scope or slice. Matching whole components (exact names,
+// or the runtime's own "<runtime>-<id>.scope" / "<runtime>.slice" forms)
+// keeps a host unit that merely contains a runtime word in its name, such
+// as urnetwork-docker-helper.service, from being classified as a container.
+func isContainerCgroupComponent(comp string) bool {
+	switch {
+	case comp == "docker", comp == "containerd", comp == "kubepods", comp == "libpod", comp == "lxc":
+		return true
+	case strings.HasPrefix(comp, "docker-") && strings.HasSuffix(comp, ".scope"):
+		return true
+	case strings.HasPrefix(comp, "cri-containerd-") && strings.HasSuffix(comp, ".scope"):
+		return true
+	case strings.HasPrefix(comp, "containerd-") && strings.HasSuffix(comp, ".scope"):
+		return true
+	case strings.HasPrefix(comp, "kubepods-") && strings.HasSuffix(comp, ".slice"), comp == "kubepods.slice":
+		return true
+	case strings.HasPrefix(comp, "libpod-") && strings.HasSuffix(comp, ".scope"):
+		return true
+	case strings.HasPrefix(comp, "libpod_"): // cgroup v1 libpod_parent
+		return true
+	case strings.HasPrefix(comp, "lxc.") || strings.HasPrefix(comp, "lxc-"):
+		return true
+	case strings.HasPrefix(comp, "systemd-nspawn"), comp == "machine.slice":
+		// machine.slice holds systemd-machined guests (nspawn, libvirt lxc).
+		return true
 	}
 	return false
 }

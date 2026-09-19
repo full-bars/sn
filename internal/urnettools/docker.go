@@ -3,11 +3,13 @@ package urnettools
 import (
 	"archive/tar"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // dockerContainer describes a discovered docker container running a
@@ -121,18 +123,85 @@ func containerEnv(c dockerContainer, key string) string {
 // is extracted with archive/tar rather than returned verbatim; falling back
 // to docker exec keeps the RUNNING-container edge where cp disagrees.
 func containerReadFile(c dockerContainer, path string) (string, error) {
-	if out, err := exec.Command(dockerCLI(), "cp", c.ID+":"+path, "-").Output(); err == nil {
+	// The cp stream is a tar archive: the file (capped at containerFileMax)
+	// plus header/padding/trailer overhead.
+	if out, _, err := runCapped(exec.Command(dockerCLI(), "cp", c.ID+":"+path, "-"), containerFileMax+containerTarOverhead); err == nil {
 		if s, terr := extractSingleFileContent(out); terr == nil {
 			return s, nil
 		}
 	}
-	cmd := exec.Command(dockerCLI(), "exec", c.ID, "cat", path)
-	out, err := cmd.CombinedOutput()
+	out, stderr, err := runCapped(exec.Command(dockerCLI(), "exec", c.ID, "cat", path), containerFileMax)
 	if err != nil {
-		return "", fmt.Errorf("docker cp/exec cat %s: %w (%s)", path, err, strings.TrimSpace(string(out)))
+		return "", fmt.Errorf("docker cp/exec cat %s: %w (%s)", path, err, strings.TrimSpace(stderr))
 	}
 	return string(out), nil
 }
+
+// containerFileMax caps how much of a container file is read: identity files
+// are tiny, and the container's contents are not trusted.
+const (
+	containerFileMax     = 1 << 20
+	containerTarOverhead = 64 << 10
+)
+
+// errOutputTooLarge is returned by runCapped when the command wrote more
+// than the allowed number of stdout bytes.
+var errOutputTooLarge = errors.New("command output exceeds size limit")
+
+// runCapped runs cmd and returns its stdout, refusing to buffer more than
+// max bytes: the reader is bounded while the process is still writing, and
+// the process is killed once the limit is exceeded, so a huge file inside a
+// container cannot force an arbitrarily large allocation. Stderr is kept
+// (truncated to 4 KiB) for error messages only.
+func runCapped(cmd *exec.Cmd, max int64) ([]byte, string, error) {
+	stderr := &cappedBuffer{max: 4096}
+	cmd.Stderr = stderr
+	// Safety net: never let Wait hang on a grandchild that still holds the
+	// stderr pipe after the process itself has been killed.
+	cmd.WaitDelay = 2 * time.Second
+	pipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, "", err
+	}
+	if err := cmd.Start(); err != nil {
+		return nil, "", err
+	}
+	data, readErr := io.ReadAll(io.LimitReader(pipe, max+1))
+	if readErr != nil || int64(len(data)) > max {
+		_ = cmd.Process.Kill()
+		// Close our read end first so a child still writing gets SIGPIPE
+		// instead of blocking Wait on a full pipe.
+		_ = pipe.Close()
+		_ = cmd.Wait()
+		if readErr != nil {
+			return nil, stderr.String(), readErr
+		}
+		return nil, stderr.String(), errOutputTooLarge
+	}
+	if err := cmd.Wait(); err != nil {
+		return nil, stderr.String(), err
+	}
+	return data, stderr.String(), nil
+}
+
+// cappedBuffer is an io.Writer that keeps only the first max bytes.
+type cappedBuffer struct {
+	buf bytes.Buffer
+	max int
+}
+
+func (b *cappedBuffer) Write(p []byte) (int, error) {
+	if room := b.max - b.buf.Len(); room > 0 {
+		if len(p) > room {
+			b.buf.Write(p[:room])
+		} else {
+			b.buf.Write(p)
+		}
+	}
+	return len(p), nil
+}
+
+func (b *cappedBuffer) String() string { return b.buf.String() }
 
 // extractSingleFileContent pulls the content of the single regular file a
 // `docker cp CONTAINER:path -` tar stream carries. Docker writes exactly one

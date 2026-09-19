@@ -23,9 +23,23 @@ func writeStateFile(stateDir, name string, data []byte, perm os.FileMode) error 
 		return fmt.Errorf("refusing to write %s: path is a symlink (possible symlink attack)", path)
 	}
 
-	fd, err := unix.Open(path, unix.O_WRONLY|unix.O_CREAT|unix.O_TRUNC|unix.O_NOFOLLOW|unix.O_NONBLOCK, uint32(perm))
+	// No O_TRUNC here: truncation happens only after the opened object is
+	// confirmed to be a regular file. O_NONBLOCK keeps an open of a FIFO with
+	// no reader from hanging (it fails with ENXIO).
+	fd, err := unix.Open(path, unix.O_WRONLY|unix.O_CREAT|unix.O_NOFOLLOW|unix.O_NONBLOCK, uint32(perm))
 	if err != nil {
 		return fmt.Errorf("write %s: %v", path, err)
+	}
+	// A FIFO that DOES have a reader opens successfully; refuse it (and
+	// devices, sockets, directories) rather than write state into it.
+	var st unix.Stat_t
+	if err := unix.Fstat(fd, &st); err != nil {
+		unix.Close(fd)
+		return fmt.Errorf("fstat %s: %v", path, err)
+	}
+	if st.Mode&unix.S_IFMT != unix.S_IFREG {
+		unix.Close(fd)
+		return fmt.Errorf("refusing to write %s: not a regular file", path)
 	}
 	// O_NONBLOCK was only for FIFO detection — the actual file (regular,
 	// freshly created or truncated) must be written in blocking mode, or a
@@ -39,6 +53,10 @@ func writeStateFile(stateDir, name string, data []byte, perm os.FileMode) error 
 	// later closed whatever descriptor had reused the number.
 	f := os.NewFile(uintptr(fd), path)
 
+	if err := f.Truncate(0); err != nil {
+		f.Close()
+		return fmt.Errorf("truncate %s: %v", path, err)
+	}
 	// os.File.Write loops on short writes. Chmod enforces perm on existing
 	// files, where O_CREAT's mode argument is ignored.
 	if _, err := f.Write(data); err != nil {
