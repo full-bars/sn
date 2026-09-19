@@ -74,6 +74,41 @@ func TestContainerCgroupMarkerDetection(t *testing.T) {
 	}
 }
 
+// TestClassifyContainerUnknownNS pins the fail-open classification used when
+// the peer's mount namespace cannot be read at all (EACCES/EPERM against
+// another uid's process — a non-root tool looking at rootless podman/docker
+// subuid containers). The cgroup alone must not over-classify: the peer is
+// foreign only when its cgroup names a container runtime AND differs from the
+// tool's own cgroup. The difference test is what keeps a tool running INSIDE
+// a container able to see its own siblings on cgroup v1, where every
+// container in the same runtime shares /docker/<id> in its cgroup path.
+func TestClassifyContainerUnknownNS(t *testing.T) {
+	cases := []struct {
+		name      string
+		cg        string
+		ourCg     string
+		want      bool
+	}{
+		{"docker scope vs our system slice", "0::/system.slice/docker-abc123.scope", "0::/system.slice/urnetwork.service", true},
+		{"docker cgroupfs driver vs ours", "5:cpu:/docker/abc123456789", "5:cpu:/system.slice/urnetwork.service", true},
+		{"podman libpod scope vs ours", "0::/user.slice/user-1000.slice/user@1000.service/user.slice/libpod-abc123.scope", "0::/system.slice/urnetwork.service", true},
+		{"identical docker cgroup (same container as tool)", "5:cpu:/docker/abc123456789", "5:cpu:/docker/abc123456789", false},
+		{"identical v1 multi-line (same container as tool)", "2:memory:/some/thing\nname=systemd:0::/system.slice/docker-abc.scope", "2:memory:/some/thing\nname=systemd:0::/system.slice/docker-abc.scope", false},
+		{"host unit without a runtime marker", "0::/system.slice/urnetwork.service", "0::/user.slice", false},
+		{"empty cgroup", "", "0::/system.slice/urnetwork.service", false},
+		{"empty own cgroup (nothing to compare against)", "0::/system.slice/docker-abc123.scope", "", false},
+		{"v1 multi-line with name=systemd line naming a docker scope", "2:memory:/some/thing\nname=systemd:0::/system.slice/docker-abc.scope", "2:memory:/some/thing\nname=systemd:0::/system.slice/urnetwork.service", true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := classifyContainerUnknownNS(c.cg, c.ourCg)
+			if got != c.want {
+				t.Errorf("classifyContainerUnknownNS(cg=%q, ourCg=%q) = %v, want %v", c.cg, c.ourCg, got, c.want)
+			}
+		})
+	}
+}
+
 // TestResolveProcessOwnerPrecedenceDoesNotTrustEnvUser pins the User
 // attribution rule: the kernel /proc owner is the ONLY source for the
 // username. When the owner uid has no passwd entry (numeric uid, LDAP-only

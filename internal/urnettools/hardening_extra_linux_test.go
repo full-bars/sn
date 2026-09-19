@@ -95,6 +95,55 @@ func TestStateDirInsideHome(t *testing.T) {
 	}
 }
 
+// TestStateDirArgvOverrideValidation pins the --state-dir argv validation
+// block of discoverProcesses: the override is accepted only when it provably
+// stays inside the KERNEL-reported owner home (ownerHome captured from the
+// single processOwner call), and an owner whose home cannot be resolved has
+// nothing to validate against, so the argv value is rejected, not believed.
+// The framing mirrors the production block exactly: accept = the override is
+// non-empty and stateDirInsideHome(ownerHome, override).
+func TestStateDirArgvOverrideValidation(t *testing.T) {
+	home := t.TempDir()
+	outside := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(home, "sub"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(home, "link")); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	cases := []struct {
+		name, ownerHome, argvDir string
+		// wantAccept is whether the argv override survives validation.
+		wantAccept bool
+	}{
+		{"inside the owner home accepted", home, filepath.Join(home, "sub", ".urnetwork"), true},
+		{"stale ownerHome reuse: argv outside the resolved home rejected", home, filepath.Join(outside, ".urnetwork"), false},
+		{"owner home itself rejected", home, home, false},
+		{"unresolvable owner home has no trusted root to validate against", "", filepath.Join(home, "sub", ".urnetwork"), false},
+		{"empty override rejected", home, "", false},
+		{"lexically inside but symlinked outside rejected", home, filepath.Join(home, "link", ".urnetwork"), false},
+	}
+	for _, c := range cases {
+		got := c.argvDir != "" && stateDirInsideHome(c.ownerHome, c.argvDir)
+		if got != c.wantAccept {
+			t.Errorf("%s: accepted=%v, want %v (ownerHome=%q, argvDir=%q)", c.name, got, c.wantAccept, c.ownerHome, c.argvDir)
+		}
+		// The rejected override must never be attributed: resolution falls
+		// back to <ownerHome>/.urnetwork (or nothing without a home).
+		gotDir := resolveDiscoveredStateDir(c.ownerHome, c.argvDir)
+		wantDir := c.argvDir
+		if !c.wantAccept {
+			wantDir = filepath.Join(c.ownerHome, ".urnetwork")
+			if c.ownerHome == "" {
+				wantDir = ""
+			}
+		}
+		if gotDir != wantDir {
+			t.Errorf("%s: resolveDiscoveredStateDir = %q, want %q", c.name, gotDir, wantDir)
+		}
+	}
+}
+
 // A longer replacement version must actually be what the scanner resolves:
 // the original stamp is invalidated before the new one is appended.
 func TestRewriteVersionStampLongerVersionWins(t *testing.T) {

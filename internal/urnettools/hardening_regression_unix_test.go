@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // TestReadStateFileNoFollowRejectsSymlink: readStateFileNoFollow must refuse
@@ -111,6 +112,104 @@ func TestContainerReadFilePrefersCP(t *testing.T) {
 		t.Errorf("containerReadFile = %q, want cp-data (cp preferred over exec)", out)
 	}
 	_ = orig
+}
+
+// TestRunCappedTimeoutKillsSlowCommand pins the timed read helper that the
+// docker reads rely on: a command that never finishes must be killed when the
+// deadline passes, and the call must return errCommandTimeout rather than
+// hanging or buffering forever (a hung dockerd would otherwise hang every
+// docker command indefinitely).
+func TestRunCappedTimeoutKillsSlowCommand(t *testing.T) {
+	start := time.Now()
+	out, _, err := runCappedTimeout(exec.Command("/bin/sleep", "30"), 1<<20, 300*time.Millisecond)
+	_ = out
+	if !errors.Is(err, errCommandTimeout) {
+		t.Fatalf("runCappedTimeout(sleep 30, 300ms) err = %v, want errCommandTimeout", err)
+	}
+	if el := time.Since(start); el > 10*time.Second {
+		t.Fatalf("runCappedTimeout took %s to give up; the process was not killed", el)
+	}
+}
+
+// TestContainerReadFileCPTooLargeSkipsExecFallback pins that a docker cp
+// which exceeds the output cap is NOT retried through docker exec: the
+// fallback would put the same bad container through a second full wait
+// (DiscoverDocker reads containers serially, so a hung or flooding
+// dockerd doubles the delay per container), and an oversized entry
+// exceeds containerFileMax either way.
+func TestContainerReadFileCPTooLargeSkipsExecFallback(t *testing.T) {
+	log := filepath.Join(t.TempDir(), "docker.log")
+	shim := filepath.Join(t.TempDir(), "docker")
+	script := "#!/bin/sh\n" +
+		"if [ \"$1\" = \"cp\" ]; then dd if=/dev/zero bs=1048576 count=2 2>/dev/null | tr '\\0' 'x'; exit 0; fi\n" +
+		"echo \"$*\" >> \"$DOCKER_SHIM_LOG\"\nexit 0\n"
+	if err := os.WriteFile(shim, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	setDockerTestBin(shim)
+	t.Cleanup(func() { setDockerTestBin("") })
+	t.Setenv("DOCKER_SHIM_LOG", log)
+	c := dockerContainer{ID: "abc123", Name: "urnet-test", Image: "urnetwork:latest", State: "running"}
+	if _, err := containerReadFile(c, "/root/.urnetwork/jwt"); err == nil {
+		t.Fatalf("containerReadFile with an oversized cp reply = nil error, want error")
+	}
+	if b, _ := os.ReadFile(log); strings.Contains(string(b), "exec") {
+		t.Fatalf("oversized cp fell back to docker exec (shim log %q); must return immediately", b)
+	}
+}
+
+// TestContainerReadFileExecFallbackUsesDashDash pins the exec-fallback argv:
+// the container path must be passed to sh as $1 after a cat -- separator, so
+// a HOME-derived path beginning with "-" is never read as a cat option, and
+// the sh -c wrapper's `test -f` keeps a FIFO from leaving a stuck cat in the
+// container when the client is killed on timeout.
+func TestContainerReadFileExecFallbackUsesDashDash(t *testing.T) {
+	log := filepath.Join(t.TempDir(), "docker.log")
+	shim := filepath.Join(t.TempDir(), "docker")
+	script := "#!/bin/sh\n" +
+		"if [ \"$1\" = \"cp\" ]; then exit 1; fi\n" +
+		"echo \"$*\" >> \"$DOCKER_SHIM_LOG\"\nexit 0\n"
+	if err := os.WriteFile(shim, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	setDockerTestBin(shim)
+	t.Cleanup(func() { setDockerTestBin("") })
+	t.Setenv("DOCKER_SHIM_LOG", log)
+	_, _ = containerReadFile(dockerContainer{ID: "abc123", Name: "urnet-test", Image: "urnetwork:latest", State: "running"}, "/tmp/-dash-file")
+	b, _ := os.ReadFile(log)
+	if !strings.Contains(string(b), "exec abc123 sh") {
+		t.Fatalf("exec fallback did not run through sh -c: shim got %q", b)
+	}
+	// `test -f "$1" && exec cat -- "$1"` then `sh` as $0, then the path.
+	if !strings.Contains(string(b), "cat --") {
+		t.Fatalf("exec fallback lacks the cat -- separator: shim got %q", b)
+	}
+	if !strings.Contains(string(b), "cat --") || !strings.Contains(string(b), "/tmp/-dash-file") {
+		t.Fatalf("path did not arrive behind the -- separator: shim got %q", b)
+	}
+}
+
+// TestExtractSingleFileContentRefusesOversizedEntry pins that a docker cp
+// tar stream carrying a file larger than containerFileMax is rejected with an
+// error instead of being silently truncated at 1 MiB (identity files are
+// small; anything bigger is either corruption or a container that must not
+// feed credentials into discovery).
+func TestExtractSingleFileContentRefusesOversizedEntry(t *testing.T) {
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+	oversize := containerFileMax + 1
+	if err := tw.WriteHeader(&tar.Header{Name: "jwt", Mode: 0o600, Size: int64(oversize)}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tw.Write(make([]byte, oversize)); err != nil {
+		t.Fatal(err)
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := extractSingleFileContent(buf.Bytes()); err == nil {
+		t.Fatalf("extractSingleFileContent accepted a %d byte entry; must error", oversize)
+	}
 }
 
 // TestContainerReadFileCapsOutput: a container file larger than the cap must

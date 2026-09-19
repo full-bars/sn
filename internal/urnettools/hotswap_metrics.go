@@ -93,10 +93,21 @@ func bumpHotswapCounter(stateDir, reason string) {
 		return
 	}
 	tmp := hotswapCountsFile + ".tmp"
-	if err := writeStateFile(stateDir, tmp, data, 0o644); err != nil {
+	// Write the temp file through a descriptor-pinned handle (the state dir
+	// opened O_NOFOLLOW): the write and its ownership are relative to one
+	// open directory, so a state dir that IS a symlink (or is swapped for
+	// one) cannot aim a root write at another tree. rename(2) below then
+	// replaces a symlink at the final path rather than writing through it,
+	// and the owner handoff already happened on the descriptor — the old
+	// separate chownLikeStateOwner by path is gone.
+	h, err := openStateDirHandle(stateDir)
+	if err != nil {
 		return
 	}
-	_ = chownLikeStateOwner(stateDir, filepath.Join(stateDir, tmp))
+	defer h.Close()
+	if err := h.writeOwned(tmp, data, 0o644); err != nil {
+		return
+	}
 	_ = os.Rename(filepath.Join(stateDir, tmp), filepath.Join(stateDir, hotswapCountsFile))
 }
 

@@ -116,8 +116,19 @@ func writeSelfHeal(state string, targetArgs []string) error {
 	const markerName = "proxy_self_heal"
 
 	if p != nil && p.StateDir != "" {
-		// Use writeStateFile for O_NOFOLLOW protection (C2 fix).
-		if err := writeStateFile(p.StateDir, markerName, []byte(state+"\n"), 0o644); err != nil {
+		// Write through a descriptor-pinned handle (the state dir itself is
+		// opened O_NOFOLLOW): the marker and its ownership are set relative
+		// to ONE open directory, so a provider user who swaps the state dir
+		// for a symlink can no longer redirect the write or hand it chown
+		// authority over another tree. Ownership lands on the descriptor
+		// (writeOwned fchowns from the handle's fstat), which is what the
+		// separate chownLikeStateOwner call used to do by path.
+		h, err := openStateDirHandle(p.StateDir)
+		if err != nil {
+			return err
+		}
+		defer h.Close()
+		if err := h.writeOwned(markerName, []byte(state+"\n"), 0o644); err != nil {
 			return err
 		}
 	} else {
@@ -137,12 +148,10 @@ func writeSelfHeal(state string, targetArgs []string) error {
 			return err
 		}
 	}
-	// When a target was given, chown to the provider's user. For the
-	// legacy path (no target, no provider discovery) the file stays
-	// owned by the caller — that's the pre-H6 behavior.
-	if p != nil {
-		_ = chownLikeStateOwner(p.StateDir, filepath.Join(p.StateDir, markerName))
-	}
+	// When a target was given, the handle handed the file to the provider's
+	// user at write time. For the legacy path (no target, no provider
+	// discovery) the file stays owned by the caller — that's the pre-H6
+	// behavior.
 	if state == "on" {
 		fmt.Println("self-heal enabled (load gate + auto cleanup active)")
 	} else {

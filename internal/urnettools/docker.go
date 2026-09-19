@@ -49,7 +49,10 @@ func dockerCLI() string {
 // unrelated software.
 func discoverDockerContainers() []dockerContainer {
 	cmd := exec.Command(dockerCLI(), "ps", "-a", "--no-trunc", "--format", "{{.ID}}|{{.Names}}|{{.Image}}|{{.State}}")
-	out, err := cmd.Output()
+	// runCapped (20s deadline) not cmd.Output(): a hung dockerd must not
+	// hang every command in the docker-facing surface. Error behaves as a
+	// plain Output() failure — no containers.
+	out, _, err := runCapped(cmd, 4<<20)
 	if err != nil {
 		return nil // docker unavailable or no permission — no containers
 	}
@@ -102,7 +105,9 @@ func containerStateDir(c dockerContainer) string {
 // containerEnv reads one env var from the container via docker inspect.
 func containerEnv(c dockerContainer, key string) string {
 	cmd := exec.Command(dockerCLI(), "inspect", "-f", "{{range .Config.Env}}{{println .}}{{end}}", c.ID)
-	out, err := cmd.Output()
+	// runCapped (20s deadline) not cmd.Output(): a hung dockerd must not
+	// hang the container query.
+	out, _, err := runCapped(cmd, 4<<20)
 	if err != nil {
 		return ""
 	}
@@ -130,8 +135,21 @@ func containerReadFile(c dockerContainer, path string) (string, error) {
 		if s, terr := extractSingleFileContent(out); terr == nil {
 			return s, nil
 		}
+	} else if errors.Is(err, errCommandTimeout) || errors.Is(err, errOutputTooLarge) {
+		// A timed-out or overflowing cp must not fall back to docker exec:
+		// the fallback would put the same bad container through a second
+		// full wait (DiscoverDocker reads containers serially, so a hung
+		// dockerd doubles the delay), and an entry bigger than the cap
+		// exceeds containerFileMax either way.
+		return "", fmt.Errorf("docker cp %s: %w", path, err)
 	}
-	out, stderr, err := runCapped(exec.Command(dockerCLI(), "exec", c.ID, "cat", path), containerFileMax)
+	// exec fallback for the running-container edge where cp disagrees.
+	// The path is passed to sh as $1 behind a `--`: a HOME-derived path
+	// beginning with "-" must never reach cat as an option. The sh -c
+	// wrapper's `test -f` is false for a FIFO WITHOUT opening it, so no
+	// stuck `cat` is left inside the container when the client is killed
+	// on timeout.
+	out, stderr, err := runCapped(exec.Command(dockerCLI(), "exec", c.ID, "sh", "-c", "test -f \"$1\" && exec cat -- \"$1\"", "sh", path), containerFileMax)
 	if err != nil {
 		return "", fmt.Errorf("docker cp/exec cat %s: %w (%s)", path, err, strings.TrimSpace(stderr))
 	}
@@ -252,7 +270,15 @@ func extractSingleFileContent(tarBytes []byte) (string, error) {
 			return "", fmt.Errorf("parse docker cp tar stream: %w", err)
 		}
 		if hdr.Typeflag == tar.TypeReg {
-			data, err := io.ReadAll(io.LimitReader(tr, 1<<20)) // 1 MiB cap: identity files are tiny
+			// Refuse an entry larger than the cap outright: silently
+			// truncating at 1 MiB could hand discovery a cut-off credential
+			// (or a file that is not what it claims to be).
+			if hdr.Size > containerFileMax {
+				return "", fmt.Errorf("docker cp tar stream entry %s is %d bytes, over the %d byte cap", hdr.Name, hdr.Size, containerFileMax)
+			}
+			// Cap the read at the declared entry size (never more): the
+			// reader must not run past the tar record into padding.
+			data, err := io.ReadAll(io.LimitReader(tr, hdr.Size))
 			if err != nil {
 				return "", fmt.Errorf("read %s from docker cp tar stream: %w", hdr.Name, err)
 			}

@@ -4,8 +4,9 @@ package urnettools
 
 // Regression tests for the inline review of the container-discovery-ghost PR:
 // descriptor-pinned session staging, no-follow/non-blocking jwt read, bounded
-// lock wait, and the session-save output path. Unix-only (symlinks, FIFOs,
-// hardlinks, flock).
+// lock wait, the session-save output path, and the converted self-heal /
+// hotswap-counter writers (symlink/FIFO/state-dir-swap refusals).
+// Unix-only (symlinks, FIFOs, hardlinks, flock).
 
 import (
 	"os"
@@ -316,5 +317,134 @@ func TestWriteSessionBundleOverwritesRegularFile(t *testing.T) {
 	}
 	if fi, _ := os.Stat(out); fi.Mode().Perm() != 0o600 {
 		t.Fatalf("mode = %v, want 0600", fi.Mode().Perm())
+	}
+}
+
+// --- D4: converted writers (self-heal marker, hotswap counters) ---
+
+// writeSelfHeal resolves through discovery; the mocked provider hands the
+// tool a state dir. A state dir that IS a symlink must be refused outright:
+// the old pathname writer opened THROUGH it (O_NOFOLLOW only guards the
+// final component) and a root write landed in the link target.
+func TestWriteSelfHealRefusesSymlinkedStateDir(t *testing.T) {
+	real := t.TempDir()
+	link := filepath.Join(t.TempDir(), "state")
+	if err := os.Symlink(real, link); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	origDiscover := discoverSystemdFn
+	origDocker := discoverDockerFn
+	discoverSystemdFn = func() []Provider {
+		return []Provider{{User: "test-user", StateDir: link, Unit: "urnetwork.service", Running: true}}
+	}
+	discoverDockerFn = func() []Provider { return nil }
+	defer func() {
+		discoverSystemdFn = origDiscover
+		discoverDockerFn = origDocker
+	}()
+	if err := cmdSelfHeal([]string{"on", "--state-dir", link}); err == nil {
+		t.Fatal("self-heal wrote through a symlinked state dir; must refuse")
+	}
+	if _, err := os.Stat(filepath.Join(real, "proxy_self_heal")); err == nil {
+		t.Fatalf("marker landed in the symlink target; the swap was followed")
+	}
+}
+
+// A symlink planted at the marker path itself must not redirect the write.
+func TestWriteSelfHealRefusesSymlinkMarker(t *testing.T) {
+	dir := t.TempDir()
+	victim := filepath.Join(dir, "victim")
+	if err := os.WriteFile(victim, []byte("precious"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(victim, filepath.Join(dir, "proxy_self_heal")); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	origDiscover := discoverSystemdFn
+	origDocker := discoverDockerFn
+	discoverSystemdFn = func() []Provider {
+		return []Provider{{User: "test-user", StateDir: dir, Unit: "urnetwork.service", Running: true}}
+	}
+	discoverDockerFn = func() []Provider { return nil }
+	defer func() {
+		discoverSystemdFn = origDiscover
+		discoverDockerFn = origDocker
+	}()
+	if err := cmdSelfHeal([]string{"on", "--state-dir", dir}); err == nil {
+		t.Fatal("self-heal followed a symlink marker; must refuse")
+	}
+	if b, _ := os.ReadFile(victim); string(b) != "precious" {
+		t.Fatalf("symlink target modified: %q", b)
+	}
+}
+
+// A FIFO planted as the marker must never hang the write.
+func TestWriteSelfHealFifoMarkerNoHang(t *testing.T) {
+	dir := t.TempDir()
+	if err := unix.Mkfifo(filepath.Join(dir, "proxy_self_heal"), 0o600); err != nil {
+		t.Skipf("mkfifo: %v", err)
+	}
+	origDiscover := discoverSystemdFn
+	origDocker := discoverDockerFn
+	discoverSystemdFn = func() []Provider {
+		return []Provider{{User: "test-user", StateDir: dir, Unit: "urnetwork.service", Running: true}}
+	}
+	discoverDockerFn = func() []Provider { return nil }
+	defer func() {
+		discoverSystemdFn = origDiscover
+		discoverDockerFn = origDocker
+	}()
+	var err error
+	runWithin(t, 5*time.Second, "self-heal write to a FIFO marker", func() {
+		err = cmdSelfHeal([]string{"on", "--state-dir", dir})
+	})
+	if err == nil {
+		t.Fatal("self-heal wrote into a FIFO marker; must refuse")
+	}
+}
+
+// recordHotswapDecline is best-effort: a symlinked state dir must be a silent
+// no-op, never a root write through the link into the target directory.
+func TestRecordHotswapDeclineRefusesSymlinkedStateDir(t *testing.T) {
+	real := t.TempDir()
+	link := filepath.Join(t.TempDir(), "state")
+	if err := os.Symlink(real, link); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	recordHotswapDecline(link, "version_old")
+	if _, err := os.Stat(filepath.Join(real, hotswapCountsFile)); err == nil {
+		t.Fatalf("hotswap counters landed in the symlink target; the swap was followed")
+	}
+}
+
+// A symlink planted at the counters temp path must not redirect the write.
+func TestRecordHotswapDeclineRefusesSymlinkCountsFile(t *testing.T) {
+	dir := t.TempDir()
+	victim := filepath.Join(t.TempDir(), "victim")
+	if err := os.WriteFile(victim, []byte("untouched"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(victim, filepath.Join(dir, hotswapCountsFile+".tmp")); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	recordHotswapDecline(dir, "version_old")
+	if b, _ := os.ReadFile(victim); string(b) != "untouched" {
+		t.Fatalf("symlink target modified: %q", b)
+	}
+}
+
+// A FIFO planted as the counters temp path must never hang the write.
+func TestRecordHotswapDeclineFifoNoHang(t *testing.T) {
+	dir := t.TempDir()
+	if err := unix.Mkfifo(filepath.Join(dir, hotswapCountsFile+".tmp"), 0o600); err != nil {
+		t.Skipf("mkfifo: %v", err)
+	}
+	var err error
+	runWithin(t, 5*time.Second, "hotswap counter write to a FIFO", func() {
+		recordHotswapDecline(dir, "version_old")
+	})
+	_ = err
+	if _, serr := os.Stat(filepath.Join(dir, hotswapCountsFile)); serr == nil {
+		t.Fatalf("counters file appeared despite the FIFO at the temp path")
 	}
 }
