@@ -108,3 +108,30 @@ func TestReload_SeededBootProxy_RotatesOnCredentialChange(t *testing.T) {
 		t.Fatalf("relaunched proxy must record the new credentials, got %+v ok=%v", got, ok)
 	}
 }
+
+// A rotated proxy with active clients must be cancelled immediately, not
+// drained: draining keeps the old credentials serving until the last client
+// leaves, and the launch pass skips addresses that are still draining.
+func TestReload_RotatedBusyProxy_IsNotDrained(t *testing.T) {
+	const addr = "10.255.0.7:1080"
+	boot := &connect.ProxySettings{Network: "tcp", Address: addr, Auth: &proxy.Auth{User: "alice", Password: "secret"}}
+	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, addr+":alice:NEWPASS"), boot)
+	r.seedRunningAuth([]*connect.ProxySettings{boot})
+
+	RegisterProxy(987001, addr)
+	bw := RegisterProxyBandwidth(987001)
+	bw.Clients.Store(3) // active sessions on the old credentials
+
+	r.reload()
+
+	if n := cancelled.Load(); n != 1 {
+		t.Fatalf("busy rotated proxy: expected old goroutine cancelled once, got %d", n)
+	}
+	if r.isDraining(addr) {
+		t.Fatal("rotated proxy must not enter the draining state")
+	}
+	got, ok := r.runningAuthFor(addr)
+	if !ok || got.Auth == nil || got.Auth.Password != "NEWPASS" {
+		t.Fatalf("relaunched proxy must record the new credentials, got %+v ok=%v", got, ok)
+	}
+}

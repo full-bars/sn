@@ -541,7 +541,9 @@ func (r *ProxyReloader) reload() {
 	// The rotated set is appended here: its addresses were already placed in
 	// `added` above (so they relaunch with the new auth in this same pass),
 	// and folding them into `removed` is what cancels the OLD goroutine.
+	rotatedSet := make(map[string]bool, len(rotated))
 	for _, addr := range rotated {
+		rotatedSet[addr] = true
 		removed = append(removed, addr)
 	}
 	for addr := range running {
@@ -653,7 +655,12 @@ func (r *ProxyReloader) reload() {
 		delete(r.state.Proxies, addr)
 
 		bw := proxyBandwidthByAddressV2026(addr)
-		if bw == nil || bw.Clients.Load() == 0 {
+		// A rotated proxy is never drained: its old credentials are being
+		// replaced (usually because they are dead or revoked), the launch pass
+		// skips addresses that are still draining, and the drain loop has no
+		// deadline. Draining would keep the old credentials serving until the
+		// last client leaves, i.e. the rotation would not take effect.
+		if rotatedSet[addr] || bw == nil || bw.Clients.Load() == 0 {
 			cancel()
 			continue
 		}
