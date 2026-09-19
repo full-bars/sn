@@ -68,8 +68,8 @@ func writeProxyFile(t *testing.T, line string) string {
 // A seeded, boot-launched proxy whose credentials are unchanged must survive
 // the first reload untouched.
 func TestReload_SeededBootProxy_NotRestarted(t *testing.T) {
-	boot := &connect.ProxySettings{Network: "tcp", Address: "1.1.1.1:1080", Auth: &proxy.Auth{User: "alice", Password: "secret"}}
-	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, "1.1.1.1:1080:alice:secret"), boot)
+	boot := &connect.ProxySettings{Network: "tcp", Address: "192.0.2.1:1080", Auth: &proxy.Auth{User: "alice", Password: "secret"}}
+	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, "192.0.2.1:1080:alice:secret"), boot)
 	r.seedRunningAuth([]*connect.ProxySettings{boot})
 
 	r.reload()
@@ -82,8 +82,8 @@ func TestReload_SeededBootProxy_NotRestarted(t *testing.T) {
 // Pins the reason seeding must precede the first reload: an unseeded
 // boot-launched proxy is treated as unknown and rotated.
 func TestReload_UnseededBootProxy_IsRotated(t *testing.T) {
-	boot := &connect.ProxySettings{Network: "tcp", Address: "1.1.1.1:1080", Auth: &proxy.Auth{User: "alice", Password: "secret"}}
-	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, "1.1.1.1:1080:alice:secret"), boot)
+	boot := &connect.ProxySettings{Network: "tcp", Address: "192.0.2.1:1080", Auth: &proxy.Auth{User: "alice", Password: "secret"}}
+	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, "192.0.2.1:1080:alice:secret"), boot)
 
 	r.reload()
 
@@ -94,8 +94,8 @@ func TestReload_UnseededBootProxy_IsRotated(t *testing.T) {
 
 // Re-pasting the same address with new credentials rotates the seeded proxy.
 func TestReload_SeededBootProxy_RotatesOnCredentialChange(t *testing.T) {
-	boot := &connect.ProxySettings{Network: "tcp", Address: "1.1.1.1:1080", Auth: &proxy.Auth{User: "alice", Password: "secret"}}
-	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, "1.1.1.1:1080:alice:NEWPASS"), boot)
+	boot := &connect.ProxySettings{Network: "tcp", Address: "192.0.2.1:1080", Auth: &proxy.Auth{User: "alice", Password: "secret"}}
+	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, "192.0.2.1:1080:alice:NEWPASS"), boot)
 	r.seedRunningAuth([]*connect.ProxySettings{boot})
 
 	r.reload()
@@ -103,7 +103,7 @@ func TestReload_SeededBootProxy_RotatesOnCredentialChange(t *testing.T) {
 	if n := cancelled.Load(); n != 1 {
 		t.Fatalf("expected old goroutine cancelled once on credential change, got %d", n)
 	}
-	got, ok := r.runningAuthFor("1.1.1.1:1080")
+	got, ok := r.runningAuthFor("192.0.2.1:1080")
 	if !ok || got.Auth == nil || got.Auth.Password != "NEWPASS" {
 		t.Fatalf("relaunched proxy must record the new credentials, got %+v ok=%v", got, ok)
 	}
@@ -113,7 +113,7 @@ func TestReload_SeededBootProxy_RotatesOnCredentialChange(t *testing.T) {
 // drained: draining keeps the old credentials serving until the last client
 // leaves, and the launch pass skips addresses that are still draining.
 func TestReload_RotatedBusyProxy_IsNotDrained(t *testing.T) {
-	const addr = "10.255.0.7:1080"
+	const addr = "192.0.2.7:1080"
 	boot := &connect.ProxySettings{Network: "tcp", Address: addr, Auth: &proxy.Auth{User: "alice", Password: "secret"}}
 	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, addr+":alice:NEWPASS"), boot)
 	r.seedRunningAuth([]*connect.ProxySettings{boot})
@@ -133,5 +133,34 @@ func TestReload_RotatedBusyProxy_IsNotDrained(t *testing.T) {
 	got, ok := r.runningAuthFor(addr)
 	if !ok || got.Auth == nil || got.Auth.Password != "NEWPASS" {
 		t.Fatalf("relaunched proxy must record the new credentials, got %+v ok=%v", got, ok)
+	}
+}
+
+// Rotating credentials relaunches the proxy in the same pass; it must keep its
+// state entry so the relaunch reuses the stable ID and persisted health.
+func TestReload_RotatedProxy_KeepsStateEntry(t *testing.T) {
+	const addr = "192.0.2.20:1080"
+	boot := &connect.ProxySettings{Network: "tcp", Address: addr, Auth: &proxy.Auth{User: "test-user", Password: "test-pass"}}
+	r, _ := bootLaunchedReloader(t, writeProxyFile(t, addr+":test-user:rotated-pass"), boot)
+	r.seedRunningAuth([]*connect.ProxySettings{boot})
+
+	state := &ProxyState{Proxies: map[string]ProxyEntry{addr: {ID: 7, Health: "up"}}}
+	if err := writeProxyState(state); err != nil {
+		t.Fatal(err)
+	}
+	r.state = state
+
+	r.reload()
+
+	after, err := readProxyState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	kept, ok := after.Proxies[addr]
+	if !ok {
+		t.Fatal("rotated proxy lost its state entry")
+	}
+	if kept.ID != 7 || kept.Health != "up" {
+		t.Fatalf("rotated proxy must keep ID 7 and health up, got ID=%d health=%q", kept.ID, kept.Health)
 	}
 }
