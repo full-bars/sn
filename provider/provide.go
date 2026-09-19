@@ -543,9 +543,12 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 						dropAge := time.Since(startedAt)
 						tlog("[proxy][slow-retry] proxy[%d] (%s) dropped after %s of continuous failure (%d total attempts)\n",
 							getProxyIndex(proxySettings.Address), proxySettings.Address, formatDuration(dropAge), authFailures)
+						var cancel context.CancelFunc
 						st.proxyCancelMu.Lock()
-						cancel := st.proxyCancelMap[proxySettings.Address]
-						delete(st.proxyCancelMap, proxySettings.Address)
+						if proxyOwnsLaunch(proxyCtx, proxySettings.Address) {
+							cancel = st.proxyCancelMap[proxySettings.Address]
+							delete(st.proxyCancelMap, proxySettings.Address)
+						}
 						st.proxyCancelMu.Unlock()
 						if cancel != nil {
 							cancel()
@@ -610,7 +613,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	}()
 
 	if err != nil {
-		provideHandleAuthFailure(st, proxySettings, isNative, isURLSourced, err)
+		provideHandleAuthFailure(st, proxyCtx, proxySettings, isNative, isURLSourced, err)
 		return
 	}
 
@@ -777,12 +780,10 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 }
 
 // provideHandleAuthFailure logs the appropriate message after auth retries.
-func provideHandleAuthFailure(st *provideState, proxySettings *connect.ProxySettings, isNative, isURLSourced bool, err error) {
+func provideHandleAuthFailure(st *provideState, proxyCtx context.Context, proxySettings *connect.ProxySettings, isNative, isURLSourced bool, err error) {
 	if proxySettings != nil {
 		if isURLSourced {
-			st.proxyCancelMu.Lock()
-			delete(st.proxyCancelMap, proxySettings.Address)
-			st.proxyCancelMu.Unlock()
+			deleteProxyCancelIfCurrent(&st.proxyCancelMu, st.proxyCancelMap, proxyCtx, proxySettings.Address)
 
 			if errors.Is(err, errProxyURLBelowBar) {
 				tlog("[proxy][init] proxy[%d] (%s) rejected by stage-1 quality gate: %v. Re-graded next fetch cycle.\n",
@@ -980,6 +981,7 @@ func provideLauncherLoop(st *provideState) func() {
 			proxyCtx, proxyCancel := context.WithCancel(st.ctx)
 			st.proxyCancelMu.Lock()
 			st.proxyCancelMap[proxySettings.Address] = proxyCancel
+			proxyCtx = withProxyLaunchGen(proxyCtx, beginProxyLaunch(proxySettings.Address))
 			st.proxyCancelMu.Unlock()
 
 			stableID := getProxyIndex(proxySettings.Address)

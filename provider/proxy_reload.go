@@ -266,6 +266,58 @@ func sameAuth(a, b *connect.ProxySettings) bool {
 	}
 }
 
+// proxyLaunches records, per proxy address, the launch generation that
+// currently owns the address in the cancel map. A credential rotation
+// relaunches a proxy while the cancelled goroutine of the previous launch is
+// still unwinding, so an exiting goroutine must not remove or cancel the
+// cancel-map entry unless it is still the current launch; otherwise it deletes
+// the replacement's entry and the next reload starts a duplicate proxy.
+var proxyLaunches = struct {
+	mu      sync.Mutex
+	next    uint64
+	current map[string]uint64
+}{current: map[string]uint64{}}
+
+type proxyLaunchGenKey struct{}
+
+// beginProxyLaunch starts a new launch generation for addr and returns it.
+// Callers hold the cancel-map lock so the generation and the cancel-map entry
+// change together.
+func beginProxyLaunch(addr string) uint64 {
+	proxyLaunches.mu.Lock()
+	defer proxyLaunches.mu.Unlock()
+	proxyLaunches.next++
+	proxyLaunches.current[addr] = proxyLaunches.next
+	return proxyLaunches.next
+}
+
+func withProxyLaunchGen(ctx context.Context, gen uint64) context.Context {
+	return context.WithValue(ctx, proxyLaunchGenKey{}, gen)
+}
+
+// proxyOwnsLaunch reports whether the goroutine that owns ctx is still the
+// current launch of addr. A context without a generation (tests, direct
+// callers) is treated as owning.
+func proxyOwnsLaunch(ctx context.Context, addr string) bool {
+	gen, ok := ctx.Value(proxyLaunchGenKey{}).(uint64)
+	if !ok {
+		return true
+	}
+	proxyLaunches.mu.Lock()
+	defer proxyLaunches.mu.Unlock()
+	return proxyLaunches.current[addr] == gen
+}
+
+// deleteProxyCancelIfCurrent drops addr from cancelMap on behalf of the
+// goroutine that owns ctx, but only while that launch is still current.
+func deleteProxyCancelIfCurrent(mu *sync.Mutex, cancelMap map[string]context.CancelFunc, ctx context.Context, addr string) {
+	mu.Lock()
+	defer mu.Unlock()
+	if proxyOwnsLaunch(ctx, addr) {
+		delete(cancelMap, addr)
+	}
+}
+
 // runningAuthFor returns the settings the proxy at addr was launched with,
 // or ok=false if it is not running / was started before this tracking existed
 // (e.g. initial startup loop populates cancelMap but not runningAuth).
@@ -751,6 +803,7 @@ func (r *ProxyReloader) reload() {
 		proxyCtx, proxyCancel := context.WithCancel(r.parentCtx)
 		r.cancelMapMu.Lock()
 		r.cancelMap[settings.Address] = proxyCancel
+		proxyCtx = withProxyLaunchGen(proxyCtx, beginProxyLaunch(settings.Address))
 		// Record the settings this proxy launched with, so a later reload can
 		// see when its credentials changed and rotate it (see the rotation
 		// branch in reload()).
