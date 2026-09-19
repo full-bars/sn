@@ -101,21 +101,19 @@ func cmdDirectToggle(args []string, force, dryRun bool) error {
 	if err := os.MkdirAll(toggleDir, 0700); err != nil {
 		return fmt.Errorf("could not create dir for direct toggle: %v", err)
 	}
-	// Match every other state-write in this package (session_cmds.go,
-	// self_heal.go): a root-run `urnet-tools direct` must not leave a
-	// root-owned dir/file the provider's unprivileged user can't read, or
-	// the toggle silently falls back to default behavior for that user.
-	if err := chownLikeStateOwner(p.StateDir, toggleDir); err != nil {
-		return fmt.Errorf("could not set owner on direct toggle dir: %v", err)
+	// Write the toggle through a descriptor-pinned handle (the state dir
+	// itself is opened O_NOFOLLOW): the marker and its ownership are set
+	// relative to ONE open directory, so a provider user who swaps the
+	// state dir for a symlink can no longer redirect the write. Ownership
+	// lands on the descriptor (writeOwned fchowns from the handle's
+	// fstat), which replaces the two pathname lookups the old code made
+	// (chownLikeStateOwner by path plus writeStateFileOwned).
+	h, err := openStateDirHandle(toggleDir)
+	if err != nil {
+		return fmt.Errorf("could not open direct toggle dir %s: %v", toggleDir, err)
 	}
-	// writeStateFile (O_NOFOLLOW) rather than os.WriteFile: the toggle path
-	// sits in a user-owned directory, so a planted symlink
-	// (~/.urnetwork/direct -> /etc/shadow) would otherwise let root
-	// truncate an arbitrary file.
-	//
-	// Ownership is set on the open descriptor (writeStateFileOwned), not by a
-	// second lookup of togglePath that the provider user could redirect.
-	if err := writeStateFileOwned(filepath.Dir(togglePath), filepath.Base(togglePath), []byte(val), 0600, p.StateDir); err != nil {
+	defer h.Close()
+	if err := h.writeOwned("direct", []byte(val), 0o600); err != nil {
 		return fmt.Errorf("could not write direct toggle for %s: %v", providerLabel(p), err)
 	}
 

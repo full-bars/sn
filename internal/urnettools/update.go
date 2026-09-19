@@ -1540,15 +1540,14 @@ func migrateUnitToNotify(p Provider) (bool, error) {
 		return false, nil // nothing to do (Type=notify already)
 	}
 
-	// Back up the original unit file before overwriting. writeStateFile
-	// (O_NOFOLLOW), not copyFile: a user unit lives in a directory the
-	// provider user controls, and this runs as root.
-	backupPath := unitPath + ".bak"
-	if err := writeStateFile(filepath.Dir(unitPath), filepath.Base(backupPath), content, 0o644); err != nil {
+	// Back up the original unit file before overwriting. The backup goes
+	// through a descriptor-pinned handle (see writeUnitBackup): a user
+	// unit lives in a directory the provider user controls, and this runs
+	// as root.
+	if err := writeUnitBackup(unitPath, content); err != nil {
 		return false, fmt.Errorf("backup unit file %s: %w", unitPath, err)
 	}
-	_ = chownLikeStateOwner(filepath.Dir(unitPath), backupPath)
-	fmt.Printf("backed up unit file %s -> %s\n", unitPath, backupPath)
+	fmt.Printf("backed up unit file %s -> %s\n", unitPath, unitPath+".bak")
 
 	if err := replaceUnitFile(unitPath, []byte(newContent)); err != nil {
 		return false, fmt.Errorf("write updated unit file: %w", err)
@@ -1727,20 +1726,36 @@ func demoteUnitToSimple(p Provider) (bool, error) {
 	return true, nil
 }
 
-// replaceUnitFile atomically replaces a unit file. A user unit lives in a
-// directory the provider user controls while this runs as root, so the temp
-// file goes through writeStateFile (O_NOFOLLOW): os.WriteFile would follow
-// a symlink planted at the temp path. rename(2) replaces a symlink at the
-// final path rather than writing through it.
-func replaceUnitFile(unitPath string, content []byte) error {
-	dir, tmpName := filepath.Dir(unitPath), filepath.Base(unitPath)+".tmp"
-	if err := writeStateFile(dir, tmpName, content, 0o644); err != nil {
+// writeUnitBackup writes <unitPath>.bak next to the unit file, handing it
+// to the directory owner through a descriptor-pinned handle: the write and
+// its ownership are relative to one open directory, so a unit directory
+// that is a symlink (or is swapped for one) cannot aim a root backup write
+// at another tree.
+func writeUnitBackup(unitPath string, content []byte) error {
+	dir, name := filepath.Dir(unitPath), filepath.Base(unitPath)+".bak"
+	h, err := openStateDirHandle(dir)
+	if err != nil {
 		return err
 	}
-	// A new file created by root would leave the provider user's own unit
-	// owned by root; hand it to the directory's owner before it goes live.
-	if err := chownLikeStateOwner(dir, filepath.Join(dir, tmpName)); err != nil {
-		os.Remove(filepath.Join(dir, tmpName))
+	defer h.Close()
+	return h.writeOwned(name, content, 0o644)
+}
+
+// replaceUnitFile atomically replaces a unit file. A user unit lives in a
+// directory the provider user controls while this runs as root, so the temp
+// file goes through a descriptor-pinned handle: the write and its ownership
+// are relative to one open directory, and a unit directory that is a symlink
+// (or is swapped for one) cannot aim a root write at another tree.
+// rename(2) replaces a symlink at the final path rather than writing through
+// it.
+func replaceUnitFile(unitPath string, content []byte) error {
+	dir, tmpName := filepath.Dir(unitPath), filepath.Base(unitPath)+".tmp"
+	h, err := openStateDirHandle(dir)
+	if err != nil {
+		return err
+	}
+	defer h.Close()
+	if err := h.writeOwned(tmpName, content, 0o644); err != nil {
 		return err
 	}
 	if err := os.Rename(filepath.Join(dir, tmpName), unitPath); err != nil {

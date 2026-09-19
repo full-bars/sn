@@ -84,10 +84,10 @@ func TestContainerCgroupMarkerDetection(t *testing.T) {
 // container in the same runtime shares /docker/<id> in its cgroup path.
 func TestClassifyContainerUnknownNS(t *testing.T) {
 	cases := []struct {
-		name      string
-		cg        string
-		ourCg     string
-		want      bool
+		name  string
+		cg    string
+		ourCg string
+		want  bool
 	}{
 		{"docker scope vs our system slice", "0::/system.slice/docker-abc123.scope", "0::/system.slice/urnetwork.service", true},
 		{"docker cgroupfs driver vs ours", "5:cpu:/docker/abc123456789", "5:cpu:/system.slice/urnetwork.service", true},
