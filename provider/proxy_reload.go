@@ -313,8 +313,16 @@ func proxyOwnsLaunch(ctx context.Context, addr string) bool {
 func deleteProxyCancelIfCurrent(mu *sync.Mutex, cancelMap map[string]context.CancelFunc, ctx context.Context, addr string) {
 	mu.Lock()
 	defer mu.Unlock()
-	if proxyOwnsLaunch(ctx, addr) {
+	gen, ok := ctx.Value(proxyLaunchGenKey{}).(uint64)
+	if !ok {
 		delete(cancelMap, addr)
+		return
+	}
+	proxyLaunches.mu.Lock()
+	defer proxyLaunches.mu.Unlock()
+	if proxyLaunches.current[addr] == gen {
+		delete(cancelMap, addr)
+		delete(proxyLaunches.current, addr)
 	}
 }
 
