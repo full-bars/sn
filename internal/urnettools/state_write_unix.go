@@ -38,6 +38,21 @@ func writeStateFileOwned(stateDir, name string, data []byte, perm os.FileMode, o
 	if err != nil {
 		return fmt.Errorf("write %s: %v", path, err)
 	}
+	return writeThroughFd(fd, path, data, perm, func(fd int) error {
+		if ownerDir == "" {
+			return nil
+		}
+		return chownFdLikeStateOwner(ownerDir, fd)
+	})
+}
+
+// writeThroughFd finishes a state-file write on a descriptor the caller just
+// opened O_WRONLY|O_NONBLOCK: it verifies the OPENED object, clears the
+// non-blocking flag, truncates, writes, applies perm, runs chown (fd-based,
+// may be nil) and closes. It takes ownership of fd on every path. Shared by
+// the pathname writer above and the dirfd-relative stateDirHandle writer so
+// both enforce the same checks.
+func writeThroughFd(fd int, path string, data []byte, perm os.FileMode, chown func(fd int) error) error {
 	// A FIFO that DOES have a reader opens successfully; refuse it (and
 	// devices, sockets, directories) rather than write state into it.
 	var st unix.Stat_t
@@ -48,6 +63,14 @@ func writeStateFileOwned(stateDir, name string, data []byte, perm os.FileMode, o
 	if st.Mode&unix.S_IFMT != unix.S_IFREG {
 		unix.Close(fd)
 		return fmt.Errorf("refusing to write %s: not a regular file", path)
+	}
+	// A second name for the same inode means the "state file" may really be a
+	// file elsewhere (a hardlink planted by the directory owner). Truncating
+	// and fchown'ing it would act on that other file. fs.protected_hardlinks
+	// blocks this on most kernels; do not depend on the sysctl.
+	if st.Nlink > 1 {
+		unix.Close(fd)
+		return fmt.Errorf("refusing to write %s: file has %d hard links", path, st.Nlink)
 	}
 	// O_NONBLOCK was only for FIFO detection — the actual file (regular,
 	// freshly created or truncated) must be written in blocking mode, or a
@@ -75,8 +98,8 @@ func writeStateFileOwned(stateDir, name string, data []byte, perm os.FileMode, o
 		f.Close()
 		return fmt.Errorf("chmod %s: %v", path, err)
 	}
-	if ownerDir != "" {
-		if err := chownFdLikeStateOwner(ownerDir, int(f.Fd())); err != nil {
+	if chown != nil {
+		if err := chown(int(f.Fd())); err != nil {
 			f.Close()
 			return fmt.Errorf("chown %s: %v", path, err)
 		}
@@ -90,6 +113,10 @@ func writeStateFileOwned(stateDir, name string, data []byte, perm os.FileMode, o
 // openNonblockFlag is OR-ed into an open used only to inspect a path that may
 // be a FIFO: a plain O_RDONLY open of a FIFO with no writer blocks forever.
 const openNonblockFlag = unix.O_NONBLOCK
+
+// openNoFollowFlag is OR-ed into an open whose final path component must not
+// be a symlink.
+const openNoFollowFlag = unix.O_NOFOLLOW
 
 // chownStateFile changes ownership of a file without following symlinks.
 // Uses Lchown instead of Chown so a symlink at the target path is not followed.
@@ -110,10 +137,18 @@ func chownStateDir(path string, uid, gid int) error {
 // state access primitives.
 func openStateFileNoFollow(stateDir, name string) (*os.File, error) {
 	full := filepath.Join(stateDir, name)
-	fd, err := unix.Open(full, unix.O_RDONLY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
+	fd, err := unix.Open(full, unix.O_RDONLY|unix.O_NOFOLLOW|unix.O_CLOEXEC|unix.O_NONBLOCK, 0)
 	if err != nil {
 		return nil, err
 	}
+	return finishStateRead(fd, full)
+}
+
+// finishStateRead validates an fd opened O_RDONLY|O_NONBLOCK and wraps it.
+// O_NONBLOCK is what lets the open of a planted FIFO return instead of
+// blocking forever on a missing writer; the fstat then rejects it. It takes
+// ownership of fd on every path.
+func finishStateRead(fd int, full string) (*os.File, error) {
 	var stat unix.Stat_t
 	if err := unix.Fstat(fd, &stat); err != nil {
 		unix.Close(fd)
@@ -121,7 +156,12 @@ func openStateFileNoFollow(stateDir, name string) (*os.File, error) {
 	}
 	if stat.Mode&unix.S_IFMT != unix.S_IFREG {
 		unix.Close(fd)
-		return nil, fmt.Errorf("refusing to read %s: not a regular file (symlink or directory)", full)
+		return nil, fmt.Errorf("refusing to read %s: not a regular file (symlink, FIFO or directory)", full)
+	}
+	// Regular file confirmed: return it to blocking mode.
+	if _, err := unix.FcntlInt(uintptr(fd), unix.F_SETFL, 0); err != nil {
+		unix.Close(fd)
+		return nil, fmt.Errorf("clear nonblock on %s: %w", full, err)
 	}
 	return os.NewFile(uintptr(fd), full), nil
 }

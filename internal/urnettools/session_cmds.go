@@ -499,8 +499,8 @@ Examples:
 	// Validate the session file BEFORE resolving a provider. On load, the
 	// file must exist; checking first avoids invoking docker/systemd
 	// discovery (which can hang when daemons are absent) for a trivially
-	// rejected command. On save, the file is an output target — create
-	// its parent dir eagerly so the dry-run path can report the target.
+	// rejected command. On save, the file is an output target and is not
+	// touched until the bundle is built (see writeSessionBundle).
 	//
 	// The file is opened ONCE here and its bytes read from that descriptor:
 	// os.Stat accepts directories and FIFOs (a FIFO would block the later
@@ -581,19 +581,8 @@ func cmdSessionSave(p Provider, outFile string, dryRun, force bool) error {
 	if err != nil {
 		return fmt.Errorf("failed to create session bundle: %v", err)
 	}
-	f, err := os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
-	if err != nil {
-		return fmt.Errorf("write %s: %v", outFile, err)
-	}
-	if _, err := f.Write(bundle); err != nil {
-		f.Close()
-		return fmt.Errorf("write %s: %v", outFile, err)
-	}
-	if err := f.Close(); err != nil {
-		return fmt.Errorf("write %s: %v", outFile, err)
-	}
-	if err := os.Chmod(outFile, 0o600); err != nil {
-		return fmt.Errorf("chmod %s: %v", outFile, err)
+	if err := writeSessionBundle(outFile, bundle); err != nil {
+		return err
 	}
 	fmt.Printf("Session saved to %s (encrypted)\n", outFile)
 	return nil
@@ -608,14 +597,27 @@ func stageSessionFiles(p Provider, files map[string][]byte, allowDiff bool) (str
 	if newID == "" {
 		return "", errors.New("could not extract network_id from the session bundle's JWT; bundle may be corrupt")
 	}
+	// Every read and write below goes through one open descriptor on the
+	// state dir. The provider user owns that directory and can rename it at
+	// any moment, so re-resolving p.StateDir by pathname for each step would
+	// let a swapped symlink redirect root's reads (into a backup the user can
+	// read) and writes/chowns (onto another user's files).
+	root, err := openStateDirHandle(p.StateDir)
+	if err != nil {
+		return "", err
+	}
+	defer root.Close()
+
 	// Read the current identity. Distinguish "no jwt" (fresh provider, no
 	// account to enforce against) from "jwt present but unreadable", which
 	// must fail closed rather than silently skip the same-account gate
 	//: a truncated/corrupt live jwt must not let a bundle
-	// for a different network load as if no identity existed.
+	// for a different network load as if no identity existed. The read is
+	// no-follow, non-blocking and bounded: a symlink to /dev/zero or a FIFO
+	// planted as jwt must not hang or exhaust a root-run tool.
 	currentID := ""
 	jwtPath := filepath.Join(p.StateDir, "jwt")
-	if b, err := os.ReadFile(jwtPath); err == nil {
+	if b, err := root.readFile("jwt", maxStateFileBytes); err == nil {
 		_, cur, _, decErr := decodeJWTFromBytes(b)
 		if decErr != nil {
 			if allowDiff {
@@ -626,7 +628,7 @@ func stageSessionFiles(p Provider, files map[string][]byte, allowDiff bool) (str
 		} else {
 			currentID = cur
 		}
-	} else if !os.IsNotExist(err) {
+	} else if !errors.Is(err, fs.ErrNotExist) {
 		return "", fmt.Errorf("could not read current provider jwt at %s: %v", jwtPath, err)
 	}
 	if currentID != "" && newID != currentID && !allowDiff {
@@ -635,59 +637,92 @@ func stageSessionFiles(p Provider, files map[string][]byte, allowDiff bool) (str
 
 	// Back up the live state before touching anything. Nanosecond suffix avoids
 	// two rapid loads colliding over one backup dir.
-	backupDir := filepath.Join(p.StateDir, ".session-backup-"+time.Now().Format("20060102-150405.000000000"))
-	if err := os.MkdirAll(backupDir, 0o700); err != nil {
+	backupName := ".session-backup-" + time.Now().Format("20060102-150405.000000000")
+	backup, err := root.mkdirOwned(backupName)
+	if err != nil {
 		return "", err
 	}
-	if err := chownLikeStateOwner(p.StateDir, backupDir); err != nil {
-		return "", err
-	}
+	defer backup.Close()
 	for _, name := range sessionFiles {
-		b, err := readStateFileNoFollow(p.StateDir, name)
+		b, err := root.readFile(name, maxStateFileBytes)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				continue // absent, fine
 			}
 			return "", fmt.Errorf("backup %s: %v", name, err) // unreadable/perm/symlink: fail, do not silently skip (MEDIUM)
 		}
-		if err := writeStateFile(backupDir, name, b, 0o600); err != nil {
+		if err := backup.writeOwned(name, b, 0o600); err != nil {
 			return "", fmt.Errorf("backup %s: %v", name, err)
-		}
-		if err := chownLikeStateOwner(p.StateDir, filepath.Join(backupDir, name)); err != nil {
-			return "", err
 		}
 	}
 
 	// Stage the new files; the provider applies .session-staging on its next
 	// start and is told a load is pending via .session-pending.
-	stagingDir := filepath.Join(p.StateDir, ".session-staging")
-	if err := os.RemoveAll(stagingDir); err != nil {
+	//
+	// The removal is still by pathname (RemoveAll never follows a symlink at
+	// the leaf, so the worst a swapped ancestor does is remove a directory
+	// literally named .session-staging elsewhere). Everything created after
+	// it is descriptor-relative.
+	if err := os.RemoveAll(filepath.Join(p.StateDir, ".session-staging")); err != nil {
 		return "", err
 	}
-	if err := os.MkdirAll(stagingDir, 0o700); err != nil {
+	staging, err := root.mkdirOwned(".session-staging")
+	if err != nil {
 		return "", err
 	}
-	if err := chownLikeStateOwner(p.StateDir, stagingDir); err != nil {
-		return "", err
-	}
+	defer staging.Close()
 	for _, name := range sessionFiles {
 		if data, ok := files[name]; ok {
-			if err := writeStateFile(stagingDir, name, data, 0o600); err != nil {
-				return "", err
-			}
-			if err := chownLikeStateOwner(p.StateDir, filepath.Join(stagingDir, name)); err != nil {
+			if err := staging.writeOwned(name, data, 0o600); err != nil {
 				return "", err
 			}
 		}
 	}
-	pending := filepath.Join(p.StateDir, ".session-pending")
-	if err := writeStateFile(p.StateDir, ".session-pending", []byte{}, 0o600); err != nil {
+	// The pending marker goes last: a load that failed part-way leaves no
+	// marker, so the provider never applies a half-staged set.
+	if err := root.writeOwned(".session-pending", []byte{}, 0o600); err != nil {
 		return "", err
 	}
-	if err := chownLikeStateOwner(p.StateDir, pending); err != nil {
-		return "", err
+	return backup.Path(), nil
+}
+
+// writeSessionBundle writes the encrypted bundle to outFile. Run as root, a
+// plain O_TRUNC open would follow a symlink planted at the destination (for
+// example in a shared directory) and truncate whatever it points at, and the
+// later path-based chmod would follow it too. So: no symlink is followed at
+// the final component, the OPENED object must be a regular file before
+// anything is truncated (O_NONBLOCK keeps a FIFO from hanging the open), and
+// the mode is set on the descriptor.
+func writeSessionBundle(outFile string, bundle []byte) error {
+	f, err := os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|openNoFollowFlag|openNonblockFlag, 0o600)
+	if err != nil {
+		return fmt.Errorf("write %s: %v", outFile, err)
 	}
-	return backupDir, nil
+	fi, err := f.Stat()
+	if err != nil {
+		f.Close()
+		return fmt.Errorf("write %s: %v", outFile, err)
+	}
+	if !fi.Mode().IsRegular() {
+		f.Close()
+		return fmt.Errorf("refusing to write %s: not a regular file", outFile)
+	}
+	if err := f.Truncate(0); err != nil {
+		f.Close()
+		return fmt.Errorf("write %s: %v", outFile, err)
+	}
+	if _, err := f.Write(bundle); err != nil {
+		f.Close()
+		return fmt.Errorf("write %s: %v", outFile, err)
+	}
+	if err := f.Chmod(0o600); err != nil {
+		f.Close()
+		return fmt.Errorf("chmod %s: %v", outFile, err)
+	}
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("write %s: %v", outFile, err)
+	}
+	return nil
 }
 
 // maxSessionBundleBytes bounds a session bundle read: it holds a handful of

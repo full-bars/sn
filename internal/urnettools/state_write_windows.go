@@ -62,6 +62,10 @@ func writeStateFile(stateDir, name string, data []byte, perm os.FileMode) error 
 // openNonblockFlag has no Windows equivalent; FIFOs do not exist there.
 const openNonblockFlag = 0
 
+// openNoFollowFlag has no Windows equivalent; callers there rely on the
+// post-open regular-file check.
+const openNoFollowFlag = 0
+
 // writeStateFileOwned is writeStateFile; there is no Unix ownership to hand over.
 func writeStateFileOwned(stateDir, name string, data []byte, perm os.FileMode, ownerDir string) error {
 	return writeStateFile(stateDir, name, data, perm)
