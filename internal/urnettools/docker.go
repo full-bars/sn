@@ -185,7 +185,10 @@ func runCappedTimeout(cmd *exec.Cmd, max int64, timeout time.Duration) ([]byte, 
 	var timedOut atomic.Bool
 	timer := time.AfterFunc(timeout, func() {
 		timedOut.Store(true)
-		_ = cmd.Process.Kill()
+		_ = pipe.Close()
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
 	})
 	defer timer.Stop()
 	data, readErr := io.ReadAll(io.LimitReader(pipe, max+1))

@@ -40,11 +40,11 @@ func TestReadSessionLoadFileRejectsFIFOWithoutBlocking(t *testing.T) {
 // killed at the deadline instead of blocking the bounded read forever.
 func TestRunCappedTimeoutKillsStuckCommand(t *testing.T) {
 	start := time.Now()
-	_, _, err := runCappedTimeout(exec.Command("sh", "-c", "sleep 30"), 1024, 300*time.Millisecond)
+	_, _, err := runCappedTimeout(exec.Command("sleep", "30"), 1024, 200*time.Millisecond)
 	if !errors.Is(err, errCommandTimeout) {
 		t.Fatalf("got %v, want errCommandTimeout", err)
 	}
-	if d := time.Since(start); d > 10*time.Second {
+	if d := time.Since(start); d > 3*time.Second {
 		t.Fatalf("took %v; the deadline did not unblock the read", d)
 	}
 	// A command that finishes in time is unaffected.
