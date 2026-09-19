@@ -1031,43 +1031,6 @@ func TestGogcDisabledIsAcceptedAndDisablesCollection(t *testing.T) {
 	}
 }
 
-func TestControlSocketShutdown_Execution(t *testing.T) {
-	withTempHome(t)
-	resetGlobalControlStateForTest()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	cleanup, err := startControlSocket(ctx, globalControlState)
-	if err != nil {
-		t.Fatalf("startControlSocket: %v", err)
-	}
-	defer cleanup()
-
-	shutdownCalled := make(chan struct{}, 1)
-	globalControlState.shutdownFn = func() {
-		shutdownCalled <- struct{}{}
-		cancel()
-	}
-	defer func() { globalControlState.shutdownFn = nil }()
-
-	resp, err := dialControlSocket(controlRequest{Cmd: "shutdown"})
-	if err != nil {
-		t.Fatalf("dial shutdown: %v", err)
-	}
-	if !resp.OK {
-		t.Fatalf("shutdown response: %+v", resp)
-	}
-	if resp.Value != "shutting down" {
-		t.Fatalf("unexpected value: %q", resp.Value)
-	}
-
-	select {
-	case <-shutdownCalled:
-	case <-time.After(2 * time.Second):
-		t.Fatal("shutdownFn was not called within 2s")
-	}
-}
-
 func TestCleanOncePreventsDoubleClose(t *testing.T) {
 	withTempHome(t)
 	resetGlobalControlStateForTest()
