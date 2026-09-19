@@ -17,16 +17,16 @@ import (
 // os.Rename in queuePendingOverride silently discard the other's update.
 // Returns a release function that must be called when done.
 func acquirePendingOverridesLock(queueFile string) (func(), error) {
-	release, err := acquireExclusiveLock(queueFile + ".lock")
+	// A freshly created lock file must belong to the state-dir owner, or the
+	// unprivileged provider's own merge cannot open it and queued overrides
+	// are silently never applied. The ownership change is made on the OPEN
+	// descriptor inside acquireExclusiveLockOwned (best-effort): re-resolving
+	// the pathname afterwards would let a local user swap it before root's
+	// chown.
+	release, err := acquireExclusiveLockOwned(queueFile+".lock", filepath.Dir(queueFile))
 	if err != nil {
 		return nil, fmt.Errorf("pending-overrides: %w", err)
 	}
-	// A freshly created lock file must belong to the state-dir owner, or the
-	// unprivileged provider's own merge cannot open it and queued overrides
-	// are silently never applied. Best-effort: do not fail the command
-	// over chown; the operator-visible symptom (lock owned by root) is at
-	// least no worse than the pre-fix state.
-	_ = chownLockFileLikeStateOwner(filepath.Dir(queueFile), queueFile+".lock")
 	return release, nil
 }
 
@@ -38,12 +38,22 @@ func acquirePendingOverridesLock(queueFile string) (func(), error) {
 // the process exits, however it exits, so a crash cannot leave a stale lock
 // that wedges the fleet. That is the reason for flock over a pidfile.
 func acquireExclusiveLock(lockPath string) (func(), error) {
+	return acquireExclusiveLockOwned(lockPath, "")
+}
+
+// acquireExclusiveLockOwned is acquireExclusiveLock that also hands the lock
+// file to the owner of ownerDir (when non-empty) via fchown on the descriptor
+// it just opened. Best-effort: a chown failure is not a lock failure.
+func acquireExclusiveLockOwned(lockPath, ownerDir string) (func(), error) {
 	// O_NOFOLLOW: a planted symlink at the lock path must not make root
 	// create the symlink TARGET (e.g. a planted ...json.lock -> /etc/nologin
 	// would block non-root logins once root O_CREATEs it) — H2.
 	f, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR|unix.O_NOFOLLOW, 0o600)
 	if err != nil {
 		return nil, fmt.Errorf("open lock file %s: %w", lockPath, err)
+	}
+	if ownerDir != "" {
+		_ = chownFdLikeStateOwner(ownerDir, int(f.Fd()))
 	}
 	if err := unix.Flock(int(f.Fd()), unix.LOCK_EX); err != nil {
 		f.Close()
@@ -53,18 +63,4 @@ func acquireExclusiveLock(lockPath string) (func(), error) {
 		unix.Flock(int(f.Fd()), unix.LOCK_UN)
 		f.Close()
 	}, nil
-}
-
-// chownLockFileLikeStateOwner hands a freshly-created lock file to the state
-// dir's owner. Without this the lock stays root-owned 0600 after a root-run
-// `urnet-tools set/report/rename/profile/fast-auth`, the unprivileged
-// provider's own merge then hits EACCES opening the same lock, and queued
-// overrides are silently never applied. Call AFTER creating the file
-// with the state dir known; best-effort (returns the chown error when the
-// caller wants to surface it).
-func chownLockFileLikeStateOwner(stateDir, lockPath string) error {
-	if stateDir == "" {
-		return nil
-	}
-	return chownLikeStateOwner(stateDir, lockPath)
 }

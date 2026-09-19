@@ -112,11 +112,11 @@ func cmdDirectToggle(args []string, force, dryRun bool) error {
 	// sits in a user-owned directory, so a planted symlink
 	// (~/.urnetwork/direct -> /etc/shadow) would otherwise let root
 	// truncate an arbitrary file.
-	if err := writeStateFile(filepath.Dir(togglePath), filepath.Base(togglePath), []byte(val), 0600); err != nil {
+	//
+	// Ownership is set on the open descriptor (writeStateFileOwned), not by a
+	// second lookup of togglePath that the provider user could redirect.
+	if err := writeStateFileOwned(filepath.Dir(togglePath), filepath.Base(togglePath), []byte(val), 0600, p.StateDir); err != nil {
 		return fmt.Errorf("could not write direct toggle for %s: %v", providerLabel(p), err)
-	}
-	if err := chownLikeStateOwner(p.StateDir, togglePath); err != nil {
-		return fmt.Errorf("could not set owner on direct toggle file: %v", err)
 	}
 
 	if p.Running {

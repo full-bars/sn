@@ -16,6 +16,14 @@ import (
 // This prevents a privileged-provider-user from planting
 // node_name -> /etc/shadow and having root overwrite shadow via urnet-tools set.
 func writeStateFile(stateDir, name string, data []byte, perm os.FileMode) error {
+	return writeStateFileOwned(stateDir, name, data, perm, "")
+}
+
+// writeStateFileOwned is writeStateFile that additionally hands the file to
+// the owner of ownerDir (when non-empty) with fchown on the descriptor it
+// wrote through, so a root-run write leaves a file the provider's user can
+// read without a second, swappable pathname lookup.
+func writeStateFileOwned(stateDir, name string, data []byte, perm os.FileMode, ownerDir string) error {
 	path := filepath.Join(stateDir, name)
 
 	// Reject if path is already a symlink (attack indicator)
@@ -66,6 +74,12 @@ func writeStateFile(stateDir, name string, data []byte, perm os.FileMode) error 
 	if err := f.Chmod(perm); err != nil {
 		f.Close()
 		return fmt.Errorf("chmod %s: %v", path, err)
+	}
+	if ownerDir != "" {
+		if err := chownFdLikeStateOwner(ownerDir, int(f.Fd())); err != nil {
+			f.Close()
+			return fmt.Errorf("chown %s: %v", path, err)
+		}
 	}
 	if err := f.Close(); err != nil {
 		return fmt.Errorf("close %s: %v", path, err)

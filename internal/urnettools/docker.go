@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -148,12 +149,27 @@ const (
 // than the allowed number of stdout bytes.
 var errOutputTooLarge = errors.New("command output exceeds size limit")
 
+// errCommandTimeout is returned by runCapped when the command did not finish
+// within its deadline.
+var errCommandTimeout = errors.New("command timed out")
+
+// containerReadTimeout bounds one docker cp / docker exec cat. A FIFO (or any
+// file that never yields data) makes cat hold stdout open forever, and the
+// bounded read below would then block before Wait ever runs.
+const containerReadTimeout = 20 * time.Second
+
 // runCapped runs cmd and returns its stdout, refusing to buffer more than
 // max bytes: the reader is bounded while the process is still writing, and
 // the process is killed once the limit is exceeded, so a huge file inside a
 // container cannot force an arbitrarily large allocation. Stderr is kept
 // (truncated to 4 KiB) for error messages only.
 func runCapped(cmd *exec.Cmd, max int64) ([]byte, string, error) {
+	return runCappedTimeout(cmd, max, containerReadTimeout)
+}
+
+// runCappedTimeout is runCapped with an explicit deadline. When the deadline
+// passes the process is killed, which closes its stdout and unblocks the read.
+func runCappedTimeout(cmd *exec.Cmd, max int64, timeout time.Duration) ([]byte, string, error) {
 	stderr := &cappedBuffer{max: 4096}
 	cmd.Stderr = stderr
 	// Safety net: never let Wait hang on a grandchild that still holds the
@@ -166,7 +182,18 @@ func runCapped(cmd *exec.Cmd, max int64) ([]byte, string, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, "", err
 	}
+	var timedOut atomic.Bool
+	timer := time.AfterFunc(timeout, func() {
+		timedOut.Store(true)
+		_ = cmd.Process.Kill()
+	})
+	defer timer.Stop()
 	data, readErr := io.ReadAll(io.LimitReader(pipe, max+1))
+	if timedOut.Load() {
+		_ = pipe.Close()
+		_ = cmd.Wait()
+		return nil, stderr.String(), errCommandTimeout
+	}
 	if readErr != nil || int64(len(data)) > max {
 		_ = cmd.Process.Kill()
 		// Close our read end first so a child still writing gets SIGPIPE
@@ -179,6 +206,9 @@ func runCapped(cmd *exec.Cmd, max int64) ([]byte, string, error) {
 		return nil, stderr.String(), errOutputTooLarge
 	}
 	if err := cmd.Wait(); err != nil {
+		if timedOut.Load() {
+			return nil, stderr.String(), errCommandTimeout
+		}
 		return nil, stderr.String(), err
 	}
 	return data, stderr.String(), nil

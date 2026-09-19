@@ -24,7 +24,15 @@ func writeStateFile(stateDir, name string, data []byte, perm os.FileMode) error 
 	} else if !os.IsNotExist(err) {
 		return fmt.Errorf("write %s: %v", path, err)
 	}
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, perm)
+	flags := os.O_WRONLY | os.O_CREATE
+	if !existed {
+		// The target did not exist at the Lstat above. O_EXCL makes the
+		// create fail if anything (a symlink or reparse point included)
+		// appeared in the meantime, instead of writing through it; the
+		// SameFile check below only covers a target that existed.
+		flags |= os.O_EXCL
+	}
+	f, err := os.OpenFile(path, flags, perm)
 	if err != nil {
 		return fmt.Errorf("write %s: %v", path, err)
 	}
@@ -53,6 +61,11 @@ func writeStateFile(stateDir, name string, data []byte, perm os.FileMode) error 
 
 // openNonblockFlag has no Windows equivalent; FIFOs do not exist there.
 const openNonblockFlag = 0
+
+// writeStateFileOwned is writeStateFile; there is no Unix ownership to hand over.
+func writeStateFileOwned(stateDir, name string, data []byte, perm os.FileMode, ownerDir string) error {
+	return writeStateFile(stateDir, name, data, perm)
+}
 
 // chownStateFile is a no-op on Windows (no Unix ownership model).
 func chownStateFile(path string, uid, gid int) error {

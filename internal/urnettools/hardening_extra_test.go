@@ -186,3 +186,84 @@ func TestSessionLoadRejectsDirectoryBeforeDiscovery(t *testing.T) {
 		t.Fatalf("session load <dir>: got %v, want a not-a-regular-file error", err)
 	}
 }
+
+// The billable_rate path is read INSIDE the container, so it uses "/" on
+// every host (a Windows host's filepath.Join would produce backslashes).
+func TestContainerBillableRatePathUsesSlashes(t *testing.T) {
+	if got := containerBillableRatePath("/root/.urnetwork"); got != "/root/.urnetwork/billable_rate" {
+		t.Errorf("got %q", got)
+	}
+	if got := containerBillableRatePath("/home/u/.urnetwork/"); strings.Contains(got, `\`) || got != "/home/u/.urnetwork/billable_rate" {
+		t.Errorf("got %q", got)
+	}
+}
+
+// The provider grammar accepts --yes only on `proxy remove --match=...`;
+// forwarding it on address or --all removals is a usage error.
+func TestWithProxyRemoveYes(t *testing.T) {
+	cases := []struct {
+		name  string
+		in    []string
+		force bool
+		want  []string
+	}{
+		{"all removal never gets --yes", []string{"proxy", "remove", "--all"}, true, []string{"proxy", "remove", "--all"}},
+		{"address removal never gets --yes", []string{"proxy", "remove", "192.0.2.10:1080"}, true, []string{"proxy", "remove", "192.0.2.10:1080"}},
+		{"match removal gets --yes when forced", []string{"proxy", "remove", "--match=foo"}, true, []string{"proxy", "remove", "--match=foo", "--yes"}},
+		{"match removal, not forced", []string{"proxy", "remove", "--match=foo"}, false, []string{"proxy", "remove", "--match=foo"}},
+		{"already has --yes", []string{"proxy", "remove", "--match=foo", "--yes"}, true, []string{"proxy", "remove", "--match=foo", "--yes"}},
+	}
+	for _, c := range cases {
+		got := withProxyRemoveYes(append([]string{}, c.in...), c.force)
+		if strings.Join(got, " ") != strings.Join(c.want, " ") {
+			t.Errorf("%s: got %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+// collectSessionFiles skips only ABSENT files: a file that exists but cannot
+// be read must fail the save, not yield a bundle silently missing it.
+func TestCollectSessionFilesFailsOnUnreadable(t *testing.T) {
+	dir := t.TempDir()
+	if files, err := collectSessionFiles(dir); err != nil || len(files) != 0 {
+		t.Fatalf("empty dir: got %v, %v; want an empty map and no error", files, err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "proxy"), []byte("n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	files, err := collectSessionFiles(dir)
+	if err != nil || string(files["proxy"]) != "n" {
+		t.Fatalf("present file: got %v, %v", files, err)
+	}
+	// jwt is a directory: exists, cannot be read as a regular file.
+	if err := os.Mkdir(filepath.Join(dir, "jwt"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := collectSessionFiles(dir); err == nil || !strings.Contains(err.Error(), "jwt") {
+		t.Fatalf("unreadable jwt: got %v, want an error naming jwt", err)
+	}
+}
+
+// State reads are bounded so a huge provider-controlled file cannot make a
+// privileged save or backup allocate its full size.
+func TestReadStateFileNoFollowBounded(t *testing.T) {
+	dir := t.TempDir()
+	f, err := os.Create(filepath.Join(dir, "proxy"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Truncate(maxStateFileBytes + 1); err != nil {
+		f.Close()
+		t.Skipf("cannot create sparse file: %v", err)
+	}
+	f.Close()
+	if _, err := readStateFileNoFollow(dir, "proxy"); err == nil || !strings.Contains(err.Error(), "limit") {
+		t.Fatalf("oversized state file: got %v, want a size-limit error", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "jwt"), []byte("ok"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if b, err := readStateFileNoFollow(dir, "jwt"); err != nil || string(b) != "ok" {
+		t.Fatalf("small file: got %q, %v", b, err)
+	}
+}

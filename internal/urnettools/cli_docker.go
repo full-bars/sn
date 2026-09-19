@@ -185,6 +185,37 @@ func consumeDockerBareTarget(providers []Provider, t Target, rest []string) (Tar
 	return t, rest
 }
 
+// consumeDockerTrailingTarget promotes a trailing bare positional that matches
+// a discovered container name to the target when no explicit target flag was
+// given. Unlike consumeDockerBareTarget (which stops at the first non-flag
+// positional), this inspects the last non-flag positional, allowing commands
+// with leading positional arguments (such as `auth [<auth-code>] [target]` or
+// `session <save|load> <file> [target]`) to resolve an optional trailing container.
+func consumeDockerTrailingTarget(providers []Provider, t Target, rest []string) (Target, []string) {
+	if t.Unit != "" || t.User != "" || t.Network != "" || t.NetworkID != "" || t.StateDir != "" {
+		return t, rest
+	}
+	lastIdx := -1
+	for i := len(rest) - 1; i >= 0; i-- {
+		if !strings.HasPrefix(rest[i], "-") {
+			lastIdx = i
+			break
+		}
+	}
+	if lastIdx < 0 {
+		return t, rest
+	}
+	for _, p := range providers {
+		if p.Unit == rest[lastIdx] {
+			t.Unit = rest[lastIdx]
+			out := append([]string{}, rest[:lastIdx]...)
+			out = append(out, rest[lastIdx+1:]...)
+			return t, out
+		}
+	}
+	return t, rest
+}
+
 // cmdDockerProviders lists every provider container on the box.
 func cmdDockerProviders(args []string) error {
 	providers := DiscoverDocker()
@@ -733,7 +764,7 @@ func cmdDockerAuth(args []string) error {
 	if err != nil {
 		return err
 	}
-	t, rest = consumeDockerBareTarget(providers, t, rest)
+	t, rest = consumeDockerTrailingTarget(providers, t, rest)
 	p, err := selectTargetInteractive(providers, t)
 	if err != nil {
 		return err
@@ -890,7 +921,7 @@ func cmdDockerSession(args []string) error {
 	if err != nil {
 		return err
 	}
-	t, rest = consumeDockerBareTarget(providers, t, rest)
+	t, rest = consumeDockerTrailingTarget(providers, t, rest)
 	p, err := selectTargetInteractive(providers, t)
 	if err != nil {
 		return err

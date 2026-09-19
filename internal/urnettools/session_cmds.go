@@ -308,16 +308,23 @@ func untarGz(pt []byte) (map[string][]byte, error) {
 
 // collectSessionFiles reads the identity files that exist under a state dir
 // into a name->bytes map (only present files are included, matching legacy).
-func collectSessionFiles(stateDir string) map[string][]byte {
+//
+// Only an absent file is skipped. A symlink, permission or I/O failure is an
+// error: skipping it would let `session save` report success with a bundle
+// that lacks (say) the jwt, which `session load` then rejects as invalid.
+func collectSessionFiles(stateDir string) (map[string][]byte, error) {
 	out := map[string][]byte{}
 	for _, name := range sessionFiles {
 		b, err := readStateFileNoFollow(stateDir, name)
 		if err != nil {
-			continue
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
+			return nil, fmt.Errorf("read session file %s: %w", name, err)
 		}
 		out[name] = b
 	}
-	return out
+	return out, nil
 }
 
 // readStateFileNoFollow reads a state file WITHOUT following symlinks: the
@@ -339,8 +346,21 @@ func readStateFileNoFollow(stateDir, name string) ([]byte, error) {
 		return nil, err
 	}
 	defer f.Close()
-	return io.ReadAll(f)
+	// The provider user controls these files, so a privileged save or backup
+	// must not allocate whatever size they claim.
+	b, err := io.ReadAll(io.LimitReader(f, maxStateFileBytes+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(b) > maxStateFileBytes {
+		return nil, fmt.Errorf("%s exceeds the %d byte state file limit", name, maxStateFileBytes)
+	}
+	return b, nil
 }
+
+// maxStateFileBytes bounds one state file read (jwt, proxy list, client jwt
+// store, ...); the largest legitimate one is a proxy list of a few MiB.
+const maxStateFileBytes = 32 << 20
 
 // sessionHasJWT reports whether a decrypted bundle carries a jwt, the
 // identity that load requires before it will stage anything.
@@ -519,7 +539,10 @@ Examples:
 func cmdSessionSave(p Provider, outFile string, dryRun, force bool) error {
 	fmt.Fprintln(os.Stderr, "WARNING: this bundle contains full identity and reputation credentials for this provider. Treat it like a password.")
 	if dryRun {
-		files := collectSessionFiles(p.StateDir)
+		files, err := collectSessionFiles(p.StateDir)
+		if err != nil {
+			return err
+		}
 		fmt.Printf("[dry-run] would save %d session files from %s to %s\n", len(files), p.StateDir, outFile)
 		return nil
 	}
@@ -537,7 +560,10 @@ func cmdSessionSave(p Provider, outFile string, dryRun, force bool) error {
 	if strings.TrimSpace(pass) == "" {
 		return errors.New("passphrase cannot be empty")
 	}
-	files := collectSessionFiles(p.StateDir)
+	files, err := collectSessionFiles(p.StateDir)
+	if err != nil {
+		return err
+	}
 	if len(files) == 0 {
 		return fmt.Errorf("no session files found under %s", p.StateDir)
 	}

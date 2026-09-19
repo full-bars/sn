@@ -178,6 +178,23 @@ func checkReadableAsUser(path, user string) error {
 
 // cmdProxy dispatches proxy sub-operations to the targeted provider(s).
 // Usage: urnet-tools proxy add <file> | clear | remove | refresh [targets]
+// withProxyRemoveYes re-adds the provider's own --yes to a `proxy remove`
+// argv when the global force flag consumed it. The provider grammar accepts
+// --yes only on the --match form (`proxy remove --match=<pattern> [--yes]`);
+// address and --all removals reject it as a usage error, so it is appended
+// only when a --match operand is present.
+func withProxyRemoveYes(opArgs []string, force bool) []string {
+	if !force || containsAny(opArgs, "--yes", "-y") {
+		return opArgs
+	}
+	for _, a := range opArgs {
+		if a == "--match" || strings.HasPrefix(a, "--match=") {
+			return append(opArgs, "--yes")
+		}
+	}
+	return opArgs
+}
+
 func cmdProxy(args []string, force, dryRun bool) error {
 	if len(args) == 0 {
 		return fmt.Errorf("proxy requires a subcommand: add <file> | paste | clear | remove | refresh | add-source <url> | remove-source <url> | health | traffic | ids | remove-dead | trim <N>")
@@ -436,9 +453,7 @@ Targets and batch flags work as for other commands (--unit/--user/--network,
 		// EOF, prints "Aborted." and exits 0 (a silent no-op reported as
 		// success). Re-add --yes when the global force flag was set, exactly
 		// like refresh re-adds --force.
-		if force && !containsAny(opArgs, "--yes", "-y") {
-			opArgs = append(opArgs, "--yes")
-		}
+		opArgs = withProxyRemoveYes(opArgs, force)
 	case "refresh":
 		opArgs = []string{"proxy", "refresh"}
 		// The dispatcher's parseGlobalFlags consumes -f/--force as the
