@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **HotSwap unit migration was a silent no-op**: the installer writes a unit with no `Type=` line, and `update` only rewrote an explicit `Type=simple`, so nodes set up by the current installer never reached a hotswap. A unit with no `Type=` now gets `Type=notify` and `NotifyAccess=all`, and the update says so when a unit cannot be migrated.
+- **HotSwap declines up front when the running provider has no notify socket** (unit migrated but provider not yet restarted), instead of aborting after SIGUSR2 and rolling back; new decline label `needs_restart`.
+- **pprof diagnostics disappeared on every other hotswap**: a candidate now retries the diagnostics bind until its parent releases the port.
+- **`urnet-tools` not found** from non-interactive shells, zsh and root: the installer links `urnet-tools` and `urnetwork` into `~/.local/bin` and `/usr/local/bin` and writes the PATH block to `~/.bashrc`, `~/.profile` and `~/.zshenv`; `urnet-tools update` repairs older installs.
+
+### Changed
+
+- **HotSwap is no longer described as zero-downtime.** Measured on a live node, a hotswap removes the 2 to 3 second window with no provider process, but the old process drops its proxy connections at the handover and the new one rebuilds them over about 30 s, the same ramp as a restart. Earlier entries that say "zero-downtime" describe the process handover only. See `docs/HotSwap.md`.
+
+### Added
+
+- `docs/HotSwap.md` (procedure and measured costs) and a design proposal for a per-client make-before-break handover, `docs/design/hotswap-make-before-break.md`.
+
+---
+
 ## [v2026.9.18-1049118720-meso] — 2026-09-18
 
 ### Added
