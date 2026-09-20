@@ -349,6 +349,7 @@ func provideLaunchGoroutines(st *provideState) {
 	go connect.HandleError(func() { runLifetimeCollector(st.ctx) })
 	go connect.HandleError(func() { runProfitHeartbeat(st.ctx) })
 	go connect.HandleError(func() { runBillableRateWriter(st.ctx) })
+	go connect.HandleError(func() { runNodeSnapshotSampler(st.ctx) })
 
 	go connect.HandleError(func() { paceMonitor(st.ctx) })
 }
