@@ -469,6 +469,7 @@ func providerExtraMetrics() string {
 	reason := startupDiag.restartReason
 	startupDiag.mu.Unlock()
 	writeNodeGauges(&b, reason, collectResources())
+	writeRuntimeGauges(&b, time.Since(providerStartTime), runtimeSysBytes())
 
 	return b.String()
 }
@@ -565,5 +566,29 @@ func writeNodeGauges(b *strings.Builder, reason string, res SnapshotResources) {
 		fmt.Fprintf(b, "# HELP urnet_fd_limit Soft file descriptor limit of the provider process (Linux).\n")
 		fmt.Fprintf(b, "# TYPE urnet_fd_limit gauge\n")
 		fmt.Fprintf(b, "urnet_fd_limit %d\n", res.FDLimit)
+	}
+}
+
+// runtimeSysBytes is the Go runtime's total memory obtained from the OS.
+func runtimeSysBytes() uint64 {
+	sample := []metrics.Sample{{Name: "/memory/classes/total:bytes"}}
+	metrics.Read(sample)
+	if sample[0].Value.Kind() != metrics.KindUint64 {
+		return 0
+	}
+	return sample[0].Value.Uint64()
+}
+
+// writeRuntimeGauges emits the uptime and Go memory gauges that the alert
+// rules and dashboard panels read. sn serves /metrics from providerExtraMetrics
+// alone, so these are exported here. A zero memory figure is left out.
+func writeRuntimeGauges(b *strings.Builder, uptime time.Duration, sysBytes uint64) {
+	fmt.Fprintf(b, "# HELP urnet_uptime_seconds Provider uptime in seconds.\n")
+	fmt.Fprintf(b, "# TYPE urnet_uptime_seconds gauge\n")
+	fmt.Fprintf(b, "urnet_uptime_seconds %g\n", uptime.Seconds())
+	if sysBytes > 0 {
+		fmt.Fprintf(b, "# HELP urnet_mem_sys_bytes Go runtime total memory obtained from the OS.\n")
+		fmt.Fprintf(b, "# TYPE urnet_mem_sys_bytes gauge\n")
+		fmt.Fprintf(b, "urnet_mem_sys_bytes %d\n", sysBytes)
 	}
 }

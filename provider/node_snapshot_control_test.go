@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestControlSocketSnapshotEndToEnd(t *testing.T) {
@@ -108,13 +109,41 @@ func TestProviderMetricsIncludeNodeGaugesAndKeepExisting(t *testing.T) {
 		"urnet_info", "urnet_startup_clean_shutdown", "urnet_startup_restarted",
 		"urnet_startup_upgraded", "urnet_control_commands_total",
 		"urnet_pressure_score", "urnet_doh_failures_total",
-		"urnet_restart_reason",
+		"urnet_restart_reason", "urnet_uptime_seconds", "urnet_mem_sys_bytes",
 	} {
 		if !strings.Contains(body, "# TYPE "+name+" ") {
 			t.Errorf("family %s missing from scrape", name)
 		}
 	}
+	if n := strings.Count(body, "# TYPE urnet_uptime_seconds "); n != 1 {
+		t.Errorf("urnet_uptime_seconds declared %d times, want 1", n)
+	}
 	for _, e := range Lint(body) {
 		t.Error(e)
+	}
+}
+
+func TestWriteRuntimeGauges(t *testing.T) {
+	var b strings.Builder
+	writeRuntimeGauges(&b, 90*time.Second, 1<<20)
+	out := b.String()
+	for _, want := range []string{
+		"# TYPE urnet_uptime_seconds gauge\n",
+		"urnet_uptime_seconds 90\n",
+		"# TYPE urnet_mem_sys_bytes gauge\n",
+		"urnet_mem_sys_bytes 1048576\n",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q\n%s", want, out)
+		}
+	}
+	if errs := Lint(out); len(errs) != 0 {
+		t.Errorf("lint: %v", errs)
+	}
+
+	b.Reset()
+	writeRuntimeGauges(&b, time.Second, 0)
+	if strings.Contains(b.String(), "urnet_mem_sys_bytes") {
+		t.Errorf("unknown memory figure exported:\n%s", b.String())
 	}
 }
