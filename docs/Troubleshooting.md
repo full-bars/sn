@@ -74,6 +74,47 @@ packets.
 - **Fix**: if you use `--cpus`, make sure the limit is high enough to handle
   the signaling overhead of your proxy list.
 
+## HotSwap declines on an existing node
+
+**Symptom**: `urnet-tools hotswap`, or a `urnet-tools update` on a HotSwap-capable
+release, restarts the provider normally instead of handing off with no downtime.
+The update prints `hotswap trigger unavailable (...); falling back to service restart`.
+
+**Cause**: the systemd handoff requires a `Type=notify` unit. The retiring
+process aborts whenever systemd started it (`INVOCATION_ID` is set) but
+`NOTIFY_SOCKET` is empty, which is exactly what a `Type=simple` unit looks like.
+`Provider_Install_Linux.sh` deliberately writes a unit with **no `Type=` line**
+(systemd's default, `simple`), because `Type=notify` blocks `systemctl start`
+until the provider is ready and can wedge every start when the binary and the
+unit come from different releases. Instead, `urnet-tools update` migrates the
+unit to `Type=notify` when the binary it installs can signal readiness
+(v3.23.0-fix.31.0 or newer). That first update is a normal restart; later ones
+hotswap.
+
+> [!WARNING]
+> Releases up to and including v3.23.0-fix.32.0 skipped that migration for units
+> with no `Type=` line, so those nodes stay on restart-only updates
+> indefinitely, and the "update migrates it" wording in the decline message was
+> not true for them. Fixed in the release after v3.23.0-fix.32.0.
+
+```bash
+# Confirm what the unit actually is
+systemctl --user show urnetwork.service -p Type,NotifyAccess   # drop --user for a system unit
+```
+
+**Fix**: update to a release that contains the migration fix, then run
+`urnet-tools update` once (it migrates the unit and restarts). Or convert the
+unit by hand; the steps are in [HotSwap](HotSwap.md#which-update-hotswaps).
+If the update prints `note: ... is Type=simple but its unit file cannot be
+migrated automatically`, `Type=` is set by a drop-in: change it there.
+
+> [!IMPORTANT]
+> The check deliberately fails closed. An earlier revision gated only on the
+> version string, so the trigger fired, the internal handoff silently aborted,
+> and the "hotswap triggered" path skipped the restart fallback entirely,
+> turning every update on a pre-existing node into a permanent no-op. Losing
+> zero-downtime is the safe failure; a bricked update is not.
+
 ## Confirming a settings change
 
 **Symptom**: `urnet-tools set <key> <value>` returns success, but the
