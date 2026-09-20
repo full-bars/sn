@@ -16,9 +16,17 @@ import (
 // Stubs for connect metrics functions not present in v2026 connect.
 // In the fork, these forwarded to cumulative counters in the connect package.
 var (
-	IncrContractAcquired = func() {}
+	IncrContractAcquired = func() { contractsAcquiredTotal.Add(1) }
 	IncrContractDenied   = func() {}
 )
+
+// contractsAcquiredTotal counts contracts acquired since this process started.
+var contractsAcquiredTotal atomic.Int64
+
+// ContractsAcquiredTotal returns the number of contracts acquired so far in
+// this process. The live status snapshot reads it to tell a node that is
+// still winning contracts from one that is not.
+func ContractsAcquiredTotal() int64 { return contractsAcquiredTotal.Load() }
 
 // contractBucket counts contract outcomes within one fixed-width time bucket.
 // epoch is the bucket index (unix seconds / widthSeconds); 0 means never written.
