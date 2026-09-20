@@ -362,6 +362,10 @@ func cmdUpdate(args []string, force, dryRun bool) error {
 		fmt.Fprintf(os.Stderr, "tool self-update failed: %v\n", err)
 	}
 
+	// Make the tool findable from non-interactive shells and from root.
+	// Installs that predate the installer doing this are repaired here.
+	ensureToolOnPath()
+
 	if failures > 0 {
 		return fmt.Errorf("%d of %d provider(s) failed to update", failures, len(chosen))
 	}
@@ -893,7 +897,11 @@ func verifyRestartLoop(p Provider, cfg updateConfig, hotSwapTriggered bool, back
 				// restart landed — just waiting for version match.
 				if rp.PID != oldPID && !pidChanged {
 					pidChanged = true
-					fmt.Printf("provider %s restarted (pid %d -> %d), waiting for version %s...\n", providerLabel(p), oldPID, rp.PID, cfg.Tag)
+					verb := "restarted"
+					if hotSwapTriggered {
+						verb = "handed off"
+					}
+					fmt.Printf("provider %s %s (pid %d -> %d), waiting for version %s...\n", providerLabel(p), verb, oldPID, rp.PID, cfg.Tag)
 				}
 
 				procExe, perr := verifyRunningImageHandleFn(rp.PID)
@@ -1537,7 +1545,12 @@ func migrateUnitToNotify(p Provider) (bool, error) {
 	// Rewrite: Type=simple → Type=notify, add NotifyAccess=all if missing.
 	newContent, changed := rewriteUnitContent(string(content))
 	if !changed {
-		return false, nil // nothing to do (Type=notify already)
+		// The effective Type is simple but the unit file offers nothing to
+		// rewrite (for example Type=simple set by a drop-in, or no [Service]
+		// section). Say so: a silent no-op leaves the operator believing the
+		// migration ran and hotswap will start working.
+		fmt.Printf("note: %s is Type=simple but its unit file cannot be migrated automatically; set Type=notify and NotifyAccess=all in %s or in the drop-in that sets Type=, then run `systemctl daemon-reload`. Updates keep using a service restart until then.\n", p.Unit, unitPath)
+		return false, nil
 	}
 
 	// Back up the original unit file before overwriting. writeStateFile
@@ -1601,9 +1614,14 @@ func rewriteUnitContent(content string) (string, bool) {
 	lines := strings.Split(content, "\n")
 	changed := false
 	hasNotifyAccess := false
+	hasTypeKey := false
+	serviceIdx := -1
 	typeLineIdx := -1
 
 	for i, line := range lines {
+		if serviceIdx < 0 && strings.EqualFold(strings.TrimSpace(line), "[Service]") {
+			serviceIdx = i
+		}
 		trimmed := strings.TrimSpace(line)
 		// Strip inline comments (# and ;) before parsing.
 		if idx := strings.IndexAny(trimmed, "#;"); idx >= 0 {
@@ -1615,6 +1633,9 @@ func rewriteUnitContent(content string) (string, bool) {
 		}
 		key := strings.TrimSpace(parts[0])
 		val := strings.TrimSpace(parts[1])
+		if strings.EqualFold(key, "Type") {
+			hasTypeKey = true
+		}
 		if strings.EqualFold(key, "Type") && strings.EqualFold(val, "simple") {
 			lines[i] = "Type=notify"
 			changed = true
@@ -1623,6 +1644,24 @@ func rewriteUnitContent(content string) (string, bool) {
 		if strings.EqualFold(key, "NotifyAccess") {
 			hasNotifyAccess = true
 		}
+	}
+
+	// Provider_Install_Linux.sh (since #546) writes NO Type= line: the unit is
+	// Type=simple by systemd's default and only a comment says so. With no
+	// explicit Type= anywhere there is nothing to rewrite, so add the line
+	// under [Service]; without this the migration was a silent no-op on every
+	// node the current installer set up. A unit that does carry some other
+	// Type= (oneshot, forking, ...) is left alone.
+	if !changed && !hasTypeKey && serviceIdx >= 0 {
+		insert := []string{"Type=notify"}
+		if !hasNotifyAccess {
+			insert = append(insert, "NotifyAccess=all")
+		}
+		out := make([]string, 0, len(lines)+len(insert))
+		out = append(out, lines[:serviceIdx+1]...)
+		out = append(out, insert...)
+		out = append(out, lines[serviceIdx+1:]...)
+		return strings.Join(out, "\n"), true
 	}
 
 	if !changed {

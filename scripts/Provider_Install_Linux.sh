@@ -631,6 +631,122 @@ sanitize_restart_dropins ()
     done
 }
 
+# ---- PATH setup ---------------------------------------------------------
+# urnet-tools has to be runnable from every kind of shell and for every user:
+# interactive and login shells, the non-interactive shell behind
+# `ssh host urnet-tools ...` or cron (which never runs the ~/.bashrc block,
+# because stock .bashrc files return early when not interactive), zsh, and
+# root (which has none of the installing user's PATH). A ~/.bashrc export
+# covers only the first. So the tools are also symlinked into directories that
+# are already on PATH, and the rc blocks are written to every startup file
+# that exists.
+
+# link_tools_into_dir DIR SRC_BIN [RUNNER...]
+# Symlink urnet-tools and urnetwork from SRC_BIN into DIR, creating DIR.
+# RUNNER (for example "sudo -n") prefixes the commands that need privilege.
+# A real file that is not a symlink is left alone: it is not ours.
+link_tools_into_dir ()
+{
+    local dir="$1" src="$2" name
+    shift 2
+    "$@" mkdir -p "$dir" 2>/dev/null || return 1
+    for name in urnet-tools urnetwork; do
+        [ -e "$src/$name" ] || continue
+        if [ -e "$dir/$name" ] && [ ! -L "$dir/$name" ]; then
+            continue
+        fi
+        "$@" ln -sfn "$src/$name" "$dir/$name" 2>/dev/null || return 1
+    done
+    return 0
+}
+
+# ensure_tools_on_path INSTALL_PATH
+ensure_tools_on_path ()
+{
+    local src="$1/bin"
+
+    # Non-interactive and login shells: ~/.local/bin is on the default PATH of
+    # most distributions and of every systemd user session.
+    if link_tools_into_dir "$HOME/.local/bin" "$src"; then
+        pr_info "Linked urnet-tools and urnetwork into %s" "$HOME/.local/bin"
+    else
+        pr_err "warning: could not link the tools into %s" "$HOME/.local/bin"
+    fi
+
+    # Root and every other user: /usr/local/bin. Root installs write it
+    # directly; otherwise use passwordless sudo when it exists, and tell the
+    # operator the one command when it does not (an unprivileged installer
+    # cannot do more).
+    if [ "$(id -u)" -eq 0 ]; then
+        link_tools_into_dir /usr/local/bin "$src" || pr_err "warning: could not link the tools into /usr/local/bin"
+    elif command -v sudo > /dev/null 2>&1 && sudo -n true 2> /dev/null; then
+        if link_tools_into_dir /usr/local/bin "$src" sudo -n; then
+            pr_info "Linked urnet-tools and urnetwork into /usr/local/bin (works for root)"
+        else
+            pr_err "warning: could not link the tools into /usr/local/bin"
+        fi
+    else
+        pr_info "root cannot find urnet-tools yet. Run once: sudo ln -sfn %s/urnet-tools /usr/local/bin/urnet-tools" "$src"
+    fi
+}
+
+# add_path_block FILE INSTALL_PATH: idempotently append the PATH export block.
+add_path_block ()
+{
+    local file="$1" install="$2"
+    if grep -q '^[[:space:]]*# == urnetwork-provider start[[:space:]]*$' "$file" 2> /dev/null; then
+        pr_info "%s is up-to-date" "$file"
+        return 0
+    fi
+    pr_info "Adding '%s' to %s" "$install/bin" "$file"
+    cat >> "$file" <<EOF
+
+# == urnetwork-provider start
+export URNETWORK_PROVIDER_INSTALL="$install"
+export PATH="\$PATH:\$URNETWORK_PROVIDER_INSTALL/bin"
+# == urnetwork-provider end
+EOF
+}
+
+# add_path_blocks INSTALL_PATH: ~/.bashrc always; ~/.profile and ~/.zshenv when
+# they exist (zshenv is created if zsh is installed: zsh reads it for every
+# invocation, interactive or not).
+add_path_blocks ()
+{
+    local install="$1"
+    [ -f "$HOME/.bashrc" ] || : > "$HOME/.bashrc"
+    add_path_block "$HOME/.bashrc" "$install"
+    [ -f "$HOME/.profile" ] && add_path_block "$HOME/.profile" "$install"
+    if [ -f "$HOME/.zshenv" ] || command -v zsh > /dev/null 2>&1; then
+        add_path_block "$HOME/.zshenv" "$install"
+    fi
+    return 0
+}
+
+# remove_path_block FILE: delete the block, keeping a backup.
+remove_path_block ()
+{
+    local file="$1"
+    [ -f "$file" ] || return 0
+    grep -q '# == urnetwork-provider start' "$file" || return 0
+    cp "$file" "$file.backup.old"
+    awk '/# == urnetwork-provider start/ { pr=1 } pr == 0 { print } /# == urnetwork-provider end/ { pr=0 }' "$file" > "$file.new" && mv "$file.new" "$file"
+}
+
+# remove_tool_links INSTALL_PATH: remove only symlinks that point into our install.
+remove_tool_links ()
+{
+    local src="$1/bin" dir name t
+    for dir in "$HOME/.local/bin" /usr/local/bin; do
+        for name in urnet-tools urnetwork; do
+            [ -L "$dir/$name" ] || continue
+            t="$(readlink "$dir/$name")"
+            [ "$t" = "$src/$name" ] || continue
+            rm -f "$dir/$name" 2> /dev/null || { command -v sudo > /dev/null 2>&1 && sudo -n rm -f "$dir/$name" 2> /dev/null; } || true
+        done
+    done
+}
+
 install_systemd_units ()
 {
     start="$systemd_units_stopped"
@@ -1334,6 +1450,434 @@ do_install ()
         install_systemd_units
     fi
 
+    # The symlinks are not a shell-startup edit, so they are made regardless of
+    # -B; the rc-file blocks honour it.
+    ensure_tools_on_path "$install_path"
+    if [ "$no_modify_bashrc" -eq 0 ]; then
+        add_path_blocks "$install_path"
+    fi
+
+    case "$operation" in
+        install)
+            case "$0" in
+                *"/urnet-tools"|*"/bin/urnet-tools")
+                    pr_err "Invalid operation '%s'" "$operation"
+                    exit 1
+                    ;;
+            esac
+
+            func_root_guard
+
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    -t|--tag)
+                        if [ -z "$2" ]; then
+                            opt_requires_arg "$1"
+                            exit 1
+                        fi
+
+                        tag="$2"
+
+                        if [ "$tag" != "latest" ] && [ "$(echo "$tag" | cut -c -1)" != "v" ]; then
+                            tag="v$tag"
+                        fi 
+
+                        shift 2
+                        ;;
+
+                    -4|--ipv4)
+                        FORCE_IPV4=1
+                        shift
+                        ;;
+
+                    -B|--no_modify_bashrc)
+                        no_modify_bashrc=1
+                        shift
+                        ;;
+
+                    -*)
+                        pr_err "Invalid option '%s'" "$1"
+                        exit 1
+                        ;;
+
+                    *)
+                        pr_err "Invalid argument '%s'" "$1"
+                        exit 1
+                        ;;
+                esac
+            done
+
+            ;;
+
+        update)
+            no_modify_bashrc=1
+            force_update=0
+
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    -f|--force)
+                        force_update=1
+                        FORCE=1
+                        shift
+                        ;;
+
+                    -t|--tag)
+                        if [ -z "$2" ]; then
+                            opt_requires_arg "$1"
+                            exit 1
+                        fi
+
+                        tag="$2"
+
+                        if [ "$tag" != "latest" ] && [ "$(echo "$tag" | cut -c -1)" != "v" ]; then
+                            tag="v$tag"
+                        fi
+
+                        shift 2
+                        ;;
+
+                    -*)
+                        pr_warn "Ignoring unknown option '%s'" "$1"
+                        shift
+                        ;;
+
+                    *)
+                        pr_warn "Ignoring unknown argument '%s'" "$1"
+                        shift
+                        ;;
+                esac
+            done
+
+            ;;
+
+        reinstall)
+            if [ ! -f "$version_file" ]; then
+                pr_err "Could not determine the currently installed version"
+                exit 1
+            fi
+
+	   		tag="$(cat "$version_file")"
+
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    -t|--tag)
+                        if [ -z "$2" ]; then
+                            opt_requires_arg "$1"
+                            exit 1
+                        fi
+
+                        tag="$2"
+
+                        if [ "$tag" != "latest" ] && [ "$(echo "$tag" | cut -c -1)" != "v" ]; then
+                            tag="v$tag"
+                        fi 
+
+                        shift 2
+                        ;;
+
+                    -4|--ipv4)
+                        FORCE_IPV4=1
+                        shift
+                        ;;
+
+                    -B|--no_modify_bashrc)
+                        no_modify_bashrc=1
+                        shift
+                        ;;
+
+                    -*)
+                        pr_err "Invalid option '%s'" "$1"
+                        exit 1
+                        ;;
+
+                    *)
+                        pr_err "Invalid argument '%s'" "$1"
+                        exit 1
+                        ;;
+                esac
+            done
+            ;;
+    esac
+
+    api_url=""
+
+    if [ "$tag" = "latest" ] || [ -z "$tag" ]; then
+        tag=latest
+        api_url="$api_base/releases/latest"
+    else
+        api_url="$api_base/releases/tags/$tag"
+    fi
+
+    pr_info "Fetching release information for tag: %s" "$tag"
+
+    release="$(network_fetch "$api_url" 2>/dev/null || true)"
+
+    version_to_install="$(get_version_from_api_response "$release" 2>&1)"
+    release_date="$(get_release_date_from_api_response "$release" 2>&1)"
+
+    # If tag was "latest" and API failed to provide a version, try the redirect trick
+    if [ "$tag" = "latest" ] && [ -z "$version_to_install" ]; then
+        if command -v curl > /dev/null; then
+            tag_url=$(curl -Ls -o /dev/null -w %{url_effective} "https://github.com/full-bars/urnetwork-3.23-fix/releases/latest")
+            if [ -n "$tag_url" ] && [ "$tag_url" != "https://github.com/full-bars/urnetwork-3.23-fix/releases/latest" ]; then
+                version_to_install="${tag_url##*/}"
+            fi
+        fi
+    fi
+
+    # If API failed and a specific tag was requested, just use the requested tag
+    if [ "$tag" != "latest" ] && [ -z "$version_to_install" ]; then
+        version_to_install="$tag"
+    fi
+
+    # Fallback: try dl.fullbars.xyz latest-version endpoint
+    if [ -z "$version_to_install" ]; then
+        if worker_version="$(network_fetch "https://dl.fullbars.xyz/latest-version" 2>/dev/null)"; then
+            version_to_install="$(printf "%s" "$worker_version" | tr -d '[:space:]')"
+        fi
+    fi
+
+    if [ -z "$version_to_install" ]; then
+        pr_err "Failed to fetch release information for tag: %s" "$tag"
+        exit 1
+    fi
+
+    # Resolve tag to the actual version for subsequent asset URL logic
+    if [ "$tag" = "latest" ] && [ -n "$version_to_install" ]; then
+        tag="$version_to_install"
+    fi
+
+    if [ "$operation" = "update" ] && [ -f "$install_path/.date" ] && [ -f "$install_path/.version" ]; then
+        install_release_date="$(cat "$install_path/.date")"
+        installed_version="$(cat "$install_path/.version")"
+
+        # If release_date could not be parsed, fall back to version string comparison
+        if [ -z "$release_date" ]; then
+            pr_info "Unable to parse release date from API; using version string comparison"
+            if [ "$force_update" = "1" ]; then
+                pr_info "Force flag enabled, reinstalling version %s" "$version_to_install"
+            elif [ "$version_to_install" != "$installed_version" ]; then
+                pr_info "Version %s differs from installed version %s, continuing upgrade" "$version_to_install" "$installed_version"
+            else
+                pr_info "Installed version %s is already up-to-date" "$installed_version"
+                exit 0
+            fi
+        else
+            # Validate dates are numeric before comparison
+            if ! printf '%s' "$install_release_date" | grep -qE '^[0-9]+$' || ! printf '%s' "$release_date" | grep -qE '^[0-9]+$'; then
+                pr_info "Invalid date format from API; using version string comparison"
+                if [ "$force_update" = "1" ]; then
+                    pr_info "Force flag enabled, reinstalling version %s" "$version_to_install"
+                elif [ "$version_to_install" != "$installed_version" ]; then
+                    pr_info "Version %s differs from installed version %s, continuing upgrade" "$version_to_install" "$installed_version"
+                else
+                    pr_info "Installed version %s is already up-to-date" "$installed_version"
+                    exit 0
+                fi
+            else
+                if [ "$force_update" = "1" ]; then
+                    pr_info "Force flag enabled, reinstalling version %s" "$version_to_install"
+                elif [ "$install_release_date" -lt "$release_date" ]; then
+                    pr_info "Version %s is newer than the installed version %s" "$version_to_install" "$installed_version"
+                    pr_info "Continuing upgrade"
+                else
+                    pr_info "Installed version is up-to-date"
+                    exit 0
+                fi
+            fi
+        fi
+    fi
+
+    # Construct download URL directly from GitHub release pattern
+    # instead of parsing potentially malformed API JSON.
+    # We MUST have a real tag name here; "latest" is not a valid download tag.
+    if [ "$tag" = "latest" ]; then
+        pr_err "Could not resolve 'latest' tag to a specific version. GitHub API might be unreachable."
+        exit 1
+    fi
+    dl_url="https://dl.fullbars.xyz/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    mirror_url="https://github.com/full-bars/urnetwork-3.23-fix/releases/download/$tag/urnetwork-provider-$tag.tar.gz"
+    
+    pr_info "Downloading: %s" "$dl_url"
+    
+    if ! workdir="$(mktemp -d)"; then
+        pr_err "Failed to create working directory"
+        exit 1
+    fi
+    
+    cd "$workdir" || exit 1
+
+    tarball="$workdir/urnetwork.tar.gz"
+    bindir="$workdir/linux/$arch"
+    bin_program="$bindir/provider"
+
+    trap 'rm -r "$workdir"' EXIT 
+    trap 'exit 1' INT TERM
+
+    if [ -z "$URNETWORK_NO_DOWNLOAD_TARBALL" ]; then
+        if ! download_asset "$dl_url" "$tarball"; then
+            pr_warn "Primary download failed, trying GitHub mirror..."
+            if ! download_asset "$mirror_url" "$tarball"; then
+                pr_err "Failed to download from both primary and mirror"
+                exit 1
+            fi
+        fi
+
+        if ! tar -xf "$tarball" 2>/dev/null; then
+            pr_err "Failed to extract tarball: %s" "$tarball"
+            exit 1
+        fi
+
+        if [ ! -f "$bin_program" ]; then
+            pr_err "Provider binary was not found in the tarball!"
+            pr_err "This indicates an issue with the tarball that was downloaded."
+            exit 1
+        fi
+    fi
+	
+    if [ "$has_systemd" -eq 1 ]; then
+        stop_systemd_units
+    fi
+
+    if [ -d "$install_path" ] && [ "$operation" = "install" ]; then
+        pr_info "Found existing installation in $install_path, updating instead"
+        operation=update
+        no_modify_bashrc=1
+    else
+        if [ ! -d "$install_path" ]; then
+            pr_info "Creating directory '%s'" "$install_path"
+
+            if ! mkdir -p "$install_path"; then
+                pr_err "Failed to create directory '%s'" "$install_path"
+                exit 1
+            fi
+        fi
+
+        if ! mkdir -p "$install_path/bin"; then
+            pr_err "Failed to create directory '%s'" "$install_path/bin"
+            exit 1
+        fi
+    fi
+
+    if [ -z "$URNETWORK_NO_DOWNLOAD_TARBALL" ]; then
+        # Bypass 'Text file busy' locks on running binaries by moving the active inode out of the way first
+        mv -f "$install_path/bin/urnetwork" "$install_path/bin/urnetwork.old" 2>/dev/null || true
+        cp "$bin_program" "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
+        chmod 755 "$install_path/bin/urnetwork" || { pr_err "Failed to install provider binary"; exit 1; }
+        rm -f "$install_path/bin/urnetwork.old" 2>/dev/null || true
+    fi
+
+    cd "$script_rundir" || exit 1
+
+    # --- urnet-tools install ---
+    # The tool is now a Go binary shipped as a standalone release asset
+    # (urnet-tools-<os>-<arch>, v3.23.0-fix.28+). Prefer it — digest-verified
+    # against the release API — and fall back to the legacy self-copy shell
+    # script only for releases that predate the Go asset. The Go tool is
+    # self-updating (`urnet-tools update` refreshes its own binary), so this
+    # shell path is a one-time handoff.
+    tool_installed=0
+    if [ -n "$tag" ] && [ "$tag" != "latest" ]; then
+        tool_asset="urnet-tools-linux-$arch"
+        tool_dl_url="https://dl.fullbars.xyz/releases/download/$tag/$tool_asset"
+        tool_mirror_url="https://github.com/full-bars/urnetwork-3.23-fix/releases/download/$tag/$tool_asset"
+
+        # Resolve the digest from the release API. Empty digest = the release
+        # predates tool assets (or the asset is missing) → fall back to shell.
+        tool_digest=""
+        if release_json="$(network_fetch "$api_base/releases/tags/$tag" 2>/dev/null)"; then
+            tool_digest="$(get_asset_digest_from_api_response "$release_json" "$tool_asset")"
+        fi
+
+        if [ -n "$tool_digest" ]; then
+            pr_info "Installing Go urnet-tools binary (%s)..." "$tool_asset"
+            if download_asset "$tool_dl_url" "$workdir/$tool_asset"; then
+                if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
+                    # Bypass 'Text file busy' like the provider swap above.
+                    mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                    cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                    chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                    rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                    tool_installed=1
+                else
+                    pr_warn "urnet-tools sha256 mismatch, falling back to shell script"
+                fi
+            else
+                pr_warn "Primary tool download failed, trying GitHub mirror..."
+                if download_asset "$tool_mirror_url" "$workdir/$tool_asset"; then
+                    if verify_sha256_file "$workdir/$tool_asset" "$tool_digest"; then
+                        mv -f "$install_path/bin/urnet-tools" "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                        cp "$workdir/$tool_asset" "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                        chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools binary"; exit 1; }
+                        rm -f "$install_path/bin/urnet-tools.old" 2>/dev/null || true
+                        tool_installed=1
+                    else
+                        pr_warn "urnet-tools sha256 mismatch (mirror), falling back to shell script"
+                    fi
+                else
+                    pr_warn "Mirror tool download failed, falling back to shell script"
+                fi
+            fi
+        fi
+    fi
+
+    if [ "$tool_installed" -ne 1 ]; then
+        # Legacy fallback: self-copy the shell script (releases that predate
+        # the Go tool asset, or 386 hosts with no Go asset).
+        # Priority: tarball-bundled script > GitHub fetch > running script
+        script=""
+        if [ -f "$workdir/urnet-tools" ]; then
+            script="$(cat "$workdir/urnet-tools" 2>/dev/null)"
+        fi
+
+        if [ -z "$script" ]; then
+            if [ "$original_operation" = "update" ] || [ "$original_operation" = "reinstall" ]; then
+                pr_info "Fetching latest urnet-tools from GitHub..."
+                if ! script="$(network_fetch "$urnet_install_url")"; then
+                    pr_err "Failed to fetch latest urnet-tools from GitHub, using current version"
+                    script="$(cat "$0" 2>/dev/null)"
+                fi
+            fi
+        fi
+
+        if [ -z "$script" ]; then
+            script="$(cat "$0" 2>/dev/null)"
+            if [ -z "$script" ]; then
+                pr_info "Fetching urnet-tools from GitHub..."
+                script="$(network_fetch "$urnet_install_url")"
+            fi
+        fi
+
+        cd "$workdir" || exit 1
+
+        if [ -f "urnet-tools" ]; then
+            script_override="$(cat "urnet-tools" 2>/dev/null)"
+            if [ -n "$script_override" ]; then
+                script="$script_override"
+            fi
+        fi
+
+        if [ -z "$script" ]; then
+            pr_err "Invalid script contents"
+            exit 1
+        fi
+
+        rm -f "$install_path/bin/urnet-tools"
+        printf "%s\n" "$script" > "$install_path/bin/urnet-tools"
+        chmod 755 "$install_path/bin/urnet-tools" || { pr_err "Failed to install urnet-tools"; exit 1; }
+
+        # Note: the GitHub-fetched script above (from main branch) is the canonical
+        # version. The tarball copy is NOT used here to avoid overwriting with stale
+        # bundled content that may lack the latest fix.
+    fi
+
+    echo "$version_to_install" > "$install_path/.version"
+    echo "$release_date" > "$install_path/.date"
+
+    if [ "$has_systemd" -eq 1 ]; then
+        install_systemd_units
+    fi
+
     if [ "$no_modify_bashrc" -eq 0 ]; then
 	if awk '/^[[:space:]]*# == urnetwork-provider start[[:space:]]*$/ { code=1; } END { exit code; }' "$HOME/.bashrc"; then
 	    pr_info "Adding '%s' to ~/.bashrc" "$install_path/bin"
@@ -1434,15 +1978,16 @@ do_uninstall ()
         rm -f "$HOME/.config/systemd/user/urnetwork-update.timer"
     fi
 
+    remove_tool_links "$install_path"
     if [ "$no_modify_bashrc" -eq 0 ]; then
         if command -v awk > /dev/null; then
-            pr_info "Removing PATH exports from ~/.bashrc"
-            cp "$HOME/.bashrc" "$HOME/.bashrc.backup.old"
-            awk '/# == urnetwork-provider start/ { pr=1 } pr == 0 { print } /# == urnetwork-provider end/ { pr=0 }' "$HOME/.bashrc" > "$HOME/.bashrc.new"
-            mv "$HOME/.bashrc.new" "$HOME/.bashrc"
+            pr_info "Removing PATH exports from ~/.bashrc, ~/.profile and ~/.zshenv"
+            remove_path_block "$HOME/.bashrc"
+            remove_path_block "$HOME/.profile"
+            remove_path_block "$HOME/.zshenv"
         else
-            pr_err "warning: awk not found, cannot update ~/.bashrc"
-            pr_err "Please manually remove PATH exports from your ~/.bashrc"
+            pr_err "warning: awk not found, cannot update shell startup files"
+            pr_err "Please manually remove the urnetwork-provider PATH block from ~/.bashrc, ~/.profile and ~/.zshenv"
         fi
     fi
 
