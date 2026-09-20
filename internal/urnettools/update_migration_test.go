@@ -339,3 +339,93 @@ Restart=on-failure
 		t.Error("Restart=on-failure should be preserved after migration")
 	}
 }
+
+// The unit Provider_Install_Linux.sh writes since #546 has NO Type= line, only
+// a comment that mentions both words. It is Type=simple by systemd's default
+// and must still be migrated (this was a silent no-op: live test on a 31.2
+// node, `urnet-tools update` left the unit untouched and hotswap never
+// became available).
+const installerShapedUnit = `[Unit]
+Description=URnetwork Provider
+
+[Service]
+# Type=simple (the default), deliberately NOT Type=notify.
+#
+# Type=notify makes ` + "`systemctl start`" + ` block until the provider sends
+# sd_notify(READY=1).
+Environment="HOST_HOSTNAME=UR313"
+ExecStart=/home/user/.local/share/urnetwork-provider/bin/urnetwork provide
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+`
+
+func TestRewriteUnitContent_NoTypeLineGetsNotify(t *testing.T) {
+	got, changed := rewriteUnitContent(installerShapedUnit)
+	if !changed {
+		t.Fatal("a unit with no Type= line is Type=simple by default and must be migrated")
+	}
+	lines := strings.Split(got, "\n")
+	svc := -1
+	for i, l := range lines {
+		if strings.TrimSpace(l) == "[Service]" {
+			svc = i
+			break
+		}
+	}
+	if svc < 0 || lines[svc+1] != "Type=notify" || lines[svc+2] != "NotifyAccess=all" {
+		t.Fatalf("Type=notify and NotifyAccess=all must directly follow [Service], got:\n%s", got)
+	}
+	// Everything else, comment included, is preserved.
+	if !strings.Contains(got, "# Type=simple (the default), deliberately NOT Type=notify.") ||
+		!strings.Contains(got, "ExecStart=/home/user/.local/share/urnetwork-provider/bin/urnetwork provide") {
+		t.Errorf("rest of the unit was altered:\n%s", got)
+	}
+	// Exactly one real Type= key now.
+	n := 0
+	for _, l := range lines {
+		if strings.HasPrefix(strings.TrimSpace(l), "Type=") {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Errorf("want exactly one Type= line, got %d:\n%s", n, got)
+	}
+	// Idempotent: a second pass has nothing to do.
+	if again, changed2 := rewriteUnitContent(got); changed2 || again != got {
+		t.Errorf("second pass must be a no-op (changed=%v)", changed2)
+	}
+	// And demotion (rollback to an older binary) turns it back into simple.
+	back, ok := rewriteUnitContentToSimple(got)
+	if !ok || !strings.Contains(back, "Type=simple") || strings.Contains(back, "Type=notify\n") {
+		t.Errorf("demote did not restore Type=simple:\n%s", back)
+	}
+}
+
+func TestRewriteUnitContent_NoTypeLineKeepsExistingNotifyAccess(t *testing.T) {
+	in := "[Service]\nNotifyAccess=main\nExecStart=/x\n"
+	got, changed := rewriteUnitContent(in)
+	if !changed {
+		t.Fatal("expected migration")
+	}
+	if strings.Count(got, "NotifyAccess=") != 1 || !strings.Contains(got, "Type=notify") {
+		t.Errorf("must add Type=notify only, leaving the existing NotifyAccess:\n%s", got)
+	}
+}
+
+func TestRewriteUnitContent_NoServiceSectionOrOtherTypeUntouched(t *testing.T) {
+	for name, in := range map[string]string{
+		"no [Service]":  "[Unit]\nDescription=x\n",
+		"oneshot":       "[Service]\nType=oneshot\nExecStart=/x\n",
+		"forking":       "[Service]\nType=forking\nExecStart=/x\n",
+		"exec":          "[Service]\nType=exec\nExecStart=/x\n",
+		"empty content": "",
+	} {
+		got, changed := rewriteUnitContent(in)
+		if changed || got != in {
+			t.Errorf("%s: must be left untouched (changed=%v)", name, changed)
+		}
+	}
+}
