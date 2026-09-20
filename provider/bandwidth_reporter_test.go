@@ -100,6 +100,8 @@ func TestResolveReportURL_NoOverrideAndNoEnvIsEmpty(t *testing.T) {
 // the lightweight companion to buildReport's per-proxy detail — it must
 // carry the same NodeID/Uptime so the hub can match it to an existing node.
 func TestBuildHeartbeat_NoProxiesConfigured(t *testing.T) {
+	resetProxyHealthForTest()
+	t.Cleanup(resetProxyHealthForTest)
 	start := time.Now().Add(-5 * time.Minute)
 
 	hb := buildHeartbeat("test-node", "test-host", start)
@@ -125,6 +127,8 @@ func TestBuildHeartbeat_NoProxiesConfigured(t *testing.T) {
 // projection must produce an empty slice rather than nil-panicking or
 // carrying stale data.
 func TestBuildHeartbeat_ProjectsProxyStatus(t *testing.T) {
+	resetProxyHealthForTest()
+	t.Cleanup(resetProxyHealthForTest)
 	start := time.Now().Add(-1 * time.Minute)
 
 	hb := buildHeartbeat("test-node", "test-host", start)

@@ -144,6 +144,7 @@ func proxyAdd(opts docopt.Opts) {
 		proxyConfig.Servers = map[string]string{}
 	}
 
+keyAddressLoop:
 	for _, keyAddress := range allKeyAddress {
 		var key string
 		var proxyAddress string
@@ -165,21 +166,52 @@ func proxyAdd(opts docopt.Opts) {
 			}
 		}
 
-		if currentKey, ok := proxyConfig.Servers[proxyAddress]; ok && currentKey != key {
-			if force, _ := opts.Bool("-f"); !force {
-				fmt.Printf(
-					"server %s (%s/%s) exists with different key. Change key? [yN]\n",
-					address,
-					obfuscateUser(user),
-					obfuscatePassword(password),
-				)
-
-				reader := bufio.NewReader(os.Stdin)
-				confirm, _ := reader.ReadString('\n')
-				if strings.ToLower(strings.TrimSpace(confirm)) != "y" {
-					return
+		// Credential rotation: purge any existing entry for the same
+		// host:port whose credentials differ, so adding the same address
+		// with new credentials is a ROTATION, not a duplicate. The
+		// reloader diffs by address only (desiredSet[s.Address]), so two
+		// keys for one host:port with different user:pass made re-paste a
+		// no-op — the same address was already "desired", the new creds
+		// were silently dropped, and the running proxy kept the old auth
+		// (LA7 incident 2026-09-18: 100 proxies pasted with new creds,
+		// "added 100" printed, daemon kept dialing the old user).
+		// Scan EVERY entry for this address before deciding anything. Stopping
+		// at the first entry with identical credentials (the old behavior)
+		// left any stale duplicate not yet visited in place, and Go's random
+		// map order made whether it was purged nondeterministic.
+		keepExisting := false
+		var stale []string
+		for existing, existingKey := range proxyConfig.Servers {
+			existingAddress, existingUser, existingPassword := parseProxyAddress(existing)
+			if existingAddress != address || existing == proxyAddress {
+				continue
+			}
+			// Compare EFFECTIVE credentials: a stored key can carry its
+			// credentials in the Auths table instead of in the server string,
+			// and an alternate representation of the same credentials is not
+			// a rotation.
+			if proxyConfig.Auths != nil {
+				if existingAuth, ok := proxyConfig.Auths[existingKey]; ok {
+					existingUser = existingAuth.User
+					existingPassword = existingAuth.Password
 				}
 			}
+			if existingUser == user && existingPassword == password {
+				keepExisting = true
+				continue
+			}
+			stale = append(stale, existing)
+		}
+		for _, existing := range stale {
+			delete(proxyConfig.Servers, existing)
+			if keepExisting {
+				fmt.Printf("removed stale duplicate entry for server %s\n", address)
+			} else {
+				fmt.Printf("rotated credentials for server %s\n", address)
+			}
+		}
+		if keepExisting {
+			continue keyAddressLoop
 		}
 
 		fmt.Printf(
