@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -26,6 +27,14 @@ func DefaultIdleUpdateOptions() IdleUpdateOptions {
 		Window:    5 * time.Minute,  // 300s
 		Timeout:   30 * time.Minute, // 30m ceiling
 	}
+}
+
+// containerBillableRatePath is the billable_rate path INSIDE the container. It
+// is a Linux path whatever the host OS is, so it is joined with "/" (path),
+// never the host separator (filepath): a Windows host would otherwise hand
+// `cat` a backslash path and idle-update would wait out its whole timeout.
+func containerBillableRatePath(stateDir string) string {
+	return path.Join(stateDir, "billable_rate")
 }
 
 // readBillableRateFile reads the current billable rate in bytes/sec from the given state dir.
@@ -327,10 +336,20 @@ func cmdDockerIdleUpdate(args []string, force, dryRun bool) error {
 		return cmdDockerUpdate(rest, force, dryRun)
 	}
 
-	// Host-side poller executing into container to read /root/.urnetwork/billable_rate
+	// Host-side poller executing into the container to read the provider's
+	// billable_rate from its RESOLVED state dir (p.StateDir), not a
+	// hardcoded /root/.urnetwork — a container whose HOME differs (env sets
+	// HOME) would never appear idle and idle-update would wait out its whole
+	// timeout.
+	stateDir := p.StateDir
+	if stateDir == "" {
+		stateDir = "/root/.urnetwork"
+	}
 	dockerPoll := func() (uint64, bool, error) {
-		cmd := exec.Command(dockerCLI(), "exec", p.Unit, "cat", "/root/.urnetwork/billable_rate")
-		out, err := cmd.Output()
+		cmd := exec.Command(dockerCLI(), "exec", p.Unit, "cat", containerBillableRatePath(stateDir))
+		// runCapped, not cmd.Output(): it applies a deadline and an output cap,
+		// so a hung dockerd cannot stall the idle wait past its own timeout.
+		out, _, err := runCapped(cmd, 1<<10)
 		if err != nil {
 			return 0, false, nil
 		}

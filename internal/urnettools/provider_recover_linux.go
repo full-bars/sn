@@ -76,14 +76,31 @@ func recoverDeletedBinary(binary string, pid int, user string) error {
 			_ = os.Remove(tmp)
 			return fmt.Errorf("recovered binary truncated during copy (got %d bytes, expected %d from %s)", n, want, procExe)
 		}
+		// Mode and ownership go on the HELD descriptor, not by path after the
+		// close: this runs as root in a directory the provider user can write,
+		// and a path-based chmod/chown lets that user swap tmp for a symlink
+		// (or the directory for another tree) in between. fchmod/fchown act on
+		// the inode that was just written.
+		if err := out.Chmod(0o755); err != nil {
+			out.Close()
+			_ = os.Remove(tmp)
+			return fmt.Errorf("chmod %s: %w", tmp, err)
+		}
+		// Best-effort ownership fix when we are root and the provider runs as
+		// another user: the recreated file would otherwise be root-owned and
+		// break the provider's own read/exec of its binary. Not fatal on
+		// failure, but surfaced.
+		if os.Geteuid() == 0 && user != "" {
+			if uid, gid, lerr := lookupUserIDs(user); lerr == nil {
+				if cerr := out.Chown(uid, gid); cerr != nil {
+					fmt.Fprintf(os.Stderr, "note: recovered binary %s will be root-owned (chown to %s failed: %v) — provider may fail to exec it\n", binary, user, cerr)
+				}
+			}
+		}
 		if closeErr := out.Close(); closeErr != nil {
 			_ = os.Remove(tmp)
 			return fmt.Errorf("close %s: %v", tmp, closeErr)
 		}
-	}
-	if err := os.Chmod(tmp, 0o755); err != nil {
-		_ = os.Remove(tmp)
-		return fmt.Errorf("chmod %s: %w", tmp, err)
 	}
 	// Belt-and-braces: confirm the recovered bytes are a valid executable for
 	// this platform before installing (catches a truncated/corrupt image the
@@ -97,20 +114,6 @@ func recoverDeletedBinary(binary string, pid int, user string) error {
 		return fmt.Errorf("install recovered binary: %w", err)
 	}
 
-	// Best-effort ownership fix when we are root and the provider runs as
-	// another user: the recreated file would otherwise be root-owned and break
-	// the provider's own read/exec of its binary. Not fatal on failure.
-	if os.Geteuid() == 0 && user != "" {
-		if uid, gid, err := lookupUserIDs(user); err == nil {
-			// Lchown (not os.Chown) so a symlink the attacker planted at
-			// `binary` is not followed to an arbitrary target (C2-class).
-			if cerr := chownStateFile(binary, uid, gid); cerr != nil {
-				// Not fatal, but surface it: a root-owned recovered binary can
-				// make the provider's own read/exec fail.
-				fmt.Fprintf(os.Stderr, "note: recovered binary %s is root-owned (chown to %s failed: %v) — provider may fail to exec it\n", binary, user, cerr)
-			}
-		}
-	}
 	return nil
 }
 

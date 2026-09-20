@@ -3,15 +3,17 @@
 package urnettools
 
 import (
+	"fmt"
 	"os"
 	"syscall"
+
+	"golang.org/x/sys/unix"
 )
 
-// chownLikeStateOwner chowns path to the owner of stateDir when the caller is a
-// different user (cross-user session load: the provider's uid must be able to
-// read what the tool staged under a root run). No-op when ownership already
-// matches. Uses Lchown (not os.Chown) to prevent following symlinks.
-func chownLikeStateOwner(stateDir, path string) error {
+// chownFdLikeStateOwner chowns an open fd to the owner of stateDir using
+// fchown (fd-based, no path resolution — immune to symlink swap between
+// close and chown). No-op when ownership already matches.
+func chownFdLikeStateOwner(stateDir string, fd int) error {
 	fi, err := os.Stat(stateDir)
 	if err != nil {
 		return err
@@ -20,13 +22,12 @@ func chownLikeStateOwner(stateDir, path string) error {
 	if !ok {
 		return nil
 	}
-	pfi, err := os.Lstat(path)
-	if err != nil {
-		return err
+	var pst unix.Stat_t
+	if err := unix.Fstat(fd, &pst); err != nil {
+		return fmt.Errorf("fstat fd %d: %w", fd, err)
 	}
-	pst, ok := pfi.Sys().(*syscall.Stat_t)
-	if !ok || (pst.Uid == st.Uid && pst.Gid == st.Gid) {
+	if pst.Uid == st.Uid && pst.Gid == st.Gid {
 		return nil
 	}
-	return chownStateFile(path, int(st.Uid), int(st.Gid))
+	return unix.Fchown(fd, int(st.Uid), int(st.Gid))
 }

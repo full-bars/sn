@@ -22,8 +22,18 @@ func newDirectCmd() *cobra.Command {
 		Example: `  urnet-tools direct off
   urnet-tools direct off --unit urnetwork-native.service
   urnet-tools direct on`,
-		Args: cobra.MaximumNArgs(1),
+		// Without this, cobra consumes the root persistent flags
+		// (--unit/--user/--network/--state-dir/-f/-n) BEFORE the handler
+		// runs, so `direct off --unit B` and `direct off -n` silently lose
+		// their target and dry-run — wrong-provider or destructive behavior.
+		// Every other command routes through newCobraCmd which sets this;
+		// direct was the holdout.
+		DisableFlagParsing: true,
+		Args:               cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if hasHelpFlag(args) {
+				return cmd.Help()
+			}
 			return parseGlobal(args, func(force, dryRun bool, rest []string) error {
 				return cmdDirectToggle(rest, force, dryRun)
 			})
@@ -88,21 +98,32 @@ func cmdDirectToggle(args []string, force, dryRun bool) error {
 	}
 
 	toggleDir := filepath.Dir(togglePath)
-	if err := os.MkdirAll(toggleDir, 0700); err != nil {
-		return fmt.Errorf("could not create dir for direct toggle: %v", err)
+	// Write the toggle through a descriptor-pinned handle (the state dir
+	// itself is opened O_NOFOLLOW): the marker and its ownership are set
+	// relative to ONE open directory, so a provider user who swaps the
+	// state dir for a symlink can no longer redirect the write. Ownership
+	// lands on the descriptor (writeOwned fchowns from the handle's
+	// fstat), which replaces the two pathname lookups the old code made
+	// (chownLikeStateOwner by path plus writeStateFileOwned).
+	h, err := openStateDirInCreate(p.StateHome, toggleDir)
+	if err != nil {
+		return fmt.Errorf("could not create or open direct toggle dir %s: %v", toggleDir, err)
 	}
-	// Match every other state-write in this package (session_cmds.go,
-	// self_heal.go): a root-run `urnet-tools direct` must not leave a
-	// root-owned dir/file the provider's unprivileged user can't read, or
-	// the toggle silently falls back to default behavior for that user.
-	if err := chownLikeStateOwner(p.StateDir, toggleDir); err != nil {
+	defer h.Close()
+	// The handle takes its owner from toggleDir itself, and a root-run
+	// MkdirAll above leaves a NEW dir owned by root (0700), which would lock
+	// the provider's unprivileged user out of the toggle. Hand the directory
+	// to the state dir's owner first, through the open descriptor.
+	ref, err := openProviderStateDir(p)
+	if err != nil {
+		return fmt.Errorf("could not open state dir %s: %v", p.StateDir, err)
+	}
+	defer ref.Close()
+	if err := h.adoptOwnerOf(ref); err != nil {
 		return fmt.Errorf("could not set owner on direct toggle dir: %v", err)
 	}
-	if err := os.WriteFile(togglePath, []byte(val), 0600); err != nil {
+	if err := h.writeOwned("direct", []byte(val), 0o600); err != nil {
 		return fmt.Errorf("could not write direct toggle for %s: %v", providerLabel(p), err)
-	}
-	if err := chownLikeStateOwner(p.StateDir, togglePath); err != nil {
-		return fmt.Errorf("could not set owner on direct toggle file: %v", err)
 	}
 
 	if p.Running {
@@ -153,10 +174,20 @@ func cmdDirectStatus(t Target) error {
 // writeReloadTrigger writes (or increments) a reload trigger file at the given path.
 // Used by urnet-tools to signal a running provider to hot-reload.
 func writeReloadTrigger(path string) error {
+	// Read and write through a descriptor-pinned handle on the state dir: the
+	// file sits in a user-owned directory and this runs as root, so the read
+	// must not follow a planted symlink, the write must not be redirected by a
+	// swapped directory, and the file is handed to the directory's owner.
+	h, err := openStateDirHandle(filepath.Dir(path))
+	if err != nil {
+		return err
+	}
+	defer h.Close()
+	name := filepath.Base(path)
 	seq := 0
-	if b, err := os.ReadFile(path); err == nil {
+	if b, rerr := h.readFile(name, 64); rerr == nil {
 		fmt.Sscanf(string(b), "%d", &seq)
 	}
 	seq++
-	return os.WriteFile(path, []byte(fmt.Sprintf("%d\n", seq)), 0600)
+	return h.writeOwned(name, []byte(fmt.Sprintf("%d\n", seq)), 0600)
 }

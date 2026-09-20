@@ -2,7 +2,7 @@
 
 package urnettools
 
-// chownLikeStateOwner is a no-op on platforms without POSIX ownership.
-func chownLikeStateOwner(stateDir, path string) error {
+// chownFdLikeStateOwner is a no-op on non-unix platforms.
+func chownFdLikeStateOwner(stateDir string, fd int) error {
 	return nil
 }
