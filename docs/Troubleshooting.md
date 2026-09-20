@@ -102,11 +102,15 @@ hotswap.
 systemctl --user show urnetwork.service -p Type,NotifyAccess   # drop --user for a system unit
 ```
 
-**Fix**: update to a release that contains the migration fix, then run
-`urnet-tools update` once (it migrates the unit and restarts). Or convert the
-unit by hand; the steps are in [HotSwap](HotSwap.md#which-update-hotswaps).
+**Fix**: nothing manual. Run `urnet-tools update` on a build that includes the
+migration fix: the first update converts the unit to `Type=notify` and restarts
+once, and the updates after that hotswap (see [HotSwap](HotSwap.md#which-update-hotswaps)).
 If the update prints `note: ... is Type=simple but its unit file cannot be
-migrated automatically`, `Type=` is set by a drop-in: change it there.
+migrated automatically`, `Type=` is set by a drop-in you control: change it
+there to `Type=notify` and `NotifyAccess=all`, then `systemctl daemon-reload`.
+A `hotswap unavailable: the running provider was started before its systemd
+unit became Type=notify` message means the unit was converted but the provider
+has not restarted since; the update restarts it for you and later ones hotswap.
 
 > [!IMPORTANT]
 > The check deliberately fails closed. An earlier revision gated only on the

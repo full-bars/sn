@@ -23,7 +23,7 @@ curl -fSsL https://raw.githubusercontent.com/full-bars/sn/refs/heads/main/script
 
 ### 🔑 Post-Install Authentication
 
-After installation, you must source your terminal profile so the new commands are available, and authenticate the provider. Then you can load your proxy list:
+After installation, source your terminal profile so the new commands are available in the terminal you installed from (new terminals, `ssh host urnet-tools ...`, cron and root find them without this step: the installer links `urnet-tools` and `urnetwork` into `~/.local/bin` and `/usr/local/bin` and writes the PATH block to `~/.bashrc`, `~/.profile` and `~/.zshenv`), and authenticate the provider. Then you can load your proxy list:
 
 ```bash
 source ~/.bashrc

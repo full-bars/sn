@@ -15,43 +15,39 @@ HotSwap replaces the running provider with a new binary without stopping the ser
 > [!IMPORTANT]
 > A stream that is still open when the old process exits after its 30-second drain is cut, and the client has to reconnect through the new process. Short flows finish on the old process. This drain cut has not been measured per stream yet.
 
-## Requirements
-
-1. The running provider and the replacement binary are both **v3.23.0-fix.31.0 or newer**.
-2. The provider's systemd unit is **`Type=notify` with `NotifyAccess=all`**. Check:
-
-   ```bash
-   systemctl --user show urnetwork.service -p Type,NotifyAccess,MainPID   # drop --user for a system unit
-   ```
-
-   `Type=notify` and `NotifyAccess=all` means eligible. `Type=simple` means the update will restart instead.
-
-3. `urnet-tools` on your PATH. A user-mode install keeps it in `~/.local/share/urnetwork-provider/bin/`, which is not on PATH by default. Either add that directory to PATH or call the tool by its full path.
-
 ## How to update with HotSwap
 
+There is nothing to set up and no script to run. Use the normal update command:
+
 ```bash
-urnet-tools update            # latest release; hotswaps when the requirements above are met
-urnet-tools update --tag v3.23.0-fix.31.2   # a specific release, same rules (also works for a downgrade)
+urnet-tools update                          # latest release
+urnet-tools update --tag v3.23.0-fix.31.2   # a specific release (a downgrade works the same way)
 ```
 
-`update -n` is a dry run, but it currently prints only the target version. It does not tell you whether the update will hotswap or restart.
+`urnet-tools update` decides for itself: it hands off to the new binary when the node is eligible and falls back to a normal restart when it is not, and it prints which one it did and why. `update -n` is a dry run, but it currently prints only the target version, not whether the update will hotswap or restart.
 
-### A node that is still `Type=simple`
+> [!NOTE]
+> `urnet-tools` is reachable from every kind of shell without any setup. The installer links `urnet-tools` and `urnetwork` into `~/.local/bin` (found by the shell behind `ssh host urnet-tools ...` and by cron, neither of which reads `~/.bashrc`), into `/usr/local/bin` so root and other users find them (directly when run as root, otherwise through passwordless `sudo`), and writes the PATH block to `~/.bashrc`, `~/.profile` and `~/.zshenv`. A node installed before that is repaired by its next `urnet-tools update`. If root still cannot find it, the box has no passwordless `sudo` for the installing user; the installer and `update` cannot write `/usr/local/bin` unprivileged, so run the single `sudo ln -sfn <install>/bin/urnet-tools /usr/local/bin/urnet-tools` line the installer prints.
 
-The installer writes a unit with no `Type=` line, which systemd treats as `simple`. The **first** `urnet-tools update` on a build that includes the unit migration rewrites the unit to `Type=notify` and `NotifyAccess=all`, reloads systemd, and performs a **normal restart** (the running process was started without a notify socket, so it cannot hand off). From the next update on, updates hotswap.
+### Which update hotswaps
 
-> [!WARNING]
-> Releases up to and including v3.23.0-fix.32.0 do **not** perform this migration on units without an explicit `Type=` line. On those, `update` reports that hotswap is unavailable and restarts every time. Update to a release that contains the fix, or convert the unit by hand once:
->
-> ```bash
-> mkdir -p ~/.config/systemd/user/urnetwork.service.d
-> printf '[Service]\nType=notify\nNotifyAccess=all\n' > ~/.config/systemd/user/urnetwork.service.d/notify.conf
-> systemctl --user daemon-reload
-> urnet-tools restart -f        # one normal restart so the process gets a notify socket
-> ```
->
-> Use `systemctl` without `--user` and a file under `/etc/systemd/system/urnetwork.service.d/` for a system unit. To undo, delete the file, run `daemon-reload` and restart.
+A node qualifies when the running provider and the new binary are both **v3.23.0-fix.31.0 or newer** and the provider was started by a systemd unit that is `Type=notify`. The installer writes a unit with no `Type=` line (systemd's default, `simple`), so a fresh or older node is not eligible yet. `urnet-tools update` fixes that for you:
+
+| Update | What `urnet-tools update` does | Downtime |
+|---|---|---|
+| The first update on a build that includes the unit migration | Converts the unit to `Type=notify` (and reloads systemd), then restarts the provider once so it starts with a notify socket | a few seconds (a normal restart) |
+| Every update after that | Hands off to the new binary | none (see [What it costs](#what-it-costs)) |
+
+You can see whether a node is ready at any time:
+
+```bash
+systemctl --user show urnetwork.service -p Type,NotifyAccess   # drop --user for a system unit
+```
+
+`Type=notify` and `NotifyAccess=all` means the next update will hotswap.
+
+> [!IMPORTANT]
+> Builds up to and including v3.23.0-fix.32.0 do not perform the unit migration on units with no `Type=` line, so on those the update always restarts. Once a node is on a build with the fix, the sequence above applies: the next update migrates and restarts, and the one after that hotswaps. If you would rather a node never hotswap, use `urnet-tools restart` after installing an update by hand.
 
 ## What you will see
 
