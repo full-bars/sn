@@ -175,6 +175,12 @@ keyAddressLoop:
 		// were silently dropped, and the running proxy kept the old auth
 		// (LA7 incident 2026-09-18: 100 proxies pasted with new creds,
 		// "added 100" printed, daemon kept dialing the old user).
+		// Scan EVERY entry for this address before deciding anything. Stopping
+		// at the first entry with identical credentials (the old behavior)
+		// left any stale duplicate not yet visited in place, and Go's random
+		// map order made whether it was purged nondeterministic.
+		keepExisting := false
+		var stale []string
 		for existing, existingKey := range proxyConfig.Servers {
 			existingAddress, existingUser, existingPassword := parseProxyAddress(existing)
 			if existingAddress != address || existing == proxyAddress {
@@ -191,27 +197,21 @@ keyAddressLoop:
 				}
 			}
 			if existingUser == user && existingPassword == password {
-				continue keyAddressLoop
+				keepExisting = true
+				continue
 			}
-			delete(proxyConfig.Servers, existing)
-			fmt.Printf("rotated credentials for server %s\n", address)
+			stale = append(stale, existing)
 		}
-
-		if currentKey, ok := proxyConfig.Servers[proxyAddress]; ok && currentKey != key {
-			if force, _ := opts.Bool("-f"); !force {
-				fmt.Printf(
-					"server %s (%s/%s) exists with different key. Change key? [yN]\n",
-					address,
-					obfuscateUser(user),
-					obfuscatePassword(password),
-				)
-
-				reader := bufio.NewReader(os.Stdin)
-				confirm, _ := reader.ReadString('\n')
-				if strings.ToLower(strings.TrimSpace(confirm)) != "y" {
-					return
-				}
+		for _, existing := range stale {
+			delete(proxyConfig.Servers, existing)
+			if keepExisting {
+				fmt.Printf("removed stale duplicate entry for server %s\n", address)
+			} else {
+				fmt.Printf("rotated credentials for server %s\n", address)
 			}
+		}
+		if keepExisting {
+			continue keyAddressLoop
 		}
 
 		fmt.Printf(

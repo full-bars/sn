@@ -60,3 +60,10 @@ jobs:
           go test ./provider/ -short -shuffle=on -count=3 -timeout 20m -v 2>&1 \
             | tee /tmp/shuffle.log \
             | grep -E "^(-test.shuffle|--- FAIL|FAIL|ok|panic)"
+
+      - name: Full shuffled-run output on failure
+        if: failure()
+        run: |
+          # The step above filters its output; print the whole log so a
+          # failure can be diagnosed without rerunning.
+          tail -n 500 /tmp/shuffle.log || true
