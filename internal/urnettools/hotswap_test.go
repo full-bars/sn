@@ -3,6 +3,7 @@ package urnettools
 import (
 	"errors"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -240,5 +241,53 @@ func TestHotSwapPreflightDistinguishesAnUnreadableUnitType(t *testing.T) {
 	// The handoff must still be refused, not attempted, when the gate is unknown.
 	if supportsHotSwap(Provider{Version: "v3.23.0-fix.31.0", Unit: "urnetwork.service"}) {
 		t.Error("supportsHotSwap = true on an unreadable unit type; must fail closed")
+	}
+}
+
+// A unit migrated to Type=notify while the provider kept running has no
+// notify socket in the process; preflight must decline with the restart
+// message instead of letting the handoff abort after SIGUSR2.
+func TestHotSwapUnitOKDeclinesRunningProcessWithoutNotifySocket(t *testing.T) {
+	origUnit, origProc := unitTypeFunc, processNotifySocketFunc
+	defer func() { unitTypeFunc, processNotifySocketFunc = origUnit, origProc }()
+	unitTypeFunc = func(Provider) (string, error) { return "notify", nil }
+	p := Provider{Unit: "urnetwork.service", PID: 4242}
+
+	processNotifySocketFunc = func(int) (bool, bool) { return false, true }
+	if err := hotSwapUnitOK(p); !errors.Is(err, ErrHotSwapNeedsRestart) {
+		t.Fatalf("running process without NOTIFY_SOCKET: got %v, want ErrHotSwapNeedsRestart", err)
+	}
+	if got := hotswapDeclineReason(ErrHotSwapNeedsRestart); got != "needs_restart" {
+		t.Fatalf("decline reason = %q, want needs_restart", got)
+	}
+
+	processNotifySocketFunc = func(int) (bool, bool) { return true, true }
+	if err := hotSwapUnitOK(p); err != nil {
+		t.Fatalf("process with a notify socket must pass: %v", err)
+	}
+
+	// Unknown (environ unreadable) must not block: fall back to the unit check.
+	processNotifySocketFunc = func(int) (bool, bool) { return false, false }
+	if err := hotSwapUnitOK(p); err != nil {
+		t.Fatalf("unknown process env must not decline: %v", err)
+	}
+
+	// No PID (stopped provider): nothing to inspect.
+	processNotifySocketFunc = func(int) (bool, bool) { t.Fatal("must not inspect pid 0"); return false, false }
+	if err := hotSwapUnitOK(Provider{Unit: "urnetwork.service"}); err != nil {
+		t.Fatalf("pid 0: %v", err)
+	}
+}
+
+func TestProcessNotifySocketLinuxSelf(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("linux only")
+	}
+	t.Setenv("NOTIFY_SOCKET", "")
+	if has, known := processNotifySocket(os.Getpid()); !known || has {
+		t.Fatalf("empty NOTIFY_SOCKET: has=%v known=%v, want false/true", has, known)
+	}
+	if _, known := processNotifySocket(1 << 30); known {
+		t.Fatal("a pid that does not exist must be unknown, not 'no socket'")
 	}
 }
