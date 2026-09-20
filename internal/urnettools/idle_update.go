@@ -347,7 +347,9 @@ func cmdDockerIdleUpdate(args []string, force, dryRun bool) error {
 	}
 	dockerPoll := func() (uint64, bool, error) {
 		cmd := exec.Command(dockerCLI(), "exec", p.Unit, "cat", containerBillableRatePath(stateDir))
-		out, err := cmd.Output()
+		// runCapped, not cmd.Output(): it applies a deadline and an output cap,
+		// so a hung dockerd cannot stall the idle wait past its own timeout.
+		out, _, err := runCapped(cmd, 1<<10)
 		if err != nil {
 			return 0, false, nil
 		}

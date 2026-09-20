@@ -9,6 +9,7 @@ package urnettools
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -345,5 +346,31 @@ func TestOpenStateDirWithinCreateOwnership(t *testing.T) {
 		if st.Uid != uid || st.Gid != gid {
 			t.Fatalf("%s owner = %d:%d, want %d:%d", d, st.Uid, st.Gid, uid, gid)
 		}
+	}
+}
+
+// writeReloadTrigger increments through a pinned handle and refuses a state
+// dir that is a symlink instead of writing through it.
+func TestWriteReloadTriggerIncrementsAndRefusesSymlinkedDir(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "proxy.reload")
+	for want := 1; want <= 3; want++ {
+		if err := writeReloadTrigger(path); err != nil {
+			t.Fatalf("write %d: %v", want, err)
+		}
+		if b, _ := os.ReadFile(path); string(b) != fmt.Sprintf("%d\n", want) {
+			t.Fatalf("after write %d file = %q", want, b)
+		}
+	}
+	real := t.TempDir()
+	link := filepath.Join(t.TempDir(), "state")
+	if err := os.Symlink(real, link); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+	if err := writeReloadTrigger(filepath.Join(link, "proxy.reload")); err == nil {
+		t.Fatal("writeReloadTrigger wrote through a symlinked state dir")
+	}
+	if entries, _ := os.ReadDir(real); len(entries) != 0 {
+		t.Fatalf("link target was modified: %v", entries)
 	}
 }

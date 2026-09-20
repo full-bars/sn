@@ -174,13 +174,20 @@ func cmdDirectStatus(t Target) error {
 // writeReloadTrigger writes (or increments) a reload trigger file at the given path.
 // Used by urnet-tools to signal a running provider to hot-reload.
 func writeReloadTrigger(path string) error {
+	// Read and write through a descriptor-pinned handle on the state dir: the
+	// file sits in a user-owned directory and this runs as root, so the read
+	// must not follow a planted symlink, the write must not be redirected by a
+	// swapped directory, and the file is handed to the directory's owner.
+	h, err := openStateDirHandle(filepath.Dir(path))
+	if err != nil {
+		return err
+	}
+	defer h.Close()
+	name := filepath.Base(path)
 	seq := 0
-	if b, err := os.ReadFile(path); err == nil {
+	if b, rerr := h.readFile(name, 64); rerr == nil {
 		fmt.Sscanf(string(b), "%d", &seq)
 	}
 	seq++
-	// Write via the symlink-safe helper (O_NOFOLLOW): the file sits in a
-	// user-owned state dir, and a planted symlink must not let root
-	// overwrite an arbitrary target.
-	return writeStateFile(filepath.Dir(path), filepath.Base(path), []byte(fmt.Sprintf("%d\n", seq)), 0600)
+	return h.writeOwned(name, []byte(fmt.Sprintf("%d\n", seq)), 0600)
 }
