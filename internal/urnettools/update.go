@@ -362,6 +362,10 @@ func cmdUpdate(args []string, force, dryRun bool) error {
 		fmt.Fprintf(os.Stderr, "tool self-update failed: %v\n", err)
 	}
 
+	// Make the tool findable from non-interactive shells and from root.
+	// Installs that predate the installer doing this are repaired here.
+	ensureToolOnPath()
+
 	if failures > 0 {
 		return fmt.Errorf("%d of %d provider(s) failed to update", failures, len(chosen))
 	}
