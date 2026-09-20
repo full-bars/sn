@@ -51,7 +51,7 @@ Replace the single global yield with a per-client release:
 3. The parent closes only client X's transport and marks X released so its supervisor does not reconnect it.
 4. Repeat for every client, in the candidate's normal start-up order (earnings ranking first).
 5. Global pieces (MAINPID, control socket, metrics) switch once, as today.
-6. Safety fallbacks: if the candidate never confirms a client within a deadline, the parent keeps that client. If the candidate dies, the parent keeps everything (already true today). An overall deadline ends the drain exactly as today.
+6. Safety fallbacks: if the candidate never confirms a client within a deadline, the parent keeps that client. If the candidate dies before it has connected any client, the parent keeps everything (already true today). After the candidate has connected client X, the backend has already replaced the old resident for X (newest instance wins), so the parent can no longer keep its old connection; recovery has to reconnect X from the parent, which is why the handover needs the commit step described in open question 8. An overall deadline ends the drain exactly as today.
 
 Result: a client never has zero connections, so the connection total should stay near its pre-swap level instead of dropping to about 4%.
 
@@ -72,6 +72,8 @@ These need answers before implementation starts:
 6. **Memory.** Two full client sets are alive together. Quantify on the lowmem profile and decide whether it needs a guard.
 7. **Observability.** There is no per-process connected-client metric. Add one, otherwise the outcome counter reports success while capacity is dipping.
 
+8. **Candidate failure after displacement.** The backend has no reserve concept: connecting the candidate's instance replaces the old resident at once. If the candidate dies after connecting X but before the parent has released X, the old connection is already gone. Design a two-phase handover: the candidate reports `CLIENT_LIVE(X)`, the parent keeps X's supervisor armed (able to reconnect) until the candidate confirms it holds X after the release, and a candidate death or health-check failure in between makes the parent reconnect X. Test by killing the candidate at each step.
+
 ## Success criteria
 
 Measured with the same per-process connection sampler used above, on a node with 1,000 or more proxies:
@@ -81,17 +83,20 @@ Measured with the same per-process connection sampler used above, on a node with
 - No increase in authentication failures over the quiet baseline.
 - Peak memory stays within a stated bound.
 - Wall-clock swap time is no worse than today's.
+- Killing the candidate at any point in the handover leaves every client connected again within the normal reconnect time.
 
 ## Phases
 
 | Phase | Work | Ships as |
 |---|---|---|
-| 0 | Research: answer questions 1, 2, 4 with experiments; read the backend paths involved | notes, no release |
+| 0 | Research: answer questions 1, 2, 4 and 8 with experiments; measure questions 5 and 6 (authentication load and memory) so Phase 3 has numbers to gate on; read the backend paths involved | notes, no release |
 | 1 | Add a per-process connected-client metric | normal point release |
 | 2 | Fix the chained-swap regrowth (question 3) | normal point release |
 | 3 | Implement the per-client protocol behind an opt-in environment flag | normal point release, off by default |
 | 4 | Canary on a couple of nodes for a full update cycle, compare against the success criteria | no release |
 | 5 | Make it the default; keep the flag as an escape hatch for one release | normal point release |
+
+Phase 3 entry criteria: answers to questions 1, 2, 4 and 8; authentication load with both processes running shows no increase in authentication failures over the quiet baseline; peak memory with both client sets alive is within the stated bound.
 
 ## Related
 
