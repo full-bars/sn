@@ -951,6 +951,31 @@ func cmdDockerProxy(args []string) error {
 		return err
 	}
 
+	// `urnet-docker proxy audit status my-container` puts the audit action
+	// first; without this, the bare-target resolver stops at the action
+	// token and never sees the container name. Peel the action (and the
+	// release address) before resolving a trailing container target, then
+	// re-prepend it to the delegated command below.
+	var auditPrefix []string
+	if sub == "audit" {
+		for len(rest2) > 0 && !strings.HasPrefix(rest2[0], "-") {
+			switch rest2[0] {
+			case "status", "on", "off":
+				auditPrefix = append(auditPrefix, rest2[0])
+				rest2 = rest2[1:]
+			case "release":
+				auditPrefix = append(auditPrefix, rest2[0])
+				rest2 = rest2[1:]
+				if len(rest2) > 0 && !strings.HasPrefix(rest2[0], "-") {
+					auditPrefix = append(auditPrefix, rest2[0])
+					rest2 = rest2[1:]
+				}
+			default:
+			}
+			break
+		}
+	}
+
 	providers := DiscoverDocker()
 	// Accept a bare container name as the target (e.g.
 	// `urnet-docker proxy refresh urnet-test`) — the usage text documents
@@ -1098,7 +1123,8 @@ func cmdDockerProxy(args []string) error {
 		inner := append([]string{"urnet-tools", "proxy", "trim"}, rest2...)
 		return containerExecByName(container, inner...)
 	case "audit":
-		inner := append([]string{"urnet-tools", "proxy", "audit"}, rest2...)
+		inner := append([]string{"urnet-tools", "proxy", "audit"}, auditPrefix...)
+		inner = append(inner, rest2...)
 		return containerExecByName(container, inner...)
 	case "exclude":
 		inner := append([]string{"urnet-tools", "proxy", "exclude"}, rest2...)

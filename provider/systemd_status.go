@@ -134,14 +134,14 @@ func systemdStatusLine() string {
 			if len(reason) > maxStatusReasonLen {
 				reason = reason[:maxStatusReasonLen] + "..."
 			}
-			return fmt.Sprintf("degraded: proxy source unreachable (%s), retrying", reason)
+			return fmt.Sprintf("degraded: proxy source unreachable (%s), retrying%s", reason, auditPauseNote())
 		case proxyResolutionEmpty:
-			return "degraded: proxy source returned no usable proxies, retrying"
+			return "degraded: proxy source returned no usable proxies, retrying" + auditPauseNote()
 		default: // proxyResolutionPending or stale OK
-			return "starting: resolving proxies"
+			return "starting: resolving proxies" + auditPauseNote()
 		}
 	case live == 0:
-		return fmt.Sprintf("degraded: 0/%d proxies authenticated, retrying", total)
+		return fmt.Sprintf("degraded: 0/%d proxies authenticated, retrying%s", total, auditPauseNote())
 	}
 	// Proxies the proxy audit engine is holding out are expected to be down.
 	parked := proxiesParked.Load()
@@ -160,6 +160,16 @@ func systemdStatusLine() string {
 		line += "; proxy audit paused (paid proxy list unreadable)"
 	}
 	return line
+}
+
+// auditPauseNote returns the pause suffix for a status line, or "" when the
+// proxy audit engine is able to work. The outage branches call this so a
+// paused audit is visible even while the line reads degraded or starting.
+func auditPauseNote() string {
+	if proxyAuditPaused.Load() {
+		return "; proxy audit paused (paid proxy list unreadable)"
+	}
+	return ""
 }
 
 // reportProxyStatusToSystemd pushes the current line to systemd. Errors are

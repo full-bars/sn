@@ -313,6 +313,9 @@ func providerExtraMetrics() string {
 	fmt.Fprintf(&b, "# HELP urnet_proxy_audit_parks_24h Parks counted against the rolling 24h budget.\n")
 	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_parks_24h gauge\n")
 	fmt.Fprintf(&b, "urnet_proxy_audit_parks_24h %d\n", audit.Parks24h)
+	fmt.Fprintf(&b, "# HELP urnet_proxy_audit_paused 1 while the paid proxy list is unreadable and the audit parks nothing.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_paused gauge\n")
+	fmt.Fprintf(&b, "urnet_proxy_audit_paused %d\n", b2i(audit.Paused))
 
 	// Backward-compatibility aliases for legacy dashboards
 	fmt.Fprintf(&b, "# HELP urnet_governor_acting Legacy alias for urnet_proxy_audit_acting.\n")
@@ -324,6 +327,9 @@ func providerExtraMetrics() string {
 	fmt.Fprintf(&b, "# HELP urnet_governor_would_park Legacy alias for urnet_proxy_audit_would_park.\n")
 	fmt.Fprintf(&b, "# TYPE urnet_governor_would_park gauge\n")
 	fmt.Fprintf(&b, "urnet_governor_would_park %d\n", audit.WouldPark)
+	fmt.Fprintf(&b, "# HELP urnet_governor_paused Legacy alias for urnet_proxy_audit_paused.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_governor_paused gauge\n")
+	fmt.Fprintf(&b, "urnet_governor_paused %d\n", b2i(audit.Paused))
 	fmt.Fprintf(&b, "# HELP urnet_governor_distrusted Legacy alias for urnet_proxy_audit_distrusted.\n")
 	fmt.Fprintf(&b, "# TYPE urnet_governor_distrusted gauge\n")
 	fmt.Fprintf(&b, "urnet_governor_distrusted %d\n", b2i(audit.Distrusted))

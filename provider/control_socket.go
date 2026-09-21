@@ -383,6 +383,9 @@ var liveDefaults = map[string]string{
 	"gogc":           "100",
 	"metrics":        "off",
 	"metrics_listen": "auto",
+	// Clearing proxy_audit must return the engine to observe mode: the
+	// in-memory override survives a clear otherwise.
+	"proxy_audit": "off",
 }
 
 func applyLiveDefault(key string) error {
@@ -522,7 +525,27 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			return controlResponse{OK: true, ProxyAudit: snap, Audit: snap, Governor: snap}
 
 		case "on":
-			_ = state.set("proxy_audit", "on")
+			// Same transaction shape as the standard set command: mutate
+			// the control state, persist, and report failure honestly so a
+			// restart cannot silently revert the command.
+			state.txMu.Lock()
+			oldValue, oldMeta, hadOld := state.getWithMeta("proxy_audit")
+			if err := state.set("proxy_audit", "on"); err != nil {
+				state.txMu.Unlock()
+				return controlResponse{OK: false, Error: err.Error()}
+			}
+			if err := state.persist(); err != nil {
+				if hadOld {
+					state.values["proxy_audit"] = oldValue
+					state.meta["proxy_audit"] = oldMeta
+				} else {
+					delete(state.values, "proxy_audit")
+					delete(state.meta, "proxy_audit")
+				}
+				state.txMu.Unlock()
+				return controlResponse{OK: false, Error: "proxy audit on failed to persist: " + err.Error()}
+			}
+			state.txMu.Unlock()
 			setProxyAuditOverride(true)
 			controlLog("✓ [proxy][audit] proxy audit enabled via control socket\n")
 			if a := currentProxyAuditor.Load(); a != nil {
@@ -531,7 +554,24 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			return controlResponse{OK: true, Value: "enabled"}
 
 		case "off":
-			_ = state.set("proxy_audit", "off")
+			state.txMu.Lock()
+			oldValue, oldMeta, hadOld := state.getWithMeta("proxy_audit")
+			if err := state.set("proxy_audit", "off"); err != nil {
+				state.txMu.Unlock()
+				return controlResponse{OK: false, Error: err.Error()}
+			}
+			if err := state.persist(); err != nil {
+				if hadOld {
+					state.values["proxy_audit"] = oldValue
+					state.meta["proxy_audit"] = oldMeta
+				} else {
+					delete(state.values, "proxy_audit")
+					delete(state.meta, "proxy_audit")
+				}
+				state.txMu.Unlock()
+				return controlResponse{OK: false, Error: "proxy audit off failed to persist: " + err.Error()}
+			}
+			state.txMu.Unlock()
 			setProxyAuditOverride(false)
 			controlLog("✓ [proxy][audit] proxy audit disabled via control socket\n")
 			if a := currentProxyAuditor.Load(); a != nil {
