@@ -263,6 +263,7 @@ func provideSetupSignals(st *provideState) {
 				if st.cleanupControlSocket != nil {
 					st.cleanupControlSocket()
 					st.cleanupControlSocket = nil
+					controlSocketQuiesceForHotSwap = nil
 				}
 			})
 		}
@@ -723,6 +724,9 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 
 			if cleanup, err := startControlSocket(st.ctx, globalControlState); err != nil {
 				tlog("[control] candidate failed to start control socket on takeover: %s\n", err)
+				// Do not carry the parent's socket closer into the hotswap
+				// commit point: this process never bound that socket.
+				controlSocketQuiesceForHotSwap = nil
 			} else {
 				st.cleanupControlSocket = cleanup
 				controlSocketQuiesceForHotSwap = st.cleanupControlSocket
@@ -730,6 +734,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 					if st.cleanupControlSocket != nil {
 						st.cleanupControlSocket()
 						st.cleanupControlSocket = nil
+						controlSocketQuiesceForHotSwap = nil
 					}
 				})
 			}
