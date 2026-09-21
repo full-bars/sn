@@ -1,9 +1,13 @@
 D
+D
 - **Audit ring survives hotswap (PR #21)**: the parent flushes the audit ring at the handoff commit point on every path (systemd, Windows, Docker); the successor merges it back from disk after takeover with timezone-safe deduplication. Lifecycle events (start, hotswap, shutdown) join the `set`/`clear` entries in `urnet-tools history`.
 - **Sliding severity scale for provider status (PR #21)**: `active` >= 90%, `partial` 70-89%, `degraded` 50-69%, `critical` < 50%, percentage always rendered and clamped at 100.
 - **HotSwap how-to and measured costs (PR #14)**: new `docs/HotSwap.md`.
 - **Design proposal: per-client make-before-break HotSwap handover (PR #15)**: design doc only.
 - **Quick start and buildable release images (PR #10)**: docs fixed and refreshed; the release pipeline builds container images.
+- **`urnet-tools top`, a live full-screen view of a provider**: the last 10 minutes of throughput as a graph, current and average rate, clients, the proxy pool, memory and descriptors, and recent events such as restarts and state changes. It reads only the provider's control socket (the live snapshot above) and changes nothing. Also available as `urtop`, a link the installer and `urnet-tools update` now create. Keys: `q`, `Esc` or `Ctrl-C` quit; `Tab` and `Shift-Tab` switch provider; `+` and `-` change the refresh rate; `?` shows help. When the provider does not answer (stopped, or an older build) the screen stays up, shows `DISCONNECTED` with the reason and a countdown, and resumes by itself. It needs an interactive terminal; use `status` for scripts.
+---
+origin/feat/ls-top
 - **Live node snapshot and a live block in `urnet-tools status`**: the provider keeps a snapshot of the node, cached for about a second, and serves it over the control socket as `snapshot`. It carries the billable rate now and as 1 and 5 minute averages with a 10 minute history, active clients and sessions, the proxy pool by status, pressure, memory, descriptors and goroutines, the restart reason, and a flowing, idle, degraded or starting verdict with a hint when idle. `urnet-tools status` shows it as a live block, `urnet-tools status --json` prints it for scripts, and a host with several providers gets a one-line summary of each. A provider that predates the command is handled: the block is skipped, and only `--json` reports it as unavailable.
 - **Restart reason**: `urnet-tools update`, `hotswap` and `restart` record why the provider is about to restart, and the provider reports it after it starts (`update`, `hotswap`, `manual`, `clean`, `unclean` or `first-start`) in the snapshot and as `urnet_restart_reason`.
 - **Resource metrics**: `urnet_mem_limit_bytes`, `urnet_rss_bytes`, `urnet_open_fds` and `urnet_fd_limit` (the last three on Linux).
