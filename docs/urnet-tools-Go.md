@@ -94,7 +94,7 @@ Both are cross-compiled from one Go source. The shell/PowerShell drift is gone.
 |---|---|
 | `config [--json]` | Show every provider setting with the source it came from. |
 | `set <key> <value>` | Set a runtime setting over the control socket. Queued to `pending_overrides.json` when the provider is down. |
-| `history [limit]` | Show the provider's command audit trail from its 1000-entry circular ring. |
+| `history [limit]` | Show the provider's command audit trail from its 1000-entry circular ring, now including lifecycle events (start, hotswap, shutdown) alongside `set`/`clear` changes. |
 | `dashboard` | Rich terminal status panel. Aliases `dash`, `panel`. |
 
 ---

@@ -96,7 +96,7 @@ Exclusion uses `proxy remove --match=<pattern>`. Matching removes proxies and pe
 | `set <key> <value>` | Set a runtime setting over the control socket. Queued to `pending_overrides.json` when the provider is down. |
 | `set <key>` | Show one setting's current value. Reads are not logged at the provider, because `status` polls them on every invocation. |
 | `set <key> off` | Clear a runtime setting and restore its default. Same queueing behavior. |
-| `history [limit]` | Show the provider's command audit trail from its 1000-entry circular ring. Defaults to the last 50, maximum 100. |
+| `history [limit]` | Show the provider's command audit trail from its 1000-entry circular ring, now including lifecycle events (start, hotswap, shutdown) alongside `set`/`clear` changes. |
 | `dashboard` | Rich terminal status panel: state indicators, active settings, proxy sources, restart warnings. Aliases `dash`, `panel`. |
 
 ---

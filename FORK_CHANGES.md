@@ -218,3 +218,12 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 
 **Last Updated**: 2026-09-17
 **Maintained By**: @full-bars
+
+---
+
+## 14. Audit Ring Survives HotSwap, Lifecycle Audit Trail, Sliding Status (PR #21)
+
+- **Audit ring persists across hotswap (PR #21)**: the old process flushes its audit ring at the handoff commit point, before the takeover message, on every handover path (systemd, Windows, Docker). The successor merges `audit.json` into its live ring after takeover with timezone-safe deduplication (timestamps compared semantically, not by `time.Time` pointer equality). The parent quiesces its control socket at the commit point, so a command accepted after the flush falls back to the pending-overrides queue instead of vanishing in the parent's memory. The merge persist is serialized with the periodic persist gate, and this fork's pre-existing persist mutex covers the same contract.
+- **Lifecycle events audited (PR #21)**: `urnet-tools history` now records process start (version + boot/hotswap source), the hotswap handoff, and control-socket shutdown, in addition to `set`/`clear`. The shutdown record is written after this fork's `shutdownFn` guard.
+- **Sliding severity scale for provider status (PR #21)**: `active` >= 90%, `partial` 70-89%, `degraded` 50-69%, `critical` < 50% (including zero), exact percentage always rendered and clamped at 100.
+- **Start entries persist immediately on normal boots (PR #21)**: only a spawned hotswap successor defers its start entry until the takeover merge; the Docker execve successor (whose ring loads after the parent's pre-exec flush) and normal boots write to disk at once.
