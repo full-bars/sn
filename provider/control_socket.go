@@ -41,12 +41,14 @@ func controlSocketPath() (string, error) {
 // controlRequest is one line of the socket protocol: newline-delimited JSON,
 // one request per line, one response per line, in order.
 type controlRequest struct {
-	Cmd    string `json:"cmd"` // "set", "clear", "get", "status", "history", "version", "snapshot", or "shutdown"
-	Key    string `json:"key"`
-	Value  string `json:"value,omitempty"`
-	Limit  int    `json:"limit,omitempty"`  // for "history" command
-	Cursor string `json:"cursor,omitempty"` // for "history" command
-	V      int    `json:"v,omitempty"`      // protocol version; 0 = legacy
+	Cmd     string `json:"cmd"` // "set", "clear", "get", "status", "history", "version", "snapshot", "shutdown", or "audit"
+	Key     string `json:"key"`
+	Value   string `json:"value,omitempty"`
+	Limit   int    `json:"limit,omitempty"`   // for "history" command
+	Cursor  string `json:"cursor,omitempty"`  // for "history" command
+	V       int    `json:"v,omitempty"`       // protocol version; 0 = legacy
+	Action  string `json:"action,omitempty"`  // for "audit" command: "status", "on", "off", "release"
+	Address string `json:"address,omitempty"` // for "audit" release action
 }
 
 // settingInfo is the per-key detail returned by the "status" command.
@@ -73,16 +75,22 @@ type controlResponse struct {
 	// should trigger the warning.
 	StartupValues map[string]string `json:"startup_values,omitempty"`
 	Version       int               `json:"v,omitempty"` // protocol version echoed back
+	MetricsAddrs  []string          `json:"metrics_addrs,omitempty"`
 	// BuildVersion is the provider's own release version, answered by the
 	// "version" command. Distinct from Version, which is the control
 	// protocol's version, not the binary's.
 	BuildVersion string `json:"build_version,omitempty"`
 	// MetricsAddrs are the addresses /metrics is listening on, answered by
 	// "status". Empty when metrics is off.
-	MetricsAddrs []string `json:"metrics_addrs,omitempty"`
 	// Snapshot is the live node picture, answered by "snapshot". An older
 	// provider replies "unknown command" instead.
 	Snapshot *NodeSnapshot `json:"snapshot,omitempty"`
+	// ProxyAudit is the proxy audit engine's last completed tick, answered by
+	// "status" and "audit". Nil before its first tick or on a provider that predates it.
+	ProxyAudit *proxyAuditStatus `json:"proxy_audit,omitempty"`
+	Audit      *proxyAuditStatus `json:"audit,omitempty"`
+	// Governor is retained as a backward-compatibility alias for older tools.
+	Governor *proxyAuditStatus `json:"governor,omitempty"`
 }
 
 func controlLog(format string, args ...any) {
@@ -266,6 +274,7 @@ var liveEffectKeys = map[string]bool{
 	"gogc":                        true,
 	"fast_auth":                   true,
 	"proxy_self_heal":             true,
+	"proxy_audit":                 true,
 	"report_url":                  true,
 	"report_interval":             true,
 	"proxy_url_refresh":           true,
@@ -308,7 +317,7 @@ func validateControlValue(key, value string) error {
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", key, value)
 		}
-	case "fast_auth", "proxy_self_heal":
+	case "fast_auth", "proxy_self_heal", "proxy_audit":
 		switch valLower {
 		case "on", "off":
 		default:
@@ -380,6 +389,9 @@ var liveDefaults = map[string]string{
 	"gogc":           "100",
 	"metrics":        "off",
 	"metrics_listen": "auto",
+	// Clearing proxy_audit must return the engine to observe mode: the
+	// in-memory override survives a clear otherwise.
+	"proxy_audit": "off",
 }
 
 func applyLiveDefault(key string) error {
@@ -512,7 +524,109 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			}
 			settings[k] = si
 		}
-		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs()}
+		snap := proxyAuditStatusSnapshot()
+		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap, Governor: snap}
+
+	case "audit":
+		switch req.Action {
+		case "status", "":
+			snap := proxyAuditStatusSnapshot()
+			return controlResponse{OK: true, ProxyAudit: snap, Audit: snap, Governor: snap}
+
+		case "on":
+			// Same transaction shape as the standard set command: mutate
+			// the control state, persist, and report failure honestly so a
+			// restart cannot silently revert the command.
+			state.txMu.Lock()
+			oldValue, oldMeta, hadOld := state.getWithMeta("proxy_audit")
+			if err := state.set("proxy_audit", "on"); err != nil {
+				state.txMu.Unlock()
+				return controlResponse{OK: false, Error: err.Error()}
+			}
+			if err := state.persist(); err != nil {
+				if hadOld {
+					state.values["proxy_audit"] = oldValue
+					state.meta["proxy_audit"] = oldMeta
+				} else {
+					delete(state.values, "proxy_audit")
+					delete(state.meta, "proxy_audit")
+				}
+				state.txMu.Unlock()
+				return controlResponse{OK: false, Error: "proxy audit on failed to persist: " + err.Error()}
+			}
+			state.txMu.Unlock()
+			setProxyAuditOverride(true)
+			controlLog("✓ [proxy][audit] proxy audit enabled via control socket\n")
+			if a := currentProxyAuditor.Load(); a != nil {
+				go a.runOnce()
+			}
+			return controlResponse{OK: true, Value: "enabled"}
+
+		case "off":
+			state.txMu.Lock()
+			oldValue, oldMeta, hadOld := state.getWithMeta("proxy_audit")
+			if err := state.set("proxy_audit", "off"); err != nil {
+				state.txMu.Unlock()
+				return controlResponse{OK: false, Error: err.Error()}
+			}
+			if err := state.persist(); err != nil {
+				if hadOld {
+					state.values["proxy_audit"] = oldValue
+					state.meta["proxy_audit"] = oldMeta
+				} else {
+					delete(state.values, "proxy_audit")
+					delete(state.meta, "proxy_audit")
+				}
+				state.txMu.Unlock()
+				return controlResponse{OK: false, Error: "proxy audit off failed to persist: " + err.Error()}
+			}
+			state.txMu.Unlock()
+			setProxyAuditOverride(false)
+			controlLog("✓ [proxy][audit] proxy audit disabled via control socket\n")
+			if a := currentProxyAuditor.Load(); a != nil {
+				go a.runOnce()
+			}
+			return controlResponse{OK: true, Value: "disabled"}
+
+		case "release":
+			a := currentProxyAuditor.Load()
+			if a == nil {
+				return controlResponse{OK: false, Error: "proxy auditor not active"}
+			}
+			// Serialize with the ticker: release mutates the same park and
+			// backoff state a running tick is reading and rewriting.
+			a.mu.Lock()
+			if req.Address == "" || req.Address == "--all" || req.Address == "all" {
+				released := a.st.releaseAll()
+				for _, addr := range released {
+					a.releaseBackoff(addr)
+				}
+				a.publish(a.env.now(), a.env.act(), proxyAuditResult{})
+				a.mu.Unlock()
+				controlLog("✓ [proxy][audit] released all %d parked proxies via control socket\n", len(released))
+				return controlResponse{OK: true, Value: fmt.Sprintf("released %d proxies", len(released))}
+			}
+			addr := req.Address
+			wasParked := a.st.isParked(addr)
+			if wasParked {
+				a.st.release(addr)
+			}
+			a.releaseBackoff(addr)
+			if globalProxyFailureHistory != nil {
+				globalProxyFailureHistory.Reset(addr)
+			}
+			a.publish(a.env.now(), a.env.act(), proxyAuditResult{})
+			a.mu.Unlock()
+			if wasParked {
+				controlLog("✓ [proxy][audit] released parked proxy %s via control socket\n", addr)
+				return controlResponse{OK: true, Value: fmt.Sprintf("released proxy %s", addr)}
+			}
+			controlLog("✓ [proxy][audit] cleared backoff for proxy %s via control socket (was not parked)\n", addr)
+			return controlResponse{OK: true, Value: fmt.Sprintf("cleared backoff for proxy %s", addr)}
+
+		default:
+			return controlResponse{OK: false, Error: fmt.Sprintf("unknown audit action %q (status|on|off|release)", req.Action)}
+		}
 
 	case "history":
 		if globalAuditRing == nil {
@@ -628,6 +742,13 @@ func applyLiveSideEffect(key, value string) error {
 		return applyMetricsLive(value)
 	case "metrics_listen":
 		return applyMetricsListenLive()
+	case "proxy_audit":
+		enabled := isTruthyOn(value)
+		setProxyAuditOverride(enabled)
+		if a := currentProxyAuditor.Load(); a != nil {
+			go a.runOnce()
+		}
+		return nil
 	}
 	return nil
 }

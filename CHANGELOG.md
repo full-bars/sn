@@ -1,3 +1,4 @@
+ HEAD
 D
 D
 - **Audit ring survives hotswap (PR #21)**: the parent flushes the audit ring at the handoff commit point on every path (systemd, Windows, Docker); the successor merges it back from disk after takeover with timezone-safe deduplication. Lifecycle events (start, hotswap, shutdown) join the `set`/`clear` entries in `urnet-tools history`.
@@ -12,6 +13,7 @@ origin/feat/ls-top
 - **Restart reason**: `urnet-tools update`, `hotswap` and `restart` record why the provider is about to restart, and the provider reports it after it starts (`update`, `hotswap`, `manual`, `clean`, `unclean` or `first-start`) in the snapshot and as `urnet_restart_reason`.
 - **Resource metrics**: `urnet_mem_limit_bytes`, `urnet_rss_bytes`, `urnet_open_fds` and `urnet_fd_limit` (the last three on Linux).
 - **Prometheus alert rules in the Monitoring bundle**: `UrnetworkNodeDown` and `UrnetworkRestartLoop` are on by default, and four more (old version, memory near limit, descriptors near limit, no billable traffic) are commented out because their thresholds depend on your fleet. The dashboard gains lifecycle and limit panels. See `docs/Monitoring.md`.
+origin/feat/proxy-grade-governor-v1
 - **HotSwap how-to and measured costs** (<https://github.com/full-bars/sn/pull/14>): new `docs/HotSwap.md` covering requirements, the update flow, what you will see, and measured costs (connection ramp, memory, drain).
 - **Design proposal: per-client make-before-break HotSwap handover** (<https://github.com/full-bars/sn/pull/15>): `docs/design/hotswap-make-before-break.md` plans a handover that keeps every client connected throughout. A proposal only, no code; it needs research before development.
 ---
@@ -23,6 +25,7 @@ origin/feat/live-status-snapshot
 
 ### Fixed
 
+<<<<<<< HEAD
 - **HotSwap unit migration was a silent no-op (PR #14)**: units with no `Type=` now migrate to `Type=notify`; `urnet-tools` goes on PATH; stale processes decline up front.
 - **Proxy credential rotation on re-paste (PR #13)**.
 - **Docker idle-update poll is bounded (PR #12)**.
@@ -39,6 +42,22 @@ origin/feat/live-status-snapshot
 ### CI
 
 - **`VT_JSON_FILE` machine-readable export (PR #9)**: JSON write failures now fail the scan instead of being skipped.
+=======
+- **Paid grading sampled the same hosts every sweep** on a box with no URL sources: the probe rotation only advanced during URL fetches, so a second grade was not independent of the first. It now rotates once per paid pass.
+- **HotSwap unit migration was a silent no-op** (<https://github.com/full-bars/sn/pull/14>): the installer writes a unit with no `Type=` line and `update` only rewrote an explicit `Type=simple`, so nodes set up by the current installer never reached a hotswap. A unit with no `Type=` now gets `Type=notify` and `NotifyAccess=all`, and the update says so when a unit cannot be migrated.
+- **HotSwap declines up front when the running provider has no notify socket** (<https://github.com/full-bars/sn/pull/14>): a migrated unit whose provider has not restarted no longer aborts after SIGUSR2 and rolls back; new decline label `needs_restart`.
+- **pprof diagnostics disappeared on every other hotswap** (<https://github.com/full-bars/sn/pull/14>): a candidate retries the diagnostics bind until its parent releases the port.
+- **`urnet-tools` not found** (<https://github.com/full-bars/sn/pull/14>) from non-interactive shells, zsh and root: the installer links `urnet-tools` and `urnetwork` into `~/.local/bin` and `/usr/local/bin` and writes the PATH block to `~/.bashrc`, `~/.profile` and `~/.zshenv`; `urnet-tools update` repairs older installs.
+- **Proxy credential rotation on re-paste** (<https://github.com/full-bars/sn/pull/13>): pasting an address that already exists with different credentials now rotates the running proxy instead of silently keeping the old credentials; all duplicate entries for an address are scanned before an add is skipped.
+- **Docker idle-update poll is bounded** (<https://github.com/full-bars/sn/pull/12>): a hung Docker daemon can no longer stall the idle wait past its own timeout.
+
+### Changed
+
+- **Runtime decoupling**: `proxy audit` is an independent runtime feature with its own control socket actions (`audit on|off|status|release`) and does not depend on `self-heal`. `self-heal` remains dedicated to resource-pressure actuators.
+- The systemd status line (`urnet-tools status` on Linux) counts proxies held by proxy audit as intentional: `active: 47/50 proxies authenticated, 3 parked by proxy audit` instead of `partial`, and notes when audit is paused.
+- The paid-grade header comments no longer claim grades are never consulted by anything that changes a proxy: trim shed ranking and proxy audit read them.
+- **HotSwap is no longer described as zero-downtime.** Measured on a live node, a hotswap removes the 2 to 3 second window with no provider process, but the old process drops its proxy connections at the handover and the new one rebuilds them over about 30 s, the same ramp as a restart. Earlier entries that say "zero-downtime" describe the process handover only. See `docs/HotSwap.md`.
+>>>>>>> origin/feat/proxy-grade-governor-v1
 
 ---
 
