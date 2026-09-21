@@ -237,6 +237,7 @@ func provideSetupSignals(st *provideState) {
 	applyPersistedRuntimeTuning(globalControlState)
 	initPersistentErrors()
 	initAuditRing()
+	recordProcessStart(st.isHotSwapCandidate)
 	globalControlState.shutdownFn = st.cancel
 
 	if !st.isHotSwapCandidate {

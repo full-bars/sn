@@ -261,6 +261,10 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 		}
 
 		flushRetentionEvents()
+		// Parent exits via os.Exit here, which skips the graceful shutdown
+		// persist: push unsaved audit entries (last <=30s) to disk so the
+		// candidate inherits them.
+		forceAuditPersist()
 		lifetimeStore.Flush()
 		isHotSwapDraining.Store(false)
 		cancel()
@@ -592,6 +596,17 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 		}
 		childPID = res.msg.PID
 		hotswapLog("⚡ [hotswap] Candidate PID %d reported READY (version=%s)\n", childPID, res.msg.Version)
+		// Candidate passed pre-flight and the handoff will proceed: record
+		// it before the swap so `urnet-tools history` shows the update
+		// event on this (soon-to-be-retired) process.
+		recordAndPersist(CommandAudit{
+			Timestamp: time.Now(),
+			Cmd:       "hotswap",
+			Key:       "version",
+			Value:     RequireVersion(),
+			Source:    "trigger",
+			OK:        true,
+		})
 	case <-time.After(HotSwapPreflightTimeout):
 		hotswapLog("❌ [hotswap] Candidate timed out during pre-flight (>%s). Aborting handoff; live provider retained.\n", HotSwapPreflightTimeout)
 		session.Kill()
@@ -647,6 +662,9 @@ func runHotSwapParentHandoff(ctx context.Context, cancel context.CancelFunc, opt
 
 		// 2. Yield live coordinator session and flush metrics immediately before execve
 		yieldCoordinatorSession()
+		// execve replaces the process image, so the in-memory audit ring
+		// disappears with it: persist unsaved entries before the swap.
+		forceAuditPersist()
 		flushRetentionEvents()
 		lifetimeStore.Flush()
 
