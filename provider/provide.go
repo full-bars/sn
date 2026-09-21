@@ -251,6 +251,10 @@ func provideSetupSignals(st *provideState) {
 		if err != nil {
 			tlog("[control] failed to start control socket, urnet-tools will fall back to file-based overrides: %s\n", err)
 		} else {
+			// The hotswap commit point quiesces this socket so no command
+			// accepted after the audit flush can be lost in the parent's
+			// memory mid-handoff.
+			controlSocketQuiesceForHotSwap = st.cleanupControlSocket
 			// NOTE: Control socket cleanup is handled by RegisterCoordinatorCloser
 			// (below) and by closeAllCaches() in provide()'s shutdown path.
 			// Do NOT defer unregSocketCloser here — the closer must stay
@@ -721,6 +725,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				tlog("[control] candidate failed to start control socket on takeover: %s\n", err)
 			} else {
 				st.cleanupControlSocket = cleanup
+				controlSocketQuiesceForHotSwap = st.cleanupControlSocket
 				unregSocketCloser = RegisterCoordinatorCloser(func() {
 					if st.cleanupControlSocket != nil {
 						st.cleanupControlSocket()
