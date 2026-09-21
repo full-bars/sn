@@ -306,7 +306,7 @@ func TestRecordAndPersistConcurrentRaceGuard(t *testing.T) {
 	defer func() { globalAuditRing = prevRing }()
 	prevPersist := lastAuditPersist
 	defer func() { lastAuditPersist = prevPersist }()
-	lastAuditPersist = time.Now() // gate closed: exercises Append only
+	lastAuditPersist = time.Time{} // gate open: first due write persists
 
 	var wg sync.WaitGroup
 	for g := 0; g < 8; g++ {
