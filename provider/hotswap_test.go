@@ -705,6 +705,8 @@ func TestHotSwapParentPID1ExecveSuccess(t *testing.T) {
 	prevRing := globalAuditRing
 	globalAuditRing = ring
 	defer func() { globalAuditRing = prevRing }()
+	prevPersist := lastAuditPersist
+	defer func() { lastAuditPersist = prevPersist }()
 
 	execInPlaceFunc = func(exe string, args []string, env []string) error {
 		// Verify URNETWORK_HOTSWAP is stripped from cleanEnv
@@ -1470,6 +1472,8 @@ func TestHotSwapSystemdBranchRecordsEntry(t *testing.T) {
 	prevRing := globalAuditRing
 	globalAuditRing = ring
 	defer func() { globalAuditRing = prevRing }()
+	prevPersist := lastAuditPersist
+	defer func() { lastAuditPersist = prevPersist }()
 
 	ClearCoordinatorClosers()
 	unreg := RegisterCoordinatorCloser(func() {})
@@ -1533,6 +1537,8 @@ func TestHotSwapAbortedHandoffRecordsNoEntry(t *testing.T) {
 	prevRing := globalAuditRing
 	globalAuditRing = ring
 	defer func() { globalAuditRing = prevRing }()
+	prevPersist := lastAuditPersist
+	defer func() { lastAuditPersist = prevPersist }()
 
 	spawnCandidateFunc = func(exe string, args []string) (*HotswapParentSession, error) {
 		return nil, fmt.Errorf("spawn failed")
