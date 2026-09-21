@@ -424,6 +424,10 @@ func TestRunSelfUpdateUnknownFlagPropagates(t *testing.T) {
 // TestRunDockerSelfUpdateUnknownFlagPropagates mirrors the above for
 // RunDocker's update/self-update/selfupdate aliases.
 func TestRunDockerSelfUpdateUnknownFlagPropagates(t *testing.T) {
+	saved := testDockerBin
+	testDockerBin = "nonexistent-docker-binary"
+	defer func() { testDockerBin = saved }()
+
 	for _, cmd := range []string{"update", "self-update", "selfupdate"} {
 		err := RunDocker([]string{cmd, "--bogus"})
 		if err == nil || !strings.Contains(err.Error(), "for self-update") {

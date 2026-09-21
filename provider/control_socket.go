@@ -41,12 +41,14 @@ func controlSocketPath() (string, error) {
 // controlRequest is one line of the socket protocol: newline-delimited JSON,
 // one request per line, one response per line, in order.
 type controlRequest struct {
-	Cmd    string `json:"cmd"` // "set", "clear", "get", "status", "history", "version", or "shutdown"
-	Key    string `json:"key"`
-	Value  string `json:"value,omitempty"`
-	Limit  int    `json:"limit,omitempty"`  // for "history" command
-	Cursor string `json:"cursor,omitempty"` // for "history" command
-	V      int    `json:"v,omitempty"`      // protocol version; 0 = legacy
+	Cmd     string `json:"cmd"` // "set", "clear", "get", "status", "history", "version", or "shutdown"
+	Key     string `json:"key"`
+	Value   string `json:"value,omitempty"`
+	Action  string `json:"action,omitempty"`
+	Address string `json:"address,omitempty"`
+	Limit   int    `json:"limit,omitempty"`  // for "history" command
+	Cursor  string `json:"cursor,omitempty"` // for "history" command
+	V       int    `json:"v,omitempty"`      // protocol version; 0 = legacy
 }
 
 // settingInfo is the per-key detail returned by the "status" command.
@@ -79,7 +81,10 @@ type controlResponse struct {
 	BuildVersion string `json:"build_version,omitempty"`
 	// MetricsAddrs are the addresses /metrics is listening on, answered by
 	// "status". Empty when metrics is off.
-	MetricsAddrs []string `json:"metrics_addrs,omitempty"`
+	MetricsAddrs []string          `json:"metrics_addrs,omitempty"`
+	ProxyAudit   *proxyAuditStatus `json:"proxy_audit,omitempty"`
+	Audit        *proxyAuditStatus `json:"audit,omitempty"`
+	Governor     *proxyAuditStatus `json:"governor,omitempty"`
 }
 
 func controlLog(format string, args ...any) {
@@ -263,6 +268,7 @@ var liveEffectKeys = map[string]bool{
 	"gogc":                        true,
 	"fast_auth":                   true,
 	"proxy_self_heal":             true,
+	"proxy_audit":                 true,
 	"report_url":                  true,
 	"report_interval":             true,
 	"proxy_url_refresh":           true,
@@ -305,7 +311,7 @@ func validateControlValue(key, value string) error {
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", key, value)
 		}
-	case "fast_auth", "proxy_self_heal":
+	case "fast_auth", "proxy_self_heal", "proxy_audit":
 		switch valLower {
 		case "on", "off":
 		default:
@@ -506,7 +512,67 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			}
 			settings[k] = si
 		}
-		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs()}
+		snap := proxyAuditStatusSnapshot()
+		return controlResponse{OK: true, Settings: settings, StartupValues: startupValues(), MetricsAddrs: metricsServedAddrs(), ProxyAudit: snap, Audit: snap, Governor: snap}
+
+	case "audit":
+		switch req.Action {
+		case "status", "":
+			snap := proxyAuditStatusSnapshot()
+			return controlResponse{OK: true, ProxyAudit: snap, Audit: snap, Governor: snap}
+
+		case "on":
+			_ = state.set("proxy_audit", "on")
+			setProxyAuditOverride(true)
+			controlLog("✓ [proxy][audit] proxy audit enabled via control socket\n")
+			if a := currentProxyAuditor.Load(); a != nil {
+				go a.runOnce()
+			}
+			return controlResponse{OK: true, Value: "enabled"}
+
+		case "off":
+			_ = state.set("proxy_audit", "off")
+			setProxyAuditOverride(false)
+			controlLog("✓ [proxy][audit] proxy audit disabled via control socket\n")
+			if a := currentProxyAuditor.Load(); a != nil {
+				go a.runOnce()
+			}
+			return controlResponse{OK: true, Value: "disabled"}
+
+		case "release":
+			a := currentProxyAuditor.Load()
+			if a == nil {
+				return controlResponse{OK: false, Error: "proxy auditor not active"}
+			}
+			if req.Address == "" || req.Address == "--all" || req.Address == "all" {
+				released := a.st.releaseAll()
+				for _, addr := range released {
+					a.releaseBackoff(addr)
+				}
+				a.publish(a.env.now(), a.env.act(), proxyAuditResult{})
+				controlLog("✓ [proxy][audit] released all %d parked proxies via control socket\n", len(released))
+				return controlResponse{OK: true, Value: fmt.Sprintf("released %d proxies", len(released))}
+			}
+			addr := req.Address
+			wasParked := a.st.isParked(addr)
+			if wasParked {
+				a.st.release(addr)
+			}
+			a.releaseBackoff(addr)
+			if globalProxyFailureHistory != nil {
+				globalProxyFailureHistory.Reset(addr)
+			}
+			a.publish(a.env.now(), a.env.act(), proxyAuditResult{})
+			if wasParked {
+				controlLog("✓ [proxy][audit] released parked proxy %s via control socket\n", addr)
+				return controlResponse{OK: true, Value: fmt.Sprintf("released proxy %s", addr)}
+			}
+			controlLog("✓ [proxy][audit] cleared backoff for proxy %s via control socket (was not parked)\n", addr)
+			return controlResponse{OK: true, Value: fmt.Sprintf("cleared backoff for proxy %s", addr)}
+
+		default:
+			return controlResponse{OK: false, Error: fmt.Sprintf("unknown audit action %q (status|on|off|release)", req.Action)}
+		}
 
 	case "history":
 		if globalAuditRing == nil {
@@ -615,6 +681,13 @@ func applyLiveSideEffect(key, value string) error {
 		return applyMetricsLive(value)
 	case "metrics_listen":
 		return applyMetricsListenLive()
+	case "proxy_audit":
+		enabled := isTruthyOn(value)
+		setProxyAuditOverride(enabled)
+		if a := currentProxyAuditor.Load(); a != nil {
+			go a.runOnce()
+		}
+		return nil
 	}
 	return nil
 }

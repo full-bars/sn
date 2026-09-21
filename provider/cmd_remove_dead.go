@@ -76,7 +76,11 @@ func collectRemoveDeadCandidates(state *ProxyState, o removeDeadOptions, uptime 
 		}
 		// A proxy can land in BOTH a category (dead/inactive/degraded) AND
 		// authFailing — a deliberate, pre-existing overlap.
-		if o.authFailMin > 0 && e.Health != "up" {
+		// A parked proxy is resting, not failing: proxy audit stopped it,
+		// and its cumulative AuthFailures can be high from before. It is not
+		// "up", so without this it would be collected here (and --degraded turns
+		// this check on by default) and removed from the operator's proxy file.
+		if o.authFailMin > 0 && e.Health != "up" && e.Health != proxyHealthParked {
 			days := int64(max(1, int(uptime.Hours())/24))
 			if e.AuthFailures >= o.authFailMin*days {
 				authFailing = append(authFailing, removedProxy{addr: addr, entry: e})

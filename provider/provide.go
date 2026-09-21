@@ -1068,6 +1068,14 @@ func provideLauncherLoop(st *provideState) func() {
 	go connect.HandleError(func() { runPressureMonitor(st.ctx, selfHealEnabled) })
 	go connect.HandleError(func() { runPoolController(st.ctx, proxyURLMax, selfHealEnabled) })
 	go connect.HandleError(func() { runDegradedProxyReaper(st.ctx, st.proxyCancelMap, &st.proxyCancelMu) })
+	// Proxy audit: parks proven-junk paid/file proxies when proxy audit is on
+	// (`urnet-tools proxy audit on`), and only logs would-park otherwise. Also
+	// started in a HotSwap candidate on purpose: its memory begins at its own
+	// start and its earn tracker must warm up first, so it cannot act during the
+	// short overlap with the parent, and skipping it would leave a swapped node
+	// without an auditor until the next full restart.
+	proxyAuditEnabled := resolveProxyAuditEnabled(os.Getenv("URNETWORK_PROXY_AUDIT") == "1")
+	go connect.HandleError(func() { runProxyAudit(st.ctx, st.proxyCancelMap, &st.proxyCancelMu, proxyAuditEnabled) })
 	go connect.HandleError(func() { runReloadReconciler(st.ctx) })
 
 	// Profiling.
