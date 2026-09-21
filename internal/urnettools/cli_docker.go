@@ -573,6 +573,19 @@ func repairContainerUpdateScript(unit string) error {
 // the host self-update. This preserves host self-update args (--tag/--digest/
 // --url) because those are never target flags and never match a container name.
 func updateTargetFromArgs(args []string, providers []Provider) (Target, []string, error) {
+	// Reject unknown flags up front: the lenient target parse below would
+	// otherwise swallow them, and a typo like `update --bogus` must fail
+	// with a self-update-specific error instead of prompting for a
+	// confirmation to update the wrong target.
+	knownFlags := map[string]bool{
+		"--unit": true, "--user": true, "--network": true, "--network-id": true, "--state-dir": true,
+		"--tag": true, "--digest": true, "--url": true, "--help": true, "-h": true,
+	}
+	for _, a := range args {
+		if strings.HasPrefix(a, "-") && !knownFlags[strings.SplitN(a, "=", 2)[0]] {
+			return Target{}, nil, fmt.Errorf("unknown flag %q for self-update (--tag/--digest/--url)", a)
+		}
+	}
 	if hasAnyTargetFlag(args) {
 		t, rest, err := dockerTargetFromArgs(args, providers)
 		if err != nil {
