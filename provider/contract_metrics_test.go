@@ -450,3 +450,12 @@ func resetContractMetricsForIndex(t *testing.T, index int) {
 	delete(globalContractMetrics.items, index)
 	globalContractMetrics.mu.Unlock()
 }
+
+func TestContractsAcquiredTotalTracksIncrements(t *testing.T) {
+	before := ContractsAcquiredTotal()
+	IncrContractAcquired()
+	IncrContractAcquired()
+	if got := ContractsAcquiredTotal(); got != before+2 {
+		t.Fatalf("ContractsAcquiredTotal = %d, want %d", got, before+2)
+	}
+}
