@@ -237,6 +237,12 @@ func provideSetupSignals(st *provideState) {
 	applyPersistedRuntimeTuning(globalControlState)
 	initPersistentErrors()
 	initAuditRing()
+	// A Docker in-place execve successor is not a candidate process (no
+	// IPC descriptor) but the env marker survives the exec, so both kinds
+	// of handoff successor get labelled hotswap. The persist gate is armed
+	// only for spawned candidates: the Docker successor's ring loaded
+	// after the parent's pre-exec flush, so it persists immediately.
+	recordProcessStart(st.isHotSwapCandidate || os.Getenv(EnvHotSwapExec) == "1", st.isHotSwapCandidate)
 	globalControlState.shutdownFn = st.cancel
 
 	if !st.isHotSwapCandidate {
@@ -245,6 +251,10 @@ func provideSetupSignals(st *provideState) {
 		if err != nil {
 			tlog("[control] failed to start control socket, urnet-tools will fall back to file-based overrides: %s\n", err)
 		} else {
+			// The hotswap commit point quiesces this socket so no command
+			// accepted after the audit flush can be lost in the parent's
+			// memory mid-handoff.
+			controlSocketQuiesceForHotSwap = st.cleanupControlSocket
 			// NOTE: Control socket cleanup is handled by RegisterCoordinatorCloser
 			// (below) and by closeAllCaches() in provide()'s shutdown path.
 			// Do NOT defer unregSocketCloser here — the closer must stay
@@ -253,6 +263,7 @@ func provideSetupSignals(st *provideState) {
 				if st.cleanupControlSocket != nil {
 					st.cleanupControlSocket()
 					st.cleanupControlSocket = nil
+					controlSocketQuiesceForHotSwap = nil
 				}
 			})
 		}
@@ -704,16 +715,29 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			}
 			mergePendingOverrides(globalControlState)
 			applyPersistedRuntimeTuning(globalControlState)
+
+			// The parent flushed its final audit entries before the
+			// takeover message; this ring was loaded at spawn time and
+			// predates that write, so pull them in now. Without this the
+			// handoff event and the last control-socket commands would
+			// exist only on disk and be dropped by the next persist.
+			mergeAuditRingFromDisk()
+
 			startMetricsAfterTakeover(globalControlState)
 
 			if cleanup, err := startControlSocket(st.ctx, globalControlState); err != nil {
 				tlog("[control] candidate failed to start control socket on takeover: %s\n", err)
+				// Do not carry the parent's socket closer into the hotswap
+				// commit point: this process never bound that socket.
+				controlSocketQuiesceForHotSwap = nil
 			} else {
 				st.cleanupControlSocket = cleanup
+				controlSocketQuiesceForHotSwap = st.cleanupControlSocket
 				unregSocketCloser = RegisterCoordinatorCloser(func() {
 					if st.cleanupControlSocket != nil {
 						st.cleanupControlSocket()
 						st.cleanupControlSocket = nil
+						controlSocketQuiesceForHotSwap = nil
 					}
 				})
 			}

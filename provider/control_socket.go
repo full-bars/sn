@@ -526,6 +526,13 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 		if state.shutdownFn == nil {
 			return controlResponse{OK: false, Error: "shutdown not available (no shutdown function configured)"}
 		}
+		// Record the operator's remote stop in the audit ring.
+		recordAndPersist(CommandAudit{
+			Timestamp: time.Now(),
+			Cmd:       "shutdown",
+			Source:    "control-socket",
+			OK:        true,
+		})
 		controlLog("🛑 [control] shutdown requested via control socket\n")
 		go func() {
 			time.Sleep(50 * time.Millisecond)

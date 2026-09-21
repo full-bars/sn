@@ -64,6 +64,112 @@ func initAuditRing() {
 	globalAuditRing = ring
 }
 
+// recordProcessStart appends this process's startup to the audit ring so
+// `urnet-tools history` shows lifecycle events (an update landing, a
+// crash-restart), not just control-socket config changes. Called right
+// after initAuditRing. candidate marks a HotSwap successor (spawned
+// candidate, or Docker execve successor via URNETWORK_HOTSWAP_EXEC) for
+// the source label; deferPersist is true only for a SPAWNED candidate,
+// whose ring was loaded before the parent's final flush and must not
+// clobber it until the takeover merge.
+func recordProcessStart(candidate, deferPersist bool) {
+	src := "boot"
+	if candidate {
+		src = "hotswap"
+	}
+	if deferPersist {
+		// A spawned candidate's ring predates the parent's final flush,
+		// so writing it would clobber the authoritative on-disk state.
+		// Arm the 30s gate now — the start entry stays in memory until
+		// the takeover merge pulls the parent's entries in. Normal boots
+		// and Docker execve successors (ring loaded after the parent's
+		// flush) persist immediately.
+		auditPersistMu.Lock()
+		lastAuditPersist = time.Now()
+		auditPersistMu.Unlock()
+	}
+	recordAndPersist(CommandAudit{
+		Timestamp: time.Now(),
+		Cmd:       "start",
+		Key:       "version",
+		Value:     RequireVersion(),
+		Source:    src,
+		OK:        true,
+	})
+}
+
+// mergeAuditRingFromDisk reloads audit.json and appends entries the live
+// ring does not already have. A HotSwap candidate calls this after the
+// takeover handshake completes: its own ring was loaded from disk at
+// spawn time, which precedes the parent's final flush, so entries the
+// parent recorded in its last moments (the "hotswap" event, the final
+// control-socket commands) exist only on disk until this merge pulls them
+// into the successor's live ring. The parent flushes before the takeover
+// message, so by the time this runs those entries are on disk.
+func mergeAuditRingFromDisk() {
+	if globalAuditRing == nil || globalAuditRing.path == "" {
+		return
+	}
+	var saved struct {
+		Entries []CommandAudit `json:"entries"`
+	}
+	ok, err := loadJSONWithRecovery(globalAuditRing.path, &saved)
+	if err != nil || !ok {
+		return
+	}
+	globalAuditRing.mu.Lock()
+	var added int
+	for _, e := range saved.Entries {
+		if globalAuditRing.hasLocked(e) {
+			continue
+		}
+		globalAuditRing.entries[globalAuditRing.head] = e
+		globalAuditRing.head = (globalAuditRing.head + 1) % len(globalAuditRing.entries)
+		if globalAuditRing.size < len(globalAuditRing.entries) {
+			globalAuditRing.size++
+		}
+		added++
+	}
+	globalAuditRing.mu.Unlock() // persist() takes r.mu itself; never call it under the lock
+	if added == 0 {
+		return
+	}
+	// Serialize the merge persist with recordAndPersist/forceAuditPersist:
+	// two concurrent persist() writers can finish out of order and leave a
+	// stale snapshot on disk.
+	auditPersistMu.Lock()
+	err = globalAuditRing.persist()
+	auditPersistMu.Unlock()
+	if err != nil {
+		auditLog("[audit] merge persist failed: %v\n", err)
+	}
+}
+
+// hasLocked reports whether an equivalent entry is already in the ring.
+// Caller must hold r.mu. Timestamps are compared with time.Time.Equal, NOT
+// ==: entries loaded from disk carry freshly-parsed fixed-offset locations,
+// and == compares the location pointer, so two entries for the same instant
+// would never dedupe after a JSON round-trip.
+func (r *AuditRing) hasLocked(want CommandAudit) bool {
+	for i := 0; i < r.size; i++ {
+		var e CommandAudit
+		if r.size < len(r.entries) {
+			e = r.entries[i] // buffer not full: entries start at index 0
+		} else {
+			e = r.entries[(r.head+i)%len(r.entries)]
+		}
+		// hasLocked treats same-instant identical commands as one (idempotent
+		// config sets ARE one state change), trading a false dedupe for the
+		// timezone-correct dedupe that == cannot provide.
+		if e.Cmd == want.Cmd && e.Key == want.Key && e.Value == want.Value &&
+			e.Source == want.Source && e.OK == want.OK && e.Error == want.Error &&
+			e.Timestamp.Equal(want.Timestamp) {
+			return true
+		}
+	}
+	return false
+}
+
 // Append adds an entry to the ring buffer (non-blocking, fast).
 func (r *AuditRing) Append(entry CommandAudit) {
 	if r == nil {
