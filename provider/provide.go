@@ -237,7 +237,10 @@ func provideSetupSignals(st *provideState) {
 	applyPersistedRuntimeTuning(globalControlState)
 	initPersistentErrors()
 	initAuditRing()
-	recordProcessStart(st.isHotSwapCandidate)
+	// A Docker in-place execve successor is not a candidate process (no
+	// IPC descriptor) but the env marker survives the exec, so both kinds
+	// of handoff successor get labelled hotswap.
+	recordProcessStart(st.isHotSwapCandidate || os.Getenv(EnvHotSwapExec) == "1")
 	globalControlState.shutdownFn = st.cancel
 
 	if !st.isHotSwapCandidate {
@@ -702,6 +705,14 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			}
 			mergePendingOverrides(globalControlState)
 			applyPersistedRuntimeTuning(globalControlState)
+
+			// The parent flushed its final audit entries before the
+			// takeover message; this ring was loaded at spawn time and
+			// predates that write, so pull them in now. Without this the
+			// handoff event and the last control-socket commands would
+			// exist only on disk and be dropped by the next persist.
+			mergeAuditRingFromDisk()
+
 			startMetricsAfterTakeover(globalControlState)
 
 			if cleanup, err := startControlSocket(st.ctx, globalControlState); err != nil {

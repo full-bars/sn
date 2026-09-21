@@ -62,6 +62,15 @@ func initAuditRing() {
 	}
 
 	globalAuditRing = ring
+
+	// A fresh process must not persist immediately: its first
+	// recordAndPersist would write the ring snapshot from before a HotSwap
+	// parent's final flush, clobbering the entries the parent just
+	// persisted. Starting the 30s gate now leaves the parent's flush as
+	// the authoritative on-disk state until the candidate's takeover merge.
+	auditPersistMu.Lock()
+	lastAuditPersist = time.Now()
+	auditPersistMu.Unlock()
 }
 
 // recordProcessStart appends this process's startup to the audit ring so
@@ -82,6 +91,64 @@ func recordProcessStart(candidate bool) {
 		Source:    src,
 		OK:        true,
 	})
+}
+
+// mergeAuditRingFromDisk reloads audit.json and appends entries the live
+// ring does not already have. A HotSwap candidate calls this after the
+// takeover handshake completes: its own ring was loaded from disk at
+// spawn time, which precedes the parent's final flush, so entries the
+// parent recorded in its last moments (the "hotswap" event, the final
+// control-socket commands) exist only on disk until this merge pulls them
+// into the successor's live ring. The parent flushes before the takeover
+// message, so by the time this runs those entries are on disk.
+func mergeAuditRingFromDisk() {
+	if globalAuditRing == nil || globalAuditRing.path == "" {
+		return
+	}
+	var saved struct {
+		Entries []CommandAudit `json:"entries"`
+	}
+	ok, err := loadJSONWithRecovery(globalAuditRing.path, &saved)
+	if err != nil || !ok {
+		return
+	}
+	globalAuditRing.mu.Lock()
+	var added int
+	for _, e := range saved.Entries {
+		if globalAuditRing.hasLocked(e) {
+			continue
+		}
+		globalAuditRing.entries[globalAuditRing.head] = e
+		globalAuditRing.head = (globalAuditRing.head + 1) % len(globalAuditRing.entries)
+		if globalAuditRing.size < len(globalAuditRing.entries) {
+			globalAuditRing.size++
+		}
+		added++
+	}
+	globalAuditRing.mu.Unlock() // persist() takes r.mu itself; never call it under the lock
+	if added == 0 {
+		return
+	}
+	if err := globalAuditRing.persist(); err != nil {
+		auditLog("[audit] merge persist failed: %v\n", err)
+	}
+}
+
+// hasLocked reports whether an identical entry (all six fields) is already
+// in the ring. Caller must hold r.mu.
+func (r *AuditRing) hasLocked(want CommandAudit) bool {
+	for i := 0; i < r.size; i++ {
+		var e CommandAudit
+		if r.size < len(r.entries) {
+			e = r.entries[i] // buffer not full: entries start at index 0
+		} else {
+			e = r.entries[(r.head+i)%len(r.entries)]
+		}
+		if e == want {
+			return true
+		}
+	}
+	return false
 }
 
 // Append adds an entry to the ring buffer (non-blocking, fast).
