@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Cross-platform compile gate on every PR** (PR #28): PR CI now compiles the provider, `urnet-tools`, and `urnet-docker` binaries for Linux, macOS, and Windows across the amd64 and arm64 architectures, so a change that breaks a build on any platform fails the PR instead of surfacing only at release time.
+
+### Maintenance
+
+- **Deterministic test suite** (PR #27).
+
+---
+
+## [v2026.09.21-1790052822-meso] — 2026-09-22
+
 ### Added
 
 - **Audit ring survives hotswap** (PR #21): the parent flushes the audit ring at the handoff commit point on every path (systemd, Windows, Docker); the successor merges it back from disk after takeover with timezone-safe deduplication. Lifecycle events (start, hotswap, shutdown) join the `set`/`clear` entries in `urnet-tools history`.

@@ -227,3 +227,7 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 - **Lifecycle events audited (PR #21)**: `urnet-tools history` now records process start (version + boot/hotswap source), the hotswap handoff, and control-socket shutdown, in addition to `set`/`clear`. The shutdown record is written after this fork's `shutdownFn` guard.
 - **Sliding severity scale for provider status (PR #21)**: `active` >= 90%, `partial` 70-89%, `degraded` 50-69%, `critical` < 50% (including zero), exact percentage always rendered and clamped at 100.
 - **Start entries persist immediately on normal boots (PR #21)**: only a spawned hotswap successor defers its start entry until the takeover merge; the Docker execve successor (whose ring loads after the parent's pre-exec flush) and normal boots write to disk at once.
+
+## 15. Cross-Platform Compile Gate on every PR (PR #28)
+
+- **PR CI now cross-compiles all shippable binaries** (PR #28): the provider, `urnet-tools`, and `urnet-docker` build for Linux, macOS, and Windows across the amd64 and arm64 architectures as a merge requirement. A change that breaks a non-Linux platform is caught at PR time instead of surfacing only at release time.
