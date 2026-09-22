@@ -253,8 +253,15 @@ func provideSetupSignals(st *provideState) {
 		} else {
 			// The hotswap commit point quiesces this socket so no command
 			// accepted after the audit flush can be lost in the parent's
-			// memory mid-handoff.
-			controlSocketQuiesceForHotSwap = st.cleanupControlSocket
+			// memory mid-handoff. The wrapper nils the closure on the way
+			// out so a later graceful exit cannot clean up again and delete
+			// the successor's freshly bound socket.
+			setQuiesceHook(func() {
+				if st.cleanupControlSocket != nil {
+					st.cleanupControlSocket()
+					st.cleanupControlSocket = nil
+				}
+			})
 			// NOTE: Control socket cleanup is handled by RegisterCoordinatorCloser
 			// (below) and by closeAllCaches() in provide()'s shutdown path.
 			// Do NOT defer unregSocketCloser here — the closer must stay
@@ -263,7 +270,7 @@ func provideSetupSignals(st *provideState) {
 				if st.cleanupControlSocket != nil {
 					st.cleanupControlSocket()
 					st.cleanupControlSocket = nil
-					controlSocketQuiesceForHotSwap = nil
+					setQuiesceHook(nil)
 				}
 			})
 		}
@@ -730,15 +737,22 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				tlog("[control] candidate failed to start control socket on takeover: %s\n", err)
 				// Do not carry the parent's socket closer into the hotswap
 				// commit point: this process never bound that socket.
-				controlSocketQuiesceForHotSwap = nil
+				setQuiesceHook(nil)
 			} else {
 				st.cleanupControlSocket = cleanup
-				controlSocketQuiesceForHotSwap = st.cleanupControlSocket
+				// Same nil-out wrapper as the parent path: quiesce once,
+				// then this process's socket is no longer ours to remove.
+				setQuiesceHook(func() {
+					if st.cleanupControlSocket != nil {
+						st.cleanupControlSocket()
+						st.cleanupControlSocket = nil
+					}
+				})
 				unregSocketCloser = RegisterCoordinatorCloser(func() {
 					if st.cleanupControlSocket != nil {
 						st.cleanupControlSocket()
 						st.cleanupControlSocket = nil
-						controlSocketQuiesceForHotSwap = nil
+						setQuiesceHook(nil)
 					}
 				})
 			}
