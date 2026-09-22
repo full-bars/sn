@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+_Nothing yet._
+
+---
+
+## [v2026.9.22-1052862940-meso] — 2026-09-22
+
 ### Changed
 
 - **Cross-platform compile gate on every PR** (PR #28): PR CI now compiles the provider, `urnet-tools`, and `urnet-docker` binaries for Linux, macOS, and Windows across the amd64 and arm64 architectures, so a change that breaks a build on any platform fails the PR instead of surfacing only at release time.
