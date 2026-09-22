@@ -90,6 +90,8 @@ docker exec -it urfix urnet-tools proxy remove-dead
 > 2. **Inactive or degraded proxies:** proxies that were previously working
 >    but have been offline for an extended period.
 >
+> Proxies that proxy audit has parked (health `parked`) are resting, not failing, and are never listed here. See [Configuration](Configuration.md#proxy-audit).
+>
 > The tool prompts you separately for each category, allowing you to
 > selectively remove dead proxies while keeping inactive ones (in case they
 > are just suffering a temporary network blip), or wipe all failing proxies
@@ -176,6 +178,24 @@ urnet-docker proxy trim --unit urfix 500
 > 5. **Prevents over-budget re-spawning:** during background URL fetch cycles
 >    and configuration reloads, new proxy additions are capped to prevent
 >    exceeding the trim target while retaining candidate history.
+
+---
+
+## 🔍 Automated Proxy Audit & Quality Enforcement
+
+`URNETWORK_PROXY_AUDIT=1` (or `urnet-tools proxy audit on` at runtime) activates automated background proxy auditing. The provider evaluates proxy reachability scores every 5 minutes and temporarily parks proxies that grade as proven junk (scores <= 0.4 on two consecutive probe passes).
+
+```sh
+urnet-tools proxy audit on                  # Enable automated proxy audit & parking
+urnet-tools proxy audit status              # Inspect audit state, parked proxies, and remaining backoffs
+urnet-tools proxy audit off                 # Switch to observe-only mode (releases all parks)
+urnet-tools proxy audit release <addr>      # Release a specific parked proxy immediately
+urnet-tools proxy audit release --all       # Release all currently parked proxies immediately
+```
+
+- **Zero Downtime:** Toggle on/off or release proxies on the fly via the Unix control socket without restarting the provider or dropping connections.
+- **Progressive Backoff:** Repeatedly parked proxies receive an escalating backoff ladder (6h → 12h → 24h → 48h → 7d) with ±25% jitter.
+- **Safety Rails:** Distrusts passes during mass-failure events (>40% bad grades at once) or thin-grading conditions, and enforces a rolling 24h park budget.
 
 ## Pressure-based self-healing
 

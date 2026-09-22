@@ -107,6 +107,7 @@ var controlKeys = map[string]bool{
 	"report_interval":             true,
 	"fast_auth":                   true,
 	"proxy_self_heal":             true,
+	"proxy_audit":                 true,
 	"proxy_url_max":               true,
 	"proxy_url_refresh":           true,
 	"proxy_dead_cleanup_scope":    true,

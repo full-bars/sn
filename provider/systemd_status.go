@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -20,6 +21,13 @@ import (
 var (
 	proxiesConfigured    atomic.Int64
 	proxiesAuthenticated atomic.Int64
+
+	// proxiesParked is how many configured proxies the proxy audit engine is
+	// deliberately holding out, and proxyAuditPaused is whether it is unable to
+	// act. Parked proxies are configured but not authenticated on purpose, so
+	// they must not read as an outage in the line.
+	proxiesParked    atomic.Int64
+	proxyAuditPaused atomic.Bool
 )
 
 // proxyResolutionStatus tracks whether proxy resolution has been attempted
@@ -88,6 +96,22 @@ func setConfiguredProxyCount(n int) {
 	reportProxyStatusToSystemd()
 }
 
+// setProxyAuditSystemdState records the proxy audit's parked count and
+// whether it is paused, and refreshes STATUS= only when either changed (the
+// proxy audit calls this every tick).
+func setProxyAuditSystemdState(parked int, paused bool) {
+	if parked < 0 {
+		parked = 0
+	}
+	changed := proxiesParked.Swap(int64(parked)) != int64(parked)
+	if proxyAuditPaused.Swap(paused) != paused {
+		changed = true
+	}
+	if changed {
+		reportProxyStatusToSystemd()
+	}
+}
+
 // proxyBecameLive/proxyWentDown bracket a proxy's live transport. Both report
 // immediately so `systemctl status` tracks reality rather than lagging until
 // the next event.
@@ -122,16 +146,32 @@ func systemdStatusLine() string {
 			if len(reason) > maxStatusReasonLen {
 				reason = reason[:maxStatusReasonLen] + "..."
 			}
-			return fmt.Sprintf("degraded: proxy source unreachable (%s), retrying", reason)
+			return fmt.Sprintf("degraded: proxy source unreachable (%s), retrying%s", reason, auditPauseNote())
 		case proxyResolutionEmpty:
-			return "degraded: proxy source returned no usable proxies, retrying"
+			return "degraded: proxy source returned no usable proxies, retrying" + auditPauseNote()
 		default: // proxyResolutionPending or stale OK
-			return "starting: resolving proxies"
+			return "starting: resolving proxies" + auditPauseNote()
 		}
-	case live == 0:
-		return fmt.Sprintf("critical: 0/%d proxies authenticated, retrying", total)
 	default:
-		pct := int(math.Round(float64(live) * 100 / float64(total)))
+		// Parks and pauses are deliberate, not outages: the word is chosen
+		// against the proxies that SHOULD be live (configured minus parked),
+		// while the rendered percentage still reflects the configured set.
+		// The band compares on the true ratio, not the rounded percentage, so
+		// an 89.5% node reads partial, not an accidental active.
+		parked := proxiesParked.Load()
+		if parked > total {
+			parked = total
+		}
+		eff := total - parked
+		ratio := 0.0
+		if total > 0 {
+			ratio = float64(live) / float64(total)
+		}
+		effRatio := ratio
+		if eff > 0 {
+			effRatio = float64(live) / float64(eff)
+		}
+		pct := int(math.Round(ratio * 100))
 		if pct > 100 {
 			// live > configured happens transiently when a reload shrinks
 			// the desired set; a >100% figure would be nonsense in
@@ -140,18 +180,47 @@ func systemdStatusLine() string {
 		}
 		word := "critical"
 		switch {
-		case pct >= statusActiveBand:
+		case effRatio*100 >= statusActiveBand:
 			word = "active"
-		case pct >= statusPartialBand:
+		case effRatio*100 >= statusPartialBand:
 			word = "partial"
-		case pct >= statusDegradedBand:
+		case effRatio*100 >= statusDegradedBand:
 			word = "degraded"
 		}
+		line := fmt.Sprintf("%s: %d/%d proxies authenticated (%d%%)", word, live, total, pct)
+		// The percentage and the park/pause notes always render, even at
+		// zero live: an operator with every proxy parked still sees why.
+		line += parkAndPauseNote(total)
 		if word == "degraded" || word == "critical" {
-			return fmt.Sprintf("%s: %d/%d proxies authenticated (%d%%), retrying", word, live, total, pct)
+			return line + ", retrying"
 		}
-		return fmt.Sprintf("%s: %d/%d proxies authenticated (%d%%)", word, live, total, pct)
+		return line
 	}
+}
+
+// parkAndPauseNote appends the proxy-audit notes: proxies the engine is
+// holding out are expected to be down, and a paused audit parks nothing.
+func parkAndPauseNote(total int64) string {
+	parked := proxiesParked.Load()
+	if parked > total {
+		parked = total
+	}
+	var b strings.Builder
+	if parked > 0 {
+		fmt.Fprintf(&b, ", %d parked by proxy audit", parked)
+	}
+	b.WriteString(auditPauseNote())
+	return b.String()
+}
+
+// auditPauseNote returns the pause suffix for a status line, or "" when the
+// proxy audit engine is able to work. The outage branches call this so a
+// paused audit is visible even while the line reads degraded or starting.
+func auditPauseNote() string {
+	if proxyAuditPaused.Load() {
+		return "; proxy audit paused (paid proxy list unreadable)"
+	}
+	return ""
 }
 
 // reportProxyStatusToSystemd pushes the current line to systemd. Errors are

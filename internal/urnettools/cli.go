@@ -307,8 +307,8 @@ func parseTargetFlagsInner(args []string, strict bool) (Target, []string, error)
 			*field = value
 			return nil
 		}
-		if t.Unit != "" || t.User != "" || t.Network != "" || t.NetworkID != "" || t.StateDir != "" {
-			return fmt.Errorf("%s=%s conflicts with already-set target selector; specify exactly one of --unit/--user/--network/--network-id/--state-dir", flag, value)
+		if t.Unit != "" || t.User != "" || t.Network != "" || t.NetworkID != "" || t.StateDir != "" || t.PID > 0 {
+			return fmt.Errorf("%s=%s conflicts with already-set target selector; specify exactly one of --unit/--user/--network/--network-id/--state-dir/--pid", flag, value)
 		}
 		*field = value
 		return nil
@@ -323,7 +323,7 @@ func parseTargetFlagsInner(args []string, strict bool) (Target, []string, error)
 	expanded := make([]string, 0, len(args))
 	for _, a := range args {
 		matched := false
-		for _, f := range []string{"--unit", "--user", "--network", "--network-id", "--state-dir"} {
+		for _, f := range []string{"--unit", "--user", "--network", "--network-id", "--state-dir", "--pid"} {
 			if v, ok := strings.CutPrefix(a, f+"="); ok {
 				if v == "" {
 					return t, nil, fmt.Errorf("%s requires a value", f)
@@ -379,6 +379,19 @@ func parseTargetFlagsInner(args []string, strict bool) (Target, []string, error)
 			if err := setField("--state-dir", args[i+1], &t.StateDir); err != nil {
 				return t, nil, err
 			}
+			i++
+		case "--pid":
+			if i+1 >= len(args) {
+				return t, nil, fmt.Errorf("--pid requires a value")
+			}
+			pid, err := strconv.Atoi(args[i+1])
+			if err != nil || pid <= 0 {
+				return t, nil, fmt.Errorf("--pid requires a positive integer (got %q)", args[i+1])
+			}
+			if t.Unit != "" || t.User != "" || t.Network != "" || t.NetworkID != "" || t.StateDir != "" || t.PID > 0 {
+				return t, nil, fmt.Errorf("--pid=%d conflicts with already-set target selector; specify exactly one of --unit/--user/--network/--network-id/--state-dir/--pid", pid)
+			}
+			t.PID = pid
 			i++
 		default:
 			// Reject unknown flags instead of silently dropping them — a
@@ -472,7 +485,52 @@ func cmdProviders(args []string) error {
 		fmt.Fprintf(w, "%s	%s	%s	%s	%s	%s	%s	%s\n",
 			pid, p.User, p.Unit, network, netID, p.StateDir, p.Binary, ver)
 	}
-	return w.Flush()
+	if err := w.Flush(); err != nil {
+		return err
+	}
+	for _, n := range providerOperationalNotes(providers) {
+		fmt.Println(n)
+	}
+	return nil
+}
+
+// providerOperationalNotes returns human-readable warnings for running
+// providers whose deployment makes them hard to operate: no systemd unit
+// (manual/disowned launch), output discarded to /dev/null (no log stream
+// exists anywhere), or an unreachable control socket (possibly not really a
+// provider). The notes surface the difference between "a provider I can
+// fully manage" and "a process that merely looks like one".
+func providerOperationalNotes(providers []Provider) []string {
+	var notes []string
+	for _, p := range providers {
+		if !p.Running {
+			continue
+		}
+		if p.Unit == "" {
+			notes = append(notes, fmt.Sprintf("* %s (pid %d) runs outside systemd — stop/logs use process signals; manage it under a unit for full lifecycle control", providerLabel(p), p.PID))
+			if stdoutDiscarded(p.PID) {
+				notes = append(notes, fmt.Sprintf("* %s discards its output (/dev/null) — there is no log stream to show; restart it under a unit or with a RAMLOGS profile to capture logs", providerLabel(p)))
+			}
+		}
+		if !controlSocketReachable(p) {
+			notes = append(notes, fmt.Sprintf("* %s control socket unreachable — the process may not be a provider, or it is still starting up", providerLabel(p)))
+		}
+	}
+	return notes
+}
+
+// stdoutDiscarded reports whether a running process's stdout points at
+// /dev/null (the classic `&>/dev/null & disown` launch has no log stream at
+// all, so operators should be told rather than left staring at journalctl).
+func stdoutDiscarded(pid int) bool {
+	if pid <= 0 {
+		return false
+	}
+	dest, err := os.Readlink(fmt.Sprintf("/proc/%d/fd/1", pid))
+	if err != nil {
+		return false
+	}
+	return dest == "/dev/null" || strings.HasPrefix(dest, "/dev/null ")
 }
 
 // shortID renders a UUID-ish id as its first 8 chars for table display.
@@ -483,15 +541,43 @@ func shortID(id string) string {
 	return id[:8] + "…"
 }
 
-// cmdStatus shows detailed info for one provider (targeted).
+// discoverStatusFn and fetchSnapshotFn are seams so cmdStatus is testable
+// without live providers or sockets.
+var (
+	discoverStatusFn = Discover
+	fetchSnapshotFn  = fetchSnapshotRaw
+)
+
+// cmdStatus shows detailed info for one provider (targeted). With several
+// providers on the box and no target it prints one compact row per provider
+// instead. --json prints the raw live snapshot.
 func cmdStatus(args []string) error {
-	t, _, err := parseTargetFlags(args)
+	// --json is this command's own flag; strip it before the strict target
+	// parser sees it. The original args still go to the sudo re-exec so the
+	// elevated child prints JSON too.
+	jsonMode := false
+	var targetArgs []string
+	for _, a := range args {
+		if a == "--json" {
+			jsonMode = true
+			continue
+		}
+		targetArgs = append(targetArgs, a)
+	}
+	t, _, err := parseTargetFlags(targetArgs)
 	if err != nil {
 		return err
 	}
-	providers := Discover()
+	providers := discoverStatusFn()
 	p, narrowed, err := selectTargetOrSoleAccessible(providers, t, false)
 	if err != nil {
+		// Several providers and no target used to be refused with an
+		// inventory. Plain status now summarizes them instead; --json still
+		// needs one provider to be named.
+		if !jsonMode && !hasExplicitTarget(t) && len(providers) > 1 {
+			printProviderSummary(providers)
+			return nil
+		}
 		return err
 	}
 	// Managing another user's provider requires root; re-exec under sudo.
@@ -499,9 +585,23 @@ func cmdStatus(args []string) error {
 	if elevated, err := maybeElevateForCrossUser("status", p, args, false, false); elevated {
 		return err
 	}
+	if jsonMode {
+		return printSnapshotJSON(p)
+	}
 	if narrowed {
 		printNarrowedNote(len(providers), p, "status")
 	}
+	if err := renderStatusBase(p); err != nil {
+		return err
+	}
+	printLiveBlock(p)
+	return nil
+}
+
+// renderStatusBase is the pre-existing status output, unchanged: the styled
+// panel on Windows and macOS, `systemctl status` on Linux, and the table when
+// no unit can be resolved.
+func renderStatusBase(p Provider) error {
 	// Windows and macOS get the styled panel. Linux restores the OLD
 	// systemd status view: `systemctl status <unit>` (the pre-rewrite tool's
 	// show_status was literally `systemctl --user status urnetwork.service`).

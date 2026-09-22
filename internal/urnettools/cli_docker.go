@@ -94,6 +94,7 @@ Usage: urnet-docker <command> [flags]
 Core Commands:
   providers               list all provider containers (identified by in-container JWT)
   status [target]         detailed status of one container
+  top [target]            live full-screen status dashboard inside container
   start|stop|restart [target]   control container lifecycle (docker start/stop/restart)
   logs [target] [N]       follow container logs (RAMLOGS-aware /dev/shm fallback)
   auth [<code>] [target]  authenticate provider inside container
@@ -113,6 +114,7 @@ Proxy Management [target]:
   proxy traffic             real-time bandwidth & client session load
   proxy remove-dead         prune dead/degraded proxies
   proxy trim <N>            hold running proxies at N, shed worst first (F -> A)
+  proxy audit [action]      manage automated proxy audit engine (status|on|off|release)
   proxy exclude [<pattern>] exclude proxies matching pattern
 
 Performance & Tuning [target]:
@@ -255,6 +257,23 @@ func cmdDockerStatus(args []string) error {
 		fmt.Fprintf(w, "jwt-expires:\t%s\n", p.JWTExpires.Format("2006-01-02 15:04:05"))
 	}
 	return w.Flush()
+}
+
+// cmdDockerTop opens the live full-screen status dashboard inside the targeted container.
+func cmdDockerTop(args []string) error {
+	providers := DiscoverDocker()
+	t, rest, err := parseTargetFlagsLenient(args)
+	if err != nil {
+		return err
+	}
+	t, rest = consumeDockerBareTarget(providers, t, rest)
+	t, rest = consumeDockerTrailingTarget(providers, t, rest, 1)
+	p, err := selectTargetInteractive(providers, t)
+	if err != nil {
+		return err
+	}
+	inner := append([]string{"urnet-tools", "top"}, rest...)
+	return containerInteractiveExecByName(p.Unit, inner...)
 }
 
 // cmdDockerExec runs a command inside the targeted container — the
@@ -573,6 +592,19 @@ func repairContainerUpdateScript(unit string) error {
 // the host self-update. This preserves host self-update args (--tag/--digest/
 // --url) because those are never target flags and never match a container name.
 func updateTargetFromArgs(args []string, providers []Provider) (Target, []string, error) {
+	// Reject unknown flags up front: the lenient target parse below would
+	// otherwise swallow them, and a typo like `update --bogus` must fail
+	// with a self-update-specific error instead of prompting for a
+	// confirmation to update the wrong target.
+	knownFlags := map[string]bool{
+		"--unit": true, "--user": true, "--network": true, "--network-id": true, "--state-dir": true,
+		"--tag": true, "--digest": true, "--url": true, "--help": true, "-h": true,
+	}
+	for _, a := range args {
+		if strings.HasPrefix(a, "-") && !knownFlags[strings.SplitN(a, "=", 2)[0]] {
+			return Target{}, nil, fmt.Errorf("unknown flag %q for self-update (--tag/--digest/--url)", a)
+		}
+	}
 	if hasAnyTargetFlag(args) {
 		t, rest, err := dockerTargetFromArgs(args, providers)
 		if err != nil {
@@ -938,7 +970,7 @@ func cmdDockerSession(args []string) error {
 // in-container urnet-tools proxy invocation.
 func cmdDockerProxy(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("proxy requires a subcommand: add <file> | paste | clear | remove | refresh | add-source <url> | remove-source <url> | remove-dead | trim <N> | exclude")
+		return fmt.Errorf("proxy requires a subcommand: add <file> | paste | clear | remove | refresh | add-source <url> | remove-source <url> | remove-dead | trim <N> | exclude | audit")
 	}
 	sub := args[0]
 	rest := args[1:]
@@ -948,6 +980,31 @@ func cmdDockerProxy(args []string) error {
 	t, rest2, err := parseTargetFlagsLenient(rest)
 	if err != nil {
 		return err
+	}
+
+	// `urnet-docker proxy audit status my-container` puts the audit action
+	// first; without this, the bare-target resolver stops at the action
+	// token and never sees the container name. Peel the action (and the
+	// release address) before resolving a trailing container target, then
+	// re-prepend it to the delegated command below.
+	var auditPrefix []string
+	if sub == "audit" {
+		for len(rest2) > 0 && !strings.HasPrefix(rest2[0], "-") {
+			switch rest2[0] {
+			case "status", "on", "off":
+				auditPrefix = append(auditPrefix, rest2[0])
+				rest2 = rest2[1:]
+			case "release":
+				auditPrefix = append(auditPrefix, rest2[0])
+				rest2 = rest2[1:]
+				if len(rest2) > 0 && !strings.HasPrefix(rest2[0], "-") {
+					auditPrefix = append(auditPrefix, rest2[0])
+					rest2 = rest2[1:]
+				}
+			default:
+			}
+			break
+		}
 	}
 
 	providers := DiscoverDocker()
@@ -1095,6 +1152,10 @@ func cmdDockerProxy(args []string) error {
 			return fmt.Errorf("proxy trim requires a count (e.g. 'urnet-docker proxy trim 500')")
 		}
 		inner := append([]string{"urnet-tools", "proxy", "trim"}, rest2...)
+		return containerExecByName(container, inner...)
+	case "audit":
+		inner := append([]string{"urnet-tools", "proxy", "audit"}, auditPrefix...)
+		inner = append(inner, rest2...)
 		return containerExecByName(container, inner...)
 	case "exclude":
 		inner := append([]string{"urnet-tools", "proxy", "exclude"}, rest2...)

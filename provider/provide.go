@@ -253,8 +253,15 @@ func provideSetupSignals(st *provideState) {
 		} else {
 			// The hotswap commit point quiesces this socket so no command
 			// accepted after the audit flush can be lost in the parent's
-			// memory mid-handoff.
-			controlSocketQuiesceForHotSwap = st.cleanupControlSocket
+			// memory mid-handoff. The wrapper nils the closure on the way
+			// out so a later graceful exit cannot clean up again and delete
+			// the successor's freshly bound socket.
+			setQuiesceHook(func() {
+				if st.cleanupControlSocket != nil {
+					st.cleanupControlSocket()
+					st.cleanupControlSocket = nil
+				}
+			})
 			// NOTE: Control socket cleanup is handled by RegisterCoordinatorCloser
 			// (below) and by closeAllCaches() in provide()'s shutdown path.
 			// Do NOT defer unregSocketCloser here — the closer must stay
@@ -263,7 +270,7 @@ func provideSetupSignals(st *provideState) {
 				if st.cleanupControlSocket != nil {
 					st.cleanupControlSocket()
 					st.cleanupControlSocket = nil
-					controlSocketQuiesceForHotSwap = nil
+					setQuiesceHook(nil)
 				}
 			})
 		}
@@ -360,6 +367,7 @@ func provideLaunchGoroutines(st *provideState) {
 	go connect.HandleError(func() { runLifetimeCollector(st.ctx) })
 	go connect.HandleError(func() { runProfitHeartbeat(st.ctx) })
 	go connect.HandleError(func() { runBillableRateWriter(st.ctx) })
+	go connect.HandleError(func() { runNodeSnapshotSampler(st.ctx) })
 
 	go connect.HandleError(func() { paceMonitor(st.ctx) })
 }
@@ -729,15 +737,22 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				tlog("[control] candidate failed to start control socket on takeover: %s\n", err)
 				// Do not carry the parent's socket closer into the hotswap
 				// commit point: this process never bound that socket.
-				controlSocketQuiesceForHotSwap = nil
+				setQuiesceHook(nil)
 			} else {
 				st.cleanupControlSocket = cleanup
-				controlSocketQuiesceForHotSwap = st.cleanupControlSocket
+				// Same nil-out wrapper as the parent path: quiesce once,
+				// then this process's socket is no longer ours to remove.
+				setQuiesceHook(func() {
+					if st.cleanupControlSocket != nil {
+						st.cleanupControlSocket()
+						st.cleanupControlSocket = nil
+					}
+				})
 				unregSocketCloser = RegisterCoordinatorCloser(func() {
 					if st.cleanupControlSocket != nil {
 						st.cleanupControlSocket()
 						st.cleanupControlSocket = nil
-						controlSocketQuiesceForHotSwap = nil
+						setQuiesceHook(nil)
 					}
 				})
 			}
@@ -1092,6 +1107,14 @@ func provideLauncherLoop(st *provideState) func() {
 	go connect.HandleError(func() { runPressureMonitor(st.ctx, selfHealEnabled) })
 	go connect.HandleError(func() { runPoolController(st.ctx, proxyURLMax, selfHealEnabled) })
 	go connect.HandleError(func() { runDegradedProxyReaper(st.ctx, st.proxyCancelMap, &st.proxyCancelMu) })
+	// Proxy audit: parks proven-junk paid/file proxies when proxy audit is on
+	// (`urnet-tools proxy audit on`), and only logs would-park otherwise. Also
+	// started in a HotSwap candidate on purpose: its memory begins at its own
+	// start and its earn tracker must warm up first, so it cannot act during the
+	// short overlap with the parent, and skipping it would leave a swapped node
+	// without an auditor until the next full restart.
+	proxyAuditEnabled := resolveProxyAuditEnabled(os.Getenv("URNETWORK_PROXY_AUDIT") == "1")
+	go connect.HandleError(func() { runProxyAudit(st.ctx, st.proxyCancelMap, &st.proxyCancelMu, proxyAuditEnabled) })
 	go connect.HandleError(func() { runReloadReconciler(st.ctx) })
 
 	// Profiling.

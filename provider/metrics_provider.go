@@ -44,6 +44,7 @@ type startupDiagnostics struct {
 	loaded           bool
 	previousVersion  string
 	cleanShutdown    bool   // was the previous shutdown clean?
+	restartReason    string // why this process started; see classifyRestart
 	previousVersion_ string // stored on disk
 }
 
@@ -92,6 +93,11 @@ func detectStartup() {
 	}
 	// Write current version
 	os.WriteFile(versionPath, []byte(RequireVersion()), 0600)
+
+	// The restart marker is consumed the same way: read, then deleted, so it
+	// only ever describes the restart that just happened.
+	marker := consumeRestartMarker(stateDir, time.Now())
+	startupDiag.restartReason = classifyRestart(marker, startupDiag.cleanShutdown, startupDiag.previousVersion)
 }
 
 // mustStateDir returns ~/.urnetwork or "" on error.
@@ -282,6 +288,41 @@ func providerExtraMetrics() string {
 	fmt.Fprintf(&b, "urnet_control_commands_total{cmd=\"clear\"} %d\n", controlCmdsClear.Load())
 	fmt.Fprintf(&b, "urnet_control_commands_total{cmd=\"any\"} %d\n", controlCmdsAcked.Load())
 
+	// --- Proxy audit ---
+	// Counts only; proxy addresses stay on the control socket. Emitted at zero
+	// before the first tick so panels and alerts have a stable series.
+	audit := proxyAuditStatusSnapshot()
+	if audit == nil {
+		audit = &proxyAuditStatus{}
+	}
+	b2i := func(v bool) int {
+		if v {
+			return 1
+		}
+		return 0
+	}
+	fmt.Fprintf(&b, "# HELP urnet_proxy_audit_acting 1 when proxy audit executes parks, 0 when it only observes.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_acting gauge\n")
+	fmt.Fprintf(&b, "urnet_proxy_audit_acting %d\n", b2i(audit.Acting))
+	fmt.Fprintf(&b, "# HELP urnet_proxy_audit_parked Proxies the proxy audit engine is currently holding out.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_parked gauge\n")
+	fmt.Fprintf(&b, "urnet_proxy_audit_parked %d\n", len(audit.Parked))
+	fmt.Fprintf(&b, "# HELP urnet_proxy_audit_would_park Proxies proxy audit would park now (observe mode).\n")
+	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_would_park gauge\n")
+	fmt.Fprintf(&b, "urnet_proxy_audit_would_park %d\n", audit.WouldPark)
+	fmt.Fprintf(&b, "# HELP urnet_proxy_audit_distrusted 1 when the last pass tripped the correlated-failure breaker.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_distrusted gauge\n")
+	fmt.Fprintf(&b, "urnet_proxy_audit_distrusted %d\n", b2i(audit.Distrusted))
+	fmt.Fprintf(&b, "# HELP urnet_proxy_audit_thin_pass 1 when too few proxies could be graded to trust the last pass.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_thin_pass gauge\n")
+	fmt.Fprintf(&b, "urnet_proxy_audit_thin_pass %d\n", b2i(audit.Thin))
+	fmt.Fprintf(&b, "# HELP urnet_proxy_audit_parks_24h Parks counted against the rolling 24h budget.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_parks_24h gauge\n")
+	fmt.Fprintf(&b, "urnet_proxy_audit_parks_24h %d\n", audit.Parks24h)
+	fmt.Fprintf(&b, "# HELP urnet_proxy_audit_paused 1 while the paid proxy list is unreadable and the audit parks nothing.\n")
+	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_paused gauge\n")
+	fmt.Fprintf(&b, "urnet_proxy_audit_paused %d\n", b2i(audit.Paused))
+
 	// --- Lifetime persisted metrics ---
 	if lm := lifetimeStore; lm != nil {
 		pqe, clas, up, deny, recov, lost, bill := lm.Snapshot()
@@ -458,6 +499,13 @@ func providerExtraMetrics() string {
 		fmt.Fprintf(&b, "urnet_url_proxy_ungraded %d\n", urlUngraded)
 	}
 
+	// --- Restart reason and process resources ---
+	startupDiag.mu.Lock()
+	reason := startupDiag.restartReason
+	startupDiag.mu.Unlock()
+	writeNodeGauges(&b, reason, collectResources())
+	writeRuntimeGauges(&b, time.Since(providerStartTime), runtimeSysBytes())
+
 	return b.String()
 }
 
@@ -523,4 +571,59 @@ func contractMetricsSnapshot() (acquired, denied, utilSum uint64) {
 		deltaD = 0
 	}
 	return uint64(deltaA), uint64(deltaD), 0
+}
+
+// writeNodeGauges emits the restart-reason and resource gauges. Resource
+// figures the platform cannot supply (zero) are left out rather than exported
+// as 0, so a missing series means unknown.
+func writeNodeGauges(b *strings.Builder, reason string, res SnapshotResources) {
+	if reason != "" {
+		fmt.Fprintf(b, "# HELP urnet_restart_reason Why the provider last started: 1 for the current reason only.\n")
+		fmt.Fprintf(b, "# TYPE urnet_restart_reason gauge\n")
+		fmt.Fprintf(b, "urnet_restart_reason{reason=%s} 1\n", prometheusLabelValue(reason))
+	}
+	if res.MemLimitBytes > 0 {
+		fmt.Fprintf(b, "# HELP urnet_mem_limit_bytes Go memory limit in effect, absent when none is set.\n")
+		fmt.Fprintf(b, "# TYPE urnet_mem_limit_bytes gauge\n")
+		fmt.Fprintf(b, "urnet_mem_limit_bytes %d\n", res.MemLimitBytes)
+	}
+	if res.RSSBytes > 0 {
+		fmt.Fprintf(b, "# HELP urnet_rss_bytes Resident set size of the provider process (Linux).\n")
+		fmt.Fprintf(b, "# TYPE urnet_rss_bytes gauge\n")
+		fmt.Fprintf(b, "urnet_rss_bytes %d\n", res.RSSBytes)
+	}
+	if res.OpenFDs > 0 {
+		fmt.Fprintf(b, "# HELP urnet_open_fds Open file descriptors of the provider process (Linux).\n")
+		fmt.Fprintf(b, "# TYPE urnet_open_fds gauge\n")
+		fmt.Fprintf(b, "urnet_open_fds %d\n", res.OpenFDs)
+	}
+	if res.FDLimit > 0 {
+		fmt.Fprintf(b, "# HELP urnet_fd_limit Soft file descriptor limit of the provider process (Linux).\n")
+		fmt.Fprintf(b, "# TYPE urnet_fd_limit gauge\n")
+		fmt.Fprintf(b, "urnet_fd_limit %d\n", res.FDLimit)
+	}
+}
+
+// runtimeSysBytes is the Go runtime's total memory obtained from the OS.
+func runtimeSysBytes() uint64 {
+	sample := []metrics.Sample{{Name: "/memory/classes/total:bytes"}}
+	metrics.Read(sample)
+	if sample[0].Value.Kind() != metrics.KindUint64 {
+		return 0
+	}
+	return sample[0].Value.Uint64()
+}
+
+// writeRuntimeGauges emits the uptime and Go memory gauges that the alert
+// rules and dashboard panels read. sn serves /metrics from providerExtraMetrics
+// alone, so these are exported here. A zero memory figure is left out.
+func writeRuntimeGauges(b *strings.Builder, uptime time.Duration, sysBytes uint64) {
+	fmt.Fprintf(b, "# HELP urnet_uptime_seconds Provider uptime in seconds.\n")
+	fmt.Fprintf(b, "# TYPE urnet_uptime_seconds gauge\n")
+	fmt.Fprintf(b, "urnet_uptime_seconds %g\n", uptime.Seconds())
+	if sysBytes > 0 {
+		fmt.Fprintf(b, "# HELP urnet_mem_sys_bytes Go runtime total memory obtained from the OS.\n")
+		fmt.Fprintf(b, "# TYPE urnet_mem_sys_bytes gauge\n")
+		fmt.Fprintf(b, "urnet_mem_sys_bytes %d\n", sysBytes)
+	}
 }

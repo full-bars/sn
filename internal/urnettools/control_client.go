@@ -21,11 +21,13 @@ import (
 
 // controlRequest is one line of the control socket protocol.
 type controlRequest struct {
-	Cmd    string `json:"cmd"` // "set", "clear", "get", "status", or "history"
-	Key    string `json:"key,omitempty"`
-	Value  string `json:"value,omitempty"`
-	Limit  int    `json:"limit,omitempty"`
-	Cursor string `json:"cursor,omitempty"`
+	Cmd     string `json:"cmd"` // "set", "clear", "get", "status", "history", "snapshot", or "audit"
+	Key     string `json:"key,omitempty"`
+	Value   string `json:"value,omitempty"`
+	Limit   int    `json:"limit,omitempty"`
+	Cursor  string `json:"cursor,omitempty"`
+	Action  string `json:"action,omitempty"`
+	Address string `json:"address,omitempty"`
 }
 
 // AuditEntry mirrors the provider's CommandAudit for JSON wire format.
@@ -45,6 +47,28 @@ type SettingInfo struct {
 	Value  string `json:"value"`
 	Source string `json:"source"`
 	SetAt  string `json:"set_at,omitempty"`
+}
+
+// ProxyAuditStatus mirrors the provider's proxy audit snapshot in the control
+// socket "audit" and "status" replies.
+type ProxyAuditStatus struct {
+	Acting          bool               `json:"acting"`
+	NotActingReason string             `json:"not_acting_reason,omitempty"`
+	Parked          []ProxyAuditParked `json:"parked,omitempty"`
+	WouldPark       int                `json:"would_park"`
+	Distrusted      bool               `json:"distrusted,omitempty"`
+	Thin            bool               `json:"thin_pass,omitempty"`
+	Parks24h        int                `json:"parks_24h"`
+	Paused          bool               `json:"paused,omitempty"`
+	PausedSince     time.Time          `json:"paused_since,omitempty"`
+	UpdatedAt       time.Time          `json:"updated_at"`
+}
+
+// ProxyAuditParked is one proxy held out by the audit engine, with when its
+// backoff probation ends.
+type ProxyAuditParked struct {
+	Addr  string    `json:"addr"`
+	Until time.Time `json:"until"`
 }
 
 // controlResponse is one line response from the control socket.
@@ -69,7 +93,13 @@ type controlResponse struct {
 	// answered by "status". Empty when metrics is off or the provider
 	// predates the field.
 	MetricsAddrs []string `json:"metrics_addrs,omitempty"`
-	Raw          []byte   `json:"-"`
+	// Snapshot is the live node snapshot, answered by "snapshot". Absent
+	// from providers that predate the command.
+	Snapshot *NodeSnapshot `json:"snapshot,omitempty"`
+	// ProxyAudit is the provider's proxy audit status, answered by "status" and "audit".
+	ProxyAudit *ProxyAuditStatus `json:"proxy_audit,omitempty"`
+	Audit      *ProxyAuditStatus `json:"audit,omitempty"`
+	Raw        []byte            `json:"-"`
 }
 
 // pendingOp is an entry in ~/.urnetwork/pending_overrides.json.
@@ -93,6 +123,8 @@ var controlKeyCanonical = map[string]string{
 	"self-heal":                   "proxy_self_heal",
 	"proxy-self-heal":             "proxy_self_heal",
 	"proxy_self_heal":             "proxy_self_heal",
+	"proxy-audit":                 "proxy_audit",
+	"proxy_audit":                 "proxy_audit",
 	"proxy-url-max":               "proxy_url_max",
 	"proxy_url_max":               "proxy_url_max",
 	"proxy-url-refresh":           "proxy_url_refresh",
@@ -151,7 +183,7 @@ func validateControlValue(canonicalKey, value string) error {
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", canonicalKey, value)
 		}
-	case "fast_auth", "proxy_self_heal":
+	case "fast_auth", "proxy_self_heal", "proxy_audit":
 		switch strings.ToLower(value) {
 		case "on", "off":
 		default:
