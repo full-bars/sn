@@ -223,6 +223,47 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
 
+  cross-build:
+    # PR compile gate: a fork-adaptation stub our tests never hit (e.g. a
+    # linux-only symbol referenced unconditionally from a portable file, like
+    # resource_pressure_stub.go) breaks non-linux builds that only release.yml
+    # would otherwise catch at cut time. Compile every shippable binary here,
+    # across the same GOOS x GOARCH matrix the release uses, so PRs fail on the
+    # gap instead of the release.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Go (native cache)
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Compile shippable binaries for ${{ matrix.goos }}/${{ matrix.goarch }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: '0'
+        run: |
+          set -e
+          for bin in provider urnet-tools urnet-docker; do
+            echo "=== go build ./cmd/${bin} (${GOOS}/${GOARCH}) ==="
+            go build -o /dev/null ./cmd/${bin}
+          done
+
   build-and-push:
     needs: [test, lint]
     runs-on: ubuntu-latest
