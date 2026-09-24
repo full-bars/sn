@@ -205,7 +205,8 @@ func TestPaidGrader_SetsPendingOnReachableUndecidable(t *testing.T) {
 	if err := writeProxyState(&ProxyState{
 		Source: src,
 		Proxies: map[string]ProxyEntry{
-			addr: {ID: 3, Health: "up", Source: "file"},
+
+			identityKey(addr, "u"): {ID: 3, Health: "up", Source: "file"},
 		},
 	}); err != nil {
 		t.Fatal(err)
@@ -219,7 +220,7 @@ func TestPaidGrader_SetsPendingOnReachableUndecidable(t *testing.T) {
 	runPaidProxyGradeOnce(context.Background(), "1.2.3.4", 443)
 
 	state, _ := readProxyState()
-	e := state.Proxies[addr]
+	e := state.Proxies[identityKey(addr, "u")]
 	if !e.Pending {
 		t.Errorf("reachable-but-undecidable paid proxy must be Pending: %+v", e)
 	}
@@ -248,7 +249,8 @@ func TestPaidGrader_ClearsPendingOnDecidable(t *testing.T) {
 	if err := writeProxyState(&ProxyState{
 		Source: src,
 		Proxies: map[string]ProxyEntry{
-			addr: {ID: 4, Health: "up", Source: "file", Pending: true},
+
+			identityKey(addr, "u"): {ID: 4, Health: "up", Source: "file", Pending: true},
 		},
 	}); err != nil {
 		t.Fatal(err)
@@ -258,7 +260,7 @@ func TestPaidGrader_ClearsPendingOnDecidable(t *testing.T) {
 	runPaidProxyGradeOnce(context.Background(), "1.2.3.4", 99)
 
 	state, _ := readProxyState()
-	e := state.Proxies[addr]
+	e := state.Proxies[identityKey(addr, "u")]
 	if e.Pending {
 		t.Errorf("a decidable pass must clear Pending: %+v", e)
 	}
@@ -297,26 +299,26 @@ func TestApplyPaidProbeBudget_TieBreakByAddr(t *testing.T) {
 	// budget cut picks an arbitrary subset and a deferred proxy can starve
 	// across ticks.
 	targets := []gradeTarget{
-		{addr: "c", snapshotGradedAt: time.Time{}},
-		{addr: "a", snapshotGradedAt: time.Time{}},
-		{addr: "b", snapshotGradedAt: time.Time{}},
+		{key: "c", addr: "c", snapshotGradedAt: time.Time{}},
+		{key: "a", addr: "a", snapshotGradedAt: time.Time{}},
+		{key: "b", addr: "b", snapshotGradedAt: time.Time{}},
 	}
 	got := applyPaidProbeBudget(targets, 2)
 	if len(got) != 2 {
 		t.Fatalf("want 2 kept, got %d", len(got))
 	}
-	if got[0].addr != "a" || got[1].addr != "b" {
-		t.Errorf("equal staleness must tie-break by addr ascending, got %s, %s", got[0].addr, got[1].addr)
+	if got[0].key != "a" || got[1].key != "b" {
+		t.Errorf("equal staleness must tie-break by identity key ascending, got %s, %s", got[0].key, got[1].key)
 	}
 	// The tie-break must decide regardless of input order.
 	reversed := []gradeTarget{
-		{addr: "b", snapshotGradedAt: time.Time{}},
-		{addr: "c", snapshotGradedAt: time.Time{}},
-		{addr: "a", snapshotGradedAt: time.Time{}},
+		{key: "b", addr: "b", snapshotGradedAt: time.Time{}},
+		{key: "c", addr: "c", snapshotGradedAt: time.Time{}},
+		{key: "a", addr: "a", snapshotGradedAt: time.Time{}},
 	}
 	got2 := applyPaidProbeBudget(reversed, 2)
-	if got2[0].addr != "a" || got2[1].addr != "b" {
-		t.Errorf("tie-break must ignore input order, got %s, %s", got2[0].addr, got2[1].addr)
+	if got2[0].key != "a" || got2[1].key != "b" {
+		t.Errorf("tie-break must ignore input order, got %s, %s", got2[0].key, got2[1].key)
 	}
 }
 
@@ -513,7 +515,8 @@ func TestPaidGrader_Stage0DropsDeadProxyInOneDial(t *testing.T) {
 	if err := writeProxyState(&ProxyState{
 		Source: src,
 		Proxies: map[string]ProxyEntry{
-			addr: {ID: 5, Health: "up", Source: "file"},
+
+			identityKey(addr, "u"): {ID: 5, Health: "up", Source: "file"},
 		},
 	}); err != nil {
 		t.Fatal(err)
@@ -521,7 +524,7 @@ func TestPaidGrader_Stage0DropsDeadProxyInOneDial(t *testing.T) {
 	runPaidProxyGradeOnce(context.Background(), "1.2.3.4", 443)
 
 	state, _ := readProxyState()
-	e := state.Proxies[addr]
+	e := state.Proxies[identityKey(addr, "u")]
 	// Dead-at-stage-0 => no grade, no pending. LastGraded DOES advance (it is
 	// set unconditionally for any target reaching the apply loop), which is
 	// correct: it paces re-probing to the 3-6h paid cadence so a transient
