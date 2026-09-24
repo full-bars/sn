@@ -24,27 +24,27 @@ import (
 	"github.com/urnetwork/connect/protocol"
 )
 
-// proxyIndexByAddr maps proxy addresses to their stable integer IDs.
-// Needed because the new connect.ProxySettings doesn't carry an Index field
-// (the old fork added it). Populated in provideLauncherLoop and read in
-// provideWithProxy.
-var proxyIndexByAddr sync.Map
+// proxyIndexByKey maps proxy identity keys (ProxySettings.Key()) to their
+// stable integer IDs. Needed because the new connect.ProxySettings doesn't
+// carry an Index field (the old fork added it). Populated in
+// provideLauncherLoop and read in provideWithProxy.
+var proxyIndexByKey sync.Map
 
-func setProxyIndex(addr string, idx int) {
-	proxyIndexByAddr.Store(addr, idx)
+func setProxyIndex(key string, idx int) {
+	proxyIndexByKey.Store(key, idx)
 }
 
-// deleteProxyIndex removes a proxy address from the index map.
+// deleteProxyIndex removes a proxy identity key from the index map.
 // Called from UnregisterProxy to prevent unbounded growth.
-func deleteProxyIndex(addr string) {
-	proxyIndexByAddr.Delete(addr)
+func deleteProxyIndex(key string) {
+	proxyIndexByKey.Delete(key)
 }
 
-// getProxyIndex returns the stable integer ID for a proxy address,
-// or -1 if the address was never registered. Callers must check for
+// getProxyIndex returns the stable integer ID for a proxy identity key,
+// or -1 if the key was never registered. Callers must check for
 // -1 to avoid misattributing health metrics to the direct proxy (index 0).
-func getProxyIndex(addr string) int {
-	if v, ok := proxyIndexByAddr.Load(addr); ok {
+func getProxyIndex(key string) int {
+	if v, ok := proxyIndexByKey.Load(key); ok {
 		return v.(int)
 	}
 	return -1
@@ -886,7 +886,7 @@ func provideDirectSetup(st *provideState) bool {
 				}
 				st.proxyCancelMu.Unlock()
 			}()
-			gen := RegisterProxy(0, "direct")
+			gen := RegisterProxy(0, "direct", "direct")
 			defer UnregisterProxySafe(0, gen)
 			provideWithProxy(st, nativeCtx, nil, true, false)
 		})
@@ -1030,7 +1030,8 @@ func provideLauncherLoop(st *provideState) func() {
 			st.wg.Add(1)
 			go connect.HandleError(func() {
 				defer st.wg.Done()
-				gen := RegisterProxy(stableID, proxySettings.Address)
+				key := proxySettings.Key()
+				gen := RegisterProxy(stableID, proxySettings.Address, key)
 				defer UnregisterProxySafe(stableID, gen)
 				defer proxyCancel()
 

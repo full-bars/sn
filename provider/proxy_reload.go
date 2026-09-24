@@ -562,7 +562,7 @@ func (r *ProxyReloader) reload() {
 				delete(r.cancelMap, directProxyKey)
 				r.cancelMapMu.Unlock()
 			}()
-			gen := RegisterProxy(0, "direct")
+			gen := RegisterProxy(0, "direct", "direct")
 			defer UnregisterProxySafe(0, gen)
 			r.spawnProxy(directCtx, nil, true, false)
 		})
@@ -740,7 +740,7 @@ func (r *ProxyReloader) reload() {
 			delete(r.state.Proxies, addr)
 		}
 
-		bw := proxyBandwidthByAddressV2026(addr)
+		bw := proxyBandwidthByKeyV2026(addr)
 		// A rotated proxy is never drained: its old credentials are being
 		// replaced (usually because they are dead or revoked), the launch pass
 		// skips addresses that are still draining, and the drain loop has no
@@ -764,7 +764,7 @@ func (r *ProxyReloader) reload() {
 				r.drainMu.Unlock()
 			}()
 			for {
-				bw := proxyBandwidthByAddressV2026(proxyAddr)
+				bw := proxyBandwidthByKeyV2026(proxyAddr)
 				if bw == nil || bw.Clients.Load() == 0 {
 					break
 				}
@@ -824,10 +824,11 @@ func (r *ProxyReloader) reload() {
 			warmupDeferred++
 			continue
 		}
+		key := settings.Key()
 		stableID := resolveProxyID(r.state, settings.Address)
-		setProxyIndex(settings.Address, stableID)
+		setProxyIndex(key, stableID)
 		tagProxySourceIfUnset(r.state, settings.Address, sourceOf[settings.Address])
-		gen := RegisterProxy(stableID, settings.Address)
+		gen := RegisterProxy(stableID, settings.Address, key)
 
 		proxyCtx, proxyCancel := context.WithCancel(r.parentCtx)
 		r.cancelMapMu.Lock()

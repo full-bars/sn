@@ -450,9 +450,9 @@ func newLiveProxyAuditor(cancelMap map[string]context.CancelFunc, cancelMu *sync
 	g := newProxyAuditor(defaultProxyAuditConfig(), proxyAuditEnv{
 		now:      time.Now,
 		readPaid: liveReadPaid,
-		health:   ProxyHealthByAddress,
+		health:   ProxyHealthByKey,
 		clients: func(addr string) (int64, bool) {
-			bw := ProxyBandwidthByAddress(addr)
+			bw := ProxyBandwidthByKey(addr)
 			if bw == nil {
 				return 0, false
 			}

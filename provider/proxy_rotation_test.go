@@ -129,7 +129,7 @@ func TestReload_RotatedBusyProxy_IsNotDrained(t *testing.T) {
 	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, addr+":alice:NEWPASS"), boot)
 	r.seedRunningAuth([]*connect.ProxySettings{boot})
 
-	RegisterProxy(987001, addr)
+	RegisterProxy(987001, addr, addr)
 	t.Cleanup(func() { UnregisterProxy(987001) })
 	bw := RegisterProxyBandwidth(987001)
 	bw.Clients.Store(3) // active sessions on the old credentials

@@ -39,7 +39,7 @@ func TestRunProxyJWTWatcherDoesNotRenewOnStaleAuthFailures(t *testing.T) {
 	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	const proxyIndex = 918274
-	RegisterProxy(proxyIndex, "test-proxy-stale-authfail-addr")
+	RegisterProxy(proxyIndex, "test-proxy-stale-authfail-addr", "test-proxy-stale-authfail-addr")
 	defer UnregisterProxy(proxyIndex)
 
 	// Failures recorded BEFORE the watcher starts become part of its
