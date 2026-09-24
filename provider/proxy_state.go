@@ -230,12 +230,15 @@ func proxyKeyDisplay(key string) string {
 
 // resolveProxyID returns the stable ID for an address.
 // Known addresses keep their existing ID; new ones get the next counter value.
-func resolveProxyID(state *ProxyState, address string) int {
-	if entry, ok := state.Proxies[address]; ok {
+func resolveProxyID(state *ProxyState, key string) int {
+	// state.Proxies is keyed by proxy identity (ProxySettings.Key()); a
+	// shared-gateway proxy's identity is address+user, never the bare
+	// address, so two accounts at one host:port keep separate IDs.
+	if entry, ok := state.Proxies[key]; ok {
 		return entry.ID
 	}
 	id := nextProxyID()
-	state.Proxies[address] = ProxyEntry{ID: id}
+	state.Proxies[key] = ProxyEntry{ID: id}
 	return id
 }
 
@@ -244,10 +247,10 @@ func resolveProxyID(state *ProxyState, address string) int {
 // an address keeps its original provenance across reloads and restarts, so
 // source-scoped dead-proxy cleanup stays accurate even if the same address
 // later also appears in a different source.
-func tagProxySourceIfUnset(state *ProxyState, address, source string) {
-	entry := state.Proxies[address]
+func tagProxySourceIfUnset(state *ProxyState, key, source string) {
+	entry := state.Proxies[key]
 	if entry.Source == "" {
 		entry.Source = source
 	}
-	state.Proxies[address] = entry
+	state.Proxies[key] = entry
 }

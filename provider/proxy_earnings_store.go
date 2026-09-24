@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -117,15 +118,25 @@ func (s *proxyEarningsStore) Observe(snapshot map[string]*bandwidth.ProxyBandwid
 
 	live := make(map[string]struct{}, len(snapshot))
 	for key, bw := range snapshot {
-		addr := proxyKeyAddress(key)
-		live[addr] = struct{}{}
+		// Snapshot keys arrive in two shapes: the display format
+		// "proxy[N] (addr)" (ProxyHealthSnapshot) or an identity key
+		// (ProxyBandwidthSnapshotByKey). Only the display format needs
+		// normalizing down to its address; identity keys are already in
+		// store key space and must pass through untouched — collapsing them
+		// to a bare address would recreate the legacy-key collision this
+		// store migrated away from.
+		credKey := key
+		if strings.HasPrefix(key, "proxy[") {
+			credKey = proxyKeyAddress(key)
+		}
+		live[credKey] = struct{}{}
 		cum := bw.BillableRx.Load() + bw.BillableTx.Load()
-		prev, seen := s.prevCum[addr]
-		s.prevCum[addr] = cum
+		prev, seen := s.prevCum[credKey]
+		s.prevCum[credKey] = cum
 		if !seen || cum <= prev {
 			continue
 		}
-		s.creditLocked(addr, float64(cum-prev), now)
+		s.creditLocked(credKey, float64(cum-prev), now)
 	}
 
 	// Drop baselines for addresses that left the snapshot. Without this the
@@ -160,11 +171,79 @@ func (s *proxyEarningsStore) Score(addr string, now time.Time) float64 {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	e, ok := s.entries[proxyKeyAddress(addr)]
+	e, ok := s.entries[addr]
 	if !ok {
 		return 0
 	}
 	return decayEarningsScore(e.Score, now.Sub(e.Updated))
+}
+
+// adoptLegacy migrates a legacy (bare-address-keyed) earnings entry to its
+// new identity key (ProxySettings.Key()) for every address the given desired
+// settings actually claim. Mirrors adoptLegacyProxyState's rules exactly (see
+// its doc comment). This file has no separate Version field because its
+// on-disk shape is a bare {address: entry} map; adoption is inferrable from
+// the map's own keys, with no schema flag required.
+func (s *proxyEarningsStore) adoptLegacy(desired []*connect.ProxySettings) (adopted, split int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	byAddress := make(map[string][]*connect.ProxySettings, len(desired))
+	for _, settings := range desired {
+		if settings == nil || settings.Address == "" {
+			continue
+		}
+		byAddress[settings.Address] = append(byAddress[settings.Address], settings)
+	}
+
+	for address, settingsAtAddress := range byAddress {
+		legacy, hasLegacy := s.entries[address]
+		if !hasLegacy {
+			continue
+		}
+
+		seen := map[string]bool{}
+		var keys []string
+		for _, settings := range settingsAtAddress {
+			k := settings.Key()
+			if !seen[k] {
+				seen[k] = true
+				keys = append(keys, k)
+			}
+		}
+		sort.Strings(keys)
+		winner := keys[0]
+
+		if winner == address {
+			continue
+		}
+
+		delete(s.entries, address)
+		if existing, ok := s.entries[winner]; ok {
+			// Both entries describe DISJOINT earning periods: the legacy
+			// (bare-address) entry predates the identity-keyed ingest, and
+			// the winner entry holds post-upgrade credits. Merge additively,
+			// decayed to the later timestamp, so neither side's earned
+			// bytes are lost — replacing would erase accumulated score.
+			if existing.Updated.After(legacy.Updated) {
+				existing.Score += decayEarningsScore(legacy.Score, existing.Updated.Sub(legacy.Updated))
+				s.entries[winner] = existing
+			} else {
+				legacy.Score += decayEarningsScore(existing.Score, legacy.Updated.Sub(existing.Updated))
+				s.entries[winner] = legacy
+			}
+		} else {
+			s.entries[winner] = legacy
+		}
+		adopted++
+
+		if len(keys) > 1 {
+			split++
+			tlog("[proxy][identity] earnings for %s split into %d identities on adoption; %s kept its history, the rest start at zero\n",
+				address, len(keys), proxyKeyDisplay(winner))
+		}
+	}
+	return adopted, split
 }
 
 // Load reads the store from disk. A missing file is not an error: a node

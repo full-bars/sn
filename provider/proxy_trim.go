@@ -199,16 +199,16 @@ func selectWorstRunningProxies(state map[string]ProxyEntry, gradeFor func(addr s
 // for the shed tiebreak. Best-effort: only used as a last-resort tiebreak among
 // addresses with identical health and grade.
 func runningProxyTraffic() map[string]uint64 {
-	_, _, _, bandwidth, _ := ProxyHealthSnapshot()
+	// Identity-keyed snapshot: traffic aggregates per proxy identity so two
+	// accounts sharing one gateway address rank separately and earn-protect
+	// independently (matches state.Proxies keys).
+	bwMap := ProxyBandwidthSnapshotByKey()
 	traffic := map[string]uint64{}
-	for key, bw := range bandwidth {
+	for key, bw := range bwMap {
 		if bw == nil {
 			continue
 		}
-		// Bandwidth is keyed by the display string "proxy[<n>] (<addr>)"; the
-		// tiebreak must key by the address so it matches ProxyEntry keys.
-		_, hp := parseProxyString(key)
-		traffic[hp] += bw.TotalRx.Load() + bw.TotalTx.Load()
+		traffic[key] += bw.TotalRx.Load() + bw.TotalTx.Load()
 	}
 	return traffic
 }

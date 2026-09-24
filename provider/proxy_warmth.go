@@ -153,9 +153,13 @@ func prioritizeAndScheduleProxies(
 	var warmCount, renewableCount, coldCount int
 
 	for _, s := range proxies {
+		// warmthMap/earningsMap and the proxySourceOf provenance set are
+		// keyed by identity — see reload()/provide(). evaluateProxyWarmth
+		// itself probes the client-JWT store by its own key (address today).
+		key := s.Key()
 		tier := evaluateProxyWarmth(s.Address, currentNetworkID)
-		warmthMap[s.Address] = tier
-		earningsMap[s.Address] = proxyEarningsScore(s.Address, now)
+		warmthMap[key] = tier
+		earningsMap[key] = proxyEarningsScore(key, now)
 		switch tier {
 		case WarmthValid:
 			warmCount++
@@ -172,13 +176,13 @@ func prioritizeAndScheduleProxies(
 	// billable traffic: at that point it is no longer an unproven address
 	// off a public list, it is a known earner, and making it wait behind
 	// every file proxy costs real throughput during the warmup window.
-	trusted := func(addr string) bool {
-		return proxySourceOf[addr] != "url" || earningsMap[addr] >= earningsPromotionBytes
+	trusted := func(key string) bool {
+		return proxySourceOf[key] != "url" || earningsMap[key] >= earningsPromotionBytes
 	}
 
 	sort.SliceStable(proxies, func(i, j int) bool {
-		addrI := proxies[i].Address
-		addrJ := proxies[j].Address
+		addrI := proxies[i].Key()
+		addrJ := proxies[j].Key()
 
 		// 1. Primary rule: higher warmth tier dials first. Warmth is the
 		//    primary rule because a cold identity must mint against the
@@ -261,7 +265,7 @@ func prioritizeAndScheduleProxies(
 
 	for i, s := range proxies {
 		tier := warmthMap[s.Address]
-		isURL := proxySourceOf[s.Address] == "url"
+		isURL := proxySourceOf[s.Key()] == "url"
 		promoted := isURL && earningsMap[s.Address] >= earningsPromotionBytes
 		// Promoted URL proxies belong with the cold file group; they have
 		// earned trusted provenance and should not be penalised with the

@@ -383,7 +383,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	proxyIndex := 0
 	if proxySettings != nil {
 		identityKey = proxySettings.Address
-		proxyIndex = getProxyIndex(proxySettings.Address)
+		proxyIndex = getProxyIndex(proxySettings.Key())
 	}
 
 	// Register bandwidth tracker for this proxy (for health/earnings reporting).
@@ -461,13 +461,13 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		const provenMaxAuthFailures = 10
 		const unprovenMaxAuthFailures = 3
 		maxAuthFailures := provenMaxAuthFailures
-		if proxySettings != nil && !globalProvenProxies.HasSucceeded(proxySettings.Address) {
+		if proxySettings != nil && !globalProvenProxies.HasSucceeded(proxySettings.Key()) {
 			maxAuthFailures = unprovenMaxAuthFailures
 		}
 		authFailures := 0
 
 		if proxySettings != nil && !isURLSourced {
-			if globalProxySlowRetryState.Load().WasDropped(proxySettings.Address) || globalProxySlowRetryState.Load().TimeUntilNextAttempt(proxySettings.Address) > 0 {
+			if globalProxySlowRetryState.Load().WasDropped(proxySettings.Key()) || globalProxySlowRetryState.Load().TimeUntilNextAttempt(proxySettings.Key()) > 0 {
 				authFailures = maxAuthFailures
 			}
 		}
@@ -487,7 +487,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				err = func() error {
 					admitFailureCount := authFailures
 					if proxySettings != nil {
-						admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Address)
+						admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Key())
 					}
 					release, waitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
 					if waitErr != nil {
@@ -512,11 +512,11 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				}()
 				if proxySettings != nil {
 					if err == nil {
-						globalProvenProxies.MarkSucceeded(proxySettings.Address)
-						globalProxyFailureHistory.Reset(proxySettings.Address)
-						globalProxySlowRetryState.Load().ClearDropped(proxySettings.Address)
+						globalProvenProxies.MarkSucceeded(proxySettings.Key())
+						globalProxyFailureHistory.Reset(proxySettings.Key())
+						globalProxySlowRetryState.Load().ClearDropped(proxySettings.Key())
 					}
-					globalAuthRateLimiter.ReportResultForProxy(err, globalProvenProxies.HasSucceeded(proxySettings.Address))
+					globalAuthRateLimiter.ReportResultForProxy(err, globalProvenProxies.HasSucceeded(proxySettings.Key()))
 				} else {
 					globalAuthRateLimiter.ReportResult(err)
 				}
@@ -547,7 +547,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 
 			authFailures++
 			if proxySettings != nil {
-				globalProxyFailureHistory.RecordFailure(proxySettings.Address)
+				globalProxyFailureHistory.RecordFailure(proxySettings.Key())
 				RecordProxyAuthFailure(proxyIndex, err)
 			}
 			if authFailures >= maxAuthFailures {
@@ -556,17 +556,17 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 					return "", connect.Id{}, false, fmt.Errorf("authentication failed after %d attempts — %s: %w", maxAuthFailures, cause, err)
 				}
 				if proxySettings != nil {
-					startedAt := globalProxySlowRetryState.Load().RecordSlowRetryStart(proxySettings.Address)
-					if globalProxySlowRetryState.Load().ShouldDrop(proxySettings.Address) {
-						globalProxySlowRetryState.Load().MarkDropped(proxySettings.Address)
+					startedAt := globalProxySlowRetryState.Load().RecordSlowRetryStart(proxySettings.Key())
+					if globalProxySlowRetryState.Load().ShouldDrop(proxySettings.Key()) {
+						globalProxySlowRetryState.Load().MarkDropped(proxySettings.Key())
 						dropAge := time.Since(startedAt)
 						tlog("[proxy][slow-retry] proxy[%d] (%s) dropped after %s of continuous failure (%d total attempts)\n",
-							getProxyIndex(proxySettings.Address), proxySettings.Address, formatDuration(dropAge), authFailures)
+							getProxyIndex(proxySettings.Key()), proxySettings.Address, formatDuration(dropAge), authFailures)
 						var cancel context.CancelFunc
 						st.proxyCancelMu.Lock()
-						if proxyOwnsLaunch(proxyCtx, proxySettings.Address) {
-							cancel = st.proxyCancelMap[proxySettings.Address]
-							delete(st.proxyCancelMap, proxySettings.Address)
+						if proxyOwnsLaunch(proxyCtx, proxySettings.Key()) {
+							cancel = st.proxyCancelMap[proxySettings.Key()]
+							delete(st.proxyCancelMap, proxySettings.Key())
 						}
 						st.proxyCancelMu.Unlock()
 						if cancel != nil {
@@ -575,15 +575,15 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 						return "", connect.Id{}, false, fmt.Errorf("proxy dropped after %s of continuous failure — %s", formatDuration(dropAge), cause)
 					}
 					slowRetryAttempt := authFailures - maxAuthFailures + 1
-					if slowRetryAttempt > slowRetryRampAttempts && !globalProxySlowRetryState.Load().RecordSlowRetryAttempt(proxySettings.Address) {
-						waitTime := globalProxySlowRetryState.Load().TimeUntilNextAttempt(proxySettings.Address)
+					if slowRetryAttempt > slowRetryRampAttempts && !globalProxySlowRetryState.Load().RecordSlowRetryAttempt(proxySettings.Key()) {
+						waitTime := globalProxySlowRetryState.Load().TimeUntilNextAttempt(proxySettings.Key())
 						if waitTime <= 0 {
 							waitTime = 24 * time.Hour
 							tlog("[proxy][slow-retry] proxy[%d] (%s) waitTime was non-positive, clamping to %s\n",
-								getProxyIndex(proxySettings.Address), proxySettings.Address, formatDuration(waitTime))
+								getProxyIndex(proxySettings.Key()), proxySettings.Address, formatDuration(waitTime))
 						}
 						tlog("[proxy][slow-retry] proxy[%d] (%s) auth still failing after %d attempts (%s); next check in %s\n",
-							getProxyIndex(proxySettings.Address), proxySettings.Address, authFailures, cause, formatDuration(waitTime))
+							getProxyIndex(proxySettings.Key()), proxySettings.Address, authFailures, cause, formatDuration(waitTime))
 						dailyTimer := time.NewTimer(waitTime)
 						select {
 						case <-proxyCtx.Done():
@@ -597,7 +597,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				slowDelay := proxyAuthSlowRetryDelay(authFailures - maxAuthFailures + 1)
 				if proxySettings != nil {
 					tlog("[proxy][init] proxy[%d] (%s) auth still failing after %d attempts (%s); retrying in %s\n",
-						getProxyIndex(proxySettings.Address), proxySettings.Address, authFailures, cause, formatDuration(slowDelay))
+						getProxyIndex(proxySettings.Key()), proxySettings.Address, authFailures, cause, formatDuration(slowDelay))
 				} else if isNative {
 					tlog("[proxy][init] proxy[0] (direct) auth still failing after %d attempts (%s); retrying in %s\n",
 						authFailures, cause, formatDuration(slowDelay))
@@ -616,7 +616,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			retryDelay := proxyAuthRetryDelay(err, authFailures)
 			if proxySettings != nil {
 				tlog("[proxy][init] proxy[%d] (%s) auth failed (attempt %d/%d): %v. Will retry in %.2fs\n",
-					getProxyIndex(proxySettings.Address), proxySettings.Address, authFailures, maxAuthFailures, err, float64(retryDelay/time.Millisecond)/1000.0)
+					getProxyIndex(proxySettings.Key()), proxySettings.Address, authFailures, maxAuthFailures, err, float64(retryDelay/time.Millisecond)/1000.0)
 			} else if isNative {
 				tlog("[proxy][init] proxy[0] (direct) auth failed (attempt %d/%d): %v. Will retry in %.2fs\n",
 					authFailures, maxAuthFailures, err, float64(retryDelay/time.Millisecond)/1000.0)
@@ -822,29 +822,29 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 func provideHandleAuthFailure(st *provideState, proxyCtx context.Context, proxySettings *connect.ProxySettings, isNative, isURLSourced bool, err error) {
 	if proxySettings != nil {
 		if isURLSourced {
-			deleteProxyCancelIfCurrent(&st.proxyCancelMu, st.proxyCancelMap, proxyCtx, proxySettings.Address)
+			deleteProxyCancelIfCurrent(&st.proxyCancelMu, st.proxyCancelMap, proxyCtx, proxySettings.Key())
 
 			if errors.Is(err, errProxyURLBelowBar) {
 				tlog("[proxy][init] proxy[%d] (%s) rejected by stage-1 quality gate: %v. Re-graded next fetch cycle.\n",
-					getProxyIndex(proxySettings.Address), proxySettings.Address, err)
+					getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
 			} else if errors.Is(err, context.Canceled) {
 				tlog("[proxy][init] proxy[%d] (%s) cancelled (not a give-up): %v\n",
-					getProxyIndex(proxySettings.Address), proxySettings.Address, err)
+					getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
 			} else {
-				giveUpCount := globalProxyFailureHistory.RecordGiveUp(proxySettings.Address)
+				giveUpCount := globalProxyFailureHistory.RecordGiveUp(proxySettings.Key())
 				if giveUpCount >= proxyURLGiveUpEvictAfterCycles {
 					if evictErr := evictProxyURLAddress(proxySettings.Address); evictErr != nil {
 						fmt.Fprintf(os.Stderr, "[proxy][init] proxy[%d] (%s) could not evict after %d give-ups: %v\n",
-							getProxyIndex(proxySettings.Address), proxySettings.Address, giveUpCount, evictErr)
+							getProxyIndex(proxySettings.Key()), proxySettings.Address, giveUpCount, evictErr)
 						delay := proxyURLGiveUpRetryDelay(giveUpCount)
-						globalProxyFailureHistory.SetBackoffUntil(proxySettings.Address, time.Now().Add(delay))
+						globalProxyFailureHistory.SetBackoffUntil(proxySettings.Key(), time.Now().Add(delay))
 					} else {
 						fmt.Fprintf(os.Stderr, "[proxy][init] proxy[%d] (%s) auth failed: Permanently removed after %d give-ups.\n",
-							getProxyIndex(proxySettings.Address), proxySettings.Address, giveUpCount)
+							getProxyIndex(proxySettings.Key()), proxySettings.Address, giveUpCount)
 					}
 				} else {
 					delay := proxyURLGiveUpRetryDelay(giveUpCount)
-					globalProxyFailureHistory.SetBackoffUntil(proxySettings.Address, time.Now().Add(delay))
+					globalProxyFailureHistory.SetBackoffUntil(proxySettings.Key(), time.Now().Add(delay))
 					if reloadPath, pathErr := proxyReloadPath(); pathErr == nil {
 						time.AfterFunc(delay, func() {
 							if err := writeReloadTrigger(reloadPath); err != nil {
@@ -853,12 +853,12 @@ func provideHandleAuthFailure(st *provideState, proxyCtx context.Context, proxyS
 						})
 					}
 					fmt.Fprintf(os.Stderr, "[proxy][init] proxy[%d] (%s) auth failed: give-up %d/%d, will retry in %s.\n",
-						getProxyIndex(proxySettings.Address), proxySettings.Address, giveUpCount, proxyURLGiveUpEvictAfterCycles, formatDuration(delay))
+						getProxyIndex(proxySettings.Key()), proxySettings.Address, giveUpCount, proxyURLGiveUpEvictAfterCycles, formatDuration(delay))
 				}
 			}
 		} else {
 			fmt.Fprintf(os.Stderr, "[proxy][init] proxy[%d] (%s) auth failed after retries: %v (proxy offline; run 'urnet-tools proxy refresh' to retry)\n",
-				getProxyIndex(proxySettings.Address), proxySettings.Address, err)
+				getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
 		}
 	} else if isNative {
 		fmt.Fprintf(os.Stderr, "[proxy][init] proxy[0] (direct) auth failed after retries: %v (offline, retry on next pulse)\n", err)
@@ -957,8 +957,8 @@ func provideLauncherLoop(st *provideState) func() {
 	proxyDesiredSet := make(map[string]*connect.ProxySettings, len(allProxySettings))
 	proxySourceOf := make(map[string]string, len(allProxySettings))
 	for _, s := range allProxySettings {
-		proxyDesiredSet[s.Address] = s
-		proxySourceOf[s.Address] = primarySource
+		proxyDesiredSet[s.Key()] = s
+		proxySourceOf[s.Key()] = primarySource
 	}
 	if urlState, err := readProxyURLState(); err != nil {
 		tlog("[proxy][url] warning: could not read proxy_url.json: %v\n", err)
@@ -973,6 +973,9 @@ func provideLauncherLoop(st *provideState) func() {
 	if err := globalProxyEarningsStore.Load(); err != nil {
 		tlog("[earn] could not read proxy earnings history: %v\n", err)
 	}
+	// Adopt any legacy bare-address earnings entries to their identity keys
+	// right after load, and before the launch scheduler reads scores.
+	globalProxyEarningsStore.adoptLegacy(allProxySettings)
 
 	currentNetworkId := currentProviderNetworkID()
 	proxySchedules, warmCount, renewableCount, coldCount := prioritizeAndScheduleProxies(allProxySettings, proxySourceOf, currentNetworkId)
@@ -1019,11 +1022,11 @@ func provideLauncherLoop(st *provideState) func() {
 			proxySettings := sched.Settings
 			proxyCtx, proxyCancel := context.WithCancel(st.ctx)
 			st.proxyCancelMu.Lock()
-			st.proxyCancelMap[proxySettings.Address] = proxyCancel
+			st.proxyCancelMap[proxySettings.Key()] = proxyCancel
 			proxyCtx = withProxyLaunchGen(proxyCtx, beginProxyLaunch(proxySettings.Address))
 			st.proxyCancelMu.Unlock()
 
-			stableID := getProxyIndex(proxySettings.Address)
+			stableID := getProxyIndex(proxySettings.Key())
 			isURLSourced := proxySourceOf[proxySettings.Address] == "url"
 			baseDelay := sched.Delay
 			staggerDuration := sched.Stagger
@@ -1038,7 +1041,7 @@ func provideLauncherLoop(st *provideState) func() {
 				if !backoffPacerWithDelay(baseDelay, staggerDuration, proxyCtx) {
 					return
 				}
-				if !isURLSourced && proxySettings != nil && globalProxySlowRetryState.Load().WasDropped(proxySettings.Address) {
+				if !isURLSourced && proxySettings != nil && globalProxySlowRetryState.Load().WasDropped(proxySettings.Key()) {
 					dropAge := time.Since(globalProxySlowRetryState.Load().DropTime(proxySettings.Address))
 					tlog("[proxy][slow-retry] proxy[%d] (%s) previously dropped %s ago\n",
 						stableID, proxySettings.Address, formatDuration(dropAge))

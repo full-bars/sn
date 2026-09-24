@@ -45,7 +45,7 @@ func bootLaunchedReloader(t *testing.T, file string, boot *connect.ProxySettings
 	cancel := context.CancelFunc(func() { cancelled.Add(1) })
 	parent, cancelParent := context.WithCancel(context.Background())
 	r := &ProxyReloader{
-		cancelMap:   map[string]context.CancelFunc{boot.Address: cancel},
+		cancelMap:   map[string]context.CancelFunc{boot.Key(): cancel},
 		cancelMapMu: &sync.Mutex{},
 		runningAuth: make(map[string]*connect.ProxySettings),
 		state:       &ProxyState{Proxies: map[string]ProxyEntry{}},
@@ -114,7 +114,7 @@ func TestReload_SeededBootProxy_RotatesOnCredentialChange(t *testing.T) {
 	if n := cancelled.Load(); n != 1 {
 		t.Fatalf("expected old goroutine cancelled once on credential change, got %d", n)
 	}
-	got, ok := r.runningAuthFor("192.0.2.1:1080")
+	got, ok := r.runningAuthFor(boot.Key())
 	if !ok || got.Auth == nil || got.Auth.Password != "NEWPASS" {
 		t.Fatalf("relaunched proxy must record the new credentials, got %+v ok=%v", got, ok)
 	}
@@ -129,7 +129,7 @@ func TestReload_RotatedBusyProxy_IsNotDrained(t *testing.T) {
 	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, addr+":alice:NEWPASS"), boot)
 	r.seedRunningAuth([]*connect.ProxySettings{boot})
 
-	RegisterProxy(987001, addr, addr)
+	RegisterProxy(987001, addr, boot.Key())
 	t.Cleanup(func() { UnregisterProxy(987001) })
 	bw := RegisterProxyBandwidth(987001)
 	bw.Clients.Store(3) // active sessions on the old credentials
@@ -139,10 +139,10 @@ func TestReload_RotatedBusyProxy_IsNotDrained(t *testing.T) {
 	if n := cancelled.Load(); n != 1 {
 		t.Fatalf("busy rotated proxy: expected old goroutine cancelled once, got %d", n)
 	}
-	if r.isDraining(addr) {
+	if r.isDraining(boot.Key()) {
 		t.Fatal("rotated proxy must not enter the draining state")
 	}
-	got, ok := r.runningAuthFor(addr)
+	got, ok := r.runningAuthFor(boot.Key())
 	if !ok || got.Auth == nil || got.Auth.Password != "NEWPASS" {
 		t.Fatalf("relaunched proxy must record the new credentials, got %+v ok=%v", got, ok)
 	}
@@ -168,9 +168,11 @@ func TestReload_RotatedProxy_KeepsStateEntry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	kept, ok := after.Proxies[addr]
+	// The seeded legacy entry (bare address) is adopted to the identity key
+	// (address+user) by the reload's migration, preserving ID and health.
+	kept, ok := after.Proxies[boot.Key()]
 	if !ok {
-		t.Fatal("rotated proxy lost its state entry")
+		t.Fatalf("rotated proxy lost its state entry: no entry at identity key %q (legacy bare-address seed %q)", boot.Key(), addr)
 	}
 	if kept.ID != 7 || kept.Health != "up" {
 		t.Fatalf("rotated proxy must keep ID 7 and health up, got ID=%d health=%q", kept.ID, kept.Health)
@@ -283,6 +285,9 @@ func TestProxyAddKeepsEntryWithSameEffectiveCredentials(t *testing.T) {
 // running under the rotated credentials, and present in the cancel map.
 func TestReload_RotationWithRealGoroutines_KeepsRegistration(t *testing.T) {
 	const addr = "192.0.2.40:1080"
+	// The config is credentialed ("addr:test-user:..."), so the reload engine
+	// keys every structure by identity (address+user), never the bare address.
+	key := (&connect.ProxySettings{Network: "tcp", Address: addr, Auth: &proxy.Auth{User: "test-user"}}).Key()
 	withTempHome(t)
 	proxyWarmupDone.Store(true)
 	t.Cleanup(func() { proxyWarmupDone.Store(false) })
@@ -305,13 +310,13 @@ func TestReload_RotationWithRealGoroutines_KeepsRegistration(t *testing.T) {
 	t.Cleanup(func() {
 		cancelParent()
 		r.wg.Wait()
-		if _, registered := ProxyHealthByAddress()[addr]; registered {
-			UnregisterProxy(r.state.Proxies[addr].ID)
+		if _, registered := ProxyHealthByKey()[key]; registered {
+			UnregisterProxy(r.state.Proxies[key].ID)
 		}
 	})
 
 	r.reload() // launch
-	if _, ok := r.state.Proxies[addr]; !ok {
+	if _, ok := r.state.Proxies[key]; !ok {
 		t.Fatal("first reload did not create a state entry")
 	}
 	if err := os.WriteFile(file, []byte(addr+":test-user:rotated-pass\n"), 0600); err != nil {
@@ -321,18 +326,18 @@ func TestReload_RotationWithRealGoroutines_KeepsRegistration(t *testing.T) {
 
 	deadline := time.Now().Add(150 * time.Millisecond)
 	for time.Now().Before(deadline) {
-		if _, registered := ProxyHealthByAddress()[addr]; !registered {
+		if _, registered := ProxyHealthByKey()[key]; !registered {
 			t.Fatal("the superseded goroutine's exit removed the replacement's health registration")
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
 	r.cancelMapMu.Lock()
-	_, running := r.cancelMap[addr]
+	_, running := r.cancelMap[key]
 	r.cancelMapMu.Unlock()
 	if !running {
 		t.Fatal("replacement is missing from the cancel map")
 	}
-	got, ok := r.runningAuthFor(addr)
+	got, ok := r.runningAuthFor(key)
 	if !ok || got.Auth == nil || got.Auth.Password != "rotated-pass" {
 		t.Fatalf("replacement must run with the rotated credentials, got %+v ok=%v", got, ok)
 	}

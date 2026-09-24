@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/urnetwork/connect"
+	"golang.org/x/net/proxy"
 )
 
 // proxyURLMaxOverridePath returns ~/.urnetwork/proxy_url_max, a file an
@@ -360,19 +361,60 @@ func currentDesiredProxyAddresses() (map[string]bool, error) {
 	return addrs, nil
 }
 
-// desiredAddressesForHistoryPruning extends currentDesiredProxyAddresses
+// currentDesiredProxyIdentities is currentDesiredProxyAddresses' identity-
+// keyed counterpart (ProxySettings.Key(): address, or address+user for a
+// shared-gateway proxy). Used where a caller must distinguish two accounts
+// sharing one address (e.g. "was THIS identity re-added while draining") and
+// where a keep-set must match identity-keyed history stores.
+func currentDesiredProxyIdentities() (map[string]bool, error) {
+	state, err := readProxyState()
+	if err != nil {
+		return nil, fmt.Errorf("could not read proxy.state: %w", err)
+	}
+	var desired []*connect.ProxySettings
+	if state.Source != "" {
+		desired, err = readProxySettingsFromFile(state.Source)
+		if err != nil {
+			return nil, fmt.Errorf("could not read proxy file %s: %w", state.Source, err)
+		}
+	} else {
+		desired = readProxySettings()
+	}
+	keys := make(map[string]bool, len(desired))
+	for _, s := range desired {
+		keys[s.Key()] = true
+	}
+	urlState, err := readProxyURLState()
+	if err != nil {
+		return nil, fmt.Errorf("could not read proxy_url.json: %w", err)
+	}
+	for addr, entry := range urlState.Cache {
+		settings := &connect.ProxySettings{Network: "tcp", Address: addr}
+		if entry.User != "" || entry.Password != "" {
+			settings.Auth = &proxy.Auth{User: entry.User, Password: entry.Password}
+		}
+		keys[settings.Key()] = true
+	}
+	return keys, nil
+}
+
+// desiredAddressesForHistoryPruning extends currentDesiredProxyIdentities
 // with in-backoff addresses: a self-heal shed deletes the address from the
 // URL cache (unlike a give-up, which leaves it in place), so without this a
 // shed proxy's history would get pruned before its backoff even elapses.
 func desiredAddressesForHistoryPruning() (map[string]bool, error) {
-	addrs, err := currentDesiredProxyAddresses()
+	// The keep-set MUST be identity keys: the failure-history and
+	// proven-proxy stores this feeds are identity-keyed, and an
+	// address-only keep-set would drop every credentialed proxy's history
+	// on every prune.
+	keys, err := currentDesiredProxyIdentities()
 	if err != nil {
 		return nil, err
 	}
-	for addr := range globalProxyFailureHistory.AddressesInBackoff(time.Now()) {
-		addrs[addr] = true
+	for k := range globalProxyFailureHistory.AddressesInBackoff(time.Now()) {
+		keys[k] = true
 	}
-	return addrs, nil
+	return keys, nil
 }
 
 var fetchMu sync.Mutex
