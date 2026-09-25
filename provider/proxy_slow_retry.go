@@ -3,9 +3,12 @@ package provider
 import (
 	"encoding/json"
 	"os"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 // proxySlowRetryState tracks operator-curated proxies that have entered
@@ -203,6 +206,62 @@ func (s *proxySlowRetryState) ClearDropped(address string) {
 	}
 	delete(s.Proxies, address)
 	persistProxySlowRetryState(s)
+}
+
+// adoptLegacy migrates a legacy (bare-address-keyed) slow-retry entry to
+// its new identity key (ProxySettings.Key()) for every address the given
+// desired settings actually claim. Mirrors adoptLegacyProxyState's rules
+// exactly (see its doc comment): single claimant carries the entry over
+// intact (StartedAt/LastAttemptAt/DroppedAt all preserved, so the 14-day
+// drop clock stays continuous); multiple claimants (a shared gateway) give
+// the entry to the lexicographically smallest Key(), deterministic and
+// stable, and every other identity starts fresh (not in slow retry at
+// all, which is the correct fresh-start state, not a fabricated one).
+func (s *proxySlowRetryState) adoptLegacy(desired []*connect.ProxySettings) (adopted, split int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	byAddress := make(map[string][]*connect.ProxySettings, len(desired))
+	for _, settings := range desired {
+		if settings == nil || settings.Address == "" {
+			continue
+		}
+		byAddress[settings.Address] = append(byAddress[settings.Address], settings)
+	}
+
+	for address, settingsAtAddress := range byAddress {
+		legacy, hasLegacy := s.Proxies[address]
+		if !hasLegacy {
+			continue
+		}
+
+		seen := map[string]bool{}
+		var keys []string
+		for _, settings := range settingsAtAddress {
+			k := settings.Key()
+			if !seen[k] {
+				seen[k] = true
+				keys = append(keys, k)
+			}
+		}
+		sort.Strings(keys)
+		winner := keys[0]
+
+		if winner == address {
+			continue
+		}
+
+		delete(s.Proxies, address)
+		s.Proxies[winner] = legacy
+		adopted++
+
+		if len(keys) > 1 {
+			split++
+			tlog("[proxy][identity] slow-retry state for %s split into %d identities on adoption; %s kept its clock, the rest start fresh\n",
+				address, len(keys), proxyKeyDisplay(winner))
+		}
+	}
+	return adopted, split
 }
 
 // LoadProxySlowRetryState loads persisted slow-retry state from disk,

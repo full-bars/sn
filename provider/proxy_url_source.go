@@ -240,7 +240,7 @@ func removeDeadProxies(state *ProxyState, addrsBySource map[string][]string) err
 	if fileAddrs := addrsBySource["file"]; len(fileAddrs) > 0 {
 		if state.Source == "" {
 			tlog("[proxy] warning: %d proxies tagged source=file but no file source is configured; skipping\n", len(fileAddrs))
-		} else if err := removeAddressesFromFile(state.Source, fileAddrs); err != nil {
+		} else if err := removeKeysFromFile(state.Source, fileAddrs); err != nil {
 			return fmt.Errorf("could not update proxy file: %w", err)
 		}
 	}
@@ -251,9 +251,8 @@ func removeDeadProxies(state *ProxyState, addrsBySource map[string][]string) err
 		for _, a := range internalAddrs {
 			removeSet[a] = true
 		}
-		for proxyAddress := range proxyConfig.Servers {
-			addr, _, _ := parseProxyAddress(proxyAddress)
-			if removeSet[addr] {
+		for proxyAddress, authKey := range proxyConfig.Servers {
+			if removeSet[internalServerSettings(proxyConfig, proxyAddress, authKey).Key()] {
 				delete(proxyConfig.Servers, proxyAddress)
 			}
 		}
@@ -265,8 +264,10 @@ func removeDeadProxies(state *ProxyState, addrsBySource map[string][]string) err
 		if err != nil {
 			return fmt.Errorf("could not read proxy_url.json: %w", err)
 		}
-		for _, a := range urlAddrs {
-			delete(urlState.Cache, a)
+		// The URL cache is keyed by bare address; the names are identity keys.
+		for _, k := range urlAddrs {
+			addr, _ := connect.SplitProxyKey(k)
+			delete(urlState.Cache, addr)
 		}
 		if err := writeProxyURLState(urlState); err != nil {
 			return fmt.Errorf("could not write proxy_url.json: %w", err)

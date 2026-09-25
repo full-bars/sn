@@ -970,6 +970,14 @@ func provideLauncherLoop(st *provideState) func() {
 		allProxySettings = append(allProxySettings, s)
 	}
 
+	// Migrate legacy bare-address state entries before anything reads proxyState
+	// by key, and adopt saved client logins onto identity keys before the
+	// warmth evaluation below consults the client-JWT store.
+	adoptLegacyProxyState(proxyState, allProxySettings)
+	if store := loadGlobalClientJWTStore(); store != nil {
+		store.AdoptLegacy(allProxySettings)
+	}
+
 	if err := globalProxyEarningsStore.Load(); err != nil {
 		tlog("[earn] could not read proxy earnings history: %v\n", err)
 	}
@@ -999,6 +1007,9 @@ func provideLauncherLoop(st *provideState) func() {
 	}
 
 	globalProxySlowRetryState.Store(LoadProxySlowRetryState())
+	// Adopt legacy bare-address slow-retry entries onto identity keys so a
+	// pre-upgrade proxy keeps its continuous 14-day drop clock.
+	globalProxySlowRetryState.Load().adoptLegacy(allProxySettings)
 	setConfiguredProxyCount(len(allProxySettings))
 
 	finishProxy := bannerPhase("Proxy load")
@@ -1006,9 +1017,10 @@ func provideLauncherLoop(st *provideState) func() {
 		finishProxy(fmt.Sprintf("%d servers", len(allProxySettings)))
 
 		for _, ps := range allProxySettings {
-			stableID := resolveProxyID(proxyState, ps.Address)
-			setProxyIndex(ps.Address, stableID)
-			tagProxySourceIfUnset(proxyState, ps.Address, proxySourceOf[ps.Address])
+			key := ps.Key()
+			stableID := resolveProxyID(proxyState, key)
+			setProxyIndex(key, stableID)
+			tagProxySourceIfUnset(proxyState, key, proxySourceOf[key])
 			var user string
 			var password string
 			if ps.Auth != nil {
@@ -1027,7 +1039,7 @@ func provideLauncherLoop(st *provideState) func() {
 			st.proxyCancelMu.Unlock()
 
 			stableID := getProxyIndex(proxySettings.Key())
-			isURLSourced := proxySourceOf[proxySettings.Address] == "url"
+			isURLSourced := proxySourceOf[proxySettings.Key()] == "url"
 			baseDelay := sched.Delay
 			staggerDuration := sched.Stagger
 			st.wg.Add(1)

@@ -244,21 +244,25 @@ func proxyRemoveDead(opts docopt.Opts) {
 	fmt.Printf("Removed %d proxies. Reload triggered.\n", len(toRemove))
 }
 
-// removeAddressesFromFile removes specific addresses from a proxy config file.
-func removeAddressesFromFile(path string, addresses []string) error {
+// removeKeysFromFile deletes the lines of a --proxy_file source whose proxy
+// identity (ProxySettings.Key(): address, or address+user) is in keys. Matching
+// on identity, not address, is what keeps two accounts at one shared gateway
+// apart: removing one must never remove the other.
+func removeKeysFromFile(path string, keys []string) error {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 	removeSet := map[string]bool{}
-	for _, a := range addresses {
-		removeSet[a] = true
+	for _, k := range keys {
+		removeSet[k] = true
 	}
 	var kept []string
 	for _, line := range strings.Split(string(b), "\n") {
 		trimmed := strings.TrimSpace(line)
-		addr, _, _ := parseProxyAddress(trimmed)
-		if !removeSet[addr] {
+		addr, user, _ := parseProxyAddress(trimmed)
+		lineKey := (&connect.ProxySettings{Address: addr, Auth: &proxy.Auth{User: user}}).Key()
+		if !removeSet[lineKey] {
 			kept = append(kept, line)
 		}
 	}

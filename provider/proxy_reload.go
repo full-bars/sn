@@ -511,9 +511,13 @@ func (r *ProxyReloader) reload() {
 		desiredValues = append(desiredValues, s)
 	}
 	adoptLegacyProxyState(r.state, desiredValues)
+	if store := loadGlobalClientJWTStore(); store != nil {
+		store.AdoptLegacy(desiredValues)
+	}
 	if globalProxyEarningsStore != nil {
 		globalProxyEarningsStore.adoptLegacy(desiredValues)
 	}
+	globalProxySlowRetryState.Load().adoptLegacy(desiredValues)
 
 	// Lock ordering: r.mu (held by caller) is always acquired before r.cancelMapMu.
 	// provide()'s initial startup loop writes the cancel map before StartWatcher is called,

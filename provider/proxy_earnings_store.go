@@ -407,19 +407,21 @@ func earningsHistorySummary(
 	now time.Time,
 ) (ranked int, promoted int, topAddr string, topScore float64) {
 	for _, p := range proxies {
-		score := proxyEarningsScore(p.Address, now)
+		key := p.Key()
+		score := proxyEarningsScore(key, now)
 		// Same cutoff Save uses, so the line cannot count a sub-byte
 		// residue as "has earned" that the next save will drop.
 		if score < earningsMinRetainedScore {
 			continue
 		}
 		ranked++
-		if proxySourceOf[p.Address] == "url" && score >= earningsPromotionBytes {
+		if proxySourceOf[key] == "url" && score >= earningsPromotionBytes {
 			promoted++
 		}
 		if score > topScore {
 			topScore = score
-			topAddr = p.Address
+			// Report the address, never a raw identity key.
+			topAddr = proxyKeyDisplay(key)
 		}
 	}
 	return ranked, promoted, topAddr, topScore

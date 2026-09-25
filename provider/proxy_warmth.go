@@ -86,8 +86,8 @@ func proxyLaunchStagger(tier ProxyWarmthTier, isURLSourced bool) time.Duration {
 	}
 }
 
-// evaluateProxyWarmth checks whether a proxy address has a warm client JWT stored on disk.
-func evaluateProxyWarmth(address string, currentNetworkID string) ProxyWarmthTier {
+// evaluateProxyWarmth checks whether a proxy identity has a warm client JWT stored on disk.
+func evaluateProxyWarmth(storeKey string, currentNetworkID string) ProxyWarmthTier {
 	if !hotRestartEnabled() {
 		return WarmthCold
 	}
@@ -97,7 +97,7 @@ func evaluateProxyWarmth(address string, currentNetworkID string) ProxyWarmthTie
 	if currentNetworkID == "" {
 		currentNetworkID = currentProviderNetworkID()
 	}
-	entry, ok := loadGlobalClientJWTStore().Get(address)
+	entry, ok := loadGlobalClientJWTStore().Get(storeKey)
 	if !ok || entry.ByClientJWT == "" || entry.ClientID == "" {
 		return WarmthCold
 	}
@@ -153,11 +153,9 @@ func prioritizeAndScheduleProxies(
 	var warmCount, renewableCount, coldCount int
 
 	for _, s := range proxies {
-		// warmthMap/earningsMap and the proxySourceOf provenance set are
-		// keyed by identity — see reload()/provide(). evaluateProxyWarmth
-		// itself probes the client-JWT store by its own key (address today).
+		// Warmth, earnings, and source provenance all use the same identity key.
 		key := s.Key()
-		tier := evaluateProxyWarmth(s.Address, currentNetworkID)
+		tier := evaluateProxyWarmth(key, currentNetworkID)
 		warmthMap[key] = tier
 		earningsMap[key] = proxyEarningsScore(key, now)
 		switch tier {
@@ -229,8 +227,8 @@ func prioritizeAndScheduleProxies(
 	trustedCold := make([]*connect.ProxySettings, 0, len(proxies))
 	unprovenCold := make([]*connect.ProxySettings, 0, len(proxies))
 	for _, s := range proxies {
-		if warmthMap[s.Address] == WarmthCold {
-			if trusted(s.Address) {
+		if warmthMap[s.Key()] == WarmthCold {
+			if trusted(s.Key()) {
 				trustedCold = append(trustedCold, s)
 			} else {
 				unprovenCold = append(unprovenCold, s)
@@ -241,7 +239,7 @@ func prioritizeAndScheduleProxies(
 		reordered := make([]*connect.ProxySettings, 0, len(proxies))
 		// Append warm + renewable proxies first (they always go first).
 		for _, s := range proxies {
-			if warmthMap[s.Address] != WarmthCold {
+			if warmthMap[s.Key()] != WarmthCold {
 				reordered = append(reordered, s)
 			}
 		}
@@ -264,9 +262,10 @@ func prioritizeAndScheduleProxies(
 	var cumulativeDelay time.Duration
 
 	for i, s := range proxies {
-		tier := warmthMap[s.Address]
-		isURL := proxySourceOf[s.Key()] == "url"
-		promoted := isURL && earningsMap[s.Address] >= earningsPromotionBytes
+		key := s.Key()
+		tier := warmthMap[key]
+		isURL := proxySourceOf[key] == "url"
+		promoted := isURL && earningsMap[key] >= earningsPromotionBytes
 		// Promoted URL proxies belong with the cold file group; they have
 		// earned trusted provenance and should not be penalised with the
 		// conservative ColdURLStagger.

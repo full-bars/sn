@@ -238,8 +238,9 @@ func writeProxyConfigForTest(t *testing.T, servers map[string]string, auths map[
 	writeProxyConfig(cfg)
 }
 
-// proxyAdd removes an existing same-address entry with different credentials
-// so a re-paste becomes a rotation instead of a silent duplicate.
+// proxyAdd removes an existing same-identity entry with a different password so
+// a re-paste becomes a rotation instead of a silent duplicate. A DIFFERENT user
+// at the same address is a separate account and is left alone.
 func TestProxyAddRotatesCredentials(t *testing.T) {
 	withTempHome(t)
 	resetReloadTriggerForTest(t)
@@ -248,17 +249,37 @@ func TestProxyAddRotatesCredentials(t *testing.T) {
 		"192.0.2.9:1080":                 "",
 	}, nil)
 
-	proxyAdd(docopt.Opts{"<key_address>": []string{"192.0.2.4:1080:newuser:newpass"}, "-f": true})
+	proxyAdd(docopt.Opts{"<key_address>": []string{"192.0.2.4:1080:olduser:newpass"}, "-f": true})
 
 	got := readProxyConfig()
-	if _, ok := got.Servers["192.0.2.4:1080:newuser:newpass"]; !ok {
+	if _, ok := got.Servers["192.0.2.4:1080:olduser:newpass"]; !ok {
 		t.Fatalf("new credential entry missing: %v", got.Servers)
 	}
 	if _, ok := got.Servers["192.0.2.4:1080:olduser:oldpass"]; ok {
-		t.Fatalf("old credential entry was not rotated away: %v", got.Servers)
+		t.Fatalf("old password for the same identity was not rotated away: %v", got.Servers)
 	}
 	if _, ok := got.Servers["192.0.2.9:1080"]; !ok {
 		t.Fatalf("unrelated proxy must survive: %v", got.Servers)
+	}
+}
+
+// A different user at the same gateway address is a DIFFERENT account, so
+// adding it must not purge the existing account.
+func TestProxyAdd_DifferentUserAtSharedGatewayIsNotARotation(t *testing.T) {
+	withTempHome(t)
+	resetReloadTriggerForTest(t)
+	writeProxyConfigForTest(t, map[string]string{
+		"192.0.2.4:1080:alice:secret": "",
+	}, nil)
+
+	proxyAdd(docopt.Opts{"<key_address>": []string{"192.0.2.4:1080:bob:other"}, "-f": true})
+
+	got := readProxyConfig()
+	if _, ok := got.Servers["192.0.2.4:1080:alice:secret"]; !ok {
+		t.Fatalf("adding a second account purged the first: %v", got.Servers)
+	}
+	if _, ok := got.Servers["192.0.2.4:1080:bob:other"]; !ok {
+		t.Fatalf("the new account was not added: %v", got.Servers)
 	}
 }
 
@@ -353,6 +374,9 @@ func TestReload_RotationWithRealGoroutines_KeepsRegistration(t *testing.T) {
 // at the first such entry it saw, so a stale duplicate for the same address
 // survived or was purged depending on Go's random map order. Every duplicate
 // must be scanned first. Repeated to cover the iteration orders.
+// An existing entry with the same effective credentials is not a rotation and
+// must not be purged. Stale duplicates of the SAME identity (same user, other
+// passwords) are still purged in a stable order.
 func TestProxyAddPurgesStaleDuplicatesWhenSameCredentialsExist(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
@@ -363,10 +387,11 @@ func TestProxyAddPurgesStaleDuplicatesWhenSameCredentialsExist(t *testing.T) {
 	for i := 0; i < 40; i++ {
 		cfg := readProxyConfig()
 		cfg.Servers = map[string]string{
-			"192.0.2.4:1080":              "k1",
-			"192.0.2.4:1080:bob:oldpass":  "",
-			"192.0.2.4:1080:carol:oldpas": "",
-			"192.0.2.9:1080":              "",
+			"192.0.2.4:1080":           "k1",
+			"192.0.2.4:1080:alice:old": "",
+			"192.0.2.4:1080:alice:zzz": "",
+			"192.0.2.4:1080:bob:other": "", // other account: untouched
+			"192.0.2.9:1080":           "",
 		}
 		cfg.Auths = map[string]*ProxyAuth{"k1": {User: "alice", Password: "secret"}}
 		writeProxyConfig(cfg)
@@ -380,13 +405,16 @@ func TestProxyAddPurgesStaleDuplicatesWhenSameCredentialsExist(t *testing.T) {
 		if _, ok := got.Servers["192.0.2.4:1080"]; !ok {
 			t.Fatalf("iteration %d: entry with the same effective credentials was lost: %v", i, got.Servers)
 		}
-		for _, stale := range []string{"192.0.2.4:1080:bob:oldpass", "192.0.2.4:1080:carol:oldpas"} {
+		for _, stale := range []string{"192.0.2.4:1080:alice:old", "192.0.2.4:1080:alice:zzz"} {
 			if _, ok := got.Servers[stale]; ok {
 				t.Fatalf("iteration %d: stale duplicate %q survived: %v", i, stale, got.Servers)
 			}
 		}
-		if len(got.Servers) != 2 {
-			t.Fatalf("iteration %d: want exactly the kept entry plus the unrelated one, got %v", i, got.Servers)
+		if _, ok := got.Servers["192.0.2.4:1080:bob:other"]; !ok {
+			t.Fatalf("iteration %d: the other account at the gateway must survive: %v", i, got.Servers)
+		}
+		if len(got.Servers) != 3 {
+			t.Fatalf("iteration %d: want the kept entry, the new account, and the unrelated one, got %v", i, got.Servers)
 		}
 	}
 }
