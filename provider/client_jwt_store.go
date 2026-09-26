@@ -106,8 +106,10 @@ func pruneStaleEntries(entries map[string]clientJWTEntry) map[string]clientJWTEn
 
 func (s *clientJWTStore) AdoptLegacy(desired []*connect.ProxySettings) (adopted, split int) {
 	keysByAddress := map[string][]string{}
+	desiredKeys := make(map[string]bool, len(desired))
 	for _, d := range desired {
 		keysByAddress[d.Address] = append(keysByAddress[d.Address], d.Key())
+		desiredKeys[d.Key()] = true
 	}
 
 	s.mu.Lock()
@@ -146,11 +148,37 @@ func (s *clientJWTStore) AdoptLegacy(desired []*connect.ProxySettings) (adopted,
 		delete(s.entries, address)
 		deletes = append(deletes, address)
 	}
+	// Drop the entries of proxies that are no longer desired at all. A rotation
+	// keeps the same identity (address+user), so its login is deliberately kept
+	// — that is what makes a restart reuse the client_id. But a REMOVED proxy,
+	// or one whose credentials changed so its identity key changed, leaves an
+	// entry nothing will ever read again: it would sit on disk for the store's
+	// whole retention window, and a re-add of the same address would inherit a
+	// JWT minted for the old account. Prune them here, where the full desired
+	// set is already in hand.
+	pruned := 0
+	for key := range s.entries {
+		if desiredKeys[key] {
+			continue
+		}
+		// "direct" is the native transport, not a configured proxy: it is never
+		// in the desired set and must keep its login.
+		if key == directProxyKey {
+			continue
+		}
+		delete(s.entries, key)
+		deletes = append(deletes, key)
+		pruned++
+	}
+
 	// One flush for the whole adoption, however many logins moved.
 	if len(upserts) > 0 || len(deletes) > 0 {
 		if err := s.flushBatchLocked(upserts, deletes); err != nil {
 			tlog("⚠️ [jwt-store] failed to persist %d adopted logins (%d legacy slots dropped): %v\n", len(upserts), len(deletes), err)
 		}
+	}
+	if pruned > 0 {
+		tlog("[jwt-store] dropped %d login(s) for proxies no longer desired\n", pruned)
 	}
 	return adopted, split
 }
