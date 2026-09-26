@@ -80,36 +80,35 @@ func TestReload_DirectOffNoSource_StillReadsEmpty(t *testing.T) {
 	}
 }
 
-// A source that WAS configured and has gone empty must stop the proxies it
-// used to supply, and must zero the configured count. Without this the old
-// proxies keep dialling and the stale positive count makes the status line
-// and startup phase ignore the empty-source resolution.
-func TestReload_EmptySource_StopsRunningProxies(t *testing.T) {
+// A source that WAS configured and reads empty must NOT stop the proxies it
+// used to supply or erase their proxy.state history: the empty read may be
+// transient (a non-atomic writer truncating the file before writing). Only the
+// resolution status changes.
+func TestReload_EmptySource_LeavesRunningProxiesAndStateAlone(t *testing.T) {
 	resetProxyCounters(t)
 
-	// A source that used to supply a proxy, now empty.
 	r := emptyReloader(t, writeProxyFile(t, "# empty"))
-	// Seed one running proxy the way the startup loop would have.
 	var cancelled atomic.Int32
-	boot := &connect.ProxySettings{Address: "gone.example:1"}
+	boot := &connect.ProxySettings{Address: "kept.example:1"}
 	r.cancelMap[boot.Address] = func() { cancelled.Add(1) }
 	r.runningAuth[boot.Address] = boot
-	r.state.Proxies[boot.Address] = ProxyEntry{Source: "file"}
+	// reload() re-reads proxy.state from disk, so the history must be seeded there.
+	r.state.Proxies[boot.Address] = ProxyEntry{ID: 4, Source: "file"}
+	if err := writeProxyState(r.state); err != nil {
+		t.Fatal(err)
+	}
 	setConfiguredProxyCount(1)
 
 	r.reload()
 
-	if got := cancelled.Load(); got != 1 {
-		t.Fatalf("running proxies stopped = %d, want 1: an empty source must not keep dialling", got)
+	if got := cancelled.Load(); got != 0 {
+		t.Fatalf("running proxies stopped = %d, want 0: a possibly transient empty read must not cancel the fleet", got)
 	}
-	if _, still := r.cancelMap[boot.Address]; still {
-		t.Fatalf("proxy %s still in the cancel map after the source went empty", boot.Address)
+	if _, ok := r.cancelMap[boot.Address]; !ok {
+		t.Fatalf("proxy %s was removed from the cancel map", boot.Address)
 	}
-	if _, still := r.state.Proxies[boot.Address]; still {
-		t.Fatalf("proxy %s still in proxy.state after the source went empty", boot.Address)
-	}
-	if n := proxiesConfigured.Load(); n != 0 {
-		t.Fatalf("configured count = %d, want 0: a stale positive count hides the empty source", n)
+	if e, ok := r.state.Proxies[boot.Address]; !ok || e.ID != 4 {
+		t.Fatalf("proxy %s lost its proxy.state history: %+v ok=%v", boot.Address, e, ok)
 	}
 	if got := proxyResolutionStatus.Load(); got != proxyResolutionEmpty {
 		t.Fatalf("resolution=%d, want proxyResolutionEmpty(%d)", got, proxyResolutionEmpty)
