@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/urnetwork/connect"
+	"golang.org/x/net/proxy"
 )
 
 // hostOfAddress returns the host portion of a "host:port" address.
@@ -132,10 +133,21 @@ func collectMatchingProxies(
 		add(source, key)
 	}
 
-	for addr := range urlCache {
-		if matchProxyHost(pattern, addr) {
-			add("url", addr)
+	for addr, entry := range urlCache {
+		if !matchProxyHost(pattern, addr) {
+			continue
 		}
+		// Key by IDENTITY, built exactly as mergeProxyURLCache builds it.
+		// The state loop above adds the same proxy under its identity key, so
+		// adding the bare address here produced a second, different key for a
+		// credentialed proxy: the source|key dedupe could not see them as one,
+		// and display listed the proxy twice while proxyRemoveMatch counted it
+		// twice.
+		s := &connect.ProxySettings{Network: "tcp", Address: addr}
+		if entry.User != "" || entry.Password != "" {
+			s.Auth = &proxy.Auth{User: entry.User, Password: entry.Password}
+		}
+		add("url", s.Key())
 	}
 
 	sort.Strings(display)

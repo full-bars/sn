@@ -220,7 +220,10 @@ func TestPaidGrader_SetsPendingOnReachableUndecidable(t *testing.T) {
 	runPaidProxyGradeOnce(context.Background(), "1.2.3.4", 443)
 
 	state, _ := readProxyState()
-	e := state.Proxies[identityKey(addr, "u")]
+	e, present := state.Proxies[identityKey(addr, "u")]
+	if !present {
+		t.Fatalf("state entry vanished: %+v", state.Proxies)
+	}
 	if !e.Pending {
 		t.Errorf("reachable-but-undecidable paid proxy must be Pending: %+v", e)
 	}
@@ -509,7 +512,11 @@ func TestPaidGrader_Stage0DropsDeadProxyInOneDial(t *testing.T) {
 	addr := closedPortAddr(t)
 
 	src := filepathJoinHome(t, "paid.txt")
-	if err := os.WriteFile(src, []byte(addr+"\n"), 0600); err != nil {
+	// The file line carries the SAME credentials as the state entry below, so
+	// the desired-set key and the state key agree on one identity. (Measured:
+	// the grader reads the entry either way, so this is consistency rather
+	// than a reachability requirement.)
+	if err := os.WriteFile(src, []byte(addr+":u:p\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	if err := writeProxyState(&ProxyState{
