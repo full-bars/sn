@@ -216,7 +216,7 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 
 ---
 
-**Last Updated**: 2026-09-17
+**Last Updated**: 2026-09-26
 **Maintained By**: @full-bars
 
 ---
@@ -231,3 +231,25 @@ This fork is a fresh repo forked from `urfoundation/sn`, with the fork feature s
 ## 15. Cross-Platform Compile Gate on every PR (PR #28)
 
 - **PR CI now cross-compiles all shippable binaries** (PR #28): the provider, `urnet-tools`, and `urnet-docker` build for Linux, macOS, and Windows across the amd64 and arm64 architectures as a merge requirement. A change that breaks a non-Linux platform is caught at PR time instead of surfacing only at release time.
+
+## 16. Proxy Identity by Account (PR #30)
+
+- **Identity primitives from the engine**: `ProxySettings.Key()` and `SplitProxyKey()` are consumed from the pinned `connect` module rather than reimplemented here. A key is the address, plus the user when the proxy is authenticated, and deliberately excludes the password so a credential rotation keeps the same identity.
+- **What is keyed by identity**: the proxy state file (with legacy adoption for state written before this change), the client-JWT store, the health registry, the reload engine's desired/running sets, the slow-retry state, the earnings store, the paid-grader lookups, and the audit/trust decisions. Add, rotation and removal paths all key the same way, so removing one account at a shared gateway does not touch its siblings.
+- **Consumers were converted too, not just the stores**: the earn tracker, the launch generation, the degraded-proxy reaper and the grade report previously read a bare address out of an identity-keyed map. The failure mode was silent rather than a crash — a credentialed proxy was invisible to the reaper, could be reported to the hub as ungraded, and could be left stuck in the cancel map after a failure.
+- **The earn tracker reads the identity-keyed bandwidth snapshot**: the display snapshot is keyed `proxy[N] (address)`, which collapses sibling accounts and cannot answer a per-identity lookup, which left the earn-skip optimization dead for every credentialed proxy.
+- **Raw identity keys are never printed**: an identity key embeds the account, so operator-facing listings (`proxy remove-dead`, `proxy trim`) go through `proxyKeyDisplay`, which obfuscates the user.
+- **A removed proxy's login is pruned**: the client-JWT store migrated legacy keys but never pruned, so a removed proxy's login survived for the store's whole retention window and a re-add at the same address inherited a JWT minted for the old account. A rotation keeps its login on purpose — that is what lets a restart reuse the client identity.
+- **Coverage**: `provider/proxy_shared_gateway_test.go` uses two accounts on one address throughout, because a suite with only unique addresses cannot tell the two keying schemes apart and would pass either way.
+
+## 17. Live Status, Runtime Internals, Reworked `top` (PR #31)
+
+- **Light control-socket commands**: `traffic`, `internals`, and `goroutines` answer without building a snapshot, so the 100ms poll stays cheap. They are additive — an older provider replies "unknown command" and `top` falls back to the snapshot's own rates.
+- **Billable versus total traffic**: the snapshot carries both, plus a session total and a persisted lifetime figure, so bytes that were not billable (a direct socket) are visible. The billable and total histories are anchored on the same sample via an absolute history index, so a graph cannot draw one series ahead of the other.
+- **`bandwidthShare`**: one process-wide cached read feeds both the per-second samplers and the traffic command, so the 100ms poll does not add a second walk of the proxy pool. This is the sn-side stand-in for the engine's `ProxyBandwidthTotals()`, which exists in the source fork but was never published to the `connect` module. The cache refreshes on a backward clock step, and a `reset()` seam exists so a test that changes the counters is not served another's.
+- **A stated reason for `starting` and `degraded`** (`StateReason`): still resolving proxies, a source that could not be read, a source that returned nothing, or how many proxies are dead against how many are configured. `proxyStartupPhase()` and `systemdStatusLine()` read the same two atomics, so the systemd STATUS line and `urnet-tools status` cannot contradict each other.
+- **The idle hint blames auth only when it explains the idleness**: a steady retry trickle on a large healthy pool is not an auth outage. Auth is blamed for a failure wave, or when most of the pool is unconnected while failures are happening; otherwise the hint states what is true and shows the numbers behind it.
+- **Four-way zero-proxy resolution**: a configured-but-empty source, an unreadable `proxy_url.json`, direct-off-with-no-source, and a settled direct-only node are told apart. A direct-only node now reads `active` instead of `degraded`. The unreadable-URL-cache case is exempt from cancellation, because there the sources are unknown rather than empty and a transient read error must not cut a working fleet.
+- **The empty-source path drains and persists**: it cancels only proxies with no live clients, hands the rest to a drain goroutine exactly as the ordinary removal path does, reconciles the state file against the desired set (a proxy whose goroutine already exited was never in the running set), and writes it.
+- **Source URLs are redacted everywhere**: `urlSourceLabels` strips the query, the userinfo, and credential-bearing path segments, so a source like `.../token/SECRET/list` never reaches the important log or the operator warning. `sanitizeURLForDisplay` alone was not enough — it keeps the path.
+- **The `top` menu persists**: `applySavedTopSettings` sets the settings path and applies the saved file on a real run (not the demo), so a chosen theme or graph style survives a restart. A theme forced by the environment is omitted from the save rather than written as the operator's choice, and because the save renames a whole new file over the old one, unset fields carry their current value forward. A config directory created by a first run under `sudo` is handed to the invoking user's home owner.
