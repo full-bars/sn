@@ -1035,7 +1035,12 @@ func provideLauncherLoop(st *provideState) func() {
 			proxyCtx, proxyCancel := context.WithCancel(st.ctx)
 			st.proxyCancelMu.Lock()
 			st.proxyCancelMap[proxySettings.Key()] = proxyCancel
-			proxyCtx = withProxyLaunchGen(proxyCtx, beginProxyLaunch(proxySettings.Address))
+			// Keyed by the same identity key as the cancel map entry above:
+			// beginProxyLaunch stores the generation, and the readers that
+			// compare it look the proxy up by identity. A bare address here
+			// never matches, so a dead proxy's generation check fails and it
+			// stays in the cancel map.
+			proxyCtx = withProxyLaunchGen(proxyCtx, beginProxyLaunch(proxySettings.Key()))
 			st.proxyCancelMu.Unlock()
 
 			stableID := getProxyIndex(proxySettings.Key())
@@ -1054,7 +1059,7 @@ func provideLauncherLoop(st *provideState) func() {
 					return
 				}
 				if !isURLSourced && proxySettings != nil && globalProxySlowRetryState.Load().WasDropped(proxySettings.Key()) {
-					dropAge := time.Since(globalProxySlowRetryState.Load().DropTime(proxySettings.Address))
+					dropAge := time.Since(globalProxySlowRetryState.Load().DropTime(proxySettings.Key()))
 					tlog("[proxy][slow-retry] proxy[%d] (%s) previously dropped %s ago\n",
 						stableID, proxySettings.Address, formatDuration(dropAge))
 				}

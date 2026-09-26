@@ -171,7 +171,7 @@ func proxyRemoveDead(opts docopt.Opts) {
 			if rp.entry.AuthFailures > 0 {
 				af = fmt.Sprintf(" auth_errors=%d", rp.entry.AuthFailures)
 			}
-			fmt.Printf("    proxy[%d]  %s%s%s\n", rp.entry.ID, rp.addr, ts, af)
+			fmt.Printf("    proxy[%d]  %s%s%s\n", rp.entry.ID, proxyKeyDisplay(rp.addr), ts, af)
 		}
 		fmt.Println()
 	}

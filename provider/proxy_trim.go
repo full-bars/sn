@@ -317,7 +317,7 @@ func proxyTrim(opts docopt.Opts) {
 			shed := selectWorstRunningProxies(state.Proxies, gradeFor, traffic, running, len(running)-count)
 			fmt.Printf("preview: %d running; would shed %d worst-graded to reach %d:\n", len(running), len(shed), count)
 			for _, addr := range shed {
-				fmt.Printf("  %s\n", addr)
+				fmt.Printf("  %s\n", proxyKeyDisplay(addr))
 			}
 		} else {
 			fmt.Printf("preview: running=%d <= %d, nothing to shed\n", len(running), count)

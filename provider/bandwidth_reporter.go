@@ -343,7 +343,8 @@ func buildReport(nodeID, host string, startTime time.Time) bandwidthReport {
 		}
 
 		var cAcquired, cDenied int64
-		if idx := parseProxyIndex(key); idx >= 0 {
+		idx := parseProxyIndex(key)
+		if idx >= 0 {
 			if m := globalContractMetrics.get(idx); m != nil {
 				cAcquired, cDenied = m.snapshot()
 			}
@@ -362,7 +363,17 @@ func buildReport(nodeID, host string, startTime time.Time) bandwidthReport {
 			ContractsAcquired: cAcquired,
 			ContractsDenied:   cDenied,
 		}
-		if g, ok := proxyGradeFor(ip, paidState, urlState); ok {
+		// Grade by IDENTITY, not by the address parsed out of the display
+		// label. paidState and urlState are keyed by identity, so looking a
+		// credentialed proxy up by its bare address misses and every such proxy
+		// would report to the hub as ungraded.
+		gradeKey := ip
+		if idx >= 0 {
+			if k := ProxyKeyByIndex(idx); k != "" {
+				gradeKey = k
+			}
+		}
+		if g, ok := proxyGradeFor(gradeKey, paidState, urlState); ok {
 			pr.Score = g.Score
 			pr.Graded = true
 			pr.Failed = g.Failed
