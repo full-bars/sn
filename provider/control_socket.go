@@ -85,6 +85,13 @@ type controlResponse struct {
 	// Snapshot is the live node picture, answered by "snapshot". An older
 	// provider replies "unknown command" instead.
 	Snapshot *NodeSnapshot `json:"snapshot,omitempty"`
+	// Traffic is the light live-counter reply, answered by "traffic". It is
+	// what urnet-tools top polls at 100ms instead of a full snapshot.
+	Traffic *LiveTraffic `json:"traffic,omitempty"`
+	// Internals and Goroutines are the runtime views urnet-tools top draws,
+	// answered by "internals" and "goroutines".
+	Internals  *NodeInternals   `json:"internals,omitempty"`
+	Goroutines *GoroutineGroups `json:"goroutines,omitempty"`
 	// ProxyAudit is the proxy audit engine's last completed tick, answered by
 	// "status" and "audit". Nil before its first tick or on a provider that predates it.
 	ProxyAudit *proxyAuditStatus `json:"proxy_audit,omitempty"`
@@ -413,6 +420,15 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 
 	case "snapshot":
 		return controlResponse{OK: true, Snapshot: nodeSnapshots.Get()}
+
+	case "traffic":
+		return controlResponse{OK: true, Traffic: liveTrafficSample(time.Now(), proxyBandwidth.totals)}
+
+	case "internals":
+		return controlResponse{OK: true, Internals: nodeInternals.Get(time.Now())}
+
+	case "goroutines":
+		return controlResponse{OK: true, Goroutines: nodeGoroutines.Get(time.Now())}
 
 	case "get":
 		if req.Key == "" {

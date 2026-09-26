@@ -50,6 +50,45 @@ func niceCeil(v float64, binary bool) float64 {
 	return math.Min(niceCeilDecimal(v/unit), 1024) * unit
 }
 
+// NiceCeil is niceCeil for callers that hold an axis steady across frames and so
+// need to pick the top themselves (see Graph.Max).
+func NiceCeil(v float64, binary bool) float64 { return niceCeil(v, binary) }
+
+// GraphSymbols picks the glyphs a graph is drawn with, like btop's graph
+// styles. The zero value is braille.
+type GraphSymbols uint8
+
+const (
+	// GraphBraille packs 2 samples by 4 levels into each cell: the most
+	// resolution, the finest look, and it needs a font with braille glyphs.
+	GraphBraille GraphSymbols = iota
+	// GraphBlock uses one sample per cell and eight levels (the lower-block
+	// glyphs), which stays sharp on fonts whose braille is thin or misaligned.
+	GraphBlock
+	// GraphTTY is plain ASCII, for terminals that cannot draw either.
+	GraphTTY
+)
+
+// GraphSymbolNames are the names the settings and the menu use, in cycle order.
+var GraphSymbolNames = []string{"braille", "block", "tty"}
+
+func (s GraphSymbols) String() string {
+	if int(s) < len(GraphSymbolNames) {
+		return GraphSymbolNames[s]
+	}
+	return GraphSymbolNames[0]
+}
+
+// GraphSymbolsByName is the inverse of String; ok is false for an unknown name.
+func GraphSymbolsByName(name string) (GraphSymbols, bool) {
+	for i, n := range GraphSymbolNames {
+		if n == name {
+			return GraphSymbols(i), true
+		}
+	}
+	return GraphBraille, false
+}
+
 // Graph is a time series drawn as a filled braille area chart with a value
 // axis down the left edge.
 type Graph struct {
@@ -66,6 +105,29 @@ type Graph struct {
 	Format    func(float64) string
 	Style     Style
 	AxisStyle Style
+	// Anchor is the absolute time index (for example unix seconds) of the
+	// newest sample. With it, a series longer than the plot is averaged into
+	// buckets aligned to absolute time, so a completed column never changes and
+	// the graph scrolls one column at a time. Zero (no time base) buckets from
+	// the oldest sample instead, which re-averages every column whenever the
+	// series shifts.
+	Anchor int64
+	// Capacity is how many samples a full series holds (the provider's ring).
+	// With an Anchor it fixes the bucket width at Capacity/columns, so the
+	// width does not change while a young series is still filling: it grows in
+	// from the right instead of re-bucketing every few seconds. Zero uses the
+	// length of the series.
+	Capacity int
+	// Tail, when HasTail is set, is drawn as its own newest column: the live
+	// value, updated far faster than the series. It is not part of the
+	// bucketed series, so it cannot change any column before it, and it does not
+	// set the scale: a burst in the tail must not rescale the whole chart, so it
+	// is clamped to the plot instead.
+	Tail    float64
+	HasTail bool
+	// Symbols is the glyph style. A DrawGraph call with ascii set draws GraphTTY
+	// whatever this says: the terminal cannot show anything else.
+	Symbols GraphSymbols
 }
 
 // DrawGraph draws g into b and returns the value at the top of the axis (zero
@@ -144,9 +206,42 @@ func DrawGraph(b *Buffer, g Graph, ascii bool) float64 {
 	}
 
 	plotW := w - x0
-	cols := plotColumns(samples, 2*plotW)
-	if ascii {
-		drawGraphASCII(b.Sub(Rect{X: x0, Y: 0, W: plotW, H: h}), cols, top, g.Style)
+	// Braille and TTY hold two samples per cell, block holds one.
+	perCell := 2
+	if g.Symbols == GraphBlock && !ascii {
+		perCell = 1
+	}
+	var cols []float64
+	if g.HasTail && plotW >= 1 {
+		// History fills every column but the newest; the tail takes that one. The
+		// TTY style (and any ASCII terminal) draws a cell as the average of a pair
+		// of columns, so there the tail must own the whole rightmost cell, both
+		// halves: sharing one with the newest history sample would show a live
+		// spike blended down. Braille halves are independent and block is one
+		// column per cell, so neither has that problem.
+		histCols, tailCols := perCell*plotW-1, 1
+		if ascii || g.Symbols == GraphTTY {
+			histCols, tailCols = 2*plotW-2, 2
+		}
+		if histCols > 0 {
+			cols = plotColumnsAnchored(samples, histCols, g.Anchor, g.Capacity)
+		}
+		tail := g.Tail
+		if math.IsNaN(tail) || math.IsInf(tail, 0) || tail < 0 {
+			tail = 0
+		}
+		for i := 0; i < tailCols; i++ {
+			cols = append(cols, math.Min(tail, top))
+		}
+	} else {
+		cols = plotColumnsAnchored(samples, perCell*plotW, g.Anchor, g.Capacity)
+	}
+	if ascii || g.Symbols == GraphTTY {
+		drawGraphCells(b.Sub(Rect{X: x0, Y: 0, W: plotW, H: h}), cols, 2, top, g.Style, sparkASCII)
+		return shown
+	}
+	if g.Symbols == GraphBlock {
+		drawGraphCells(b.Sub(Rect{X: x0, Y: 0, W: plotW, H: h}), cols, 1, top, g.Style, sparkBlocks)
 		return shown
 	}
 	dots := 4 * h
@@ -201,14 +296,76 @@ func plotColumns(samples []float64, n int) []float64 {
 	return cols
 }
 
-// drawGraphASCII is the fallback for terminals without braille: one glyph per
-// pair of sample columns, stacked '#' rows with the top row graded by the
-// sparkline ramp, and a baseline glyph so a zero still shows.
-func drawGraphASCII(b *Buffer, cols []float64, top float64, st Style) {
+// plotColumnsAnchored is plotColumns with buckets aligned to absolute time when
+// there is a time base (anchor is the absolute index of the newest sample) and
+// the samples are wider than a column. Otherwise it is plotColumns.
+func plotColumnsAnchored(samples []float64, n int, anchor int64, capacity int) []float64 {
+	if anchor == 0 || n < 2 || bucketWidth(len(samples), n, capacity) <= 1 {
+		return plotColumns(samples, n)
+	}
+	_, vals := bucketColumns(samples, n, anchor, capacity)
+	cols := make([]float64, n)
+	for i := range cols {
+		cols[i] = math.NaN()
+	}
+	copy(cols[n-len(vals):], vals)
+	return cols
+}
+
+// bucketWidth is how many samples one column covers: capacity (or the series
+// length when that is larger or unknown) over the columns.
+func bucketWidth(length, n, capacity int) float64 {
+	return float64(max(capacity, length)) / float64(n)
+}
+
+// bucketColumns averages samples into buckets aligned to absolute time: sample
+// i sits at time anchor-(len-1-i) and belongs to bucket floor(time/width), where
+// width is a constant number of samples per column. A sample's bucket depends
+// only on its own time and the width, so a bucket the newest sample has passed
+// never changes: as the series slides only the newest, still-filling bucket
+// moves and the rest scroll left a column at a time. The width is
+// capacity/columns, so it stays put while the series fills, and the buckets
+// fill the plot to within a column (they are a little uneven: 4 and 5 samples
+// for a width of 4.85). The oldest bucket is dropped when partial, since it
+// would otherwise shimmer as samples fall off the left edge. ids are bucket
+// numbers, oldest first; vals are the averages. At most n buckets are returned.
+func bucketColumns(samples []float64, n int, anchor int64, capacity int) (ids []int64, vals []float64) {
+	width := bucketWidth(len(samples), n, capacity)
+	if width < 1 {
+		width = 1
+	}
+	bucketOf := func(a int64) int64 { return int64(math.Floor(float64(a) / width)) }
+	first := anchor - int64(len(samples)-1)
+	for i := 0; i < len(samples); {
+		id := bucketOf(first + int64(i))
+		j, sum := i, 0.0
+		for j < len(samples) && bucketOf(first+int64(j)) == id {
+			sum += samples[j]
+			j++
+		}
+		partialOldest := i == 0 && bucketOf(first-1) == id
+		if !partialOldest {
+			ids = append(ids, id)
+			vals = append(vals, sum/float64(j-i))
+		}
+		i = j
+	}
+	if len(ids) > n {
+		ids, vals = ids[len(ids)-n:], vals[len(vals)-n:]
+	}
+	return ids, vals
+}
+
+// drawGraphCells draws a graph one cell wide per perCell samples, eight levels
+// a cell: full cells stacked from the baseline and the top one graded by the
+// glyph ramp. A cell holding several samples shows their average. A sample of
+// zero still draws the ramp's lowest glyph so "measured zero" reads apart from
+// "no sample yet". Used for both the block style and the ASCII fallback.
+func drawGraphCells(b *Buffer, cols []float64, perCell int, top float64, st Style, ramp []rune) {
 	h := b.Height()
 	for cx := 0; cx < b.Width(); cx++ {
 		sum, n := 0.0, 0
-		for _, v := range cols[2*cx : 2*cx+2] {
+		for _, v := range cols[perCell*cx : perCell*cx+perCell] {
 			if !math.IsNaN(v) {
 				sum += v
 				n++
@@ -220,8 +377,14 @@ func drawGraphASCII(b *Buffer, cols []float64, top float64, st Style) {
 		rem := min(max(int(math.Round(sum/float64(n)/top*float64(h*8))), 1), h*8)
 		for row := h - 1; row >= 0 && rem > 0; row-- {
 			take := min(rem, 8)
-			b.Set(cx, row, Cell{Rune: sparkASCII[take-1], Style: st})
+			b.Set(cx, row, Cell{Rune: ramp[take-1], Style: st})
 			rem -= take
 		}
 	}
+}
+
+// GraphBuckets exposes the bucketing DrawGraph uses, so a caller can check the
+// stability of what it feeds the graph without rendering it. See bucketColumns.
+func GraphBuckets(samples []float64, n int, anchor int64, capacity int) (ids []int64, vals []float64) {
+	return bucketColumns(samples, n, anchor, capacity)
 }

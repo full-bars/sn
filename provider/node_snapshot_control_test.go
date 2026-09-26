@@ -147,3 +147,80 @@ func TestWriteRuntimeGauges(t *testing.T) {
 		t.Errorf("unknown memory figure exported:\n%s", b.String())
 	}
 }
+
+// "traffic" is the light reply urnet-tools top polls at 100ms. It must carry
+// live counters and the provider's clock, and never a snapshot (building one is
+// the expensive part it exists to avoid).
+func TestControlSocketTrafficCommand(t *testing.T) {
+	withTempHome(t)
+	resetGlobalControlStateForTest()
+	resetProxyHealthForTest()
+	t.Cleanup(resetProxyHealthForTest)
+	// The bandwidth read is a process-wide cache; drop it so this test is
+	// served its own counters and leaves none behind.
+	proxyBandwidth.reset()
+	t.Cleanup(proxyBandwidth.reset)
+	RegisterProxy(1, "traffic-test:1")
+	bw := RegisterProxyBandwidth(1)
+	bw.BillableRx.Store(300)
+	bw.TotalRx.Store(900)
+
+	before := time.Now().UnixNano()
+	resp := handleControlRequest(globalControlState, controlRequest{Cmd: "traffic"})
+	if !resp.OK || resp.Traffic == nil || resp.Snapshot != nil {
+		t.Fatalf("traffic response: %+v", resp)
+	}
+	if resp.Traffic.BillableBytes != 300 || resp.Traffic.TotalBytes != 900 {
+		t.Fatalf("counters = %d / %d, want 300 / 900", resp.Traffic.BillableBytes, resp.Traffic.TotalBytes)
+	}
+	if resp.Traffic.AtUnixNano < before || resp.Traffic.AtUnixNano > time.Now().UnixNano() {
+		t.Fatalf("timestamp %d is not the provider's clock at the read", resp.Traffic.AtUnixNano)
+	}
+}
+
+// Existing commands must not start carrying live traffic either.
+func TestControlResponseTrafficOnlyOnTrafficCommand(t *testing.T) {
+	withTempHome(t)
+	resetGlobalControlStateForTest()
+	for _, cmd := range []string{"version", "status", "snapshot"} {
+		resp := handleControlRequest(globalControlState, controlRequest{Cmd: cmd})
+		if resp.Traffic != nil {
+			t.Errorf("%s response carries live traffic", cmd)
+		}
+	}
+}
+
+// "internals" and "goroutines" are the runtime views for top. Each answers only
+// its own field, and the provider's real runtime shows through.
+func TestControlSocketInternalsAndGoroutinesCommands(t *testing.T) {
+	withTempHome(t)
+	resetGlobalControlStateForTest()
+
+	resp := handleControlRequest(globalControlState, controlRequest{Cmd: "internals"})
+	if !resp.OK || resp.Internals == nil || resp.Goroutines != nil || resp.Snapshot != nil || resp.Traffic != nil {
+		t.Fatalf("internals response: %+v", resp)
+	}
+	if resp.Internals.Goroutines == 0 || resp.Internals.HeapObjectsBytes == 0 {
+		t.Fatalf("internals carry no runtime figures: %+v", resp.Internals)
+	}
+
+	resp = handleControlRequest(globalControlState, controlRequest{Cmd: "goroutines"})
+	if !resp.OK || resp.Goroutines == nil || resp.Internals != nil || resp.Snapshot != nil {
+		t.Fatalf("goroutines response: %+v", resp)
+	}
+	if resp.Goroutines.Total == 0 || len(resp.Goroutines.Groups) == 0 {
+		t.Fatalf("goroutines carry no groups: %+v", resp.Goroutines)
+	}
+}
+
+// Existing commands must not start carrying the runtime views.
+func TestControlResponseInternalsOnlyOnTheirCommands(t *testing.T) {
+	withTempHome(t)
+	resetGlobalControlStateForTest()
+	for _, cmd := range []string{"version", "status", "snapshot", "traffic"} {
+		resp := handleControlRequest(globalControlState, controlRequest{Cmd: cmd})
+		if resp.Internals != nil || resp.Goroutines != nil {
+			t.Errorf("%s response carries runtime views", cmd)
+		}
+	}
+}
