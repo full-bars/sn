@@ -513,6 +513,9 @@ func (r *ProxyReloader) reload() {
 	adoptLegacyProxyState(r.state, desiredValues)
 	if store := loadGlobalClientJWTStore(); store != nil {
 		store.AdoptLegacy(desiredValues)
+		// Only prune against a complete desired set: an unreadable
+		// proxy_url.json leaves every URL-sourced proxy out of it.
+		store.PruneUndesired(desiredValues, urlCacheLoaded)
 	}
 	if globalProxyEarningsStore != nil {
 		globalProxyEarningsStore.adoptLegacy(desiredValues)

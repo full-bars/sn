@@ -270,6 +270,7 @@ func TestAdoptLegacyPrunesLoginsForProxiesNoLongerDesired(t *testing.T) {
 		{Network: "tcp", Address: "rot.example:1080", Auth: &proxy.Auth{User: "bob", Password: "newpass"}},
 	}
 	store.AdoptLegacy(desired)
+	store.PruneUndesired(desired, true)
 
 	if _, ok := store.Get(keptKey); !ok {
 		t.Error("a still-desired proxy lost its login")

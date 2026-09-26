@@ -65,3 +65,24 @@ func TestSlowRetryAdoptLegacy_NoAuthIsANoOp(t *testing.T) {
 		t.Errorf("no-auth entry was disturbed: %+v", got)
 	}
 }
+
+// A bare-address entry coexisting with a live identity entry for the same
+// address must not replace it: the identity entry is the current one.
+func TestSlowRetryAdoptLegacy_ExistingIdentityEntryIsKept(t *testing.T) {
+	s := newProxySlowRetryState()
+	const addr = "1.2.3.4:1080"
+	desired := []*connect.ProxySettings{jwtRegressionSettings(addr, "alice")}
+	key := desired[0].Key()
+	live := time.Now().Add(-1 * time.Hour)
+	s.Proxies[addr] = &proxySlowRetryEntry{StartedAt: time.Now().Add(-9 * 24 * time.Hour)}
+	s.Proxies[key] = &proxySlowRetryEntry{StartedAt: live}
+
+	s.adoptLegacy(desired)
+
+	if _, ok := s.Proxies[addr]; ok {
+		t.Error("stale bare entry still present")
+	}
+	if got := s.Proxies[key]; got == nil || !got.StartedAt.Equal(live) {
+		t.Fatalf("live identity entry was overwritten: %+v", got)
+	}
+}

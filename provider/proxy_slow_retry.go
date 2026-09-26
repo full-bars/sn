@@ -252,6 +252,12 @@ func (s *proxySlowRetryState) adoptLegacy(desired []*connect.ProxySettings) (ado
 		}
 
 		delete(s.Proxies, address)
+		if _, has := s.Proxies[winner]; has {
+			// The identity already has its own live entry (a proxy that ran
+			// without auth and later with, or a downgrade then re-upgrade).
+			// It is newer than the bare-address one: keep it, drop the stale.
+			continue
+		}
 		s.Proxies[winner] = legacy
 		adopted++
 

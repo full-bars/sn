@@ -128,3 +128,37 @@ func TestJWTStoreAdoptLegacy_OneFlushForManyLogins(t *testing.T) {
 		t.Fatalf("second adoption moved %d logins and flushed %d times total, want 0 and still 1", a, s.flushes)
 	}
 }
+
+// An unreadable proxy_url.json leaves every URL-sourced proxy out of the desired
+// set. Pruning against that set would delete their saved logins (memory and
+// disk) and force a cold-auth burst on the next restart, so an incomplete set
+// must prune nothing.
+func TestJWTStorePruneUndesired_IncompleteSetIsANoOp(t *testing.T) {
+	s := newJWTStoreForTest(t)
+	file := jwtRegressionSettings("file.example:1080", "u1")
+	url := jwtRegressionSettings("url.example:1080", "u2")
+	for _, d := range []*connect.ProxySettings{file, url} {
+		if err := s.Put(jwtStoreKey(d), jwtEntryWithClient("c-"+d.Address)); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// What reload passes when proxy_url.json cannot be read: file proxy only.
+	if n := s.PruneUndesired([]*connect.ProxySettings{file}, false); n != 0 {
+		t.Fatalf("pruned %d with an incomplete desired set, want 0", n)
+	}
+	if _, ok := s.Get(jwtStoreKey(url)); !ok {
+		t.Fatal("URL proxy lost its login in memory")
+	}
+	if _, ok := newClientJWTStore(s.path).Get(jwtStoreKey(url)); !ok {
+		t.Fatal("URL proxy lost its login on disk")
+	}
+
+	// With a complete set the same call does prune it.
+	if n := s.PruneUndesired([]*connect.ProxySettings{file}, true); n != 1 {
+		t.Fatalf("pruned %d with a complete desired set, want 1", n)
+	}
+	if _, ok := newClientJWTStore(s.path).Get(jwtStoreKey(url)); ok {
+		t.Fatal("undesired login survived a complete prune")
+	}
+}

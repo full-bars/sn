@@ -106,10 +106,8 @@ func pruneStaleEntries(entries map[string]clientJWTEntry) map[string]clientJWTEn
 
 func (s *clientJWTStore) AdoptLegacy(desired []*connect.ProxySettings) (adopted, split int) {
 	keysByAddress := map[string][]string{}
-	desiredKeys := make(map[string]bool, len(desired))
 	for _, d := range desired {
 		keysByAddress[d.Address] = append(keysByAddress[d.Address], d.Key())
-		desiredKeys[d.Key()] = true
 	}
 
 	s.mu.Lock()
@@ -148,15 +146,41 @@ func (s *clientJWTStore) AdoptLegacy(desired []*connect.ProxySettings) (adopted,
 		delete(s.entries, address)
 		deletes = append(deletes, address)
 	}
-	// Drop the entries of proxies that are no longer desired at all. A rotation
-	// keeps the same identity (address+user), so its login is deliberately kept
-	// — that is what makes a restart reuse the client_id. But a REMOVED proxy,
-	// or one whose credentials changed so its identity key changed, leaves an
-	// entry nothing will ever read again: it would sit on disk for the store's
-	// whole retention window, and a re-add of the same address would inherit a
-	// JWT minted for the old account. Prune them here, where the full desired
-	// set is already in hand.
-	pruned := 0
+	// One flush for the whole adoption, however many logins moved.
+	if len(upserts) > 0 || len(deletes) > 0 {
+		if err := s.flushBatchLocked(upserts, deletes); err != nil {
+			tlog("⚠️ [jwt-store] failed to persist %d adopted logins (%d legacy slots dropped): %v\n", len(upserts), len(deletes), err)
+		}
+	}
+	return adopted, split
+}
+
+// PruneUndesired drops the logins of proxies that are no longer desired at
+// all. A rotation keeps the same identity (address+user), so its login is
+// deliberately kept: that is what makes a restart reuse the client_id. But a
+// REMOVED proxy, or one whose credentials changed so its identity key changed,
+// leaves an entry nothing will ever read again: it would sit on disk for the
+// store's whole retention window, and a re-add of the same address would
+// inherit a JWT minted for the old account.
+//
+// complete says whether desired is the FULL desired set. When a source could
+// not be read (proxy_url.json unreadable), desired silently lacks every proxy
+// that source supplies, and pruning against it would delete their saved logins
+// and force a cold-auth burst on the next restart. An incomplete set prunes
+// nothing.
+func (s *clientJWTStore) PruneUndesired(desired []*connect.ProxySettings, complete bool) (pruned int) {
+	if !complete {
+		return 0
+	}
+	desiredKeys := make(map[string]bool, len(desired))
+	for _, d := range desired {
+		desiredKeys[d.Key()] = true
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.loadLocked()
+	var deletes []string
 	for key := range s.entries {
 		if desiredKeys[key] {
 			continue
@@ -170,17 +194,13 @@ func (s *clientJWTStore) AdoptLegacy(desired []*connect.ProxySettings) (adopted,
 		deletes = append(deletes, key)
 		pruned++
 	}
-
-	// One flush for the whole adoption, however many logins moved.
-	if len(upserts) > 0 || len(deletes) > 0 {
-		if err := s.flushBatchLocked(upserts, deletes); err != nil {
-			tlog("⚠️ [jwt-store] failed to persist %d adopted logins (%d legacy slots dropped): %v\n", len(upserts), len(deletes), err)
+	if len(deletes) > 0 {
+		if err := s.flushBatchLocked(nil, deletes); err != nil {
+			tlog("⚠️ [jwt-store] failed to persist %d pruned logins: %v\n", pruned, err)
 		}
-	}
-	if pruned > 0 {
 		tlog("[jwt-store] dropped %d login(s) for proxies no longer desired\n", pruned)
 	}
-	return adopted, split
+	return pruned
 }
 
 func (s *clientJWTStore) loadLocked() {

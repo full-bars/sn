@@ -203,6 +203,12 @@ func adoptLegacyProxyState(state *ProxyState, desired []*connect.ProxySettings) 
 		}
 
 		delete(state.Proxies, address)
+		if _, has := state.Proxies[winner]; has {
+			// The identity already has its own live entry (a proxy that ran
+			// without auth and later with, or a downgrade then re-upgrade).
+			// It is newer than the bare-address one: keep it, drop the stale.
+			continue
+		}
 		state.Proxies[winner] = legacy
 		adopted++
 

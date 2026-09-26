@@ -960,8 +960,10 @@ func provideLauncherLoop(st *provideState) func() {
 		proxyDesiredSet[s.Key()] = s
 		proxySourceOf[s.Key()] = primarySource
 	}
+	urlCacheLoaded := true
 	if urlState, err := readProxyURLState(); err != nil {
 		tlog("[proxy][url] warning: could not read proxy_url.json: %v\n", err)
+		urlCacheLoaded = false
 	} else {
 		mergeProxyURLCache(proxyDesiredSet, proxySourceOf, urlState)
 	}
@@ -976,6 +978,9 @@ func provideLauncherLoop(st *provideState) func() {
 	adoptLegacyProxyState(proxyState, allProxySettings)
 	if store := loadGlobalClientJWTStore(); store != nil {
 		store.AdoptLegacy(allProxySettings)
+		// An unreadable proxy_url.json leaves every URL-sourced proxy out of
+		// allProxySettings; pruning then would delete their saved logins.
+		store.PruneUndesired(allProxySettings, urlCacheLoaded)
 	}
 
 	if err := globalProxyEarningsStore.Load(); err != nil {
