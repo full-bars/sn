@@ -100,6 +100,33 @@ func TestBandwidthShareBuildsOncePerTick(t *testing.T) {
 	}
 }
 
+// A clock stepped backwards must not hold the cache stale. A negative
+// at.Sub(s.at) fails the TTL test, so without the backward check the traffic
+// command and the samplers would keep serving the pre-step byte sums until
+// real time caught up. nodeSnapshotCollector.Get() guards the same way.
+func TestBandwidthShareRefreshesWhenTheClockStepsBack(t *testing.T) {
+	now := snapT0
+	reads := 0
+	share := newBandwidthShare(func() time.Time { return now }, 500*time.Millisecond, func() (map[string]uint64, map[string]uint64) {
+		reads++
+		return map[string]uint64{"p": uint64(reads)}, map[string]uint64{"p": uint64(reads)}
+	})
+
+	share.get()
+	if reads != 1 {
+		t.Fatalf("reads = %d after the first get, want 1", reads)
+	}
+
+	// Step the clock back a minute, then forward past the TTL. The cache must
+	// refresh rather than serve the pre-step read.
+	now = now.Add(-time.Minute)
+	now = now.Add(2 * time.Second)
+	share.get()
+	if reads != 2 {
+		t.Fatalf("reads = %d after a backward clock step, want a fresh read", reads)
+	}
+}
+
 // The graph buckets history against the absolute index of its newest sample, so
 // that index must only ever grow by one per recorded sample, and must keep
 // growing after the 600 slot ring wraps.

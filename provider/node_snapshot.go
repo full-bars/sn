@@ -706,7 +706,11 @@ func newBandwidthShare(now func() time.Time, ttl time.Duration, read func() (map
 func (s *bandwidthShare) get() (billable, total map[string]uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if at := s.now(); !s.fetched || at.Sub(s.at) >= s.ttl {
+	// A backward clock step makes at.Sub(s.at) negative, which would hold the
+	// cache stale until real time caught up. nodeSnapshotCollector.Get() guards
+	// the same way; do the same here so a stepped clock refreshes instead of
+	// serving old byte sums.
+	if at := s.now(); !s.fetched || at.Before(s.at) || at.Sub(s.at) >= s.ttl {
 		s.billed, s.moved = s.read()
 		s.at, s.fetched = at, true
 	}
