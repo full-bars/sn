@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -20,7 +21,11 @@ type NodeSnapshot struct {
 	UptimeSeconds   float64   `json:"uptime_seconds"`
 
 	// State is one of starting, degraded, idle, flowing.
-	State          string `json:"state"`
+	State string `json:"state"`
+	// StateReason says why the node is starting or degraded (a startup phase
+	// that has not finished, dead proxies, pressure). Empty for idle and
+	// flowing, and for an ordinary warmup.
+	StateReason    string `json:"state_reason,omitempty"`
 	Busy           bool   `json:"busy"`
 	RestartPending bool   `json:"restart_pending"`
 
@@ -35,16 +40,62 @@ type NodeSnapshot struct {
 
 	// IdleHint says why the node is idle. Set only when State is idle.
 	IdleHint string `json:"idle_hint,omitempty"`
+
+	// Traffic carries the byte totals and the total-traffic rate that sit next
+	// to the billable Rate. The provider always sets it; it is a pointer so a
+	// snapshot from a provider that predates it (and the fixtures that stand
+	// for one) round-trips without it.
+	Traffic *SnapshotTraffic `json:"traffic,omitempty"`
+}
+
+// SnapshotTraffic is billable versus total traffic. Rate stays the billable
+// rate; this adds what was actually moved. Session totals count from provider
+// start and are built from the same deltas as the rates, so a proxy that is
+// removed or respawns never adds or subtracts bytes.
+type SnapshotTraffic struct {
+	BillableBytes uint64 `json:"billable_bytes"`
+	TotalBytes    uint64 `json:"total_bytes"`
+	// LifetimeBillableBytes is the persisted lifetime total. Omitted when the
+	// lifetime store is not running.
+	LifetimeBillableBytes *uint64 `json:"lifetime_billable_bytes,omitempty"`
+
+	// The total-traffic rate, sampled the same way and at the same interval as
+	// Rate.HistoryBps.
+	TotalNowBps     int64   `json:"total_now_bps"`
+	TotalAvg1mBps   int64   `json:"total_avg_1m_bps"`
+	TotalAvg5mBps   int64   `json:"total_avg_5m_bps"`
+	TotalHistoryBps []int64 `json:"total_history_bps"`
+}
+
+// LiveTraffic is the light reply to the "traffic" command: live counter sums and
+// the provider's clock at the moment they were read. urnet-tools top polls it
+// at 100ms and derives rates from the deltas, so it never rebuilds a snapshot.
+// The sums drop when a proxy is removed or respawns; readers skip a decrease.
+type LiveTraffic struct {
+	AtUnixNano    int64  `json:"at_unix_nano"`
+	BillableBytes uint64 `json:"billable_bytes"`
+	TotalBytes    uint64 `json:"total_bytes"`
+}
+
+// liveTrafficSample reads the counter sums at now.
+func liveTrafficSample(now time.Time, totals func() (billable, total uint64)) *LiveTraffic {
+	billable, total := totals()
+	return &LiveTraffic{AtUnixNano: now.UnixNano(), BillableBytes: billable, TotalBytes: total}
 }
 
 // SnapshotRate is billable throughput in bytes per second. HistoryBps holds
 // per-second samples, oldest first, at most snapshotRingSize of them.
 type SnapshotRate struct {
-	NowBps          int64   `json:"now_bps"`
-	Avg1mBps        int64   `json:"avg_1m_bps"`
-	Avg5mBps        int64   `json:"avg_5m_bps"`
-	HistoryInterval int     `json:"history_interval_seconds"`
-	HistoryBps      []int64 `json:"history_bps"`
+	NowBps          int64 `json:"now_bps"`
+	Avg1mBps        int64 `json:"avg_1m_bps"`
+	Avg5mBps        int64 `json:"avg_5m_bps"`
+	HistoryInterval int   `json:"history_interval_seconds"`
+	// HistorySeq is the absolute index of the newest sample in HistoryBps: the
+	// number of samples ever recorded. A reader that draws the history against
+	// this, not against a clock, sees each sample keep its place from one
+	// snapshot to the next however the poll and the sampler tick line up.
+	HistorySeq uint64  `json:"history_seq,omitempty"`
+	HistoryBps []int64 `json:"history_bps"`
 }
 
 type SnapshotSessions struct {
@@ -96,6 +147,21 @@ const (
 	// cumulative counter samples for the "in the last 10 min" idle hints.
 	snapshotHistoryInterval = 10 * time.Second
 	snapshotHistorySize     = 60
+
+	// The idle hint blames auth only when failures are a wave or the pool is
+	// mostly down, never for a trickle. A large paid pool always has a few
+	// percent of its proxies failing and retrying every minute, so "any
+	// failure at all" read as an outage on a healthy node. A wave is at least
+	// 1/snapshotAuthWaveDivisor of the pool failing within
+	// snapshotAuthWaveWindow, with a floor so a tiny pool is not a hair trigger.
+	// snapshotStartupStuckAfter is how long a node may stay "starting" because
+	// proxy startup has not finished before it reads degraded instead. A big
+	// pool legitimately takes a couple of minutes; this is a stall.
+	snapshotStartupStuckAfter = 5 * time.Minute
+
+	snapshotAuthWaveWindow  = time.Minute
+	snapshotAuthWaveDivisor = 4
+	snapshotAuthWaveFloor   = 3
 )
 
 // rateSampler turns cumulative per-proxy billable byte counters into a
@@ -110,6 +176,12 @@ type rateSampler struct {
 	ring     [snapshotRingSize]int64
 	next     int // slot the next sample is written to
 	count    int // valid samples, capped at snapshotRingSize
+	// sessionBytes is every delta counted so far, so the total since the
+	// provider started survives proxies being removed and respawned.
+	sessionBytes uint64
+	// recorded counts every sample ever written to the ring, so the newest
+	// sample has an absolute index that never depends on a clock.
+	recorded uint64
 }
 
 func newRateSampler() *rateSampler {
@@ -139,14 +211,31 @@ func (s *rateSampler) sample(cur map[string]uint64, now time.Time) {
 	if first {
 		return
 	}
+	s.sessionBytes += delta
 	if elapsed < 1 {
 		elapsed = 1
 	}
 	s.ring[s.next] = int64(float64(delta) / elapsed)
+	s.recorded++
 	s.next = (s.next + 1) % snapshotRingSize
 	if s.count < snapshotRingSize {
 		s.count++
 	}
+}
+
+// seq returns how many samples have ever been recorded: the absolute index of
+// the newest sample in history().
+func (s *rateSampler) seq() uint64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.recorded
+}
+
+// session returns the bytes counted since the provider started.
+func (s *rateSampler) session() uint64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.sessionBytes
 }
 
 // history returns the samples oldest first. Never nil.
@@ -226,16 +315,17 @@ func (h *cumulativeHistory) copy() []cumulativeSample {
 	return append([]cumulativeSample(nil), h.samples...)
 }
 
-// authFailingSince returns when auth failures were first seen to increase
-// inside the history window. A decrease (a proxy was removed) is not an
-// increase, so only consecutive pairs that went up count.
-func authFailingSince(hist []cumulativeSample) (time.Time, bool) {
+// authFailuresSince counts auth failures recorded after cutoff. A decrease (a
+// proxy was removed) is not a failure, so only consecutive pairs that went up
+// count. A zero cutoff counts the whole history window.
+func authFailuresSince(hist []cumulativeSample, cutoff time.Time) int64 {
+	var n int64
 	for i := 1; i < len(hist); i++ {
-		if hist[i].auth > hist[i-1].auth {
-			return hist[i].at, true
+		if hist[i].at.After(cutoff) && hist[i].auth > hist[i-1].auth {
+			n += hist[i].auth - hist[i-1].auth
 		}
 	}
-	return time.Time{}, false
+	return n
 }
 
 // contractsAcquiredInWindow reports whether any contract was acquired across
@@ -255,6 +345,8 @@ type stateInputs struct {
 	proxies  SnapshotProxies
 	pressure float64
 	avg1m    int64
+	// startup is the proxy startup phase still pending, or "" once settled.
+	startup string
 }
 
 func (p SnapshotProxies) total() int {
@@ -262,10 +354,24 @@ func (p SnapshotProxies) total() int {
 }
 
 // deriveSnapshotState returns starting, degraded, idle or flowing, checked in
-// that order.
+// that order. A node whose proxy startup has not finished stays "starting" past
+// the warmup window, and reads degraded once that has taken too long or the
+// proxy source failed, so the status agrees with the systemd STATUS= line.
 func deriveSnapshotState(in stateInputs) string {
+	// A proxy source that failed or came back empty is degraded at once, like
+	// the systemd line, even inside the warmup window: warmup covers a pool still
+	// connecting, not a source that has already given its answer.
+	if in.startup == startupSourceUnreachable || in.startup == startupSourceEmpty || in.startup == startupNoSource {
+		return "degraded"
+	}
 	if in.uptime < snapshotStartingWindow {
 		return "starting"
+	}
+	if in.startup != "" {
+		if in.uptime < snapshotStartupStuckAfter {
+			return "starting"
+		}
+		return "degraded"
 	}
 	total := in.proxies.total()
 	if total > 0 && 2*(in.proxies.Dead+in.proxies.Degraded) > total {
@@ -280,7 +386,46 @@ func deriveSnapshotState(in stateInputs) string {
 	return "flowing"
 }
 
-// deriveIdleHint picks the first matching reason a node is idle.
+// deriveStateReason says why the state is starting or degraded, or "" when
+// there is nothing informative to add (idle and flowing have their own hint, and
+// an ordinary warmup needs no explanation).
+func deriveStateReason(in stateInputs) string {
+	mins := int(in.uptime / time.Minute)
+	switch deriveSnapshotState(in) {
+	case "starting":
+		if in.startup == startupResolving {
+			return fmt.Sprintf("%s (%d min)", startupResolving, mins)
+		}
+	case "degraded":
+		if in.startup == startupResolving {
+			return fmt.Sprintf("startup stuck: %s for %d min", startupResolving, mins)
+		}
+		if in.startup != "" {
+			// The no-source phase is a deliberate configuration, not something
+			// being retried: the operator set up no proxy source and turned the
+			// direct transport off, so there is nothing to retry. systemdStatusLine
+			// describes the same case without "retrying"; the two must agree.
+			if in.startup == startupNoSource {
+				return in.startup
+			}
+			return in.startup + ", retrying"
+		}
+		var parts []string
+		if total := in.proxies.total(); total > 0 && 2*(in.proxies.Dead+in.proxies.Degraded) > total {
+			parts = append(parts, fmt.Sprintf("%d of %d proxies dead or degraded", in.proxies.Dead+in.proxies.Degraded, total))
+		}
+		if in.pressure >= 0.8 {
+			parts = append(parts, fmt.Sprintf("resource pressure %.2f", in.pressure))
+		}
+		return strings.Join(parts, "; ")
+	}
+	return ""
+}
+
+// deriveIdleHint picks the first matching reason a node is idle. It blames
+// auth only when that plausibly explains the idleness (a failure wave, or most
+// of the pool not connected while failures are happening), and otherwise says
+// what is true and shows the numbers so the reader can judge it.
 func deriveIdleHint(proxies SnapshotProxies, hist []cumulativeSample, now time.Time) string {
 	total := proxies.total()
 	switch {
@@ -293,17 +438,36 @@ func deriveIdleHint(proxies SnapshotProxies, hist []cumulativeSample, now time.T
 	case proxies.Up == 0:
 		return fmt.Sprintf("all %d proxies dead or connecting", total)
 	}
-	if since, ok := authFailingSince(hist); ok {
-		mins := int(now.Sub(since).Minutes())
-		if mins < 1 {
-			mins = 1
+
+	recent := authFailuresSince(hist, now.Add(-snapshotAuthWaveWindow))
+	waveAt := int64((total + snapshotAuthWaveDivisor - 1) / snapshotAuthWaveDivisor)
+	if waveAt < snapshotAuthWaveFloor {
+		waveAt = snapshotAuthWaveFloor
+	}
+	if recent >= waveAt {
+		return fmt.Sprintf("auth failing: %d failures in the last minute across %d proxies", recent, total)
+	}
+	if 2*proxies.Up < total {
+		if authFailuresSince(hist, now.Add(-snapshotAuthWaveWindow)) > 0 {
+			return fmt.Sprintf("auth failing: only %d of %d proxies authenticated", proxies.Up, total)
 		}
-		return fmt.Sprintf("auth failing for %d min", mins)
+		return fmt.Sprintf("only %d of %d proxies connected", proxies.Up, total)
 	}
+
+	evidence := idleEvidence(proxies, recent)
 	if !contractsAcquiredInWindow(hist) {
-		return "no contracts acquired in the last 10 min"
+		return "no contracts acquired in the last 10 min" + evidence
 	}
-	return "no traffic offered"
+	return "no traffic offered" + evidence
+}
+
+// idleEvidence is the parenthetical that backs up a hint with the numbers it
+// was derived from. The retry rate is left out when there are no retries.
+func idleEvidence(proxies SnapshotProxies, retriesPerMin int64) string {
+	if retriesPerMin > 0 {
+		return fmt.Sprintf(" (%d/%d proxies up, ~%d auth retries/min)", proxies.Up, proxies.total(), retriesPerMin)
+	}
+	return fmt.Sprintf(" (%d/%d proxies up)", proxies.Up, proxies.total())
 }
 
 // snapshotSources are the live inputs behind a snapshot, injectable so the
@@ -322,27 +486,58 @@ type snapshotSources struct {
 	resources  func() SnapshotResources
 
 	restartPending func() bool
+
+	// startup reports the proxy startup phase still pending, or "" once it has
+	// settled. Nil means always settled.
+	startup func() string
+
+	// traffic maps proxy key to cumulative TOTAL bytes (rx+tx), like billable
+	// does for billable bytes. Nil means no total-traffic figures.
+	traffic func() map[string]uint64
+	// lifetimeBillable reports the persisted lifetime billable total, false
+	// when the lifetime store is not running. Nil means not available.
+	lifetimeBillable func() (uint64, bool)
 }
 
 // nodeSnapshotCollector samples the node once a second and builds snapshots.
 type nodeSnapshotCollector struct {
-	src  snapshotSources
-	rate *rateSampler
-	hist *cumulativeHistory
+	src     snapshotSources
+	rate    *rateSampler // billable bytes
+	traffic *rateSampler // total bytes
+	hist    *cumulativeHistory
 
 	mu       sync.Mutex
 	cached   *NodeSnapshot
 	cachedAt time.Time
+
+	// sampleMu makes one tick's samples, and one snapshot's capture of them,
+	// atomic against each other. The graph anchors both series on HistorySeq; a
+	// tick landing between reading it and reading the history it labels made the
+	// anchor one sample stale and shifted every completed column. It is separate
+	// from mu on purpose: a slow snapshot build must not stall the sampler, and
+	// this lock is held only for the samplers' own short reads and writes.
+	sampleMu sync.Mutex
 }
 
 func newNodeSnapshotCollector(src snapshotSources) *nodeSnapshotCollector {
-	return &nodeSnapshotCollector{src: src, rate: newRateSampler(), hist: &cumulativeHistory{}}
+	return &nodeSnapshotCollector{src: src, rate: newRateSampler(), traffic: newRateSampler(), hist: &cumulativeHistory{}}
 }
 
 // tick takes one rate sample and, when due, one counter sample.
 func (c *nodeSnapshotCollector) tick() {
 	now := c.src.now()
-	c.rate.sample(c.src.billable(), now)
+	// The counter reads walk the proxy pool; do them before taking the lock.
+	billable := c.src.billable()
+	var total map[string]uint64
+	if c.src.traffic != nil {
+		total = c.src.traffic()
+	}
+	c.sampleMu.Lock()
+	c.rate.sample(billable, now)
+	if c.src.traffic != nil {
+		c.traffic.sample(total, now)
+	}
+	c.sampleMu.Unlock()
 	if c.hist.due(now) {
 		auth, contracts := c.src.cumulative()
 		c.hist.add(cumulativeSample{at: now, auth: auth, contracts: contracts})
@@ -379,7 +574,15 @@ func (c *nodeSnapshotCollector) Get() *NodeSnapshot {
 }
 
 func (c *nodeSnapshotCollector) build(now time.Time) *NodeSnapshot {
+	// Everything read from the samplers is captured together, so the anchor, the
+	// billable history and the total history all describe the same sample.
+	c.sampleMu.Lock()
 	nowBps, avg1m, avg5m := c.rate.rates()
+	histSeq, histBps := c.rate.seq(), c.rate.history()
+	traffic := c.trafficSnapshot()
+	c.sampleMu.Unlock()
+	c.withLifetime(traffic)
+
 	proxies, clients := c.src.pool()
 	pqe, classical := c.src.sessions()
 	uptime := now.Sub(c.src.startedAt)
@@ -402,7 +605,8 @@ func (c *nodeSnapshotCollector) build(now time.Time) *NodeSnapshot {
 			Avg1mBps:        avg1m,
 			Avg5mBps:        avg5m,
 			HistoryInterval: 1,
-			HistoryBps:      c.rate.history(),
+			HistorySeq:      histSeq,
+			HistoryBps:      histBps,
 		},
 		Clients:   clients,
 		Sessions:  SnapshotSessions{PQE: pqe, Classical: classical},
@@ -411,11 +615,44 @@ func (c *nodeSnapshotCollector) build(now time.Time) *NodeSnapshot {
 		Restart:   c.src.restart(),
 		Resources: c.src.resources(),
 	}
-	snap.State = deriveSnapshotState(stateInputs{uptime: uptime, proxies: proxies, pressure: pressure, avg1m: avg1m})
+	in := stateInputs{uptime: uptime, proxies: proxies, pressure: pressure, avg1m: avg1m}
+	if c.src.startup != nil {
+		in.startup = c.src.startup()
+	}
+	snap.Traffic = traffic
+	snap.State = deriveSnapshotState(in)
+	snap.StateReason = deriveStateReason(in)
 	if snap.State == "idle" {
 		snap.IdleHint = deriveIdleHint(proxies, c.hist.copy(), now)
 	}
 	return snap
+}
+
+// trafficSnapshot builds the billable-versus-total block.
+func (c *nodeSnapshotCollector) trafficSnapshot() *SnapshotTraffic {
+	nowBps, avg1m, avg5m := c.traffic.rates()
+	tr := &SnapshotTraffic{
+		BillableBytes:   c.rate.session(),
+		TotalBytes:      c.traffic.session(),
+		TotalNowBps:     nowBps,
+		TotalAvg1mBps:   avg1m,
+		TotalAvg5mBps:   avg5m,
+		TotalHistoryBps: c.traffic.history(),
+	}
+	return tr
+}
+
+// withLifetime adds the persisted lifetime total to tr. It is read separately,
+// after the sampling lock is released: the lifetime store holds its own lock
+// across a file write, and reading it under the sampling lock would let a flush
+// stall the per-second sampler.
+func (c *nodeSnapshotCollector) withLifetime(tr *SnapshotTraffic) {
+	if c.src.lifetimeBillable == nil {
+		return
+	}
+	if v, ok := c.src.lifetimeBillable(); ok {
+		tr.LifetimeBillableBytes = &v
+	}
 }
 
 // restartPendingFor reports whether any restart-required control key now
@@ -453,20 +690,95 @@ func snapshotTruthy(v string) bool {
 
 var nodeSnapshots = newNodeSnapshotCollector(productionSnapshotSources())
 
+// bandwidthShare hands the billable and the total per-proxy counters from one
+// read, and reuses that read for ttl. Building the proxy snapshot is the costly
+// part (about 2ms and 35k allocations at 5000 proxies), and the billable and
+// total samplers tick together, so without this every tick would build it twice.
+// The maps are only read by the samplers, which copy what they keep.
+type bandwidthShare struct {
+	mu      sync.Mutex
+	now     func() time.Time
+	ttl     time.Duration
+	read    func() (billable, total map[string]uint64)
+	at      time.Time
+	billed  map[string]uint64
+	moved   map[string]uint64
+	fetched bool
+}
+
+func newBandwidthShare(now func() time.Time, ttl time.Duration, read func() (map[string]uint64, map[string]uint64)) *bandwidthShare {
+	return &bandwidthShare{now: now, ttl: ttl, read: read}
+}
+
+func (s *bandwidthShare) get() (billable, total map[string]uint64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	// A backward clock step makes at.Sub(s.at) negative, which would hold the
+	// cache stale until real time caught up. nodeSnapshotCollector.Get() guards
+	// the same way; do the same here so a stepped clock refreshes instead of
+	// serving old byte sums.
+	if at := s.now(); !s.fetched || at.Before(s.at) || at.Sub(s.at) >= s.ttl {
+		s.billed, s.moved = s.read()
+		s.at, s.fetched = at, true
+	}
+	return s.billed, s.moved
+}
+
+// reset drops the cached read so the next get re-reads the proxy pool. Tests
+// that change the counters need it: the cache is shared process-wide, and
+// without dropping it a test can be served another test's numbers.
+func (s *bandwidthShare) reset() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.billed, s.moved = nil, nil
+	s.at, s.fetched = time.Time{}, false
+}
+
+// totals sums one cached read, without re-reading the proxy pool. It is the
+// sn-side stand-in for the engine's ProxyBandwidthTotals, which the source
+// calls for the "traffic" control command. Reusing the shared cache keeps the
+// 100ms top poll off the proxy pool: one read serves the samplers and the
+// traffic reply, and the sums drop when a proxy is removed or respawns, so
+// callers derive rates from deltas and skip a decrease.
+func (s *bandwidthShare) totals() (billable, total uint64) {
+	b, t := s.get()
+	for _, v := range b {
+		billable += v
+	}
+	for _, v := range t {
+		total += v
+	}
+	return billable, total
+}
+
+// proxyBandwidth is the process-wide shared read. The "traffic" control command
+// answers from it, so polling live traffic does not add a second walk of the
+// proxy pool on top of the one the per-second samplers already make.
+var proxyBandwidth = newBandwidthShare(time.Now, 500*time.Millisecond, readProxyBandwidth)
+
+// readProxyBandwidth reads both per-proxy counters from one proxy snapshot.
+func readProxyBandwidth() (billable, total map[string]uint64) {
+	if ProxyHealthCount() == 0 {
+		return map[string]uint64{}, map[string]uint64{}
+	}
+	_, _, _, bw, _ := ProxyHealthSnapshot()
+	billable = make(map[string]uint64, len(bw))
+	total = make(map[string]uint64, len(bw))
+	for k, p := range bw {
+		billable[k] = p.BillableRx.Load() + p.BillableTx.Load()
+		total[k] = p.TotalRx.Load() + p.TotalTx.Load()
+	}
+	return billable, total
+}
+
 func productionSnapshotSources() snapshotSources {
+	bandwidth := proxyBandwidth
 	return snapshotSources{
 		now:       time.Now,
 		startedAt: providerStartTime,
 		billable: func() map[string]uint64 {
-			if ProxyHealthCount() == 0 {
-				return map[string]uint64{}
-			}
-			_, _, _, bw, _ := ProxyHealthSnapshot()
-			out := make(map[string]uint64, len(bw))
-			for k, p := range bw {
-				out[k] = p.BillableRx.Load() + p.BillableTx.Load()
-			}
-			return out
+			b, _ := bandwidth.get()
+			return b
 		},
 		pool: func() (SnapshotProxies, int64) {
 			up, dead, degraded, bw, connecting := ProxyHealthSnapshot()
@@ -506,6 +818,18 @@ func productionSnapshotSources() snapshotSources {
 		resources: collectResources,
 		restartPending: func() bool {
 			return restartPendingFor(globalControlState.get, startupValues())
+		},
+		startup: proxyStartupPhase,
+		traffic: func() map[string]uint64 {
+			_, t := bandwidth.get()
+			return t
+		},
+		lifetimeBillable: func() (uint64, bool) {
+			if lifetimeStore == nil {
+				return 0, false
+			}
+			_, _, _, _, _, _, bill := lifetimeStore.Snapshot()
+			return bill, true
 		},
 	}
 }

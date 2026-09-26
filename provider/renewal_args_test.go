@@ -28,6 +28,13 @@ func TestProviderAuthClientArgsForRenewal(t *testing.T) {
 
 func TestRenewClientJWTPreservesClientId(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// The API client pings /hello before the real request to check the
+		// server is reachable. A real server answers it; this stand-in must
+		// too, or the ping 404s and the renewal never reaches its endpoint.
+		if r.URL.Path == "/hello" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		if r.URL.Path != "/network/auth-client" {
 			t.Errorf("path = %q, want /network/auth-client", r.URL.Path)
 			http.NotFound(w, r)
@@ -74,6 +81,12 @@ func TestRenewClientJWTPreservesSameClientIdValue(t *testing.T) {
 	clientId := connect.NewId()
 	var gotClientId string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// The API client pings /hello before the real request; answer it so
+		// the renewal reaches the endpoint under test.
+		if r.URL.Path == "/hello" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		var args connect.AuthNetworkClientArgs
 		_ = json.NewDecoder(r.Body).Decode(&args)
 		if args.ClientId != nil {

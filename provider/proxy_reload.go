@@ -453,6 +453,12 @@ func (r *ProxyReloader) reload() {
 		settings, err := readProxySettingsFromFile(r.sourcePath)
 		if err != nil {
 			tlog("[proxy] reload skipped: could not read source: %v\n", err)
+			// Record the failure before returning. Without this the resolution
+			// stays pending, so the status line reads "starting: resolving
+			// proxies" instead of a source failure, and the snapshot's startup
+			// reason later reads as stuck rather than as an unreadable source.
+			// The running proxies are deliberately left alone.
+			setProxyResolutionStatus(proxyResolutionFailed, fmt.Sprintf("could not read %s: %v", r.sourcePath, err))
 			return
 		}
 		desired = settings
@@ -472,10 +478,14 @@ func (r *ProxyReloader) reload() {
 	}
 
 	urlCacheLoaded := true
+	anySourceConfigured := r.sourcePath != ""
 	if urlState, err := readProxyURLState(); err != nil {
 		tlog("[proxy][url] warning: could not read proxy_url.json: %v\n", err)
 		urlCacheLoaded = false
 	} else {
+		if len(urlState.Sources) > 0 {
+			anySourceConfigured = true
+		}
 		mergeProxyURLCache(desiredSet, sourceOf, urlState)
 	}
 
@@ -552,8 +562,142 @@ func (r *ProxyReloader) reload() {
 	// (no --proxy_file, no internal proxies) has desired == 0 but a
 	// non-empty desiredSet, and must not be treated as a source-read error.
 	if len(desiredSet) == 0 {
-		tlog("[proxy] reload skipped: 0 proxies found in source\n")
-		setProxyResolutionStatus(proxyResolutionEmpty, "source returned no usable proxies")
+		// A node that deliberately provides via the direct transport with no
+		// proxy source configured is a valid, completed zero-proxy config — it
+		// settles, it is not degraded. Only reserve "empty" for the case where
+		// a proxy source WAS configured but returned no usable proxies.
+		if anySourceConfigured {
+			tlog("[proxy] reload skipped: 0 proxies found in source\n")
+			setProxyResolutionStatus(proxyResolutionEmpty, "source returned no usable proxies")
+		} else if !urlCacheLoaded {
+			// proxy_url.json exists but could not be read (a missing file reads as
+			// empty, not as an error), so whether URL sources are configured is
+			// unknown. Settling as direct-only would report a healthy node whose
+			// sources were never resolved.
+			tlog("[proxy] reload skipped: proxy_url.json unreadable, URL sources unknown\n")
+			setProxyResolutionStatus(proxyResolutionFailed, "could not read proxy_url.json")
+		} else if !directShouldRun {
+			// Direct transport is turned off and no proxy source is configured,
+			// so nothing is being provided. It is a valid config but not a
+			// completed zero-proxy setup that is actively serving, so it reads
+			// as degraded rather than as a healthy direct-only node.
+			tlog("[proxy] reload skipped: direct transport disabled and no proxy source\n")
+			setProxyResolutionStatus(proxyResolutionNoSource, "direct transport disabled and no proxy source configured")
+		} else {
+			tlog("[proxy] reload: 0 proxies; direct-only (no proxy source configured) — settled\n")
+			setProxyResolutionStatus(proxyResolutionZeroValid, "direct-only providing; no proxy source configured")
+		}
+		// A source that was configured and has now gone empty is NOT a reason to
+		// keep dialling the proxies it used to supply. The full diff below is
+		// skipped because there is nothing to add, so the removal half has to
+		// happen here: without it the old proxies keep running and the stale
+		// positive configured count makes the status line and the startup
+		// phase ignore the resolution just recorded.
+		//
+		// The unreadable proxy_url.json case is exempt: there the sources are
+		// UNKNOWN rather than empty, so a transient read error must not cancel
+		// a working fleet.
+		if urlCacheLoaded {
+			stopped, draining := 0, 0
+			for addr := range running {
+				if addr == directProxyKey {
+					continue // managed by the direct hot-toggle block above
+				}
+				if r.isDraining(addr) {
+					continue
+				}
+				r.cancelMapMu.Lock()
+				cancel, ok := r.cancelMap[addr]
+				if ok {
+					delete(r.cancelMap, addr)
+				}
+				r.cancelMapMu.Unlock()
+				if !ok {
+					continue
+				}
+				delete(r.state.Proxies, addr)
+				r.cancelMapMu.Lock()
+				delete(r.runningAuth, addr)
+				r.cancelMapMu.Unlock()
+
+				// Drain rather than hard-cancel: a proxy with live clients
+				// must not have them cut mid-session. The removal pass below
+				// does the same, so this matches it — a proxy with no clients
+				// stops now, one with clients stops when the last one leaves.
+				bw := proxyBandwidthByAddressV2026(addr)
+				if bw == nil || bw.Clients.Load() == 0 {
+					cancel()
+					stopped++
+					continue
+				}
+				r.drainMu.Lock()
+				r.drainingProxies[addr] = cancel
+				r.drainMu.Unlock()
+				tlog("[proxy] draining %s (%d active clients): source went empty\n", addr, bw.Clients.Load())
+				go func(cancelFn context.CancelFunc, proxyAddr string) {
+					defer func() {
+						r.drainMu.Lock()
+						delete(r.drainingProxies, proxyAddr)
+						r.drainMu.Unlock()
+					}()
+					for {
+						bw := proxyBandwidthByAddressV2026(proxyAddr)
+						if bw == nil || bw.Clients.Load() == 0 {
+							break
+						}
+						select {
+						case <-r.parentCtx.Done():
+							return
+						case <-time.After(5 * time.Second):
+						}
+					}
+					tlog("[proxy] drain complete: %s\n", proxyAddr)
+					cancelFn()
+				}(cancel, addr)
+				draining++
+			}
+			if stopped > 0 || draining > 0 {
+				tlog("[proxy] reload: source empty, stopped %d running prox(ies), draining %d with active clients\n", stopped, draining)
+			}
+			// Reconcile and persist, not just the running set. A dead or
+			// offline proxy's goroutine has already exited, so it was never
+			// in `running` and the loop above never saw it — without this its
+			// state entry would survive in proxy.state forever. Gated on
+			// urlCacheLoaded for the same reason as the loop: an unreadable
+			// cache makes desiredSet incomplete, and pruning against it would
+			// wipe history for proxies that are merely unreadable this cycle.
+			pruned := 0
+			for addr := range r.state.Proxies {
+				if _, ok := desiredSet[addr]; !ok {
+					delete(r.state.Proxies, addr)
+					pruned++
+				}
+			}
+			if pruned > 0 {
+				tlog("[proxy] pruned %d stale proxy.state entries (source empty)\n", pruned)
+			}
+			proxyStateMu.Lock()
+			if diskState, err := readProxyState(); err == nil {
+				for addr, entry := range r.state.Proxies {
+					if diskEntry, ok := diskState.Proxies[addr]; ok {
+						entry.Health = diskEntry.Health
+						entry.DownSince = diskEntry.DownSince
+						entry.AuthFailures = diskEntry.AuthFailures
+						r.state.Proxies[addr] = entry
+					}
+				}
+			}
+			r.state.NextID = currentProxyIDCounter()
+			if err := writeProxyState(r.state); err != nil {
+				tlog("[proxy] warning: could not write proxy.state after reload: %v\n", err)
+			}
+			proxyStateMu.Unlock()
+
+			// The configured count reflects the desired set, which is empty.
+			// This must be set even when nothing was running, or a node that
+			// never had proxies would keep a stale count.
+			setConfiguredProxyCount(0)
+		}
 		return
 	}
 
@@ -788,11 +932,19 @@ func (r *ProxyReloader) reload() {
 	// at 25ms intervals while cold proxies use standard backoff.
 	addedSchedules, _, _, _ := prioritizeAndScheduleProxies(added, sourceOf, r.networkID)
 	warmupDeferred := 0
+	// Count URL-sourced proxies that will actually be launched, inside the
+	// loop so a draining proxy (skipped before launch) is not counted as
+	// scheduled. urlLaunchLine subtracts warmupDeferred, so warmup-deferred
+	// entries stay in the total.
+	urlAdded := 0
 	for _, sched := range addedSchedules {
 		settings := sched.Settings
 		if r.isDraining(settings.Address) {
 			tlog("[proxy] skip add %s: still draining\n", settings.Address)
 			continue
+		}
+		if sourceOf[settings.Address] == "url" {
+			urlAdded++
 		}
 		// Defer unproven URL-sourced proxy launches until file-proxy warmup
 		// completes, so operator-curated proxies get an uncontested ramp.
@@ -897,12 +1049,19 @@ func (r *ProxyReloader) reload() {
 	if pruned > 0 {
 		tlog("[proxy] pruned %d stale proxy.state entries (no longer desired)\n", pruned)
 	}
+	// Say where the additions came from, and announce URL-sourced launches on
+	// their own line: a bare "+N added" said neither. The summary keeps its
+	// "reloaded: +N added" prefix for anything that matches on it.
+	fromSources := reloadSourceBreakdown(added, sourceOf)
+	if line := urlLaunchLine(urlAdded, warmupDeferred); line != "" {
+		importantLogf("%s\n", line)
+	}
 	if deferredTotal > 0 {
-		tlog("🔄 [proxy] reloaded: +%d added, -%d removed, %d deferred (backoff=%d warmup=%d) [%s]\n",
-			len(added), len(removed), deferredTotal, deferredBackoff, warmupDeferred, reloadDur)
+		tlog("🔄 [proxy] reloaded: +%d added%s, -%d removed, %d deferred (backoff=%d warmup=%d) [%s]\n",
+			len(added), fromSources, len(removed), deferredTotal, deferredBackoff, warmupDeferred, reloadDur)
 	} else {
-		tlog("🔄 [proxy] reloaded: +%d added, -%d removed [%s]\n",
-			len(added), len(removed), reloadDur)
+		tlog("🔄 [proxy] reloaded: +%d added%s, -%d removed [%s]\n",
+			len(added), fromSources, len(removed), reloadDur)
 	}
 }
 

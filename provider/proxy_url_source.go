@@ -434,12 +434,23 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 	// every later source skips it, and its grade comes from that one pass.
 	probed := map[string]bool{}
 	skippedCached := 0
+	// What each source did this cycle, for the per-source lines and the headline.
+	// urlSourceLabels redacts credential-bearing PATH segments as well as the
+	// query and userinfo that sanitizeURLForDisplay strips, so a token in a
+	// source path cannot reach the log or the operator warning. It also gives
+	// duplicate sources distinct labels instead of collapsing them.
+	labels := urlSourceLabels(urls)
+	perSource := make([]urlSourceStats, len(urls))
+	for i := range perSource {
+		perSource[i].Label = labels[i]
+	}
 	for i, url := range urls {
 		lines, err := fetchProxyURLLines(ctx, url)
 		if err != nil {
-			tlog("[proxy][url] fetch failed for %s: %v (skipping this cycle)\n", sanitizeURLForDisplay(url), err)
-			setProxyResolutionStatus(proxyResolutionFailed, fmt.Sprintf("%s: %v", sanitizeURLForDisplay(url), err))
-			warnProxySourceFailure(url, err.Error())
+			perSource[i].Failed = true
+			tlog("[proxy][url] fetch failed for %s: %v (skipping this cycle)\n", labels[i], err)
+			setProxyResolutionStatus(proxyResolutionFailed, fmt.Sprintf("%s: %v", labels[i], err))
+			warnProxySourceFailure(labels[i], err.Error())
 			continue
 		}
 		// Free public proxy lists are mostly dead entries. The staged probe
@@ -455,6 +466,7 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 			if !ok {
 				continue
 			}
+			perSource[i].Lines++
 			if cached[addr] || probed[addr] {
 				skippedCached++
 				skippedThisSource++
@@ -463,7 +475,19 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 			probed[addr] = true
 			probeLines = append(probeLines, line)
 		}
+		perSource[i].Known = skippedThisSource
 		lineGrades := probeAndGradeProxyURLLines(ctx, probeLines, apiHost, apiPort, probeCfg)
+		// Count each NEW address once: dropped as dead, or graded but below the
+		// bar. (A duplicate line within one source was skipped as known above.)
+		for _, line := range probeLines {
+			addr, _, _, _ := parseProxyURLLine(line)
+			switch g, ok := lineGrades[addr]; {
+			case !ok:
+				perSource[i].Dead++
+			case !g.Qualified:
+				perSource[i].Rejected++
+			}
+		}
 		var qualified, belowBar, socks5Only []string
 		for _, line := range lines {
 			addr, _, _, ok := parseProxyURLLine(line)
@@ -524,11 +548,11 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 		if len(qualified) == 0 && len(belowBar) == 0 && len(socks5Only) == 0 && len(probeLines) > 0 {
 			// The fetch itself succeeded but every NEW line was unparseable
 			// or dead — distinct from the fetch-failed case above (N3).
-			tlog("[proxy][url] %s: fetched %d lines, %d new, all unparseable or dead\n", sanitizeURLForDisplay(url), len(lines), len(probeLines))
-			warnProxySourceFailure(url, fmt.Sprintf("fetched %d lines, %d new, all unparseable or dead", len(lines), len(probeLines)))
+			tlog("[proxy][url] %s: fetched %d lines, %d new, all unparseable or dead\n", labels[i], len(lines), len(probeLines))
+			warnProxySourceFailure(labels[i], fmt.Sprintf("fetched %d lines, %d new, all unparseable or dead", len(lines), len(probeLines)))
 		}
 		tlog("[proxy][url] probed %s: %d/%d new qualified (%d cached, skipped), %d below-bar, %d socks5-only\n",
-			sanitizeURLForDisplay(url), len(qualified), len(probeLines), skippedThisSource, len(belowBar), len(socks5Only))
+			labels[i], len(qualified), len(probeLines), skippedThisSource, len(belowBar), len(socks5Only))
 	}
 	if skippedCached > 0 {
 		// Cached-skip is the main efficiency change of this PR; the
@@ -582,6 +606,7 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 	// would be wrong if a candidate ever reached the merge without a grade —
 	// a kill-switch-disabled admission (Qualified=true, Decidable=false)
 	// ranks last while a decidable F ranks first.
+	existingBefore := cachedProxyAddresses(state)
 	added := mergeProxyURLEntries(state, admittedLines, 0, maxTotal, rankAddr, gradeFor)
 	totalAdded += added
 	// admittedByTier counts what actually entered the cache this cycle, per
@@ -660,6 +685,55 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 	}
 	if markedSocks5 > 0 || markedAPI > 0 {
 		tlog("[proxy][url] %d qualified entries saved, %d below-bar/socks5-only entries marked for reaper\n", markedAPI, markedSocks5)
+	}
+
+	// Attribute each newly cached address to the first source that listed it:
+	// qualified ones were added to the pool, the rest are held for the reaper.
+	attributed := map[string]bool{}
+	for i, lines := range fetched {
+		for _, line := range lines {
+			addr, _, _, ok := parseProxyURLLine(line)
+			if !ok || existingBefore[addr] || attributed[addr] {
+				continue
+			}
+			entry, in := state.Cache[addr]
+			if !in {
+				continue
+			}
+			attributed[addr] = true
+			if entry.ProbeOK {
+				perSource[i].Added++
+			} else {
+				perSource[i].Held++
+			}
+		}
+	}
+
+	// One line per source, then the cycle headline. The headline is printed
+	// before the early return below so a cycle where every address was already
+	// known, or every source failed, says so too: those are the cycles the
+	// detail lines used to bury.
+	cycle := urlCycleStats{Sources: len(urls), PoolCached: len(state.Cache)}
+	for _, ps := range perSource {
+		importantLogf("%s\n", ps)
+		if ps.Failed {
+			cycle.Failed++
+			continue
+		}
+		cycle.Admitted += ps.Added
+		cycle.Held += ps.Held
+		cycle.AlreadyKnown += ps.Known
+		cycle.Rejected += ps.Rejected + ps.Dead
+	}
+	for _, entry := range state.Cache {
+		if entry.ProbeOK {
+			cycle.PoolQualified++
+		}
+	}
+	if cycle.Failed >= len(urls) {
+		tlog("%s\n", cycle)
+	} else {
+		importantLogf("%s\n", cycle)
 	}
 
 	// Grade breakdown is printed every cycle that produced any grade, even

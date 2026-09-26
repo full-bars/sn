@@ -2,4 +2,34 @@
 
 ### Unreleased
 
-_Nothing yet._
+Proxy identity across the provider, live provider status and runtime internals, a reworked `urnet-tools top`, and the correctness fixes that came with them.
+
+### Added
+
+- **Proxies are identified by account, not just by address** ([#30](https://github.com/full-bars/sn/pull/30)): a shared-gateway proxy provider hands one `host:port` to several accounts, and the account decides the backend IP. Every store that tracked a proxy by address alone now tracks it by identity — the address, plus the user when the proxy is authenticated — so two accounts at one gateway no longer collapse into a single entry. That covers the proxy state file, the client-JWT store, the health registry, the earnings and grade lookups, the audit and trust decisions, and the add/rotation semantics. A credential rotation keeps the same identity on purpose, so a restart still reuses the existing client identity instead of resetting its reliability reputation.
+- **Live traffic, runtime internals and a reworked `top` view** ([#31](https://github.com/full-bars/sn/pull/31)): the live status block separates billable from total traffic, so non-billable bytes (a direct socket, for instance) are visible instead of folded into one number, and session totals follow proxies being removed or respawning. `top` gains a zoomable graph, a runtime panel (goroutines, heap, descriptors), a theme/graph menu, and a layout that adapts to a small terminal. The provider answers three new light control-socket commands — `traffic`, `internals`, `goroutines` — so the 100ms poll no longer rebuilds a full snapshot; an older provider is detected and falls back to the snapshot's own rates.
+- **A stated reason for the node's state** ([#31](https://github.com/full-bars/sn/pull/31)): `starting` and `degraded` now say why — still resolving proxies, a source that could not be read, a source that returned nothing, or how many proxies are dead against how many are configured.
+
+### Changed
+
+- **A node that deliberately runs with no proxies now reads `active`, not `degraded`** ([#31](https://github.com/full-bars/sn/pull/31)): serving on the direct transport with no proxy source configured is a valid, completed configuration, and was previously indistinguishable from a real outage. A configured source that came back empty still reads degraded, and so does a node whose direct transport is off with nothing to serve.
+- **The idle hint blames auth only when it explains the idleness** ([#31](https://github.com/full-bars/sn/pull/31)): a steady trickle of auth retries on a large healthy pool is no longer reported as an auth outage. Auth is blamed for a failure wave, or when most of the pool is not connected while failures are happening; otherwise the hint states what is true and shows the numbers behind it.
+- **The reload summary says where additions came from** ([#31](https://github.com/full-bars/sn/pull/31)): the `reloaded: +N added` line breaks the additions down by source, and URL-sourced launches get their own line instead of being folded into a bare count.
+- **Proxy keys are never printed raw** ([#30](https://github.com/full-bars/sn/pull/30)): an identity key embeds the account, so operator-facing listings show a display form instead of the raw key.
+
+### Fixed
+
+- **Two accounts at one gateway no longer overwrite each other** ([#30](https://github.com/full-bars/sn/pull/30)): the stores were keyed by identity but several consumers still read a bare address, so a shared-gateway proxy silently merged the accounts. The earn tracker, the launch generation, the degraded-proxy reaper and the grade report now all use the identity. Credentialed proxies were previously invisible to the reaper, could report to the hub as ungraded, and could be left stuck in the cancel map after a failure.
+- **A credentialed URL proxy is no longer counted twice** ([#30](https://github.com/full-bars/sn/pull/30)): the match collector added it under its identity key and again under its bare address, so it appeared twice in `display` and inflated the `proxy remove --match` count.
+- **A removed proxy's login is dropped** ([#30](https://github.com/full-bars/sn/pull/30)): the client-JWT store migrated legacy keys but never pruned, so a removed proxy's login stayed on disk for the store's whole retention window and a re-add at the same address inherited a JWT minted for the old account. A rotation — same identity, new password — deliberately keeps its login.
+- **A source that goes empty stops the proxies it used to supply** ([#31](https://github.com/full-bars/sn/pull/31)): the reload returned before the removal pass, so the old proxies kept dialling and the stale configured count made the status line ignore the new empty-source state. A proxy with live clients is now drained rather than cut, and the state file is reconciled and persisted on that path.
+- **A file source that cannot be read is reported as a failure** ([#31](https://github.com/full-bars/sn/pull/31)): it left the resolution pending, so the status line read `starting: resolving proxies` and the snapshot later read it as a stuck startup. Running proxies are deliberately left alone.
+- **A proxy source URL cannot leak its token into the logs** ([#31](https://github.com/full-bars/sn/pull/31)): the per-source log lines and the operator warning use a redacted label that strips the query, the userinfo, and credential-bearing path segments, so a source like `.../token/SECRET/list` no longer reaches the important log or the warning, and one source no longer produces two different warning keys.
+- **A no-source node stops claiming it is retrying** ([#31](https://github.com/full-bars/sn/pull/31)): that configuration has nothing to retry, and the reason now matches the systemd status line.
+- **The `top` menu now persists** ([#31](https://github.com/full-bars/sn/pull/31)): the menu wrote through a settings path that nothing ever set and never loaded it back, so every choice was silently discarded and the theme reset on the next run. A theme forced by the environment (`NO_COLOR`, a dumb terminal) is not saved, so it does not outlive the terminal that forced it, and a config directory created by a first run under `sudo` is handed to the invoking user instead of staying root-owned and blocking their next save.
+
+### Deploy Notes
+
+1. **No action is needed on deploy.** The identity work is internal; the control-socket commands are additive, so a new `urnet-tools` against an older provider falls back cleanly and an older `urnet-tools` against a new provider is unaffected.
+2. **Expect the status line to read differently on a direct-only node.** A node that serves on the direct transport with no proxy source now reports `active` where it used to report `degraded`. That is the intended reading, not a new fault.
+3. **This release moves sn onto a much newer engine.** The pinned `connect` commit advances by several hundred engine commits, so the provider is built against current internals rather than the previous pin. `message_pool`, the content-filtering blocklist, and the rest of the engine arrive through that pin.
