@@ -293,3 +293,92 @@ func TestTopMenuFitsSmallTerminals(t *testing.T) {
 		}
 	}
 }
+
+// The menu's save only reaches disk when the model carries a settings path, and
+// a chosen theme or graph style only survives a restart if startup loads them
+// back. This exercises both halves against a real file, so a regression that
+// leaves either unwired fails here rather than silently resetting every run.
+func TestTopSettingsRoundTripThroughMenu(t *testing.T) {
+	dir := t.TempDir()
+
+	// Startup goes through the SAME helper the command uses, with HOME pointed
+	// at a temp dir so topSettingsPath resolves inside it. Calling applySettings
+	// directly would test the helper and not the wiring that was missing.
+	t.Setenv("HOME", dir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(dir, ".config"))
+	m := newTestModel(tui.DefaultTheme(), topProviders(1), &fakeClock{t: topBase})
+	applySavedTopSettings(m)
+	if m.settingsPath == "" {
+		t.Fatal("settingsPath is empty: the menu save would be a silent no-op")
+	}
+
+	// The operator picks a different theme and graph style in the menu.
+	names := tui.ThemeNames()
+	target := ""
+	for _, n := range names {
+		if n != m.theme.Name {
+			target = n
+			break
+		}
+	}
+	if target == "" {
+		t.Skip("only one theme available")
+	}
+	m.menu = true
+	m.menuSel = topMenuTheme
+	th, _ := tui.ThemeByName(target)
+	m.theme = th
+	graphName := tui.GraphSymbolNames[(int(m.graph)+1)%len(tui.GraphSymbolNames)]
+	g, _ := tui.GraphSymbolsByName(graphName)
+	m.graph = g
+
+	if err := saveTopSettings(m.settingsPath, m.settings()); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+
+	// Restart: a fresh model, wired the same way, must pick both choices up.
+	m2 := newTestModel(tui.DefaultTheme(), topProviders(1), &fakeClock{t: topBase})
+	applySavedTopSettings(m2)
+
+	if m2.theme.Name != target {
+		t.Errorf("theme after reload = %q, want the saved %q", m2.theme.Name, target)
+	}
+	if m2.graph.String() != graphName {
+		t.Errorf("graph after reload = %q, want the saved %q", m2.graph.String(), graphName)
+	}
+}
+
+// An environment-forced theme must not be written into the saved settings: it
+// is the terminal's choice, not the operator's, and persisting it would
+// outlive the terminal that forced it.
+func TestTopSettingsOmitForcedTheme(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "top.conf")
+
+	m := newTestModel(tui.MonoTheme(), topProviders(1), &fakeClock{t: topBase})
+	m.settingsPath = path
+	m.themeLocked = true
+
+	s := m.settings()
+	if s.Theme != "" {
+		t.Fatalf("a forced theme must not be saved, got theme %q", s.Theme)
+	}
+
+	// A previously saved theme must survive a forced-theme save. The loader
+	// validates names, so use a real theme and graph style here.
+	savedTheme := tui.ThemeNames()[0]
+	savedGraph := tui.GraphSymbolNames[0]
+	if err := os.WriteFile(path, []byte("theme = "+savedTheme+"\ngraph = "+savedGraph+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := saveTopSettings(path, s); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+	got := loadTopSettings(path)
+	if got.Theme != savedTheme {
+		t.Errorf("saved theme = %q, want the pre-existing %q left untouched", got.Theme, savedTheme)
+	}
+	if got.Graph != savedGraph {
+		t.Errorf("saved graph = %q, want the pre-existing %q left untouched", got.Graph, savedGraph)
+	}
+}

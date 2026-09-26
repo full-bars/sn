@@ -112,7 +112,32 @@ func saveTopSettings(path string, s topSettings) error {
 		return err
 	}
 	defer os.Remove(tmp.Name()) // a no-op once renamed
-	_, werr := fmt.Fprintf(tmp, "# urnet-tools top: chosen in the m menu\ntheme = %s\ngraph = %s\n", s.Theme, s.Graph)
+	// An empty field means "leave whatever is already saved alone" — used when
+	// the environment forces the theme. Because the save renames a whole new
+	// file over the old one, that means carrying the current value forward, not
+	// just skipping the line: skipping alone would drop every other saved
+	// setting too.
+	prev := loadTopSettings(path)
+	if s.Theme == "" {
+		s.Theme = prev.Theme
+	}
+	if s.Graph == "" {
+		s.Graph = prev.Graph
+	}
+	var werr error
+	if _, err := tmp.WriteString("# urnet-tools top: chosen in the m menu\n"); err != nil {
+		werr = err
+	}
+	if werr == nil && s.Theme != "" {
+		if _, err := fmt.Fprintf(tmp, "theme = %s\n", s.Theme); err != nil {
+			werr = err
+		}
+	}
+	if werr == nil {
+		if _, err := fmt.Fprintf(tmp, "graph = %s\n", s.Graph); err != nil {
+			werr = err
+		}
+	}
 	if cerr := tmp.Chmod(0o644); werr == nil {
 		werr = cerr
 	}

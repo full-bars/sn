@@ -450,7 +450,7 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 			perSource[i].Failed = true
 			tlog("[proxy][url] fetch failed for %s: %v (skipping this cycle)\n", labels[i], err)
 			setProxyResolutionStatus(proxyResolutionFailed, fmt.Sprintf("%s: %v", labels[i], err))
-			warnProxySourceFailure(url, err.Error())
+			warnProxySourceFailure(labels[i], err.Error())
 			continue
 		}
 		// Free public proxy lists are mostly dead entries. The staged probe
