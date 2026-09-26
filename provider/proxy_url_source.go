@@ -435,14 +435,21 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 	probed := map[string]bool{}
 	skippedCached := 0
 	// What each source did this cycle, for the per-source lines and the headline.
+	// urlSourceLabels redacts credential-bearing PATH segments as well as the
+	// query and userinfo that sanitizeURLForDisplay strips, so a token in a
+	// source path cannot reach the log or the operator warning. It also gives
+	// duplicate sources distinct labels instead of collapsing them.
+	labels := urlSourceLabels(urls)
 	perSource := make([]urlSourceStats, len(urls))
+	for i := range perSource {
+		perSource[i].Label = labels[i]
+	}
 	for i, url := range urls {
-		perSource[i].Label = sanitizeURLForDisplay(url)
 		lines, err := fetchProxyURLLines(ctx, url)
 		if err != nil {
 			perSource[i].Failed = true
-			tlog("[proxy][url] fetch failed for %s: %v (skipping this cycle)\n", sanitizeURLForDisplay(url), err)
-			setProxyResolutionStatus(proxyResolutionFailed, fmt.Sprintf("%s: %v", sanitizeURLForDisplay(url), err))
+			tlog("[proxy][url] fetch failed for %s: %v (skipping this cycle)\n", labels[i], err)
+			setProxyResolutionStatus(proxyResolutionFailed, fmt.Sprintf("%s: %v", labels[i], err))
 			warnProxySourceFailure(url, err.Error())
 			continue
 		}
@@ -541,11 +548,11 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 		if len(qualified) == 0 && len(belowBar) == 0 && len(socks5Only) == 0 && len(probeLines) > 0 {
 			// The fetch itself succeeded but every NEW line was unparseable
 			// or dead — distinct from the fetch-failed case above (N3).
-			tlog("[proxy][url] %s: fetched %d lines, %d new, all unparseable or dead\n", sanitizeURLForDisplay(url), len(lines), len(probeLines))
-			warnProxySourceFailure(sanitizeURLForDisplay(url), fmt.Sprintf("fetched %d lines, %d new, all unparseable or dead", len(lines), len(probeLines)))
+			tlog("[proxy][url] %s: fetched %d lines, %d new, all unparseable or dead\n", labels[i], len(lines), len(probeLines))
+			warnProxySourceFailure(labels[i], fmt.Sprintf("fetched %d lines, %d new, all unparseable or dead", len(lines), len(probeLines)))
 		}
 		tlog("[proxy][url] probed %s: %d/%d new qualified (%d cached, skipped), %d below-bar, %d socks5-only\n",
-			sanitizeURLForDisplay(url), len(qualified), len(probeLines), skippedThisSource, len(belowBar), len(socks5Only))
+			labels[i], len(qualified), len(probeLines), skippedThisSource, len(belowBar), len(socks5Only))
 	}
 	if skippedCached > 0 {
 		// Cached-skip is the main efficiency change of this PR; the

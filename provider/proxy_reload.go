@@ -598,7 +598,7 @@ func (r *ProxyReloader) reload() {
 		// UNKNOWN rather than empty, so a transient read error must not cancel
 		// a working fleet.
 		if urlCacheLoaded {
-			stopped := 0
+			stopped, draining := 0, 0
 			for addr := range running {
 				if addr == directProxyKey {
 					continue // managed by the direct hot-toggle block above
@@ -615,16 +615,84 @@ func (r *ProxyReloader) reload() {
 				if !ok {
 					continue
 				}
-				cancel()
 				delete(r.state.Proxies, addr)
 				r.cancelMapMu.Lock()
 				delete(r.runningAuth, addr)
 				r.cancelMapMu.Unlock()
-				stopped++
+
+				// Drain rather than hard-cancel: a proxy with live clients
+				// must not have them cut mid-session. The removal pass below
+				// does the same, so this matches it — a proxy with no clients
+				// stops now, one with clients stops when the last one leaves.
+				bw := proxyBandwidthByAddressV2026(addr)
+				if bw == nil || bw.Clients.Load() == 0 {
+					cancel()
+					stopped++
+					continue
+				}
+				r.drainMu.Lock()
+				r.drainingProxies[addr] = cancel
+				r.drainMu.Unlock()
+				tlog("[proxy] draining %s (%d active clients): source went empty\n", addr, bw.Clients.Load())
+				go func(cancelFn context.CancelFunc, proxyAddr string) {
+					defer func() {
+						r.drainMu.Lock()
+						delete(r.drainingProxies, proxyAddr)
+						r.drainMu.Unlock()
+					}()
+					for {
+						bw := proxyBandwidthByAddressV2026(proxyAddr)
+						if bw == nil || bw.Clients.Load() == 0 {
+							break
+						}
+						select {
+						case <-r.parentCtx.Done():
+							return
+						case <-time.After(5 * time.Second):
+						}
+					}
+					tlog("[proxy] drain complete: %s\n", proxyAddr)
+					cancelFn()
+				}(cancel, addr)
+				draining++
 			}
-			if stopped > 0 {
-				tlog("[proxy] reload: source empty, stopped %d running prox(ies)\n", stopped)
+			if stopped > 0 || draining > 0 {
+				tlog("[proxy] reload: source empty, stopped %d running prox(ies), draining %d with active clients\n", stopped, draining)
 			}
+			// Reconcile and persist, not just the running set. A dead or
+			// offline proxy's goroutine has already exited, so it was never
+			// in `running` and the loop above never saw it — without this its
+			// state entry would survive in proxy.state forever. Gated on
+			// urlCacheLoaded for the same reason as the loop: an unreadable
+			// cache makes desiredSet incomplete, and pruning against it would
+			// wipe history for proxies that are merely unreadable this cycle.
+			pruned := 0
+			for addr := range r.state.Proxies {
+				if _, ok := desiredSet[addr]; !ok {
+					delete(r.state.Proxies, addr)
+					pruned++
+				}
+			}
+			if pruned > 0 {
+				tlog("[proxy] pruned %d stale proxy.state entries (source empty)\n", pruned)
+			}
+			proxyStateMu.Lock()
+			if diskState, err := readProxyState(); err == nil {
+				for addr, entry := range r.state.Proxies {
+					if diskEntry, ok := diskState.Proxies[addr]; ok {
+						entry.Health = diskEntry.Health
+						entry.DownSince = diskEntry.DownSince
+						entry.AuthFailures = diskEntry.AuthFailures
+						r.state.Proxies[addr] = entry
+					}
+				}
+			}
+			r.state.NextID = currentProxyIDCounter()
+			if err := writeProxyState(r.state); err != nil {
+				tlog("[proxy] warning: could not write proxy.state after reload: %v\n", err)
+			}
+			proxyStateMu.Unlock()
+
 			// The configured count reflects the desired set, which is empty.
 			// This must be set even when nothing was running, or a node that
 			// never had proxies would keep a stale count.
