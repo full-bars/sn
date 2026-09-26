@@ -71,14 +71,41 @@ func loadTopSettings(path string) topSettings {
 	return s
 }
 
+// ensureConfigDir creates the settings directory if it is missing and reports
+// whether THIS call created it. The caller uses that to hand a directory it
+// owns to the invoking user; an existing directory is never touched, so this
+// cannot take over a directory the user created themselves.
+func ensureConfigDir(dir string) (created bool, err error) {
+	if _, err := os.Stat(dir); err == nil {
+		return false, nil
+	} else if !os.IsNotExist(err) {
+		return false, err
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // saveTopSettings writes the file through a temporary file and a rename, so a
 // crash mid-write never leaves half a file behind.
 func saveTopSettings(path string, s topSettings) error {
 	if path == "" {
 		return nil
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	dir := filepath.Dir(path)
+	// MkdirAll leaves a root-owned directory behind when the first save runs
+	// under sudo with HOME preserved: chownConfigFdToDirOwner then reads THAT
+	// directory's owner, finds root, and changes nothing — so the user's next
+	// non-sudo save cannot create a temp file in it. Hand a directory we just
+	// created to the owner of the invoking user's home before anything is
+	// written into it. Only when we created it, and best-effort.
+	created, err := ensureConfigDir(dir)
+	if err != nil {
 		return err
+	}
+	if created {
+		chownConfigDirToHomeOwner(dir)
 	}
 	tmp, err := os.CreateTemp(filepath.Dir(path), ".top.conf.*")
 	if err != nil {

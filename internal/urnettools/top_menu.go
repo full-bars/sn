@@ -30,8 +30,17 @@ func (m *topModel) applySettings(s topSettings) {
 	}
 }
 
+// settings is what a save writes. When the theme is forced by the environment
+// (NO_COLOR, a dumb terminal) it is deliberately OMITTED: writing m.theme.Name
+// would persist the environment's choice as the user's preference, so the
+// forced theme would outlive the terminal that forced it. Omitting it leaves
+// any previously saved theme untouched.
 func (m *topModel) settings() topSettings {
-	return topSettings{Theme: m.theme.Name, Graph: m.graph.String()}
+	s := topSettings{Graph: m.graph.String()}
+	if !m.themeLocked {
+		s.Theme = m.theme.Name
+	}
+	return s
 }
 
 // menuHandle applies one input event while the menu is open. It reports whether
