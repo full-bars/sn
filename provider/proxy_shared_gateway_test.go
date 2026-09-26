@@ -49,6 +49,51 @@ func TestEarnTrackerKeepsSiblingAccountsApart(t *testing.T) {
 	}
 }
 
+// The tracker must keep one baseline PER IDENTITY. Two accounts at one shared
+// gateway must not be merged into a single baseline, or an account that never
+// earned could inherit the other's activity.
+//
+// This asserts on the STORED baselines rather than a query result, because
+// EarnedSince normalizes its argument the same way the tracker normalizes its
+// ingest key: a query returns the same answer under either keying scheme, so
+// only the state itself pins the invariant. Verified to hold today (both
+// normalizers leave an identity key intact) — this test is here so a future
+// change to the normalizer cannot quietly break it.
+func TestEarnTrackerKeepsOneBaselinePerIdentity(t *testing.T) {
+	tr := newPerProxyEarnTracker()
+
+	keyA := sharedGateway + "\x1falice"
+	keyB := sharedGateway + "\x1fbob"
+
+	bwA := &bandwidth.ProxyBandwidth{}
+	bwB := &bandwidth.ProxyBandwidth{}
+
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{keyA: bwA, keyB: bwB})
+	// A earns, B does not.
+	bwA.BillableRx.Store(500)
+	tr.Update(map[string]*bandwidth.ProxyBandwidth{keyA: bwA, keyB: bwB})
+
+	tr.mu.Lock()
+	defer tr.mu.Unlock()
+
+	if len(tr.prevCum) != 2 {
+		t.Fatalf("baselines = %d (%v), want 2: the two accounts were merged onto one", len(tr.prevCum), tr.prevCum)
+	}
+	if got, ok := tr.prevCum[keyA]; !ok || got != 500 {
+		t.Fatalf("baseline for account A = %d (present=%v), want 500: identity keys must be stored intact", got, ok)
+	}
+	if got, ok := tr.prevCum[keyB]; !ok || got != 0 {
+		t.Fatalf("baseline for account B = %d (present=%v), want 0", got, ok)
+	}
+	// Only A moved, so only A is marked as earning.
+	if _, ok := tr.lastEarned[keyA]; !ok {
+		t.Fatalf("account A earned but carries no earned timestamp")
+	}
+	if _, ok := tr.lastEarned[keyB]; ok {
+		t.Fatalf("account B was credited with an earn it never made")
+	}
+}
+
 // TestProxyBandwidthSnapshotByKeySeparatesAccounts pins the property the
 // collector depends on: the identity-keyed bandwidth snapshot keeps sibling
 // accounts apart, while the display snapshot collapses them. The collector
