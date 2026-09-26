@@ -542,7 +542,7 @@ func fetchAndMergeProxyURLs(ctx context.Context, urls []string, maxTotal int, ap
 			// The fetch itself succeeded but every NEW line was unparseable
 			// or dead — distinct from the fetch-failed case above (N3).
 			tlog("[proxy][url] %s: fetched %d lines, %d new, all unparseable or dead\n", sanitizeURLForDisplay(url), len(lines), len(probeLines))
-			warnProxySourceFailure(url, fmt.Sprintf("fetched %d lines, %d new, all unparseable or dead", len(lines), len(probeLines)))
+			warnProxySourceFailure(sanitizeURLForDisplay(url), fmt.Sprintf("fetched %d lines, %d new, all unparseable or dead", len(lines), len(probeLines)))
 		}
 		tlog("[proxy][url] probed %s: %d/%d new qualified (%d cached, skipped), %d below-bar, %d socks5-only\n",
 			sanitizeURLForDisplay(url), len(qualified), len(probeLines), skippedThisSource, len(belowBar), len(socks5Only))

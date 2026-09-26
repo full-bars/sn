@@ -453,6 +453,12 @@ func (r *ProxyReloader) reload() {
 		settings, err := readProxySettingsFromFile(r.sourcePath)
 		if err != nil {
 			tlog("[proxy] reload skipped: could not read source: %v\n", err)
+			// Record the failure before returning. Without this the resolution
+			// stays pending, so the status line reads "starting: resolving
+			// proxies" instead of a source failure, and the snapshot's startup
+			// reason later reads as stuck rather than as an unreadable source.
+			// The running proxies are deliberately left alone.
+			setProxyResolutionStatus(proxyResolutionFailed, fmt.Sprintf("could not read %s: %v", r.sourcePath, err))
 			return
 		}
 		desired = settings
@@ -580,6 +586,49 @@ func (r *ProxyReloader) reload() {
 		} else {
 			tlog("[proxy] reload: 0 proxies; direct-only (no proxy source configured) — settled\n")
 			setProxyResolutionStatus(proxyResolutionZeroValid, "direct-only providing; no proxy source configured")
+		}
+		// A source that was configured and has now gone empty is NOT a reason to
+		// keep dialling the proxies it used to supply. The full diff below is
+		// skipped because there is nothing to add, so the removal half has to
+		// happen here: without it the old proxies keep running and the stale
+		// positive configured count makes the status line and the startup
+		// phase ignore the resolution just recorded.
+		//
+		// The unreadable proxy_url.json case is exempt: there the sources are
+		// UNKNOWN rather than empty, so a transient read error must not cancel
+		// a working fleet.
+		if urlCacheLoaded {
+			stopped := 0
+			for addr := range running {
+				if addr == directProxyKey {
+					continue // managed by the direct hot-toggle block above
+				}
+				if r.isDraining(addr) {
+					continue
+				}
+				r.cancelMapMu.Lock()
+				cancel, ok := r.cancelMap[addr]
+				if ok {
+					delete(r.cancelMap, addr)
+				}
+				r.cancelMapMu.Unlock()
+				if !ok {
+					continue
+				}
+				cancel()
+				delete(r.state.Proxies, addr)
+				r.cancelMapMu.Lock()
+				delete(r.runningAuth, addr)
+				r.cancelMapMu.Unlock()
+				stopped++
+			}
+			if stopped > 0 {
+				tlog("[proxy] reload: source empty, stopped %d running prox(ies)\n", stopped)
+			}
+			// The configured count reflects the desired set, which is empty.
+			// This must be set even when nothing was running, or a node that
+			// never had proxies would keep a stale count.
+			setConfiguredProxyCount(0)
 		}
 		return
 	}

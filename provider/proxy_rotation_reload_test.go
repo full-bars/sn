@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/urnetwork/connect"
@@ -76,6 +77,42 @@ func TestReload_DirectOffNoSource_StillReadsEmpty(t *testing.T) {
 	}
 	if line := systemdStatusLine(); !strings.Contains(line, "direct transport is off") {
 		t.Fatalf("direct-off no-source line must name the missing direct transport, got %q", line)
+	}
+}
+
+// A source that WAS configured and has gone empty must stop the proxies it
+// used to supply, and must zero the configured count. Without this the old
+// proxies keep dialling and the stale positive count makes the status line
+// and startup phase ignore the empty-source resolution.
+func TestReload_EmptySource_StopsRunningProxies(t *testing.T) {
+	resetProxyCounters(t)
+
+	// A source that used to supply a proxy, now empty.
+	r := emptyReloader(t, writeProxyFile(t, "# empty"))
+	// Seed one running proxy the way the startup loop would have.
+	var cancelled atomic.Int32
+	boot := &connect.ProxySettings{Address: "gone.example:1"}
+	r.cancelMap[boot.Address] = func() { cancelled.Add(1) }
+	r.runningAuth[boot.Address] = boot
+	r.state.Proxies[boot.Address] = ProxyEntry{Source: "file"}
+	setConfiguredProxyCount(1)
+
+	r.reload()
+
+	if got := cancelled.Load(); got != 1 {
+		t.Fatalf("running proxies stopped = %d, want 1: an empty source must not keep dialling", got)
+	}
+	if _, still := r.cancelMap[boot.Address]; still {
+		t.Fatalf("proxy %s still in the cancel map after the source went empty", boot.Address)
+	}
+	if _, still := r.state.Proxies[boot.Address]; still {
+		t.Fatalf("proxy %s still in proxy.state after the source went empty", boot.Address)
+	}
+	if n := proxiesConfigured.Load(); n != 0 {
+		t.Fatalf("configured count = %d, want 0: a stale positive count hides the empty source", n)
+	}
+	if got := proxyResolutionStatus.Load(); got != proxyResolutionEmpty {
+		t.Fatalf("resolution=%d, want proxyResolutionEmpty(%d)", got, proxyResolutionEmpty)
 	}
 }
 
