@@ -1,14 +1,15 @@
 package provider
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
-
-	"fmt"
-	"github.com/docopt/docopt-go"
+	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/docopt/docopt-go"
 )
 
 // proxy_trim.go implements the operator `proxy trim <N>` hard cap: hold the
@@ -95,13 +96,13 @@ type trimRank struct {
 	traffic uint64
 }
 
-// buildTrimGradeResolver returns a per-address A-F grade resolver backed by the
-// existing proxyGradeFor unifier, which reads the grade from the correct store
-// for each proxy (paid/file ProxyEntry wins, else the URL cache ProxyURLEntry)
-// nil urlState degrades to the paid store only.
-func buildTrimGradeResolver(state *ProxyState, urlState *ProxyURLState) func(addr string) (float64, bool) {
-	return func(addr string) (float64, bool) {
-		g, ok := proxyGradeFor(addr, state, urlState)
+// buildTrimGradeResolver returns a per-identity-key A-F grade resolver backed by
+// the existing proxyGradeFor unifier, which reads the grade from the correct
+// store for each proxy (paid/file ProxyEntry wins, else the URL cache
+// ProxyURLEntry). nil urlState degrades to the paid store only.
+func buildTrimGradeResolver(state *ProxyState, urlState *ProxyURLState) func(key string) (float64, bool) {
+	return func(key string) (float64, bool) {
+		g, ok := proxyGradeFor(key, state, urlState)
 		if !ok {
 			return 0, false
 		}
@@ -199,41 +200,54 @@ func selectWorstRunningProxies(state map[string]ProxyEntry, gradeFor func(addr s
 // for the shed tiebreak. Best-effort: only used as a last-resort tiebreak among
 // addresses with identical health and grade.
 func runningProxyTraffic() map[string]uint64 {
-	_, _, _, bandwidth, _ := ProxyHealthSnapshot()
+	// Identity-keyed snapshot: traffic aggregates per proxy identity so two
+	// accounts sharing one gateway address rank separately and earn-protect
+	// independently (matches state.Proxies keys).
+	bwMap := ProxyBandwidthSnapshotByKey()
 	traffic := map[string]uint64{}
-	for key, bw := range bandwidth {
+	for key, bw := range bwMap {
 		if bw == nil {
 			continue
 		}
-		// Bandwidth is keyed by the display string "proxy[<n>] (<addr>)"; the
-		// tiebreak must key by the address so it matches ProxyEntry keys.
-		_, hp := parseProxyString(key)
-		traffic[hp] += bw.TotalRx.Load() + bw.TotalTx.Load()
+		traffic[key] += bw.TotalRx.Load() + bw.TotalTx.Load()
 	}
 	return traffic
 }
 
-// runningProxyAddresses returns the currently RUNNING addresses from the health
-// surface (bandwidth + connecting), so --preview reports the running pool rather
-// than the larger desired set in proxy.state).
+// runningProxyAddresses returns the currently RUNNING proxies as identity keys
+// (ProxySettings.Key(): address, or address+user for a credentialed proxy) from
+// the health surface (bandwidth + connecting), so --preview reports the running
+// pool rather than the larger desired set in proxy.state. The keys must match
+// the ones proxy.state and runningProxyTraffic use, or the preview ranks a
+// credentialed proxy as unknown and idle. The health snapshot lists proxies as
+// "proxy[N] (addr)" display strings, so each one is resolved to its identity via
+// the registry index, falling back to the parsed address when it is not
+// registered.
 func runningProxyAddresses() []string {
 	_, _, _, bandwidth, connecting := ProxyHealthSnapshot()
 	seen := map[string]bool{}
 	var out []string
-	add := func(a string) {
-		if a == "" || seen[a] {
+	add := func(display string) {
+		key := ""
+		if idx := parseProxyIndex(display); idx >= 0 {
+			key = ProxyKeyByIndex(idx)
+		}
+		if key == "" {
+			_, key = parseProxyString(display)
+		}
+		if key == "" || seen[key] {
 			return
 		}
-		seen[a] = true
-		out = append(out, a)
+		seen[key] = true
+		out = append(out, key)
 	}
-	for key := range bandwidth {
-		_, hp := parseProxyString(key)
-		add(hp)
+	for display := range bandwidth {
+		add(display)
 	}
 	for _, c := range connecting {
 		add(c)
 	}
+	sort.Strings(out)
 	return out
 }
 
@@ -303,7 +317,7 @@ func proxyTrim(opts docopt.Opts) {
 			shed := selectWorstRunningProxies(state.Proxies, gradeFor, traffic, running, len(running)-count)
 			fmt.Printf("preview: %d running; would shed %d worst-graded to reach %d:\n", len(running), len(shed), count)
 			for _, addr := range shed {
-				fmt.Printf("  %s\n", addr)
+				fmt.Printf("  %s\n", proxyKeyDisplay(addr))
 			}
 		} else {
 			fmt.Printf("preview: running=%d <= %d, nothing to shed\n", len(running), count)

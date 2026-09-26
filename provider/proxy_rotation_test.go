@@ -45,7 +45,7 @@ func bootLaunchedReloader(t *testing.T, file string, boot *connect.ProxySettings
 	cancel := context.CancelFunc(func() { cancelled.Add(1) })
 	parent, cancelParent := context.WithCancel(context.Background())
 	r := &ProxyReloader{
-		cancelMap:   map[string]context.CancelFunc{boot.Address: cancel},
+		cancelMap:   map[string]context.CancelFunc{boot.Key(): cancel},
 		cancelMapMu: &sync.Mutex{},
 		runningAuth: make(map[string]*connect.ProxySettings),
 		state:       &ProxyState{Proxies: map[string]ProxyEntry{}},
@@ -114,7 +114,7 @@ func TestReload_SeededBootProxy_RotatesOnCredentialChange(t *testing.T) {
 	if n := cancelled.Load(); n != 1 {
 		t.Fatalf("expected old goroutine cancelled once on credential change, got %d", n)
 	}
-	got, ok := r.runningAuthFor("192.0.2.1:1080")
+	got, ok := r.runningAuthFor(boot.Key())
 	if !ok || got.Auth == nil || got.Auth.Password != "NEWPASS" {
 		t.Fatalf("relaunched proxy must record the new credentials, got %+v ok=%v", got, ok)
 	}
@@ -129,7 +129,7 @@ func TestReload_RotatedBusyProxy_IsNotDrained(t *testing.T) {
 	r, cancelled := bootLaunchedReloader(t, writeProxyFile(t, addr+":alice:NEWPASS"), boot)
 	r.seedRunningAuth([]*connect.ProxySettings{boot})
 
-	RegisterProxy(987001, addr)
+	RegisterProxy(987001, addr, boot.Key())
 	t.Cleanup(func() { UnregisterProxy(987001) })
 	bw := RegisterProxyBandwidth(987001)
 	bw.Clients.Store(3) // active sessions on the old credentials
@@ -139,10 +139,10 @@ func TestReload_RotatedBusyProxy_IsNotDrained(t *testing.T) {
 	if n := cancelled.Load(); n != 1 {
 		t.Fatalf("busy rotated proxy: expected old goroutine cancelled once, got %d", n)
 	}
-	if r.isDraining(addr) {
+	if r.isDraining(boot.Key()) {
 		t.Fatal("rotated proxy must not enter the draining state")
 	}
-	got, ok := r.runningAuthFor(addr)
+	got, ok := r.runningAuthFor(boot.Key())
 	if !ok || got.Auth == nil || got.Auth.Password != "NEWPASS" {
 		t.Fatalf("relaunched proxy must record the new credentials, got %+v ok=%v", got, ok)
 	}
@@ -168,9 +168,11 @@ func TestReload_RotatedProxy_KeepsStateEntry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	kept, ok := after.Proxies[addr]
+	// The seeded legacy entry (bare address) is adopted to the identity key
+	// (address+user) by the reload's migration, preserving ID and health.
+	kept, ok := after.Proxies[boot.Key()]
 	if !ok {
-		t.Fatal("rotated proxy lost its state entry")
+		t.Fatalf("rotated proxy lost its state entry: no entry at identity key %q (legacy bare-address seed %q)", boot.Key(), addr)
 	}
 	if kept.ID != 7 || kept.Health != "up" {
 		t.Fatalf("rotated proxy must keep ID 7 and health up, got ID=%d health=%q", kept.ID, kept.Health)
@@ -236,8 +238,9 @@ func writeProxyConfigForTest(t *testing.T, servers map[string]string, auths map[
 	writeProxyConfig(cfg)
 }
 
-// proxyAdd removes an existing same-address entry with different credentials
-// so a re-paste becomes a rotation instead of a silent duplicate.
+// proxyAdd removes an existing same-identity entry with a different password so
+// a re-paste becomes a rotation instead of a silent duplicate. A DIFFERENT user
+// at the same address is a separate account and is left alone.
 func TestProxyAddRotatesCredentials(t *testing.T) {
 	withTempHome(t)
 	resetReloadTriggerForTest(t)
@@ -246,17 +249,37 @@ func TestProxyAddRotatesCredentials(t *testing.T) {
 		"192.0.2.9:1080":                 "",
 	}, nil)
 
-	proxyAdd(docopt.Opts{"<key_address>": []string{"192.0.2.4:1080:newuser:newpass"}, "-f": true})
+	proxyAdd(docopt.Opts{"<key_address>": []string{"192.0.2.4:1080:olduser:newpass"}, "-f": true})
 
 	got := readProxyConfig()
-	if _, ok := got.Servers["192.0.2.4:1080:newuser:newpass"]; !ok {
+	if _, ok := got.Servers["192.0.2.4:1080:olduser:newpass"]; !ok {
 		t.Fatalf("new credential entry missing: %v", got.Servers)
 	}
 	if _, ok := got.Servers["192.0.2.4:1080:olduser:oldpass"]; ok {
-		t.Fatalf("old credential entry was not rotated away: %v", got.Servers)
+		t.Fatalf("old password for the same identity was not rotated away: %v", got.Servers)
 	}
 	if _, ok := got.Servers["192.0.2.9:1080"]; !ok {
 		t.Fatalf("unrelated proxy must survive: %v", got.Servers)
+	}
+}
+
+// A different user at the same gateway address is a DIFFERENT account, so
+// adding it must not purge the existing account.
+func TestProxyAdd_DifferentUserAtSharedGatewayIsNotARotation(t *testing.T) {
+	withTempHome(t)
+	resetReloadTriggerForTest(t)
+	writeProxyConfigForTest(t, map[string]string{
+		"192.0.2.4:1080:alice:secret": "",
+	}, nil)
+
+	proxyAdd(docopt.Opts{"<key_address>": []string{"192.0.2.4:1080:bob:other"}, "-f": true})
+
+	got := readProxyConfig()
+	if _, ok := got.Servers["192.0.2.4:1080:alice:secret"]; !ok {
+		t.Fatalf("adding a second account purged the first: %v", got.Servers)
+	}
+	if _, ok := got.Servers["192.0.2.4:1080:bob:other"]; !ok {
+		t.Fatalf("the new account was not added: %v", got.Servers)
 	}
 }
 
@@ -283,7 +306,15 @@ func TestProxyAddKeepsEntryWithSameEffectiveCredentials(t *testing.T) {
 // running under the rotated credentials, and present in the cancel map.
 func TestReload_RotationWithRealGoroutines_KeepsRegistration(t *testing.T) {
 	const addr = "192.0.2.40:1080"
+	// The config is credentialed ("addr:test-user:..."), so the reload engine
+	// keys every structure by identity (address+user), never the bare address.
+	key := (&connect.ProxySettings{Network: "tcp", Address: addr, Auth: &proxy.Auth{User: "test-user"}}).Key()
 	withTempHome(t)
+	// Production seeds the ID counter at startup so ID 0 stays reserved for
+	// [direct]. Without it, run in isolation the first proxy is handed ID 0
+	// and races the direct goroutine's RegisterProxy(0, "direct"), which
+	// overwrites this proxy's health entry.
+	initProxyIDCounter(0)
 	proxyWarmupDone.Store(true)
 	t.Cleanup(func() { proxyWarmupDone.Store(false) })
 
@@ -305,13 +336,13 @@ func TestReload_RotationWithRealGoroutines_KeepsRegistration(t *testing.T) {
 	t.Cleanup(func() {
 		cancelParent()
 		r.wg.Wait()
-		if _, registered := ProxyHealthByAddress()[addr]; registered {
-			UnregisterProxy(r.state.Proxies[addr].ID)
+		if _, registered := ProxyHealthByKey()[key]; registered {
+			UnregisterProxy(r.state.Proxies[key].ID)
 		}
 	})
 
 	r.reload() // launch
-	if _, ok := r.state.Proxies[addr]; !ok {
+	if _, ok := r.state.Proxies[key]; !ok {
 		t.Fatal("first reload did not create a state entry")
 	}
 	if err := os.WriteFile(file, []byte(addr+":test-user:rotated-pass\n"), 0600); err != nil {
@@ -321,18 +352,18 @@ func TestReload_RotationWithRealGoroutines_KeepsRegistration(t *testing.T) {
 
 	deadline := time.Now().Add(150 * time.Millisecond)
 	for time.Now().Before(deadline) {
-		if _, registered := ProxyHealthByAddress()[addr]; !registered {
+		if _, registered := ProxyHealthByKey()[key]; !registered {
 			t.Fatal("the superseded goroutine's exit removed the replacement's health registration")
 		}
 		time.Sleep(5 * time.Millisecond)
 	}
 	r.cancelMapMu.Lock()
-	_, running := r.cancelMap[addr]
+	_, running := r.cancelMap[key]
 	r.cancelMapMu.Unlock()
 	if !running {
 		t.Fatal("replacement is missing from the cancel map")
 	}
-	got, ok := r.runningAuthFor(addr)
+	got, ok := r.runningAuthFor(key)
 	if !ok || got.Auth == nil || got.Auth.Password != "rotated-pass" {
 		t.Fatalf("replacement must run with the rotated credentials, got %+v ok=%v", got, ok)
 	}
@@ -343,6 +374,9 @@ func TestReload_RotationWithRealGoroutines_KeepsRegistration(t *testing.T) {
 // at the first such entry it saw, so a stale duplicate for the same address
 // survived or was purged depending on Go's random map order. Every duplicate
 // must be scanned first. Repeated to cover the iteration orders.
+// An existing entry with the same effective credentials is not a rotation and
+// must not be purged. Stale duplicates of the SAME identity (same user, other
+// passwords) are still purged in a stable order.
 func TestProxyAddPurgesStaleDuplicatesWhenSameCredentialsExist(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
@@ -353,10 +387,11 @@ func TestProxyAddPurgesStaleDuplicatesWhenSameCredentialsExist(t *testing.T) {
 	for i := 0; i < 40; i++ {
 		cfg := readProxyConfig()
 		cfg.Servers = map[string]string{
-			"192.0.2.4:1080":              "k1",
-			"192.0.2.4:1080:bob:oldpass":  "",
-			"192.0.2.4:1080:carol:oldpas": "",
-			"192.0.2.9:1080":              "",
+			"192.0.2.4:1080":           "k1",
+			"192.0.2.4:1080:alice:old": "",
+			"192.0.2.4:1080:alice:zzz": "",
+			"192.0.2.4:1080:bob:other": "", // other account: untouched
+			"192.0.2.9:1080":           "",
 		}
 		cfg.Auths = map[string]*ProxyAuth{"k1": {User: "alice", Password: "secret"}}
 		writeProxyConfig(cfg)
@@ -370,13 +405,16 @@ func TestProxyAddPurgesStaleDuplicatesWhenSameCredentialsExist(t *testing.T) {
 		if _, ok := got.Servers["192.0.2.4:1080"]; !ok {
 			t.Fatalf("iteration %d: entry with the same effective credentials was lost: %v", i, got.Servers)
 		}
-		for _, stale := range []string{"192.0.2.4:1080:bob:oldpass", "192.0.2.4:1080:carol:oldpas"} {
+		for _, stale := range []string{"192.0.2.4:1080:alice:old", "192.0.2.4:1080:alice:zzz"} {
 			if _, ok := got.Servers[stale]; ok {
 				t.Fatalf("iteration %d: stale duplicate %q survived: %v", i, stale, got.Servers)
 			}
 		}
-		if len(got.Servers) != 2 {
-			t.Fatalf("iteration %d: want exactly the kept entry plus the unrelated one, got %v", i, got.Servers)
+		if _, ok := got.Servers["192.0.2.4:1080:bob:other"]; !ok {
+			t.Fatalf("iteration %d: the other account at the gateway must survive: %v", i, got.Servers)
+		}
+		if len(got.Servers) != 3 {
+			t.Fatalf("iteration %d: want the kept entry, the new account, and the unrelated one, got %v", i, got.Servers)
 		}
 	}
 }

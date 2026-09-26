@@ -9,6 +9,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 // clientJWTStaleAfter prunes entries for proxies that haven't reconnected in
@@ -42,6 +44,10 @@ type clientJWTStore struct {
 	path    string
 	loaded  bool
 	entries map[string]clientJWTEntry
+	// flushes counts durable rewrites of the store file. Each one reads,
+	// re-encodes and fsyncs the whole file, so callers that change many
+	// entries at once must batch them into a single flush.
+	flushes int
 }
 
 func newClientJWTStore(path string) *clientJWTStore {
@@ -96,6 +102,85 @@ func pruneStaleEntries(entries map[string]clientJWTEntry) map[string]clientJWTEn
 		}
 	}
 	return pruned
+}
+
+func (s *clientJWTStore) AdoptLegacy(desired []*connect.ProxySettings) (adopted, split int) {
+	keysByAddress := map[string][]string{}
+	desiredKeys := make(map[string]bool, len(desired))
+	for _, d := range desired {
+		keysByAddress[d.Address] = append(keysByAddress[d.Address], d.Key())
+		desiredKeys[d.Key()] = true
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.loadLocked()
+	addresses := make([]string, 0, len(keysByAddress))
+	for address := range keysByAddress {
+		addresses = append(addresses, address)
+	}
+	sort.Strings(addresses)
+	upserts := map[string]clientJWTEntry{}
+	var deletes []string
+	for _, address := range addresses {
+		keys := keysByAddress[address]
+		legacy, ok := s.entries[address]
+		if !ok {
+			continue
+		}
+		ownedByUnauthenticated := false
+		for _, k := range keys {
+			if k == address {
+				ownedByUnauthenticated = true
+			}
+		}
+		if ownedByUnauthenticated {
+			continue
+		}
+		sort.Strings(keys)
+		winner := keys[0]
+		if _, has := s.entries[winner]; !has {
+			s.entries[winner] = legacy
+			upserts[winner] = legacy
+			adopted++
+			split += len(keys) - 1
+		}
+		delete(s.entries, address)
+		deletes = append(deletes, address)
+	}
+	// Drop the entries of proxies that are no longer desired at all. A rotation
+	// keeps the same identity (address+user), so its login is deliberately kept
+	// — that is what makes a restart reuse the client_id. But a REMOVED proxy,
+	// or one whose credentials changed so its identity key changed, leaves an
+	// entry nothing will ever read again: it would sit on disk for the store's
+	// whole retention window, and a re-add of the same address would inherit a
+	// JWT minted for the old account. Prune them here, where the full desired
+	// set is already in hand.
+	pruned := 0
+	for key := range s.entries {
+		if desiredKeys[key] {
+			continue
+		}
+		// "direct" is the native transport, not a configured proxy: it is never
+		// in the desired set and must keep its login.
+		if key == directProxyKey {
+			continue
+		}
+		delete(s.entries, key)
+		deletes = append(deletes, key)
+		pruned++
+	}
+
+	// One flush for the whole adoption, however many logins moved.
+	if len(upserts) > 0 || len(deletes) > 0 {
+		if err := s.flushBatchLocked(upserts, deletes); err != nil {
+			tlog("⚠️ [jwt-store] failed to persist %d adopted logins (%d legacy slots dropped): %v\n", len(upserts), len(deletes), err)
+		}
+	}
+	if pruned > 0 {
+		tlog("[jwt-store] dropped %d login(s) for proxies no longer desired\n", pruned)
+	}
+	return adopted, split
 }
 
 func (s *clientJWTStore) loadLocked() {
@@ -215,6 +300,20 @@ func pruneOldBackupsLocked(dir, base string) {
 
 // Get returns the stored entry for key, if any. It does not validate
 // expiry/age — callers decide whether the entry is still usable.
+
+// jwtStoreKey is the client JWT store key for a proxy: its identity
+// (ProxySettings.Key(): the address, or address+user for a credentialed
+// proxy), or the "direct" sentinel when there is no proxy. Keying by bare
+// address made two accounts at one gateway share a single saved login, so
+// one account's revocation eviction deleted the other's and both read as
+// warm from one slot.
+func jwtStoreKey(s *connect.ProxySettings) string {
+	if s == nil {
+		return "direct"
+	}
+	return s.Key()
+}
+
 func (s *clientJWTStore) Get(key string) (clientJWTEntry, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -280,10 +379,23 @@ func (s *clientJWTStore) Delete(key string) error {
 // of merging: both Put calls would report success, but only the last
 // process's snapshot survives on disk (F-9).
 func (s *clientJWTStore) flushLocked(key string, entry clientJWTEntry, deleted bool) error {
+	if deleted {
+		return s.flushBatchLocked(nil, []string{key})
+	}
+	return s.flushBatchLocked(map[string]clientJWTEntry{key: entry}, nil)
+}
+
+// flushBatchLocked applies a set of upserts and deletes to the durable store
+// with ONE read-merge-write-fsync cycle. The cost of a flush scales with the
+// whole store, not with the change, so changing N entries must cost one flush,
+// never N: a node with thousands of saved logins spent minutes at startup
+// rewriting a multi-megabyte file once per adopted entry.
+func (s *clientJWTStore) flushBatchLocked(upserts map[string]clientJWTEntry, deletes []string) error {
 	// In-memory-only mode (HOME unavailable at init): nothing to persist.
 	if s.path == "" {
 		return nil
 	}
+	s.flushes++
 	dir := filepath.Dir(s.path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
@@ -316,9 +428,10 @@ func (s *clientJWTStore) flushLocked(key string, entry clientJWTEntry, deleted b
 	// write the stale entries straight back to disk on the next flush of any
 	// key, forever undoing the prune.
 	merged = pruneStaleEntries(merged)
-	if deleted {
+	for _, key := range deletes {
 		delete(merged, key)
-	} else {
+	}
+	for key, entry := range upserts {
 		merged[key] = entry
 	}
 	s.entries = merged

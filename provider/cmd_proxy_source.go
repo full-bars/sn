@@ -3,12 +3,48 @@ package provider
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/docopt/docopt-go"
 	"github.com/urnetwork/connect"
 )
+
+// refreshRemoval is one proxy state entry that the refresh diff would drop,
+// carrying its identity key so the operator prompt never prints a raw key.
+type refreshRemoval struct {
+	key   string
+	entry ProxyEntry
+}
+
+// planProxyRefresh diffs the desired proxy list against proxy.state by proxy
+// identity (ProxySettings.Key(): address, or address+user), the same key reload
+// tracks proxies by. Diffing by bare address listed every credentialed proxy as
+// both removed (its identity key is not an address) and added. Results are
+// sorted by key so the operator prompt is stable despite map iteration order.
+func planProxyRefresh(desired []*connect.ProxySettings, current map[string]ProxyEntry) (added []string, removed []refreshRemoval) {
+	desiredSet := map[string]bool{}
+	for _, s := range desired {
+		desiredSet[s.Key()] = true
+	}
+	addedSet := map[string]bool{}
+	for _, s := range desired {
+		if _, ok := current[s.Key()]; !ok && !addedSet[s.Key()] {
+			addedSet[s.Key()] = true
+			added = append(added, s.Key())
+		}
+	}
+	for key, e := range current {
+		if !desiredSet[key] {
+			e.Health = classifyHealth(e)
+			removed = append(removed, refreshRemoval{key: key, entry: e})
+		}
+	}
+	sort.Strings(added)
+	sort.Slice(removed, func(i, j int) bool { return removed[i].key < removed[j].key })
+	return added, removed
+}
 
 func proxyRefresh(opts docopt.Opts) {
 	force, _ := opts.Bool("--force")
@@ -46,35 +82,9 @@ func proxyRefresh(opts docopt.Opts) {
 		desired = readProxySettings()
 	}
 
-	// Diff
-	desiredSet := map[string]bool{}
-	for _, s := range desired {
-		desiredSet[s.Address] = true
-	}
-
-	currentSet := map[string]ProxyEntry{}
-	for addr, e := range state.Proxies {
-		currentSet[addr] = e
-	}
-
-	var added []string
-	for _, s := range desired {
-		if _, ok := currentSet[s.Address]; !ok {
-			added = append(added, s.Address)
-		}
-	}
-
-	type removedProxyLocal struct {
-		addr  string
-		entry ProxyEntry
-	}
-	var removed []removedProxyLocal
-	for addr, e := range currentSet {
-		if !desiredSet[addr] {
-			e.Health = classifyHealth(e)
-			removed = append(removed, removedProxyLocal{addr: addr, entry: e})
-		}
-	}
+	// Diff by proxy identity (proxy.state keys are identity keys).
+	currentSet := state.Proxies
+	added, removed := planProxyRefresh(desired, currentSet)
 
 	if len(added) == 0 && len(removed) == 0 {
 		fmt.Println("proxy list is already up to date. Nothing to do.")
@@ -92,13 +102,13 @@ func proxyRefresh(opts docopt.Opts) {
 	if len(removed) > 0 {
 		fmt.Println("  Removing:")
 		for _, rp := range removed {
-			fmt.Printf("    proxy[%d]  %s   — %s\n", rp.entry.ID, rp.addr, rp.entry.Health)
+			fmt.Printf("    proxy[%d]  %s   — %s\n", rp.entry.ID, proxyKeyDisplay(rp.key), rp.entry.Health)
 		}
 	}
 	if len(added) > 0 {
 		fmt.Println("\n  Adding:")
-		for _, addr := range added {
-			fmt.Printf("    %s\n", addr)
+		for _, key := range added {
+			fmt.Printf("    %s\n", proxyKeyDisplay(key))
 		}
 	}
 

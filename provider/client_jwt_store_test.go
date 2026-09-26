@@ -6,6 +6,9 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/urnetwork/connect"
+	"golang.org/x/net/proxy"
 )
 
 const testClientId = "00000000-0000-0000-0000-000000000001"
@@ -234,5 +237,56 @@ func TestClientJWTStoreAnyNetworkID(t *testing.T) {
 	})
 	if got := store.AnyNetworkID(); got != "" {
 		t.Fatalf("AnyNetworkID() with conflicting networks = %q, want empty (ambiguous)", got)
+	}
+}
+
+// A login for a proxy that is no longer desired must not survive a reload: it
+// would sit on disk for the store's whole retention window, and a re-add of
+// the same address would inherit a JWT minted for the old account. The two
+// cases that must KEEP their login are a rotation (same identity, new
+// password — that is exactly what makes a restart reuse the client_id) and
+// the native "direct" transport, which is never in the desired set at all.
+func TestAdoptLegacyPrunesLoginsForProxiesNoLongerDesired(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "client_jwts.json")
+	store := newClientJWTStore(path)
+
+	keptKey := "gw.example:1080\x1falice"      // still desired
+	rotatedKey := "rot.example:1080\x1fbob"    // still desired, password changed
+	droppedKey := "gone.example:1080\x1fcarol" // removed from the source
+	for _, k := range []string{keptKey, rotatedKey, droppedKey, directProxyKey} {
+		if err := store.Put(k, clientJWTEntry{
+			ByClientJWT: "jwt-for-" + k,
+			ClientID:    testClientId,
+			MintedAt:    time.Now(),
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	desired := []*connect.ProxySettings{
+		{Network: "tcp", Address: "gw.example:1080", Auth: &proxy.Auth{User: "alice", Password: "p1"}},
+		// Same identity as the stored entry: the user is unchanged, only the
+		// password. This is a rotation, not a removal.
+		{Network: "tcp", Address: "rot.example:1080", Auth: &proxy.Auth{User: "bob", Password: "newpass"}},
+	}
+	store.AdoptLegacy(desired)
+
+	if _, ok := store.Get(keptKey); !ok {
+		t.Error("a still-desired proxy lost its login")
+	}
+	if _, ok := store.Get(rotatedKey); !ok {
+		t.Error("a rotated proxy lost its login: a restart would mint a fresh client_id and lose its reliability history")
+	}
+	if _, ok := store.Get(directProxyKey); !ok {
+		t.Error("the native direct transport lost its login; it is never in the desired set")
+	}
+	if _, ok := store.Get(droppedKey); ok {
+		t.Error("a removed proxy kept its login: a re-add would inherit the old account's JWT")
+	}
+
+	// And it must be gone from disk, not just from memory.
+	reloaded := newClientJWTStore(path)
+	if _, ok := reloaded.Get(droppedKey); ok {
+		t.Error("the removed proxy's login survived on disk")
 	}
 }

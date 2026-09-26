@@ -36,7 +36,8 @@ type ProxyFailureCounters struct {
 // proxyHealth tracks one proxy's platform-transport liveness for the
 // [health][proxies] report. See docs/design/dead-proxy-health-report.md.
 type proxyHealth struct {
-	address         string
+	address         string // dial target, for operator-facing display
+	key             string // identity: address, or address+user for a shared-gateway proxy — see ProxySettings.Key()
 	currentlyUp     bool
 	everUp          bool
 	connecting      bool      // registered and still trying to establish first WebSocket
@@ -116,10 +117,13 @@ type ProxyHealthReport struct {
 var (
 	proxyHealthMu      sync.Mutex
 	proxyHealthByIndex = map[int]*proxyHealth{}
-	// addr -> health, kept in sync with proxyHealthByIndex so ProxyBandwidthByAddress
-	// is O(1). It is polled every 5s per draining proxy during hot-reload; a linear
-	// scan there was O(proxies) under the global lock for every poll.
-	proxyHealthByAddr = map[string]*proxyHealth{}
+	// identity-keyed, kept in sync with proxyHealthByIndex so by-key lookups
+	// are O(1). It is polled every 5s per draining proxy during hot-reload; a
+	// linear scan there was O(proxies) under the global lock for every poll.
+	// Keyed by proxy identity (address, or address+user for a shared-gateway
+	// proxy), not bare address: two accounts sharing one gateway address are
+	// different identities and must not shadow each other here.
+	proxyHealthByKey = map[string]*proxyHealth{}
 
 	proxyLifetimeRecovered int
 	proxyLifetimeLost      int
@@ -131,8 +135,12 @@ var (
 	proxyHealthGen atomic.Uint64
 )
 
-// RegisterProxy adds or updates a proxy in the health registry.
-func RegisterProxy(index int, address string) uint64 {
+// RegisterProxy adds or updates a proxy in the health registry under its
+// identity key (ProxySettings.Key(): address, or address+user for a
+// shared-gateway proxy). address stays the literal dial target for display;
+// key is the identity two accounts sharing a gateway address must never
+// share.
+func RegisterProxy(index int, address, key string) uint64 {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
 	h, ok := proxyHealthByIndex[index]
@@ -140,10 +148,10 @@ func RegisterProxy(index int, address string) uint64 {
 		h = &proxyHealth{}
 		proxyHealthByIndex[index] = h
 	}
-	if h.address != "" && h.address != address {
-		// Different address at the same index: full reset — the old
+	if h.key != "" && h.key != key {
+		// Different identity at the same index: full reset — the old
 		// proxy instance is being replaced by a different one.
-		delete(proxyHealthByAddr, h.address)
+		delete(proxyHealthByKey, h.key)
 		h.everUp = false
 		h.currentlyUp = false
 		h.downSince = time.Time{}
@@ -154,6 +162,7 @@ func RegisterProxy(index int, address string) uint64 {
 		h.failures = ProxyFailureCounters{}
 	}
 	h.address = address
+	h.key = key
 	h.connecting = true
 	h.connectingSince = time.Now()
 
@@ -169,7 +178,7 @@ func RegisterProxy(index int, address string) uint64 {
 	gen := proxyHealthGen.Add(1)
 	h.regen = gen
 
-	proxyHealthByAddr[address] = h
+	proxyHealthByKey[key] = h
 	return gen
 }
 
@@ -177,7 +186,7 @@ func RegisterProxy(index int, address string) uint64 {
 // Returns nil if the proxy has not been registered via RegisterProxy first —
 // callers that run before RegisterProxy will get nil rather than a health
 // entry with an empty address that pollutes the registry (invariant:
-// proxyHealthByIndex and proxyHealthByAddr must stay in sync).
+// proxyHealthByIndex and proxyHealthByKey must stay in sync).
 func RegisterProxyBandwidth(index int) *bandwidth.ProxyBandwidth {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
@@ -208,11 +217,11 @@ func markProxyUp(index int) {
 	}
 }
 
-// ProxyBandwidthByAddress returns the ProxyBandwidth for a given address, or nil.
-func ProxyBandwidthByAddress(addr string) *bandwidth.ProxyBandwidth {
+// ProxyBandwidthByKey returns the ProxyBandwidth for a given identity key, or nil.
+func ProxyBandwidthByKey(key string) *bandwidth.ProxyBandwidth {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
-	if h, ok := proxyHealthByAddr[addr]; ok {
+	if h, ok := proxyHealthByKey[key]; ok {
 		return h.bw
 	}
 	return nil
@@ -312,7 +321,7 @@ func UnregisterProxySafe(id int, gen uint64) {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
 	h, ok := proxyHealthByIndex[id]
-	if !ok || h.address == "" {
+	if !ok || h.key == "" {
 		delete(proxyHealthByIndex, id)
 		return
 	}
@@ -321,10 +330,10 @@ func UnregisterProxySafe(id int, gen uint64) {
 	if h.regen != gen {
 		return
 	}
-	deleteProxyIndex(h.address)
-	// only drop the addr entry if it still points at this proxy
-	if proxyHealthByAddr[h.address] == h {
-		delete(proxyHealthByAddr, h.address)
+	deleteProxyIndex(h.key)
+	// only drop the key entry if it still points at this proxy
+	if proxyHealthByKey[h.key] == h {
+		delete(proxyHealthByKey, h.key)
 	}
 	delete(proxyHealthByIndex, id)
 }
@@ -336,10 +345,10 @@ func UnregisterProxySafe(id int, gen uint64) {
 func UnregisterProxy(id int) {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
-	if h, ok := proxyHealthByIndex[id]; ok && h.address != "" {
-		deleteProxyIndex(h.address)
-		if proxyHealthByAddr[h.address] == h {
-			delete(proxyHealthByAddr, h.address)
+	if h, ok := proxyHealthByIndex[id]; ok && h.key != "" {
+		deleteProxyIndex(h.key)
+		if proxyHealthByKey[h.key] == h {
+			delete(proxyHealthByKey, h.key)
 		}
 	}
 	delete(proxyHealthByIndex, id)
@@ -582,13 +591,14 @@ func classifyProxyHealth(h *proxyHealth, now time.Time) string {
 // DegradedProxyEntry captures metrics and duration for a degraded proxy.
 type DegradedProxyEntry struct {
 	Index        int
-	Address      string
+	Address      string // dial target, for operator-facing display
+	Key          string // identity (ProxySettings.Key()); what cancelMap and IsDegraded are keyed by
 	DownFor      time.Duration
 	TotalRxBytes uint64
 	TotalTxBytes uint64
 }
 
-// IsDegraded reports whether the proxy at address is degraded right now.
+// IsDegraded reports whether the proxy at key is degraded right now.
 // Mirrors DegradedProxies()'s predicate, plus excludes an instance that is
 // mid-connect: RegisterProxy sets connecting=true on every (re)registration
 // and reuses the existing *proxyHealth struct for that index rather than
@@ -598,10 +608,10 @@ type DegradedProxyEntry struct {
 // as "degraded" before it had ever attempted to connect. Callers use this to
 // re-verify a proxy is still the same stuck instance a decision was made
 // about moments earlier, not a since-recovered or since-replaced one.
-func IsDegraded(address string) bool {
+func IsDegraded(key string) bool {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
-	h, ok := proxyHealthByAddr[address]
+	h, ok := proxyHealthByKey[key]
 	if !ok {
 		return false
 	}
@@ -620,6 +630,7 @@ func DegradedProxies() []DegradedProxyEntry {
 			entry := DegradedProxyEntry{
 				Index:   idx,
 				Address: h.address,
+				Key:     h.key,
 				DownFor: now.Sub(h.downSince),
 			}
 			if h.bw != nil {
@@ -675,9 +686,73 @@ func activeProxyConnections() int64 {
 func ResetProxyHealthForTesting() {
 	proxyHealthMu.Lock()
 	proxyHealthByIndex = map[int]*proxyHealth{}
-	proxyHealthByAddr = map[string]*proxyHealth{}
+	proxyHealthByKey = map[string]*proxyHealth{}
 	proxyLifetimeRecovered = 0
 	proxyLifetimeLost = 0
 	proxyBaselineSet = false
 	proxyHealthMu.Unlock()
+}
+
+// ProxyKeyByIndex returns the identity key (ProxySettings.Key()) registered
+// for a registry index, or "" when the index is unknown. For consumers that
+// only hold the "proxy[N] (addr)" display string and need the proxy.state key.
+func ProxyKeyByIndex(index int) string {
+	proxyHealthMu.Lock()
+	defer proxyHealthMu.Unlock()
+	if h, ok := proxyHealthByIndex[index]; ok {
+		return h.key
+	}
+	return ""
+}
+
+// ProxyHealthByKey returns the current health classification for each
+// registered proxy, keyed by identity key (see ProxySettings.Key()). Used to
+// update proxy.state snapshots.
+func ProxyHealthByKey() map[string]ProxyHealthStatus {
+	proxyHealthMu.Lock()
+	defer proxyHealthMu.Unlock()
+	now := time.Now()
+	result := make(map[string]ProxyHealthStatus, len(proxyHealthByIndex))
+	for _, h := range proxyHealthByIndex {
+		coarse := classifyProxyHealth(h, now)
+		health := coarse
+		if coarse == "degraded" {
+			health = degradedTierFromDuration(time.Since(h.downSince))
+		}
+		latencyNs := int64(0)
+		socksLatencyNs := int64(0)
+		if h.bw != nil {
+			latencyNs = h.bw.LatencyNs.Load()
+			socksLatencyNs = h.bw.SocksLatencyNs.Load()
+		}
+		result[h.key] = ProxyHealthStatus{
+			Health:         health,
+			DownSince:      h.downSince,
+			AuthFailures:   h.failures.AuthFailures.Load(),
+			TransportDrops: h.failures.TransportDrops.Load(),
+			TimeoutFails:   h.failures.TimeoutFailures.Load(),
+			LatencyMs:      latencyNs / 1_000_000,
+			SocksLatencyMs: socksLatencyNs / 1_000_000,
+		}
+	}
+	return result
+}
+
+// ProxyBandwidthSnapshotByKey returns the live bandwidth map keyed by proxy
+// IDENTITY (ProxySettings.Key()) instead of ProxyHealthSnapshot's display
+// format "proxy[N] (addr)". Consumers that persist or decide per-identity —
+// the earnings store, promotion and trust logic — must key by identity so two
+// accounts sharing one gateway address never collide or credit each other.
+func ProxyBandwidthSnapshotByKey() map[string]*bandwidth.ProxyBandwidth {
+	proxyHealthMu.Lock()
+	defer proxyHealthMu.Unlock()
+	bandwidth := make(map[string]*bandwidth.ProxyBandwidth)
+	for idx, h := range proxyHealthByIndex {
+		if h.key == "" || h.bw == nil {
+			continue
+		}
+		bandwidth[h.key] = proxyBandwidthSnapshot(h.bw)
+		_ = idx
+	}
+	return bandwidth
 }

@@ -14,7 +14,7 @@ func resetProxyHealthForTest() {
 	proxyHealthMu.Lock()
 	defer proxyHealthMu.Unlock()
 	proxyHealthByIndex = map[int]*proxyHealth{}
-	proxyHealthByAddr = map[string]*proxyHealth{}
+	proxyHealthByKey = map[string]*proxyHealth{}
 	proxyLifetimeRecovered = 0
 	proxyLifetimeLost = 0
 	proxyBaselineSet = false
@@ -23,14 +23,14 @@ func resetProxyHealthForTest() {
 func TestProxyHealthRegisterAndMark(t *testing.T) {
 	resetProxyHealthForTest()
 
-	RegisterProxy(0, "1.1.1.1:1081")
-	RegisterProxy(1, "2.2.2.2:1081")
+	RegisterProxy(0, "1.1.1.1:1081", "1.1.1.1:1081")
+	RegisterProxy(1, "2.2.2.2:1081", "2.2.2.2:1081")
 	if got := ProxyHealthCount(); got != 2 {
 		t.Fatalf("count = %d, want 2", got)
 	}
 
 	// idempotent: re-register keeps the entry
-	RegisterProxy(0, "1.1.1.1:1081")
+	RegisterProxy(0, "1.1.1.1:1081", "1.1.1.1:1081")
 	if got := ProxyHealthCount(); got != 2 {
 		t.Fatalf("count after re-register = %d, want 2", got)
 	}
@@ -61,9 +61,9 @@ func TestProxyHealthRegisterAndMark(t *testing.T) {
 
 func TestProxyHealthSnapshot(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(2, "c:1") // dead (never up)
-	RegisterProxy(0, "a:1") // will be up
-	RegisterProxy(1, "b:1") // will be degraded
+	RegisterProxy(2, "c:1", "c:1") // dead (never up)
+	RegisterProxy(0, "a:1", "a:1") // will be up
+	RegisterProxy(1, "b:1", "b:1") // will be degraded
 
 	markProxyUp(0)
 	markProxyUp(1)
@@ -95,9 +95,9 @@ func TestProxyHealthSnapshot(t *testing.T) {
 
 func TestProxyHealthHeartbeatTransitions(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(0, "a:1")
-	RegisterProxy(1, "b:1") // becomes dead after up→down
-	RegisterProxy(2, "c:1") // connecting (RegisterProxy sets connecting=true)
+	RegisterProxy(0, "a:1", "a:1")
+	RegisterProxy(1, "b:1", "b:1") // becomes dead after up→down
+	RegisterProxy(2, "c:1", "c:1") // connecting (RegisterProxy sets connecting=true)
 
 	// First call establishes the baseline: no transitions, no dead (confirmDead=false).
 	r := ProxyHealthHeartbeat(false)
@@ -145,7 +145,7 @@ func TestProxyHealthHeartbeatTransitions(t *testing.T) {
 func TestUnregisterProxy_RemovesFromRegistry(t *testing.T) {
 	resetProxyHealthForTest()
 
-	RegisterProxy(99, "1.2.3.4:1080")
+	RegisterProxy(99, "1.2.3.4:1080", "1.2.3.4:1080")
 	if ProxyHealthCount() != 1 {
 		t.Fatal("expected 1 proxy registered")
 	}
@@ -165,7 +165,7 @@ func TestUnregisterProxy_NoopIfNotRegistered(t *testing.T) {
 
 func TestProxyHealthHeartbeatFlappingCountsTwice(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(0, "a:1")
+	RegisterProxy(0, "a:1", "a:1")
 	ProxyHealthHeartbeat(false) // baseline
 
 	markProxyUp(0)
@@ -182,7 +182,7 @@ func TestProxyHealthHeartbeatFlappingCountsTwice(t *testing.T) {
 
 func TestDegradedProxies_EmptyWhenAllUp(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(0, "a:1")
+	RegisterProxy(0, "a:1", "a:1")
 	markProxyUp(0)
 
 	dps := DegradedProxies()
@@ -193,9 +193,9 @@ func TestDegradedProxies_EmptyWhenAllUp(t *testing.T) {
 
 func TestDegradedProxies_IncludesDegradedOnly(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(0, "a:1") // up
-	RegisterProxy(1, "b:1") // degraded
-	RegisterProxy(2, "c:1") // connecting (never up, never down)
+	RegisterProxy(0, "a:1", "a:1") // up
+	RegisterProxy(1, "b:1", "b:1") // degraded
+	RegisterProxy(2, "c:1", "c:1") // connecting (never up, never down)
 
 	markProxyUp(0)
 	markProxyUp(1)
@@ -215,8 +215,8 @@ func TestDegradedProxies_IncludesDegradedOnly(t *testing.T) {
 
 func TestDegradedProxies_ExcludesConnectingAndDead(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(0, "a:1") // connecting (never up)
-	RegisterProxy(1, "b:1") // dead (never up, connecting=false)
+	RegisterProxy(0, "a:1", "a:1") // connecting (never up)
+	RegisterProxy(1, "b:1", "b:1") // dead (never up, connecting=false)
 
 	// Set proxy 1 to dead: it was registered with connecting=true,
 	// set connecting=false without ever marking up
@@ -234,7 +234,7 @@ func TestDegradedProxies_ExcludesConnectingAndDead(t *testing.T) {
 
 func TestDegradedProxies_BandwidthPopulated(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(0, "a:1")
+	RegisterProxy(0, "a:1", "a:1")
 	markProxyUp(0)
 
 	bw := RegisterProxyBandwidth(0)
@@ -257,7 +257,7 @@ func TestDegradedProxies_BandwidthPopulated(t *testing.T) {
 
 func TestDegradedProxies_NilBandwidth(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(0, "a:1")
+	RegisterProxy(0, "a:1", "a:1")
 	markProxyUp(0)
 	markProxyDown(0)
 
@@ -274,7 +274,7 @@ func TestDegradedProxies_NilBandwidth(t *testing.T) {
 
 func TestDegradedProxies_DownSinceStamped(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(0, "a:1")
+	RegisterProxy(0, "a:1", "a:1")
 	markProxyUp(0)
 	markProxyDown(0)
 
@@ -289,8 +289,8 @@ func TestDegradedProxies_DownSinceStamped(t *testing.T) {
 
 func TestDegradedProxies_NotSorted(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(0, "a:1") // will be degraded last
-	RegisterProxy(1, "b:1") // will be degraded first
+	RegisterProxy(0, "a:1", "a:1") // will be degraded last
+	RegisterProxy(1, "b:1", "b:1") // will be degraded first
 
 	markProxyUp(0)
 	markProxyUp(1)
@@ -317,7 +317,7 @@ func TestDegradedProxies_NotSorted(t *testing.T) {
 
 func TestIsDegraded_TrueWhenDegraded(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(10, "degraded:1")
+	RegisterProxy(10, "degraded:1", "degraded:1")
 	markProxyUp(10)
 	markProxyDown(10)
 
@@ -328,7 +328,7 @@ func TestIsDegraded_TrueWhenDegraded(t *testing.T) {
 
 func TestIsDegraded_FalseWhenCurrentlyUp(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(11, "up:1")
+	RegisterProxy(11, "up:1", "up:1")
 	markProxyUp(11)
 
 	if IsDegraded("up:1") {
@@ -346,7 +346,7 @@ func TestIsDegraded_FalseWhenUnregistered(t *testing.T) {
 
 func TestIsDegraded_FalseWhenRecoveredAfterDown(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(12, "recovered:1")
+	RegisterProxy(12, "recovered:1", "recovered:1")
 	markProxyUp(12)
 	markProxyDown(12)
 
@@ -362,7 +362,7 @@ func TestIsDegraded_FalseWhenRecoveredAfterDown(t *testing.T) {
 
 func TestIsDegraded_FalseWhileRespawnConnecting(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(13, "respawn:1")
+	RegisterProxy(13, "respawn:1", "respawn:1")
 	markProxyUp(13)
 	markProxyDown(13)
 
@@ -374,7 +374,7 @@ func TestIsDegraded_FalseWhileRespawnConnecting(t *testing.T) {
 	// the same index/address: RegisterProxy sets connecting=true and reuses
 	// the struct, leaving everUp/downSince stale until the new instance
 	// reports its own first transition.
-	RegisterProxy(13, "respawn:1")
+	RegisterProxy(13, "respawn:1", "respawn:1")
 
 	if IsDegraded("respawn:1") {
 		t.Fatal("expected respawn:1 to not be degraded while the respawned instance is still connecting")
@@ -383,7 +383,7 @@ func TestIsDegraded_FalseWhileRespawnConnecting(t *testing.T) {
 
 func TestDegradedProxiesExcludesConnecting(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(20, "degraded-conn:1")
+	RegisterProxy(20, "degraded-conn:1", "degraded-conn:1")
 	markProxyUp(20)
 	markProxyDown(20)
 
@@ -399,7 +399,7 @@ func TestDegradedProxiesExcludesConnecting(t *testing.T) {
 
 	// Respawn at the same index: RegisterProxy sets connecting=true and reuses
 	// the struct, so the stale everUp/downSince must not make it read degraded.
-	RegisterProxy(20, "degraded-conn:1")
+	RegisterProxy(20, "degraded-conn:1", "degraded-conn:1")
 	for _, e := range DegradedProxies() {
 		if e.Index == 20 {
 			t.Fatal("expected index 20 to be excluded from DegradedProxies while connecting")
@@ -409,7 +409,7 @@ func TestDegradedProxiesExcludesConnecting(t *testing.T) {
 
 func TestProxyHealthByAddressReportsConnectingOnRespawn(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(21, "respawn-addr:2")
+	RegisterProxy(21, "respawn-addr:2", "respawn-addr:2")
 	markProxyUp(21)
 	markProxyDown(21)
 
@@ -418,7 +418,7 @@ func TestProxyHealthByAddressReportsConnectingOnRespawn(t *testing.T) {
 		t.Fatalf("expected a degraded tier before respawn, got %q", s.Health)
 	}
 
-	RegisterProxy(21, "respawn-addr:2")
+	RegisterProxy(21, "respawn-addr:2", "respawn-addr:2")
 	status = ProxyHealthByAddress()
 	if s, ok := status["respawn-addr:2"]; !ok || s.Health != "connecting" {
 		t.Fatalf("expected connecting after respawn, got %q", s.Health)
@@ -427,11 +427,11 @@ func TestProxyHealthByAddressReportsConnectingOnRespawn(t *testing.T) {
 
 func TestProxyHealthByAddressUpWinsOverConnecting(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(22, "up-wins:3")
+	RegisterProxy(22, "up-wins:3", "up-wins:3")
 	markProxyUp(22)
 
 	// Re-register while still up: connecting=true, but currentlyUp must win.
-	RegisterProxy(22, "up-wins:3")
+	RegisterProxy(22, "up-wins:3", "up-wins:3")
 	status := ProxyHealthByAddress()
 	if s, ok := status["up-wins:3"]; !ok || s.Health != "up" {
 		t.Fatalf("expected up to win over connecting, got %q", s.Health)
@@ -440,7 +440,7 @@ func TestProxyHealthByAddressUpWinsOverConnecting(t *testing.T) {
 
 func TestProxyHealthByAddress_Dead(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(30, "dead-addr:1")
+	RegisterProxy(30, "dead-addr:1", "dead-addr:1")
 
 	// Force out of the connecting state without ever coming up, simulating
 	// a proxy that gave up before its first successful connection.
@@ -456,7 +456,7 @@ func TestProxyHealthByAddress_Dead(t *testing.T) {
 
 func TestProxyHealthByAddress_ConnectingFresh(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(31, "connecting-addr:1")
+	RegisterProxy(31, "connecting-addr:1", "connecting-addr:1")
 
 	// Freshly registered, never up, never down: should read as connecting.
 	status := ProxyHealthByAddress()
@@ -467,7 +467,7 @@ func TestProxyHealthByAddress_ConnectingFresh(t *testing.T) {
 
 func TestProxyHealthByAddress_DegradedTier(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(32, "degraded-tier:1")
+	RegisterProxy(32, "degraded-tier:1", "degraded-tier:1")
 	markProxyUp(32)
 	markProxyDown(32)
 
@@ -483,10 +483,10 @@ func TestProxyHealthByAddress_DegradedTier(t *testing.T) {
 
 func TestProxyHealthByAddress_AllHealthStatesTogether(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(40, "up:1")
-	RegisterProxy(41, "connecting:1")
-	RegisterProxy(42, "degraded:1")
-	RegisterProxy(43, "dead:1")
+	RegisterProxy(40, "up:1", "up:1")
+	RegisterProxy(41, "connecting:1", "connecting:1")
+	RegisterProxy(42, "degraded:1", "degraded:1")
+	RegisterProxy(43, "dead:1", "dead:1")
 
 	markProxyUp(40)
 
@@ -519,16 +519,16 @@ func TestDegradedProxies_MixedConnectingAndDegraded(t *testing.T) {
 	resetProxyHealthForTest()
 
 	// idx 50: genuinely degraded, no respawn involved.
-	RegisterProxy(50, "genuine-degraded:1")
+	RegisterProxy(50, "genuine-degraded:1", "genuine-degraded:1")
 	markProxyUp(50)
 	markProxyDown(50)
 
 	// idx 51: was degraded, then respawned at the same index/address -> must
 	// be excluded despite the stale everUp/downSince it inherited.
-	RegisterProxy(51, "respawned:1")
+	RegisterProxy(51, "respawned:1", "respawned:1")
 	markProxyUp(51)
 	markProxyDown(51)
-	RegisterProxy(51, "respawned:1")
+	RegisterProxy(51, "respawned:1", "respawned:1")
 
 	dps := DegradedProxies()
 	if len(dps) != 1 {
@@ -541,12 +541,12 @@ func TestDegradedProxies_MixedConnectingAndDegraded(t *testing.T) {
 
 func TestDegradedProxies_RespawnThenRedown(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(52, "respawn-redown:1")
+	RegisterProxy(52, "respawn-redown:1", "respawn-redown:1")
 	markProxyUp(52)
 	markProxyDown(52)
 
 	// Respawn: connecting=true, must be excluded.
-	RegisterProxy(52, "respawn-redown:1")
+	RegisterProxy(52, "respawn-redown:1", "respawn-redown:1")
 	dps := DegradedProxies()
 	if len(dps) != 0 {
 		t.Fatalf("DegradedProxies = %d, want 0 while connecting", len(dps))
@@ -567,10 +567,10 @@ func TestDegradedProxies_RespawnThenRedown(t *testing.T) {
 
 func TestConnectingStateExpiresToDegraded(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(23, "stale-conn:1")
+	RegisterProxy(23, "stale-conn:1", "stale-conn:1")
 	markProxyUp(23)
 	markProxyDown(23)
-	RegisterProxy(23, "stale-conn:1")
+	RegisterProxy(23, "stale-conn:1", "stale-conn:1")
 
 	// Fresh connecting: reported as connecting, not degraded.
 	if s, ok := ProxyHealthByAddress()["stale-conn:1"]; !ok || s.Health != "connecting" {
@@ -596,10 +596,10 @@ func TestConnectingStateExpiresToDegraded(t *testing.T) {
 
 func TestDegradedProxiesIncludesStaleConnecting(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(24, "stale-conn:2")
+	RegisterProxy(24, "stale-conn:2", "stale-conn:2")
 	markProxyUp(24)
 	markProxyDown(24)
-	RegisterProxy(24, "stale-conn:2")
+	RegisterProxy(24, "stale-conn:2", "stale-conn:2")
 
 	if len(DegradedProxies()) != 0 {
 		t.Fatal("expected no degraded entries while connecting fresh")
@@ -622,7 +622,7 @@ func TestDegradedProxiesIncludesStaleConnecting(t *testing.T) {
 
 func TestConnectingStateResetsOnUpAndDown(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(25, "reset-conn:3")
+	RegisterProxy(25, "reset-conn:3", "reset-conn:3")
 
 	// Up clears connecting and connectingSince.
 	markProxyUp(25)
@@ -645,7 +645,7 @@ func TestConnectingStateResetsOnUpAndDown(t *testing.T) {
 
 func TestNeverUpProxyReadsDeadAfterConnectingStale(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(60, "never-up:1")
+	RegisterProxy(60, "never-up:1", "never-up:1")
 
 	// Fresh connecting: reads as connecting, not dead.
 	if s, ok := ProxyHealthByAddress()["never-up:1"]; !ok || s.Health != "connecting" {
@@ -663,7 +663,7 @@ func TestNeverUpProxyReadsDeadAfterConnectingStale(t *testing.T) {
 
 func TestNewlyDeadFiresForNeverUpProxyAfterConnectingStale(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(61, "never-up-newly-dead:1")
+	RegisterProxy(61, "never-up-newly-dead:1", "never-up-newly-dead:1")
 
 	// First heartbeat establishes the baseline; fresh connecting means no
 	// NewlyDead yet.
@@ -693,10 +693,10 @@ func TestNewlyDeadFiresForNeverUpProxyAfterConnectingStale(t *testing.T) {
 
 func TestRespawnedEverUpProxyNotDegradedWhileConnecting(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(62, "respawn-everup:1")
+	RegisterProxy(62, "respawn-everup:1", "respawn-everup:1")
 	markProxyUp(62)
 	markProxyDown(62)
-	RegisterProxy(62, "respawn-everup:1")
+	RegisterProxy(62, "respawn-everup:1", "respawn-everup:1")
 
 	// Previously up, now respawning: the inherited everUp must not classify it
 	// as degraded while its fresh connection attempt is still running.
@@ -748,7 +748,7 @@ func TestConnectingStaleAfterIsOneHourlyPulseCycle(t *testing.T) {
 
 func TestConnectingRemainsActiveBeyondOldFifteenMinuteBound(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(70, "beyond-old-bound:1")
+	RegisterProxy(70, "beyond-old-bound:1", "beyond-old-bound:1")
 
 	proxyHealthMu.Lock()
 	proxyHealthByIndex[70].connectingSince = time.Now().Add(-20 * time.Minute)
@@ -808,7 +808,7 @@ func (e testTimeoutErr) Temporary() bool { return true }
 
 func TestRecordProxyAuthFailure_AuthAndTimeout(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(80, "auth-fail:1")
+	RegisterProxy(80, "auth-fail:1", "auth-fail:1")
 
 	// Standard error increments AuthFailures
 	RecordProxyAuthFailure(80, errors.New("unauthorized: 401"))
@@ -845,7 +845,7 @@ func TestRecordProxyAuthFailure_AuthAndTimeout(t *testing.T) {
 
 func TestRecordProxyTransportDrop(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(81, "drop-proxy:1")
+	RegisterProxy(81, "drop-proxy:1", "drop-proxy:1")
 
 	RecordProxyTransportDrop(81, errors.New("connection reset by peer"))
 	RecordProxyTransportDrop(81, errors.New("broken pipe"))
@@ -858,7 +858,7 @@ func TestRecordProxyTransportDrop(t *testing.T) {
 
 func TestProxyEverUp(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(82, "everup-proxy:1")
+	RegisterProxy(82, "everup-proxy:1", "everup-proxy:1")
 
 	if ProxyEverUp(82) {
 		t.Fatal("expected ProxyEverUp false before markProxyUp")
@@ -878,19 +878,19 @@ func TestProxyEverUp(t *testing.T) {
 	}
 }
 
-func TestProxyBandwidthByAddress(t *testing.T) {
+func TestProxyBandwidthByKey(t *testing.T) {
 	resetProxyHealthForTest()
-	RegisterProxy(83, "bw-addr:1")
+	RegisterProxy(83, "bw-addr:1", "bw-addr:1")
 	bw := RegisterProxyBandwidth(83)
 	bw.LatencyNs.Store(50_000_000)
 	bw.SocksLatencyNs.Store(20_000_000)
 
-	got := ProxyBandwidthByAddress("bw-addr:1")
+	got := ProxyBandwidthByKey("bw-addr:1")
 	if got == nil || got != bw {
 		t.Fatalf("expected bw pointer for bw-addr:1, got %v", got)
 	}
 
-	if ProxyBandwidthByAddress("unknown:1") != nil {
+	if ProxyBandwidthByKey("unknown:1") != nil {
 		t.Fatal("expected nil for unregistered address")
 	}
 
@@ -951,7 +951,8 @@ func TestConcurrentAccess_Race(t *testing.T) {
 
 	const numProxies = 20
 	for i := 0; i < numProxies; i++ {
-		RegisterProxy(i, net.JoinHostPort("10.0.0.1", "8080"))
+		addr := net.JoinHostPort("10.0.0.1", "8080")
+		RegisterProxy(i, addr, addr)
 	}
 
 	var wg sync.WaitGroup
@@ -1006,13 +1007,13 @@ func TestUnregisterProxyStaleGeneration(t *testing.T) {
 	resetProxyHealthForTest()
 
 	// Register a proxy and capture its generation.
-	gen1 := RegisterProxy(0, "1.1.1.1:1080")
+	gen1 := RegisterProxy(0, "1.1.1.1:1080", "1.1.1.1:1080")
 	if ProxyHealthCount() != 1 {
 		t.Fatalf("expected 1 proxy after first register, got %d", ProxyHealthCount())
 	}
 
 	// Re-register at the same index with a new address (triggers new generation).
-	gen2 := RegisterProxy(0, "2.2.2.2:1080")
+	gen2 := RegisterProxy(0, "2.2.2.2:1080", "2.2.2.2:1080")
 	if gen2 == gen1 {
 		t.Fatalf("expected different generation on re-register, got gen1=%d gen2=%d", gen1, gen2)
 	}
@@ -1035,7 +1036,7 @@ func TestUnregisterProxyFreshGeneration(t *testing.T) {
 	resetProxyHealthForTest()
 
 	// Register a proxy and capture its generation.
-	gen := RegisterProxy(0, "3.3.3.3:1080")
+	gen := RegisterProxy(0, "3.3.3.3:1080", "3.3.3.3:1080")
 	if ProxyHealthCount() != 1 {
 		t.Fatalf("expected 1 proxy, got %d", ProxyHealthCount())
 	}

@@ -257,10 +257,13 @@ func runEarningWindows(ctx context.Context) {
 			continue
 		}
 
-		_, _, _, bw, _ := ProxyHealthSnapshot()
-
+		// The earn tracker and the earnings store are BOTH identity-keyed: feed
+		// them the identity-keyed bandwidth snapshot so two accounts sharing one
+		// gateway address never collide. The display snapshot is keyed
+		// "proxy[N] (address)", which collapses sibling accounts onto one entry
+		// and cannot answer a lookup by identity key.
+		bw := ProxyBandwidthSnapshotByKey()
 		globalPerProxyEarnTracker.Update(bw)
-
 		globalProxyEarningsStore.Observe(bw, time.Now())
 		globalProxyEarningsStore.MaybeSave(time.Now())
 

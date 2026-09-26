@@ -17,7 +17,7 @@ func TestEarnTracker_SnapshotKeyFormatMatchesProduction(t *testing.T) {
 	const addr = "198.51.100.7:443"
 	defer UnregisterProxy(idx)
 
-	RegisterProxy(idx, addr)
+	RegisterProxy(idx, addr, addr)
 	bw := RegisterProxyBandwidth(idx)
 
 	// First snapshot establishes the per-address baseline (no delta).

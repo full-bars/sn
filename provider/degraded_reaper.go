@@ -100,13 +100,15 @@ func selectProxiesToReap(scored []scoredDegradedProxy, keep int, minDownTime tim
 }
 
 // onlyCancellableProxies filters degraded proxies down to those the reaper
-// can actually act on — i.e. present in proxyCancelMap.
+// can actually act on — i.e. present in proxyCancelMap, which is keyed by
+// identity. DegradedProxyEntry.Key is that identity; Address is only the
+// operator-facing dial target and does not match for a credentialed proxy.
 func onlyCancellableProxies(degraded []DegradedProxyEntry, proxyCancelMap map[string]context.CancelFunc, proxyCancelMu *sync.Mutex) []DegradedProxyEntry {
 	proxyCancelMu.Lock()
 	defer proxyCancelMu.Unlock()
 	var out []DegradedProxyEntry
 	for _, d := range degraded {
-		if _, ok := proxyCancelMap[d.Address]; ok {
+		if _, ok := proxyCancelMap[d.Key]; ok {
 			out = append(out, d)
 		}
 	}
@@ -127,14 +129,17 @@ func reapProxies(toReap []DegradedProxyEntry, proxyCancelMap map[string]context.
 	var reaped int64
 	for _, p := range toReap {
 		proxyCancelMu.Lock()
-		if !isStillDegraded(p.Address) {
+		// Key, not Address: isStillDegraded and the cancel map are both keyed
+		// by identity. Looking a credentialed proxy up by its bare address
+		// misses, so the reaper could never act on one.
+		if !isStillDegraded(p.Key) {
 			proxyCancelMu.Unlock()
 			continue
 		}
-		cancel, ok := proxyCancelMap[p.Address]
+		cancel, ok := proxyCancelMap[p.Key]
 		if ok {
 			cancel()
-			delete(proxyCancelMap, p.Address)
+			delete(proxyCancelMap, p.Key)
 			reaped++
 		}
 		proxyCancelMu.Unlock()

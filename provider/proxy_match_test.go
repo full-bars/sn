@@ -1,6 +1,9 @@
 package provider
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestHostOfAddress(t *testing.T) {
 	cases := []struct{ in, want string }{
@@ -38,10 +41,10 @@ func TestMatchProxyHost(t *testing.T) {
 }
 
 func TestCollectMatchingProxies(t *testing.T) {
-	servers := map[string]string{
+	cfg := &ProxyConfig{Servers: map[string]string{
 		"dc.decodo.com:8001:alice:secret": "",
 		"gate.smartproxy.com:7000":        "",
-	}
+	}}
 	stateProxies := map[string]ProxyEntry{
 		"dc.decodo.com:8002": {Source: "file"},
 		"dc.decodo.com:8003": {Source: "url"},
@@ -53,10 +56,13 @@ func TestCollectMatchingProxies(t *testing.T) {
 		"dc.decodo.com:9999": {}, // cached but not in state (not yet launched)
 	}
 
-	addrsBySource, display := collectMatchingProxies("dc.decodo.com", servers, stateProxies, "/etc/proxies.txt", urlCache)
+	addrsBySource, display := collectMatchingProxies("dc.decodo.com", cfg, stateProxies, "/etc/proxies.txt", urlCache)
 
-	if got := addrsBySource["internal"]; len(got) != 1 || got[0] != "dc.decodo.com:8001" {
-		t.Errorf("internal = %v, want [dc.decodo.com:8001]", got)
+	// A credentialed internal entry is collected by its identity key, so two
+	// accounts at one gateway stay independently removable.
+	aliceKey := internalServerSettings(cfg, "dc.decodo.com:8001:alice:secret", "").Key()
+	if got := addrsBySource["internal"]; len(got) != 1 || got[0] != aliceKey {
+		t.Errorf("internal = %v, want [%v]", got, aliceKey)
 	}
 	if got := addrsBySource["file"]; len(got) != 1 || got[0] != "dc.decodo.com:8002" {
 		t.Errorf("file = %v, want [dc.decodo.com:8002]", got)
@@ -72,14 +78,19 @@ func TestCollectMatchingProxies(t *testing.T) {
 	if len(display) != 4 {
 		t.Errorf("display = %v, want 4 entries", display)
 	}
+	for _, d := range display {
+		if strings.Contains(d, "\x1f") {
+			t.Errorf("display leaked the raw identity separator: %q", d)
+		}
+	}
 }
 
 func TestCollectMatchingProxiesNoState(t *testing.T) {
 	// Provider never ran: state is empty, but proxy.json + URL cache still work.
-	servers := map[string]string{"dc.decodo.com:8001": ""}
+	cfg := &ProxyConfig{Servers: map[string]string{"dc.decodo.com:8001": ""}}
 	urlCache := map[string]ProxyURLEntry{"dc.decodo.com:8002": {}}
 
-	addrsBySource, display := collectMatchingProxies("decodo", servers, nil, "", urlCache)
+	addrsBySource, display := collectMatchingProxies("decodo", cfg, nil, "", urlCache)
 
 	if len(addrsBySource["internal"]) != 1 || len(addrsBySource["url"]) != 1 {
 		t.Errorf("addrsBySource = %v, want 1 internal + 1 url", addrsBySource)

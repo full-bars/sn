@@ -6,9 +6,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
+
+// proxyStateVersion is bumped whenever ProxyState.Proxies' map key changes
+// format. 2 = keyed by proxy identity (ProxySettings.Key(): address, or
+// address+user for a shared-gateway proxy). Absent or 1 = the legacy format,
+// keyed by bare address alone. writeProxyState always stamps the current
+// version; a file with no "version" field (or 0/1) unmarshals with
+// Version==0, which adoptLegacyProxyState and every reader treat as "may
+// contain legacy bare-address keys, never rewrite or drop them blindly".
+const proxyStateVersion = 2
 
 // proxyStateMu serializes all proxy.state read-modify-write cycles.
 // Held during: heartbeat snapshot goroutine, reload() state write.
@@ -18,10 +30,11 @@ var proxyStateMu sync.Mutex
 // ProxyState is the on-disk record of what the provider is currently running.
 // Written atomically at startup and after each reload.
 type ProxyState struct {
+	Version   int                   `json:"version,omitempty"`
 	Source    string                `json:"source"`     // live source file path ("" = internal config)
 	StartedAt time.Time             `json:"started_at"` // provider process start time
 	NextID    int                   `json:"next_id"`    // snapshot of counter for display
-	Proxies   map[string]ProxyEntry `json:"proxies"`    // address -> entry
+	Proxies   map[string]ProxyEntry `json:"proxies"`    // identity key -> entry (see proxyStateVersion)
 }
 
 // proxyHealthParked is the Health of a proxy proxy audit is holding out.
@@ -128,6 +141,12 @@ func writeProxyStateTo(path string, s *ProxyState) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
 	}
+	// Every write moves the file forward to the current key format, even if
+	// it was read as legacy (Version 0/1). adoptLegacyProxyState is what
+	// actually migrates entries; this just records that a write in the
+	// current format happened. It is not a claim that every entry HAS been
+	// migrated — a legacy entry with no current claimant is left alone.
+	s.Version = proxyStateVersion
 	b, err := json.Marshal(s)
 	if err != nil {
 		return err
@@ -149,14 +168,77 @@ func writeProxyStateTo(path string, s *ProxyState) error {
 	return os.Rename(tmp, path)
 }
 
+func adoptLegacyProxyState(state *ProxyState, desired []*connect.ProxySettings) (adopted, split int) {
+	byAddress := make(map[string][]*connect.ProxySettings, len(desired))
+	for _, s := range desired {
+		if s == nil || s.Address == "" {
+			continue
+		}
+		byAddress[s.Address] = append(byAddress[s.Address], s)
+	}
+
+	for address, settingsAtAddress := range byAddress {
+		legacy, hasLegacy := state.Proxies[address]
+		if !hasLegacy {
+			continue
+		}
+
+		seen := map[string]bool{}
+		var keys []string
+		for _, s := range settingsAtAddress {
+			k := s.Key()
+			if !seen[k] {
+				seen[k] = true
+				keys = append(keys, k)
+			}
+		}
+		sort.Strings(keys)
+		winner := keys[0]
+
+		if winner == address {
+			// The winning (and, if len(keys)==1, only) identity carries no
+			// distinguishing user: its Key() IS the bare address, so the
+			// legacy entry is already correctly keyed. Nothing to adopt.
+			continue
+		}
+
+		delete(state.Proxies, address)
+		state.Proxies[winner] = legacy
+		adopted++
+
+		if len(keys) > 1 {
+			split++
+			tlog("[proxy][identity] %s split into %d identities on adoption; %s kept id=%d and history, the rest start fresh\n",
+				address, len(keys), proxyKeyDisplay(winner), legacy.ID)
+		}
+	}
+	return adopted, split
+}
+
+// proxyKeyDisplay renders a proxy identity key for operator-facing output
+// ("addr" for no auth, "addr (user ab***yz)" for a shared-gateway
+// identity), never the raw key — Key()'s \x1f separator must never reach a
+// log line or terminal verbatim, and the password is never in the key to
+// begin with (see ProxySettings.Key()).
+func proxyKeyDisplay(key string) string {
+	address, user := connect.SplitProxyKey(key)
+	if user == "" {
+		return address
+	}
+	return fmt.Sprintf("%s (user %s)", address, obfuscateUser(user))
+}
+
 // resolveProxyID returns the stable ID for an address.
 // Known addresses keep their existing ID; new ones get the next counter value.
-func resolveProxyID(state *ProxyState, address string) int {
-	if entry, ok := state.Proxies[address]; ok {
+func resolveProxyID(state *ProxyState, key string) int {
+	// state.Proxies is keyed by proxy identity (ProxySettings.Key()); a
+	// shared-gateway proxy's identity is address+user, never the bare
+	// address, so two accounts at one host:port keep separate IDs.
+	if entry, ok := state.Proxies[key]; ok {
 		return entry.ID
 	}
 	id := nextProxyID()
-	state.Proxies[address] = ProxyEntry{ID: id}
+	state.Proxies[key] = ProxyEntry{ID: id}
 	return id
 }
 
@@ -165,10 +247,10 @@ func resolveProxyID(state *ProxyState, address string) int {
 // an address keeps its original provenance across reloads and restarts, so
 // source-scoped dead-proxy cleanup stays accurate even if the same address
 // later also appears in a different source.
-func tagProxySourceIfUnset(state *ProxyState, address, source string) {
-	entry := state.Proxies[address]
+func tagProxySourceIfUnset(state *ProxyState, key, source string) {
+	entry := state.Proxies[key]
 	if entry.Source == "" {
 		entry.Source = source
 	}
-	state.Proxies[address] = entry
+	state.Proxies[key] = entry
 }
