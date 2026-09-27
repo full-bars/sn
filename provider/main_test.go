@@ -241,9 +241,10 @@ func TestTagProxySourceIfUnset_DoesNotOverwriteExisting(t *testing.T) {
 // logs, when almost none of them were.
 func TestClassifyAuthFailureCause(t *testing.T) {
 	cases := []struct {
-		name string
-		err  error
-		want string
+		name   string
+		err    error
+		direct bool
+		want   string
 	}{
 		{
 			name: "proxy unreachable gets its own cause, not lumped with API errors",
@@ -276,9 +277,21 @@ func TestClassifyAuthFailureCause(t *testing.T) {
 			want: "proxy tunnel stalled (TLS handshake timeout through the proxy, not the API)",
 		},
 		{
+			name:   "a TLS handshake timeout on the DIRECT path is an API reachability error, not a proxy tunnel",
+			err:    errors.New("tls handshake timeout after 1m0s"),
+			direct: true,
+			want:   "network error reaching API (check connectivity to api.bringyour.com)",
+		},
+		{
 			name: "a connection reset is the proxy path, not the API",
 			err:  errors.New("read tcp 10.0.0.1:1234->1.2.3.4:1080: connection reset by peer"),
 			want: "proxy tunnel reset the connection (the proxy path, not the API)",
+		},
+		{
+			name:   "a connection reset on the DIRECT path is an API reachability error",
+			err:    errors.New("read tcp 10.0.0.1:1234->1.2.3.4:443: connection reset by peer"),
+			direct: true,
+			want:   "network error reaching API (check connectivity to api.bringyour.com)",
 		},
 		{
 			name: "anything else is treated as a rejected token",
@@ -289,8 +302,8 @@ func TestClassifyAuthFailureCause(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			if got := classifyAuthFailureCause(c.err); got != c.want {
-				t.Fatalf("classifyAuthFailureCause(%q) = %q, want %q", c.err, got, c.want)
+			if got := classifyAuthFailureCause(c.err, !c.direct); got != c.want {
+				t.Fatalf("classifyAuthFailureCause(%q, viaProxy=%v) = %q, want %q", c.err, !c.direct, got, c.want)
 			}
 		})
 	}

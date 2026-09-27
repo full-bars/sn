@@ -32,14 +32,23 @@ func isTimeoutFamilyError(err error) bool {
 		strings.Contains(errMsg, "deadline exceeded")
 }
 
-func classifyAuthFailureCause(err error) string {
+func classifyAuthFailureCause(err error, viaProxy bool) string {
 	errMsg := err.Error()
 	switch {
 	case strings.Contains(errMsg, "proxy unreachable"):
 		return "proxy itself is unreachable (dead/offline SOCKS endpoint — not an API issue)"
 	case strings.Contains(errMsg, "tls handshake timeout"):
+		if !viaProxy {
+			// Direct connection: there is no proxy tunnel, so a TLS timeout
+			// to the API endpoint is an API-reachability symptom, not a
+			// proxy-path one.
+			return "network error reaching API (check connectivity to api.bringyour.com)"
+		}
 		return "proxy tunnel stalled (TLS handshake timeout through the proxy, not the API)"
 	case strings.Contains(errMsg, "connection reset by peer"):
+		if !viaProxy {
+			return "network error reaching API (check connectivity to api.bringyour.com)"
+		}
 		return "proxy tunnel reset the connection (the proxy path, not the API)"
 	case errors.Is(err, context.DeadlineExceeded),
 		errors.Is(err, context.Canceled),

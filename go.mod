@@ -219,4 +219,4 @@ replace github.com/urnetwork/goidenticons => github.com/full-bars/goidenticons v
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20260916141202-065bcdd9b85d
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20260928062147-e61ec8e53cb4

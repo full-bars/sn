@@ -273,6 +273,7 @@ var liveEffectKeys = map[string]bool{
 	"fast_auth":                   true,
 	"proxy_self_heal":             true,
 	"proxy_audit":                 true,
+	"smart_dialer":                true,
 	"report_url":                  true,
 	"report_interval":             true,
 	"proxy_url_refresh":           true,
@@ -315,7 +316,7 @@ func validateControlValue(key, value string) error {
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", key, value)
 		}
-	case "fast_auth", "proxy_self_heal", "proxy_audit":
+	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer":
 		switch valLower {
 		case "on", "off":
 		default:
@@ -390,6 +391,10 @@ var liveDefaults = map[string]string{
 	// Clearing proxy_audit must return the engine to observe mode: the
 	// in-memory override survives a clear otherwise.
 	"proxy_audit": "off",
+	// Clearing smart_dialer must restore the measured-cost preference to its
+	// off default; without the entry, clear reported success while the live
+	// dialer stayed enabled until restart.
+	"smart_dialer": "off",
 }
 
 func applyLiveDefault(key string) error {
@@ -751,6 +756,17 @@ func applyLiveSideEffect(key, value string) error {
 			spawnRunOnce(a)
 		}
 		return nil
+	case "smart_dialer":
+		// Transport choice keeps adapting either way (the measurement is always
+		// running); this decides whether selection consults it. See
+		// connect.SetSmartDialer.
+		enabled := strings.EqualFold(value, "on")
+		previous := connect.SetSmartDialer(enabled)
+		was := "off"
+		if previous {
+			was = "on"
+		}
+		controlApplyLog("⚙️ [control] applied smart_dialer=%s (was %s)\n", value, was)
 	}
 	return nil
 }
@@ -933,6 +949,11 @@ func applyPersistedRuntimeTuning(state *controlState) {
 	if v, ok := state.get("metrics"); ok && strings.EqualFold(v, "on") && os.Getenv("URNETWORK_METRICS") == "" && !metricsHandoffPending.Load() {
 		if err := applyMetricsLive("on"); err != nil {
 			controlLog("[control] failed to apply persisted metrics=on: %s\n", err)
+		}
+	}
+	if v, ok := state.get("smart_dialer"); ok && strings.EqualFold(v, "on") {
+		if err := applyLiveSideEffect("smart_dialer", v); err != nil {
+			controlLog("[control] failed to apply persisted smart_dialer=%s: %s\n", v, err)
 		}
 	}
 }

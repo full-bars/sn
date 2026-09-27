@@ -526,3 +526,14 @@ func formatDuration(d time.Duration) string {
 	}
 	return fmt.Sprintf("%dh %dm", h, m)
 }
+
+// formatSeconds renders a sub-minute duration with second-level precision.
+// formatDuration truncates to whole minutes, which makes a 12-15 second
+// connect-deadline cutoff read as "0m" in the give-up diagnostic; the whole
+// point of that line is to distinguish a slow dial from a quick failure.
+func formatSeconds(d time.Duration) string {
+	if d < time.Minute {
+		return fmt.Sprintf("%.1fs", d.Seconds())
+	}
+	return formatDuration(d)
+}
