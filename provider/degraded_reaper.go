@@ -9,11 +9,38 @@ import (
 	"time"
 )
 
+// authTimeoutCutShortThreshold is the measured attempt duration at or above
+// which a timeout-family error counts as "the connect deadline cut this dial
+// short" instead of "this proxy refused us". The underlying client's connect
+// deadline is 15s; an attempt that ran into it was slow, not broken, and
+// treating it as a proxy failure (or reporting it to the shared auth rate)
+// turns latency into a failure spiral.
+const authTimeoutCutShortThreshold = 12 * time.Second
+
+// isTimeoutFamilyError reports whether err is a timeout/deadline failure, as
+// opposed to a refusal, a reset, or an API rejection.
+func isTimeoutFamilyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "Timeout") ||
+		strings.Contains(errMsg, "timeout") ||
+		strings.Contains(errMsg, "deadline exceeded")
+}
+
 func classifyAuthFailureCause(err error) string {
 	errMsg := err.Error()
 	switch {
 	case strings.Contains(errMsg, "proxy unreachable"):
 		return "proxy itself is unreachable (dead/offline SOCKS endpoint — not an API issue)"
+	case strings.Contains(errMsg, "tls handshake timeout"):
+		return "proxy tunnel stalled (TLS handshake timeout through the proxy, not the API)"
+	case strings.Contains(errMsg, "connection reset by peer"):
+		return "proxy tunnel reset the connection (the proxy path, not the API)"
 	case errors.Is(err, context.DeadlineExceeded),
 		errors.Is(err, context.Canceled),
 		strings.Contains(errMsg, "Timeout"),

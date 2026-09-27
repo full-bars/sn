@@ -465,6 +465,14 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			maxAuthFailures = unprovenMaxAuthFailures
 		}
 		authFailures := 0
+		// Per-attempt measurements for this proxy's retry ladder: how long the
+		// attempt waited for an admission slot, how long the attempt itself
+		// ran, its raw error, and whether it was cut short by the connect
+		// deadline (i.e. slow rather than broken).
+		var admitWait time.Duration
+		var attemptDuration time.Duration
+		var attemptErr error
+		var cutShortByDeadline bool
 
 		if proxySettings != nil && !isURLSourced {
 			if globalProxySlowRetryState.Load().WasDropped(proxySettings.Address) || globalProxySlowRetryState.Load().TimeUntilNextAttempt(proxySettings.Address) > 0 {
@@ -489,7 +497,9 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 					if proxySettings != nil {
 						admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Address)
 					}
+					admitStart := time.Now()
 					release, waitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
+					admitWait = time.Since(admitStart)
 					if waitErr != nil {
 						return waitErr
 					}
@@ -507,17 +517,29 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 					if proxySettings != nil {
 						identityKey = proxySettings.Address
 					}
+					attemptStart := time.Now()
 					byClientJwt, clientId, reused, err = provideAuth(proxyCtx, clientStrategy, st.apiUrl, st.opts, st.nodeName, identityKey)
+					attemptDuration = time.Since(attemptStart)
+					attemptErr = err
 					return err
 				}()
+				// Decide, from the MEASURED duration, whether the connect
+				// deadline cut this dial short. Such an attempt is slow, not
+				// broken: it must not read as a proxy failure, and it must not
+				// drag the shared auth rate down (that turns proxy latency into
+				// a failure spiral — the rate drops, every remaining proxy waits
+				// longer, and those wait past the deadline in turn).
+				cutShortByDeadline = authTimeoutCutShortThreshold <= attemptDuration && isTimeoutFamilyError(attemptErr)
 				if proxySettings != nil {
 					if err == nil {
 						globalProvenProxies.MarkSucceeded(proxySettings.Address)
 						globalProxyFailureHistory.Reset(proxySettings.Address)
 						globalProxySlowRetryState.Load().ClearDropped(proxySettings.Address)
 					}
-					globalAuthRateLimiter.ReportResultForProxy(err, globalProvenProxies.HasSucceeded(proxySettings.Address))
-				} else {
+					if !cutShortByDeadline {
+						globalAuthRateLimiter.ReportResultForProxy(err, globalProvenProxies.HasSucceeded(proxySettings.Address))
+					}
+				} else if !cutShortByDeadline {
 					globalAuthRateLimiter.ReportResult(err)
 				}
 				if err == nil {
@@ -547,11 +569,28 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 
 			authFailures++
 			if proxySettings != nil {
-				globalProxyFailureHistory.RecordFailure(proxySettings.Address)
+				// Only genuine failures count against the proxy's history. A
+				// dial cut off by the connect deadline is slow, not broken;
+				// recording it would demote the proxy in the admission lottery
+				// and start a spiral of longer waits and more timeouts.
+				if !cutShortByDeadline {
+					globalProxyFailureHistory.RecordFailure(proxySettings.Address)
+				}
 				RecordProxyAuthFailure(proxyIndex, err)
 			}
 			if authFailures >= maxAuthFailures {
 				cause := classifyAuthFailureCause(err)
+				// One diagnostic line per give-up, with the raw error and the
+				// measured split between waiting for an admission slot and the
+				// attempt itself, so latency can be told apart from a refusal.
+				if proxySettings != nil {
+					tlog("[proxy][auth] proxy[%d] (%s) attempts=%d admit_wait=%s attempt=%s cut_short=%t err=%v\n",
+						getProxyIndex(proxySettings.Address), proxySettings.Address, authFailures,
+						formatDuration(admitWait), formatDuration(attemptDuration), cutShortByDeadline, attemptErr)
+				} else {
+					tlog("[proxy][auth] direct attempts=%d admit_wait=%s attempt=%s cut_short=%t err=%v\n",
+						authFailures, formatDuration(admitWait), formatDuration(attemptDuration), cutShortByDeadline, attemptErr)
+				}
 				if isURLSourced {
 					return "", connect.Id{}, false, fmt.Errorf("authentication failed after %d attempts — %s: %w", maxAuthFailures, cause, err)
 				}

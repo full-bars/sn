@@ -271,6 +271,16 @@ func TestClassifyAuthFailureCause(t *testing.T) {
 			want: "network error reaching API (check connectivity to api.bringyour.com)",
 		},
 		{
+			name: "a TLS handshake timeout is the proxy path, not the API",
+			err:  errors.New("tls handshake timeout after 1m0s"),
+			want: "proxy tunnel stalled (TLS handshake timeout through the proxy, not the API)",
+		},
+		{
+			name: "a connection reset is the proxy path, not the API",
+			err:  errors.New("read tcp 10.0.0.1:1234->1.2.3.4:1080: connection reset by peer"),
+			want: "proxy tunnel reset the connection (the proxy path, not the API)",
+		},
+		{
 			name: "anything else is treated as a rejected token",
 			err:  errors.New("401 unauthorized"),
 			want: "API rejected token (check JWT validity)",
