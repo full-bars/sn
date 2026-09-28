@@ -13,8 +13,7 @@ require (
 	github.com/quic-go/quic-go v0.61.0
 	github.com/spf13/cobra v1.10.2
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	github.com/urnetwork/connect v0.0.0
-	github.com/urnetwork/sdk v0.0.40
+	github.com/urnetwork/connect v0.0.0-20260928110756-1efe2165dc35
 	github.com/vedhavyas/go-subkey/v2 v2.0.0
 	golang.org/x/crypto v0.54.0
 	golang.org/x/net v0.57.0
@@ -219,4 +218,4 @@ replace github.com/urnetwork/goidenticons => github.com/full-bars/goidenticons v
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20260928062147-e61ec8e53cb4
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20260928110756-1efe2165dc35
