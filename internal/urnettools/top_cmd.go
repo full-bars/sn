@@ -82,8 +82,23 @@ func cmdTop(args []string) error {
 	src := topSourceFn()
 	if demo {
 		src = newDemoTopSource(time.Now)
+	} else {
+		// Wire the saved menu settings into a real run. The demo deliberately
+		// stays out of it — it is a sample, not the user's box.
+		applySavedTopSettings(m)
 	}
 	return runTop(ctx, scr, m, src, topTick)
+}
+
+// applySavedTopSettings points the model at the user's settings file and
+// applies what is in it. Without this the menu's save is a silent no-op (no
+// path to write to) and a chosen theme or graph style resets on the next run.
+func applySavedTopSettings(m *topModel) {
+	if m == nil {
+		return
+	}
+	m.settingsPath = topSettingsPath()
+	m.applySettings(loadTopSettings(m.settingsPath))
 }
 
 // parseTopFlags pulls --interval out of args, leaving the target flags for the
