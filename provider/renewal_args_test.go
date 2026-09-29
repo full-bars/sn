@@ -28,6 +28,9 @@ func TestProviderAuthClientArgsForRenewal(t *testing.T) {
 
 func TestRenewClientJWTPreservesClientId(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/hello" {
+			return
+		}
 		if r.URL.Path != "/network/auth-client" {
 			t.Errorf("path = %q, want /network/auth-client", r.URL.Path)
 			http.NotFound(w, r)
@@ -74,6 +77,9 @@ func TestRenewClientJWTPreservesSameClientIdValue(t *testing.T) {
 	clientId := connect.NewId()
 	var gotClientId string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/hello" {
+			return
+		}
 		var args connect.AuthNetworkClientArgs
 		_ = json.NewDecoder(r.Body).Decode(&args)
 		if args.ClientId != nil {
