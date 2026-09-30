@@ -465,6 +465,32 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			maxAuthFailures = unprovenMaxAuthFailures
 		}
 		authFailures := 0
+		// Per-attempt measurements for this proxy's retry ladder: how long the
+		// attempt waited for an admission slot, how long the attempt itself
+		// ran, its raw error, and whether it was cut short by the connect
+		// deadline (i.e. slow rather than broken).
+		var admitWait time.Duration
+		var attemptDuration time.Duration
+		var attemptErr error
+		var cutShortByDeadline bool
+		// Slow attempts (cut short by the deadline) and genuine failures are
+		// counted separately: a slow-but-working proxy must not have its attempts
+		// advance the give-up budget that ends in eviction. Both counters share
+		// the same ceiling, so the ladder still terminates for a proxy that only
+		// ever times out.
+		cutShortAttempts := 0
+		// slowRetryCycles counts consecutive slow (deadline-cut) give-up
+		// cycles for the non-URL retry ramp. It is deliberately NOT
+		// persisted: the persisted-state guard routes back through the
+		// genuine-failure path, which clears it and continues on the
+		// authFailures-based delay.
+		slowRetryCycles := 0
+		// genuineRetryCycles counts consecutive genuine (non-slow) give-up
+		// cycles for the non-URL retry ramp's daily gate. authFailures is
+		// pinned near its ceiling after each cycle (see below) rather than
+		// growing without bound or resetting to 0, so it can no longer
+		// drive the ramp math itself; this dedicated counter does.
+		genuineRetryCycles := 0
 
 		if proxySettings != nil && !isURLSourced {
 			if globalProxySlowRetryState.Load().WasDropped(proxySettings.Key()) || globalProxySlowRetryState.Load().TimeUntilNextAttempt(proxySettings.Key()) > 0 {
@@ -477,6 +503,14 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			var clientId connect.Id
 			var reused bool
 
+			// Per-attempt state must be fresh for this iteration: the previous
+			// attempt's measurements and cut-short classification describe a
+			// DIFFERENT error and must not leak into its accounting.
+			admitWait = 0
+			attemptDuration = 0
+			attemptErr = nil
+			cutShortByDeadline = false
+
 			if proxySettings != nil && isURLSourced && !urlProxyPassesAdmission(proxyCtx, proxySettings.Address) {
 				cfg := resolveProxyTableProbeConfig()
 				if score, ok := cachedProxyURLScore(proxySettings.Address); ok && cfg.Enabled && score < cfg.PassBar {
@@ -485,17 +519,16 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				err = fmt.Errorf("proxy unreachable: %s", proxySettings.Address)
 			} else {
 				err = func() error {
-					admitFailureCount := authFailures
-					if proxySettings != nil {
-						admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Key())
-					}
-					release, waitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
-					if waitErr != nil {
-						return waitErr
-					}
-					defer release()
-
-					if !isURLSourced && authFailures >= maxAuthFailures {
+					// The direct connection (proxySettings == nil) is the
+					// provider's own identity, not a paid/free proxy: it must
+					// never queue behind slow or dead proxies for a shared
+					// 3-slot semaphore, even if it enters slow-retry mode
+					// itself. Also acquire the semaphore BEFORE the admission
+					// gate (not after): otherwise a slow-retry proxy holds an
+					// admission slot while it waits on/holds the semaphore,
+					// starving admission for healthy proxies behind it.
+					usesSlowRetrySemaphore := proxySettings != nil && !isURLSourced && (authFailures >= maxAuthFailures || 0 < slowRetryCycles)
+					if usesSlowRetrySemaphore {
 						select {
 						case slowRetrySemaphore <- struct{}{}:
 							defer func() { <-slowRetrySemaphore }()
@@ -503,21 +536,50 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 							return proxyCtx.Err()
 						}
 					}
+					admitFailureCount := authFailures
+					if proxySettings != nil {
+						admitFailureCount = globalProxyFailureHistory.FailureCount(proxySettings.Key())
+					}
+					admitStart := time.Now()
+					release, waitErr := globalProxyAdmissionGate.Admit(proxyCtx, admitFailureCount)
+					admitWait = time.Since(admitStart)
+					if waitErr != nil {
+						return waitErr
+					}
+					defer release()
+
 					identityKey := "direct"
 					if proxySettings != nil {
 						identityKey = proxySettings.Address
 					}
+					attemptStart := time.Now()
 					byClientJwt, clientId, reused, err = provideAuth(proxyCtx, clientStrategy, st.apiUrl, st.opts, st.nodeName, identityKey)
+					attemptDuration = time.Since(attemptStart)
+					attemptErr = err
 					return err
 				}()
+				// Decide, from the MEASURED duration, whether the connect
+				// deadline cut this dial short. Such an attempt is slow, not
+				// broken: it must not read as a proxy failure, and it must not
+				// drag the shared auth rate down (that turns proxy latency into
+				// a failure spiral — the rate drops, every remaining proxy waits
+				// longer, and those wait past the deadline in turn).
+				cutShortByDeadline = authTimeoutCutShortThreshold <= attemptDuration && isTimeoutFamilyError(attemptErr)
 				if proxySettings != nil {
 					if err == nil {
 						globalProvenProxies.MarkSucceeded(proxySettings.Key())
 						globalProxyFailureHistory.Reset(proxySettings.Key())
 						globalProxySlowRetryState.Load().ClearDropped(proxySettings.Key())
 					}
-					globalAuthRateLimiter.ReportResultForProxy(err, globalProvenProxies.HasSucceeded(proxySettings.Key()))
+					if !cutShortByDeadline {
+						globalAuthRateLimiter.ReportResultForProxy(err, globalProvenProxies.HasSucceeded(proxySettings.Key()))
+					}
 				} else {
+					// Direct (non-proxy) path: there is no proxy whose
+					// latency could fake an API overload, so a sustained
+					// timeout-family error IS an overload signal — report
+					// it to the shared limiter even when the attempt was
+					// cut short by the connect deadline.
 					globalAuthRateLimiter.ReportResult(err)
 				}
 				if err == nil {
@@ -545,23 +607,129 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				}
 			}
 
-			authFailures++
+			// A deadline-cut attempt is slow, not broken: it must not move the
+			// give-up budget that ends in eviction or the 14-day drop, but
+			// it still counts toward the ladder's own ceiling so the loop
+			// terminates for a proxy that only ever times out.
+			if cutShortByDeadline {
+				cutShortAttempts++
+			} else {
+				authFailures++
+			}
 			if proxySettings != nil {
-				globalProxyFailureHistory.RecordFailure(proxySettings.Key())
+				// Only genuine failures count against the proxy's history. A
+				// dial cut off by the connect deadline is slow, not broken;
+				// recording it would demote the proxy in the admission lottery
+				// and start a spiral of longer waits and more timeouts.
+				if !cutShortByDeadline {
+					globalProxyFailureHistory.RecordFailure(proxySettings.Key())
+				}
 				RecordProxyAuthFailure(proxyIndex, err)
 			}
-			if authFailures >= maxAuthFailures {
-				cause := classifyAuthFailureCause(err)
+			if authFailures >= maxAuthFailures || cutShortAttempts >= maxAuthFailures {
+				// The ladder ended either on genuine failures or on slow
+				// (deadline-cut) attempts. When the slow budget filled first,
+				// the proxy is slow, not broken: it must not enter the give-up
+				// accounting that ends in eviction (URL) or the 14-day drop
+				// (non-URL).
+				gaveUpOnSlow := cutShortByDeadline && cutShortAttempts >= maxAuthFailures && authFailures < maxAuthFailures
+				ladderAttempts := authFailures + cutShortAttempts
+				cause := classifyAuthFailureCause(err, proxySettings != nil)
+				// One diagnostic line per give-up, with the raw error and the
+				// measured split between waiting for an admission slot and the
+				// attempt itself, so latency can be told apart from a refusal.
+				if proxySettings != nil {
+					tlog("[proxy][auth] proxy[%d] (%s) attempts=%d admit_wait=%s attempt=%s cut_short=%t err=%v\n",
+						getProxyIndex(proxySettings.Key()), proxySettings.Address, ladderAttempts,
+						formatSeconds(admitWait), formatSeconds(attemptDuration), cutShortByDeadline, attemptErr)
+				} else {
+					tlog("[proxy][auth] direct attempts=%d admit_wait=%s attempt=%s cut_short=%t err=%v\n",
+						ladderAttempts, formatSeconds(admitWait), formatSeconds(attemptDuration), cutShortByDeadline, attemptErr)
+				}
 				if isURLSourced {
+					// Slow-shielding is a reward for a proven track record,
+					// not a blanket amnesty for anything that hangs until
+					// the deadline: an entry that has NEVER once succeeded
+					// gets no signal from "slow" beyond "still unproven,"
+					// and shielding it would retry forever with backoff
+					// instead of ever reaching the normal give-up/eviction
+					// path that a never-worked entry should take.
+					if gaveUpOnSlow && globalProvenProxies.HasSucceeded(proxySettings.Key()) {
+						// Slow, not broken: do not enter give-up accounting.
+						// The outer handler recognizes the sentinel and backs
+						// off + requeues without RecordGiveUp, so a
+						// slow-but-working list entry is never evicted.
+						return "", connect.Id{}, false, fmt.Errorf("%w: %s", errProxyURLSlowCutShort, proxySettings.Address)
+					}
 					return "", connect.Id{}, false, fmt.Errorf("authentication failed after %d attempts — %s: %w", maxAuthFailures, cause, err)
 				}
+				if gaveUpOnSlow {
+					// Non-URL slow give-up: bounded slow retry WITHOUT the
+					// 14-day drop clock. The delay ramps 5m/10m/15m then
+					// daily, so a slow-but-working paid/direct proxy keeps
+					// trying on that schedule instead of being dropped from
+					// the active pool for being slow. Never
+					// RecordSlowRetryStart/ShouldDrop/MarkDropped here.
+					// The ramp advances on slowRetryCycles, NOT on
+					// authFailures. cutShortAttempts is set to one below its
+					// ceiling (not zeroed) so exactly ONE further attempt —
+					// of either kind — re-enters this block, correctly
+					// classified by its own outcome: one attempt per ramp
+					// step, matching the pre-existing cadence, instead of
+					// replaying a full ladder of up to maxAuthFailures
+					// attempts every cycle. authFailures is left untouched
+					// (it was already < maxAuthFailures to have reached this
+					// branch), so a genuine failure on that one attempt
+					// still needs its own share of the ceiling before it can
+					// end in a genuine give-up — a stale ceiling must not
+					// make it read as slow.
+					slowRetryCycles++
+					slowDelay := proxyAuthSlowRetryDelay(slowRetryCycles)
+					if proxySettings != nil {
+						tlog("[proxy][slow-retry] proxy[%d] (%s) auth slow after %d attempts (%s); retrying in %s (not counted as a drop)\n",
+							getProxyIndex(proxySettings.Key()), proxySettings.Address, ladderAttempts, cause, formatDuration(slowDelay))
+					} else if isNative {
+						tlog("[proxy][slow-retry] proxy[0] (direct) auth slow after %d attempts (%s); retrying in %s (not counted as a drop)\n",
+							ladderAttempts, cause, formatDuration(slowDelay))
+					}
+					cutShortAttempts = maxAuthFailures - 1
+					select {
+					case <-proxyCtx.Done():
+						return "", connect.Id{}, false, proxyCtx.Err()
+					case <-time.After(slowDelay):
+						continue
+					}
+				}
+				// The genuine-failure path owns the persisted ramp: clear
+				// the local slow-cycle counter so the semaphore condition
+				// and the delay both fall back to the authFailures-based
+				// accounting.
+				slowRetryCycles = 0
+				// genuineRetryCycles drives the ramp/daily-gate math below
+				// instead of authFailures: authFailures is pinned one below
+				// its ceiling (not left at/above it) so exactly ONE further
+				// attempt — of either kind — re-enters this give-up branch,
+				// correctly classified by its own outcome. Leaving
+				// authFailures >= maxAuthFailures permanently (the pre-fix
+				// behavior) made every later attempt's gaveUpOnSlow check
+				// read authFailures < maxAuthFailures as false forever, so a
+				// slow-but-working proxy could never be reclassified as slow
+				// again after one genuine give-up — it kept retrying every
+				// ~5 minutes instead of ramping to the daily cadence, while
+				// the 14-day drop clock still advanced underneath it. This
+				// applies to the direct connection too (proxySettings ==
+				// nil skips only the PERSISTED bookkeeping below, which is
+				// keyed by proxy address).
+				genuineRetryCycles++
+				authFailures = maxAuthFailures - 1
+				cutShortAttempts = maxAuthFailures - 1
 				if proxySettings != nil {
 					startedAt := globalProxySlowRetryState.Load().RecordSlowRetryStart(proxySettings.Key())
 					if globalProxySlowRetryState.Load().ShouldDrop(proxySettings.Key()) {
 						globalProxySlowRetryState.Load().MarkDropped(proxySettings.Key())
 						dropAge := time.Since(startedAt)
-						tlog("[proxy][slow-retry] proxy[%d] (%s) dropped after %s of continuous failure (%d total attempts)\n",
-							getProxyIndex(proxySettings.Key()), proxySettings.Address, formatDuration(dropAge), authFailures)
+						tlog("[proxy][slow-retry] proxy[%d] (%s) dropped after %s of continuous failure (%d give-up cycles)\n",
+							getProxyIndex(proxySettings.Key()), proxySettings.Address, formatDuration(dropAge), genuineRetryCycles)
 						var cancel context.CancelFunc
 						st.proxyCancelMu.Lock()
 						if proxyOwnsLaunch(proxyCtx, proxySettings.Key()) {
@@ -574,16 +742,15 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 						}
 						return "", connect.Id{}, false, fmt.Errorf("proxy dropped after %s of continuous failure — %s", formatDuration(dropAge), cause)
 					}
-					slowRetryAttempt := authFailures - maxAuthFailures + 1
-					if slowRetryAttempt > slowRetryRampAttempts && !globalProxySlowRetryState.Load().RecordSlowRetryAttempt(proxySettings.Key()) {
+					if genuineRetryCycles > slowRetryRampAttempts && !globalProxySlowRetryState.Load().RecordSlowRetryAttempt(proxySettings.Key()) {
 						waitTime := globalProxySlowRetryState.Load().TimeUntilNextAttempt(proxySettings.Key())
 						if waitTime <= 0 {
 							waitTime = 24 * time.Hour
 							tlog("[proxy][slow-retry] proxy[%d] (%s) waitTime was non-positive, clamping to %s\n",
 								getProxyIndex(proxySettings.Key()), proxySettings.Address, formatDuration(waitTime))
 						}
-						tlog("[proxy][slow-retry] proxy[%d] (%s) auth still failing after %d attempts (%s); next check in %s\n",
-							getProxyIndex(proxySettings.Key()), proxySettings.Address, authFailures, cause, formatDuration(waitTime))
+						tlog("[proxy][slow-retry] proxy[%d] (%s) auth still failing after %d cycles (%s); next check in %s\n",
+							getProxyIndex(proxySettings.Key()), proxySettings.Address, genuineRetryCycles, cause, formatDuration(waitTime))
 						dailyTimer := time.NewTimer(waitTime)
 						select {
 						case <-proxyCtx.Done():
@@ -594,16 +761,16 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 						}
 					}
 				}
-				slowDelay := proxyAuthSlowRetryDelay(authFailures - maxAuthFailures + 1)
+				slowDelay := proxyAuthSlowRetryDelay(genuineRetryCycles)
 				if proxySettings != nil {
-					tlog("[proxy][init] proxy[%d] (%s) auth still failing after %d attempts (%s); retrying in %s\n",
-						getProxyIndex(proxySettings.Key()), proxySettings.Address, authFailures, cause, formatDuration(slowDelay))
+					tlog("[proxy][init] proxy[%d] (%s) auth still failing after %d cycles (%s); retrying in %s\n",
+						getProxyIndex(proxySettings.Key()), proxySettings.Address, genuineRetryCycles, cause, formatDuration(slowDelay))
 				} else if isNative {
-					tlog("[proxy][init] proxy[0] (direct) auth still failing after %d attempts (%s); retrying in %s\n",
-						authFailures, cause, formatDuration(slowDelay))
+					tlog("[proxy][init] proxy[0] (direct) auth still failing after %d cycles (%s); retrying in %s\n",
+						genuineRetryCycles, cause, formatDuration(slowDelay))
 				} else {
-					tlog("[init] auth still failing after %d attempts (%s); retrying in %s\n",
-						authFailures, cause, formatDuration(slowDelay))
+					tlog("[init] auth still failing after %d cycles (%s); retrying in %s\n",
+						genuineRetryCycles, cause, formatDuration(slowDelay))
 				}
 				select {
 				case <-proxyCtx.Done():
@@ -830,6 +997,22 @@ func provideHandleAuthFailure(st *provideState, proxyCtx context.Context, proxyS
 			} else if errors.Is(err, context.Canceled) {
 				tlog("[proxy][init] proxy[%d] (%s) cancelled (not a give-up): %v\n",
 					getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
+			} else if errors.Is(err, errProxyURLSlowCutShort) {
+				// Slow, not broken: the ladder ended on deadline-cut attempts,
+				// not genuine failures. Back off and requeue WITHOUT give-up
+				// accounting, so a slow-but-working list entry is never
+				// permanently evicted by latency.
+				tlog("[proxy][init] proxy[%d] (%s) auth slow (deadline-cut); not a give-up, requeue with backoff: %v\n",
+					getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
+				delay := proxyURLGiveUpRetryDelay(proxyURLGiveUpEvictAfterCycles - 1)
+				globalProxyFailureHistory.SetBackoffUntil(proxySettings.Key(), time.Now().Add(delay))
+				if reloadPath, pathErr := proxyReloadPath(); pathErr == nil {
+					time.AfterFunc(delay, func() {
+						if err := writeReloadTrigger(reloadPath); err != nil {
+							tlog("[proxy] warn: failed to signal proxy reload after slow-auth backoff (write .reload): %v\n", err)
+						}
+					})
+				}
 			} else {
 				giveUpCount := globalProxyFailureHistory.RecordGiveUp(proxySettings.Key())
 				if giveUpCount >= proxyURLGiveUpEvictAfterCycles {
