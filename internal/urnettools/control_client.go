@@ -131,6 +131,10 @@ var controlKeyCanonical = map[string]string{
 	"proxy_self_heal":             "proxy_self_heal",
 	"proxy-audit":                 "proxy_audit",
 	"proxy_audit":                 "proxy_audit",
+	"oom-cap":                     "oom_cap",
+	"oom_cap":                     "oom_cap",
+	"smart-dialer":                "smart_dialer",
+	"smart_dialer":                "smart_dialer",
 	"proxy-url-max":               "proxy_url_max",
 	"proxy_url_max":               "proxy_url_max",
 	"proxy-url-refresh":           "proxy_url_refresh",
@@ -189,11 +193,17 @@ func validateControlValue(canonicalKey, value string) error {
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", canonicalKey, value)
 		}
-	case "fast_auth", "proxy_self_heal", "proxy_audit":
+	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer":
 		switch strings.ToLower(value) {
 		case "on", "off":
 		default:
 			return fmt.Errorf("%s: must be on or off (got %q)", canonicalKey, value)
+		}
+	case "oom_cap":
+		switch strings.ToLower(value) {
+		case "on", "off", "shadow":
+		default:
+			return fmt.Errorf("oom_cap: must be on, off, or shadow (got %q)", value)
 		}
 	case "hot_restart":
 		switch strings.ToLower(value) {

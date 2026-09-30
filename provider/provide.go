@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/urfoundation/sn/internal/connectx"
 	"io"
 	"net"
 	"net/http"
@@ -74,6 +75,13 @@ type provideState struct {
 
 // provide is the main entry point for the provider process.
 func provide(opts docopt.Opts) {
+	// Wire the Prometheus pool snapshot to this process's own health registry
+	// before anything can serve a scrape. connectx owns no health state, so
+	// without this the /metrics handler omits the proxy-pool families entirely
+	// (which is the correct safe default, but it would mean the pool is never
+	// reported). Typed exactly as sn's ProxyHealthSnapshot so it satisfies the
+	// seam without a wrapper.
+
 	st := &provideState{}
 	st.opts = opts
 	st.proxyCancelMap = make(map[string]context.CancelFunc)
@@ -424,6 +432,12 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	applyTurboMemoryLimit(profile, st.maxMemory)
 	applyEcoSettings(st.maxMemory)
 	ensureMemoryLimit(st.maxMemory)
+	// First proxy goroutine: the tier/profile limits are in place now, so this
+	// is the first point where the soft memory limit in force is the one this
+	// process will actually run under. Read at the old call site (before the
+	// first launch) it saw no limit at all on every auto, eco, turbo and
+	// default node, because the tier code sets GOMEMLIMIT here.
+	resourceConfigWarningsOnce()
 	// Wrap the relay-egress ConnectSettings with byte counting. This is a
 	// separate copy from clientStrategySettings.ConnectSettings on purpose —
 	// wrapping in place would also instrument the provider's own
@@ -1181,9 +1195,60 @@ func provideLauncherLoop(st *provideState) func() {
 	globalProxyEarningsStore.adoptLegacy(allProxySettings)
 
 	currentNetworkId := currentProviderNetworkID()
-	proxySchedules, warmCount, renewableCount, coldCount := prioritizeAndScheduleProxies(allProxySettings, proxySourceOf, currentNetworkId)
+	// Decide the startup cap BEFORE scheduling anything, so the OOM-aware cap
+	// set since the last start applies to this very start (enforced only with
+	// URNETWORK_OOM_CAP=on; otherwise reported as a shadow decision), and so a
+	// trim cap is applied before the pool opens rather than by shedding after
+	// it. Held proxies stay desired; the reload budget admits them when the cap
+	// rises.
+	bootID, oomKills := readOOMKillEpoch()
+	for _, line := range oomCapDecide(len(allProxySettings), bootID, oomKills, time.Now()) {
+		importantLogf("%s\n", line)
+	}
+	launchSettings := allProxySettings
+	if trimCap, _, terr := effectiveTrimCapSource(); terr == nil && trimCap > 0 && len(allProxySettings) > trimCap {
+		startupURLState, _ := readProxyURLState()
+		gradeFor := buildTrimGradeResolver(proxyState, startupURLState)
+		var held []*connect.ProxySettings
+		launchSettings, held = startupTrimSelection(allProxySettings, trimCap, proxyState.Proxies, gradeFor,
+			func(key string) float64 { return proxyEarningsScore(key, time.Now()) })
+		importantLogf("[proxy][trim] startup: cap=%d, launching %d of %d desired, holding %d worst-graded until the cap is raised\n",
+			trimCap, len(launchSettings), len(allProxySettings), len(held))
+	}
+	// Prime the reload loop's change-detector with the cap (and its source)
+	// this start already saw and applied above, whether or not it bound (a
+	// cap looser than the desired count still counts as "seen"). Without this
+	// the first reload after a capped startup reads the same cap fresh and
+	// treats it as new: a duplicate "[proxy][trim] received" line and a
+	// duplicate ledger "applied" entry whose From is a partial mid-ramp
+	// running count, even though startup already logged and applied it.
+	if startupCap, startupSource, serr := effectiveTrimCapSource(); serr == nil && startupCap > 0 {
+		primeTrimCapSeen(startupCap, startupSource)
+	}
+	// Store the launch count for the startup resource warning, which runs from
+	// the first proxy goroutine (after the tier memory limits are applied) and
+	// needs the pool size this start actually opens, not the desired count.
+	resourceConfigLaunchCount.Store(int64(len(launchSettings)))
+	// Startup holds no reload lock, so any critical-log line the cap lookup
+	// queued (an unparseable proxy_trim) is written straight away here rather
+	// than waiting for a reload that may be hours away.
+	for _, line := range drainDeferredCrit() {
+		critLog("%s", line)
+	}
+	{
+		// Say once, at startup, what RAM ceiling this process tunes itself
+		// against (see resource_config_warn.go). The short-pool warning that
+		// used to sit here moved into the first launch goroutine, because the
+		// soft memory limit it reports is only in force after the tier code
+		// has run.
+		ceilingBytes, ceilingSource := connectx.EffectiveRAMLimit()
+		importantLogf("%s\n", ramCeilingLogLine(ceilingBytes, ceilingSource))
+	}
+	// Record what this start actually launched, for the next start's decision.
+	oomCapRecordStart(len(launchSettings), bootID, oomKills, time.Now())
+	proxySchedules, warmCount, renewableCount, coldCount := prioritizeAndScheduleProxies(launchSettings, proxySourceOf, currentNetworkId)
 	tlog("[startup] proxy prioritization: %d total (warm: %d, renewable: %d, cold: %d)\n",
-		len(allProxySettings), warmCount, renewableCount, coldCount)
+		len(launchSettings), warmCount, renewableCount, coldCount)
 
 	if ranked, promoted, topAddr, topScore := earningsHistorySummary(allProxySettings, proxySourceOf, time.Now()); ranked == 0 {
 		tlog("[startup] earnings ranking: no history yet\n")
@@ -1205,7 +1270,7 @@ func provideLauncherLoop(st *provideState) func() {
 	// Adopt legacy bare-address slow-retry entries onto identity keys so a
 	// pre-upgrade proxy keeps its continuous 14-day drop clock.
 	globalProxySlowRetryState.Load().adoptLegacy(allProxySettings)
-	setConfiguredProxyCount(len(allProxySettings))
+	setConfiguredProxyCount(trimmedConfiguredCount(len(allProxySettings)))
 
 	finishProxy := bannerPhase("Proxy load")
 	if 0 < len(allProxySettings) {
@@ -1299,7 +1364,7 @@ func provideLauncherLoop(st *provideState) func() {
 	// relaunch) all of them at boot. Seeding also has to precede the re-paste
 	// case (LA7 incident: 100 proxies pasted with new creds, "added 100"
 	// printed, daemon kept dialing the old user).
-	reloader.seedRunningAuth(allProxySettings)
+	reloader.seedRunningAuth(launchSettings)
 	reloader.StartWatcher(st.ctx)
 	reloader.reload()
 
@@ -1336,19 +1401,7 @@ func provideLauncherLoop(st *provideState) func() {
 	// Profiling.
 	if profileAddr := os.Getenv("URNETWORK_PPROF"); profileAddr != "" {
 		tlog("[profile] enabling diagnostics on %s\n", profileAddr)
-		if err := EnableProfiling(profileAddr); err != nil {
-			if st.isHotSwapCandidate && errors.Is(err, syscall.EADDRINUSE) {
-				// The parent keeps the port through its stream drain; keep
-				// trying so the promoted process is not left without
-				// diagnostics for the rest of its life.
-				tlog("[profile] %s is held by the hotswap parent; retrying until it exits\n", profileAddr)
-				go connect.HandleError(func() {
-					enableProfilingWithRetry(st.ctx, profileAddr, EnableProfiling, 90*time.Second, time.Second, tlog)
-				})
-			} else {
-				tlog("[profile] failed: %v\n", err)
-			}
-		}
+		enableProfilingWithRetry(st.ctx, profileAddr, EnableProfiling, 90*time.Second, time.Second, tlog)
 	}
 
 	if metricsAddr := os.Getenv("URNETWORK_METRICS"); metricsAddr != "" && !st.isHotSwapCandidate {

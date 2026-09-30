@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/urfoundation/sn/internal/connectx"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -114,6 +115,12 @@ const proxyLockMaxAge = 1 * time.Hour
 // per debounce window instead of spawning overlapping reloads.
 var writeReloadTriggerDebounce = 30 * time.Second
 
+// drainPollInterval is how often the drain-completion goroutine rechecks a
+// draining proxy's client count. A package var (rather than a literal) so
+// tests can shrink it and finish in milliseconds instead of blocking on the
+// real interval.
+var drainPollInterval = 5 * time.Second
+
 var lastReloadTriggerTime struct {
 	sync.Mutex
 	ts      time.Time
@@ -221,13 +228,21 @@ type ProxyReloader struct {
 	directDone      chan struct{}                 // closed when direct goroutine exits; nil when not running
 	drainingProxies map[string]context.CancelFunc // proxies draining active sessions
 	drainMu         sync.Mutex
+	// trimShed records addresses currently held out of the running pool by the
+	// trim cap (operator or automatic OOM). It outlives a single reload() call
+	// so the drain-completion goroutine, which wakes up independently later,
+	// can tell "this address was shed by trim" from "some other proxy's drain
+	// completed while a cap happens to bind" -- only the former must skip the
+	// re-trigger. Guarded by drainMu. Cleared when the address is admitted or
+	// launched again.
+	trimShed  map[string]bool
+	networkID string
 
 	// runningAuth tracks the credentials of currently running proxies.
 	// Used for credential rotation: when a proxy's desired settings have
 	// different auth than what's running, we cancel the old goroutine and
 	// relaunch with new credentials in the same reload pass.
 	runningAuth map[string]*connect.ProxySettings
-	networkID   string
 }
 
 // seedRunningAuth records the settings the startup loop launched each proxy
@@ -247,7 +262,7 @@ func (r *ProxyReloader) seedRunningAuth(settings []*connect.ProxySettings) {
 		// and reload() must compare against the baseline as CONFIGURED,
 		// not as dialed. Sharing the pointer made every credentialed
 		// proxy at a gateway look perpetually rotated.
-		r.runningAuth[s.Key()] = cloneProxySettings(s)
+		r.runningAuth[connectx.ProxyKey(s.Address, s.Auth)] = cloneProxySettings(s)
 	}
 }
 
@@ -367,6 +382,33 @@ func (r *ProxyReloader) isDraining(addr string) bool {
 	return ok
 }
 
+// markTrimShed records addr as currently held out by the trim cap, so the
+// drain-completion goroutine can single it out later (see the trimShed field
+// doc).
+func (r *ProxyReloader) markTrimShed(addr string) {
+	r.drainMu.Lock()
+	defer r.drainMu.Unlock()
+	if r.trimShed == nil {
+		r.trimShed = map[string]bool{}
+	}
+	r.trimShed[addr] = true
+}
+
+// isTrimShed reports whether addr is currently held out by the trim cap.
+func (r *ProxyReloader) isTrimShed(addr string) bool {
+	r.drainMu.Lock()
+	defer r.drainMu.Unlock()
+	return r.trimShed[addr]
+}
+
+// clearTrimShed drops addr's trim-shed mark: it is being admitted or launched
+// again, so it is no longer held out.
+func (r *ProxyReloader) clearTrimShed(addr string) {
+	r.drainMu.Lock()
+	defer r.drainMu.Unlock()
+	delete(r.trimShed, addr)
+}
+
 // reconciliationReloadInterval is how often runReloadReconciler forces a
 // reload cycle regardless of whether anything is known to have changed. This
 // is a belt-and-suspenders safety net, not the primary reload path — normal
@@ -448,6 +490,34 @@ func (r *ProxyReloader) StartWatcher(ctx context.Context) {
 func (r *ProxyReloader) reload() {
 	reloadStart := time.Now()
 
+	// Important lines are printed as they happen, but their events.log copy is
+	// an open+write+fsync, so it is held back and written after r.mu is
+	// released: this defer is registered BEFORE the Unlock defer, so it runs
+	// after it. A slow or failing disk then stalls only this goroutine's log
+	// tail, not every other reload-path caller waiting on r.mu.
+	var pendingCrit []func()
+	// One serialised writer for the whole post-unlock batch: the queued
+	// warnings and the pending writes go out together, in reload order, so a
+	// second reload cannot slip its cap change in before this one's.
+	defer func() {
+		writes := pendingCrit
+		drainDeferredCritFn(func(lines []string) {
+			for _, line := range lines {
+				critLog("%s", line)
+			}
+			for _, write := range writes {
+				write()
+			}
+		})
+	}()
+	// critLog appends its own newline, so the format must NOT carry one or every
+	// line leaves a blank line behind it in events.log. tlog needs its newline,
+	// so the immediate path adds it back.
+	logImportant := func(format string, args ...any) {
+		tlog(format+"\n", args...)
+		pendingCrit = append(pendingCrit, func() { critLog("%s", fmt.Sprintf(format, args...)) })
+	}
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -494,8 +564,8 @@ func (r *ProxyReloader) reload() {
 		primarySource = "file"
 	}
 	for _, s := range desired {
-		desiredSet[s.Key()] = s
-		sourceOf[s.Key()] = primarySource
+		desiredSet[connectx.ProxyKey(s.Address, s.Auth)] = s
+		sourceOf[connectx.ProxyKey(s.Address, s.Auth)] = primarySource
 	}
 
 	urlCacheLoaded := true
@@ -692,15 +762,74 @@ func (r *ProxyReloader) reload() {
 			continue // managed by the direct hot-toggle block above, not the proxy diff
 		}
 		if _, ok := desiredSet[addr]; !ok {
+			// When proxy_url.json could not be read, desiredSet never got the
+			// URL cache merged in (see the urlCacheLoaded gate above), so EVERY
+			// running URL proxy looks absent here and this loop cancels the
+			// entire live URL pool off one transient read error. The state
+			// prune further down is gated on urlCacheLoaded for exactly this
+			// reason; the cancel has to be too. A proxy is only "no longer
+			// desired" when we actually know what the desired set is.
+			if !urlCacheLoaded {
+				continue
+			}
 			removed = append(removed, addr)
 		}
 	}
+
+	// Addresses shed by the trim cap below. Their state entry (ID, health,
+	// downtime, grade) must survive the removal loop: the shed is a capacity
+	// decision, not a verdict on the proxy, and dropping the entry would make a
+	// later relaunch allocate a new ID and rank the proxy as ungraded.
+	trimShedSet := map[string]bool{}
 
 	// Operator trim cap (provider proxy trim <N>): hold the running pool at N.
 	// Shed the A-F-worst running proxies above N (folded into removed so they are
 	// cancelled), and drop the worst-graded not-yet-running additions above the
 	// budget so the pool cannot regrow above the cap until it is raised.
-	if trimCap, terr := readTrimTarget(); terr == nil && trimCap > 0 {
+	trimCapNow, trimSource, trimErr := effectiveTrimCapSource()
+	// The direct transport is in the running map but is never trimmed, so the
+	// counts reported below exclude it, like the cap does.
+	runningProxies := 0
+	for a := range running {
+		if a != directProxyKey {
+			runningProxies++
+		}
+	}
+	autoNote := ""
+	if trimSource == trimCapOOM {
+		autoNote = " (automatic OOM cap)"
+	}
+	trimChanged := false
+	if trimErr == nil {
+		// Acknowledge a new or cleared operator cap once, so the log shows the
+		// command was received before (and regardless of) what it sheds.
+		var prevCap int
+		var prevSource string
+		if prevCap, prevSource, trimChanged = noteTrimCap(trimCapNow, trimSource); trimChanged {
+			if trimCapNow > 0 {
+				prev := "none"
+				if prevCap > 0 {
+					prev = strconv.Itoa(prevCap)
+				}
+				logImportant("[proxy][trim] received: cap=%d (was %s); %d running, %d desired, applying%s", trimCapNow, prev, runningProxies, len(desiredSet), autoNote)
+			} else {
+				// The cap that just cleared may have been the automatic OOM cap
+				// relaxing to zero, not an operator command: attribute the
+				// ledger entry to whichever source actually bound before, so an
+				// OOM-driven clear is not mislabeled "operator".
+				clearedMode := prevSource
+				if clearedMode == "" {
+					clearedMode = trimCapOperator
+				}
+				logImportant("[proxy][trim] received: cap cleared (was %d); pool may regrow toward %d desired", prevCap, len(desiredSet))
+				pendingCrit = append(pendingCrit, func() {
+					ledgerRecord(ledgerEntry{Actor: "trim", Action: "cleared", From: prevCap, To: 0, Mode: clearedMode,
+						Reason: fmt.Sprintf("pool may regrow toward %d desired", len(desiredSet))})
+				})
+			}
+		}
+	}
+	if trimCap := trimCapNow; trimErr == nil && trimCap > 0 {
 		traffic := runningProxyTraffic()
 		// Read the URL cache here: the urlState read earlier is scoped to its own
 		// if/else and is not visible in this hook.
@@ -734,6 +863,8 @@ func (r *ProxyReloader) reload() {
 				if _, ok := running[addr]; ok && !removedSet[addr] {
 					removed = append(removed, addr)
 					removedSet[addr] = true
+					trimShedSet[addr] = true
+					r.markTrimShed(addr)
 					shedCount++
 					// Do NOT delete from desiredSet: pruning against a trim-mutated
 					// set erases grade/health history. Mark a short
@@ -751,7 +882,7 @@ func (r *ProxyReloader) reload() {
 		if len(added) > budget {
 			alist := make([]string, 0, len(added))
 			for _, s := range added {
-				alist = append(alist, s.Key())
+				alist = append(alist, connectx.ProxyKey(s.Address, s.Auth))
 			}
 			drop := selectWorstRunningProxies(r.state.Proxies, gradeFor, traffic, alist, len(added)-budget)
 			dropSet := make(map[string]bool, len(drop))
@@ -760,7 +891,7 @@ func (r *ProxyReloader) reload() {
 			}
 			kept := added[:0]
 			for _, s := range added {
-				if dropSet[s.Key()] {
+				if dropSet[connectx.ProxyKey(s.Address, s.Auth)] {
 					// Deferred, not undesired: leave it in desiredSet so the
 					// prune pass keeps this proxy's grade/health history.
 					// It re-enters the budget next cycle.
@@ -771,8 +902,14 @@ func (r *ProxyReloader) reload() {
 			}
 			added = kept
 		}
-		if shedCount > 0 || dropped > 0 {
-			tlog("[proxy][trim] cap=%d: shed %d worst-graded running, held %d additions (pool ~%d)\n", trimCap, shedCount, dropped, runningNonDirect-shedCount)
+		if shedCount > 0 || dropped > 0 || trimChanged {
+			logImportant("[proxy][trim] applied: cap=%d: shed %d worst-graded running, held %d additions (pool ~%d)", trimCap, shedCount, dropped, runningNonDirect-shedCount)
+		}
+		if trimChanged {
+			pendingCrit = append(pendingCrit, func() {
+				ledgerRecord(ledgerEntry{Actor: "trim", Action: "applied", From: runningProxies, To: trimCap, Mode: trimSource,
+					Reason: fmt.Sprintf("shed %d worst-graded running, held %d additions", shedCount, dropped)})
+			})
 		}
 	}
 
@@ -796,7 +933,7 @@ func (r *ProxyReloader) reload() {
 		// Keep the state entry of a rotated proxy: it is relaunched in this same
 		// pass, and dropping it would make the relaunch allocate a new ID and
 		// lose its persisted health, downtime and grading history.
-		if !rotatedSet[addr] {
+		if !rotatedSet[addr] && !trimShedSet[addr] {
 			delete(r.state.Proxies, addr)
 		}
 
@@ -831,7 +968,7 @@ func (r *ProxyReloader) reload() {
 				select {
 				case <-r.parentCtx.Done():
 					return
-				case <-time.After(5 * time.Second):
+				case <-time.After(drainPollInterval):
 				}
 			}
 			tlog("[proxy] drain complete: %s\n", proxyKeyDisplay(proxyAddr))
@@ -839,7 +976,22 @@ func (r *ProxyReloader) reload() {
 
 			desired, err := currentDesiredProxyIdentities()
 			if err == nil && desired[proxyAddr] {
-				if reloadPath, err := proxyReloadPath(); err == nil {
+				// A drained proxy that is still desired is normally re-added
+				// (credential rotation, or a source flap that removed and
+				// re-added it while it drained). But a TRIM-SHED proxy also
+				// stays in the desired set on purpose (to keep its grade/health
+				// state), so IT must not re-trigger here: under a binding cap
+				// the next reload would only hold it again, and each shed
+				// proxy that finished draining would burn a reload cycle and
+				// log a false "re-added while draining" line. Checking THIS
+				// address's shed mark (not just "some cap happens to bind")
+				// matters: a non-shed proxy re-added while draining under a
+				// binding cap must still re-trigger promptly rather than wait
+				// for the reconciler's next tick. The next natural reload
+				// admits a shed proxy when the cap allows.
+				if r.isTrimShed(proxyAddr) {
+					tlog("[proxy] drain complete: %s stays within the trim cap; not re-triggering a reload\n", proxyKeyDisplay(proxyAddr))
+				} else if reloadPath, err := proxyReloadPath(); err == nil {
 					if err := writeReloadTrigger(reloadPath); err == nil {
 						tlog("[proxy] re-triggered reload for %s (re-added while draining)\n", proxyKeyDisplay(proxyAddr))
 					}
@@ -876,18 +1028,26 @@ func (r *ProxyReloader) reload() {
 	urlAdded := 0
 	for _, sched := range addedSchedules {
 		settings := sched.Settings
-		if r.isDraining(settings.Key()) {
-			tlog("[proxy] skip add %s: still draining\n", proxyKeyDisplay(settings.Key()))
+		// Every per-proxy map below is keyed by the proxy's identity, not by its
+		// bare address: a shared-gateway proxy (same host:port, two accounts) is
+		// two identities with separate health and state.
+		key := connectx.ProxyKey(settings.Address, settings.Auth)
+		if r.isDraining(key) {
+			tlog("[proxy] skip add %s: still draining\n", proxyKeyDisplay(key))
 			continue
 		}
-		if sourceOf[settings.Key()] == "url" {
+		// This address is being admitted or launched again (the cap raised
+		// enough to let it back in, or it was never trim-shed): it is no
+		// longer held out, so the next drain of it (if any) must re-trigger
+		// normally instead of being mistaken for a still-standing shed.
+		r.clearTrimShed(key)
+		if sourceOf[key] == "url" {
 			urlAdded++
 		}
 		// Defer unproven URL-sourced proxy launches until file-proxy warmup
 		// completes, so operator-curated proxies get an uncontested ramp.
 		// Promoted URL proxies (earnings >= 64 MiB) are known earners and
 		// should launch with the file list rather than be deferred.
-		key := settings.Key()
 		isPromoted := proxyEarningsScore(key, time.Now()) >= earningsPromotionBytes
 		if sourceOf[key] == "url" && !isPromoted && !proxyWarmupDone.Load() {
 			warmupDeferred++
@@ -979,7 +1139,7 @@ func (r *ProxyReloader) reload() {
 	// Update systemd status counters: the configured count reflects
 	// the full desired set (file/internal + URL cache), and resolution
 	// is OK since we found proxies. These are operator-facing only.
-	setConfiguredProxyCount(len(desiredSet))
+	setConfiguredProxyCount(trimmedConfiguredCount(len(desiredSet)))
 	setProxyResolutionOK()
 
 	deferredTotal := deferredBackoff + warmupDeferred
@@ -992,7 +1152,7 @@ func (r *ProxyReloader) reload() {
 	// "reloaded: +N added" prefix for anything that matches on it.
 	fromSources := reloadSourceBreakdown(added, sourceOf)
 	if line := urlLaunchLine(urlAdded, warmupDeferred); line != "" {
-		importantLogf("%s\n", line)
+		logImportant("%s", line)
 	}
 	if deferredTotal > 0 {
 		tlog("🔄 [proxy] reloaded: +%d added%s, -%d removed, %d deferred (backoff=%d warmup=%d) [%s]\n",

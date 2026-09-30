@@ -52,7 +52,12 @@ var startupDiag = &startupDiagnostics{}
 
 // markCleanShutdown writes a marker file so next startup knows this was clean.
 func markCleanShutdown() {
-	stateDir := mustStateDir()
+	markCleanShutdownIn(mustStateDir())
+}
+
+// markCleanShutdownIn is markCleanShutdown against an explicit state dir, so a
+// test can exercise the marker without touching the real one.
+func markCleanShutdownIn(stateDir string) {
 	if stateDir == "" {
 		return
 	}
@@ -60,6 +65,18 @@ func markCleanShutdown() {
 	if err := os.WriteFile(path, []byte(time.Now().UTC().Format(time.RFC3339)), 0600); err != nil {
 		metricsProviderLog("[metrics] failed to write shutdown marker: %v\n", err)
 	}
+}
+
+// readCleanShutdown reports whether the state dir carries a clean-shutdown
+// marker, leaving the file in place: it records that the process which ran here
+// before us exited cleanly, and that stays true until whoever runs next rewrites
+// it on its own exit.
+func readCleanShutdown(stateDir string) bool {
+	if stateDir == "" {
+		return false
+	}
+	_, err := os.Stat(filepath.Join(stateDir, ".clean-shutdown"))
+	return err == nil
 }
 
 // detectStartup reads the shutdown marker and version file, then removes the
@@ -77,14 +94,32 @@ func detectStartup() {
 		return
 	}
 
-	// Check for clean-shutdown marker
-	shutdownPath := filepath.Join(stateDir, ".clean-shutdown")
-	if data, err := os.ReadFile(shutdownPath); err == nil {
-		startupDiag.cleanShutdown = true
-		_ = data // timestamp available if needed
-	}
-	// Remove marker — if we crash, it won't be re-created
-	os.Remove(shutdownPath)
+	// Check for clean-shutdown marker, then CONSUME it.
+	//
+	// The marker means "the process that just exited did so cleanly", and it is
+	// only true until the next start reads it. An earlier revision left it on
+	// disk to tell a plain restart from a crash, but that is unworkable: the
+	// marker survives a crash (an OOM kill or SIGKILL never runs the clean-exit
+	// path, so nothing rewrites or removes it), so once one clean shutdown had
+	// happened every later crash was reported as "clean". Caught in review and
+	// reproduced; see the TODO below.
+	//
+	// Cost of consuming it: `systemctl restart` and an OOM kill both skip the
+	// clean-exit path, so both leave the file absent and both read "unclean".
+	// That is a mislabelled restart, which is the right way round: a wrong label
+	// on a restart is a cosmetic inaccuracy, a missing crash is a blind spot.
+	startupDiag.cleanShutdown = readCleanShutdown(stateDir)
+	os.Remove(filepath.Join(stateDir, ".clean-shutdown"))
+
+	// TODO(owner): tell a plain `systemctl restart` from a crash without
+	// breaking crash detection. The inputs are already on disk and unused: the
+	// running process persists StartedAt in proxy.state, and the marker file
+	// carries an RFC3339 timestamp that readCleanShutdown discards today. If the
+	// marker's timestamp is NEWER than the previous StartedAt, the previous
+	// process genuinely started and then exited cleanly; older or absent means
+	// it did not. That needs no tuning window and cannot mask a crash at any
+	// uptime, which is why it was not done inline. Deferred by the operator
+	// 2026-09-29 pending time to review it properly.
 
 	// Check for version change (upgrade detection)
 	versionPath := filepath.Join(stateDir, ".provider_version")
@@ -92,12 +127,13 @@ func detectStartup() {
 		startupDiag.previousVersion = strings.TrimSpace(string(data))
 	}
 	// Write current version
-	os.WriteFile(versionPath, []byte(RequireVersion()), 0600)
+	currentVersion := RequireVersion()
+	os.WriteFile(versionPath, []byte(currentVersion), 0600)
 
 	// The restart marker is consumed the same way: read, then deleted, so it
 	// only ever describes the restart that just happened.
 	marker := consumeRestartMarker(stateDir, time.Now())
-	startupDiag.restartReason = classifyRestart(marker, startupDiag.cleanShutdown, startupDiag.previousVersion)
+	startupDiag.restartReason = classifyRestart(marker, startupDiag.cleanShutdown, startupDiag.previousVersion, currentVersion)
 }
 
 // mustStateDir returns ~/.urnetwork or "" on error.

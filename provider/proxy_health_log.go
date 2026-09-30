@@ -245,6 +245,14 @@ func formatEventLines(r ProxyHealthReport, now time.Time) []string {
 
 const proxyHealthLogMaxBytes = 20 * 1024 * 1024 // 20 MB
 
+// proxyHealthLogMu serialises every append and rotation of proxy_health.log.
+// Two independent writers touch that file: the retention writer (a long-lived
+// goroutine holding an open handle) and writeProxyHealthEvents (the heartbeat).
+// Without a shared lock, a rotation by one renames the file out from under the
+// other's open descriptor, and the loser's subsequent writes land in the renamed
+// generation; the next rotation then overwrites .1 and those events are gone.
+var proxyHealthLogMu sync.Mutex
+
 // proxyHealthDir resolves the directory for the persistent files:
 // URNETWORK_PROXY_HEALTH_DIR, else <home>/.urnetwork. Returns ok=false if neither
 // can be resolved (persistence then disabled by the caller).
@@ -286,6 +294,8 @@ func writeProxyHealthEvents(dir string, r ProxyHealthReport, now time.Time) {
 	if len(lines) == 0 {
 		return
 	}
+	proxyHealthLogMu.Lock()
+	defer proxyHealthLogMu.Unlock()
 	path := filepath.Join(dir, "proxy_health.log")
 	rotateIfNeeded(path, proxyHealthLogMaxBytes)
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
@@ -339,24 +349,150 @@ var (
 	retentionEventDropped atomic.Uint64
 )
 
+// retentionEventBatch is how many buffered events the writer drains per file
+// write. Draining one at a time cost a full open/stat/write/close cycle PER
+// EVENT, so on a slow disk the single writer could not keep up with the event
+// rate and the 256-slot buffer went permanently full, dropping most of the
+// retention log on a large box. Batching turns draining a full buffer into one
+// open and one write.
+const retentionEventBatch = 64
+
 // startRetentionEventWriter launches the single goroutine that performs the
-// per-event file I/O (stat + rotate + open + append + close) off the hot path.
+// retention file I/O off the hot path. It takes the first event blocking, then
+// drains whatever else is already queued without waiting, so a burst becomes
+// one write while an idle stream still costs nothing.
 func startRetentionEventWriter() {
 	retentionEventOnce.Do(func() {
 		retentionEventCh = make(chan string, retentionEventBuffer)
 		retentionEventDone = make(chan struct{})
 		go func() {
 			defer close(retentionEventDone)
+			w := newRetentionLogWriter()
+			defer w.close()
 			var lastReportedDropped uint64
-			for event := range retentionEventCh {
-				writeRetentionEventLine(event)
+			reportDrops := func() {
 				if dropped := retentionEventDropped.Load(); dropped != lastReportedDropped {
 					fmt.Fprintf(os.Stderr, "[provider] warn: retention event buffer was full, dropped %d event(s)\n", dropped-lastReportedDropped)
 					lastReportedDropped = dropped
 				}
 			}
+			batch := make([]string, 0, retentionEventBatch)
+			for event := range retentionEventCh {
+				batch = append(batch[:0], event)
+				// Take whatever else is already queued, without blocking. A
+				// closed channel drains to what is left and then yields ok=false,
+				// so the outer range ends on the next turn.
+			drain:
+				for len(batch) < retentionEventBatch {
+					select {
+					case next, ok := <-retentionEventCh:
+						if !ok {
+							w.write(batch)
+							reportDrops()
+							return
+						}
+						batch = append(batch, next)
+					default:
+						break drain
+					}
+				}
+				w.write(batch)
+				reportDrops()
+			}
 		}()
 	})
+}
+
+// retentionLogWriter appends retention lines to proxy_health.log, keeping the
+// file open across batches. The handle is reopened when the file is rotated:
+// renaming a path that is still open would leave every later append going to
+// the rotated generation, so the writer must notice the rename and reopen.
+type retentionLogWriter struct {
+	path   string
+	f      *os.File
+	bytes  int64 // size at the last check, for the rotation threshold
+	opened bool
+}
+
+func newRetentionLogWriter() *retentionLogWriter { return &retentionLogWriter{} }
+
+// write appends a batch of events as one write.
+func (w *retentionLogWriter) write(events []string) {
+	if len(events) == 0 {
+		return
+	}
+	dir, ok := proxyHealthDir()
+	if !ok {
+		return
+	}
+	if w.f == nil || w.path != filepath.Join(dir, "proxy_health.log") {
+		w.reopen(dir)
+		if w.f == nil {
+			return
+		}
+	}
+	// Rotate BEFORE writing, when the previous batch already filled the file.
+	// Checking after the write (as an earlier version did, despite its own
+	// comment) puts the batch that crosses the threshold into the generation
+	// that is about to be renamed, so the newest events are the ones lost from
+	// the live file.
+	//
+	// w.bytes is this writer's own count, seeded from the file size at open and
+	// incremented by exactly what it appended, so it is the live size without a
+	// stat per line.
+	proxyHealthLogMu.Lock()
+	defer proxyHealthLogMu.Unlock()
+	if w.bytes >= proxyHealthLogMaxBytes {
+		w.close()
+		if _, err := os.Stat(w.path); err == nil {
+			_ = os.Rename(w.path, w.path+".1")
+		}
+		w.bytes = 0
+		if w.f == nil {
+			w.reopen(filepath.Dir(w.path))
+			if w.f == nil {
+				return
+			}
+		}
+	}
+	var b strings.Builder
+	ts := time.Now().UTC().Format(time.RFC3339)
+	for _, e := range events {
+		fmt.Fprintf(&b, "| %s | %-9s | %-16s | %-21s | %s |\n", ts, "RETAIN", "-", "", e)
+	}
+	n, err := w.f.WriteString(b.String())
+	if err != nil {
+		// The handle went bad (rotation by the OTHER writer, truncation, disk).
+		// Drop it so the next batch reopens rather than writing into a dead
+		// file forever.
+		w.close()
+		return
+	}
+	w.bytes += int64(n)
+}
+
+func (w *retentionLogWriter) reopen(dir string) {
+	w.close()
+	w.path = filepath.Join(dir, "proxy_health.log")
+	f, err := os.OpenFile(w.path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return
+	}
+	w.f = f
+	w.opened = true
+	if info, err := f.Stat(); err == nil {
+		w.bytes = info.Size()
+	} else {
+		w.bytes = 0
+	}
+}
+
+func (w *retentionLogWriter) close() {
+	if w.f != nil {
+		_ = w.f.Close()
+		w.f = nil
+	}
+	w.opened = false
 }
 
 // appendRetentionEvent buffers a retention telemetry line and returns
@@ -400,22 +536,4 @@ func flushRetentionEvents() {
 	}
 	retentionEventMu.Unlock()
 	<-retentionEventDone
-}
-
-// writeRetentionEventLine performs the actual append of one retention event
-// to the health event log. Runs only on the writer goroutine.
-func writeRetentionEventLine(event string) {
-	dir, ok := proxyHealthDir()
-	if !ok {
-		return
-	}
-	path := filepath.Join(dir, "proxy_health.log")
-	rotateIfNeeded(path, proxyHealthLogMaxBytes)
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-	ts := time.Now().UTC().Format(time.RFC3339)
-	fmt.Fprintf(f, "| %s | %-9s | %-16s | %-21s | %s |\n", ts, "RETAIN", "-", "", event)
 }
