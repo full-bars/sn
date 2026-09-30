@@ -541,6 +541,7 @@ func providerExtraMetrics() string {
 	startupDiag.mu.Unlock()
 	writeNodeGauges(&b, reason, collectResources())
 	writeRuntimeGauges(&b, time.Since(providerStartTime), runtimeSysBytes())
+	writeDashboardMetrics(&b)
 
 	return b.String()
 }
