@@ -3,7 +3,6 @@ package provider
 import (
 	"strings"
 	"testing"
-
 )
 
 // `proxy trim N --preview` used to compute the running set in the CLI's own

@@ -3,7 +3,6 @@ package provider
 import (
 	"math"
 	"testing"
-
 )
 
 // The goroutine sensor exists to catch a runaway (a leak that grows without
