@@ -238,11 +238,32 @@ var setKeyHelps = []string{
 	"  cleanup-scope       none|url|all  dead proxy auto-cleanup scope (default: url)",
 	"  cleanup-interval    <duration>    dead proxy cleanup interval (default: 6h, min: 1m)",
 	"  hot-restart         on|off        preserve client JWTs across restarts",
+	"  oom-cap             on|off|shadow OOM-aware start cap: shadow logs what it would do (default), on enforces, off is the kill switch and forgets the standing cap",
+	"  smart-dialer        on|off        adapt transport choice to measured network cost (skip DPI circumvention when not needed)",
 	"  gomemlimit          <bytes>       Go runtime memory limit (e.g. 256MiB, 1GiB)",
 	"  gogc      <int>|off|disabled     GC target percentage (default: 100). off clears; disabled turns GC off entirely (unbounded heap)",
 	"  profile             <profile>     tuning profile (auto, eco, lowmem, turbo-v4, turbo-v8)",
 	"  ramlogs             on|off        in-memory ramlogs toggle",
 	"  metrics             on|off        enable metrics endpoint",
+}
+
+// treatsOffAsClear reports whether `set <key> off` is turned into a generic
+// clear (drop the override, revert to the startup default) rather than being
+// sent to the provider as the value "off".
+//
+// For most keys the two are the same intent and the clear path is a fine
+// shortcut. The exceptions send "off" as a real value, because their off state
+// is not their default: hot_restart and ramlogs keep a concrete off behaviour,
+// proxy_self_heal and metrics would otherwise revert to a default that is not
+// off, and oom_cap would revert to the "shadow" default, which decides and logs
+// but enforces nothing, so the documented kill switch would never turn the
+// feature off.
+func treatsOffAsClear(canonicalKey string) bool {
+	switch canonicalKey {
+	case "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap":
+		return false
+	}
+	return true
 }
 
 func printSetHelp() {
@@ -356,7 +377,7 @@ func applySetOverride(p Provider, key, value string, dryRun bool) error {
 
 	// EqualFold, matching validateControlValue: an exact match let "OFF"
 	// pass validation and reach the provider as a set rather than a clear.
-	if strings.EqualFold(value, "off") && canonicalKey != "hot_restart" && canonicalKey != "ramlogs" && canonicalKey != "proxy_self_heal" && canonicalKey != "metrics" {
+	if strings.EqualFold(value, "off") && treatsOffAsClear(canonicalKey) {
 		if dryRun {
 			fmt.Printf("[dry-run] would clear %s for %s and revert to startup default\n", key, providerLabel(p))
 			return nil

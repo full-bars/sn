@@ -181,6 +181,7 @@ func buildRootCmd() *cobra.Command {
 		newRenameCmd(),
 		newGetCmd(),
 		newHistoryCmd(),
+		newAutopilotCmd(),
 		newMetricsCmd(),
 		newSmartDialerCmd(),
 		newProfileCmd(),
