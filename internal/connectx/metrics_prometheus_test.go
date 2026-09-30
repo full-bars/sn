@@ -1,13 +1,22 @@
 package connectx
 
 import (
+	"github.com/urfoundation/sn/provider/bandwidth"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 )
 
 func TestPrometheusHandlerReturnsValidFormat(t *testing.T) {
+	// This asserts the FULL metric set, including the per-proxy families, so it
+	// must run with a pool snapshot registered. The omission path is covered
+	// separately by TestPrometheusOmitsProxyPoolWhenSeamUnregistered.
+	t.Cleanup(func() { proxyPoolSnapshotPtr.Store(nil) })
+	SetProxyPoolSnapshot(func() (int, []string, []string, map[string]*bandwidth.ProxyBandwidth, []string) {
+		return 0, nil, nil, map[string]*bandwidth.ProxyBandwidth{}, nil
+	})
 	handler := PrometheusHandler()
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	w := httptest.NewRecorder()
@@ -133,4 +142,90 @@ func TestEnhancedMetricsProvenance(t *testing.T) {
 	if _, ok := m["gc_pauses"].([]string); !ok {
 		t.Errorf("gc_pauses is %T, want []string", m["gc_pauses"])
 	}
+}
+
+// TestPrometheusOmitsProxyPoolWhenSeamUnregistered pins the deliberate omission
+// of the proxy-pool families when no provider has registered the snapshot seam.
+// Without this, an unwired build prints urnet_proxy_pool_size{status="up"} 0 on
+// every scrape and a scraper concludes the pool is empty, which is a fabricated
+// measurement rather than a missing one (#1995).
+func TestPrometheusOmitsProxyPoolWhenSeamUnregistered(t *testing.T) {
+	proxyPoolSnapshotPtr.Store(nil) // no provider registered
+
+	body := scrapeMetrics(t)
+	for _, family := range []string{
+		"urnet_proxy_pool_size",
+		"urnet_proxy_billable_bytes_total",
+		"urnet_proxy_session_age_seconds",
+	} {
+		if strings.Contains(body, family) {
+			t.Errorf("%s must be omitted when no provider registered the pool snapshot; "+
+				"a zero there reads as an empty pool.\noutput:\n%s", family, body)
+		}
+	}
+	// The families that do NOT depend on the seam must still be present, so this
+	// test cannot pass just because the handler emitted nothing at all.
+	for _, family := range []string{"urnet_uptime_seconds", "urnet_goroutines"} {
+		if !strings.Contains(body, family) {
+			t.Errorf("%s must still be emitted; the seam guards only the proxy-pool families", family)
+		}
+	}
+}
+
+// TestPrometheusEmitsProxyPoolWhenSeamRegistered is the other half: with a
+// provider registered, the pool families come back. Together the two tests pin
+// that the omission tracks registration and is not a permanent regression.
+func TestPrometheusEmitsProxyPoolWhenSeamRegistered(t *testing.T) {
+	t.Cleanup(func() { proxyPoolSnapshotPtr.Store(nil) })
+	SetProxyPoolSnapshot(func() (int, []string, []string, map[string]*bandwidth.ProxyBandwidth, []string) {
+		return 3, []string{"proxy[1] (a:1)"}, nil, map[string]*bandwidth.ProxyBandwidth{}, nil
+	})
+
+	body := scrapeMetrics(t)
+	if !strings.Contains(body, "urnet_proxy_pool_size") {
+		t.Fatalf("urnet_proxy_pool_size must be emitted once a provider registers the snapshot.\noutput:\n%s", body)
+	}
+	for _, want := range []string{
+		`urnet_proxy_pool_size{status="up"} 3`,
+		`urnet_proxy_pool_size{status="dead"} 1`,
+		`urnet_proxy_pool_size{status="degraded"} 0`,
+		`urnet_proxy_pool_size{status="connecting"} 0`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("missing %q in output:\n%s", want, body)
+		}
+	}
+}
+
+// TestProxyPoolSnapshotSeamIsRaceSafe exercises the seam under -race: the write
+// happens at provider startup while scrapes read it, so the storage must be
+// atomic rather than a plain package var.
+func TestProxyPoolSnapshotSeamIsRaceSafe(t *testing.T) {
+	t.Cleanup(func() { proxyPoolSnapshotPtr.Store(nil) })
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 200; j++ {
+				SetProxyPoolSnapshot(func() (int, []string, []string, map[string]*bandwidth.ProxyBandwidth, []string) {
+					return 1, nil, nil, nil, nil
+				})
+				_, _, _, _, _, _ = proxyPoolSnapshot()
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+// scrapeMetrics renders the exposition exactly as an HTTP scrape would.
+func scrapeMetrics(t *testing.T) string {
+	t.Helper()
+	req := httptest.NewRequest("GET", "/metrics", nil)
+	w := httptest.NewRecorder()
+	PrometheusHandler().ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	return w.Body.String()
 }

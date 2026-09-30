@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/urfoundation/sn/internal/connectx"
 	"io"
 	"net"
 	"net/http"
@@ -74,6 +75,14 @@ type provideState struct {
 
 // provide is the main entry point for the provider process.
 func provide(opts docopt.Opts) {
+	// Wire the Prometheus pool snapshot to this process's own health registry
+	// before anything can serve a scrape. connectx owns no health state, so
+	// without this the /metrics handler omits the proxy-pool families entirely
+	// (which is the correct safe default, but it would mean the pool is never
+	// reported). Typed exactly as sn's ProxyHealthSnapshot so it satisfies the
+	// seam without a wrapper.
+	connectx.SetProxyPoolSnapshot(ProxyHealthSnapshot)
+
 	st := &provideState{}
 	st.opts = opts
 	st.proxyCancelMap = make(map[string]context.CancelFunc)

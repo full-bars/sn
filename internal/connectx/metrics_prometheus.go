@@ -3,6 +3,7 @@ package connectx
 import (
 	"compress/gzip"
 	"fmt"
+	"github.com/urfoundation/sn/provider/bandwidth"
 	"io"
 	"net/http"
 	"runtime"
@@ -104,72 +105,85 @@ func PrometheusHandler() http.Handler {
 		// instead. Proxies currently connected are still exposed, and are derived
 		// from the connectx proxy-health snapshot.
 
-		// --- Proxy pool (from ProxyHealthSnapshot) ---
-		up, dead, degraded, bandwidth, connecting := ProxyHealthSnapshot()
-		fmt.Fprintf(&b, "# HELP urnet_proxy_pool_size Proxy pool composition.\n")
-		fmt.Fprintf(&b, "# TYPE urnet_proxy_pool_size gauge\n")
-		fmt.Fprintf(&b, "urnet_proxy_pool_size{status=\"up\"} %d\n", up)
-		fmt.Fprintf(&b, "urnet_proxy_pool_size{status=\"dead\"} %d\n", len(dead))
-		fmt.Fprintf(&b, "urnet_proxy_pool_size{status=\"degraded\"} %d\n", len(degraded))
-		fmt.Fprintf(&b, "urnet_proxy_pool_size{status=\"connecting\"} %d\n", len(connecting))
+		// --- Proxy pool, and every per-proxy family derived from it ---
+		// The pool composition comes from the provider's own registry, injected
+		// with SetProxyPoolSnapshot at startup. connectx deliberately owns no
+		// health registry: the provider's provider/proxy_health.go is the single
+		// source, so there is exactly one place a proxy is registered and counted.
+		//
+		// When no provider has registered the seam, the whole block below is
+		// OMITTED rather than printed as zeros. An unregistered seam means this
+		// process is not serving a proxy pool, and a scraper reading
+		// urnet_proxy_pool_size{status="up"} 0 would conclude the pool is empty,
+		// which is a fabricated measurement rather than a missing one. Same rule
+		// as urnet_connections_active above.
+		if up, dead, degraded, bandwidth, connecting, ok := proxyPoolSnapshot(); ok {
+			fmt.Fprintf(&b, "# HELP urnet_proxy_pool_size Proxy pool composition.\n")
+			fmt.Fprintf(&b, "# TYPE urnet_proxy_pool_size gauge\n")
+			fmt.Fprintf(&b, "urnet_proxy_pool_size{status=\"up\"} %d\n", up)
+			fmt.Fprintf(&b, "urnet_proxy_pool_size{status=\"dead\"} %d\n", len(dead))
+			fmt.Fprintf(&b, "urnet_proxy_pool_size{status=\"degraded\"} %d\n", len(degraded))
+			fmt.Fprintf(&b, "urnet_proxy_pool_size{status=\"connecting\"} %d\n", len(connecting))
 
-		// --- Per-proxy bandwidth + provider aggregates ---
-		// Each family is one contiguous block: HELP, TYPE, then its samples.
-		// The text format requires that, and strict parsers reject samples of
-		// one family interleaved with another's. Sorted keys keep the output
-		// stable between scrapes.
-		keys := make([]string, 0, len(bandwidth))
-		for key := range bandwidth {
-			keys = append(keys, key)
+			// --- Per-proxy bandwidth + provider aggregates ---
+			// Each family is one contiguous block: HELP, TYPE, then its samples.
+			// The text format requires that, and strict parsers reject samples of
+			// one family interleaved with another's. Sorted keys keep the output
+			// stable between scrapes.
+			keys := make([]string, 0, len(bandwidth))
+			for key := range bandwidth {
+				keys = append(keys, key)
+			}
+			sort.Strings(keys)
+			var proxyBytes, proxyBillable, proxyClients, proxyAge strings.Builder
+			var totalBillRx, totalBillTx uint64
+			var totalRx, totalTx uint64
+			var totalClients int64
+			for _, key := range keys {
+				bw := bandwidth[key]
+				rx := bw.TotalRx.Load()
+				tx := bw.TotalTx.Load()
+				billRx := bw.BillableRx.Load()
+				billTx := bw.BillableTx.Load()
+				clients := bw.Clients.Load()
+				proxyID := PrometheusLabelValue(key)
+				fmt.Fprintf(&proxyBytes, "urnet_proxy_bytes_total{proxy=%s,direction=\"in\"} %d\n", proxyID, rx)
+				fmt.Fprintf(&proxyBytes, "urnet_proxy_bytes_total{proxy=%s,direction=\"out\"} %d\n", proxyID, tx)
+				fmt.Fprintf(&proxyBillable, "urnet_proxy_billable_bytes_total{proxy=%s,direction=\"in\"} %d\n", proxyID, billRx)
+				fmt.Fprintf(&proxyBillable, "urnet_proxy_billable_bytes_total{proxy=%s,direction=\"out\"} %d\n", proxyID, billTx)
+				fmt.Fprintf(&proxyClients, "urnet_proxy_clients{proxy=%s} %d\n", proxyID, clients)
+				fmt.Fprintf(&proxyAge, "urnet_proxy_session_age_seconds{proxy=%s} %g\n", proxyID, bw.MaxAge().Seconds())
+				totalBillRx += billRx
+				totalBillTx += billTx
+				totalRx += rx
+				totalTx += tx
+				totalClients += clients
+			}
+			fmt.Fprintf(&b, "# HELP urnet_proxy_bytes_total Cumulative bytes transferred per proxy.\n")
+			fmt.Fprintf(&b, "# TYPE urnet_proxy_bytes_total counter\n")
+			b.WriteString(proxyBytes.String())
+			fmt.Fprintf(&b, "# HELP urnet_proxy_billable_bytes_total Cumulative billable bytes per proxy.\n")
+			fmt.Fprintf(&b, "# TYPE urnet_proxy_billable_bytes_total counter\n")
+			b.WriteString(proxyBillable.String())
+			fmt.Fprintf(&b, "# HELP urnet_proxy_clients Active clients per proxy.\n")
+			fmt.Fprintf(&b, "# TYPE urnet_proxy_clients gauge\n")
+			b.WriteString(proxyClients.String())
+			fmt.Fprintf(&b, "# HELP urnet_proxy_session_age_seconds How long the current client presence window has been active per proxy.\n")
+			fmt.Fprintf(&b, "# TYPE urnet_proxy_session_age_seconds gauge\n")
+			b.WriteString(proxyAge.String())
+			fmt.Fprintf(&b, "# HELP urnet_billable_bytes_total Aggregate billable bytes for this provider.\n")
+			fmt.Fprintf(&b, "# TYPE urnet_billable_bytes_total counter\n")
+			fmt.Fprintf(&b, "urnet_billable_bytes_total{direction=\"in\"} %d\n", totalBillRx)
+			fmt.Fprintf(&b, "urnet_billable_bytes_total{direction=\"out\"} %d\n", totalBillTx)
+			fmt.Fprintf(&b, "# HELP urnet_bytes_total Aggregate total bytes for this provider.\n")
+			fmt.Fprintf(&b, "# TYPE urnet_bytes_total counter\n")
+			fmt.Fprintf(&b, "urnet_bytes_total{direction=\"in\"} %d\n", totalRx)
+			fmt.Fprintf(&b, "urnet_bytes_total{direction=\"out\"} %d\n", totalTx)
+			fmt.Fprintf(&b, "# HELP urnet_clients_active Aggregate active clients across all proxies.\n")
+			fmt.Fprintf(&b, "# TYPE urnet_clients_active gauge\n")
+			fmt.Fprintf(&b, "urnet_clients_active %d\n", totalClients)
+
 		}
-		sort.Strings(keys)
-		var proxyBytes, proxyBillable, proxyClients, proxyAge strings.Builder
-		var totalBillRx, totalBillTx uint64
-		var totalRx, totalTx uint64
-		var totalClients int64
-		for _, key := range keys {
-			bw := bandwidth[key]
-			rx := bw.TotalRx.Load()
-			tx := bw.TotalTx.Load()
-			billRx := bw.BillableRx.Load()
-			billTx := bw.BillableTx.Load()
-			clients := bw.Clients.Load()
-			proxyID := PrometheusLabelValue(key)
-			fmt.Fprintf(&proxyBytes, "urnet_proxy_bytes_total{proxy=%s,direction=\"in\"} %d\n", proxyID, rx)
-			fmt.Fprintf(&proxyBytes, "urnet_proxy_bytes_total{proxy=%s,direction=\"out\"} %d\n", proxyID, tx)
-			fmt.Fprintf(&proxyBillable, "urnet_proxy_billable_bytes_total{proxy=%s,direction=\"in\"} %d\n", proxyID, billRx)
-			fmt.Fprintf(&proxyBillable, "urnet_proxy_billable_bytes_total{proxy=%s,direction=\"out\"} %d\n", proxyID, billTx)
-			fmt.Fprintf(&proxyClients, "urnet_proxy_clients{proxy=%s} %d\n", proxyID, clients)
-			fmt.Fprintf(&proxyAge, "urnet_proxy_session_age_seconds{proxy=%s} %g\n", proxyID, bw.MaxAge().Seconds())
-			totalBillRx += billRx
-			totalBillTx += billTx
-			totalRx += rx
-			totalTx += tx
-			totalClients += clients
-		}
-		fmt.Fprintf(&b, "# HELP urnet_proxy_bytes_total Cumulative bytes transferred per proxy.\n")
-		fmt.Fprintf(&b, "# TYPE urnet_proxy_bytes_total counter\n")
-		b.WriteString(proxyBytes.String())
-		fmt.Fprintf(&b, "# HELP urnet_proxy_billable_bytes_total Cumulative billable bytes per proxy.\n")
-		fmt.Fprintf(&b, "# TYPE urnet_proxy_billable_bytes_total counter\n")
-		b.WriteString(proxyBillable.String())
-		fmt.Fprintf(&b, "# HELP urnet_proxy_clients Active clients per proxy.\n")
-		fmt.Fprintf(&b, "# TYPE urnet_proxy_clients gauge\n")
-		b.WriteString(proxyClients.String())
-		fmt.Fprintf(&b, "# HELP urnet_proxy_session_age_seconds How long the current client presence window has been active per proxy.\n")
-		fmt.Fprintf(&b, "# TYPE urnet_proxy_session_age_seconds gauge\n")
-		b.WriteString(proxyAge.String())
-		fmt.Fprintf(&b, "# HELP urnet_billable_bytes_total Aggregate billable bytes for this provider.\n")
-		fmt.Fprintf(&b, "# TYPE urnet_billable_bytes_total counter\n")
-		fmt.Fprintf(&b, "urnet_billable_bytes_total{direction=\"in\"} %d\n", totalBillRx)
-		fmt.Fprintf(&b, "urnet_billable_bytes_total{direction=\"out\"} %d\n", totalBillTx)
-		fmt.Fprintf(&b, "# HELP urnet_bytes_total Aggregate total bytes for this provider.\n")
-		fmt.Fprintf(&b, "# TYPE urnet_bytes_total counter\n")
-		fmt.Fprintf(&b, "urnet_bytes_total{direction=\"in\"} %d\n", totalRx)
-		fmt.Fprintf(&b, "urnet_bytes_total{direction=\"out\"} %d\n", totalTx)
-		fmt.Fprintf(&b, "# HELP urnet_clients_active Aggregate active clients across all proxies.\n")
-		fmt.Fprintf(&b, "# TYPE urnet_clients_active gauge\n")
-		fmt.Fprintf(&b, "urnet_clients_active %d\n", totalClients)
 
 		// --- Error counters ---
 		globalProm.initErrors()
@@ -310,4 +324,33 @@ func FormatDuration(seconds float64) string {
 	default:
 		return fmt.Sprintf("%ds", int(seconds))
 	}
+}
+
+// ProxyPoolSnapshot is the pool composition the Prometheus handler reports:
+// up and connecting counts, the dead and degraded address lists, and per-proxy
+// bandwidth. It mirrors sn's provider.ProxyHealthSnapshot.
+type ProxyPoolSnapshot func() (up int, dead, degraded []string, bandwidth map[string]*bandwidth.ProxyBandwidth, connecting []string)
+
+// Held in an atomic.Pointer rather than a plain package var: it is written once
+// at provider startup and read from every /metrics scrape goroutine, so a plain
+// var is a data race under -race even though the write happens "early".
+var proxyPoolSnapshotPtr atomic.Pointer[ProxyPoolSnapshot]
+
+// SetProxyPoolSnapshot registers the provider's snapshot function. It is called
+// once at provider startup; until then the handler reports an empty pool rather
+// than a fabricated zero count.
+func SetProxyPoolSnapshot(fn ProxyPoolSnapshot) { proxyPoolSnapshotPtr.Store(&fn) }
+
+// proxyPoolSnapshot returns ok=false when no provider has registered a
+// snapshot function. The handler then omits the whole proxy-pool family rather
+// than printing zeros: an unregistered seam means "this process does not serve
+// a proxy pool", and a scraper reading {status="up"} 0 would conclude the pool
+// is empty, which is a fabricated measurement rather than a missing one.
+func proxyPoolSnapshot() (up int, dead, degraded []string, bw map[string]*bandwidth.ProxyBandwidth, connecting []string, ok bool) {
+	p := proxyPoolSnapshotPtr.Load()
+	if p == nil {
+		return 0, nil, nil, nil, nil, false
+	}
+	up, dead, degraded, bw, connecting = (*p)()
+	return up, dead, degraded, bw, connecting, true
 }
