@@ -20,6 +20,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/urfoundation/sn/internal/connectx"
 	"github.com/urnetwork/connect"
 )
 
@@ -239,39 +240,7 @@ func readPSI(resource string) (avg60 float64, err error) {
 // detectEffectiveRAMLimitBytes returns the effective RAM ceiling in bytes.
 // Checks cgroup v2, then cgroup v1, then /proc/meminfo MemTotal.
 func detectEffectiveRAMLimitBytes() int64 {
-	// cgroup v2
-	if data, err := os.ReadFile("/sys/fs/cgroup/memory.max"); err == nil {
-		s := strings.TrimSpace(string(data))
-		if s != "max" {
-			if v, err := strconv.ParseInt(s, 10, 64); err == nil && v > 0 {
-				return v
-			}
-		}
-	}
-	// cgroup v1 — sentinel for "no limit" is near max int64; filter anything >= 1 TiB
-	const oneTiB = 1 << 40
-	if data, err := os.ReadFile("/sys/fs/cgroup/memory/memory.limit_in_bytes"); err == nil {
-		if v, err := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64); err == nil && v > 0 && v < oneTiB {
-			return v
-		}
-	}
-	// /proc/meminfo MemTotal (kB)
-	if f, err := os.Open("/proc/meminfo"); err == nil {
-		defer f.Close()
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "MemTotal:") {
-				fields := strings.Fields(line)
-				if len(fields) >= 2 {
-					if v, err := strconv.ParseInt(fields[1], 10, 64); err == nil {
-						return v * 1024
-					}
-				}
-			}
-		}
-	}
-	return 850 * 1024 * 1024
+	return connectx.DetectEffectiveRAMLimitBytes()
 }
 
 func readMemAvailableMiB() int64 {
@@ -302,21 +271,11 @@ func readMemAvailableMiB() int64 {
 func readCgroupAvailableMiB() int64 {
 	const oneTiB = int64(1) << 40
 
-	// cgroup v2
-	maxData, maxErr := os.ReadFile("/sys/fs/cgroup/memory.max")
-	currData, currErr := os.ReadFile("/sys/fs/cgroup/memory.current")
-	if maxErr == nil && currErr == nil {
-		maxStr := strings.TrimSpace(string(maxData))
-		if maxStr != "max" {
-			limit, err1 := strconv.ParseInt(maxStr, 10, 64)
-			curr, err2 := strconv.ParseInt(strings.TrimSpace(string(currData)), 10, 64)
-			if err1 == nil && err2 == nil && limit > 0 && limit < oneTiB {
-				if avail := (limit - curr) / 1024 / 1024; avail >= 0 {
-					return avail
-				}
-				return 0
-			}
-		}
+	// cgroup v2: the process's own cgroup and its ancestors (systemd MemoryMax=
+	// and MemoryHigh= live there, not at the mount root, which only a
+	// container's own cgroup makes meaningful).
+	if room, ok := connectx.CgroupMemoryHeadroomBytes(); ok && room < oneTiB {
+		return room / 1024 / 1024
 	}
 
 	// cgroup v1
