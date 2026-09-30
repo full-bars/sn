@@ -2,6 +2,7 @@ package urnettools
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -49,6 +50,7 @@ Performance & Tuning:
   config [--json]         Show all provider settings with source and age
   profile [<name>]        Show or set the memory/GC tuning profile
   metrics [on|off|listen] Prometheus /metrics: status, toggle, listen address
+  smart-dialer [on|off]   Adapt transport choice to the network: skip DPI-circumvention cost when it is not needed
 
 Session & Identity:
   session save <file>     Export identity + proxy state (encrypted)
@@ -180,6 +182,7 @@ func buildRootCmd() *cobra.Command {
 		newGetCmd(),
 		newHistoryCmd(),
 		newMetricsCmd(),
+		newSmartDialerCmd(),
 		newProfileCmd(),
 		newDashboardCmd(),
 		newConfigCmd(),
@@ -246,7 +249,7 @@ func newTopCmd() *cobra.Command {
 		return parseGlobal(args, func(force, dryRun bool, rest []string) error {
 			return cmdTop(rest)
 		})
-	}), "Open a live, full-screen view of one provider: throughput graph for the last 10 minutes, current and average rate, clients, proxy pool, memory and descriptors, and recent events such as restarts and state changes. Reads only the provider's control socket and changes nothing. Also available as `urtop`. Keys: q, Esc or Ctrl-C quit; Tab and Shift-Tab switch provider; + and - change the refresh rate; ? shows help. When the provider stops answering the screen stays up, shows DISCONNECTED with a countdown, and resumes by itself. Needs an interactive terminal; use `status` for scripts. Target a specific provider with --unit, --user, --network, --network-id, or --state-dir. --interval sets the refresh period (default 1s, minimum 250ms).", "  urnet-tools top\n  urnet-tools top --network tacogonzalez3000\n  urnet-tools top --interval 500ms\n  urtop")
+	}), "Open a live, full-screen view of one provider: throughput graph for the last 10 minutes, current and average rate, clients, proxy pool, memory and descriptors, and recent events such as restarts and state changes. Reads only the provider's control socket and changes nothing. Also available as `urtop`. Keys: q, Esc or Ctrl-C quit; Tab and Shift-Tab switch provider; + and - change the refresh rate; ? shows help. When the provider stops answering the screen stays up, shows DISCONNECTED with a countdown, and resumes by itself. Needs an interactive terminal; use `status` for scripts. Target a specific provider with --unit, --user, --network, --network-id, or --state-dir. --interval sets the refresh period (default 1s, minimum 100ms).", "  urnet-tools top\n  urnet-tools top --network tacogonzalez3000\n  urnet-tools top --interval 500ms\n  urtop")
 }
 
 func newSnStatusCmd() *cobra.Command {
@@ -899,6 +902,105 @@ func cmdMetrics(args []string, dryRun bool) error {
 	}
 	printMetricsStatus(os.Stdout, status)
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// urnet-tools smart-dialer — latency-aware transport preference
+// ---------------------------------------------------------------------------
+
+func newSmartDialerCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:                "smart-dialer [status|on|off]",
+		Short:              "show or toggle latency-aware dialer preference (skip DPI-circumvention cost when the network does not need it)",
+		Aliases:            []string{"smart_dialer"},
+		DisableFlagParsing: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if hasHelpFlag(args) {
+				return cmd.Help()
+			}
+			// Route through the global flag parser so -n/--dry-run (and -f)
+			// are honored: a dry-run must report the planned change without
+			// sending the set request to the provider.
+			return parseGlobal(args, func(force, dryRun bool, rest []string) error {
+				return cmdSmartDialer(rest, dryRun)
+			})
+		},
+	}
+}
+
+func cmdSmartDialer(args []string, dryRun bool) error {
+	t, rest, err := parseTargetFlags(args)
+	if err != nil {
+		return err
+	}
+	const usage = "usage: urnet-tools smart-dialer [status|on|off]"
+	if len(rest) > 1 {
+		return fmt.Errorf("%s (got %q)", usage, strings.Join(rest, " "))
+	}
+	action := "status"
+	if len(rest) > 0 {
+		action = strings.ToLower(rest[0])
+	}
+	var change *controlRequest
+	switch action {
+	case "status":
+	case "on", "off":
+		change = &controlRequest{Cmd: "set", Key: "smart_dialer", Value: action}
+	default:
+		return fmt.Errorf("%s (got %q)", usage, rest[0])
+	}
+
+	p, err := selectTarget(Discover(), t)
+	if err != nil {
+		return err
+	}
+	if p.StateDir == "" {
+		return fmt.Errorf("provider %s has no resolvable state dir", providerLabel(p))
+	}
+	socketPath := filepath.Join(p.StateDir, "provider.sock")
+
+	if change != nil {
+		if err := validateControlValue(change.Key, change.Value); err != nil {
+			return err
+		}
+		if dryRun {
+			fmt.Printf("[dry-run] would send %s %s %s to %s\n", change.Cmd, change.Key, change.Value, providerLabel(p))
+			return nil
+		}
+		resp, err := sendSocketRequest(socketPath, *change)
+		if err != nil {
+			return err
+		}
+		if !resp.OK {
+			return fmt.Errorf("provider returned error: %s", resp.Error)
+		}
+	}
+
+	status, err := sendSocketRequest(socketPath, controlRequest{Cmd: "status"})
+	if err != nil {
+		return err
+	}
+	if !status.OK {
+		return fmt.Errorf("provider returned error: %s", status.Error)
+	}
+	printSmartDialerStatus(os.Stdout, status)
+	return nil
+}
+
+func printSmartDialerStatus(w io.Writer, resp controlResponse) {
+	setting, ok := resp.Settings["smart_dialer"]
+	if ok && isTruthy(setting.Value) {
+		fmt.Fprintln(w, "Smart dialer: on")
+		fmt.Fprintln(w, "  The provider prefers the transport that measures fastest on this network.")
+		fmt.Fprintln(w, "  A transport that stops working here is automatically avoided, so this is")
+		fmt.Fprintln(w, "  safe on networks that need DPI circumvention.")
+		fmt.Fprintln(w, "Turn off with: urnet-tools smart-dialer off")
+		return
+	}
+	fmt.Fprintln(w, "Smart dialer: off")
+	fmt.Fprintln(w, "  Transport preference is fixed (fragmented TLS first), which costs time on")
+	fmt.Fprintln(w, "  networks that do not need DPI circumvention.")
+	fmt.Fprintln(w, "Turn on with: urnet-tools smart-dialer on")
 }
 
 // ---------------------------------------------------------------------------

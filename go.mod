@@ -8,13 +8,14 @@ require (
 	github.com/consensys/gnark-crypto v0.20.1
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/ethereum/go-ethereum v1.17.0
+	github.com/gdamore/tcell/v2 v2.13.10
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/quic-go/quic-go v0.61.0
 	github.com/spf13/cobra v1.10.2
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/urnetwork/connect v0.0.0
-	github.com/urnetwork/sdk v0.0.40
+	github.com/urnetwork/sdk v0.0.0-00010101000000-000000000000
 	github.com/vedhavyas/go-subkey/v2 v2.0.0
 	golang.org/x/crypto v0.54.0
 	golang.org/x/net v0.57.0
@@ -56,7 +57,6 @@ require (
 	github.com/gagliardetto/solana-go v1.21.0 // indirect
 	github.com/gagliardetto/treeout v0.1.4 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
-	github.com/gdamore/tcell/v2 v2.13.10 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -219,4 +219,4 @@ replace github.com/urnetwork/goidenticons => github.com/full-bars/goidenticons v
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20260916141202-065bcdd9b85d
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20260929233534-33b60544c295

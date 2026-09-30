@@ -60,6 +60,12 @@ func topFlowing(t *testing.T) *NodeSnapshot {
 	t.Helper()
 	s := loadSnapshotFixture(t, "node_snapshot_v1.json")
 	s.Rate.HistoryBps = topSamples()
+	// Total traffic is billable plus what was not billable: a steady extra 60%.
+	total := make([]float64, len(s.Rate.HistoryBps))
+	for i, v := range s.Rate.HistoryBps {
+		total[i] = v * 1.6
+	}
+	s.Traffic.TotalHistoryBps = total
 	return s
 }
 
@@ -232,12 +238,12 @@ func TestTopFullLayoutStartsAtTheNamedMinimum(t *testing.T) {
 	m.apply(0, topFlowing(t), nil)
 	full := tui.New(topMinWidth, topMinHeight)
 	m.render(full)
-	if !strings.Contains(full.String(), "Throughput") {
+	if !strings.Contains(full.String(), "Billable") {
 		t.Fatalf("%dx%d should be the full layout:\n%s", topMinWidth, topMinHeight, full.String())
 	}
 	small := tui.New(topMinWidth-1, topMinHeight)
 	m.render(small)
-	if strings.Contains(small.String(), "Throughput") || !strings.Contains(small.String(), "enlarge") {
+	if strings.Contains(small.String(), "Billable") || !strings.Contains(small.String(), "enlarge") {
 		t.Fatalf("%dx%d should be the compact view:\n%s", topMinWidth-1, topMinHeight, small.String())
 	}
 }
@@ -432,18 +438,26 @@ func TestTopRefreshRateKeys(t *testing.T) {
 	m := newTestModel(tui.DefaultTheme(), topProviders(1), clock)
 	press := func(r rune) { m.handle(tcellui.Event{Kind: tcellui.EventRune, Rune: r}) }
 
-	press('+')
-	press('+')
-	press('+') // clamps at the fastest step
+	press('-')
+	press('-')
+	press('-')
+	press('-') // clamps at the fastest step, 100ms like btop: - is faster
 	if m.interval != topMinInterval {
 		t.Fatalf("interval = %v, want the %v floor", m.interval, topMinInterval)
 	}
-	press('-')
+	if topMinInterval != 100*time.Millisecond {
+		t.Fatalf("floor = %v, want 100ms like btop", topMinInterval)
+	}
+	press('+')
+	if m.interval != 250*time.Millisecond {
+		t.Fatalf("interval = %v", m.interval)
+	}
+	press('+')
 	if m.interval != 500*time.Millisecond {
 		t.Fatalf("interval = %v", m.interval)
 	}
 	for i := 0; i < 10; i++ {
-		press('-')
+		press('+')
 	}
 	if m.interval != 10*time.Second {
 		t.Fatalf("interval = %v, want the slowest step", m.interval)
@@ -452,12 +466,12 @@ func TestTopRefreshRateKeys(t *testing.T) {
 	// A custom --interval sits between steps and moves to the next one.
 	m.interval = 1500 * time.Millisecond
 	press('+')
-	if m.interval != time.Second {
+	if m.interval != 2*time.Second {
 		t.Fatalf("interval = %v", m.interval)
 	}
 	m.interval = 1500 * time.Millisecond
 	press('-')
-	if m.interval != 2*time.Second {
+	if m.interval != time.Second {
 		t.Fatalf("interval = %v", m.interval)
 	}
 
@@ -480,7 +494,7 @@ func TestParseTopFlags(t *testing.T) {
 		{[]string{"--interval", "500ms"}, 500 * time.Millisecond, nil, ""},
 		{[]string{"--interval=2s", "--unit", "a.service"}, 2 * time.Second, []string{"--unit", "a.service"}, ""},
 		{[]string{"--network", "n", "--interval", "3"}, 3 * time.Second, []string{"--network", "n"}, ""},
-		{[]string{"--interval", "100ms"}, 0, nil, "at least 250ms"},
+		{[]string{"--interval", "50ms"}, 0, nil, "at least 100ms"},
 		{[]string{"--interval", "fast"}, 0, nil, "not a duration"},
 		{[]string{"--interval"}, 0, nil, "needs a value"},
 	}

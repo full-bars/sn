@@ -85,6 +85,13 @@ type controlResponse struct {
 	// Snapshot is the live node picture, answered by "snapshot". An older
 	// provider replies "unknown command" instead.
 	Snapshot *NodeSnapshot `json:"snapshot,omitempty"`
+	// Traffic is the light live-counter reply, answered by "traffic". It is
+	// what urnet-tools top polls at 100ms instead of a full snapshot.
+	Traffic *LiveTraffic `json:"traffic,omitempty"`
+	// Internals and Goroutines are the runtime views urnet-tools top draws,
+	// answered by "internals" and "goroutines".
+	Internals  *NodeInternals   `json:"internals,omitempty"`
+	Goroutines *GoroutineGroups `json:"goroutines,omitempty"`
 	// ProxyAudit is the proxy audit engine's last completed tick, answered by
 	// "status" and "audit". Nil before its first tick or on a provider that predates it.
 	ProxyAudit *proxyAuditStatus `json:"proxy_audit,omitempty"`
@@ -273,6 +280,7 @@ var liveEffectKeys = map[string]bool{
 	"fast_auth":                   true,
 	"proxy_self_heal":             true,
 	"proxy_audit":                 true,
+	"smart_dialer":                true,
 	"report_url":                  true,
 	"report_interval":             true,
 	"proxy_url_refresh":           true,
@@ -315,7 +323,7 @@ func validateControlValue(key, value string) error {
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", key, value)
 		}
-	case "fast_auth", "proxy_self_heal", "proxy_audit":
+	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer":
 		switch valLower {
 		case "on", "off":
 		default:
@@ -390,6 +398,10 @@ var liveDefaults = map[string]string{
 	// Clearing proxy_audit must return the engine to observe mode: the
 	// in-memory override survives a clear otherwise.
 	"proxy_audit": "off",
+	// Clearing smart_dialer must restore the measured-cost preference to its
+	// off default; without the entry, clear reported success while the live
+	// dialer stayed enabled until restart.
+	"smart_dialer": "off",
 }
 
 func applyLiveDefault(key string) error {
@@ -413,6 +425,15 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 
 	case "snapshot":
 		return controlResponse{OK: true, Snapshot: nodeSnapshots.Get()}
+
+	case "traffic":
+		return controlResponse{OK: true, Traffic: liveTrafficSample(time.Now(), proxyBandwidth.totals)}
+
+	case "internals":
+		return controlResponse{OK: true, Internals: nodeInternals.Get(time.Now())}
+
+	case "goroutines":
+		return controlResponse{OK: true, Goroutines: nodeGoroutines.Get(time.Now())}
 
 	case "get":
 		if req.Key == "" {
@@ -608,23 +629,37 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 				controlLog("✓ [proxy][audit] released all %d parked proxies via control socket\n", len(released))
 				return controlResponse{OK: true, Value: fmt.Sprintf("released %d proxies", len(released))}
 			}
-			addr := req.Address
-			wasParked := a.st.isParked(addr)
-			if wasParked {
-				a.st.release(addr)
-			}
-			a.releaseBackoff(addr)
+			known := a.st.parkedAddrs()
 			if globalProxyFailureHistory != nil {
-				globalProxyFailureHistory.Reset(addr)
+				known = append(known, globalProxyFailureHistory.Keys()...)
+			}
+			keys := resolveAuditReleaseKeys(req.Address, known)
+			wasParked := false
+			for _, key := range keys {
+				if a.st.isParked(key) {
+					wasParked = true
+					a.st.release(key)
+				}
+				a.releaseBackoff(key)
+				if globalProxyFailureHistory != nil {
+					globalProxyFailureHistory.Reset(key)
+				}
 			}
 			a.publish(a.env.now(), a.env.act(), proxyAuditResult{})
 			a.mu.Unlock()
-			if wasParked {
-				controlLog("✓ [proxy][audit] released parked proxy %s via control socket\n", addr)
-				return controlResponse{OK: true, Value: fmt.Sprintf("released proxy %s", addr)}
+			// Name what was released by address (never the raw identity key, whose
+			// \x1f separator must not reach a log line); several accounts at one
+			// gateway are reported as a count.
+			label := proxyKeyDisplay(keys[0])
+			if len(keys) > 1 {
+				label = fmt.Sprintf("%s (%d accounts)", req.Address, len(keys))
 			}
-			controlLog("✓ [proxy][audit] cleared backoff for proxy %s via control socket (was not parked)\n", addr)
-			return controlResponse{OK: true, Value: fmt.Sprintf("cleared backoff for proxy %s", addr)}
+			if wasParked {
+				controlLog("✓ [proxy][audit] released parked proxy %s via control socket\n", label)
+				return controlResponse{OK: true, Value: fmt.Sprintf("released proxy %s", label)}
+			}
+			controlLog("✓ [proxy][audit] cleared backoff for proxy %s via control socket (was not parked)\n", label)
+			return controlResponse{OK: true, Value: fmt.Sprintf("cleared backoff for proxy %s", label)}
 
 		default:
 			return controlResponse{OK: false, Error: fmt.Sprintf("unknown audit action %q (status|on|off|release)", req.Action)}
@@ -751,6 +786,17 @@ func applyLiveSideEffect(key, value string) error {
 			spawnRunOnce(a)
 		}
 		return nil
+	case "smart_dialer":
+		// Transport choice keeps adapting either way (the measurement is always
+		// running); this decides whether selection consults it. See
+		// connect.SetSmartDialer.
+		enabled := strings.EqualFold(value, "on")
+		previous := connect.SetSmartDialer(enabled)
+		was := "off"
+		if previous {
+			was = "on"
+		}
+		controlApplyLog("⚙️ [control] applied smart_dialer=%s (was %s)\n", value, was)
 	}
 	return nil
 }
@@ -933,6 +979,11 @@ func applyPersistedRuntimeTuning(state *controlState) {
 	if v, ok := state.get("metrics"); ok && strings.EqualFold(v, "on") && os.Getenv("URNETWORK_METRICS") == "" && !metricsHandoffPending.Load() {
 		if err := applyMetricsLive("on"); err != nil {
 			controlLog("[control] failed to apply persisted metrics=on: %s\n", err)
+		}
+	}
+	if v, ok := state.get("smart_dialer"); ok && strings.EqualFold(v, "on") {
+		if err := applyLiveSideEffect("smart_dialer", v); err != nil {
+			controlLog("[control] failed to apply persisted smart_dialer=%s: %s\n", v, err)
 		}
 	}
 }

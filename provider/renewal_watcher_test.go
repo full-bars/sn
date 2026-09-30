@@ -538,7 +538,7 @@ func TestRunProxyJWTWatcherRenewsOnTransportAuthFailures(t *testing.T) {
 	defer func() { storeGlobalClientJWTStore(oldStore) }()
 
 	const proxyIndex = 918273
-	RegisterProxy(proxyIndex, "test-proxy-authfail-addr")
+	RegisterProxy(proxyIndex, "test-proxy-authfail-addr", "test-proxy-authfail-addr")
 	defer UnregisterProxy(proxyIndex)
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -264,7 +264,7 @@ func TestCollectProxyGradeSummary_FileOwnershipOverridesURLTag(t *testing.T) {
 	state := &ProxyState{
 		Source: src,
 		Proxies: map[string]ProxyEntry{
-			"9.9.9.9:1080": {Health: "up", Source: "url", Graded: true, Score: 0.8, LastGraded: time.Now().Add(-4 * time.Hour)},
+			"9.9.9.9:1080\x1fu": {Health: "up", Source: "url", Graded: true, Score: 0.8, LastGraded: time.Now().Add(-4 * time.Hour)},
 		},
 	}
 	if err := writeProxyStateTo(filepath.Join(dir, "proxy.state"), state); err != nil {

@@ -38,9 +38,11 @@ func TestRemoveDeadProxies_RoutesBySource(t *testing.T) {
 	state := &ProxyState{Source: fileSourcePath, Proxies: map[string]ProxyEntry{}}
 
 	err := removeDeadProxies(state, map[string][]string{
-		"file":     {"1.1.1.1:1080"},
+		// proxy.state and the removal seam use identity keys, so a
+		// credentialed file line is named by address+user.
+		"file":     {identityKey("1.1.1.1:1080", "u")},
 		"internal": {"3.3.3.3:1080"},
-		"url":      {"4.4.4.4:1080"},
+		"url":      {identityKey("4.4.4.4:1080", "u")},
 	})
 	if err != nil {
 		t.Fatal(err)

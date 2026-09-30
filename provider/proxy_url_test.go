@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/urnetwork/connect"
+	"golang.org/x/net/proxy"
 )
 
 func init() {
@@ -225,15 +226,21 @@ func TestMergeProxyURLCache_PrimarySourceWins(t *testing.T) {
 	if sourceOf["1.2.3.4:1080"] != "file" {
 		t.Errorf("existing entry's source was overwritten: got %q", sourceOf["1.2.3.4:1080"])
 	}
-	if sourceOf["5.6.7.8:1080"] != "url" {
-		t.Errorf("new entry not tagged url: got %q", sourceOf["5.6.7.8:1080"])
+	// The credentialed URL entry is keyed by identity (address+user), not the
+	// bare address — the whole point of the merge change.
+	uKey := (&connect.ProxySettings{Network: "tcp", Address: "5.6.7.8:1080", Auth: &proxy.Auth{User: "u", Password: "p"}}).Key()
+	if sourceOf[uKey] != "url" {
+		t.Errorf("new entry not tagged url: got %q", sourceOf[uKey])
 	}
-	settings, ok := desiredSet["5.6.7.8:1080"]
+	settings, ok := desiredSet[uKey]
 	if !ok {
-		t.Fatal("expected new address merged into desiredSet")
+		t.Fatal("expected new address merged into desiredSet under its identity key")
 	}
 	if settings.Auth == nil || settings.Auth.User != "u" || settings.Auth.Password != "p" {
 		t.Errorf("expected auth u/p, got %+v", settings.Auth)
+	}
+	if _, bare := desiredSet["5.6.7.8:1080"]; bare {
+		t.Error("bare address must never be a merge key when the URL entry is credentialed")
 	}
 }
 

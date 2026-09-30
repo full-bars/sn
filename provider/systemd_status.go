@@ -42,10 +42,12 @@ var (
 // Resolution status constants. The value matters only inside
 // systemdStatusLine's total==0 branch; no control-flow reads these.
 const (
-	proxyResolutionPending int32 = 0 // no resolution attempted yet
-	proxyResolutionFailed  int32 = 1 // attempted, source unreachable
-	proxyResolutionEmpty   int32 = 2 // succeeded but zero usable proxies
-	proxyResolutionOK      int32 = 3 // resolved with at least one proxy
+	proxyResolutionPending   int32 = 0 // no resolution attempted yet
+	proxyResolutionFailed    int32 = 1 // attempted, source unreachable
+	proxyResolutionEmpty     int32 = 2 // succeeded but zero usable proxies
+	proxyResolutionOK        int32 = 3 // resolved with at least one proxy
+	proxyResolutionZeroValid int32 = 4 // no proxy source configured; direct-only is a valid zero config
+	proxyResolutionNoSource  int32 = 5 // no proxy source configured and the direct transport is off: nothing is served
 )
 
 // Status severity bands for the live/configured proxy ratio. The exact
@@ -149,6 +151,16 @@ func systemdStatusLine() string {
 			return fmt.Sprintf("degraded: proxy source unreachable (%s), retrying%s", reason, auditPauseNote())
 		case proxyResolutionEmpty:
 			return "degraded: proxy source returned no usable proxies, retrying" + auditPauseNote()
+		case proxyResolutionNoSource:
+			// Configured deliberately to serve nothing: the direct transport
+			// is off and no proxy source is configured. It is degraded, not
+			// settled, because nothing is actually being provided.
+			return "degraded: no proxy source configured and the direct transport is off" + auditPauseNote()
+		case proxyResolutionZeroValid:
+			// Direct-only: no proxy source configured, and this is a valid,
+			// completed zero-proxy config. The provider is serving via the
+			// native direct transport, so it is not degraded.
+			return "active: providing on direct/local IP (no proxy source configured)"
 		default: // proxyResolutionPending or stale OK
 			return "starting: resolving proxies" + auditPauseNote()
 		}
@@ -271,4 +283,42 @@ func truncateReason(s string, maxLen int) string {
 func resetProxyResolutionStatus() {
 	proxyResolutionStatus.Store(proxyResolutionPending)
 	proxyResolutionReason.Store("")
+}
+
+// Startup phases, as reported to the live status snapshot. An empty phase means
+// startup has settled.
+const (
+	startupResolving         = "resolving proxies"
+	startupSourceUnreachable = "proxy source unreachable"
+	startupSourceEmpty       = "proxy source returned no usable proxies"
+	startupNoSource          = "no proxy source configured and the direct transport is off"
+)
+
+// proxyStartupPhase reports what proxy startup is still waiting on, or "" once it
+// has settled. It is the zero-proxy branch of systemdStatusLine, read the same
+// way from the same inputs, so the two never disagree: a node systemd calls
+// "starting: resolving proxies" is not IDLE in `urnet-tools status`.
+//
+// With proxies configured startup has settled. With none, the resolution status
+// says what it is waiting on. The first reload after launch always resolves that
+// status (empty, failed or ok), so a node with no proxies leaves "resolving"
+// within moments and reads degraded, exactly as the systemd line does.
+func proxyStartupPhase() string {
+	if proxiesConfigured.Load() != 0 {
+		return ""
+	}
+	switch proxyResolutionStatus.Load() {
+	case proxyResolutionFailed:
+		return startupSourceUnreachable
+	case proxyResolutionEmpty:
+		return startupSourceEmpty
+	case proxyResolutionNoSource:
+		return startupNoSource
+	case proxyResolutionZeroValid:
+		// Direct-only: no proxy source configured, so zero proxies is a valid,
+		// completed config. Startup has settled.
+		return ""
+	default: // proxyResolutionPending, or a stale OK with no proxies
+		return startupResolving
+	}
 }

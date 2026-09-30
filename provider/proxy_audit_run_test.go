@@ -486,9 +486,9 @@ func TestLiveReadPaid_FingerprintsFollowTheAddressNotTheHost(t *testing.T) {
 		os.WriteFile(src, []byte(lines), 0600)
 	}
 	if err := writeProxyState(&ProxyState{Source: src, Proxies: map[string]ProxyEntry{
-		"9.9.9.9:1080": {ID: 1, Health: "up", Source: "file"},
-		"9.9.9.9:1081": {ID: 2, Health: "up", Source: "file"}, // same host, next port
-		"9.9.9.8:1080": {ID: 3, Health: "up", Source: "file"}, // next host, same port
+		"9.9.9.9:1080\x1falice": {ID: 1, Health: "up", Source: "file"},
+		"9.9.9.9:1081\x1falice": {ID: 2, Health: "up", Source: "file"}, // same host, next port
+		"9.9.9.8:1080\x1falice": {ID: 3, Health: "up", Source: "file"}, // next host, same port
 	}}); err != nil {
 		t.Fatal(err)
 	}
@@ -500,10 +500,10 @@ func TestLiveReadPaid_FingerprintsFollowTheAddressNotTheHost(t *testing.T) {
 
 	write("9.9.9.9:1080:alice:pw2\n9.9.9.9:1081:alice:pw1\n9.9.9.8:1080:alice:pw1\n")
 	_, after, _ := liveReadPaid()
-	if after["9.9.9.9:1080"] == before["9.9.9.9:1080"] {
+	if after["9.9.9.9:1080\x1falice"] == before["9.9.9.9:1080\x1falice"] {
 		t.Fatalf("re-pasting an address with new credentials must change its fingerprint")
 	}
-	if after["9.9.9.9:1081"] != before["9.9.9.9:1081"] || after["9.9.9.8:1080"] != before["9.9.9.8:1080"] {
+	if after["9.9.9.9:1081\x1falice"] != before["9.9.9.9:1081\x1falice"] || after["9.9.9.8:1080\x1falice"] != before["9.9.9.8:1080\x1falice"] {
 		t.Fatalf("near-identical endpoints must not be disturbed by another address's rotation")
 	}
 }
@@ -660,8 +660,8 @@ func TestLiveReadPaid_ReturnsTrackedPaidProxiesOnly(t *testing.T) {
 	src := filepath.Join(home, "paid.txt")
 	os.WriteFile(src, []byte("1.1.1.1:1080:u:p\n3.3.3.3:1080:u:p\n"), 0600)
 	err := writeProxyState(&ProxyState{Source: src, Proxies: map[string]ProxyEntry{
-		"1.1.1.1:1080": {ID: 1, Health: "up", Source: "file"},
-		"2.2.2.2:1080": {ID: 2, Health: "up", Source: "url"}, // URL-sourced: not paid
+		"1.1.1.1:1080\x1fu": {ID: 1, Health: "up", Source: "file"},
+		"2.2.2.2:1080":      {ID: 2, Health: "up", Source: "url"}, // URL-sourced: not paid
 	}})
 	if err != nil {
 		t.Fatal(err)
@@ -671,7 +671,7 @@ func TestLiveReadPaid_ReturnsTrackedPaidProxiesOnly(t *testing.T) {
 	if !ok {
 		t.Fatalf("a readable source file is a trustworthy paid set")
 	}
-	if len(got) != 1 || got["1.1.1.1:1080"].ID != 1 {
+	if len(got) != 1 || got["1.1.1.1:1080\x1fu"].ID != 1 {
 		t.Fatalf("expected only the tracked file proxy, got %v", got)
 	}
 }
@@ -679,7 +679,7 @@ func TestLiveReadPaid_ReturnsTrackedPaidProxiesOnly(t *testing.T) {
 func TestLiveReadPaid_UnreadableSourceIsUntrusted(t *testing.T) {
 	home := withTempHome(t)
 	err := writeProxyState(&ProxyState{Source: filepath.Join(home, "missing.txt"), Proxies: map[string]ProxyEntry{
-		"1.1.1.1:1080": {ID: 1, Health: "up", Source: "file"},
+		"1.1.1.1:1080\x1fu": {ID: 1, Health: "up", Source: "file"},
 	}})
 	if err != nil {
 		t.Fatal(err)
@@ -928,8 +928,8 @@ func TestParkedProxyIsNeverRemovedFromTheProxyFileByCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 	err := writeProxyState(&ProxyState{Source: src, StartedAt: auditEpoch.Add(-48 * time.Hour), Proxies: map[string]ProxyEntry{
-		"1.1.1.1:1080": {ID: 1, Health: "up", Source: "file"},
-		"2.2.2.2:1080": {ID: 2, Health: "up", Source: "file"},
+		"1.1.1.1:1080\x1fu": {ID: 1, Health: "up", Source: "file"},
+		"2.2.2.2:1080":      {ID: 2, Health: "up", Source: "file"},
 	}})
 	if err != nil {
 		t.Fatal(err)

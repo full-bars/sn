@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/docopt/docopt-go"
+	"github.com/urnetwork/connect"
+	"golang.org/x/net/proxy"
 )
 
 // ProxyConfig holds the persisted proxy list configuration.
@@ -81,6 +84,72 @@ func expandPath(p string) string {
 	return p
 }
 
+// internalServerSettings resolves one internal-config server entry
+// (Servers[proxyAddress] = authKey) to its ProxySettings: credentials embedded
+// in the address form first, then overridden by the Auths entry named by
+// authKey. Shared by the reader and the removal path so both derive the same
+// identity (ProxySettings.Key()) for an entry.
+func internalServerSettings(proxyConfig *ProxyConfig, proxyAddress, authKey string) *connect.ProxySettings {
+	address, user, password := parseProxyAddress(proxyAddress)
+	proxySettings := &connect.ProxySettings{
+		Network: "tcp",
+		Address: address,
+	}
+	if user != "" || password != "" {
+		proxySettings.Auth = &proxy.Auth{
+			User:     user,
+			Password: password,
+		}
+	}
+	if proxyConfig.Auths != nil {
+		if proxyAuth, ok := proxyConfig.Auths[authKey]; ok {
+			proxySettings.Auth = &proxy.Auth{
+				User:     proxyAuth.User,
+				Password: proxyAuth.Password,
+			}
+		}
+	}
+	return proxySettings
+}
+
+// planInternalAdd decides what adding proxyAddress (parsed as address/user/
+// password) means for the existing internal-config entries at the same host:port.
+//
+// A proxy's identity is address+user (ProxySettings.Key(); the password is not
+// part of it), so:
+//   - same user, same password: already present (keepExisting), and any other
+//     entry of the SAME identity is a stale duplicate to purge;
+//   - same user, different password: a credential ROTATION of that identity,
+//     the old entry is purged so the new credentials take effect;
+//   - different user: a DIFFERENT account at a shared gateway. It is left
+//     alone, purging it would delete a live proxy the operator still wants.
+//
+// Purged entries come back sorted so the output is stable despite map order.
+func planInternalAdd(proxyConfig *ProxyConfig, proxyAddress, address, user, password string) (keepExisting bool, stale []string) {
+	for existing, existingKey := range proxyConfig.Servers {
+		existingAddress, existingUser, existingPassword := parseProxyAddress(existing)
+		if existingAddress != address || existing == proxyAddress {
+			continue
+		}
+		if proxyConfig.Auths != nil {
+			if existingAuth, ok := proxyConfig.Auths[existingKey]; ok {
+				existingUser = existingAuth.User
+				existingPassword = existingAuth.Password
+			}
+		}
+		if existingUser != user {
+			continue // another account at this gateway: not ours to touch
+		}
+		if existingPassword == password {
+			keepExisting = true
+			continue
+		}
+		stale = append(stale, existing)
+	}
+	sort.Strings(stale)
+	return keepExisting, stale
+}
+
 func proxyAdd(opts docopt.Opts) {
 	// File-backed providers (Workflow A: --proxy_file=<X>) load their proxies
 	// from that external file on every reload; writes to the internal config
@@ -121,42 +190,10 @@ keyAddressLoop:
 			}
 		}
 
-		// Credential rotation: purge any existing entry for the same
-		// host:port whose credentials differ, so adding the same address
-		// with new credentials is a ROTATION, not a duplicate. The
-		// reloader diffs by address only (desiredSet[s.Address]), so two
-		// keys for one host:port with different user:pass made re-paste a
-		// no-op — the same address was already "desired", the new creds
-		// were silently dropped, and the running proxy kept the old auth
-		// (LA7 incident 2026-09-18: 100 proxies pasted with new creds,
-		// "added 100" printed, daemon kept dialing the old user).
-		// Scan EVERY entry for this address before deciding anything. Stopping
-		// at the first entry with identical credentials (the old behavior)
-		// left any stale duplicate not yet visited in place, and Go's random
-		// map order made whether it was purged nondeterministic.
-		keepExisting := false
-		var stale []string
-		for existing, existingKey := range proxyConfig.Servers {
-			existingAddress, existingUser, existingPassword := parseProxyAddress(existing)
-			if existingAddress != address || existing == proxyAddress {
-				continue
-			}
-			// Compare EFFECTIVE credentials: a stored key can carry its
-			// credentials in the Auths table instead of in the server string,
-			// and an alternate representation of the same credentials is not
-			// a rotation.
-			if proxyConfig.Auths != nil {
-				if existingAuth, ok := proxyConfig.Auths[existingKey]; ok {
-					existingUser = existingAuth.User
-					existingPassword = existingAuth.Password
-				}
-			}
-			if existingUser == user && existingPassword == password {
-				keepExisting = true
-				continue
-			}
-			stale = append(stale, existing)
-		}
+		// Credential rotation is decided by identity (address+user): a new
+		// password for the same user rotates that proxy, but a DIFFERENT user
+		// at the same gateway is a separate account and must be left alone.
+		keepExisting, stale := planInternalAdd(proxyConfig, proxyAddress, address, user, password)
 		for _, existing := range stale {
 			delete(proxyConfig.Servers, existing)
 			if keepExisting {
@@ -430,7 +467,7 @@ func proxyRemoveMatch(pattern string, opts docopt.Opts) {
 	}
 
 	addrsBySource, display := collectMatchingProxies(
-		pattern, proxyConfig.Servers, stateProxies, stateSource, urlState.Cache)
+		pattern, proxyConfig, stateProxies, stateSource, urlState.Cache)
 
 	if len(display) == 0 {
 		fmt.Printf("no proxies matched %q — nothing to do\n", pattern)

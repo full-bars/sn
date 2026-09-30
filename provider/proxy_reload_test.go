@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/urnetwork/connect"
+	"golang.org/x/net/proxy"
 )
 
 // TestReload_URLOnlySource_NoEarlyExit is a regression test for a bug found
@@ -288,9 +289,12 @@ func TestReload_PrunesGhostStateEntries_NotRunningNotDesired(t *testing.T) {
 	if _, ok := after.Proxies["9.8.7.6:1080"]; ok {
 		t.Fatal("ghost entry (not running, not desired) should have been pruned from proxy.state")
 	}
-	kept, ok := after.Proxies["1.1.1.1:1080"]
+	// The still-desired entry was seeded under its bare address (legacy
+	// shape); the reload migrates it to its identity key (address+user).
+	key := (&connect.ProxySettings{Network: "tcp", Address: "1.1.1.1:1080", Auth: &proxy.Auth{User: "alice"}}).Key()
+	kept, ok := after.Proxies[key]
 	if !ok {
-		t.Fatal("still-desired proxy's state entry must survive reload")
+		t.Fatal("still-desired proxy's state entry must survive reload (adopted under its identity key)")
 	}
 	if kept.ID != 1 {
 		t.Fatalf("expected still-desired proxy to keep its original ID 1, got %d", kept.ID)

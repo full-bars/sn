@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/docopt/docopt-go"
-	"github.com/urnetwork/connect"
 )
 
 // main() is the CLI entry point. It dispatches to subcommands (auth,
@@ -348,7 +347,7 @@ func RunStartupAudit() (slowDisk bool, lowSpace bool) {
 	// If RAM logs are already ON (manually or via profile), skip disk benchmark
 	skipDisk := (ramlogs == "1" || profile == "lowmem" || profile == "eco")
 
-	return connect.RunSystemAudit(skipDisk)
+	return RunSystemAudit(skipDisk)
 }
 
 // sanitizeRootPath filters the PATH environment variable when running as

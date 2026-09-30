@@ -5,16 +5,21 @@ import (
 )
 
 // registerProxyV2026 stubs for connect.RegisterProxy removed in v2026.
-func registerProxyV2026(idx int, addr string) { RegisterProxy(idx, addr) }
+// Identity is the bare address here (unauthenticated proxies register
+// address-as-key); credentialed shared-gateway callers register their real
+// key through the reload engine.
+func registerProxyV2026(idx int, addr string) { RegisterProxy(idx, addr, addr) }
 
-// proxyBandwidthByAddressV2026 stubs for connect.ProxyBandwidthByAddress removed in v2026.
-func proxyBandwidthByAddressV2026(addr string) *bandwidth.ProxyBandwidth {
-	return ProxyBandwidthByAddress(addr)
+// proxyBandwidthByKeyV2026 stubs for connect.ProxyBandwidthByKey removed in v2026.
+func proxyBandwidthByKeyV2026(key string) *bandwidth.ProxyBandwidth {
+	return ProxyBandwidthByKey(key)
 }
 
 // connect.ProxyHealthByAddress removed in v2026.
-// DESIGN ADAPTATION: stub until health-by-address is reimplemented.
-func proxyHealthByAddressV2026() map[string]ProxyHealthStatus { return ProxyHealthByAddress() }
+// DESIGN ADAPTATION: identity-keyed health snapshot (ProxyHealthByKey). For
+// an unauthenticated proxy the key is the address, so address-keyed callers
+// behave identically; credentialed shared-gateway callers must look up by key.
+func proxyHealthByAddressV2026() map[string]ProxyHealthStatus { return ProxyHealthByKey() }
 
 func unregisterProxyStub(idx interface{}) {
 	if i, ok := idx.(int); ok {

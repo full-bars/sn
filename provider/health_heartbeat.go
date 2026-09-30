@@ -14,7 +14,7 @@ import (
 // - connect.ProxyHealthCount() -> ProxyHealthCount()
 // - connect.ProxyHealthSnapshot() -> ProxyHealthSnapshot()
 // - connect.ProxyHealthHeartbeat() -> ProxyHealthHeartbeat()
-// - connect.ProxyHealthByAddress() -> ProxyHealthByAddress()
+// - connect.ProxyHealthByAddress() -> ProxyHealthByKey()
 // - connect.GetDohFailureCount() -> getDohFailureCountStub()
 // - connect.ActiveConnectionCount() -> activeConnectionCount()
 // - connect.ActiveProxyConnections() -> activeProxyConnections()
@@ -307,7 +307,7 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 			if state.StartedAt.IsZero() {
 				state.StartedAt = startTime
 			}
-			liveHealth := ProxyHealthByAddress()
+			liveHealth := ProxyHealthByKey()
 			for addr, entry := range state.Proxies {
 				if h, ok := liveHealth[addr]; ok {
 					entry.Health = h.Health

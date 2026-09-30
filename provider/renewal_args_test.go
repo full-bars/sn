@@ -28,7 +28,14 @@ func TestProviderAuthClientArgsForRenewal(t *testing.T) {
 
 func TestRenewClientJWTPreservesClientId(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// A connect fork bump changed the API client to fetch root keys at
+		// /hello before any API call. Serve it (and any other path) as no-op
+		// so only the real /network/auth-client call is asserted below.
 		if r.URL.Path != "/network/auth-client" {
+			if r.URL.Path == "/hello" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
 			t.Errorf("path = %q, want /network/auth-client", r.URL.Path)
 			http.NotFound(w, r)
 			return
@@ -74,6 +81,11 @@ func TestRenewClientJWTPreservesSameClientIdValue(t *testing.T) {
 	clientId := connect.NewId()
 	var gotClientId string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Same as above: the connect fork bump probes /hello for root keys.
+		if r.URL.Path == "/hello" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		var args connect.AuthNetworkClientArgs
 		_ = json.NewDecoder(r.Body).Decode(&args)
 		if args.ClientId != nil {
