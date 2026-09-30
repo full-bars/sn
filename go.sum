@@ -538,8 +538,14 @@ github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9 h1:3NQ/ljf5HMSmR
 github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9/go.mod h1:IHtyYBudQmotM5M7loKNR54hFyzsM0pL+qeD2U8BQzU=
 github.com/urnetwork/goidenticons v0.0.0-20260925081816-06eb779a691e h1:lmhDN5RJtczoXWayKhzoLnr5jxXh+kclpm1jHxPbQIw=
 github.com/urnetwork/goidenticons v0.0.0-20260925081816-06eb779a691e/go.mod h1:O/Q9lMhKp+Z4BvqRh9eQouMU9ImbTUNieOZF5npKR0o=
+github.com/urnetwork/proxy v0.0.0-20260923144941-024b212f8a6f h1:DfwxLj+fluhygWAe48P/WGXN+YoMwW+faj/zPltiJIw=
+github.com/urnetwork/proxy v0.0.0-20260923144941-024b212f8a6f/go.mod h1:8X15xUXLyX4LnQwm80hwjGIdkO27ix1mO8jId8bcCJE=
 github.com/urnetwork/sdk v0.0.0-20260929171820-c50e10db8dda h1:716kyRHMFZ1rnb3o69HAUNcpu83Jbt1VzRuMrPLDMEg=
 github.com/urnetwork/sdk v0.0.0-20260929171820-c50e10db8dda/go.mod h1:IuPYnLZ5j1SP+gm3O4a4SxbOT4U/CPKEqONI1iLO5yk=
+github.com/urnetwork/server v0.0.0-20260930014749-998469229357 h1:yRJDKuKW6ZLNUFUW0rfUuMbYmSsjnk93riGUyH7M8HE=
+github.com/urnetwork/server v0.0.0-20260930014749-998469229357/go.mod h1:/QsNmCFuee1bME31UBtIxAVkqxpMYXy4awvPZtImaPA=
+github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f h1:mFWJM5UHu+mi0zlhkBbzmzfSba5/7Jg617msw57LA5c=
+github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f/go.mod h1:Atw3lGlqEbIKH+FCyFdBZGILi4qMuP5Mk0kFlnVnZgE=
 github.com/vedhavyas/go-subkey/v2 v2.0.0 h1:LemDIsrVtRSOkp0FA8HxP6ynfKjeOj3BY2U9UNfeDMA=
 github.com/vedhavyas/go-subkey/v2 v2.0.0/go.mod h1:95aZ+XDCWAUUynjlmi7BtPExjXgXxByE0WfBwbmIRH4=
 github.com/wlynxg/anet v0.0.5 h1:J3VJGi1gvo0JwZ/P1/Yc/8p63SoW98B5dHkYDmpgvvU=
