@@ -27,6 +27,9 @@ type fakeSocks5 struct {
 	// reportIP, when set, is the relay address the proxy claims in its reply
 	// (a hostile or NATed proxy may name any host)
 	reportIP net.IP
+	// tcpExitBody, when set, is what a CONNECT-then-GET through this proxy
+	// answers (a stand-in for an "what is my address" service)
+	tcpExitBody string
 
 	mu        sync.Mutex
 	relayPort int
@@ -112,8 +115,25 @@ func (self *fakeSocks5) serve(conn net.Conn) {
 	switch request[3] {
 	case 1:
 		io.ReadFull(conn, make([]byte, 4+2))
+	case 3:
+		length := make([]byte, 1)
+		io.ReadFull(conn, length)
+		io.ReadFull(conn, make([]byte, int(length[0])+2))
 	case 4:
 		io.ReadFull(conn, make([]byte, 16+2))
+	}
+	if request[1] == 1 && self.tcpExitBody != "" {
+		conn.Write([]byte{5, 0, 0, 1, 0, 0, 0, 0, 0, 0})
+		reader := make([]byte, 1)
+		var seen []byte
+		for !(len(seen) >= 4 && string(seen[len(seen)-4:]) == "\r\n\r\n") {
+			if _, err := io.ReadFull(conn, reader); err != nil {
+				return
+			}
+			seen = append(seen, reader[0])
+		}
+		conn.Write([]byte("HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\n\r\n" + self.tcpExitBody + "\n"))
+		return
 	}
 	if request[1] != 3 || self.refuseUDP {
 		conn.Write([]byte{5, 7, 0, 1, 0, 0, 0, 0, 0, 0})
@@ -386,6 +406,7 @@ func TestSocks5UdpHeaderRoundTripsIpv4AndIpv6(t *testing.T) {
 // back to a mode that goes through the proxy, and a socket on the host is
 // never opened.
 func TestH3FactoryForAProxiedIdentityNeverUsesTheHostSocket(t *testing.T) {
+	stubUdpCheck(t, proxyUDPOK)
 	server := startFakeSocks5(t, "", "", true)
 	settings := &connect.ProxySettings{Network: "tcp", Address: server.address()}
 	factory := newH3PacketConnFactory(settings, nil, "test")
@@ -418,6 +439,7 @@ func TestH3FactoryForADirectIdentityKeepsTheEngineDefaultUnlessCounting(t *testi
 // Through a working proxy the factory wraps the relay socket with the byte
 // counter, so QUIC traffic through the proxy is still counted.
 func TestH3FactoryThroughAProxyStillCountsBytes(t *testing.T) {
+	stubUdpCheck(t, proxyUDPOK)
 	server := startFakeSocks5(t, "", "", false)
 	echo, _ := startEchoUdp(t)
 	bw := &bandwidth.ProxyBandwidth{}
@@ -462,4 +484,15 @@ func TestSocks5UdpUsesTheProxyAddressNotTheOneItReports(t *testing.T) {
 	if string(buf[:n]) != "still relayed" {
 		t.Fatalf("payload = %q", buf[:n])
 	}
+}
+
+// stubUdpCheck makes the H3 factory's UDP check answer with a fixed status, so
+// tests that are about something else do not reach for the public internet.
+func stubUdpCheck(t *testing.T, status proxyUDPStatus) {
+	t.Helper()
+	previous := globalProxyUDPCheck
+	globalProxyUDPCheck = newProxyUDPCheckStore(func(context.Context, *connect.ProxySettings) proxyUDPResult {
+		return proxyUDPResult{Status: status}
+	})
+	t.Cleanup(func() { globalProxyUDPCheck = previous })
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/urnetwork/connect"
 
@@ -29,6 +30,13 @@ func newH3PacketConnFactory(proxySettings *connect.ProxySettings, bw *bandwidth.
 	return func(ctx context.Context) (net.PacketConn, error) {
 		var pc net.PacketConn
 		if proxySettings != nil {
+			// the grade only saw this proxy's TCP path; before QUIC goes
+			// through its UDP relay make sure the relay works and exits from
+			// the address TCP does
+			switch result := globalProxyUDPCheck.Check(ctx, proxySettings, time.Now()); result.Status {
+			case proxyUDPNoRelay, proxyUDPExitMismatch:
+				return nil, fmt.Errorf("h3 not used through proxy %s: udp check %s", proxySettings.Address, result.Status)
+			}
 			relayed, err := dialSocks5UDP(ctx, proxySettings.Network, proxySettings.Address, proxySettings.Auth)
 			if err != nil {
 				return nil, fmt.Errorf("h3 through proxy %s: %w", proxySettings.Address, err)

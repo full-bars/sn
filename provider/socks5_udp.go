@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	cryptorand "crypto/rand"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -50,16 +51,34 @@ const (
 // encodeSocks5UdpHeader is the header a datagram to addr carries on its way to
 // the relay: RSV RSV FRAG ATYP DST.ADDR DST.PORT.
 func encodeSocks5UdpHeader(addr *net.UDPAddr) []byte {
+	return appendSocks5UdpHeader(make([]byte, 0, socks5UdpMaxHeader), addr)
+}
+
+// appendSocks5UdpHeader appends the header to dst, so the packet path can build
+// header and payload in one pooled buffer with no allocation.
+func appendSocks5UdpHeader(dst []byte, addr *net.UDPAddr) []byte {
 	if ip4 := addr.IP.To4(); ip4 != nil {
-		header := make([]byte, 0, 10)
-		header = append(header, 0, 0, 0, socks5AtypIpv4)
-		header = append(header, ip4...)
-		return binary.BigEndian.AppendUint16(header, uint16(addr.Port))
+		dst = append(dst, 0, 0, 0, socks5AtypIpv4)
+		dst = append(dst, ip4...)
+		return binary.BigEndian.AppendUint16(dst, uint16(addr.Port))
 	}
-	header := make([]byte, 0, socks5UdpMaxHeader)
-	header = append(header, 0, 0, 0, socks5AtypIpv6)
-	header = append(header, addr.IP.To16()...)
-	return binary.BigEndian.AppendUint16(header, uint16(addr.Port))
+	dst = append(dst, 0, 0, 0, socks5AtypIpv6)
+	dst = append(dst, addr.IP.To16()...)
+	return binary.BigEndian.AppendUint16(dst, uint16(addr.Port))
+}
+
+// socks5PacketBuffers holds the scratch buffers of the packet path. QUIC sends
+// a datagram at a time at a high rate, and a buffer per read or write is
+// garbage per packet. A buffer is only ever used inside one ReadFrom or
+// WriteTo call, so a plain pool is enough; an oversized datagram falls back to
+// a one-off allocation.
+const socks5PacketBufferSize = 2048
+
+var socks5PacketBuffers = sync.Pool{
+	New: func() any {
+		buffer := make([]byte, socks5PacketBufferSize)
+		return &buffer
+	},
 }
 
 // parseSocks5UdpPacket splits a datagram from the relay into its payload and
@@ -248,7 +267,15 @@ type socks5PacketConn struct {
 }
 
 func (self *socks5PacketConn) ReadFrom(p []byte) (int, net.Addr, error) {
-	buffer := make([]byte, len(p)+socks5UdpMaxHeader)
+	need := len(p) + socks5UdpMaxHeader
+	var buffer []byte
+	if need <= socks5PacketBufferSize {
+		pooled := socks5PacketBuffers.Get().(*[]byte)
+		defer socks5PacketBuffers.Put(pooled)
+		buffer = (*pooled)[:need]
+	} else {
+		buffer = make([]byte, need)
+	}
 	for {
 		n, from, err := self.local.ReadFromUDP(buffer)
 		if err != nil {
@@ -280,9 +307,15 @@ func (self *socks5PacketConn) WriteTo(p []byte, addr net.Addr) (int, error) {
 	if !ok {
 		return 0, fmt.Errorf("socks5 udp: cannot send to %T", addr)
 	}
-	header := encodeSocks5UdpHeader(destination)
-	packet := make([]byte, 0, len(header)+len(p))
-	packet = append(packet, header...)
+	var packet []byte
+	if need := len(p) + socks5UdpMaxHeader; need <= socks5PacketBufferSize {
+		pooled := socks5PacketBuffers.Get().(*[]byte)
+		defer socks5PacketBuffers.Put(pooled)
+		packet = (*pooled)[:0]
+	} else {
+		packet = make([]byte, 0, len(p)+socks5UdpMaxHeader)
+	}
+	packet = appendSocks5UdpHeader(packet, destination)
 	packet = append(packet, p...)
 	if _, err := self.local.WriteToUDP(packet, self.relay); err != nil {
 		return 0, err
@@ -313,4 +346,11 @@ func (self *socks5PacketConn) SetWriteDeadline(t time.Time) error {
 func (self *socks5PacketConn) SetReadBuffer(bytes int) error { return self.local.SetReadBuffer(bytes) }
 func (self *socks5PacketConn) SetWriteBuffer(bytes int) error {
 	return self.local.SetWriteBuffer(bytes)
+}
+
+// binaryRandomFill fills b with random bytes (STUN transaction ids).
+func binaryRandomFill(b []byte) {
+	if _, err := cryptorand.Read(b); err != nil {
+		panic(err)
+	}
 }
