@@ -119,6 +119,7 @@ var controlKeys = map[string]bool{
 	"ramlogs":                     true,
 	"metrics":                     true,
 	"metrics_listen":              true,
+	"oom_cap":                     true,
 	"smart_dialer":                true,
 }
 

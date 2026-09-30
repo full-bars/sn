@@ -740,10 +740,7 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 		// Consolidated GC governor: merge heap + host-RAM, tighter wins.
 		prevGOGC := gcState.currentGOGC
 		gcGovernor(sample.HeapFrac, hostAvailMiB(), comps["psi_cpu"], true, &gcState)
-		if gcState.currentGOGC != prevGOGC {
-			pressureLog("[proxy][pressure] gcGovernor %s (heap=%.2f go=%d)\n",
-				gcState.lastTightenAction, gcState.lastHeapFrac, gcState.currentGOGC)
-		}
+		logGCGovernorChange(prevGOGC, &gcState)
 
 		// MemoryBudget actuator (#6): scale the per-connection memory-dominant
 		// settings (queue caps, receive windows, socket buffers) down proportionally
@@ -1201,4 +1198,14 @@ var proxyHealthSnapshot = func() (up int, dead []string, degraded []string, band
 
 func pressureLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
+}
+
+// logGCGovernorChange logs a governor GOGC change. Every writer path uses it,
+// so an operator can always tell why GOGC moved (the 10s subtick and the
+// self-heal-off tick used to change it silently).
+func logGCGovernorChange(prevGOGC int, state *gcGovernorState) {
+	if state.currentGOGC != prevGOGC {
+		tlog("[proxy][pressure] gcGovernor %s (heap=%.2f go=%d)\n",
+			state.lastTightenAction, state.lastHeapFrac, state.currentGOGC)
+	}
 }
