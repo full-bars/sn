@@ -201,16 +201,16 @@ require (
 // validator (and miner) import connect; connect imports glog. Replaces in a
 // dependency's go.mod are ignored, so the main module declares both.
 
-replace github.com/urnetwork/server => github.com/full-bars/server v0.0.0-20260604200213-1201b27f79cd
+replace github.com/urnetwork/server => github.com/urnetwork/server v0.0.0-20260930014749-998469229357
 
 // The server module also imports Warp; dependency replaces are not inherited.
-replace github.com/urnetwork/warp => github.com/full-bars/warp v0.0.0-20260914140309-c600ae774515
+replace github.com/urnetwork/warp => github.com/urnetwork/warp v0.0.0-20260926170351-89a47cb6561d
 
-replace github.com/urnetwork/operator-proxy => github.com/full-bars/operator-proxy v0.0.0-20260913171122-350b6c0a99f4
+replace github.com/urnetwork/operator-proxy => github.com/urnetwork/operator-proxy v0.0.0-20260925161145-18967d687ec5
 
-replace github.com/urnetwork/proxy => github.com/full-bars/proxy v0.0.0-20260806184912-319243147855
+replace github.com/urnetwork/proxy => github.com/urnetwork/proxy v0.0.0-20260923144941-024b212f8a6f
 
-replace github.com/urnetwork/userwireguard => github.com/full-bars/userwireguard v0.0.0-20260420063323-e1979e9d53c9
+replace github.com/urnetwork/userwireguard => github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f
 
 replace github.com/urnetwork/sdk => github.com/urnetwork/sdk v0.0.0-20260929171820-c50e10db8dda
 
