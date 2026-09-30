@@ -1078,11 +1078,6 @@ func applyPersistedRuntimeTuning(state *controlState) {
 			controlLog("[control] failed to apply persisted smart_dialer=%s: %s\n", v, err)
 		}
 	}
-	if v, ok := state.get("smart_dialer"); ok && strings.EqualFold(v, "on") {
-		if err := applyLiveSideEffect("smart_dialer", v); err != nil {
-			tlog("[control] failed to apply persisted smart_dialer=%s: %s\n", v, err)
-		}
-	}
 }
 
 func persistedRuntimeTuningActive(key string) bool {
