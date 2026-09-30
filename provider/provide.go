@@ -435,6 +435,15 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	remoteUserNatProviderSettings := connect.DefaultRemoteUserNatProviderSettings()
 
 	clientStrategy := connect.NewClientStrategy(proxyCtx, clientStrategySettings)
+	// The smart dialer ranks transports it has measured, and the first-choice
+	// transport always wins where it works, so the others are never dialed and
+	// never measured. Probe them in the background (a no-op while the smart
+	// dialer is off). See startSmartDialerProbes.
+	probeTag := "proxy"
+	if isNative {
+		probeTag = "direct"
+	}
+	startSmartDialerProbes(proxyCtx, clientStrategy, st.apiUrl, probeTag)
 
 	// Peer-client-key fetcher.
 	if clientSettings.EncryptionSettings != nil && clientSettings.EncryptionSettings.NewPeerClientPublicKeyFetcher == nil {
