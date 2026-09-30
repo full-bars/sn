@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // Effective RAM-limit detection.
@@ -22,15 +21,6 @@ import (
 // A second health or bandwidth registry is deliberately NOT carried either: sn's
 // provider/proxy_health.go is the single registry, and connectx reaches it through
 // the ProxyPoolSnapshot seam in metrics_prometheus.go.
-
-func resetOrCreateTimer(timer **time.Timer, timeout time.Duration) <-chan time.Time {
-	if *timer == nil {
-		*timer = time.NewTimer(timeout)
-	} else {
-		(*timer).Reset(timeout)
-	}
-	return (*timer).C
-}
 
 // cgroupV2MemoryCeiling returns the tightest positive memory.max or memory.high
 // found on the process's own cgroup or any ancestor up to the mount root.

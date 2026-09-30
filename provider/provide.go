@@ -81,7 +81,6 @@ func provide(opts docopt.Opts) {
 	// (which is the correct safe default, but it would mean the pool is never
 	// reported). Typed exactly as sn's ProxyHealthSnapshot so it satisfies the
 	// seam without a wrapper.
-	connectx.SetProxyPoolSnapshot(ProxyHealthSnapshot)
 
 	st := &provideState{}
 	st.opts = opts
@@ -1402,19 +1401,7 @@ func provideLauncherLoop(st *provideState) func() {
 	// Profiling.
 	if profileAddr := os.Getenv("URNETWORK_PPROF"); profileAddr != "" {
 		tlog("[profile] enabling diagnostics on %s\n", profileAddr)
-		if err := EnableProfiling(profileAddr); err != nil {
-			if st.isHotSwapCandidate && errors.Is(err, syscall.EADDRINUSE) {
-				// The parent keeps the port through its stream drain; keep
-				// trying so the promoted process is not left without
-				// diagnostics for the rest of its life.
-				tlog("[profile] %s is held by the hotswap parent; retrying until it exits\n", profileAddr)
-				go connect.HandleError(func() {
-					enableProfilingWithRetry(st.ctx, profileAddr, EnableProfiling, 90*time.Second, time.Second, tlog)
-				})
-			} else {
-				tlog("[profile] failed: %v\n", err)
-			}
-		}
+		enableProfilingWithRetry(st.ctx, profileAddr, EnableProfiling, 90*time.Second, time.Second, tlog)
 	}
 
 	if metricsAddr := os.Getenv("URNETWORK_METRICS"); metricsAddr != "" && !st.isHotSwapCandidate {

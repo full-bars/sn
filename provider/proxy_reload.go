@@ -245,26 +245,6 @@ type ProxyReloader struct {
 	runningAuth map[string]*connect.ProxySettings
 }
 
-func proxyLaunchIsCurrent(addr string, gen uint64) bool {
-	proxyLaunches.mu.Lock()
-	defer proxyLaunches.mu.Unlock()
-	return proxyLaunches.current[addr] == gen
-}
-
-// unregisterProxyIfCurrent removes the health registration for stableID when
-// the exiting launch still owns addr, and releases its generation.
-func unregisterProxyIfCurrent(addr string, gen uint64, stableID int) {
-	proxyLaunches.mu.Lock()
-	owns := proxyLaunches.current[addr] == gen
-	if owns {
-		delete(proxyLaunches.current, addr)
-	}
-	proxyLaunches.mu.Unlock()
-	if owns {
-		UnregisterProxy(stableID)
-	}
-}
-
 // seedRunningAuth records the settings the startup loop launched each proxy
 // with. It must run before the first reload(): reload() treats a running proxy
 // with no recorded auth as "unknown, rotate", so an unseeded first pass would
