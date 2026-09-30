@@ -19,7 +19,7 @@ import (
 func TestDashboardQueriesExportedMetrics(t *testing.T) {
 	declared := map[string]bool{}
 	typeLine := regexp.MustCompile(`# TYPE (urnet_[a-z0-9_]+) `)
-	for _, src := range []string{"../metrics_prometheus.go", "metrics_provider.go"} {
+	for _, src := range []string{"metrics_provider.go", "metrics_dashboard.go"} {
 		data, err := os.ReadFile(src)
 		if err != nil {
 			t.Fatal(err)
@@ -51,5 +51,45 @@ func TestDashboardQueriesExportedMetrics(t *testing.T) {
 				t.Errorf("%s queries %s, which /metrics does not export", filepath.Base(path), name)
 			}
 		}
+	}
+}
+
+// The alert rules and the scrape config read the same families, and an alert on
+// a metric nobody exports never fires, which is worse than an empty panel.
+func TestAlertRulesQueryExportedMetrics(t *testing.T) {
+	declared := map[string]bool{}
+	typeLine := regexp.MustCompile(`# TYPE (urnet_[a-z0-9_]+) `)
+	for _, src := range []string{"metrics_provider.go", "metrics_dashboard.go"} {
+		data, err := os.ReadFile(src)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, m := range typeLine.FindAllStringSubmatch(string(data), -1) {
+			declared[m[1]] = true
+		}
+	}
+	metricRef := regexp.MustCompile(`\burnet_[a-z0-9_]+`)
+	checked := 0
+	err := filepath.WalkDir("../monitoring/prometheus", func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		checked++
+		for _, name := range metricRef.FindAllString(string(data), -1) {
+			if !declared[name] {
+				t.Errorf("%s references %s, which /metrics does not export", path, name)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if checked == 0 {
+		t.Fatal("no prometheus rule or config files found")
 	}
 }
