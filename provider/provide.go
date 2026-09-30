@@ -845,19 +845,17 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		InstanceId: instanceId,
 		AppVersion: RequireVersion(),
 	}
-	// Wire UDP/QUIC bandwidth tracking via H3PacketConnFactory.
-	// When set, the platform transport calls this instead of raw net.ListenUDP,
-	// allowing us to wrap the PacketConn with byte counters.
+	// The platform transport's H3 (QUIC) modes open a UDP socket, which left
+	// alone is a socket on the host: a proxied identity that wins the H3 race
+	// would reach the platform from the host's address, not its proxy's. The
+	// factory relays a proxied identity's QUIC through its proxy (and fails
+	// closed to a TCP mode if the proxy cannot), and counts the bytes when
+	// there is a tracker. A direct identity with nothing to count keeps the
+	// engine's default socket. See newH3PacketConnFactory.
 	var platformSettings *connect.PlatformTransportSettings
-	if proxyBandwidth != nil {
+	if factory := newH3PacketConnFactory(proxySettings, proxyBandwidth, identityKey); factory != nil {
 		platformSettings = connect.DefaultPlatformTransportSettings()
-		platformSettings.H3PacketConnFactory = func(ctx context.Context) (net.PacketConn, error) {
-			raw, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
-			if err != nil {
-				return nil, err
-			}
-			return bandwidth.NewPacketConn(raw, proxyBandwidth, identityKey), nil
-		}
+		platformSettings.H3PacketConnFactory = factory
 	}
 	platformTransport := connect.NewPlatformTransport(proxyCtx, clientStrategy, connectClient.RouteManager(), st.connectUrl, auth, platformSettings)
 	unregCloser := RegisterCoordinatorCloser(func() {
