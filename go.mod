@@ -15,8 +15,8 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/urnetwork/connect v0.0.0
-	github.com/urnetwork/glog v0.0.0
-	github.com/urnetwork/sdk v0.0.0-00010101000000-000000000000
+	github.com/urnetwork/sdk v0.0.0
+	github.com/urnetwork/server v0.0.0-00010101000000-000000000000
 	github.com/vedhavyas/go-subkey/v2 v2.0.0
 	golang.org/x/crypto v0.54.0
 	golang.org/x/net v0.57.0
@@ -121,6 +121,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nyaruka/phonenumbers v1.6.5 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729 // indirect
+	github.com/oklog/ulid/v2 v2.1.1 // indirect
 	github.com/oschwald/maxminddb-golang/v2 v2.4.1 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pierrec/xxHash v0.1.5 // indirect
@@ -153,6 +154,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/cors v1.8.2 // indirect
 	github.com/rs/xid v1.6.0 // indirect
+	github.com/samber/lo v1.51.0 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
@@ -167,7 +169,9 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
+	github.com/urnetwork/glog v0.0.0 // indirect
 	github.com/urnetwork/goidenticons v0.0.0 // indirect
+	github.com/urnetwork/proxy v0.0.0 // indirect
 	github.com/urnetwork/userwireguard v0.0.0 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
@@ -208,11 +212,11 @@ replace github.com/urnetwork/proxy => github.com/full-bars/proxy v0.0.0-20260806
 
 replace github.com/urnetwork/userwireguard => github.com/full-bars/userwireguard v0.0.0-20260420063323-e1979e9d53c9
 
-replace github.com/urnetwork/sdk => github.com/full-bars/sdk v0.0.0-20260906085924-8b87754cd2a3
+replace github.com/urnetwork/sdk => github.com/urnetwork/sdk v0.0.0-20260929171820-c50e10db8dda
 
-replace github.com/urnetwork/glog => github.com/full-bars/glog v0.0.0-20260906203417-70396199c89c
+replace github.com/urnetwork/glog => github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9
 
-replace github.com/urnetwork/goidenticons => github.com/full-bars/goidenticons v0.0.0-20260822053141-e6a59cd2e818
+replace github.com/urnetwork/goidenticons => github.com/urnetwork/goidenticons v0.0.0-20260925081816-06eb779a691e
 
 // The substrate RPC client still imports the archived npipe module, whose
 // generated Windows syscalls only support 386 and amd64. Keep its narrow API
