@@ -160,7 +160,7 @@ func TestControlSocketTrafficCommand(t *testing.T) {
 	// served its own counters and leaves none behind.
 	proxyBandwidth.reset()
 	t.Cleanup(proxyBandwidth.reset)
-	RegisterProxy(1, "traffic-test:1")
+	RegisterProxy(1, "traffic-test:1", "traffic-test:1")
 	bw := RegisterProxyBandwidth(1)
 	bw.BillableRx.Store(300)
 	bw.TotalRx.Store(900)

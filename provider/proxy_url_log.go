@@ -77,7 +77,7 @@ func reloadSourceBreakdown(added []*connect.ProxySettings, sourceOf map[string]s
 	}
 	counts := map[string]int{}
 	for _, s := range added {
-		src := sourceOf[s.Address]
+		src := sourceOf[s.Key()]
 		if src == "" {
 			src = "other"
 		}

@@ -880,7 +880,7 @@ func (r *ProxyReloader) reload() {
 			tlog("[proxy] skip add %s: still draining\n", proxyKeyDisplay(settings.Key()))
 			continue
 		}
-		if sourceOf[settings.Address] == "url" {
+		if sourceOf[settings.Key()] == "url" {
 			urlAdded++
 		}
 		// Defer unproven URL-sourced proxy launches until file-proxy warmup
