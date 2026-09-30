@@ -74,6 +74,19 @@ func TestSocks5UdpCloseGivesBackEveryDescriptorAndGoroutine(t *testing.T) {
 	}
 }
 
+// minAllocsPerRun measures f several times and returns the smallest result.
+// perAttempt runs before each measurement.
+func minAllocsPerRun(attempts, runs int, f func(), perAttempt func()) float64 {
+	best := -1.0
+	for a := 0; a < attempts; a++ {
+		perAttempt()
+		if v := testing.AllocsPerRun(runs, f); best < 0 || v < best {
+			best = v
+		}
+	}
+	return best
+}
+
 // The packet conn sits on the QUIC hot path, so it must not allocate per
 // packet what a pool can hand out. Writing needs nothing new at all; reading
 // needs only the source address the interface returns.
@@ -93,9 +106,9 @@ func TestSocks5UdpPacketPathBarelyAllocates(t *testing.T) {
 		pc.ReadFrom(buf)
 	}
 
-	writeAllocs := testing.AllocsPerRun(50, func() {
+	writeAllocs := minAllocsPerRun(5, 50, func() {
 		pc.WriteTo(payload, destination)
-	})
+	}, func() {})
 	// leave the echoes of those writes to drain, then measure reads alone
 	// against a bounded backlog (UDP drops what overflows a socket buffer)
 	time.Sleep(300 * time.Millisecond)
@@ -191,4 +204,33 @@ func itoa(n int) string {
 		n /= 10
 	}
 	return string(digits)
+}
+
+// testing.AllocsPerRun counts every allocation in the process, not just the
+// function's, and divides as integers. A goroutine an earlier test leaked (the
+// suite runs shuffled) allocating in the background while the measurement runs
+// therefore reads as a per-call allocation on a path that allocates nothing. A
+// real regression allocates on every attempt; noise does not, so the smallest
+// of several attempts is the measurement.
+func TestMinAllocsPerRunIgnoresBackgroundNoiseInSomeAttempts(t *testing.T) {
+	var sink [][]byte
+	attempt := 0
+	got := minAllocsPerRun(5, 20, func() {
+		// noisy for the first two attempts only, clean afterwards
+		if attempt <= 2 {
+			sink = append(sink, make([]byte, 64))
+		}
+	}, func() { attempt++ })
+	if got != 0 {
+		t.Fatalf("noise in two of five attempts must not raise the measurement, got %.1f", got)
+	}
+	_ = sink
+
+	// an allocation on every attempt is a real regression and must show
+	always := minAllocsPerRun(3, 20, func() {
+		sink = append(sink, make([]byte, 64))
+	}, func() {})
+	if always < 1 {
+		t.Fatalf("an allocation on every call must be reported, got %.1f", always)
+	}
 }
