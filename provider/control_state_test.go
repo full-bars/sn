@@ -93,6 +93,25 @@ func withTempHome(t *testing.T) string {
 	// not leak into the next test's resolve*/*Enabled expectations.
 	resetGlobalControlStateForTest()
 	t.Cleanup(resetGlobalControlStateForTest)
+	// The baseline recorder's state is process-wide too. A test that switches
+	// the key off, or that provokes a write failure to rate-limit the warning,
+	// would otherwise leave the next test with a recorder that writes nothing or
+	// one that stays quiet for an hour. Reset both at setup and on cleanup, so
+	// a shuffled run cannot depend on which of those ran first.
+	prevBaselineEnabled := baselineEnabled.Load()
+	baselineEnabled.Store(true)
+	t.Cleanup(func() { baselineEnabled.Store(prevBaselineEnabled) })
+	baselineWarnLast.Store(0)
+	t.Cleanup(func() { baselineWarnLast.Store(0) })
+	prevBaselineHook := baselineWriteErrorHook
+	baselineWriteErrorHook = nil
+	t.Cleanup(func() { baselineWriteErrorHook = prevBaselineHook })
+	prevBaselineWarn := baselineWarnHook
+	baselineWarnHook = nil
+	t.Cleanup(func() { baselineWarnHook = prevBaselineWarn })
+	prevBaselineClock := baselineNowUnix
+	baselineNowUnix = func() int64 { return time.Now().Unix() }
+	t.Cleanup(func() { baselineNowUnix = prevBaselineClock })
 	return dir
 }
 
