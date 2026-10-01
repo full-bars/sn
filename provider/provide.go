@@ -918,6 +918,12 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 			// handoff event and the last control-socket commands would
 			// exist only on disk and be dropped by the next persist.
 			mergeAuditRingFromDisk()
+			// The parent persists again at the end of its drain, from a ring
+			// without our entries. Re-merge and persist once that is over so
+			// a crash soon after takeover cannot lose our start entry.
+			go connect.HandleError(func() {
+				reconcileAuditRingAfterHandoff(st.ctx, HotSwapDrainTimeout+auditReconcileGrace)
+			})
 
 			startMetricsAfterTakeover(globalControlState)
 
