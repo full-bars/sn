@@ -755,7 +755,7 @@ func readSwapUsedMiB() (int64, bool) {
 // "some", and the baseline needs both the full-pressure stall time and its
 // longer window, so this is a separate reader rather than a widened one.
 func readPSIFull() (avg60, avg300 float64, err error) {
-	b, err := os.ReadFile("/proc/pressure/full")
+	b, err := os.ReadFile("/proc/pressure/memory")
 	if err != nil {
 		return 0, 0, err
 	}
