@@ -19,6 +19,7 @@
 * **[urnet-tools (Go)](urnet-tools-go)**
 * **[urnet-docker](urnet-docker)**
 * **[Monitoring](Monitoring)**
+* **[Baseline Recorder](Baseline)**
 * **[Node Identity](Node-Identity)**
 * **[Egress Security Policy](Egress-Security-Policy)**
 * **[Bittensor Operations](Bittensor-Operations)**

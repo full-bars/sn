@@ -4,6 +4,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"time"
 )
 
@@ -29,3 +30,14 @@ func fetchStretch(_ float64) float64                     { return 1.0 }
 func applyShedBackoff(addr string, now time.Time) {
 	globalProxyFailureHistory.ExtendBackoffUntil(addr, now.Add(shedBackoff))
 }
+
+// The baseline recorder reads these on every platform. Off Linux there is no
+// /proc, cgroup or PSI to read, so each reports "unmeasured" the way the Linux
+// readers do on error (-1 or an error), and the recorder omits those fields
+// rather than writing a zero.
+var errNoHostReadings = errors.New("host readings are not available on this platform")
+
+func readMemAvailableMiB() int64                       { return -1 }
+func readCgroupAvailableMiB() int64                    { return -1 }
+func readPSI(_ string) (avg60 float64, err error)      { return 0, errNoHostReadings }
+func getSystemLoad() (load1, load5 float64, err error) { return 0, 0, errNoHostReadings }

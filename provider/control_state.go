@@ -121,6 +121,7 @@ var controlKeys = map[string]bool{
 	"metrics_listen":              true,
 	"oom_cap":                     true,
 	"smart_dialer":                true,
+	"baseline":                    true,
 }
 
 // globalControlState is the single provider-wide instance. Set by

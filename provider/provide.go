@@ -377,6 +377,14 @@ func provideLaunchGoroutines(st *provideState) {
 	go connect.HandleError(func() { runBillableRateWriter(st.ctx) })
 	go connect.HandleError(func() { runNodeSnapshotSampler(st.ctx) })
 
+	// The baseline recorder. Started here, beside the other long-lived
+	// samplers and tied to the SAME ctx, so it stops when the provider stops:
+	// a recorder that outlives its process would be a second writer on the file
+	// after a hot swap promoted the candidate. baselineStart writes the start
+	// mark before launching the goroutine, because a sample with no start beside
+	// it cannot be told apart from one the operator never had.
+	baselineStart(st.ctx, currentVersionForBaseline(), previousVersionForBaseline())
+
 	go connect.HandleError(func() { paceMonitor(st.ctx) })
 }
 
