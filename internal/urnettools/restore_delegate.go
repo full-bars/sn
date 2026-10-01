@@ -260,7 +260,7 @@ var setKeyHelps = []string{
 // feature off.
 func treatsOffAsClear(canonicalKey string) bool {
 	switch canonicalKey {
-	case "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap":
+	case "hot_restart", "ramlogs", "proxy_self_heal", "metrics", "oom_cap", "baseline":
 		return false
 	}
 	return true
