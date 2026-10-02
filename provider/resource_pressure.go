@@ -3,7 +3,6 @@
 package provider
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -244,24 +243,11 @@ func detectEffectiveRAMLimitBytes() int64 {
 }
 
 func readMemAvailableMiB() int64 {
-	f, err := os.Open("/proc/meminfo")
-	if err != nil {
+	v, ok := connectx.HostMemoryAvailableBytes()
+	if !ok {
 		return -1
 	}
-	defer f.Close()
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "MemAvailable:") {
-			fields := strings.Fields(line)
-			if len(fields) >= 2 {
-				if v, err := strconv.ParseInt(fields[1], 10, 64); err == nil {
-					return v / 1024
-				}
-			}
-		}
-	}
-	return -1
+	return v / 1024 / 1024
 }
 
 // readCgroupAvailableMiB returns the free headroom within the active cgroup

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"sync/atomic"
 	"time"
+
+	"github.com/urfoundation/sn/internal/connectx"
 )
 
 // Stub implementations of resource_pressure functions for non-Linux platforms.
@@ -15,8 +17,17 @@ import (
 const shedBackoff = time.Hour
 const paidStaleCalm = 6 * time.Hour
 
-func currentPressure() float64            { return 0 }
-func detectEffectiveRAMLimitBytes() int64 { return 0 }
+func currentPressure() float64 { return 0 }
+
+// detectEffectiveRAMLimitBytes is the host's physical RAM where the platform
+// reader supports it (macOS, Windows), else 0 for "unmeasured". There is no
+// cgroup to consult off Linux.
+func detectEffectiveRAMLimitBytes() int64 {
+	if v, ok := connectx.HostMemoryTotalBytes(); ok {
+		return v
+	}
+	return 0
+}
 
 const pressureLoopsSupported = false
 
@@ -41,7 +52,13 @@ func applyShedBackoff(addr string, now time.Time) {
 // rather than writing a zero.
 var errNoHostReadings = errors.New("host readings are not available on this platform")
 
-func readMemAvailableMiB() int64                       { return -1 }
+func readMemAvailableMiB() int64 {
+	if v, ok := connectx.HostMemoryAvailableBytes(); ok {
+		return v / 1024 / 1024
+	}
+	return -1
+}
+
 func readCgroupAvailableMiB() int64                    { return -1 }
 func readPSI(_ string) (avg60 float64, err error)      { return 0, errNoHostReadings }
 func getSystemLoad() (load1, load5 float64, err error) { return 0, 0, errNoHostReadings }
