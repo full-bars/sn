@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/urnetwork/connect"
+	"golang.org/x/net/proxy"
 )
 
 func almostEq(a, b float64) bool { return math.Abs(a-b) < 1e-9 }
@@ -647,5 +648,49 @@ func TestShedPoolToTarget_DoesNotShortenALongerBackoff(t *testing.T) {
 
 	if hist.Eligible("2.2.2.2:1080", long.Add(-time.Minute)) {
 		t.Fatalf("a shed must not shorten a longer backoff already on the address")
+	}
+}
+
+// Pool shed's last-resort tiebreak ranked traffic through a stub that always
+// returned no bandwidth, so among equally healthy, equally (un)earning URL
+// proxies an active relay was shed exactly as readily as an idle one. With
+// the live per-identity traffic map the busy proxy survives.
+func TestShedPoolToTarget_KeepsBusyProxyOnTrafficTiebreak(t *testing.T) {
+	withTempHome(t)
+	ResetProxyHealthForTesting()
+	t.Cleanup(ResetProxyHealthForTesting)
+	// "1.1.1.1" sorts first, so without traffic data the address tiebreak
+	// would shed it.
+	busy := (&connect.ProxySettings{Network: "tcp", Address: "1.1.1.1:1080", Auth: &proxy.Auth{User: "alice"}}).Key()
+	idle := "2.2.2.2:1080"
+	if err := writeProxyState(&ProxyState{Proxies: map[string]ProxyEntry{
+		busy: {ID: 1, Health: "up", Source: "url"},
+		idle: {ID: 2, Health: "up", Source: "url"},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeProxyURLState(&ProxyURLState{Cache: map[string]ProxyURLEntry{
+		"1.1.1.1:1080": {User: "alice", ProbeOK: true},
+		"2.2.2.2:1080": {ProbeOK: true},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	RegisterProxy(1, "1.1.1.1:1080", busy)
+	RegisterProxyBandwidth(1).TotalRx.Store(1 << 20)
+	RegisterProxy(2, "2.2.2.2:1080", idle)
+	RegisterProxyBandwidth(2)
+
+	shedPoolToTarget(1)
+
+	// A shed deletes the bare address from the URL cache.
+	got, err := readProxyURLState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := got.Cache["1.1.1.1:1080"]; !ok {
+		t.Fatal("busy proxy was shed")
+	}
+	if _, ok := got.Cache["2.2.2.2:1080"]; ok {
+		t.Fatal("idle proxy survived the shed")
 	}
 }
