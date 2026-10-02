@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -609,3 +610,72 @@ type fakeError struct{ msg string }
 func (e *fakeError) Error() string { return e.msg }
 
 var errFakeRenew = &fakeError{msg: "fake renewal failure"}
+
+// A credentialed proxy's saved login lives under its identity key
+// (address plus user), not its bare address. provide() must look it up and
+// store it under that same key, or every restart mints a fresh client id for
+// every proxy: the hot-restart log line says N identities were loaded and the
+// start then prints [new] for each one.
+func TestProvideAuthReusesCredentialedProxyIdentity(t *testing.T) {
+	home, restoreHome := withHome(t)
+	defer restoreHome()
+	writeAccountJWT(t, home, map[string]interface{}{
+		"client_id":  testClientId,
+		"network_id": "net-1",
+	})
+	restoreStore := withGlobalStore(t, filepath.Join(t.TempDir(), "store.json"))
+	defer restoreStore()
+
+	proxy := jwtRegressionSettings("gw.example:1080", "u1")
+	goodJwt := createFakeJWTWithClaims(map[string]interface{}{
+		"client_id": testClientId,
+		"exp":       float64(time.Now().Add(time.Hour).Unix()),
+	})
+	if err := loadGlobalClientJWTStore().Put(jwtStoreKey(proxy), clientJWTEntry{
+		ByClientJWT: goodJwt,
+		ClientID:    testClientId,
+		NetworkID:   "net-1",
+		MintedAt:    time.Now(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("URNETWORK_HOT_RESTART", "1")
+	origFn := renewClientJWTFn
+	defer func() { renewClientJWTFn = origFn }()
+	renewClientJWTFn = func(_ context.Context, _, _ string, _ connect.Id, _ string, _ *connect.ClientStrategy) (string, error) {
+		t.Fatal("renewal must NOT be called for a valid, unexpired entry")
+		return "", nil
+	}
+
+	_, id, reused, err := provideAuth(nil, nil, "", docopt.Opts{}, "node", jwtStoreKey(proxy))
+	if err != nil {
+		t.Fatalf("provideAuth err = %v", err)
+	}
+	if !reused || id.String() != testClientId {
+		t.Fatalf("reused=%v id=%q, want the stored identity %q", reused, id.String(), testClientId)
+	}
+
+	// The bare address is NOT the key: looking up by it finds nothing, which is
+	// exactly the failure the call sites must avoid.
+	if _, ok := loadGlobalClientJWTStore().Get(proxy.Address); ok {
+		t.Fatalf("an entry exists under the bare address %q; the store key is the identity", proxy.Address)
+	}
+}
+
+// provide() computes the store key in two places (the per-proxy setup that
+// feeds the revocation watcher, bandwidth wrapper and h3 factory, and the auth
+// attempt). Both must use jwtStoreKey; a bare ".Address" there silently
+// disables hot restart for every credentialed proxy.
+func TestProvideUsesTheIdentityKeyForTheJWTStore(t *testing.T) {
+	src, err := os.ReadFile("provide.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(src), "identityKey = proxySettings.Address") {
+		t.Fatal("provide.go builds identityKey from the bare proxy address; use jwtStoreKey(proxySettings)")
+	}
+	if strings.Count(string(src), "identityKey := jwtStoreKey(proxySettings)") < 2 {
+		t.Fatal("provide.go must derive identityKey with jwtStoreKey(proxySettings) at both sites")
+	}
+}
