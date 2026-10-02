@@ -395,10 +395,9 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 
 	// Compute proxy identity early so we can wire bandwidth tracking
 	// before the client strategy (and its DialContext) is created.
-	identityKey := "direct"
+	identityKey := jwtStoreKey(proxySettings)
 	proxyIndex := 0
 	if proxySettings != nil {
-		identityKey = proxySettings.Address
 		proxyIndex = getProxyIndex(proxySettings.Key())
 	}
 
@@ -579,10 +578,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 					}
 					defer release()
 
-					identityKey := "direct"
-					if proxySettings != nil {
-						identityKey = proxySettings.Address
-					}
+					identityKey := jwtStoreKey(proxySettings)
 					attemptStart := time.Now()
 					byClientJwt, clientId, reused, err = provideAuth(proxyCtx, clientStrategy, st.apiUrl, st.opts, st.nodeName, identityKey)
 					attemptDuration = time.Since(attemptStart)
