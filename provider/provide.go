@@ -883,9 +883,14 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	// closed to a TCP mode if the proxy cannot), and counts the bytes when
 	// there is a tracker. A direct identity with nothing to count keeps the
 	// engine's default socket. See newH3PacketConnFactory.
-	var platformSettings *connect.PlatformTransportSettings
+	//
+	// Health follows the transport's real connection state rather than its
+	// construction: see proxy_transport_health.go. Its logger observes the
+	// engine's per-attempt connect failures.
+	transportHealth := newProxyTransportHealth(proxyCtx, proxyIndex)
+	platformSettings := connect.DefaultPlatformTransportSettings()
+	platformSettings.Log = transportHealth.logger(connect.DefaultLogger())
 	if factory := newH3PacketConnFactory(proxySettings, proxyBandwidth, identityKey); factory != nil {
-		platformSettings = connect.DefaultPlatformTransportSettings()
 		platformSettings.H3PacketConnFactory = factory
 	}
 	platformTransport := connect.NewPlatformTransport(proxyCtx, clientStrategy, connectClient.RouteManager(), st.connectUrl, auth, platformSettings)
@@ -895,9 +900,10 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	defer unregCloser()
 
 	proxyBecameLive()
-	markProxyUp(proxyIndex)
 	defer proxyWentDown()
 	defer markProxyDown(proxyIndex)
+	stopTransportHealth := transportHealth.start(platformTransport)
+	defer stopTransportHealth()
 
 	// HotSwap candidate ACK
 	var unregSocketCloser func()
