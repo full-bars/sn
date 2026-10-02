@@ -1029,7 +1029,11 @@ func provideHandleAuthFailure(st *provideState, proxyCtx context.Context, proxyS
 			if errors.Is(err, errProxyURLBelowBar) {
 				tlog("[proxy][init] proxy[%d] (%s) rejected by stage-1 quality gate: %v. Re-graded next fetch cycle.\n",
 					getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
-			} else if errors.Is(err, context.Canceled) {
+			} else if errors.Is(err, context.Canceled) || proxyCtx.Err() != nil {
+				// Context cancellation (trim, reaper, reload, drain) is not an
+				// auth failure even when the ladder surfaced a different error
+				// on the way out. Recording a give-up would eventually evict a
+				// healthy proxy after enough operational cycles.
 				tlog("[proxy][init] proxy[%d] (%s) cancelled (not a give-up): %v\n",
 					getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
 			} else if errors.Is(err, errProxyURLSlowCutShort) {
