@@ -111,3 +111,9 @@ The test file covers the two enabled rules. `prometheus.yml` lists `urnetwork.ym
 | `urnet_open_fds` | gauge | | Open file descriptors (Linux) |
 | `urnet_fd_limit` | gauge | | File descriptor limit (Linux) |
 | `urnet_restart_reason` | gauge | `reason` | Value 1 for the reason the current process started; absent for other reasons |
+| `urnet_gc_gogc` | gauge | | GOGC value currently in force |
+| `urnet_gc_tightening` | gauge | | 1 while the GC governor holds GOGC below its baseline |
+| `urnet_gc_cpu_fraction` | gauge | | Share of CPU spent in GC over the last window; absent until a window completes |
+| `urnet_conntrack_used_ratio` | gauge | | `nf_conntrack_count` over `nf_conntrack_max` (Linux, when conntrack is loaded). Overflow drops packets silently |
+| `urnet_tcp_time_wait` | gauge | | TCP sockets in TIME_WAIT (Linux) |
+| `urnet_tcp_orphans` | gauge | | Orphaned TCP sockets (Linux) |
