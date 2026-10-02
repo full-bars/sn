@@ -5,6 +5,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"sync/atomic"
 	"time"
 )
 
@@ -44,3 +45,11 @@ func readMemAvailableMiB() int64                       { return -1 }
 func readCgroupAvailableMiB() int64                    { return -1 }
 func readPSI(_ string) (avg60 float64, err error)      { return 0, errNoHostReadings }
 func getSystemLoad() (load1, load5 float64, err error) { return 0, 0, errNoHostReadings }
+
+// gcTightening and readGOGCPercent back the baseline recorder's GC signals,
+// which live in files that build everywhere. There is no GC governor off Linux,
+// so the flag is never set and the GOGC reading is reported as unavailable,
+// which omits the gc block instead of writing zeros.
+var gcTightening atomic.Bool
+
+func readGOGCPercent() (int, bool) { return 0, false }

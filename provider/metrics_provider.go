@@ -543,6 +543,7 @@ func providerExtraMetrics() string {
 	reason := startupDiag.restartReason
 	startupDiag.mu.Unlock()
 	writeNodeGauges(&b, reason, collectResources())
+	writeResourceSignalGauges(&b, readBaselineGC(time.Now()), readBaselineNet())
 	writeRuntimeGauges(&b, time.Since(providerStartTime), runtimeSysBytes())
 	writeDashboardMetrics(&b)
 
