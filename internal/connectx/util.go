@@ -1,7 +1,6 @@
 package connectx
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -237,21 +236,10 @@ func EffectiveRAMLimit() (int64, string) {
 			return v, "cgroup v1 memory.limit_in_bytes"
 		}
 	}
-	// /proc/meminfo MemTotal (kB)
-	if f, err := os.Open("/proc/meminfo"); err == nil {
-		defer f.Close()
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "MemTotal:") {
-				fields := strings.Fields(line)
-				if len(fields) >= 2 {
-					if v, err := strconv.ParseInt(fields[1], 10, 64); err == nil {
-						return v * 1024, "host MemTotal, no cgroup limit found"
-					}
-				}
-			}
-		}
+	// host physical RAM: /proc/meminfo on Linux, sysctl on macOS,
+	// GlobalMemoryStatusEx on Windows
+	if v, ok := HostMemoryTotalBytes(); ok {
+		return v, "host MemTotal, no cgroup limit found"
 	}
 	return 850 * 1024 * 1024, "fallback default, host memory unreadable"
 }
