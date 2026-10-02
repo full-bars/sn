@@ -1,8 +1,10 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
 )
@@ -118,31 +120,97 @@ func mergeAuditRingFromDisk() {
 		return
 	}
 	globalAuditRing.mu.Lock()
-	var added int
-	for _, e := range saved.Entries {
-		if globalAuditRing.hasLocked(e) {
-			continue
-		}
-		globalAuditRing.entries[globalAuditRing.head] = e
-		globalAuditRing.head = (globalAuditRing.head + 1) % len(globalAuditRing.entries)
-		if globalAuditRing.size < len(globalAuditRing.entries) {
-			globalAuditRing.size++
-		}
-		added++
+	merged, imported := unionAuditEntries(globalAuditRing.orderedLocked(), saved.Entries, len(globalAuditRing.entries))
+	if imported > 0 {
+		globalAuditRing.replaceLocked(merged)
 	}
 	globalAuditRing.mu.Unlock() // persist() takes r.mu itself; never call it under the lock
-	if added == 0 {
+	if imported == 0 {
 		return
 	}
 	// Serialize the merge persist with recordAndPersist/forceAuditPersist:
-	// two concurrent persist() writers can finish out of order and leave a
-	// stale snapshot on disk.
+	// persist() snapshots the ring and then writes the file, and two of them
+	// running at once can write out of order (or collide on the temp file) and
+	// leave a stale snapshot on disk.
 	auditPersistMu.Lock()
 	err = globalAuditRing.persist()
 	auditPersistMu.Unlock()
 	if err != nil {
 		auditLog("[audit] merge persist failed: %v\n", err)
 	}
+}
+
+// auditEntryKey identifies an entry for deduplication. The instant is compared
+// by UnixNano, not by time.Time: entries loaded from disk carry freshly-parsed
+// fixed-offset locations, and == compares the location pointer, so two entries
+// for the same instant would never match after a JSON round-trip. Same-instant
+// identical commands count as one (idempotent config sets ARE one state change).
+type auditEntryKey struct {
+	cmd, key, value, source, errText string
+	ok                               bool
+	at                               int64
+}
+
+func auditKeyOf(e CommandAudit) auditEntryKey {
+	return auditEntryKey{e.Cmd, e.Key, e.Value, e.Source, e.Error, e.OK, e.Timestamp.UnixNano()}
+}
+
+// unionAuditEntries merges the live ring (oldest to newest) with entries read
+// from disk into one deduplicated, timestamp-ordered slice, keeping only the
+// newest capacity entries. imported is how many of the kept entries came from
+// disk. Appending disk entries one at a time into a full ring instead let each
+// older parent entry evict a newer successor entry, and the evicted shared
+// entries then looked missing and were re-added.
+func unionAuditEntries(live, disk []CommandAudit, capacity int) (merged []CommandAudit, imported int) {
+	type tagged struct {
+		e    CommandAudit
+		disk bool
+	}
+	all := make([]tagged, 0, len(live)+len(disk))
+	seen := make(map[auditEntryKey]struct{}, len(live)+len(disk))
+	for _, e := range live {
+		seen[auditKeyOf(e)] = struct{}{}
+		all = append(all, tagged{e, false})
+	}
+	for _, e := range disk {
+		k := auditKeyOf(e)
+		if _, dup := seen[k]; dup {
+			continue
+		}
+		seen[k] = struct{}{}
+		all = append(all, tagged{e, true})
+	}
+	sort.SliceStable(all, func(i, j int) bool { return all[i].e.Timestamp.Before(all[j].e.Timestamp) })
+	if capacity > 0 && len(all) > capacity {
+		all = all[len(all)-capacity:]
+	}
+	merged = make([]CommandAudit, len(all))
+	for i, t := range all {
+		merged[i] = t.e
+		if t.disk {
+			imported++
+		}
+	}
+	return merged, imported
+}
+
+// orderedLocked returns the ring's entries oldest to newest. Caller holds r.mu.
+func (r *AuditRing) orderedLocked() []CommandAudit {
+	ordered := make([]CommandAudit, 0, r.size)
+	if r.size < len(r.entries) {
+		return append(ordered, r.entries[:r.size]...)
+	}
+	ordered = append(ordered, r.entries[r.head:]...)
+	return append(ordered, r.entries[:r.head]...)
+}
+
+// replaceLocked replaces the ring's contents with entries (oldest to newest,
+// at most the ring capacity). Caller holds r.mu.
+func (r *AuditRing) replaceLocked(entries []CommandAudit) {
+	r.entries = [len(r.entries)]CommandAudit{}
+	n := copy(r.entries[:], entries)
+	r.size = n
+	r.head = n % len(r.entries)
 }
 
 // hasLocked reports whether an equivalent entry is already in the ring.
@@ -248,21 +316,22 @@ func (r *AuditRing) Entries(limit int, cursor string) ([]CommandAudit, string) {
 	return result, nextCursor
 }
 
+// auditPersistHook runs inside persist after the snapshot and before the write.
+// A seam for tests that need to observe whether persists overlap.
+var auditPersistHook func()
+
 // persist writes the ring buffer to disk atomically.
 func (r *AuditRing) persist() error {
 	if r == nil || r.path == "" {
 		return nil
 	}
 	r.mu.Lock()
-	ordered := make([]CommandAudit, 0, r.size)
-	if r.size < len(r.entries) {
-		ordered = append(ordered, r.entries[:r.size]...)
-	} else {
-		ordered = append(ordered, r.entries[r.head:]...)
-		ordered = append(ordered, r.entries[:r.head]...)
-	}
+	ordered := r.orderedLocked()
 	r.mu.Unlock()
 
+	if auditPersistHook != nil {
+		auditPersistHook()
+	}
 	payload := map[string]interface{}{
 		"entries": ordered,
 	}
@@ -340,4 +409,39 @@ func formatAuditSummary(e CommandAudit) string {
 		return fmt.Sprintf("%s %s=%s ok=%v src=%s", e.Cmd, e.Key, e.Value, e.OK, e.Source)
 	}
 	return fmt.Sprintf("%s %s ok=%v src=%s", e.Cmd, e.Key, e.OK, e.Source)
+}
+
+// auditReconcileGrace is how long past the parent's drain timeout the
+// successor waits before reconciling, so the parent's drain-end persist has
+// landed first.
+const auditReconcileGrace = 10 * time.Second
+
+// reconcileAuditRingAfterHandoff re-merges audit.json into the live ring and
+// persists it once the parent's drain is over.
+//
+// The takeover merge runs once, right after the parent yields its control
+// socket, and persists the combined ring. The parent then persists AGAIN at the
+// end of its drain (up to HotSwapDrainTimeout later) from its own ring, which
+// holds none of the successor's entries. They are two processes, so
+// auditPersistMu cannot order the writes, and the parent's can land last. The
+// disk then holds a parent-only ring until the next control command more than
+// 30s after the last persist, or a clean shutdown, so a crash in between loses
+// the successor's start entry. Waiting past the drain, merging again (which also
+// carries over anything the parent recorded during the drain) and persisting
+// unconditionally puts the authoritative ring back on disk.
+//
+// The persist is unconditional because mergeAuditRingFromDisk persists only when
+// it added something, and after the parent's overwrite it often adds nothing.
+// A cancelled ctx returns without touching the disk: the provider is shutting
+// down and main()'s own final persist owns the file.
+func reconcileAuditRingAfterHandoff(ctx context.Context, wait time.Duration) {
+	t := time.NewTimer(wait)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return
+	case <-t.C:
+	}
+	mergeAuditRingFromDisk()
+	forceAuditPersist()
 }
