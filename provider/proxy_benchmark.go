@@ -49,6 +49,12 @@ var benchmarkEndpoint = func() string {
 	return resolveBenchmarkEndpoint()
 }
 
+// Probe intervals; vars so tests can shorten them.
+var (
+	proxyBenchmarkTCPInterval   = 5 * time.Minute
+	proxyBenchmarkSocksInterval = 15 * time.Minute
+)
+
 // startProxyBenchmarks launches optional latency probes for one proxy, enabled
 // only when URNETWORK_PROXY_BENCHMARK=true. It starts two independent probes
 // whose results are stored on the proxy's ProxyBandwidth for the hub dashboard:
@@ -63,8 +69,13 @@ func startProxyBenchmarks(ctx context.Context, bw *bandwidth.ProxyBandwidth, set
 	if os.Getenv("URNETWORK_PROXY_BENCHMARK") != "true" {
 		return
 	}
-	tcpInterval := 5 * time.Minute
-	socksInterval := 15 * time.Minute
+	// The probes store into bw on every tick, so a nil bw would panic the
+	// whole provider on the first successful dial.
+	if bw == nil || settings == nil {
+		return
+	}
+	tcpInterval := proxyBenchmarkTCPInterval
+	socksInterval := proxyBenchmarkSocksInterval
 
 	// random startup jitter so proxies don't thundering-herd the endpoint
 	jitter := time.Duration(rand.Int63n(int64(tcpInterval)))

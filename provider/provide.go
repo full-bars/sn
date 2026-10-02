@@ -1001,7 +1001,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	defer remoteUserNatProvider.Close()
 
 	if proxySettings != nil {
-		startProxyBenchmarks(proxyCtx, nil, proxySettings)
+		startProxyBenchmarks(proxyCtx, proxyBandwidth, proxySettings)
 	}
 
 	provideModes := map[protocol.ProvideMode]bool{
