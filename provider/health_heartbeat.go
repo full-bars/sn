@@ -278,16 +278,7 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 		tlog("[earn] proxies_up=%d serving=%d idle=%d clients=%d\n",
 			report.Up, serving, idle, totalClients)
 
-		keepAddrs, pruneErr := desiredAddressesForHistoryPruning()
-		if pruneErr != nil {
-			tlog("[proxy] warning: could not determine desired proxy addresses for history pruning: %v\n", pruneErr)
-			keepAddrs = make(map[string]bool, len(report.Bandwidth))
-			for k := range report.Bandwidth {
-				keepAddrs[k] = true
-			}
-		}
-		globalProxyFailureHistory.Prune(keepAddrs)
-		globalProvenProxies.Prune(keepAddrs)
+		pruneProxyHistoryStores()
 
 		// Update proxy.state health snapshot for use by proxy refresh subcommand.
 		go func() {
@@ -332,4 +323,25 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 			writeUsageHistory(dir, report, now)
 		}
 	}
+}
+
+// pruneProxyHistoryStores drops failure-history and proven-proxy entries for
+// identities no longer desired. See desiredAddressesForHistoryPruning for why
+// this isn't just currently-registered health entries.
+func pruneProxyHistoryStores() {
+	keepAddrs, pruneErr := desiredAddressesForHistoryPruning()
+	if pruneErr != nil {
+		tlog("[proxy] warning: could not determine desired proxy identities for history pruning: %v\n", pruneErr)
+		// Fall back to the live registry's IDENTITY keys, not the health
+		// report's display-formatted keys: the pruned stores are
+		// identity-keyed, and "proxy[N] (addr)" matches nothing in them, so
+		// pruning against it would wipe every proxy's history on a
+		// transient read error.
+		keepAddrs = make(map[string]bool)
+		for k := range ProxyBandwidthSnapshotByKey() {
+			keepAddrs[k] = true
+		}
+	}
+	globalProxyFailureHistory.Prune(keepAddrs)
+	globalProvenProxies.Prune(keepAddrs)
 }
