@@ -14,8 +14,11 @@ import (
 const shedBackoff = time.Hour
 const paidStaleCalm = 6 * time.Hour
 
-func currentPressure() float64                           { return 0 }
-func detectEffectiveRAMLimitBytes() int64                { return 0 }
+func currentPressure() float64            { return 0 }
+func detectEffectiveRAMLimitBytes() int64 { return 0 }
+
+const pressureLoopsSupported = false
+
 func runPressureMonitor(_ context.Context, _ bool)       {}
 func runPoolController(_ context.Context, _ int, _ bool) {}
 func cleanupIntervalScale(_ float64) float64             { return 1.0 }
