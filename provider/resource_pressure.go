@@ -727,6 +727,11 @@ func runPressureMonitor(ctx context.Context, selfHealEnabled bool) {
 		pressureLog("[proxy][pressure] gcGovernor armed (baseline GOGC=%d)\n", gcState.baselineGOGC)
 	}
 	gcState.currentGOGC = gcState.baselineGOGC
+	// However this loop ends (ctx, or a panic the supervisor restarts it after),
+	// leave the score, memory budget and GOGC neutral. Without it a dead monitor
+	// froze its last reading in force, and a restart would adopt the tightened
+	// GOGC as its baseline.
+	defer resetPressureActuators(&gcState, debug.SetGCPercent)
 
 	var headroom headroomTracker
 	headroomLow := headroomLowThresholdMiB(detectEffectiveRAMLimitBytes() >> 20)
@@ -1254,4 +1259,23 @@ var proxyHealthSnapshot = func() (up int, dead []string, degraded []string, band
 
 func pressureLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)
+}
+
+// resetPressureActuators puts everything the pressure monitor drives back to
+// neutral: the published score, the connection memory budget, and a GOGC the
+// governor had tightened. setGC is debug.SetGCPercent in production. Run when
+// the monitor exits for any reason, so a dead monitor fails neutral instead of
+// freezing the last (possibly emergency) reading in force.
+func resetPressureActuators(state *gcGovernorState, setGC func(int) int) {
+	setPressure(0)
+	applyPressureMemoryBudget(0)
+	gcTightening.Store(false)
+	if state != nil {
+		if state.currentGOGC != state.baselineGOGC {
+			setGC(state.baselineGOGC)
+			state.currentGOGC = state.baselineGOGC
+		}
+		state.level = 0
+		state.consecutiveCalmCount = 0
+	}
 }

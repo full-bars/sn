@@ -359,6 +359,9 @@ func providerExtraMetrics() string {
 	fmt.Fprintf(&b, "# TYPE urnet_proxy_audit_paused gauge\n")
 	fmt.Fprintf(&b, "urnet_proxy_audit_paused %d\n", b2i(audit.Paused))
 
+	// --- Supervised background loops ---
+	b.WriteString(supervisedLoopMetrics())
+
 	// --- Lifetime persisted metrics ---
 	if lm := lifetimeStore; lm != nil {
 		pqe, clas, up, deny, recov, lost, bill := lm.Snapshot()
