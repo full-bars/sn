@@ -68,6 +68,12 @@ func WrapDialContextSettings(ds *connect.DialContextSettings, bw *ProxyBandwidth
 // net.Conn with byte counting. The proxy route is preserved; only the
 // dial-function seam changes.
 //
+// Every connection it dials is also a live client session on bw (see
+// NewSessionConn), which is what drives bw.Clients: the engine's NAT no longer
+// takes a tracker, so this dial is the only place sn sees client sessions
+// begin and end. Note this counts live egress connections, not distinct
+// client sources, so one client with several flows counts several times.
+//
 // Returns cs unchanged if bw is nil.
 func WrapConnectSettings(cs connect.ConnectSettings, bw *ProxyBandwidth, proxyAddr string) connect.ConnectSettings {
 	if bw == nil {
@@ -90,7 +96,9 @@ func WrapConnectSettings(cs connect.ConnectSettings, bw *ProxyBandwidth, proxyAd
 			if err != nil {
 				return nil, err
 			}
-			return NewConn(conn, bw, proxyAddr), nil
+			// Each relay-egress connection carries a client's flow, so it
+			// counts as a live client session for this proxy.
+			return NewSessionConn(conn, bw, proxyAddr), nil
 		},
 	}
 	return cs
