@@ -453,6 +453,11 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	relayConnectSettings := bandwidth.WrapConnectSettings(clientStrategySettings.ConnectSettings, proxyBandwidth, identityKey)
 	localUserNatSettings.TcpBufferSettings.ConnectSettings = relayConnectSettings
 	localUserNatSettings.UdpBufferSettings.ConnectSettings = relayConnectSettings
+	// The provider's own connections to the platform (API, auth, the H1 tunnel)
+	// count into the total only. This is a copy made after the relay copy above
+	// so relay bytes are not counted twice, and a direct identity keeps the
+	// engine's own dial. See bandwidth.WrapConnectSettingsTotal.
+	clientStrategySettings.ConnectSettings = bandwidth.WrapConnectSettingsTotal(clientStrategySettings.ConnectSettings, proxyBandwidth, identityKey)
 	remoteUserNatProviderSettings := connect.DefaultRemoteUserNatProviderSettings()
 
 	clientStrategy := connect.NewClientStrategy(proxyCtx, clientStrategySettings)
@@ -993,14 +998,44 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		RevocationDone: revocationDone,
 	})
 
-	// Note: NewLocalUserNat in v2026 no longer takes a bw parameter.
-	// Per-byte bandwidth tracking via DialContextSettings wrapping is disabled
-	// because it bypasses proxy routing. See DESIGN ADAPTATION in provideWithProxy.
+	// Note: NewLocalUserNat in v2026 no longer takes a bw parameter. Relay-egress
+	// sockets are still counted into the TOTAL by WrapConnectSettings (see
+	// above); billable comes from the remote provider's relay stats below.
 	localUserNat := connect.NewLocalUserNat(proxyCtx, clientId.String(), localUserNatSettings)
 	defer localUserNat.Close()
 	// Note: NewRemoteUserNatProvider in v2026 no longer takes a bw parameter.
 	remoteUserNatProvider := connect.NewRemoteUserNatProvider(connectClient, localUserNat, remoteUserNatProviderSettings)
 	defer remoteUserNatProvider.Close()
+	// Billable bytes come from the provider's own relay accounting, not from the
+	// egress socket wrapper: see bandwidth.ProxyBandwidth.RelayStatsObserver.
+	// The engine fires this about once a second and has no final flush at
+	// shutdown, so the last epoch is read directly after unsubscribing, before
+	// the provider closes (defers run in reverse, and Close was deferred above).
+	if proxyBandwidth != nil {
+		observeRelay := proxyBandwidth.RelayStatsObserver()
+		unsubscribeRelayStats, err := remoteUserNatProvider.TryAddPacketStatsCallback(func(stats *connect.PacketStats) {
+			observeRelay(uint64(max(stats.RemoteIngressByteCount, 0)), uint64(max(stats.RemoteEgressByteCount, 0)))
+		})
+		if err != nil {
+			// without the callback billable stays zero for this proxy; say so
+			tlog("[proxy][billable] proxy[%d] relay stats unavailable, billable bytes will not be counted: %v\n", proxyIndex, err)
+		} else {
+			defer func() {
+				unsubscribeRelayStats()
+				if stats := remoteUserNatProvider.PacketStats(); stats != nil {
+					observeRelay(uint64(max(stats.RemoteIngressByteCount, 0)), uint64(max(stats.RemoteEgressByteCount, 0)))
+				}
+			}()
+		}
+	}
+
+	// The platform's own per-contract accounting, kept beside billable as a
+	// cross-check (urnet_contract_used_bytes_total). A duplicate or stale event
+	// is discarded by sequence, and a closed contract is forgotten.
+	if proxyBandwidth != nil {
+		unsubscribeContractStats := connectClient.ContractManager().AddContractStatsCallback(proxyBandwidth.ContractStatsObserver())
+		defer unsubscribeContractStats()
+	}
 
 	if proxySettings != nil {
 		startProxyBenchmarks(proxyCtx, proxyBandwidth, proxySettings)

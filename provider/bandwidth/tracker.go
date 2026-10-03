@@ -19,15 +19,24 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 // ProxyBandwidth holds per-proxy atomic byte counters and session tracking.
 // Safe for concurrent use from multiple goroutines and transport paths.
 type ProxyBandwidth struct {
 	TotalRx, TotalTx, BillableRx, BillableTx atomic.Uint64
-	Clients                                  atomic.Int64
-	LatencyNs                                atomic.Int64
-	SocksLatencyNs                           atomic.Int64
+	// ContractUsedIngress and ContractUsedEgress are the bytes the platform
+	// contracts have used, summed from the engine's per-contract accounting
+	// (ContractStatsObserver). Ingress is the receive-side contracts (traffic
+	// from the clients), egress the send-side ones. This is the number the
+	// platform settles on, kept as a cross-check against billable, which is
+	// counted from the relay packets.
+	ContractUsedIngress, ContractUsedEgress atomic.Uint64
+	Clients                                 atomic.Int64
+	LatencyNs                               atomic.Int64
+	SocksLatencyNs                          atomic.Int64
 
 	mu            sync.Mutex
 	sessions      map[any]time.Time
@@ -36,6 +45,49 @@ type ProxyBandwidth struct {
 }
 
 const clientPresenceGrace = 10 * time.Second
+
+// RelayStatsObserver returns the function a proxy's remote provider feeds with
+// its CUMULATIVE relay byte counts. The counts are the engine's own accounting
+// of the IP packets it relayed for remote clients: ingress is traffic received
+// from the tunnel (the clients' egress) and egress is the return traffic sent
+// back into the tunnel. They are what BillableTx and BillableRx mean, and the
+// same quantities the 3.23-fix line counted inside its user NAT provider.
+//
+// Billable used to be incremented in the connection wrapper next to the total,
+// by the same byte count, so the two were always equal and billable was only
+// the bytes carried on the relay-egress socket. The engine does not take a
+// bandwidth object any more, so the wrapper cannot see which bytes belong to a
+// client contract; the provider's own packet counters can.
+//
+// Each observer keeps its own high-water mark, so a provider that is rebuilt (a
+// restart of this proxy) starts from zero without double counting. Within one
+// observer the engine's counts only ever go up, so a value below the mark can
+// only be an out-of-order delivery (a late final read racing an epoch): it adds
+// nothing and the mark stays, instead of re-adding history.
+// The function is safe to call from any goroutine.
+func (self *ProxyBandwidth) RelayStatsObserver() func(ingress uint64, egress uint64) {
+	var mu sync.Mutex
+	var highIngress, highEgress uint64
+	delta := func(current uint64, high *uint64) uint64 {
+		if current <= *high {
+			return 0
+		}
+		d := current - *high
+		*high = current
+		return d
+	}
+	return func(ingress uint64, egress uint64) {
+		mu.Lock()
+		in, out := delta(ingress, &highIngress), delta(egress, &highEgress)
+		mu.Unlock()
+		if 0 < in {
+			self.BillableTx.Add(in)
+		}
+		if 0 < out {
+			self.BillableRx.Add(out)
+		}
+	}
+}
 
 func (self *ProxyBandwidth) AddSession(key any, start time.Time) {
 	self.mu.Lock()
@@ -93,6 +145,8 @@ func (bw *ProxyBandwidth) Snapshot() *ProxyBandwidth {
 	out.TotalTx.Store(bw.TotalTx.Load())
 	out.BillableRx.Store(bw.BillableRx.Load())
 	out.BillableTx.Store(bw.BillableTx.Load())
+	out.ContractUsedIngress.Store(bw.ContractUsedIngress.Load())
+	out.ContractUsedEgress.Store(bw.ContractUsedEgress.Load())
 	out.Clients.Store(bw.Clients.Load())
 	out.LatencyNs.Store(bw.LatencyNs.Load())
 	out.SocksLatencyNs.Store(bw.SocksLatencyNs.Load())
@@ -226,7 +280,6 @@ func (c *Conn) Read(b []byte) (int, error) {
 	n, err := c.Conn.Read(b)
 	if n > 0 {
 		c.bw.TotalRx.Add(uint64(n))
-		c.bw.BillableRx.Add(uint64(n))
 	}
 	return n, err
 }
@@ -235,7 +288,6 @@ func (c *Conn) Write(b []byte) (int, error) {
 	n, err := c.Conn.Write(b)
 	if n > 0 {
 		c.bw.TotalTx.Add(uint64(n))
-		c.bw.BillableTx.Add(uint64(n))
 	}
 	return n, err
 }
@@ -244,7 +296,10 @@ func (c *Conn) ProxyAddress() string { return c.proxyAddr }
 
 // PacketConn wraps a net.PacketConn and counts every ReadFrom/WriteTo byte
 // into the associated ProxyBandwidth counters. This is the H3/QUIC path —
-// without this wrapper, QUIC traffic reports zero bytes to billing.
+// without this wrapper, QUIC traffic would report zero bytes to the TOTAL.
+// Billable is not counted here: it comes from the provider's own relay
+// accounting (RelayStatsObserver). This wrapper sits on the platform tunnel
+// socket when H3 wins, so Total mixes relay-egress bytes with H3 tunnel bytes.
 type PacketConn struct {
 	net.PacketConn
 	bw        *ProxyBandwidth
@@ -273,3 +328,55 @@ func (pc *PacketConn) WriteTo(p []byte, addr net.Addr) (int, error) {
 }
 
 func (pc *PacketConn) ProxyAddress() string { return pc.proxyAddr }
+
+// ContractStatsObserver returns the function a proxy's contract manager feeds
+// with per-contract usage events. Each event carries the bytes a contract used
+// since its previous event; the observer sums them into ContractUsedIngress
+// (receive contracts) and ContractUsedEgress (send contracts).
+//
+// Events can be delivered out of order or repeated, and a stale snapshot of an
+// open contract can arrive after the contract closed, so each contract
+// direction keeps the last sequence it applied and ignores anything at or below
+// it. A closed contract is forgotten, so the map stays bounded by the number of
+// open contracts. The function is safe to call from any goroutine.
+func (self *ProxyBandwidth) ContractStatsObserver() func(events []*connect.ContractStatsEvent) {
+	type contractDirection struct {
+		id      connect.Id
+		receive bool
+	}
+	var mu sync.Mutex
+	lastSequence := map[contractDirection]uint64{}
+	return func(events []*connect.ContractStatsEvent) {
+		var ingress, egress uint64
+		mu.Lock()
+		for _, event := range events {
+			if event == nil {
+				continue
+			}
+			key := contractDirection{id: event.ContractId, receive: event.Receive}
+			if last, seen := lastSequence[key]; seen && event.Sequence <= last {
+				continue
+			}
+			if event.Open {
+				lastSequence[key] = event.Sequence
+			} else {
+				// the final event for this contract: apply it, then forget it
+				delete(lastSequence, key)
+			}
+			if 0 < event.UsedByteCountDelta {
+				if event.Receive {
+					ingress += uint64(event.UsedByteCountDelta)
+				} else {
+					egress += uint64(event.UsedByteCountDelta)
+				}
+			}
+		}
+		mu.Unlock()
+		if 0 < ingress {
+			self.ContractUsedIngress.Add(ingress)
+		}
+		if 0 < egress {
+			self.ContractUsedEgress.Add(egress)
+		}
+	}
+}
