@@ -474,5 +474,7 @@ func TestReload_WritesTheLedgerAfterReleasingTheReloaderLock(t *testing.T) {
 // health and bandwidth registries, not a second one.
 func registerBandwidthProxy(index int, address, key string, rx uint64) {
 	RegisterProxy(index, address, key)
-	RegisterProxyBandwidth(index).TotalRx.Store(rx)
+	bw := RegisterProxyBandwidth(index)
+	bw.TotalRx.Store(rx)
+	bw.BillableRx.Store(rx) // the egress wrapper moves both together
 }

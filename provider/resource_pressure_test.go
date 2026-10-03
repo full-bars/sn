@@ -676,7 +676,9 @@ func TestShedPoolToTarget_KeepsBusyProxyOnTrafficTiebreak(t *testing.T) {
 		t.Fatal(err)
 	}
 	RegisterProxy(1, "1.1.1.1:1080", busy)
-	RegisterProxyBandwidth(1).TotalRx.Store(1 << 20)
+	busyBw := RegisterProxyBandwidth(1)
+	busyBw.TotalRx.Store(1 << 20)
+	busyBw.BillableRx.Store(1 << 20) // the egress wrapper moves both together
 	RegisterProxy(2, "2.2.2.2:1080", idle)
 	RegisterProxyBandwidth(2)
 
