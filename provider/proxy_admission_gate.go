@@ -4,6 +4,8 @@ import (
 	"context"
 	"math/rand"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 // proxyAdmissionGate sits in front of the shared globalAuthRateLimiter and
@@ -38,6 +40,30 @@ type proxyAdmissionGate struct {
 	mu      sync.Mutex
 	waiters []*admissionWaiter
 	wake    chan struct{}
+
+	// lastActivity is the unix nanosecond time of the latest Admit call or
+	// release. Background work that must never compete with auth for the API
+	// (the smart dialer's probes) waits until QuietFor says auth has been idle.
+	lastActivity atomic.Int64
+	// inAdmit counts attempts that are waiting for a slot or running with one:
+	// incremented on entry to Admit, decremented when Admit fails or when the
+	// returned release runs. QuietFor reads only atomics, so a probe polling it
+	// can never contend with auth for g.mu.
+	inAdmit atomic.Int64
+}
+
+func (g *proxyAdmissionGate) touch() {
+	g.lastActivity.Store(time.Now().UnixNano())
+}
+
+// QuietFor reports whether no proxy is waiting for or running an auth attempt
+// and none has been for at least d. It only reads: auth never waits on it.
+func (g *proxyAdmissionGate) QuietFor(d time.Duration) bool {
+	if 0 < g.inAdmit.Load() {
+		return false
+	}
+	last := g.lastActivity.Load()
+	return last == 0 || d <= time.Since(time.Unix(0, last))
 }
 
 type admissionWaiter struct {
@@ -70,12 +96,20 @@ func (g *proxyAdmissionGate) Admit(ctx context.Context, failureCount int) (relea
 		weight: 1.0 / float64(failureCount+1),
 		ready:  make(chan struct{}),
 	}
+	g.touch()
+	g.inAdmit.Add(1)
 	g.push(w)
 
 	select {
 	case <-w.ready:
-		return func() { <-g.concurrency }, nil
+		return func() {
+			<-g.concurrency
+			g.touch()
+			g.inAdmit.Add(-1)
+		}, nil
 	case <-ctx.Done():
+		g.touch()
+		defer g.inAdmit.Add(-1)
 		g.remove(w)
 		select {
 		case <-w.ready:

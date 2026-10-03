@@ -9,8 +9,7 @@ import (
 	"time"
 )
 
-// The loop waits out the initial delay (so a starting proxy is not probed
-// while it is still authenticating), then probes on every tick until the
+// The loop waits out the initial delay, then probes on every tick until the
 // context ends.
 func TestSmartDialerProbeLoopProbesAfterDelayThenRepeats(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -23,7 +22,7 @@ func TestSmartDialerProbeLoopProbesAfterDelayThenRepeats(t *testing.T) {
 		runSmartDialerProbes(ctx, 20*time.Millisecond, 10*time.Millisecond, func(context.Context) int {
 			calls.Add(1)
 			return 0
-		}, func(string, ...any) {})
+		})
 	}()
 
 	time.Sleep(5 * time.Millisecond)
@@ -47,46 +46,27 @@ func TestSmartDialerProbeLoopProbesAfterDelayThenRepeats(t *testing.T) {
 	}
 }
 
-// A round that attempted nothing (smart dialer off, or every transport already
-// measured) is silent; a round that probed says so once.
-func TestSmartDialerProbeLoopLogsOnlyRoundsThatProbed(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	var rounds atomic.Int32
-	var logged atomic.Int32
-	go runSmartDialerProbes(ctx, 0, 5*time.Millisecond, func(context.Context) int {
-		if rounds.Add(1) == 2 {
-			return 3
-		}
-		return 0
-	}, func(string, ...any) { logged.Add(1) })
-
-	deadline := time.Now().Add(2 * time.Second)
-	for rounds.Load() < 5 && time.Now().Before(deadline) {
-		time.Sleep(5 * time.Millisecond)
-	}
-	cancel()
-	if got := logged.Load(); got != 1 {
-		t.Fatalf("logged %d times over %d rounds, want exactly 1 (the round that probed 3)", got, rounds.Load())
-	}
-}
-
-// The probe is only worth anything if every proxy's strategy actually starts
-// it, and the start is one line inside a very large function that no unit test
-// drives. Read the source so that a refactor which drops the line fails here
-// instead of silently leaving the smart dialer with nothing to compare.
-func TestEveryProxyStrategyStartsTheSmartDialerProbe(t *testing.T) {
+// The probe starts only after the proxy authenticated, never before: a proxy
+// that never gets through auth, or sits in slow retry, must not probe.
+func TestSmartDialerProbeStartsAfterAuthSucceeds(t *testing.T) {
 	source, err := os.ReadFile("provide.go")
 	if err != nil {
 		t.Fatal(err)
 	}
-	create := strings.Index(string(source), "connect.NewClientStrategy(proxyCtx, clientStrategySettings)")
-	start := strings.Index(string(source), "startSmartDialerProbes(proxyCtx, clientStrategy, st.apiUrl")
-	if create < 0 {
-		t.Fatal("provideWithProxy no longer creates its strategy this way; update this test")
+	text := string(source)
+	create := strings.Index(text, "connect.NewClientStrategy(proxyCtx, clientStrategySettings)")
+	authFailed := strings.Index(text, "provideHandleAuthFailure(st, proxyCtx, proxySettings, isNative, isURLSourced, err)")
+	start := strings.Index(text, "startSmartDialerProbes(proxyCtx, clientStrategy, st.apiUrl")
+	if create < 0 || authFailed < 0 {
+		t.Fatal("provideWithProxy no longer creates its strategy or handles auth failure this way; update this test")
 	}
-	if start < 0 || start < create {
-		t.Fatal("provideWithProxy does not start the smart dialer probe right after creating the proxy's client strategy")
+	if start < 0 {
+		t.Fatal("provideWithProxy does not start the smart dialer probe")
+	}
+	if start < authFailed {
+		t.Fatal("the smart dialer probe starts before the auth outcome is known; it must start only after auth succeeds")
+	}
+	if strings.Count(text, "startSmartDialerProbes(") != 1 {
+		t.Fatal("expected exactly one probe start per proxy")
 	}
 }

@@ -15,6 +15,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/urnetwork/connect v0.0.0
+	github.com/urnetwork/glog v0.0.0
 	github.com/urnetwork/sdk v0.0.0
 	github.com/urnetwork/server v0.0.0-00010101000000-000000000000
 	github.com/vedhavyas/go-subkey/v2 v2.0.0
@@ -169,7 +170,6 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
-	github.com/urnetwork/glog v0.0.0 // indirect
 	github.com/urnetwork/goidenticons v0.0.0 // indirect
 	github.com/urnetwork/proxy v0.0.0 // indirect
 	github.com/urnetwork/userwireguard v0.0.0 // indirect
@@ -223,4 +223,4 @@ replace github.com/urnetwork/goidenticons => github.com/urnetwork/goidenticons v
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261003022742-938cb17481d9
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261003105035-0d6c2cf8e310
