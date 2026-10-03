@@ -456,15 +456,6 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	remoteUserNatProviderSettings := connect.DefaultRemoteUserNatProviderSettings()
 
 	clientStrategy := connect.NewClientStrategy(proxyCtx, clientStrategySettings)
-	// The smart dialer ranks transports it has measured, and the first-choice
-	// transport always wins where it works, so the others are never dialed and
-	// never measured. Probe them in the background (a no-op while the smart
-	// dialer is off). See startSmartDialerProbes.
-	probeTag := "proxy"
-	if isNative {
-		probeTag = "direct"
-	}
-	startSmartDialerProbes(proxyCtx, clientStrategy, st.apiUrl, probeTag)
 
 	// Peer-client-key fetcher.
 	if clientSettings.EncryptionSettings != nil && clientSettings.EncryptionSettings.NewPeerClientPublicKeyFetcher == nil {
@@ -829,6 +820,19 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 		provideHandleAuthFailure(st, proxyCtx, proxySettings, isNative, isURLSourced, err)
 		return
 	}
+
+	// The smart dialer ranks transports it has measured, and the first-choice
+	// transport always wins where it works, so the others are never dialed and
+	// never measured. Probe them in the background (a no-op while the smart
+	// dialer is off). Started only now, after this proxy authenticated: a proxy
+	// that never gets through auth, or sits in slow retry, must not probe, and
+	// the scheduler keeps the probes behind the auth admission gate besides.
+	// See startSmartDialerProbes.
+	probeTag, probeAddr, probeViaSocks := "direct", "direct", false
+	if proxySettings != nil {
+		probeTag, probeAddr, probeViaSocks = "proxy", proxySettings.Address, true
+	}
+	startSmartDialerProbes(proxyCtx, clientStrategy, st.apiUrl, probeTag, proxyIndex, probeAddr, probeViaSocks)
 
 	instanceId := connect.NewId()
 
