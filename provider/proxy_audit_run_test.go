@@ -1086,3 +1086,48 @@ func TestProxyAuditRunOnceConcurrentWithControlActions(t *testing.T) {
 		t.Fatal("no status published after concurrent tick/control storm")
 	}
 }
+
+// Proxy audit log lines printed the raw identity key, whose \x1f separator
+// is invisible in a terminal and corrupts log greps. Every per-proxy line
+// must go through proxyKeyDisplay.
+func TestProxyAuditRunOnce_LogsDisplayIdentityKeys(t *testing.T) {
+	const key = "a:1\x1falice" // ProxySettings.Key() shape for a credentialed proxy
+
+	assertClean := func(h *govHarness, want string) {
+		t.Helper()
+		if h.logged(want) == 0 {
+			t.Fatalf("expected a %q line, got %q", want, h.logs)
+		}
+		for _, l := range h.logs {
+			if strings.Contains(l, "\x1f") {
+				t.Fatalf("log line carries a raw identity key: %q", l)
+			}
+		}
+	}
+
+	// would-park (observe mode)
+	h := newGovHarness(key)
+	h.act = false
+	h.twoBadTicks(key)
+	assertClean(h, "would-park a:1 (user ")
+
+	// parked, then restored after a good regrade
+	h = newGovHarness(key)
+	h.act = true
+	h.twoBadTicks(key)
+	assertClean(h, "parked a:1 (user ")
+	h.now = h.now.Add(2 * time.Hour)
+	h.grade(key, 0.9, h.now.Add(-30*time.Minute))
+	h.healthUp[key] = false
+	h.g.runOnce()
+	assertClean(h, "restored a:1 (user ")
+
+	// released after leaving the paid list
+	h = newGovHarness(key)
+	h.act = true
+	h.twoBadTicks(key)
+	delete(h.entries, key)
+	h.now = h.now.Add(24 * time.Hour)
+	h.g.runOnce()
+	assertClean(h, "released a:1 (user ")
+}

@@ -1110,8 +1110,17 @@ func runURLProxyReaperOnce(ctx context.Context, apiHost string, apiPort uint16) 
 			entry.LastProbe = time.Now()
 
 			liveHealth := proxyHealthByAddressV2026()
+			// liveHealth is keyed by proxy IDENTITY (address+user for a
+			// credentialed entry), while r.addr is the URL cache's bare
+			// address. Look the entry up under its real identity key or a
+			// live credentialed proxy reads as dead and accrues ProbeFails
+			// until it is wrongly blacklisted.
+			liveKey := r.addr
+			if entry.User != "" {
+				liveKey = (&connect.ProxySettings{Network: "tcp", Address: r.addr, Auth: &proxy.Auth{User: entry.User}}).Key()
+			}
 			isLive := false
-			if h, ok := liveHealth[r.addr]; ok && h.Health == "up" {
+			if h, ok := liveHealth[liveKey]; ok && h.Health == "up" {
 				isLive = true
 			}
 

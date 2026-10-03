@@ -772,3 +772,34 @@ func TestCollectProxyGradeSummary_PendingWinsOverStaleTier(t *testing.T) {
 		t.Errorf("A bucket = %d, want 1 (%+v)", s.tiers["A"], s.tiers)
 	}
 }
+
+// TestCollectProxyGradeSummary_CredentialedURLProxyGraded: state.Proxies is
+// identity-keyed, the URL cache bare-address-keyed. Indexing the cache with
+// the identity key missed every credentialed URL proxy, so a graded one was
+// reported as ungraded.
+func TestCollectProxyGradeSummary_CredentialedURLProxyGraded(t *testing.T) {
+	home := withTempHome(t)
+	dir := filepath.Join(home, ".urnetwork")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeProxyURLStateTo(filepath.Join(dir, "proxy_url.json"), &ProxyURLState{Cache: map[string]ProxyURLEntry{
+		"1.1.1.1:1080": {User: "alice", ProbeOK: true, Score: 0.95, Graded: true, LastProbe: time.Now()},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	key := "1.1.1.1:1080\x1falice"
+	if err := writeProxyStateTo(filepath.Join(dir, "proxy.state"), &ProxyState{Proxies: map[string]ProxyEntry{
+		key: {Health: "up", Source: "url"},
+	}}); err != nil {
+		t.Fatal(err)
+	}
+
+	s, ok := collectProxyGradeSummary()
+	if !ok {
+		t.Fatal("collectProxyGradeSummary returned ok=false")
+	}
+	if s.tiers["A"] != 1 || s.tiers["ungraded"] != 0 {
+		t.Fatalf("credentialed URL proxy bucketed wrong: %+v", s.tiers)
+	}
+}

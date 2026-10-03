@@ -1372,15 +1372,9 @@ func shedPoolToTarget(target int) {
 		return
 	}
 
-	// Per-proxy traffic for last-resort ranking, keyed by address.
-	traffic := map[string]uint64{}
-	_, _, _, bandwidth, _ := proxyHealthSnapshot()
-	for key, bw := range bandwidth {
-		_, ip := parseProxyString(key)
-		if bw != nil {
-			traffic[ip] += bw.TotalRx.Load() + bw.TotalTx.Load()
-		}
-	}
+	// Per-proxy traffic for last-resort ranking, keyed by proxy identity to
+	// match state.Proxies.
+	traffic := runningProxyTraffic()
 
 	now := time.Now()
 	earnings := make(map[string]float64, len(state.Proxies))
@@ -1407,18 +1401,6 @@ func shedPoolToTarget(target int) {
 // ---------------------------------------------------------------------------
 // Local Stubs and Adapters for Connect and Storage
 // ---------------------------------------------------------------------------
-
-// ProxyBandwidth tracks the data usage of a proxy.
-type ProxyBandwidth struct {
-	TotalRx atomic.Uint64
-	TotalTx atomic.Uint64
-}
-
-// proxyHealthSnapshot is a local adapter/stub for ProxyHealthSnapshot, which
-// is not present in v2026 connect.
-var proxyHealthSnapshot = func() (up int, dead []string, degraded []string, bandwidth map[string]*ProxyBandwidth, connecting []string) {
-	return 0, nil, nil, nil, nil
-}
 
 func pressureLog(format string, args ...any) {
 	fmt.Printf("%s "+format, append([]any{time.Now().Format("0102 15:04:05")}, args...)...)

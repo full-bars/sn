@@ -3,7 +3,9 @@ package provider
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -149,5 +151,77 @@ func TestControlSocketAuditActionsPersist(t *testing.T) {
 	resp = handleControlRequest(state, controlRequest{Cmd: "audit", Action: "release"})
 	if resp.OK || !strings.Contains(resp.Error, "requires an address") {
 		t.Fatalf("empty release: OK=%v err=%q, want refused", resp.OK, resp.Error)
+	}
+}
+
+// proxy audit on/off changed persisted control state without a CommandAudit
+// record, so the operator audit trail had no entry for the toggle, unlike
+// every other control-state mutation.
+func TestControlSocketAuditActionsRecordCommandAudit(t *testing.T) {
+	withTempHome(t)
+	ring := &AuditRing{path: filepath.Join(t.TempDir(), "audit.json")}
+	withGlobalRing(t, ring)
+	t.Cleanup(func() { proxyAuditOverride.Store(nil) })
+
+	state := newControlState()
+	for _, action := range []string{"on", "off"} {
+		if resp := handleControlRequest(state, controlRequest{Cmd: "audit", Action: action}); !resp.OK {
+			t.Fatalf("audit %s rejected: %v", action, resp.Error)
+		}
+	}
+
+	entries, _ := ring.Entries(0, "")
+	got := map[string]int{}
+	for _, e := range entries {
+		if e.Cmd == "audit" && e.Key == "proxy_audit" && e.OK {
+			got[e.Value]++
+		}
+	}
+	if len(entries) != 2 || got["on"] != 1 || got["off"] != 1 {
+		t.Fatalf("audit trail for proxy audit on/off = %v (all entries %+v), want one on and one off", got, entries)
+	}
+}
+
+// The persist-failure rollback wrote state.values and state.meta without
+// state.mu while readers (status, get) take only state.mu. Run with -race:
+// the old rollback is a data race against the concurrent reader below.
+func TestControlSocketAuditPersistFailureRollbackLocked(t *testing.T) {
+	home := withTempHome(t)
+	state := newControlState()
+	state.set("proxy_audit", "off")
+
+	dir := filepath.Join(home, ".urnetwork")
+	if err := os.MkdirAll(dir, 0o500); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o500); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chmod(dir, 0o700) })
+
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				state.statusSnapshot()
+			}
+		}
+	}()
+	for i := 0; i < 20; i++ {
+		if resp := handleControlRequest(state, controlRequest{Cmd: "audit", Action: "on"}); resp.OK {
+			t.Fatal("expected persist failure to surface as an error")
+		}
+	}
+	close(stop)
+	wg.Wait()
+
+	if v, _ := state.get("proxy_audit"); v != "off" {
+		t.Fatalf("proxy_audit after failed persist = %q, want rollback to off", v)
 	}
 }

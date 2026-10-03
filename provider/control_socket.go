@@ -626,17 +626,24 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 			snap := proxyAuditStatusSnapshot()
 			return controlResponse{OK: true, ProxyAudit: snap, Audit: snap}
 
-		case "on":
-			// Same transaction shape as the standard set command: mutate
-			// the control state, persist, and report failure honestly so a
-			// restart cannot silently revert the command.
+		case "on", "off":
+			val := "off"
+			if req.Action == "on" {
+				val = "on"
+			}
+			// Same persist-then-commit transaction as "set": apply, persist,
+			// roll back memory on failure so disk and memory never disagree
+			// about whether audit is on, and so a restart cannot silently
+			// revert the command.
 			state.txMu.Lock()
+			defer state.txMu.Unlock()
 			oldValue, oldMeta, hadOld := state.getWithMeta("proxy_audit")
-			if err := state.set("proxy_audit", "on"); err != nil {
-				state.txMu.Unlock()
+			if err := state.set("proxy_audit", val); err != nil {
+				controlLog("❌ [control] audit %s rejected: %s\n", req.Action, err)
 				return controlResponse{OK: false, Error: err.Error()}
 			}
 			if err := state.persist(); err != nil {
+				state.mu.Lock()
 				if hadOld {
 					state.values["proxy_audit"] = oldValue
 					state.meta["proxy_audit"] = oldMeta
@@ -644,40 +651,24 @@ func handleControlRequest(state *controlState, req controlRequest) controlRespon
 					delete(state.values, "proxy_audit")
 					delete(state.meta, "proxy_audit")
 				}
-				state.txMu.Unlock()
-				return controlResponse{OK: false, Error: "proxy audit on failed to persist: " + err.Error()}
+				state.mu.Unlock()
+				controlLog("❌ [control] audit %s failed to persist, rolled back: %s\n", req.Action, err)
+				return controlResponse{OK: false, Error: "proxy audit " + req.Action + " failed to persist: " + err.Error()}
 			}
-			state.txMu.Unlock()
-			setProxyAuditOverride(true)
-			controlLog("✓ [proxy][audit] proxy audit enabled via control socket\n")
-			if a := currentProxyAuditor.Load(); a != nil {
-				spawnRunOnce(a)
+			if err := applyLiveSideEffect("proxy_audit", val); err != nil {
+				controlLog("⚠️ [control] audit %s persisted but live apply failed: %s\n", req.Action, err)
+				return controlResponse{OK: false, Error: "persisted, but failed to apply live: " + err.Error()}
 			}
-			return controlResponse{OK: true, Value: "enabled"}
-
-		case "off":
-			state.txMu.Lock()
-			oldValue, oldMeta, hadOld := state.getWithMeta("proxy_audit")
-			if err := state.set("proxy_audit", "off"); err != nil {
-				state.txMu.Unlock()
-				return controlResponse{OK: false, Error: err.Error()}
-			}
-			if err := state.persist(); err != nil {
-				if hadOld {
-					state.values["proxy_audit"] = oldValue
-					state.meta["proxy_audit"] = oldMeta
-				} else {
-					delete(state.values, "proxy_audit")
-					delete(state.meta, "proxy_audit")
-				}
-				state.txMu.Unlock()
-				return controlResponse{OK: false, Error: "proxy audit off failed to persist: " + err.Error()}
-			}
-			state.txMu.Unlock()
-			setProxyAuditOverride(false)
-			controlLog("✓ [proxy][audit] proxy audit disabled via control socket\n")
-			if a := currentProxyAuditor.Load(); a != nil {
-				spawnRunOnce(a)
+			controlLog("✓ [proxy][audit] proxy audit %s via control socket (was %s)\n", req.Action, formerValue(oldValue, hadOld))
+			recordAndPersist(CommandAudit{
+				Timestamp: time.Now(),
+				Cmd:       "audit",
+				Key:       "proxy_audit",
+				Value:     val,
+				OK:        true,
+			})
+			if val == "on" {
+				return controlResponse{OK: true, Value: "enabled"}
 			}
 			return controlResponse{OK: true, Value: "disabled"}
 

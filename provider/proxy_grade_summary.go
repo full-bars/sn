@@ -32,6 +32,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 const (
@@ -315,7 +317,10 @@ func collectProxyGradeSummary() (gradeSummary, bool) {
 			src = "file"
 		}
 		if src == "url" {
-			if ue, ok := urlState.Cache[addr]; ok {
+			// state.Proxies is keyed by proxy identity (address, or
+			// address+user); the URL cache is keyed by bare address.
+			urlAddr, _ := connect.SplitProxyKey(addr)
+			if ue, ok := urlState.Cache[urlAddr]; ok {
 				score, graded = ue.Score, ue.Graded
 				lastProbe = ue.LastProbe
 			}

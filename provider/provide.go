@@ -1003,7 +1003,7 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	defer remoteUserNatProvider.Close()
 
 	if proxySettings != nil {
-		startProxyBenchmarks(proxyCtx, nil, proxySettings)
+		startProxyBenchmarks(proxyCtx, proxyBandwidth, proxySettings)
 	}
 
 	provideModes := map[protocol.ProvideMode]bool{
@@ -1031,7 +1031,11 @@ func provideHandleAuthFailure(st *provideState, proxyCtx context.Context, proxyS
 			if errors.Is(err, errProxyURLBelowBar) {
 				tlog("[proxy][init] proxy[%d] (%s) rejected by stage-1 quality gate: %v. Re-graded next fetch cycle.\n",
 					getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
-			} else if errors.Is(err, context.Canceled) {
+			} else if errors.Is(err, context.Canceled) || proxyCtx.Err() != nil {
+				// Context cancellation (trim, reaper, reload, drain) is not an
+				// auth failure even when the ladder surfaced a different error
+				// on the way out. Recording a give-up would eventually evict a
+				// healthy proxy after enough operational cycles.
 				tlog("[proxy][init] proxy[%d] (%s) cancelled (not a give-up): %v\n",
 					getProxyIndex(proxySettings.Key()), proxySettings.Address, err)
 			} else if errors.Is(err, errProxyURLSlowCutShort) {
@@ -1087,33 +1091,47 @@ func provideHandleAuthFailure(st *provideState, proxyCtx context.Context, proxyS
 	}
 }
 
-// provideDirectSetup starts the native [direct] connection as proxy[0].
-func provideDirectSetup(st *provideState) bool {
-	noDirect := !isDirectEnabled()
-	if !noDirect {
-		st.wg.Add(1)
-		nativeCtx, nativeCancel := context.WithCancel(st.ctx)
-		st.proxyCancelMu.Lock()
-		st.proxyCancelMap[directProxyKey] = nativeCancel
-		st.proxyCancelMu.Unlock()
-		go connect.HandleError(func() {
-			defer st.wg.Done()
-			defer nativeCancel()
-			defer func() {
-				st.proxyCancelMu.Lock()
-				if cur, ok := st.proxyCancelMap[directProxyKey]; ok && reflect.ValueOf(cur).Pointer() == reflect.ValueOf(nativeCancel).Pointer() {
-					delete(st.proxyCancelMap, directProxyKey)
-				}
-				st.proxyCancelMu.Unlock()
-			}()
-			gen := RegisterProxy(0, "direct", "direct")
-			defer UnregisterProxySafe(0, gen)
-			provideWithProxy(st, nativeCtx, nil, true, false)
-		})
-	} else {
+// provideDirectSetup starts the native [direct] connection as proxy[0]. It
+// returns a channel closed when the direct goroutine exits, or nil when direct
+// is disabled.
+func provideDirectSetup(st *provideState) chan struct{} {
+	return startDirectTransport(st, func(nativeCtx context.Context) {
+		provideWithProxy(st, nativeCtx, nil, true, false)
+	})
+}
+
+// startDirectTransport runs the direct transport in a goroutine registered as
+// proxy[0] and under directProxyKey in the cancel map. The returned channel is
+// published to the reloader so a `direct off` before any reload has
+// hot-toggled direct still waits for this startup goroutine (it would
+// otherwise unregister proxy[0] out from under a still-running transport).
+func startDirectTransport(st *provideState, run func(nativeCtx context.Context)) chan struct{} {
+	if !isDirectEnabled() {
 		tlog("[no-direct] providing on direct/local IP is disabled; using proxy list only\n")
+		return nil
 	}
-	return !noDirect
+	st.wg.Add(1)
+	nativeCtx, nativeCancel := context.WithCancel(st.ctx)
+	st.proxyCancelMu.Lock()
+	st.proxyCancelMap[directProxyKey] = nativeCancel
+	st.proxyCancelMu.Unlock()
+	done := make(chan struct{})
+	go connect.HandleError(func() {
+		defer close(done) // first defer = runs last (LIFO)
+		defer st.wg.Done()
+		defer nativeCancel()
+		defer func() {
+			st.proxyCancelMu.Lock()
+			if cur, ok := st.proxyCancelMap[directProxyKey]; ok && reflect.ValueOf(cur).Pointer() == reflect.ValueOf(nativeCancel).Pointer() {
+				delete(st.proxyCancelMap, directProxyKey)
+			}
+			st.proxyCancelMu.Unlock()
+		}()
+		gen := RegisterProxy(0, "direct", "direct")
+		defer UnregisterProxySafe(0, gen)
+		run(nativeCtx)
+	})
+	return done
 }
 
 // provideLauncherLoop loads proxy state, launches per-proxy goroutines,
@@ -1274,7 +1292,7 @@ func provideLauncherLoop(st *provideState) func() {
 	}
 
 	// Start direct connection.
-	provideDirectSetup(st)
+	directStartupDone := provideDirectSetup(st)
 
 	// Launch per-proxy goroutines.
 	proxyState.NextID = currentProxyIDCounter()
@@ -1370,7 +1388,7 @@ func provideLauncherLoop(st *provideState) func() {
 			provideWithProxy(st, proxyCtx, settings, isNative, isURLSourced)
 		},
 		drainingProxies: make(map[string]context.CancelFunc),
-		directDone:      nil,
+		directDone:      directStartupDone,
 		networkID:       currentNetworkId,
 	}
 	// Seed runningAuth with the STARTUP launch settings BEFORE the watcher and
