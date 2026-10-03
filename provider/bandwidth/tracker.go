@@ -154,16 +154,72 @@ func (r *ProxyRegistry) Snapshot() map[int]*ProxyBandwidth {
 }
 
 // Conn wraps a net.Conn and counts every Read/Write byte into
-// the associated ProxyBandwidth counters.
+// the associated ProxyBandwidth counters. A Conn made by NewSessionConn also
+// counts as one live client session on the ProxyBandwidth until it is closed.
 type Conn struct {
 	net.Conn
 	bw        *ProxyBandwidth
 	proxyAddr string
+
+	sessionMu sync.Mutex
+	tracked   bool // counted in bw.Clients and bw.sessions
+	closed    bool
 }
 
-// NewConn wraps conn with bandwidth tracking for the given proxy.
+// NewConn wraps conn with bandwidth tracking for the given proxy. A conn that
+// is already a *Conn for the same bw is returned as is, so wrapping twice
+// never counts its bytes twice.
 func NewConn(conn net.Conn, bw *ProxyBandwidth, proxyAddr string) *Conn {
+	if c, ok := conn.(*Conn); ok && c.bw == bw {
+		return c
+	}
 	return &Conn{Conn: conn, bw: bw, proxyAddr: proxyAddr}
+}
+
+// NewSessionConn wraps conn like NewConn and also counts it as one live
+// client session on bw (Clients and the session presence window) until the
+// first Close. Used on the relay-egress dial, where each connection carries a
+// client's traffic; the provider's own control-plane connections use NewConn.
+// Wrapping the same connection twice counts it once.
+func NewSessionConn(conn net.Conn, bw *ProxyBandwidth, proxyAddr string) *Conn {
+	c := NewConn(conn, bw, proxyAddr)
+	c.trackSession()
+	return c
+}
+
+func (c *Conn) trackSession() {
+	if c.bw == nil {
+		return
+	}
+	c.sessionMu.Lock()
+	defer c.sessionMu.Unlock()
+	if c.tracked || c.closed {
+		return
+	}
+	c.tracked = true
+	c.bw.Clients.Add(1)
+	c.bw.AddSession(c, time.Now())
+}
+
+// releaseSession ends the session exactly once, whichever Close comes first.
+func (c *Conn) releaseSession() {
+	c.sessionMu.Lock()
+	defer c.sessionMu.Unlock()
+	if c.closed {
+		return
+	}
+	c.closed = true
+	if c.tracked {
+		c.bw.Clients.Add(-1)
+		c.bw.RemoveSession(c)
+	}
+}
+
+// Close ends the client session (if any) before closing the underlying
+// connection, so an error or panic from the inner Close cannot leak it.
+func (c *Conn) Close() error {
+	c.releaseSession()
+	return c.Conn.Close()
 }
 
 func (c *Conn) Read(b []byte) (int, error) {
