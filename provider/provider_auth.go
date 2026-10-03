@@ -430,6 +430,10 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 	return
 }
 
+// revocationWatchInterval is how often watchReusedIdentityForRevocation
+// checks the transport health. A var so tests can shorten it.
+var revocationWatchInterval = 2 * time.Minute
+
 // watchReusedIdentityForRevocation polls proxyIndex's transport health and
 // evicts identityKey from the client JWT store if the reused identity keeps
 // failing to authenticate and never once comes up. See the call site for
@@ -441,7 +445,7 @@ func provideAuth(ctx context.Context, clientStrategy *connect.ClientStrategy, ap
 // just re-signed it), so this watcher stops before it evicts the fresh entry
 // while the transport is still reconnecting.
 func watchReusedIdentityForRevocation(ctx context.Context, identityKey string, proxyIndex int, revocationDone <-chan struct{}) {
-	ticker := time.NewTicker(2 * time.Minute)
+	ticker := time.NewTicker(revocationWatchInterval)
 	defer ticker.Stop()
 	for {
 		select {
