@@ -66,7 +66,7 @@ func writeDashboardMetricsFrom(b *strings.Builder, in dashboardMetricsInput) {
 	fmt.Fprintf(b, "urnet_proxy_pool_size{status=\"connecting\"} %d\n", len(in.Connecting))
 
 	var perProxy strings.Builder
-	var billRx, billTx, rx, tx uint64
+	var billRx, billTx, rx, tx, contractIn, contractOut uint64
 	var clients int64
 	for _, key := range slices.Sorted(maps.Keys(in.Bandwidth)) {
 		bw := in.Bandwidth[key]
@@ -81,6 +81,8 @@ func writeDashboardMetricsFrom(b *strings.Builder, in dashboardMetricsInput) {
 		rx += pRx
 		tx += pTx
 		billRx += pBillRx
+		contractIn += bw.ContractUsedIngress.Load()
+		contractOut += bw.ContractUsedEgress.Load()
 		billTx += pBillTx
 		clients += bw.Clients.Load()
 	}
@@ -93,6 +95,10 @@ func writeDashboardMetricsFrom(b *strings.Builder, in dashboardMetricsInput) {
 	fmt.Fprintf(b, "# TYPE urnet_billable_bytes_total counter\n")
 	fmt.Fprintf(b, "urnet_billable_bytes_total{direction=\"in\"} %d\n", billRx)
 	fmt.Fprintf(b, "urnet_billable_bytes_total{direction=\"out\"} %d\n", billTx)
+	fmt.Fprintf(b, "# HELP urnet_contract_used_bytes_total Bytes used on the platform contracts (the engine's per-contract accounting), a cross-check against billable. in is receive-side contracts, out is send-side.\n")
+	fmt.Fprintf(b, "# TYPE urnet_contract_used_bytes_total counter\n")
+	fmt.Fprintf(b, "urnet_contract_used_bytes_total{direction=\"in\"} %d\n", contractIn)
+	fmt.Fprintf(b, "urnet_contract_used_bytes_total{direction=\"out\"} %d\n", contractOut)
 	fmt.Fprintf(b, "# HELP urnet_bytes_total Aggregate total bytes for this provider.\n")
 	fmt.Fprintf(b, "# TYPE urnet_bytes_total counter\n")
 	fmt.Fprintf(b, "urnet_bytes_total{direction=\"in\"} %d\n", rx)

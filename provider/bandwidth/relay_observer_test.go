@@ -3,6 +3,8 @@ package bandwidth
 import (
 	"sync"
 	"testing"
+
+	"github.com/urnetwork/connect"
 )
 
 // The observer turns the engine's CUMULATIVE relay counts into billable deltas,
@@ -133,5 +135,68 @@ func TestConnWriteCountsTotalNotBillable(t *testing.T) {
 	}
 	if bw.BillableTx.Load() != 0 || bw.BillableRx.Load() != 0 {
 		t.Fatalf("the wrapper counted billable: tx=%d rx=%d", bw.BillableTx.Load(), bw.BillableRx.Load())
+	}
+}
+
+func contractEvent(id byte, receive bool, seq uint64, delta int64, open bool) *connect.ContractStatsEvent {
+	var contractId connect.Id
+	contractId[0] = id
+	return &connect.ContractStatsEvent{
+		ContractId:         contractId,
+		Receive:            receive,
+		UsedByteCountDelta: connect.ByteCount(delta),
+		Sequence:           seq,
+		Open:               open,
+	}
+}
+
+// The platform's own per-contract usage is summed by direction: receive
+// contracts are ingress, send contracts are egress.
+func TestContractStatsObserverSumsDeltasByDirection(t *testing.T) {
+	bw := &ProxyBandwidth{}
+	observe := bw.ContractStatsObserver()
+	observe([]*connect.ContractStatsEvent{
+		contractEvent(1, true, 1, 1000, true),
+		contractEvent(2, false, 1, 4000, true),
+		contractEvent(1, true, 2, 500, true),
+		contractEvent(2, false, 2, 250, false),
+	})
+	if got := bw.ContractUsedIngress.Load(); got != 1500 {
+		t.Fatalf("ingress = %d, want 1500", got)
+	}
+	if got := bw.ContractUsedEgress.Load(); got != 4250 {
+		t.Fatalf("egress = %d, want 4250", got)
+	}
+}
+
+// A repeated or stale event, including an open snapshot that arrives after the
+// contract closed, must not be counted again.
+func TestContractStatsObserverIgnoresRepeatedAndStaleEvents(t *testing.T) {
+	bw := &ProxyBandwidth{}
+	observe := bw.ContractStatsObserver()
+	observe([]*connect.ContractStatsEvent{contractEvent(1, true, 1, 1000, true)})
+	observe([]*connect.ContractStatsEvent{contractEvent(1, true, 1, 1000, true)}) // repeat
+	observe([]*connect.ContractStatsEvent{contractEvent(1, true, 3, 300, true)})
+	observe([]*connect.ContractStatsEvent{contractEvent(1, true, 2, 999, true)})  // older
+	observe([]*connect.ContractStatsEvent{contractEvent(1, true, 4, 100, false)}) // final
+	if got := bw.ContractUsedIngress.Load(); got != 1400 {
+		t.Fatalf("ingress = %d, want 1400 (1000 + 300 + 100, each once)", got)
+	}
+	observe(nil)
+	observe([]*connect.ContractStatsEvent{nil})
+}
+
+// A closed contract is forgotten, so the observer does not grow without bound.
+func TestContractStatsObserverForgetsClosedContracts(t *testing.T) {
+	bw := &ProxyBandwidth{}
+	observe := bw.ContractStatsObserver()
+	for i := 0; i < 200; i++ {
+		observe([]*connect.ContractStatsEvent{
+			contractEvent(byte(i), true, 1, 10, true),
+			contractEvent(byte(i), true, 2, 5, false),
+		})
+	}
+	if got := bw.ContractUsedIngress.Load(); got != 200*15 {
+		t.Fatalf("ingress = %d, want %d", got, 200*15)
 	}
 }

@@ -19,15 +19,24 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/urnetwork/connect"
 )
 
 // ProxyBandwidth holds per-proxy atomic byte counters and session tracking.
 // Safe for concurrent use from multiple goroutines and transport paths.
 type ProxyBandwidth struct {
 	TotalRx, TotalTx, BillableRx, BillableTx atomic.Uint64
-	Clients                                  atomic.Int64
-	LatencyNs                                atomic.Int64
-	SocksLatencyNs                           atomic.Int64
+	// ContractUsedIngress and ContractUsedEgress are the bytes the platform
+	// contracts have used, summed from the engine's per-contract accounting
+	// (ContractStatsObserver). Ingress is the receive-side contracts (traffic
+	// from the clients), egress the send-side ones. This is the number the
+	// platform settles on, kept as a cross-check against billable, which is
+	// counted from the relay packets.
+	ContractUsedIngress, ContractUsedEgress atomic.Uint64
+	Clients                                 atomic.Int64
+	LatencyNs                               atomic.Int64
+	SocksLatencyNs                          atomic.Int64
 
 	mu            sync.Mutex
 	sessions      map[any]time.Time
@@ -136,6 +145,8 @@ func (bw *ProxyBandwidth) Snapshot() *ProxyBandwidth {
 	out.TotalTx.Store(bw.TotalTx.Load())
 	out.BillableRx.Store(bw.BillableRx.Load())
 	out.BillableTx.Store(bw.BillableTx.Load())
+	out.ContractUsedIngress.Store(bw.ContractUsedIngress.Load())
+	out.ContractUsedEgress.Store(bw.ContractUsedEgress.Load())
 	out.Clients.Store(bw.Clients.Load())
 	out.LatencyNs.Store(bw.LatencyNs.Load())
 	out.SocksLatencyNs.Store(bw.SocksLatencyNs.Load())
@@ -317,3 +328,55 @@ func (pc *PacketConn) WriteTo(p []byte, addr net.Addr) (int, error) {
 }
 
 func (pc *PacketConn) ProxyAddress() string { return pc.proxyAddr }
+
+// ContractStatsObserver returns the function a proxy's contract manager feeds
+// with per-contract usage events. Each event carries the bytes a contract used
+// since its previous event; the observer sums them into ContractUsedIngress
+// (receive contracts) and ContractUsedEgress (send contracts).
+//
+// Events can be delivered out of order or repeated, and a stale snapshot of an
+// open contract can arrive after the contract closed, so each contract
+// direction keeps the last sequence it applied and ignores anything at or below
+// it. A closed contract is forgotten, so the map stays bounded by the number of
+// open contracts. The function is safe to call from any goroutine.
+func (self *ProxyBandwidth) ContractStatsObserver() func(events []*connect.ContractStatsEvent) {
+	type contractDirection struct {
+		id      connect.Id
+		receive bool
+	}
+	var mu sync.Mutex
+	lastSequence := map[contractDirection]uint64{}
+	return func(events []*connect.ContractStatsEvent) {
+		var ingress, egress uint64
+		mu.Lock()
+		for _, event := range events {
+			if event == nil {
+				continue
+			}
+			key := contractDirection{id: event.ContractId, receive: event.Receive}
+			if last, seen := lastSequence[key]; seen && event.Sequence <= last {
+				continue
+			}
+			if event.Open {
+				lastSequence[key] = event.Sequence
+			} else {
+				// the final event for this contract: apply it, then forget it
+				delete(lastSequence, key)
+			}
+			if 0 < event.UsedByteCountDelta {
+				if event.Receive {
+					ingress += uint64(event.UsedByteCountDelta)
+				} else {
+					egress += uint64(event.UsedByteCountDelta)
+				}
+			}
+		}
+		mu.Unlock()
+		if 0 < ingress {
+			self.ContractUsedIngress.Add(ingress)
+		}
+		if 0 < egress {
+			self.ContractUsedEgress.Add(egress)
+		}
+	}
+}

@@ -453,6 +453,11 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 	relayConnectSettings := bandwidth.WrapConnectSettings(clientStrategySettings.ConnectSettings, proxyBandwidth, identityKey)
 	localUserNatSettings.TcpBufferSettings.ConnectSettings = relayConnectSettings
 	localUserNatSettings.UdpBufferSettings.ConnectSettings = relayConnectSettings
+	// The provider's own connections to the platform (API, auth, the H1 tunnel)
+	// count into the total only. This is a copy made after the relay copy above
+	// so relay bytes are not counted twice, and a direct identity keeps the
+	// engine's own dial. See bandwidth.WrapConnectSettingsTotal.
+	clientStrategySettings.ConnectSettings = bandwidth.WrapConnectSettingsTotal(clientStrategySettings.ConnectSettings, proxyBandwidth, identityKey)
 	remoteUserNatProviderSettings := connect.DefaultRemoteUserNatProviderSettings()
 
 	clientStrategy := connect.NewClientStrategy(proxyCtx, clientStrategySettings)
@@ -1022,6 +1027,14 @@ func provideWithProxy(st *provideState, proxyCtx context.Context, proxySettings 
 				}
 			}()
 		}
+	}
+
+	// The platform's own per-contract accounting, kept beside billable as a
+	// cross-check (urnet_contract_used_bytes_total). A duplicate or stale event
+	// is discarded by sequence, and a closed contract is forgotten.
+	if proxyBandwidth != nil {
+		unsubscribeContractStats := connectClient.ContractManager().AddContractStatsCallback(proxyBandwidth.ContractStatsObserver())
+		defer unsubscribeContractStats()
 	}
 
 	if proxySettings != nil {
