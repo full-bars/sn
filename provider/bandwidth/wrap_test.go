@@ -145,8 +145,13 @@ func TestWrapConnectSettingsCountsBytes(t *testing.T) {
 	if _, err := conn.Write(data); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
-	if bw.BillableTx.Load() != uint64(len(data)) {
-		t.Fatalf("BillableTx: expected %d, got %d", len(data), bw.BillableTx.Load())
+	if bw.TotalTx.Load() != uint64(len(data)) {
+		t.Fatalf("TotalTx: expected %d, got %d", len(data), bw.TotalTx.Load())
+	}
+	// Billable is NOT counted at the socket: the wrapper cannot tell which bytes
+	// belong to a client contract. It comes from the engine's relay counters.
+	if bw.BillableTx.Load() != 0 || bw.BillableRx.Load() != 0 {
+		t.Fatalf("the egress wrapper counted billable bytes: tx=%d rx=%d", bw.BillableTx.Load(), bw.BillableRx.Load())
 	}
 }
 
