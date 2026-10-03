@@ -42,9 +42,11 @@ func WrapDialContextSettings(ds *connect.DialContextSettings, bw *ProxyBandwidth
 		return NewConn(conn, bw, proxyAddr), nil
 	}
 
-	// NOTE: UDP/QUIC bandwidth wrapping is handled at the provider level
-	// via PlatformTransportSettings.H3PacketConnFactory (see provide.go),
-	// not here, because DialContextSettings bypasses the proxy dialer.
+	// NOTE: UDP/QUIC wrapping of the platform tunnel is handled at the provider
+	// level via PlatformTransportSettings.H3PacketConnFactory (see provide.go),
+	// not here, because DialContextSettings bypasses the proxy dialer. That
+	// wrapper feeds the TOTAL counters only. Billable is not counted on any
+	// socket: it comes from the remote provider's relay accounting.
 	return &connect.DialContextSettings{
 		DialContext: wrappedDial,
 	}

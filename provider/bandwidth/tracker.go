@@ -37,6 +37,49 @@ type ProxyBandwidth struct {
 
 const clientPresenceGrace = 10 * time.Second
 
+// RelayStatsObserver returns the function a proxy's remote provider feeds with
+// its CUMULATIVE relay byte counts. The counts are the engine's own accounting
+// of the IP packets it relayed for remote clients: ingress is traffic received
+// from the tunnel (the clients' egress) and egress is the return traffic sent
+// back into the tunnel. They are what BillableTx and BillableRx mean, and the
+// same quantities the 3.23-fix line counted inside its user NAT provider.
+//
+// Billable used to be incremented in the connection wrapper next to the total,
+// by the same byte count, so the two were always equal and billable was only
+// the bytes carried on the relay-egress socket. The engine does not take a
+// bandwidth object any more, so the wrapper cannot see which bytes belong to a
+// client contract; the provider's own packet counters can.
+//
+// Each observer keeps its own high-water mark, so a provider that is rebuilt (a
+// restart of this proxy) starts from zero without double counting. Within one
+// observer the engine's counts only ever go up, so a value below the mark can
+// only be an out-of-order delivery (a late final read racing an epoch): it adds
+// nothing and the mark stays, instead of re-adding history.
+// The function is safe to call from any goroutine.
+func (self *ProxyBandwidth) RelayStatsObserver() func(ingress uint64, egress uint64) {
+	var mu sync.Mutex
+	var highIngress, highEgress uint64
+	delta := func(current uint64, high *uint64) uint64 {
+		if current <= *high {
+			return 0
+		}
+		d := current - *high
+		*high = current
+		return d
+	}
+	return func(ingress uint64, egress uint64) {
+		mu.Lock()
+		in, out := delta(ingress, &highIngress), delta(egress, &highEgress)
+		mu.Unlock()
+		if 0 < in {
+			self.BillableTx.Add(in)
+		}
+		if 0 < out {
+			self.BillableRx.Add(out)
+		}
+	}
+}
+
 func (self *ProxyBandwidth) AddSession(key any, start time.Time) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -226,7 +269,6 @@ func (c *Conn) Read(b []byte) (int, error) {
 	n, err := c.Conn.Read(b)
 	if n > 0 {
 		c.bw.TotalRx.Add(uint64(n))
-		c.bw.BillableRx.Add(uint64(n))
 	}
 	return n, err
 }
@@ -235,7 +277,6 @@ func (c *Conn) Write(b []byte) (int, error) {
 	n, err := c.Conn.Write(b)
 	if n > 0 {
 		c.bw.TotalTx.Add(uint64(n))
-		c.bw.BillableTx.Add(uint64(n))
 	}
 	return n, err
 }
@@ -244,7 +285,10 @@ func (c *Conn) ProxyAddress() string { return c.proxyAddr }
 
 // PacketConn wraps a net.PacketConn and counts every ReadFrom/WriteTo byte
 // into the associated ProxyBandwidth counters. This is the H3/QUIC path —
-// without this wrapper, QUIC traffic reports zero bytes to billing.
+// without this wrapper, QUIC traffic would report zero bytes to the TOTAL.
+// Billable is not counted here: it comes from the provider's own relay
+// accounting (RelayStatsObserver). This wrapper sits on the platform tunnel
+// socket when H3 wins, so Total mixes relay-egress bytes with H3 tunnel bytes.
 type PacketConn struct {
 	net.PacketConn
 	bw        *ProxyBandwidth
