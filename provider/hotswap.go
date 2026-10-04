@@ -217,7 +217,7 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 			session.Kill()
 			return fmt.Errorf("candidate takeover unconfirmed: %v", res.err)
 		}
-		hotswapLog("⚡ [hotswap] Candidate PID %d confirmed active takeover (ACK received)!\n", childPID)
+		hotswapLog("♻️⚡ [hotswap] Candidate PID %d confirmed active takeover (ACK received)!\n", childPID)
 	case <-time.After(HotSwapAckTimeout):
 		hotswapLog("❌ [hotswap] Candidate takeover ACK timed out (>%s). Aborting handoff; live provider retained.\n", HotSwapAckTimeout)
 		session.Kill()
@@ -233,7 +233,7 @@ func handoffBatonSendTakeover(session *HotswapParentSession, parentPID, childPID
 // exits cleanly (or non-zero if the candidate dies prematurely).
 func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session *HotswapParentSession, parentPID int) {
 	isHotSwapDraining.Store(true)
-	hotswapLog("⚡ [hotswap] Parent PID %d entering graceful stream drain (max %s)...\n", parentPID, HotSwapDrainTimeout)
+	hotswapLog("♻️⚡ [hotswap] Parent PID %d entering graceful stream drain (max %s)...\n", parentPID, HotSwapDrainTimeout)
 
 	go func() {
 		// Monitor candidate child liveness during drain.
@@ -282,7 +282,7 @@ func handoffDrainParent(ctx context.Context, cancel context.CancelFunc, session 
 			exitFunc(1)
 			return
 		}
-		hotswapLog("⚡ [hotswap] Graceful drain complete -> parent PID %d exiting cleanly.\n", parentPID)
+		hotswapLog("♻️⚡ [hotswap] Graceful drain complete -> parent PID %d exiting cleanly.\n", parentPID)
 		exitFunc(0)
 	}()
 }
