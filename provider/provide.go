@@ -178,7 +178,7 @@ func provideSetupMemory(st *provideState) {
 		}
 		finishIdentity(RequireVersion())
 	} else {
-		tlog("[hotswap] Candidate PID %d promoted to live provider (version=%s)\n", os.Getpid(), RequireVersion())
+		tlog("♻️⚡ [hotswap] Candidate PID %d promoted to live provider (version=%s)\n", os.Getpid(), RequireVersion())
 	}
 
 	// Log JWT expiry status at startup
@@ -1412,7 +1412,7 @@ func provideLauncherLoop(st *provideState) func() {
 	if readyVersion == "" {
 		readyVersion = "unknown"
 	}
-	tlog("Ready — %s | profile=%s | proxies=%d\n", readyVersion, readyProfile, len(allProxySettings))
+	tlog("📶 Ready — %s | profile=%s | proxies=%d\n", readyVersion, readyProfile, len(allProxySettings))
 
 	// Start hot-reload watcher.
 	reloader := &ProxyReloader{

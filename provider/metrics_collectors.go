@@ -182,7 +182,7 @@ func runLifetimeCollector(ctx context.Context) {
 		a1, a2, a3, a4, a5, a6, a7 := lifetimeStore.Snapshot()
 		if a1 != prevA1 || a2 != prevA2 || a3 != prevA3 || a4 != prevA4 || a5 != prevA5 || a6 != prevA6 || a7 != prevA7 {
 			if a1|a2|a3|a4|a5|a6|a7 != 0 {
-				tlog("♾️ [lifetime] all-time: post-quantum=%d classical=%d contracts_acquired=%d denied=%d proxies_recovered=%d lost=%d billable_total=%s\n",
+				tlog("♾️⚖️ [lifetime] all-time: post-quantum=%d classical=%d contracts_acquired=%d denied=%d proxies_recovered=%d lost=%d billable_total=%s\n",
 					a1, a2, a3, a4, a5, a6, fmtBytes(a7))
 			}
 			prevA1, prevA2, prevA3, prevA4, prevA5, prevA6, prevA7 = a1, a2, a3, a4, a5, a6, a7
