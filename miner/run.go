@@ -153,7 +153,7 @@ Options:
 	--require-whole-work-capture       Refuse startup without the complete original capture profile; never allocate replacement client keys.
 	--original-contract-capture=<path> Exact approved original request/admission source profile with prepared private custody.
 	--original-contract-capture-sha256=<hash> Independently reviewed sha256: digest of the original contract source profile.
-	--require-original-contract-capture Refuse startup without the complete original contract source profile and retained provider identity.
+	--require-original-contract-capture       Refuse startup without the complete original contract source profile and retained provider identity.
     --durable-volumes=<path>          Exact external storage declaration; fleet writes require the owner-local schema.
     --durable-volumes-sha256=<hash>   Reviewed sha256: digest; claim daemons require the daemon-volume schema.
     -h --help                        Show this help and exit.
