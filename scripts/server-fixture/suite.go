@@ -31,9 +31,9 @@ import (
 // The generator owns this exact typed census. A changed upstream manifest
 // requires an explicit resource implementation, never a generic empty file.
 var suiteFixtureResourceKindNames = map[string][]string{
-	"vault":      {"auth.yml", "brevo.yml", "circle.yml", "client.yml", "coinbase.yml", "helius.yml", "ipinfo.yml", "jwt.yml", "jwt-local-evaluator.pem", "password.yml", "pg.yml", "proxy.yml", "redis.yml", "services.yml", "st.yml", "stripe.yml", "wireguard.yml", "x402.yml"},
+	"vault":      {"auth.yml", "brevo.yml", "circle.yml", "client.yml", "coinbase.yml", "helius.yml", "jwt.yml", "jwt-local-evaluator.pem", "password.yml", "pg.yml", "proxy.yml", "redis.yml", "services.yml", "st.yml", "stripe.yml", "wireguard.yml", "x402.yml"},
 	"vault_tree": {"tls"},
-	"config":     {"apple_roots.pem", "brevo.yml", "city-list.yml", "db.yml", "email.yml", "iso-country-list.yml", "pro.yml", "redis.yml", "settings.yml", "subsidy.yml", "tls.yml"},
+	"config":     {"apple_roots.pem", "brevo.yml", "db.yml", "email.yml", "mmdb/places.yml", "pro.yml", "redis.yml", "settings.yml", "subsidy.yml", "tls.yml"},
 }
 
 // The portable suite resolves its documentation and local transport subnets
@@ -94,6 +94,39 @@ data_code:
   skus: []
 `
 
+// The synthetic place list covers cities with and without a subdivision and
+// one city with coordinate spread, without a production-sized database. Tests
+// validate its schema and values; server exporter parity is not yet available.
+const suiteFixturePlaces = `# Synthetic place-list fixture for the intended connect/GEOMAP.md schema.
+# This resource has not been validated against a server GeoLite2 exporter.
+
+# This product includes GeoLite2 data created by MaxMind, available from
+# https://www.maxmind.com. GeoLite2 incorporates GeoNames data (CC BY 4.0).
+
+version: 1
+source: fixture
+build_epoch: 946684800
+countries:
+  de: {name: Germany, geoname_id: 2921044, continent_code: eu, continent: Europe}
+  gb: {name: United Kingdom, geoname_id: 2635167, continent_code: eu, continent: Europe}
+  sg: {name: Singapore, geoname_id: 1880251, continent_code: as, continent: Asia}
+  us: {name: United States, geoname_id: 6252001, continent_code: na, continent: North America}
+places:
+  de:
+    Hesse:
+      Frankfurt am Main: {geoname_id: 2925533, region_geoname_id: 2905330, latitude: 50.1155, longitude: 8.6842, spread_km: 0, time_zone: Europe/Berlin}
+  gb:
+    England:
+      East Finchley: {geoname_id: 2650444, region_geoname_id: 6269131, latitude: 51.5967, longitude: -0.1593, spread_km: 0, time_zone: Europe/London}
+      London: {geoname_id: 2643743, region_geoname_id: 6269131, latitude: 51.5081, longitude: -0.1278, spread_km: 0, time_zone: Europe/London}
+  sg:
+    Singapore:
+      Bedok New Town: {geoname_id: 1884382, latitude: 1.3264, longitude: 103.9394, spread_km: 0, time_zone: Asia/Singapore}
+  us:
+    California:
+      Palo Alto: {geoname_id: 5380748, region_geoname_id: 5332921, latitude: 37.4419, longitude: -122.143, spread_km: 6, time_zone: America/Los_Angeles}
+`
+
 // Suite admission reads a few fixed small physical source files only.
 func readSuiteFixtureSource(server, relative string) ([]byte, error) {
 	path := filepath.Join(server, filepath.FromSlash(relative))
@@ -108,32 +141,47 @@ func readSuiteFixtureSource(server, relative string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
-// Every required resource is admitted exactly once before any output exists.
-func validateSuiteFixtureManifest(encoded []byte) error {
+// Each supported geography profile is an exact resource set. A frozen legacy
+// server still needs disabled ipinfo/country/city resources; mixed profiles fail.
+func validateSuiteFixtureManifest(encoded []byte) (bool, error) {
+	seen := map[string]bool{}
+	scanner := bufio.NewScanner(bytes.NewReader(encoded))
+	if !scanner.Scan() || scanner.Text() != "format=urnetwork-server-suite-resources-v1" {
+		return false, errors.New("suite fixture manifest format differs")
+	}
+	for scanner.Scan() {
+		line := scanner.Text()
+		if seen[line] {
+			return false, fmt.Errorf("suite fixture manifest contains duplicate resource %q", line)
+		}
+		seen[line] = true
+	}
+	if err := scanner.Err(); err != nil {
+		return false, err
+	}
+	legacyGeography := !seen["config=mmdb/places.yml"]
 	want := map[string]bool{}
 	for kind, names := range suiteFixtureResourceKindNames {
 		for _, name := range names {
 			want[kind+"="+name] = true
 		}
 	}
-	scanner := bufio.NewScanner(bytes.NewReader(encoded))
-	if !scanner.Scan() || scanner.Text() != "format=urnetwork-server-suite-resources-v1" {
-		return errors.New("suite fixture manifest format differs")
+	if legacyGeography {
+		delete(want, "config=mmdb/places.yml")
+		for _, name := range []string{"vault=ipinfo.yml", "config=city-list.yml", "config=iso-country-list.yml"} {
+			want[name] = true
+		}
 	}
-	for scanner.Scan() {
-		line := scanner.Text()
+	for line := range seen {
 		if !want[line] {
-			return fmt.Errorf("suite fixture manifest contains unknown or duplicate resource %q", line)
+			return false, fmt.Errorf("suite fixture manifest contains unknown resource %q", line)
 		}
 		delete(want, line)
 	}
-	if err := scanner.Err(); err != nil {
-		return err
-	}
 	if len(want) != 0 {
-		return errors.New("suite fixture manifest is incomplete")
+		return false, errors.New("suite fixture manifest is incomplete")
 	}
-	return nil
+	return legacyGeography, nil
 }
 
 // The existing shell contract chooses resource aliases, not certificate
@@ -204,7 +252,8 @@ func createSuiteFixture(parent, server, postgres, redis string) (report fixtureR
 	if err != nil {
 		return report, err
 	}
-	if err := validateSuiteFixtureManifest(manifest); err != nil {
+	legacyGeography, err := validateSuiteFixtureManifest(manifest)
+	if err != nil {
 		return report, err
 	}
 	contract, err := readSuiteFixtureSource(server, "test-env.sh")
@@ -291,26 +340,33 @@ func createSuiteFixture(parent, server, postgres, redis string) (report fixtureR
 		"vault/proxy.yml":               []byte(fmt.Sprintf("hosts:\n  proxy.fixture.example:\n    fixture:\n      socks: 1080\n      http: 8080\n      https: 8443\n      api: 8444\n      wg: 51820\nsecrets:\n  - %q\nwg:\n  private_key: %q\n  public_key: %q\n", hex.EncodeToString(secrets[1]), base64.StdEncoding.EncodeToString(wgKey.Bytes()), base64.StdEncoding.EncodeToString(wgKey.PublicKey().Bytes()))),
 		"vault/wireguard.yml":           []byte(fmt.Sprintf("handoff_encryption_key: %q\n", hex.EncodeToString(secrets[2]))),
 		"vault/pg.yml":                  pg, "vault/pg_maintenance.yml": pg, "vault/redis.yml": redisResource,
-		"vault/brevo.yml":             []byte("brevo:\n  api_key: ''\n  webhook_bearers: []\n"),
-		"vault/circle.yml":            []byte("wallet_set_id: ''\ncircle:\n  api_token: ''\n  entity_secret: ''\n  app_id: ''\n  solana_usdc_address: ''\n  polygon_usdc_address: ''\n  solana_wallet_id: ''\n  polygon_wallet_id: ''\n"),
-		"vault/coinbase.yml":          []byte("api:\n  host: disabled.fixture.example\n  key: ''\nwebhook:\n  shared_secret: ''\n"),
-		"vault/helius.yml":            []byte("api_key: ''\nhelius:\n  api_key: ''\n"),
-		"vault/ipinfo.yml":            []byte("token: ''\n"),
-		"vault/services.yml":          []byte("{}\n"),
-		"vault/st.yml":                []byte("enabled: false\n"),
-		"vault/stripe.yml":            []byte("api:\n  token: ''\n  publishable_key: ''\nwebhook:\n  signing_secret: ''\n"),
-		"vault/x402.yml":              []byte("enabled: false\nskus: []\n"),
-		"vault/verify.yml":            []byte(fmt.Sprintf("profile: testnet\nkeys:\n  - server_key_id: 0\n    seed: %q\negress_hash_key: %q\nsettings:\n  step_timeout_seconds: 5\n  step_timeout_grace_seconds: 1\n  trail_ttl_grace_seconds: 60\n  egress_ttl_seconds: 600\n  egress_refresh_seconds: 60\n  reliability_a_min: 1\n  stats_period_seconds: 60\n  egress_ipv4_prefix: 29\n  egress_ipv6_prefix: 48\n  egress_hash_key_id: fixture-egress\n  soft_guardrails_enabled: false\n  hard_seed_per_minute_per_source: 40\n  hard_extend_per_minute_per_source: 400\n  hard_active_trails_per_source: 32\n", base64.StdEncoding.EncodeToString(secrets[3]), base64.StdEncoding.EncodeToString(secrets[4]))),
-		"config/apple_roots.pem":      certificatePem,
-		"config/brevo.yml":            []byte("brevo:\n  list_ids:\n    new_networks: 1\n    network_users: 2\n"),
-		"config/city-list.yml":        []byte("{}\n"),
-		"config/iso-country-list.yml": []byte("{}\n"),
-		"config/pro.yml":              []byte(suiteFixturePro),
-		"config/db.yml":               dbConfig, "config/db_maintenance.yml": dbConfig, "config/redis.yml": redisConfig,
+		"vault/brevo.yml":        []byte("brevo:\n  api_key: ''\n  webhook_bearers: []\n"),
+		"vault/circle.yml":       []byte("wallet_set_id: ''\ncircle:\n  api_token: ''\n  entity_secret: ''\n  app_id: ''\n  solana_usdc_address: ''\n  polygon_usdc_address: ''\n  solana_wallet_id: ''\n  polygon_wallet_id: ''\n"),
+		"vault/coinbase.yml":     []byte("api:\n  host: disabled.fixture.example\n  key: ''\nwebhook:\n  shared_secret: ''\n"),
+		"vault/helius.yml":       []byte("api_key: ''\nhelius:\n  api_key: ''\n"),
+		"vault/services.yml":     []byte("{}\n"),
+		"vault/st.yml":           []byte("enabled: false\n"),
+		"vault/stripe.yml":       []byte("api:\n  token: ''\n  publishable_key: ''\nwebhook:\n  signing_secret: ''\n"),
+		"vault/x402.yml":         []byte("enabled: false\nskus: []\n"),
+		"vault/verify.yml":       []byte(fmt.Sprintf("profile: testnet\nkeys:\n  - server_key_id: 0\n    seed: %q\negress_hash_key: %q\nsettings:\n  step_timeout_seconds: 5\n  step_timeout_grace_seconds: 1\n  trail_ttl_grace_seconds: 60\n  egress_ttl_seconds: 600\n  egress_refresh_seconds: 60\n  reliability_a_min: 1\n  stats_period_seconds: 60\n  egress_ipv4_prefix: 29\n  egress_ipv6_prefix: 48\n  egress_hash_key_id: fixture-egress\n  soft_guardrails_enabled: false\n  hard_seed_per_minute_per_source: 40\n  hard_extend_per_minute_per_source: 400\n  hard_active_trails_per_source: 32\n", base64.StdEncoding.EncodeToString(secrets[3]), base64.StdEncoding.EncodeToString(secrets[4]))),
+		"config/apple_roots.pem": certificatePem,
+		"config/brevo.yml":       []byte("brevo:\n  list_ids:\n    new_networks: 1\n    network_users: 2\n"),
+		"config/mmdb/places.yml": []byte(suiteFixturePlaces),
+		"config/pro.yml":         []byte(suiteFixturePro),
+		"config/db.yml":          dbConfig, "config/db_maintenance.yml": dbConfig, "config/redis.yml": redisConfig,
 		"config/email.yml":    []byte("company_sender_email: nobody@fixture.example\nreply_to_email: nobody@fixture.example\n"),
 		"config/settings.yml": []byte(suiteFixtureSettings),
 		"config/subsidy.yml":  []byte("days: 1\nmin_days_fraction: 1\nusd_per_active_user: 0\nsubscription_net_revenue_fraction: 0\nmin_payout_usd: 1\nactive_user_byte_count_threshold: 1GiB\nreferral_parent_payout_fraction: 0\nreferral_child_payout_fraction: 0\naccount_points_per_payout: 0\nreliability_points_per_payout: 0\nreliability_subsidy_per_payout_usd: 0\ncountry_reliability_weight_target: 1\nmax_country_reliability_multiplier: 1\nmin_wallet_payout_usd: 1\nwallet_payout_timeout: 24h\nseeker_holder_multiplier: 1\n"),
 		"config/tls.yml":      []byte("allowed_hosts:\n  - fixture.example\n"),
+	}
+	if legacyGeography {
+		resources["vault/ipinfo.yml"] = []byte("token: ''\n")
+		resources["config/city-list.yml"] = []byte("{}\n")
+		resources["config/iso-country-list.yml"] = []byte("{}\n")
+	}
+	// the place list's directory, private like every other fixture directory
+	if err := os.MkdirAll(filepath.Join(report.Workspace, "config", "mmdb"), 0700); err != nil {
+		return report, err
 	}
 	if !slices.Contains(aliases, "fixture.example") {
 		aliases = append(aliases, "fixture.example")

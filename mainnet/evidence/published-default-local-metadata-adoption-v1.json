@@ -1,0 +1,35 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 15032385536,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "ac532b4c2e9173b8be3a05720c6ba1f9a8df342785b9d4ead72d1467631348b2",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "network_dependency_count": 0,
+  "runner_sha256": "8d01c0e29f65446988a8c1e18205120256b49397a6795f85ff24e00ac8cff495",
+  "short_count": 0,
+  "status": "ADOPTED_DEFAULT_MODULE_TEN_SIBLING_METADATA",
+  "additional_predecessor_waits": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-normal-body-v1-01.process-result.json",
+      "sha256": "e4a2d0b0968e0b9411622a89a06bcc16b23d4007008ef3a7ad928ecdf7263341"
+    }
+  ],
+  "additional_closed_owner_readbacks": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-normal-body-v1-user-terminal-readback.json",
+      "sha256": "1703e96dc8b7af355e56b8c1f59faa634bd8653125860b910fc8bdf96bd9b60b"
+    }
+  ],
+  "adopted_at": "2026-10-05T06:53:32.293346+00:00",
+  "root_review": "All bindings and runner AST checked. Exact ten local sibling archives and four ordinary GOWORKoff dependency graphs, no compiler/body/network. Collect independent ordinary graph failures. Corrected renewal body joinedPASS/export5 bound as predecessor."
+}

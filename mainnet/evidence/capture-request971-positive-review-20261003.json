@@ -1,0 +1,317 @@
+{
+  "schema": "root-historical-request971-positive-review-v1",
+  "status": "PASS_POSITIVES_ONLY_CAUSALS_PENDING",
+  "source": {
+    "head": "971706d0f0a74ca338ca759f8849bd5f9ffdaf7f",
+    "intake": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/evidence/intake.json",
+    "intake_sha256": "dc911e746119d8a006a92733edb98fe08e16984fb37b558edbb8baaf858bb9a3",
+    "physical_root": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003",
+    "tree": "7b5128d2010a31673ac0ed03c66327aaf71570a9"
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-positive-receipt.json",
+      "bytes": 9693,
+      "sha256": "b644b297059e79fe4b858ce8f454e03de4a5265ab6230ed55d39b32b47cce77b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/evidence/intake.json",
+      "bytes": 7948,
+      "sha256": "dc911e746119d8a006a92733edb98fe08e16984fb37b558edbb8baaf858bb9a3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-normal-provisional-receipt.json",
+      "bytes": 5086,
+      "sha256": "fba452746017d1482daa9aa456a0de8777f3844eeea16fc9fa2573011b1f55a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-deps.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-deps.stdout",
+      "bytes": 28557,
+      "sha256": "c67cb81be39eb8d0b79109790b52bdc0c77c45d330000c79c029d5382f29a3b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-vet.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/modules.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/modules.stdout",
+      "bytes": 26624,
+      "sha256": "72e69cc6c74353757fde48a03eed1d2cf0e4188dd1bb0c5c62d0b6d690c2ba4b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal-image.sha256",
+      "bytes": 349,
+      "sha256": "c27eb5b42b3411fed2a275eb9aa1f8ed2f34e0fce7081c9ae9fb08e2715e6f1e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal10.command.json",
+      "bytes": 1610,
+      "sha256": "5cb07a5022caf4d8749400ba6fb3edd39f455acb856ca70814326f569cc1a821"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal10.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal10.jsonl",
+      "bytes": 7142,
+      "sha256": "82f5d70526b0cc364d10f6e45ad770419a2aa0ae46d5b66cf54a83cfe30b1846"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal10.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/peer-source-fence.json",
+      "bytes": 2544,
+      "sha256": "8fcb390ad23c58033becd6eee75e0445e5f7e65d63ba7be661fcaa26197df056"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/preflight.exits",
+      "bytes": 4,
+      "sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-image-after-mode.sha256",
+      "bytes": 178,
+      "sha256": "0d01eeb6fce0c9c66f03e9d7381ac7a119917fb5c63f67df44b23e7de805f04b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-image-after-mode.txt",
+      "bytes": 25,
+      "sha256": "f6ef8f5330de734409daf27d6b5cf67b669e9dde170129258c836f5331b2f9e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-image-before-mode.sha256",
+      "bytes": 178,
+      "sha256": "0d01eeb6fce0c9c66f03e9d7381ac7a119917fb5c63f67df44b23e7de805f04b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-image-before-mode.txt",
+      "bytes": 25,
+      "sha256": "de604f00923f90961f5baa077c63ae491e6bd620d6b529ae75033092ba2386c1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.command.json",
+      "bytes": 1878,
+      "sha256": "0d34e3de07583b4ff7300b12371941dbc2acffcb481cef75afb8d970ad4ceb00"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.custody.json",
+      "bytes": 1019,
+      "sha256": "a15a0edc22dbf9d58144d9dfab37e9cee5b105f1783bf9a70bf0785b36bda415"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.jsonl",
+      "bytes": 7142,
+      "sha256": "7a3a6a2c8f6006db670a3aa323fcb48017de245eb16aa5d1927b6000ee8a2b1a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/source-readback.json",
+      "bytes": 290,
+      "sha256": "8585a7c973889473a1f79d85601204e8e3ad82baee85ff1ecc56ddf1a3d3db3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/mainnet-normal-owned.test",
+      "bytes": 74245296,
+      "sha256": "4d075d110dc909504e92c61ad0f9901088aacdc00c0eebde717d0f4f1bd5a3fc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/mainnet-race-direct-owned.test",
+      "bytes": 99437392,
+      "sha256": "d2478901ed2fde633c99f1543d86ff34e85ae546b0ba27c2aeb5375237e6e096"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/sn/mainnet/historical_capture_request.go",
+      "bytes": 7651,
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/historical_capture_request.go",
+      "bytes": 7651,
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/sn/mainnet/historical_capture_request_command.go",
+      "bytes": 2726,
+      "sha256": "dda75c0815c27f9ce0743a5db851ca854994790441aa9ca1aa4e8121eaaf1308"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/historical_capture_request_command.go",
+      "bytes": 2726,
+      "sha256": "dda75c0815c27f9ce0743a5db851ca854994790441aa9ca1aa4e8121eaaf1308"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/sn/mainnet/historical_capture_request_test.go",
+      "bytes": 12337,
+      "sha256": "e156007bf9d4b1294051042815352717652895eb271ac2e07adf17ba5e162fdb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/historical_capture_request_test.go",
+      "bytes": 12337,
+      "sha256": "e156007bf9d4b1294051042815352717652895eb271ac2e07adf17ba5e162fdb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/sn/mainnet/main.go",
+      "bytes": 23919,
+      "sha256": "bd2ad4e5764f1a5491f2d6372902f794991e7c8f5ba9605a9dc07286a8c44101"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/main.go",
+      "bytes": 23919,
+      "sha256": "bd2ad4e5764f1a5491f2d6372902f794991e7c8f5ba9605a9dc07286a8c44101"
+    }
+  ],
+  "owned_images": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/mainnet-normal-owned.test",
+      "bytes": 74245296,
+      "sha256": "4d075d110dc909504e92c61ad0f9901088aacdc00c0eebde717d0f4f1bd5a3fc",
+      "mode": "0500",
+      "links": 1,
+      "uid": 1000
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/mainnet-race-direct-owned.test",
+      "bytes": 99437392,
+      "sha256": "d2478901ed2fde633c99f1543d86ff34e85ae546b0ba27c2aeb5375237e6e096",
+      "mode": "0500",
+      "links": 1,
+      "uid": 1000
+    }
+  ],
+  "census": {
+    "causal": "three exact operative controls pending",
+    "mainnet_vet_exit": 0,
+    "normal": {
+      "fail": [],
+      "pass": [
+        "TestHistoricalCaptureRequestCancellationJoinsActualBodyRead",
+        "TestHistoricalCaptureRequestChangedOrMissingCompleteBodyRefuses",
+        "TestHistoricalCaptureRequestClosingCanonicalAndRuntimeChangesRefuse",
+        "TestHistoricalCaptureRequestProfileBindsOriginalCodeAndMetadata",
+        "TestHistoricalCaptureRequestPublicCommandUsesParentRuntimeAtUpgrade",
+        "TestHistoricalCaptureRequestTransientReadKeepsOneCallerBudget",
+        "TestHistoricalCaptureRequestWrongNetworkPrecedesArtifactReads",
+        "TestRuntimeSnapshotBindsOneFinalizedArtifact",
+        "TestRuntimeSnapshotRejectsFullVersionDriftAtOneBlock",
+        "TestRuntimeSnapshotRejectsRetargetedGenesis"
+      ],
+      "run": [
+        "TestHistoricalCaptureRequestCancellationJoinsActualBodyRead",
+        "TestHistoricalCaptureRequestChangedOrMissingCompleteBodyRefuses",
+        "TestHistoricalCaptureRequestClosingCanonicalAndRuntimeChangesRefuse",
+        "TestHistoricalCaptureRequestProfileBindsOriginalCodeAndMetadata",
+        "TestHistoricalCaptureRequestPublicCommandUsesParentRuntimeAtUpgrade",
+        "TestHistoricalCaptureRequestTransientReadKeepsOneCallerBudget",
+        "TestHistoricalCaptureRequestWrongNetworkPrecedesArtifactReads",
+        "TestRuntimeSnapshotBindsOneFinalizedArtifact",
+        "TestRuntimeSnapshotRejectsFullVersionDriftAtOneBlock",
+        "TestRuntimeSnapshotRejectsRetargetedGenesis"
+      ],
+      "skip": []
+    },
+    "race": {
+      "fail": [],
+      "pass": [
+        "TestHistoricalCaptureRequestCancellationJoinsActualBodyRead",
+        "TestHistoricalCaptureRequestChangedOrMissingCompleteBodyRefuses",
+        "TestHistoricalCaptureRequestClosingCanonicalAndRuntimeChangesRefuse",
+        "TestHistoricalCaptureRequestProfileBindsOriginalCodeAndMetadata",
+        "TestHistoricalCaptureRequestPublicCommandUsesParentRuntimeAtUpgrade",
+        "TestHistoricalCaptureRequestTransientReadKeepsOneCallerBudget",
+        "TestHistoricalCaptureRequestWrongNetworkPrecedesArtifactReads",
+        "TestRuntimeSnapshotBindsOneFinalizedArtifact",
+        "TestRuntimeSnapshotRejectsFullVersionDriftAtOneBlock",
+        "TestRuntimeSnapshotRejectsRetargetedGenesis"
+      ],
+      "run": [
+        "TestHistoricalCaptureRequestCancellationJoinsActualBodyRead",
+        "TestHistoricalCaptureRequestChangedOrMissingCompleteBodyRefuses",
+        "TestHistoricalCaptureRequestClosingCanonicalAndRuntimeChangesRefuse",
+        "TestHistoricalCaptureRequestProfileBindsOriginalCodeAndMetadata",
+        "TestHistoricalCaptureRequestPublicCommandUsesParentRuntimeAtUpgrade",
+        "TestHistoricalCaptureRequestTransientReadKeepsOneCallerBudget",
+        "TestHistoricalCaptureRequestWrongNetworkPrecedesArtifactReads",
+        "TestRuntimeSnapshotBindsOneFinalizedArtifact",
+        "TestRuntimeSnapshotRejectsFullVersionDriftAtOneBlock",
+        "TestRuntimeSnapshotRejectsRetargetedGenesis"
+      ],
+      "skip": []
+    }
+  },
+  "changed_paths": [
+    "mainnet/historical_capture_request.go",
+    "mainnet/historical_capture_request_command.go",
+    "mainnet/historical_capture_request_test.go",
+    "mainnet/main.go"
+  ],
+  "limits": [
+    "Ten exact roots per mode include seven new historical request roots and three selected runtime-reader neighbors; no broad all-role qualification.",
+    "Three operative race controls remain pending resource admission; no source merge authorized by this positive-only proof.",
+    "RPC-bound canonical checks do not independently approve actual runtime/source semantics, native fees or finality."
+  ]
+}

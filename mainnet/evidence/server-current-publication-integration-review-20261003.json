@@ -1,0 +1,23 @@
+{
+  "classification": "SEPARATE_SEMANTIC_SUCCESSOR_REQUIRED",
+  "conflict_paths": [
+    "db_migrations.go",
+    "go.mod",
+    "model/subscription_redis_admission.go"
+  ],
+  "diagnostic_sha256": "68d034f08b0465531e4a8627e6a6697160a71fec774986160c7f9116928c5741",
+  "incoming_main": "f024b11a7666d3ba0e1025c083123d32f01285c2",
+  "limits": [
+    "Readonly merge-tree wrote no worktree or remote changes.",
+    "Original1d3c complete model success remains exact historical evidence, not qualification of this new semantic merge."
+  ],
+  "observations": [
+    "Incoming published migration prefix must remain intact; unshipped request migration must append without rewriting deployed versions.",
+    "Published shrink-to-fit and asynchronous debit settlement must coexist with bounded selection and durable owned-token recovery.",
+    "Recovery must consult exact debit-journal outcome/debt instead of releasing pending debit reservations or requiring an amount already legitimately reduced.",
+    "Textually auto-merged subscription_model.go still needs semantic review and deterministic affected tests."
+  ],
+  "qualified_module_candidate": "5089a9dde0ca5d60a8dda0493c861de53ed4e0c4",
+  "readonly_merge_tree_exit": 1,
+  "schema": "urnetwork-server-publication-integration-review-v1"
+}

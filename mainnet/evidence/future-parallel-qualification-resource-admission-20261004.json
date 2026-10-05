@@ -1,0 +1,37 @@
+{
+  "schema": "future-parallel-qualification-resource-admission-v1",
+  "observed_utc": "2026-10-04T17:54:33.774684+00:00",
+  "authorization": "Standing automatic budget increases and maximum parallel agents. Future runner guards only; retain existing work and original baselines.",
+  "baseline_available_bytes": 113681502208,
+  "future_cap_bytes": 107374182400,
+  "resource_margin": 2,
+  "compiler_disk_forecasts_bytes": [
+    6442450944,
+    6442450944
+  ],
+  "short_body_disk_forecasts_bytes": [
+    1073741824,
+    1073741824
+  ],
+  "minimum_available_bytes": 36372090880,
+  "observed_available_bytes": 38801977344,
+  "memory_baseline_bytes": 103079215104,
+  "compiler_memory_forecasts_bytes": [
+    4294967296,
+    4294967296
+  ],
+  "short_body_memory_forecasts_bytes": [
+    1073741824,
+    1073741824
+  ],
+  "minimum_memory_available_bytes": 124554051584,
+  "observed_memory_available_bytes": 129861017600,
+  "scope": "At most two warm Go compilers and two bounded short bodies. Rust, DB fixtures and long historical bodies excluded; require separate workload admission. Recheck guards before every phase; no third compiler.",
+  "docker_root_future_cap_bytes": 8589934592,
+  "docker_root_baseline_available_bytes": 304423350272,
+  "docker_root_forecast_bytes": 2147483648,
+  "docker_root_minimum_available_bytes": 300128382976,
+  "observed_docker_root_available_bytes": 302761418752,
+  "docker_scope": "Future single DB fixture only, subject to separate forecast adoption and exact owned container census. This receipt does not launch DB or claim an empty census.",
+  "status": "ADOPTED_FUTURE_GUARDS_ONLY"
+}

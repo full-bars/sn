@@ -1,0 +1,48 @@
+{
+  "completed_prior_model37_resources": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-owned-db-v1.resources.jsonl",
+    "sha256": "50d681068f8809076656bc40ac5e022136386353da2f932542a7c0909613bfc5"
+  },
+  "completed_prior_model37_terminal": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-owned-db-v1.terminal.json",
+    "sha256": "b61f97fc10add12ab4da69e7388600ee9c1a0b3b79c7edba61c07c1a1f62060c"
+  },
+  "forecast": {
+    "data_growth_stop_bytes": 8589934592,
+    "held_extra_reserve_disk_bytes": 4294967296,
+    "held_extra_reserve_memory_bytes": 4294967296,
+    "launch_data_available_bytes": 17179869184,
+    "launch_memory_available_bytes": 120259084288,
+    "margin": 2,
+    "owned_disk_bytes": 4294967296,
+    "owned_memory_bytes": 4294967296,
+    "owner_memory_max_bytes": 8589934592,
+    "owner_swap_max_bytes": 0
+  },
+  "limits": "Observed4b andc60 cgroup/sample figures are supporting scope-limited observations, not a future peak bound or architectural lower bound. Owner8GiB cgroup excludes Docker siblings; exact owned service cgroups and96GiB global host floor remain separately observed. Original baseline113681502208/cap108GiB/max0floor unchanged.",
+  "observed_maxima": {
+    "owner_cgroup_memory": 214564864,
+    "owner_cgroup_peak": 226369536,
+    "postgres_memory": 216608768,
+    "postgres_memory_peak": 228249600,
+    "redis_memory": 10076160,
+    "redis_memory_peak": 11542528
+  },
+  "parent_resource_basis": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/completed-model37-resource-basis-selected-server873e313c-monitor17-20261005.json",
+    "sha256": "074a9a199135d6d872e577f0cd736a073c03ade602c497b659dd4092f77f208d"
+  },
+  "resource_errors": [],
+  "retained_full_model_basis": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/completed-c60-resource-basis-selected-server4b-model37-20261005.json",
+    "sha256": "fefff0836d6fadac56e5570558b5f839359019b05f0917cb8ef4868c00f50f2d"
+  },
+  "sample_count": 545,
+  "sampled_simultaneous_owner_pg_redis_max_bytes": 411586560,
+  "schema": "selected-server9430262c-monitor17-prospective-resource-basis-v1",
+  "scope": "Prospective monitor17 fresh isolated PG18/Redis body, normal only. Three-file monitor delta leaves779 migrations/source modules unchanged; bounded schema-prefix and transactional catalog fault tests, no native engine, compiler, fullmodel, parallel short or live infrastructure.4GiB forecasts retain2x margin and previous extra reserves. Successor873e corrects only monitor test helper types; all17 identities and DDL/production/import bytes are unchanged from7885. Successor943 moves16+2 assertions after the existing fixture worker join, with the same17 identities, DDL and production/import bytes.",
+  "source_selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server9430262c-monitor17-selection-source-v1.json",
+    "sha256": "f3fa28dcc50b3bb3ced2543bfe8f8b8f3fc1300a40c458a7b2f6ef7b5e63b307"
+  }
+}

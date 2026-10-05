@@ -7,6 +7,7 @@ package validator
 // refuse before mutation; this adapter is not qualified release custody.
 
 import (
+	"context"
 	"errors"
 	"path/filepath"
 )
@@ -19,7 +20,7 @@ type statsSnapshotDirectory struct {
 }
 
 // Explicit new authority is never silently routed through the legacy writer.
-func acquireStatsSnapshotDirectory(path string, physical bool, _ statsSnapshotIOHooks) (*statsSnapshotDirectory, error) {
+func acquireStatsSnapshotDirectory(path string, physical bool, _ statsSnapshotIOHooks, _ ...context.Context) (*statsSnapshotDirectory, error) {
 	if physical {
 		return nil, errAttemptPrivateDirectoryPlatform
 	}

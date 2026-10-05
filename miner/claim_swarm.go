@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/urfoundation/sn/internal/durablepath"
 	"io"
 	"net/http"
 	"net/netip"
@@ -42,7 +43,7 @@ func (self ClaimSwarmConfig) Validate() error {
 	seenIDs := map[string]bool{}
 	seenConfigs := map[string]bool{}
 	for index, member := range self.Members {
-		if member.ID == "" || seenIDs[member.ID] || strings.ContainsAny(member.ID, `/\`) {
+		if member.ID == "" || len(member.ID) > 128 || seenIDs[member.ID] || strings.ContainsAny(member.ID, `/\`) {
 			return fmt.Errorf("claim member %d has an empty, duplicate or unsafe id", index)
 		}
 		seenIDs[member.ID] = true
@@ -95,6 +96,7 @@ type ClaimSwarm struct {
 	stateLock sync.Mutex
 	running   map[string]bool
 	failures  map[string]string
+	progress  map[string]*claimProgressOwner
 }
 
 func NewClaimSwarm(config *ClaimSwarmConfig) (*ClaimSwarm, error) {
@@ -104,7 +106,11 @@ func NewClaimSwarm(config *ClaimSwarmConfig) (*ClaimSwarm, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
-	return &ClaimSwarm{config: config, running: map[string]bool{}, failures: map[string]string{}}, nil
+	progress := map[string]*claimProgressOwner{}
+	for _, member := range config.Members {
+		progress[member.ID] = nil
+	}
+	return &ClaimSwarm{config: config, running: map[string]bool{}, failures: map[string]string{}, progress: progress}, nil
 }
 
 func (self *ClaimSwarm) status() claimSwarmStatus {
@@ -118,6 +124,10 @@ func (self *ClaimSwarm) status() claimSwarmStatus {
 }
 
 func (self *ClaimSwarm) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	if request.URL.Path == "/claim-progress" {
+		self.serveClaimProgress(writer, request)
+		return
+	}
 	if request.Method != http.MethodGet || request.URL.Path != "/status" {
 		http.NotFound(writer, request)
 		return
@@ -132,6 +142,7 @@ func (self *ClaimSwarm) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 
 func loadClaimSwarmMembers(config *ClaimSwarmConfig) (map[string]*ClaimDaemonConfig, time.Duration, error) {
 	loaded := make(map[string]*ClaimDaemonConfig, len(config.Members))
+	stateOwnerKVs := map[string]string{}
 	var keyFile string
 	var rpc []string
 	minimumPoll := time.Duration(0)
@@ -143,6 +154,14 @@ func loadClaimSwarmMembers(config *ClaimSwarmConfig) (map[string]*ClaimDaemonCon
 		if claimConfig.JWTFile == "" {
 			return nil, 0, fmt.Errorf("claim member %s must bind an explicit jwt_file", member.ID)
 		}
+		stateDir, err := canonicalClaimStateDirectory(claimConfig.StateDir)
+		if err != nil {
+			return nil, 0, fmt.Errorf("claim member %s state directory: %w", member.ID, err)
+		}
+		if prior := stateOwnerKVs[stateDir]; prior != "" {
+			return nil, 0, fmt.Errorf("claim members %s and %s share one queue state directory", prior, member.ID)
+		}
+		stateOwnerKVs[stateDir] = member.ID
 		if keyFile == "" {
 			keyFile = claimConfig.KeyFile
 			rpc = append([]string(nil), claimConfig.RPC...)
@@ -158,13 +177,59 @@ func loadClaimSwarmMembers(config *ClaimSwarmConfig) (map[string]*ClaimDaemonCon
 	return loaded, minimumPoll, nil
 }
 
-func (self *ClaimSwarm) Run(ctx context.Context) error {
+func (self *ClaimSwarm) Run(ctx context.Context) (runErr error) {
+	return self.run(ctx, nil)
+}
+
+// The optional observer runs after a joined member result. It cannot replace
+// admission, worker execution, publication or any stored evidence.
+func (self *ClaimSwarm) run(ctx context.Context, afterMember func(string, error, context.Context)) (runErr error) {
 	if ctx == nil {
 		return errors.New("claim swarm context is nil")
 	}
-	_, pollPeriod, err := loadClaimSwarmMembers(self.config)
+	if err := durablepath.Require(ctx); err != nil {
+		return err
+	}
+	loaded, pollPeriod, err := loadClaimSwarmMembers(self.config)
 	if err != nil {
 		return err
+	}
+	for _, member := range self.config.Members {
+		owner := newClaimProgressOwner(member.ID, loaded[member.ID].ProgressPool)
+		loaded[member.ID].progress = owner
+		self.stateLock.Lock()
+		self.progress[member.ID] = owner
+		self.stateLock.Unlock()
+	}
+	defer func() {
+		for _, member := range self.config.Members {
+			loaded[member.ID].progress.close()
+		}
+	}()
+	members := append([]ClaimSwarmMember(nil), self.config.Members...)
+	sort.Slice(members, func(i, j int) bool { return members[i].ID < members[j].ID })
+	stores := make(map[string]*claimQueueStore, len(members))
+	defer func() {
+		for _, member := range members {
+			runErr = errors.Join(runErr, stores[member.ID].close())
+		}
+	}()
+	// Acquire every queue before reading custody or starting any sibling.
+	// Partial admission releases only our descriptors and leaves bytes untouched.
+	for _, member := range members {
+		store, err := newClaimQueueStore(loaded[member.ID].StateDir, ctx)
+		if err != nil {
+			return fmt.Errorf("claim member %s queue ownership: %w", member.ID, err)
+		}
+		stores[member.ID] = store
+	}
+	admission := &claimAdmission{}
+	// Seed the complete nonce domain before even the first member can sign.
+	// External signers using this key require a separate shared nonce owner.
+	for _, member := range members {
+		if err := admission.seedMember(loaded[member.ID], stores[member.ID]); err != nil {
+			return fmt.Errorf("seed relayer nonce custody: %w", err)
+		}
 	}
 	runCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -182,42 +247,68 @@ func (self *ClaimSwarm) Run(ctx context.Context) error {
 		_ = server.Shutdown(shutdownCtx)
 	}()
 
-	members := append([]ClaimSwarmMember(nil), self.config.Members...)
-	sort.Slice(members, func(i, j int) bool { return members[i].ID < members[j].ID })
-	terminalErrors := make(chan error, 1)
-	var chainStateLock sync.Mutex
+	type memberResult struct {
+		id  string
+		err error
+	}
+	terminalErrors := make(chan memberResult, len(members))
+	var membersDone sync.WaitGroup
+	defer func() { cancel(); membersDone.Wait() }()
 	for index, member := range members {
 		delay := time.Duration(index) * pollPeriod / time.Duration(len(members))
+		membersDone.Add(1)
 		go func(member ClaimSwarmMember, initialDelay time.Duration) {
+			defer membersDone.Done()
+			defer loaded[member.ID].progress.close()
 			onReady := func() {
 				self.stateLock.Lock()
 				self.running[member.ID] = true
+				delete(self.failures, member.ID)
 				self.stateLock.Unlock()
 			}
-			if runErr := runClaimDaemonWithLock(runCtx, member.ConfigPath, &chainStateLock, initialDelay, onReady); runErr != nil {
+			onFailure := func(err error) {
+				loaded[member.ID].progress.unavailable()
 				self.stateLock.Lock()
 				delete(self.running, member.ID)
-				self.failures[member.ID] = runErr.Error()
+				self.failures[member.ID] = err.Error()
 				self.stateLock.Unlock()
-				select {
-				case terminalErrors <- fmt.Errorf("claim member %s: %w", member.ID, runErr):
-				default:
-				}
-				cancel()
 			}
+			runErr := runClaimOwner(runCtx, loaded[member.ID], stores[member.ID], claimOwnerHooks{
+				run: func(owner *claimQueueStore) error {
+					return runClaimDaemonWithStore(runCtx, loaded[member.ID], owner, admission, initialDelay, onReady)
+				}, state: onFailure,
+			})
+			if runErr != nil {
+				onFailure(runErr)
+				runErr = fmt.Errorf("claim member %s: %w", member.ID, runErr)
+			}
+			terminalErrors <- memberResult{id: member.ID, err: runErr}
 		}(member, delay)
 	}
-	select {
-	case <-ctx.Done():
-		return nil
-	case err := <-serverErrors:
-		return err
-	case err := <-terminalErrors:
-		return err
+	// A stopped member remains visible as unhealthy while its independent
+	// siblings retain their owners. Shared nonce custody still gates every
+	// signature through admission; a member error never resets that domain.
+	var failures []error
+	for remaining := len(members); remaining > 0; remaining-- {
+		select {
+		case <-ctx.Done():
+			return nil
+		case err := <-serverErrors:
+			return err
+		case terminal := <-terminalErrors:
+			failures = append(failures, terminal.err)
+			if afterMember != nil {
+				afterMember(terminal.id, terminal.err, runCtx)
+			}
+		}
 	}
+	return errors.Join(failures...)
 }
 
 func RunClaimSwarm(ctx context.Context, configPath string) error {
+	if err := durablepath.Require(ctx); err != nil {
+		return err
+	}
 	config, err := LoadClaimSwarmConfig(configPath)
 	if err != nil {
 		return err

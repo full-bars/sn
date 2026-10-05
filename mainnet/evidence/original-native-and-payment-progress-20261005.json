@@ -1,0 +1,202 @@
+{
+  "author_execution": {
+    "binary_lists": 0,
+    "compilers": 0,
+    "db": 0,
+    "production_changes": 0,
+    "test_bodies": 0
+  },
+  "documentation_base": "5b873c942c57ff2a47ad9a896a529bf59e9ec5e6",
+  "optional_helper": {
+    "actual_failure": "Expected regex exceeds bound did not match actual closed directory name bytes exceed bound.",
+    "adoption_status": "Optional helper is not imported into active jobs. Full hashing remains active; no product Go root or Server continuation dependency.",
+    "correction": {
+      "commit": "598f7ebf54a63d407ed13e54839c2f4e9d64dc05",
+      "merged_main": "5b873c942c57ff2a47ad9a896a529bf59e9ec5e6",
+      "qualification": "One affected-root retest pending. Original31 and latest34 failed receipts remain unchanged.",
+      "scope": "Exact count and byte census diagnostic assertions only; production helper unchanged by this follow-up."
+    },
+    "counts": {
+      "errors": 0,
+      "fail": 1,
+      "pass": 33,
+      "run": 34,
+      "skip": 0
+    },
+    "failed_root": "source_verification_test.SourceVerificationTests.test_directory_entry_count_and_bytes_stop_before_iterator_overrun",
+    "latest34_actual_wait": {
+      "bytes": 1927,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-source-verification34-v1.process-result.json",
+      "sha256": "96832d1a7befea55c0d6a74a2b9c76e7717ba0ec1a570759bcac19a5769a52a2"
+    },
+    "latest34_receipt": {
+      "bytes": 2922,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-source-verification34-v1.receipt.json",
+      "sha256": "801a37817308480dfcbcabade2963a3a27d76caa3128945349d4e2f03a65e427"
+    },
+    "latest34_terminal": {
+      "bytes": 1527,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-source-verification34-v1-user-terminal-readback.json",
+      "sha256": "45c9de6a5f02a8dcc12e3dc0441b2e2e997cf28f8463bafd2b7ca16d6a01da45"
+    },
+    "prior31_receipt": {
+      "bytes": 2923,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-source-verification31-v1.receipt.json",
+      "sha256": "c3096bcdd26ef1878c3041a0f5ae15d862ca0a0a407afb851e19be628c7110da"
+    },
+    "stderr": {
+      "bytes": 7214,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-source-verification34-v1.stderr",
+      "sha256": "3ff34b9a662b7067e083d537669f1cdfe2ff2cc0026b5b4d55a90edde17b1078"
+    }
+  },
+  "original_native86": {
+    "actual_rust38": {
+      "bytes": 173776,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2.receipt.json",
+      "sha256": "50d38265e783204d8c1868d1e013600c73ed4e8ae2411dbc58bb79bb7304a950"
+    },
+    "current_declarations_and_selection": {
+      "bytes": 2602973,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5b873-d64-native86/positive-partitions.json",
+      "sha256": "ecf40d938a23d4ec67c8a0862e64350e37c65a0c47a6d2aa6ef7309ae684dc38"
+    },
+    "no_result_credit": "All86 original names are restored with no overlap. Their presence in a compiled image is not execution. Nativefee13 and selected replay7 positives do not qualify these86.",
+    "no_substitution": "Do not rename R1/R2 renewal jobs into ordinary producer or conservation fixtures. Full113 exporter retention steering is separate from current Server compilation.",
+    "original_environment_and_recipe": {
+      "bytes": 38108,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/native-witness-review/sn/mainnet/evidence/native-qualification-readiness-20261004/go-selectors.json",
+      "sha256": "cb7c06b72cff838e2910759f79d505e8329f9aa2ebd51a7ebb2e2a563e5f044f"
+    },
+    "renewal_four_actual_profile": {
+      "bytes": 8806,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-five-original-inputs-v1.json",
+      "sha256": "5146486fc31ac3f0052905a24ecfce90721a053ad091f6a4e54b7ae411a1fe4d"
+    },
+    "retained_asset_status": "Execution, whole-fee, principal, principal-effects, vault capture/sequence and corrected renewal have retained actual original profiles. Generic PRODUCER and CONSERVATION five-job exports were not produced by the38-root batch; separate original exporters in full113 must supply them if no qualified retained originals are found."
+  },
+  "payment_source_correction": {
+    "authority": "Only exact retained original request/key/address/amount/wallet retry is restored. Fresh active-wallet and inclusive earning-cutoff gates remain; no new signing or production authority.",
+    "causal_controls": "UNEXECUTED",
+    "changed_existing_roots": 2,
+    "controls": 8,
+    "independent_control_review": {
+      "bytes": 4999,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-wallet-reconciliation/INDEPENDENT-CONTROLS-ACK-0d6a91bd.json",
+      "sha256": "22a070db3c062915915f4dd3a178fd65e1fb306899bdc8206f2215fee2d1f05b"
+    },
+    "independent_source_review": {
+      "bytes": 6835,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-wallet-reconciliation/INDEPENDENT-SOURCE-ACK-0d6a91bd.json",
+      "sha256": "f69c896ea08909a4fc110b22ebfaddbbe8d0af6a03d0430dc21a1bfb75846026"
+    },
+    "intake": {
+      "bytes": 13775,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/provider-wallet-reconciliation/handoff/INTAKE.json",
+      "sha256": "3cbdf6bfe6dce4e90efba5db5817d479eab810240a1803930c01546fa1b2a1c5"
+    },
+    "new_roots": 10,
+    "normal": "UNEXECUTED",
+    "published_commit": "d64c9beb49a8637ce753103e9ea34521cc55f597",
+    "race": "UNEXECUTED",
+    "status": "MERGED_SOURCE_FIXED_TARGETED_QUALIFICATION_PENDING"
+  },
+  "prior_component_results": {
+    "bytes": 15015,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-499-983-coverage/final-status-v4/current-main-qualification-progress-20261005.json",
+    "sha256": "5442233d106a0980caeb327fa072fd6f9e413c3306d28a7e264f3d10f97591fb"
+  },
+  "schema": "current-main-original-requirements-payment-and-continuation-checkpoint-v1",
+  "server_compiler_continuation": {
+    "actual_launch_intent": {
+      "bytes": 22088,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v2.intent.json",
+      "sha256": "581dc704c4491afa13614630fd220560100176269b90beeb0f99fc1afaab81e1"
+    },
+    "classification": "PRECOMPILER_HARNESS_REFUSAL; caller requested128MiB logs while qualified process helper requires64MiB. No compiler child, image, process result or Wait was created.",
+    "continuation_adoption": {
+      "bytes": 1223,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/server8-continuation-v2/root-adoption.json",
+      "sha256": "2ad1c258878061697bf6f95573c70b2b17f9087ce95d0ad9153eda2eccdacc81"
+    },
+    "continuation_job": {
+      "bytes": 169068,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/server8-continuation-v2/compiler.job.json",
+      "sha256": "ff4f38d80e0e0d7e29c2845948db6a377a1ae37394e4064ada27b575555ec85c"
+    },
+    "correction": "64MiB caller;5700-second runtime plus90-second stop horizon, retaining the720-second source-verification forecast and existing resource limits.",
+    "input_closure": {
+      "bytes": 16021128,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-f0b-026b-983-compiler-source-closure-v1.json",
+      "sha256": "5ca984f2055fc5036b64ffd46cb93c6ead7521a21c7a9e6bc4372374567fa9ce"
+    },
+    "last_reported_actual_state": {
+      "command": "go test -c -vet=off",
+      "invocation": "89706ee8747c4d918bf3f5c034ed2128",
+      "main_pid": 3550085,
+      "root_compiler_child_pid": 3550697,
+      "source": "Sole executor /root/sol_parallel_qualification message during this checkpoint",
+      "status": "LIVE; no terminal, successful image or compiler PASS yet",
+      "unit": "sn-default-server8-continuation-v2-20261005.service"
+    },
+    "previous_failed_batch": {
+      "bytes": 14450,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v1.receipt.json",
+      "sha256": "b19f8a6c325bebbe61e79b0cf9fd521da3f35d0c50a2fd8ede3f1eace9de6262"
+    },
+    "previous_root_phase": {
+      "bytes": 2893,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v1-root.receipt.json",
+      "sha256": "b413a2186b6c47929eeb5074387c4175987438e5913d86f1dd075988c6d487c1"
+    },
+    "previous_user_terminal": {
+      "bytes": 1584,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-server8-continuation-v1-user-terminal-readback.json",
+      "sha256": "25b1f6ae2eb77ad557de35070fc60292b1d91e1862d0380654560f18d5da4257"
+    },
+    "selected_source_tuple": {
+      "core": "026b850248352b72255be7a966e391e0a15e74c1",
+      "server": "9836322d6c06ce0207fd5d754b025fc48cb11c83",
+      "sn": "f0b7e52ab009746e05c3f6fb718243658881790d"
+    },
+    "source_boundary": "Frozen f0b/026/983 execution remains independent of later published paymentd64 source and future2733 selection."
+  },
+  "source_scope": {
+    "control_counts": {
+      "distinct_total": 259,
+      "original227": 227,
+      "output_guards": 3,
+      "payment": 8,
+      "restored_original_native_go": 21,
+      "two_original_native_rust_already_in227": 2
+    },
+    "controls": {
+      "bytes": 37699,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5b873-d64-native86/control-catalog-addendum.json",
+      "sha256": "67d952e271791e6b7d4ebfe60fe9fc15322347fcd1f622ffd7627937fd178f25"
+    },
+    "counts_per_mode": {
+      "all_go": 2733,
+      "connect": 224,
+      "mainnet": 270,
+      "server": 2025,
+      "server_controller": 93,
+      "server_full_model": 1865,
+      "sn": 476,
+      "sn_connect_vless": 708,
+      "vlessinterop": 8
+    },
+    "handoff": {
+      "bytes": 2148,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5b873-d64-native86/HANDOFF.json",
+      "sha256": "61b549493116ec3b123138907422757625e1e2b581e447502f94465b719338c7"
+    },
+    "outcomes_closed": 0,
+    "positive": {
+      "bytes": 2602973,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/current-main-5b873-d64-native86/positive-partitions.json",
+      "sha256": "ecf40d938a23d4ec67c8a0862e64350e37c65a0c47a6d2aa6ef7309ae684dc38"
+    },
+    "required_outcomes": 38
+  }
+}

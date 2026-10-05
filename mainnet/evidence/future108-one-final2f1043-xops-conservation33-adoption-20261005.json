@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "9eca8a199e53f18e114fa90516f32c94014fd84f0563773cfca5c2d8facc1021",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_count": 0,
+  "runner_sha256": "3bf89ee253a18f37c0813db4dbac69203632ab19d01c2246ef786d97cb9d23b7",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_ONE_XOPS_CONSERVATION33_AFTER_MONITOR_DB_JOIN",
+  "adopted_at": "2026-10-05T02:40:44.935178+00:00",
+  "review_sha256": "efe22ddb305ad0d628c44d46cd8ed3c3c3a1a5860cac796e8ff601f3698be4cc",
+  "scope": "Exact33 conservation tests:18 offline and15 actual pinned Promtool, including ClockAhead rule-omission causal control; source09 unchanged. Prior311 result remains historical. No318/fullsuite, deployment, external sends, compiler or DB overlap."
+}

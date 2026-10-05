@@ -1,0 +1,114 @@
+{
+  "limits": [
+    "Compiler success qualifies exact selected338 Rust source and retained assets only.",
+    "Principal exporter executes one root: 1 passed, 0 failed, 0 ignored, 112 filtered.",
+    "Go carry consumers, remaining Rust tests and causal controls remain unexecuted.",
+    "No independently approved production Wasm, deployment or mainnet economic outcome is established."
+  ],
+  "results": [
+    {
+      "counts": null,
+      "exports": [],
+      "images": [
+        {
+          "bytes": 53746064,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/selected338-runtime-historical-capture-v1",
+          "sha256": "3f12dc2af4440c27d0b9992610e9610cc7232e7caa72897f6adad0ddd70919d2"
+        },
+        {
+          "bytes": 51561640,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/selected338-runtime-historical-proof-v1",
+          "sha256": "e343668fc22bf43a3f99bf0eb04df9e4f9c5de6bbe1ced90ba6e365c9ea65277"
+        }
+      ],
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-engines-compile-v1.receipt.json",
+        "sha256": "af411d030d1080993b1e093b4ac85141085274664888ba4323af091937908dae"
+      },
+      "resource_errors": [],
+      "source_tuple": {
+        "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+        "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+        "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+      },
+      "status": "RUST_COMPILE_PASS_EXPORT_PENDING",
+      "tree_joined": true,
+      "unix_exit": 0
+    },
+    {
+      "counts": null,
+      "exports": [],
+      "images": [
+        {
+          "bytes": 64947952,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/selected338-runtime-metadata-probe-libtest-v1",
+          "sha256": "e5a8f152a7dd247c5a700cfbf761e1927e0655a37cbcf6e30f4f0f325d778f8a"
+        }
+      ],
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-libtest-compile-v1.receipt.json",
+        "sha256": "ac9c2f22c7141d1838173064e96efe7fea42418af78cd11db24a126fe04978bd"
+      },
+      "resource_errors": [],
+      "source_tuple": {
+        "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+        "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+        "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+      },
+      "status": "RUST_COMPILE_PASS_EXPORT_PENDING",
+      "tree_joined": true,
+      "unix_exit": 0
+    },
+    {
+      "counts": {
+        "classification": "PASS",
+        "exit": 0,
+        "failed": 0,
+        "filtered_out": 112,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 1,
+        "root": "historical::tests::native_execution_tests::capture_join_tests::historical_native_vault_capture_exports_original_transaction_causes",
+        "summary": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 112 filtered out; finished in 0.69s"
+      },
+      "exports": [
+        {
+          "bytes": 20698,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-selected338-principal-v1/principal-capture-causes.json",
+          "sha256": "7b5f8497bfd3b6c72f60499df163258a34e2575b25d7ff9756730811aa9f346d"
+        },
+        {
+          "bytes": 20656,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-selected338-principal-v1/principal-capture-rollback.json",
+          "sha256": "b63fda732b6001741c3e65a16f614ac7815a65ec861f6af07a1185f8021ba015"
+        },
+        {
+          "bytes": 20905,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-selected338-principal-v1/principal-capture-unclassified.json",
+          "sha256": "e3bd4b5f7d12befc4381dc2998031f5c06563c7f4d6247fb213489dea8a9052a"
+        },
+        {
+          "bytes": 20657,
+          "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-selected338-principal-v1/principal-capture.json",
+          "sha256": "496e8db2ef45f5325a57c50be05fa215f32066294f896821c83bb50903376b6d"
+        }
+      ],
+      "images": [],
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-principal-exporter-v1.receipt.json",
+        "sha256": "91f8276b7adf77fd58da7636e221ad6e04b7f48e3f2e1c655ec14db64fcc91fb"
+      },
+      "resource_errors": [],
+      "source_tuple": {
+        "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+        "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+        "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+      },
+      "status": "PASS_ONE_PRINCIPAL_EXPORTER_FOUR_CASES_NO_SKIPS",
+      "tree_joined": true,
+      "unix_exit": 0
+    }
+  ],
+  "schema": "selected338-rust-assets-actual-result-v1",
+  "verified_at_utc": "2026-10-05T04:18:13.159382+00:00"
+}

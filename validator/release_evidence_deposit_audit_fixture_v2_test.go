@@ -47,20 +47,22 @@ func (self *depositAuditNativeRpcTestClient) URL() string { return self.endpoint
 
 // Mutable controls change actual HTTP responses, never a source verdict.
 type depositAuditPublicationV2TestFixture struct {
-	base        *releaseRuntimeV2TestFixture
-	chain       *releaseDecisionV2TestFixture
-	artifact    *ReleaseMeasurementArtifact
-	options     ValidatorEvidencePublicationV2ReadOptions
-	mode        string
-	sourceNoIds [2]uint64
-	payout      *payoutartifact.Artifact
-	payoutBytes []byte
-	payoutReads atomic.Uint64
-	publicReads atomic.Uint64
-	posts       atomic.Uint64
-	nativeReads atomic.Uint64
-	outage      atomic.Bool
-	refuseLast  atomic.Bool
+	negativeRetryElapsed time.Duration
+	base                 *releaseRuntimeV2TestFixture
+	chain                *releaseDecisionV2TestFixture
+	artifact             *ReleaseMeasurementArtifact
+	options              ValidatorEvidencePublicationV2ReadOptions
+	mode                 string
+	sourceNoIds          [2]uint64
+	payout               *payoutartifact.Artifact
+	payoutBytes          []byte
+	payoutReads          atomic.Uint64
+	publicReads          atomic.Uint64
+	posts                atomic.Uint64
+	nativeReads          atomic.Uint64
+	outage               atomic.Bool
+	refuseLast           atomic.Bool
+	stopOrigins          [2]func()
 }
 
 // Extend the existing actual activation/runtime fixture with independently
@@ -141,7 +143,7 @@ func newDepositAuditPublicationV2TestFixtureWithBounds(t *testing.T, mode string
 	if err != nil {
 		t.Fatal(err)
 	}
-	required, _, err := protocol.RequiredDepositRao(self.payout.TotalUsageBytes, chain.bigConviction, cfg.Policy.Deposit)
+	required, _, err := protocol.RequiredDepositRao(self.payout.TotalUsageBytes, self.payout.TotalUsers, chain.bigConviction, cfg.Policy.Deposit)
 	if err != nil || required.Sign() <= 0 {
 		t.Fatalf("actual payout deposit: %v", err)
 	}
@@ -171,8 +173,7 @@ func newDepositAuditPublicationV2TestFixtureWithBounds(t *testing.T, mode string
 	key := self.base.hotkey.PublicKey()
 	chain.views[fmt.Sprintf("%x", data)] = releaseDecisionV2TestView{method: "getHotkey", data: bytes.Clone(key[:])}
 	native := self.base.startup.nativeFixture
-	native.blockNumber = block
-	self.base.startup.nativeEpoch[native.block.Hex()] = block - 99
+	self.base.startup.selectNativePoint(self.base.startup.nativePoint(t, block-99))
 	self.wrapNativeHttp(t)
 	for index := range runtime.runtimes {
 		original, err := url.Parse(runtime.origins[index])
@@ -266,6 +267,7 @@ func newDepositAuditPublicationV2TestFixtureWithBounds(t *testing.T, mode string
 		}
 		t.Cleanup(upload.close)
 		runtime.runtimes[index].attemptUpload = upload
+		self.stopOrigins[index] = endpoint.Close
 		runtime.origins[index] = endpoint.URL
 	}
 	runtime.cfg, runtime.history.cfg, runtime.chain = cfg, cfg, chain.chain
@@ -278,6 +280,11 @@ func newDepositAuditPublicationV2TestFixtureWithBounds(t *testing.T, mode string
 		reader, err := NewHTTPArtifactReader(operator.APIURL, cfg.DeploymentID, cfg.Netuid)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if mode == "negative" {
+			// Advance the existing full retry deadline at the first wait. The
+			// actual response, signed custody and replay remain production paths.
+			reader.retryHooks = releaseHttpGetTestDeadlineHooks(t, &self.negativeRetryElapsed, releaseHttpGetRetryTimeout)
 		}
 		contexts[operator.NoID] = &ReleaseMeasurementContext{NoID: operator.NoID, Artifacts: reader}
 		operators[operator.NoID] = operator
@@ -347,6 +354,8 @@ func (self *depositAuditPublicationV2TestFixture) wrapNativeHttp(t *testing.T) {
 		response := map[string]any{"jsonrpc": "2.0", "id": call.Id}
 		if err != nil {
 			response["error"] = map[string]any{"code": -32000, "message": err.Error()}
+		} else if header, ok := result.(*types.Header); ok {
+			response["result"] = releaseReceiptTestHeaderWire(*header)
 		} else {
 			response["result"] = result
 		}

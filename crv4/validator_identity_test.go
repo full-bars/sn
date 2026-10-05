@@ -79,8 +79,10 @@ func newValidatorIdentityTestFixture(t *testing.T) *validatorIdentityTestFixture
 			},
 		},
 	}}
+	header, block := receiptTestHeader(t, types.Hash{2}, 100, nil, 1)
+	finalizedHeader, finalized := receiptTestHeader(t, types.Hash{3}, 103, nil, 1)
 	query := ValidatorIdentityQuery{
-		GenesisHash: types.Hash{1}, BlockHash: types.Hash{2}, BlockNumber: 100,
+		GenesisHash: types.Hash{1}, BlockHash: block, BlockNumber: 100,
 		Netuid: 521, UID: 1, MaximumSubnetUIDs: 256,
 	}
 	fixture := &validatorIdentityTestFixture{
@@ -89,12 +91,12 @@ func newValidatorIdentityTestFixture(t *testing.T) *validatorIdentityTestFixture
 		version:     RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 454, TransactionVersion: 1, StateVersion: 1},
 		codeHash:    types.Hash{4}.Hex(),
 		metadata:    metadata,
-		blockHashes: map[uint64]types.Hash{0: query.GenesisHash, 100: query.BlockHash, 103: types.Hash{3}},
+		blockHashes: map[uint64]types.Hash{0: query.GenesisHash, 100: query.BlockHash, 103: finalized},
 		headers: map[string]types.Header{
-			query.BlockHash.Hex(): {Number: types.BlockNumber(100)},
-			types.Hash{3}.Hex():   {Number: types.BlockNumber(103)},
+			query.BlockHash.Hex(): header,
+			finalized.Hex():       finalizedHeader,
 		},
-		finalized: types.Hash{3},
+		finalized: finalized,
 		hotkey:    [32]byte{11},
 		coldkey:   [32]byte{12},
 		stake:     9_123_456_789_012_345,
@@ -160,7 +162,7 @@ func (self *validatorIdentityTestFixture) publishMetadata(t *testing.T) {
 // Refuses all contextless calls, wrong block arguments, unknown keys and
 // methods outside the reader's read-only transcript.
 func (self *validatorIdentityTestFixture) call(ctx context.Context, result any, method string, args ...any) error {
-	if ctx != self.ctx {
+	if !validatorIdentityTestReadContext(ctx, self.ctx) {
 		return errors.New("validator identity RPC changed caller context")
 	}
 	if err := ctx.Err(); err != nil {
@@ -213,12 +215,11 @@ func (self *validatorIdentityTestFixture) call(ctx context.Context, result any, 
 		if !ok || !found {
 			return fmt.Errorf("unexpected header hash %v", args[0])
 		}
-		target, ok := result.(*types.Header)
-		if !ok {
-			return fmt.Errorf("unexpected header result %T", result)
+		if target, ok := result.(*types.Header); ok {
+			*target = header
+			return nil
 		}
-		*target = header
-		return nil
+		return setRuntimeIdentityTestResult(result, receiptTestHeaderWire(header))
 	case "chain_getFinalizedHead":
 		if err := checkArgs(); err != nil {
 			return err
@@ -254,7 +255,7 @@ func (self *validatorIdentityTestFixture) call(ctx context.Context, result any, 
 	}
 }
 
-// The complete observed tuple comes from sixteen explicit historical reads,
+// The complete observed tuple comes from explicit historical and finality reads,
 // leaving the dial-time signing metadata/runtime untouched.
 func TestRuntimeArtifactMetadataValidatorIdentityBindsHistoricalState(t *testing.T) {
 	t.Parallel()
@@ -280,7 +281,8 @@ func TestRuntimeArtifactMetadataValidatorIdentityBindsHistoricalState(t *testing
 		"state_getRuntimeVersion", "state_getStorageHash", "state_getMetadata",
 		"state_getStorage:SubnetworkN", "state_getStorage:Keys", "state_getStorage:Uids",
 		"state_getStorage:Owner", "state_getStorage:TotalHotkeyAlpha",
-		"state_getStorage:ValidatorPermit", "chain_getBlockHash",
+		"state_getStorage:ValidatorPermit", "chain_getFinalizedHead", "chain_getHeader",
+		"chain_getBlockHash", "chain_getBlockHash",
 	}
 	if !reflect.DeepEqual(fixture.calls, expectedCalls) {
 		t.Fatalf("historical RPC transcript=%v, want %v", fixture.calls, expectedCalls)
@@ -378,7 +380,7 @@ func TestRuntimeArtifactMetadataValidatorIdentityExactAuthorityBound(t *testing.
 			if err == nil || observed != (ValidatorIdentityObservation{}) || len(fixture.calls) != 0 {
 				t.Fatalf("one-over authority reached a provider: result=%+v calls=%v error=%v", observed, fixture.calls, err)
 			}
-		} else if err != nil || observed.Runtime != selected || observed.Hotkey != fixture.hotkey || observed.Coldkey != fixture.coldkey || observed.StakeAlphaRao != fixture.stake || !observed.ValidatorPermit || len(fixture.calls) != 16 || len(fixture.storageCalls) != 6 {
+		} else if err != nil || observed.Runtime != selected || observed.Hotkey != fixture.hotkey || observed.Coldkey != fixture.coldkey || observed.StakeAlphaRao != fixture.stake || !observed.ValidatorPermit || len(fixture.calls) != 19 || len(fixture.storageCalls) != 6 {
 			t.Fatalf("exact authority bound did not authenticate its selected historical source: result=%+v calls=%v error=%v", observed, fixture.calls, err)
 		}
 	}
@@ -443,7 +445,7 @@ func TestRuntimeArtifactMetadataValidatorIdentityRechecksCanonicalityBeforePubli
 		}
 	}
 	observed, err := ReadValidatorIdentityAtContext(fixture.ctx, fixture.chain, fixture.query, fixture.allowed...)
-	if err == nil || observed != (ValidatorIdentityObservation{}) || len(fixture.storageCalls) != 6 || len(fixture.calls) != 16 {
+	if err == nil || observed != (ValidatorIdentityObservation{}) || len(fixture.storageCalls) != 6 || len(fixture.calls) != 19 {
 		t.Fatalf("canonical switch: result=%+v storage=%v calls=%v error=%v", observed, fixture.storageCalls, fixture.calls, err)
 	}
 }
@@ -558,7 +560,7 @@ func TestRuntimeArtifactMetadataValidatorIdentityPreservesExactStake(t *testing.
 		fixture.storage["TotalHotkeyAlpha"] = example.raw
 		observed, err := ReadValidatorIdentityAtContext(fixture.ctx, fixture.chain, fixture.query, fixture.allowed...)
 		if err != nil || observed.StakeAlphaRao != example.stake || observed.Hotkey != fixture.hotkey ||
-			!observed.ValidatorPermit || len(fixture.calls) != 16 {
+			!observed.ValidatorPermit || len(fixture.calls) != 19 {
 			t.Errorf("%s: result=%+v calls=%v error=%v", example.name, observed, fixture.calls, err)
 		}
 	}
@@ -591,7 +593,7 @@ func TestRuntimeArtifactMetadataValidatorIdentityPreservesFalsePermit(t *testing
 	fixture := newValidatorIdentityTestFixture(t)
 	fixture.storage["ValidatorPermit"] = validatorIdentityTestHex([]byte{12, 1, 0, 1})
 	observed, err := ReadValidatorIdentityAtContext(fixture.ctx, fixture.chain, fixture.query, fixture.allowed...)
-	if err != nil || observed.ValidatorPermit || observed.StakeAlphaRao != fixture.stake || observed.Hotkey != fixture.hotkey || len(fixture.calls) != 16 {
+	if err != nil || observed.ValidatorPermit || observed.StakeAlphaRao != fixture.stake || observed.Hotkey != fixture.hotkey || len(fixture.calls) != 19 {
 		t.Fatalf("non-validator observation=%+v calls=%v error=%v", observed, fixture.calls, err)
 	}
 }
@@ -723,11 +725,11 @@ func TestRuntimeArtifactMetadataValidatorIdentityHexOwnsExactBytes(t *testing.T)
 	}
 }
 
-// Each of the sixteen actual RPC positions propagates its causal error and
+// Each actual RPC position propagates its causal error and
 // discards every partially collected identity, including final-check failure.
 func TestRuntimeArtifactMetadataValidatorIdentityPreservesEveryRPCFailure(t *testing.T) {
 	t.Parallel()
-	for position := 0; position < 16; position++ {
+	for position := 0; position < 19; position++ {
 		fixture := newValidatorIdentityTestFixture(t)
 		cause := errors.New("injected historical RPC failure")
 		fixture.hook = func(context.Context, any, string, ...any) (bool, error) {
@@ -797,7 +799,7 @@ func TestRuntimeArtifactMetadataValidatorIdentityCancelsBeforePublish(t *testing
 		}
 	}
 	observed, err := ReadValidatorIdentityAtContext(ctx, fixture.chain, fixture.query, fixture.allowed...)
-	if !errors.Is(err, context.Canceled) || observed != (ValidatorIdentityObservation{}) || selectedReads != 2 || len(fixture.calls) != 16 {
+	if !errors.Is(err, context.Canceled) || observed != (ValidatorIdentityObservation{}) || selectedReads != 2 || len(fixture.calls) != 19 {
 		t.Fatalf("canceled publication: result=%+v calls=%v error=%v", observed, fixture.calls, err)
 	}
 }
@@ -813,4 +815,21 @@ func TestRuntimeArtifactMetadataValidatorIdentityRejectsCanceledCallerBeforeRPC(
 	if !errors.Is(err, context.Canceled) || observed != (ValidatorIdentityObservation{}) || len(fixture.calls) != 0 {
 		t.Fatalf("already canceled: result=%+v calls=%v error=%v", observed, fixture.calls, err)
 	}
+}
+
+// Owned read children must retain the exact original context and a clipped
+// finite deadline; a contextless replacement cannot satisfy this fixture.
+func validatorIdentityTestReadContext(ctx, original context.Context) bool {
+	if ctx == original {
+		return true
+	}
+	owner, ok := ctx.Value(runtimeObservationReadOwnerKey{}).(runtimeObservationReadOwner)
+	deadline, bounded := ctx.Deadline()
+	if !ok || owner.parent != original || !bounded {
+		return false
+	}
+	if parentDeadline, parentBounded := original.Deadline(); parentBounded && deadline.After(parentDeadline) {
+		return false
+	}
+	return original.Err() == nil || ctx.Err() == original.Err()
 }

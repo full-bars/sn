@@ -1,0 +1,78 @@
+{
+  "schema": "urnetwork-inactive-cache-reclaim-6-v1",
+  "status": "COMPLETE",
+  "reclaimed_bytes": 8605618176,
+  "deleted_archives": 155,
+  "minimum_age_hours": 48,
+  "minimum_bytes": 8388608,
+  "root_verified_absent": true,
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-6-20261002/reclaim.go",
+      "bytes": 7047,
+      "sha256": "d544598ca0c6ebe192ebce63615031d6e7cbcb33037b2de4024491a0406ec5ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-6-20261002/plan.json",
+      "bytes": 47525,
+      "sha256": "3cf91895de9326619d2aac7637d35e74585d75b3e6f1ecf3b0db86ed2f9e444e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-6-20261002/receipt.json",
+      "bytes": 47806,
+      "sha256": "36bb32bcb145f44c4cb8ae168d17566eae946325343a57e9e7ca2e0875c7ab44"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-6-20261002/process-census-plan.json",
+      "bytes": 73,
+      "sha256": "069124db4c11b01f3a290140e6be45e9ee353cb9d28b9b347d81c2ebb5f71511"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-6-20261002/process-census-apply.json",
+      "bytes": 73,
+      "sha256": "d2e1a99c0b7bffeb35d966888ebe7e368c2ec807cc6a1d509451f3597bb542f7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-6-20261002/candidate-paths.txt",
+      "bytes": 15345,
+      "sha256": "b1abc550e8ef41f79019665b4fa9ac95f62f0024de1a12e1a6d463a4a1a79a49"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-6-20261002/reference-matches.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-6-20261002/reference-scan.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-6-20261002/reference-scan.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    }
+  ],
+  "guards": [
+    "Privileged process cmdline/environ/maps/fd/cwd/exe census repeated at plan and apply; zero old-cache references.",
+    "Exact archive magic/type/link count/age/stat identity repeated before unlink.",
+    "Declared metadata scan<=5MiB underSN anddata scratch; no candidate matches or final errors."
+  ],
+  "observed_initial_scan_attempts": [
+    {
+      "scope": "unprivileged scan",
+      "exit": 2,
+      "stderr": "messages suppressed; final qualified scan used privileged reads"
+    },
+    {
+      "scope": "sudo rg via PATH",
+      "exit": 1,
+      "stderr": "sudo: rg: command not found",
+      "action": "Retried exact absolute rg path; no deletion before clean final scan."
+    }
+  ],
+  "limits": [
+    "Scan is declared Markdown/receipt/manifest/hash metadata, not every raw artifact.",
+    "Active caches, source, module data, evidence and ELF executables were preserved."
+  ]
+}

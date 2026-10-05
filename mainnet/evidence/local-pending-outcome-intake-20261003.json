@@ -1,0 +1,170 @@
+{
+  "behavior": [
+    "The separate local approval binds the original full terminal payload digest; omitted optional field keeps settled plan signing bytes unchanged.",
+    "Offline resume preserves pending original outcome and nonce claims, reports incomplete local custody, and defers registry/local physical receipts until exact original canonical completion.",
+    "Actual missing/pending canonical read cannot cause another send; exact included outcome retains the same attempt count and then the physical receipt, with no transaction reconstruction.",
+    "A first stage inode may be acquired only while every other originally reserved field remains identical. A positive original inode or changed payload remains refused.",
+    "Publication error closes the affected owner; exact pending/acknowledged receipt recovery remains under joined reopen. No new signer, nonce, spend, service or live authority is introduced."
+  ],
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-2689-intake.json": {
+      "bytes": 13180,
+      "sha256": "08617a7f85a1d3aeaca31639d60ae14043a62715add8f4ff171f4571106e3744"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-fcf-compile-jobs.json": {
+      "bytes": 1276,
+      "sha256": "554ccd430b2417023abc44c22e2acc18121facda8bde08012fe21f5425581816"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-fcf-compile.json": {
+      "bytes": 1077,
+      "sha256": "fcdb29eb46754f2ff3ae214e1323302a887ebf2157912a2f7a0b0c23aa0f2f90"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-fcf-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-fcf-preflight.json": {
+      "bytes": 954,
+      "sha256": "67627f0d81787d0794036ecdc239f8fdcc8bb15b9aae4b2de44e92da513232ba"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-fcf-preflight.jsonl": {
+      "bytes": 3646292,
+      "sha256": "e11533d82b593bb8d1f0ca4fa67efa9f23d0af3d145e4096795c19a9a921cf06"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-local-fcf-intake.go": {
+      "bytes": 6097,
+      "sha256": "21140343fe9b77769896a7641fbdf553d7291ae1ed5b0c535d481272ca21407c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-148-9fb-intake.json": {
+      "bytes": 12862,
+      "sha256": "aaabab504c90226015d7981a51205350dd6daf363e656be65c4789557389b658"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/sn/mainnet/MAINNET.md": {
+      "bytes": 276537,
+      "sha256": "94e77318b4c94c5db5bc83a81216f2b681babf92a7dda3f90a1b3a5c6fb92c8b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/sn/mainnet/PRELAUNCH-FIXES.md": {
+      "bytes": 432690,
+      "sha256": "426809d450b297e8028d48a3ec5aa87625dbd154378936c9ade44d0cfe980d38"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/sn/mainnet/bootstrap_successor_execution_owner.go": {
+      "bytes": 22105,
+      "sha256": "13fc7399a173d82111fde6e68e3ce2c2af78655b26635430554d4c498b8dde4b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/sn/mainnet/bootstrap_successor_execution_store.go": {
+      "bytes": 21786,
+      "sha256": "8555d0563351e3a537b53b686772807260eb71c6d9e6aa3f760348fa0f6ec0eb"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/sn/mainnet/bootstrap_successor_local_pending_test.go": {
+      "bytes": 12508,
+      "sha256": "5be61b09d2ba68b2e1229d881a4873fb5ac78aa22b61802ab2723f6576be1150"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/sn/mainnet/bootstrap_successor_local_rebind.go": {
+      "bytes": 23025,
+      "sha256": "e249b601b9aa56cd044fa26bd8d3deea4af911934c57c69451b80c4b48617634"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/sn/mainnet/bootstrap_successor_registry_rebind.go": {
+      "bytes": 17338,
+      "sha256": "60ff7c0f6f8bfd9b372b7096e552e338226646e57475f961b535e6febb625feb"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/sn/mainnet/evidence/successor-local-rebind-profile-20261003.md": {
+      "bytes": 4530,
+      "sha256": "b35c41f4de69e413af38ff79d848025b76748199b1fad5039de00dc63213c4f6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/qualify-scoped.go": {
+      "bytes": 3425,
+      "sha256": "1a7b115440ecd7ce543810e9a08a751f4e2c1bb213ee2439b8a9e55455753e26"
+    }
+  },
+  "causal": {
+    "base": "2689fced35b5438bb00d957971813bbdd7eea44e",
+    "expectedBoundary": "The old public builder refuses the original pending terminal outcome at the settled-only review gate in the first two controls; old shared passive readback refuses exact first materialization of a previously inode-zero stage in the third. Record the actual discriminating failure, never a setup refusal.",
+    "overlay": [
+      "mainnet/bootstrap_successor_local_pending_test.go"
+    ],
+    "roots": [
+      "TestBootstrapSuccessorLocalRebindRetainsReservedOriginalOutcome",
+      "TestBootstrapSuccessorLocalRebindRetainsAcknowledgedOriginalOutcome",
+      "TestBootstrapSuccessorRebindRetainsFirstPendingStageGeneration"
+    ]
+  },
+  "dependencies": {
+    "connect": {
+      "commit": "9fb897f8d880ab813dd61dc02fa187e3d85f13a5",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/connect",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect",
+      "tree": "a3500ca8e57b70c78951fe91871d6bdc7a93f7c7"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/glog",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/goidenticons",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/proxy",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/server",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/userwireguard",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/warp",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "qualificationBoundary": "Settled2689 and registry08f remain separate source scopes. This intake has only graph preflight and compile success, not a behavior result. Public fixtures can be costly; keep passing roots and use disjoint continuation if a package deadline expires.",
+  "remaining": [
+    "Interrupted outer member-head restore, chained rebind, retained in-place and joined resource/retention revisions remain required.",
+    "Combined local/registry and current published SN/Server29ce/Connect08d composition have separate gates; this inherited graph is not that composition.",
+    "No live signing, broadcast, deployment, service start or remote PostgreSQL/MinIO recovery claim."
+  ],
+  "schema": "urnetwork-author-source-handoff-v1",
+  "scope": {
+    "expectedPass": 3,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "package": "./mainnet",
+    "roots": [
+      "TestBootstrapSuccessorLocalRebindRetainsReservedOriginalOutcome",
+      "TestBootstrapSuccessorLocalRebindRetainsAcknowledgedOriginalOutcome",
+      "TestBootstrapSuccessorRebindRetainsFirstPendingStageGeneration"
+    ],
+    "vet": true
+  },
+  "source": {
+    "causalBase": "2689fced35b5438bb00d957971813bbdd7eea44e",
+    "commit": "fcf410309f827e8df625bc56d4045a94d7532243",
+    "originalTwoRootOverlay": "015f91d1e0ec5bce789363162c5308a82651c918",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/sn",
+    "tree": "ab36518f45365659ad2b3dc85229f0cdd92732cf"
+  },
+  "status": "COMPILE_ONLY_NO_BEHAVIORAL_EXECUTION",
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-outcome/go.work"
+}

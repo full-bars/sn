@@ -1,0 +1,716 @@
+{
+  "schema": "mainnet-independent-behavior-review-v1",
+  "status": "SCOPED_POSITIVES_PASS_CONTROLS_PENDING",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-bounded-causes-selected.receipt.json",
+    "sha256": "de7c3b4cd996446515b1da2d5210e8a4a4b9dfffe86ac3a09c2cfb278a361372"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-bounded-causes-adoption-v1.json",
+      "bytes": 1054,
+      "sha256": "2bd51dd415059bea29cb2e2fed3447646e3c49945d0ba9278d2d1244d905543a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/intake.json",
+      "bytes": 20113,
+      "sha256": "62a0242654496191e12184d4105c19d6e741ad0c7cf1ce8b5a27c144cd2be8b8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/qualification-recipe.json",
+      "bytes": 11447,
+      "sha256": "6245e2be75d30cf7e55532c3c7daa6809a1cb320a62d78bd198b4816e8e5b3fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-compile-receipt.json",
+      "bytes": 3892,
+      "sha256": "63021b2851c607bda3389d3bfd80f384d46ea5e49f70797d116f240fc98bf556"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server-stage-receipt.json",
+      "bytes": 3017,
+      "sha256": "f7313c041c3a92afb2793deb0967d369c284ad66373d18262f7c8be5d954713c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-root.receipt.json",
+      "bytes": 5894,
+      "sha256": "038afaab91e32a4792cd50c68fa40f12455087b3deb030fffd5892105bd7f572"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-root-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-root-body.stdout",
+      "bytes": 5836,
+      "sha256": "50bc0384006c53c00d79bc1e270b6fc3b07234049e4973398827433e087d6e53"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-root-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-root-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-normal-root.test",
+      "bytes": 77816400,
+      "sha256": "35aae842839a18bcc4d8296ffcf7f8850d7649f8d468a9d726ec3ef4c012d9d4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-controller.receipt.json",
+      "bytes": 6176,
+      "sha256": "a27118bb01f4291f8134cf41145caf9526aaac253ed274b9396c3113d4b32c9f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-controller-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-controller-body.stdout",
+      "bytes": 6360,
+      "sha256": "247ead0b0f3bf726bafa53719d2b4764f76bd2c4d279049da836fc3f7546aba7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-controller-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-controller-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-normal-controller.test",
+      "bytes": 104936464,
+      "sha256": "c94ec85926657e9e06aacc7aa37c5ff3eaa122b513c6fca46af789e0a68b7674"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-model.receipt.json",
+      "bytes": 4601,
+      "sha256": "4094e28b09c2b3a33256bf1879b125531b1b85302f9a3ccf36d469a8e5300c02"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-model-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-model-body.stdout",
+      "bytes": 3052,
+      "sha256": "d9515ea1b763d305f88f27f7cba69e0ec292f43864508d06d050bde2b9f6f502"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-model-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-model-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-normal-model.test",
+      "bytes": 79511664,
+      "sha256": "6497b2d2ed7d657995eb333521888f10fb1877298e8690e6c11bb3c8fe07d41f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-monitor.receipt.json",
+      "bytes": 5273,
+      "sha256": "dc76a28e5ed98e6a15c18578b0d07f22d7bc46980c19e1ed726e5099002ce1f3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-monitor-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-monitor-body.stdout",
+      "bytes": 4441,
+      "sha256": "bd2425b31da2cd9274e40f8915e931e145296277964e68ab286c58d630769ede"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-monitor-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-monitor-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-normal-monitor.test",
+      "bytes": 93766736,
+      "sha256": "53d27e335f1eca14c1da32274acdfa470724825f97dceb4c9206d305b4e4ebf7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-task.receipt.json",
+      "bytes": 5315,
+      "sha256": "dbe62f8c4260f629a2e8577dc80529e32c65d9ec44f2969237d5e209c1a02545"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-task-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-task-body.stdout",
+      "bytes": 4747,
+      "sha256": "c36814dedb75a6a428946388042a658ba7b6ecd0d8497b309150f08569556f41"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-task-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-task-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-normal-task.test",
+      "bytes": 47851159,
+      "sha256": "6e6e9fba097843c56529e926cba7753c01eabb5f4e73ca79f8d686e6ac03096a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-taskworker_work.receipt.json",
+      "bytes": 4391,
+      "sha256": "7428510429c6dab1e558e1d2ea352fc3d45ab6a61ce9efa2b529b21ad3c099fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-taskworker_work-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-taskworker_work-body.stdout",
+      "bytes": 2397,
+      "sha256": "ff9596a030df1922c065c978cbe0443b8bbe5138f5141c0539400cd80aaa30ad"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-taskworker_work-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-taskworker_work-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-normal-taskworker_work.test",
+      "bytes": 105643976,
+      "sha256": "82800ce71353468029f74b51a7be51369acea331ab7eca091515823bbfed5cbb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-root.receipt.json",
+      "bytes": 5894,
+      "sha256": "cc25b5c9125d7cbc69f518b3049099bb79fed1e0f89e438f8423668bbbd0f2bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-root-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-root-body.stdout",
+      "bytes": 5833,
+      "sha256": "dacea500b4480208786bcf48c8a9530e032799688a1e669937216ba8b8f2ee7a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-root-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-root-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-race-root.test",
+      "bytes": 102244960,
+      "sha256": "152e3b565a8994bc2fd0c7c3d561b54832cc8be83e7cd53d0d6612805d2bca3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-controller.receipt.json",
+      "bytes": 6175,
+      "sha256": "6913b2813d2ea1e029ff310da495f31271d4eba3713c33b3055dd7dae4ac08fc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-controller-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-controller-body.stdout",
+      "bytes": 6356,
+      "sha256": "0e836734596c765f221cf207a2ffa6098cfc49bb71077b89d7f0d24acda94bbc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-controller-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-controller-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-race-controller.test",
+      "bytes": 138557448,
+      "sha256": "811dd765bd1b1170c0f788adb947bd3bfe598c5689f9c62feaaac6c292096f5c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-model.receipt.json",
+      "bytes": 4601,
+      "sha256": "f2b1f221f91e747be47f82be7ebd2e3dcdc82043e33cc86aba9634ee853ab14f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-model-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-model-body.stdout",
+      "bytes": 3067,
+      "sha256": "6ae5d833efa359db3cfacce821e4246a7adc471cc2ba25032c705d40b5fa588b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-model-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-model-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-race-model.test",
+      "bytes": 106802968,
+      "sha256": "43b85effaac4fb659d2ec46df9dcf93003d13927f3b9513cf76775acfc45c1f3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-monitor.receipt.json",
+      "bytes": 5273,
+      "sha256": "4b8978caf8fd9b7564d8d3a16c13c836a1637433849add9113f1dc8464e90b9c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-monitor-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-monitor-body.stdout",
+      "bytes": 4440,
+      "sha256": "dc1339f20fc8b49a57092f8620b91d96fbe9c95ea1d1eccf2145424951b1a067"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-monitor-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-monitor-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-race-monitor.test",
+      "bytes": 122893200,
+      "sha256": "f8d575fda8ae74d05281c874245804fb63bf3da2d7e3c910a7e926625037dd0b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-task.receipt.json",
+      "bytes": 5314,
+      "sha256": "fa891cda3b86827b86511e3ede2f9ee1517674e4f4746427a4359ff467e7edf6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-task-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-task-body.stdout",
+      "bytes": 4743,
+      "sha256": "eb8babbcd3cf911db2b6a040df001f1d30476e94ac517e587a5d42bd4bbb640f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-task-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-task-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-race-task.test",
+      "bytes": 61745246,
+      "sha256": "4e86d3d3be9df19ff9621dbe4b5a0461296b08128aa64d21dab03f3395893c25"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-taskworker_work.receipt.json",
+      "bytes": 4390,
+      "sha256": "f3546172358635a03775323347948948fca8373413f6d198cf8d3460236a7f63"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-taskworker_work-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-taskworker_work-body.stdout",
+      "bytes": 2398,
+      "sha256": "52cbad57453d6f5bf13f4ed08f7c1e1739b21d47c6a12b5e3c27c6d74031a3e0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-taskworker_work-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-taskworker_work-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-causes-race-taskworker_work.test",
+      "bytes": 138744864,
+      "sha256": "d10cdd20a3027e6b1c430c3e7dcfa6268784fa867f0d5bffedc311ccef0b4bc0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-root.receipt.json",
+      "bytes": 1239,
+      "sha256": "69e79267eeebb6e9fccd6286c44aca2ec50f5641513f43a7c55e327803285f83"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-root.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-root.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-controller.receipt.json",
+      "bytes": 1273,
+      "sha256": "eda94e80a30f3da94095db18533edfdf404efddb8aa255608aeb422a7985638d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-controller.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-controller.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-model.receipt.json",
+      "bytes": 1253,
+      "sha256": "bbe6b68977f1de8a492e5ceb4f430fc4ae858ac4038ffa07211c61a049dde7d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-model.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-model.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-monitor.receipt.json",
+      "bytes": 1261,
+      "sha256": "f9aa3fa54a5fafc5d246b2a5d836f170456f4019fab0cdfe3e1de91b05ce4945"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-monitor.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-monitor.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-task.receipt.json",
+      "bytes": 1249,
+      "sha256": "105a6f62ab9b0c0b1509f515452f9b17b570f17c7e34e8377f7861a34e4dc16a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-task.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-task.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-taskworker_work.receipt.json",
+      "bytes": 1293,
+      "sha256": "834aa13dbc02f6c99f296ea4104a098937aeda3c74f0c70dfbeadccd4e04d6c0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-taskworker_work.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-vet-taskworker_work.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "reproduced_counts": {
+    "normal": 31,
+    "race": 31,
+    "vets": 6
+  },
+  "results": [
+    {
+      "mode": "normal",
+      "package": ".",
+      "receipt_sha256": "038afaab91e32a4792cd50c68fa40f12455087b3deb030fffd5892105bd7f572",
+      "roots": [
+        "TestProviderBoundaryIncompleteCauseCensusStaysUnavailable",
+        "TestProviderBoundaryObservedHardCauseSurvivesCyclicSibling",
+        "TestProviderBoundaryAbsentReadRequiresCompleteExclusiveNoRows",
+        "TestErrorCauseInspectionBoundsCyclesDepthWidthAndNil",
+        "TestErrorCauseInspectionRetainsHardSiblingAndOriginalAncestry",
+        "TestProviderBoundaryObservationClassificationAndOwnerCancellation",
+        "TestProviderBoundaryPanicAndCancellationPreserveCause"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "normal",
+      "package": "./controller",
+      "receipt_sha256": "a27118bb01f4291f8134cf41145caf9526aaac253ed274b9396c3113d4b32c9f",
+      "roots": [
+        "TestPaymentReadCircleBoundsMalformedTransportCauses",
+        "TestPaymentReadCauseOriginsRetainHardAndCancellationDominance",
+        "TestStReceiptCensusRejectsMalformedAndMixedAbsenceCauses",
+        "TestPaymentReadCircleSurvivesTransientOutageBeyondOneMinute",
+        "TestPaymentReadCircleRetriesTypedTransportTimeoutAndDisconnect",
+        "TestPaymentReadCirclePermanentResponsesDoNotRetry",
+        "TestPaymentReadCircleJoinedHardCauseDominatesRetry",
+        "TestPaymentReadCircleCanceledPauseDoesNotSendAgain"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "normal",
+      "package": "./model",
+      "receipt_sha256": "4094e28b09c2b3a33256bf1879b125531b1b85302f9a3ccf36d469a8e5300c02",
+      "roots": [
+        "TestRedisCleanupBoundsMalformedCausesAndRetainsPendingPeer",
+        "TestRedisCleanupPreservesIndependentTransientCancellationPolicy",
+        "TestRedisRecoveryHardErrorDominatesTransientCleanup"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "normal",
+      "package": "./monitor",
+      "receipt_sha256": "dc76a28e5ed98e6a15c18578b0d07f22d7bc46980c19e1ed726e5099002ce1f3",
+      "roots": [
+        "TestGrafanaPublicObservationBoundsMalformedScopeAndTransport",
+        "TestGrafanaPublicObservationRetainsScopeCancelAndTransientPolicies",
+        "TestHostScopeOnlyErrorRejectsMixedAndCanceledFailures",
+        "TestGrafanaObservationHTTPClientReplaysOverIPv4",
+        "TestGrafanaObservationHTTPClientParentCancellationStopsFallback"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "normal",
+      "package": "./task",
+      "receipt_sha256": "dbe62f8c4260f629a2e8577dc80529e32c65d9ec44f2969237d5e209c1a02545",
+      "roots": [
+        "TestTaskRetryAndMetricsBoundIncompleteCauseGraphs",
+        "TestTaskRetryCauseInspectionRetainsTypedSentinelPrecedence",
+        "TestTaskRetryDelayRejectsInvalidBounds",
+        "TestTaskRetryDelayPreservesOrdinaryErrorPrecedence",
+        "TestTargetRetryCapKeepsOtherErrorsAndPrecedence",
+        "TestTaskMetricLabelsAndOutcomesAreBounded"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "normal",
+      "package": "./taskworker/work",
+      "receipt_sha256": "7428510429c6dab1e558e1d2ea352fc3d45ab6a61ce9efa2b529b21ad3c099fe",
+      "roots": [
+        "TestProviderEgressPublicTaskBoundsIncompleteFundingCauses",
+        "TestProviderEgressProbeReadinessRetryClassifiesTheCompleteError"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "race",
+      "package": ".",
+      "receipt_sha256": "cc25b5c9125d7cbc69f518b3049099bb79fed1e0f89e438f8423668bbbd0f2bb",
+      "roots": [
+        "TestProviderBoundaryIncompleteCauseCensusStaysUnavailable",
+        "TestProviderBoundaryObservedHardCauseSurvivesCyclicSibling",
+        "TestProviderBoundaryAbsentReadRequiresCompleteExclusiveNoRows",
+        "TestErrorCauseInspectionBoundsCyclesDepthWidthAndNil",
+        "TestErrorCauseInspectionRetainsHardSiblingAndOriginalAncestry",
+        "TestProviderBoundaryObservationClassificationAndOwnerCancellation",
+        "TestProviderBoundaryPanicAndCancellationPreserveCause"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "race",
+      "package": "./controller",
+      "receipt_sha256": "6913b2813d2ea1e029ff310da495f31271d4eba3713c33b3055dd7dae4ac08fc",
+      "roots": [
+        "TestPaymentReadCircleBoundsMalformedTransportCauses",
+        "TestPaymentReadCauseOriginsRetainHardAndCancellationDominance",
+        "TestStReceiptCensusRejectsMalformedAndMixedAbsenceCauses",
+        "TestPaymentReadCircleSurvivesTransientOutageBeyondOneMinute",
+        "TestPaymentReadCircleRetriesTypedTransportTimeoutAndDisconnect",
+        "TestPaymentReadCirclePermanentResponsesDoNotRetry",
+        "TestPaymentReadCircleJoinedHardCauseDominatesRetry",
+        "TestPaymentReadCircleCanceledPauseDoesNotSendAgain"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "race",
+      "package": "./model",
+      "receipt_sha256": "f2b1f221f91e747be47f82be7ebd2e3dcdc82043e33cc86aba9634ee853ab14f",
+      "roots": [
+        "TestRedisCleanupBoundsMalformedCausesAndRetainsPendingPeer",
+        "TestRedisCleanupPreservesIndependentTransientCancellationPolicy",
+        "TestRedisRecoveryHardErrorDominatesTransientCleanup"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "race",
+      "package": "./monitor",
+      "receipt_sha256": "4b8978caf8fd9b7564d8d3a16c13c836a1637433849add9113f1dc8464e90b9c",
+      "roots": [
+        "TestGrafanaPublicObservationBoundsMalformedScopeAndTransport",
+        "TestGrafanaPublicObservationRetainsScopeCancelAndTransientPolicies",
+        "TestHostScopeOnlyErrorRejectsMixedAndCanceledFailures",
+        "TestGrafanaObservationHTTPClientReplaysOverIPv4",
+        "TestGrafanaObservationHTTPClientParentCancellationStopsFallback"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "race",
+      "package": "./task",
+      "receipt_sha256": "fa891cda3b86827b86511e3ede2f9ee1517674e4f4746427a4359ff467e7edf6",
+      "roots": [
+        "TestTaskRetryAndMetricsBoundIncompleteCauseGraphs",
+        "TestTaskRetryCauseInspectionRetainsTypedSentinelPrecedence",
+        "TestTaskRetryDelayRejectsInvalidBounds",
+        "TestTaskRetryDelayPreservesOrdinaryErrorPrecedence",
+        "TestTargetRetryCapKeepsOtherErrorsAndPrecedence",
+        "TestTaskMetricLabelsAndOutcomesAreBounded"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "race",
+      "package": "./taskworker/work",
+      "receipt_sha256": "f3546172358635a03775323347948948fca8373413f6d198cf8d3460236a7f63",
+      "roots": [
+        "TestProviderEgressPublicTaskBoundsIncompleteFundingCauses",
+        "TestProviderEgressProbeReadinessRetryClassifiesTheCompleteError"
+      ],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "vet",
+      "package": ".",
+      "receipt_sha256": "69e79267eeebb6e9fccd6286c44aca2ec50f5641513f43a7c55e327803285f83",
+      "roots": [],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "vet",
+      "package": "./controller",
+      "receipt_sha256": "eda94e80a30f3da94095db18533edfdf404efddb8aa255608aeb422a7985638d",
+      "roots": [],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "vet",
+      "package": "./model",
+      "receipt_sha256": "bbe6b68977f1de8a492e5ceb4f430fc4ae858ac4038ffa07211c61a049dde7d7",
+      "roots": [],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "vet",
+      "package": "./monitor",
+      "receipt_sha256": "f9aa3fa54a5fafc5d246b2a5d836f170456f4019fab0cdfe3e1de91b05ce4945",
+      "roots": [],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "vet",
+      "package": "./task",
+      "receipt_sha256": "105a6f62ab9b0c0b1509f515452f9b17b570f17c7e34e8377f7861a34e4dc16a",
+      "roots": [],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    },
+    {
+      "mode": "vet",
+      "package": "./taskworker/work",
+      "receipt_sha256": "834aa13dbc02f6c99f296ea4104a098937aeda3c74f0c70dfbeadccd4e04d6c0",
+      "roots": [],
+      "status": "INDEPENDENTLY_REPRODUCED_PASS"
+    }
+  ],
+  "source": {
+    "compile_receipt_sha256": "63021b2851c607bda3389d3bfd80f384d46ea5e49f70797d116f240fc98bf556",
+    "intake_sha256": "62a0242654496191e12184d4105c19d6e741ad0c7cf1ce8b5a27c144cd2be8b8",
+    "recipe_sha256": "6245e2be75d30cf7e55532c3c7daa6809a1cb320a62d78bd198b4816e8e5b3fe",
+    "resource": {
+      "canonical_lease_holder": 620836,
+      "canonical_lease_starttime": "94830154",
+      "cumulative_cap_bytes": 51539607552,
+      "data_floor_and_reserve_bytes": 75026796544,
+      "memory_minimum_bytes": 113816633344,
+      "original_baseline_bytes": 113681502208
+    },
+    "runner_sha256": "cf3ef1607659f167940575c5971ed5e498b2f5c714072dadb98f5c9478a8e217",
+    "schema": "server1709-bounded-causes-adoption-v1",
+    "scope": "31 selected roots each mode in six packages, six vets; operative controls separate",
+    "source_head": "1709ffe03ffa59ae31441374f3e673793d099764",
+    "source_stage_sha256": "f7313c041c3a92afb2793deb0967d369c284ad66373d18262f7c8be5d954713c",
+    "source_tree": "508ed76d96299b1415896a9c82c2e333c3db2fc4",
+    "status": "ADOPTED_SERVER1709_BOUNDED_CAUSES"
+  },
+  "limits": [
+    "Six operative control groups in both modes remain separately required.",
+    "No full Server release, mainnet activation or whole 38-requirement closure inferred."
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "yuma-activation-parent-source-finding-v1",
+  "status": "CONFIRMED_SOURCE_MISMATCH_NOT_BEHAVIORALLY_REPRODUCED",
+  "source_head": "7263a6ba303915d07b8f6c7d6c60949704f047ff",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-owner-causes/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 32697,
+      "sha256": "e70b2c286c8e10568dd439837e91fc8bb62e26c51b9275adfaa463e0929256f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-owner-causes/sn/tools/runtime-metadata-probe/src/historical_native_yuma_tests.rs",
+      "bytes": 12058,
+      "sha256": "e1481aae0c65bf25e53b7210aa33744407740af1f29f55d2dae0523098804472"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-owner-causes/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 17358,
+      "sha256": "20e4dc7291f579637da620b979d2dd1962a4082cc273068b38d466fc34c20d74"
+    }
+  ],
+  "finding": "fixture_with_allocation chooses drained_activation only when principal.is_some(). All legacy/Yuma3/liquid Yuma exporters call with principal=None, so original parent pending state remains100 while Go combined fixture unconditionally reports PendingServerEmission0. Genuinely drained original proof is not established by an RPC-only override.",
+  "required_fix": "Give every combined-owner Yuma variant an actually drained parent proof, execute original accrual before original drain/epoch and assert the storage values from its historical trie. Preserve standalone legacy fixture identity. Qualify a distinct corrected successor, including named omission controls; do not mutate frozen58e/726 or invent actual runtime failure.",
+  "assigned": "Astra Integration; compose same correction into captured-value join before build.",
+  "whole_mainnet_complete": false
+}

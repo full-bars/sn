@@ -1,0 +1,45 @@
+{
+  "status": "PREFLIGHT_AND_CONTROL_REBASE_VERIFIED_CORE_BODIES_PENDING",
+  "core_graph": {
+    "packages": 132,
+    "new_test_discovered": true,
+    "exit": 0,
+    "independently_reproduced_from_raw_output": true
+  },
+  "core_helper_interface": "Real small ELF stage/verify regression passed; wrapper preserves full qualified helper record before/after execution",
+  "claim_controls": {
+    "original_bodies_match_current_candidate": 14,
+    "narrow_rebases_reviewed": 4,
+    "production_source_changed": false,
+    "execution_pending": true
+  },
+  "concurrency": {
+    "after_model_owned_cleanup": true,
+    "native_and_core_can_overlap": true,
+    "combined_data_2x_bytes": 12884901888,
+    "combined_memory_admission_bytes": 51539607552,
+    "original_data_baseline_preserved": true
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-core-ac65-concurrent-20261004/evidence/ac65-selected-graph-preflight.receipt.json",
+      "bytes": 1461,
+      "sha256": "e5dbfff8bb0b4d9a6f299adacca5b38bbbe7f873d25829ddde0566d722fb598b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-core-ac65-concurrent-20261004/evidence/owned-image-interface-regression-v1.json",
+      "bytes": 2599,
+      "sha256": "4b2a03f74f515bc3bebaf6958a57c72e31222f1cca0b3370e6419ab4e9f82105"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/candidate/evidence/finite-scope-control-map-v2.json",
+      "bytes": 103083,
+      "sha256": "1e6c63e05c6d2cf08da4c76746ae1de7fc6841e5bc886ed9dc088263a619ff7d"
+    }
+  ],
+  "limits": [
+    "No Core behavior/race/vet qualification yet",
+    "No combined release qualification or activation",
+    "Original model failures and unexecuted runner versions retained"
+  ]
+}

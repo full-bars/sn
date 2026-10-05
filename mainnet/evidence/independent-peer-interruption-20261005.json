@@ -1,0 +1,27 @@
+{
+  "schema": "mainnet-independent-peer-interruption-v1",
+  "status": "FAIL_OR_INCOMPLETE",
+  "counts": {
+    "fail": 0,
+    "pass": 0,
+    "run": 0,
+    "skip": 0
+  },
+  "failure": {
+    "detail": "joint peer terminal is unqualified",
+    "type": "Refused"
+  },
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-nativefee11-v2.receipt.json",
+    "sha256": "22158dc2038915e74cccbec7f5f631bd44195470c2bd694af6461d8277cbb7e2"
+  },
+  "original_user_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-nativefee11-v2-user-terminal-readback.json",
+    "sha256": "943d6058221fe08df27f0c21a725e336cb30aeeb92ccdf6434e99852b281087a"
+  },
+  "completed_list_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-nativefee11-v2-list-nativefee.process-result.json",
+    "sha256": "efeefb1fc1d6cfb6df0c8cc3b1a204266564ad6c546e831f19ccda1a26264b77"
+  },
+  "required_fix": "Separate independent peer resource release from test success. Retain exact original failure and generation closure; retry only the unrun body and preserve completed listing."
+}

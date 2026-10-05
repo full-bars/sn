@@ -1,0 +1,195 @@
+{
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/config.go": {
+      "bytes": 9464,
+      "sha256": "68ac9ed2bbc8e0fded670b4a0e6ceb1c418136be19cc7682f7736e4d5cdb5e5c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/constructor_observation_test.go": {
+      "bytes": 3417,
+      "sha256": "53238f0fea09fbd2a534991d9d4d4a7d70c487a9a7faec913085d67d95bf2f05"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/host_linux.go": {
+      "bytes": 25838,
+      "sha256": "428a719730f02f3309bb735b6d1d52d63234fbac6b0953062f4e96cbf610d050"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/host_other.go": {
+      "bytes": 1303,
+      "sha256": "7b903f7e9d161423f7f4bfc1eb3d549491599f6b2e94d3261df651e89b58ef1b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory.go": {
+      "bytes": 14048,
+      "sha256": "a304a0f8486644b15a65d5f1c198103fa514836fa8e82d70d0927fbdab978400"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory_attributes_linux.go": {
+      "bytes": 6226,
+      "sha256": "c6e3c77fcf70bce5bf41e165a56abb62d7cb4a1346d59a91e1a9a3b3168ee95c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory_attributes_test.go": {
+      "bytes": 6728,
+      "sha256": "52a1d49d057587f28155ee2d93945218e95d4a6f08c6090f31fd97f5371e912a"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory_custody_test.go": {
+      "bytes": 4846,
+      "sha256": "02db9db8cf9b708b129f10d6a8cbbfebf0e3b06c9761a8adbf0662bc211aeff9"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory_linux.go": {
+      "bytes": 6724,
+      "sha256": "c94416d5b98c23d612269c695c4d9a3ad82473488813608d98567701ff9b8ddc"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory_other.go": {
+      "bytes": 299,
+      "sha256": "7f170caeea9d988d1f860903c27291afb0bf19ba2b7894746fdaba84a099d5bf"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory_physical_linux.go": {
+      "bytes": 4568,
+      "sha256": "c11a12aad4ef8b748c8ecab83385ef0156e017075ee11400dd7904a38848090a"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory_physical_load_test.go": {
+      "bytes": 2627,
+      "sha256": "693dbc75d2dd8a8a534b7be006f5790a15678e3e3122e91650eb94528778e601"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory_physical_test.go": {
+      "bytes": 6007,
+      "sha256": "90bccfa35a3d4e4c4663151e8bd69ab234e42ff366b908bc5c2661c91c09fefb"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/inventory_test.go": {
+      "bytes": 13030,
+      "sha256": "46f933661028ebec9dacb4b8cf772b02b0d53c7d367d37dfff9f2b579b7d3ddf"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/observation_test.go": {
+      "bytes": 3209,
+      "sha256": "9cf139f1e912ccd4dad0c2da1a17afadc4253080470de3321ef0d1e28c1982a5"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/owner.go": {
+      "bytes": 9266,
+      "sha256": "1f38fc38c537ad4cfef3fa2c1526ff1816dce113349ca9a7fb513e26b4138cd9"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/owner_local_test.go": {
+      "bytes": 10443,
+      "sha256": "de0a4356abd0be07fb28ea2c85d3ffc3d28fbc6c624c28f3bd3889056f9ac169"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/owner_test.go": {
+      "bytes": 25194,
+      "sha256": "aefb0b5e1a7c577a3733d3871dd9e2e15f4ff29232ea81bf58a94d49a2bc6eb7"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation.go": {
+      "bytes": 11159,
+      "sha256": "f05ebc32d00ecc048343e8e1b03c5a0d07e6d973e7a810b16bd1342e9cc9b292"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_apply_linux.go": {
+      "bytes": 37866,
+      "sha256": "2f58432e7489cce15dc14c76a9bfb4f610c6de3b105d4808d6979a5e82546288"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_capacity_linux.go": {
+      "bytes": 3545,
+      "sha256": "a17b105980f7803e65b7eaac7d2de0b6d5f24cbbca8ebc7ca8c46de3d26db626"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_empty_head_test.go": {
+      "bytes": 7713,
+      "sha256": "d29c6121115b5429fbec35cb643afd1e93fc82d05416c00bf96737dbdb352e27"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_other.go": {
+      "bytes": 630,
+      "sha256": "f5c3e44f2add6260d7fe9b90d3a3144afd317bf32375f26dd7895a473052ab90"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_plan_linux.go": {
+      "bytes": 29529,
+      "sha256": "bb3ca3e0ebb8089bf3f649d5cd8d15aec190e46b0554cc7acd31949f3cd1c4c7"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_restore_linux.go": {
+      "bytes": 19571,
+      "sha256": "ef86d84427554deec69c5a0f5cfc257ef3016dc93019b6dfc6df7381168d6fe2"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_restore_test.go": {
+      "bytes": 13865,
+      "sha256": "ecfd4b526178efff4c17cf5bbde79c3bdb106ccd6dd3572552957a4cca083f1c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_root_linux.go": {
+      "bytes": 8805,
+      "sha256": "236eb734c8a823083f75ef671d8eac14c92dcdeb1685563934d666fb45d29594"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_root_test.go": {
+      "bytes": 13173,
+      "sha256": "a9b28fa1ab53cc28fab94afc0bd4ff11551542262f81ae11be3625c091fa577b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/preparation_test.go": {
+      "bytes": 27950,
+      "sha256": "0b6484af7f3f437b7401649dbbce1fd94a85478bec88285f51825c79faa27e26"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/read_admission_test.go": {
+      "bytes": 3829,
+      "sha256": "cef81dbe80934fdcd7e9f2c64011fc25427f1bab56855304125840a8ca269cd5"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/root_generation_linux.go": {
+      "bytes": 2547,
+      "sha256": "e9b80675ec957ce9313f7dd856647b360f0bf35398527c171a8adefd8c908cda"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/durablevolume/root_generation_test.go": {
+      "bytes": 6657,
+      "sha256": "7b17b640358a450010d780724195f16c2a80b2b3ac3d51e34b24799eec11a633"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/go.mod": {
+      "bytes": 3847,
+      "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect/go.sum": {
+      "bytes": 21922,
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-core53-join.go": {
+      "bytes": 3532,
+      "sha256": "32de086743fe8ca3b422498f31ffc2b49cf21250d5097c4355992f04244291b1"
+    },
+    "/mnt/data/sn-testnet/sol-restore-core-independent-20261002/evidence/normal-receipt.json": {
+      "bytes": 4053,
+      "sha256": "30be193d2a7523fe136bcea2b9825923f2f80bd2195dbe596e3a510ee8837386"
+    },
+    "/mnt/data/sn-testnet/sol-restore-core-independent-20261002/evidence/race-vet-receipt.json": {
+      "bytes": 1703,
+      "sha256": "7571670c2db6dd4984ebac43c226aaaaab51dd9c8d3b8d99760122c398f0d655"
+    }
+  },
+  "proof": {
+    "allDurablevolumeAndModuleBytesEqualCore": true,
+    "allOtherPathsEqualFreshOrigin": true,
+    "durablevolumeImports": {
+      "bufio": true,
+      "bytes": true,
+      "context": true,
+      "crypto/rand": true,
+      "crypto/sha256": true,
+      "encoding/hex": true,
+      "encoding/json": true,
+      "errors": true,
+      "fmt": true,
+      "io": true,
+      "math": true,
+      "os": true,
+      "os/exec": true,
+      "path/filepath": true,
+      "reflect": true,
+      "runtime": true,
+      "sort": true,
+      "strconv": true,
+      "strings": true,
+      "sync": true,
+      "sync/atomic": true,
+      "syscall": true,
+      "testing": true,
+      "unicode/utf8": true,
+      "unsafe": true
+    },
+    "newBehaviorTestsExecuted": false,
+    "physicalFilesExact": 34
+  },
+  "schema": "urnetwork-source-join-receipt-v1",
+  "scope": "Retains independent core32 normal/race/vet only and prior distinct preparation scopes. No consumer, full-suite, module publication or live restore claim. Member332 is excluded.",
+  "source": {
+    "commit": "da2385aab6246f928c327463ddbac60fa8e276b8",
+    "freshOriginMain": "69a006b3a9fcc7a8947ed268dc7c713430dd8923",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/connect-53-integration/connect",
+    "qualifiedCore": "53bc92fabb28a79e26f5e3c5c78a6718751e5e79",
+    "tree": "b1919e473daab790c5cf7a6fb6fc56e74831d636"
+  },
+  "status": "BYTE_PRESERVING_SOURCE_JOIN"
+}

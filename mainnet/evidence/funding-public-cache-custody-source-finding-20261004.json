@@ -1,0 +1,41 @@
+{
+  "schema": "funding-public-cache-custody-source-finding-v1",
+  "status": "WORK_IN_PROGRESS_SOURCE_FINDING_CORRECTION_ASSIGNED_NOT_EXECUTED",
+  "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-composition/sn",
+  "base_head": "72c166c5c23231dc79043792c1840975c6459b3c",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-composition/sn/mainnet/economic_conservation_funding.go",
+      "relative": "mainnet/economic_conservation_funding.go",
+      "bytes": 18763,
+      "sha256": "83e252a581958012e602d87e7117b55fc3139102f9664c365fa860b9384259ec"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-composition/sn/mainnet/economic_conservation_funding_archive.go",
+      "relative": "mainnet/economic_conservation_funding_archive.go",
+      "bytes": 4183,
+      "sha256": "f42d2de904bf83f7860fad269152283601f10ee2b0a54e0d41153e472898366c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-composition/sn/mainnet/economic_conservation_command.go",
+      "relative": "mainnet/economic_conservation_command.go",
+      "bytes": 30062,
+      "sha256": "c80b4f32721e264f090e1c7eb82236095a31be23ceab0053452b721b718ec536"
+    }
+  ],
+  "observations": [
+    "Funding resolver accesses cold capture, entitlement and claim maps directly under ctx.Err checks.",
+    "Funding summary copies previously admitted cold funding totals.",
+    "Public state summary runs earlier component summaries, funding and conformance, then returns without a final original archive-view check."
+  ],
+  "risk": "Original owner identity can be lost between earlier component admission and later public funding/conformance publication. Current source inspection is not a reproduced execution failure.",
+  "required_fix": "Bound public funding use with original owner/context checks and a final publication fence. Preserve private cold admission checkAdmission/final finishAdmission semantics and avoid full retained-prefix rewalk per map access.",
+  "required_tests": [
+    "Closed/canceled admitted owner returns no published funding summary.",
+    "Late equal-byte physical owner replacement refuses public summary before publication.",
+    "Healthy summary retains original cold counters without historical payload reread.",
+    "Cold admission performs full original checks and one final custody fence without repeated prefix work."
+  ],
+  "owner": "Astra Current; Sol qualification",
+  "limits": "Mutable WIP source snapshot, not a frozen source receipt, compiler result, live failure reproduction or completed fix."
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "0e5-source-stage-independent-readback-v1",
+  "status": "PASS_SOURCE_ONLY",
+  "source_commit": "0e5ace17d6cdd419331a3dbca13fb3ec96c67808",
+  "source_tree": "72a346cbf56cf44d52decb6045d974f442b093a9",
+  "wrapper_receipt_sha256": "584bc38d4dbdefdf8841c34ec8e47312a74cc0ca5a2100ed2d1ab1d90d3b24e9",
+  "source_receipt_sha256": "c07eceb59719ff65485960b882934adbb19e161e019e8c56149708daaf996aa0",
+  "job_sha256": "1733997e422e846ea02dfacd739eadaa3e55d4bf4361da8fca2b2fcacdd7a3e4",
+  "adoption_sha256": "83d745892555562e6a159d24f3c725aa279fa6dcc4868021a587252eee00abff",
+  "physical": {
+    "physical_census_sha256": "0410b409aefe2b83fed7e748625bbd3fe658c59bd6da0be44db54e9a349556d5",
+    "tracked_bytes": 224960146,
+    "tracked_entries": 20650
+  },
+  "review": "All tracked physical Git blobs independently rehashed; exact commit/tree, clean complete source and no alternates. Wrapper raw output and receipt hashes match.",
+  "limits": [
+    "No graph, compile, behavioral test or requirement closure.",
+    "Private reused Core proxy is not public module publication.",
+    "Original failures and earlier successful scopes remain retained."
+  ]
+}

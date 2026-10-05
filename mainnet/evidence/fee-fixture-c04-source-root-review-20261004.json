@@ -1,0 +1,43 @@
+{
+  "schema": "fee-fixture-correction-source-root-review-v1",
+  "observed_utc": "2026-10-04T05:12:44.585074+00:00",
+  "status": "SOURCE_REVIEWED_QUALIFICATION_PENDING",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-fixture-correction/evidence/intake.json",
+    "bytes": 9488,
+    "sha256": "b1e454b99b01db0f64778812f895c701ef8e36d69f58abc5470ef01dca54ab9e"
+  },
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-fixture-correction/sn",
+    "head": "c04dd5def019f1d87bf5b2a147a8c0990a670793",
+    "tree": "3488d37e407a80ba634e1072840987029a9c976c",
+    "parent": "663a0ea299e21411a92b9eb064443d7cc9b0b851",
+    "clean": true,
+    "sparse": true,
+    "materialization": "Exact Git archive or owned complete checkout; never sparse filesystem copy."
+  },
+  "physical_git_bindings_verified": 14,
+  "recipe_ancestor_bindings_verified": 6,
+  "changed_paths": [
+    "mainnet/economic_conservation_archive_test.go",
+    "mainnet/economic_conservation_fixture_test.go",
+    "mainnet/economic_conservation_receipt_test.go",
+    "mainnet/economic_native_fee_evidence.go",
+    "mainnet/economic_native_fee_evidence_test.go",
+    "mainnet/economic_native_fee_signature_test.go"
+  ],
+  "review": "Complete six-path diff inspected against663. NativeFee production decoder unchanged; signer fixture roundtrips bare canonical128hex. Positive original-key admission precedes malformed-wire and foreign-key controls. Logical receipt fixture publishes through actual physical-head owner. Stable instance birth and advancing publication asserted. Public error helper includes emitted summary.",
+  "qualification": {
+    "go_roots_per_mode": 49,
+    "controls_per_mode": 11,
+    "vet": "./mainnet",
+    "server": "No source/module changes; exact1709/Coread6 and source-bound964 exports retained.",
+    "preserve": "663 normal28P18F and subsequent race/control results remain immutable. This is a separate corrected source scope.",
+    "causal_types": "9 production controls,2 exact old fixture controls; do not label fixture repairs as production guards."
+  },
+  "limits": [
+    "No code body, compiler or tests executed by source review.",
+    "Original663 failures and ineffective signature omission controls remain retained.",
+    "No mainnet readiness or whole economic witness inferred."
+  ]
+}

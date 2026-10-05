@@ -1,0 +1,98 @@
+{
+  "schema": "native-yuma-activation79c-source-root-review-v1",
+  "status": "TEST_ONLY_SOURCE_REVIEWED_QUALIFICATION_PENDING",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn",
+    "head": "79c5e816f897dbb89629f3630b47ae7cb64c6acf",
+    "tree": "332d3be36c5160a8ebc610274c02d943f5b74d05",
+    "parent": "d039fe283054d64dc749c600224a70f65ee1d463",
+    "clean": true
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/evidence/intake.json",
+      "bytes": 5284,
+      "sha256": "dcb060bf91daee0c67f41d9a2b43c37db4ffc34cf952701f37c46cb8f5b60846"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 35040,
+      "sha256": "70f8a5ce8300a9c2c16632e6826bf3904b27b2ccfc8cb0744ffc1833b64f3822"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn/tools/runtime-metadata-probe/src/historical_native_yuma_tests.rs",
+      "bytes": 13503,
+      "sha256": "fe78b4f2e542a69ac54dd0eed394878acf7cdc353c2b69b97aaaef62bb3af90e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 18346,
+      "sha256": "efa8e8cd53d81600471d116d6da20ad76db526039e74ad0e04ffec9bdd6213d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn/mainnet/economic_conservation_yuma_test.go",
+      "bytes": 14407,
+      "sha256": "25c687e86c53fa606907af4e3968581f661f3946cf07b4f5fde233f2ff6f915f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/evidence/selectors.json",
+      "bytes": 1057,
+      "sha256": "655f7b16ad939f377570590ff0789fa0a6a5ff15e226920c4f3a47c0ded4b4be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/evidence/operative-controls.json",
+      "bytes": 1227,
+      "sha256": "38366a466c71c2b566bac322c7354bcbb8b96d93343d97ef47618a3009fd3901"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/evidence/recipe.json",
+      "bytes": 1979,
+      "sha256": "14318d108934a52ff6984fb434c4f4244918d052b692d9b023f088ae815e2561"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-join/evidence/intake.json",
+      "bytes": 20278,
+      "sha256": "65017e5195440541a6b2bac9984a63f16a821951a15c0d3f76fe9b7821e85a18"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 35040,
+      "sha256": "70f8a5ce8300a9c2c16632e6826bf3904b27b2ccfc8cb0744ffc1833b64f3822"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-activation-fixture/evidence/controls/restore-original-yuma-pending-parent/historical_native_execution_tests.rs",
+      "bytes": 35022,
+      "sha256": "79935778fc85d7878814438365f9eee8cfa3076bc7cffb308eb9031edd2128fa"
+    }
+  ],
+  "review": [
+    "Read both complete changed hunks and surrounding parent-proof and original accrual path. Yuma presence independently selects drained activation without changing legacy no-principal/no-Yuma identity.",
+    "All three original pending storage words are read from the parent state trie and required zero for legacy/Yuma3/liquid exporters. Capture and replay then require original total-alpha200, unchanged9/89 emissions and matching post-state.",
+    "One test-fixture omission removes only the Yuma drain selector; expected assertion is the original parent-trie zero check. This does not prove a production control.",
+    "Production Rust/Go and module bytes are unchanged relative to d039; exact production engines may be reused only after closure/custody checks. Four selected Rust roots and three Go branch roots per normal/race mode remain to execute."
+  ],
+  "limits": [
+    "No source-only result establishes runtime approval, full production capacity or economic conservation.",
+    "d039 capture-join and726 operational-cause scopes remain separately unqualified; combine their pending scopes without dropping roots."
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "schema": "fd922-original-export-two-pass-two-fail-root-readback-v1",
+  "status": "TWO_CAPTURE_ROOTS_FAIL_TWO_YUMA_ROOTS_PASS",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-exports-v1.terminal.json",
+      "bytes": 4469,
+      "sha256": "0ad6e61f3fb82a7ffe9737c522ce0413975048c2a881279e78a5437e19f68ef7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-01.receipt.json",
+      "bytes": 3066,
+      "sha256": "39ec189861a879a15c78ac257a3c67b4b4339aecd7d00f86f1c92e37957a3a43"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-01.stdout",
+      "bytes": 421,
+      "sha256": "c35ae0bcdf4564010dbeab0efd85455ccf3ee7da610a9d77cb412322710ff51a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-01.stderr",
+      "bytes": 383,
+      "sha256": "ad00df5fb50ad832172d332d21b709125026f520a69e8fedf18181c8886b3c93"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-01.resources.csv",
+      "bytes": 155,
+      "sha256": "a8731e6895a222411aaa3552d2a4886574f291a27ecf52053f568d93c7db6d7d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-02.receipt.json",
+      "bytes": 3063,
+      "sha256": "306a8e69b55c878386cf11f455ce5e92133ba982bded0022242e6f0aabd3bc42"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-02.stdout",
+      "bytes": 419,
+      "sha256": "4e18f37c938ef193b8f548bca3c2a4bb8e9a8b1a8e98c36c74d381854464c382"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-02.stderr",
+      "bytes": 378,
+      "sha256": "9765fab79a84b19bc61d1d85a2d17007013840133457ba7d64561dd3b4201389"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-02.resources.csv",
+      "bytes": 155,
+      "sha256": "b6f4da0ea512655c40c7b31ad224076207e160daf526be7797d742cf3f00094e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-03.receipt.json",
+      "bytes": 4097,
+      "sha256": "33c7cf1b5681d8003cd4ceb0e227892ff67d884104a6f0abe4a23c978e9cd6bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-03.stdout",
+      "bytes": 238,
+      "sha256": "d967dea22644f5a263751224573545937aac254110d10ca208b952e32ce71849"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-03.resources.csv",
+      "bytes": 162,
+      "sha256": "2734b722e336f842fe1492a17e387a4be14f8e3ce94305781a14c7971978b311"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-03/yuma-legacy.json",
+      "bytes": 22720,
+      "sha256": "0526cbe6b3e420148a5dd72b7ab7e2682afd8fc6edadecc9ac1bd8a386208e41"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-03/yuma-yuma3.json",
+      "bytes": 22716,
+      "sha256": "41e6fc4028b39c0839751a5996b683047bb634584127c9fb16c038bf83633c80"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-03/yuma-liquid.json",
+      "bytes": 22707,
+      "sha256": "2a84270e98b92eabdb9dd1653fc4de1130a283a4f6dc7bbe0206ca925115b8c6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-04.receipt.json",
+      "bytes": 4463,
+      "sha256": "432eb383057a3c40b46473dcb082d4dbe9ae84ebd44d214c698b87735401372f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-04.stdout",
+      "bytes": 252,
+      "sha256": "cd2ab3243361772b485e7db10e15b637b2bd09ccd964294ea0c6b35698aa4895"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-root-04.resources.csv",
+      "bytes": 2697,
+      "sha256": "913e10fa0c01d4dec70b348ad8593bbabf18450c4db6acdf71933932809d696c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-04/yuma-populated-1024.json",
+      "bytes": 240025,
+      "sha256": "a350ce30ee73f3c7952dbb61eca5aa21b5bc2b2816d06915bed859bec1e1f99e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-04/yuma-populated-1024-original-events.json",
+      "bytes": 4293,
+      "sha256": "b6897358a0ff86c717218726e6df2e30f44b618e1282c7dc3b2383ec28cdeaa0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-04/yuma-populated-2048.json",
+      "bytes": 453030,
+      "sha256": "e473da03d0d92caa6e30db809ee334b70bfa3abdaa2b04779676b203573adee7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-04/yuma-populated-2048-original-events.json",
+      "bytes": 8394,
+      "sha256": "7a2a25c5963177a35770007472bee12f90593d2dd884c1423b2332950df9f600"
+    }
+  ],
+  "results": [
+    {
+      "root": "historical::tests::native_execution_tests::capture_join_tests::historical_native_vault_capture_exports_original_transaction_causes",
+      "status": "FAIL",
+      "exit": 101,
+      "exports": [],
+      "sampled_peaks": {
+        "forest_process_count": 0,
+        "forest_rss_bytes": 0
+      }
+    },
+    {
+      "root": "historical::tests::native_execution_tests::capture_join_tests::historical_native_vault_capture_exports_original_capture_sequences",
+      "status": "FAIL",
+      "exit": 101,
+      "exports": [],
+      "sampled_peaks": {
+        "forest_process_count": 0,
+        "forest_rss_bytes": 0
+      }
+    },
+    {
+      "root": "historical::tests::native_execution_tests::yuma_tests::historical_native_yuma_exports_original_complete_branches",
+      "status": "PASS",
+      "exit": 0,
+      "exports": [
+        {
+          "bytes": 22720,
+          "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-03/yuma-legacy.json",
+          "sha256": "0526cbe6b3e420148a5dd72b7ab7e2682afd8fc6edadecc9ac1bd8a386208e41"
+        },
+        {
+          "bytes": 22716,
+          "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-03/yuma-yuma3.json",
+          "sha256": "41e6fc4028b39c0839751a5996b683047bb634584127c9fb16c038bf83633c80"
+        },
+        {
+          "bytes": 22707,
+          "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-03/yuma-liquid.json",
+          "sha256": "2a84270e98b92eabdb9dd1653fc4de1130a283a4f6dc7bbe0206ca925115b8c6"
+        }
+      ],
+      "sampled_peaks": {
+        "forest_process_count": 1,
+        "forest_rss_bytes": 39800832
+      }
+    },
+    {
+      "root": "historical::tests::native_execution_tests::yuma_populated_tests::historical_native_yuma_exports_populated_64_by_1024_and_2048",
+      "status": "PASS",
+      "exit": 0,
+      "exports": [
+        {
+          "bytes": 240025,
+          "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-04/yuma-populated-1024.json",
+          "sha256": "a350ce30ee73f3c7952dbb61eca5aa21b5bc2b2816d06915bed859bec1e1f99e"
+        },
+        {
+          "bytes": 4293,
+          "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-04/yuma-populated-1024-original-events.json",
+          "sha256": "b6897358a0ff86c717218726e6df2e30f44b618e1282c7dc3b2383ec28cdeaa0"
+        },
+        {
+          "bytes": 453030,
+          "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-04/yuma-populated-2048.json",
+          "sha256": "e473da03d0d92caa6e30db809ee334b70bfa3abdaa2b04779676b203573adee7"
+        },
+        {
+          "bytes": 8394,
+          "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/exports-required/root-04/yuma-populated-2048-original-events.json",
+          "sha256": "7a2a25c5963177a35770007472bee12f90593d2dd884c1423b2332950df9f600"
+        }
+      ],
+      "sampled_peaks": {
+        "forest_process_count": 1,
+        "forest_rss_bytes": 93347840
+      }
+    }
+  ],
+  "finding": "Both capture roots reach actual original capture and refuse nonexact SCALE extrinsic bytes. Astra traced unconstrained Vec integer elements in test fixtures; type byte literals explicitly, preserve strict production decoder and add framing/adjacent controls.",
+  "limits": [
+    "Seven original Yuma/populated output files retained; do not rerun those successful roots for a capture-only fixture correction.",
+    "Capture-dependent Go tests have no original assets yet; full funding41 remains incomplete.",
+    "Sampled peaks are observations, not measured worst-case production sizing."
+  ]
+}

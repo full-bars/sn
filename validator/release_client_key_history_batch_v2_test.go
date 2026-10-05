@@ -163,8 +163,8 @@ func TestReleaseClientKeyHistoryBatchAdmissionFallbackReservesEachClientTwice(t 
 	}
 }
 
-// Quota, transport, unsigned and repeated work refusals cannot create a third
-// reservation attempt or a successful-looking response prefix.
+// Quota and input refusals stay hard. Transient service responses and work
+// fallback share the same two-reservation ceiling without returning a prefix.
 func TestReleaseClientKeyHistoryBatchFailureDoesNotRetryBeyondAdmission(t *testing.T) {
 	for _, status := range []int{http.StatusServiceUnavailable, http.StatusTooManyRequests, http.StatusRequestEntityTooLarge} {
 		fixture := newReleaseClientKeyAuthorityV2TestFixture(t)
@@ -190,7 +190,7 @@ func TestReleaseClientKeyHistoryBatchFailureDoesNotRetryBeyondAdmission(t *testi
 		count := calls
 		stateLock.Unlock()
 		want := 1
-		if status == http.StatusRequestEntityTooLarge {
+		if status == http.StatusRequestEntityTooLarge || status == http.StatusServiceUnavailable {
 			want = protocol.MaxClientKeyObservationReservationAttempts
 		}
 		if err == nil || response != nil || count != want {
@@ -485,7 +485,7 @@ func TestReleaseClientKeyHistoryBatchRealHttpPreservesDeadlineOwnership(t *testi
 		t.Fatal(err)
 	}
 	earlier := <-observed
-	if plural.path != "/sn/client-key/observations" || plural.remaining <= 30*time.Second || plural.remaining > time.Duration(protocol.ClientKeyObservationBatchOperationSeconds)*time.Second || singleton.path != "/sn/client-key/observation" || singleton.remaining <= 0 || singleton.remaining > 30*time.Second || !earlier.deadline.Equal(parentDeadline) || reader.client.Timeout != 30*time.Second {
+	if plural.path != "/sn/client-key/observations" || plural.remaining <= 30*time.Second || plural.remaining > time.Duration(protocol.ClientKeyObservationBatchOperationSeconds)*time.Second || singleton.path != "/sn/client-key/observation" || singleton.remaining <= 0 || singleton.remaining > clientKeyHistoryHTTPTimeout || !earlier.deadline.Equal(parentDeadline) || reader.client.Timeout != clientKeyHistoryHTTPTimeout {
 		t.Fatalf("actual deadline ownership differs: plural=%+v singleton=%+v earlier=%+v original=%s", plural, singleton, earlier, reader.client.Timeout)
 	}
 }

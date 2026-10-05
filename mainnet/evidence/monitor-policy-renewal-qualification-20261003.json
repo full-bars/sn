@@ -1,0 +1,577 @@
+{
+  "schema": "root-monitor-policy-renewal-qualification-v1",
+  "source": "1a98ef89fb34553b2b6c566cd4f4b30e2b256dd6",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/policy1a98-selected19-normal-race-vet-receipt.json",
+      "bytes": 7570,
+      "sha256": "3dd0160218f2d8a3739a8e7329d56d27cf3fe67013b7928a5b279b87783af965"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/effective-modules.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/effective-modules.jsonl",
+      "bytes": 175011,
+      "sha256": "75759b1db375bf2e6f1fe09f8ec89e44cd2f693f58ab317abdceb5997cb93e93"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-policy-renewal/evidence/intake.json",
+      "bytes": 19674,
+      "sha256": "84b3f119bdb9ebb92c71879c8db127952836794771c1252fa76607245792121a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/overlay.json",
+      "bytes": 2535,
+      "sha256": "4749c5aac3c740c2d872b8ba86a1b8824da8878d42e4e2cb8fe782657b3ed8d8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/run-scope.sh",
+      "bytes": 1746,
+      "sha256": "13ea2ecc5706445b760ad7ef80a06a0d362b5d70357a3c3736e856d58fb0dc94"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/sn-fixed.mod",
+      "bytes": 12031,
+      "sha256": "195451f77eac0eff4338878ee945c0ed4019e030a1132c3992c9030c37871920"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/sn-fixed.sum",
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/source-join.json",
+      "bytes": 2634,
+      "sha256": "52932335649df701b84f1997241f2b20944cfbed9f431333bd16b66752b858f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/vet-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/vet-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/vet-normal.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-normal.jsonl",
+      "bytes": 9326,
+      "sha256": "85f4ca88719f95af1a23cb40dd3e97e06b7bdd53ff2c743093a56a84a1d92509"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-normal.phase",
+      "bytes": 111,
+      "sha256": "35956e0619b82e5ef19c11b66827761f6d863805ad75b850b21d7d9e5104e3ed"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-normal.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-race.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-race.jsonl",
+      "bytes": 9313,
+      "sha256": "8d66742a6362e7fa491f38974e7a541271368b315c371ac8fdb21e5a6baac45f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-race.phase",
+      "bytes": 107,
+      "sha256": "af38bf9663f4e1dbf788adb391c906de86dd87dd97c39717242165088e525e26"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-race.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/neighbors-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-normal.jsonl",
+      "bytes": 8547,
+      "sha256": "8c17548abb234a7e16aa8bb16fc53b6056e1b9841c10c16d5fcb8a4989688420"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-normal.phase",
+      "bytes": 111,
+      "sha256": "2a35c926c3c2b201836e6cf210a3f34745d16f45448bc9b37d2d6663e46500f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-normal.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-race.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-race.jsonl",
+      "bytes": 8550,
+      "sha256": "c7cc49cc8b407f4efda21586aa3bb6e4da8af66d3a67cd8e1ff3a624b6e4f913"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-race.phase",
+      "bytes": 107,
+      "sha256": "e19dfac6a442ff536cc45c741a17a34ced82b1376596032367c2eac77eafa8a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-race.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/new_roots-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/policy1a98-three-controls-normal-race-receipt.json",
+      "bytes": 8542,
+      "sha256": "6126e687407388f48b4548ce9a302c21f865f81c854068b2667a7718aaf8f166"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/monitor_progress_policy.go",
+      "bytes": 14028,
+      "sha256": "c1e6f707060e3932b2c73ef5d8d0128ae443a1e243204938bc4f100f05a98837"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/overlay.json",
+      "bytes": 2552,
+      "sha256": "8d93f5649389492826c32226546e1c02aca56add6a2de480a144eb7dd1047d61"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/selector.txt",
+      "bytes": 73,
+      "sha256": "7cd771082a6948e0b33e632baa98e75fb083677fe7330880c64c7c0393d85c1d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/monitor_claim_worker.go",
+      "bytes": 13915,
+      "sha256": "661d06cd221f2b784b0da3f204694aac0eefdaa3ef732990973210efd98cd8be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/monitor_provider_worker.go",
+      "bytes": 13985,
+      "sha256": "3e242b715eb3b7c5f56d47a2215ab8dc700b7b8196f71c5dfeb3762979c469fc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/overlay.json",
+      "bytes": 2569,
+      "sha256": "b1c04d04018f32ffb0486c63d25c34283c5b472d2ecb64379f23ad9aa30e838d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/selector.txt",
+      "bytes": 237,
+      "sha256": "82b5f059b8263a4b74174b137aa299e801e8d081f44f5b561f6c1c28d740ba2e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/monitor_claim_worker.go",
+      "bytes": 13856,
+      "sha256": "d6febe793b06d1c1592aefb2f5eb7505e0774bd531ed4e288e3bcf85a939b0e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/overlay.json",
+      "bytes": 2548,
+      "sha256": "a0cc0412153f0a4d7ac3ad6fedf7efd67860e4b8d04840302b7a885d997fc5a8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/selector.txt",
+      "bytes": 70,
+      "sha256": "08328557d41ba0432efda4e269b4fed0eedfe2dd1f9c0310153606b3bdb6ef07"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/controls-binding.json",
+      "bytes": 2629,
+      "sha256": "1f674b5ddc617c3c3ba4ca5029f24d35cbe2db76e6c9bcb711212c4e4dde4a6e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/evidence/run-control.sh",
+      "bytes": 1609,
+      "sha256": "8dfd7e0c6266a431b6595cfff908aa13bfeec3b5d1c64ebf7947f4e6b4d51d56"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/normal.jsonl",
+      "bytes": 1756,
+      "sha256": "fff2abddab8eddf26d6d7dbf4b98065e2dea9b3de9c1dc99125d6138a3dae2fc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/normal.phase",
+      "bytes": 109,
+      "sha256": "1094937647bfc0b4d9370a13dac123efaaa092e851379be289c22d5a616dd1c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/normal.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/race.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/race.jsonl",
+      "bytes": 1757,
+      "sha256": "add215b9c488e1b4d98fb67f8fc09d1dd13a3351ca5dc5211d4460e97cd45175"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/race.phase",
+      "bytes": 107,
+      "sha256": "b974ac25d1bb48cd0eb23e1f880b006aa3b2b5eb7a25ce4589dc199cf4155cd0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/race.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-nonadjacent-review-reuse/race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/normal.jsonl",
+      "bytes": 5710,
+      "sha256": "715ea53d01064831979898b0fb7e71762d75cd6760f5a6a94db2f4abf4a1beb0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/normal.phase",
+      "bytes": 109,
+      "sha256": "4a5326cf415babe0939ab18492b84198ae41c2973a5434504d80ca5e2c0b42d4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/normal.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/race.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/race.jsonl",
+      "bytes": 5726,
+      "sha256": "037909ea67db5bb7a8d83b974bafff6b83f1e969631a5b7564a16f130a9278a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/race.phase",
+      "bytes": 107,
+      "sha256": "4caba86818d78c59a1f1e318c00a70e9508c85cff3d983d0ca8f9a3927201086"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/race.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-old-exact-policy-refusal/race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/normal.jsonl",
+      "bytes": 1858,
+      "sha256": "53f8a5feb026404fc3cde7fb7a8c6bfe804ded760fafcf3574bbc801676bcb2c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/normal.phase",
+      "bytes": 105,
+      "sha256": "bf74fcc249e1e4926de8a6048254319b1ca1e31084b8f24365120613011fead9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/normal.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/race.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/race.jsonl",
+      "bytes": 1857,
+      "sha256": "cafd874466ea85ddaf690e7469bbd144811a2b0b6866996bdada4dd44380245a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/race.phase",
+      "bytes": 103,
+      "sha256": "60805b017352dc5f74f397bf06ecf8e5b4bfddbbb0bb752fd4ccfbc65416c538"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/race.preflight",
+      "bytes": 157,
+      "sha256": "bea71776d2db3ccbd7011da531e4602eb84acf8cff15dbfa84ebed79de6abc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/control-premature-policy-ack/race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_claim.go",
+      "bytes": 8104,
+      "sha256": "b31a79e85339c6484c13b182bc750a5309c276a0cc579831462b7edba2ec08ab"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_claim_worker.go",
+      "bytes": 13795,
+      "sha256": "0388068ef3dd213facfac9ba3b55933eab458d43ac52ff4179995f4ee492aabe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_progress_attempt_test.go",
+      "bytes": 10584,
+      "sha256": "db4d60ffde4c2ffe754d52ea31c9120c95fae607002a4dbd34db6f5f295a6a62"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_progress_body_test.go",
+      "bytes": 6093,
+      "sha256": "5856fdf366aacea6c11a87e6e212dfe7f51527df032df3d3243bb8f079a0b8fa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_progress_policy.go",
+      "bytes": 14056,
+      "sha256": "1e3982d9234da7ee49d0eb06e929741c45a56695bd78111536fd0c2d08281a5f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_progress_policy_test.go",
+      "bytes": 23903,
+      "sha256": "74c8a4df2d8ce1e7bc1fb432e02af2b1f7ca0a6a0e837f28b968fbebb28f1bc4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_progress_retry.go",
+      "bytes": 4255,
+      "sha256": "cdbd019adec16b5ccec18a52509d737d07fc16762fbcca1862e296c356349763"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_provider.go",
+      "bytes": 10098,
+      "sha256": "c6ddde5eb9c87a882469b9dcd849c03a8b716bdd99c714f48898e0d8b91e1e02"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_provider_worker.go",
+      "bytes": 13865,
+      "sha256": "503fe69ce58145aff5f4749baa836c7e77e58a37be31cd86145378aabe463b83"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_services.go",
+      "bytes": 14186,
+      "sha256": "26d8ee517639e2386cd0c49055658e63740ea052ce4adc82f34dd18cdf63cca6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-policy-1a98-independent-20261003/changed/mainnet/monitor_services_policy.go",
+      "bytes": 9488,
+      "sha256": "69fe21e3f9b582467120068621a1a50d1fa83f812ec10a7ea3b8f83d14250fcd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-policy-renewal/evidence/legacy-grammar/monitor_claim_worker.go",
+      "bytes": 12017,
+      "sha256": "528bc5f6b6ce80978d470a8fa952ff7ba376bdd8e4a24b1a2400505f01a4ccda"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-policy-renewal/evidence/legacy-grammar/monitor_provider_worker.go",
+      "bytes": 12225,
+      "sha256": "b681cdf6eb8cc46c975723a657646bc71518daaec83a0dee092a676e0b97bee2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-policy-renewal/evidence/legacy-grammar/monitor_claim.go",
+      "bytes": 7750,
+      "sha256": "f6b7569c61f857c74edecaac1023ba36a15f8c6908cfccce62c9bfe31e017066"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-policy-renewal/evidence/legacy-grammar/monitor_provider.go",
+      "bytes": 9790,
+      "sha256": "04bbdfa025390c95bdfe8c9b02493db9ca39c23922337ed6fdb5bbad0e4330ac"
+    }
+  ],
+  "verified_results": [
+    {
+      "phase": "neighbors-normal",
+      "roots": {
+        "TestMonitorClaimPublicLostAckReopensExactCheckpoint": "pass",
+        "TestMonitorClaimHeartbeatCannotMoveAcceptanceDeadline": "pass",
+        "TestMonitorClaimReceiptRetainsEarlierMerkleWitness": "pass",
+        "TestMonitorClaimContradictionCannotRewriteRetainedReceipt": "pass",
+        "TestMonitorClaimCheckpointReopenFencesLostOrRetargetedHistory": "pass",
+        "TestMonitorProgressOwnedWorkersUseActualClientReadWindow": "pass",
+        "TestMonitorProgressPartialTransientBodyRetainsOwnedRecovery": "pass",
+        "TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation": "pass",
+        "TestMonitorProviderCheckpointReopenCannotAcceptCachedOrLostEvidence": "pass",
+        "TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal": "pass"
+      },
+      "exit": 0
+    },
+    {
+      "phase": "neighbors-race",
+      "roots": {
+        "TestMonitorClaimPublicLostAckReopensExactCheckpoint": "pass",
+        "TestMonitorClaimHeartbeatCannotMoveAcceptanceDeadline": "pass",
+        "TestMonitorClaimReceiptRetainsEarlierMerkleWitness": "pass",
+        "TestMonitorClaimContradictionCannotRewriteRetainedReceipt": "pass",
+        "TestMonitorClaimCheckpointReopenFencesLostOrRetargetedHistory": "pass",
+        "TestMonitorProgressOwnedWorkersUseActualClientReadWindow": "pass",
+        "TestMonitorProgressPartialTransientBodyRetainsOwnedRecovery": "pass",
+        "TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation": "pass",
+        "TestMonitorProviderCheckpointReopenCannotAcceptCachedOrLostEvidence": "pass",
+        "TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal": "pass"
+      },
+      "exit": 0
+    },
+    {
+      "phase": "new_roots-normal",
+      "roots": {
+        "TestMonitorClaimPublicRenewalRetainsOriginalLiability": "pass",
+        "TestMonitorProviderPublicBudgetRenewalKeepsIncidentAndRoster": "pass",
+        "TestMonitorClaimLegacyCheckpointRenewalPreservesExactOrigin": "pass",
+        "TestMonitorClaimRenewalRefusesExpectationAndIdentityRewrites": "pass",
+        "TestMonitorProgressPolicyAcknowledgmentRequiresDurablePublication": "pass",
+        "TestMonitorProgressReviewCapacityGrowsWithoutDroppingAcknowledgments": "pass",
+        "TestMonitorClaimEpochCapacityGrowthRetainsEveryExpectedDebt": "pass",
+        "TestMonitorProviderLegacyPolicyRenewalKeepsOriginalRoster": "pass",
+        "TestMonitorPolicyRenewalCannotStartWithoutRetainedHistory": "pass"
+      },
+      "exit": 0
+    },
+    {
+      "phase": "new_roots-race",
+      "roots": {
+        "TestMonitorClaimPublicRenewalRetainsOriginalLiability": "pass",
+        "TestMonitorProviderPublicBudgetRenewalKeepsIncidentAndRoster": "pass",
+        "TestMonitorClaimLegacyCheckpointRenewalPreservesExactOrigin": "pass",
+        "TestMonitorClaimRenewalRefusesExpectationAndIdentityRewrites": "pass",
+        "TestMonitorProgressPolicyAcknowledgmentRequiresDurablePublication": "pass",
+        "TestMonitorProgressReviewCapacityGrowsWithoutDroppingAcknowledgments": "pass",
+        "TestMonitorClaimEpochCapacityGrowthRetainsEveryExpectedDebt": "pass",
+        "TestMonitorProviderLegacyPolicyRenewalKeepsOriginalRoster": "pass",
+        "TestMonitorPolicyRenewalCannotStartWithoutRetainedHistory": "pass"
+      },
+      "exit": 0
+    },
+    {
+      "phase": "nonadjacent-review-reuse-normal",
+      "roots": {
+        "TestMonitorProgressReviewCapacityGrowsWithoutDroppingAcknowledgments": "fail"
+      },
+      "exit": 1
+    },
+    {
+      "phase": "nonadjacent-review-reuse-race",
+      "roots": {
+        "TestMonitorProgressReviewCapacityGrowsWithoutDroppingAcknowledgments": "fail"
+      },
+      "exit": 1
+    },
+    {
+      "phase": "old-exact-policy-refusal-normal",
+      "roots": {
+        "TestMonitorClaimPublicRenewalRetainsOriginalLiability": "fail",
+        "TestMonitorProviderPublicBudgetRenewalKeepsIncidentAndRoster": "fail",
+        "TestMonitorClaimLegacyCheckpointRenewalPreservesExactOrigin": "fail",
+        "TestMonitorProviderLegacyPolicyRenewalKeepsOriginalRoster": "fail"
+      },
+      "exit": 1
+    },
+    {
+      "phase": "old-exact-policy-refusal-race",
+      "roots": {
+        "TestMonitorClaimPublicRenewalRetainsOriginalLiability": "fail",
+        "TestMonitorProviderPublicBudgetRenewalKeepsIncidentAndRoster": "fail",
+        "TestMonitorClaimLegacyCheckpointRenewalPreservesExactOrigin": "fail",
+        "TestMonitorProviderLegacyPolicyRenewalKeepsOriginalRoster": "fail"
+      },
+      "exit": 1
+    },
+    {
+      "phase": "premature-policy-ack-normal",
+      "roots": {
+        "TestMonitorProgressPolicyAcknowledgmentRequiresDurablePublication": "fail"
+      },
+      "exit": 1
+    },
+    {
+      "phase": "premature-policy-ack-race",
+      "roots": {
+        "TestMonitorProgressPolicyAcknowledgmentRequiresDurablePublication": "fail"
+      },
+      "exit": 1
+    }
+  ],
+  "source_join": "11 exact Git overlays over separately authenticated a5 physical source;3 isolated operative controls;exact prior four-field grammar bytes bound to ff42 Git",
+  "qualification": "19 roots pass each mode;vet and graph preflight0;6 intended failures each mode across3 compiling operative controls",
+  "limits": [
+    "ExplicitConnect631/SDK9ae/Server5089 graph,not finalcurrentrelease",
+    "Local review reference does not establish signature,funding or finality authority",
+    "128-entry bounded growth is not indefinite archive rollover",
+    "Legacy JSON grammar is synthetic and not old executable output",
+    "Actualhost/custody/config activation and final38requirement closure remain"
+  ]
+}

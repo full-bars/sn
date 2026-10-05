@@ -1,0 +1,57 @@
+{
+  "schema": "native-adoptionade5-rust-control-operational-root-review-v1",
+  "status": "ADMITTED_TWO_CAUSAL_CONTROLS_NOT_YET_EXECUTED",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/rust-controls-adoption-v1.json",
+      "bytes": 1600,
+      "sha256": "bfb24eb086cebb1da4e216b5274847a8ec2b584411a51b8846f1bf2d72959ec2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/run-rust-controls-v3.py",
+      "bytes": 10195,
+      "sha256": "298a3601414956c62d5f11d2222ec6f9ef212cd2b967cbf0c4bc42326da053a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/run-rust-positives-v1.py",
+      "bytes": 12187,
+      "sha256": "73ffc6e5d123787b20a372f5834e04fd87ddfbb8030fd8b7f3300d3c40b204e8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-positives-v1.terminal.json",
+      "bytes": 4118,
+      "sha256": "64882d13458d9ffbeea6d8d77e4ea81f207fd71d4dc9e50d83bfdbc3bf09cb03"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/rust-controls/stage-receipt-v1.json",
+      "bytes": 2273,
+      "sha256": "c77fd772a5f5b06b3999bbb4528957ab6501a1de4076d618f05179d5a90e7c9d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/rust-controls-nochild-preflight-v1.json",
+      "bytes": 541,
+      "sha256": "05c5d0ffa46795015f956b3c029787a8fed65c07c390a57d91a8172364ff3f61"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/composed-finite-resource-proposal-v3.json",
+      "bytes": 7236,
+      "sha256": "4c8cf6b705b4a769228202fde52a823cc2b05a4558d49120bf20a75f9a1d84e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/operative-controls.json",
+      "bytes": 6877,
+      "sha256": "8dacf5386f5ae242a609e3fef3f3853dfa2bc911bdb9f1c9737d9a596cfdd7d9"
+    }
+  ],
+  "review": [
+    "Read complete v2 runner and complete v3 difference; imports and counterpart receipt bound before use, exact positive source stage verified.",
+    "Both independently owned29-file crates match positive source except one exact test expression; production/module closure unchanged.",
+    "Package-only clean, fresh libtest artifact and distinct protected owned image precede each exact activation root. Named intended assertion, exit101, zero passes, one failure, zero ignored are required; ordinary assertion failures are collected and children joined.",
+    "Cumulative64GiB cap retains original113681502208B baseline; entry and each phase verify canonical lease, data floor plus twice12GiB forecast and memory floor.",
+    "Actual positive counterpart independently confirmed; no production/economic authority follows."
+  ],
+  "limits": [
+    "Controls remain unexecuted at review.",
+    "Qualification classification helper enforces results itself; explicit runner assertion is redundant defense, not a correction to established product failure."
+  ]
+}

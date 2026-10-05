@@ -38,6 +38,7 @@ package merkle
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"math/big"
@@ -153,6 +154,18 @@ type Tree struct {
 // returns ErrEmptyTree for an empty input and ErrDuplicateLeaf if any two
 // leaves are identical.
 func NewTree(leaves []Leaf) (*Tree, error) {
+	return NewTreeWithContext(context.Background(), leaves)
+}
+
+// Build the identical canonical tree with cancellation at every node. Sorting
+// and one fixed-size hash remain atomic finite operations between owner checks.
+func NewTreeWithContext(ctx context.Context, leaves []Leaf) (*Tree, error) {
+	if ctx == nil {
+		return nil, errors.New("merkle construction requires an owner context")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	n := len(leaves)
 	if n == 0 {
 		return nil, ErrEmptyTree
@@ -161,6 +174,9 @@ func NewTree(leaves []Leaf) (*Tree, error) {
 	// Sort original indices by leaf hash, ascending lexicographic.
 	order := make([]int, n)
 	for i := range order {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		order[i] = i
 	}
 	sort.Slice(order, func(a, b int) bool {
@@ -174,6 +190,9 @@ func NewTree(leaves []Leaf) (*Tree, error) {
 	}
 	level0 := make([][32]byte, n)
 	for sortedIdx, origIdx := range order {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		leaf := leaves[origIdx]
 		if sortedIdx > 0 && level0[sortedIdx-1] == [32]byte(leaf) {
 			return nil, fmt.Errorf("%w: %#x", ErrDuplicateLeaf, leaf[:])
@@ -188,6 +207,9 @@ func NewTree(leaves []Leaf) (*Tree, error) {
 	for cur := level0; len(cur) > 1; {
 		next := make([][32]byte, 0, (len(cur)+1)/2)
 		for i := 0; i+1 < len(cur); i += 2 {
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
 			next = append(next, hashPair(cur[i], cur[i+1]))
 		}
 		if len(cur)%2 == 1 {
@@ -195,6 +217,9 @@ func NewTree(leaves []Leaf) (*Tree, error) {
 		}
 		t.levels = append(t.levels, next)
 		cur = next
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	return t, nil
 }

@@ -1,0 +1,284 @@
+{
+  "schema": "mainnet-independent-source-review-v1",
+  "status": "SOURCE_REVIEWED_NOT_BEHAVIORALLY_QUALIFIED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn",
+    "head": "7dc1944073f11e925e989b706e833b9004616f2b",
+    "tree": "7b9d3bd0e035a45dea69651fa299d78b7f4e0976",
+    "base": "3e7feec728d5666ad355942177cfa42a161359ce",
+    "clean": true,
+    "sparse": true
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/intake-v2.json",
+    "sha256": "3959376febfdde9ee82f37e6ea2cd2ad8084a2dc844b5ea96ef07e59ebed4d56"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/economic_conservation.go",
+      "bytes": 36251,
+      "sha256": "a73acf02b6cc502a001f3757815c106956edba6c542533e0923fbf812c60972c",
+      "relative": "mainnet/economic_conservation.go",
+      "git_blob": "eca97fd7984043bc396f1df07f84e3306d1a88d9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 25838,
+      "sha256": "6a4053dffe6548927c6b6cdb5c68d5e65731073cab63f3c124749755f585351b",
+      "relative": "mainnet/economic_conservation_archive.go",
+      "git_blob": "771b34234c4690c8b73b4ab8df9a8f2fa53cb5c9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/economic_conservation_archive_command.go",
+      "bytes": 18065,
+      "sha256": "9275268f7a1f67eab02c6a2d3d9ef5e01a5a76dd875243af3e92ccc4f00759bd",
+      "relative": "mainnet/economic_conservation_archive_command.go",
+      "git_blob": "043fb520c2c8afd53b35d400c9f0f98d77815a79"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/economic_conservation_claim_window.go",
+      "bytes": 20599,
+      "sha256": "80effbeeef4d4637fb46b5e9379043a933e7c10c7e3d22aeac7593431a8e84d7",
+      "relative": "mainnet/economic_conservation_claim_window.go",
+      "git_blob": "47d6947dd8b362c3a855b4ee93ec57d7131d2868"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/economic_conservation_claim_window_command.go",
+      "bytes": 5683,
+      "sha256": "09be28fc76056a513802e04a5f55959898df0438d7f48c17e8690bc92b0579c2",
+      "relative": "mainnet/economic_conservation_claim_window_command.go",
+      "git_blob": "078ae71422a3ad846d0f4161f5028015d28ae650"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/economic_conservation_claim_window_test.go",
+      "bytes": 19905,
+      "sha256": "ef58efde1b0297061cd126032c187c4d2fdb5970fbbc57d590e118a7ce9821d1",
+      "relative": "mainnet/economic_conservation_claim_window_test.go",
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/economic_conservation_command.go",
+      "bytes": 23345,
+      "sha256": "c6c69b86aa6305d9e334306467f2b4ca1cf66370f3b5c6a1a789cb70a175cfd8",
+      "relative": "mainnet/economic_conservation_command.go",
+      "git_blob": "31641325f09a2b3c274be7f5f706e574c0a9de8a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/economic_conservation_resources.go",
+      "bytes": 7674,
+      "sha256": "903b013d96eef0218cc784844ceb750aa6eefb1b7e52024583d3849c15094d97",
+      "relative": "mainnet/economic_conservation_resources.go",
+      "git_blob": "c8c0e31cbb9e9cf17c8c0f82c56cec31fc2ec303"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/main.go",
+      "bytes": 25615,
+      "sha256": "c9e683cbaa7a98245f0ffc6502353f1ae97831b4a1b592dc13f5411ebae84741",
+      "relative": "mainnet/main.go",
+      "git_blob": "5d3906d95e034a77006235f43b601b14be1469be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/monitor_claim_state.go",
+      "bytes": 13736,
+      "sha256": "f568a97078fc5b921994de768ef82933fb336baef2dc5f79f819f8fea75120b8",
+      "relative": "mainnet/monitor_claim_state.go",
+      "git_blob": "771a7958ecdb91262ff540fe0f5e3b9116d86481"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/mainnet/monitor_services.go",
+      "bytes": 13462,
+      "sha256": "879372acf4e14337dbca0a3ea6dabcb151dd986358c975a2c32a431992bae8d7",
+      "relative": "mainnet/monitor_services.go",
+      "git_blob": "4d622771da3a5cad1d31c0a1b11c2d845728beea"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/qualification-recipe.json",
+      "bytes": 9913,
+      "sha256": "2a6ae44963af454b90965bc59e1243ee28d8d5ac24a7218db8078866fb7bfb83"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/operative-controls-v2.json",
+      "bytes": 7839,
+      "sha256": "de2706aabb24e4f5480af08e38fb0033f1a23cb0850413624f345f7281b170cb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/source-audit.json",
+      "bytes": 2896,
+      "sha256": "71735ccbbdc2796810844bc36e59784af912aa97da4a715af79e2c8f51bc1e58"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/intake.json",
+      "bytes": 5735,
+      "sha256": "c8c9572a17b86aea2392f6ea463be3266dedff31677a840799932bf012162761"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/go.mod",
+      "bytes": 11292,
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d",
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/sn/go.sum",
+      "bytes": 67111,
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57",
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/operative-controls.json",
+      "bytes": 7328,
+      "sha256": "e959f1e36876022fc69afc5a69e7417ee3fe67b01dd7364783444c35c4fb8557"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/controls/original-signature-omitted.go",
+      "bytes": 20601,
+      "sha256": "a16fdac0c4ac3a320c02ab0c444f31476d3ff8a8b133ef7c2c167c2f766e9806"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/controls/unresolved-prefix-omitted.go",
+      "bytes": 20499,
+      "sha256": "439e15e200fe41301c3ff01956423cb6998f3e0ec358d774e2a9773a001af3a8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/controls/archived-review-omitted.go",
+      "bytes": 5692,
+      "sha256": "23a09d0134c163625963fe149e04466c90394da765211deaf34eb5406c81dcc7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/controls/derived-retirement-omitted.go",
+      "bytes": 20617,
+      "sha256": "4f104a44187b929943ff9d4654444f53d612e90679d8ab313c1a9d3d838fea47"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/controls/retired-publication-omitted.go",
+      "bytes": 20670,
+      "sha256": "eec6a6114b7faa44980116d92acefdb184d373eb52f46d8a399b3b8249111fa0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/controls/resident-admission-budget-omitted.go",
+      "bytes": 20610,
+      "sha256": "a35f27824c84c0850e33b18e0b0c4070f480fcad6b5fe91c6e260cda97637ede"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-claim-window/evidence/controls/indexed-facts-borrow-resident-budget.go",
+      "bytes": 25692,
+      "sha256": "411a5db5e54e6dd23ec69de00ad1b2b4fd87f4f5c78fa26fa3d8905c68903892"
+    }
+  ],
+  "selected_declarations_verified": {
+    "TestEconomicConservationClaimWindowPublicFull128RetainsUnknownCreditAndResumes": {
+      "path": "mainnet/economic_conservation_claim_window_test.go",
+      "line": 106,
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    "TestEconomicConservationClaimWindowPublicLostAckAndShortOutputReconcile": {
+      "path": "mainnet/economic_conservation_claim_window_test.go",
+      "line": 140,
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    "TestEconomicConservationClaimWindowPublicRefusesUnknownOmissionAndEpochReuse": {
+      "path": "mainnet/economic_conservation_claim_window_test.go",
+      "line": 177,
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    "TestEconomicConservationClaimWindowPublicUnknownPaymentStaysHot": {
+      "path": "mainnet/economic_conservation_claim_window_test.go",
+      "line": 191,
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    "TestEconomicConservationClaimWindowPublicRefusesEnrollmentSignatureAndOldReview": {
+      "path": "mainnet/economic_conservation_claim_window_test.go",
+      "line": 202,
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    "TestEconomicConservationClaimWindowPublicRetiredReceiptContradictionKeepsPeerProgress": {
+      "path": "mainnet/economic_conservation_claim_window_test.go",
+      "line": 232,
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    "TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage": {
+      "path": "mainnet/economic_conservation_claim_window_test.go",
+      "line": 254,
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    "TestEconomicConservationClaimWindowPublicSignatureCannotForgeRetirement": {
+      "path": "mainnet/economic_conservation_claim_window_test.go",
+      "line": 313,
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    "TestEconomicConservationClaimWindowCountsResidentPredecessorBeforeEffects": {
+      "path": "mainnet/economic_conservation_claim_window_test.go",
+      "line": 331,
+      "git_blob": "c68cfca21cccdcbc7da70408f2e7d4918c5b31be"
+    },
+    "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt": {
+      "path": "mainnet/economic_conservation_archive_test.go",
+      "line": 176,
+      "git_blob": "9911502474ff188746177940433fa327fc2033a2"
+    },
+    "TestEconomicConservationArchivePublicAdmitsOnceThenUsesRetainedIndex": {
+      "path": "mainnet/economic_conservation_archive_test.go",
+      "line": 202,
+      "git_blob": "9911502474ff188746177940433fa327fc2033a2"
+    },
+    "TestEconomicConservationArchivePublicLostAcknowledgmentsReconcileExactHeads": {
+      "path": "mainnet/economic_conservation_archive_test.go",
+      "line": 237,
+      "git_blob": "9911502474ff188746177940433fa327fc2033a2"
+    },
+    "TestEconomicConservationRenewalPublicPreservesOriginalPolicyAndReviewChain": {
+      "path": "mainnet/economic_conservation_archive_test.go",
+      "line": 320,
+      "git_blob": "9911502474ff188746177940433fa327fc2033a2"
+    },
+    "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan": {
+      "path": "mainnet/economic_conservation_receipt_test.go",
+      "line": 17,
+      "git_blob": "c722ea3721daec1a7c31cf1c02542a794415ad85"
+    },
+    "TestEconomicConservationPublicReceiptRefreshRetainsFirstArchiveBytes": {
+      "path": "mainnet/economic_conservation_receipt_test.go",
+      "line": 114,
+      "git_blob": "c722ea3721daec1a7c31cf1c02542a794415ad85"
+    },
+    "TestEconomicConservationPublicUnknownReceiptPaymentRemainsHotUntilKnown": {
+      "path": "mainnet/economic_conservation_receipt_test.go",
+      "line": 145,
+      "git_blob": "c722ea3721daec1a7c31cf1c02542a794415ad85"
+    },
+    "TestEconomicConservationArchiveIndexLostCustodyRefusesBeforeMutation": {
+      "path": "mainnet/economic_conservation_archive_index_test.go",
+      "line": 64,
+      "git_blob": "f9117fedc05e4dfd4b4fa26f4c810f86644a7357"
+    }
+  },
+  "review": [
+    "Original configured Claim history key signs exact owner/checkpoint/predecessor/ordinal/next-policy transition. Legacy policy cannot silently enroll authority; endpoint, member, pool and original key remain unchanged.",
+    "Public proposal is read-only and emits exact unsigned signing bytes; signed window goes through existing archive plan/apply, retaining original-before-next publication and exact lost-ack reconciliation.",
+    "Retirement is reconstructed from original retained epoch evidence and matched original vault receipt; unknown/unmatched obligations and full unresolved prefix remain live. Signature alone cannot authorize supplied forged retirement.",
+    "Archived cumulative heads/review identities and retired receipt lookup survive reopening without replaying historical payload for each sample. Actual state/observation/summary comparisons and archive admission are counted.",
+    "Current predecessor and archive index share entry/serialized-byte budgets with an explicit two-times margin. Replacement checks larger prior/new basis before changing admitted state.",
+    "Healthy native and vault observation proceeds when a returned Claim record contradicts an archived receipt. Stock/full quantization/economic acceptance authority is unchanged.",
+    "Read all11 changed paths, nine new public/boundary test bodies and seven original production mutations; exact seventeen declarations and module bindings verified."
+  ],
+  "qualification_required": {
+    "roots_per_mode": 17,
+    "normal_and_race_required": true,
+    "operative_groups_per_mode": 7,
+    "vets": [
+      "./mainnet"
+    ],
+    "short_long_bodies_separate": true,
+    "long_history_duration_requires_concrete_forecast": true
+  },
+  "execution_recipe_disposition": "The source recipe1800s batch ceiling is not adopted for129-review race execution: comparable original history took2869.42s alone. Independently forecast with2xmargin and retain prior successes; no second long body under short-overlap envelope.",
+  "remaining": [
+    "Complete-owner cross-volume restore adapter",
+    "Complete original entitlement/root/funding census",
+    "Unattended operator capture/replay/monitor and approved runtime-profile continuation",
+    "Whole economic execution effects/full native denominator/quantization and final release qualification"
+  ],
+  "limits": [
+    "No compiler/body/control results or full requirement closure are inferred from source review.",
+    "No owner signing, transaction broadcast or production activation authorized by this increment."
+  ]
+}

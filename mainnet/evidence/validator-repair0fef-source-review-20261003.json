@@ -1,0 +1,219 @@
+{
+  "schema": "urnetwork-root-validator-repair-observation-source-review-v1",
+  "captured_utc": "2026-10-03T18:11:47.788264+00:00",
+  "status": "SOURCE_ONLY_UNCOMPILED",
+  "bindings": [
+    {
+      "bytes": 6418,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/evidence/seal_source.py",
+      "sha256": "8d20877cab503c2a96bd3da00e2f7064fcf8c7b3f7409676d656f3061a6ca36d"
+    },
+    {
+      "bytes": 10265,
+      "git_blob": "1adc41c6159fb09ff7959483fb634d720f0e723e",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_active_validator.go",
+      "relative_path": "mainnet/repair_active_validator.go",
+      "sha256": "b9c0cd9f42bba3f2a1e4f3bb7b8465625548d31840f0668f83e8ea4c1e3fba3d"
+    },
+    {
+      "bytes": 10755,
+      "git_blob": "47ae3d6df1506cec57849b1df0cfc228a60b0787",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_active_validator_host.go",
+      "relative_path": "mainnet/repair_active_validator_host.go",
+      "sha256": "8ae1e15de63b9f6ed7cf5a22777aa8a600315d193397232f9fad2f20f1ae9e44"
+    },
+    {
+      "bytes": 8066,
+      "git_blob": "ba33ff7a0cd2d212a543c355a9452616f68ebeee",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_active_validator_store.go",
+      "relative_path": "mainnet/repair_active_validator_store.go",
+      "sha256": "b11ee4bdef299592fcab1fd0e756ab561ac5df57be3ab975fd72541bbfa450bb"
+    },
+    {
+      "bytes": 8244,
+      "git_blob": "daa93de1ab40ba005f43de49714df0e81a0ef181",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator.go",
+      "relative_path": "mainnet/repair_validator.go",
+      "sha256": "75d93dcb512cce4df826df820e769f183f995bb72aa14f8ae2723a4c2530a622"
+    },
+    {
+      "bytes": 4582,
+      "git_blob": "64e70c656e47f60dd1151451473a4918ffc3bd5f",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_control.go",
+      "relative_path": "mainnet/repair_validator_control.go",
+      "sha256": "baaa2255953e21a4c4d12b9c1ce06b3c7d6fd356e2a6712d60d5bac5e865f479"
+    },
+    {
+      "bytes": 23327,
+      "git_blob": "02a2c4347510ff8eda1e343706c3363e8f05fbad",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_host.go",
+      "relative_path": "mainnet/repair_validator_host.go",
+      "sha256": "1f09fec59cd9cc5fa9eaa657ff62000bcef1491fd85980f538c61a7d42d5c56a"
+    },
+    {
+      "bytes": 1753,
+      "git_blob": "84dc574e3a9b10d638d62d640bb66b984df1a4a7",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_observation.go",
+      "relative_path": "mainnet/repair_validator_observation.go",
+      "sha256": "c803109dce1cb6f55d13ff876a9f54333a975b34aa88064cd0fcb56baa683da7"
+    },
+    {
+      "bytes": 19044,
+      "git_blob": "9fba0f425dc6799ad0f8d4530a5482d889f9513d",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_observation_test.go",
+      "relative_path": "mainnet/repair_validator_observation_test.go",
+      "sha256": "01ad2192ea865621816b359622090dd06b1fafc053a1a651fecdbfb45f9aacfe"
+    },
+    {
+      "bytes": 12874,
+      "git_blob": "7da512bf0cefc0cee87b08390a60567e6015ccc2",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_store.go",
+      "relative_path": "mainnet/repair_validator_store.go",
+      "sha256": "4aa950cea37f39164bec963f8e119cfd433d9fd0bd51fdb3adf7cfa46db3330c"
+    },
+    {
+      "bytes": 4592,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/evidence/source-join.json",
+      "sha256": "f025b507b459523bee9e66d1bd33f57ec406e9416c6f955d1ccc473ed95b15df"
+    },
+    {
+      "bytes": 5111,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/evidence/jobs.json",
+      "sha256": "4a92e4944dfc219776216bd8b68cbebcdf8f3b5c908558e7a4ba998ea0a20a04"
+    },
+    {
+      "bytes": 3420,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/evidence/graph-recipe.json",
+      "sha256": "91c83d824c8eb4cec052fe8a16a5ff735699f70f0ed5062f758fc368eec3d156"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/evidence/intake.json",
+      "bytes": 11025,
+      "sha256": "73e05d1f0242029e2473e5f91d832aefdd816ca4ee849cd3f1f23fda62920bf0"
+    }
+  ],
+  "source": {
+    "all_other_git_entries_equal_parent": true,
+    "changed_files": [
+      {
+        "bytes": 10265,
+        "git_blob": "1adc41c6159fb09ff7959483fb634d720f0e723e",
+        "git_mode": "100644",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_active_validator.go",
+        "relative_path": "mainnet/repair_active_validator.go",
+        "sha256": "b9c0cd9f42bba3f2a1e4f3bb7b8465625548d31840f0668f83e8ea4c1e3fba3d"
+      },
+      {
+        "bytes": 10755,
+        "git_blob": "47ae3d6df1506cec57849b1df0cfc228a60b0787",
+        "git_mode": "100644",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_active_validator_host.go",
+        "relative_path": "mainnet/repair_active_validator_host.go",
+        "sha256": "8ae1e15de63b9f6ed7cf5a22777aa8a600315d193397232f9fad2f20f1ae9e44"
+      },
+      {
+        "bytes": 8066,
+        "git_blob": "ba33ff7a0cd2d212a543c355a9452616f68ebeee",
+        "git_mode": "100644",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_active_validator_store.go",
+        "relative_path": "mainnet/repair_active_validator_store.go",
+        "sha256": "b11ee4bdef299592fcab1fd0e756ab561ac5df57be3ab975fd72541bbfa450bb"
+      },
+      {
+        "bytes": 8244,
+        "git_blob": "daa93de1ab40ba005f43de49714df0e81a0ef181",
+        "git_mode": "100644",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator.go",
+        "relative_path": "mainnet/repair_validator.go",
+        "sha256": "75d93dcb512cce4df826df820e769f183f995bb72aa14f8ae2723a4c2530a622"
+      },
+      {
+        "bytes": 4582,
+        "git_blob": "64e70c656e47f60dd1151451473a4918ffc3bd5f",
+        "git_mode": "100644",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_control.go",
+        "relative_path": "mainnet/repair_validator_control.go",
+        "sha256": "baaa2255953e21a4c4d12b9c1ce06b3c7d6fd356e2a6712d60d5bac5e865f479"
+      },
+      {
+        "bytes": 23327,
+        "git_blob": "02a2c4347510ff8eda1e343706c3363e8f05fbad",
+        "git_mode": "100644",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_host.go",
+        "relative_path": "mainnet/repair_validator_host.go",
+        "sha256": "1f09fec59cd9cc5fa9eaa657ff62000bcef1491fd85980f538c61a7d42d5c56a"
+      },
+      {
+        "bytes": 1753,
+        "git_blob": "84dc574e3a9b10d638d62d640bb66b984df1a4a7",
+        "git_mode": "100644",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_observation.go",
+        "relative_path": "mainnet/repair_validator_observation.go",
+        "sha256": "c803109dce1cb6f55d13ff876a9f54333a975b34aa88064cd0fcb56baa683da7"
+      },
+      {
+        "bytes": 19044,
+        "git_blob": "9fba0f425dc6799ad0f8d4530a5482d889f9513d",
+        "git_mode": "100644",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_observation_test.go",
+        "relative_path": "mainnet/repair_validator_observation_test.go",
+        "sha256": "01ad2192ea865621816b359622090dd06b1fafc053a1a651fecdbfb45f9aacfe"
+      },
+      {
+        "bytes": 12874,
+        "git_blob": "7da512bf0cefc0cee87b08390a60567e6015ccc2",
+        "git_mode": "100644",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn/mainnet/repair_validator_store.go",
+        "relative_path": "mainnet/repair_validator_store.go",
+        "sha256": "4aa950cea37f39164bec963f8e119cfd433d9fd0bd51fdb3adf7cfa46db3330c"
+      }
+    ],
+    "clean": true,
+    "commit": "0fef99beb74416ac3a019142ce55a72353fa3165",
+    "git_entry_count": 20584,
+    "git_ls_tree_sha256": "a281ae83400dfdd7105f0a29a89aab8039b766d4f8f8d25d72368f68cf49fbb8",
+    "module_bytes_unchanged": true,
+    "parent": "87e40c645951abe246f347055532eaee5fbe6c98",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-causes/sn",
+    "representation": "Sparse checkout: nine changed files physically read back; full Git tree bound. Not an independently materialized full physical archive.",
+    "tree": "fb113025a0d25bb707eed5420412db6c33b3bdd9"
+  },
+  "new_test_roots": [
+    "TestRepairValidatorOwnerReadErrorsDoNotPoison",
+    "TestRepairValidatorOwnerReadCancellationRetainsOriginal",
+    "TestRepairValidatorOwnerReplacementRemainsSticky",
+    "TestRepairValidatorControlReadErrorsRecover",
+    "TestRepairValidatorControlReplacementCannotBeUndoneInOwner",
+    "TestRepairValidatorClosedControlDoesNotClaimIdentityLoss",
+    "TestRepairValidatorPublicReadbackUnavailableRetainsAcknowledgment",
+    "TestRepairActiveValidatorPublicReservedReadFailureHasNoNewEffect",
+    "TestRepairActiveValidatorPublicReadbackUnavailableRetainsAcknowledgment",
+    "TestRepairValidatorPublicCanceledReadbackRetainsOriginal",
+    "TestRepairValidatorPublicReturnedGenerationConflictStillRefuses",
+    "TestRepairValidatorHostReadErrorsKeepObservationCauses",
+    "TestRepairValidatorPublicCgroupReadFailurePreservesStart",
+    "TestRepairActiveValidatorRetainedReadErrorsPreserveAuthority"
+  ],
+  "source_review": [
+    "Manager/cgroup/policy and retained marker observations return original read errors before comparing generation, hashes or population.",
+    "Acknowledged generation and consumed stop/start reservations are preserved; unavailable postcondition readback records source-refused or consumed-uncertain without authorizing a replacement action.",
+    "Confirmed marker/inode/content loss is sticky within the original owner; EIO/EMFILE are typed unavailable, while cancellation and closed descriptor retain their causes without claiming replacement.",
+    "Instance-local context hooks only add failures after observations; they do not supply bytes or admit reads. Public test paths inspect actual persisted journals and command effect counts.",
+    "Creation cleanup joins descriptor close errors; exact module files and every non-delta Git entry remain unchanged from parent87e40."
+  ],
+  "limits": [
+    "Sparse source verified, not independently materialized full source/module graph or compiled behavior.",
+    "Fourteen new roots and six neighbors plus old-body controls remain queued; predicted causal counts are not results.",
+    "Finite signed action/observation budgets and acknowledged-versus-uncertain dispositions are unchanged; no live host restart or deployment was performed.",
+    "Native allocation consumer, multi-role repair and cross-domain conservation remain separate implementation/qualification work."
+  ]
+}

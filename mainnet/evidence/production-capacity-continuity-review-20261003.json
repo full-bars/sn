@@ -1,0 +1,31 @@
+{
+  "adjacent_boundary": "ReleaseEvidenceV2SourceBounds permits an exact private V6 simulator lifetime doubling; it is not production/mainnet approval and cannot confer that authority.",
+  "bindings": {
+    "validator/config_evidence_source_v2.go": {
+      "bytes": 2246,
+      "sha256": "f1c2111bec11c79593f7377d6a6c34f53f5488858402d6d3c5ba05d3ca8f6437"
+    },
+    "validator/config_evidence_v2.go": {
+      "bytes": 26652,
+      "sha256": "00306b8c4ff52aa609c92065ae8921f076cc80ea099a750eafad44e980fb2577"
+    },
+    "validator/production_authority_history.go": {
+      "bytes": 17079,
+      "sha256": "0ef7193c6ee9341fc8281dd9d45730c4d837c2992cbc2fc956588d13c708f32a"
+    }
+  },
+  "classification": "SOURCE_REVIEW_IMPLEMENTATION_REQUIRED",
+  "finding": "validateProductionAuthorityContinuity retains the complete EvidenceV2.Bounds vector in its stable config comparison; a separately approved lifetime capacity increase therefore rejects existing production authority continuity.",
+  "limits": [
+    "No behavioral execution, authority approval, or capacity acceptance claim.",
+    "Implementation delegated to Astra; source review does not close MG09 or final current-release recovery."
+  ],
+  "required_change": [
+    "A config-bound, separately signed production revision retains exact predecessor, original approvals, activation, policy and historical signed prefix.",
+    "Qualify aggregate retention horizon and ledger/upload/archive/resident resource dimensions, with nonshrinking retained requirements and explicit future allowance.",
+    "Resource capacity never changes active membership, economic allocation or spending authority.",
+    "Exercise actual public preview and config loader/reopen on populated old state; preserve original failed and incomplete evidence."
+  ],
+  "schema": "urnetwork-mainnet-production-capacity-continuity-review-v1",
+  "source_commit": "caeb959cf4d707509c6bd98ff214f436b2909ded"
+}

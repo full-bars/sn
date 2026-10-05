@@ -18,6 +18,7 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/urnetwork/connect/durablevolume"
 	"golang.org/x/sys/unix"
 )
 
@@ -51,8 +52,8 @@ func (self attemptSettlementV2IO) validate() error {
 }
 
 // Native directory admission also pins private ownership before any write.
-func openAttemptSettlementV2Root(path string) (*attemptPrivateDirectory, error) {
-	root, err := openAttemptPrivateDirectory(path)
+func openAttemptSettlementV2Root(path string, storageContexts ...context.Context) (*attemptPrivateDirectory, error) {
+	root, err := openAttemptPrivateDirectory(path, storageContexts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +76,7 @@ func retainAttemptSettlementV2Roots(coordinator string, participants []AttemptSe
 		paths = append(paths, participant.StateDir)
 	}
 	for _, path := range paths {
-		root, err := openAttemptSettlementV2Root(path)
+		root, err := openAttemptSettlementV2Root(path, physical.context())
 		if err != nil {
 			return physical, errors.Join(err, physical.closeRoots())
 		}
@@ -145,7 +146,7 @@ func (self attemptSettlementV2IO) openRoot(path string) (*attemptPrivateDirector
 		}
 		return root, func() error { return nil }, nil
 	}
-	root, err := openAttemptSettlementV2Root(path)
+	root, err := openAttemptSettlementV2Root(path, self.context())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -249,6 +250,11 @@ func openAttemptSettlementOwnedClosureDirectory(coordinator, name string, create
 		}
 	}()
 	if create {
+		if parent.storage != nil {
+			if err := parent.storage.CheckWrite(); err != nil {
+				return nil, err
+			}
+		}
 		if err := unix.Mkdirat(int(parent.file.Fd()), name, 0o700); err != nil && !errors.Is(err, os.ErrExist) {
 			return nil, err
 		}
@@ -273,7 +279,11 @@ func openAttemptSettlementOwnedClosureDirectory(coordinator, name string, create
 	if err != nil || before.dev != opened.dev || before.ino != opened.ino || before.mode != opened.mode || before.uid != opened.uid {
 		return nil, errors.Join(errors.New("compact closure directory changed during open"), err, physical.closeFile(file))
 	}
-	child := &attemptPrivateDirectory{file: file, path: filepath.Join(parent.path, name), anchor: opened}
+	child := &attemptPrivateDirectory{file: file, path: filepath.Join(parent.path, name), anchor: opened, storageCtx: parent.storageCtx}
+	child.storage, err = openValidatorDurableDirectory(child.storageCtx, child.path, durablevolume.ReadWrite, false)
+	if err != nil {
+		return nil, errors.Join(err, physical.closeFile(file))
+	}
 	if err := errors.Join(physical.retainWitness(child), parent.check(), child.check()); err != nil {
 		return nil, errors.Join(err, physical.closeOwnedRoot(child))
 	}

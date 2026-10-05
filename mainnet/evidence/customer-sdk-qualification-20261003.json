@@ -1,0 +1,254 @@
+{
+  "author_intake_sha256": "d89f8b11ab20b70d209f025450d451c85218eced1785c04264b7764248781a76",
+  "bindings": {
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/client-tools-readback.json": {
+      "bytes": 899,
+      "sha256": "b80fbda25c00ee6833e26e84e2dbd53437b542f59b4d393214424d1a1fd29fde"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-cpp-scratch-readback.json": {
+      "bytes": 441,
+      "sha256": "db6d26388451d2a4fa302452d38f275f402799790f96fa880e153c6161a15e60"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-cpp.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-cpp.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-cpp.stdout": {
+      "bytes": 306,
+      "sha256": "11969717f16f6a7c635ba34498eb4f9c6be6c79bf3f85418c53eec9bec0e7058"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-go-sum-correction.json": {
+      "bytes": 720,
+      "sha256": "646118fa169613377a93890cbe52cbb9569f73e42ff30a7709a7e703d664cb74"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-go.sum-after-overbroad-download": {
+      "bytes": 38019,
+      "sha256": "9c11f68a3abccbf0ca3095fcedb93e69cf69d966b033ca4eb3d3191f5ed3a925"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-imported-packages.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-imported-packages.jsonl": {
+      "bytes": 2314626,
+      "sha256": "b34039d2c0aaf89a9c59d700f12aea5cfe47fa5a0042a8a53d9763b2978d98ea"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-imported-packages.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-imported-qualified-go-sum-after.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-imported-qualified-go-sum-before.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-imported-qualified.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-imported-qualified.jsonl": {
+      "bytes": 2314626,
+      "sha256": "b34039d2c0aaf89a9c59d700f12aea5cfe47fa5a0042a8a53d9763b2978d98ea"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-imported-qualified.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-js.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-js.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-js.stdout": {
+      "bytes": 593,
+      "sha256": "dcf03d89a4d4ef47d06661c4bf89368624b47d3a21e98021e1d5df98a7395ec9"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-modules.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-modules.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-modules.stderr": {
+      "bytes": 126,
+      "sha256": "acb5068c5ce4fb45393aa40e0703656129b7df537a3fa23a8125a2678ad4a1a3"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-normal-offline.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-normal-offline.jsonl": {
+      "bytes": 2061,
+      "sha256": "3fe15baa926e08cf32a117497c6691683e58a554ee6dc164b8bc820bfb01141e"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-normal-offline.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-normal-qualified-go-sum-after.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-normal-qualified-go-sum-before.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-normal-qualified.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-normal-qualified.jsonl": {
+      "bytes": 2063,
+      "sha256": "6b2f0ce0314c849be12b7935e56ca09ac059a1a2b472ad25c4a10b5ab9810bb5"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-normal-qualified.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-offline-download.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-offline-download.jsonl": {
+      "bytes": 123873,
+      "sha256": "c283a8527fdd899fcaa2729b33bbbd80059d1179eebb6f392a4159be5f06a293"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-offline-download.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-race-qualified-go-sum-after.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-race-qualified-go-sum-before.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-race-qualified.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-race-qualified.jsonl": {
+      "bytes": 2067,
+      "sha256": "0a7d8a8059624c0e5eb250467676676a63b9ccad38351684ff5252cfa37a095b"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-race-qualified.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-race.jsonl": {
+      "bytes": 2067,
+      "sha256": "997740a4725c8aae228be4a3244e86b416ee8677cd53028221efdce6522411cd"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-vet-go-sum-after.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-vet-go-sum-before.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-vet.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/source-fence.json": {
+      "bytes": 1282,
+      "sha256": "7192af8e2554522eaa05e363e55378dc36d73dd33c84dc24cb42b7aa8d81d053"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/source-readback.json": {
+      "bytes": 324,
+      "sha256": "e34c3aeffb3796d4125ed0caedd8f473c7e132a36ef4b87f5d155f7b65c255fe"
+    }
+  },
+  "checks": {
+    "cpp": {
+      "actual_roundtrip": true,
+      "exit": 0
+    },
+    "imported_graph": {
+      "exit": 0,
+      "go_sum_after": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3",
+      "go_sum_before": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3"
+    },
+    "js": {
+      "exit": 0,
+      "roots": 6
+    },
+    "normal": {
+      "counts": {
+        "fail": 0,
+        "pass": 2,
+        "skip": 0
+      },
+      "exit": 0,
+      "go_sum_after": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3",
+      "go_sum_before": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3",
+      "roots": {
+        "TestWalletTransferOldCallerRefusesBeforeHttp": "pass",
+        "TestWalletTransferRequestIdSurvivesRetriesAndSerialization": "pass"
+      }
+    },
+    "race": {
+      "counts": {
+        "fail": 0,
+        "pass": 2,
+        "skip": 0
+      },
+      "exit": 0,
+      "go_sum_after": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3",
+      "go_sum_before": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3",
+      "roots": {
+        "TestWalletTransferOldCallerRefusesBeforeHttp": "pass",
+        "TestWalletTransferRequestIdSurvivesRetriesAndSerialization": "pass"
+      }
+    },
+    "vet": {
+      "exit": 0,
+      "go_sum_after": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3",
+      "go_sum_before": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3"
+    }
+  },
+  "created_utc": "2026-10-03T04:01:05.913946+00:00",
+  "limits": [
+    "Selected SDK2 Go normal/race, SDK vet, JS6 and C++ roundtrip only.",
+    "Imported-package module graph (82 modules) qualified; full unused module metadata enumeration not claimed.",
+    "Earlier offline go mod download all appended 153 unused transitive go.mod checksums to own archive, failed, and was restored exactly; corrected qualified runs had before/after tracked go.sum guards.",
+    "No Server530 qualification inherited."
+  ],
+  "schema": "sol-independent-customer-sdk-scoped-v1",
+  "source": {
+    "connect_api": "5654569957ac813cd4599dc54a917eee6d2420d7",
+    "sdk": "9ae95704a2303f94963e9d2fad81fa5705a4698c"
+  },
+  "source_fence_sha256": "7192af8e2554522eaa05e363e55378dc36d73dd33c84dc24cb42b7aa8d81d053"
+}

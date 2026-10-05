@@ -2,6 +2,7 @@ package crv4
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -9,7 +10,6 @@ import (
 	gsrpcrpc "github.com/centrifuge/go-substrate-rpc-client/v4/rpc"
 	gsrpcchain "github.com/centrifuge/go-substrate-rpc-client/v4/rpc/chain"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	gsrpcblock "github.com/centrifuge/go-substrate-rpc-client/v4/types/block"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"golang.org/x/crypto/blake2b"
 )
@@ -66,7 +66,7 @@ func TestLocateFinalizedExtrinsicPreservesContextAcrossScan(t *testing.T) {
 	raw := []byte{1, 2, 3, 4}
 	digest := blake2b.Sum256(raw)
 	extrinsicHash := types.Hash(digest)
-	finalizedHash := types.Hash{5}
+	header, finalizedHash := receiptTestHeader(t, types.Hash{4}, 5, [][]byte{raw}, 0)
 	calls := 0
 	client := &runtimeIdentityTestClient{callContext: func(ctx context.Context, result any, method string, args ...any) error {
 		if ctx.Value(callerContextKey{}) != callerContextValue {
@@ -80,7 +80,7 @@ func TestLocateFinalizedExtrinsicPreservesContextAcrossScan(t *testing.T) {
 			if len(args) != 1 || args[0] != finalizedHash.Hex() {
 				return errors.New("finalized header hash changed")
 			}
-			*(result.(*types.Header)) = types.Header{Number: types.BlockNumber(5)}
+			return receiptTestAssign(result, receiptTestHeaderWire(header))
 		case "chain_getBlockHash":
 			if len(args) != 1 || args[0] != uint64(5) {
 				return errors.New("finalized block number changed")
@@ -90,7 +90,7 @@ func TestLocateFinalizedExtrinsicPreservesContextAcrossScan(t *testing.T) {
 			if len(args) != 1 || args[0] != finalizedHash.Hex() {
 				return errors.New("finalized block hash changed")
 			}
-			*(result.(*gsrpcblock.SignedBlock)) = gsrpcblock.SignedBlock{Block: gsrpcblock.Block{Extrinsics: []string{codec.HexEncodeToString(raw)}}}
+			return receiptTestAssign(result, map[string]any{"block": map[string]any{"header": receiptTestHeaderWire(header), "extrinsics": []string{codec.HexEncodeToString(raw)}}})
 		default:
 			return errors.New("unexpected finalized scan RPC")
 		}
@@ -108,7 +108,17 @@ func TestLocateFinalizedExtrinsicPreservesContextAcrossScan(t *testing.T) {
 	if !found || receipt == nil || receipt.BlockHash != finalizedHash || receipt.BlockNumber != 5 {
 		t.Fatalf("finalized receipt = %+v found=%t", receipt, found)
 	}
-	if calls != 4 {
-		t.Fatalf("finalized scan RPC calls=%d, want 4", calls)
+	if calls != 5 {
+		t.Fatalf("finalized scan RPC calls=%d, want 5", calls)
 	}
+}
+
+// Marshals real JSON through the production destination, retaining omitted and
+// null wire distinctions instead of manufacturing a decoded admission verdict.
+func receiptTestAssign(target, value any) error {
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(raw, target)
 }

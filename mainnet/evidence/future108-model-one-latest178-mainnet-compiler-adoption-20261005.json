@@ -1,0 +1,29 @@
+{
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "accounting_floor_bytes": 0,
+  "margin": 2,
+  "history_count": 0,
+  "model_count": 1,
+  "compiler_count": 1,
+  "data_minimum_available_bytes": 17179869184,
+  "memory_minimum_available_bytes": 120259084288,
+  "compiler_memory_max_bytes": 8589934592,
+  "compiler_memory_swap_max_bytes": 0,
+  "data_growth_stop_bytes": 8589934592,
+  "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_GO_COMPILER",
+  "job_sha256": "371424b4186d4f09357a8134f01627ee31f4cfaa24a080dfcf9d33f979a01ecd",
+  "runner_sha256": "523a14a82f896cb536ca146c1fd07aceb4ff2050fa78fb3c44141407edc808a6",
+  "schema": "root-corrected178-mainnet-compiler-adoption-v1",
+  "adopted_at_ns": 1791160617513946228,
+  "review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest178-mainnet-compiler-review-20261005.json",
+    "sha256": "fa934f9c327a89cd0979a71668245868c47167a71095cdb82caf51e137933ba2"
+  },
+  "scope": "One exact normal ./mainnet compiler only; BODY66 requires separate retained image and adopted SHORT job.",
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "ba5260285eb73650667665627f015e415afd9d82",
+    "sn": "178639735c0e9f4f2309b187557204a2bbf65f1e"
+  }
+}

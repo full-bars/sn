@@ -1,0 +1,197 @@
+{
+  "author_validation": "Exact clean Git heads/trees, all finite changed Git blobs, parent expected hashes and actual predecessor joins checked. AST only; no staging, Go, compiler or test body.",
+  "closed_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "owned_containers": [
+      {
+        "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "postgres"
+      },
+      {
+        "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "redis"
+      }
+    ],
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  },
+  "closed_model30_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected1ea-native-model30-closed-terminal-proof-v1.json",
+    "sha256": "819d8191629441e62f6e450e24a1d01cf0c5a649d4020d679fe0a0602efb9c92"
+  },
+  "closed_model37_actual_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-independent-readback-v1.json",
+    "sha256": "2492394fc0c1152c61b6040985b2e10e9c5e3b9c34de2ae4c231efd59624955b"
+  },
+  "closed_model37_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+    "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+  },
+  "closed_monitor943_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+    "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+  },
+  "effective_overlay_files": 160,
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 4294967296,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 1800,
+    "TimeoutStopSec": 90,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-latest475-core07-server87d-metadata-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-latest475-core07-server87d-metadata-v1-20261005.service"
+  },
+  "expected_elapsed_seconds": [
+    60,
+    180
+  ],
+  "forecast": {
+    "actual_model_count": 0,
+    "basis": "4 individually bounded1MiB source logs plus three64MiB graph logs, 65330 new source bytes and retained metadata. Existing2GiB forecast at2x plus held4GiB reserve:12GiB data/108GiB memory; hard4GiB/swap0/growth4GiB. Exclusive metadata class.",
+    "held_former_model_disk_bytes": 4294967296,
+    "held_former_model_memory_bytes": 4294967296,
+    "margin": 2,
+    "metadata_disk_bytes": 2147483648,
+    "metadata_memory_bytes": 2147483648
+  },
+  "healthy_guards": {
+    "data_active_formula": "max(6307319808, immediate_available-4294967296)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "rebased_or_retargeted": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-metadata-job-v1.json",
+    "sha256": "e8bcef480a3f293a56fddfae24958e40ed8a46b2086ce0696c603fd21896867a"
+  },
+  "overlay_bytes": 65330,
+  "overlay_files": 4,
+  "parent_actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-metadata-v1.receipt.json",
+    "sha256": "69f12c2aee0aa789800a5432b78d84a3eedc78e2824097b0e9e04932a9376902"
+  },
+  "prior_compiler": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server873e313c-monitor-normal-compile-v1.receipt.json",
+    "sha256": "4cc6b22a34861164dd82a8c5aacfbf35d1c065c92ffa55f941508c82087a73df"
+  },
+  "prior_evidence": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-normal-v1.receipt.json",
+      "sha256": "a254adf289d90e2330de3db5f657341c29ce80cb74acf55c6fc6e4814c2b329a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-terminal-sol-readback-v1.json",
+      "sha256": "d7e6d21a026fe8168568911ff58d7d560c03d48d0b74319ff5c64b725f2ec31e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1.receipt.json",
+      "sha256": "8fe93671c654edf678762139f581fba21ba35c661ab8fff83e1e15e5decc1301"
+    }
+  ],
+  "prior_failed_compiler": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server7885-monitor-normal-compile-v1.receipt.json",
+    "sha256": "094379f175a77e4d0abae6791e833ca2d0fb5e9fd5ec75cd7e6b14eba9e11dd6"
+  },
+  "prior_xops33": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final2f1043-xops-conservation33-v1.receipt.json",
+    "sha256": "56748837d4ee77742f4af3250d30a34916566469739a05cdbaad3aa64e18ee2b"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 12884901888,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "e8bcef480a3f293a56fddfae24958e40ed8a46b2086ce0696c603fd21896867a",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "runner_sha256": "a368556b994da4a6dc271cacf07b4b11cd6d0dacaa78dd62bc56a648c1206fbb",
+    "short_count": 0,
+    "status": "ADOPTED_ONE_BOUNDED_METADATA_STAGE_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest475-core07-server87d-metadata-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest475-core07-server87d-delta-metadata-v1.py",
+    "sha256": "a368556b994da4a6dc271cacf07b4b11cd6d0dacaa78dd62bc56a648c1206fbb"
+  },
+  "schema": "latest475-core07-server87d-delta-metadata-review-v1",
+  "scope": "Exactly 4 test-only Git blobs over immutable actual88/Core07/ec3 overlay, and three offline Go-list dependency/test graphs. No compiler, test body, DB, download, source mutation or inherited runtime qualification. Prior carry3 actual2PASS1FAIL remains preserved; ordinary joined failure does not require unrelated metadata to pass that suite.",
+  "source_changes": "Finite exact test-file successors; module manifests and production source unchanged. Archives and previous overlays remain immutable.",
+  "source_deltas": [
+    {
+      "all_changed_paths": [],
+      "base": "07fe87bd6891cade2574abe9e39a7e78d48a3612",
+      "go_mod_sum_unchanged": true,
+      "head": "07fe87bd6891cade2574abe9e39a7e78d48a3612",
+      "module": "connect",
+      "repo": "/mnt/data/sn-testnet/mainnet-sdk-dns-child-order-20261005/connect",
+      "scope": "Test-only source successor; original receipts keep original tuple.",
+      "tree": "6f8a06a553af97ea220734500eec3b20c0f29878"
+    },
+    {
+      "all_changed_paths": [
+        "M\tcontroller/provider_work_first_partial_test.go"
+      ],
+      "base": "ec3feae1cb35d8718dbbf33f5d11d6ab42206e3a",
+      "go_mod_sum_unchanged": true,
+      "head": "87d278f5e5f710ff6e3238892d9dcb0cc543c31a",
+      "module": "server",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261005/server-first-partial-reports-api/server",
+      "scope": "Test-only source successor; original receipts keep original tuple.",
+      "tree": "a356b31e8d5ec9da8fd91385346a16645fe91b8f"
+    },
+    {
+      "all_changed_paths": [
+        "M\tmainnet/economic_conservation_carry_chronology_test.go",
+        "M\tpayoutartifact/whole_work_earning_test.go",
+        "M\tpayoutartifact/whole_work_export_test.go"
+      ],
+      "base": "88bd7956d401fe6de1f764242e75e6ddf1a3653f",
+      "go_mod_sum_unchanged": true,
+      "head": "47566b256b60cec221cca9a63f16aa56cb017b4b",
+      "module": "sn",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261005/mainnet-carry-credit-final/sn",
+      "scope": "Test-only source successor; original receipts keep original tuple.",
+      "tree": "423a587b880859f1034b8169e119a5c44d28830c"
+    }
+  ],
+  "source_tuple": {
+    "core": "07fe87bd6891cade2574abe9e39a7e78d48a3612",
+    "server": "87d278f5e5f710ff6e3238892d9dcb0cc543c31a",
+    "sn": "47566b256b60cec221cca9a63f16aa56cb017b4b"
+  },
+  "status": "AUTHOR_SEALED_READY_FOR_ROOT_ADOPTION",
+  "virtual_package_dirs": [
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/server/cli/stnativefees",
+    "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/sn/nativefee"
+  ]
+}

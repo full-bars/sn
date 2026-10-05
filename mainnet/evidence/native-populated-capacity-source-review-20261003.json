@@ -1,0 +1,133 @@
+{
+  "scope": "Synthetic populated provider-capacity source review only; no execution, measured capacity, actual runtime admission or native producer qualification",
+  "status": "SOURCE_REVIEWED_UNEXECUTED",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-provider-capacity/evidence/intake.json",
+    "sha256": "52e02cf0aaa548d4cabd7f7f8262d31aeaf73f7ede342fe298f16a77400a3f4a"
+  },
+  "source": {
+    "base": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+    "binding": {
+      "bytes": 16348,
+      "git_blob": "47c7994f6b60815acbb83a1bae55716708120799",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-provider-capacity/server/tools/native-storage-oracle/examples/native-provider-capacity.rs",
+      "relative_path": "tools/native-storage-oracle/examples/native-provider-capacity.rs",
+      "sha256": "b4e4cd98740efd5b4a2455e830e41696b08d88cb1e5fb1f3cd6aa20451b967f9"
+    },
+    "changed_paths": [
+      "tools/native-storage-oracle/examples/native-provider-capacity.rs"
+    ],
+    "head": "c74a980742b83ac528f72bbebc7118982f9fd123",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-provider-capacity/server",
+    "sparse_checkout": true,
+    "tree": "0c422fc4b38490e136e1981b6074a1c70caeee54",
+    "unchanged_legacy_oracle": [
+      {
+        "bytes": 7032,
+        "git_blob": "75a95c7e21c8776214170c4061455a2c636a6a9d",
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-provider-capacity/server/tools/native-storage-oracle/src/main.rs",
+        "relative_path": "tools/native-storage-oracle/src/main.rs",
+        "sha256": "072fa773c7c39d45e430352604842f99d6c0cacc6c1398b7390e305bd155426b"
+      },
+      {
+        "bytes": 376,
+        "git_blob": "c1bd11152ac98d51d4f8f4efd90ed84b94b379fd",
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-provider-capacity/server/tools/native-storage-oracle/Cargo.toml",
+        "relative_path": "tools/native-storage-oracle/Cargo.toml",
+        "sha256": "baa1d00a4fa25aab5df221417f1cd5fc840e5764c40256433db1c7c684a3ad60"
+      },
+      {
+        "bytes": 70358,
+        "git_blob": "af4385819a328cc920c9cda4b2f9462c9614c976",
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-provider-capacity/server/tools/native-storage-oracle/Cargo.lock",
+        "relative_path": "tools/native-storage-oracle/Cargo.lock",
+        "sha256": "aa375a3883b251861b1ef4a0dcd9399b0ec65a86bbeb6fd9ce289ebf961acc4e"
+      }
+    ]
+  },
+  "physical_binding_count": 9,
+  "root_review": [
+    "Exact one additive Cargo example; legacy source/manifest/lock hashes unchanged.",
+    "Builds 4096 present values in each of four provider map families and four fixed facts, verifies all16388 present values on SDK recorder and raw-proof replay for both layouts.",
+    "Removes actual root and layout1 hashed value; neither missing proof may become absent data.",
+    "Tests measured node and decoded/serialized byte counts against2x margins; exported8MiB runtime value is deliberately not executable.",
+    "No measured capacity or compile result claimed; source is sparse, separate resource admission and actual Go/native verifier handoff required."
+  ],
+  "capacity_profile": {
+    "decoded_bytes": 67108864,
+    "derivation": "2*(3*(4*4096+4)+1)",
+    "encoded_bytes": 135266304,
+    "item_bytes": 16777216,
+    "margin": 2,
+    "native_nodes": 98330,
+    "receipt_nodes_unchanged": 8192,
+    "receipt_reads_unchanged": 32
+  },
+  "operative_controls": [
+    {
+      "change": "Replace CANDIDATE_NATIVE_NODE_LIMIT expression with8192.",
+      "expected": "candidate native node cap lacks the required2x fixture margin",
+      "name": "old-native-node-cap",
+      "scope": "operative capacity omission; not whole old SDK source",
+      "target": "tools/native-storage-oracle/examples/native-provider-capacity.rs"
+    },
+    {
+      "change": "Remove the node with blake2_256(node)==root.0 from nodes immediately after Recorder extraction, before building proof_database.",
+      "expected": "SDK populated proof replay",
+      "name": "drop-actual-recorded-root",
+      "scope": "otherwise populated proof must fail actual SDK replay",
+      "target": "tools/native-storage-oracle/examples/native-provider-capacity.rs"
+    }
+  ],
+  "qualification_recipe": {
+    "authority": "Sol execution only after separate resource admission",
+    "exports": [
+      [
+        "cargo",
+        "run",
+        "--offline",
+        "--locked",
+        "--example",
+        "native-provider-capacity",
+        "--",
+        "--layout",
+        "layout0",
+        "<fresh absolute layout0.json>"
+      ],
+      [
+        "cargo",
+        "run",
+        "--offline",
+        "--locked",
+        "--example",
+        "native-provider-capacity",
+        "--",
+        "--layout",
+        "layout1",
+        "<fresh absolute layout1.json>"
+      ]
+    ],
+    "handoff": "Operator must consume exported raw nodes/reads through actual new native verifier, preserving receipt negative controls; this helper alone does not qualify the Go admission or VM execution.",
+    "legacy": "Existing default cargo run still selects original sole src/main binary; Cargo manifests, lock and original18-vector oracle unchanged.",
+    "stage": "Sparse author source is not a full test snapshot. Stage exact Git archive plus exact SDK as sibling server/../polkadot-sdk; reuse a separately authenticated owned warm target without retargeting live source.",
+    "test": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--example",
+      "native-provider-capacity",
+      "tests::populated_native_provider_proof_covers_both_layouts_with_two_times_margin",
+      "--",
+      "--exact",
+      "--nocapture"
+    ],
+    "working_directory": "<owned exact Server checkout>/tools/native-storage-oracle"
+  },
+  "limitations": [
+    "Synthetic populated storage fixture only. It admits no actual runtime472 layout, checkpoint, provider membership, fee witness or signer authority.",
+    "Complete historical execution may access additional key families; this narrow provider-identity capacity profile does not prove the entire VM state footprint.",
+    "No benchmark, elapsed-time, RSS, proof count or observed byte result is claimed until independently executed.",
+    "Producer production files and all frozen17/Claim control sources remain untouched."
+  ]
+}

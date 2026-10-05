@@ -1,0 +1,277 @@
+{
+  "schema": "root-progress-get-attempt-source-review-v1",
+  "source": {
+    "head": "ff42a433726655559ac49bef0732add09b785dd4",
+    "parent": "a5d2c5b4e4b206356d6d029dd71dc37cad0ac6d6",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/sn",
+    "tree": "af4a8cba970186193fca0441d559b81353689e46"
+  },
+  "author_intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/intake.json",
+    "bytes": 19753,
+    "sha256": "b950341cef4a09519d1e827a6dbe6923f49a908ebff88f583be86c0754a89ac7"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/sn/mainnet/monitor_progress_attempt_test.go",
+      "bytes": 10584,
+      "sha256": "db4d60ffde4c2ffe754d52ea31c9120c95fae607002a4dbd34db6f5f295a6a62"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/sn/mainnet/monitor_progress_retry.go",
+      "bytes": 3685,
+      "sha256": "ff00fabeac2ab695c74ed60a3d5ac556aa9f419cd826f78374e7dcf8489da53a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/sn/mainnet/monitor_provider.go",
+      "bytes": 9790,
+      "sha256": "04bbdfa025390c95bdfe8c9b02493db9ca39c23922337ed6fdb5bbad0e4330ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/sn/mainnet/monitor_services.go",
+      "bytes": 14186,
+      "sha256": "26d8ee517639e2386cd0c49055658e63740ea052ce4adc82f34dd18cdf63cca6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/omit-owned-retries/monitor_progress_retry.go",
+      "bytes": 3706,
+      "sha256": "dcdeafa90d4b27b0010f12dd271a8f903b1462434349afce3d6b10bd6eb80864"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/omit-owned-retries/overlay.json",
+      "bytes": 288,
+      "sha256": "5a416ea12c7bc8492c21d8f4eb23cf67f1d6ff4de83fff07023e0ba855a672e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/old-transient-status-classification/monitor_progress_retry.go",
+      "bytes": 3630,
+      "sha256": "05fa751b8c7b566860ebf0b8089351565066b10517dc80d45ffa91deb13ba7a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/old-transient-status-classification/overlay.json",
+      "bytes": 305,
+      "sha256": "a55f6636b9bd934f47602484de9222196b1a9ae6a0fb903a289ef6ae7b48155f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/joined-timeout-masks-hard-cause/monitor_progress_retry.go",
+      "bytes": 3028,
+      "sha256": "04461b366518f7204e726eb95006262c411d6e930cb0c766292b9ae82499910e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/joined-timeout-masks-hard-cause/overlay.json",
+      "bytes": 301,
+      "sha256": "8663840a766d549b669848a0e627186c5e6ec626043e9ae77882cad8965b2c97"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/cancellation-masks-observed-hard-cause/monitor_provider_worker.go",
+      "bytes": 12178,
+      "sha256": "c60a7197c53f23975205a9e7c674b5d7ae2901e00dad4291b3eb43446a08b5ae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/cancellation-masks-observed-hard-cause/monitor_claim_worker.go",
+      "bytes": 11973,
+      "sha256": "68904c2626cfc4727023c145cdfba6fcd07c64ee1bf1392ac6404f968aeb72b8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/cancellation-masks-observed-hard-cause/overlay.json",
+      "bytes": 592,
+      "sha256": "a58a77d568cb5ea9f732b20c9f62e530f1fc75e1452f7b211b4d868597e79752"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/close-masks-complete-malformed-reply/monitor_provider.go",
+      "bytes": 9722,
+      "sha256": "56d7c833deafc6993d941b85ea11f53cf974052e512ba6e453f8be4a56cc6693"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/close-masks-complete-malformed-reply/monitor_claim.go",
+      "bytes": 7642,
+      "sha256": "b5970289bdfd57a8b66d413cc2b88d547ef6e88aadbfa1b0db65ea0f195fe837"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/close-masks-complete-malformed-reply/overlay.json",
+      "bytes": 560,
+      "sha256": "39706891fab6f165554a08fc389f55b3dbf739fa214b1079c32aa009089bef9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/old-five-second-client/monitor_provider.go",
+      "bytes": 9613,
+      "sha256": "e91e5c41aacb1d0b148169f205820acf68c3a62d85a0e63b4e80d57084c0e880"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/old-five-second-client/overlay.json",
+      "bytes": 280,
+      "sha256": "afa44f9ef2671adf1d6c9c42e8e880968a83f00241f41abfcea265546312acbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/old-network-classification/monitor_progress_retry.go",
+      "bytes": 3386,
+      "sha256": "6b23fb7f653f50612e9784ca1387debf0edfe20039fc40edcc228e312abdca34"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/controls/old-network-classification/overlay.json",
+      "bytes": 296,
+      "sha256": "7f8ffb18b8fa51c493fcff6b462e1bef0820b0f79ac8c2c22dd4792ead4bd778"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/source-readback.json",
+      "bytes": 5383927,
+      "sha256": "95ecea5354621fb3277d335ec9ef58c357835d06e0148b9c201674a7f034f10a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn/go.sum",
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/sn.mod",
+      "bytes": 12039,
+      "sha256": "c380bf47a1a4ce895c8159824a88aa1253bc440b5fce7f5bdcab5646675bdbd9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/server/go.mod",
+      "bytes": 10651,
+      "sha256": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp/go.mod",
+      "bytes": 1752,
+      "sha256": "8413b369e94cf2f76927ef8f5f91794fdd723dd169125b85e1f12d6244d94a0d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy/go.mod",
+      "bytes": 1972,
+      "sha256": "bd538f2de13d314e5604022082b28bb692702e3b68aa869abf1df2dfeab3a4e1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard/go.mod",
+      "bytes": 237,
+      "sha256": "470b20749c9d46b715bce19db1e50618892417a2a4d72b2697efb0e55070f965"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog/go.mod",
+      "bytes": 109,
+      "sha256": "5022a0fd461de289e6e84a4f0930a362613b5bcaaffe090a201e68b6714cb40b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons/go.mod",
+      "bytes": 157,
+      "sha256": "67dd6efd0fafd9d54e4bbf953eb07c9526ba55ee0dd4eb3e752ef201f619f28c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor/go.mod",
+      "bytes": 6213,
+      "sha256": "760a8007bca84c7465d3a82a5ba1aec47df23692f7a4484e9d94926c5817afc4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/sn.sum",
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    }
+  ],
+  "changed_files": [
+    "mainnet/monitor_progress_attempt_test.go",
+    "mainnet/monitor_progress_retry.go",
+    "mainnet/monitor_provider.go",
+    "mainnet/monitor_services.go"
+  ],
+  "peers_verified": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn",
+      "head": "b18e76dc53948d7fd6e7bf4dab0422db21062d87",
+      "tree": "d07834913092d6213fd52aefbcbc9b3ef3d08266",
+      "clean": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/server",
+      "head": "5089a9dde0ca5d60a8dda0493c861de53ed4e0c4",
+      "tree": "bb861b9e88b268dfc7b092f66c3330f79f5f3a0c",
+      "clean": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269",
+      "clean": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce",
+      "clean": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0",
+      "clean": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe",
+      "clean": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790",
+      "clean": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+      "head": "21c2a5da852b7c92bc27573bd09ee8449d0fe605",
+      "tree": "e8600f8aaa2c86a52a59302d632a96a98060aeeb",
+      "clean": true
+    }
+  ],
+  "reviewed_sources": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/sn/mainnet/monitor_provider.go",
+      "sha256": "04bbdfa025390c95bdfe8c9b02493db9ca39c23922337ed6fdb5bbad0e4330ac",
+      "bytes": 9790,
+      "git_blob": "3bd2109a71c8f0ba307b822788667257578ae6de"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/sn/mainnet/monitor_claim.go",
+      "sha256": "f6b7569c61f857c74edecaac1023ba36a15f8c6908cfccce62c9bfe31e017066",
+      "bytes": 7750,
+      "git_blob": "8990b279bd155ef3a4f1e34ca17584f31e103bf3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/sn/mainnet/monitor_progress_retry.go",
+      "sha256": "ff00fabeac2ab695c74ed60a3d5ac556aa9f419cd826f78374e7dcf8489da53a",
+      "bytes": 3685,
+      "git_blob": "ce783932d4e6145da4c6c853410512f62d2a8a03"
+    }
+  ],
+  "qualification": "SOURCE_ONLY_BEHAVIOR_PENDING",
+  "findings": [
+    {
+      "status": "fixed_in_candidate_pending_qualification",
+      "issue": "five-second healthy read attempt",
+      "behavior": "60-second header/body limit clipped by remaining300-second owner; typed route/DNS temporary handling and actual hook declaration"
+    },
+    {
+      "status": "sent_to_astra_separate_successor",
+      "issue": "body read/close blanket retry hides hard joined cause",
+      "evidence": "provider and claim use retryable || readErr != nil || closeErr != nil; fully decoded identity validation requires readErr==nil",
+      "required": "typed transient body/close policy, mixed hard dominance, complete foreign identity refusal and partial-body retry controls for both consumers"
+    }
+  ],
+  "limits": [
+    "No source-only behavioral acceptance",
+    "No POST/broadcast semantics changed",
+    "Explicit current graph differs from earlier historical-source qualification",
+    "Rolling independent policy/epoch renewal, archive adoption and all-role composition remain separate"
+  ]
+}

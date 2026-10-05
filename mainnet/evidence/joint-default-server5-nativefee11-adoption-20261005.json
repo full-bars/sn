@@ -1,0 +1,35 @@
+{
+  "schema": "mainnet-joint-qualification-adoption-v1",
+  "status": "ADOPTED_EXECUTION_PENDING",
+  "review": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/useful-pair-v2/review.json",
+    "sha256": "12155e71737bcb3ae7fac10d0d1a65a2f943f5139b0448419af56265c368a476"
+  },
+  "plan": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/useful-pair-v2/joint-plan.json",
+    "sha256": "a6cc119b96bc798865b5ae527f88872d77b81636cb6f79864867096522697fc1"
+  },
+  "members": {
+    "compiler": {
+      "job": {
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/useful-pair-v2/compiler.job.json",
+        "sha256": "6edd63b6dfb9718d1a067ef0c27bc49c995b96cb7dd3906ab2794f2e260c6dd0"
+      },
+      "root_adoption": {
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/useful-pair-v2/compiler.root-adoption.json",
+        "sha256": "9b7024f4a9f754315a638dc91b825e0407c38a20519ef33679d883ddb5d115be"
+      }
+    },
+    "short": {
+      "job": {
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/useful-pair-v2/short.job.json",
+        "sha256": "6ef023bd1ed0c8324113c28c02591e2a3e478b04449b42f4100e41cbbaa74aa7"
+      },
+      "root_adoption": {
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/useful-pair-v2/short.root-adoption.json",
+        "sha256": "7fad62aa5ba3816b92406544de173baf487b635481a66b6dcae534267c6c0c03"
+      }
+    }
+  },
+  "scope": "Five current-default Server normal compiler images and eleven retained Main9 nativefee normal bodies. Preserve distinct source inputs; no compiler/body/deployment success claimed."
+}

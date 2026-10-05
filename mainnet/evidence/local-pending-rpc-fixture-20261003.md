@@ -1,0 +1,5 @@
+# Local pending-outcome fixture scope
+
+This test-only successor of `b35ca9c9c18dfca1c80a98a406a2677cfa535bd1` limits the synthetic absent-transaction reply to the exact ninth transaction. The prior helper hid every transaction and receipt, so canonical authentication correctly stopped at the first of eight original completed actions before exercising the pending outcome. The original independent normal result remains four passes and two failures; its receipt is `cb23012392f5f8a0d90535194ffc139231b7b3a9264cffdc884d8dcb5ac5b187`.
+
+Both reserved and acknowledged pending-publication controls now require exactly eight historical receipt reads and the two intended ninth-transaction absence reads, no output, no additional send, and refusal at the pending-outcome boundary. They then restore the original RPC observations and require canonical completion and restart without changed signatures, nonce claims or additional attempts. All production and module bytes remain unchanged. Behavioral qualification is pending; this correction does not establish a production retry classification for unavailable historical RPC observations.

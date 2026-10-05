@@ -68,14 +68,14 @@ func upgradeRuntimeEvidenceHistoricalTest(t *testing.T, fixture *runtimeEvidence
 	t.Helper()
 	cfg := fixture.base.cfg
 	cfg.Release = testReleaseLockFixture(t)
-	cfg.Public.Chain.ExpectedRuntimeSpec, cfg.Public.Chain.ConfigIdentityRuntimeSpec = 461, 455
+	cfg.Public.Chain.ExpectedRuntimeSpec, cfg.Public.Chain.ConfigIdentityRuntimeSpec = 467, 455
 	if hash, err := releaseConfigHash(cfg.Config, cfg.Public, cfg.Hyperparameters); err != nil || hash != cfg.ConfigHash {
 		t.Fatalf("explicit runtime migration changed original config identity: %v", err)
 	}
 }
 
 // The actual failing preparation reader must retain its original source hash,
-// pinned native uid, signatures and exact persisted bytes under current461.
+// pinned native uid, signatures and exact persisted bytes under current467.
 func TestRuntimeEvidenceHistoricalRuntimeReplaysOriginalPreparation(t *testing.T) {
 	fixture := newRuntimeEvidenceHistoricalRuntimeTest(t)
 	upgradeRuntimeEvidenceHistoricalTest(t, fixture)
@@ -83,7 +83,7 @@ func TestRuntimeEvidenceHistoricalRuntimeReplaysOriginalPreparation(t *testing.T
 	metadata, runtime := fixture.executor.substrate.chain.Meta, fixture.executor.substrate.chain.Runtime
 	prepared, wire, err := fixture.executor.prepareRuntimeEvidenceActivationsV2(t.Context(), fixture.chain)
 	if err != nil {
-		t.Fatalf("original455 preparation replay under461: %v", err)
+		t.Fatalf("original455 preparation replay under467: %v", err)
 	}
 	if prepared.PlanHash != fixture.base.plan.PlanHash || !bytes.Equal(before, wire) {
 		t.Fatal("historical preparation changed signed original bytes or approval")
@@ -163,8 +163,10 @@ func TestRuntimeEvidenceHistoricalRuntimeHorizonSeparatesOriginalAndFreshReads(t
 	upgradeRuntimeEvidenceHistoricalTest(t, fixture)
 	relay := &evidenceRelayRuntime{executor: fixture.executor}
 	activation := fixture.base.prepared.Members[0].Activation
-	if epoch, err := relay.readHorizonNative(t.Context(), activation, evidenceRelayNativeOriginalSnapshot); err != nil || epoch == 0 {
-		t.Fatalf("original relay native anchor: epoch=%d error=%v", epoch, err)
+	for _, mode := range []evidenceRelayNativeReadMode{evidenceRelayNativeOriginalSnapshot, evidenceRelayNativeContinuationSnapshot} {
+		if epoch, err := relay.readHorizonNative(t.Context(), activation, mode); err != nil || epoch == 0 {
+			t.Fatalf("retained relay native snapshot %d: epoch=%d error=%v", mode, epoch, err)
+		}
 	}
 	for _, mode := range []evidenceRelayNativeReadMode{evidenceRelayNativeCurrentHead, evidenceRelayNativeCurrentSnapshot, 0} {
 		if _, err := relay.readHorizonNative(t.Context(), activation, mode); err == nil {
@@ -174,8 +176,10 @@ func TestRuntimeEvidenceHistoricalRuntimeHorizonSeparatesOriginalAndFreshReads(t
 	fixture.stateLock.Lock()
 	fixture.permits[1] = false
 	fixture.stateLock.Unlock()
-	if _, err := relay.readHorizonNative(t.Context(), activation, evidenceRelayNativeOriginalSnapshot); err == nil {
-		t.Fatal("historical horizon ignored original eligibility")
+	for _, mode := range []evidenceRelayNativeReadMode{evidenceRelayNativeOriginalSnapshot, evidenceRelayNativeContinuationSnapshot} {
+		if _, err := relay.readHorizonNative(t.Context(), activation, mode); err == nil {
+			t.Fatalf("historical horizon %d ignored original eligibility", mode)
+		}
 	}
 }
 

@@ -1,0 +1,160 @@
+{
+  "schema": "funding-remaining-and-f51-terminal-root-readback-v1",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-v1.terminal.json",
+      "bytes": 4207,
+      "sha256": "7fc17290c389809273c296621785d5c08ce06cd615386f985ba5f8c1aa74b541"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-normal-ordinary-remaining21.receipt.json",
+      "bytes": 12771,
+      "sha256": "ea07b101273019028e9845393da2b5eec7ad063841ec84e2fb0813cb1525510a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-normal-ordinary-remaining21.stdout",
+      "bytes": 24354,
+      "sha256": "021fc9bf8a300d6752825a9eaeffb83ff5ab48680456db0b8c58a859b82a83f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-normal-dual-engine9.receipt.json",
+      "bytes": 7826,
+      "sha256": "0b55472146bc7f34468cadad976525674477de26fd52014457807267b678eb01"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-normal-dual-engine9.stdout",
+      "bytes": 38211,
+      "sha256": "ea996540a55fa4bb37b96bb867bb808aa64c1e550a145c1bec81dc06a5e3ce72"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-race-ordinary-remaining21.receipt.json",
+      "bytes": 12757,
+      "sha256": "417c173c050b04e49f983def5645c77df3dc22c11cc5bf5979555f976be0e7c7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-race-ordinary-remaining21.stdout",
+      "bytes": 24373,
+      "sha256": "f24cf5aac5458e3489a251d7a72ea28da46bbec3de90e705be91c16f72f3fbd5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-race-dual-engine9.receipt.json",
+      "bytes": 7813,
+      "sha256": "60451900eac699c8a4c64ba0ddeeb2c900a5da6f12d010259921f2a9f8d3dcb3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-race-dual-engine9.stdout",
+      "bytes": 38219,
+      "sha256": "59df3386688b0fd7697a6347b73631c652b349f46dde5463b37c8c8f063e2ade"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturef51/evidence/f51-single-root-v2.terminal.json",
+      "bytes": 1798,
+      "sha256": "f7dd5cf69c6dcdf3f4b02c7340ae2e8262a4d4fe78306b95909ffdb4660c86ef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturef51/evidence/f51-fee-candidate-normal.receipt.json",
+      "bytes": 9100,
+      "sha256": "9bb78741b2436521e1e30e5f266abb1584e4e29e2289fbcdee5e23567419720c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturef51/evidence/f51-fee-candidate-normal-body.stdout",
+      "bytes": 1389,
+      "sha256": "28c39c9b8eba359bc5118cb90c9c38ceed5356c7dbd85299bb96f20c04bd1b90"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturef51/evidence/f51-fee-candidate-race.receipt.json",
+      "bytes": 9104,
+      "sha256": "ad0644e11ccaaf3b2d043bf337ef029c56a6d83f986facd54561afc87b7e5096"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturef51/evidence/f51-fee-candidate-race-body.stdout",
+      "bytes": 1395,
+      "sha256": "f9c01e069ab59e166d66e5c4d5848dfc92291d653560ba46fa6404412ae29e69"
+    }
+  ],
+  "results": {
+    "fixtureab48": [
+      {
+        "phase": "ab48-funding-remaining-normal-ordinary-remaining21",
+        "raw_events": {
+          "run": 21,
+          "pass": 20,
+          "fail": 1
+        },
+        "failed_roots": [
+          "TestEconomicFundingRefusedFeeCandidateCannotMutateOriginalIndex"
+        ]
+      },
+      {
+        "phase": "ab48-funding-remaining-normal-dual-engine9",
+        "raw_events": {
+          "run": 9,
+          "fail": 9
+        },
+        "failed_roots": [
+          "TestEconomicFundingPublicActualCaptureDoesNotEarnOpeningStock",
+          "TestEconomicFundingPublicActualWithdrawalKeepsSourceBoundsThroughArchive",
+          "TestEconomicFundingPublicSameBlockDepositCannotRepeatNativeIncome",
+          "TestEconomicFundingPublicNextBlockKeepsOriginalIncomeAcrossRetirement",
+          "TestEconomicFundingPublicOriginalIncomeFundsLaterAuthorizedPayment",
+          "TestEconomicFundingPublicMissedRootPaysOriginalStockWithoutEarningItAgain",
+          "TestEconomicFundingPublicLostAckRetainsPaidSourceComposition",
+          "TestEconomicFundingPublicSelfSealedCaptureCannotAuthorizeCapitalIncome",
+          "TestEconomicFundingPublicCompleteYumaComparesOriginalTenNinety"
+        ]
+      },
+      {
+        "phase": "ab48-funding-remaining-race-ordinary-remaining21",
+        "raw_events": {
+          "run": 21,
+          "pass": 20,
+          "fail": 1
+        },
+        "failed_roots": [
+          "TestEconomicFundingRefusedFeeCandidateCannotMutateOriginalIndex"
+        ]
+      },
+      {
+        "phase": "ab48-funding-remaining-race-dual-engine9",
+        "raw_events": {
+          "run": 9,
+          "fail": 9
+        },
+        "failed_roots": [
+          "TestEconomicFundingPublicActualCaptureDoesNotEarnOpeningStock",
+          "TestEconomicFundingPublicActualWithdrawalKeepsSourceBoundsThroughArchive",
+          "TestEconomicFundingPublicSameBlockDepositCannotRepeatNativeIncome",
+          "TestEconomicFundingPublicNextBlockKeepsOriginalIncomeAcrossRetirement",
+          "TestEconomicFundingPublicOriginalIncomeFundsLaterAuthorizedPayment",
+          "TestEconomicFundingPublicMissedRootPaysOriginalStockWithoutEarningItAgain",
+          "TestEconomicFundingPublicLostAckRetainsPaidSourceComposition",
+          "TestEconomicFundingPublicSelfSealedCaptureCannotAuthorizeCapitalIncome",
+          "TestEconomicFundingPublicCompleteYumaComparesOriginalTenNinety"
+        ]
+      }
+    ],
+    "fixturef51": [
+      {
+        "phase": "f51-fee-candidate-normal",
+        "raw_events": {
+          "run": 1,
+          "fail": 1
+        },
+        "failed_roots": [
+          "TestEconomicFundingRefusedFeeCandidateCannotMutateOriginalIndex"
+        ]
+      },
+      {
+        "phase": "f51-fee-candidate-race",
+        "raw_events": {
+          "run": 1,
+          "fail": 1
+        },
+        "failed_roots": [
+          "TestEconomicFundingRefusedFeeCandidateCannotMutateOriginalIndex"
+        ]
+      }
+    ]
+  },
+  "interpretation": "Forty ordinary successful executions retained. Eighteen dual failures retain original composition and combined-profile findings. F51 resolves network seam but fails later Claim epoch precondition in both modes; no economic union acceptance."
+}

@@ -1,0 +1,107 @@
+{
+  "schema": "provider-context-cancellation-root-review-v1",
+  "status": "SOURCE_REVIEWED_QUALIFICATION_PENDING",
+  "bindings": [
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "mainnet/economic_conservation_entitlement.go",
+      "bytes": 34325,
+      "sha256": "ebee6f07d2b88ee382284aaa42d9c6676e84fa54869e490d6b1f3db525bc952d"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "merkle/merkle.go",
+      "bytes": 10270,
+      "sha256": "a8f49af1eb95faa598f243ecb2030fb6e75dd2900b3f74e003cf0a85e5b0f7cc"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "merkle/tree_context_test.go",
+      "bytes": 1946,
+      "sha256": "db53a41875fe7e93642a2d08910083de01c114c3402476f9a69366c536cb1284"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "payoutartifact/artifact.go",
+      "bytes": 17420,
+      "sha256": "30d2f58c379b4813f5c64224aa286fc3c175b20647e7bbd39cdd65047c4ebc8f"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "payoutartifact/artifact_context_test.go",
+      "bytes": 3386,
+      "sha256": "165896c6a59454457c98580613d0191e3f6d0092fd586cf16c2fe19d49e1cba5"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "payoutartifact/closed_work.go",
+      "bytes": 14402,
+      "sha256": "84a746d074269643261f3990960b8967b08f329fb4522ce5e0484ddc09631124"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "protocol/allocation_context_test.go",
+      "bytes": 2266,
+      "sha256": "9006d2feaa488ebc157341a93ab4b7907cfbe3e856d06c16a04ee5e6b09c7567"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "protocol/payout.go",
+      "bytes": 4271,
+      "sha256": "5d14dcc1c24e1e70852b5c1f4bdbb73cae019b7c04dfde23a5f548384cf6d5f5"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "validator/artifact.go",
+      "bytes": 12626,
+      "sha256": "be2fc26f1292843709e454089e1ac2ae4b7fcf5ff6b459b4ab43a2e23efaae4c"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/server",
+      "head": "b18297597c70778f4e1a9142eaea3fc4475467ed",
+      "relative": "controller/st_controller.go",
+      "bytes": 180756,
+      "sha256": "94bf9ed2d89c0d431fbc2a0edc56f1314def6cabecf318ca1bf5da744fb6c432"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/server",
+      "head": "b18297597c70778f4e1a9142eaea3fc4475467ed",
+      "relative": "startifact/artifact.go",
+      "bytes": 5634,
+      "sha256": "adaf1623c7803c0cfb56b5bd51084d45b1cb9b8b4ea85c16010759b04e6d8c3d"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/server",
+      "head": "b18297597c70778f4e1a9142eaea3fc4475467ed",
+      "relative": "startifact/artifact_context_test.go",
+      "bytes": 1259,
+      "sha256": "96a24c8ea2d20811e2510077fbabec2752bc1c896d510887676a2a1e7ef32c74"
+    }
+  ],
+  "new_roots": [
+    "TestMerkleOwnedInputCancellation",
+    "TestMerkleOwnedCanonicalCompatibility",
+    "TestClosedWorkCloneStopsAtOwnedRowBoundary",
+    "TestArtifactContextCanonicalCompatibility",
+    "TestClosedWorkReconstructionPreservesOwnedCancellation",
+    "TestArtifactCanceledDecodeRefusesBeforeParsing",
+    "TestAllocateSharesOwnedInputCancellation",
+    "TestAllocateSharesOwnedCanonicalCompatibility",
+    "TestArtifactPublicationCancelsBeforeDestinationSelection"
+  ],
+  "review": [
+    "Complete contextual production delta and all9 new deterministic test roots read. Actual owner context now reaches row cloning, allocation loops, Merkle nodes, canonical reconstruction, Server publication/read, validator HTTP decode and monitor admission.",
+    "Legacy entry points remain wrappers preserving grammar; independent expected-value protocol/Merkle/reconstruction neighbors remain required, since wrapper-vs-new comparisons alone cannot establish canonical compatibility.",
+    "Cancellation retains pure operational cause through closed-work verification; typed monitor classifier preserves it. Requested additional actual HTTP canceled-decode classification regression to protect that seam."
+  ],
+  "limits": "Tests unexecuted. No full provider/window/reliability authority claimed. Report-ID transactional deduplication is a separate implementation still in progress."
+}

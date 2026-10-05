@@ -1,0 +1,88 @@
+{
+  "environment": {
+    "GOCACHE": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+    "GOENV": "off",
+    "GOFLAGS": "-mod=readonly",
+    "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOWORK": "off",
+    "TMPDIR": "/mnt/data/sn-testnet/sol-restore-core-independent-20261002/tmp",
+    "go_test_count": 1,
+    "parallel": 2
+  },
+  "inputs": {
+    "selection_sha256": "06e2b15f7ec7b5c648051b9f595bb7c5bbd52c56d9fd0ba8ef00812b66887c41",
+    "selector_sha256": "ef810c97670176fc73aa7d3878c376b07cb3eca0d94c0ba92f8cd29ec9b9b0a9"
+  },
+  "limits": [
+    "Normal core32 only; public SN, reader, race, vet and causal scopes not qualified.",
+    "No storage restore, mount, service, signing or deployment performed."
+  ],
+  "outputs": {
+    "normal_exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "normal_jsonl_sha256": "91096cc5d5a5611e255c80352ab7f9299b6915a316593dc4e79a2612e427a8a2",
+    "normal_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "schema": "sol-independent-restore-core-normal-v1",
+  "scope": {
+    "causal": "not_run",
+    "normal_fail": 0,
+    "normal_pass": 32,
+    "normal_skip": 0,
+    "package": [
+      {
+        "action": "pass",
+        "elapsed": 2.815,
+        "package": "github.com/urnetwork/connect/durablevolume"
+      }
+    ],
+    "public_native": "not_run",
+    "race": "not_run",
+    "root_count": 32,
+    "roots": [
+      "TestInventoryAndRestoreRetainExactLocalCustody",
+      "TestInventoryAttributeCallerFailureAndCapacityRemainDistinct",
+      "TestInventoryConcurrentOwnerAttributeChangePoisonsSnapshot",
+      "TestInventoryNamedObservationUnavailableCanRetry",
+      "TestInventoryOwnerAttributeAdmissionRetainsCancellation",
+      "TestInventoryOwnerAttributeBoundsRetainSameSnapshot",
+      "TestInventoryOwnerAttributeObservationRecoversWithoutIdentityInference",
+      "TestInventoryRefusesPriorSchemaAndMalformedCustodyNames",
+      "TestInventoryRefusesUnknownOwnerCustodyMetadata",
+      "TestInventoryRejectsAliasesAndNestedMounts",
+      "TestInventoryRequiresExactFormerWriterFence",
+      "TestInventoryRestoredRootReportsChangedPhysicalIdentity",
+      "TestInventoryRetainsOwnerCustodyMetadata",
+      "TestInventoryWorkAndByteBoundsAndCancellation",
+      "TestPhysicalInventoryBoundsAndCancellationRetainOriginalOwner",
+      "TestPhysicalInventoryLeavesOrdinaryReportEncodingUnchanged",
+      "TestPhysicalInventoryLoaderRequiresCompleteOriginalAuthority",
+      "TestPhysicalInventoryReplacementRefusesEntireReport",
+      "TestPhysicalInventoryRetainsEveryOriginalMemberGeneration",
+      "TestPhysicalRestoreCapacityCountsNamespaceSeparately",
+      "TestPreparationAdmitsAllCapacityDimensionsBeforeTargetEffects",
+      "TestPreparationPressureAndObservationRetryOriginalPlan",
+      "TestPreparationPrivateRootParentSyncLossResumesOriginal",
+      "TestPreparationRestoreCopiedArchiveKeepsOriginalIntent",
+      "TestPreparationRestoreLostAcknowledgementsKeepOriginalTarget",
+      "TestPreparationRestoreRefusesAlteredSourceAndTargetAuthority",
+      "TestPreparationReviewedPlanOpensActualGuard",
+      "TestPreparationSeparateScopeAndRootLease",
+      "TestProtectedEvidenceReadStopsBetweenFiniteChunks",
+      "TestVerifyInventoryCancellationPrecedesExpectedEvidenceRead",
+      "TestVerifyInventoryNilContextPrecedesExpectedEvidenceRead",
+      "TestVerifyInventoryRefusesLostOwnerCustodyMetadata"
+    ],
+    "vet": "not_run"
+  },
+  "source": {
+    "all_durablevolume_tracked_bytes_equal": true,
+    "author_source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/restore-apply/connect",
+    "connect_commit": "53bc92fabb28a79e26f5e3c5c78a6718751e5e79",
+    "connect_tree": "4a38bff08096b94b989e8a7fb230bdceb061c85e",
+    "durablevolume_tracked_file_count": 32,
+    "physical_archive": "/mnt/data/sn-testnet/sol-restore-core-independent-20261002/source/connect"
+  },
+  "status": "PASS_SCOPED"
+}

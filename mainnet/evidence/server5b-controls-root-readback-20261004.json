@@ -1,0 +1,220 @@
+{
+  "bindings": [
+    {
+      "bytes": 308,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/controls-adoption-v1.json",
+      "sha256": "3d9fb13639550c1ab7ad4868a6b18670a3e013d7be2a99cad1c4c0b3c6c9eb59"
+    },
+    {
+      "bytes": 3662,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-control-images-v1.terminal.json",
+      "sha256": "098a1189c63b0a86f296b814ee144a9dec1b0c99c18468f228cc6463808e696f"
+    },
+    {
+      "bytes": 7254,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/controls-job-v1.json",
+      "sha256": "36a9ae47a627b1243cc433905e2a0ac4b2d2e4256f3ba8cd0278d4182c004601"
+    },
+    {
+      "bytes": 6085,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-independent-readback.json",
+      "sha256": "52b5e8cd0768118e8eac6af86f6a102591e7140d328f83df295ab7340c80f24d"
+    },
+    {
+      "bytes": 10280,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/run-control-bodies-v1.py",
+      "sha256": "87026b14d873e57c89103d39abb0a892b7105d1065a81202d28df0b8d1a3b197"
+    },
+    {
+      "bytes": 4242,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/run-control-bodies-v1.sh",
+      "sha256": "a77ffe2eeafa7fcf08bb1fb7318a6a4eb4c12dfa4e662cd5ba774ddc2e3617f7"
+    },
+    {
+      "bytes": 4421,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-stage-v1.json",
+      "sha256": "a3449d7f11747b361be2b52105afe91fd7818ff6e6d8d2aa74397e622793fde4"
+    },
+    {
+      "bytes": 4309,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-model-vet-v1.receipt.json",
+      "sha256": "8de5795a44a52b1510b7b1796ccf17c59c1341f6c85dec0497e40d440e6fd0d7"
+    },
+    {
+      "bytes": 98897,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-normal-0.jsonl",
+      "sha256": "76db56b42ebd533996bf4864000eef17b694153baa021392489dac5a9d02881e"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-normal-0.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 72071,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-normal-1.jsonl",
+      "sha256": "8d65073bde16ef92589fd0aee2463aea790a6209a237a17a97ac377d8cff825a"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-normal-1.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 63810,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-normal-2.jsonl",
+      "sha256": "06e4b42519831b823d46601be5928169872ff7edc75a39c09d7ccbdab3567af0"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-normal-2.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 98887,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-race-0.jsonl",
+      "sha256": "794dbaa740602d67b84db2fdcaa5797709f1af26f399808ca6dc17d71eab2f27"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-race-0.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 72063,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-race-1.jsonl",
+      "sha256": "1b1500e2552e22d181d63c17b7b8a6d4492bcf24e4b94e063303e0fa59d5017a"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-race-1.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 63804,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-race-2.jsonl",
+      "sha256": "7502e2f09355232582721f7d56319e967241af9114d447305fceae527efbcf57"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-race-2.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 11315,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1.terminal.json",
+      "sha256": "35265784028fb8da6b4dc5f901a09cf20da06bc47d4788c4f650a77c9a203a54"
+    },
+    {
+      "bytes": 13907,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1.resources.csv",
+      "sha256": "7ba616c61812572893b495f5fa8d69f57e6e009d5f26470a84292c5255168064"
+    },
+    {
+      "bytes": 127,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-controls-v1-race-2.phase",
+      "sha256": "0e1800987d0b0505993dbaf5b658ad52dd9869baf8937994816e83cc24979702"
+    }
+  ],
+  "body_causal_qualification": true,
+  "body_end_phase": "START server5b-controls-v1 race index=2 2026-10-04T14:57:05Z\nEND server5b-controls-v1 race index=2 exit=1 2026-10-04T14:57:18Z\n",
+  "control_groups_per_mode": 3,
+  "events": {
+    "normal:omit-retained-participant-lookup": {
+      "TestStContractUsageRemovedParticipantCompanionKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      },
+      "TestStContractUsageRemovedParticipantRetryKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      }
+    },
+    "normal:omit-retained-role-agreement": {
+      "TestStContractUsageEndpointStreamIdentityConflictStaysLocal": {
+        "fail": 1,
+        "run": 1
+      },
+      "TestStContractUsageStreamExtenderIdentityConflictStaysLocal": {
+        "fail": 1,
+        "run": 1
+      }
+    },
+    "normal:restore-original-live-stream-identity": {
+      "TestStContractUsageCompanionJoinKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      },
+      "TestStContractUsageFreeStreamRetryKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      },
+      "TestStContractUsagePaidStreamRetryKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      }
+    },
+    "race:omit-retained-participant-lookup": {
+      "TestStContractUsageRemovedParticipantCompanionKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      },
+      "TestStContractUsageRemovedParticipantRetryKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      }
+    },
+    "race:omit-retained-role-agreement": {
+      "TestStContractUsageEndpointStreamIdentityConflictStaysLocal": {
+        "fail": 1,
+        "run": 1
+      },
+      "TestStContractUsageStreamExtenderIdentityConflictStaysLocal": {
+        "fail": 1,
+        "run": 1
+      }
+    },
+    "race:restore-original-live-stream-identity": {
+      "TestStContractUsageCompanionJoinKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      },
+      "TestStContractUsageFreeStreamRetryKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      },
+      "TestStContractUsagePaidStreamRetryKeepsOriginalIdentity": {
+        "fail": 1,
+        "run": 1
+      }
+    }
+  },
+  "exact_control_roots": 14,
+  "original_terminal_status": "FAIL_OR_INCOMPLETE",
+  "post_body_observation_gap": {
+    "data_available_bytes": "57506320384",
+    "data_available_inodes": "93344442",
+    "data_error_type": "",
+    "data_status": "available",
+    "docker_root_available_bytes": "303465684992",
+    "docker_root_available_inodes": "50986958",
+    "docker_root_error_type": "",
+    "docker_root_status": "available",
+    "kind": "periodic",
+    "memory_available_bytes": "120856174592",
+    "memory_error_type": "",
+    "memory_status": "available",
+    "postgres_cgroup_memory_bytes": "",
+    "postgres_error_type": "ValueError",
+    "postgres_status": "unavailable",
+    "redis_cgroup_memory_bytes": "",
+    "redis_error_type": "",
+    "redis_status": "absent",
+    "sequence": "77",
+    "utc": "2026-10-04T14:57:19.118343+00:00"
+  },
+  "resource_qualified": false,
+  "schema": "server5b-causal-controls-root-independent-readback-v1",
+  "scope": "Fourteen exact causal assertion failures verified from six raw Go JSON streams. Sampler gap occurs after last body; retain original unqualified resource outcome. No full Server or release acceptance claim.",
+  "source_commit": "5b22f984f51b279f88a83d6f3fb41b19ab46b22a"
+}

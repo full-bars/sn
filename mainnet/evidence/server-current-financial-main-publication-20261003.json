@@ -1,0 +1,55 @@
+{
+  "schema": "root-qualified-current-server-main-publication-v1",
+  "verified_at_utc": "2026-10-03T10:13:28.984181+00:00",
+  "published_commit": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+  "published_tree": "4728109a6e40394c56f50e14f2a66c24c6623d00",
+  "previous_remote_main": "f024b11a7666d3ba0e1025c083123d32f01285c2",
+  "remote_heads_verified": {
+    "refs/heads/codex/mainnet-server-hardening-20260927": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+    "refs/heads/main": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf"
+  },
+  "local_worktrees_verified": [
+    {
+      "path": "/home/by/urnetwork/server",
+      "head": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+      "tree": "4728109a6e40394c56f50e14f2a66c24c6623d00",
+      "branch": "codex/mainnet-server-hardening-20260927",
+      "clean": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/server-model-settlement-fixtures-20261002/server-integrated",
+      "head": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+      "tree": "4728109a6e40394c56f50e14f2a66c24c6623d00",
+      "branch": "main",
+      "clean": true
+    }
+  ],
+  "evidence_sha256": [
+    {
+      "path": "server-current-financial-source-join-20261003.json",
+      "bytes": 12871,
+      "sha256": "b78cf4dec7023dcc25f938f7e8dbced4f1f03dc230b0a62b6d7f487650f48166"
+    },
+    {
+      "path": "server-current-financial-product-qualification-20261003.json",
+      "bytes": 30291,
+      "sha256": "592cca074b86e50637f240a5bacefb500760f873f839b3b86a259b73e9bb4a60"
+    },
+    {
+      "path": "server-current-financial-controls-qualification-20261003.json",
+      "bytes": 18886,
+      "sha256": "4d24ec4f616677fa5582fb0f4b94f1625a93fcfdc10f5b4c30ff0a2d708d9c98"
+    },
+    {
+      "path": "server-main-publication-worktree-census-20261003.json",
+      "bytes": 148,
+      "sha256": "eb2db6d388fd3cbed776aad7695d35c3fd2e4b801325d9906deb8a51e6ff7091"
+    }
+  ],
+  "publication": "Ordinary merge candidate already includes published main; remote main fast-forwarded without force; local main pulled fast-forward after385-process idle census; ready root release branch fast-forwarded and pushed",
+  "limits": [
+    "Source publication only; no migration, service deployment, payment or chain signing",
+    "Old fullmodel1d scope remains separate from selected current22normal/race and causal5eachmode",
+    "Final common-source SN release and remaining PH/MG requirements not complete"
+  ]
+}

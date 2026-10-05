@@ -1,0 +1,110 @@
+{
+  "schema": "mainnet-independent-validator-retry-body-review-v1",
+  "status": "SCOPED_NORMAL_BODY_PASS",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-validator-short-normal.receipt.json",
+    "sha256": "31df6725c065e8f9ac089054f972a9e64e412d6bead17b806eed71341ba965e1"
+  },
+  "verified_bindings": [
+    {
+      "bytes": 1163,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-validator-short-normal-adoption-v1.json",
+      "sha256": "40f91947b378b3ad839ece26ffbad2138463b1412653168c56fdf6840c5a6760"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-validator-short-normal-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 8744,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-validator-short-normal-body.stdout",
+      "sha256": "6e212fc2432c87bb763b6549a46028c75c25f945783431b67b12e2e0457b7095"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-validator-short-normal-compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-validator-short-normal-compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 6446,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current-independent-body-census-v1.json",
+      "sha256": "26004282f0f685fce3287722e1e8416901caf44db46a8fe81b75ff2777323de9"
+    },
+    {
+      "bytes": 5798,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.terminal.json",
+      "sha256": "b7deef9db4cbe0b0ee2e373b3c5f042c3134acac0685fcd3f4e2cb1d74142dd6"
+    },
+    {
+      "bytes": 2004,
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/second-short-go-body-resource-root-review-20261004.json",
+      "sha256": "ba3af5f27c839ee129bda99dfd6dd9ee08f1cc9078609957512b9c7eb1b03166"
+    },
+    {
+      "bytes": 82099312,
+      "ctime_ns": 1791094566011923956,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 17869069,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791094565883928431,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/images/6fa-validator-short-normal.test",
+      "sha256": "f97bf8ba6818a4ae24e5799d011252c3f1d1778fb34255941f40532890e0c81a",
+      "type": 32768,
+      "uid": 1000
+    },
+    {
+      "bytes": 19673,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/evidence/qualification-recipe.json",
+      "sha256": "83d220ca8af0b2f99b39c9d18e44cbcca8f83dc062658acd7b83fc27d5930b02"
+    },
+    {
+      "bytes": 2709,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/selected-compiles-receipt.json",
+      "sha256": "408d1b7b714dc22fab847403e300a182fbb8f7b956221039787cdc81262c5ff6"
+    },
+    {
+      "bytes": 12673,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/selected-test-graph-receipt.json",
+      "sha256": "3f841bd858bf6403f897a3534d0500531ab7e19f694d7edea691d067d1b9e3ee"
+    },
+    {
+      "bytes": 1108,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/source-stage-receipt.json",
+      "sha256": "29598950b15494d632c89b96e333b9a86dffd20f147b067e334be84f0a969332"
+    }
+  ],
+  "source_head": "6fa7c4adbc85a99d809a9f00e658d4db6b0d9cff",
+  "package": "./validator",
+  "census": {
+    "roots": 10,
+    "pass": 10,
+    "fail": 0,
+    "skip": 0
+  },
+  "actual_passed_roots": [
+    "TestAuthenticatePinnedNativeRuntimeValidatorStakeAccepts",
+    "TestAuthenticatePinnedNativeRuntimeValidatorStakeCancels",
+    "TestProductionRuntimeActualWebsocketReconnectReobservesOriginalAuthority",
+    "TestProductionRuntimeContinuityChecksActualArtifactAndInterfaces",
+    "TestProductionRuntimeContinuityObservedWindowAndRegressionRemainHard",
+    "TestProductionRuntimeContinuityReviewKeepsProductionSelectionClosed",
+    "TestProductionRuntimeContinuityUnavailableCanonicalReadRecovers",
+    "TestProductionRuntimeTransportChangeDoesNotMaskObservedIdentity",
+    "TestProductionRuntimeTransportExpiryReobservesWithinOriginalBudget",
+    "TestProductionSteeringReadRejectsMixedAndCancellation"
+  ],
+  "review": "Actual WebSocket reconnect reobserves original authority through production whole-read owner; original budget, hard returned-identity conflicts and cancellation checks pass.",
+  "limits": [
+    "Validator normal scope only; remaining forty roots, validator race, six vets and twelve causal controls remain.",
+    "Direct one-attempt authentication intentionally expires after transport change; only whole-read owner reobserves.",
+    "No all-role or release readiness claimed; original f3 failed scopes retained."
+  ]
+}

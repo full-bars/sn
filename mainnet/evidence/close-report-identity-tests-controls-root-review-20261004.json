@@ -1,0 +1,414 @@
+{
+  "schema": "server-close-report-identity-root-source-review-v1",
+  "status": "SOURCE_AND_17_NEW_TESTS_AND_8_CONTROLS_REVIEWED_EXECUTION_PENDING",
+  "sources": {
+    "server": {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "tree": "0ad738960962630f84a9a8e3e2c70e3057b6c13d",
+      "base": "b18297597c70778f4e1a9142eaea3fc4475467ed",
+      "changed_paths": [
+        "controller/connect_close_report_test.go",
+        "controller/connect_controller.go",
+        "db_contract_close_report.go",
+        "db_contract_close_report_test.go",
+        "db_migrations.go",
+        "model/contract_close_report.go",
+        "model/contract_close_report_test.go"
+      ],
+      "clean": true
+    },
+    "sn_peer": {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "tree": "743904694cb94a89643bdbd30cf229af92c560f7"
+    }
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/intake.json",
+      "bytes": 15272,
+      "sha256": "80f9c418f43953a66ac995dc7a01b2d88e395c5afbcd8dc4c483678652eaa5be"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "controller/connect_close_report_test.go",
+      "git_blob": "af28871f8fd49cd70c69295ba212daaccdaec098",
+      "bytes": 7662,
+      "sha256": "da8e95e608290406303f405631bfe803aae381f08b4a49c75c6150638d9d118b"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "controller/connect_companion_reservation_test.go",
+      "git_blob": "2efff35d84b16df14dabb836c774caf76196bec6",
+      "bytes": 6483,
+      "sha256": "f8d184395db10e0d68ed317fea393a5275c4325599c52040106775b99edfebd6"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "controller/connect_control_frames_test.go",
+      "git_blob": "190895d8d2c26e1cfe8c61eafdaf6168261890a8",
+      "bytes": 9214,
+      "sha256": "09f32cf7acc3034841d52bca8d58e1b903857e1df4ee52e0cb7e95b4109f742a"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "controller/connect_controller.go",
+      "git_blob": "a34add0ce6f4fd1d2b8705624c0a4b8db6b86d31",
+      "bytes": 49576,
+      "sha256": "b9f182a302d3094659a03e946e8538f9ed9257d161c1c7feb24949bed751308d"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "controller/st_closed_work_test.go",
+      "git_blob": "adeda11672db2f40908e28a68319c210efc138e8",
+      "bytes": 5820,
+      "sha256": "e34fd1515d7f888cc960f48cefe3baf03aa7b8f74333d4051bba20229c7af288"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "db.go",
+      "git_blob": "bfe01f5bd303388b056438056a9afdf275deca42",
+      "bytes": 36723,
+      "sha256": "9be9ced99415c67b4213531001d3de4aa551fd5bcd252484a5aa6b59febdaedd"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "db_contract_close_report.go",
+      "git_blob": "cd7368af383e200595a7502124d52f32e31a08e8",
+      "bytes": 1499,
+      "sha256": "c19c20a3d58b913f6960e8486e52798efe3633f470453b0019500eea5473c0ae"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "db_contract_close_report_test.go",
+      "git_blob": "83d8efb47a34ab73a4259af7e1cd1b1457935a48",
+      "bytes": 697,
+      "sha256": "79607f6918a39084087ff1a1f00b55f6de342d2d5dabe36e304c6565a75e6819"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "db_migration_catalog.go",
+      "git_blob": "9e2e6af298eec8baf32b18b2fb148a7f6e7c130d",
+      "bytes": 13272,
+      "sha256": "5b97bc2face682663dc7b84da8ab95217d2446921a4b531b8f5fa073f58a76f4"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "db_migrations.go",
+      "git_blob": "d959389e6101dbf806200234ba261556ce482b3d",
+      "bytes": 386853,
+      "sha256": "a45527dc24f9730e203699a6171568960e1d6228ec4edbe5ab2341552dd3d2eb"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "go.mod",
+      "git_blob": "0212b7ac9f0eadfeae004f1f6cd8c779e86d78ce",
+      "bytes": 10651,
+      "sha256": "0b46ffc190eb63fec79e852dc73c37d5aa81b11450f34452655c7dc7bab043b6"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "go.sum",
+      "git_blob": "5702bae66ed28bf059432277fed2e8a06e428855",
+      "bytes": 69997,
+      "sha256": "df20bacb30f7a2fc1cf4ea27fc021959b2b369bc6fae3656c6ab269835120a23"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "model/contract_close_report.go",
+      "git_blob": "fa7fc7142c224041fe1607a16b72ce030b630473",
+      "bytes": 6674,
+      "sha256": "597024dd08d444a8c07274daefccf87fe888544daf0472ff1d4f8098c2d364b0"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "model/contract_close_report_test.go",
+      "git_blob": "02d1d9f338665e907ec918c1e8b69ff809bfe30d",
+      "bytes": 19896,
+      "sha256": "fa01531a193e3065041cb802d9df7033d42862dc07ec23dc7d694da9bdd33394"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "model/contract_participant_identity_test.go",
+      "git_blob": "3285d0fbbd6c5c6f3e11da97358baee238da3030",
+      "bytes": 16047,
+      "sha256": "aef4d1d276cfb81fb2ee04d3653e85014d792dd1034a1d825efd4cb11bac9c02"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "model/contract_usage_db_test.go",
+      "git_blob": "b82ff055d6a8dd90116bd7df3d61a537b037e0cd",
+      "bytes": 14449,
+      "sha256": "5d6d7c119f35f0470bea51a7f246ccd3a027f880c2133bb40849f2862931f119"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "model/provider_payout_transition_test.go",
+      "git_blob": "c65f5cb30c5c5c49af39e6e7bbe253b698cffc8c",
+      "bytes": 14457,
+      "sha256": "20e738cab7f8b41e272a381c9308f7b44c99e7f2bc24a6a57322663668c22cd7"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "model/st_provider_closed_work_test.go",
+      "git_blob": "298751131d49110411887647ed3d2dae42f79b77",
+      "bytes": 5856,
+      "sha256": "449ed622b6ba193752cf1257da573720b789d06ca720881ecb54c909c600a4a0"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "model/subscription_model.go",
+      "git_blob": "c27ec3d6c5bd9967aaf2995f3f14c7396e58342d",
+      "bytes": 210867,
+      "sha256": "5219516d01dcc83ce1baae938ee2df69ce877dfc18b476d0918067fb30c5b09f"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "model/subscription_payout_debit_anchor_test.go",
+      "git_blob": "ab2c5f716d4d13e23f6c52c4f2beddb12a03d7fc",
+      "bytes": 6990,
+      "sha256": "1f24d25d525952ec2e9a2d108910fd45d9b52c5228e9247fa6c78f05b7f922f2"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "taskworker/work/provider_egress_control.go",
+      "git_blob": "9945e7e5f090dd719a6dc2cefd060fe7dfef769c",
+      "bytes": 4170,
+      "sha256": "561fca3ec3009dc76b7c4b4b8a191f48d4c8e170c75316cacc63d3d05a95f016"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/server",
+      "head": "968b808279df4848b4487c32fc6a0bc0bc706252",
+      "relative": "test_util.go",
+      "git_blob": "5f3f3eda7229a87550380fbd9a93ac5c44e89cf3",
+      "bytes": 41710,
+      "sha256": "30ef27b64d73077b0d463fc1321b75ee51150bf805c791428723f42ea93e9907"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "go.mod",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "go.sum",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "scripts/server-fixture/main.go",
+      "git_blob": "a0e01ac3bdc9d9c75a70008046f1a6d3205ab051",
+      "bytes": 7621,
+      "sha256": "56dc93c6eb13d8f414eb3a92fa2705d46d19c11e1f939ad1685150d23f4d3298"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "payoutartifact/artifact.go",
+      "git_blob": "962207442164ab363ea133f6ae3db00071ce62dd",
+      "bytes": 17420,
+      "sha256": "30d2f58c379b4813f5c64224aa286fc3c175b20647e7bbd39cdd65047c4ebc8f"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work-context/sn",
+      "head": "b2e2aac639de640e4d4d8da200e47bb80c78b05a",
+      "relative": "payoutartifact/closed_work.go",
+      "git_blob": "04d25f6b952c746e1f85c58e427c1e621b14e507",
+      "bytes": 14402,
+      "sha256": "84a746d074269643261f3990960b8967b08f329fb4522ce5e0484ddc09631124"
+    },
+    {
+      "repository": "/home/by/urnetwork/connect",
+      "head": "c6186b79caaaae7f7a35beee42e815c0c0ca7170",
+      "relative": "go.mod",
+      "git_blob": "b5de586f79dfa4b9d1264dde72a5be28fb20bd0d",
+      "bytes": 3887,
+      "sha256": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d"
+    },
+    {
+      "repository": "/home/by/urnetwork/connect",
+      "head": "c6186b79caaaae7f7a35beee42e815c0c0ca7170",
+      "relative": "go.sum",
+      "git_blob": "11555eee4473212e338379a8fc49e2af83b0490c",
+      "bytes": 21922,
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+    },
+    {
+      "repository": "/home/by/urnetwork/connect",
+      "head": "c6186b79caaaae7f7a35beee42e815c0c0ca7170",
+      "relative": "protocol/transfer.proto",
+      "git_blob": "b706857f3d14b5cea03b696d314c1f2481678f50",
+      "bytes": 34428,
+      "sha256": "4e51a164eeaea1bae386527c4f27a6e77d7ea8e089f5cd2c122d3200a590d005"
+    },
+    {
+      "repository": "/home/by/urnetwork/connect",
+      "head": "c6186b79caaaae7f7a35beee42e815c0c0ca7170",
+      "relative": "protocol/transfer.pb.go",
+      "git_blob": "fc5955241e2c811764bab35e0edad2cecaf4964b",
+      "bytes": 109822,
+      "sha256": "e7c5346117fb2efd82fbb0d67882d27a4673a695e8c19dfbeaba52fd3d91e08d"
+    },
+    {
+      "repository": "/home/by/urnetwork/connect",
+      "head": "c6186b79caaaae7f7a35beee42e815c0c0ca7170",
+      "relative": "transfer_contract_manager.go",
+      "git_blob": "d9ff64c477281ba74035a982742df247f1a4353c",
+      "bytes": 72418,
+      "sha256": "c534627c5e01b1d0cf98862da44bd6f9e6fcdb4735f991a9279aeede01888611"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/selectors.json",
+      "bytes": 7300,
+      "sha256": "98925ecc1e241ab2dd3001e53d2586349e1332881733575d65389cba068904e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/operative-controls.json",
+      "bytes": 13536,
+      "sha256": "3a16fd5a81358826c43bc69498c3be3c9b861f3823c41ae01164b45b808af158"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/source-review.json",
+      "bytes": 2846,
+      "sha256": "4b4152e9a592262791f1bd676c21645f6dccd8446ea2687a76ba18f928c59539"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/qualification-recipe.json",
+      "bytes": 2435,
+      "sha256": "35f2d31889d4659ed5dd6106add7b26663ec83930e26d2caa821fe7b48c96b0e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/seal.py",
+      "bytes": 14716,
+      "sha256": "ba8fcd514f64f00165a617c8bf73a0ce69f9a2587186ea7e4f8422678f31bc9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/restore-report-dropping-controller/connect_controller.go",
+      "bytes": 49585,
+      "sha256": "197ba170d3029e275adb5582e7ea79204a5735037570f945164e663faa55f0b8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/restore-report-dropping-controller/control.diff",
+      "bytes": 463,
+      "sha256": "cd5770aefc14b9e70dc3d0614df7d756c3575014ad2a258bc97aa71348895528"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-original-content-agreement/contract_close_report.go",
+      "bytes": 6685,
+      "sha256": "61f91e26fe9f0b001b37fc3ac948baa17b13390b0b00fc26356b7413614829e3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-original-content-agreement/control.diff",
+      "bytes": 558,
+      "sha256": "6bc8db46dbd856bf5ddf9f9f76e66e3a093a30da487d777fc2725f645061f904"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-authenticated-client-domain/contract_close_report.go",
+      "bytes": 6682,
+      "sha256": "e6d32e230d9bf53f53bc5548a40a9c7508e4ebd2a087710190c2da3f6d5ad7b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-authenticated-client-domain/control.diff",
+      "bytes": 606,
+      "sha256": "a54d09419fafeafa90da6b6b5f82cbe18a9231d0448058a012867ca23da4c39a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-cold-retained-report-before-contract/contract_close_report.go",
+      "bytes": 6564,
+      "sha256": "eefde704259af9911a70651bbbb1fa78c08f51ec97b968ac37309929b05101bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-cold-retained-report-before-contract/control.diff",
+      "bytes": 356,
+      "sha256": "092a7b1e63bdf7992d1938d77a609a74d2466044c8203dbede3d11c49db014b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-terminal-party-admission-refusal/contract_close_report.go",
+      "bytes": 6649,
+      "sha256": "aea3c878e6932d8748600268c56673fe77859b603c8e608af7b1a489f025a6f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-terminal-party-admission-refusal/control.diff",
+      "bytes": 407,
+      "sha256": "92bd8dd1fdf980eadfb8530a578021653851d14699660aee492cc1ad5da0a608"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-original-database-custody/db_contract_close_report.go",
+      "bytes": 1491,
+      "sha256": "1dc9ca469a81139e024b513c7d4f206a603996a6ec95e5a96d32a884acce911f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-original-database-custody/control.diff",
+      "bytes": 744,
+      "sha256": "6510bbbed097924cd0910f9588d8123627c6de21882fd6cd6fde00712ad1997e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-duplicate-settlement-continuation/contract_close_report.go",
+      "bytes": 6709,
+      "sha256": "5a9c6f32781c19c499449bfb2ccfbec00d88b204f654d0ef99ad9d842de7db0c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/omit-duplicate-settlement-continuation/control.diff",
+      "bytes": 418,
+      "sha256": "94f0e8d9b894a218f6b619d56d20cee921e863cae5025f8128b716bf776e87b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/commit-refused-report-reservation/contract_close_report.go",
+      "bytes": 6656,
+      "sha256": "174ffce99df84b2b1e0c2d43979e43a14703b75edf42cc22d6dbaa1051b4b448"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-close-report-identity/evidence/controls/commit-refused-report-reservation/control.diff",
+      "bytes": 382,
+      "sha256": "259194bb95c02cfcf1eded893f34f3da2129e5f9803f765ad2be086b661d95c5"
+    }
+  ],
+  "scope": {
+    "new_roots": 17,
+    "roots_per_mode": 34,
+    "vets": 3,
+    "controls_per_mode": 8
+  },
+  "review": [
+    "Authenticated client plus immutable ReportId scopes original increments; exact content is checked before any reused delivery.",
+    "Real READ COMMITTED row-lock admission rechecks retained identity after contention; semantic refusal rolls back report reservation and accumulated bytes together.",
+    "Lost postcommit reply retries actual idempotent settlement; accepted original report survives contract and client-directory cleanup.",
+    "Controller forwards original serialized ReportId and committed applied status into byte metrics; malformed present identifiers refuse, empty legacy identifiers retain previous behavior.",
+    "New tests cover duplicate and changed content, two client namespaces, full uint64 unacked count, actual lock contention and canceled contender join, SQL rollback, cleanup/reopen, terminal-party refusal, immutable SQL custody, and equal paid/free/companion completed-byte weighting.",
+    "Eight isolated production controls target routing, content, authenticated namespace, retained cold lookup, terminal refusal, immutable schema, settlement continuation and transactional rollback. Intended assertions are not yet executed.",
+    "Prospective migration is append-only; legacy subscription model remains unchanged."
+  ],
+  "limits": [
+    "34 roots per mode, three vets and eight operative controls per mode remain uncompiled/unexecuted.",
+    "Transport-authenticated original reports and durable SQL do not establish cryptographic physical-work, eligibility/reliability or whole-window completeness."
+  ]
+}

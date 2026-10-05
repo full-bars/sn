@@ -1,0 +1,25 @@
+{
+  "schema": "server-participant-publication-root-readback-v1",
+  "head": "050663259d616080b62a6d19c1d2f1280b07f8ab",
+  "parent": "ee44895eb512ab2858dc092761ab86879e4b01fe",
+  "upstream": "8f336de7f3eb1bd29ccc2da6b2d85ebfcbb7e7d5",
+  "tree": "8f3054d75d710a139b4a70bd5a38ceede5f6db6b",
+  "changed_paths": [
+    "model/contract_participant_identity_test.go",
+    "model/subscription_model.go"
+  ],
+  "remote_readback": "050663259d616080b62a6d19c1d2f1280b07f8ab\trefs/heads/main",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-participant-publication/evidence/publication.json",
+      "bytes": 724,
+      "sha256": "68c0b46581952bdcfbc12241cdd26cd2fad4efaf292e12117ce43389331affe0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-participant-publication/evidence/integration-review.json",
+      "bytes": 5463,
+      "sha256": "f9a44245a8799dd1c09421e12996dd5d90d627d8af47c42171f0cff414696367"
+    }
+  ],
+  "scope": "Two-file participant increment published over current upstream via two commits. Retained64 positives/vet/14 causal bodies refer to original qualified graph; unchanged affected function/caller review retained from Astra. Full current Server graph and teardown resource observations remain unqualified. No deployment claimed."
+}

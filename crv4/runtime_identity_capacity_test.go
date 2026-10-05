@@ -1,4 +1,4 @@
-// The complete release history remains usable at a finite catalog-sized bound.
+// The complete reviewed release history remains usable with a finite cache.
 package crv4
 
 import (
@@ -11,8 +11,8 @@ import (
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
 
-// All reviewed exact authorities reach the actual reader and retain hot metadata;
-// oversized, duplicate and incomplete authorities fail before another read.
+// Reviewed authorities reach the actual reader and retain hot metadata while
+// they fit; oversized, duplicate and incomplete lists fail before another read.
 func TestRuntimeArtifactMetadataAuthenticatesCompleteReviewedIdentityHistory(t *testing.T) {
 	metadataHex, metadataHash := runtimeIdentityTestMetadata(t)
 	var identities []RuntimeArtifactIdentity
@@ -63,8 +63,13 @@ func TestRuntimeArtifactMetadataAuthenticatesCompleteReviewedIdentityHistory(t *
 			}
 		}
 	}
-	if metadataCalls != len(identities) || calls != 5*len(identities) {
-		t.Fatalf("full history did not retain all exact hot entries: metadata=%d calls=%d", metadataCalls, calls)
+	expectedMetadataCalls := len(identities)
+	if len(identities) > maximumRuntimeMetadataCacheEntries {
+		// The second complete scan reauthenticates evicted history.
+		expectedMetadataCalls *= 2
+	}
+	if metadataCalls != expectedMetadataCalls || calls != 4*len(identities)+expectedMetadataCalls {
+		t.Fatalf("full history exact reads: metadata=%d calls=%d, want %d/%d", metadataCalls, calls, expectedMetadataCalls, 4*len(identities)+expectedMetadataCalls)
 	}
 	for _, change := range []func([]RuntimeArtifactIdentity) []RuntimeArtifactIdentity{
 		func(values []RuntimeArtifactIdentity) []RuntimeArtifactIdentity {

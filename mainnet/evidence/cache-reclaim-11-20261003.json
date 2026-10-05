@@ -1,0 +1,55 @@
+{
+  "schema": "mainnet-cache-headroom-proof-v1",
+  "status": "VERIFIED_COMPLETE",
+  "reclaimed_bytes": 11284443136,
+  "deleted_files": 450,
+  "minimum_age_hours": 48,
+  "minimum_bytes": 8388608,
+  "guards": "Same audited reclaim10 logic, task path only changed; privileged process references checked before plan/apply; bounded metadata scan exit1/no output/diagnostics; regular single-link compiler archives; physical identity checked before/during unlink; selected paths verified absent.",
+  "files": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "e3ba1c41920e24beb4b13d223b1460bc8a0473b67aa123a825a2db6ee89156de"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/reference-scope.json": {
+      "bytes": 707,
+      "sha256": "cabb49896d9210f2ad0f65d26fd238ba5bb37cedf4c5023039a412645d4d82ca"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/reference-scan.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/receipt.json": {
+      "bytes": 138026,
+      "sha256": "ad7deef6c8b8c11e7739ed99ab818b2515e1fa65a2f9aea5752d33051c4fd150"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "b87a82fc95d75dadef6e985c20b4e5653c706f604bc1731f3ea09cbd702d1d7a"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/reclaim.go": {
+      "bytes": 7049,
+      "sha256": "5bf3d1f25e688f92e25a7b05a3c70341f26fed693b3c1f81bc26a0aeff111c73"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/candidate-paths.txt": {
+      "bytes": 44550,
+      "sha256": "f24362e1642e9f5be57bd048ad6830c9c30a5847d75d5c96a563b46afa5b7210"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/reclaim": {
+      "bytes": 3849124,
+      "sha256": "b6c9c09b30672595c7e1f46ee14e06c581f906e363cff091c987842922a05880"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-11-20261003/plan.json": {
+      "bytes": 137744,
+      "sha256": "5922a5bbc6e28b5ae0322585e70687158a23c0e2e09789272e88638462e13d4d"
+    }
+  }
+}

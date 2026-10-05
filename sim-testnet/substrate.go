@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -18,13 +17,12 @@ import (
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types/extrinsic"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types/extrinsic/extensions"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"golang.org/x/crypto/blake2b"
 
+	snchain "github.com/urfoundation/sn/chain"
 	"github.com/urfoundation/sn/crv4"
 	"github.com/urfoundation/sn/ss58"
 )
@@ -37,86 +35,24 @@ type SubstrateManager struct {
 	cfg      *ResolvedConfig
 }
 
-// Retains the provider's integer token so parsing never passes through float64.
-type nativeTransactionFeeResponse struct {
-	PartialFee json.RawMessage `json:"partialFee"`
-}
-
-// Parse the standard payment_queryInfo fee without accepting JSON floats,
-// signs, overflow, or provider-specific loss of integer precision.
-func parseNativeTransactionFee(raw json.RawMessage) (uint64, error) {
-	value := strings.TrimSpace(string(raw))
-	if len(value) >= 2 && value[0] == '"' && value[len(value)-1] == '"' {
-		var decoded string
-		if err := json.Unmarshal(raw, &decoded); err != nil {
-			return 0, fmt.Errorf("decode native transaction fee: %w", err)
-		}
-		value = strings.TrimSpace(decoded)
-	}
-	base := 10
-	if strings.HasPrefix(value, "0x") || strings.HasPrefix(value, "0X") {
-		base = 16
-		value = value[2:]
-	}
-	if value == "" {
-		return 0, errors.New("native transaction fee is empty")
-	}
-	fee, err := strconv.ParseUint(value, base, 64)
-	if err != nil {
-		return 0, fmt.Errorf("native transaction fee %q is not an unsigned uint64: %w", value, err)
-	}
-	return fee, nil
-}
-
-// Enforce the approval-bound per-extrinsic ceiling.
-func validateNativeTransactionFee(estimated, limit uint64) error {
-	if limit == 0 {
-		return errors.New("native transaction fee limit is zero")
-	}
-	if estimated > limit {
-		return fmt.Errorf("estimated native transaction fee %d rao exceeds approved limit %d rao", estimated, limit)
-	}
-	return nil
-}
-
-// Quote the exact signed bytes immediately before broadcast. The funded role
-// balance remains the hard loss boundary if the runtime multiplier changes
-// between this read and inclusion.
+// Quote the exact signed bytes immediately before broadcast through the shared
+// sn/chain fee rule. The funded role balance remains the hard loss boundary if
+// the runtime multiplier changes between this read and inclusion.
 func (self *SubstrateManager) approveNativeTransactionFee(ctx context.Context, raw []byte) (uint64, uint64, error) {
 	if self == nil || self.chain == nil || self.chain.API == nil || self.chain.API.Client == nil || self.cfg == nil || self.cfg.Config == nil {
 		return 0, 0, errors.New("native transaction fee quote dependencies are unavailable")
 	}
-	var response nativeTransactionFeeResponse
-	if err := self.chain.API.Client.CallContext(ctx, &response, "payment_queryInfo", codec.HexEncodeToString(raw)); err != nil {
-		return 0, 0, fmt.Errorf("quote native transaction fee: %w", err)
-	}
-	estimated, err := parseNativeTransactionFee(response.PartialFee)
-	if err != nil {
-		return 0, 0, err
-	}
 	limit := self.cfg.Config.Budgets.MaximumNativeTransactionFeeRao
-	if err := validateNativeTransactionFee(estimated, limit); err != nil {
+	estimated, err := snchain.ApproveNativeTransactionFee(ctx, self.chain, raw, limit)
+	if err != nil {
 		return estimated, limit, err
 	}
 	return estimated, limit, nil
 }
 
-// subtensorAccountInfo matches runtime 453's System.Account value. Runtime 453
-// retains the fixed-width balance shape audited under runtime 452; Subtensor's
-// Balance is u64 (rao), while the generic GSRPC AccountInfo assumes u128 and
-// therefore cannot decode this runtime's AccountData.
-type subtensorAccountInfo struct {
-	Nonce       types.U32
-	Consumers   types.U32
-	Providers   types.U32
-	Sufficients types.U32
-	Data        struct {
-		Free     types.U64
-		Reserved types.U64
-		Frozen   types.U64
-		Flags    types.U128
-	}
-}
+// subtensorAccountInfo is the reviewed runtime's System.Account value with
+// Subtensor's fixed-width u64 (rao) balances; the shape lives in sn/chain.
+type subtensorAccountInfo = snchain.AccountInfo
 
 // SetupFacts are finalized, read-only inputs which make the setup plan exact.
 // In particular, alpha is transferred from an existing wallet-owned position;
@@ -166,14 +102,9 @@ type ExistingUIDFact struct {
 	TotalHotkeyAlphaRao uint64 `json:"total_hotkey_alpha_rao,omitempty"`
 }
 
-// Captures the runtime auction state needed to prove a bounded bootstrap.
-type registrationEconomics struct {
-	BurnRao             uint64
-	MinBurnRao          uint64
-	MaxBurnRao          uint64
-	BurnHalfLifeBlocks  uint16
-	BurnIncreaseMultQ64 string
-}
+// Captures the runtime auction state needed to prove a bounded bootstrap; the
+// read and its shape are shared with the release binaries through sn/chain.
+type registrationEconomics = snchain.RegistrationEconomics
 
 type SubnetTopologyFacts struct {
 	UIDCount    uint16
@@ -211,62 +142,9 @@ type runtime453PruneNeuron struct {
 	Immortal          bool
 }
 
-// Read every auction parameter from one finalized state root.
+// Read every auction parameter from one finalized state root (sn/chain).
 func readRegistrationEconomicsAt(chain *crv4.Chain, netuid uint16, finalized types.Hash) (registrationEconomics, error) {
-	var result registrationEconomics
-	if chain == nil || chain.API == nil || chain.API.RPC == nil || chain.API.RPC.State == nil || chain.Meta == nil {
-		return result, errors.New("registration economics chain dependencies are unavailable")
-	}
-	readU64 := func(storage string) (uint64, error) {
-		key, err := types.CreateStorageKey(chain.Meta, crv4.PalletName, storage, netuidArg(netuid))
-		if err != nil {
-			return 0, err
-		}
-		var value types.U64
-		if err := readRequiredStorageAt(chain, key, crv4.PalletName, storage, &value, finalized); err != nil {
-			return 0, err
-		}
-		return uint64(value), nil
-	}
-	var err error
-	if result.BurnRao, err = readU64("Burn"); err != nil {
-		return result, fmt.Errorf("read Burn: %w", err)
-	} else if result.BurnRao == 0 {
-		return result, errors.New("Burn is zero")
-	}
-	if result.MinBurnRao, err = readU64("MinBurn"); err != nil {
-		return result, fmt.Errorf("read MinBurn: %w", err)
-	} else if result.MinBurnRao == 0 {
-		return result, errors.New("MinBurn is zero")
-	}
-	if result.MaxBurnRao, err = readU64("MaxBurn"); err != nil {
-		return result, fmt.Errorf("read MaxBurn: %w", err)
-	} else if result.MaxBurnRao == 0 {
-		return result, errors.New("MaxBurn is zero")
-	}
-	halfLifeKey, err := types.CreateStorageKey(chain.Meta, crv4.PalletName, "BurnHalfLife", netuidArg(netuid))
-	if err != nil {
-		return result, err
-	}
-	var halfLife types.U16
-	if err := readRequiredStorageAt(chain, halfLifeKey, crv4.PalletName, "BurnHalfLife", &halfLife, finalized); err != nil {
-		return result, fmt.Errorf("read BurnHalfLife: %w", err)
-	} else if halfLife == 0 {
-		return result, errors.New("BurnHalfLife is zero")
-	}
-	result.BurnHalfLifeBlocks = uint16(halfLife)
-	multiplierKey, err := types.CreateStorageKey(chain.Meta, crv4.PalletName, "BurnIncreaseMult", netuidArg(netuid))
-	if err != nil {
-		return result, err
-	}
-	var multiplier types.U128
-	if err := readRequiredStorageAt(chain, multiplierKey, crv4.PalletName, "BurnIncreaseMult", &multiplier, finalized); err != nil {
-		return result, fmt.Errorf("read BurnIncreaseMult: %w", err)
-	} else if multiplier.Int == nil || multiplier.Sign() <= 0 {
-		return result, errors.New("BurnIncreaseMult is zero")
-	}
-	result.BurnIncreaseMultQ64 = multiplier.String()
-	return result, nil
+	return snchain.ReadRegistrationEconomicsAt(chain, netuid, finalized)
 }
 
 func runtime453PruneCandidate(neurons []runtime453PruneNeuron, minimumNonImmune uint16) (uint16, error) {
@@ -357,6 +235,25 @@ func validateRuntimeDefaultMinTransferBinding(raw []byte, observedCodeHash, expe
 	return value, nil
 }
 
+// Binds the transfer floor to the exact artifact already authenticated at the
+// finalized block. A provisional artifact has a different code identity from
+// the release lock, while its decoded value must still match public policy.
+func validateAuthenticatedRuntimeDefaultMinTransferBinding(raw []byte, authenticated authenticatedRuntimeMetadata, cfg *ResolvedConfig) (uint64, error) {
+	if cfg == nil || cfg.Public == nil || cfg.Release == nil {
+		return 0, errors.New("runtime DefaultMinTransfer manifests are unavailable")
+	}
+	expectedCodeHash := cfg.Release.Runtime.CodeHash
+	if authenticated.CompatibilityProfile == crv4.ProvisionalRuntimeCompatibilityProfile {
+		expectedCodeHash = authenticated.CodeHash
+	}
+	return validateRuntimeDefaultMinTransferBinding(
+		raw,
+		authenticated.CodeHash,
+		expectedCodeHash,
+		cfg.Public.Chain.ExpectedDefaultMinTransferRao,
+	)
+}
+
 func readRuntimeDefaultMinTransferAt(chain *crv4.Chain, cfg *ResolvedConfig, finalized types.Hash) (uint64, error) {
 	authenticated, err := readAuthenticatedRuntimeMetadataAt(chain, cfg, finalized)
 	if err != nil {
@@ -366,12 +263,7 @@ func readRuntimeDefaultMinTransferAt(chain *crv4.Chain, cfg *ResolvedConfig, fin
 	if err != nil {
 		return 0, err
 	}
-	return validateRuntimeDefaultMinTransferBinding(
-		raw,
-		authenticated.CodeHash,
-		cfg.Release.Runtime.CodeHash,
-		cfg.Public.Chain.ExpectedDefaultMinTransferRao,
-	)
+	return validateAuthenticatedRuntimeDefaultMinTransferBinding(raw, authenticated, cfg)
 }
 
 func decodeRuntimeRaoConstant(name string, raw []byte) (uint64, error) {
@@ -423,7 +315,7 @@ func decodeAlphaPriceQ9(value *big.Int) (uint64, error) {
 // the supplied testnet wallet. A single source position is intentional: each
 // planned transfer is then atomic, bounded, and trivially resumable.
 func ReadSetupFacts(ctx context.Context, cfg *ResolvedConfig) (*SetupFacts, error) {
-	chain, authenticated, err := dialReleaseSubstrateChain(cfg, cfg.OperationalSubstrate)
+	chain, authenticated, err := dialReleaseSubstrateChainContext(ctx, cfg, cfg.OperationalSubstrate)
 	if err != nil {
 		return nil, err
 	}
@@ -454,12 +346,7 @@ func ReadSetupFacts(ctx context.Context, cfg *ResolvedConfig) (*SetupFacts, erro
 	if err != nil {
 		return nil, err
 	}
-	facts.DefaultMinTransferRao, err = validateRuntimeDefaultMinTransferBinding(
-		initialMinTransfer,
-		authenticated.CodeHash,
-		cfg.Release.Runtime.CodeHash,
-		cfg.Public.Chain.ExpectedDefaultMinTransferRao,
-	)
+	facts.DefaultMinTransferRao, err = validateAuthenticatedRuntimeDefaultMinTransferBinding(initialMinTransfer, authenticated, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("resolve finalized %s.DefaultMinTransfer: %w", crv4.PalletName, err)
 	}
@@ -679,8 +566,8 @@ func ReadSetupFacts(ctx context.Context, cfg *ResolvedConfig) (*SetupFacts, erro
 	return facts, nil
 }
 
-func DialSubstrateManager(cfg *ResolvedConfig, stateDir string, j *Journal) (*SubstrateManager, error) {
-	chain, _, err := dialReleaseSubstrateChain(cfg, cfg.OperationalSubstrate)
+func DialSubstrateManagerContext(ctx context.Context, cfg *ResolvedConfig, stateDir string, j *Journal) (*SubstrateManager, error) {
+	chain, _, err := dialReleaseSubstrateChainContext(ctx, cfg, cfg.OperationalSubstrate)
 	if err != nil {
 		return nil, err
 	}
@@ -693,7 +580,18 @@ func DialSubstrateManager(cfg *ResolvedConfig, stateDir string, j *Journal) (*Su
 		chain.API.Client.Close()
 		return nil, err
 	}
+	if provisionalRelayCaptureEnabled(cfg) {
+		// Snapshot metadata remains available to read storage, but this connection
+		// cannot provide a current native signing identity.
+		chain.Runtime = nil
+		signer = signature.KeyringPair{}
+	}
 	return &SubstrateManager{chain: chain, signer: signer, stateDir: stateDir, journal: j, cfg: cfg}, nil
+}
+
+// Compatibility wrapper for callers that do not yet own a lifecycle context.
+func DialSubstrateManager(cfg *ResolvedConfig, stateDir string, j *Journal) (*SubstrateManager, error) {
+	return DialSubstrateManagerContext(context.Background(), cfg, stateDir, j)
 }
 
 func DialIndependentSubstrateManager(cfg *ResolvedConfig) (*SubstrateManager, error) {
@@ -722,51 +620,23 @@ var hyperShapes = map[string]hyperShape{
 	"transfer_enabled":              {Storage: "TransferToggle", Call: "sudo_set_toggle_transfer", Kind: "bool"},
 }
 
-func netuidArg(n uint16) []byte { var b [2]byte; binary.LittleEndian.PutUint16(b[:], n); return b[:] }
+func netuidArg(n uint16) []byte { return snchain.NetuidArg(n) }
 
-// Decode a runtime-declared ValueQuery fallback when no raw key exists. A
-// missing OptionalQuery remains absent; inventing a zero value there would
-// hide missing identities and subnet state.
+// Decode a runtime-declared ValueQuery fallback when no raw key exists; the
+// rule is shared with the release binaries through sn/chain.
 func decodeStorageFallback(entry types.StorageEntryMetadata, value any) (bool, error) {
-	entryV14, ok := entry.(types.StorageEntryMetadataV14)
-	if !ok {
-		return false, fmt.Errorf("runtime storage entry is not metadata v14")
-	}
-	if !entryV14.Modifier.IsDefault {
-		return false, nil
-	}
-	if err := codec.Decode(entryV14.Fallback, value); err != nil {
-		return false, fmt.Errorf("decode runtime storage fallback: %w", err)
-	}
-	return true, nil
+	return snchain.DecodeStorageFallback(entry, value)
 }
 
 // Read one finalized value with the same absent-key semantics the runtime
-// applies. GSRPC reports only raw key presence and otherwise leaves zeroes.
+// applies (sn/chain).
 func readStorageAt(chain *crv4.Chain, key types.StorageKey, pallet, storage string, value any, blockHash types.Hash) (bool, error) {
-	present, err := chain.API.RPC.State.GetStorage(key, value, blockHash)
-	if err != nil || present {
-		return present, err
-	}
-	entry, err := chain.Meta.FindStorageEntryMetadata(pallet, storage)
-	if err != nil {
-		return false, err
-	}
-	return decodeStorageFallback(entry, value)
+	return snchain.ReadStorageAt(chain, key, pallet, storage, value, blockHash)
 }
 
-// Require a concrete value or a runtime-declared ValueQuery fallback. Owner
-// settings and activation prerequisites must never interpret absent optional
-// storage as a real zero/false value.
+// Require a concrete value or a runtime-declared ValueQuery fallback (sn/chain).
 func readRequiredStorageAt(chain *crv4.Chain, key types.StorageKey, pallet, storage string, value any, blockHash types.Hash) error {
-	present, err := readStorageAt(chain, key, pallet, storage, value, blockHash)
-	if err != nil {
-		return err
-	}
-	if !present {
-		return fmt.Errorf("%s.%s storage is absent", pallet, storage)
-	}
-	return nil
+	return snchain.ReadRequiredStorageAt(chain, key, pallet, storage, value, blockHash)
 }
 
 const storageQueryChunkSize = 128
@@ -1047,7 +917,7 @@ func readRegisteredAlphaSnapshotAt(chain *crv4.Chain, netuid uint16, finalized t
 }
 
 func (m *SubstrateManager) RegisteredAlphaSnapshot() (RegisteredAlphaSnapshot, error) {
-	finalized, block, err := m.finalizedHead()
+	m, finalized, block, err := m.finalizedManager()
 	if err != nil {
 		return RegisteredAlphaSnapshot{}, err
 	}
@@ -1174,7 +1044,7 @@ func readExistingUIDFactsAt(chain *crv4.Chain, netuid uint16, finalized types.Ha
 }
 
 func (m *SubstrateManager) SubnetTopology() (SubnetTopologyFacts, error) {
-	finalized, _, err := m.finalizedHead()
+	m, finalized, _, err := m.finalizedManager()
 	if err != nil {
 		return SubnetTopologyFacts{}, err
 	}
@@ -1182,7 +1052,7 @@ func (m *SubstrateManager) SubnetTopology() (SubnetTopologyFacts, error) {
 }
 
 func (m *SubstrateManager) ExistingUIDFacts() ([]ExistingUIDFact, error) {
-	finalized, _, err := m.finalizedHead()
+	m, finalized, _, err := m.finalizedManager()
 	if err != nil {
 		return nil, err
 	}
@@ -1198,7 +1068,7 @@ func (m *SubstrateManager) ExistingUIDFacts() ([]ExistingUIDFact, error) {
 // The fresh-plan invariant proves the only subnet-owner-owned live identity is
 // SubnetOwnerHotkey, so it is the sole immortal entry in this release topology.
 func (m *SubstrateManager) Runtime453PruneCandidate() (uint16, error) {
-	finalized, block, err := m.finalizedHead()
+	m, finalized, block, err := m.finalizedManager()
 	if err != nil {
 		return 0, err
 	}
@@ -1279,31 +1149,56 @@ func (m *SubstrateManager) finalizedHead() (types.Hash, uint64, error) {
 // Authenticates one finalized checkpoint without allowing a stalled public
 // provider to outlive the caller's release-preflight deadline.
 func (self *SubstrateManager) finalizedHeadContext(ctx context.Context) (types.Hash, uint64, error) {
+	authenticated, number, err := self.finalizedRuntimeContext(ctx)
+	return authenticated.FinalizedHash, number, err
+}
+
+// Each storage reader owns its exact-block metadata view; a runtime upgrade
+// cannot mutate a shared signing connection underneath concurrent readers.
+func (self *SubstrateManager) finalizedManagerContext(ctx context.Context) (*SubstrateManager, types.Hash, uint64, error) {
+	authenticated, number, err := self.finalizedRuntimeContext(ctx)
+	if err != nil {
+		return nil, types.Hash{}, 0, err
+	}
+	chain, manager := *self.chain, *self
+	if err := bindAuthenticatedRuntime(&chain, authenticated); err != nil {
+		return nil, types.Hash{}, 0, err
+	}
+	manager.chain = &chain
+	return &manager, authenticated.FinalizedHash, number, nil
+}
+
+func (self *SubstrateManager) finalizedManager() (*SubstrateManager, types.Hash, uint64, error) {
+	return self.finalizedManagerContext(context.Background())
+}
+
+func (self *SubstrateManager) finalizedRuntimeContext(ctx context.Context) (authenticatedRuntimeMetadata, uint64, error) {
 	if ctx == nil || self == nil || self.chain == nil || self.chain.API == nil || self.chain.API.Client == nil {
-		return types.Hash{}, 0, errors.New("finalized native checkpoint context is unavailable")
+		return authenticatedRuntimeMetadata{}, 0, errors.New("finalized native checkpoint context is unavailable")
 	}
 	var hashHex string
 	err := retryFinalSemanticRPCCall(ctx, nil, releaseRuntimeRPCRetryPolicy(), func(attemptCtx context.Context) error {
 		return self.chain.API.Client.CallContext(attemptCtx, &hashHex, "chain_getFinalizedHead")
 	})
 	if err != nil {
-		return types.Hash{}, 0, err
+		return authenticatedRuntimeMetadata{}, 0, err
 	}
 	hash, err := types.NewHashFromHexString(hashHex)
 	if err != nil {
-		return types.Hash{}, 0, err
+		return authenticatedRuntimeMetadata{}, 0, err
 	}
-	if _, err := readAuthenticatedRuntimeMetadataAtContext(ctx, self.chain, self.cfg, hash); err != nil {
-		return types.Hash{}, 0, fmt.Errorf("authenticate finalized runtime at %s: %w", hash.Hex(), err)
+	authenticated, err := readAuthenticatedRuntimeMetadataAtContext(ctx, self.chain, self.cfg, hash)
+	if err != nil {
+		return authenticatedRuntimeMetadata{}, 0, fmt.Errorf("authenticate finalized runtime at %s: %w", hash.Hex(), err)
 	}
 	var header types.Header
 	err = retryFinalSemanticRPCCall(ctx, nil, releaseRuntimeRPCRetryPolicy(), func(attemptCtx context.Context) error {
 		return self.chain.API.Client.CallContext(attemptCtx, &header, "chain_getHeader", hash.Hex())
 	})
 	if err != nil {
-		return types.Hash{}, 0, err
+		return authenticatedRuntimeMetadata{}, 0, err
 	}
-	return hash, uint64(header.Number), nil
+	return authenticated, uint64(header.Number), nil
 }
 
 // Resolves one canonical block number through the caller's bounded public-RPC
@@ -1361,32 +1256,46 @@ func (self *SubstrateManager) releaseHistoryChainAtContext(ctx context.Context, 
 		return nil, err
 	}
 	historical := *self.chain
-	bindAuthenticatedRuntime(&historical, authenticated)
+	if err := bindAuthenticatedRuntime(&historical, authenticated); err != nil {
+		return nil, err
+	}
 	return &historical, nil
 }
 
 func (m *SubstrateManager) fleetCommitmentAt(hotkey [32]byte, blockHash types.Hash) (*crv4.FinalizedCommitment, error) {
-	chain, err := m.releaseHistoryChainAt(blockHash)
+	return m.fleetCommitmentAtContext(context.Background(), hotkey, blockHash)
+}
+
+// fleetCommitmentAtContext retains the caller's deadline through exact-block
+// runtime authentication and storage reads. Carried-action reconciliation must
+// be able to abandon one stalled historical proof and continue reporting its
+// other independent findings.
+func (m *SubstrateManager) fleetCommitmentAtContext(ctx context.Context, hotkey [32]byte, blockHash types.Hash) (*crv4.FinalizedCommitment, error) {
+	chain, err := m.releaseHistoryChainAtContext(ctx, blockHash)
 	if err != nil {
 		return nil, err
 	}
-	return chain.FleetCommitmentAt(m.cfg.Netuid, hotkey, blockHash)
+	return chain.FleetCommitmentAtContext(ctx, m.cfg.Netuid, hotkey, blockHash)
 }
 
 // Read the current commitment only after authenticating the complete runtime
 // identity at that same finalized state root.
 func (m *SubstrateManager) fleetCommitmentFinalized(hotkey [32]byte) (*crv4.FinalizedCommitment, error) {
-	hash, _, err := m.finalizedHead()
+	return m.fleetCommitmentFinalizedContext(context.Background(), hotkey)
+}
+
+func (m *SubstrateManager) fleetCommitmentFinalizedContext(ctx context.Context, hotkey [32]byte) (*crv4.FinalizedCommitment, error) {
+	hash, _, err := m.finalizedHeadContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return m.fleetCommitmentAt(hotkey, hash)
+	return m.fleetCommitmentAtContext(ctx, hotkey, hash)
 }
 
 // Read the release scheduler only after authenticating the complete runtime
 // identity at that same finalized state root.
 func (m *SubstrateManager) epochScheduleStateFinalized() (*crv4.EpochScheduleState, types.Hash, error) {
-	hash, _, err := m.finalizedHead()
+	m, hash, _, err := m.finalizedManager()
 	if err != nil {
 		return nil, types.Hash{}, err
 	}
@@ -1456,11 +1365,11 @@ func (m *SubstrateManager) ReadHyper(name string) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("unsupported owner hyperparameter %q", name)
 	}
-	key, err := types.CreateStorageKey(m.chain.Meta, crv4.PalletName, s.Storage, netuidArg(m.cfg.Netuid))
+	m, finalized, _, err := m.finalizedManager()
 	if err != nil {
 		return nil, err
 	}
-	finalized, _, err := m.finalizedHead()
+	key, err := types.CreateStorageKey(m.chain.Meta, crv4.PalletName, s.Storage, netuidArg(m.cfg.Netuid))
 	if err != nil {
 		return nil, err
 	}
@@ -1567,7 +1476,7 @@ func (m *SubstrateManager) FundCall(destination [32]byte, rao uint64) (types.Cal
 }
 
 func (m *SubstrateManager) FreeBalance(account [32]byte) (uint64, error) {
-	finalized, _, err := m.finalizedHead()
+	m, finalized, _, err := m.finalizedManager()
 	if err != nil {
 		return 0, err
 	}
@@ -1599,10 +1508,15 @@ func (self *SubstrateManager) freeBalanceAtBlockContext(ctx context.Context, acc
 		}
 		return readFreeBalanceAtHashContext(ctx, historical, account, hash)
 	}
-	if _, err := readAuthenticatedRuntimeMetadataAtContext(ctx, self.chain, self.cfg, hash); err != nil {
+	authenticated, err := readAuthenticatedRuntimeMetadataAtContext(ctx, self.chain, self.cfg, hash)
+	if err != nil {
 		return 0, fmt.Errorf("authenticate requested native block %d/%s: %w", block, hash.Hex(), err)
 	}
-	return readFreeBalanceAtHashContext(ctx, self.chain, account, hash)
+	view := *self.chain
+	if err := bindAuthenticatedRuntime(&view, authenticated); err != nil {
+		return 0, err
+	}
+	return readFreeBalanceAtHashContext(ctx, &view, account, hash)
 }
 
 // Preserves the contextless compatibility surface for existing callers.
@@ -1681,18 +1595,11 @@ func (m *SubstrateManager) Send(ctx context.Context, planHash string, a Action, 
 }
 
 // Encode the exact metadata-driven signed transaction used by both first
-// broadcast and interrupted-funding recovery. Keeping one encoder prevents a
-// recovery verifier from drifting from the executor's wire representation.
+// broadcast and interrupted-funding recovery. The one encoder lives in
+// sn/chain so the release binaries, this executor and its recovery verifier
+// share a single wire representation.
 func encodeSignedSubstrateCall(chain *crv4.Chain, signer signature.KeyringPair, call types.Call, nonce uint32) ([]byte, error) {
-	if chain == nil || chain.Meta == nil || chain.Runtime == nil {
-		return nil, errors.New("substrate signing context is unavailable")
-	}
-	ext := extrinsic.NewExtrinsic(call)
-	err := ext.Sign(signer, chain.Meta, extrinsic.WithEra(types.ExtrinsicEra{IsImmortalEra: true}, chain.GenesisHash), extrinsic.WithNonce(types.NewUCompactFromUInt(uint64(nonce))), extrinsic.WithTip(types.NewUCompactFromUInt(0)), extrinsic.WithSpecVersion(chain.Runtime.SpecVersion), extrinsic.WithTransactionVersion(chain.Runtime.TransactionVersion), extrinsic.WithGenesisHash(chain.GenesisHash), extrinsic.WithMetadataMode(extensions.CheckMetadataModeDisabled, extensions.CheckMetadataHash{Hash: types.NewEmptyOption[types.H256]()}))
-	if err != nil {
-		return nil, err
-	}
-	return codec.Encode(ext)
+	return snchain.EncodeSignedCall(chain, signer, call, nonce)
 }
 
 func (m *SubstrateManager) SendAs(ctx context.Context, planHash string, a Action, call types.Call, signer signature.KeyringPair) (types.Hash, uint64, error) {
@@ -1706,6 +1613,9 @@ func (m *SubstrateManager) SendAs(ctx context.Context, planHash string, a Action
 // than silently blessing later state. Ordinary callers retain SendAs's exact
 // behavior through a nil callback.
 func (m *SubstrateManager) SendAsWithRecoveryPrecondition(ctx context.Context, planHash string, a Action, call types.Call, signer signature.KeyringPair, precondition func(types.Hash, uint64) error) (types.Hash, uint64, error) {
+	if m != nil && m.cfg != nil && m.cfg.readOnlyAudit {
+		return types.Hash{}, 0, errors.New("read-only observation cannot sign or broadcast native transactions")
+	}
 	if prior, ok := m.journal.LatestTransaction(planHash, a.ID, a.IntentHash); ok {
 		rawPath := filepath.Join(m.stateDir, "transactions", stringsTrim0x(prior.TransactionHash)+".scale")
 		raw, err := os.ReadFile(rawPath)
@@ -1732,8 +1642,17 @@ func (m *SubstrateManager) SendAsWithRecoveryPrecondition(ctx context.Context, p
 		}
 		return m.watchRaw(ctx, planHash, a, raw, hash, prior.RecoveryBlock, prior.RecoveryBlockHash, false)
 	}
-	if _, _, err := m.finalizedHeadContext(ctx); err != nil {
+	signingHash, _, err := m.finalizedHeadContext(ctx)
+	if err != nil {
 		return types.Hash{}, 0, fmt.Errorf("authenticate native runtime before signing: %w", err)
+	}
+	signingRuntime, err := readAuthenticatedRuntimeMetadataAtContext(ctx, m.chain, m.cfg, signingHash)
+	if err != nil {
+		return types.Hash{}, 0, err
+	}
+	signingChain := *m.chain
+	if err := bindAuthenticatedRuntime(&signingChain, signingRuntime); err != nil {
+		return types.Hash{}, 0, err
 	}
 	var nonce uint32
 	if err := m.chain.API.Client.CallContext(ctx, &nonce, "system_accountNextIndex", signer.Address); err != nil {
@@ -1745,7 +1664,7 @@ func (m *SubstrateManager) SendAsWithRecoveryPrecondition(ctx context.Context, p
 			return types.Hash{}, 0, errors.New("renewal native nonce differs from exact approval")
 		}
 	}
-	raw, err := encodeSignedSubstrateCall(m.chain, signer, call, nonce)
+	raw, err := encodeSignedSubstrateCall(&signingChain, signer, call, nonce)
 	if err != nil {
 		return types.Hash{}, 0, err
 	}
@@ -1757,6 +1676,13 @@ func (m *SubstrateManager) SendAsWithRecoveryPrecondition(ctx context.Context, p
 	}
 	recoveryHash, recoveryBlock, err := m.finalizedHeadContext(ctx)
 	if err != nil {
+		return types.Hash{}, 0, err
+	}
+	recoveryRuntime, err := readAuthenticatedRuntimeMetadataAtContext(ctx, m.chain, m.cfg, recoveryHash)
+	if err != nil {
+		return types.Hash{}, 0, err
+	}
+	if err := requireSameNativeSigningRuntime(signingRuntime, recoveryRuntime); err != nil {
 		return types.Hash{}, 0, err
 	}
 	if precondition != nil {
@@ -1784,34 +1710,20 @@ func (m *SubstrateManager) RoleSigner(roles *RoleSecrets, label string) (signatu
 
 // Build a runtime-enforced registration limit so a moving burn auction cannot
 // charge more than the approved action ceiling between observation and block.
+// The calldata rule is the shared sn/chain one used by the release binaries.
 func (m *SubstrateManager) BurnRegisterLimitCall(hotkey [32]byte, limitPrice uint64) (types.Call, error) {
-	account, err := types.NewAccountID(hotkey[:])
-	if err != nil {
-		return types.Call{}, err
-	}
-	return types.NewCall(m.chain.Meta, crv4.PalletName+".register_limit", types.NewU16(m.cfg.Netuid), *account, types.NewU64(limitPrice))
+	return snchain.BurnRegisterLimitCall(m.chain.Meta, m.cfg.Netuid, hotkey, limitPrice)
 }
 
-// Build a fill-or-kill Dynamic TAO purchase with an explicit maximum price.
+// Build a fill-or-kill Dynamic TAO purchase with an explicit maximum price
+// (sn/chain).
 func (self *SubstrateManager) AddStakeLimitCall(hotkey [32]byte, amount, limitPrice uint64, allowPartial bool) (types.Call, error) {
-	account, err := types.NewAccountID(hotkey[:])
-	if err != nil {
-		return types.Call{}, err
-	}
-	return types.NewCall(
-		self.chain.Meta,
-		crv4.PalletName+".add_stake_limit",
-		*account,
-		types.NewU16(self.cfg.Netuid),
-		types.NewU64(amount),
-		types.NewU64(limitPrice),
-		types.NewBool(allowPartial),
-	)
+	return snchain.AddStakeLimitCall(self.chain.Meta, self.cfg.Netuid, hotkey, amount, limitPrice, allowPartial)
 }
 
 // Read all activation prerequisites and results from one finalized head.
 func (self *SubstrateManager) ActivationState() (SubnetActivationState, error) {
-	finalized, block, err := self.finalizedHead()
+	self, finalized, block, err := self.finalizedManager()
 	if err != nil {
 		return SubnetActivationState{}, err
 	}
@@ -1868,15 +1780,15 @@ func (self *SubstrateManager) StartCallCall() (types.Call, error) {
 }
 
 func (m *SubstrateManager) DelegateTake(hotkey [32]byte) (uint16, error) {
+	m, finalized, _, err := m.finalizedManager()
+	if err != nil {
+		return 0, err
+	}
 	key, err := types.CreateStorageKey(m.chain.Meta, crv4.PalletName, "Delegates", hotkey[:])
 	if err != nil {
 		return 0, err
 	}
 	var take types.U16
-	finalized, _, err := m.finalizedHead()
-	if err != nil {
-		return 0, err
-	}
 	if _, err := readStorageAt(m.chain, key, crv4.PalletName, "Delegates", &take, finalized); err != nil {
 		return 0, err
 	}
@@ -1917,29 +1829,29 @@ func (m *SubstrateManager) TransferStakeAndHotkeyCall(destinationColdkey, origin
 	)
 }
 func (m *SubstrateManager) UID(hotkey [32]byte) (uint16, bool, error) {
+	m, finalized, _, err := m.finalizedManager()
+	if err != nil {
+		return 0, false, err
+	}
 	key, err := types.CreateStorageKey(m.chain.Meta, crv4.PalletName, "Uids", netuidArg(m.cfg.Netuid), hotkey[:])
 	if err != nil {
 		return 0, false, err
 	}
 	var uid types.U16
-	finalized, _, err := m.finalizedHead()
-	if err != nil {
-		return 0, false, err
-	}
 	ok, err := m.chain.API.RPC.State.GetStorage(key, &uid, finalized)
 	return uint16(uid), ok, err
 }
 
 func (m *SubstrateManager) UIDCount() (uint16, error) {
+	m, finalized, _, err := m.finalizedManager()
+	if err != nil {
+		return 0, err
+	}
 	key, err := types.CreateStorageKey(m.chain.Meta, crv4.PalletName, "SubnetworkN", netuidArg(m.cfg.Netuid))
 	if err != nil {
 		return 0, err
 	}
 	var count types.U16
-	finalized, _, err := m.finalizedHead()
-	if err != nil {
-		return 0, err
-	}
 	ok, err := m.chain.API.RPC.State.GetStorage(key, &count, finalized)
 	if err != nil {
 		return 0, err
@@ -1955,11 +1867,11 @@ func (m *SubstrateManager) UIDCount() (uint16, error) {
 // resolves to the runtime's zero-account fallback and will fail exact matching.
 func (m *SubstrateManager) HotkeyOwner(hotkey [32]byte) ([32]byte, error) {
 	var result [32]byte
-	key, err := types.CreateStorageKey(m.chain.Meta, crv4.PalletName, "Owner", hotkey[:])
+	m, finalized, _, err := m.finalizedManager()
 	if err != nil {
 		return result, err
 	}
-	finalized, _, err := m.finalizedHead()
+	key, err := types.CreateStorageKey(m.chain.Meta, crv4.PalletName, "Owner", hotkey[:])
 	if err != nil {
 		return result, err
 	}
@@ -1996,7 +1908,9 @@ func verifyAuthenticatedFinalizedExtrinsicContext(ctx context.Context, chain *cr
 		return fmt.Errorf("authenticated finalized extrinsic metadata identity: %w", err)
 	}
 	finalizedChain := *chain
-	bindAuthenticatedRuntime(&finalizedChain, authenticated)
+	if err := bindAuthenticatedRuntime(&finalizedChain, authenticated); err != nil {
+		return err
+	}
 	return finalizedChain.VerifyFinalizedExtrinsicContext(ctx, blockHash, extrinsicHash)
 }
 
@@ -2017,7 +1931,8 @@ func (m *SubstrateManager) appendRecoveredFinality(ctx context.Context, planHash
 }
 
 func (m *SubstrateManager) watchRaw(ctx context.Context, planHash string, a Action, raw []byte, hash types.Hash, recoveryBlock uint64, recoveryHash string, feeChecked bool) (types.Hash, uint64, error) {
-	if _, _, err := m.finalizedHeadContext(ctx); err != nil {
+	currentHash, _, err := m.finalizedHeadContext(ctx)
+	if err != nil {
 		return hash, 0, err
 	}
 	if receipt, found, err := m.chain.LocateFinalizedExtrinsic(ctx, hash, recoveryBlock); err != nil {
@@ -2036,8 +1951,16 @@ func (m *SubstrateManager) watchRaw(ctx context.Context, planHash string, a Acti
 	if err != nil || canonicalRecovery != recoveryCheckpoint {
 		return hash, 0, stateMismatchError(err, "substrate recovery checkpoint %d/%s is not canonical", recoveryBlock, recoveryHash)
 	}
-	if _, err := readAuthenticatedRuntimeMetadataAtContext(ctx, m.chain, m.cfg, recoveryCheckpoint); err != nil {
+	recoveryRuntime, err := readAuthenticatedRuntimeMetadataAtContext(ctx, m.chain, m.cfg, recoveryCheckpoint)
+	if err != nil {
 		return hash, 0, fmt.Errorf("authenticate substrate recovery runtime before broadcast: %w", err)
+	}
+	currentRuntime, err := readAuthenticatedRuntimeMetadataAtContext(ctx, m.chain, m.cfg, currentHash)
+	if err != nil {
+		return hash, 0, err
+	}
+	if err := requireSameNativeSigningRuntime(recoveryRuntime, currentRuntime); err != nil {
+		return hash, 0, err
 	}
 	if !feeChecked {
 		if _, _, err := m.approveNativeTransactionFee(ctx, raw); err != nil {
@@ -2148,7 +2071,9 @@ func verifyCompatibilityGatesAt(chain *crv4.Chain, cfg *ResolvedConfig, finalize
 		return nil, fmt.Errorf("authenticate compatibility-gate runtime: %w", err)
 	}
 	authenticatedChain := *chain
-	bindAuthenticatedRuntime(&authenticatedChain, authenticated)
+	if err := bindAuthenticatedRuntime(&authenticatedChain, authenticated); err != nil {
+		return nil, err
+	}
 	out := map[string]any{}
 	names := make([]string, 0, len(cfg.Hyperparameters.ObservedCompatibilityGates))
 	for name := range cfg.Hyperparameters.ObservedCompatibilityGates {

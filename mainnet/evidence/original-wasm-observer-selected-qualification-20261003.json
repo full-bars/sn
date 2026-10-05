@@ -1,0 +1,156 @@
+{
+  "schema": "root-original-wasm-observer-selected-qualification-v1",
+  "source": "d022c648bd0d2c285353b12c4b6b1ca39fc9388d",
+  "tree": "e663f7aefaa16cc70044e2df37eb7f85e17abcc2",
+  "verified_artifacts": [
+    {
+      "bytes": 3253,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/source-join.json",
+      "sha256": "5cf5ef2e8411b6253d3cd52a5fa3ae27dac3c2f42e2cd1e676243ee86d702eac"
+    },
+    {
+      "bytes": 7524,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/cargo-metadata.json",
+      "sha256": "7c1fe989cd55c3b3fd56a7dbc6ba402483990f8dccdf839c1c0ce05de3231015"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-test.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 87,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-test.phase",
+      "sha256": "d1cf3f5d54717b861e073af464aba0dfa99ec284697e2edbcf9855ff2e0e6391"
+    },
+    {
+      "bytes": 1998,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-test.stdout",
+      "sha256": "f702fed253fad924c567c53f04ab749a6418984177670a2705ea280c8505dc81"
+    },
+    {
+      "bytes": 20981,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-test.stderr",
+      "sha256": "dd53673d076247148637daf539648d6ce69c5cce2ab8f5eb05769c30934145c8"
+    },
+    {
+      "bytes": 187,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-test.lock-before",
+      "sha256": "f8999f503bd091ffd1b9ba3671a5bcce0ca390cf63974d7947ca44ff733ba832"
+    },
+    {
+      "bytes": 187,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-test.lock-after",
+      "sha256": "f8999f503bd091ffd1b9ba3671a5bcce0ca390cf63974d7947ca44ff733ba832"
+    },
+    {
+      "bytes": 1707,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/run-observer.sh",
+      "sha256": "1f528bbcbc242608616a3b12dfa3174d51e3fee2148862b4747a27df8fe40807"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118683,
+      "sha256": "2440fcbe35c1a6359e78c4d42e9bbfca9c81c6afceccc0e2b7c8892648bb6e82"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2242,
+      "sha256": "a5e1991491e8d3095ad353b0313e246aeaf8b24342629a45150fe552eb8e9ca9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "bytes": 4738,
+      "sha256": "ce8833381c8007a9d885acbac25805afdb41ea989c0abd6c936ee118727ca1b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/rust-toolchain.toml",
+      "bytes": 104,
+      "sha256": "fb3f87a4bf579a0dc02e69de34f9cda59f20b1224d3511464ee64c90885ddb49"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+      "bytes": 1182,
+      "sha256": "06310aec3708943ce37b097c33d2fda13f240ddcac6fb99fe1f5ad69227a7f21"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/bin/runtime-transition-replay.rs",
+      "bytes": 1062,
+      "sha256": "27932de27ef19775c9c01781c275617991e1d857ef657d26de7d92531ead7e77"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/historical.rs",
+      "bytes": 16313,
+      "sha256": "fc14a006aa034d93752e9d150b407e83158449c848b0d41c01d4dd8076e8300c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/historical_backend.rs",
+      "bytes": 6330,
+      "sha256": "1a62ea226930f693a8c3e67a88d890df1a4d62ccf7a23dbd50cd0aa073577e4a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "bytes": 9933,
+      "sha256": "98771e9be5adef72dc7201c861947b757397067dd0c4b6a1f84464ae1bda1ea3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/historical_observer.rs",
+      "bytes": 14067,
+      "sha256": "0d10781a8f6d93ddd7597972767885efa6794913b19b1d3bbcec5fe6307b42a5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/historical_tests.rs",
+      "bytes": 24154,
+      "sha256": "c00d10ef156b1050740cd224f4d70d246f13f40b8932efdf71f887e2633d4d15"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/lib.rs",
+      "bytes": 17694,
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/main.rs",
+      "bytes": 3292,
+      "sha256": "83f55935f40f8803c4552038a5be26983747a51176dc7f94b3cc535c3f1108c9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/replay.rs",
+      "bytes": 16621,
+      "sha256": "36030a50a42eb083aa8725b5abef025c9cf5fd6d0793ea8cc53c3a0cede2da54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/source/sn/tools/runtime-metadata-probe/src/replay_tests.rs",
+      "bytes": 11565,
+      "sha256": "8dc046e4abc8de0de10a9c8dba4966433711f0ddd60f13050b6fc6c68bccbe3c"
+    }
+  ],
+  "passed_roots": [
+    "historical::tests::historical_missing_read_node_is_not_authenticated_absence",
+    "historical::tests::historical_missing_child_read_refuses_before_empty_value",
+    "historical::tests::historical_original_wasm_observer_never_publishes_incomplete_poststate",
+    "historical::tests::historical_missing_write_path_refuses_unchanged_declared_root",
+    "historical::tests::historical_missing_child_write_path_refuses_unchanged_declared_root",
+    "historical::tests::historical_original_wasm_nested_ambiguous_attribution_refuses_complete_block",
+    "historical::tests::historical_complete_parent_proof_retains_unread_top_and_child_nodes",
+    "historical::tests::historical_original_wasm_stack_observes_real_host_calls_without_fee_authority",
+    "historical::tests::historical_original_wasm_unobserved_calls_and_zero_events_remain_unknown",
+    "historical::tests::historical_complete_parent_proof_replays_top_and_child_writes",
+    "historical::tests::historical_empty_block_and_sealed_header_keep_original_identity",
+    "historical::tests::historical_unsupported_host_is_not_a_successful_noop",
+    "historical::tests::historical_complete_proof_supports_same_key_rollback_and_child_delete",
+    "historical::tests::historical_original_wasm_observer_rollback_discards_effect_not_work",
+    "historical::tests::historical_public_decoder_refuses_unknown_trailing_duplicate_and_bounded_inputs",
+    "historical::tests::historical_original_wasm_observer_refuses_relabelled_body_code_and_range",
+    "historical::tests::historical_header_body_parent_code_and_post_root_are_independent_guards",
+    "historical::tests::historical_original_wasm_observer_cumulative_bound_survives_rollback",
+    "historical::tests::historical_unfinished_transaction_and_work_exhaustion_publish_no_fact"
+  ],
+  "mode": "LockedofflineRustlibrary selectedhistoricaltests;19othersfilteredout",
+  "cargo_lock_unchanged": true,
+  "limits": [
+    "Syntheticoriginal-codecallsite/rollback/proofbehavior only",
+    "Noactualruntimefee withdrawal/refund orfinalityauthority claim",
+    "Binarybuild andthreeoperativeomissioncontrols remainpending",
+    "Finalsourcecomposition/hostadoption/liveingestion separate"
+  ]
+}

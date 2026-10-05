@@ -1,0 +1,20 @@
+{
+  "scope": "Source-confirmed read-error/identity conflation; no fixed-source qualification or causal reproduction claim yet",
+  "source": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn/internal/durablehead/head_linux.go",
+    "sha256": "a16e16e66b042f0864b8693284f606fda1deea5d1aafed700e1efc1632128872",
+    "bytes": 29282,
+    "candidate": "b6b7880ea4059af1a77f232a1ed597fe11cc8999"
+  },
+  "observed": "Owner.writeCheckpoint reads back after xattr publication and sync, then joins identityIfDifferent(actual,raw) when either read error or byte difference occurs. A canceled read returns nil with an error; comparing nil with expected bytes manufactures ErrIdentity.",
+  "required_fix": "Return retained uncertainty and the original cause for failed reads. Classify identity only after successful read returns different bytes. Preserve pending checkpoint reconciliation.",
+  "required_controls": [
+    "Real pending-synced cancellation barrier",
+    "Uncanceled observation error preserves its cause without invented identity",
+    "Successfully returned changed bytes retain identity rejection",
+    "Lost acknowledgment can reopen exact published checkpoint",
+    "Adjacent preparation/inventory observation errors receive equivalent cause separation"
+  ],
+  "implementation_owner": "Astra max; isolated SN successor and separate actual Core adjacencies underway",
+  "limits": "Original corrected-cwd tests remain active; source-confirmed bug is not proof that it caused every original aggregate exit3."
+}

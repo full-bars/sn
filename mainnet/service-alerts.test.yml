@@ -1,0 +1,171 @@
+rule_files:
+  - service-alerts.example.yml
+evaluation_interval: 30s
+tests:
+  - name: fresh publisher heartbeats cannot conceal a retained steering stall
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_sample_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1+30x12'
+      - series: 'sn_mainnet_validator_heartbeat_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1+30x12'
+      - series: 'sn_mainnet_validator_steering_liveness_unresolved{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1+0x8 0+0x3'
+      - series: 'sn_mainnet_validator_steering_liveness_unresolved{env="fixture",host="first.example",job="node",role="beta"}'
+        values: '0+0x12'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetValidatorSteeringStalled
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: critical}
+            exp_annotations: {summary: "Validator alpha steering loop has an unresolved responsiveness incident on first.example"}
+      - eval_time: 3m
+        alertname: SnMainnetValidatorHeartbeatStale
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: SnMainnetValidatorSteeringStalled
+        exp_alerts: []
+  - name: unknown first startup is distinct from an observed steering stall
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_steering_liveness_enabled{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1+0x12'
+      - series: 'sn_mainnet_validator_steering_liveness_status{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '2+0x12'
+      - series: 'sn_mainnet_validator_steering_liveness_unresolved{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0+0x12'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: SnMainnetValidatorSteeringUnknown
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: warning}
+            exp_annotations: {summary: "Validator alpha steering responsiveness is unknown on first.example"}
+      - eval_time: 5m
+        alertname: SnMainnetValidatorSteeringStalled
+        exp_alerts: []
+  - name: an independent roster detects a disappeared steering monitor
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_expected{env="fixture",host="absent.example",role="alpha"}'
+        values: '1+0x12'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetValidatorMissing
+        exp_alerts:
+          - exp_labels: {env: fixture, host: absent.example, role: alpha, severity: critical}
+            exp_annotations: {summary: "Validator alpha telemetry is absent on absent.example"}
+  - name: an aging outcome warns before a retained stall opens
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_steering_liveness_status{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '4+0x12'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetValidatorSteeringWarning
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: warning}
+            exp_annotations: {summary: "Validator alpha steering outcome is aging on first.example"}
+  - name: a healthy role cannot conceal a missing role on the same host
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_expected{env="fixture",host="first.example",role="alpha"}'
+        values: '1+0x10'
+      - series: 'sn_mainnet_validator_expected{env="fixture",host="first.example",role="beta"}'
+        values: '1+0x10'
+      - series: 'sn_mainnet_validator_sample_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1+30x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetValidatorMissing
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, role: beta, severity: critical}
+            exp_annotations: {summary: "Validator beta telemetry is absent on first.example"}
+      - eval_time: 3m
+        alertname: SnMainnetValidatorStale
+        exp_alerts: []
+  - name: fresh reads cannot refresh a stale producer heartbeat
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_sample_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0+30x10'
+      - series: 'sn_mainnet_validator_heartbeat_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '60+0x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetValidatorHeartbeatStale
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: critical}
+            exp_annotations: {summary: "Validator alpha producer heartbeat is stale on first.example"}
+      - eval_time: 3m
+        alertname: SnMainnetValidatorStale
+        exp_alerts: []
+  - name: retained good output does not hide a stopped sampling domain
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_sample_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '60+0x10'
+      - series: 'sn_mainnet_validator_severity{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0+0x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetValidatorStale
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: critical}
+            exp_annotations: {summary: "Validator alpha observations stopped on first.example"}
+  - name: fresh ambiguous bytes do not acknowledge export and later real success resolves it
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_sample_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0+30x10'
+      - series: 'sn_mainnet_validator_export_last_success_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '60+0x8 270 300'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: SnMainnetValidatorExportUnconfirmed
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: critical}
+            exp_annotations: {summary: "Validator alpha export acknowledgment is stale on first.example"}
+      - eval_time: 5m
+        alertname: SnMainnetValidatorExportUnconfirmed
+        exp_alerts: []
+      - eval_time: 4m
+        alertname: SnMainnetValidatorStale
+        exp_alerts: []
+  - name: future consumer time and persistent unknown domains stay distinct
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_sample_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '3600+0x12'
+      - series: 'sn_mainnet_validator_status{env="fixture",host="first.example",job="node",role="beta"}'
+        values: '9+0x12'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetValidatorClockAhead
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: critical}
+            exp_annotations: {summary: "Validator alpha monitor clock is ahead on first.example"}
+      - eval_time: 5m
+        alertname: SnMainnetValidatorDomainUnknown
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: beta, severity: warning}
+            exp_annotations: {summary: "Validator beta protocol observations remain unknown on first.example"}
+  - name: original pending age alone is not a protocol deadline
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_sample_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0+30x12'
+      - series: 'sn_mainnet_validator_heartbeat_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0+30x12'
+      - series: 'sn_mainnet_validator_intent_created_timestamp_seconds{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1+0x12'
+      - series: 'sn_mainnet_validator_protocol_deadline_known{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0+0x12'
+      - series: 'sn_mainnet_validator_severity{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0+0x12'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: SnMainnetValidatorCritical
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: SnMainnetValidatorHeartbeatStale
+        exp_alerts: []

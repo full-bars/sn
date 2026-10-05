@@ -1,0 +1,137 @@
+{
+  "schema": "principal-fixture4af-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_STAGE_ONLY",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn",
+    "head": "4af72a82410ee4d229900dbb95560a5887e4c4ae",
+    "tree": "05148e71c31d8d92a7c0d1b8fa344bdccc4e26bf",
+    "parent": "8d33892ccad78ff69692b7fdcc3112ce12f1cfcb",
+    "clean": true
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/mainnet/economic_conservation_principal_custody_test.go",
+      "bytes": 3008,
+      "sha256": "859dc2d5b15fb7b9a1eee9a502f9690241117b93be946209cfe602929d2788d2",
+      "relative": "mainnet/economic_conservation_principal_custody_test.go",
+      "git_blob": "8fca2f13b29027a800571b433f320211a35011dc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 16876,
+      "sha256": "64ad9d77b3ea84c594a6464f56820a39c9693ec07b9bc0d6cff307466c6263ba"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/mainnet/economic_conservation_command.go",
+      "bytes": 23320,
+      "sha256": "5c92c9dbe2cce3f2cc8d28756351c885213c66e21bfa3851f47672d51f2d8c14"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/mainnet/monitor_storage_fixture_test.go",
+      "bytes": 2497,
+      "sha256": "305f1a8f8c65d38012fa2ffbfe4713798200923f3c5cdeeb145ab52b5a9a5973",
+      "relative": "mainnet/monitor_storage_fixture_test.go",
+      "git_blob": "75802df40f1da046c7343ce8e6b1dca55433b74a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/mainnet/monitor_output_fixture_test.go",
+      "bytes": 5024,
+      "sha256": "5dcf430f76f8078ba409db3a1d74947ce70f17cef10d2857b81ba23a9d01feec",
+      "relative": "mainnet/monitor_output_fixture_test.go",
+      "git_blob": "865d01c2e0c4aaaea864ed130e9940de161d8df0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/internal/durablefixture/fixture_linux.go",
+      "bytes": 7064,
+      "sha256": "1b6ec23982cd2140f7f0ee2afd9c90b3f0b20307b1c4592a6bd34bc9b3b43ff1",
+      "relative": "internal/durablefixture/fixture_linux.go",
+      "git_blob": "7eefb1eae2443836eae5bd2cb7cf3050593b79b1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31",
+      "relative": "go.mod",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981",
+      "relative": "go.sum",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc",
+      "relative": "tools/runtime-metadata-probe/Cargo.toml",
+      "git_blob": "a698109860741b88d661c29d95be93d81c62a160"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067",
+      "relative": "tools/runtime-metadata-probe/Cargo.lock",
+      "git_blob": "185310d18fcb00bcffd17ddacd80db8d34707651"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/evidence/intake.json",
+      "bytes": 4684,
+      "sha256": "7c65aed53ff5df0d7c3abe21fbabb4641c3baff76e81ed062372b181060d7ead"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-normal-body.stdout",
+      "bytes": 19925,
+      "sha256": "0504c49578ba08e7fbd414b7cf9bfac711cf73c79db462586e573b56ab38b700"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/selectors.json",
+      "bytes": 5512,
+      "sha256": "3d416ce6e960b632e58400cd830da851eed417f65f955b0ef53e204f2a606414"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/operative-controls.json",
+      "bytes": 2872,
+      "sha256": "f2bf1de4f73d95a2f13ef76061d47631b16780be03dc528274debd9396f8508b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/recipe.json",
+      "bytes": 2100,
+      "sha256": "7153242354641998a59a3d233db291fc36beb24870fca01ee45760128b7d7f15"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/controls/omit-fixture-checkpoint-provisioning/economic_conservation_principal_test.go",
+      "bytes": 16848,
+      "sha256": "cc698f9b03b66bded09f28c3423cee01c4093a0dc273b799b64fa52d00519a6f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/controls/omit-fixture-checkpoint-provisioning/overlay.json",
+      "bytes": 356,
+      "sha256": "f3d6c7ea3bbd02fa0386957d6cd801172af6273c8a741b842a2a845b17a86437"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/controls/treat-committed-empty-head-as-absence/economic_conservation_command.go",
+      "bytes": 23351,
+      "sha256": "845aeb34b596c2620285664250b6dc6c3ea2f30b2f02042f50ba5b37179493fa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/controls/treat-committed-empty-head-as-absence/overlay.json",
+      "bytes": 343,
+      "sha256": "7fbf991509f49cee4ff84261d002e4e72af7fb5acb5dbd9c69ac952ca2e3f1e6"
+    }
+  ],
+  "changed_paths": [
+    "mainnet/economic_conservation_principal_custody_test.go",
+    "mainnet/economic_conservation_principal_test.go"
+  ],
+  "scope": {
+    "roots_per_mode": 12,
+    "controls_per_mode": 2,
+    "vet": "./mainnet",
+    "rust_rebuild": false
+  },
+  "review": "Read complete two-file test delta, actual-public lost-lock and empty-committed-head tests, fresh custody provisioning helper, both causal control diffs, and twelve root declarations. Production/modules/Rust unchanged.",
+  "recipe_finding": "Original recipe inherits stale twenty-root/one-control parent steps. Additive corrected recipe/intake required before operational admission. Stage only exact current source; no behavioral pass claimed.",
+  "whole_mainnet_complete": false
+}

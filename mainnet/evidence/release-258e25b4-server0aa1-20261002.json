@@ -1,0 +1,498 @@
+{
+  "actions": [
+    {
+      "depends_on": [],
+      "description": "Review exact source, artifacts and production qualification",
+      "executable": false,
+      "id": "qualify-release",
+      "phase": 0,
+      "requirements": [
+        "runtime-authority",
+        "testnet-closure",
+        "testnet-exceptions",
+        "production-qualification",
+        "contract-artifacts",
+        "binary-artifacts",
+        "migration-cutover"
+      ],
+      "status": "blocked"
+    },
+    {
+      "depends_on": [
+        "qualify-release"
+      ],
+      "description": "Establish network, public roles, custody and bounded authority",
+      "executable": false,
+      "id": "review-authority",
+      "phase": 1,
+      "requirements": [
+        "owned-rpc",
+        "roles",
+        "custody",
+        "limits"
+      ],
+      "status": "blocked"
+    },
+    {
+      "depends_on": [
+        "review-authority"
+      ],
+      "description": "Apply the safest owner-authorized partial SN25 trim; prove protected identities survive and report every residual old generation without claiming a full reset",
+      "executable": false,
+      "id": "reset-miner-uids",
+      "phase": 2,
+      "requirements": [
+        "subnet-census",
+        "reset-capability"
+      ],
+      "status": "blocked"
+    },
+    {
+      "depends_on": [
+        "reset-miner-uids"
+      ],
+      "description": "Deploy exact custody graph, validator-evidence journal and coordinator binding; then prove code, ownership and constructor state",
+      "executable": false,
+      "id": "install-contracts",
+      "phase": 3,
+      "postconditions": [
+        "deployed-contract-state"
+      ],
+      "requirements": [
+        "contract-artifacts",
+        "custody",
+        "limits"
+      ],
+      "status": "blocked"
+    },
+    {
+      "depends_on": [
+        "install-contracts"
+      ],
+      "description": "Register approved pool, escrow, miner and UR-validator generations",
+      "executable": false,
+      "id": "register-subnet-roles",
+      "phase": 3,
+      "postconditions": [
+        "registered-subnet-roles"
+      ],
+      "requirements": [
+        "registration-plan",
+        "subnet-census",
+        "roles",
+        "limits",
+        "deployed-contract-state"
+      ],
+      "status": "blocked"
+    },
+    {
+      "depends_on": [
+        "review-authority"
+      ],
+      "description": "Run the separate netuid-0 role only for an approved existing seat and strategy",
+      "executable": false,
+      "id": "start-root-validator",
+      "phase": 4,
+      "requirements": [
+        "root-seat",
+        "services",
+        "custody",
+        "limits"
+      ],
+      "status": "blocked"
+    },
+    {
+      "depends_on": [
+        "register-subnet-roles"
+      ],
+      "description": "Start both independent standard UR validators with the two-operator safety quorum before requiring their first production rows",
+      "executable": false,
+      "id": "start-ur-validators",
+      "phase": 4,
+      "postconditions": [
+        "ur-validator-services"
+      ],
+      "requirements": [
+        "ur-validators",
+        "operator-quorum",
+        "services",
+        "payout-policy",
+        "registered-subnet-roles"
+      ],
+      "status": "blocked"
+    },
+    {
+      "depends_on": [
+        "review-authority"
+      ],
+      "description": "Start independent monitoring and verify alert/repair ownership",
+      "executable": false,
+      "id": "admit-operations",
+      "phase": 4,
+      "requirements": [
+        "monitor-oncall",
+        "services"
+      ],
+      "status": "blocked"
+    },
+    {
+      "depends_on": [
+        "start-root-validator",
+        "start-ur-validators",
+        "admit-operations"
+      ],
+      "description": "Activate the approved 10/90 evidence-based producer and owner Recycle mode; retain actual rows and native state before economic acceptance",
+      "executable": false,
+      "id": "activate-native-miner-emissions",
+      "phase": 5,
+      "postconditions": [
+        "ur-validator-rows",
+        "emission-activation-state"
+      ],
+      "requirements": [
+        "emission-mechanism",
+        "recycle-policy",
+        "payout-policy",
+        "activation-boundary",
+        "ur-validator-services"
+      ],
+      "status": "blocked"
+    },
+    {
+      "depends_on": [
+        "activate-native-miner-emissions"
+      ],
+      "description": "Observe actual production outcomes, settle accrued value and publish complete evidence",
+      "executable": false,
+      "id": "accept-and-reconcile",
+      "phase": 6,
+      "postconditions": [
+        "native-emission-outcomes"
+      ],
+      "requirements": [
+        "acceptance-policy",
+        "monitor-oncall",
+        "recycle-policy",
+        "ur-validator-rows",
+        "emission-activation-state"
+      ],
+      "status": "blocked"
+    }
+  ],
+  "activation_ready": false,
+  "apply_authority": false,
+  "artifact_status": "PASS_SCOPED",
+  "author_current_pair_independent_readback": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/author-mg06-readback.json",
+    "sha256": "sha256:cf7b6b8e76ba66e0074e87445b82d46ca3b9adb59aa3d2986fbb8049a4526833"
+  },
+  "author_receipt": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/evidence/release-receipt.json",
+    "sha256": "sha256:57b87ca18a03fd62171641ab64a24d72c885a47af861dd7831365cbf126287bd"
+  },
+  "base_checksum_entries": 1359,
+  "base_checksum_manifest": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/evidence/SHA256SUMS",
+    "sha256": "sha256:3f6b13c2e0146b8654a90b1a4bd10f5e40eca2e511daeff464fcc2c97b81d6d0"
+  },
+  "claims": {
+    "chain_submission_performed": false,
+    "deployment_approved": false,
+    "independent_builder_reproduction": false,
+    "live_signing_performed": false,
+    "local_source_to_bytecode_exact": true,
+    "local_source_to_image_verified": true,
+    "private_database_fixture_services_started_in_current_release": false,
+    "production_application_service_start_performed": false,
+    "publication_performed": false,
+    "release_complete": false,
+    "reproducibility_verified": false,
+    "same_host_repeat_outputs_equal": true
+  },
+  "components": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/evidence/component-gates.json",
+    "sha256": "sha256:c24468ce82cea2322c9913963ac0c2f6ad2ec11f698ce44c5b56f5a5661ac516"
+  },
+  "current_pair_author": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/mg06-qualification/receipt.json",
+    "sha256": "sha256:10563d27e1dfffca1ef067163a43e0d33d0fd324e12adde4cd4e068ad2b9a9ab"
+  },
+  "current_pair_independent": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/current-pair/receipt.json",
+    "sha256": "sha256:594907b53502594612dc0856a86e6e5aa2e000a4643a5b38b0a5860cd3600368"
+  },
+  "evm_hash": "0xee08392773bcf074dcbaf3bc540698b66ef4a27d982760c813dc1bdaddbb2884",
+  "execution_blockers": [
+    "Semantic validators for every supplied review manifest are required; byte identity does not satisfy a capability or custody gate",
+    "Exact per-action origin/payload/nonce/address/postcondition adapters and bounded lifetime ledger are not implemented by this planner",
+    "This review-only graph cannot authorize the separate executable local-custody bootstrap phase or any chain phase; each chain phase needs its own signed action, ceilings and expiry",
+    "Revalidate current identity, runtime, generations and retained receipts at execution; an offline snapshot cannot establish present readiness"
+  ],
+  "final_seal_independent": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/final-seal-readback.json",
+    "sha256": "sha256:c023d17904414f10cf4aaf98cf10927ef162475c77e7f74cb7ce0656664c7d6d"
+  },
+  "final_seal_independent_pending": false,
+  "finalized_hash": "0x4ea36b2a87ca41daad6f4f3f06753444ef54662bebd13a57462374d5879e2329",
+  "finalized_number": 9192802,
+  "independent_binding": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/evidence/independent-artifact-binding.json",
+    "sha256": "sha256:686774cc0dfc84fad74d1eca6fa57fca1be7d692526f634b1fd7aa55a2a3d4e2"
+  },
+  "independent_binding_readback": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/binding-readback.json",
+    "sha256": "sha256:b28754e01980fea10e88d371aee133a2f36d368804e4db34f1a2d881ad5871d5"
+  },
+  "later_server_included": false,
+  "later_server_intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/successor-intake/receipt.json",
+    "sha256": "sha256:c93ddacc23da7dd7f7e8e706ad6caa671b095b44b3c0e89a1f757084b59e8eeb"
+  },
+  "later_server_intake_manifest": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/successor-intake/SHA256SUMS",
+    "sha256": "sha256:638e3680030ed495823ac0567efa152c0420717d900557d674870e276976e3fa"
+  },
+  "later_server_intake_status": "UNREVIEWED_SOURCE_INTAKE_EXCLUDED_FROM_FROZEN_RELEASE",
+  "later_server_required_p0_successor_determined": false,
+  "launch_status": "NO_GO_PROVENANCE_AND_PRODUCTION_GATES",
+  "limits": [
+    "Both source builds are sequential with distinct initially empty Go caches. Image repeats use separate initially empty owned containerd/Docker stores; image-only daemons are stopped/joined. Private database fixture qualification is retained from exact server0aa in original SN132 context; it was not repeated in this successor.",
+    "Local byte equality does not prove independent compiler/package provenance, arm64 behavior, archive restore or SBOM/scanner/attestation policy.",
+    "Actual production policy/configuration, migration/rollout readiness, published/running image identity and release/deployment approval remain absent.",
+    "Original component receipts keep their original source and test scopes. Fresh current-pair MG06 qualification covers83 roots normal/race and3 vet packages. Prior SN132 composition42, unchanged-server46, sampler13 and independent roles retain their original scopes; no full application, production database or live service qualification is claimed.",
+    "The accepted exact v470 artifact exception is a separately scoped planning decision; it does not change this frozen binary source or grant live runtime, release or deployment authority.",
+    "This exact SN258e25b4/server0aa1e244 successor adds MG06 economic observer context and signed schedule profile to the prior owner/installation/recycle/server752 composition. Original MG06 causal controls used serverac868 and are retained separately. Publication and all local qualifications are terminal; economic outcomes and production authority remain open."
+  ],
+  "migration_ast_independent": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/migration-ast-count.json",
+    "sha256": "sha256:fb58aba151a72fa0f01784fc616e0d321f2918b5b0e213747fa0bbfc658de57d"
+  },
+  "migration_inventory_independent": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/migration-inventory-independent.json",
+    "sha256": "sha256:dc082b23618961a08e7b15ebcc955b183203e69a962f7810e6eaefbcc3c3a90d"
+  },
+  "oci_ab_independent": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/oci-ab-addendum.json",
+    "sha256": "sha256:186a93e4900f608e65854845177a18402fe0b5a7e059a22bde5c6cbc4e350e68"
+  },
+  "original_prior_scopes": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/evidence/prior-scoped-qualification-binding.json",
+    "sha256": "sha256:67c025d4b62365dea006508d3fce147db34d93ce91e9615459183f5724ff7471"
+  },
+  "original_scope_independent_readback": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/prior-scope-readback.json",
+    "sha256": "sha256:4ae3069086fad66ae432b9700373c4160595fdcbb063f7a3d5fa38c1a3d6edf2"
+  },
+  "plan_content_hash": "sha256:6720779f4449eccfd741226c845b15093586250f1525ba4fa87349824ed6b9d0",
+  "planning_checksum_manifest": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/planning/SHA256SUMS",
+    "sha256": "sha256:a53148898ba4bca707efb0e384ad10b8b085d994bb5b24370c636b5e60d8b15d"
+  },
+  "planning_independent": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/planning-independent.json",
+    "sha256": "sha256:8b577845047aacc140a0f3f3302f67ca5e783605fd2f2dd77bc5c477e85b8c45"
+  },
+  "planning_receipt": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/planning/planning-receipt.json",
+    "sha256": "sha256:f84bada3be92b9e282d940608f5f3c5405b1b014004592779c3df3f536f4883c"
+  },
+  "primary_independent": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/receipt.json",
+    "sha256": "sha256:273e865992334f3277fb5975c5b4ae9073022fcb24f1f01ef93e59f8daf47450"
+  },
+  "publication_observation": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/evidence/remote-source-publication-observation.json",
+    "sha256": "sha256:6757bc26e199eae7284d68480e3d9d54ad61a9c6c99a918578f008bf294c8a49"
+  },
+  "release_root": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244",
+  "requirements": [
+    {
+      "description": "Independent mainnet source-to-Wasm, code/metadata/version and supported capability approval",
+      "id": "runtime-authority",
+      "status": "missing"
+    },
+    {
+      "description": "Owned mainnet route attestation, archive capability and independently corroborated finalized identity",
+      "id": "owned-rpc",
+      "status": "missing"
+    },
+    {
+      "description": "Final testnet report preserving R48 failure and the actual completed scope",
+      "id": "testnet-closure",
+      "status": "missing"
+    },
+    {
+      "description": "Disposition of every testnet exception; no provisional testnet authority inherited",
+      "id": "testnet-exceptions",
+      "status": "missing"
+    },
+    {
+      "description": "Exact composed binary/contract/server release and controlled production-path rehearsal results",
+      "id": "production-qualification",
+      "input_sha256": "sha256:57b87ca18a03fd62171641ab64a24d72c885a47af861dd7831365cbf126287bd",
+      "status": "supplied_unvalidated"
+    },
+    {
+      "description": "Approved exact bytecode, ABI, constructor arguments, origins/nonces, expected addresses and expected custody getter values; observed getters are installation postconditions",
+      "id": "contract-artifacts",
+      "status": "missing"
+    },
+    {
+      "description": "Finalized deployment receipts, exact runtime code and actual custody/immutable getters, including the validator-evidence journal and coordinator binding",
+      "id": "deployed-contract-state",
+      "produced_by": "install-contracts",
+      "status": "missing"
+    },
+    {
+      "description": "Exact miner, validator, operator, root-service and monitor executable/config/image identities",
+      "id": "binary-artifacts",
+      "input_sha256": "sha256:27c3522a22a6289e7bf0a93d0729e6c8a0e4170eac7bc6686dac8e2b823d5777",
+      "status": "supplied_unvalidated"
+    },
+    {
+      "description": "Qualified server migration order, schema/writer compatibility and revision-fenced writer cutover",
+      "id": "migration-cutover",
+      "status": "missing"
+    },
+    {
+      "description": "Public owner/deployer/Safe/guardian/oracle/pool/escrow/provider identities, two distinct UR validators, and separate netuid-0 role",
+      "id": "roles",
+      "status": "missing"
+    },
+    {
+      "description": "Bounded signer/coldkey/Safe custody adapters, permissions, single-writer leases and durable nonce/receipt ownership",
+      "id": "custody",
+      "status": "missing"
+    },
+    {
+      "description": "Integer fee/value/stake/registration/lifetime ceilings, collateral exposure and validity windows; no inherited testnet budgets",
+      "id": "limits",
+      "status": "missing"
+    },
+    {
+      "description": "Exact SN25 generation and both mapping directions; removal/preservation hotkey generations, residual stake and capacity",
+      "id": "subnet-census",
+      "status": "missing"
+    },
+    {
+      "description": "Best-effort owner-authorized trim with execution-time selection guard; prove protected roles, custody, renumbering and explicitly retained old generations",
+      "id": "reset-capability",
+      "status": "missing"
+    },
+    {
+      "description": "Approved bounded pool/escrow/head/validator identities, exact registration payloads, cost ceilings and expected postconditions",
+      "id": "registration-plan",
+      "status": "missing"
+    },
+    {
+      "description": "Finalized exact registration generations, ownership, mappings and bounded registration cost receipts",
+      "id": "registered-subnet-roles",
+      "produced_by": "register-subnet-roles",
+      "status": "missing"
+    },
+    {
+      "description": "Existing netuid-0 hotkey/coldkey seat generation, eligibility, stake/retention, delegation and basket policy; no assumed seat or unbounded registration",
+      "id": "root-seat",
+      "status": "missing"
+    },
+    {
+      "description": "Two independent UR identities, approved standard-validator configs, current permits/effective stake and evidence-based CRv4 policy; no prior revealed row is required to start",
+      "id": "ur-validators",
+      "status": "missing"
+    },
+    {
+      "description": "Both admitted standard validator services own their approved config and durable state; first revealed/applied rows remain later output",
+      "id": "ur-validator-services",
+      "produced_by": "start-ur-validators",
+      "status": "missing"
+    },
+    {
+      "description": "Actual independently observed committed/revealed/applied evidence-based rows from both UR validators",
+      "id": "ur-validator-rows",
+      "produced_by": "activate-native-miner-emissions",
+      "status": "missing"
+    },
+    {
+      "description": "Two healthy operators and authenticated domains; root-only membership cannot count toward UR quorum",
+      "id": "operator-quorum",
+      "status": "missing"
+    },
+    {
+      "description": "Independent root/UR services with complete child joining, durable state, config hashes and bounded restart/rollout",
+      "id": "services",
+      "status": "missing"
+    },
+    {
+      "description": "Independent reconciliation, delivered alert tests, primary/backup on-call and bounded repair/rollback policy",
+      "id": "monitor-oncall",
+      "status": "missing"
+    },
+    {
+      "description": "Approved runtime-qualified 10/90 producer policy, exact native calls, allocation denominator and accepted quantization/outcome tolerance; actual Yuma results are later postconditions",
+      "id": "emission-mechanism",
+      "status": "missing"
+    },
+    {
+      "description": "Approved owner-hotkey destinations, exact Recycle-mode transition/precondition, drain boundary and remainder-accounting policy with no reserve credit",
+      "id": "recycle-policy",
+      "status": "missing"
+    },
+    {
+      "description": "Finalized native Recycle mode, activation boundary and exact applied policy generation",
+      "id": "emission-activation-state",
+      "produced_by": "activate-native-miner-emissions",
+      "status": "missing"
+    },
+    {
+      "description": "Observed native miner allocation, provider 10% target within approved tolerance and realized 90% recycling over the accepted production interval",
+      "id": "native-emission-outcomes",
+      "produced_by": "accept-and-reconcile",
+      "status": "missing"
+    },
+    {
+      "description": "Signed UR policy and equal paid/free completed-byte attribution with durable usage, source continuity and settlement proofs",
+      "id": "payout-policy",
+      "status": "missing"
+    },
+    {
+      "description": "Fresh finalized native boundary and exact admitted policy/capability generation after setup completes",
+      "id": "activation-boundary",
+      "status": "missing"
+    },
+    {
+      "description": "Production interval, settlement/claim reconciliation, observed 10% outcome tolerance and terminal evidence predicates",
+      "id": "acceptance-policy",
+      "status": "missing"
+    }
+  ],
+  "runtime_version": {
+    "specName": "node-subtensor",
+    "specVersion": 470,
+    "stateVersion": 1,
+    "transactionVersion": 1
+  },
+  "schema": "urnetwork-mainnet-mg06-release-report-v1",
+  "snapshot_content_hash": "sha256:2f42895845869450db6b2a2bd844410b6121d32944b05e06fb91c0568c525d79",
+  "source_ab_independent": {
+    "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/source-ab-receipt.json",
+    "sha256": "sha256:9879de09a776cc274e9f197f54165d04629fa5a91dfc910de61e5112443656f6"
+  },
+  "source_server": {
+    "clean": true,
+    "commit": "0aa1e2449b92fe62b10c6a287e5492dd5a19b792",
+    "name": "server",
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/server",
+    "tree": "c2f5649fda780e8371e0f314a2da1356549a8ae7"
+  },
+  "source_sn": {
+    "clean": true,
+    "commit": "258e25b4dd2c8b210bd8932b415e7d39776e23a0",
+    "name": "sn",
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/sn",
+    "tree": "253bc2b79016c06d4d7d5f06ce828e22660b8bb6"
+  },
+  "supporting_observations": {
+    "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/evidence/support-observations.json",
+    "sha256": "sha256:d329b4a21705be6139f8fe35a58d93c338a1f4907d3273894de280cba9de28cf"
+  }
+}

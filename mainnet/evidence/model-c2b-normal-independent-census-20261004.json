@@ -1,0 +1,90 @@
+{
+  "source_commit": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/model-retention-final/server",
+    "commit": "c2b0cf6582ff375f49ef2546b49f61112ac8b084",
+    "tree": "5ad68c8bfff9e37104200eb42d8373b5ea017ce8",
+    "base": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+    "prior_fixture": "4754cca86f600c86927fba713c5f32ed9a86043a",
+    "intermediate_retained": "744f5144b6e5296377b6814c52e24657aefcf104",
+    "changed_paths": [
+      "model/account_payment_model_test.go",
+      "model/contract_lifecycle_clock_guard_test.go",
+      "model/contract_payout_test.go",
+      "model/subscription_balance_retention_test.go",
+      "model/subscription_force_close_dispute_test.go",
+      "model/subscription_model_test.go",
+      "model/subscription_payout_debit_fixture_test.go",
+      "model/subscription_reservation_domains_test.go",
+      "model/subscription_retention_model_test.go"
+    ],
+    "git_entries": 5440,
+    "unchanged_non_test_entries": 3989,
+    "checkout": "Sparse nine test files plus modules. Unchecked-out source is present in exact Git blobs and the existing full Server5f archive; archive it before compilation."
+  },
+  "status": "FAILED_NORMAL_SCOPE_RACE_VET_CONTROLS_RUNNING",
+  "records": [
+    {
+      "package": "./model",
+      "mode": "normal",
+      "root_count": 45,
+      "counts": {
+        "pass": 43,
+        "fail": 2,
+        "skip": 0
+      },
+      "failed": [
+        "TestCompanionContractPayoutParticipantsJoinByStreamId",
+        "TestCompanionContractExtenderPayoutPaysTheReversedParties"
+      ],
+      "exit": 1,
+      "bindings": [
+        {
+          "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/evidence/model-c2b-targeted-normal-model.jsonl",
+          "bytes": 1675868,
+          "sha256": "60ec9fc9961cea09e91068617599f9f77e35078fda276569e6b6226d7e532701"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/evidence/model-c2b-targeted-normal-model.exit",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/evidence/model-c2b-targeted-normal-model.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "package": "./taskworker/work",
+      "mode": "normal",
+      "root_count": 1,
+      "counts": {
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "failed": [],
+      "exit": 0,
+      "bindings": [
+        {
+          "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/evidence/model-c2b-targeted-normal-worker.jsonl",
+          "bytes": 38887,
+          "sha256": "eb7a65214d512a61a3eeb88b677d53b01cc2c13db55169b57d902e3ffc3fbcf3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/evidence/model-c2b-targeted-normal-worker.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/evidence/model-c2b-targeted-normal-worker.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "full_suite_qualification": false,
+  "original_results_preserved": true
+}

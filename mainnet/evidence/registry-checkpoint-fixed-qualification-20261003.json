@@ -1,0 +1,47 @@
+{
+  "commit": "08f32b7f584b6dd982eb5024a65af82624699f4b",
+  "phases": {
+    "normal": {
+      "failed": [],
+      "passed": [
+        "TestBootstrapSuccessorExecutionFencesRegistryReplacement",
+        "TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend",
+        "TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains",
+        "TestBootstrapSuccessorRegistryRebindLostAcknowledgementKeepsPublicResume",
+        "TestBootstrapSuccessorRegistryRebindPublicResumeKeepsOriginalAuthority",
+        "TestBootstrapSuccessorUnapprovedRebindReceiptCannotAcquireAuthority"
+      ],
+      "skipped": []
+    },
+    "race": {
+      "failed": [],
+      "passed": [
+        "TestBootstrapSuccessorExecutionFencesRegistryReplacement",
+        "TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend",
+        "TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains",
+        "TestBootstrapSuccessorRegistryRebindLostAcknowledgementKeepsPublicResume",
+        "TestBootstrapSuccessorRegistryRebindPublicResumeKeepsOriginalAuthority",
+        "TestBootstrapSuccessorUnapprovedRebindReceiptCannotAcquireAuthority"
+      ],
+      "skipped": []
+    }
+  },
+  "schema": "sol-registry-checkpoint08f-fixed-v1",
+  "scope": "Six selected mainnet roots normal/race plus mainnet vet. Old7a test-only causal is separate.",
+  "sha256": {
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "c8e6540014cdb1ffcc9e9c3c6168c324cc25a7e185fc2b3a74fd981542329f7e",
+    "normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "normal.jsonl": "6f9ea39009b4e1421e19db2757a36e86e8e8b247d6a5727b79a23c7f1e867a3d",
+    "normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "race.jsonl": "8c5761c3734d3336d92a236305536388bf6a9d2278b0d3ba5289fc2ed2607f7e",
+    "race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source-preflight.json": "6e25e31b1ea3ca1c2c60d8bdcfe28db5c0602cccb1bec414875eb5c15afe6226",
+    "vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "tree": "5a3910c5b01826209d552e3b8003053457152254",
+  "vet_exit": 0
+}

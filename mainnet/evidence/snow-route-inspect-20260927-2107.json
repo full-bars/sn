@@ -1,0 +1,16 @@
+{
+  "schema": "urnetwork-mainnet-route-inspection-v1",
+  "rpc_url": "http://172.28.208.185:9944",
+  "rpc_methods": [
+    "eth_chainId",
+    "chain_getBlockHash(0)"
+  ],
+  "observed_at_utc": "2026-09-27T21:07:24Z",
+  "http_status_by_method": {
+    "eth_chainId": 502,
+    "chain_getBlockHash(0)": 502
+  },
+  "expected_mainnet_evm_chain_id_decimal": 964,
+  "independent_mainnet_genesis_approved": false,
+  "admission": "unavailable_during_node_move"
+}

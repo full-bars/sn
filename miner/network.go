@@ -137,10 +137,10 @@ func insecureNetworkWarning(apiUrl, connectUrl string) string {
 // The jwt is minted by one network's api and means nothing to another, so
 // after a switch `provider provide` fails with an auth error whose cause
 // is several steps removed from the message. The persisted client JWT
-// (.provider.jwt) goes stale the same way, but that one fails loudly on
-// its own: clientauth.LoadOrCreateClientJwt finds it rejected, clears it,
-// and its error says to run `provider auth`, so only the jwt needs this
-// note.
+// (.provider.jwt) is separately bound to its original endpoint/key/slot by
+// clientauth.LoadOrRegisterClientJwt. Switching network authentication cannot
+// clear that retained operation or authorize a replacement client; only the
+// network jwt needs this particular warning.
 func networkSwitchNotice(dir string) string {
 	if _, err := os.Stat(filepath.Join(dir, "jwt")); err != nil {
 		return ""

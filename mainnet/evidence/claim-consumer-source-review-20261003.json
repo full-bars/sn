@@ -1,0 +1,70 @@
+{
+  "schema": "coordinator-claim-consumer-source-review-v1",
+  "source_commit": "80030acb1024f8a74967ae9948ceea6ed9e5faee",
+  "source_tree": "4249ab40291e6e5c6d48cba44ae0fb3a5eb185f6",
+  "base_commit": "4e413cb019062ecabd8afd6d3f84340421bc713f",
+  "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn",
+  "changed_files": [
+    {
+      "path": "mainnet/monitor_claim.go",
+      "sha256": "f5a357882df14b81f0f509c4d2877497011a4f3cacb300fc57591f4145c9fb34",
+      "git_blob": "6197386d2e911bd6564e94b59299a399ce8e0817"
+    },
+    {
+      "path": "mainnet/monitor_claim_composition_test.go",
+      "sha256": "f326c25910f53a644cf6b2d48e2237abecc22a1df01475ba0bbf3715e6fc66bc",
+      "git_blob": "ff9837a3ff3b3b003d9880aa70632ce434d6b215"
+    },
+    {
+      "path": "mainnet/monitor_claim_state.go",
+      "sha256": "aa4794819e5779583d736618d681780006e81a7cdd32207405ce66f8ef84832b",
+      "git_blob": "4910ee08520a745d017c23640adbbf156e87f563"
+    },
+    {
+      "path": "mainnet/monitor_claim_state_test.go",
+      "sha256": "90e208b54c0658821e387cba0e8f302f3c4be6f3344a8c06733ee7ea9b048ffd",
+      "git_blob": "c526f0651e37924697788528bd889b207e11bcf6"
+    },
+    {
+      "path": "mainnet/monitor_claim_test.go",
+      "sha256": "b66151c25fcce8ac86a3a0da13c6a92b7ade133d920ad866ba86e62f4f155595",
+      "git_blob": "a7edaf31f52fa7029acf3cf1e27b6134e266c082"
+    },
+    {
+      "path": "mainnet/monitor_claim_worker.go",
+      "sha256": "530bb3bc4d21a66ddd89237840a138dddf9c2c14d92f158d7721e22e69a661fb",
+      "git_blob": "05dcfc302ac0eacb3d30fee22eae766d0a522523"
+    },
+    {
+      "path": "mainnet/monitor_output_fixture_test.go",
+      "sha256": "5dcf430f76f8078ba409db3a1d74947ce70f17cef10d2857b81ba23a9d01feec",
+      "git_blob": "865d01c2e0c4aaaea864ed130e9940de161d8df0"
+    },
+    {
+      "path": "mainnet/monitor_services.go",
+      "sha256": "480f05c344ae33bb13f9d3a314d3f362169d1cd02b6d730d2df8c022d7aae887",
+      "git_blob": "72ae513987cec26285158dcbd0b87d1f27782500"
+    },
+    {
+      "path": "mainnet/monitor_services_policy.go",
+      "sha256": "af1557f05f35fec8e608ecc921f77dc461c0f4614a4edb0384a4d69e1e7f007f",
+      "git_blob": "cb9b7da7abffd147756b72f999e4b6aec1ca8e7e"
+    }
+  ],
+  "unchanged_scopes": [
+    "go.mod",
+    "go.sum",
+    "miner",
+    "validator",
+    "operator",
+    "protocol",
+    "chain"
+  ],
+  "limits": [
+    "Source review only; no test or launch qualification.",
+    "Unsigned leaf lifecycle and signed receipt lifecycle are distinct producer paths.",
+    "Original receipt payment evidence is immutable; later credit events require separate economic monitoring.",
+    "Five-second transport attempts are retried by the continuous worker; no terminal timeout established.",
+    "HTTP408/429 transient classification and pacing need an adjacent follow-up; existing invalid status remains nonterminal."
+  ]
+}

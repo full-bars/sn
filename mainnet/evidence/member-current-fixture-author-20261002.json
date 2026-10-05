@@ -1,0 +1,129 @@
+{
+  "schema": "urnetwork-successor-public-census-fixture-author-v1",
+  "sealed_at": "2026-10-02T19:10:08.269301+00:00",
+  "verdict": "PASS_SCOPED",
+  "source": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/source/sn",
+    "Commit": "d8788c9ed8ade71acb287ea97621a77dfe175ec8",
+    "Tree": "0aa7f108213353e8beb46f65697724360df9049f",
+    "Parent": "5f1fe123474e6464e8cb30c17577de577517367b"
+  },
+  "results": {
+    "public-census-d878-normal": {
+      "Job": {
+        "Name": "public-census-d878-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/source/sn",
+        "Commit": "d8788c9ed8ade71acb287ea97621a77dfe175ec8",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/evidence/normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=20m",
+          "./mainnet",
+          "-run",
+          "^TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody$"
+        ],
+        "ExpectedPass": 1,
+        "ExpectedFail": 0
+      },
+      "Tree": "0aa7f108213353e8beb46f65697724360df9049f",
+      "Started": "2026-10-02T18:54:55.950809265Z",
+      "Finished": "2026-10-02T18:57:41.415367041Z",
+      "AvailableBytesBefore": 130019930112,
+      "ExitCode": 0,
+      "Census": {
+        "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "b7e18ea716d5600c6115586ab5f9bc41271599ccf20299bf11546e4a69be5af4"
+    },
+    "public-census-d878-race": {
+      "Job": {
+        "Name": "public-census-d878-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/source/sn",
+        "Commit": "d8788c9ed8ade71acb287ea97621a77dfe175ec8",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/evidence/race",
+        "Args": [
+          "test",
+          "-race",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=30m",
+          "./mainnet",
+          "-run",
+          "^TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody$"
+        ],
+        "ExpectedPass": 1,
+        "ExpectedFail": 0
+      },
+      "Tree": "0aa7f108213353e8beb46f65697724360df9049f",
+      "Started": "2026-10-02T18:57:41.516253126Z",
+      "Finished": "2026-10-02T19:06:57.423705275Z",
+      "AvailableBytesBefore": 128896192512,
+      "ExitCode": 0,
+      "Census": {
+        "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "ce9e218021ee47dec0b5a87a63e8597756c49441c1cd3a066d80fad286d66109"
+    },
+    "public-census-d878-vet": {
+      "Job": {
+        "Name": "public-census-d878-vet",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/source/sn",
+        "Commit": "d8788c9ed8ade71acb287ea97621a77dfe175ec8",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/evidence/vet",
+        "Args": [
+          "vet",
+          "-p=1",
+          "./mainnet"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 0
+      },
+      "Tree": "0aa7f108213353e8beb46f65697724360df9049f",
+      "Started": "2026-10-02T19:06:57.512792061Z",
+      "Finished": "2026-10-02T19:07:11.770089924Z",
+      "AvailableBytesBefore": 127836372992,
+      "ExitCode": 0,
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "artifact_count": 14,
+  "manifest": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/evidence/d878-author-manifest.json",
+    "Bytes": 3199,
+    "Sha256": "eb91139f10c8a7235631ff97171672a65d81fbd9f4bf8478c762e517fb5ad0e6"
+  },
+  "archive": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/evidence/d878-author-raw.tar.gz",
+    "Bytes": 58217,
+    "Sha256": "30490cea30c0eb19e8e3d32bed1c5e7a36895943993dd6ab72764761ddac0d91"
+  },
+  "source_bundle": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/member-fixture/evidence/d878-source.bundle",
+    "Bytes": 3387,
+    "Sha256": "2e5bb007ca6c0985857ab75df7555c2445ddc65d46d1eb48ee3e882d00674506"
+  },
+  "causal_scope": "Original exact composed5f normal ten-root run: nine pass, one blanket equality assertion on the legitimately extended local census fails. This test-only successor qualifies only that affected public execution root, normal/race and mainnet vet.",
+  "invariants": [
+    "Original preparation members retain exact inode, size, bytes and digest.",
+    "The local head adds only claim, ready, adopted intent and adopted outcome with exact semantic authority and sequence.",
+    "Both domain-separated nonce members retain exact approval, root identity, digest and transaction authority.",
+    "All other original custody remains byte-identical; later replay pins both complete namespace censuses including heads.",
+    "The missing-receipt negative restores the actual original inode rather than inventing a replacement."
+  ],
+  "limits": [
+    "Only two test files change. No production or module change.",
+    "Original composed5f race remains a separate original-source receipt; it is not relabeled.",
+    "No signing, broadcasting, deployment, real database or service start."
+  ]
+}

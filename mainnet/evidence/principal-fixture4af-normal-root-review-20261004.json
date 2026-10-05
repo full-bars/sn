@@ -1,0 +1,95 @@
+{
+  "schema": "principal-fixture4af-normal-root-review-v1",
+  "status": "NORMAL_TERMINAL_MIXED_RACE_PENDING",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture4af-normal-body.resources.csv",
+      "bytes": 43850,
+      "sha256": "9f74e73176572657e35df2d6d5f54fd02c3cb34e85c2dfa21f43a0c01235b9b3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture4af-normal-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture4af-normal-body.stdout",
+      "bytes": 30938,
+      "sha256": "c0ff1c4e3cd4b5c0c73e5e8178e2ea9ea57d464161bcfff6cd30ab021a6485b7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture4af-normal-compile.resources.csv",
+      "bytes": 8123,
+      "sha256": "db498c1a3e4b91dca19c4a24d17bbf57798845ae0ad0cd7e54d1f73a480122bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture4af-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture4af-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-capture",
+      "bytes": 53657192,
+      "sha256": "bde25ccda67b5321849c190139f2ff1de7bc2caa0234df5514183f6059d2447d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-replay",
+      "bytes": 51509672,
+      "sha256": "abbbbae181a120c04359d39d8448b12034367f235131f4627d5106d0ddb5b5d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-capture",
+      "bytes": 53657192,
+      "sha256": "bde25ccda67b5321849c190139f2ff1de7bc2caa0234df5514183f6059d2447d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-replay",
+      "bytes": 51509672,
+      "sha256": "abbbbae181a120c04359d39d8448b12034367f235131f4627d5106d0ddb5b5d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/fixture4af-normal.test",
+      "bytes": 78922752,
+      "sha256": "35817ed797e50b8f31df245ba316c38f2423462a9fe6671873060ae18ed453e2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/go-overlay-effective-v2.json",
+      "bytes": 1048,
+      "sha256": "a91bd68e950431f1554b24edb9fc6c40fecf98cbf41b65ed742d89b7cc9bf4c0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/fixture4af-normal.receipt.json",
+      "bytes": 12390,
+      "sha256": "94f6eab6154c379b1a7c3a98e1f593c1b480fe85a0d605b4d0ce2f3bac5f0aa4"
+    }
+  ],
+  "pass_roots": [
+    "TestEconomicConservationPrincipalFixtureEmptyCommittedHeadIsNotAbsence",
+    "TestEconomicConservationPublicPrincipalReviewCannotReplaceOriginalSignature",
+    "TestEconomicConservationPublicMissingPrincipalProofKeepsSiblings"
+  ],
+  "failure_groups": {
+    "missing_original_drained_activation": [
+      "TestEconomicConservationPrincipalFixtureProvisionsAbsentHeadAndRefusesLostLock",
+      "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome",
+      "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive",
+      "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping",
+      "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown",
+      "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative",
+      "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed"
+    ],
+    "replay_exit_without_source_diagnostic": [
+      "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative",
+      "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings"
+    ]
+  },
+  "root_count": 12,
+  "skip_count": 0,
+  "review": "Raw events independently reproduce three passes and nine failures. Original parent PendingServerEmission=100 cannot be reconciled by an invented zero RPC initial state. Author is preparing a genuinely drained original parent plus witnessed accrual. Bounded child diagnostics require separate production correction. Keep race running and retain every original result.",
+  "whole_mainnet_complete": false
+}

@@ -1,0 +1,769 @@
+{
+  "baseline_causal": "retention and retry old0aa test-only overlays fail intended assertions in normal and race",
+  "created_utc": "2026-10-02T05:51:27.721997+00:00",
+  "early": [
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=15m",
+        "-run",
+        "^(TestRemoveContractBatchesDrainsDuplicateCandidates|TestAssignStragglerReapTimeRespectsBudget|TestGetProviderEgressLocationDueOrderingIsStableAcrossLimits)$",
+        "./model"
+      ],
+      "exit": 0,
+      "failed": [],
+      "finished_utc": "2026-10-02T05:35:20.042130+00:00",
+      "mode": "normal",
+      "name": "historical-three-normal",
+      "package": "./model",
+      "passed": [
+        "TestAssignStragglerReapTimeRespectsBudget",
+        "TestGetProviderEgressLocationDueOrderingIsStableAcrossLimits",
+        "TestRemoveContractBatchesDrainsDuplicateCandidates"
+      ],
+      "run": [
+        "TestAssignStragglerReapTimeRespectsBudget",
+        "TestGetProviderEgressLocationDueOrderingIsStableAcrossLimits",
+        "TestRemoveContractBatchesDrainsDuplicateCandidates"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:34:57.211418+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=15m",
+        "-race",
+        "-run",
+        "^(TestRemoveContractBatchesDrainsDuplicateCandidates|TestAssignStragglerReapTimeRespectsBudget|TestGetProviderEgressLocationDueOrderingIsStableAcrossLimits)$",
+        "./model"
+      ],
+      "exit": 0,
+      "failed": [],
+      "finished_utc": "2026-10-02T05:35:52.005609+00:00",
+      "mode": "race",
+      "name": "historical-three-race",
+      "package": "./model",
+      "passed": [
+        "TestAssignStragglerReapTimeRespectsBudget",
+        "TestGetProviderEgressLocationDueOrderingIsStableAcrossLimits",
+        "TestRemoveContractBatchesDrainsDuplicateCandidates"
+      ],
+      "run": [
+        "TestAssignStragglerReapTimeRespectsBudget",
+        "TestGetProviderEgressLocationDueOrderingIsStableAcrossLimits",
+        "TestRemoveContractBatchesDrainsDuplicateCandidates"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:35:20.042466+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=15m",
+        "-overlay",
+        "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/baseline-overlay.json",
+        "-run",
+        "^TestRemoveCompletedContractsCascades$",
+        "./model"
+      ],
+      "exit": 1,
+      "failed": [
+        "TestRemoveCompletedContractsCascades"
+      ],
+      "finished_utc": "2026-10-02T05:38:01.680819+00:00",
+      "mode": "normal",
+      "name": "baseline-model-normal",
+      "package": "./model",
+      "passed": [],
+      "run": [
+        "TestRemoveCompletedContractsCascades"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/baseline-server",
+      "started_utc": "2026-10-02T05:35:52.006033+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=15m",
+        "-race",
+        "-overlay",
+        "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/baseline-overlay.json",
+        "-run",
+        "^TestRemoveCompletedContractsCascades$",
+        "./model"
+      ],
+      "exit": 1,
+      "failed": [
+        "TestRemoveCompletedContractsCascades"
+      ],
+      "finished_utc": "2026-10-02T05:41:09.690765+00:00",
+      "mode": "race",
+      "name": "baseline-model-race",
+      "package": "./model",
+      "passed": [],
+      "run": [
+        "TestRemoveCompletedContractsCascades"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/baseline-server",
+      "started_utc": "2026-10-02T05:38:01.681260+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=15m",
+        "-overlay",
+        "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/baseline-overlay.json",
+        "-run",
+        "^TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce$",
+        "./taskworker"
+      ],
+      "exit": 1,
+      "failed": [
+        "TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce"
+      ],
+      "finished_utc": "2026-10-02T05:42:07.947493+00:00",
+      "mode": "normal",
+      "name": "baseline-taskworker-normal",
+      "package": "./taskworker",
+      "passed": [],
+      "run": [
+        "TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/baseline-server",
+      "started_utc": "2026-10-02T05:41:09.691230+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=15m",
+        "-race",
+        "-overlay",
+        "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/baseline-overlay.json",
+        "-run",
+        "^TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce$",
+        "./taskworker"
+      ],
+      "exit": 1,
+      "failed": [
+        "TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce"
+      ],
+      "finished_utc": "2026-10-02T05:43:35.550090+00:00",
+      "mode": "race",
+      "name": "baseline-taskworker-race",
+      "package": "./taskworker",
+      "passed": [],
+      "run": [
+        "TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/baseline-server",
+      "started_utc": "2026-10-02T05:42:07.948028+00:00"
+    }
+  ],
+  "files_sha256": {
+    "baseline-model-normal.jsonl": "c907e33343179a06e343b2bea7f4a232f238a487b9e05ef85d1ef9fb8798f8d4",
+    "baseline-model-race.jsonl": "d7da1a791f47de27470d71a3bfcb63d6a41ceca376ffab4bc4894a942b900703",
+    "baseline-overlay.json": "df9937b0b81d7ecf142d09526ef5b006793022e876c79575691c20fd85f50575",
+    "baseline-taskworker-normal.jsonl": "5ebe5e4fce5a92af1bd1ffb3f0bcb47a49efdbb8440d12692b6310ec24c4db34",
+    "baseline-taskworker-race.jsonl": "655c55c2385b91eb59cbc6ec819b4aa27c32902fa6f6779b5ae87b7ed984b424",
+    "early-results.json": "05731098f063512d3676e9002446ae03942409697e884ed32a1d922e6a602da2",
+    "early-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "early-runner.log": "93dd64531bcc600f4231479e5f213fa78ee5287088eb5251a9adeae244e9801b",
+    "early-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "focused-results.json": "12f5a2857cc02e016c3380e410109f897679726f712c4f43f514f61e3f3813eb",
+    "historical-three-normal.jsonl": "3496e2da3c938571e7186cc5ed0d56217cf15cf05707b40f0271ea27193c10a4",
+    "historical-three-race.jsonl": "366c92f0c350242708ce1506d081df33b2b9e6a808ed01aae3c7f93fcddc67f6",
+    "model-normal.jsonl": "8e5f7bc2e9bb7f2d20052d9c7d5e11bef1dc0012893f63eec35ec4e95966d7cb",
+    "model-race.jsonl": "58100777d2692507664d01581da59fd8354966c88a1d0af267ddfaffd0834d28",
+    "model-vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run_early.py": "56c434789caf0e542dcecbb0d03af7082a5cc3cbda3739e86de6130af891198d",
+    "run_focused_private.sh": "903d8124b5d53aec1c8380d2ad84f11d721f57b4fccc3037ecc7a958ad01451a",
+    "run_private_stage.sh": "076306e210b3062efd0930e8f95ab18a4630b2bd533323796c3ede6efe924700",
+    "run_scopes.py": "c81c81dc6bed243659d27621b34facf8f09db1456435590ca59e38ce41f61bdb",
+    "runner-private.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "runner-private.log": "eac0f790c86a27cb155a40de700e1e90d8b8d2c0a5f5ca083c5156c2df177079",
+    "services-cleanup-private.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sim-testnet-normal.jsonl": "61d3897162335455410e314664add181c2c443efbfd09b0e97ac1314d63e4543",
+    "sim-testnet-race.jsonl": "713a2f7316d1a717be114224d85324b8246edfe5ed57ba82f51c2ec493c83d3e",
+    "sim-testnet-vet.log": "e46199c293c949f98ffb1eb1bf6c452df1d963f391c8c803569d3760de46b628",
+    "task-normal.jsonl": "fee6abb52dbd999b1f08aaf4a9fdaed09696b5da76f6ec5b05f9be863c2b1cc2",
+    "task-race.jsonl": "b38dd53f77b294fcc128a633343b621e90f50748ba9abc63feda1f4573325a58",
+    "task-vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "taskworker-normal.jsonl": "453a039816bf57ee63d551ed7bc1a2e32ffc9a3bc127d252e35bccca03a3464f",
+    "taskworker-race.jsonl": "d62943a66f489f30ea60d4156c631474dc9773f022bb4429a3c1ffb347262ca3",
+    "taskworker-vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "taskworker-work-normal.jsonl": "d6b496342510c19d121f8163a144be6fe1a38b48251e4a0ccf99de0086dd30d8",
+    "taskworker-work-race.jsonl": "16d650235bb22d17e1cbff7d9c04509920e43265831535695f357c71ff2bc191",
+    "taskworker-work-vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fixture_cleanup": {
+    "early": 0,
+    "focused": 0
+  },
+  "focused": [
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=40m",
+        "-run",
+        "^(TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy|TestCompletedTransferBalanceRetentionAdvancesPastRetainedPage|TestCompletedTransferBalanceRetentionConcurrentReservations|TestCompletedTransferBalanceRetentionPlansStayIndexed|TestRemoveCompletedContractsCascades|TestNetEscrowAdmissionSerializesCompetingCreators|TestNetEscrowAdmissionWaiterUsesRolledBackCredit|TestNetEscrowSettlementRetryDebitsOnce|TestNetEscrowRevisionRetainsDeletedBalanceIdentity|TestNetEscrowReconcileRepairsExpiredBalanceWithOpenEscrow|TestZeroByteEscrowConcurrentGrantTransitions|TestProberShardTerminalUnsettledAndZeroByteContractsBlockCleanup|TestProberShardOpenDebtBlocksDeleteUntilRealSettlement|TestProberShardCleanupResumesAfterPostDeleteRedisFailure|TestProberShardDrainOrdersAgainstRealContractAdmission|TestProberShardRetriesOnlyTwoRealFinalReports|TestRemoveStragglerContracts|TestCompletedContractRetentionResumesInBatches|TestProberShardReaperContinuesPastFailedOwner)$",
+        "./model"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:14:06.118387+00:00",
+      "log": "model-normal.jsonl",
+      "name": "model-normal",
+      "package": "./model",
+      "passed_roots": [
+        "TestCompletedContractRetentionResumesInBatches",
+        "TestCompletedTransferBalanceRetentionAdvancesPastRetainedPage",
+        "TestCompletedTransferBalanceRetentionConcurrentReservations",
+        "TestCompletedTransferBalanceRetentionPlansStayIndexed",
+        "TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy",
+        "TestNetEscrowAdmissionSerializesCompetingCreators",
+        "TestNetEscrowAdmissionWaiterUsesRolledBackCredit",
+        "TestNetEscrowReconcileRepairsExpiredBalanceWithOpenEscrow",
+        "TestNetEscrowRevisionRetainsDeletedBalanceIdentity",
+        "TestNetEscrowSettlementRetryDebitsOnce",
+        "TestProberShardCleanupResumesAfterPostDeleteRedisFailure",
+        "TestProberShardDrainOrdersAgainstRealContractAdmission",
+        "TestProberShardOpenDebtBlocksDeleteUntilRealSettlement",
+        "TestProberShardReaperContinuesPastFailedOwner",
+        "TestProberShardRetriesOnlyTwoRealFinalReports",
+        "TestProberShardTerminalUnsettledAndZeroByteContractsBlockCleanup",
+        "TestRemoveCompletedContractsCascades",
+        "TestRemoveStragglerContracts",
+        "TestZeroByteEscrowConcurrentGrantTransitions"
+      ],
+      "run_roots": [
+        "TestCompletedContractRetentionResumesInBatches",
+        "TestCompletedTransferBalanceRetentionAdvancesPastRetainedPage",
+        "TestCompletedTransferBalanceRetentionConcurrentReservations",
+        "TestCompletedTransferBalanceRetentionPlansStayIndexed",
+        "TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy",
+        "TestNetEscrowAdmissionSerializesCompetingCreators",
+        "TestNetEscrowAdmissionWaiterUsesRolledBackCredit",
+        "TestNetEscrowReconcileRepairsExpiredBalanceWithOpenEscrow",
+        "TestNetEscrowRevisionRetainsDeletedBalanceIdentity",
+        "TestNetEscrowSettlementRetryDebitsOnce",
+        "TestProberShardCleanupResumesAfterPostDeleteRedisFailure",
+        "TestProberShardDrainOrdersAgainstRealContractAdmission",
+        "TestProberShardOpenDebtBlocksDeleteUntilRealSettlement",
+        "TestProberShardReaperContinuesPastFailedOwner",
+        "TestProberShardRetriesOnlyTwoRealFinalReports",
+        "TestProberShardTerminalUnsettledAndZeroByteContractsBlockCleanup",
+        "TestRemoveCompletedContractsCascades",
+        "TestRemoveStragglerContracts",
+        "TestZeroByteEscrowConcurrentGrantTransitions"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:09:28.993753+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=40m",
+        "-race",
+        "-run",
+        "^(TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy|TestCompletedTransferBalanceRetentionAdvancesPastRetainedPage|TestCompletedTransferBalanceRetentionConcurrentReservations|TestCompletedTransferBalanceRetentionPlansStayIndexed|TestRemoveCompletedContractsCascades|TestNetEscrowAdmissionSerializesCompetingCreators|TestNetEscrowAdmissionWaiterUsesRolledBackCredit|TestNetEscrowSettlementRetryDebitsOnce|TestNetEscrowRevisionRetainsDeletedBalanceIdentity|TestNetEscrowReconcileRepairsExpiredBalanceWithOpenEscrow|TestZeroByteEscrowConcurrentGrantTransitions|TestProberShardTerminalUnsettledAndZeroByteContractsBlockCleanup|TestProberShardOpenDebtBlocksDeleteUntilRealSettlement|TestProberShardCleanupResumesAfterPostDeleteRedisFailure|TestProberShardDrainOrdersAgainstRealContractAdmission|TestProberShardRetriesOnlyTwoRealFinalReports|TestRemoveStragglerContracts|TestCompletedContractRetentionResumesInBatches|TestProberShardReaperContinuesPastFailedOwner)$",
+        "./model"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:20:40.237373+00:00",
+      "log": "model-race.jsonl",
+      "name": "model-race",
+      "package": "./model",
+      "passed_roots": [
+        "TestCompletedContractRetentionResumesInBatches",
+        "TestCompletedTransferBalanceRetentionAdvancesPastRetainedPage",
+        "TestCompletedTransferBalanceRetentionConcurrentReservations",
+        "TestCompletedTransferBalanceRetentionPlansStayIndexed",
+        "TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy",
+        "TestNetEscrowAdmissionSerializesCompetingCreators",
+        "TestNetEscrowAdmissionWaiterUsesRolledBackCredit",
+        "TestNetEscrowReconcileRepairsExpiredBalanceWithOpenEscrow",
+        "TestNetEscrowRevisionRetainsDeletedBalanceIdentity",
+        "TestNetEscrowSettlementRetryDebitsOnce",
+        "TestProberShardCleanupResumesAfterPostDeleteRedisFailure",
+        "TestProberShardDrainOrdersAgainstRealContractAdmission",
+        "TestProberShardOpenDebtBlocksDeleteUntilRealSettlement",
+        "TestProberShardReaperContinuesPastFailedOwner",
+        "TestProberShardRetriesOnlyTwoRealFinalReports",
+        "TestProberShardTerminalUnsettledAndZeroByteContractsBlockCleanup",
+        "TestRemoveCompletedContractsCascades",
+        "TestRemoveStragglerContracts",
+        "TestZeroByteEscrowConcurrentGrantTransitions"
+      ],
+      "run_roots": [
+        "TestCompletedContractRetentionResumesInBatches",
+        "TestCompletedTransferBalanceRetentionAdvancesPastRetainedPage",
+        "TestCompletedTransferBalanceRetentionConcurrentReservations",
+        "TestCompletedTransferBalanceRetentionPlansStayIndexed",
+        "TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy",
+        "TestNetEscrowAdmissionSerializesCompetingCreators",
+        "TestNetEscrowAdmissionWaiterUsesRolledBackCredit",
+        "TestNetEscrowReconcileRepairsExpiredBalanceWithOpenEscrow",
+        "TestNetEscrowRevisionRetainsDeletedBalanceIdentity",
+        "TestNetEscrowSettlementRetryDebitsOnce",
+        "TestProberShardCleanupResumesAfterPostDeleteRedisFailure",
+        "TestProberShardDrainOrdersAgainstRealContractAdmission",
+        "TestProberShardOpenDebtBlocksDeleteUntilRealSettlement",
+        "TestProberShardReaperContinuesPastFailedOwner",
+        "TestProberShardRetriesOnlyTwoRealFinalReports",
+        "TestProberShardTerminalUnsettledAndZeroByteContractsBlockCleanup",
+        "TestRemoveCompletedContractsCascades",
+        "TestRemoveStragglerContracts",
+        "TestZeroByteEscrowConcurrentGrantTransitions"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:14:06.135331+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "vet",
+        "./model"
+      ],
+      "exit": 0,
+      "finished_utc": "2026-10-02T05:20:52.908122+00:00",
+      "log": "model-vet.log",
+      "name": "model-vet",
+      "package": "./model",
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:20:40.258548+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=20m",
+        "-run",
+        "^(TestTargetRetryCapKeepsOtherErrorsAndPrecedence|TestTaskRetryDelayRejectsInvalidBounds|TestTaskRetryDelayPreservesOrdinaryErrorPrecedence|TestTaskClaimProfilePreservesVersionedAliases|TestTaskWorkerDrainCancelsStragglerAndHandsBackClaim|TestTaskWorkerGiveUpStillFinalizesAfterRootCancel|TestTaskLeaseExpiryRequiresOwnerSessionLoss|TestTaskRescheduleErrorBackoff)$",
+        "./task"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:21:37.001746+00:00",
+      "log": "task-normal.jsonl",
+      "name": "task-normal",
+      "package": "./task",
+      "passed_roots": [
+        "TestTargetRetryCapKeepsOtherErrorsAndPrecedence",
+        "TestTaskClaimProfilePreservesVersionedAliases",
+        "TestTaskLeaseExpiryRequiresOwnerSessionLoss",
+        "TestTaskRescheduleErrorBackoff",
+        "TestTaskRetryDelayPreservesOrdinaryErrorPrecedence",
+        "TestTaskRetryDelayRejectsInvalidBounds",
+        "TestTaskWorkerDrainCancelsStragglerAndHandsBackClaim",
+        "TestTaskWorkerGiveUpStillFinalizesAfterRootCancel"
+      ],
+      "run_roots": [
+        "TestTargetRetryCapKeepsOtherErrorsAndPrecedence",
+        "TestTaskClaimProfilePreservesVersionedAliases",
+        "TestTaskLeaseExpiryRequiresOwnerSessionLoss",
+        "TestTaskRescheduleErrorBackoff",
+        "TestTaskRetryDelayPreservesOrdinaryErrorPrecedence",
+        "TestTaskRetryDelayRejectsInvalidBounds",
+        "TestTaskWorkerDrainCancelsStragglerAndHandsBackClaim",
+        "TestTaskWorkerGiveUpStillFinalizesAfterRootCancel"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:20:52.908699+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=20m",
+        "-race",
+        "-run",
+        "^(TestTargetRetryCapKeepsOtherErrorsAndPrecedence|TestTaskRetryDelayRejectsInvalidBounds|TestTaskRetryDelayPreservesOrdinaryErrorPrecedence|TestTaskClaimProfilePreservesVersionedAliases|TestTaskWorkerDrainCancelsStragglerAndHandsBackClaim|TestTaskWorkerGiveUpStillFinalizesAfterRootCancel|TestTaskLeaseExpiryRequiresOwnerSessionLoss|TestTaskRescheduleErrorBackoff)$",
+        "./task"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:22:35.466559+00:00",
+      "log": "task-race.jsonl",
+      "name": "task-race",
+      "package": "./task",
+      "passed_roots": [
+        "TestTargetRetryCapKeepsOtherErrorsAndPrecedence",
+        "TestTaskClaimProfilePreservesVersionedAliases",
+        "TestTaskLeaseExpiryRequiresOwnerSessionLoss",
+        "TestTaskRescheduleErrorBackoff",
+        "TestTaskRetryDelayPreservesOrdinaryErrorPrecedence",
+        "TestTaskRetryDelayRejectsInvalidBounds",
+        "TestTaskWorkerDrainCancelsStragglerAndHandsBackClaim",
+        "TestTaskWorkerGiveUpStillFinalizesAfterRootCancel"
+      ],
+      "run_roots": [
+        "TestTargetRetryCapKeepsOtherErrorsAndPrecedence",
+        "TestTaskClaimProfilePreservesVersionedAliases",
+        "TestTaskLeaseExpiryRequiresOwnerSessionLoss",
+        "TestTaskRescheduleErrorBackoff",
+        "TestTaskRetryDelayPreservesOrdinaryErrorPrecedence",
+        "TestTaskRetryDelayRejectsInvalidBounds",
+        "TestTaskWorkerDrainCancelsStragglerAndHandsBackClaim",
+        "TestTaskWorkerGiveUpStillFinalizesAfterRootCancel"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:21:37.006980+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "vet",
+        "./task"
+      ],
+      "exit": 0,
+      "finished_utc": "2026-10-02T05:22:36.863342+00:00",
+      "log": "task-vet.log",
+      "name": "task-vet",
+      "package": "./task",
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:22:35.471595+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=20m",
+        "-run",
+        "^(TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce)$",
+        "./taskworker"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:23:49.513601+00:00",
+      "log": "taskworker-normal.jsonl",
+      "name": "taskworker-normal",
+      "package": "./taskworker",
+      "passed_roots": [
+        "TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce"
+      ],
+      "run_roots": [
+        "TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:22:36.863941+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=20m",
+        "-race",
+        "-run",
+        "^(TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce)$",
+        "./taskworker"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:25:41.480132+00:00",
+      "log": "taskworker-race.jsonl",
+      "name": "taskworker-race",
+      "package": "./taskworker",
+      "passed_roots": [
+        "TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce"
+      ],
+      "run_roots": [
+        "TestProberBootstrapTimeoutRetryCapPreservesFailuresAndRunOnce"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:23:49.515418+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "vet",
+        "./taskworker"
+      ],
+      "exit": 0,
+      "finished_utc": "2026-10-02T05:25:49.850987+00:00",
+      "log": "taskworker-vet.log",
+      "name": "taskworker-vet",
+      "package": "./taskworker",
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:25:41.481963+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=20m",
+        "-run",
+        "^(TestProberBootstrapTimeoutRetainsTaskAndInheritedBackoff|TestProberBootstrapInitialTaskRunsImmediately|TestProberBootstrapStartupAdvancesOldSixHourSchedule|TestProberBootstrapPostKeepsTheRecurringCadence|TestProberBootstrapReapsShardsWithoutRecreatingSharedCredit)$",
+        "./taskworker/work"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:26:38.027780+00:00",
+      "log": "taskworker-work-normal.jsonl",
+      "name": "taskworker-work-normal",
+      "package": "./taskworker/work",
+      "passed_roots": [
+        "TestProberBootstrapInitialTaskRunsImmediately",
+        "TestProberBootstrapPostKeepsTheRecurringCadence",
+        "TestProberBootstrapReapsShardsWithoutRecreatingSharedCredit",
+        "TestProberBootstrapStartupAdvancesOldSixHourSchedule",
+        "TestProberBootstrapTimeoutRetainsTaskAndInheritedBackoff"
+      ],
+      "run_roots": [
+        "TestProberBootstrapInitialTaskRunsImmediately",
+        "TestProberBootstrapPostKeepsTheRecurringCadence",
+        "TestProberBootstrapReapsShardsWithoutRecreatingSharedCredit",
+        "TestProberBootstrapStartupAdvancesOldSixHourSchedule",
+        "TestProberBootstrapTimeoutRetainsTaskAndInheritedBackoff"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:25:49.851670+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=20m",
+        "-race",
+        "-run",
+        "^(TestProberBootstrapTimeoutRetainsTaskAndInheritedBackoff|TestProberBootstrapInitialTaskRunsImmediately|TestProberBootstrapStartupAdvancesOldSixHourSchedule|TestProberBootstrapPostKeepsTheRecurringCadence|TestProberBootstrapReapsShardsWithoutRecreatingSharedCredit)$",
+        "./taskworker/work"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:27:47.413558+00:00",
+      "log": "taskworker-work-race.jsonl",
+      "name": "taskworker-work-race",
+      "package": "./taskworker/work",
+      "passed_roots": [
+        "TestProberBootstrapInitialTaskRunsImmediately",
+        "TestProberBootstrapPostKeepsTheRecurringCadence",
+        "TestProberBootstrapReapsShardsWithoutRecreatingSharedCredit",
+        "TestProberBootstrapStartupAdvancesOldSixHourSchedule",
+        "TestProberBootstrapTimeoutRetainsTaskAndInheritedBackoff"
+      ],
+      "run_roots": [
+        "TestProberBootstrapInitialTaskRunsImmediately",
+        "TestProberBootstrapPostKeepsTheRecurringCadence",
+        "TestProberBootstrapReapsShardsWithoutRecreatingSharedCredit",
+        "TestProberBootstrapStartupAdvancesOldSixHourSchedule",
+        "TestProberBootstrapTimeoutRetainsTaskAndInheritedBackoff"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:26:38.033942+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "vet",
+        "./taskworker/work"
+      ],
+      "exit": 0,
+      "finished_utc": "2026-10-02T05:27:50.143696+00:00",
+      "log": "taskworker-work-vet.log",
+      "name": "taskworker-work-vet",
+      "package": "./taskworker/work",
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server",
+      "started_utc": "2026-10-02T05:27:47.417929+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=20m",
+        "-run",
+        "^(TestStaleServerContractCleanupDrainsToAnEmptyBoundedPass|TestStaleServerContractCleanupRejectsPersistentAttempt|TestStaleServerContractCleanupRejectsCanceledEmptyPass|TestServerContractCleanupCommandDiesWithSupervisor|TestSupervisorContractCleanupCoversEveryOperatorBeforeStartup|TestSupervisorContractCleanupFailsClosedOnUnprovenConvergence|TestSupervisorContractCleanupPropagatesOperatorFailure)$",
+        "./sim-testnet"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:30:14.065803+00:00",
+      "log": "sim-testnet-normal.jsonl",
+      "name": "sim-testnet-normal",
+      "package": "./sim-testnet",
+      "passed_roots": [
+        "TestServerContractCleanupCommandDiesWithSupervisor",
+        "TestStaleServerContractCleanupDrainsToAnEmptyBoundedPass",
+        "TestStaleServerContractCleanupRejectsCanceledEmptyPass",
+        "TestStaleServerContractCleanupRejectsPersistentAttempt",
+        "TestSupervisorContractCleanupCoversEveryOperatorBeforeStartup",
+        "TestSupervisorContractCleanupFailsClosedOnUnprovenConvergence",
+        "TestSupervisorContractCleanupPropagatesOperatorFailure"
+      ],
+      "run_roots": [
+        "TestServerContractCleanupCommandDiesWithSupervisor",
+        "TestStaleServerContractCleanupDrainsToAnEmptyBoundedPass",
+        "TestStaleServerContractCleanupRejectsCanceledEmptyPass",
+        "TestStaleServerContractCleanupRejectsPersistentAttempt",
+        "TestSupervisorContractCleanupCoversEveryOperatorBeforeStartup",
+        "TestSupervisorContractCleanupFailsClosedOnUnprovenConvergence",
+        "TestSupervisorContractCleanupPropagatesOperatorFailure"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/sn",
+      "started_utc": "2026-10-02T05:27:50.144399+00:00"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=20m",
+        "-race",
+        "-run",
+        "^(TestStaleServerContractCleanupDrainsToAnEmptyBoundedPass|TestStaleServerContractCleanupRejectsPersistentAttempt|TestStaleServerContractCleanupRejectsCanceledEmptyPass|TestServerContractCleanupCommandDiesWithSupervisor|TestSupervisorContractCleanupCoversEveryOperatorBeforeStartup|TestSupervisorContractCleanupFailsClosedOnUnprovenConvergence|TestSupervisorContractCleanupPropagatesOperatorFailure)$",
+        "./sim-testnet"
+      ],
+      "exit": 0,
+      "failed_roots": [],
+      "finished_utc": "2026-10-02T05:33:54.190044+00:00",
+      "log": "sim-testnet-race.jsonl",
+      "name": "sim-testnet-race",
+      "package": "./sim-testnet",
+      "passed_roots": [
+        "TestServerContractCleanupCommandDiesWithSupervisor",
+        "TestStaleServerContractCleanupDrainsToAnEmptyBoundedPass",
+        "TestStaleServerContractCleanupRejectsCanceledEmptyPass",
+        "TestStaleServerContractCleanupRejectsPersistentAttempt",
+        "TestSupervisorContractCleanupCoversEveryOperatorBeforeStartup",
+        "TestSupervisorContractCleanupFailsClosedOnUnprovenConvergence",
+        "TestSupervisorContractCleanupPropagatesOperatorFailure"
+      ],
+      "run_roots": [
+        "TestServerContractCleanupCommandDiesWithSupervisor",
+        "TestStaleServerContractCleanupDrainsToAnEmptyBoundedPass",
+        "TestStaleServerContractCleanupRejectsCanceledEmptyPass",
+        "TestStaleServerContractCleanupRejectsPersistentAttempt",
+        "TestSupervisorContractCleanupCoversEveryOperatorBeforeStartup",
+        "TestSupervisorContractCleanupFailsClosedOnUnprovenConvergence",
+        "TestSupervisorContractCleanupPropagatesOperatorFailure"
+      ],
+      "skipped_roots": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/sn",
+      "started_utc": "2026-10-02T05:30:14.067010+00:00"
+    },
+    {
+      "census_pass": false,
+      "command": [
+        "go",
+        "vet",
+        "./sim-testnet"
+      ],
+      "exit": 1,
+      "finished_utc": "2026-10-02T05:34:11.799225+00:00",
+      "log": "sim-testnet-vet.log",
+      "name": "sim-testnet-vet",
+      "package": "./sim-testnet",
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/sn",
+      "started_utc": "2026-10-02T05:33:54.191295+00:00"
+    }
+  ],
+  "historical_early": "3/3 normal and 3/3 race PASS",
+  "limits": [
+    "full model normal runs separately and is not included",
+    "sealed release SN258/server0aa remains unchanged",
+    "private synthetic PG/Redis only; no live service/deploy"
+  ],
+  "schema": "sol-server025-focused-causal-independent-v1",
+  "source": {
+    "baseline_server_commit": "0aa1e2449b92fe62b10c6a287e5492dd5a19b792",
+    "clean_physical_no_alternates": true,
+    "scope_sha256": "05923fe6a4a7e64a8696d33a24051c99f58021f11cf367d29b6a9da67cad89d2",
+    "server_commit": "025802a50e2dc56dc56c3cb749db7375aa9f72be",
+    "server_tree": "adf05777aca3ad4fb97c4befd2163a74064d635b",
+    "sn_commit": "6cfc4773038fae8b1de07807eeeb4a97c32d07d3",
+    "sn_tree": "89ba29e90b731e5e344fbef539d3be9497fa0ba4"
+  },
+  "verdict": "SERVER33_SN7_NORMAL_RACE_PASS_WITH_SN_VET_FAILURE",
+  "vet_failure": "SN sim-testnet/evidence_relay_provisional_continuation_test.go lines139,218 copy evidenceRelayRuntime containing sync.Mutex; preserved and assigned fixture-only followup"
+}

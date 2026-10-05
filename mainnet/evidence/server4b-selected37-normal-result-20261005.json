@@ -1,0 +1,37 @@
+{
+  "recorded_at_utc": "2026-10-05T01:55:14.230757+00:00",
+  "scope": "Selected Server4b normal regression roots only; all19 original full-model failures plus selected adjacent roots.",
+  "counts": {
+    "run": 37,
+    "pass": 37,
+    "fail": 0,
+    "skip": 0
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "4b917455396419606fcff33cf45a6f362549203e",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "receipts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-normal-v1.receipt.json",
+      "sha256": "47374c493124786dcf0f29bb2a2758319b4df2c546ba8e17c746c670cc647cae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-owned-db-v1.terminal.json",
+      "sha256": "b61f97fc10add12ab4da69e7388600ee9c1a0b3b79c7edba61c07c1a1f62060c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-terminal-sol-readback-v1.json",
+      "sha256": "ca343ad63b00262a156d5d363321126d9fb197eeeff9307ce2ebb3fb1506269a"
+    }
+  ],
+  "owned_cleanup_exit": 0,
+  "resource_qualified": true,
+  "limitations": [
+    "Not a new full1703 model run",
+    "Race and mutation controls not executed by this phase",
+    "Later monitor7885 and native-fee780 changes excluded",
+    "No mainnet activation or signing authorized by this proof"
+  ]
+}

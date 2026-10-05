@@ -1,0 +1,19 @@
+{
+  "schema": "mainnet-core-composed-source-review-v1",
+  "status": "SOURCE_ONLY_NOT_QUALIFIED_NOT_PUBLISHED",
+  "commit": "2ea8d82ea5cbc8bdebdee05f5b90a9f21b64128f",
+  "tree": "1fc3f0f491127ead2d4cfed8980e0d24520e3bbd",
+  "parents": [
+    "fd25b314526e4ffc3268944233855bc3d7556af3",
+    "e7f247172e2cf30553f0281f0f92f8332a9cbe40"
+  ],
+  "repository": "/home/by/urnetwork/connect",
+  "namespace_paths": [
+    "durablevolume/preparation_inventory_depth_test.go",
+    "durablevolume/preparation_plan_linux.go"
+  ],
+  "unchanged_paths_preserve_base": true,
+  "current_wire_protocol_preserved": true,
+  "qualification_required": true,
+  "main_unchanged": "8ec41070e250c1f77dc74dc46977b849cc59565a"
+}

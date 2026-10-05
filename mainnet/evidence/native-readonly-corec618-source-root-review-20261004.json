@@ -1,0 +1,88 @@
+{
+  "schema": "native-readonly-corec618-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_UNCOMPILED_UNEXECUTED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/connect",
+    "head": "c6186b79caaaae7f7a35beee42e815c0c0ca7170",
+    "tree": "78631e8a97d8c82a007839358b80ff5a49a253cd",
+    "base": "ad6fc3a191a3d777b9a18aae63a03c4554c95dd6",
+    "clean": true,
+    "sparse": true
+  },
+  "review": [
+    "Read complete four-file changed diff, production copy/sealing context, four new public deterministic tests, ten-root recipe and both exact old-production-file controls.",
+    "Inventory admits only exact0400/0600 private files. Restore seals original member mode after verified exact copy and before sync/publication. Modules unchanged from publishedad6.",
+    "Public tests preserve bytes/mode/inode and journal prefix through member-sync,parent-sync,control-complete lost acknowledgements, reject altered source/target permissions, and retain writable0600 neighboring behavior.",
+    "Both causal replacements are byte-identical publishedad6 production bodies, changing only one declared file. Actual compilation/normal/race/vet/causal results remain required. Native complete restore needs an exact qualified/published Core dependency join."
+  ],
+  "qualification": {
+    "roots_per_mode": 10,
+    "control_groups_per_mode": 2,
+    "vet": [
+      "./durablevolume"
+    ]
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/intake.json",
+      "bytes": 3159,
+      "sha256": "4d4fe74365642358e5db195cdb3366b4709c67a6d19e3bad3be8cf7b43a98592"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/connect/durablevolume/inventory_physical_linux.go",
+      "bytes": 4590,
+      "sha256": "725eaccd1dd908a4f593c38e928740f25f3ca924507b11ec9aa0ec2eff44412e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/connect/durablevolume/preparation_restore_linux.go",
+      "bytes": 23908,
+      "sha256": "893fadf21ff6b8c61f18b22aa6d5c0fc4056719ce1ebe2838bd71dd9537945f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/connect/durablevolume/preparation_restore_mode_test.go",
+      "bytes": 5098,
+      "sha256": "0e2b2a8f976f56308e08cf2c237f3b3284d6de01554c6f121688b4b104648842"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/connect/durablevolume/preparation_restore_test.go",
+      "bytes": 14301,
+      "sha256": "da9ae39404cf3074c398b376e29789442a062e1bc5a2eb50092151f25e0f043b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/connect/go.mod",
+      "bytes": 3887,
+      "sha256": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/connect/go.sum",
+      "bytes": 21922,
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/qualification-recipe.json",
+      "bytes": 5024,
+      "sha256": "3a053d866edb5f4989a66582cd2751cc38bcf2e5d3330658d959b42f4df30fb7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/operative-controls.json",
+      "bytes": 2231,
+      "sha256": "9499e287ecbe3004cc772000486502386a9715f25042349ba2e2351ba2b0d65a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/source-audit.json",
+      "bytes": 824,
+      "sha256": "ea5e8eb9ebad94543930cf15f1dae2bf3bb3c0096e79ed985103889da17d7780"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/controls/old0600-loader.go",
+      "bytes": 4568,
+      "sha256": "c11a12aad4ef8b748c8ecab83385ef0156e017075ee11400dd7904a38848090a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/controls/old0600-copy.go",
+      "bytes": 23677,
+      "sha256": "129ef6f0a9db91685f6887f9a5fb506167f171db2d0801efbc887d47cf917d03"
+    }
+  ],
+  "requirement_closure": false
+}

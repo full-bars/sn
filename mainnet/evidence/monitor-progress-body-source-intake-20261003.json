@@ -1,0 +1,170 @@
+{
+  "schema": "root-http-progress-body-error-source-intake-v1",
+  "source": {
+    "head": "1a4524f287c5b8217531cfad87cf2d41769486c0",
+    "parent": "ff42a433726655559ac49bef0732add09b785dd4",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/sn",
+    "tree": "95940bc9f84b9699f8a484e756eced869eed0773"
+  },
+  "author_intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/evidence/intake.json",
+    "bytes": 10975,
+    "sha256": "6473d888ddbaa0906ee554b3f699bde787e08a50cc505967da006d20605a8ab2"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/sn/mainnet/monitor_claim.go",
+      "bytes": 7763,
+      "sha256": "9db8920a1698d0814341ce078818c3ed12446007d8a60f06e0dea873a7ec001b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/sn/mainnet/monitor_progress_body_test.go",
+      "bytes": 6093,
+      "sha256": "5856fdf366aacea6c11a87e6e212dfe7f51527df032df3d3243bb8f079a0b8fa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/sn/mainnet/monitor_progress_retry.go",
+      "bytes": 4255,
+      "sha256": "cdbd019adec16b5ccec18a52509d737d07fc16762fbcca1862e296c356349763"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/sn/mainnet/monitor_provider.go",
+      "bytes": 9789,
+      "sha256": "d77d1da6492b12ec37d4e44b3c8a6ea154707747bd85203e1f724a1056b3b452"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/evidence/controls/monitor_provider.go",
+      "bytes": 9790,
+      "sha256": "04bbdfa025390c95bdfe8c9b02493db9ca39c23922337ed6fdb5bbad0e4330ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/evidence/controls/monitor_claim.go",
+      "bytes": 7750,
+      "sha256": "f6b7569c61f857c74edecaac1023ba36a15f8c6908cfccce62c9bfe31e017066"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/evidence/controls/old-ff42-readers.json",
+      "bytes": 474,
+      "sha256": "067b545b1d463df14f1073d5ae300ef3c6805c11b1eda97d166163e649abc441"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/evidence/source-readback.json",
+      "bytes": 5384119,
+      "sha256": "58ba4374f2952fcbf5741d535eed62e11a8bf0e5b0864200c1b165ee4f1499ca"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn/go.sum",
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/evidence/sn.mod",
+      "bytes": 12033,
+      "sha256": "b7a3d55f1d2ed0017a5dde355172f57d2cef05dccded9902cd294443ebd2aa32"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/server/go.mod",
+      "bytes": 10651,
+      "sha256": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp/go.mod",
+      "bytes": 1752,
+      "sha256": "8413b369e94cf2f76927ef8f5f91794fdd723dd169125b85e1f12d6244d94a0d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy/go.mod",
+      "bytes": 1972,
+      "sha256": "bd538f2de13d314e5604022082b28bb692702e3b68aa869abf1df2dfeab3a4e1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard/go.mod",
+      "bytes": 237,
+      "sha256": "470b20749c9d46b715bce19db1e50618892417a2a4d72b2697efb0e55070f965"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog/go.mod",
+      "bytes": 109,
+      "sha256": "5022a0fd461de289e6e84a4f0930a362613b5bcaaffe090a201e68b6714cb40b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons/go.mod",
+      "bytes": 157,
+      "sha256": "67dd6efd0fafd9d54e4bbf953eb07c9526ba55ee0dd4eb3e752ef201f619f28c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor/go.mod",
+      "bytes": 6213,
+      "sha256": "760a8007bca84c7465d3a82a5ba1aec47df23692f7a4484e9d94926c5817afc4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/evidence/sn.sum",
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-attempt/evidence/intake.json",
+      "bytes": 19753,
+      "sha256": "b950341cef4a09519d1e827a6dbe6923f49a908ebff88f583be86c0754a89ac7"
+    }
+  ],
+  "changed_git_files": [
+    {
+      "bytes": 7763,
+      "git_blob": "0ca9ff0bef1519014f3f116a89fabc8c503a0e9f",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/sn/mainnet/monitor_claim.go",
+      "sha256": "9db8920a1698d0814341ce078818c3ed12446007d8a60f06e0dea873a7ec001b"
+    },
+    {
+      "bytes": 6093,
+      "git_blob": "15c9f03b93bc9ecd3237a921d5ccb639abfd5a6c",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/sn/mainnet/monitor_progress_body_test.go",
+      "sha256": "5856fdf366aacea6c11a87e6e212dfe7f51527df032df3d3243bb8f079a0b8fa"
+    },
+    {
+      "bytes": 4255,
+      "git_blob": "4e26c345aa029e8f65c269a0fc011b2783ce660e",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/sn/mainnet/monitor_progress_retry.go",
+      "sha256": "cdbd019adec16b5ccec18a52509d737d07fc16762fbcca1862e296c356349763"
+    },
+    {
+      "bytes": 9789,
+      "git_blob": "2e563a8734d9b9ee4037fb901853bd71907fe507",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-body/sn/mainnet/monitor_provider.go",
+      "sha256": "d77d1da6492b12ec37d4e44b3c8a6ea154707747bd85203e1f724a1056b3b452"
+    }
+  ],
+  "new_roots": [
+    "TestMonitorProgressBodyHardCausesDoNotBorrowRetryPermission",
+    "TestMonitorProgressCompleteIdentityDominatesTerminalReadFault",
+    "TestMonitorProgressPartialTransientBodyRetainsOwnedRecovery",
+    "TestMonitorProgressCloseIoRetainsRetryButNotMixedHardCause"
+  ],
+  "neighbors": [
+    "TestMonitorProgressResponseBodiesCloseBeforeRetry",
+    "TestMonitorProgressCompleteMalformedBodyDominatesCloseOutage",
+    "TestMonitorProgressJoinedPermanentTransportCauseDoesNotBorrowTimeout",
+    "TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation",
+    "TestMonitorProviderIdentityAndAuthenticationDominateCloseFailure",
+    "TestMonitorClaimIdentityAndAuthDominateBodyCloseOutage",
+    "TestMonitorProgressPartialBodyCancellationJoinsAttempt"
+  ],
+  "review": "Complete decoded identity precedes terminal read error; observed read/close errors override status-only retry permission with all-causes transient classification; explicit EIO remains retryable while joined permanent causes refuse",
+  "qualification": "FROZEN_SOURCE_ONLY_BEHAVIOR_PENDING",
+  "limits": [
+    "Four new roots/seven neighbors and prior-reader controls pending Sol qualification",
+    "Prior ff42 29-root scope remains separate",
+    "Actual rolling policy/archive/economic authority/current release not established",
+    "Nested artifact hashes checked; this receipt does not repeat full physical base/peer census"
+  ]
+}

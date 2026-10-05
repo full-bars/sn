@@ -1,0 +1,34 @@
+{
+  "bindings": [
+    {
+      "bytes": 5589,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/evidence/model-a2-full-current.terminal.json",
+      "sha256": "9a6e5e9d650aaa3f51d9c3a4fcee74f1f1e3eff82b1c1d290ca712bea717d784"
+    },
+    {
+      "bytes": 767,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/evidence/model-a2-full-current-model.jsonl",
+      "sha256": "3ff3de31b9b2e5c64cd1a155b6088617bd50c164307a9dcde8dc4e082e4b0230"
+    },
+    {
+      "bytes": 14772,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/evidence/model-a2-full-current.resource.csv",
+      "sha256": "ad7599e7fcf773fc5981f1c6eca09f67acfcda144f4bb1121dd301c245f9801b"
+    },
+    {
+      "bytes": 896,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/evidence/a2-first-model-build-failure-v1.json",
+      "sha256": "652bec27a3d51fa3ad01e2b4c9b61c7279561bf2326829563546b917b0d1dce8"
+    }
+  ],
+  "build_failure": "task/metrics.go:346:20: undefined: errors",
+  "cleanup_exit": 0,
+  "observed_utc": "2026-10-04T04:06:26.376924+00:00",
+  "original_receipt_preserved": true,
+  "resource_qualified": false,
+  "schema": "current-combined-model-build-failure-root-review-v1",
+  "server_head": "a2b191890d6e87539d99aa1ba084a4f7da29064a",
+  "status": "BUILD_FAILED_BEFORE_TEST_ROOTS",
+  "successor_action": "Astra correct missing import and adjacent changed-package compile seams; Sol compile complete selected model package before corrected fixture launch. Preserve sampler teardown gap and fix observer separately.",
+  "test_roots_started": 0
+}

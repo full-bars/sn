@@ -1,0 +1,109 @@
+{
+  "schema": "mainnet-independent-test-review-v1",
+  "status": "FAILED_SCOPE_RETAINED",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/c04-normal-49root-receipt.json",
+    "sha256": "2a745360592b1282a6ba523bf4deeb6ecdf2d73d6950cb1f21708bf0927fe1c4"
+  },
+  "raw_stdout": {
+    "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/c04-normal-body.stdout",
+    "sha256": "aa5855fac06a7e9d1e4df55d434353a5181a46cc4eebb51bafc0da004a51bd7e"
+  },
+  "census": {
+    "roots": 49,
+    "pass": 48,
+    "fail": 1,
+    "skip": 0
+  },
+  "failed_roots": [
+    "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan"
+  ],
+  "complete_failure_output": [
+    "=== RUN   TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan\n",
+    "    economic_conservation_receipt_test.go:58: public archived receipt contradiction was overwritten or reached another source read 2  economic archive: economic archived original Claim receipt contradicts retained evidence\n",
+    "        \n",
+    "--- FAIL: TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan (4.64s)\n"
+  ],
+  "root_cause": "Observer reopen correctly returns3; archive-plan admission correctly returns2. Shared fixture incorrectly expected3 for both commands. Actual logical contradiction guard was reached.",
+  "successor": "6820f42aa48316a249acc054e92066ebd2ccfbc2 changes per-command test expectation only, retaining logical cause/no reads/no output/custody assertions. Source reviewed; five-root qualification pending.",
+  "limits": [
+    "Normal only; c04 race unstarted at this review.",
+    "48 positives retained; failed scope is not reported green.",
+    "No whole provider10/90 witness inferred."
+  ],
+  "successor_verified_intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/evidence/intake.json",
+    "sha256": "3fe8a5f54800538fb6702fd224811ea078a998563a9582e6e2f7f4f5a52a2a3d",
+    "bindings": [
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/sn/go.mod",
+        "bytes": 11292,
+        "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31",
+        "relative": "go.mod",
+        "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/sn/go.sum",
+        "bytes": 67111,
+        "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981",
+        "relative": "go.sum",
+        "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/sn/mainnet/economic_conservation_receipt_test.go",
+        "bytes": 8027,
+        "sha256": "d9ce5ac212ea843d03401c67a721aabb91e483401622c26bc44d836e9e98643f",
+        "relative": "mainnet/economic_conservation_receipt_test.go",
+        "git_blob": "c722ea3721daec1a7c31cf1c02542a794415ad85"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/sn/mainnet/economic_conservation_test.go",
+        "bytes": 27285,
+        "sha256": "a8053264fa890a531aca2c7011c100b54368cba94a85cb4a8f5566b5cfc3c807",
+        "relative": "mainnet/economic_conservation_test.go",
+        "git_blob": "e72540962f53727e76959a34971088d4f8084561"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/sn/mainnet/economic_conservation_archive.go",
+        "bytes": 19680,
+        "sha256": "e14d9c30436d951bc374b32f94e37066c458fd7888fd79fcf4cbed04075e961f",
+        "relative": "mainnet/economic_conservation_archive.go",
+        "git_blob": "95c50c81187626030346355049d574869126d300"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/sn/mainnet/economic_conservation_archive_command.go",
+        "bytes": 15772,
+        "sha256": "e347ccd915a465917b8a85b42dbfeb6f4bbedb3aeb3ec9f085b4a7f5bf5407ef",
+        "relative": "mainnet/economic_conservation_archive_command.go",
+        "git_blob": "604c4e3c51da86a3a8e54e6c70c46f7920f71dd3"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/sn/mainnet/economic_conservation_command.go",
+        "bytes": 22386,
+        "sha256": "db1c550352aa9cae99bbfab3ebb5c1333fcb03c14e180671386096bec7975403",
+        "relative": "mainnet/economic_conservation_command.go",
+        "git_blob": "d993ba2b5c10761e8a31e80ad3c694f0785acc59"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/evidence/selectors.json",
+        "bytes": 1103,
+        "sha256": "07d1d59b86d63eaea0668f2030e05ee2d3f089bdd2209b9ec56f4b36df7d557f"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/evidence/operative-controls.json",
+        "bytes": 3023,
+        "sha256": "846916dc524b5b617c52da817ff841684a5d4d918057c8f63f1ed1d3a394961d"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-fixture-correction/evidence/intake.json",
+        "bytes": 9488,
+        "sha256": "b1e454b99b01db0f64778812f895c701ef8e36d69f58abc5470ef01dca54ab9e"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/c04-normal-sole-failure-readback.json",
+        "bytes": 748,
+        "sha256": "34f4550097e0a5ecdc714dfe32eb2684b42966e40cd9b4a572b866461dd82957"
+      }
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "core_module": "v0.0.0-20261004025941-ad6fc3a191a3",
+  "observed_utc": "2026-10-04T04:16:36.766599+00:00",
+  "original_failed_a2_preserved": true,
+  "packages": [
+    "github.com/urnetwork/server",
+    "github.com/urnetwork/server/controller",
+    "github.com/urnetwork/server/model",
+    "github.com/urnetwork/server/monitor",
+    "github.com/urnetwork/server/task",
+    "github.com/urnetwork/server/taskworker/work"
+  ],
+  "raw_stderr": {
+    "bytes": 0,
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-compile.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "raw_stdout": {
+    "bytes": 10298,
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-compile.stdout.jsonl",
+    "sha256": "77c0e2e975ec6a25975f2c61dc98d97ab763f8f9b2177899828ba7f7afe1e69b"
+  },
+  "receipt": {
+    "bytes": 3892,
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-compile-receipt.json",
+    "sha256": "63021b2851c607bda3389d3bfd80f384d46ea5e49f70797d116f240fc98bf556"
+  },
+  "remaining": "Complete corrected model body; bounded-error behavioral scopes; separate SN fee consumer normal/race/controls.",
+  "schema": "server-1709-actual-compile-root-review-v1",
+  "server_head": "1709ffe03ffa59ae31441374f3e673793d099764",
+  "sn_peer_head": "663a0ea299e21411a92b9eb064443d7cc9b0b851",
+  "status": "SIX_PACKAGE_COMPILE_PASS_NO_BEHAVIOR_TESTS",
+  "test_roots_executed": 0
+}

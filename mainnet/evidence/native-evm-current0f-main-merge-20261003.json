@@ -1,0 +1,120 @@
+{
+  "schema": "native-evm0f-main-integration-v1",
+  "main_merge": "1a7a123d8b82aba23f24876e3c2a4105761e6431",
+  "previous_main": "db0f7fda94fecc434e282ecb7cb5728897de33aa",
+  "candidate": "0f8886946b7d58808ef9ae89dbdd968f31e77298",
+  "changed_files": [
+    {
+      "path": "mainnet/durable_volume_owner.go",
+      "sha256": "ae9d14c677e8fb3a99271133626e6ed2df61b824c39eca9a3b264bb99d3d3792",
+      "bytes": 16672
+    },
+    {
+      "path": "mainnet/evidence/native-monitor-archive-20261003.md",
+      "sha256": "1d05d07024a4fe65049442e28176eacb89bd0a5041c41a6f6900f71415c0ec54",
+      "bytes": 3436
+    },
+    {
+      "path": "mainnet/evidence/native-monitor-catalog-20261003.md",
+      "sha256": "09c523deca16d9ba7bd39cafc218c6b172f67f77b941a086e998c8429ee55864",
+      "bytes": 4111
+    },
+    {
+      "path": "mainnet/main.go",
+      "sha256": "281521d187bd6c700bc4d9c413b8454e7dfc69ba5632e01034e7ecc3751921e7",
+      "bytes": 24164
+    },
+    {
+      "path": "mainnet/monitor_economic_evm.go",
+      "sha256": "f461bbc0defc07a65c646401e022728eb218463ce72ac0124dc7ff7091793eba",
+      "bytes": 8182
+    },
+    {
+      "path": "mainnet/monitor_economic_evm_archive.go",
+      "sha256": "9879688623951c0f9d061ebab859c87d40fea84eceb26055256f14d3a8034cae",
+      "bytes": 10729
+    },
+    {
+      "path": "mainnet/monitor_economic_evm_archive_command.go",
+      "sha256": "bc46e90986d481f5682833445cd0e660baaea8d6593ab742ebddf55367484afa",
+      "bytes": 13277
+    },
+    {
+      "path": "mainnet/monitor_economic_evm_archive_review_test.go",
+      "sha256": "cd01af7e042e86500508c8576f7215df446bc9530cb978cbb9ceb3e20d31d5b7",
+      "bytes": 3648
+    },
+    {
+      "path": "mainnet/monitor_economic_evm_archive_test.go",
+      "sha256": "e00707f080fc59df9fa57bf09910d6c77481682ae7c4bdad7efcf2f9eb2faa10",
+      "bytes": 19207
+    },
+    {
+      "path": "mainnet/monitor_economic_evm_catalog.go",
+      "sha256": "5071f7d3f27b2f4a25484bc0146eb1b911cb0b39fd56a71e994b7107e344e39f",
+      "bytes": 17172
+    },
+    {
+      "path": "mainnet/monitor_economic_evm_catalog_test.go",
+      "sha256": "1b88c1df7577773f2d31813ceae871a3914aad0f984ed71701597b030f8c9557",
+      "bytes": 21577
+    },
+    {
+      "path": "mainnet/monitor_economic_evm_ledger.go",
+      "sha256": "0518f01e24633ce06f1a91952d609e0861bf9c8ec5affb05d1892e9986084da0",
+      "bytes": 21064
+    },
+    {
+      "path": "mainnet/monitor_economic_evm_worker.go",
+      "sha256": "24fd75a3dcd3094e0f8deb94fac90a9639bb9482ad8bcf784c3796921b875b53",
+      "bytes": 21469
+    },
+    {
+      "path": "mainnet/monitor_economic_native.go",
+      "sha256": "69a9297bdc75e94f13ca608d9a5cf53409566cca9c8d1709353eeb399a9e54fa",
+      "bytes": 23665
+    },
+    {
+      "path": "mainnet/monitor_economic_native_archive.go",
+      "sha256": "dae8c86f46cbbc6a0f484af5e66bcebe8672f4dd0d42043e07181ee45197885e",
+      "bytes": 7832
+    },
+    {
+      "path": "mainnet/monitor_economic_native_archive_command.go",
+      "sha256": "ec27cdb9e6b81144633e86f393f46c0fba209328e9decfa5e219a5de03d604bb",
+      "bytes": 15652
+    },
+    {
+      "path": "mainnet/monitor_economic_native_archive_test.go",
+      "sha256": "b9f8f7e7b3bebf1485c7ae68f8e883eed252f39e6b1e4062811b4bace56bafe4",
+      "bytes": 18412
+    },
+    {
+      "path": "mainnet/monitor_economic_native_catalog.go",
+      "sha256": "40a1f73880788c72acf310e04b131bf1f48e94b161d9820e10cba0987b64eff0",
+      "bytes": 16977
+    },
+    {
+      "path": "mainnet/monitor_economic_native_catalog_test.go",
+      "sha256": "e2bc3e5656021f9e90ce35d253187fdd4fd30613f6500c78bc17871b65ef5ad2",
+      "bytes": 21721
+    },
+    {
+      "path": "mainnet/monitor_economic_native_worker.go",
+      "sha256": "f11b68eb2132780e15199fbf419f817a4f23cc21b01c30e7d8ff0392a474cb7c",
+      "bytes": 22422
+    },
+    {
+      "path": "mainnet/monitor_history_archive.go",
+      "sha256": "04d1cae5d3a54dc6a965c33dfbe6fcfda9d302c2dc7bd437e7d9220d94629d9d",
+      "bytes": 4465
+    },
+    {
+      "path": "mainnet/monitor_history_catalog.go",
+      "sha256": "7229d167f1b26f35fa0754c3f8a53da6802a56f85f3c44e116b38c0ad492a2a9",
+      "bytes": 10020
+    }
+  ],
+  "all_non_documentation_git_entries_match_candidate": true,
+  "scope": "Exact qualified source and module/workflow inputs integrated; plans/evidence retained. No actual native fee authority, Claim lineage, restore cohort or live launch claim."
+}

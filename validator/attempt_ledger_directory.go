@@ -9,9 +9,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/urfoundation/sn/internal/durablepath"
+	"github.com/urnetwork/connect/durablevolume"
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -25,6 +28,9 @@ const (
 // Operations are serialized by enter/leave. Hooks expose actual inode and I/O
 // boundaries for deterministic tests and are nil in production.
 type attemptLedgerDirectory struct {
+	stateLock sync.Mutex
+	failure   error
+	storage   *durablepath.Directory
 	path      string
 	name      string
 	anchor    os.FileInfo
@@ -33,39 +39,53 @@ type attemptLedgerDirectory struct {
 	directory *os.File
 	gate      chan struct{}
 	step      func(string, string) error
+	statFile  func(*os.File) (os.FileInfo, error)
+	statName  func(*os.Root, string) (os.FileInfo, error)
 }
 
 // Only the final directory is created here; existing parents are resolved
 // once, then all evidence access uses descriptor-relative no-follow opens.
-func openAttemptLedgerDirectory(path string, step func(string, string) error) (*attemptLedgerDirectory, error) {
+func openAttemptLedgerDirectory(path string, step func(string, string) error, storageContexts ...context.Context) (*attemptLedgerDirectory, error) {
 	path, err := filepath.Abs(path)
 	if err != nil || filepath.Dir(path) == path {
 		return nil, errors.New("attempt ledger state directory is invalid")
 	}
-	// Preserve the legacy constructor's support for nested new state paths.
-	// Existing directory modes are never broadened or silently repaired.
-	ancestor := filepath.Dir(path)
-	for {
-		if _, err := os.Stat(ancestor); err == nil {
-			break
-		} else if !errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
-		ancestor = filepath.Dir(ancestor)
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+	storage, err := openValidatorDurableDirectory(validatorStorageContext(storageContexts), path, durablevolume.ReadWrite, false)
+	if err != nil {
 		return nil, err
 	}
-	for current := filepath.Dir(path); ; current = filepath.Dir(current) {
-		file, err := os.Open(current)
-		if err != nil {
+	transferred := false
+	defer func() {
+		if !transferred {
+			_ = storage.Close()
+		}
+	}()
+	// Preserve the legacy constructor's support for nested new state paths.
+	// Existing directory modes are never broadened or silently repaired.
+	if storage == nil {
+		ancestor := filepath.Dir(path)
+		for {
+			if _, err := os.Stat(ancestor); err == nil {
+				break
+			} else if !errors.Is(err, os.ErrNotExist) {
+				return nil, err
+			}
+			ancestor = filepath.Dir(ancestor)
+		}
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 			return nil, err
 		}
-		if err := errors.Join(file.Sync(), file.Close()); err != nil {
-			return nil, err
-		}
-		if current == ancestor {
-			break
+		for current := filepath.Dir(path); ; current = filepath.Dir(current) {
+			file, err := os.Open(current)
+			if err != nil {
+				return nil, err
+			}
+			if err := errors.Join(file.Sync(), file.Close()); err != nil {
+				return nil, err
+			}
+			if current == ancestor {
+				break
+			}
 		}
 	}
 	parentPath, err := filepath.EvalSymlinks(filepath.Dir(path))
@@ -76,7 +96,8 @@ func openAttemptLedgerDirectory(path string, step func(string, string) error) (*
 	if err != nil {
 		return nil, err
 	}
-	self := &attemptLedgerDirectory{path: filepath.Join(parentPath, filepath.Base(path)), name: filepath.Base(path), parent: parent, gate: make(chan struct{}, 1), step: step}
+	self := &attemptLedgerDirectory{storage: storage, path: filepath.Join(parentPath, filepath.Base(path)), name: filepath.Base(path), parent: parent, gate: make(chan struct{}, 1), step: step}
+	transferred = true
 	complete := false
 	defer func() {
 		if !complete {
@@ -91,8 +112,11 @@ func openAttemptLedgerDirectory(path string, step func(string, string) error) (*
 		return nil, err
 	}
 	self.anchor, err = parent.Lstat(self.name)
-	if err != nil || !attemptLedgerPrivateDirectory(self.anchor) {
-		return nil, errors.New("attempt ledger state directory is not private and owned")
+	if err != nil {
+		return nil, attemptLedgerDirectoryObservation("cannot observe opened attempt ledger directory", err)
+	}
+	if !attemptLedgerPrivateDirectory(self.anchor) {
+		return nil, errors.Join(durablevolume.ErrIdentity, errors.New("attempt ledger state directory is not private and owned"))
 	}
 	self.root, err = parent.OpenRoot(self.name)
 	if err != nil {
@@ -103,8 +127,11 @@ func openAttemptLedgerDirectory(path string, step func(string, string) error) (*
 		return nil, err
 	}
 	opened, err := self.directory.Stat()
-	if err != nil || !os.SameFile(opened, self.anchor) || !attemptLedgerPrivateDirectory(opened) {
-		return nil, errors.New("attempt ledger state directory changed during open")
+	if err != nil {
+		return nil, attemptLedgerDirectoryObservation("cannot observe attempt ledger directory descriptor", err)
+	}
+	if !os.SameFile(opened, self.anchor) || !attemptLedgerPrivateDirectory(opened) {
+		return nil, errors.Join(durablevolume.ErrIdentity, errors.New("attempt ledger state directory changed during open"))
 	}
 	parentFile, err := parent.Open(".")
 	if err != nil {
@@ -118,11 +145,55 @@ func openAttemptLedgerDirectory(path string, step func(string, string) error) (*
 	return self, nil
 }
 
+// Failed observations preserve their cause; a missing retained name proves
+// custody loss. Instance hooks replace only the actual observation boundary.
+func attemptLedgerDirectoryObservation(detail string, err error) error {
+	if errors.Is(err, os.ErrNotExist) {
+		return errors.Join(durablevolume.ErrIdentity, errors.New(detail), err)
+	}
+	return errors.Join(&durablevolume.UnavailableError{Reason: detail}, err)
+}
+
+func (self *attemptLedgerDirectory) observeFile(file *os.File) (os.FileInfo, error) {
+	if self.statFile != nil {
+		return self.statFile(file)
+	}
+	return file.Stat()
+}
+
+func (self *attemptLedgerDirectory) observeName(name string) (os.FileInfo, error) {
+	if self.statName != nil {
+		return self.statName(self.root, name)
+	}
+	return self.root.Lstat(name)
+}
+
 // Replacing or chmodding the directory never redirects an existing owner.
-func (self *attemptLedgerDirectory) check() error {
+func (self *attemptLedgerDirectory) check() (resultErr error) {
+	self.stateLock.Lock()
+	failure := self.failure
+	self.stateLock.Unlock()
+	if failure != nil {
+		return failure
+	}
+	defer func() {
+		if errors.Is(resultErr, durablevolume.ErrIdentity) {
+			self.stateLock.Lock()
+			if self.failure == nil {
+				self.failure = resultErr
+			}
+			self.stateLock.Unlock()
+		}
+	}()
+	if err := checkValidatorDurableDirectory(self.storage, self.directory); err != nil {
+		return err
+	}
 	info, err := self.parent.Lstat(self.name)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return errors.Join(&durablevolume.UnavailableError{Reason: "cannot observe attempt ledger state directory"}, err)
+	}
 	if err != nil || !attemptLedgerPrivateDirectory(info) || !os.SameFile(info, self.anchor) {
-		return errors.New("attempt ledger state directory changed after open")
+		return errors.Join(durablevolume.ErrIdentity, errors.New("attempt ledger state directory changed after open"), err)
 	}
 	return nil
 }
@@ -195,6 +266,9 @@ func (self *attemptLedgerDirectory) requireLegacy() error {
 // Existing evidence must be owned, single-link and private at both the name
 // and opened descriptor. Exclusive creates never truncate an unexpected file.
 func (self *attemptLedgerDirectory) openFile(name string, flags int, create bool) (*os.File, error) {
+	if err := self.check(); err != nil {
+		return nil, err
+	}
 	if filepath.Base(name) != name || name == "." {
 		return nil, errors.New("attempt ledger private filename is invalid")
 	}
@@ -214,10 +288,16 @@ func (self *attemptLedgerDirectory) openFile(name string, flags int, create bool
 	if err != nil {
 		return nil, err
 	}
-	opened, err := file.Stat()
-	current, currentErr := self.root.Lstat(name)
-	if err != nil || currentErr != nil || !attemptLedgerPrivateFile(opened) || !attemptLedgerPrivateFile(current) || !os.SameFile(opened, current) || info != nil && !os.SameFile(info, opened) {
-		return nil, errors.Join(errors.New("attempt ledger evidence changed during open"), file.Close())
+	opened, err := self.observeFile(file)
+	if err != nil {
+		return nil, errors.Join(attemptLedgerDirectoryObservation("cannot observe opened attempt ledger evidence", err), file.Close())
+	}
+	current, err := self.observeName(name)
+	if err != nil {
+		return nil, errors.Join(attemptLedgerDirectoryObservation("cannot reobserve named attempt ledger evidence", err), file.Close())
+	}
+	if !attemptLedgerPrivateFile(opened) || !attemptLedgerPrivateFile(current) || !os.SameFile(opened, current) || info != nil && !os.SameFile(info, opened) {
+		return nil, errors.Join(durablevolume.ErrIdentity, errors.New("attempt ledger evidence changed during open"), file.Close())
 	}
 	return file, nil
 }
@@ -265,9 +345,12 @@ func (self *attemptLedgerDirectory) readSmall(name string, limit uint64) ([]byte
 	if err != nil {
 		return nil, err
 	}
-	info, err := file.Stat()
-	if err != nil || info.Size() < 0 || uint64(info.Size()) > limit {
-		return nil, errors.Join(errors.New("attempt ledger metadata exceeds its bound"), err, file.Close())
+	info, err := self.observeFile(file)
+	if err != nil {
+		return nil, errors.Join(attemptLedgerDirectoryObservation("cannot observe attempt ledger metadata size", err), file.Close())
+	}
+	if info.Size() < 0 || uint64(info.Size()) > limit {
+		return nil, errors.Join(errors.New("attempt ledger metadata exceeds its bound"), file.Close())
 	}
 	raw, err := io.ReadAll(io.LimitReader(file, int64(limit)+1))
 	err = errors.Join(err, file.Close())
@@ -296,8 +379,11 @@ func (self *attemptLedgerDirectory) publishMarker(name string, raw []byte) (resu
 			return err
 		}
 		actual, err := self.readSmall(name, uint64(len(raw)))
-		if err != nil || !bytes.Equal(actual, raw) {
-			return errors.Join(errors.New("attempt ledger existing marker changed during acknowledgement"), err)
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(actual, raw) {
+			return errors.Join(durablevolume.ErrIdentity, errors.New("attempt ledger existing marker changed during acknowledgement"))
 		}
 		return nil
 	} else if !errors.Is(err, os.ErrNotExist) {
@@ -316,13 +402,19 @@ func (self *attemptLedgerDirectory) publishMarker(name string, raw []byte) (resu
 			resultErr = errors.Join(resultErr, file.Close())
 		}
 	}()
-	info, err := file.Stat()
-	if err != nil || info.Size() < 0 || info.Size() > int64(len(raw)) {
-		return errors.Join(errors.New("attempt ledger partial marker exceeds expected bytes"), err)
+	info, err := self.observeFile(file)
+	if err != nil {
+		return attemptLedgerDirectoryObservation("cannot observe attempt ledger partial marker size", err)
+	}
+	if info.Size() < 0 || info.Size() > int64(len(raw)) {
+		return errors.New("attempt ledger partial marker exceeds expected bytes")
 	}
 	prior := make([]byte, int(info.Size()))
-	if _, err := io.ReadFull(file, prior); err != nil || !bytes.HasPrefix(raw, prior) {
-		return errors.Join(errors.New("attempt ledger partial marker conflicts"), err)
+	if _, err := io.ReadFull(file, prior); err != nil {
+		return attemptLedgerDirectoryObservation("cannot read attempt ledger partial marker", err)
+	}
+	if !bytes.HasPrefix(raw, prior) {
+		return errors.Join(durablevolume.ErrIdentity, errors.New("attempt ledger partial marker conflicts"))
 	}
 	if n, err := file.Write(raw[len(prior):]); err != nil {
 		return err
@@ -337,18 +429,21 @@ func (self *attemptLedgerDirectory) publishMarker(name string, raw []byte) (resu
 	if err := file.Sync(); err != nil {
 		return err
 	}
-	publishedInfo, err := file.Stat()
+	publishedInfo, err := self.observeFile(file)
 	if err != nil {
-		return err
+		return attemptLedgerDirectoryObservation("cannot observe synced attempt ledger marker", err)
 	}
 	err = file.Close()
 	file = nil
 	if err != nil {
 		return err
 	}
-	current, err := self.root.Lstat(temporary)
-	if err != nil || !attemptLedgerPrivateFile(current) || !os.SameFile(current, publishedInfo) || current.Size() != int64(len(raw)) {
-		return errors.New("attempt ledger marker inode changed before publication")
+	current, err := self.observeName(temporary)
+	if err != nil {
+		return attemptLedgerDirectoryObservation("cannot reobserve attempt ledger marker before publication", err)
+	}
+	if !attemptLedgerPrivateFile(current) || !os.SameFile(current, publishedInfo) || current.Size() != int64(len(raw)) {
+		return errors.Join(durablevolume.ErrIdentity, errors.New("attempt ledger marker inode changed before publication"))
 	}
 	if err := attemptLedgerRenameNoReplace(self.directory, temporary, name); err != nil {
 		return fmt.Errorf("publish attempt ledger marker: %w", err)
@@ -357,8 +452,11 @@ func (self *attemptLedgerDirectory) publishMarker(name string, raw []byte) (resu
 		return err
 	}
 	actual, err := self.readSmall(name, uint64(len(raw)))
-	if err != nil || !bytes.Equal(actual, raw) {
-		return errors.Join(errors.New("attempt ledger marker bytes changed during publication"), err)
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(actual, raw) {
+		return errors.Join(durablevolume.ErrIdentity, errors.New("attempt ledger marker bytes changed during publication"))
 	}
 	return nil
 }
@@ -381,5 +479,5 @@ func (self *attemptLedgerDirectory) Close() error {
 		err = errors.Join(err, self.parent.Close())
 		self.parent = nil
 	}
-	return err
+	return errors.Join(err, self.storage.Close())
 }

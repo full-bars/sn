@@ -1,0 +1,199 @@
+{
+  "artifact_sha256": {
+    "allocation-4aaf-causal-normal-capacity-as-insufficient.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-normal-capacity-as-insufficient.jsonl": "2675f698aabfa332c613cb46d4af3c6ba7a630a12257bd500b4bc2314d4c77ee",
+    "allocation-4aaf-causal-normal-capacity-as-insufficient.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-normal-missing-postwait-expiry.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-normal-missing-postwait-expiry.jsonl": "f02da0249cef9f8090e94648118a2880f8ccf7754fed8b029d7a149f18b4303e",
+    "allocation-4aaf-causal-normal-missing-postwait-expiry.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-normal-network-cleanup.log": "256bd96e786cd7524bf9a385f4965f81c4f9b4621bf5adeee65a60aa72ff5f3c",
+    "allocation-4aaf-causal-normal-old-f305-operative-allocator.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-normal-old-f305-operative-allocator.jsonl": "4587af429251f42f34785213d4381da9a0f3343296582db171664c73d5dbf547",
+    "allocation-4aaf-causal-normal-old-f305-operative-allocator.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-normal-partial-preferred-reservation.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-normal-partial-preferred-reservation.jsonl": "7ad8b49ea14bbfda9516e1c7cdd3dc5e9675d12f4361f329ac5a02a7a28f2e83",
+    "allocation-4aaf-causal-normal-partial-preferred-reservation.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-normal-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "allocation-4aaf-causal-normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "allocation-4aaf-causal-normal-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-normal-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "allocation-4aaf-causal-normal-unknown-counter-stops-peer.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-normal-unknown-counter-stops-peer.jsonl": "eae9eeb254ab9bcf7e897f6c058c9ad23672f805e6a0807557e2266bf2b68af6",
+    "allocation-4aaf-causal-normal-unknown-counter-stops-peer.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-normal.phase": "b59168531149fe61d6823171023b839c576c9c7046adc6988948a2aa5a1e48a9",
+    "allocation-4aaf-causal-race-capacity-as-insufficient.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-race-capacity-as-insufficient.jsonl": "8a69e28f2abf3044248aa93e24ab70379a58ca15fc66b312e0b091360eef24cf",
+    "allocation-4aaf-causal-race-capacity-as-insufficient.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-race-missing-postwait-expiry.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-race-missing-postwait-expiry.jsonl": "bf1e0cf664e00b80a27612683070a6e42d62f37fb38791dea9713c8739c2e324",
+    "allocation-4aaf-causal-race-missing-postwait-expiry.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-race-network-cleanup.log": "280c783f48d43a4a6e8db96c24746b0e72e8b7f45a8538143993a06896fe9434",
+    "allocation-4aaf-causal-race-old-f305-operative-allocator.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-race-old-f305-operative-allocator.jsonl": "68ad625fa4a4b6aec5b5c1304f7f6763041d108280615d557b30e171a845451e",
+    "allocation-4aaf-causal-race-old-f305-operative-allocator.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-race-partial-preferred-reservation.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-race-partial-preferred-reservation.jsonl": "6d1bade8d55ad24c9cebc595bc14db1210935bf49fea7c2c63b022cac9f412a0",
+    "allocation-4aaf-causal-race-partial-preferred-reservation.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-race-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "allocation-4aaf-causal-race-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "allocation-4aaf-causal-race-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-race-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "allocation-4aaf-causal-race-unknown-counter-stops-peer.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "allocation-4aaf-causal-race-unknown-counter-stops-peer.jsonl": "a4a9907dea5ca2a2b401b5c6491ca6a3b800046086aca1589a5b084ef37256c0",
+    "allocation-4aaf-causal-race-unknown-counter-stops-peer.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "allocation-4aaf-causal-race.phase": "b4a9c96ea30213ea0fe91b9881572275382ca08d9caa0be52b9649d317e7fa10",
+    "allocation-4aaf-product25-receipt.json": "207b013a4a677ae23d44e1b8025667e98dcfafec07897b27c02fb13a3dec883f",
+    "controls.tsv": "9da6b90ff0965a2d0cedf80800af23586208390493780788ee948e0ee54c5ec6",
+    "overlay-capacity-as-insufficient.json": "712142b53c681d95431b56d5be21c6dd17733ef2c2963e231921709438e30fb7",
+    "overlay-missing-postwait-expiry.json": "7a585eefc4325ee9b9de729485a3900af196703eb06f2549313f009ace8b3c19",
+    "overlay-old-f305-operative-allocator.json": "52baef7d854365942c2cc1949e645aa529e36c2d3d7e9342850cf7a69fa092cd",
+    "overlay-partial-preferred-reservation.json": "d62181ef657c3d2cd681c612316116c38c10f5d0f6578b2b28a4a25f7b391895",
+    "overlay-unknown-counter-stops-peer.json": "026832da04213196039d92effe255f5b77ec392354bceba0c98fc9fa716fcadb",
+    "run-causal-normal.sh": "98b4c5566d63f5fc7c54beeedbd77103242856bfed1b7bf03922908c24204b26",
+    "run-causal-race.sh": "d3716eeee9369d32d09705c64c03c1b94ac9d7bfd49a70bd8d7d9e21125da5a2"
+  },
+  "assertion_strings_present": true,
+  "classification": "EXPECTED_FAILURE_CAUSAL_SCOPED",
+  "control_results": [
+    {
+      "failed_roots": [
+        "TestDynamicProberGrantKeepsClientDistributionAfterLockSort",
+        "TestRedisGrantDiscoveryBoundsManyCurrentRows",
+        "TestRedisGrantFallbackPagesKeepFinancialOrderAndPriority"
+      ],
+      "group": "old-f305-operative-allocator",
+      "intended_assertions": [
+        "Redis prober discovery read its whole current grant history",
+        "fallback repeated or omitted a keyset page",
+        "payer position"
+      ],
+      "kind": "exact f305 operative createRedisTransferEscrowInTx body; new tests, declarations and independent recovery remain",
+      "mode": "normal"
+    },
+    {
+      "failed_roots": [
+        "TestRedisGrantWholePreferredAttemptDoesNotKeepPartialToken"
+      ],
+      "group": "partial-preferred-reservation",
+      "intended_assertions": [
+        "whole preferred attempt left partial authority or changed the next preference"
+      ],
+      "kind": "operative omission, not a historical full file",
+      "mode": "normal"
+    },
+    {
+      "failed_roots": [
+        "TestRedisGrantUnknownCounterPreservesDebtAndHealthyPeer"
+      ],
+      "group": "unknown-counter-stops-peer",
+      "intended_assertions": [
+        "unknown counter stopped an independently valid funding peer"
+      ],
+      "kind": "operative omission, not a historical full file",
+      "mode": "normal"
+    },
+    {
+      "failed_roots": [
+        "TestRedisGrantPostWaitExpiryRefusesAndCompensates"
+      ],
+      "group": "missing-postwait-expiry",
+      "intended_assertions": [
+        "publication used a grant which expired during endpoint wait"
+      ],
+      "kind": "operative omission, not a historical full file",
+      "mode": "normal"
+    },
+    {
+      "failed_roots": [
+        "TestRedisGrantCapacityRetainsDebtAndLargerOwnerCanContinue"
+      ],
+      "group": "capacity-as-insufficient",
+      "intended_assertions": [
+        "selection cap became insufficient funding or lost its examined cursor"
+      ],
+      "kind": "operative omission, not a historical full file",
+      "mode": "normal"
+    },
+    {
+      "failed_roots": [
+        "TestDynamicProberGrantKeepsClientDistributionAfterLockSort",
+        "TestRedisGrantDiscoveryBoundsManyCurrentRows",
+        "TestRedisGrantFallbackPagesKeepFinancialOrderAndPriority"
+      ],
+      "group": "old-f305-operative-allocator",
+      "intended_assertions": [
+        "Redis prober discovery read its whole current grant history",
+        "fallback repeated or omitted a keyset page",
+        "payer position"
+      ],
+      "kind": "exact f305 operative createRedisTransferEscrowInTx body; new tests, declarations and independent recovery remain",
+      "mode": "race"
+    },
+    {
+      "failed_roots": [
+        "TestRedisGrantWholePreferredAttemptDoesNotKeepPartialToken"
+      ],
+      "group": "partial-preferred-reservation",
+      "intended_assertions": [
+        "whole preferred attempt left partial authority or changed the next preference"
+      ],
+      "kind": "operative omission, not a historical full file",
+      "mode": "race"
+    },
+    {
+      "failed_roots": [
+        "TestRedisGrantUnknownCounterPreservesDebtAndHealthyPeer"
+      ],
+      "group": "unknown-counter-stops-peer",
+      "intended_assertions": [
+        "unknown counter stopped an independently valid funding peer"
+      ],
+      "kind": "operative omission, not a historical full file",
+      "mode": "race"
+    },
+    {
+      "failed_roots": [
+        "TestRedisGrantPostWaitExpiryRefusesAndCompensates"
+      ],
+      "group": "missing-postwait-expiry",
+      "intended_assertions": [
+        "publication used a grant which expired during endpoint wait"
+      ],
+      "kind": "operative omission, not a historical full file",
+      "mode": "race"
+    },
+    {
+      "failed_roots": [
+        "TestRedisGrantCapacityRetainsDebtAndLargerOwnerCanContinue"
+      ],
+      "group": "capacity-as-insufficient",
+      "intended_assertions": [
+        "selection cap became insufficient funding or lost its examined cursor"
+      ],
+      "kind": "operative omission, not a historical full file",
+      "mode": "race"
+    }
+  ],
+  "intake_sha256": "baf13a9169ddbbbc602b6cd630509d880454d3aa3a9ff86d7da8a1a748795cee",
+  "limits": [
+    "Only old-f305-operative-allocator is an exact old production body. The other four overlays are operative omissions, not historical whole-source control.",
+    "All deliberately red roots failed at intended behavioral assertions; positive 25-root normal/race tests are in a separate receipt."
+  ],
+  "normal_failed_root_count": 7,
+  "private_fixture_cleanup_exit": 0,
+  "product_receipt_sha256": "207b013a4a677ae23d44e1b8025667e98dcfafec07897b27c02fb13a3dec883f",
+  "race_failed_root_count": 7,
+  "root_verification": {
+    "all_expected_failed_names_and_assertions_matched": true,
+    "artifact_bindings_rehashed": 51,
+    "fixture_and_driver_exit_markers_confirmed": true,
+    "raw_intended_failures": {
+      "normal": 7,
+      "race": 7
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-customer-redis-allocation-4aaf-independent-20261003/evidence/allocation-4aaf-causal-receipt.json",
+    "receipt_sha256": "167a217cc8d8ab5d3abe78b2fcdfa32e5d5ce1e96cbbc53ee6582aa8069eca5c"
+  },
+  "schema": "sol-allocation-4aaf-five-causal-groups-v1",
+  "source_commit": "4aaf440289bfeb81eb93e86ee967607892148ab2"
+}

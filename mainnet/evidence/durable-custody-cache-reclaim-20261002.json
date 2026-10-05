@@ -1,0 +1,25 @@
+{
+  "cache_members_excluded_from_seal": true,
+  "caches": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-custody-release-astra-20261001/final-1d580d5e-serverac86855d/candidate-a/cache/go",
+      "files": 11048,
+      "bytes": 2177323578,
+      "latest_write": "2026-10-01T23:24:18.550300271Z"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-custody-release-astra-20261001/final-1d580d5e-serverac86855d/candidate-b/cache/go",
+      "files": 11048,
+      "bytes": 2177323578,
+      "latest_write": "2026-10-01T23:34:29.816276089Z"
+    }
+  ],
+  "checked_processes": 386,
+  "free_after": 123270598656,
+  "free_before": 118836633600,
+  "schema": "superseded-custody-compiled-cache-reclaim-v1",
+  "sealed_manifest": "/mnt/data/sn-testnet/mainnet-custody-release-astra-20261001/final-1d580d5e-serverac86855d/evidence/SHA256SUMS",
+  "sealed_manifest_sha256": "69cfb66647620bb8dc0e85bfa2d3980710ec224cee5f3e4cdf22932a04c08ec3",
+  "source_module_artifact_evidence_unchanged": true,
+  "time": "2026-10-02T12:12:55.827832242Z"
+}

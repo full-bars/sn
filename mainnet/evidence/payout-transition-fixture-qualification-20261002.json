@@ -1,0 +1,59 @@
+{
+  "helper_callers": {
+    "bonus_callers_use_closed_rows": true,
+    "bonus_test_roots_use_helper": 3,
+    "other_transition_roots_use_helper": true
+  },
+  "limits": [
+    "One targeted test in each mode only; does not relabel ffcc 24/25 as all-pass.",
+    "Canceled legacy subsidy/reliability carry and full model suite pending later source."
+  ],
+  "schema": "sol-provider-cutover-6a-fixture-target-v1",
+  "scope": {
+    "assertions": [
+      "open outcome is NULL and excluded from subnet usage",
+      "legal NULL-to-canceled terminal transition followed by immutable close-time check",
+      "actual GetStEpochProviderUsageAtEpoch returns equal 1024-byte free and paid weights",
+      "post-cutoff free and paid usage do not create USDC network payment"
+    ],
+    "modes": [
+      {
+        "cleanup_exit": 0,
+        "exit": 0,
+        "jsonl_sha256": "8147d1c12451afb5444c1ca72de23c6b9baf625df5a377e411122eee656bda67",
+        "mode": "normal",
+        "package_terminal": "pass",
+        "race_reports": 0,
+        "root_fail": 0,
+        "root_pass": 1,
+        "root_skip": 0,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "cleanup_exit": 0,
+        "exit": 0,
+        "jsonl_sha256": "38271f28fa3b97d56cf9e226613a4f7f34604dd56ae137dd0abb2edd00374e37",
+        "mode": "race",
+        "package_terminal": "pass",
+        "race_reports": 0,
+        "root_fail": 0,
+        "root_pass": 1,
+        "root_skip": 0,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "package": "./model",
+    "root": "TestProviderTransitionFreeAndPaidUsageHaveEqualSubnetWeight"
+  },
+  "source": {
+    "changed_file_sha256": "78f2008438525396f9a4461839ada0a90b6d5814dcd47bbcd8103f5ac8d08ee0",
+    "config_commit": "93dc65fd84da9a0f5423b5cab9bfc650692fded8",
+    "go_mod_sha256": "ad4b307433de35ab9f40df50d0c6906ec2eef1a4bfdec1adad700c3b3c842147",
+    "go_sum_sha256": "a805fb68cf119986df0d3fb630081d7b0fcac1e7b0470181934bc6b763616555",
+    "only_changed_file": "model/provider_payout_transition_test.go",
+    "parent": "ffcc77b86bc33822d64b9edd4238bc94697fedcb",
+    "server_commit": "6a63892b6736b857340fddaea92dcc2da6849934",
+    "server_tree": "5eb1d411f78ffc5961d5b9afb0b1b3d5bc28fb50"
+  },
+  "status": "PASS_SCOPED"
+}

@@ -1,0 +1,110 @@
+{
+  "accounting_floor_bytes": 0,
+  "author_validation": "AST and exact Git tree inventory, module checksums, pinned inputs and seven original qualified waits only. No source staging, Go invocation, download, compiler, body, Docker or systemd action by author.",
+  "canonical_lease_unit": {
+    "expected_properties": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "1023496138121",
+      "InvocationID": "1caad07516864b83a41fe0b39cba4257",
+      "MainPID": "2132303",
+      "RuntimeMaxUSec": "8h"
+    },
+    "expiry_monotonic_us": 1052296138121,
+    "name": "sn-canonical-host-lease-108-20261004.service"
+  },
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_minimum_available_bytes": 15032385536,
+  "docker_active_available_bytes": 295833415680,
+  "docker_launch_available_bytes": 300128382976,
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 4294967296,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 1800,
+    "TimeoutStopSec": 90,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-published-main-babb-7ca-3e1-metadata-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-published-main-babb-7ca-3e1-metadata-v1-20261005.service"
+  },
+  "forecast": {
+    "basis": "1,129,297,614 exact archive bytes + at most768MiB checksum-pinned module artifacts +192MiB graph logs + small receipts under3GiB prospective disk;2GiB memory estimate with enforced4GiB. These are forecasts, not observed peaks or lower bounds.",
+    "disk_bytes": 3221225472,
+    "held_closed_model_reserve_bytes": 4294967296,
+    "memory_bytes": 2147483648
+  },
+  "healthy_data_floor_bytes": 6307319808,
+  "healthy_memory_floor_bytes": 103079215104,
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-metadata-job-v1.json",
+    "sha256": "92dfdf5c978012edf58f46a9c66d298502a16302c96e4b64acd207cc7bd0527d"
+  },
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "network_dependency_count": 1,
+  "one_cumulative_data_growth_stop_bytes": 4294967296,
+  "pinned_dependency": {
+    "download_dir": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/urnetwork/gvisor/@v",
+    "go_mod_sum": "h1:We1Jh3kDvpcx13qPcI0LTjx3U6pHpis/KFoU/UtJTkM=",
+    "maximum_artifact_bytes": 805306368,
+    "module": "github.com/urnetwork/gvisor",
+    "module_dir": "/mnt/data/sn-testnet/gomodcache/github.com/urnetwork/gvisor@v0.0.0-20261004152605-c0783dba2eef",
+    "network_environment": {
+      "GOPROXY": "https://proxy.golang.org,direct",
+      "GOSUMDB": "sum.golang.org",
+      "GOWORK": "off"
+    },
+    "sum": "h1:5o+/eARHbukXt1AkZW8MqCJ/o8hfuhYOllPaZv1Zdts=",
+    "version": "v0.0.0-20261004152605-c0783dba2eef"
+  },
+  "predecessor": {
+    "seven_compiler_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1.receipt.json",
+      "sha256": "a0aeaaf5bdf0d077cbd0ffc2fdfd840f2abbe0a24b41895998418aa93dfa3133"
+    },
+    "seven_user_terminal_readback": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-user-terminal-readback-v2.json",
+      "sha256": "4aed1ef1374f56efc9a014a516c30122edd7826d8aef4dad65b0152a9db824b3"
+    }
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 15032385536,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "92dfdf5c978012edf58f46a9c66d298502a16302c96e4b64acd207cc7bd0527d",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "network_dependency_count": 1,
+    "runner_sha256": "0c48ac80ae56237926bedeecded75dd793474eef308a66bcd8be632a4ca62824",
+    "short_count": 0,
+    "status": "ADOPTED_PUBLISHED_MAIN_METADATA_WITH_ONE_PINNED_DEPENDENCY_FETCH"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-published-main-metadata-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-published-main-metadata-v1.py",
+    "sha256": "0c48ac80ae56237926bedeecded75dd793474eef308a66bcd8be632a4ca62824"
+  },
+  "schema": "published-main-metadata-resource-review-v1",
+  "scope": "Three exact published-main Git archives, one explicit checksum-pinned published gvisor dependency fetch, then three offline readonly go list -deps -test graphs. No compiler, body, DB, auto toolchain fetch, or inherited old-graph qualification.",
+  "source_context": "Main-module contexts use the same exact local main tuple and Core-main SCTP, the published Server gvisor version and retained explicitly pinned sibling peers. Actual per-context module selection will be recorded; equality is not assumed.",
+  "source_manifest": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-source-manifest-v1.json",
+    "sha256": "b0b799f679d25c2c24954888758836271d3f70bf950c2f8e4c0841563dc810b7"
+  },
+  "source_tuple": {
+    "core": "7ca8e222e3496552146f2d97eb09237401662c99",
+    "server": "3e1fe2d786e0f1b066fbcfd4dd37214352498f7f",
+    "sn": "babb0af573f6bdfe95a7db6d8888bbe9327fc39b"
+  },
+  "status": "READY_FOR_ROOT_ADOPTION_NO_EXECUTION",
+  "whole_owner_horizon_seconds": 1890
+}

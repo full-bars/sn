@@ -1,0 +1,23 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 12884901888,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "9a76331319767a4dd3ab5b2b722bd372d23bca1f4724f99700512f0344ea27c6",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "runner_sha256": "3685c0ee77e524bb5edd5d5b1a27837c850ed359714a3a71567b9f933b2ae249",
+  "short_count": 0,
+  "status": "ADOPTED_ONE_BOUNDED_METADATA_STAGE_POST_MODEL",
+  "adopted_at": "2026-10-05T02:15:07.856966+00:00",
+  "review_sha256": "ec9ea45f6f6f4b950d081e7e3c973be9460f2eb5864dd0e79658ae56e9773270",
+  "scope": "One exact monitor test correction plus one offline ./monitor Go-list graph; immutable7885 source and failed compiler retained. No compiler/body/DB overlap or native780/newSN/newCore inheritance."
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "coordinator-server-publication-v1",
+  "published_commit": "29ce22d66801c4c79f2abfff3c3874b2c8e8cbaf",
+  "remote_main": "29ce22d66801c4c79f2abfff3c3874b2c8e8cbaf",
+  "qualified_candidate": "a244ae7c57f38739f4d97ea41de1bbb7619b4a21",
+  "qualified_receipt_sha256": "0738209f840be3080e59fd79e7f0138cce0465afece89e230e594d3699e3f040",
+  "retained_upstream": "87e7e8a6",
+  "joined_source_blobs": 5375,
+  "upstream_delta_paths": [
+    "FP2FIX.md",
+    "model/contract_lifecycle_model_test.go",
+    "model/contract_lifecycle_redis_guard_test.go",
+    "model/contract_lifecycle_redis_model_test.go",
+    "model/prober_grant_independent_lock_test.go",
+    "model/prober_shard_companion_chain_test.go",
+    "model/subscription_admission_mode_test.go",
+    "model/subscription_escrow_selection_test.go",
+    "model/subscription_model.go",
+    "model/subscription_model_test.go",
+    "model/subscription_net_escrow_test.go",
+    "model/subscription_payer_admission_test.go"
+  ],
+  "clean_worktree": true,
+  "push_exit": 0,
+  "limits": [
+    "Candidate16 normal/race roots and seven vets retain exact a244 scope.",
+    "Later upstream11 Redis paths and FP2FIX documentation are source-joined; no new full-model qualification is claimed.",
+    "No deployment or running worker adoption."
+  ]
+}

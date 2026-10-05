@@ -11,6 +11,8 @@ import (
 	"github.com/urfoundation/sn/protocol"
 )
 
+// Give every derived seed owner an explicitly private fixture root, independent
+// of the process umask applied to testing.TempDir's numbered directory.
 func validReleaseConfig(t *testing.T) ReleaseConfig {
 	t.Helper()
 	p, err := protocol.LoadPolicy(filepath.Join("..", "deploy", "testnet", "policy-v1.yml"))
@@ -21,7 +23,7 @@ func validReleaseConfig(t *testing.T) ReleaseConfig {
 	if err != nil {
 		t.Fatal(err)
 	}
-	root := t.TempDir()
+	root := identityTestStateDir(t)
 	cfg := ReleaseConfig{
 		SchemaVersion:       1,
 		Production:          true,

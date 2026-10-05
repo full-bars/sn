@@ -1,0 +1,23 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 12884901888,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "cf14f8b53ab2a4a40d95264f6f28bf22618fc02b84f4a0433549748af9ffed85",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "runner_sha256": "e0fbd78190fc517fdb2a0b58aed9278d6ba55a17f023128c823ca1de378bbaf6",
+  "short_count": 0,
+  "status": "ADOPTED_ONE_BOUNDED_METADATA_STAGE_POST_MODEL",
+  "adopted_at": "2026-10-05T01:56:04.875672+00:00",
+  "review_sha256": "17fddd1047732ec01dd6ef21bcb98f1c5cac20b1a991c0426bd3b6934141ecd0",
+  "scope": "Three exact monitor delta blobs only plus one offline ./monitor Go-list graph over immutable4b stage. Actual model37 must be joined/resource-qualified/owned DB and network absent. No compiler/short/DB overlap, native780 excluded."
+}

@@ -1,0 +1,181 @@
+{
+  "schema": "mainnet-independent-rust-control-qualification-v1",
+  "status": "TWO_RUST_CAUSAL_CONTROLS_PASS",
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-controls-v1.terminal.json",
+      "sha256": "4bee5ff59148eae31e3993be33355ef6c77e8dbdbf1ed8bfb1799ba29612dee5"
+    },
+    {
+      "bytes": 13168,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-only-positives-v3.terminal.json",
+      "sha256": "c3c038897d634714db5fc2fd08007858a8c8619b7cf629782b56e9d03ae501e5"
+    },
+    {
+      "bytes": 1137,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-controls-adoption-v1.json",
+      "sha256": "8c875d93cf138b2016acd98fc5d0b1cba8dccaf1701912a7d598bf22f482e131"
+    },
+    {
+      "bytes": 58569,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    },
+    {
+      "bytes": 23340,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "bytes": 9475,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard.receipt.json",
+      "sha256": "a5728651876d636d10f52e6c63e99e63afe1715e01bb12792f4c79cc68494c5f"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard-clean.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 170,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard-clean.stderr",
+      "sha256": "3a7d5e550e355ad53aa17e9f95c9d38df8a355a7ef7744357fab9ae8fd3c9e57"
+    },
+    {
+      "bytes": 351,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard-clean.resources.csv",
+      "sha256": "e9b5b3f855a63a2aa7a378023acdbeb492026de7f1f1d5361e656710daf93772"
+    },
+    {
+      "bytes": 503469,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard-compile.stdout",
+      "sha256": "5d7fc2a37c750a0c6052cb346713b9693c88e46480aa95dadc1ee3f48709de67"
+    },
+    {
+      "bytes": 215,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard-compile.stderr",
+      "sha256": "1e97bc1847abead16b4da67882defd8a1b088770d034ada09cd9921f36f6d67e"
+    },
+    {
+      "bytes": 3796,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard-compile.resources.csv",
+      "sha256": "768d0da25d597438b671d68adce07453d13ecb3d02c1c3512af7159e377544c3"
+    },
+    {
+      "bytes": 393,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard-body.stdout",
+      "sha256": "e6de74cc99debabc5c3e91cdcedc35f62c9fc460c743334c4f52d47242cbc628"
+    },
+    {
+      "bytes": 320,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard-body.stderr",
+      "sha256": "12305afa410a2dc044f78007ef7a209fca4924a55a46bb159200c6a2ecdd8717"
+    },
+    {
+      "bytes": 155,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-read-only-principal-host-guard-body.resources.csv",
+      "sha256": "85fdb972da865513801c6b49d3c8d5e232da5701a30682489d8bd640a7aac367"
+    },
+    {
+      "bytes": 63564976,
+      "ctime_ns": 1791098672761232548,
+      "device": 2081,
+      "inode": 18641360,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791098672538241857,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-control-omit-read-only-principal-host-guard.test",
+      "sha256": "18a9d7768065592a57d1e37e8d0f2fde58a4f1a27b6402a6802e5bd6a55fdd7f",
+      "uid": 1000
+    },
+    {
+      "bytes": 9647,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity.receipt.json",
+      "sha256": "b677e42ba7a31a6097ffc636f4b0d61b1a45bab1126bd15c9a8ea977b3b28bd3"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity-clean.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 168,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity-clean.stderr",
+      "sha256": "fadc44ead9c99327d8edd4db3ea3f8af422a352d03a40ad84b34a6de6149a530"
+    },
+    {
+      "bytes": 358,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity-clean.resources.csv",
+      "sha256": "7751a36ff6ffd132a47b359ea38e63e9dbe962f760c18d79e0bb700ad52d5ea0"
+    },
+    {
+      "bytes": 503901,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity-compile.stdout",
+      "sha256": "c43631b7b0fd520856ed43f9ca0d398bd03ffd54271fee3bb8be80ca61007cc5"
+    },
+    {
+      "bytes": 221,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity-compile.stderr",
+      "sha256": "6728f6b6ea06675410ecd76ad0276b6d40894feec010c931ff86ed0a4c510b96"
+    },
+    {
+      "bytes": 3928,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity-compile.resources.csv",
+      "sha256": "078a7b29885314993e8f5c747847fb919052f225451696a14d9990831e7a3eef"
+    },
+    {
+      "bytes": 401,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity-body.stdout",
+      "sha256": "08864b9ddd76f346a79d4aaa28df01621aec5b2a8b6173f3f847d3b066798029"
+    },
+    {
+      "bytes": 323,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity-body.stderr",
+      "sha256": "a8383e772b7796cfbda6db23469b67243205e041e3c4b8bfe9bd93f4925be1b9"
+    },
+    {
+      "bytes": 155,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-control-omit-original-principal-returned-identity-body.resources.csv",
+      "sha256": "99c7e55deafa7abff509173f01f7320ed404cda6bc6537902395027d5d8dc736"
+    },
+    {
+      "bytes": 63561920,
+      "ctime_ns": 1791098709793690797,
+      "device": 2081,
+      "inode": 18641395,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791098709602698728,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-control-omit-original-principal-returned-identity.test",
+      "sha256": "70ac1ed946d1985771cb9d9821d354e7ae726ae168015e3f7d007f189421efb3",
+      "uid": 1000
+    }
+  ],
+  "controls": [
+    {
+      "name": "omit-read-only-principal-host-guard",
+      "root": "historical::tests::capture_tests::principal_tests::historical_principal_top_child_and_rolled_back_writes_are_refused",
+      "expected_assertion": "principal API was allowed to manufacture transient stock",
+      "changed_path": "src/historical_hosts.rs",
+      "private_crate_files": 29,
+      "body_exit": 101,
+      "classification": "EXPECTED_BEHAVIORAL_FAILURE"
+    },
+    {
+      "name": "omit-original-principal-returned-identity",
+      "root": "historical::tests::capture_tests::principal_tests::historical_principal_query_census_refuses_substitution_and_duplicates",
+      "expected_assertion": "principal query identity or bounded census was replaced",
+      "changed_path": "src/historical_principal.rs",
+      "private_crate_files": 29,
+      "body_exit": 101,
+      "classification": "EXPECTED_BEHAVIORAL_FAILURE"
+    }
+  ],
+  "positive_roots_retained": 24,
+  "review": "Both controlled sources compile freshly into distinct protected executables. Independent raw root summaries prove one selected named assertion failure per control, no ignored root. Full29-file private census differs only at original declared production file; imported helper/classifier hashes remain exact. Resource CSVs and raw outcomes are retained separately from positives.",
+  "remaining": [
+    "38 dependent Go roots per mode and six Go causal groups",
+    "Complete effects/Yuma/quantization, capture join and entitlement/funding census"
+  ],
+  "requirement_closure": false
+}

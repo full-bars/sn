@@ -1,0 +1,50 @@
+{
+  "artifact_sha256": {
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "7b129c409ee46505ee363d517643efe2201baa494e3a0b20a6df11ff0aa5a2fc",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-ten.sh": "26f7251a9d85b9dc030f759cd958c4db9879d2424e47ddc5cff038b18ddb47d4",
+    "selector-ten.txt": "dc2ff96e4ab73bc1d17e058433346c7737d48149416600e31d8e6f6f8e39962a",
+    "source-readback.json": "00cc1ea205aa072ca9a507a389eb9c507b4247603785ff47a2c42ce8235d1899",
+    "ten-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "ten-normal.jsonl": "fa21ff4513c5360f40f1a70ccaeb4f5fbcb369464ce31380d99705dc76c2c6e1",
+    "ten-normal.phase": "a07397213c46527a8ae9fd3c2a764ddd69a5a941230887770de7568486ff4d82",
+    "ten-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "classification": "SCOPED_BEHAVIORAL_FAILURE",
+  "failed_roots": {
+    "TestSafeStateReadReturnedConflictsRemainIntegrity": [
+      "safe_state_read_test.go:203: returned conflicting Safe authority was retried or admitted {eth_getCode  } RPC evidence is inconsistent or malformed"
+    ]
+  },
+  "intake_sha256": "ca8d97204db8fdfa5fa7ad2b7e7b92bc1d846a7e5a79785ce4f22cd39572997c",
+  "limits": [
+    "Exact ten-root normal scope only; race, vet, and old5a0 causal controls are separate.",
+    "One test assertion failed; this does not qualify Safe296 as passing."
+  ],
+  "mode": "normal",
+  "passed_roots": [
+    "TestBootstrapSuccessorCanonicalSafeAuthority",
+    "TestEvmReadProfileAbsenceIsReceiptOnly",
+    "TestEvmReadProfileBoundsEveryReply",
+    "TestEvmRequiredStateAbsencePreservesRetainedReceipt",
+    "TestSafeCurrentPendingRecheckCannotClaimCompleteAuthority",
+    "TestSafeCurrentPendingSeparatesUnavailableFromChanged",
+    "TestSafeCurrentPublicReadFailurePreservesOriginalAttempt",
+    "TestSafeStateReadRetainsOriginalRetryBudget",
+    "TestSafeStateReadUnavailableDoesNotClaimChangedAuthority"
+  ],
+  "physical_git_blobs_verified": 20174,
+  "root_verification": {
+    "artifact_bindings_rehashed": 10,
+    "failed_assertion_verified": true,
+    "raw_failed": 1,
+    "raw_passed": 9,
+    "raw_skipped": 0,
+    "receipt_path": "/mnt/data/sn-testnet/sol-safe-state-296-independent-20261003/evidence/safe-296-normal-receipt.json",
+    "receipt_sha256": "3340954d1d0e6d35a0c1f79773fdbde58d18a29bcfaa05a39efa632553283fc9"
+  },
+  "schema": "sol-safe-296-normal-v1",
+  "source_commit": "296980a056b7a92596d51d17e8ad020e8329bc2c",
+  "source_tree": "ed0cdac0a7db0bf4b7ba285948ca8eb4c84b6352"
+}

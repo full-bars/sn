@@ -1,0 +1,139 @@
+{
+  "schema": "principal-fixture4af-operational-root-adoption-v1",
+  "status": "ADMITTED_TO_LAUNCH",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/run-fixture4af-v1.py",
+      "bytes": 12500,
+      "sha256": "039c314313da2dbd308a05922a121a1ff6a46e58695bc3114025115fd1dae4d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/actual-helper-preflight-v1.json",
+      "bytes": 1582,
+      "sha256": "c749158fee8eee53ad31af296635a52409dbe9b39fbfa47a8eae8f4d92c4015f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/finite-resource-proposal-v1.json",
+      "bytes": 5031,
+      "sha256": "d64183466399b938c6cda2613aa61e300f44a885b75d069611c481da46476134"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/effective-source-stage-receipt-v2.json",
+      "bytes": 3614,
+      "sha256": "bbb66ed7d0363cfb8ee545c2105977451a1d6f737f09b18687536dc1060094ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/evidence/selected-effective-graph-receipt-v1.json",
+      "bytes": 3050,
+      "sha256": "912f7e8f0dddb92857ec3fdf243982fe555692a67580b4ad270f2c10c7706947"
+    },
+    {
+      "bytes": 3614,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/effective-source-stage-receipt-v2.json",
+      "sha256": "bbb66ed7d0363cfb8ee545c2105977451a1d6f737f09b18687536dc1060094ac"
+    },
+    {
+      "bytes": 3050,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/evidence/selected-effective-graph-receipt-v1.json",
+      "sha256": "912f7e8f0dddb92857ec3fdf243982fe555692a67580b4ad270f2c10c7706947"
+    },
+    {
+      "bytes": 7617,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/intake-v2.json",
+      "sha256": "52122a82106488abbfa8dd6865de193e993a26207ee67f82814500cd05b57fb6"
+    },
+    {
+      "bytes": 2499,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/recipe-v2.json",
+      "sha256": "33725ad3e29c261f571cc23cccffdcaf6a0a352fcc6b987a022ffaf662a3791d"
+    },
+    {
+      "bytes": 5512,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/selectors.json",
+      "sha256": "3d416ce6e960b632e58400cd830da851eed417f65f955b0ef53e204f2a606414"
+    },
+    {
+      "bytes": 2872,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/operative-controls.json",
+      "sha256": "f2bf1de4f73d95a2f13ef76061d47631b16780be03dc528274debd9396f8508b"
+    },
+    {
+      "bytes": 2361,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-fd4-positives-v1.terminal.json",
+      "sha256": "37ab4ba17439efc278388ebac703b6bf9a66c7283f5478e7df1a3c050193cdf4"
+    },
+    {
+      "bytes": 2638,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/qualification-v1.terminal.json",
+      "sha256": "dfb994eb4d7c3753edbb3c98f241c2c96f742e1f078c2f1a1b23a2718b9a303a"
+    },
+    {
+      "bytes": 13168,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-only-positives-v3.terminal.json",
+      "sha256": "c3c038897d634714db5fc2fd08007858a8c8619b7cf629782b56e9d03ae501e5"
+    },
+    {
+      "bytes": 1364,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-controls-v1.terminal.json",
+      "sha256": "4bee5ff59148eae31e3993be33355ef6c77e8dbdbf1ed8bfb1799ba29612dee5"
+    },
+    {
+      "bytes": 12880,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-go-positives-v2.py",
+      "sha256": "d56ae51568f3b46cb802276e779de8566ce0f5bbdcb3d36e0099b9a2e139c9b4"
+    },
+    {
+      "bytes": 10122,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/go_test_image.py",
+      "sha256": "63444702ee731ef3a1b22d6073fb7b4e436691c7cf6a41b475e237f25286bb11"
+    },
+    {
+      "bytes": 23340,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "bytes": 20536,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-rust-only-v3.py",
+      "sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472"
+    },
+    {
+      "bytes": 58569,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    },
+    {
+      "bytes": 10122,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/go_test_image.py",
+      "sha256": "63444702ee731ef3a1b22d6073fb7b4e436691c7cf6a41b475e237f25286bb11"
+    },
+    {
+      "bytes": 20536,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-rust-only-v3.py",
+      "sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472"
+    },
+    {
+      "bytes": 23340,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "bytes": 58569,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    }
+  ],
+  "mechanism_review": "Full213-line runner read. Twelve exact public roots per mode, vet, two one-file causal controls/mode. Exact four-path overlay, prior10fail/10pass partition, protected Go images, real retained capture/replay engines before/after, originalmodulebytes, helperAPIpreflight and finite owned process joins. No selectedskip or extra root accepted.",
+  "effective_resources": {
+    "data_available": 77411905536,
+    "memory_available": 122106171392,
+    "data_threshold": 66436861952,
+    "memory_threshold": 113816633344,
+    "lease_pid": 620836,
+    "lease_start": "94830154",
+    "lock_inode": 16941991
+  },
+  "resource_note": "Imported reviewed base enforces stricter original6GiB forecast/12GiB two-times disk reserve than proposed4GiB/8GiB. Adopt actual stricter66436861952B threshold; no cap/baseline reset.",
+  "scope": "Run exact serial4af qualification. No competingcompiler, Rustbuild or long-body overlap. Freshadmission beforeeachphase. Keep originalsuccesses and control outcomes distinct.",
+  "whole_mainnet_complete": false
+}

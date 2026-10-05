@@ -1,0 +1,41 @@
+{
+  "schema": "mainnet-independent-protocol-resource-clarification-v1",
+  "status": "RUST_ONLY_SCOPE_CLARIFIED_NO_BUILD_RESULT",
+  "clarification": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/principal-dc1-rust-executable-protocol-clarification-v1.json",
+    "sha256": "e6e430468e218124aa72d05615c52565fd86d313fd8f56dba1c657f4151714f2"
+  },
+  "verified_source_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-capture.rs",
+      "sha256": "3d743a086e9f30e872a05ebd269c064e1ac14df99005e0a01a5101a646f0324f",
+      "bytes": 2368
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+      "sha256": "6043e5f07344b549fd5f86247151cfc19ee84ef61aa6ac197508f990ed7ea0d8",
+      "bytes": 1174
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/mainnet/historical_replay_supervisor.go",
+      "sha256": "846fa5e974714eb62f7515812f1ffc527150aed9dd2430b666c38ccf49d47063",
+      "bytes": 4134
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/mainnet/historical_replay.go",
+      "sha256": "4667f345cce401e834e93e357afeebbe2cdc272368ac6c8690f198b03784f575",
+      "bytes": 17497
+    }
+  ],
+  "conditional_adoption": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/principal-dc1-rust-resource-root-adoption-20261004.json",
+    "sha256": "4460f220372c8a7368a0869645b4892ed4dc642fc3f7524c5e0056dea1e66463"
+  },
+  "decision": "Keep original finite Rust resource gates and footprint. Rust compiles/custodies actual distinct capture/replay/test ELFs, runs24 roots, reads four actual exported jobs and runs two Rust controls. Actual fd4 directory/feed capture followed by replay is a dependent separately admitted Go38-root public scope. Neither build nor in-process Rust capture proves that cross-engine execution.",
+  "limits": [
+    "Direct capture invocation from exported JSON alone",
+    "Actual capture/replay cross-engine qualification from Rust-only tests",
+    "Live chain/finality/full-economic authority"
+  ],
+  "resource_effect": "No added Rust phase, cap, forecast, or concurrency. Original conditional resource thresholds remain."
+}

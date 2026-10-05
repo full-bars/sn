@@ -1,0 +1,365 @@
+{
+  "changed_files": [
+    {
+      "bytes": 7750,
+      "git_blob": "8990b279bd155ef3a4f1e34ca17584f31e103bf3",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn/mainnet/monitor_claim.go",
+      "sha256": "f6b7569c61f857c74edecaac1023ba36a15f8c6908cfccce62c9bfe31e017066"
+    },
+    {
+      "bytes": 16935,
+      "git_blob": "1e3347c6686d27005bf1bef9f2b9931a662fef30",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn/mainnet/monitor_claim_composition_test.go",
+      "sha256": "aa73e565eccbb3cd7c19df410512a1c1dd03e15e3096bae80e46d1d73b4d48a3"
+    },
+    {
+      "bytes": 12017,
+      "git_blob": "830deb95c0baaedcd1742dae93f5729cbd2646c6",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn/mainnet/monitor_claim_worker.go",
+      "sha256": "528bc5f6b6ce80978d470a8fa952ff7ba376bdd8e4a24b1a2400505f01a4ccda"
+    },
+    {
+      "bytes": 3332,
+      "git_blob": "6c420b6aaa0cddd5531a991ae2e9ed027c9de984",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn/mainnet/monitor_progress_retry.go",
+      "sha256": "62ff9e15f3f531022920fb7e715c3bec31abc3fd43cdb3971f45668e3130dde3"
+    },
+    {
+      "bytes": 9863,
+      "git_blob": "548524417c15f21394222d1f4cb7a8f3857f9739",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn/mainnet/monitor_progress_retry_public_test.go",
+      "sha256": "ae3e0ec8b9260769a6d25d321b61ab111ccd1b7e33a53cc710c4c5fd42a637af"
+    },
+    {
+      "bytes": 12338,
+      "git_blob": "9ac678426ec5624da40119848f35b244ae9ea1d0",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn/mainnet/monitor_progress_retry_test.go",
+      "sha256": "068d0b31da2d27aa62cfe4715c05347024d452fe0e1606007e6a0dceb6c8f359"
+    },
+    {
+      "bytes": 9613,
+      "git_blob": "15f0705239c6b66add47ec878aa4f06be491133b",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn/mainnet/monitor_provider.go",
+      "sha256": "e91e5c41aacb1d0b148169f205820acf68c3a62d85a0e63b4e80d57084c0e880"
+    },
+    {
+      "bytes": 22855,
+      "git_blob": "788bb1ff5543ad2b153ef114cfabfa11648f8f6a",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn/mainnet/monitor_provider_test.go",
+      "sha256": "bf1ae973207c3f616b1955bb045fed1da35c79674a270ba722f3d863b7766319"
+    },
+    {
+      "bytes": 12225,
+      "git_blob": "590aebb94528f326e2f2c0eff09c6661b2990d5a",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn/mainnet/monitor_provider_worker.go",
+      "sha256": "b681cdf6eb8cc46c975723a657646bc71518daaec83a0dee092a676e0b97bee2"
+    }
+  ],
+  "controls": [
+    {
+      "expected": "intended behavioral assertion failure; compilation/setup failure is not causal proof",
+      "files": [
+        {
+          "bytes": 3353,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/omit-owned-retries/monitor_progress_retry.go",
+          "sha256": "9989166a3f5a58474f18fb8c2a7d8e2c65d5c1ca1c427cebdddc9fa2aa1a1ba0"
+        }
+      ],
+      "name": "omit-owned-retries",
+      "overlay": {
+        "bytes": 288,
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/omit-owned-retries/overlay.json",
+        "sha256": "cee26b5d4de44b4e1eb0a495e293c6f4f0e5c328d60f781100ac85a2bf1c1b7f"
+      },
+      "roots": [
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter",
+        "TestMonitorProgressRetryKeepsSingleBudgetBeyondSixtySeconds",
+        "TestMonitorProgressResponseBodiesCloseBeforeRetry",
+        "TestMonitorProgressEarlyTransportOutageRetainsOwnerBudget"
+      ]
+    },
+    {
+      "expected": "intended behavioral assertion failure; compilation/setup failure is not causal proof",
+      "files": [
+        {
+          "bytes": 3277,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/old-transient-status-classification/monitor_progress_retry.go",
+          "sha256": "74afa136769db53d4a67746bde88ba295770c634b39e72930b5a45cf3ada87b2"
+        }
+      ],
+      "name": "old-transient-status-classification",
+      "overlay": {
+        "bytes": 305,
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/old-transient-status-classification/overlay.json",
+        "sha256": "b35b20478be9ec87873eca72158ad9e0f706d29b34fd5d5335d9d5a4d5dbe303"
+      },
+      "roots": [
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter"
+      ]
+    },
+    {
+      "expected": "intended behavioral assertion failure; compilation/setup failure is not causal proof",
+      "files": [
+        {
+          "bytes": 2782,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/joined-timeout-masks-hard-cause/monitor_progress_retry.go",
+          "sha256": "257e2c8527f006f12db60c0f122a4fc52cd37e0b678e359dc60ad53e8356a7d6"
+        }
+      ],
+      "name": "joined-timeout-masks-hard-cause",
+      "overlay": {
+        "bytes": 301,
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/joined-timeout-masks-hard-cause/overlay.json",
+        "sha256": "d2c83c5f6485a17e8b736f8da7c0fa3ddf67b742621de63e897b21ffadce8e7d"
+      },
+      "roots": [
+        "TestMonitorProgressJoinedPermanentTransportCauseDoesNotBorrowTimeout"
+      ]
+    },
+    {
+      "expected": "intended behavioral assertion failure; compilation/setup failure is not causal proof",
+      "files": [
+        {
+          "bytes": 12178,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/cancellation-masks-observed-hard-cause/monitor_provider_worker.go",
+          "sha256": "c60a7197c53f23975205a9e7c674b5d7ae2901e00dad4291b3eb43446a08b5ae"
+        },
+        {
+          "bytes": 11973,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/cancellation-masks-observed-hard-cause/monitor_claim_worker.go",
+          "sha256": "68904c2626cfc4727023c145cdfba6fcd07c64ee1bf1392ac6404f968aeb72b8"
+        }
+      ],
+      "name": "cancellation-masks-observed-hard-cause",
+      "overlay": {
+        "bytes": 592,
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/cancellation-masks-observed-hard-cause/overlay.json",
+        "sha256": "d8eba6591a3ed094205eea661c96ab5018d620f2553ad2fea7a4822477eee3ec"
+      },
+      "roots": [
+        "TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation"
+      ]
+    },
+    {
+      "expected": "intended behavioral assertion failure; compilation/setup failure is not causal proof",
+      "files": [
+        {
+          "bytes": 9545,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/close-masks-complete-malformed-reply/monitor_provider.go",
+          "sha256": "623b2817b752238893d10b0413183e7f33cdfa30a59e36ebde61846f5f81ea96"
+        },
+        {
+          "bytes": 7642,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/close-masks-complete-malformed-reply/monitor_claim.go",
+          "sha256": "b5970289bdfd57a8b66d413cc2b88d547ef6e88aadbfa1b0db65ea0f195fe837"
+        }
+      ],
+      "name": "close-masks-complete-malformed-reply",
+      "overlay": {
+        "bytes": 560,
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/controls/close-masks-complete-malformed-reply/overlay.json",
+        "sha256": "672f1a7f9a6ad80c281abec7aaad1d6702a001d5184e15c3cda8367dd389dab7"
+      },
+      "roots": [
+        "TestMonitorProgressCompleteMalformedBodyDominatesCloseOutage"
+      ]
+    }
+  ],
+  "full_source": {
+    "bytes": 5383731,
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/source-readback.json",
+    "sha256": "5d69ad41fc216c71acdf0546324f202dd6b97e2d6fdb6d86b52e2139b33f0722"
+  },
+  "graph": {
+    "basis_go_mod": {
+      "bytes": 11292,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn/go.mod",
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    "basis_go_sum": {
+      "bytes": 66649,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn/go.sum",
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    "modfile": {
+      "bytes": 12039,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/sn.mod",
+      "sha256": "d43e1f7a76002a17b9130c5a4ae765d99980b14b98ccf9578b6e7986c0b5d959"
+    },
+    "note": "Explicit631/9ae/Server5089 graph; tracked source0a module files unchanged. Sol must qualify effective graph, not inherit historical graph receipts.",
+    "peers": [
+      {
+        "go_mod": {
+          "bytes": 11292,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn/go.mod",
+          "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+        },
+        "head": "b18e76dc53948d7fd6e7bf4dab0422db21062d87",
+        "name": "sn",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn",
+        "tree": "d07834913092d6213fd52aefbcbc9b3ef3d08266"
+      },
+      {
+        "go_mod": {
+          "bytes": 10651,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/server/go.mod",
+          "sha256": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8"
+        },
+        "head": "5089a9dde0ca5d60a8dda0493c861de53ed4e0c4",
+        "name": "server",
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/server",
+        "tree": "bb861b9e88b268dfc7b092f66c3330f79f5f3a0c"
+      },
+      {
+        "go_mod": {
+          "bytes": 1752,
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp/go.mod",
+          "sha256": "8413b369e94cf2f76927ef8f5f91794fdd723dd169125b85e1f12d6244d94a0d"
+        },
+        "head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+        "name": "warp",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+        "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+      },
+      {
+        "go_mod": {
+          "bytes": 1972,
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy/go.mod",
+          "sha256": "bd538f2de13d314e5604022082b28bb692702e3b68aa869abf1df2dfeab3a4e1"
+        },
+        "head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+        "name": "proxy",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+        "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+      },
+      {
+        "go_mod": {
+          "bytes": 237,
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard/go.mod",
+          "sha256": "470b20749c9d46b715bce19db1e50618892417a2a4d72b2697efb0e55070f965"
+        },
+        "head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+        "name": "userwireguard",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+        "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+      },
+      {
+        "go_mod": {
+          "bytes": 109,
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog/go.mod",
+          "sha256": "5022a0fd461de289e6e84a4f0930a362613b5bcaaffe090a201e68b6714cb40b"
+        },
+        "head": "892ade4a6be396b32ea82a550f243190b5992180",
+        "name": "glog",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+        "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+      },
+      {
+        "go_mod": {
+          "bytes": 157,
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons/go.mod",
+          "sha256": "67dd6efd0fafd9d54e4bbf953eb07c9526ba55ee0dd4eb3e752ef201f619f28c"
+        },
+        "head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+        "name": "goidenticons",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+        "tree": "553487079352d9544edb62850328305e97668790"
+      },
+      {
+        "go_mod": {
+          "bytes": 6213,
+          "path": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor/go.mod",
+          "sha256": "760a8007bca84c7465d3a82a5ba1aec47df23692f7a4484e9d94926c5817afc4"
+        },
+        "head": "21c2a5da852b7c92bc27573bd09ee8449d0fe605",
+        "name": "gvisor",
+        "path": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+        "tree": "e8600f8aaa2c86a52a59302d632a96a98060aeeb"
+      }
+    ],
+    "sum": {
+      "bytes": 66649,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/sn.sum",
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    }
+  },
+  "neighbors": [
+    "TestMonitorProviderIdentityAndAuthenticationDominateCloseFailure",
+    "TestMonitorProviderCancellationJoinsPartialHttpBody",
+    "TestMonitorProviderBoundsAndRedirectDoNotReachReplacement",
+    "TestMonitorProviderCheckpointReopenCannotAcceptCachedOrLostEvidence",
+    "TestMonitorClaimIdentityAndAuthDominateBodyCloseOutage",
+    "TestMonitorClaimBodyCancellationAndBoundsJoin",
+    "TestMonitorClaimCheckpointReopenFencesLostOrRetargetedHistory",
+    "TestMonitorProviderPublicRolesRecoverWithoutResettingPeer",
+    "TestMonitorClaimPublicOutageAndForeignIdentityPreservePeer",
+    "TestMonitorClaimPublicCompletedCheckpointLossPreservesPeer"
+  ],
+  "new_roots": [
+    "TestMonitorProgressTransientStatusesUseOwnedRetryAfter",
+    "TestMonitorProgressRetryKeepsSingleBudgetBeyondSixtySeconds",
+    "TestMonitorProgressBudgetExhaustionDoesNotInventSample",
+    "TestMonitorProgressRetryCancellationJoinsWithoutNextRequest",
+    "TestMonitorProgressResponseBodiesCloseBeforeRetry",
+    "TestMonitorProgressPermanentResponsesNeverRetry",
+    "TestMonitorProgressEarlyTransportOutageRetainsOwnerBudget",
+    "TestMonitorProgressJoinedPermanentTransportCauseDoesNotBorrowTimeout",
+    "TestMonitorProgressCompleteMalformedBodyDominatesCloseOutage",
+    "TestMonitorProviderPublicRateLimitKeepsPeerCurrent",
+    "TestMonitorClaimPublicRateLimitKeepsPeerCurrent",
+    "TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation"
+  ],
+  "qualification": {
+    "env": {
+      "GOCACHE": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+      "GOFLAGS": "-mod=readonly -modfile=/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/sn.mod",
+      "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+      "GOWORK": "off"
+    },
+    "fixture": "private root/tmp, umask077, floor110GiB/phase111GiB",
+    "normal_and_race": "12new+10neighbors on frozen source",
+    "owner": "Sol",
+    "vet": [
+      "./mainnet"
+    ],
+    "working_directory": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn"
+  },
+  "root_verification": {
+    "clean_head_tree_verified": true,
+    "exact_changed_git_blobs_verified": [
+      "mainnet/monitor_claim.go",
+      "mainnet/monitor_claim_composition_test.go",
+      "mainnet/monitor_claim_worker.go",
+      "mainnet/monitor_progress_retry.go",
+      "mainnet/monitor_progress_retry_public_test.go",
+      "mainnet/monitor_progress_retry_test.go",
+      "mainnet/monitor_provider.go",
+      "mainnet/monitor_provider_test.go",
+      "mainnet/monitor_provider_worker.go"
+    ],
+    "intake_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/evidence/intake.json",
+    "intake_sha256": "2933bf3a18fe3df885d54bc480d8d2ebb9c5720b9bd4d9e7656ce681f7995b01",
+    "limits": "Source intake only; independent behavior and final role/runtime/fee admission remain separate.",
+    "list_file_bindings_rehashed": 9
+  },
+  "scope_limits": [
+    "No Astra test/build/vet execution",
+    "130seconds outage represents accelerated retry clock, not elapsed wall time",
+    "Source fixed300second owner budget; per-attempt client deadline remains5seconds",
+    "Read retry only, no POST/signing changes",
+    "Rolling independently configured epochs and compatible retained policy renewal remain separate WIP",
+    "Shared all-role current composition not inferred",
+    "EVM81de source/gates untouched"
+  ],
+  "selectors": {
+    "neighbors": "^(TestMonitorProviderIdentityAndAuthenticationDominateCloseFailure|TestMonitorProviderCancellationJoinsPartialHttpBody|TestMonitorProviderBoundsAndRedirectDoNotReachReplacement|TestMonitorProviderCheckpointReopenCannotAcceptCachedOrLostEvidence|TestMonitorClaimIdentityAndAuthDominateBodyCloseOutage|TestMonitorClaimBodyCancellationAndBoundsJoin|TestMonitorClaimCheckpointReopenFencesLostOrRetargetedHistory|TestMonitorProviderPublicRolesRecoverWithoutResettingPeer|TestMonitorClaimPublicOutageAndForeignIdentityPreservePeer|TestMonitorClaimPublicCompletedCheckpointLossPreservesPeer)$",
+    "new": "^(TestMonitorProgressTransientStatusesUseOwnedRetryAfter|TestMonitorProgressRetryKeepsSingleBudgetBeyondSixtySeconds|TestMonitorProgressBudgetExhaustionDoesNotInventSample|TestMonitorProgressRetryCancellationJoinsWithoutNextRequest|TestMonitorProgressResponseBodiesCloseBeforeRetry|TestMonitorProgressPermanentResponsesNeverRetry|TestMonitorProgressEarlyTransportOutageRetainsOwnerBudget|TestMonitorProgressJoinedPermanentTransportCauseDoesNotBorrowTimeout|TestMonitorProgressCompleteMalformedBodyDominatesCloseOutage|TestMonitorProviderPublicRateLimitKeepsPeerCurrent|TestMonitorClaimPublicRateLimitKeepsPeerCurrent|TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation)$"
+  },
+  "source": {
+    "head": "a5d2c5b4e4b206356d6d029dd71dc37cad0ac6d6",
+    "parent": "1acc95b68b258036c66180b8f6bf1b5d04dd9529",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-progress-renewal/sn",
+    "tree": "bfb68a21ddfc8536e05175b0fa908efd885e2e12"
+  },
+  "status": "SOURCE_FROZEN_QUALIFICATION_PENDING"
+}

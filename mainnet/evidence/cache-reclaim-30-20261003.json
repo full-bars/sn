@@ -1,0 +1,23 @@
+{
+  "schema": "guarded-cache-reclaim30-v1",
+  "status": "COMPLETE",
+  "source_directory": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-30-20261003",
+  "reclaimed_bytes": 11883319296,
+  "deleted_archives": 1139,
+  "all_removed_paths_rechecked_absent": true,
+  "guards": "Regular single-link >=1MiB compiler archives older than12h, archive magic, strict16GiB budget, process/env/maps/fd/cwd/exe and exact-path reference scan, physical identity before all and each removal. No source, module, evidence or ELF removal.",
+  "bindings": {
+    "reclaim.go": "1aab3615f37c04ffbeb4652553ac2197b2e7f79410fd54c34cb9d825e671c4af",
+    "helper-changes.json": "323b7788e30892596dd194ad15cc8a82a406d0fac564576375f8f3cead7ec2f4",
+    "plan.json": "fd46f3850544c688ae77fe8d41df3c859e9552add5ddfdd107526e5725f218cf",
+    "receipt.json": "bc14a5d66b26dfb1cb029e598be3ad0694d45ecf44f20ccc48abec07f284a963",
+    "reference-command.json": "7bb048f247c355ef6b4a50c00d1f62d006efad989a21eb9022e5abb7dbda4a6b",
+    "reference-scan.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "reference-scan.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reference-scan.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "process-census-plan.json": "88996f9b70a708888f789364b1b36035580203ca6fe3c05e9296b63294e777ec",
+    "process-census-apply.json": "3ce688cde7fec89a4cdbd6d738135705b8e7ab15fa4f0c8c72d713e872167997"
+  },
+  "free_bytes_after": 130318204928,
+  "scope": "Superseded durable-volume Go cache; recipes may retain directory-level provenance. Future jobs must use fresh2x forecast, not this snapshot."
+}

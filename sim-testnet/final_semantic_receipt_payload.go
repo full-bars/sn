@@ -679,7 +679,8 @@ func verifyFinalSemanticClaimPayload(evidence *FinalSemanticEvidence, receipt Fi
 			return errors.New("release ClaimPaymentDeferred TAO equivalent is invalid")
 		}
 		reason, ok := finalSemanticUint(event.Args, "reason")
-		if !ok || reason == 0 || reason > 3 {
+		// The immutable vault enum is zero-based: below minimum, unavailable price, runtime failure.
+		if !ok || reason > 2 {
 			return errors.New("release ClaimPaymentDeferred reason is invalid")
 		}
 	default:

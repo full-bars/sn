@@ -1,0 +1,59 @@
+{
+  "actual_closed_terminal": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+    "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+  },
+  "actual_terminal_readback": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+    "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+  },
+  "first_time_ns": 1791153208380647431,
+  "last_time_ns": 1791162557125564377,
+  "observed_maxima": {
+    "owner_cgroup_memory": 559157248,
+    "owner_cgroup_peak": 570843136,
+    "postgres_memory": 2143956992,
+    "postgres_memory_peak": 2146578432,
+    "redis_memory": 61403136,
+    "redis_memory_peak": 62189568
+  },
+  "observed_minima": {
+    "data": 22920531968,
+    "docker": 301397020672,
+    "memory": 121486737408
+  },
+  "prospective_selected_body_forecast": {
+    "accounting_floor_bytes": 0,
+    "cap_bytes": 115964116992,
+    "data_healthy_floor_bytes": 6307319808,
+    "data_launch_minimum_bytes": 17179869184,
+    "margin": 2,
+    "memory_healthy_floor_bytes": 103079215104,
+    "memory_launch_minimum_bytes": 120259084288,
+    "no_root_rebase": true,
+    "note": "One selected model37 plus exact fresh isolated PG/Redis, no concurrent compiler/short/history.2x4GiB body forecast plus conservatively held2x4GiB former compiler reserve retains16GiB data/112GiB host memory thresholds. Prebuilt fixtures/test2json; DB data stays tmpfs. Owner hard memory8GiB does not enclose Docker cgroups; those are observed independently under96GiB host floor. Not execution authorization.",
+    "original_data_baseline_bytes": 113681502208,
+    "owned_disk_bytes": 4294967296,
+    "owned_memory_bytes": 4294967296,
+    "preserved_extra_reserve_disk_bytes": 4294967296,
+    "preserved_extra_reserve_memory_bytes": 4294967296,
+    "selection": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server4b-model37-selection-source-v1.json",
+      "sha256": "a9c5e8c7f391109af581b2d310b4fe0d8c72c0566ac261f8d356b5df21ad3f31"
+    },
+    "source_tuple": {
+      "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+      "server": "4b917455396419606fcff33cf45a6f362549203e",
+      "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+    }
+  },
+  "resource_errors": [],
+  "resource_samples": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.resources.jsonl",
+    "sha256": "21fde7e0527357cff68d3fe079c083c3334c9e92ca9f750652a3a292f6e8efe0"
+  },
+  "sample_count": 14308,
+  "sampled_temporal_owner_plus_postgres_plus_redis_max_bytes": 2383249408,
+  "schema": "completed-oldmodel-resource-basis-for-server4b-selected37-v1",
+  "scope": "Completed oldc60 full1703 model run with1673PASS19FAIL11allowedSKIP, resource-qualified and owned DB cleanup0. Retained observational support only; test failures unchanged. No later-source peak upper bound or hidden lower bound inferred."
+}

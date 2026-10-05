@@ -1,0 +1,367 @@
+{
+  "artifact_base": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/evidence",
+  "artifacts_sha256": {
+    "baseline-consumers-source.txt": "c904e7b794985bf8a4cfbcf3a54e29d32b1ca7a1e023bb4ca1d202739a380a16",
+    "baseline-consumers.json": "183582e3ddb013491fea62e5a165492b29e7596207a3ab6d5b961580ad66241d",
+    "baseline-consumers.log": "024e372fdcb17e224d1d79912ca2e5f39b1367656cbf162c526ed2eaa923f6eb",
+    "baseline-test.go": "3967929568504564652622a7da74dcce5845195cdce023a535f95959e0b42f5d",
+    "baseline.json": "e3c85051ab1d4d4cc9db7b8287389beb83babcdeb634097ac691bce2da2ab493",
+    "baseline.log": "0421f8e80d2f5f5ffc92304c8adea474597691239621eb3df6c532a1c43d116d",
+    "causal-selection-closure.json": "a47a6a487642f5d364eee88bdb9204718ed5d8bc0f83f6edfb3ac62f19619c0f",
+    "completion-fixed.json": "28da113e4ede538bed32ad712a82d838a93f07a9c65bd806d7cd2b72dc324284",
+    "completion-fixed.log": "9031f79be6395079bf931ce948c5b87265863431d3e422a0a11f3c61aa40ef5c",
+    "dependency-fence.txt": "1bce53af88e9fea42886a56c76dcc0bf53669471455503803bedc176d8582aed",
+    "independent-copy-verification.json": "222eaf94262f1209cd24242699b9de466af58a4f92171d4d0d4c5ebcf4ecd2e7",
+    "independent/readiness-baseline-fence.json": "a41e4e34355f83d2d16ad77ecbdb5fe3d3fb39109c839bd794d7d68b598d06f9",
+    "independent/readiness-baseline.command.json": "65c12c15f5be46db727cdaaa5a20427e2bf226687b6b90e4c9f01fbb67e6bfe9",
+    "independent/readiness-baseline.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "independent/readiness-baseline.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "independent/readiness-baseline.stdout": "98b0edf31331c5f67b7bd67d714fd304e9c37578d7f55b8691da2864bd60b723",
+    "independent/readiness-custody-receipt.json": "eb083cf71318778ac3fcb4973fa4217f9fe134856a03a8904e1eb916e23ce18e",
+    "independent/readiness-normal.command.json": "605696434f5385d5b653b6df7f3e7ec7e7de8ee68e06d8e0cc1d3dc916a5577c",
+    "independent/readiness-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "independent/readiness-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "independent/readiness-normal.stdout": "b7bdd640745a0a904058cf1061c762e707921278e5143335656093ce8e5a94da",
+    "independent/readiness-race.command.json": "6bc84bb9cbf66c0daa300a12b4690132b4b1758a2aedf611566d7f2dab5a49b4",
+    "independent/readiness-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "independent/readiness-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "independent/readiness-race.stdout": "4c8f9c09ff21a2df42127beb713a2ee674041553d9cba59cd863f202e3097b3d",
+    "independent/readiness-vet.command.json": "bf0f227bcba2da9b34d77d59e23bfb55cde8206ee132fca4bc2336c6e70b2c4f",
+    "independent/readiness-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "independent/readiness-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "independent/readiness-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "initial-fixed.json": "bd3e14aa8a7c967c75e23385f1a394d654a2b73cd2acf55c7da95811b6ec024e",
+    "initial-fixed.log": "bc94d1360a7cb17ce3c81c631e2771b41b3eec6ee8fba5ffd06604d15b2fed37",
+    "initial-fixed.patch": "018baf1605a318bc38bcd7a842f0fb996e93b8d35164b824bf4723fb7f1bb828",
+    "modules.json": "e1e67540e377862a6d67d25b0f39ef8023dea17965d101d0c53db9f165a5d2ef",
+    "normal-roots.json": "1518e4aba05600738db538d03e215824564bc3bbc4c87527525db41136f70751",
+    "normal-selection-closure.json": "e5e5cc049a4d88617d457839c0b4da7ecd2af165b50d517901f1e40ea02c6cd3",
+    "normal.json": "00e4ea2591cfac8f253e93cacf668df56ac9fe174e5558a21ad05810758d9ef8",
+    "normal.log": "17fa116e262747897efdd9bcf860d1d51484ff08d5548980a0d85c98674ef70e",
+    "qualification-source-fence.json": "128684220eae2f794fc56e8fac2f0445a903f635544399e5c681569a89b01932",
+    "race-roots.json": "32c987e89a6bb1f42ec1e086c9450dce5372ede116b44a61b5c6a4c1e4bf82ba",
+    "race-selection-closure.json": "1b1d6eb805f2b22384ea3d90ff8f3dc6ef2abd279d283c105d071de8c732cf15",
+    "race-source.txt": "0abadb17ead6c65971c0c770a05699a3f0b637e705e49c9b7574692309efad04",
+    "race.json": "a13360dfd13023b140344b93f064ae7b53b9fb69005817d096a07e4b3d13605d",
+    "race.log": "992d96bf291bd42b0aa88d954d87fc5f75cc8ab912f321ba9461de494b6901c7",
+    "running-job.json": "ad1ed6243ea081e7d97d9e7bf7443870a40e1ea693c6c7fb4a35354451f1de93",
+    "security-roots.json": "a9af1c0bb41fde9eb76346c439c2327c85965cb784b038194b064d8a1df92fe3",
+    "security.regex": "7feb578b80b926033e53948c8509791f032558a3ce8b7811ea43f3c6f483b4c0",
+    "source-frozen.patch": "c7f05ffbe8cc2368bf768e806165f12b67c7d013afff635707c453f1356625ca",
+    "toolchain.txt": "058fc41f36af1ff69115b2bd237ebf769e90628e64a58c9dc171751384ffef72",
+    "validator-last-boundary-omission.patch": "739c52b9782e6d295e8b44ef761373fdf1b7ce337f9563b658e1f16e49f09a73",
+    "validator-omission-source.txt": "5fd5f1c8ef78e9ff5d288100bfe600228cb7928808cbfc853a9aa70fdd1f7328",
+    "validator-omission.json": "ff7c0ee82bd1176703e6ea61ecdb1b420c2e32621beb06c68639c7e8ff434ce0",
+    "validator-omission.log": "21dc7a469b82c09587ff0332cf928ea3ebc7a76a0ffb0193dbfd8490b6a9c141",
+    "vet-source.txt": "0abadb17ead6c65971c0c770a05699a3f0b637e705e49c9b7574692309efad04",
+    "vet.json": "7f97d26ac4852d821d5f51c35c8ed0d383df1b687b3ed55f000caf57c0b681c9",
+    "vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "author": {
+    "normal": {
+      "command": [
+        "go",
+        "test",
+        "-v",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement|TestBootstrapReadinessRejectsDeletedCompletedJournalDuringRead|TestRootPassiveHostRejectsBorrowedCustodyBeforeStart|TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss|TestBootstrapReceiptsRejectLostPreparationMarker|TestBootstrapInstallationRejectsLostPreparationMarker|TestBootstrapSuccessorRejectsLostPreparationBeforeSend|TestBootstrapReadinessIncompletePreparationRemainsRecoverable|TestBootstrapReadinessRetainsSignedIntentAcrossIntegrityFailure|TestOwnerTrimRejectsLostBorrowedCustodyAfterPublication|TestValidatorCurrentRejectsBorrowedCustodyAfterFinalManagerRead|TestBootstrapChainReadinessCommandPreservesCustodyAndNoAuthority|TestBootstrapChainReadinessRejectsStaleRoleGenerations|TestBootstrapChainReadinessReportsActivityPermitAndSubnetConflict|TestBootstrapChainReadinessRejectsFutureSignedWindows|TestBootstrapChainReadinessRejectsConflictingRootCheckpoint|TestBootstrapChainReadinessReorgNeverPublishesPartialEligibility|TestBootstrapChainReadinessUnavailableRuntimeAndRouteRemainUnresolved|TestBootstrapChainReadinessMissingStateNeverRepairsCustody|TestBootstrapChainReadinessConflictingOwnerDoesNotLeakLocks|TestBootstrapChainReadinessRestartRequiresOriginalApproval|TestRootPassiveHostInstallsStartsAndRecovers|TestRootPassiveHostPreservesUncertainStartAcrossReopen|TestRootPassiveHostPartialInstallationRecoversExactFile|TestRootPassiveHostRefusesConflictingPartialInstallation|TestRootPassiveHostRejectsManagerOmissionAndSandboxChange|TestRootPassiveHostPublicationFailureConsumesWithoutStarting|TestRootPassiveHostPostSyncExpiryConsumesWithoutStarting|TestRootPassiveHostRejectsChangedOriginalAuthority|TestRootPassiveHostRejectsWritableAuthorityAndCheckpointLinks|TestRootPassiveHostRequiresFreshRuntimeAndExactInvocation|TestRootPassiveHostRejectsUnapprovedEnvelopeAndStartFlags|TestBootstrapRootPassiveReadinessUsesCurrentSupportedProfile|TestBootstrapRootPassiveComposesAndResumesBothRoles|TestBootstrapRootPassiveCannotConvertLegacySchemas|TestOwnerTrimStorePreservesOriginalV3CustodyAndCannotRebind|TestBootstrapSuccessorPreparationCommandRetainsActualV3Prefix|TestBootstrapSuccessorSafeReviewCommandReconstructsPreparedV3Custody|TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody|TestBootstrapSuccessorCanonicalCommandExecutesAndRecovers|TestBootstrapSuccessorSafeCurrentPublicCommandPreservesExactSend|TestValidatorActivationCurrentStartsBothExactUnitsOnce|TestValidatorActivationCurrentPublicOptInDoesNotTrustReports|TestBootstrapContractReceiptAdmissionCommandRetainsHistory)$",
+        "-count=1",
+        "-timeout=40m"
+      ],
+      "elapsed_seconds": 746.3823170661926,
+      "exit_code": 0,
+      "package_result": "ok  \tgithub.com/urfoundation/sn/mainnet\t725.650s",
+      "root_results": {
+        "TestBootstrapChainReadinessCommandPreservesCustodyAndNoAuthority": "pass",
+        "TestBootstrapChainReadinessConflictingOwnerDoesNotLeakLocks": "pass",
+        "TestBootstrapChainReadinessMissingStateNeverRepairsCustody": "pass",
+        "TestBootstrapChainReadinessRejectsConflictingRootCheckpoint": "pass",
+        "TestBootstrapChainReadinessRejectsFutureSignedWindows": "pass",
+        "TestBootstrapChainReadinessRejectsStaleRoleGenerations": "pass",
+        "TestBootstrapChainReadinessReorgNeverPublishesPartialEligibility": "pass",
+        "TestBootstrapChainReadinessReportsActivityPermitAndSubnetConflict": "pass",
+        "TestBootstrapChainReadinessRestartRequiresOriginalApproval": "pass",
+        "TestBootstrapChainReadinessUnavailableRuntimeAndRouteRemainUnresolved": "pass",
+        "TestBootstrapContractReceiptAdmissionCommandRetainsHistory": "pass",
+        "TestBootstrapInstallationRejectsLostPreparationMarker": "pass",
+        "TestBootstrapReadinessIncompletePreparationRemainsRecoverable": "pass",
+        "TestBootstrapReadinessRejectsDeletedCompletedJournalDuringRead": "pass",
+        "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement": "pass",
+        "TestBootstrapReadinessRetainsSignedIntentAcrossIntegrityFailure": "pass",
+        "TestBootstrapReceiptsRejectLostPreparationMarker": "pass",
+        "TestBootstrapRootPassiveCannotConvertLegacySchemas": "pass",
+        "TestBootstrapRootPassiveComposesAndResumesBothRoles": "pass",
+        "TestBootstrapRootPassiveReadinessUsesCurrentSupportedProfile": "pass",
+        "TestBootstrapSuccessorCanonicalCommandExecutesAndRecovers": "pass",
+        "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody": "pass",
+        "TestBootstrapSuccessorPreparationCommandRetainsActualV3Prefix": "pass",
+        "TestBootstrapSuccessorRejectsLostPreparationBeforeSend": "pass",
+        "TestBootstrapSuccessorSafeCurrentPublicCommandPreservesExactSend": "pass",
+        "TestBootstrapSuccessorSafeReviewCommandReconstructsPreparedV3Custody": "pass",
+        "TestOwnerTrimRejectsLostBorrowedCustodyAfterPublication": "pass",
+        "TestOwnerTrimStorePreservesOriginalV3CustodyAndCannotRebind": "pass",
+        "TestRootPassiveHostInstallsStartsAndRecovers": "pass",
+        "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss": "pass",
+        "TestRootPassiveHostPartialInstallationRecoversExactFile": "pass",
+        "TestRootPassiveHostPostSyncExpiryConsumesWithoutStarting": "pass",
+        "TestRootPassiveHostPreservesUncertainStartAcrossReopen": "pass",
+        "TestRootPassiveHostPublicationFailureConsumesWithoutStarting": "pass",
+        "TestRootPassiveHostRefusesConflictingPartialInstallation": "pass",
+        "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart": "pass",
+        "TestRootPassiveHostRejectsChangedOriginalAuthority": "pass",
+        "TestRootPassiveHostRejectsManagerOmissionAndSandboxChange": "pass",
+        "TestRootPassiveHostRejectsUnapprovedEnvelopeAndStartFlags": "pass",
+        "TestRootPassiveHostRejectsWritableAuthorityAndCheckpointLinks": "pass",
+        "TestRootPassiveHostRequiresFreshRuntimeAndExactInvocation": "pass",
+        "TestValidatorActivationCurrentPublicOptInDoesNotTrustReports": "pass",
+        "TestValidatorActivationCurrentStartsBothExactUnitsOnce": "pass",
+        "TestValidatorCurrentRejectsBorrowedCustodyAfterFinalManagerRead": "pass"
+      },
+      "selected_roots": 44,
+      "source": "3d1e2ecfadf75e33341830a86b6e1871b050840a"
+    },
+    "race": {
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "-v",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement|TestBootstrapReadinessRejectsDeletedCompletedJournalDuringRead|TestRootPassiveHostRejectsBorrowedCustodyBeforeStart|TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss|TestBootstrapReceiptsRejectLostPreparationMarker|TestBootstrapInstallationRejectsLostPreparationMarker|TestBootstrapSuccessorRejectsLostPreparationBeforeSend|TestBootstrapReadinessIncompletePreparationRemainsRecoverable|TestBootstrapReadinessRetainsSignedIntentAcrossIntegrityFailure|TestOwnerTrimRejectsLostBorrowedCustodyAfterPublication|TestValidatorCurrentRejectsBorrowedCustodyAfterFinalManagerRead|TestRootPassiveHostInstallsStartsAndRecovers|TestValidatorActivationCurrentStartsBothExactUnitsOnce|TestBootstrapChainReadinessCommandPreservesCustodyAndNoAuthority)$",
+        "-count=1",
+        "-timeout=45m"
+      ],
+      "elapsed_seconds": 1514.605307817459,
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "gocache": "/mnt/data/sn-testnet/gocache",
+      "gomodcache": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/module-cache",
+      "package_result": "ok  \tgithub.com/urfoundation/sn/mainnet\t1354.234s",
+      "root_results": {
+        "TestBootstrapChainReadinessCommandPreservesCustodyAndNoAuthority": "pass",
+        "TestBootstrapInstallationRejectsLostPreparationMarker": "pass",
+        "TestBootstrapReadinessIncompletePreparationRemainsRecoverable": "pass",
+        "TestBootstrapReadinessRejectsDeletedCompletedJournalDuringRead": "pass",
+        "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement": "pass",
+        "TestBootstrapReadinessRetainsSignedIntentAcrossIntegrityFailure": "pass",
+        "TestBootstrapReceiptsRejectLostPreparationMarker": "pass",
+        "TestBootstrapSuccessorRejectsLostPreparationBeforeSend": "pass",
+        "TestOwnerTrimRejectsLostBorrowedCustodyAfterPublication": "pass",
+        "TestRootPassiveHostInstallsStartsAndRecovers": "pass",
+        "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss": "pass",
+        "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart": "pass",
+        "TestValidatorActivationCurrentStartsBothExactUnitsOnce": "pass",
+        "TestValidatorCurrentRejectsBorrowedCustodyAfterFinalManagerRead": "pass"
+      },
+      "source": "3d1e2ecfadf75e33341830a86b6e1871b050840a",
+      "tmpdir": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/tmp"
+    },
+    "vet": {
+      "command": [
+        "go",
+        "vet",
+        "./mainnet"
+      ],
+      "elapsed_seconds": 20.088876724243164,
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "gocache": "/mnt/data/sn-testnet/gocache",
+      "gomodcache": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/module-cache",
+      "source": "3d1e2ecfadf75e33341830a86b6e1871b050840a",
+      "tmpdir": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/tmp"
+    }
+  },
+  "baseline_source_commit": "1d580d5e60e569c346cf2aaba2f7cf12eed8c032",
+  "causal_controls": {
+    "baseline": {
+      "command_receipt": {
+        "command": [
+          "go",
+          "test",
+          "-v",
+          "./mainnet",
+          "-run",
+          "^(TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement|TestBootstrapReadinessRejectsDeletedCompletedJournalDuringRead|TestRootPassiveHostRejectsBorrowedCustodyBeforeStart)$",
+          "-count=1",
+          "-timeout=20m"
+        ],
+        "elapsed_seconds": 86.66481971740723,
+        "exit_code": 1,
+        "source": "1d580d5e60e569c346cf2aaba2f7cf12eed8c032"
+      },
+      "exit_code": 1,
+      "failed_roots": [
+        "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement",
+        "TestBootstrapReadinessRejectsDeletedCompletedJournalDuringRead",
+        "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart"
+      ],
+      "package_result": "FAIL\tgithub.com/urfoundation/sn/mainnet\t30.615s"
+    },
+    "baseline-consumers": {
+      "command_receipt": {
+        "command": [
+          "go",
+          "test",
+          "-v",
+          "./mainnet",
+          "-run",
+          "^(TestBootstrapReceiptsRejectLostPreparationMarker|TestBootstrapInstallationRejectsLostPreparationMarker|TestBootstrapSuccessorRejectsLostPreparationBeforeSend|TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss)$",
+          "-count=1",
+          "-timeout=25m"
+        ],
+        "elapsed_seconds": 227.18825507164001,
+        "exit_code": 1,
+        "expected_exit_code": 1,
+        "gocache": "/mnt/data/sn-testnet/gocache",
+        "gomodcache": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/module-cache",
+        "source": "1d580d5e60e569c346cf2aaba2f7cf12eed8c032",
+        "tmpdir": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/tmp"
+      },
+      "exit_code": 1,
+      "failed_roots": [
+        "TestBootstrapReceiptsRejectLostPreparationMarker",
+        "TestBootstrapInstallationRejectsLostPreparationMarker",
+        "TestBootstrapSuccessorRejectsLostPreparationBeforeSend",
+        "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss"
+      ],
+      "package_result": "FAIL\tgithub.com/urfoundation/sn/mainnet\t155.864s"
+    },
+    "validator-omission": {
+      "command_receipt": {
+        "command": [
+          "go",
+          "test",
+          "-v",
+          "./mainnet",
+          "-run",
+          "^TestValidatorCurrentRejectsBorrowedCustodyAfterFinalManagerRead$",
+          "-count=1",
+          "-timeout=10m"
+        ],
+        "elapsed_seconds": 39.38115167617798,
+        "exit_code": 1,
+        "expected_exit_code": 1,
+        "gocache": "/mnt/data/sn-testnet/gocache",
+        "gomodcache": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/module-cache",
+        "source": "3d1e2ecfadf75e33341830a86b6e1871b050840a",
+        "tmpdir": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/tmp"
+      },
+      "exit_code": 1,
+      "failed_roots": [
+        "TestValidatorCurrentRejectsBorrowedCustodyAfterFinalManagerRead"
+      ],
+      "package_result": "FAIL\tgithub.com/urfoundation/sn/mainnet\t5.164s",
+      "synthetic_starts": [
+        1,
+        0
+      ]
+    }
+  },
+  "documentation_base_commit": "0a8f0afb",
+  "independent": {
+    "receipt": {
+      "baseline_fence_sha256": "sha256:a41e4e34355f83d2d16ad77ecbdb5fe3d3fb39109c839bd794d7d68b598d06f9",
+      "baseline_source_commit": "1d580d5e60e569c346cf2aaba2f7cf12eed8c032",
+      "causal_baseline": {
+        "exit": 1,
+        "root_results": {
+          "TestBootstrapInstallationRejectsLostPreparationMarker": "fail",
+          "TestBootstrapReadinessRejectsDeletedCompletedJournalDuringRead": "fail",
+          "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement": "fail",
+          "TestBootstrapReceiptsRejectLostPreparationMarker": "fail",
+          "TestBootstrapSuccessorRejectsLostPreparationBeforeSend": "fail",
+          "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss": "fail",
+          "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart": "fail"
+        },
+        "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "sha256:98b0edf31331c5f67b7bd67d714fd304e9c37578d7f55b8691da2864bd60b723"
+      },
+      "dependency_commits": {
+        "glog": "892ade4a6be396b32ea82a550f243190b5992180",
+        "goidenticons": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+        "proxy": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+        "server": "ac86855df7f63a1d85a1c57a70298f9c7f9ced4d",
+        "userwireguard": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+        "warp": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+      },
+      "fixed_source_commit": "3d1e2ecfadf75e33341830a86b6e1871b050840a",
+      "limitations": [
+        "Author broader adjacent trim/validator/bootstrap regression suite and any later release composition are separate.",
+        "No live chain, signing, publication or deployment performed."
+      ],
+      "normal": {
+        "exit": 0,
+        "root_results": {
+          "TestBootstrapInstallationRejectsLostPreparationMarker": "pass",
+          "TestBootstrapReadinessIncompletePreparationRemainsRecoverable": "pass",
+          "TestBootstrapReadinessRejectsDeletedCompletedJournalDuringRead": "pass",
+          "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement": "pass",
+          "TestBootstrapReadinessRetainsSignedIntentAcrossIntegrityFailure": "pass",
+          "TestBootstrapReceiptsRejectLostPreparationMarker": "pass",
+          "TestBootstrapSuccessorRejectsLostPreparationBeforeSend": "pass",
+          "TestOwnerTrimRejectsLostBorrowedCustodyAfterPublication": "pass",
+          "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss": "pass",
+          "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart": "pass",
+          "TestValidatorCurrentRejectsBorrowedCustodyAfterFinalManagerRead": "pass"
+        },
+        "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "sha256:b7bdd640745a0a904058cf1061c762e707921278e5143335656093ce8e5a94da"
+      },
+      "race": {
+        "exit": 0,
+        "root_results": {
+          "TestBootstrapInstallationRejectsLostPreparationMarker": "pass",
+          "TestBootstrapReadinessIncompletePreparationRemainsRecoverable": "pass",
+          "TestBootstrapReadinessRejectsDeletedCompletedJournalDuringRead": "pass",
+          "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement": "pass",
+          "TestBootstrapReadinessRetainsSignedIntentAcrossIntegrityFailure": "pass",
+          "TestBootstrapReceiptsRejectLostPreparationMarker": "pass",
+          "TestBootstrapSuccessorRejectsLostPreparationBeforeSend": "pass",
+          "TestOwnerTrimRejectsLostBorrowedCustodyAfterPublication": "pass",
+          "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss": "pass",
+          "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart": "pass",
+          "TestValidatorCurrentRejectsBorrowedCustodyAfterFinalManagerRead": "pass"
+        },
+        "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "sha256:4c8f9c09ff21a2df42127beb713a2ee674041553d9cba59cd863f202e3097b3d"
+      },
+      "schema": "sol-independent-mainnet-readiness-custody-v1",
+      "scope": "Eleven new roots fixed under normal and race, explicit vet, and seven old-implementation roots failing with only new test files copied onto exact 1d580d5e.",
+      "verdict": "PASS_SCOPED",
+      "verified_at_utc": "2026-10-02T00:02:43.991444+00:00",
+      "vet": {
+        "exit": 0,
+        "root_results": {},
+        "stderr_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "receipt_sha256": "eb083cf71318778ac3fcb4973fa4217f9fe134856a03a8904e1eb916e23ce18e"
+  },
+  "schema": "mainnet-bootstrap-readiness-custody-qualification-v1",
+  "scope_limits": [
+    "Eleven new security/lifecycle roots plus the exact separately listed adjacent author roots; no whole-package test claim.",
+    "Deferred legacy root/trim exclusive writers need P0 custody qualification before wiring fresh native signing or sends.",
+    "No live signing, transactions, deployment, service start, release artifact qualification, or launch acceptance."
+  ],
+  "source_commit": "3d1e2ecfadf75e33341830a86b6e1871b050840a",
+  "source_fence": {
+    "clean": true,
+    "dependency_commits": {
+      "glog": "892ade4a6be396b32ea82a550f243190b5992180",
+      "goidenticons": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "proxy": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "server": "ac86855df7f63a1d85a1c57a70298f9c7f9ced4d",
+      "userwireguard": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "warp": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+    },
+    "qualification_finished_utc": "2026-10-02T00:13:17.714040+00:00",
+    "source_commit": "3d1e2ecfadf75e33341830a86b6e1871b050840a",
+    "source_patch_sha256": "c7f05ffbe8cc2368bf768e806165f12b67c7d013afff635707c453f1356625ca",
+    "toolchain": "go version go1.26.6 linux/amd64",
+    "working_tree": "/mnt/data/sn-testnet/bootstrap-readiness-custody-20261001/sn"
+  },
+  "verdict": "PASS_SCOPED"
+}

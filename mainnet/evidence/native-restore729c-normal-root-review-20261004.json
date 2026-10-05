@@ -1,0 +1,85 @@
+{
+  "schema": "native-restore729c-normal-root-review-v1",
+  "status": "NORMAL_BODY_11_PASS_14_FAIL",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-actual_dual_engine_12.receipt.json",
+      "bytes": 7979,
+      "sha256": "20ebeee1e35c358cae0304a897a1710b0b6d42a60763e342ea9462086ea60d85"
+    },
+    {
+      "bytes": 13909,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-actual_dual_engine_12-body.stdout",
+      "sha256": "7ae62d6892605c893109f4aeddaf7fdff9963a8eb5be0031b96ddf468742f9a3"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-actual_dual_engine_12-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 6773,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-actual_dual_engine_12-body.resources.csv",
+      "sha256": "32449c8f3a47932cc10ebd6df0ada7c02e9bd609a1314cbb31b3ac629c50b7c0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-ordinary_12.receipt.json",
+      "bytes": 7927,
+      "sha256": "bb28749d7c1cccbb9a863ce0d440b30839d5d836d4463cd62e12dfcd29d52614"
+    },
+    {
+      "bytes": 11018,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-ordinary_12-body.stdout",
+      "sha256": "9ccb31d58fc1b21c3bf816cd4833e22873a00258d34699950a7b0a812e54d661"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-ordinary_12-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1852,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-ordinary_12-body.resources.csv",
+      "sha256": "cdf1dfd5074a0a4c2c1a15bb25e26732625a1fd35b8bf88a1ae838fcf07b8cb2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-long_129_review_1.receipt.json",
+      "bytes": 3124,
+      "sha256": "6e4c37ca70f6775533c6f86cace1f7b4fb4c956079cbb6ac656f8c649c3416a5"
+    },
+    {
+      "bytes": 1425,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-long_129_review_1-body.stdout",
+      "sha256": "a1d73c1e4022c0c0a069b452148c6650e2fb353d9aa5fd22d13947be72a3ef21"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-long_129_review_1-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 220,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-long_129_review_1-body.resources.csv",
+      "sha256": "867f7cb658f801ac213a5efa350745e2e950c72937bd9693ad9725a41453331b"
+    }
+  ],
+  "actual_root_census": {
+    "run": 25,
+    "pass_": 11,
+    "fail": 14,
+    "skip": 0
+  },
+  "failure_excerpts": {
+    "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob": "economic_native_producer_restore_test.go:242: fixed owner public plan failed: 2 storage preparation: durable volume identity is lost",
+    "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot": "economic_native_producer_restore_test.go:269: fixed owner public plan failed: 2 storage preparation: durable volume identity is lost",
+    "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted": "economic_native_producer_restore_test.go:284: fixed owner public plan failed: 2 storage preparation: durable volume identity is lost",
+    "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval": "economic_native_producer_restore_test.go:307: fixed owner public plan failed: 2 storage preparation: durable volume identity is lost",
+    "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects": "economic_native_producer_restore_test.go:351: fixed owner public plan failed: 2 storage preparation: durable volume identity is lost",
+    "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody": "economic_native_producer_restore_test.go:389: fixed owner public plan failed: 2 storage preparation: durable volume identity is lost",
+    "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint": "economic_native_producer_restore_test.go:411: fixed owner public plan failed: 2 storage preparation: durable volume identity is lost",
+    "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress": "economic_native_producer_restore_test.go:443: fixed owner public plan failed: 2 storage preparation: durable volume identity is lost",
+    "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput": "economic_native_producer_restore_test.go:464: fixed owner public plan failed: 2 storage preparation: durable volume identity is lost"
+  },
+  "review": "Independently reproduce exact root events from all three raw normal partitions and rehash stdout/stderr/resource CSV receipts. All 25 roots reached bodies; fourteen fail storage preparation, not timeout. Race/vet continue separately without restart. Successful bodies retained; no full restore qualification.",
+  "whole_mainnet_complete": false
+}

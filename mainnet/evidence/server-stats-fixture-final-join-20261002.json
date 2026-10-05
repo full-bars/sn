@@ -1,0 +1,29 @@
+{
+  "schema": "server-statistics-fixture-integration-join-v1",
+  "head": "047a266496709e9410cba3b7f08cd3c2703bf207",
+  "tree": "92f7251d3f6d5e7da448ba91ec21fecb79106034",
+  "upstream": "b3ba233f616a10e8c74921eb930648bc464ee15e",
+  "qualified_ancestor": "0739cab5b74f5d0defcfd17c9194277842dfc521",
+  "independent_receipt_sha256": "2adc095af94c4abf6081b6a7157daf52540c633c21d358619abd994288cad38b",
+  "unchanged_sha256": {
+    "model/contract_stats_model_test.go": "3d7f660cb79b8ed171913cb8c6058c927efe86926f733d99f170408ccaf6e8ca",
+    "model/contract_stats_model.go": "06b4d731b8e35be47ddcf18f05a7bd45454a7264b3979d41916d7b511d02bc60",
+    "model/contract_stats_bounded.go": "2e83e6b0218a941ec6848c38f991fb930ae093a4f22beac20c9b5bf006d94080",
+    "db_contract_usage_guard.go": "f17c5f5322873eacba06c60164dff9ef230d7381e3b39214416fe9c105cdfba0",
+    "model/contract_usage.go": "5e4b95d646773cae7d2dccdb75800a4b37b3fe93a8020a5891b2c5b97136bd4c",
+    "go.mod": "a50c18b8e1ca83b8c9c0919a398261d4256a351da48e31f8435c49e97b00570b",
+    "go.sum": "6be07e61f4935b0f5f9d9f32eebe41424f0b81eb24d6ade6f50d2c9fe6de366b"
+  },
+  "prior_escrow_function_and_schema_prefix_unchanged": true,
+  "prior_migration_sequence_bytes_unchanged": true,
+  "new_migration": "netEscrowAdmissionSnapshotSchemaSql: new transfer_balance_net_escrow_snapshot table; no changed immutable-usage or transfer_contract trigger",
+  "delta_from_upstream": [
+    "model/contract_stats_model_test.go"
+  ],
+  "clean": true,
+  "limits": [
+    "No tests repeated on this join; scoped normal8/race8/vet receipt remains exact0739",
+    "New reservation cache and other upstream changes require their own qualification",
+    "No whole-model, release, remote restore or live deployment claim"
+  ]
+}

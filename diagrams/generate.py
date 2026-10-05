@@ -160,7 +160,7 @@ card(1560,454,300,188,EVAL,"Yuma  +  θ split",
 
 # Top-level miner UIDs — the HEAD channel (bottom-right, wide, cyan accent)
 card(1300,662,560,210,HEAD,"Top-level miner UIDs   (~200)",
-     ["the top ~200 providers — each claims its OWN miner UID: the canonical",
+     ["the top ~200 fleets — each claims its OWN miner UID: the canonical",
       "Bittensor treatment, MORE trust-minimized than the pool (no operator in path).",
       "NATIVE emission straight to the provider's own hotkey each tempo —",
       "no contract custody · no Merkle claim · no NO take, not shared.",
@@ -209,7 +209,7 @@ Lx=cX+pad; Rx=cX+pad+iw+gut
 # L-top: deposit ledger
 box(Lx,iy,iw,ih1,10,DEP[1],DEP[0],1.5,sh=False)
 T(Lx+12,iy+24,"Deposits  (conviction stake)",13.5,"bold",DEP[2])
-TL(Lx+12,iy+46,["NO deposit -> Deposited event + full","amount into the reserve. NO DT ledger:",
+TL(Lx+12,iy+46,["NO deposit -> Deposit event + full","amount into the reserve. NO DT ledger:",
                 "the contract weighs nothing (D25).","validators read deposits from events."],11.5,"normal",INK,lh=17)
 T(Lx+12,iy+ih1-12,"cumulative locked α sets the NO's rate tier",10.5,"italic",DEP[2])
 # R-top: miner-pool UIDs (TAIL)
@@ -220,7 +220,7 @@ TL(Rx+12,iy+46,["contract-owned accrual slots — no","emission ever touches a N
 # emphasize formula
 S.append(f'<rect x="{Rx+10}" y="{iy+ih1-40}" width="{iw-20}" height="26" rx="5" fill="white" stroke="{EMI[0]}" stroke-width="1.2"/>')
 T(Rx+18,iy+ih1-22,"implied_usage x Qn",12,"bold",EMI[2],family=MONO)
-T(Rx+iw-14,iy+ih1-22,"impl = dep / tier-rate",10.5,"italic",SUB,anchor="end")
+T(Rx+iw-14,iy+ih1-22,"impl = audited usage x base rate",10.5,"italic",SUB,anchor="end")
 # L-bot: merkle roots
 iy2=iy+ih1+gut
 box(Lx,iy2,iw,ih2,10,SET[1],SET[0],1.5,sh=False)
@@ -291,7 +291,7 @@ pill(1580,932,["a top provider's own coldkey","paid directly — no NO middleman
 
 # 13) provider lifecycle: pool -> graduate to top slot -> fall back
 curve(516,1058,910,1206,1150,1010,1322,858,HEAD[0],2.4,dash="2 7")
-pill(936,1196,["a provider starts in a pool, GRADUATES to a top slot, and FALLS BACK if quality slips"],11,HEAD[2],HEAD[0],weight="bold")
+pill(936,1196,["a provider starts in a pool, GRADUATES to a top slot, and FALLS BACK if its routable-IP breadth slips"],11,HEAD[2],HEAD[0],weight="bold")
 
 # key-insight callout (bottom banner)
 kb_x,kb_y,kb_w,kb_h=470,1212,960,66

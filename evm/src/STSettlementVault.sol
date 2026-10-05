@@ -440,12 +440,9 @@ contract STSettlementVault {
         return (true, Math.mulDiv(alphaRao, price, 1 ether));
     }
 
-    // A claim must remain accepted when the fixed runtime precompile reverts,
-    // so the guarded function restores its exact pre-call ledger in the catch
-    // branch. This deliberate compensation is safe because every mutating
-    // public entry point is nonReentrant; an explicit hostile-precompile test
-    // pins that invariant.
-    // slither-disable-next-line reentrancy-no-eth
+    // The self-call encloses both the runtime transfer and its delta checks.
+    // Reverting a Solidity try success arm would also erase the accepted claim;
+    // reverting this nested frame instead restores only the attempted payment.
     function _settleClaimCredit(bytes32 coldkey, bool deferOnFailure, address relayer)
         internal
         returns (bool paid)
@@ -468,41 +465,49 @@ contract STSettlementVault {
             return false;
         }
 
-        uint256 escrowBefore = _liveEscrowStake();
-        uint256 destinationBefore =
-            IStaking(ISTAKING_ADDRESS).getStake(escrowHotkey, coldkey, uint256(netuid));
-
-        uint256 liabilityBefore = outstandingLiability;
-        uint256 accountedBefore = escrowAccounted;
-        uint256 paidBefore = totalPaid;
-        claimCredit[coldkey] = 0;
-        outstandingLiability -= credit;
-        escrowAccounted -= credit;
-        totalPaid += credit;
-
-        try IStaking(ISTAKING_ADDRESS)
-            .transferStake(coldkey, escrowHotkey, uint256(netuid), uint256(netuid), credit) {
-            uint256 escrowAfter = _liveEscrowStake();
-            uint256 destinationAfter =
-                IStaking(ISTAKING_ADDRESS).getStake(escrowHotkey, coldkey, uint256(netuid));
-            if (
-                escrowAfter > escrowBefore || escrowBefore - escrowAfter != credit
-                    || destinationAfter < destinationBefore || destinationAfter - destinationBefore != credit
-            ) revert RuntimeAccountingMismatch();
-
+        try this.transferClaimCredit(coldkey) {
             emit ClaimPaid(coldkey, credit, relayer);
             return true;
-        } catch {
-            if (!deferOnFailure) revert RuntimeTransferFailed();
-            claimCredit[coldkey] = credit;
-            outstandingLiability = liabilityBefore;
-            escrowAccounted = accountedBefore;
-            totalPaid = paidBefore;
+        } catch (bytes memory failure) {
+            if (!deferOnFailure) {
+                assembly ("memory-safe") {
+                    revert(add(failure, 32), mload(failure))
+                }
+            }
             emit ClaimPaymentDeferred(
                 coldkey, credit, taoEquivalentRao, minimumTransferTaoRao, PaymentDeferralReason.RuntimeFailure
             );
             return false;
         }
+    }
+
+    /// @dev Atomic payment frame, reachable only by this vault while a claim
+    /// or withdrawal holds its reentrancy guard. Runtime state and payment
+    /// accounting revert together on any failed call or non-exact delta.
+    /// This is not an independently callable withdrawal or custody capability.
+    function transferClaimCredit(bytes32 coldkey) external {
+        if (msg.sender != address(this) || _entered == 0) revert Unauthorized();
+        uint256 credit = claimCredit[coldkey];
+        uint256 escrowBefore = _liveEscrowStake();
+        uint256 destinationBefore =
+            IStaking(ISTAKING_ADDRESS).getStake(escrowHotkey, coldkey, uint256(netuid));
+
+        claimCredit[coldkey] = 0;
+        outstandingLiability -= credit;
+        escrowAccounted -= credit;
+        totalPaid += credit;
+        try IStaking(ISTAKING_ADDRESS)
+            .transferStake(coldkey, escrowHotkey, uint256(netuid), uint256(netuid), credit) {}
+        catch {
+            revert RuntimeTransferFailed();
+        }
+
+        uint256 escrowAfter = _liveEscrowStake();
+        uint256 destinationAfter = IStaking(ISTAKING_ADDRESS).getStake(escrowHotkey, coldkey, uint256(netuid));
+        if (
+            escrowAfter > escrowBefore || escrowBefore - escrowAfter != credit
+                || destinationAfter < destinationBefore || destinationAfter - destinationBefore != credit
+        ) revert RuntimeAccountingMismatch();
     }
 
     function _requireBacking() internal view {

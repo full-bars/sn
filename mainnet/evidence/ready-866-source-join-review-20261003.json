@@ -1,0 +1,44 @@
+{
+  "schema": "root-ready-866-source-join-review-v1",
+  "author_receipt": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-source-join.json",
+  "author_receipt_sha256": "d5487b7c69b2916c7d2847d4ffbd06f1c84dfa53413e52d8b59e922efed4459e",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/prepare-ready-866-native-3bc-graphs.go",
+      "bytes": 4082,
+      "sha256": "1a03adad30ed29ffede332a18e04fab3dc67759e1ab51df42624e860a33b9f0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-peer-graph.json",
+      "bytes": 2915,
+      "sha256": "6e36c89aad29fb4c8646e525b913a395ab1f6bcb43332c6eca2ecff86157661a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-server-source-manifest.json",
+      "bytes": 1573196,
+      "sha256": "4c10e6b7d2da7bb182c296b0ca7a2a8906f43dba326554e7cdaa367ad71ab8be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-sn-source-manifest.json",
+      "bytes": 6212596,
+      "sha256": "ab4f8458bc96bf1ea6327006303732976fe985d9af6eba47c6254e80515a1fbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-ready-866-source.go",
+      "bytes": 6973,
+      "sha256": "7c51d2d3abe744094de0b08c12fcf17ef9701bca7998af39370afbe2ffb6caec"
+    }
+  ],
+  "physical_blob_counts": {
+    "server": 5439,
+    "sn": 20453
+  },
+  "physical_git_modes_and_hashes_verified": true,
+  "merge_parents_and_bases_verified": true,
+  "module_files_exact_b18": true,
+  "limits": [
+    "Source-only frozen866 join;finalsuccessor8a/latestdocsremainseparate",
+    "No newbehavior,buildreproducibility,hostadoption orliveactivationclaim",
+    "Historicalreplay/nativearchive/nativefeewitness excludedfrom866"
+  ]
+}

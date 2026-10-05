@@ -1,0 +1,128 @@
+{
+  "schema": "ab48-required-rust-export-operational-root-adoption-v1",
+  "status": "ADOPTED_EXECUTION_PENDING",
+  "bindings": [
+    {
+      "bytes": 11461,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/run-required-rust-exports-v1.py",
+      "sha256": "c512484e25e68db63c06be3542460ee8dfc7d358a62ccbd06781269f4798bc2a"
+    },
+    {
+      "bytes": 6951496,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/source-full-readback-v1.json",
+      "sha256": "070512ffcb58a95b4c3171e30803b586cdfa50fc93fc8d71debdee39e5dee5ab"
+    },
+    {
+      "bytes": 6764,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-required-rust-crate-stage-v1.json",
+      "sha256": "a24cd81384da116d0818254c5c83ed37dadac94760a3dc3779e3a89043f6c1e6"
+    },
+    {
+      "bytes": 2980,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-required-rust-exports-resource-proposal-v1.json",
+      "sha256": "bf364d37a91351387675dbb0543314c7c530225bc79968c684123f8342ac269c"
+    },
+    {
+      "bytes": 7573,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/entitlement-coordinator-tuple-fixture/evidence/required-rust-exports-v1.json",
+      "sha256": "6b0c896d338e98e222faebb4bf07552b294f1a665121a3686b6f0ca9e3e10a7b"
+    },
+    {
+      "bytes": 9478,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/entitlement-coordinator-tuple-fixture/evidence/required-rust-exports-source-v1.json",
+      "sha256": "86fc508f9e45fd32bc80e8c990e6005a933b24853db887f89b27faaed4515762"
+    },
+    {
+      "bytes": 12531,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/entitlement-coordinator-tuple-fixture/evidence/required-rust-exports-controls-v1.json",
+      "sha256": "f7120fb696d87c11423736747669cb0e3a5a2f5f6c6ee681441a1dc8595a9407"
+    },
+    {
+      "bytes": 20536,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-rust-only-v3.py",
+      "sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472"
+    },
+    {
+      "bytes": 58569,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    },
+    {
+      "bytes": 23340,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "bytes": 39124328,
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "5b32bd53b8a08d8e206daed51f3fce40cdc0729038ff96bd0ca845596a2c1019"
+    },
+    {
+      "bytes": 654128,
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "c6ac0142c05a60b0f6c15e1a118bd5ac3bd04924cd6dc0c328f501c5f86e4142"
+    },
+    {
+      "bytes": 6081,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3.terminal.json",
+      "sha256": "e0d887bda45caabb2ab41d53d1afa6db2811b70cc4b42d51032a6c224aa4ccb1"
+    },
+    {
+      "bytes": 3996,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-libtest-build.resources.csv",
+      "sha256": "11fcc7943c10e3d89dfccd0b522052b69a85d76ea84ebc5d68ca80197ab6554b"
+    },
+    {
+      "bytes": 3143,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-bins-build.resources.csv",
+      "sha256": "56da489ba97eca2376706889cfdebd2094bc849d57e375c15891d20ac0abd83a"
+    }
+  ],
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/required-rust-exports-job-v1.json",
+    "sha256": "4ffc280a4c2c3640be8bdecbd496dbf8fbd902e4111dc51eecb7aefa08eb05bb"
+  },
+  "adoption": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/required-rust-exports-adoption-v1.json",
+    "sha256": "bc4f585bac2e80654eb94444c7458122c0bb8f9ce25d8f62f0b41293f96602b1"
+  },
+  "admission": {
+    "phase": "root-reviewed-before-adoption",
+    "available_bytes": 60435832832,
+    "memory_available_bytes": 120957153280,
+    "free_inodes": 93352613,
+    "data_threshold_bytes": 57846927360,
+    "memory_threshold_bytes": 113816633344,
+    "baseline_bytes": 113681502208,
+    "cumulative_cap_bytes": 68719476736,
+    "data_forecast_bytes": 6442450944,
+    "memory_forecast_bytes": 4294967296,
+    "retained_old_long_body_bytes": 1073741824,
+    "lease_pid": 620836,
+    "lease_starttime": "94830154",
+    "lock_inode": 16941991,
+    "forecast_note": "two-times reservation; samples are not a measured upper bound"
+  },
+  "scope": {
+    "causal_controls": 5,
+    "fresh_libtest_images_maximum": 6,
+    "no_go_or_server_compiler_overlap": true,
+    "positive_outputs": 14,
+    "positive_roots": 4,
+    "prior_rust_engines_reuse_only_after_closure": true,
+    "serial": true
+  },
+  "review": [
+    "Exact four original SDK exporters, fourteen output members and per-root liveness bounds are preserved.",
+    "Complete33-file crate remains byte-identical to frozen source; Cargo package-only clean, locked offline fresh libtest and fresh-artifact classifier preserve unrelated warm dependencies.",
+    "Inherited owned-process supervisor bounds logs, samples resource usage and joins descendants on every completion/refusal path; protected ELF is retained and rechecked for each root.",
+    "The imported runner uses an8MiB total stdout/stderr bound, stricter than the recipe64MiB ceiling; no larger output or population timing is assumed.",
+    "Every independent root runs after a passing compile even if a prior root fails; outputs use0700 directories and exact0600 original files, with finite file ceilings.",
+    "Only the positive compiler/four exporters are admitted here; five causal controls still need separate exact images and executions."
+  ],
+  "limits": [
+    "No compiler or test body was started by this review.",
+    "Sampled historical maxima inform forecasts but are not measured upper bounds or actual populated workload sizing.",
+    "Successful exporters will be prerequisites for the full41-root funding scope, not substitutes for its qualification."
+  ]
+}

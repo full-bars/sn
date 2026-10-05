@@ -31,7 +31,7 @@ func TestFleetRenewalRevisionPreservesApprovedRoundsAndChargesOnce(t *testing.T)
 			t.Fatal("revision changed exact approved round or successor generation")
 		}
 		for _, action := range prior.Actions {
-			if isFleetRenewalAction(action) || fleetLifecycleRenewalFutureAction(action.ID) {
+			if isFleetRenewalAction(action) || isFleetRenewalExtensionAction(action) || fleetLifecycleRenewalFutureAction(action.ID) {
 				if !finalJSONEqual(action, actionByID(t, revised, action.ID)) {
 					t.Fatalf("revision rewrote approved action %s", action.ID)
 				}
@@ -62,6 +62,76 @@ func TestFleetRenewalRevisionPreservesApprovedRoundsAndChargesOnce(t *testing.T)
 	}
 	if len(revised.FleetRenewals) != 1 || !finalJSONEqual(revised.FleetLifecycleRenewal, prior.FleetLifecycleRenewal) || !finalJSONEqual(actionByID(t, revised, "fleet.renew.1.5.bind.1"), actionByID(t, prior, "fleet.renew.1.5.bind.1")) {
 		t.Fatal("full revision omitted the approved renewal carry")
+	}
+}
+
+func TestFleetRenewalRevisionRestoresCompletedHistoricalActions(t *testing.T) {
+	fixture := newFleetRenewalTestFixture(t)
+	approved, err := appendFleetRenewalPlan(fixture.base, fixture.renewal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The live completion record keeps the signed renewal and receipts, while
+	// executable actions are deliberately omitted from the compact successor
+	// input. A later recovery must rebuild only those deterministic actions.
+	historical := *approved
+	historical.Actions = make([]Action, 0, len(approved.Actions))
+	for index, action := range approved.Actions {
+		// Leave a valid subset behind to cover the real compacted-history
+		// shape: recovery must restore missing primary and extension actions,
+		// while retaining and authenticating those still present.
+		if !isFleetRenewalAction(action) && !isFleetRenewalExtensionAction(action) || index%3 == 0 {
+			historical.Actions = append(historical.Actions, action)
+		}
+	}
+	tampered := historical
+	tampered.Actions = append([]Action(nil), historical.Actions...)
+	for index := range tampered.Actions {
+		if isFleetRenewalAction(tampered.Actions[index]) {
+			tampered.Actions[index].Target = "0x0000000000000000000000000000000000000001"
+			break
+		}
+	}
+	if _, err := restoreFleetRenewalActions(&tampered); err == nil {
+		t.Fatal("compacted history accepted a tampered retained renewal action")
+	}
+	roles, err := derivePublicRoles(fixture.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	revised, err := buildPlan(fixture.cfg, testSetupFacts(), roles, time.Unix(2, 0))
+	if err != nil {
+		t.Fatal(err)
+	}
+	revised.PriorPlanHashes = append(append([]string(nil), historical.PriorPlanHashes...), historical.PlanHash)
+	if err := carryFleetRenewalRevision(revised, &historical); err != nil {
+		t.Fatalf("restore completed historical renewal: %v", err)
+	}
+	for _, action := range approved.Actions {
+		if isFleetRenewalAction(action) || isFleetRenewalExtensionAction(action) {
+			if !finalJSONEqual(action, actionByID(t, revised, action.ID)) {
+				t.Fatalf("restored action %s differs from its signed deterministic generation", action.ID)
+			}
+		}
+	}
+}
+
+func TestFleetRenewalRevisionKeepsExtensionBackedLiabilityOutOfCampaignReserve(t *testing.T) {
+	fixture := newFleetRenewalTestFixture(t)
+	approved, err := appendFleetRenewalPlan(fixture.base, fixture.renewal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reserve := actionByID(t, approved, "campaign.evm-gas-reserve").Spend.EVMGasWei
+	approved.FleetRenewals[len(approved.FleetRenewals)-1].AllowanceExtensionWei = "1"
+	approved.FleetRenewals[len(approved.FleetRenewals)-1].CampaignReserveBeforeWei = reserve
+	approved.FleetRenewals[len(approved.FleetRenewals)-1].CampaignLiabilityWei = reserve + "1"
+	if err := validateFleetRenewalReservedLiability(approved); err != nil {
+		t.Fatalf("extension-backed renewal charged its campaign reserve twice: %v", err)
+	}
+	approved.FleetRenewals[len(approved.FleetRenewals)-1].AllowanceExtensionWei = ""
+	if err := validateFleetRenewalReservedLiability(approved); err == nil {
+		t.Fatal("unfunded renewal liability bypassed the campaign reserve")
 	}
 }
 

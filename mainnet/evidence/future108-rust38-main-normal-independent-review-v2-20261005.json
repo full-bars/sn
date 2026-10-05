@@ -1,0 +1,44 @@
+{
+  "author_review": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-author-review-v2.json",
+    "sha256": "a88d4a5ee531f50221fc4a6f6ee8c68cc21b7562e14b9c5b4e611302d7e02b0f"
+  },
+  "canonical_lease_unit": {
+    "expected_properties": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "1050376633119",
+      "InvocationID": "b71e5474e5274fc3bc60009f2ddbb418",
+      "MainPID": "3404159",
+      "RuntimeMaxUSec": "8h"
+    },
+    "expiry_monotonic_us": 1079176633119,
+    "name": "sn-canonical-host-lease-108-successor-v2-20261005.service"
+  },
+  "checks": {
+    "actual_successor_root_readback_bound": true,
+    "all_bindings_rehashed": 192,
+    "all_predecessor_waits_replayed_joined": 47,
+    "phases_images_limits_unchanged": true
+  },
+  "delta": "Job-only fresh label/unit/export directory and exact actual successor generation plus7 mainmetadata and7 compiler waits. Original38 roots,29 exports, source/image applicability, normal101 collection, hard limits and healthy floors unchanged.",
+  "execution": "No compiler, body, Go, Rust, list, systemd, Docker or lock action by reviewer.",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-job-v2.json",
+    "sha256": "56a61312b19d1e7618da105cf129dc401218ec073c48e11d6f138cbb5e9553ab"
+  },
+  "lease_binding": {
+    "path": "/mnt/data/sn-testnet/sol-canonical-lease-successor-108-20261005/holder-receipt-v1.json",
+    "sha256": "341abbba247d67733fa026b3cde1086790a00d09f108a3d1775c2fb091644b54"
+  },
+  "prior_source_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-rust38-main-normal-independent-review-20261005.json",
+    "sha256": "9f356fcb3d25b979bc71d74d35f333d0332204d5b75cfadebb646cc9f8ee4bf3"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-rust38-main-normal-adoption-v2-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-rust38-main-normal-v1.py",
+    "sha256": "0f5b09c2d4a5e6d5f564fd77f6bd170eeecb3661cdb3d479ab5feb169d7ff949"
+  },
+  "schema": "rust38-main-normal-successor-independent-review-v2",
+  "status": "READY_FOR_ROOT_ADOPTION"
+}

@@ -95,7 +95,7 @@ func (self *ProofStore) reconcileDiskAttemptProofs(ctx context.Context, ledger *
 			self.projectionFault = resultErr
 		}
 	}()
-	directory, err := openAttemptLedgerDirectory(filepath.Dir(self.path), self.projectionStep)
+	directory, err := openAttemptLedgerDirectory(filepath.Dir(self.path), self.projectionStep, ctx)
 	if err != nil {
 		return err
 	}

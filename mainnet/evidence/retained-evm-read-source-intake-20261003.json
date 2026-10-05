@@ -1,0 +1,182 @@
+{
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/retained-5a0-compile-jobs.json": {
+      "bytes": 1173,
+      "sha256": "77368f81d5cb3a39568aa74b583558a7257e39c7a46eb6d07a03f6e20b972edb"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/retained-5a0-compile.json": {
+      "bytes": 1081,
+      "sha256": "2d6926388c2f43aa841d7cd27cc08dfff583e7be118e511124de8623e7be96c3"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/retained-5a0-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/retained-5a0-preflight.json": {
+      "bytes": 955,
+      "sha256": "a18106eae93c1ae4746ed0e0e01e5d3843a15bf36339ac54429b76f858bdba59"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/retained-5a0-preflight.jsonl": {
+      "bytes": 3645593,
+      "sha256": "5c4e58d503c7aca1106643c253cf52a41b72b16e17664cb9633ad4a4c30b1863"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-retained-5a0-intake.go": {
+      "bytes": 5275,
+      "sha256": "b65c4a4036e536f5be8235eb02e5eeea44bb09a1c27e96db5b2119eb7dc28647"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/qualify-scoped.go": {
+      "bytes": 3425,
+      "sha256": "1a7b115440ecd7ce543810e9a08a751f4e2c1bb213ee2439b8a9e55455753e26"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn/go.mod": {
+      "bytes": 11252,
+      "sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn/go.sum": {
+      "bytes": 65954,
+      "sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn/mainnet/bootstrap_successor_canonical.go": {
+      "bytes": 12773,
+      "sha256": "34455ca46e166715cb54eef09aa3579fd28824d657467efc25480e7811c14ef7"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn/mainnet/bootstrap_successor_canonical_command_test.go": {
+      "bytes": 17980,
+      "sha256": "30180530b9ca9251af1e22f09400eae092559686609a3da81a9cbe11b4e0c345"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn/mainnet/evidence/retained-evm-read-unavailability-20261003.md": {
+      "bytes": 2260,
+      "sha256": "754c6c763f21af48975b15e0e93925090f1ebbee664227f62d622b19124065b5"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn/mainnet/evm_action.go": {
+      "bytes": 26266,
+      "sha256": "05ae5970c2c5206d9ffee6c1b4f1412f37a19c3cb785742e64fda7d75a403e34"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn/mainnet/evm_action_rpc.go": {
+      "bytes": 27443,
+      "sha256": "bae15e73548a898ef7add4fc93e3858f5fb6e1e6fc0039a2b31c1a36785bed24"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn/mainnet/evm_retained_read_test.go": {
+      "bytes": 11422,
+      "sha256": "9d9025f253e902e716e99082c454e63537566edc6dbdf69d8cb13baf25141517"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn/mainnet/identity.go": {
+      "bytes": 18145,
+      "sha256": "3d257c53deefedf960e2d48d46bc178a4ca47e349858ca6ad83b7b9724eadb0b"
+    }
+  },
+  "causal": {
+    "base": "abb2e808fa5c706fdc61012832b7c4f0cba94aae",
+    "expected": "Original retained receipt null refuses immediately as disappeared, without bounded observation retry; canonical wrapper mislabels unavailable history. Record actual assertions per root. Existing nullable-profile root remains a positive.",
+    "overlay": [
+      "mainnet/evm_retained_read_test.go"
+    ],
+    "roots": [
+      "TestEvmRetainedReadRecoversAfterLogicalMinute",
+      "TestEvmRetainedReadExhaustionPreservesOriginalCustody",
+      "TestEvmRetainedReadCancellationKeepsOtherOwnerUsable",
+      "TestBootstrapSuccessorCanonicalHistoricalReadUnavailable"
+    ]
+  },
+  "dependencies": {
+    "connect": {
+      "commit": "9fb897f8d880ab813dd61dc02fa187e3d85f13a5",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/connect",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect",
+      "tree": "a3500ca8e57b70c78951fe91871d6bdc7a93f7c7"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/glog",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/goidenticons",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/proxy",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/server",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/userwireguard",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/warp",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "invariants": [
+    "Retained receipt or authenticated block/index expectation alone selects null retry; pending ninth hash/receipt absence remains nullable.",
+    "Original signed read budget60\u2013900s and request identities/response limits are unchanged. Synthetic newly signed fixture selects300s, deterministic wait seam accounts82.5s before valid response and300s exhaustion without sleeps.",
+    "Unavailable/canceled history cannot authorize another send, nonce, signature, journal change or peer cancellation. Returned malformed/hash/status/nonce contradictions remain hard integrity refusals."
+  ],
+  "limits": "No behavioral claim from compile. Exact historical Connect9fb/Serverc256 graph; not latest published graph, final release, actual outer-head approval consumers or capacity revisions. abb2 fixture correction and all failed b35/bdf receipts remain separate.",
+  "root_verification": {
+    "all_changed_git_blobs_verified": 7,
+    "bindings_rehashed": 17,
+    "clean_commit_tree_verified": true,
+    "production_diff_review": "Expected retained receipt/position null retries separately; nullable pending lookup unchanged; historical read errors propagate without false canonical-difference wrapper. Returned receipt/position contradictions classified integrity. Behavioral scopes pending.",
+    "receipt_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/retained-5a0-intake.json",
+    "receipt_sha256": "cb17545f2627d7bd7c8af754e6ae68cd3af47448fe81437ade292a650299e0c9"
+  },
+  "schema": "urnetwork-author-source-handoff-v1",
+  "scope": {
+    "expectedPass": 9,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "package": "./mainnet",
+    "roots": [
+      "TestEvmRetainedReadRecoversAfterLogicalMinute",
+      "TestEvmRetainedReadExhaustionPreservesOriginalCustody",
+      "TestEvmRetainedReadCancellationKeepsOtherOwnerUsable",
+      "TestEvmRetainedReadRejectsReturnedConflicts",
+      "TestBootstrapSuccessorCanonicalHistoricalReadUnavailable",
+      "TestBootstrapSuccessorCanonicalAdapterBoundaries",
+      "TestEvmReadProfileAbsenceIsReceiptOnly",
+      "TestEvmReadProfileBoundsEveryReply",
+      "TestRpcReadRetryRetainsTransportTimeoutCause"
+    ],
+    "vet": true
+  },
+  "source": {
+    "changedPaths": [
+      "mainnet/bootstrap_successor_canonical.go",
+      "mainnet/bootstrap_successor_canonical_command_test.go",
+      "mainnet/evidence/retained-evm-read-unavailability-20261003.md",
+      "mainnet/evm_action.go",
+      "mainnet/evm_action_rpc.go",
+      "mainnet/evm_retained_read_test.go",
+      "mainnet/identity.go"
+    ],
+    "commit": "5a0a8f666faa0a55b05efceac20173a29144af4e",
+    "parent": "abb2e808fa5c706fdc61012832b7c4f0cba94aae",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/sn",
+    "tree": "5ab8488261ba9b0eb343e61878027bd48167abf2"
+  },
+  "status": "SOURCE_PREFLIGHT_COMPILE_ONLY_BEHAVIOR_PENDING",
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/retained-evm-read/go.work"
+}

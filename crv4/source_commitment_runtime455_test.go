@@ -86,14 +86,14 @@ func TestSourceCommitmentRuntime455RejectsCrossVersionSignatureReuse(t *testing.
 	}
 }
 
-// Neither source encoding nor actual call construction admits future specs
-// or transaction versions merely because the layout might still look alike.
+// Offline encoding rejects unsupported schema/signing versions. A syntactically
+// valid future spec still needs independent live block/capability admission.
 func TestSourceCommitmentRuntime455RejectsUnreviewedVersionDomains(t *testing.T) {
 	for _, version := range []struct {
 		spec        uint32
 		transaction uint32
 	}{
-		{spec: 0, transaction: 1}, {spec: 453, transaction: 1}, {spec: 456, transaction: 1},
+		{spec: 0, transaction: 1},
 		{spec: 454, transaction: 0}, {spec: 454, transaction: 2}, {spec: 455, transaction: 0}, {spec: 455, transaction: 2},
 	} {
 		prepared := sourceRuntime455PreparedTest(t, 455, nil)

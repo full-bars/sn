@@ -1,0 +1,349 @@
+{
+  "base_source": "69f4bbdd68f3ba933fc0e6b8994708664689acbc",
+  "files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-normal.command.json": {
+      "bytes": 783,
+      "sha256": "8eba3c2910293345a9934196549a17ab0ded0b3c3b40b53ec2c20f5ee94bd49e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-normal.jsonl": {
+      "bytes": 3736,
+      "sha256": "503d1dad275ced66afcdc819b4ea808a4ac21a19bedeb1ddff717a0548593e5e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-normal.result.json": {
+      "bytes": 149,
+      "sha256": "63537f1ebc23119cfae7f6359fed06699a143f2a10a589d0568112f677d3ac8d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-race.command.json": {
+      "bytes": 796,
+      "sha256": "66dd48e461fab7adf6a75e0845fd7e6c389a3b1540f38005a1c9f193c3d9ee98"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-race.jsonl": {
+      "bytes": 3733,
+      "sha256": "432772eb4fd1f9495f3d14b5c4bfdae21983c642da39d0a09c86a5a7506aae8f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-race.result.json": {
+      "bytes": 150,
+      "sha256": "77b06538f0f78319b6530a1eff2e556949c1a15daed326be7b9bd6b630200d94"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-002-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-monitor_durable_owner_test.go": {
+      "bytes": 6841,
+      "sha256": "87854f16deda3ebc18c67ec76ff86b3c3936e1f226e73fe5f5717150bc47aa65"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-overlay.json": {
+      "bytes": 747,
+      "sha256": "abf6d68b61d9652c22ea82c40cbe8391836dcd16b41380e2a0416ddefd311712"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-root_action_test.go": {
+      "bytes": 30711,
+      "sha256": "c06b68eae1fe53f04d9ba312dd233577cd4b01f6143d902cc687404b4bb838b3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/before-root_offline_custody_test.go": {
+      "bytes": 26108,
+      "sha256": "30fde5680b9368f391b3eacb37075b585f5f8a783a52c7bc3d6d6cea03100402"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-normal.command.json": {
+      "bytes": 925,
+      "sha256": "79bc8c976c6ef36433d77bd62b675c9493b35870fc1cfb646c71d5296e06421c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-normal.jsonl": {
+      "bytes": 6342,
+      "sha256": "285336838ada2e9668bdf38c4d97182c7d0df915ce96046b9ead9bffa2507557"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-normal.result.json": {
+      "bytes": 150,
+      "sha256": "e60153a90df0bc889190b330cadcb961a881dd287798def45bfe86b1990b86f9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-race.command.json": {
+      "bytes": 938,
+      "sha256": "4cbeb888154abf4c447647bf749d8091a1d20f5df802e07b0165b4166aea8b68"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-race.jsonl": {
+      "bytes": 6345,
+      "sha256": "1958047663fb6bad4d96794cde2bce90fb6e8181fc2e6def40d2f4fbb727958c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-race.result.json": {
+      "bytes": 149,
+      "sha256": "3c1760e2acc14cd6df43caf4fa806ef6fc10b6c21f07ebc9cabc8af8675b0984"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-002-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-normal.command.json": {
+      "bytes": 925,
+      "sha256": "95de40ef5ab1ad67af96bbf7a0c87a0a30ae430ee027cf5f9a696b20c6c6d337"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-normal.jsonl": {
+      "bytes": 6340,
+      "sha256": "5a223cb1e1114e02c4f4ea2e1d9ad8b16c14b455150476f73f7f398b967bb810"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-normal.result.json": {
+      "bytes": 150,
+      "sha256": "6190373240df51ff6d99dd60adc8c5862b981aa5dba668cfeb5229022774144e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-race.command.json": {
+      "bytes": 938,
+      "sha256": "68379f06c2b1281c56513427d15e0bcbe3b039443ecd4b985ec87854fb8d54b0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-race.jsonl": {
+      "bytes": 6341,
+      "sha256": "a7d9cc1ada84bc3e50bb1624e8edd8ed2cb7000bb4217b60f6ba2acbfdd5defb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-race.result.json": {
+      "bytes": 148,
+      "sha256": "b6eb31aeb21eb90a849acea94b89180d1969f02469ea2ca9f4cc9fda500a142e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/fixed-077-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/sn.mod": {
+      "bytes": 11710,
+      "sha256": "bde77443e47c991465da5eb9c802f7a7decff9527d3e09fbd05f0bb7f2d0a2f6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence-2/sn.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/before-002-normal.command.json": {
+      "bytes": 781,
+      "sha256": "eb351cf52d69c93159fb94203861d7ed530f458a8973bd5cfe2708186f3e2246"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/before-002-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/before-002-normal.jsonl": {
+      "bytes": 2989,
+      "sha256": "e9a688fba92ccaee2d2713cf82d6b99dd612f53e00114a5b2f92a0a8b39c4038"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/before-002-normal.result.json": {
+      "bytes": 149,
+      "sha256": "7a14e1cdded4f39ba571e5779df6dc7ea4260af57a561bf33f3fd231065a41ce"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/before-002-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/before-monitor_durable_owner_test.go": {
+      "bytes": 6698,
+      "sha256": "272cbf9fa78d4c2112709c723606280c0f8627fd8958bc1dade1878d1b18a9cc"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/before-overlay.json": {
+      "bytes": 741,
+      "sha256": "6d8904bfad598991a033d8f6258d2a3177abc00eb27a13ca5137b255a6ee2bc5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/before-root_action_test.go": {
+      "bytes": 30551,
+      "sha256": "fb7d6d95c7955179b0a9fe4b320b810e02f0e4c8d97f882499fddeb42bbea1bc"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/before-root_offline_custody_test.go": {
+      "bytes": 25948,
+      "sha256": "e0b4e9445e38b44f401e008f7e4100c8be26e24fc73760d1554312abb1a2e1f5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/sn.mod": {
+      "bytes": 11710,
+      "sha256": "bde77443e47c991465da5eb9c802f7a7decff9527d3e09fbd05f0bb7f2d0a2f6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/evidence/sn.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/prepare-resume.go": {
+      "bytes": 2094,
+      "sha256": "0117e8ef3e9ebc2e187fe9f2e9d41b4b3b074b2d84bf67f83c8ffe45223c2a56"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/qualify-v2.go": {
+      "bytes": 6483,
+      "sha256": "7c4187ef7a21a41a7479091c0d26207dd0c2ba0ba6248f60804069c11e45e2ec"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/qualify.go": {
+      "bytes": 5458,
+      "sha256": "594ca6f8e81d506e742eb425d7206252a5d0ffbd14e14e4a620d71e33c8ff6c7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/seal.go": {
+      "bytes": 4472,
+      "sha256": "acd23f68a09acbfb943022eb9f2fb1f75a89d713c438792b24502272f7c43220"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/sn/mainnet/durable_private_fixture_test.go": {
+      "bytes": 577,
+      "sha256": "136937562f313f2ea0f0bf93913ac781b39d87a4188aa7c35b69189d16f25574"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/sn/mainnet/monitor_durable_census_test.go": {
+      "bytes": 1306,
+      "sha256": "7aa76de84e636167378fb48cb9f326f11bae35dd6c4ce10d7105a3513e591347"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/sn/mainnet/monitor_durable_owner_test.go": {
+      "bytes": 6737,
+      "sha256": "c5d27c69565a8af22e41847bf6af5c48cdfbe5d4c7975911aca330b0defd4c35"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/sn/mainnet/monitor_storage_recovery_test.go": {
+      "bytes": 19628,
+      "sha256": "386bea77cb3552c02b7918669a728be1efac70a00598000335129bf080b24913"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/sn/mainnet/root_action_test.go": {
+      "bytes": 30564,
+      "sha256": "5f8a37b84414039cd66d61a72d861406623f643db3eff84e2e9ca439e0229344"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/sn/mainnet/root_monitor_output_test.go": {
+      "bytes": 15218,
+      "sha256": "377ba9953663242b58674a400cbd87a0d7d1bed2215d907e4efc9c7f7348f038"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/private-root-fixtures/sn/mainnet/root_offline_custody_test.go": {
+      "bytes": 25961,
+      "sha256": "e1c15dbc1433d54dd9163fa09979aca10da81a48ccefef2fdf62ee4258decd38"
+    }
+  },
+  "limits": [
+    "Seven selected retained-custody fixture roots pass normal/race under actual child umask002 and077; no full mainnet suite claim.",
+    "Two old69 fixture bodies plus test-only owned-parent mode logging fail at actual0775 ancestry with ErrIdentity under002 in both modes. Production ancestry admission is unchanged.",
+    "Initial runner stopped after its expected product setup failures because its own causal text assertion expected unprotected/path wording instead of the opaque typed identity text. Original evidence/qualify.go remain retained; corrected runner records per-test actual parent mode and refusal.",
+    "Only newly owned numbered t.TempDir children are chmod0700; external parents are never relaxed or changed.",
+    "No independent rerun, full package qualification, deployment or runtime policy change."
+  ],
+  "phases": {
+    "before-002-normal": {
+      "effective_child_umask": "0002",
+      "exit": 1,
+      "fail": [
+        "TestMonitorDurableReplacementRecoveryIsPerRoot",
+        "TestRootOfflineCustodyActionRecovery"
+      ],
+      "identity_refusals": {
+        "TestMonitorDurableReplacementRecoveryIsPerRoot": true,
+        "TestRootOfflineCustodyActionRecovery": true
+      },
+      "owned_0775_causes": {
+        "TestMonitorDurableReplacementRecoveryIsPerRoot": true,
+        "TestRootOfflineCustodyActionRecovery": true
+      },
+      "pass": []
+    },
+    "before-002-race": {
+      "effective_child_umask": "0002",
+      "exit": 1,
+      "fail": [
+        "TestMonitorDurableReplacementRecoveryIsPerRoot",
+        "TestRootOfflineCustodyActionRecovery"
+      ],
+      "identity_refusals": {
+        "TestMonitorDurableReplacementRecoveryIsPerRoot": true,
+        "TestRootOfflineCustodyActionRecovery": true
+      },
+      "owned_0775_causes": {
+        "TestMonitorDurableReplacementRecoveryIsPerRoot": true,
+        "TestRootOfflineCustodyActionRecovery": true
+      },
+      "pass": []
+    },
+    "fixed-002-normal": {
+      "effective_child_umask": "0002",
+      "exit": 0,
+      "fail": [],
+      "identity_refusals": {},
+      "owned_0775_causes": {},
+      "pass": [
+        "TestMonitorDurableCensusRefusesLostCompletedCheckpoint",
+        "TestMonitorDurableReserveRecoveryRetainsSameOwner",
+        "TestMonitorDurableReplacementRecoveryIsPerRoot",
+        "TestMonitorStorageLostMemberCannotBecomeFreshThroughWrappedAbsence",
+        "TestMonitorStorageChainLostAckReopensOriginalCheckpoint",
+        "TestMonitorStorageChainReserveRetainsOwner",
+        "TestRootOfflineCustodyActionRecovery"
+      ]
+    },
+    "fixed-002-race": {
+      "effective_child_umask": "0002",
+      "exit": 0,
+      "fail": [],
+      "identity_refusals": {},
+      "owned_0775_causes": {},
+      "pass": [
+        "TestMonitorDurableCensusRefusesLostCompletedCheckpoint",
+        "TestMonitorDurableReserveRecoveryRetainsSameOwner",
+        "TestMonitorDurableReplacementRecoveryIsPerRoot",
+        "TestMonitorStorageLostMemberCannotBecomeFreshThroughWrappedAbsence",
+        "TestMonitorStorageChainLostAckReopensOriginalCheckpoint",
+        "TestMonitorStorageChainReserveRetainsOwner",
+        "TestRootOfflineCustodyActionRecovery"
+      ]
+    },
+    "fixed-077-normal": {
+      "effective_child_umask": "0077",
+      "exit": 0,
+      "fail": [],
+      "identity_refusals": {},
+      "owned_0775_causes": {},
+      "pass": [
+        "TestMonitorDurableCensusRefusesLostCompletedCheckpoint",
+        "TestMonitorDurableReserveRecoveryRetainsSameOwner",
+        "TestMonitorDurableReplacementRecoveryIsPerRoot",
+        "TestMonitorStorageLostMemberCannotBecomeFreshThroughWrappedAbsence",
+        "TestMonitorStorageChainLostAckReopensOriginalCheckpoint",
+        "TestMonitorStorageChainReserveRetainsOwner",
+        "TestRootOfflineCustodyActionRecovery"
+      ]
+    },
+    "fixed-077-race": {
+      "effective_child_umask": "0077",
+      "exit": 0,
+      "fail": [],
+      "identity_refusals": {},
+      "owned_0775_causes": {},
+      "pass": [
+        "TestMonitorDurableCensusRefusesLostCompletedCheckpoint",
+        "TestMonitorDurableReserveRecoveryRetainsSameOwner",
+        "TestMonitorDurableReplacementRecoveryIsPerRoot",
+        "TestMonitorStorageLostMemberCannotBecomeFreshThroughWrappedAbsence",
+        "TestMonitorStorageChainLostAckReopensOriginalCheckpoint",
+        "TestMonitorStorageChainReserveRetainsOwner",
+        "TestRootOfflineCustodyActionRecovery"
+      ]
+    }
+  },
+  "production_files_changed": 0,
+  "schema": "urnetwork-private-durable-fixture-qualification-v1",
+  "source": "28c970db29ede27b1b1177f5f04b49c62ff4ed1d",
+  "tree": "9eb0b87ab79c3535ef25460467281ddac2954f8f",
+  "verdict": "PASS_SCOPED_TEST_ONLY"
+}

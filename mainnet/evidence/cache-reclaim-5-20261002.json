@@ -1,0 +1,49 @@
+{
+  "schema": "mainnet-qualification-cache-reclaim-v1",
+  "status": "COMPLETE",
+  "deleted_archives": 132,
+  "reclaimed_bytes": 8615211008,
+  "minimum_age_hours": 48,
+  "minimum_bytes": 8388608,
+  "files": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-5-20261002/reclaim.go": {
+      "bytes": 7047,
+      "sha256": "b231ea419e6a6fd724b82cedb8baa4eea9aa23274181e239c7af9412fc1c9557"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-5-20261002/plan.json": {
+      "bytes": 40487,
+      "sha256": "14efb3b99bdb5c35d13931cc716542215d89ade2183a59832e25aff6c65be36d"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-5-20261002/receipt.json": {
+      "bytes": 40768,
+      "sha256": "00bed97c378b1a5d871e318fabda0ca46b14fde23ed2887802ad267331d1ed1e"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-5-20261002/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "845cb517d6f89f3381286a77a79865acdcbe1f34e996612b90852fdec03001a9"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-5-20261002/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "3ebc07bf908bcc99001008d580836220f0bcc747eed5f5d37796f089db06e236"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-5-20261002/candidate-paths.txt": {
+      "bytes": 13068,
+      "sha256": "2d022e3ff4715eedaba0c86f4df3e1c192463eee4bbdf6598acf9761965ba578"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-5-20261002/reference-matches.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-5-20261002/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-5-20261002/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "verification": "Privileged process references absent; archive magic, inode/link/times rechecked before deletion; all132 candidate paths absent afterward",
+  "reference_scope": "Declared Markdown/receipt/manifest/checksum metadata up to5MiB under SN/testdata; compiler/module/container/git trees excluded; not global raw-artifact absence proof.",
+  "preserved": "Active caches, source, module downloads, immutable evidence, ELF executables and live qualification processes"
+}

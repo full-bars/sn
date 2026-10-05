@@ -1,0 +1,240 @@
+{
+  "author_jobs_sha256": "b454d08cffbc54b4e6a9825a2660677e7933b813c50fad38544cd23667304d42",
+  "author_jobs_total_roots": 78,
+  "author_source_join_sha256": "63238579bc1844c44bc2fdfdd210f24aebf85739b4b02041867e3b612cdf655f",
+  "component_byte_join_sha256": "aed85936191c471d92d86b13bbb22670bcfd57bd3ebf0abd3767ddaa3dcf66c5",
+  "dependencies": {
+    "glog": {
+      "head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "userwireguard": {
+      "head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "limits": [
+    "Twelve selected public/role/declaration seams normal/race; unchanged component suites and author 78-root package census are not relabeled independent.",
+    "SN uses Connect0a5, standalone server uses Connect6cd; full server6387 intake is outside this frozen pair.",
+    "No mainnet signing, RPC submission, deployment, restart authorization, or release artifact build."
+  ],
+  "module_selection_server_sha256": "139cba8b7463570455c032dd190b63820f2c986023b38fc282c540abb56d2201",
+  "module_selection_sn_sha256": "7bdd7c03948753393e89802ea259c8bb221ff1fe45e501142fd50fc52641f10b",
+  "private_fixture_preflight": {
+    "pass": true,
+    "paths": [
+      {
+        "mode": "0o755",
+        "path": "/",
+        "uid": 0
+      },
+      {
+        "mode": "0o755",
+        "path": "/mnt",
+        "uid": 0
+      },
+      {
+        "mode": "0o755",
+        "path": "/mnt/data",
+        "uid": 0
+      },
+      {
+        "mode": "0o755",
+        "path": "/mnt/data/sn-testnet",
+        "uid": 1000
+      },
+      {
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002",
+        "uid": 1000
+      },
+      {
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/composition-69f",
+        "uid": 1000
+      },
+      {
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/composition-69f/tmp",
+        "uid": 1000
+      }
+    ],
+    "umask": "0o077"
+  },
+  "schema": "sol-independent-composition-69f-v1",
+  "scopes": {
+    "inspect-normal": {
+      "elapsed_seconds": 0.9808573722839355,
+      "fail": 0,
+      "log_sha256": "02566adf53d24cfd14f839d258267874c32ab201275e215e40d9c29681de6c94",
+      "pass": 1,
+      "result_sha256": "47ca5c05203744c36fa06bccd4369e5383c13dd805941b3696d424943edd103a",
+      "roots": [
+        "TestInspectionReadOnlyRefusesMissingAndReplacedRoots"
+      ],
+      "skip": 0
+    },
+    "inspect-race": {
+      "elapsed_seconds": 2.370314359664917,
+      "fail": 0,
+      "log_sha256": "e3712a0cfdde3101f94d3fb974e6eda5aef7f7f8e6bcb4fe4c8f08e4ecbb49df",
+      "pass": 1,
+      "result_sha256": "2ecb51da986f01dc2ec4ccf0d32e01d972e1efeb44d1205c864c97cfd88ec591",
+      "roots": [
+        "TestInspectionReadOnlyRefusesMissingAndReplacedRoots"
+      ],
+      "skip": 0
+    },
+    "mainnet-normal": {
+      "elapsed_seconds": 292.7256796360016,
+      "fail": 0,
+      "log_sha256": "c9b57d264e5b16dcdfad68fa5a687ec40331bb995d5c21ac6eeed6001d9c9922",
+      "pass": 8,
+      "result_sha256": "12f2d92126c3d6406ab27b9dace90bd5d052db1532e201ce6ddee13fd41b151a",
+      "roots": [
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity",
+        "TestBootstrapSuccessorPublicExclusiveClaimRetainsWriteAdmission",
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission",
+        "TestBootstrapReadinessSharedSnapshotsRemainReadOnly",
+        "TestBootstrapPassivePreparationRequiresFreshMonitorHead",
+        "TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor"
+      ],
+      "skip": 0
+    },
+    "mainnet-race": {
+      "elapsed_seconds": 1170.4874730110168,
+      "fail": 0,
+      "log_sha256": "17962abaef89fb643fa5e4472818e5d91a0909875020300dc6170d39a6b0ab0f",
+      "pass": 8,
+      "result_sha256": "5d7327dbc0c549223e44372de6fd01b283a3a086dc5782361c8c9e5e284978dd",
+      "roots": [
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity",
+        "TestBootstrapSuccessorPublicExclusiveClaimRetainsWriteAdmission",
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission",
+        "TestBootstrapReadinessSharedSnapshotsRemainReadOnly",
+        "TestBootstrapPassivePreparationRequiresFreshMonitorHead",
+        "TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor"
+      ],
+      "skip": 0
+    },
+    "miner-normal": {
+      "elapsed_seconds": 47.15783929824829,
+      "fail": 0,
+      "log_sha256": "7622d7a50b8f87ff4ea0a6e321fbd0d9e062835304e225530caeab9e0053fb40",
+      "pass": 1,
+      "result_sha256": "db4f43e973a4d9293f4f258dadb13f4f882f2aa85574728020085cc2b4d12a7f",
+      "roots": [
+        "TestClaimStoragePreparedLostAckRetainsNonceFloor"
+      ],
+      "skip": 0
+    },
+    "miner-race": {
+      "elapsed_seconds": 73.80620336532593,
+      "fail": 0,
+      "log_sha256": "adce5b659e0d06d1b0b0f814dee1797fd4035d4764c1923211dfaf5f1d28cb83",
+      "pass": 1,
+      "result_sha256": "3880184960c840979a8ddb00333395d30c4e1db47364a6043fcf8c7ba84b86c3",
+      "roots": [
+        "TestClaimStoragePreparedLostAckRetainsNonceFloor"
+      ],
+      "skip": 0
+    },
+    "server-normal": {
+      "elapsed_seconds": 159.7178659439087,
+      "fail": 0,
+      "log_sha256": "58b07b437406b5345798473f2dc20da4c719f251c9673b47cee882dc30866d87",
+      "pass": 1,
+      "result_sha256": "0f5968de2aa73a724a97f785d69516e1ddaccff016b4c4d5cd855f53db79369e",
+      "roots": [
+        "TestConfiguredLocalBlobRequiresExactDeclaration"
+      ],
+      "skip": 0
+    },
+    "server-race": {
+      "elapsed_seconds": 235.94115376472473,
+      "fail": 0,
+      "log_sha256": "3f18e294569ccf434a07470d6e98ac9e2542c222a24448a1ffb94cc8e539bc8c",
+      "pass": 1,
+      "result_sha256": "a7fabcb88a47da6356895c8e09fa0b55235ccd68e437597a9456477125489ac4",
+      "roots": [
+        "TestConfiguredLocalBlobRequiresExactDeclaration"
+      ],
+      "skip": 0
+    },
+    "validator-normal": {
+      "elapsed_seconds": 63.499751806259155,
+      "fail": 0,
+      "log_sha256": "05d02d2f7711f2b802170371af47514cf5ded36abbde8ce99824b9dbc9014da1",
+      "pass": 1,
+      "result_sha256": "bbcaaf69322e96b62a693a9d613f6a01cc227b1e8f6d5271e07ca8519a71f215",
+      "roots": [
+        "TestProductionPublicLifecyclesRequirePhysicalCustody"
+      ],
+      "skip": 0
+    },
+    "validator-race": {
+      "elapsed_seconds": 103.93821167945862,
+      "fail": 0,
+      "log_sha256": "62d36ad78944b976d27aa23d0af9a306c0e60e8de673340c6d91007df4b4435c",
+      "pass": 1,
+      "result_sha256": "147dcb24e4bc43a138084bf39539b60ecfca95488e0f8c95abb0821da2f2aeb9",
+      "roots": [
+        "TestProductionPublicLifecyclesRequirePhysicalCustody"
+      ],
+      "skip": 0
+    }
+  },
+  "server": {
+    "blobs_verified": 5240,
+    "commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+    "tree": "622c52b73f71b7652cf508856198ffa6aa85f574"
+  },
+  "source": {
+    "blobs_verified": 20018,
+    "commit": "69f4bbdd68f3ba933fc0e6b8994708664689acbc",
+    "join_sha256": "63238579bc1844c44bc2fdfdd210f24aebf85739b4b02041867e3b612cdf655f",
+    "tree": "4e49dc8fba437bb55939eaea09ef190fde89c8e4"
+  },
+  "verdict": "PASS_SCOPED",
+  "vet": {
+    "server": {
+      "args": [
+        "go",
+        "vet",
+        "-p=1",
+        "."
+      ],
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_sha256": "ddad910cc507dcff10dcb229e967d0a659fdc1fc6ff4c307467a1331b59c7446"
+    },
+    "sn": {
+      "args": [
+        "go",
+        "vet",
+        "-p=1",
+        "./mainnet",
+        "./miner",
+        "./validator",
+        "./internal/durableinspect"
+      ],
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result_sha256": "08dc76c1d457fd0212629b2382ecac2315e9b93faec09a016be7a584e46ed706"
+    }
+  }
+}

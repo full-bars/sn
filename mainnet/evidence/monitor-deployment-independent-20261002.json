@@ -1,0 +1,77 @@
+{
+  "adjacent_xops_tests": 19,
+  "ansible_syntax_exit": 0,
+  "author_entries_rehashed": 58,
+  "author_evidence_sha256": {
+    "archive": "6cb681a9126ab943aca6423db481dde07b84ea50a9c280f1694469a0baa3b461",
+    "manifest": "d6b28dced03efc7f913eff3a48b679f8bf266a882afc6997659f6d2aa8cee69c",
+    "receipt": "6effb657654e46d7dd160f3be4715826259c103b5135ac2eaaddd77015a63e0d",
+    "source_bundle": "679eb5edf350fd7f0496a5943bd42bb1b3a79084b296be0130535293486cd06f"
+  },
+  "controller_preflight_exit": 0,
+  "cross_user_credential_check_exit": 0,
+  "files_sha256": {
+    "adjacent-attempt-1-missing-siblings.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "adjacent-attempt-1-missing-siblings.log": "ae8273c5737d640b63dd25c9681b0d42d51533be4009b93046e74161bd0c344d",
+    "adjacent.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "adjacent.log": "33bf9bbdffb09774e62e8d27a0b90937b5c070ce07a1ccd6b4893e92c22783e9",
+    "ansible-preflight.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "ansible-preflight.log": "949898e5142adf492b026d21ca6e1a52395b64428507f3a2607d4c2f87998323",
+    "ansible-syntax.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "ansible-syntax.log": "5a1c1ae0b15a37355cad6cc1bd928a5ed3831047d5e75f951fc700cbfd8758e1",
+    "ansible-unapproved.exit": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
+    "ansible-unapproved.log": "d27fb5ac2f40cbbfda6ef4fb03694c303970b98c91494634d4ce677cd23411f2",
+    "new-xops.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "new-xops.log": "10db96f134db02c097d150768229117a9bea533e6caefacfb1cc76c0d6149f24",
+    "permissions-attempt-1-unprotected-parent.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "permissions-attempt-1-unprotected-parent.log": "35d0579f9f2ca77ac50f15b6864e57444fe1162107d5c0b09b506191bf4081e7",
+    "permissions.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "permissions.log": "68b4263d8d4657c9ff3ab14530ae470c4b01e8cc9a4ad97a09b40abb50469cff",
+    "prometheus.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "prometheus.log": "53e14d8b869df21eec8e4ec6440a38d494b10c498bc41a590305b05a07a4957b",
+    "run_sn13.py": "c77174143706d2b0a9d33ec3c5407ea63b09074d75267dc998579aec65ad3d59",
+    "sn13-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn13-normal.log": "092d66b2a331da1102d55dd57f90de14274640a5b08209d894b94cc4a8f0f388",
+    "sn13-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn13-race.log": "684ca30b0fc10252550bbd3122c92cb8fffbe3354741a0f71b2040ebcb6a910c",
+    "sn13-selector.txt": "e50d72c07cf894e0837ae76b6158d9ad5060a5b01571da52e314452f6db803d3",
+    "sn13-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn13-vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "systemd-verify.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "systemd-verify.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": [
+    "No production inventory target or activation approval; no remote deployment, unit start, chain read, transaction or notification send.",
+    "Loopback Prometheus and synthetic credentials only; no Fluent Bit ingestion, remote backend, Alertmanager delivery or actual monitor host acceptance.",
+    "Author evidence reused only under its exact frozen source; source and selected SN roots rerun independently here."
+  ],
+  "loopback_prometheus_tests": 5,
+  "new_xops_tests": 27,
+  "schema": "sol-independent-mg07-monitor-audit-v1",
+  "sealed_at_utc": "2026-10-02T04:59:10.524877+00:00",
+  "setup_attempts_retained": [
+    "First adjacent run lacked pinned sibling server/warp sources; after exact links all19 passed.",
+    "First root credential run used a group-writable parent under /mnt/data/sn-testnet and was correctly refused; protected /mnt/data scratch passed."
+  ],
+  "sn_monitor_normal_roots": 13,
+  "sn_monitor_race_roots": 13,
+  "sn_monitor_vet_exit": 0,
+  "source_sn": {
+    "commit": "6cfc4773038fae8b1de07807eeeb4a97c32d07d3",
+    "physical_clean_no_alternates": true,
+    "tree": "89ba29e90b731e5e344fbef539d3be9497fa0ba4"
+  },
+  "source_xops": {
+    "commit": "b98f876999c2ad3f057ca8d32d97a23cd7a535ba",
+    "physical_clean_no_alternates": true,
+    "tree": "0b77986eb2ee92b5aacb7a8991387667db411857"
+  },
+  "status": "PASS_SCOPED",
+  "systemd_unit_verify_exit": 0,
+  "tool_sha256": {
+    "prometheus": "4ee49f574d80682b6571f017c8f42f2532aa3603b725b51ecb0cb864f06c2282",
+    "prometheus-3.5.0.linux-amd64.tar.gz": "e811827af26d822afb09a4f28314f61b618b12cff5369835a67f674d8b46f39a",
+    "promtool": "e59210d5474e2c811a4460fb1593d708b94d58107ae62e9d44e88029bb7e5805"
+  },
+  "unapproved_activation_refused_exit": 2
+}

@@ -1,0 +1,33 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "history_count": 0,
+  "job_sha256": "99ede390ac27cca7b072dc63d609b511afdfca0b60ad44853c8ec165f18ce1fe",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_count": 1,
+  "runner_sha256": "a277e68dc23231b5e2d00100dfca64b28027eee4f869f428207412b503704c4f",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_MODEL_PLUS_ONE_XOPS311_AFTER_COMPILER_JOIN",
+  "schema": "root-model-one-bounded-short-adoption-v1",
+  "adopted_at_ns": 1791158579894918907,
+  "review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-xops311-retry2-concrete-review-20261004.json",
+    "sha256": "8b3ecb28ab3cdbb86a83b95d8127405e5ca3002edccb05676cb916772eca3795"
+  },
+  "conditions": "Exact sealed job only. Predecessor durable actual joined waits, empty compiler/short census, fresh resource/pin admission required. Preserve running model. No deployment or other body permitted.",
+  "unchanged_active_floors": {
+    "data_available_bytes": 6307319808,
+    "docker_available_bytes": 295833415680,
+    "docker_launch_available_bytes": 300128382976,
+    "healthy_guards_changed": false,
+    "memory_available_bytes": 103079215104,
+    "original_data_baseline_rebased": false
+  }
+}

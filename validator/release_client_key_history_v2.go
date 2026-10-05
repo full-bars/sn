@@ -33,6 +33,11 @@ func releaseClientKeyDecisionV2(cfg *ReleaseConfig, noID uint64, hotkey [32]byte
 	if cfg == nil || artifact == nil || clientID == (connect.Id{}) || hotkey == ([32]byte{}) || noID == 0 {
 		return domain, request, errors.New("client-key decision owner is incomplete")
 	}
+	decisionCfg, err := releaseConfigForPolicyHash(cfg, artifact.PolicyHash)
+	if err != nil {
+		return domain, request, err
+	}
+	cfg = decisionCfg
 	genesis, err := canonicalAttemptHex32("client-key native genesis", cfg.GenesisHash, false)
 	if err != nil {
 		return domain, request, err
@@ -51,7 +56,7 @@ func releaseClientKeyDecisionV2(cfg *ReleaseConfig, noID uint64, hotkey [32]byte
 	}
 	domain = protocol.ClientKeyHistoryDomain{ChainID: cfg.ChainID, GenesisHash: genesis, Netuid: cfg.Netuid, Coordinator: common.HexToAddress(cfg.Coordinator), SettlementVault: common.HexToAddress(cfg.SettlementVault), DeploymentIDHash: sha256.Sum256([]byte(cfg.DeploymentID)), PolicyHash: policy, NoID: noID}
 	request = protocol.ClientKeyObservationRequest{ClientID: [16]byte(clientID), ValidatorHotkey: hotkey, NativeBlock: artifact.NativeSnapshotBlock, NativeHash: nativeHash, NativeEpoch: artifact.SubnetEpoch, DecisionBoundary: protocol.ClientKeyEffectiveBoundary{Epoch: artifact.SettlementEpoch, Block: artifact.EVMSnapshotBlock, Hash: evmHash}}
-	if artifact.DeploymentID != cfg.DeploymentID || artifact.ChainID != cfg.ChainID || artifact.GenesisHash != cfg.GenesisHash || artifact.Coordinator != cfg.Coordinator || artifact.SettlementVault != cfg.SettlementVault || artifact.Netuid != cfg.Netuid || artifact.PolicyHash != cfg.PolicyHash || artifact.ValidatorID != cfg.ValidatorID {
+	if artifact.DeploymentID != cfg.DeploymentID || artifact.ChainID != cfg.ChainID || artifact.GenesisHash != cfg.GenesisHash || !releaseAddressIdentityMatches(artifact.Coordinator, cfg.Coordinator) || !releaseAddressIdentityMatches(artifact.SettlementVault, cfg.SettlementVault) || artifact.Netuid != cfg.Netuid || artifact.PolicyHash != cfg.PolicyHash || artifact.ValidatorID != cfg.ValidatorID {
 		return protocol.ClientKeyHistoryDomain{}, protocol.ClientKeyObservationRequest{}, errors.New("client-key capture differs from the admitted validator deployment")
 	}
 	return domain, request, domain.Validate()
@@ -100,25 +105,33 @@ func (self *ChainClient) readReleaseClientKeyAuthorityUnsharedV2(ctx context.Con
 	if err := errors.Join(ctx.Err(), domain.Validate(), boundary.Validate()); err != nil {
 		return result, err
 	}
-	chain := &ChainClient{client: self.client, coordinator: self.coordinator, chainId: new(big.Int).Set(self.chainId), contractAddr: self.contractAddr, release: true}
+	chain := &ChainClient{client: self.client, coordinator: self.coordinator, chainId: new(big.Int).Set(self.chainId), contractAddr: self.contractAddr, release: true, readRetryHooks: self.readRetryHooks}
 	defer func() {
 		resultErr = errors.Join(resultErr, ctx.Err())
 		if resultErr != nil {
 			result = common.Address{}
 		}
 	}()
-	chainID, err := chain.client.ChainID(ctx)
-	if err != nil || chainID == nil || chainID.Cmp(chain.chainId) != 0 {
-		return result, errors.Join(errors.New("client-key authority RPC chain identity differs"), err)
+	var chainID *big.Int
+	err := chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		var err error
+		chainID, err = chain.client.ChainID(callCtx)
+		return err
+	})
+	if err := releaseRpcObservationError(err, chainID != nil && chainID.Cmp(chain.chainId) == 0, errors.New("client-key authority RPC chain identity differs")); err != nil {
+		return result, err
 	}
 	var nativeGenesis *common.Hash
-	err = chain.client.Client().CallContext(ctx, &nativeGenesis, "chain_getBlockHash", uint64(0))
-	if err != nil || nativeGenesis == nil || [32]byte(*nativeGenesis) != domain.GenesisHash {
-		return result, errors.Join(errors.New("client-key authority native RPC genesis identity differs"), err)
+	err = chain.retryChainRead(ctx, func(callCtx context.Context) error {
+		nativeGenesis = nil
+		return chain.client.Client().CallContext(callCtx, &nativeGenesis, "chain_getBlockHash", uint64(0))
+	})
+	if err := releaseRpcObservationError(err, nativeGenesis != nil && [32]byte(*nativeGenesis) == domain.GenesisHash, errors.New("client-key authority native RPC genesis identity differs")); err != nil {
+		return result, err
 	}
 	finalized, finalizedHash, err := chain.FinalizedBlockContext(ctx)
-	if err != nil || finalized < boundary.Block || finalized == boundary.Block && finalizedHash != boundary.Hash {
-		return result, errors.Join(errors.New("client-key authority boundary is not finalized"), err)
+	if err := releaseRpcObservationError(err, finalized >= boundary.Block && (finalized != boundary.Block || finalizedHash == boundary.Hash), errors.New("client-key authority boundary is not finalized")); err != nil {
+		return result, err
 	}
 	epoch := new(big.Int).SetUint64(boundary.Epoch)
 	methods := []string{"currentEpoch", "netuid", "settlementVault", "policyAt", "operatorAt", "validatorEvidence"}
@@ -163,8 +176,8 @@ func (self *ChainClient) readReleaseClientKeyAuthorityUnsharedV2(ctx context.Con
 	}
 	for _, field := range fields {
 		encoded, err := chain.ethCallAtHashContext(ctx, anchor, field.data, boundary.Block, boundary.Hash)
-		if err != nil || !bytes.Equal(encoded, field.expected[:]) {
-			return result, errors.Join(errors.New("client-key companion immutable native/deployment identity differs"), err)
+		if err := releaseRpcObservationError(err, bytes.Equal(encoded, field.expected[:]), errors.New("client-key companion immutable native/deployment identity differs")); err != nil {
+			return result, err
 		}
 	}
 	return operator.RootSigner, nil
@@ -233,8 +246,8 @@ func verifyReservedReleaseClientKeyCaptureV2(ctx context.Context, chain *ChainCl
 			return result, err
 		}
 		registration, err := protocol.DecodeClientKeyRegistration(wrapper.Payload)
-		if err != nil || registration.Domain != domain || registration.ClientID != request.ClientID {
-			return result, errors.Join(errors.New("client-key capture registration identity differs"), err)
+		if err := releaseRpcObservationError(err, registration.Domain == domain && registration.ClientID == request.ClientID, errors.New("client-key capture registration identity differs")); err != nil {
+			return result, err
 		}
 		if err := registration.Follows(prior); err != nil {
 			return result, err
@@ -355,7 +368,7 @@ func censusReleaseEvidenceCapturesV2(ctx context.Context, parent *attemptPrivate
 	if ctx == nil || parent == nil || maximum == 0 || maximumFiles == 0 || maximumFiles >= uint64(^uint(0)>>1) {
 		return 0, 0, errors.New("client-key capture census owner is incomplete")
 	}
-	directory, err := openAttemptPrivateDirectory(parent.path)
+	directory, err := openAttemptPrivateDirectory(parent.path, parent.storageCtx)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -406,8 +419,11 @@ func readRetainedReleaseClientKeyV2(ctx context.Context, chain *ChainClient, cus
 		return protocol.ClientKeyRegistration{}, err
 	}
 	encoded, err := custody.read(ctx, path, min(maximum, uint64(protocol.MaxClientKeyHistoryResponseBytes)), false)
-	if err != nil || ReleaseMeasurementContentHash(encoded) != contentHash {
-		return protocol.ClientKeyRegistration{}, errors.Join(errReleaseHistoricalClientKeyV2, errors.New("retained client-key capture differs from its complete byte identity"), err)
+	if err != nil {
+		return protocol.ClientKeyRegistration{}, err
+	}
+	if ReleaseMeasurementContentHash(encoded) != contentHash {
+		return protocol.ClientKeyRegistration{}, errors.Join(errReleaseHistoricalClientKeyV2, errors.New("retained client-key capture differs from its complete byte identity"))
 	}
 	registration, err := verifyReleaseClientKeyCaptureV2(ctx, chain, encoded, maximum, domain, request, true)
 	return registration, errors.Join(err, custody.check(), ctx.Err())

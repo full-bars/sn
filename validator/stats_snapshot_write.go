@@ -54,7 +54,7 @@ func (self *statsWriteOwner) prepareSnapshot(dir string, physical bool) error {
 	if err := self.ctx.Err(); err != nil {
 		return err
 	}
-	owner, err := acquireStatsSnapshotDirectory(filepath.Join(dir, "stats.json"), physical, self.hooks.snapshotIO)
+	owner, err := acquireStatsSnapshotDirectory(filepath.Join(dir, "stats.json"), physical, self.hooks.snapshotIO, self.ctx)
 	self.snapshot = owner
 	return err
 }

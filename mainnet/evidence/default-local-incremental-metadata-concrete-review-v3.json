@@ -1,0 +1,80 @@
+{
+  "base_runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-default-module-metadata-v1.py",
+    "sha256": "8d01c0e29f65446988a8c1e18205120256b49397a6795f85ff24e00ac8cff495"
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 2147483648,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 1500,
+    "TimeoutStopSec": 90
+  },
+  "forecast": {
+    "disk_bytes": 536870912,
+    "entry_basis": "Conservative existing SHORT10GiB/106GiB entry retained; current stage/cache already held. Fresh source bytes plus4x64MiB graph logs+4MiB stage log and small receipts fit prospective512MiB disk doubled to1GiB cap; prospective1GiB memory doubled to2GiB hard. No global baseline, cap, margin or healthy floor change.",
+    "memory_bytes": 1073741824
+  },
+  "fresh_bytes": 4946605,
+  "fresh_files": 36,
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-local-incremental-metadata-job-v3.json",
+    "sha256": "dd1776e8ee5127499d27be530a2a790a041807f15ec4ec202fe2314c1af7eace"
+  },
+  "manifest": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-local-source-manifest-v2.json",
+    "sha256": "75816c8adb56e9fd6acd667a6515d6aeac7aec70762c4a5a77f8c8fbf32b5e60"
+  },
+  "metadata_revision": "v3 adds actual recovery closure and aligns metadata_sources head/tree with exact selected source rows; runner, manifest, resource class and five-phase scope unchanged.",
+  "ordering": "Actual recovery checker PASS and its original wait/closed USER readback now bound in this job.",
+  "phase_bounds": {
+    "count": 5,
+    "graph": 300,
+    "incremental_stage": 180,
+    "total_seconds": 1380
+  },
+  "previous_unadopted_job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-local-incremental-metadata-job-v2.json",
+    "sha256": "fc25c13d870988cda4d6716773543da36dd3b45baf63d29f9b78b6701a2baf6b"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 1073741824,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "dd1776e8ee5127499d27be530a2a790a041807f15ec4ec202fe2314c1af7eace",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 2147483648,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "network_dependency_count": 0,
+    "runner_sha256": "1a8476cfafb1d3f0ef95d7385f321b89cf4959615f69c2b97af0061a43f06f68",
+    "short_count": 0,
+    "status": "ADOPTED_INCREMENTAL_CACHED_DEFAULT_MODULE_METADATA"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/default-local-incremental-metadata-adoption-v3.json",
+  "reused_files": 35643,
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-default-local-incremental-metadata-v2.py",
+    "sha256": "1a8476cfafb1d3f0ef95d7385f321b89cf4959615f69c2b97af0061a43f06f68"
+  },
+  "scope": "One exact local source delta stage and four cached offline readonly default module graphs, including nested VLESS. Preserve old ten source archives and all hydration outputs. No download, compiler, product body or canonical source edit.",
+  "source_tuple": {
+    "core": "026b850248352b72255be7a966e391e0a15e74c1",
+    "server": "c198263137730fe7fce7e9b83b6b6c298b3f9eba",
+    "sn": "fcfd5acde5c0a77eaedcbc2f39ce35f5f53052f4"
+  },
+  "stage_helper": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/stage-default-local-incremental-v1.py",
+    "sha256": "8c5b20159aecc260a31035db91b3073486b4182c7114b2f2da9a4e5b99382db6"
+  },
+  "status": "READY_FOR_ROOT_ADOPTION_NO_EXECUTION",
+  "validation": "AST, metadata hashes and finite Git ls-tree only; no staging, link, copy, Go, test, network or service action by author.",
+  "whole_owner_horizon_seconds": 1590
+}

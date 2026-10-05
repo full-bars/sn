@@ -26,6 +26,18 @@ type finalNativeRewardReadClientV2 struct {
 	budget finalV2RPCDecodeBudget
 }
 
+// A facade must not hide upstream socket replacement from runtime proofs.
+// Custom immutable clients without that contract retain one stable lifetime.
+func (self *finalNativeRewardReadClientV2) TransportGeneration() uint64 {
+	if self == nil || self.Client == nil {
+		return 0
+	}
+	if tracked, ok := self.Client.(interface{ TransportGeneration() uint64 }); ok {
+		return tracked.TransportGeneration()
+	}
+	return 1
+}
+
 func (self *finalNativeRewardReadClientV2) Call(result any, method string, args ...any) error {
 	if self == nil {
 		return errors.New("historical native reward read owner is absent")
@@ -98,7 +110,17 @@ func readFinalNativeRewardAtV2(ctx context.Context, native *crv4.Chain, at Chain
 		return nil, errors.Join(errors.New("historical native reward hash is invalid"), err)
 	}
 	client := &finalNativeRewardReadClientV2{Client: native.API.Client, ctx: ctx, budget: finalV2RPCDecodeBudget{remaining: uint64(maximumCampaignEvidenceRawFileBytes)}}
-	own := &crv4.Chain{API: &gsrpc.SubstrateAPI{Client: client, RPC: &gsrpcrpc.RPC{State: gsrpcstate.NewState(client)}}, GenesisHash: native.GenesisHash}
+	view := *native
+	view.API = &gsrpc.SubstrateAPI{Client: client, RPC: &gsrpcrpc.RPC{State: gsrpcstate.NewState(client)}}
+	return crv4.ReadRuntimeObservationContext(ctx, &view, func(ctx context.Context) (*NativeRewardObservation, error) {
+		client.ctx = ctx
+		return readFinalNativeRewardAttemptV2(ctx, &view, at, netuid, hash, runtime)
+	})
+}
+
+// The private API and decode budget span every attempt. Replacement repeats
+// the complete exact-block census without renewing its finite byte allowance.
+func readFinalNativeRewardAttemptV2(ctx context.Context, own *crv4.Chain, at ChainHead, netuid uint16, hash types.Hash, runtime crv4.RuntimeArtifactIdentity) (*NativeRewardObservation, error) {
 	var genesis, canonical types.Hash
 	if err := own.API.Client.CallContext(ctx, &genesis, "chain_getBlockHash", uint64(0)); err != nil {
 		return nil, err
@@ -124,11 +146,13 @@ func readFinalNativeRewardAtV2(ctx context.Context, native *crv4.Chain, at Chain
 	if err != nil || finalizedHeader == nil || uint64(finalizedHeader.Number) < at.Number {
 		return nil, errors.Join(errors.New("historical native reward head is not finalized"), err)
 	}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, own, hash, runtime)
+	artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, own, hash, runtime)
 	if err != nil {
 		return nil, err
 	}
-	own.Meta = artifact.Metadata
+	if err := own.BindRuntimeArtifact(artifact); err != nil {
+		return nil, err
+	}
 	read := func(name string, value any) error {
 		key, err := types.CreateStorageKey(own.Meta, crv4.PalletName, name, netuidArg(netuid))
 		if err != nil {
@@ -161,7 +185,7 @@ func readFinalNativeRewardAtV2(ctx context.Context, native *crv4.Chain, at Chain
 	if err != nil {
 		return nil, err
 	}
-	result, err = nativeRewardObservationFromFinalizedState(ChainHead{Number: at.Number, Hash: hash.Hex()}, emission, incentive, dividends, facts)
+	result, err := nativeRewardObservationFromFinalizedState(ChainHead{Number: at.Number, Hash: hash.Hex()}, emission, incentive, dividends, facts)
 	if err != nil {
 		return nil, err
 	}

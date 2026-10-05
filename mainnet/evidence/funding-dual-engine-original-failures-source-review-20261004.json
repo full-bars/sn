@@ -1,0 +1,82 @@
+{
+  "schema": "funding-dual-engine-original-failure-source-findings-v1",
+  "source": "ab48c41d0f1d196a8311905f81d635c868f13dfe",
+  "source_blobs": [
+    {
+      "path": "mainnet/historical_capture.go",
+      "git_blob": "755b13264ec2294839f638b14883986f4cf6e415",
+      "bytes": 8764,
+      "sha256": "893c495182dedcb688e32ae1c6013578a9f48c0d67dcf2e5db496f9238400c44"
+    },
+    {
+      "path": "mainnet/historical_replay.go",
+      "git_blob": "637ad0b68f8c31afbbe2760b73f6681242486170",
+      "bytes": 18617,
+      "sha256": "d6023645b3ebe83762282c36ec98618bb6a935138d3ae18a0d6ce310455f6acd"
+    },
+    {
+      "path": "mainnet/historical_native_observation.go",
+      "git_blob": "9bef67b9cbb4c9f17ce78252375a9717d0bb29e0",
+      "bytes": 6806,
+      "sha256": "c6e3ecc20c2ba835f5088d1765ee89d053b9580b0d420fa80274b43799773c46"
+    },
+    {
+      "path": "mainnet/historical_principal.go",
+      "git_blob": "864b1fbeea47cb082a295455cc17babe8e99e1e9",
+      "bytes": 4327,
+      "sha256": "e341b121bc6dc471053d6d4eb458b4d1ad05a9f386a2eea4ec44a808355298db"
+    },
+    {
+      "path": "mainnet/economic_conservation_capture_fixture_test.go",
+      "git_blob": "b792babd531ce5879cbd2587a02bd7a394fc4148",
+      "bytes": 14764,
+      "sha256": "3597196366e72d3914b901ed60ea90ead40ae4abfd89d73e9121f0142e80ff42"
+    },
+    {
+      "path": "sim-testnet/contracts_gen.go",
+      "git_blob": "16ac201e194060cb5fc88104c84f7d97699517b4",
+      "bytes": 332856,
+      "sha256": "91d4c21837321d627e88af7eb98c8eee125384d2a5d96c2fe70c91c989b8398e"
+    }
+  ],
+  "raw_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-normal-dual-engine9.stdout",
+      "bytes": 38211,
+      "sha256": "ea996540a55fa4bb37b96bb867bb808aa64c1e550a145c1bec81dc06a5e3ce72"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-normal-dual-engine9.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-normal-dual-engine9.receipt.json",
+      "bytes": 7826,
+      "sha256": "0b55472146bc7f34468cadad976525674477de26fd52014457807267b678eb01"
+    }
+  ],
+  "raw_normal_root_events": {
+    "run": 9,
+    "fail": 9
+  },
+  "findings": [
+    {
+      "class": "production_combined_profile_limit",
+      "cause": "Native capture output allowance272MiB plus two principal companions4MiB each yields280MiB, but shared worker rejects any MaximumReport above272MiB before launch. Exact ab48 already reads192MiB native jobs; historical main96/104MiB limits are not the cause asserted for this candidate.",
+      "required_fix": "Derive and enforce combined profile limits consistently across caller, worker and report validator, retaining exact authority and finite bounds. Deterministic boundary and adjacent mode tests required."
+    },
+    {
+      "class": "capture_fixture_artifact_name",
+      "cause": "Capture fixture requests STSettlementVault but maintained release projection names the same vault SettlementVault. Actual EVM creation cannot start.",
+      "required_fix": "Use the maintained exact catalog identity with ABI/creation validation; no substituted bytecode."
+    },
+    {
+      "class": "engine_profile_composition",
+      "cause": "Integration reviewer traced continuation using older ade5 engine without native-yuma purposes while newer original Yuma exporter uses those purposes. Compile the actual matching capture/replay engines before using the new original assets.",
+      "verification_scope": "Reviewer finding delivered to root; raw Yuma refusal reproduced. Independent exact engine source/ELF closure qualification remains required."
+    }
+  ],
+  "status": "ORIGINAL_FAILURE_RETAINED_FIXES_IN_PROGRESS",
+  "limitations": "Normal nine failures independently counted; race partition still collecting. No corrected body, full union or mainnet economics acceptance claimed."
+}

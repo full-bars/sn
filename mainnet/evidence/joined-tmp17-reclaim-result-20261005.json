@@ -1,0 +1,14 @@
+{
+  "status": "FIXED17_JOINED_ORIGINAL_SCRATCH_DUPLICATES_RELEASED",
+  "files_removed": 17,
+  "removed_allocated_bytes": 1501515776,
+  "free_before_bytes": 16761430016,
+  "free_after_bytes": 18262892544,
+  "compiler_launch_threshold_bytes": 17179869184,
+  "all17_retained_images_and_original_receipts_preserved": true,
+  "no_source_dependency_cache_state_or_other_files_removed": true,
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/qualification-child-context/evidence/joined-recent17-tmp-duplicate-reclaim-20261005-v1.receipt.json",
+    "sha256": "3cd8698e859d6c15e7703ee01786407d90a21f26c8b3bb674e9dc86abfbc306c"
+  }
+}

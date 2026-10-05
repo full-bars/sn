@@ -1,0 +1,19 @@
+{
+  "schema": "runtime-observation-typed-nil-source-finding-v1",
+  "observed_utc": "2026-10-04T05:34:39.894819+00:00",
+  "status": "SOURCE_FINDING_FIX_REQUIRED",
+  "source_head": "426e6687e9ee283e9151e94386b5a442034137b6",
+  "source_file": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner/sn/crv4/runtime_observation_read.go",
+    "bytes": 4919,
+    "sha256": "39747475a4acb2f7bd76af3025467a004bdef09f9be8193527cd6159a03126e4"
+  },
+  "function": "runtimeObservationMayRepeat",
+  "cause": "Interface nil comparison does not reject a typed nil pointer. The private-expiry type assertion succeeds for a typed-nil *runtimeTransportObservationError; typed-nil custom wrapper may also reach Unwrap dispatch.",
+  "required_fix": "Reject typed-nil causes before leaf authority or custom Unwrap. Retain existing depth/node limits and mixed hard/cancellation precedence; add causal nil-expiry and nil-wrapper tests.",
+  "limits": [
+    "No failed production run or compiled behavior claimed from static finding.",
+    "Preserve one-attempt authentication and actual public-owner bounded reconnect recovery.",
+    "Generic all-role purpose/binding read composition remains open."
+  ]
+}

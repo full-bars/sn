@@ -1,0 +1,21 @@
+{
+  "schema": "mixed-cancellation-source-finding-v1",
+  "status": "SOURCE_CONFIRMED_FIX_AND_TESTS_PENDING",
+  "commit": "c5737e0d91dabe1c7a89b1f3865e2316d33f0e58",
+  "files": {
+    "mainnet/monitor_directory.go": "b10399e2ddc63f75d0496a24ded08a2209dcb2dc",
+    "mainnet/monitor_cancellation.go": "2576e7656f7fb4bdcdad4b90b662275d911b6412"
+  },
+  "finding": "A joined Canceled and DeadlineExceeded error fails each single-sentinel all-leaf classifier. Named observation adds unavailable; downstream checkpoint classifier also refuses the join.",
+  "required_behavior": "Accept a tree containing only cancellation sentinels while requiring the actual owner cancellation cause. Independent I/O, identity, ownership and cleanup errors retain dominance.",
+  "verification_required": [
+    "Deterministic mixed cancellation joins in both orders.",
+    "Actual owner cause absent must not qualify as owner cancellation.",
+    "Mixed independent hard/cleanup cause must remain terminal."
+  ],
+  "limits": [
+    "No runtime or behavioral execution in this review.",
+    "Frozen c573 remains retained; successor is separate.",
+    "Existing live qualification jobs unchanged."
+  ]
+}

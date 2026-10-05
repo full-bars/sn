@@ -1,0 +1,56 @@
+{
+  "actual_predecessor_exits": {
+    "0": 56,
+    "1": 4,
+    "101": 1
+  },
+  "actual_predecessor_wait_count": 61,
+  "author_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-final482050-main-xops-control1-conservation33-review-v3-20261005.json",
+    "sha256": "c8e29ef2fce11caa3e0bc5d7b1b128706a1ae6c65a7f4054b379fc3db657ac0c"
+  },
+  "canonical_lease_unit": {
+    "expected_properties": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "1050376633119",
+      "InvocationID": "b71e5474e5274fc3bc60009f2ddbb418",
+      "MainPID": "3404159",
+      "RuntimeMaxUSec": "8h"
+    },
+    "expiry_monotonic_us": 1079176633119,
+    "name": "sn-canonical-host-lease-108-successor-v2-20261005.service"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-main-xops-control1-conservation33-job-v3.json",
+    "sha256": "ec8194f280cb9a79583a46d5bdd6fb3cbab6687b0a8fd0479ab5f5f63f8a0afa"
+  },
+  "numeric_class": {
+    "accounting_floor_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_minimum_available_bytes": 10737418240,
+    "growth_stop_bytes": 2147483648,
+    "margin": 2,
+    "memory_max_bytes": 2147483648,
+    "memory_minimum_available_bytes": 113816633344,
+    "memory_swap_max_bytes": 0,
+    "whole_owner_horizon_seconds": 1290
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final482050-main-xops-control1-conservation33-v2.py",
+    "sha256": "8cb4165f20ade11003551636ba2d4d98678b4d1aaf790572ea67c59ece1927c0"
+  },
+  "schema": "independent-final-xops-main-v3-review-v1",
+  "scope": "Exact canonical482 control1 then33,33 unique/34 invocations on success. Ordinary historical Rust/Xops failures retained. Review performed only hashing, AST parsing, and original wait replay; no compiler/body/DB/launch. Actual fresh admission and runtime guards remain executor responsibilities.",
+  "source_file_hashes_checked": 1014,
+  "status": "ACK_EXACT_FROZEN_JOB_AND_UNCHANGED_CLASS",
+  "unique_binding_pins_checked": 117,
+  "v2_to_v3_delta": [
+    "adoption_path",
+    "bindings",
+    "label",
+    "predecessor_wait_paths",
+    "scratch",
+    "systemd_unit"
+  ]
+}

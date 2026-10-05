@@ -1,0 +1,58 @@
+{
+  "schema": "mainnet-proof-constructor-reachability-v1",
+  "source_commit": "17dd217099aeb362b93560c92ec08187e01c834f",
+  "files": {
+    "validator/trail.go": {
+      "bytes": 47079,
+      "sha256": "cd0ded2a513852887ab08619f005aeec4164ca7c0a0aee1ea1274d6ad3115154"
+    },
+    "validator/durable_volume_owner.go": {
+      "bytes": 5536,
+      "sha256": "0e8d50ee4fcb3d75f908ee6390b078652df521cc6bf19888e3f64a2733d85471"
+    },
+    "validator/measurement_run.go": {
+      "bytes": 11684,
+      "sha256": "2c7f573a442b2294400840e3989d8bc2c36c5d67abc26c20cf563b7bf9693c5c"
+    },
+    "validator/run.go": {
+      "bytes": 17571,
+      "sha256": "a96341198ee51496e7356cfb9a87ffd5b3e4b30d13b9e13361613a29a744af22"
+    },
+    "validator/release_run.go": {
+      "bytes": 42033,
+      "sha256": "a729ab3f1fcb44e642220d82e38ef2198c52f7473b209ef8d2f580a1ef020298"
+    },
+    "validator/release_proof_state_v2.go": {
+      "bytes": 6248,
+      "sha256": "fb2f0c53b6317cc0437f48304a471cbd8a00032e2a8630d4bcc825ebed9fa30f"
+    },
+    "validator/release_startup_v2.go": {
+      "bytes": 10857,
+      "sha256": "0f105bf1be25046b4629662a73e9da60f26834c233cb959ae750c86d4fbabc53"
+    }
+  },
+  "scope": "Static direct-call tracing for three omitted NewProofStore storage contexts; not dynamic or complete constructor census",
+  "findings": [
+    {
+      "caller": "validator/measurement_run.go:287",
+      "classification": "flag-mode measurement path; no steering permitted by run entry",
+      "limit": "No runtime qualification or all callers claim"
+    },
+    {
+      "caller": "validator/run.go:447",
+      "classification": "info summary; no release startup claim",
+      "limit": "May independently require read-only/status hardening"
+    },
+    {
+      "caller": "validator/release_run.go:446",
+      "classification": "legacy helper; direct non-test census finds only unused wrapper",
+      "limit": "No dynamic dispatch/reflective reachability claim"
+    },
+    {
+      "caller": "validator/release_proof_state_v2.go:117",
+      "classification": "actual V2 proof startup passes ownedCtx",
+      "path": "release startup \u2192 prepareReleaseEvidenceV2ProofStores(ctx) \u2192 NewProofStore(stateDir, ownedCtx)"
+    }
+  ],
+  "verdict": "THREE_LEADS_CLASSIFIED_NOT_FULL_GATE_CLOSURE"
+}

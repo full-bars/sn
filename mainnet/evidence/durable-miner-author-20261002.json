@@ -1,0 +1,1450 @@
+{
+  "artifacts": [
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-fleet-snapshot-broad-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 972,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-fleet-snapshot-broad-normal.jsonl",
+      "sha256": "0df0aee836004a9aca334e592bac044cc807c29d0cd6acb82a07f7f4b13890f6"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-fleet-snapshot-broad-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-fleet-snapshot-intermediate2-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 176687,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-fleet-snapshot-intermediate2-normal.jsonl",
+      "sha256": "d4b54ee86749f8b0a95485ba20282c9fcc3196508ca8fd4d484f5642cd9e3141"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-fleet-snapshot-intermediate2-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 37067,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-prepared-before-floor-fix.go",
+      "sha256": "c799ea32ff3ad76295b3aa721a57d1a5556e3ddf5fd67130c6a68c44064897ef"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-prepared-floor-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 4014,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-prepared-floor-baseline-normal.jsonl",
+      "sha256": "dd9b819a66671445cce801afd63c8c85c4b92fbe9ecb4ffdf2796dbfd372d2eb"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-prepared-floor-baseline-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-fourth-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 8396,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-fourth-normal.jsonl",
+      "sha256": "3b631f57741b6eccd8116b9e46df84d248a115af172dec76abd8445d14c3aed1"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-fourth-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-initial-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1191,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-initial-normal.jsonl",
+      "sha256": "a3167682bc6c29a7e6e5bd0394fafc80ae5019ec94b0856981f6ea54ceb30479"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-initial-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-second-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 14500,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-second-normal.jsonl",
+      "sha256": "53cba8f8d89b1e4d09656eb379238cc398436e8b0ca3975911a095f610567421"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-second-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-third-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 12875,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-third-normal.jsonl",
+      "sha256": "3b78c8acb06620717ccbe582ae507bb75ff9afb49214038ac5f016d67a274346"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/claim-storage-recovery-third-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2542,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-causal-overlay-bindings.json",
+      "sha256": "ef99fc5ed54ba3cfe165949ab3ed228af706a68bce0391c81f9f0c9a366c8930"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-census-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 3747,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-census-baseline-normal.jsonl",
+      "sha256": "a24693179ad57c2b4641e127ff996c94d06ce7139c41cdc14f9ab7740e4b78fc"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-census-baseline-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 11685,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-checkpoint.mod",
+      "sha256": "d432dd6069728825030f4b102034a64a1611c8a1281b1975329f803596582375"
+    },
+    {
+      "bytes": 65112,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-checkpoint.sum",
+      "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3"
+    },
+    {
+      "bytes": 1050,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-normal.command.json",
+      "sha256": "a428ae4f3d501c8ddd8f905e4923997e71878aafd637b23d6898c1f3f0e2fe69"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 275321,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-normal.jsonl",
+      "sha256": "79736dbfe0362debb2ae3730ed1bb94fca8603511cea654381a4db74ed861da1"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1192,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-normal.command.json",
+      "sha256": "da12e1ac91a7f3f11487a4405ac9668bbf7594ff3fbfb7ec806b92a5490a0682"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 4015,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-normal.jsonl",
+      "sha256": "7ae9167fd9e47ba0ad75fb841e256602004d9d11eb2fd998ed3e8a242bca4886"
+    },
+    {
+      "bytes": 243,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-normal.result.json",
+      "sha256": "06a3d3e27ed64093e42cc8603a0f3c7b568e71fcb947a864dc5ad1be56b4a5ed"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1205,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-race.command.json",
+      "sha256": "7ad501c1e509f788ed5c5f7bf1ae6010bea0f058a2cbfc5a55aa0bee9d221706"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 4014,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-race.jsonl",
+      "sha256": "618a38b94d12a99948231a78386fb3685c5e54c7797b2569e410d47f4260cd6a"
+    },
+    {
+      "bytes": 241,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-race.result.json",
+      "sha256": "7253839a7d9064cb2e9be5881333f005d0a15f9f8cdbab4bee9e4bacbf719d02"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-floor-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1135,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-normal.command.json",
+      "sha256": "fa4d94b5075aee9efc823bc0b8879629b3bcb37a37f39eafaeb2264073848e99"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 274725,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-normal.jsonl",
+      "sha256": "5e0c9904de6add1ac7fa753d8d484ff1439e42b3d23de210e65a117ecad5d0a0"
+    },
+    {
+      "bytes": 12903,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-normal.result.json",
+      "sha256": "b4b4d5697b1bbe14deae2340cb74043419fdf00f4453bcad2cb1645cc017003a"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1148,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-race.command.json",
+      "sha256": "09c5c564aa75e96dc3086b84fb4b90360bcd14b38f5e3b6cad3f46c9f795d48e"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 274797,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-race.jsonl",
+      "sha256": "e25b192747babfe20dbb6c12f9a7503e41d84d49d78045b81e5863d94fbdf20e"
+    },
+    {
+      "bytes": 12901,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-race.result.json",
+      "sha256": "9c992fc348b8b561670f2b14a47bfaba7bf6561c5f788e02af4cad7ca025eded"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1191,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-normal.command.json",
+      "sha256": "5d539f30c498aedd93144738df3c5c01dcfe1a6d39013dcd2db383e8e8457ef6"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 3244,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-normal.jsonl",
+      "sha256": "195e7dcd66fa4e4a938eed963fbc6e949d27f159b3b111c240c49b49dd281a5d"
+    },
+    {
+      "bytes": 243,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-normal.result.json",
+      "sha256": "ca8cf05e92d7e9774fab5c9f09004ad5c3bddbdf75333fe4f8eb2a03303233d3"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1204,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-race.command.json",
+      "sha256": "ac6efe6289821090bbd5af9c5c608f7a3246d168ff298ea76a51afda9fbf8212"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 3247,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-race.jsonl",
+      "sha256": "41c9125548cc0b1d0f8cb488d6b0224f18f5e288ba8d3d77065f03bbc89fcc6d"
+    },
+    {
+      "bytes": 241,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-race.result.json",
+      "sha256": "0fab0f641e74be07af8627bf3c54db3933c459690a3ae859bdc64760f248da6e"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-replay-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 28468,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-results.json",
+      "sha256": "e31cafb0fd558bbad7f887b96e3359b347a304d87518eb6e6010ec33fba841af"
+    },
+    {
+      "bytes": 1186,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-normal.command.json",
+      "sha256": "a6a63903f7890e30602778bd1c145eefa6bcb0fcb18c8e666f34d44507068d4b"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 2613,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-normal.jsonl",
+      "sha256": "3bf2e9912bfce6f21241337ea76c25db3637ebc9d93eb120163845a2c5d7e9c3"
+    },
+    {
+      "bytes": 240,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-normal.result.json",
+      "sha256": "12b8b3b5ad38c3cbc3fd00f3e11dc50e27d6f80f27942d30dc9cff68ca119df8"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1199,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-race.command.json",
+      "sha256": "3f198c03ecd9c1127c5a9be37ac881b99b3e052623b75e0ae8d2016e73585837"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 2612,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-race.jsonl",
+      "sha256": "ce5d47ccb557695cb78cd8ce42c3614eed84fa2f754cb335cadb99e68ef0d854"
+    },
+    {
+      "bytes": 238,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-race.result.json",
+      "sha256": "512fc86e2495708bf021ad192bc6d6c817e75127da940fd6877b438965d95f1e"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-swarm-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 893,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-vet.command.json",
+      "sha256": "ceb53e4b0d9856e1610d5d9dcd55fe0efc107fccb3372670640f540265d98af2"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-vet.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 178,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-vet.result.json",
+      "sha256": "d401a1689852d71011ff40ac067639a9e39a079515cbee8c8df9514c853733d1"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-wrapper.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-wrapper.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 592,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-qualified-wrapper.stdout",
+      "sha256": "61f9dc99e8563408926bccb3b25c8d4d73cd30453c7220936f709c9340344f3d"
+    },
+    {
+      "bytes": 1135,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-successor-normal.command.json",
+      "sha256": "e43a1d156b754174c716b011715d1a3fcc499cd2cd4074efe2de9ee3af7bacdb"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-successor-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 275075,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-successor-normal.jsonl",
+      "sha256": "eb1cf17d06f3599353120f30d5ea5a408023c79d01e7a75fef6494373f01a882"
+    },
+    {
+      "bytes": 12904,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-successor-normal.result.json",
+      "sha256": "360fa157d5c4bf90306a823a94e5ec3e505ae51502492f0cea24c2de35a3cd46"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-successor-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 182,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-successor-wrapper.stderr",
+      "sha256": "d3095614bee12b61d1d026e8b553ff35857b8707dc9ce49945b8809a5b74891d"
+    },
+    {
+      "bytes": 66,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-successor-wrapper.stdout",
+      "sha256": "1d7647a345c4d1efd3713fb6e28ef9910e30b720ab8a70ccdf9d9cb1d7ba2682"
+    },
+    {
+      "bytes": 229,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-floor-baseline-overlay.json",
+      "sha256": "fb50f2cbab5d08d6f33174064d0faf1594941c12522dd281aa8c35555d230503"
+    },
+    {
+      "bytes": 224,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-replay-baseline-overlay.json",
+      "sha256": "53322a77fea7bc3bf9cca1cf9f1bb2c0188e99535c654eff79d39079ce7474ad"
+    },
+    {
+      "bytes": 37482,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-replay-original-body.go",
+      "sha256": "63aed282c17b41262468a6260ed3acecff3ebc98cd090d2365013ea1c97f80ea"
+    },
+    {
+      "bytes": 222,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-swarm-baseline-overlay.json",
+      "sha256": "6ee38bb4bab812e7c7c2024359e6bf5c5470ab05b6abb4b0cee44aa4b9fda15e"
+    },
+    {
+      "bytes": 8823,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-swarm-original-body.go",
+      "sha256": "91498d2e69de0466676d3cf5b3fc1a945bfdc7f4e82f76c9db5df06b734ccd49"
+    },
+    {
+      "bytes": 47120,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-receipt.json",
+      "sha256": "c0569ceba8cf412f7447feeb60c1b90d7c01d31b08adc0354137454e8dbe57db"
+    },
+    {
+      "bytes": 3745,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/prepare-miner-causal-overlays.go",
+      "sha256": "3b615d59e3fdd85a0e007432412f81a6806d118a1f3233a03c2f072bc327bab8"
+    },
+    {
+      "bytes": 5515,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/qualify-miner-custody-final.go",
+      "sha256": "0808104a04b43fe04725802aeb83326730a8ccced4fed4a49abf1af96b38f4de"
+    },
+    {
+      "bytes": 5515,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/qualify-miner-custody.go",
+      "sha256": "0e06d31eff596ebb7784a25a4e0c4ec111b27b578abc8b83eb8063b896987d2e"
+    },
+    {
+      "bytes": 8318,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/seal-miner-custody.go",
+      "sha256": "6cb848e84771b63a46442dbafad7440324f2cb5301f6d5c8a89690e9d52d81e9"
+    },
+    {
+      "bytes": 33933,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-census-intermediate-source/miner/claim_daemon.go",
+      "sha256": "fd96ada299cb0a0cf992739f3484449ddcee66e35ed879f59873d25a2339f8a4"
+    },
+    {
+      "bytes": 8340,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-census-intermediate-source/miner/claim_swarm.go",
+      "sha256": "7994dfb61eac7d77667e5c092c409d11a493e803295fbbf2b3e157a77c7c5422"
+    },
+    {
+      "bytes": 18531,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-head-capacity-receipt.json",
+      "sha256": "e9361c9ccf66bd3234a98dfc826d932ed095051c787fe926c40779440296af4b"
+    },
+    {
+      "bytes": 16992,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-receipt.json",
+      "sha256": "67b836274acf3d6bb2331bfc1298768af699094429acc10e9407ab8ea7f94f66"
+    },
+    {
+      "bytes": 6165,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/chain/journal.go",
+      "sha256": "140cf42ec177c058614531989d807fd8f210d479bdbc6e59c0187acd4faf0ed1"
+    },
+    {
+      "bytes": 16740,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/chain/journal_custody_linux.go",
+      "sha256": "71fef7f71e5472bbe7be096d8d35692171c83afeb84e7d135c856d791233c905"
+    },
+    {
+      "bytes": 22491,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/chain/journal_durable_linux.go",
+      "sha256": "1190c9eb5a9d36721888ca6d06e36f34337e0a2399d1a8eac4ee5df2f7e2fbe0"
+    },
+    {
+      "bytes": 5335,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/chain/submit.go",
+      "sha256": "e69aa304be3fd0de12500c59c8a47db36970d3b80a8493e382bdd6a7054ca6cd"
+    },
+    {
+      "bytes": 11191,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/go.mod",
+      "sha256": "44ae2f38cf56c4981e2b3dcf393bc611dc79a95d4e3115b6387da45d9678ffdd"
+    },
+    {
+      "bytes": 65112,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/go.sum",
+      "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3"
+    },
+    {
+      "bytes": 7064,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/internal/durablefixture/fixture_linux.go",
+      "sha256": "1b6ec23982cd2140f7f0ee2afd9c90b3f0b20307b1c4592a6bd34bc9b3b43ff1"
+    },
+    {
+      "bytes": 3107,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/internal/durablefixture/snapshot_linux.go",
+      "sha256": "39fa14256ff241830f1642aaa9eba1eb6c8c29d751698872afa2c192410b7245"
+    },
+    {
+      "bytes": 2880,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/internal/durablehead/head.go",
+      "sha256": "9f43ffb336995eb3e2a30db0335ad50f99c1ef7635567e9c498f9b8de3f11491"
+    },
+    {
+      "bytes": 29282,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/internal/durablehead/head_linux.go",
+      "sha256": "a16e16e66b042f0864b8693284f606fda1deea5d1aafed700e1efc1632128872"
+    },
+    {
+      "bytes": 5825,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/internal/durablepath/directory.go",
+      "sha256": "fd1a7da327cb3aa776db9aecaa22725ac7ae5e688e606186c14e3443cadd2835"
+    },
+    {
+      "bytes": 37657,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_daemon.go",
+      "sha256": "452f796d296dbfd1c197bcb3c1db6ddbf96414e38381e1765aada82fab5b7447"
+    },
+    {
+      "bytes": 10464,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_daemon_test.go",
+      "sha256": "95c4c1db0897de86bbe789251163b93cb749e5a3a3863b45fd069b51cd825a66"
+    },
+    {
+      "bytes": 4661,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_durable_fixture_test.go",
+      "sha256": "e391aad4f6df9405686678e52fbff42f5834bc8bb067ef3a77aa9b13832be4df"
+    },
+    {
+      "bytes": 5130,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_finality_closure_test.go",
+      "sha256": "7b1a132921220af701ad89bc8e412623a0ff535ff3d947849c55025bdc5a9f77"
+    },
+    {
+      "bytes": 16181,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_finality_test.go",
+      "sha256": "c81e14a5e7405806f87581da721d702aa20793bb215af8d1246c7da54efa357e"
+    },
+    {
+      "bytes": 3094,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_nonce.go",
+      "sha256": "067a233ad9d4ebe9fc702dbdc0de8556ec10bbc396ef14569c18f35423af369d"
+    },
+    {
+      "bytes": 9408,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_nonce_rpc_test.go",
+      "sha256": "855f335a5113d6c1610e71c6483f69260b55a3d20e61e72df5c05ca712d067c8"
+    },
+    {
+      "bytes": 12303,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_queue_capacity_test.go",
+      "sha256": "75116410a5f90ae2d9aa32774368f7792816f1d19041c63c75dbd9c172e161af"
+    },
+    {
+      "bytes": 23006,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_queue_owner_test.go",
+      "sha256": "f83d5d8b1cafcd9a17a23d3a3e3415c1c74e6dfbb65533ec280cbc0b146088dd"
+    },
+    {
+      "bytes": 796,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_queue_owner_unix_test.go",
+      "sha256": "d9e576d33349d9ab1dab4ca2783dc30a16c304929f11f3ac187d0cd0de3ad147"
+    },
+    {
+      "bytes": 17774,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_queue_poll_test.go",
+      "sha256": "7c74b10afd202b7e87100be7c733634f626cb8ce2592e9706d43762fc9ad9bf7"
+    },
+    {
+      "bytes": 1204,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_queue_store_other.go",
+      "sha256": "163cbcd4c38298af413f564cf0b008fcee908d8bd5d7dc817a51be98b10e621d"
+    },
+    {
+      "bytes": 5110,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_queue_store_unix.go",
+      "sha256": "deb7fe8a1603f1a4e4bd071f38487c60911cba62c7bfb6af1c4bd00a35e2d304"
+    },
+    {
+      "bytes": 5856,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_signed_outcome.go",
+      "sha256": "df5077a814499b2052f8be6f6efb06384603c4f8b998c81b54710c4ed7a0bc70"
+    },
+    {
+      "bytes": 15699,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_signed_outcome_test.go",
+      "sha256": "b68b44af384e20ad2d1145bbe0ba59e30c9f9e7c47a202a1eca637b9c8c26c2e"
+    },
+    {
+      "bytes": 2825,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_storage_recovery.go",
+      "sha256": "ab3f1d0062c9983621e7ee3dd8babd803b4065385bddc6de00d014b7a30ccffe"
+    },
+    {
+      "bytes": 14613,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_storage_recovery_test.go",
+      "sha256": "46b86ce4c53d354eab6b676dc202e7468ebb6b142a4816b1d31a52c6d2eb2a40"
+    },
+    {
+      "bytes": 9612,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/claim_swarm.go",
+      "sha256": "502ce3185319e0499c0a7df372eba8643329925117c1d9554e5c205c91bec019"
+    },
+    {
+      "bytes": 1992,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/durable_census_test.go",
+      "sha256": "b3204dfa2cae5c585eae6bf645220960482ff5f0c951270d0dc4afc973a5802c"
+    },
+    {
+      "bytes": 675,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/durable_volume.go",
+      "sha256": "5602954515bb9b9047bf2c5bf277a8d01231a2879aa4e6b93520542cca769b7c"
+    },
+    {
+      "bytes": 1480,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/durable_volume_admission_test.go",
+      "sha256": "9d49bcdad65f97602b09cbbed53f274fe890e6494147be63239bdf4402717f25"
+    },
+    {
+      "bytes": 6627,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/evm_http_admission_test.go",
+      "sha256": "71d189ede4c930cf6eb6b7382ec04e8104c3c39da3a2190c3e75ef288c458086"
+    },
+    {
+      "bytes": 20078,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet.go",
+      "sha256": "1546a4d574bfba59953a949f68bce6f59f0d30f877a7b3cf17c804c158da5ba0"
+    },
+    {
+      "bytes": 9836,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_current_header_test.go",
+      "sha256": "cdaef3bfa587fd3caa3578d4a595da3f952146dc99325e180dfdf37e6b1cdc95"
+    },
+    {
+      "bytes": 10628,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_mainnet_admission_test.go",
+      "sha256": "6eb0059adf5dd236c48a68d8e5dfa6b9e062216b0b256654e5d53ced6aaa40bb"
+    },
+    {
+      "bytes": 16869,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_mainnet_fixture_test.go",
+      "sha256": "ccc7f1f066d917c6e9de2474ba2fbc4c258caec3ce3d5bb9e3125c24431b6484"
+    },
+    {
+      "bytes": 11875,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_mainnet_native_test.go",
+      "sha256": "33db21bd5f3f17af487fc60f746a3fb275f0e643ec6904623c5e4824179ddd6f"
+    },
+    {
+      "bytes": 6514,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_recovery_chunk_test.go",
+      "sha256": "41204f056827cca278ab53e221576740eb56231866340682166c6c388270b144"
+    },
+    {
+      "bytes": 25941,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_recovery_command_test.go",
+      "sha256": "2cc7a39236652abdd57de841d60ba6cc529188ed3284303d36d8eef060952f25"
+    },
+    {
+      "bytes": 19100,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_recovery_evm.go",
+      "sha256": "caa02fd7ac99618ecdb570120bbfb66437e33b75e2ee9cd675c4d5d4bc45b3d4"
+    },
+    {
+      "bytes": 18224,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_recovery_native.go",
+      "sha256": "157863dc42a861c60e912b13f68e488b80c58cec4da0157773b7ff3f8628f517"
+    },
+    {
+      "bytes": 4565,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_recovery_read_cause_test.go",
+      "sha256": "8916d7cee4586c95e75db55eca10f4a4768d62892ad59c4c4b34b0de4fb29067"
+    },
+    {
+      "bytes": 9935,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_recovery_receipt_test.go",
+      "sha256": "630e3b787297994f752e43aae966f156254c9fb2e1f39361b66a82fa272abb8e"
+    },
+    {
+      "bytes": 23698,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_recovery_store.go",
+      "sha256": "3becf05ca51af5a41e8376a60a4005bbe4b36caa56721641c63adb479383f32e"
+    },
+    {
+      "bytes": 10309,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_recovery_store_test.go",
+      "sha256": "f73a0d5bcab7536596d3aa28836ef969a6c22d06aa6982b955624ec3932896fe"
+    },
+    {
+      "bytes": 10803,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/fleet_runtime_compatibility_test.go",
+      "sha256": "b6f15a40da2043cccee38f3612b1f2a7f671752d4220a7640ab31dac3703830a"
+    },
+    {
+      "bytes": 40988,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/miner/run.go",
+      "sha256": "aa21ff47eff000c16f2a3214b2b7ed92a46a8f6c4be2bddb81c81efae971a5e5"
+    },
+    {
+      "bytes": 1505,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/third_party/go-substrate-rpc-client/go.mod",
+      "sha256": "2915174f97f9aeccd01002b6c61c86366eabcaa2e6f84a21e4ea880e8d45f8d9"
+    },
+    {
+      "bytes": 10513,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/third_party/go-substrate-rpc-client/go.sum",
+      "sha256": "a5bac63fcbe282e4af978e6fbd58eec74a9a92fd606b4944bf7c0a606dd0923e"
+    },
+    {
+      "bytes": 138,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/third_party/npipe/go.mod",
+      "sha256": "59af6d15db6f8d4765fc6a4df110651a895a4c7b3126c7882234cfa0ed9193d9"
+    },
+    {
+      "bytes": 330,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/third_party/npipe/go.sum",
+      "sha256": "d07138b47b7e360eebd880e37ba9ed07d47d45e479b3e31393ebc31421ad5ea7"
+    },
+    {
+      "bytes": 109,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/glog/go.mod",
+      "sha256": "5022a0fd461de289e6e84a4f0930a362613b5bcaaffe090a201e68b6714cb40b"
+    },
+    {
+      "bytes": 167,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/glog/go.sum",
+      "sha256": "6ba1f1ec5cac9d186a7701f560308f919d1d8ddccb49cbf2aaf6281a48268c74"
+    },
+    {
+      "bytes": 157,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/goidenticons/go.mod",
+      "sha256": "67dd6efd0fafd9d54e4bbf953eb07c9526ba55ee0dd4eb3e752ef201f619f28c"
+    },
+    {
+      "bytes": 386,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/goidenticons/go.sum",
+      "sha256": "bd0d81bad9b37ba97715ebb3124e837dcaa4475b92f126f9be95ba7a690fafa0"
+    },
+    {
+      "bytes": 1972,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/proxy/go.mod",
+      "sha256": "bd538f2de13d314e5604022082b28bb692702e3b68aa869abf1df2dfeab3a4e1"
+    },
+    {
+      "bytes": 8881,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/proxy/go.sum",
+      "sha256": "2b76cc33188e10bb564bbe78f82aa16e49d36700a7ad17ef44f94e716fe6e50d"
+    },
+    {
+      "bytes": 10468,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/server/go.mod",
+      "sha256": "a50c18b8e1ca83b8c9c0919a398261d4256a351da48e31f8435c49e97b00570b"
+    },
+    {
+      "bytes": 67231,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/server/go.sum",
+      "sha256": "6be07e61f4935b0f5f9d9f32eebe41424f0b81eb24d6ade6f50d2c9fe6de366b"
+    },
+    {
+      "bytes": 237,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/userwireguard/go.mod",
+      "sha256": "470b20749c9d46b715bce19db1e50618892417a2a4d72b2697efb0e55070f965"
+    },
+    {
+      "bytes": 873,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/userwireguard/go.sum",
+      "sha256": "a0f1fdc50b67dc08e03b7f0e7f6b83acc4722dfc47e29a9f77fe91e2b683ed0b"
+    },
+    {
+      "bytes": 1752,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/warp/go.mod",
+      "sha256": "8413b369e94cf2f76927ef8f5f91794fdd723dd169125b85e1f12d6244d94a0d"
+    },
+    {
+      "bytes": 7822,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/warp/go.sum",
+      "sha256": "5c4cc7a41a8364f54706216ad9554a219b3aba1b4600bd447e16b621ee41a441"
+    },
+    {
+      "bytes": 15434687,
+      "path": "/usr/local/go/bin/go",
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  ],
+  "behavior": [
+    "Daemon claim and owner-local fleet public custody admission require explicit external declarations and preprovisioned snapshot anchors.",
+    "Claim reserve pressure remains on the same owner; an uncertain publisher joins/closes and may reopen only exact pending bytes, at most three generations per controller lifetime.",
+    "Claim replay checks actual retained signed bytes after finalized RPC and before send; a published Prepared callback that loses acknowledgement still retains the shared nonce floor.",
+    "A terminal claim-swarm member does not cancel healthy members, while explicit parent cancellation joins all.",
+    "Fleet and claim missing retained members cannot silently initialize fresh lifetime history; original signed JSON/RLP bytes remain unchanged."
+  ],
+  "causal_scope": [
+    "Replay: exact old replay function body from retained intermediate source, with the current unused owner parameter.",
+    "Swarm: exact old Run body with only required fixture-context forwarding and an observer after its original campaign cancel; not a clean historical whole-program build.",
+    "Prepared nonce floor: retained actual intermediate source before the correction, with the post-real-sync observer; fails floor0 in normal/race.",
+    "Earlier two-root lost-member census normal failure is retained separately; no race rerun claimed for that historical census."
+  ],
+  "dependencies": [
+    {
+      "clean": true,
+      "git_head": "025802a50e2dc56dc56c3cb749db7375aa9f72be",
+      "git_tree": "adf05777aca3ad4fb97c4befd2163a74064d635b",
+      "module": "github.com/urnetwork/server",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/server"
+    },
+    {
+      "clean": true,
+      "git_head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "git_tree": "5a54f2db5582403b7b732c8602adeabaacc1a269",
+      "module": "github.com/urnetwork/warp",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/warp"
+    },
+    {
+      "clean": true,
+      "git_head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "git_tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce",
+      "module": "github.com/urnetwork/proxy",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/proxy"
+    },
+    {
+      "clean": true,
+      "git_head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "git_tree": "e83cf65488b192388571b25b1ac85ecebc36eea0",
+      "module": "github.com/urnetwork/userwireguard",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/userwireguard"
+    },
+    {
+      "clean": true,
+      "git_head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "git_tree": "4b3c242905aed44db5879b3d22e860697f666abe",
+      "module": "github.com/urnetwork/glog",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/glog"
+    },
+    {
+      "clean": true,
+      "git_head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "git_tree": "553487079352d9544edb62850328305e97668790",
+      "module": "github.com/urnetwork/goidenticons",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/goidenticons"
+    },
+    {
+      "clean": true,
+      "git_head": "b3c3d661849eeacbce7a395ed6829a8f45eb1e79",
+      "git_tree": "2337d8c505d9677b57cc637d1cff22f4a7f19daa",
+      "module": "github.com/centrifuge/go-substrate-rpc-client/v4",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/third_party/go-substrate-rpc-client"
+    },
+    {
+      "clean": true,
+      "git_head": "b3c3d661849eeacbce7a395ed6829a8f45eb1e79",
+      "git_tree": "2337d8c505d9677b57cc637d1cff22f4a7f19daa",
+      "module": "gopkg.in/natefinch/npipe.v2",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint/third_party/npipe"
+    }
+  ],
+  "limits": [
+    "201 selected fleet/claim/miner admission roots and3 inherited subtests per mode, plus package vet; not full miner/provider, full SN, release composition, live chain or device qualification.",
+    "Author execution only; independent source rerun remains separate.",
+    "Snapshot/native primitives retain their separate author and independent scopes; monitor18dc and sibling validator/root/server adoption are excluded.",
+    "No signing/broadcasting to a live network, service deployment or production start occurred; synthetic tests capture generated bytes locally.",
+    "Production preparation, owner-xattr backup/restore, capacity forecasting/rotation, deployment units and live authority remain separate open work.",
+    "The three-generation controller budget is per process lifetime; no anti-rollback proof against replay of all predecessor bytes and local authority."
+  ],
+  "phases": [
+    {
+      "elapsed_seconds": 144.744230919,
+      "exit": 0,
+      "expectation_met": true,
+      "failures": null,
+      "phase": "normal",
+      "root_pass": [
+        "TestClaimAdmissionRetainsCrossMemberFIFOAndWake",
+        "TestClaimAdmissionBoundsRecentBurstWithoutReplacingHistory",
+        "TestClaimAdmissionUsesSharedDiscoveryHighWater",
+        "TestClaimAdmissionCancellationDoesNotReleaseAnotherOwner",
+        "TestClaimAdmissionBudgetStartsOnlyAfterGrant",
+        "TestClaimQueueDiscoveryAdvancesWhileAnotherMemberOwnsNonce",
+        "TestClaimEpochReaderCancellationJoinsBlockedRead",
+        "TestClaimQueueAdmissionSpansReconcileAndSignedTimeout",
+        "TestClaimHistoricalOutcomesProgressAcrossSlowAttempts",
+        "TestClaimAdmissionCustodyFailureBlocksNextOwner",
+        "TestClaimQueueReadyTicketBypassesBlockedEpochRead",
+        "TestClaimDaemonConfigStrictAndPortable",
+        "TestClaimDaemonConfigRejectsMalformedTrailingYAML",
+        "TestClaimQueueDiscoveryAndCrashRecoveryBoundary",
+        "TestClaimTxHashOnlyAcceptsCompleteHash",
+        "TestBoundedClaimOutputPersistsHashAcrossWrites",
+        "TestPreparedClaimRecordContainsExactRLP",
+        "TestReconcileClaimEntryUsesFinalizedLeafClaimed",
+        "TestRecordFinalizedClaimReceiptBindsCanonicalInclusionAndLogs",
+        "TestClaimClockFinalizedTagClosesStateAuthority",
+        "TestClaimClockFinalizedTagClosesReceiptAuthority",
+        "TestClaimClockFinalizedTagClosesReplayAuthority",
+        "TestClaimClockClosingTagOutageRemainsTransient",
+        "TestClaimClockFreshSubmitClosesFinalityBeforePublication",
+        "TestClaimClockFreshSubmitAuthenticatesReconciledReceiptIdentityAndEvent",
+        "TestClaimClockReceiptWaitsForEVMFinality",
+        "TestClaimClockStateSelectsFinalizedEVMSnapshot",
+        "TestClaimClockReplayUsesEVMNonceAndExactBytes",
+        "TestClaimClockRestartRetainsUnfinalizedSignedReceipt",
+        "TestClaimClockStateClosesOriginalFinalizedWitness",
+        "TestClaimClockReplayClosesBeforeNonceDispositionOrSend",
+        "TestClaimClockReceiptClosesInclusionAndFinalizedWitness",
+        "TestClaimClockFinalityUnavailableNeverFallsBackToNative",
+        "TestClaimClockRootMismatchRequiresStableWitness",
+        "TestClaimClockCancellationClosesWithoutEvidenceOrSend",
+        "TestClaimNonceFloorPreventsReuseAfterUnacknowledgedSend",
+        "TestClaimAdmissionCancelsInFlightFinalityAndRetainsSignedOutcome",
+        "TestClaimQueueRestartPreservesPartialSignedIdentity",
+        "TestClaimNonceFloorDoesNotAdvanceWithoutOwner",
+        "TestClaimQueueCapacityReadAcceptsExactLimitAndRejectsExcess",
+        "TestClaimQueueCapacityReadRejectsGrowthAfterStat",
+        "TestClaimQueueCapacitySavePreservesExactLimitBytesOnExcess",
+        "TestClaimQueueCapacityPublisherRefusesExcessBeforeFileCreation",
+        "TestClaimQueueCapacityDaemonRefusesExcessBeforeNetwork",
+        "TestClaimQueueCapacitySupportsDocumentedRetainedHorizon",
+        "TestClaimQueueOwnerRejectsDuplicateAndAllowsClosedRestart",
+        "TestClaimQueueOwnerExcludesAnotherProcess",
+        "TestClaimQueueOwnerChildProcess",
+        "TestClaimQueueOwnerPinsPhysicalAliases",
+        "TestClaimQueueOwnerRejectsReplacedDirectory",
+        "TestClaimQueueOwnerRejectsChangedDirectoryAlias",
+        "TestClaimQueueOwnerIoStaysWithinPinnedDirectory",
+        "TestClaimQueueOwnerPreservesLegacyBytesDuringAdmission",
+        "TestClaimQueueOwnerRejectsUnownedAndUnsafeReads",
+        "TestClaimDaemonRejectsDuplicateOwnerBeforeNetwork",
+        "TestClaimDaemonRetainsOwnerUntilJoinedShutdown",
+        "TestClaimDaemonReleasesOwnerOnStartupFailure",
+        "TestClaimSwarmAcquiresAllQueueOwnersBeforeCustodyOrNetwork",
+        "TestClaimSwarmReleasesAllOwnersOnCustodyFailure",
+        "TestClaimSwarmRetainsOwnerThroughActiveMemberShutdown",
+        "TestClaimQueueOwnerRejectsFifoBeforeReading",
+        "TestClaimQueuePollHonorsDeadlineBeforeAnySideEffect",
+        "TestClaimQueuePollBatchesHistoricalFailuresAndPrioritizesRecentClaims",
+        "TestClaimQueuePollHistoricalBudgetPreservesUncertainOutcomePriority",
+        "TestClaimQueuePollPersistsIndependentBoundedReconciliationBackoff",
+        "TestClaimQueuePollKeepsRecentEpochReadinessPrompt",
+        "TestClaimQueuePollRetainsUncertainTransactionAndBoundsOutcomeDelay",
+        "TestClaimQueuePollPropagatesRetryCheckpointFailure",
+        "TestClaimQueuePollCancellationFlushesObservedDiagnostics",
+        "TestClaimQueuePollPreservesImmediateTransactionCheckpoints",
+        "TestClaimQueuePollCannotSubmitAfterIntentCheckpointFailure",
+        "TestClaimQueuePollRejectsMalformedRetryDeadline",
+        "TestClaimQueueStoreSkipsOnlyCurrentIdenticalBytes",
+        "TestClaimQueueStoreRefusesChangedPrivacyBeforeSkippingSave",
+        "TestClaimQueueStoreReacknowledgesPreviouslyVisibleBytes",
+        "TestFinalizedClaimReceiptPreservesSyntheticRPCIdentity",
+        "TestFinalizedClaimReceiptRetainsFailedSyntheticReceipt",
+        "TestClaimReceiptIdentityRejectsAdjacentRPCFailures",
+        "TestFinalizedClaimReceiptRejectsMalformedChainIdentity",
+        "TestDecodeMinerClaimReceiptDistinguishesCreditDeferralAndPayment",
+        "TestDecodeMinerClaimReceiptRejectsNilAndForeignLogs",
+        "TestSignedClaimReconcilesCanonicalReceiptWithoutHistoricalAPI",
+        "TestSignedClaimRejectsReceiptWithoutMatchingIntentEvent",
+        "TestSignedClaimMissingReceiptCannotBecomeAPINoClaim",
+        "TestClaimQueueCannotClearSignedHistoryForRetryOrNoClaim",
+        "TestClaimNonceFloorSeedsAllDurableMembersAndRejectsForgedIdentity",
+        "TestClaimArtifactRootMismatchRemainsDistinctCorrectnessFailure",
+        "TestSignedClaimConsumedNonceRetainsExactLiability",
+        "TestSignedClaimPrunedAPIReplaysExactBytesAfterFinalizedPreflight",
+        "TestClaimStorageRecoveryKeepsOwnerDuringReservePressure",
+        "TestClaimStorageRecoveryReopensExactPendingAfterJoin",
+        "TestClaimStorageRecoveryBoundsUncertainGenerations",
+        "TestClaimStoragePublicEntrypointsRequireDeclaration",
+        "TestClaimStorageReplayRechecksAfterFinalizedRpc",
+        "TestClaimStoragePreparedLostAckRetainsNonceFloor",
+        "TestClaimStorageSwarmLossDoesNotCancelSibling",
+        "TestClaimSwarmConfigIsStrictAndSharesOneNonceDomain",
+        "TestClaimSwarmStatusFailsClosedOnMissingMember",
+        "TestClaimSwarmRejectsDuplicatePhysicalQueueOwners",
+        "TestFleetRecoveryDurableCensusRefusesLostJournalAndMarker",
+        "TestClaimQueueDurableCensusRefusesLostCompletedQueue",
+        "TestFleetRecoveryMissingVolumeDoesNotCreateFreshCustody",
+        "TestClaimQueueMissingVolumeDoesNotCreateFreshCustody",
+        "TestEvmHttpMinerDialPathsRefuseOversizedIdentity",
+        "TestEvmHttpClaimRecoveryRetainsSignedReceiptAcrossAdmissionFailure",
+        "TestEvmHttpClaimReplayStatusCannotMasqueradeAsKnownTransaction",
+        "TestFleetMainnetRegisterAuthenticatesFinalizedUpgradeHeader",
+        "TestFleetMainnetPublishRetainsUpgradePreparedHeaderAcrossRestart",
+        "TestFleetMainnetEvmRetainsUpgradePreparedHeaderAcrossRestart",
+        "TestFleetFinalizedRuntimeRejectsUnauthenticatedHeader",
+        "TestFleetFinalizedRuntimeRejectsClosingCanonicalChange",
+        "TestFleetFinalizedRuntimeCancellationPreservesPriorView",
+        "TestFleetMainnetCommandsRejectUncommittedCurrentHeader",
+        "TestFleetMainnetAuthorityRejectsClosingCanonicalChange",
+        "TestFleetMainnetCommandsRequireAuthorityBeforeSideEffects",
+        "TestFleetMainnetEvmUpgradeAfterPreparedRetainsBytesWithoutSend",
+        "TestFleetMainnetEvmReceiptIsReturnedWithFailedRuntimeAdmission",
+        "TestFleetMainnetRuntimeCancellationNeverReachesSigning",
+        "TestFleetMainnetCliRetainsIndependentAuthorityFlags",
+        "TestFleetMainnetRegisterCommandSignsApprovedRuntime",
+        "TestFleetMainnetBindCommandRequiresActualEvmRuntime",
+        "TestFleetMainnetRevokeCommandChecksLocalSigningDomain",
+        "TestFleetMainnetStatusCommandReadsApprovedNativeAndEvmState",
+        "TestFleetMainnetBindRejectsWrongActualEvmGenesisBeforeKeys",
+        "TestFleetMainnetEvmChainMismatchNeverFallsBack",
+        "TestFleetMainnetEvmUpgradeBeforeSigningDoesNotSend",
+        "TestFleetMainnetEvmUpgradeAtReceiptNeverRebroadcasts",
+        "TestFleetMainnetPublishCommandSignsAndVerifiesApprovedReceipt",
+        "TestFleetMainnetPublishCommandRejectsIncludedUpgradeWithoutResend",
+        "TestFleetMainnetRegisterCommandAppliesAndChecksReceiptAuthority",
+        "TestFleetMainnetRegisterCommandRejectsUpgradeBeforeBroadcast",
+        "TestFleetMainnetRegisterCommandRejectsIncludedUpgradeWithoutResend",
+        "TestFleetMainnetRegisterRejectsUpgradeDuringNonceReadBeforeSigning",
+        "TestFleetMainnetAuthorityRejectsIncompleteAndForeignScope",
+        "TestFleetMainnetAuthorityFileRequiresExactApprovedBytes",
+        "TestFleetMainnetAuthorityCannotInheritTestnetProvisionalFlags",
+        "TestFleetMainnetRuntimeUsesIndependentExactArtifact",
+        "TestFleetMainnetRuntimeChecksFreshGenesisDespiteCachedMetadata",
+        "TestFleetMainnetRuntimeRejectsEveryArtifactCoordinate",
+        "TestFleetMainnetReceiptRuntimeDriftPrecedesStorageDecoding",
+        "TestFleetMainnetReceiptBindsExactWriteBlock",
+        "TestFleetMainnetRuntimeRejectsInstalledProvisionalAuthority",
+        "TestFleetMainnetAuthoritySnapshotDoesNotReloadChangedFile",
+        "TestFleetRecoveryNativeChunkSurvivesLateUnavailableBody",
+        "TestFleetRecoveryNativeInterruptedChunkKeepsPartialProgress",
+        "TestFleetRecoveryNativeChunkBehindHeadKeepsCheckpoint",
+        "TestFleetRecoveryPublishCommandDoesNotSignAgain",
+        "TestFleetRecoveryBindCommandDoesNotSignAgain",
+        "TestFleetRecoveryRevokeCommandDoesNotSignAgain",
+        "TestFleetRecoveryPublishAcceptedWithoutAcknowledgment",
+        "TestFleetRecoveryRegisterAcceptedWithoutAcknowledgment",
+        "TestFleetRecoveryPublishPreparedRestartReplaysExactBytes",
+        "TestFleetRecoveryNativeMalformedAccountNeverReplays",
+        "TestFleetRecoveryNativeHistoricalReceiptAfterCurrentUpgrade",
+        "TestFleetRecoveryNativeMissingHistoryOrConsumedNonceNeverResigns",
+        "TestFleetRecoveryEvmAcceptedWithoutAcknowledgment",
+        "TestFleetRecoveryEvmHistoricalReceiptAfterCurrentUpgrade",
+        "TestFleetRecoveryUpgradeAtReceiptRetainsOriginalAuthority",
+        "TestFleetRecoveryEvmRequiresFirstNativeInsertion",
+        "TestFleetRecoveryEvmConsumedNonceWithoutReceipt",
+        "TestFleetRecoveryCommandRejectsSecondOwnerBeforeSigning",
+        "TestFleetRecoveryActualSendHasDurableSignedRecord",
+        "TestFleetRecoveryEvmDifferentHeightRequiresAuthenticatedMapping",
+        "TestFleetRecoveryEvmPreparedRestartReplaysExactBytes",
+        "TestFleetRecoveryEvmMalformedOutcomeNeverCompletes",
+        "TestFleetRecoveryNativeScanResumesDurableCanonicalProgress",
+        "TestFleetRecoveryNativeFinalizedFailureNeverResigns",
+        "TestFleetRecoveryEvmFinalizedFailureNeverResigns",
+        "TestFleetRecoveryEvmReadFailuresPreserveOriginalWork",
+        "TestFleetRecoveryNativeTruncatedBodyNeverAdvancesCheckpoint",
+        "TestFleetRecoveryNativeIncompleteBodyNeverAdvancesPastEvidence",
+        "TestFleetRecoveryNativeRuntimeUpdateDigestPreservesProgress",
+        "TestFleetRecoveryNativeLegacyScanProofMigratesOnce",
+        "TestFleetRecoveryStoreExclusiveOwner",
+        "TestFleetRecoveryStoreInterruptedCommitRetainsExactSignedBytes",
+        "TestFleetRecoveryStoreRejectsTamperedCustodyAndReplacement",
+        "TestFleetRecoveryStoreMissingOrCorruptJournalFailsClosed",
+        "TestFleetRecoveryStoreRefusesSymlinkAndOversizedJournal",
+        "TestFleetRecoveryStorePendingIntentBlocksChangedTarget",
+        "TestFleetRecoveryStoreRejectsInventoryRemoval",
+        "TestFleetRecoveryStoreRejectsCandidateReplacementWithoutMutation",
+        "TestFleetRuntimeArtifactMatchesReviewedMetadataManifest",
+        "TestFleetFinalizedRuntime467AuthenticatesIndependentExactHeads",
+        "TestFleetFinalizedRuntime467RejectsPrecedingSpecWithReviewedBytes",
+        "TestFleetRuntime467RejectsReceiptRuntimeDriftAfterCurrentAuthentication",
+        "TestFleetRuntimeMetadataFixtureRejectsBoundFramingAndDigestDrift",
+        "TestFleetRuntime458Retains455EvidenceWithoutCurrentAuthority",
+        "TestFleetRuntime460Retains458EvidenceWithoutCurrentAuthority",
+        "TestFleetRuntime467RetainsPrecedingEvidenceWithoutCurrentAuthority",
+        "TestFleetProvisionalRuntimeFlagsRequireExplicitTestnetAuthority",
+        "TestFleetProvisionalRuntimeAuthenticatesCurrentStatusAndSigningBinding",
+        "TestFleetProvisionalRuntimeRefusesForgedBindingAndUndurableObservation",
+        "TestFleetRuntimeArtifactMatchesReleaseManifests",
+        "TestFleetRuntimeAuthenticationRejectsAdjacentArtifactDrift",
+        "TestFleetFinalizedRuntimeGateRejectsFormerSpecOnlyPin",
+        "TestBindFleetRuntimeUsesAuthenticatedCurrentArtifact",
+        "TestBindFleetRuntimeRejectsUnreviewedArtifactWithoutMutation",
+        "TestFleetRuntimeArtifactAuthenticationSharesMetadataAcrossConcurrentHeads",
+        "TestDialFleetNativeContextBindsDeadlineThroughRuntimeAuthentication",
+        "TestDialFleetNativeContextFailsOverAfterSlowEndpointDeadline",
+        "TestDialFleetNativeContextClampsEndpointDeadlineToParent"
+      ],
+      "skips": null,
+      "subtest_pass": [
+        "TestRecordFinalizedClaimReceiptBindsCanonicalInclusionAndLogs/failed",
+        "TestRecordFinalizedClaimReceiptBindsCanonicalInclusionAndLogs/missing_block",
+        "TestRecordFinalizedClaimReceiptBindsCanonicalInclusionAndLogs/wrong_transaction"
+      ]
+    },
+    {
+      "elapsed_seconds": 1164.18868983,
+      "exit": 0,
+      "expectation_met": true,
+      "failures": null,
+      "phase": "race",
+      "root_pass": [
+        "TestClaimAdmissionRetainsCrossMemberFIFOAndWake",
+        "TestClaimAdmissionBoundsRecentBurstWithoutReplacingHistory",
+        "TestClaimAdmissionUsesSharedDiscoveryHighWater",
+        "TestClaimAdmissionCancellationDoesNotReleaseAnotherOwner",
+        "TestClaimAdmissionBudgetStartsOnlyAfterGrant",
+        "TestClaimQueueDiscoveryAdvancesWhileAnotherMemberOwnsNonce",
+        "TestClaimEpochReaderCancellationJoinsBlockedRead",
+        "TestClaimQueueAdmissionSpansReconcileAndSignedTimeout",
+        "TestClaimHistoricalOutcomesProgressAcrossSlowAttempts",
+        "TestClaimAdmissionCustodyFailureBlocksNextOwner",
+        "TestClaimQueueReadyTicketBypassesBlockedEpochRead",
+        "TestClaimDaemonConfigStrictAndPortable",
+        "TestClaimDaemonConfigRejectsMalformedTrailingYAML",
+        "TestClaimQueueDiscoveryAndCrashRecoveryBoundary",
+        "TestClaimTxHashOnlyAcceptsCompleteHash",
+        "TestBoundedClaimOutputPersistsHashAcrossWrites",
+        "TestPreparedClaimRecordContainsExactRLP",
+        "TestReconcileClaimEntryUsesFinalizedLeafClaimed",
+        "TestRecordFinalizedClaimReceiptBindsCanonicalInclusionAndLogs",
+        "TestClaimClockFinalizedTagClosesStateAuthority",
+        "TestClaimClockFinalizedTagClosesReceiptAuthority",
+        "TestClaimClockFinalizedTagClosesReplayAuthority",
+        "TestClaimClockClosingTagOutageRemainsTransient",
+        "TestClaimClockFreshSubmitClosesFinalityBeforePublication",
+        "TestClaimClockFreshSubmitAuthenticatesReconciledReceiptIdentityAndEvent",
+        "TestClaimClockReceiptWaitsForEVMFinality",
+        "TestClaimClockStateSelectsFinalizedEVMSnapshot",
+        "TestClaimClockReplayUsesEVMNonceAndExactBytes",
+        "TestClaimClockRestartRetainsUnfinalizedSignedReceipt",
+        "TestClaimClockStateClosesOriginalFinalizedWitness",
+        "TestClaimClockReplayClosesBeforeNonceDispositionOrSend",
+        "TestClaimClockReceiptClosesInclusionAndFinalizedWitness",
+        "TestClaimClockFinalityUnavailableNeverFallsBackToNative",
+        "TestClaimClockRootMismatchRequiresStableWitness",
+        "TestClaimClockCancellationClosesWithoutEvidenceOrSend",
+        "TestClaimNonceFloorPreventsReuseAfterUnacknowledgedSend",
+        "TestClaimAdmissionCancelsInFlightFinalityAndRetainsSignedOutcome",
+        "TestClaimQueueRestartPreservesPartialSignedIdentity",
+        "TestClaimNonceFloorDoesNotAdvanceWithoutOwner",
+        "TestClaimQueueCapacityReadAcceptsExactLimitAndRejectsExcess",
+        "TestClaimQueueCapacityReadRejectsGrowthAfterStat",
+        "TestClaimQueueCapacitySavePreservesExactLimitBytesOnExcess",
+        "TestClaimQueueCapacityPublisherRefusesExcessBeforeFileCreation",
+        "TestClaimQueueCapacityDaemonRefusesExcessBeforeNetwork",
+        "TestClaimQueueCapacitySupportsDocumentedRetainedHorizon",
+        "TestClaimQueueOwnerRejectsDuplicateAndAllowsClosedRestart",
+        "TestClaimQueueOwnerExcludesAnotherProcess",
+        "TestClaimQueueOwnerChildProcess",
+        "TestClaimQueueOwnerPinsPhysicalAliases",
+        "TestClaimQueueOwnerRejectsReplacedDirectory",
+        "TestClaimQueueOwnerRejectsChangedDirectoryAlias",
+        "TestClaimQueueOwnerIoStaysWithinPinnedDirectory",
+        "TestClaimQueueOwnerPreservesLegacyBytesDuringAdmission",
+        "TestClaimQueueOwnerRejectsUnownedAndUnsafeReads",
+        "TestClaimDaemonRejectsDuplicateOwnerBeforeNetwork",
+        "TestClaimDaemonRetainsOwnerUntilJoinedShutdown",
+        "TestClaimDaemonReleasesOwnerOnStartupFailure",
+        "TestClaimSwarmAcquiresAllQueueOwnersBeforeCustodyOrNetwork",
+        "TestClaimSwarmReleasesAllOwnersOnCustodyFailure",
+        "TestClaimSwarmRetainsOwnerThroughActiveMemberShutdown",
+        "TestClaimQueueOwnerRejectsFifoBeforeReading",
+        "TestClaimQueuePollHonorsDeadlineBeforeAnySideEffect",
+        "TestClaimQueuePollBatchesHistoricalFailuresAndPrioritizesRecentClaims",
+        "TestClaimQueuePollHistoricalBudgetPreservesUncertainOutcomePriority",
+        "TestClaimQueuePollPersistsIndependentBoundedReconciliationBackoff",
+        "TestClaimQueuePollKeepsRecentEpochReadinessPrompt",
+        "TestClaimQueuePollRetainsUncertainTransactionAndBoundsOutcomeDelay",
+        "TestClaimQueuePollPropagatesRetryCheckpointFailure",
+        "TestClaimQueuePollCancellationFlushesObservedDiagnostics",
+        "TestClaimQueuePollPreservesImmediateTransactionCheckpoints",
+        "TestClaimQueuePollCannotSubmitAfterIntentCheckpointFailure",
+        "TestClaimQueuePollRejectsMalformedRetryDeadline",
+        "TestClaimQueueStoreSkipsOnlyCurrentIdenticalBytes",
+        "TestClaimQueueStoreRefusesChangedPrivacyBeforeSkippingSave",
+        "TestClaimQueueStoreReacknowledgesPreviouslyVisibleBytes",
+        "TestFinalizedClaimReceiptPreservesSyntheticRPCIdentity",
+        "TestFinalizedClaimReceiptRetainsFailedSyntheticReceipt",
+        "TestClaimReceiptIdentityRejectsAdjacentRPCFailures",
+        "TestFinalizedClaimReceiptRejectsMalformedChainIdentity",
+        "TestDecodeMinerClaimReceiptDistinguishesCreditDeferralAndPayment",
+        "TestDecodeMinerClaimReceiptRejectsNilAndForeignLogs",
+        "TestSignedClaimReconcilesCanonicalReceiptWithoutHistoricalAPI",
+        "TestSignedClaimRejectsReceiptWithoutMatchingIntentEvent",
+        "TestSignedClaimMissingReceiptCannotBecomeAPINoClaim",
+        "TestClaimQueueCannotClearSignedHistoryForRetryOrNoClaim",
+        "TestClaimNonceFloorSeedsAllDurableMembersAndRejectsForgedIdentity",
+        "TestClaimArtifactRootMismatchRemainsDistinctCorrectnessFailure",
+        "TestSignedClaimConsumedNonceRetainsExactLiability",
+        "TestSignedClaimPrunedAPIReplaysExactBytesAfterFinalizedPreflight",
+        "TestClaimStorageRecoveryKeepsOwnerDuringReservePressure",
+        "TestClaimStorageRecoveryReopensExactPendingAfterJoin",
+        "TestClaimStorageRecoveryBoundsUncertainGenerations",
+        "TestClaimStoragePublicEntrypointsRequireDeclaration",
+        "TestClaimStorageReplayRechecksAfterFinalizedRpc",
+        "TestClaimStoragePreparedLostAckRetainsNonceFloor",
+        "TestClaimStorageSwarmLossDoesNotCancelSibling",
+        "TestClaimSwarmConfigIsStrictAndSharesOneNonceDomain",
+        "TestClaimSwarmStatusFailsClosedOnMissingMember",
+        "TestClaimSwarmRejectsDuplicatePhysicalQueueOwners",
+        "TestFleetRecoveryDurableCensusRefusesLostJournalAndMarker",
+        "TestClaimQueueDurableCensusRefusesLostCompletedQueue",
+        "TestFleetRecoveryMissingVolumeDoesNotCreateFreshCustody",
+        "TestClaimQueueMissingVolumeDoesNotCreateFreshCustody",
+        "TestEvmHttpMinerDialPathsRefuseOversizedIdentity",
+        "TestEvmHttpClaimRecoveryRetainsSignedReceiptAcrossAdmissionFailure",
+        "TestEvmHttpClaimReplayStatusCannotMasqueradeAsKnownTransaction",
+        "TestFleetMainnetRegisterAuthenticatesFinalizedUpgradeHeader",
+        "TestFleetMainnetPublishRetainsUpgradePreparedHeaderAcrossRestart",
+        "TestFleetMainnetEvmRetainsUpgradePreparedHeaderAcrossRestart",
+        "TestFleetFinalizedRuntimeRejectsUnauthenticatedHeader",
+        "TestFleetFinalizedRuntimeRejectsClosingCanonicalChange",
+        "TestFleetFinalizedRuntimeCancellationPreservesPriorView",
+        "TestFleetMainnetCommandsRejectUncommittedCurrentHeader",
+        "TestFleetMainnetAuthorityRejectsClosingCanonicalChange",
+        "TestFleetMainnetCommandsRequireAuthorityBeforeSideEffects",
+        "TestFleetMainnetEvmUpgradeAfterPreparedRetainsBytesWithoutSend",
+        "TestFleetMainnetEvmReceiptIsReturnedWithFailedRuntimeAdmission",
+        "TestFleetMainnetRuntimeCancellationNeverReachesSigning",
+        "TestFleetMainnetCliRetainsIndependentAuthorityFlags",
+        "TestFleetMainnetRegisterCommandSignsApprovedRuntime",
+        "TestFleetMainnetBindCommandRequiresActualEvmRuntime",
+        "TestFleetMainnetRevokeCommandChecksLocalSigningDomain",
+        "TestFleetMainnetStatusCommandReadsApprovedNativeAndEvmState",
+        "TestFleetMainnetBindRejectsWrongActualEvmGenesisBeforeKeys",
+        "TestFleetMainnetEvmChainMismatchNeverFallsBack",
+        "TestFleetMainnetEvmUpgradeBeforeSigningDoesNotSend",
+        "TestFleetMainnetEvmUpgradeAtReceiptNeverRebroadcasts",
+        "TestFleetMainnetPublishCommandSignsAndVerifiesApprovedReceipt",
+        "TestFleetMainnetPublishCommandRejectsIncludedUpgradeWithoutResend",
+        "TestFleetMainnetRegisterCommandAppliesAndChecksReceiptAuthority",
+        "TestFleetMainnetRegisterCommandRejectsUpgradeBeforeBroadcast",
+        "TestFleetMainnetRegisterCommandRejectsIncludedUpgradeWithoutResend",
+        "TestFleetMainnetRegisterRejectsUpgradeDuringNonceReadBeforeSigning",
+        "TestFleetMainnetAuthorityRejectsIncompleteAndForeignScope",
+        "TestFleetMainnetAuthorityFileRequiresExactApprovedBytes",
+        "TestFleetMainnetAuthorityCannotInheritTestnetProvisionalFlags",
+        "TestFleetMainnetRuntimeUsesIndependentExactArtifact",
+        "TestFleetMainnetRuntimeChecksFreshGenesisDespiteCachedMetadata",
+        "TestFleetMainnetRuntimeRejectsEveryArtifactCoordinate",
+        "TestFleetMainnetReceiptRuntimeDriftPrecedesStorageDecoding",
+        "TestFleetMainnetReceiptBindsExactWriteBlock",
+        "TestFleetMainnetRuntimeRejectsInstalledProvisionalAuthority",
+        "TestFleetMainnetAuthoritySnapshotDoesNotReloadChangedFile",
+        "TestFleetRecoveryNativeChunkSurvivesLateUnavailableBody",
+        "TestFleetRecoveryNativeInterruptedChunkKeepsPartialProgress",
+        "TestFleetRecoveryNativeChunkBehindHeadKeepsCheckpoint",
+        "TestFleetRecoveryPublishCommandDoesNotSignAgain",
+        "TestFleetRecoveryBindCommandDoesNotSignAgain",
+        "TestFleetRecoveryRevokeCommandDoesNotSignAgain",
+        "TestFleetRecoveryPublishAcceptedWithoutAcknowledgment",
+        "TestFleetRecoveryRegisterAcceptedWithoutAcknowledgment",
+        "TestFleetRecoveryPublishPreparedRestartReplaysExactBytes",
+        "TestFleetRecoveryNativeMalformedAccountNeverReplays",
+        "TestFleetRecoveryNativeHistoricalReceiptAfterCurrentUpgrade",
+        "TestFleetRecoveryNativeMissingHistoryOrConsumedNonceNeverResigns",
+        "TestFleetRecoveryEvmAcceptedWithoutAcknowledgment",
+        "TestFleetRecoveryEvmHistoricalReceiptAfterCurrentUpgrade",
+        "TestFleetRecoveryUpgradeAtReceiptRetainsOriginalAuthority",
+        "TestFleetRecoveryEvmRequiresFirstNativeInsertion",
+        "TestFleetRecoveryEvmConsumedNonceWithoutReceipt",
+        "TestFleetRecoveryCommandRejectsSecondOwnerBeforeSigning",
+        "TestFleetRecoveryActualSendHasDurableSignedRecord",
+        "TestFleetRecoveryEvmDifferentHeightRequiresAuthenticatedMapping",
+        "TestFleetRecoveryEvmPreparedRestartReplaysExactBytes",
+        "TestFleetRecoveryEvmMalformedOutcomeNeverCompletes",
+        "TestFleetRecoveryNativeScanResumesDurableCanonicalProgress",
+        "TestFleetRecoveryNativeFinalizedFailureNeverResigns",
+        "TestFleetRecoveryEvmFinalizedFailureNeverResigns",
+        "TestFleetRecoveryEvmReadFailuresPreserveOriginalWork",
+        "TestFleetRecoveryNativeTruncatedBodyNeverAdvancesCheckpoint",
+        "TestFleetRecoveryNativeIncompleteBodyNeverAdvancesPastEvidence",
+        "TestFleetRecoveryNativeRuntimeUpdateDigestPreservesProgress",
+        "TestFleetRecoveryNativeLegacyScanProofMigratesOnce",
+        "TestFleetRecoveryStoreExclusiveOwner",
+        "TestFleetRecoveryStoreInterruptedCommitRetainsExactSignedBytes",
+        "TestFleetRecoveryStoreRejectsTamperedCustodyAndReplacement",
+        "TestFleetRecoveryStoreMissingOrCorruptJournalFailsClosed",
+        "TestFleetRecoveryStoreRefusesSymlinkAndOversizedJournal",
+        "TestFleetRecoveryStorePendingIntentBlocksChangedTarget",
+        "TestFleetRecoveryStoreRejectsInventoryRemoval",
+        "TestFleetRecoveryStoreRejectsCandidateReplacementWithoutMutation",
+        "TestFleetRuntimeArtifactMatchesReviewedMetadataManifest",
+        "TestFleetFinalizedRuntime467AuthenticatesIndependentExactHeads",
+        "TestFleetFinalizedRuntime467RejectsPrecedingSpecWithReviewedBytes",
+        "TestFleetRuntime467RejectsReceiptRuntimeDriftAfterCurrentAuthentication",
+        "TestFleetRuntimeMetadataFixtureRejectsBoundFramingAndDigestDrift",
+        "TestFleetRuntime458Retains455EvidenceWithoutCurrentAuthority",
+        "TestFleetRuntime460Retains458EvidenceWithoutCurrentAuthority",
+        "TestFleetRuntime467RetainsPrecedingEvidenceWithoutCurrentAuthority",
+        "TestFleetProvisionalRuntimeFlagsRequireExplicitTestnetAuthority",
+        "TestFleetProvisionalRuntimeAuthenticatesCurrentStatusAndSigningBinding",
+        "TestFleetProvisionalRuntimeRefusesForgedBindingAndUndurableObservation",
+        "TestFleetRuntimeArtifactMatchesReleaseManifests",
+        "TestFleetRuntimeAuthenticationRejectsAdjacentArtifactDrift",
+        "TestFleetFinalizedRuntimeGateRejectsFormerSpecOnlyPin",
+        "TestBindFleetRuntimeUsesAuthenticatedCurrentArtifact",
+        "TestBindFleetRuntimeRejectsUnreviewedArtifactWithoutMutation",
+        "TestFleetRuntimeArtifactAuthenticationSharesMetadataAcrossConcurrentHeads",
+        "TestDialFleetNativeContextBindsDeadlineThroughRuntimeAuthentication",
+        "TestDialFleetNativeContextFailsOverAfterSlowEndpointDeadline",
+        "TestDialFleetNativeContextClampsEndpointDeadlineToParent"
+      ],
+      "skips": null,
+      "subtest_pass": [
+        "TestRecordFinalizedClaimReceiptBindsCanonicalInclusionAndLogs/failed",
+        "TestRecordFinalizedClaimReceiptBindsCanonicalInclusionAndLogs/missing_block",
+        "TestRecordFinalizedClaimReceiptBindsCanonicalInclusionAndLogs/wrong_transaction"
+      ]
+    },
+    {
+      "elapsed_seconds": 22.216392624,
+      "exit": 0,
+      "expectation_met": true,
+      "failures": null,
+      "phase": "vet",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 15.327555045,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestClaimStorageReplayRechecksAfterFinalizedRpc"
+      ],
+      "phase": "replay-normal",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 22.707245955,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestClaimStorageReplayRechecksAfterFinalizedRpc"
+      ],
+      "phase": "replay-race",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 15.261728513,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestClaimStorageSwarmLossDoesNotCancelSibling"
+      ],
+      "phase": "swarm-normal",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 23.217209815,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestClaimStorageSwarmLossDoesNotCancelSibling"
+      ],
+      "phase": "swarm-race",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 14.752517928,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestClaimStoragePreparedLostAckRetainsNonceFloor"
+      ],
+      "phase": "floor-normal",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 21.155090515,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestClaimStoragePreparedLostAckRetainsNonceFloor"
+      ],
+      "phase": "floor-race",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    }
+  ],
+  "preserved_failures": [
+    "Original ab7 full normal: two fixture defects (alternate RPC fixture changed the declared state path; provisional runtime fixture lacked a real RPC/SCALE-committed header).",
+    "98ff fixture successor: only provisional header fixture still failed. Both corrected in separate commits; no production authority check was relaxed.",
+    "First successor wrapper failed to write its terminal wrapper-exit variable; raw phase command/JSON/stderr/exit and result remain authoritative. Qualified wrapper has terminal0."
+  ],
+  "schema": "mainnet-miner-storage-custody-author-v1",
+  "source": {
+    "base": "a5c765c4b0c9342350acf185d35042bbab894dac",
+    "checkout_kind": "linked worktree with retained physical common Git repository",
+    "clean": true,
+    "head": "b3c3d661849eeacbce7a395ed6829a8f45eb1e79",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-custody-checkpoint",
+    "tree": "2337d8c505d9677b57cc637d1cff22f4a7f19daa"
+  },
+  "time": "2026-10-02T11:31:18.64170958Z",
+  "verdict": "PASS_SCOPED_AUTHOR_ONLY"
+}

@@ -1,0 +1,20 @@
+{
+  "composition_commit": "2a453df9bd7967776889b5f15cd8724d6f9255cb",
+  "composition_delta_paths": [
+    "controller/account_payment_controller.go",
+    "controller/provider_payout_boundary_test.go",
+    "controller/provider_payout_composition_test.go",
+    "controller/st_payout_transition.go"
+  ],
+  "file_count": 46,
+  "limitations": [
+    "Byte/readback join only; does not qualify newer Server18ec migration source."
+  ],
+  "schema": "sol-financial-get-2a-source-join-readback-v1",
+  "source_commit": [
+    "cdcb61fa3db72fb5c5844358224eeb0fb3cbd661",
+    "25f617dc30ec49b5162d51082498beaef583bf00"
+  ],
+  "source_join_sha256": "ee8cdd24b5e60e3cdc59539de1dd067042d944ec083d3193b028b419a0efe016",
+  "status": "PASS_SHA256_BYTES_GIT_BLOB"
+}

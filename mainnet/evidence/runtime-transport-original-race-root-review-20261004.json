@@ -1,0 +1,127 @@
+{
+  "schema": "runtime-transport-original-race-root-review-v1",
+  "observed_utc": "2026-10-04T05:17:38.040069+00:00",
+  "status": "RACE_32_PASS_ONE_RECONNECT_FAILURE",
+  "source_head": "f3baff84b70d047039680210d14a48d784b24a28",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-33root-receipt.json",
+    "sha256": "6bde9cf1f74fb3bc5b81545c22726f7d11bb20240fdbe55eb0c8cb2dc0eda830"
+  },
+  "census": {
+    "run": 33,
+    "pass": 32,
+    "fail": 1
+  },
+  "verified_bindings": [
+    {
+      "bytes": 18126,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-0-body.stdout",
+      "sha256": "6dca5f9cf6d047f8be1567183fe5d47c2282fc276087b92bc4f421b670240979"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-0-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-0-compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-0-compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 20375461,
+      "ctime_ns": 1791090627429929138,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 17574303,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791090627350932526,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/images/ph18-race-0.test",
+      "sha256": "4067aaffdd787b763e685a19ccaa5c7b53a98489aa6e78385607be807e5036ce",
+      "type": 32768,
+      "uid": 1000
+    },
+    {
+      "bytes": 4363,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-1-body.stdout",
+      "sha256": "cf4b5a751091e671bc1d8a424a5efeb12d9d7d3d66f5261c27b674b32ffeb52b"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-1-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-1-compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-1-compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 108922128,
+      "ctime_ns": 1791090893247753122,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 17600796,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791090893021762462,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/images/ph18-race-1.test",
+      "sha256": "88b259cfd07a07c2354451e12943e2b2b7e66d10e48d912bf49977e2078b8bbd",
+      "type": 32768,
+      "uid": 1000
+    },
+    {
+      "bytes": 4102,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-2-body.stdout",
+      "sha256": "37f2a296373cd86d3ede2c767ec84da022544b3fd1f8354dbd101903c6516980"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-2-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-2-compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-race-2-compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 14417710,
+      "ctime_ns": 1791090913625911776,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 17598484,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791090913557914580,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/images/ph18-race-2.test",
+      "sha256": "e4609dd79e8a12864cd5a10b59235bd5cc40d99e5d63473a35ecfe0638db505e",
+      "type": 32768,
+      "uid": 1000
+    }
+  ],
+  "failed_root_outputs": {
+    "TestRuntimeTransportActualWebsocketReconnectRevokesSameApiProof": "=== RUN   TestRuntimeTransportActualWebsocketReconnectRevokesSameApiProof\n    runtime_transport_test.go:151: same API failed to reobserve after actual reconnect: connections=3 err=runtime transport observation expired; reobserve the original pinned block\n--- FAIL: TestRuntimeTransportActualWebsocketReconnectRevokesSameApiProof (0.01s)\n"
+  },
+  "interpretation": "Same actual WS reconnect root fails normally and with race detection. One-attempt authentication correctly expires when reconnect changes generation. Preserve this contract; qualify bounded whole-read public-owner recovery in distinct successor. All twelve validator/gethrpc roots pass per mode.",
+  "limits": [
+    "Original selected both-mode scope remains failed.",
+    "No correction success, all-role admission or mainnet readiness inferred."
+  ]
+}

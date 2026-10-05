@@ -1,0 +1,69 @@
+{
+  "schema": "corrected-rust-renewal-body-result-v1",
+  "checked_at": "2026-10-05T06:52:27.503145+00:00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-normal-body-v1.receipt.json",
+    "sha256": "cf62048dbcc153fb7cb757cf824c5e70c28274a5403056a119252dec9372651a"
+  },
+  "actual_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-normal-body-v1-01.process-result.json",
+    "sha256": "e4a2d0b0968e0b9411622a89a06bcc16b23d4007008ef3a7ad928ecdf7263341"
+  },
+  "totals": {
+    "fail": 0,
+    "not_run": 0,
+    "pass": 1,
+    "planned": 1,
+    "run": 1,
+    "skip": 0
+  },
+  "retained_exports": [
+    {
+      "bytes": 32857,
+      "device": 2081,
+      "inode": 195631,
+      "links": 1,
+      "mode": 256,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-main-b13-renewal-normal-v1/runtime-renewal/native-job-101.json",
+      "sha256": "2db7ca1f61e75b64f162c1118d835922f3a2ba76d479a776157f4b808102e506"
+    },
+    {
+      "bytes": 33376,
+      "device": 2081,
+      "inode": 195632,
+      "links": 1,
+      "mode": 256,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-main-b13-renewal-normal-v1/runtime-renewal/native-job-102.json",
+      "sha256": "12c707415d499a2c86acdcb2702ccb3d6c712615ecd1f8df247202b3b477f6cc"
+    },
+    {
+      "bytes": 20922,
+      "device": 2081,
+      "inode": 195633,
+      "links": 1,
+      "mode": 256,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-main-b13-renewal-normal-v1/runtime-renewal/native-job-103.json",
+      "sha256": "ee8640c0644c5f0b45e9d48f2f44e46590262ff953f3095cac545f40a5f5e0d4"
+    },
+    {
+      "bytes": 20918,
+      "device": 2081,
+      "inode": 195634,
+      "links": 1,
+      "mode": 256,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-main-b13-renewal-normal-v1/runtime-renewal/native-job-104.json",
+      "sha256": "a44c4f60fdcb0a54c490355b9461fd747f6ad54db3c4a02e1ae4a0834e0d6842"
+    },
+    {
+      "bytes": 20919,
+      "device": 2081,
+      "inode": 195635,
+      "links": 1,
+      "mode": 256,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/exports-main-b13-renewal-normal-v1/runtime-renewal/native-job-105.json",
+      "sha256": "e5c4283121f41fe0b4e3ac73e938f2f92d11494e77b681c76910312b1755b4a3"
+    }
+  ],
+  "status": "PASS_MAIN_RENEWAL_NORMAL_5_EXPORTS",
+  "scope": "One corrected runtime-renewal root and five original export files. Retained37 passing roots preserve original component provenance. Independent omission control, complete113 Rust suite and production authority are not established."
+}

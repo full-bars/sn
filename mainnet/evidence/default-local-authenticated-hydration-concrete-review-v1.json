@@ -1,0 +1,72 @@
+{
+  "authentication": {
+    "GONOPROXY": "",
+    "GONOSUMDB": "",
+    "GOPRIVATE": "",
+    "GOPROXY": "https://proxy.golang.org",
+    "GOSUMDB": "sum.golang.org",
+    "toolchain": "Pinned installed Go1.26.6, GOTOOLCHAIN=local; no auto download."
+  },
+  "default_qualification": false,
+  "execution_limits": {
+    "KillMode": "control-group",
+    "MemoryMax": 4294967296,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 2700,
+    "TimeoutStopSec": 90
+  },
+  "forecast": {
+    "basis": "Existing source archives reused without copy. Prospective3GiB disk covers additional authenticated module artifacts, four32MiB download logs plus four64MiB proposal logs and small module copies; growth4GiB and hard4GiB memory enforce refusal/stop if exceeded. Forecast is not a measured bound.",
+    "disk_bytes": 3221225472,
+    "held_closed_model_reserve_bytes": 4294967296,
+    "memory_bytes": 2147483648
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-job-v1.json",
+    "sha256": "125cfd983a270ba63d2551c26b7d88165b010f55d250c619802c8fd3c4f45464"
+  },
+  "module_context": "Go -modfile changes only which module/sum files are mutable, not original cwd/main-module root. Exact installed Go init.go/modfile.go source pinned as semantics evidence. All relative replacements remain resolved from original module root.",
+  "ordering": "Any intervening omission compiler must be bound with its actual wait and closed USER readback in Root adoption additional_predecessor_waits/additional_closed_owner_readbacks.",
+  "original_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1.receipt.json",
+    "sha256": "236f5965da9e1434565677aa20026c392dcb02b56985a5a409aebd904a1886fc"
+  },
+  "phase_count": 8,
+  "phase_timeout_seconds": 300,
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 15032385536,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "125cfd983a270ba63d2551c26b7d88165b010f55d250c619802c8fd3c4f45464",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "network_context_count": 4,
+    "runner_sha256": "0229924632a94f451be02a89dd4dc524ed305921dac65c97591666887f349f82",
+    "short_count": 0,
+    "status": "ADOPTED_BOUNDED_AUTHENTICATED_PRIVATE_MODULE_HYDRATION"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/default-local-authenticated-hydration-adoption-v1.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-default-dependency-hydration-v1.py",
+    "sha256": "0229924632a94f451be02a89dd4dc524ed305921dac65c97591666887f349f82"
+  },
+  "schema": "default-module-authenticated-hydration-review-v1",
+  "scope": "Four authenticated public dependency download contexts and private module-file proposal graphs only. Original ten staged archives remain byte-exact. Private -modfile proposals are not actual default-module qualification; later published source fixes require independent readonly default graphs. No compiler/body/DB or canonical source edits.",
+  "source_manifest": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-local-source-manifest-v1.json",
+    "sha256": "093587b9e087e34a61f88f5afb9dda4f8a185f8615d791c3a5e8f105a5688953"
+  },
+  "source_mutation": false,
+  "stage_root": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/published-default-local-source-v1",
+  "status": "READY_FOR_ROOT_ADOPTION_NO_EXECUTION",
+  "whole_owner_horizon_seconds": 2790
+}

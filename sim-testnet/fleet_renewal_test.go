@@ -6,12 +6,14 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -26,6 +28,32 @@ import (
 	"github.com/urfoundation/sn/protocol"
 	"github.com/urfoundation/sn/stabi"
 )
+
+func TestFleetRenewalRetainsAuthenticatedSourceAcrossReleaseFingerprint(t *testing.T) {
+	fixture := newFleetRenewalTestFixture(t)
+	wire, err := json.Marshal(fixture.base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := atomicWrite(filepath.Join(fixture.stateDir, "plan.json"), wire, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// A later release changes its operational fingerprint, but has not changed
+	// the deployment, policy, route, runtime approval, or public custody.
+	fixture.cfg.ConfigHash = common.Hash{0x91}.Hex()
+	if _, err := loadPersistedPlan(fixture.cfg, fixture.stateDir); !errors.Is(err, errPersistedPlanIdentityMismatch) {
+		t.Fatalf("strict active-plan load error=%v, want retained identity mismatch", err)
+	}
+	base, err := loadFleetRenewalBase(fixture.cfg, fixture.stateDir)
+	if err != nil || base.PlanHash != fixture.base.PlanHash {
+		t.Fatalf("retained renewal source=%v/%v", base, err)
+	}
+
+	fixture.cfg.PolicyHash = common.Hash{0x92}.Hex()
+	if _, err := loadFleetRenewalBase(fixture.cfg, fixture.stateDir); err == nil {
+		t.Fatal("renewal accepted a changed policy identity")
+	}
+}
 
 type fleetRenewalTestFixture struct {
 	cfg      *ResolvedConfig
@@ -53,6 +81,13 @@ func newFleetRenewalTestFixture(t *testing.T) fleetRenewalTestFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
+	return newFleetRenewalConfiguredTestFixture(t, cfg, base, roles)
+}
+
+// Share the exact signed fleet geometry with retained-generation integration
+// tests that already own a different evidence-journal deployment.
+func newFleetRenewalConfiguredTestFixture(t *testing.T, cfg *ResolvedConfig, base *SetupPlan, roles *RoleSecrets) fleetRenewalTestFixture {
+	t.Helper()
 	for fleet := 1; fleet <= cfg.Config.Topology.fleetCandidates(); fleet++ {
 		for member := 1; member <= cfg.Config.Topology.ClientsPerHeadFleet; member++ {
 			miner := fleetMemberMinerIndex(cfg, fleet, member)
@@ -306,11 +341,11 @@ func TestFleetRenewalRejectsChangedPrestateAndPreservesApproval(t *testing.T) {
 		t.Fatal(err)
 	}
 	entries := []JournalEntry{{EntryHash: fixture.renewal.JournalHash}}
-	if err := validateFleetRenewalSource(fixture.base, plan, entries); err != nil {
+	if err := validateFleetRenewalSource(fixture.cfg, fixture.base, plan, entries); err != nil {
 		t.Fatal(err)
 	}
 	entries = append(entries, JournalEntry{PlanHash: fixture.base.PlanHash, ActionID: "external-new-action"})
-	if err := validateFleetRenewalSource(fixture.base, plan, entries); err == nil {
+	if err := validateFleetRenewalSource(fixture.cfg, fixture.base, plan, entries); err == nil {
 		t.Fatal("unreviewed journal advance accepted")
 	}
 	path := filepath.Join(fixture.stateDir, "public", "retained.json")
@@ -473,5 +508,56 @@ func TestFleetRenewalHistoricalScopeExcludesFundingAndUnrelatedActions(t *testin
 	}
 	if _, err := fleetRenewalHistoricalActionFleets(cfg, Action{ID: "fleet.refresh.batch.0"}); err == nil {
 		t.Fatal("invalid historical batch admitted")
+	}
+}
+
+func TestFleetRenewalSuccessorReserveFundsExactSignerCeilings(t *testing.T) {
+	fixture := newFleetRenewalTestFixture(t)
+	raw, err := fleetRenewalActions(fixture.base, fixture.renewal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	spend, err := maximumActionSpend(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limit, err := addDecimalUint(fixture.base.MaximumSpend.EVMGasWei, spend.EVMGasWei)
+	if err != nil {
+		t.Fatal(err)
+	}
+	renewal := cloneFleetRenewalForTest(t, fixture.renewal)
+	renewal.AllowanceExtensionWei = spend.EVMGasWei
+	renewal.AllowanceTotalEVMWei = limit
+	renewal.AllowanceTotalTAORao = 250_000_000_000
+	fixture.cfg.MaximumEVMGasWei, fixture.cfg.MaximumTAORao = limit, renewal.AllowanceTotalTAORao
+	plan, err := appendFleetRenewalPlan(fixture.base, renewal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reserve := actionByID(t, plan, fleetRenewalReserveID(renewal.Round))
+	if reserve.Kind != "budget-reserve" || !reserve.Spend.EVMGasWei.IsZero() || reserve.Parameters["allowance_extension_wei"] != string(spend.EVMGasWei) {
+		t.Fatal("successor reserve did not record and consume its exact extension")
+	}
+	for _, role := range []string{"commitment-oracle", "keeper"} {
+		fund := actionByID(t, plan, fleetRenewalFundingID(renewal.Round, role))
+		if _, err := evmFundingTerms(fund, plan.LiveFacts.ExistentialDepositRao); err != nil {
+			t.Fatalf("%s funding: %v", role, err)
+		}
+	}
+	for _, action := range plan.Actions {
+		if action.Kind != "evm-transaction" || !isFleetRenewalAction(action) {
+			continue
+		}
+		role := "keeper"
+		if action.Parameters["operation"] == "mirror" {
+			role = "commitment-oracle"
+		}
+		if !slices.Contains(action.DependsOn, fleetRenewalFundingID(renewal.Round, role)) {
+			t.Fatalf("%s is not gated by its signer funding", action.ID)
+		}
+	}
+	plan.Actions = slices.DeleteFunc(plan.Actions, func(action Action) bool { return action.ID == fleetRenewalFundingID(renewal.Round, "keeper") })
+	if err := validateFleetRenewalPlan(plan); err == nil {
+		t.Fatal("renewal accepted without its keeper funding action")
 	}
 }

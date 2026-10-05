@@ -1,0 +1,760 @@
+{
+  "schema": "root-compiled-cache-reclaim-v1",
+  "status": "COMPLETE",
+  "time_unix": 1790952174.1392174,
+  "plan_sha256": "9d1661a7bd744ea7b4e2c8cd0c03954be4d39328de790dd8b0eb045e2a036689",
+  "process_census": {
+    "processes": 384,
+    "gone_or_kernel_fields": 308,
+    "matches": [],
+    "errors": []
+  },
+  "reference_scan_exit": 1,
+  "reference_matches": 0,
+  "deleted_files": [
+    {
+      "path": "/mnt/data/sn-testnet/gocache/1b/1be6a170502bdf847016f3700cf56d85e0b0e59d807fc91e192ef2b86055546b-d",
+      "dev": 2081,
+      "ino": 119089366,
+      "size": 163958950,
+      "mtime_ns": 1790507774251697335,
+      "allocated": 163962880
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/4b/4b0702d97be0de058c4b73a2c56d8262ed002f99a14e028672420a48dba6ad50-d",
+      "dev": 2081,
+      "ino": 119086778,
+      "size": 163954504,
+      "mtime_ns": 1790505706301370543,
+      "allocated": 163954688
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/3b/3b80e9840eae4873a47760e62c9c55f075013753782d5c7d96103b99e2ebab51-d",
+      "dev": 2081,
+      "ino": 119847268,
+      "size": 163944402,
+      "mtime_ns": 1790546288048110651,
+      "allocated": 163950592
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/cf/cf8fbace639ef2d39574713d7eb650e379fcc3d82be337977fcf948afcc4be15-d",
+      "dev": 2081,
+      "ino": 119845886,
+      "size": 163936826,
+      "mtime_ns": 1790540437592543590,
+      "allocated": 163942400
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/20/20d7b48052a924c6f97990c953476686b88cb70f1ce1cf81ddd31e300d3cde8e-d",
+      "dev": 2081,
+      "ino": 119073193,
+      "size": 163932556,
+      "mtime_ns": 1790489784602548128,
+      "allocated": 163934208
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/fd/fdb0bf6f225ae68c525e0bb8e4c57192502a23272dd508f549c1c04a2c41d1ad-d",
+      "dev": 2081,
+      "ino": 119071125,
+      "size": 163932556,
+      "mtime_ns": 1790489101174018420,
+      "allocated": 163934208
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/eb/eb39b3ed71400947e4ff4aba5a441a872b3051c7b38b1cb320d6035aa37f5b09-d",
+      "dev": 2081,
+      "ino": 119208969,
+      "size": 149576754,
+      "mtime_ns": 1790593082390223396,
+      "allocated": 149581824
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/19/19d745a99fea44084fd386562decfe56d9febd208aa44b4796e638cd6e9a7084-d",
+      "dev": 2081,
+      "ino": 119209613,
+      "size": 149573792,
+      "mtime_ns": 1790593865360783707,
+      "allocated": 149577728
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/f3/f354d67ae0e665c046be5a3249ccbb3ef5d5feeca06f9800331949bb18440d84-d",
+      "dev": 2081,
+      "ino": 119208587,
+      "size": 149566006,
+      "mtime_ns": 1790592847468976851,
+      "allocated": 149569536
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/68/681b86b3414e664f1768a83d2ec546810f9d930aa06e271a776c9742f2a07f00-d",
+      "dev": 2081,
+      "ino": 119209267,
+      "size": 149561468,
+      "mtime_ns": 1790593315239393015,
+      "allocated": 149565440
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/1c/1cc9692e8b4abae96e1bab61ac967fa3f38c5c5ba71e7dd77f5c59c9b6e2d548-d",
+      "dev": 2081,
+      "ino": 119208251,
+      "size": 149521702,
+      "mtime_ns": 1790592608417155533,
+      "allocated": 149524480
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/9e/9e322f18026d45c9dcb3075121cf8e7a6a07ef426938964d7e715bfe417a2377-d",
+      "dev": 2081,
+      "ino": 119210604,
+      "size": 149517810,
+      "mtime_ns": 1790604243406998732,
+      "allocated": 149524480
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/c7/c7b9c88bf959af7141e7671748eb7c9aa00c2a351b6aa3317ca6db34577257ef-d",
+      "dev": 2081,
+      "ino": 119196932,
+      "size": 149267610,
+      "mtime_ns": 1790588375201676755,
+      "allocated": 149270528
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/2f/2f5e55edb5487171322a42615992d2d787a6c5630d19e6652a19c196b515eaad-d",
+      "dev": 2081,
+      "ino": 119194804,
+      "size": 149250256,
+      "mtime_ns": 1790587748223016550,
+      "allocated": 149258240
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/80/80cbe2ff1aff786ab37e58ea933557506383daf8481e45f9f99f7bdd55d773c1-d",
+      "dev": 2081,
+      "ino": 119064880,
+      "size": 148989602,
+      "mtime_ns": 1790488745259420314,
+      "allocated": 148996096
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e2/e2fc5c0237b5d560a9e08e62860137f56468b4b534dd68256379bfba93683b1b-d",
+      "dev": 2081,
+      "ino": 119035875,
+      "size": 136037910,
+      "mtime_ns": 1790474502399307702,
+      "allocated": 136044544
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/af/af10b5dda42694fcfca19aabb8e2c7b43998d5f4a27d70280a13180f9df1b83e-d",
+      "dev": 2081,
+      "ino": 119013746,
+      "size": 136004238,
+      "mtime_ns": 1790470486546786467,
+      "allocated": 136011776
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/bf/bf464dfa3d95805530179a16a27aaeed624ad3d11b9d4f345c3685e91630f16f-d",
+      "dev": 2081,
+      "ino": 51029715,
+      "size": 135991592,
+      "mtime_ns": 1790468878143470810,
+      "allocated": 135995392
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/18/18daa6d979428b19afd67edeb8177fe2f9fb502605c597bcd761f39439e4d74b-d",
+      "dev": 2081,
+      "ino": 55750252,
+      "size": 135964424,
+      "mtime_ns": 1790466791056585952,
+      "allocated": 135966720
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/6a/6a294cbc17cebfc290fa4f7b0d5619b2e8bdd449fe41bfbc6465d81aa4708235-d",
+      "dev": 2081,
+      "ino": 119090736,
+      "size": 131312000,
+      "mtime_ns": 1790509253483316580,
+      "allocated": 131313664
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/3c/3cca2675503abfe2b2cf8f0f67aa440a190121486053aed8e107856b130c216a-d",
+      "dev": 2081,
+      "ino": 119112686,
+      "size": 131312000,
+      "mtime_ns": 1790521048295580367,
+      "allocated": 131317760
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/25/25587859dca00efc421ac903fe0da2554cdda86b0771f3341c92f16e1b99433c-d",
+      "dev": 2081,
+      "ino": 119712189,
+      "size": 131312000,
+      "mtime_ns": 1790522143195856078,
+      "allocated": 131317760
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/c7/c74091def3c8b98e6856e108cc488c5f19edcdc420111d0a1a9814accb0a9914-d",
+      "dev": 2081,
+      "ino": 119088714,
+      "size": 131312000,
+      "mtime_ns": 1790507025178325118,
+      "allocated": 131313664
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/0d/0dc845bd3b9eb4e1922b7fa16ab6db4e118360f0dcd24a4862cb2bf58476b5dc-d",
+      "dev": 2081,
+      "ino": 119092709,
+      "size": 131312000,
+      "mtime_ns": 1790518910753321856,
+      "allocated": 131313664
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e3/e3e81dd9fba6136f49b982a6d4e1e230f414cdc53e97b5a91fd1e552425460e9-d",
+      "dev": 2081,
+      "ino": 119080882,
+      "size": 131309600,
+      "mtime_ns": 1790504746393068315,
+      "allocated": 131313664
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/51/51d446398e90c3d723128bcbe1860337b74254fddd13d115cee6203d007b04a9-d",
+      "dev": 2081,
+      "ino": 119080842,
+      "size": 131309596,
+      "mtime_ns": 1790504580306242653,
+      "allocated": 131317760
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/36/36f9ab0d92cd2d1755e8f74b4812e4174faa3b7b0b8f06699dbffe862f07deca-d",
+      "dev": 2081,
+      "ino": 119083718,
+      "size": 131307892,
+      "mtime_ns": 1790505611829027924,
+      "allocated": 131309568
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/1c/1c91f1bb38480b7ffc9ac771bf026583679f29b6c98ece3889f41700207d270a-d",
+      "dev": 2081,
+      "ino": 119721143,
+      "size": 131295706,
+      "mtime_ns": 1790546141320275804,
+      "allocated": 131301376
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/4c/4cb9ebe74ce972bab3b29f456b817f6f932202b034bce2e08d3fba874acc371e-d",
+      "dev": 2081,
+      "ino": 119718235,
+      "size": 131288508,
+      "mtime_ns": 1790540279619331171,
+      "allocated": 131293184
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/40/4013d306268d782541b9a04ba85057fd8a1c7a1b0a7c6c04f2506ddd1385dbab-d",
+      "dev": 2081,
+      "ino": 119072891,
+      "size": 131287600,
+      "mtime_ns": 1790489471668172644,
+      "allocated": 131289088
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/ce/ce3a30c12e407a06070ac0294411ab094e154bd4ffb1d18c78196bf2d01a869b-d",
+      "dev": 2081,
+      "ino": 119061362,
+      "size": 131287600,
+      "mtime_ns": 1790488704243613032,
+      "allocated": 131293184
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/77/7781664dc5d9ca09fefaba1be5ec4d442755483ac97e4895fcef81c175d8d29b-d",
+      "dev": 2081,
+      "ino": 119717858,
+      "size": 131270806,
+      "mtime_ns": 1790539913806070586,
+      "allocated": 131276800
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e2/e2045592122d7e3cba64c497013a65e5cd70b6d95c1f155f7866773d803a0ff9-d",
+      "dev": 2081,
+      "ino": 119208931,
+      "size": 130140968,
+      "mtime_ns": 1790593045295104505,
+      "allocated": 130146304
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e4/e4bc003ead83244362a73b03d778189e436c609e94b9bdcb4655ca528323ecdf-d",
+      "dev": 2081,
+      "ino": 119209605,
+      "size": 130138036,
+      "mtime_ns": 1790593823887424459,
+      "allocated": 130138112
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/c7/c7b34553d730a27c7262159873744c9e494d3de2d6d60c92ce594253da7c3eef-d",
+      "dev": 2081,
+      "ino": 119208491,
+      "size": 130130924,
+      "mtime_ns": 1790592809580749814,
+      "allocated": 130134016
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/4c/4c07026cdfdae3d985e0839e886972bf44e1b277010469575e9822f672b3f3ce-d",
+      "dev": 2081,
+      "ino": 119209231,
+      "size": 130124792,
+      "mtime_ns": 1790593274798835416,
+      "allocated": 130125824
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/3d/3dba832569dde7e09121b69d741901deb8ccf26c5a3eea4e3a226826d0d9058a-d",
+      "dev": 2081,
+      "ino": 119204327,
+      "size": 130085838,
+      "mtime_ns": 1790590901960829262,
+      "allocated": 130088960
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/41/41423c71383b4df4538a03a688cbce16a17912262ffdc94056fa0775f0b9e38c-d",
+      "dev": 2081,
+      "ino": 119205670,
+      "size": 130085682,
+      "mtime_ns": 1790591309744829178,
+      "allocated": 130093056
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/8a/8a768db1ad77102fef77b7cc8cb7c977815c05909b8da64e21a19cbefd6ac0d9-d",
+      "dev": 2081,
+      "ino": 119582821,
+      "size": 130084736,
+      "mtime_ns": 1790591109375909914,
+      "allocated": 130084864
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/cd/cd7e9a4e398b457f3973de13b5f52fe76d0ba1f7790ac38b36907276ba7c62e0-d",
+      "dev": 2081,
+      "ino": 119204978,
+      "size": 130082448,
+      "mtime_ns": 1790591010160027514,
+      "allocated": 130084864
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/fe/fee0d4e67cceab78fbd4b6548b30036893becf7538f841d10384860c0cfdbc40-d",
+      "dev": 2081,
+      "ino": 119210597,
+      "size": 130081948,
+      "mtime_ns": 1790604124013329125,
+      "allocated": 130084864
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/50/50f3a30c49ccabdcd29429ac838b865c427c78c196773ace31d4fb0f00c67050-d",
+      "dev": 2081,
+      "ino": 119205384,
+      "size": 130068562,
+      "mtime_ns": 1790591212164885719,
+      "allocated": 130076672
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/85/85f37cb7476ca97be1366902273379649fef3e1acf20f2852203c6a168f6dcd3-d",
+      "dev": 2081,
+      "ino": 119204022,
+      "size": 130064378,
+      "mtime_ns": 1790590752968337751,
+      "allocated": 130068480
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/be/be81a8a6a6ee81b98a1ab15984030ee0b106537c27753ed247fb62412df6b5b6-d",
+      "dev": 2081,
+      "ino": 119203340,
+      "size": 130053880,
+      "mtime_ns": 1790590431708579883,
+      "allocated": 130056192
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/c2/c261caa82bd3a8f2d069f9cdd45e6df9844e2e72db2b2693c0b8ef9fc60b4fe4-d",
+      "dev": 2081,
+      "ino": 119203561,
+      "size": 130052758,
+      "mtime_ns": 1790590637638968454,
+      "allocated": 130056192
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/a3/a310cd218626d01121afef37881f44a3e617397187768ab69118f52f7ce72a51-d",
+      "dev": 2081,
+      "ino": 119203521,
+      "size": 130050504,
+      "mtime_ns": 1790590542616417244,
+      "allocated": 130056192
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/0c/0c7f276ed375b2f12ed7aaaea9a1b1b12dfefed26fab02ddc94fdaee4a3b7101-d",
+      "dev": 2081,
+      "ino": 119203944,
+      "size": 130036604,
+      "mtime_ns": 1790590731679066983,
+      "allocated": 130043904
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/53/53a4bd13af459dabec7964cfbb5306f640e7f218ee91ee9012c1cf4be9ef1f84-d",
+      "dev": 2081,
+      "ino": 119199959,
+      "size": 130032486,
+      "mtime_ns": 1790589799191345382,
+      "allocated": 130039808
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e0/e0de8c949d2f67fea1c576a4570b114372b36a00687d4c32691e298657c77ba8-d",
+      "dev": 2081,
+      "ino": 119196313,
+      "size": 129869460,
+      "mtime_ns": 1790588229966990644,
+      "allocated": 129875968
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e6/e60d4e743512cae3692f438b2bc5f0473630c65e17cc84cca33a75549752574b-d",
+      "dev": 2081,
+      "ino": 119193188,
+      "size": 129852124,
+      "mtime_ns": 1790586918561955796,
+      "allocated": 129855488
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/2b/2bce6bbc30d85396085717ef8d1e6efb0244c63468164d136f1a793d49839945-d",
+      "dev": 2081,
+      "ino": 119191472,
+      "size": 129696398,
+      "mtime_ns": 1790586439329995576,
+      "allocated": 129703936
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/6e/6ecc025220c4281fe18fd7524e940710071b841e15c5324c95ba870ef7c720fd-d",
+      "dev": 2081,
+      "ino": 119191280,
+      "size": 129664994,
+      "mtime_ns": 1790586083303937816,
+      "allocated": 129667072
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/3a/3a8e5bd71bbe79948fb81f2ea90b0adf21253fbe8ed336d972b1a7987e6217fc-d",
+      "dev": 2081,
+      "ino": 119060117,
+      "size": 129635466,
+      "mtime_ns": 1790488615247855073,
+      "allocated": 129642496
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/62/6212e4efadc02cf5b62d73605c0643beee4d20bd66256ff599c55ff702464452-d",
+      "dev": 2081,
+      "ino": 119123434,
+      "size": 89258286,
+      "mtime_ns": 1790767629250762585,
+      "allocated": 89260032
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/93/93003cabda1d966fb3ce61982955aa97f1d3c56683d0bde55231614a3a2986ac-d",
+      "dev": 2081,
+      "ino": 119123703,
+      "size": 89238562,
+      "mtime_ns": 1790768498700114676,
+      "allocated": 89239552
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/64/64468a713a5be3535e59217d488d0017c82fcc976ffff85da52a74f75720219c-d",
+      "dev": 2081,
+      "ino": 119123780,
+      "size": 89238540,
+      "mtime_ns": 1790768923656437737,
+      "allocated": 89239552
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/4c/4cfbfbd1804c5f6f12fde4434b6f5c93c3129d10d88e6f70abf657ea3e47c74d-d",
+      "dev": 2081,
+      "ino": 119123742,
+      "size": 89238180,
+      "mtime_ns": 1790768634052018105,
+      "allocated": 89239552
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/ce/ce3bdccef35319cbec539811f9a309efb916fe4b745bfb5d05ed651ea39f4bd5-d",
+      "dev": 2081,
+      "ino": 119123761,
+      "size": 89237972,
+      "mtime_ns": 1790768795791187195,
+      "allocated": 89239552
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/ae/aedb3c9976f545056ee16e0f68d3f3793b1b2ee1ed48d6735968deeba3257d86-d",
+      "dev": 2081,
+      "ino": 119122362,
+      "size": 89029266,
+      "mtime_ns": 1790763451972441918,
+      "allocated": 89030656
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/29/29e6e36e62abbd78c0cd3509a63e10cb1f8562f5a28cfe8b832125d65e5c404a-d",
+      "dev": 2081,
+      "ino": 119122789,
+      "size": 89012958,
+      "mtime_ns": 1790764521520195915,
+      "allocated": 89014272
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/64/6401d35c112a2041c1c607518df27c619578e133e1340dc0d6930c7cc750b359-d",
+      "dev": 2081,
+      "ino": 119122750,
+      "size": 89012386,
+      "mtime_ns": 1790764402293724872,
+      "allocated": 89014272
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e5/e5439883a3144ccbf8421a36b74396b8bba44c05934f4a2ce548d35e98f72d94-d",
+      "dev": 2081,
+      "ino": 119122808,
+      "size": 89009036,
+      "mtime_ns": 1790764639068015596,
+      "allocated": 89010176
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/45/455f3da86b399b70a14f1b6b6f45f4cdba0ec1173a9b61feda5136b4ae881439-d",
+      "dev": 2081,
+      "ino": 121815793,
+      "size": 88732894,
+      "mtime_ns": 1790715198073490615,
+      "allocated": 88735744
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/28/282a3f702f93455f3e6201e05ddaf33c8e1e9ea020b878369675229884a7ae21-d",
+      "dev": 2081,
+      "ino": 119465299,
+      "size": 88732672,
+      "mtime_ns": 1790715341101122139,
+      "allocated": 88735744
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/96/964f237f49a95d006ff99b15a22ea578dad3deddc4e85c97fccc5e8942faf9e4-d",
+      "dev": 2081,
+      "ino": 119465306,
+      "size": 88732566,
+      "mtime_ns": 1790715486746809310,
+      "allocated": 88735744
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/b7/b78a1bff6a1ed9bda65969fe2a338cd6f4ce666051fd41394e039eb74eae1046-d",
+      "dev": 2081,
+      "ino": 119850302,
+      "size": 88732156,
+      "mtime_ns": 1790714516065517448,
+      "allocated": 88735744
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/a7/a76869386b68dedaac0eaecd6b99c3d85ea31dd4209efa18d84e2b982f2607ec-d",
+      "dev": 2081,
+      "ino": 7389765,
+      "size": 88732126,
+      "mtime_ns": 1790715921420550332,
+      "allocated": 88735744
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/d9/d90798301a02e5e00a0e65b3f7744be5acdea017d985fabda0849b3ee7658a83-d",
+      "dev": 2081,
+      "ino": 121029452,
+      "size": 88732126,
+      "mtime_ns": 1790714772659745327,
+      "allocated": 88735744
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/48/488cbbd8cbebcfeda1c6b3c1cd5d5639ed3fabd67d5c101ae7bfd8f6696ca6be-d",
+      "dev": 2081,
+      "ino": 120636391,
+      "size": 88731802,
+      "mtime_ns": 1790714903715119117,
+      "allocated": 88735744
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/98/9878842abd2a9953b882ecc8831021a4ca624c7a905a7d69dda1e592cc0689ef-d",
+      "dev": 2081,
+      "ino": 119465326,
+      "size": 88731736,
+      "mtime_ns": 1790715776218444344,
+      "allocated": 88735744
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e9/e95b2bbe65c54dfaaeaa32464715bfc41c7ee37ee736d9e9b1c2c4f2de08eeff-d",
+      "dev": 2081,
+      "ino": 71873225,
+      "size": 88731604,
+      "mtime_ns": 1790715052015735981,
+      "allocated": 88731648
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/9b/9bc414b14f466b04f6e1cef8bce77f310581b3ca13c9d8b79d2466bfee1c4564-d",
+      "dev": 2081,
+      "ino": 71873241,
+      "size": 88730956,
+      "mtime_ns": 1790715633272283547,
+      "allocated": 88731648
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/79/798531cc916fbafd5496d6728fbebd6b650570b3910b3a645cebc42507e1b075-d",
+      "dev": 2081,
+      "ino": 71873088,
+      "size": 88702178,
+      "mtime_ns": 1790713116541029945,
+      "allocated": 88702976
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/f3/f33c40c5f9553bd9933e4e0f8287d701650931dcef79f3d03fa69badae46b176-d",
+      "dev": 2081,
+      "ino": 119465124,
+      "size": 88701010,
+      "mtime_ns": 1790714414465499465,
+      "allocated": 88702976
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e8/e809e3f74c405a45034a60357b6185836afdeb4d82077258f998e4d8d52ef33d-d",
+      "dev": 2081,
+      "ino": 119067586,
+      "size": 88199234,
+      "mtime_ns": 1790658921017960367,
+      "allocated": 88207360
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/6b/6b734ff8fe6f642e8b2fb5a8a734a7f9ea8c4062f08091eefbd89d91bd248b64-d",
+      "dev": 2081,
+      "ino": 119066727,
+      "size": 88198436,
+      "mtime_ns": 1790656815723697012,
+      "allocated": 88203264
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/c8/c8859ea787eaaedd024136cd8b536447c01aad69243a3b2f634b26c0d4b4a4ca-d",
+      "dev": 2081,
+      "ino": 71871749,
+      "size": 88186934,
+      "mtime_ns": 1790709139663124808,
+      "allocated": 88190976
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/ef/ef464df9287083640896300c9b62619c08f5e383937889c2ac7ec0f0f80bd887-d",
+      "dev": 2081,
+      "ino": 120374014,
+      "size": 88175186,
+      "mtime_ns": 1790710638770353847,
+      "allocated": 88182784
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/bc/bcb9f7b2dd83c14074b9745724978d7c89d165e0ef9972ea511502af51b96f3f-d",
+      "dev": 2081,
+      "ino": 119067259,
+      "size": 88175068,
+      "mtime_ns": 1790658802706346663,
+      "allocated": 88182784
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/99/99d13c1aac4634169184daeb82a7b84b1d8b7ca1d1cefb31df8a048025670c8a-d",
+      "dev": 2081,
+      "ino": 119066421,
+      "size": 88174270,
+      "mtime_ns": 1790656681419754135,
+      "allocated": 88174592
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/13/136279294e66c17b4a078c7a9812c1db367ae7802b39bee3132bf92dd1810a64-d",
+      "dev": 2081,
+      "ino": 119065661,
+      "size": 88170528,
+      "mtime_ns": 1790656448054599514,
+      "allocated": 88178688
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/73/732dc32a22a3eb2154dd53aa1dd93c806c22cfd908b90f8b7b744a9799db2896-d",
+      "dev": 2081,
+      "ino": 119212687,
+      "size": 87954010,
+      "mtime_ns": 1790613686912459046,
+      "allocated": 87957504
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/c8/c8cb82587f7a8e65d541c3e804348ee8bf5042415073dc8be7fca890288dc764-d",
+      "dev": 2081,
+      "ino": 119212548,
+      "size": 87948400,
+      "mtime_ns": 1790613504081305843,
+      "allocated": 87953408
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/e9/e96b5886242f58cab3645f0ef73c71a89ac44c430e1c56a247ec0280d7a3e085-d",
+      "dev": 2081,
+      "ino": 119583970,
+      "size": 87928322,
+      "mtime_ns": 1790614080084943239,
+      "allocated": 87932928
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/a9/a94519b3d178c13de2da18b99f36d2a0f75f0dc46dbe07e12d0704bbab93d293-d",
+      "dev": 2081,
+      "ino": 119210150,
+      "size": 87827126,
+      "mtime_ns": 1790603734056781358,
+      "allocated": 87834624
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/80/801f37c595abc1382a994a2660f7f384aac84630ce6d4c6569c58e9f0cb2255b-d",
+      "dev": 2081,
+      "ino": 119207464,
+      "size": 87741250,
+      "mtime_ns": 1790592079493304071,
+      "allocated": 87748608
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/ba/bab1488522e4634573cceac8bbf5e39f241256759bc7c2c2d3681a6eb275f66f-d",
+      "dev": 2081,
+      "ino": 119207819,
+      "size": 87739214,
+      "mtime_ns": 1790592242820534557,
+      "allocated": 87744512
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/b7/b729c447c45e0605ec5af75184559465cb3187612205c8a76a819dd9e2faa5f0-d",
+      "dev": 2081,
+      "ino": 119205168,
+      "size": 87715024,
+      "mtime_ns": 1790591078443873092,
+      "allocated": 87719936
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/88/886863c2f227e0f6244cd72c19277254da8006ca6a7ba0077cd2097ce9aab7c5-d",
+      "dev": 2081,
+      "ino": 119204063,
+      "size": 87694224,
+      "mtime_ns": 1790590788840593095,
+      "allocated": 87699456
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/24/24af21c5de887c540e48f96cb252a6f2b321efd0c1fb71dce09dddd80b51cc04-d",
+      "dev": 2081,
+      "ino": 119205955,
+      "size": 87691446,
+      "mtime_ns": 1790591408741974058,
+      "allocated": 87695360
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/b0/b042b39a6044bc9fc2df42279dca575d4cb56731d5f86ca7bb551ab1479bdf92-d",
+      "dev": 2081,
+      "ino": 119205178,
+      "size": 87688820,
+      "mtime_ns": 1790591094844710653,
+      "allocated": 87691264
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gocache/67/67c4b4ad81ebe2879b28e33757bf0da2fca52e5f39245e029ac9b5cebdb46c98-d",
+      "dev": 2081,
+      "ino": 119197032,
+      "size": 87662436,
+      "mtime_ns": 1790588447799067559,
+      "allocated": 87666688
+    }
+  ],
+  "allocated_bytes_reclaimed": 10759667712,
+  "free_before": 119751974912,
+  "free_after": 130511638528,
+  "limits": [
+    "Only inactive Go compiled archives older than48h; ELF executables, source, modules, images and evidence preserved.",
+    "All three active agents confirmed current and queued caches are separate.",
+    "This local scratch cleanup does not qualify production capacity or restore."
+  ]
+}

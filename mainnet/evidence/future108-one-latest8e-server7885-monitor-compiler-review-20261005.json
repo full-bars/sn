@@ -1,0 +1,107 @@
+{
+  "actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server7885-monitor-metadata-v1.receipt.json",
+    "sha256": "cc0e1516084e84f2f27f4fa62e471b8320facb7670b8655d5bd1bebcb28d13d6"
+  },
+  "closed_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "owned_containers": [
+      {
+        "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "postgres"
+      },
+      {
+        "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "redis"
+      }
+    ],
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  },
+  "closed_model37_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+    "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+  },
+  "closure_validation": "New actual metadata4 phases replayed exit0/joined; every old expected source/dependency digest retained and rechecked by compiler pre/post; exact3 new Git blobs with30 retained overlay replacements and newly encountered current graph files bound. No expected digest silently updated.",
+  "elapsed_estimate_limit": "Uncertain cached compile duration; no deadline completion promise.",
+  "expected_elapsed_seconds": [
+    180,
+    360
+  ],
+  "healthy_guards": {
+    "active_data_formula": "max(6307319808, launch_data_available-8589934592)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "retargeted_or_rebased": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server7885-monitor-normal-compiler-job-v1.json",
+    "sha256": "1ccd0de683d08f6d940d42b7b277d9feb092ef5468c69430477ba2e1a9ecbd1e"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 1,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_minimum_available_bytes": 17179869184,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "1ccd0de683d08f6d940d42b7b277d9feb092ef5468c69430477ba2e1a9ecbd1e",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "model_count": 0,
+    "runner_sha256": "623899c3958d12d3f77b049a4f5086a6a2fe31567256efa76cc59ac7958f3240",
+    "status": "ADOPTED_ONE_BOUNDED_GO_COMPILER_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest8e-server7885-monitor-compiler-adoption-20261005.json",
+  "resource_forecast": {
+    "actual_model_count": 0,
+    "basis": "Prospective bounded one-Go-compiler estimate, with unchanged offline modules/toolchain/cache and new actual source graph bound; not a fully-warm assertion or peak upper bound. Prior mainnet178 compile peak2915721216B is scope-limited supporting evidence, not a Server peak proof. Hard8GiB compiler/zeroSwap and wholedata growth8GiB fail-closed; protected image max512MiB, log128MiB.",
+    "compiler_disk_bytes": 4294967296,
+    "compiler_memory_bytes": 4294967296,
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296,
+    "reserve_note": "Former4GiB model disk/memory forecast retained conservatively at2x despite actual model_count0; data16GiB and memory112GiB thresholds unchanged."
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest8e-server7885-monitor-compiler-v1.py",
+    "sha256": "623899c3958d12d3f77b049a4f5086a6a2fe31567256efa76cc59ac7958f3240"
+  },
+  "schema": "latest8e-server7885-monitor-normal-compiler-review-v1",
+  "scope": "Only ./monitor normal compile. Later selected body needs separate retained-image/list/DB fixture ownership and resource admission. Current8e earlier priority13 actual PASS and oldmodel1673PASS19FAIL11SKIP preserved; actual selected4b model37 PASS retained as separate scope; no7885 monitor PASS inherited.",
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server7885-monitor-compiler-source-closure-v1.json",
+    "sha256": "35180f94fed2edac34bc276582fbb32843d1838775241d87e69bb945fa3551f2"
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "7885a3ec517262680f98cd652b074923d1e6c3f1",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

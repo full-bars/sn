@@ -38,6 +38,7 @@ type ValidatorUploadDeployment struct {
 	DeploymentBlock   uint64                       `json:"deployment_block" yaml:"deployment_block"`
 	NativeRuntime     crv4.RuntimeArtifactIdentity `json:"native_runtime" yaml:"native_runtime"`
 	MaximumSubnetUIDs uint32                       `json:"maximum_subnet_uids" yaml:"maximum_subnet_uids"`
+	productionRuntime *validatorUploadRuntimeAuthority
 }
 
 // All transport/lookup limits are independent of a discovered activation.
@@ -79,6 +80,15 @@ type ValidatorUploadNativeObserver struct {
 // The fixed eight-byte native timestamp is retained only after a final
 // canonical height/hash check. The schedule reader separately proves permit.
 func ValidatorUploadNativeObserverContext(ctx context.Context, native *crv4.Chain, deployment ValidatorUploadDeployment) (result ValidatorUploadNativeObserver, resultErr error) {
+	var selected types.Hash
+	return crv4.ReadRuntimeObservationContext(ctx, native, func(ctx context.Context) (ValidatorUploadNativeObserver, error) {
+		return validatorUploadNativeObserverAttempt(ctx, native, deployment, &selected)
+	})
+}
+
+// Timestamp storage belongs to the same transport as its route and artifact.
+// A replacement repeats those reads while retaining the first finalized block.
+func validatorUploadNativeObserverAttempt(ctx context.Context, native *crv4.Chain, deployment ValidatorUploadDeployment, selected *types.Hash) (result ValidatorUploadNativeObserver, resultErr error) {
 	if ctx == nil || native == nil || native.API == nil || native.API.Client == nil {
 		return result, errors.New("validator staging native observer is unavailable")
 	}
@@ -94,18 +104,38 @@ func ValidatorUploadNativeObserverContext(ctx context.Context, native *crv4.Chai
 	if native.GenesisHash != types.Hash(deployment.GenesisHash) {
 		return result, errors.New("validator staging native genesis differs")
 	}
-	hash, err := crv4.FinalizedHeadContext(ctx, native)
+	if err := deployment.authenticateNativeRuntimeRouteContext(ctx, native); err != nil {
+		return result, err
+	}
+	finalized, err := crv4.FinalizedHeadContext(ctx, native)
 	if err != nil {
 		return result, err
 	}
-	header, err := native.HeaderAtContext(ctx, hash)
+	if *selected == (types.Hash{}) {
+		*selected = finalized
+	}
+	hash := *selected
+	number, _, err := native.CanonicalHeaderAtContext(ctx, hash)
 	if err != nil {
 		return result, err
 	}
-	if header == nil || header.Number == 0 {
+	if number == 0 {
 		return result, errors.New("validator staging finalized native header is absent")
 	}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, native, hash, deployment.NativeRuntime)
+	if finalized != hash {
+		finalizedNumber, _, err := native.CanonicalHeaderAtContext(ctx, finalized)
+		if err != nil {
+			return result, err
+		}
+		if finalizedNumber < number {
+			return result, errors.New("validator staging native finality regressed")
+		}
+	}
+	allowed, err := deployment.runtimeArtifactsAt(number, false)
+	if err != nil {
+		return result, err
+	}
+	artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, native, hash, allowed...)
 	if err != nil {
 		return result, err
 	}
@@ -131,14 +161,10 @@ func ValidatorUploadNativeObserverContext(ctx context.Context, native *crv4.Chai
 	if timestamp == 0 || timestamp > math.MaxInt64 {
 		return result, errors.New("validator staging native timestamp exceeds its bound")
 	}
-	var canonical string
-	if err := native.API.Client.CallContext(ctx, &canonical, "chain_getBlockHash", uint64(header.Number)); err != nil {
+	if err := native.CheckCanonicalBlockAtContext(ctx, hash, number); err != nil {
 		return result, err
 	}
-	if canonical != hash.Hex() {
-		return result, errors.New("validator staging native finalized hash changed")
-	}
-	return ValidatorUploadNativeObserver{Number: uint64(header.Number), Hash: hash, TimestampMillis: timestamp}, nil
+	return ValidatorUploadNativeObserver{Number: number, Hash: hash, TimestampMillis: timestamp}, nil
 }
 
 // Reads one complete finalized header through the bounded real RPC transport.
@@ -161,12 +187,10 @@ func (self *ChainClient) ValidatorUploadObserverContext(ctx context.Context) (re
 		Hash      *common.Hash    `json:"hash"`
 		Timestamp *hexutil.Uint64 `json:"timestamp"`
 	}
-	callCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	defer cancel()
-	if err := self.client.Client().CallContext(callCtx, &header, "eth_getBlockByNumber", "finalized", false); err != nil {
-		return result, err
-	}
-	if err := callCtx.Err(); err != nil {
+	if err := self.retryChainRead(ctx, func(callCtx context.Context) error {
+		header = nil
+		return self.client.Client().CallContext(callCtx, &header, "eth_getBlockByNumber", "finalized", false)
+	}); err != nil {
 		return result, err
 	}
 	if header == nil || header.Number == nil || header.Hash == nil || header.Timestamp == nil || *header.Number == 0 || *header.Number > math.MaxInt64 ||
@@ -192,8 +216,11 @@ type ValidatorUploadActivationEvent struct {
 // These staging boundaries always consult the actual numbered RPC header.
 func (self *ChainClient) recheckValidatorUploadBlockContext(ctx context.Context, block uint64, expected [32]byte) error {
 	actual, err := self.BlockHashContext(ctx, block)
-	if err != nil || actual != expected {
-		return errors.Join(errors.New("validator staging canonical EVM boundary changed"), err)
+	if err != nil {
+		return err
+	}
+	if actual != expected {
+		return errors.New("validator staging canonical EVM boundary changed")
 	}
 	return ctx.Err()
 }
@@ -232,13 +259,11 @@ func (self *ChainClient) ValidatorUploadActivationEventsContext(ctx context.Cont
 		LogIndex    *hexutil.Uint64 `json:"logIndex"`
 		Removed     *bool           `json:"removed"`
 	}
-	callCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	defer cancel()
 	filter := map[string]any{"address": common.Address(deployment.Journal), "fromBlock": hexutil.EncodeUint64(from), "toBlock": hexutil.EncodeUint64(to), "topics": []common.Hash{topic}}
-	if err := self.client.Client().CallContext(callCtx, &rows, "eth_getLogs", filter); err != nil {
-		return nil, err
-	}
-	if err := callCtx.Err(); err != nil {
+	if err := self.retryChainRead(ctx, func(callCtx context.Context) error {
+		rows = nil
+		return self.client.Client().CallContext(callCtx, &rows, "eth_getLogs", filter)
+	}); err != nil {
 		return nil, err
 	}
 	// JSON null is not an authenticated empty range. Geth leaves a nonnil
@@ -302,6 +327,9 @@ func (self *ChainClient) AuthenticateValidatorUploadActivationContext(ctx contex
 	if digest == ([32]byte{}) || observer.Number < deployment.DeploymentBlock || observer.Hash == ([32]byte{}) {
 		return result, errors.New("validator staging activation discovery is incomplete")
 	}
+	if err := deployment.authenticateNativeRuntimeRouteContext(ctx, native); err != nil {
+		return result, err
+	}
 	contract := stabi.NewSTValidatorEvidence()
 	outputs, err := self.batchCallsAtHashContext(ctx, observer.Number, observer.Hash, []chainBatchCall{{address: common.Address(deployment.Journal), calldata: contract.PackActivation(digest)}})
 	if err != nil {
@@ -338,8 +366,12 @@ func (self *ChainClient) AuthenticateValidatorUploadActivationContext(ctx contex
 	if err != nil {
 		return result, err
 	}
+	allowed, err := deployment.runtimeArtifactsAt(record.NativeBlock, true)
+	if err != nil {
+		return result, err
+	}
 	schedule, err := crv4.ReadValidatorScheduleAtContext(ctx, native, crv4.ValidatorScheduleQuery{GenesisHash: types.Hash(domain.GenesisHash), BlockHash: types.Hash(record.NativeHash),
-		BlockNumber: record.NativeBlock, Netuid: domain.Netuid, Hotkey: record.Hotkey, MaximumSubnetUIDs: deployment.MaximumSubnetUIDs}, HistoricalReleaseRuntimeArtifacts(deployment.NativeRuntime)...)
+		BlockNumber: record.NativeBlock, Netuid: domain.Netuid, Hotkey: record.Hotkey, MaximumSubnetUIDs: deployment.MaximumSubnetUIDs}, allowed...)
 	if err != nil {
 		return result, err
 	}

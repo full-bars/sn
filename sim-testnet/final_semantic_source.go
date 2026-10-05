@@ -5,7 +5,6 @@ package main
 // output write; no terminal evidence is accepted as a pre-run option.
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"crypto/ed25519"
@@ -859,28 +858,17 @@ func (a *finalSemanticArchive) receiptFromIndex(index *finalSemanticEventIndex, 
 	return FinalEVMReceipt{TransactionHash: event.Log.TransactionHash, Block: ChainHead{Number: event.Log.BlockNumber, Hash: event.Log.BlockHash}, Status: "success", LogsHash: hash, Proof: proof}, nil
 }
 
-func (a *finalSemanticArchive) journalEntries() ([]JournalEntry, error) {
-	data, _, err := a.file("launch-foundation/journal.jsonl")
+// Receipt selection uses the same authenticated history as lifecycle replay;
+// a decoded JSON object alone cannot authorize a transaction or postcondition.
+func (self *finalSemanticArchive) journalEntries() ([]JournalEntry, error) {
+	if self == nil {
+		return nil, errors.New("final semantic archive is unavailable")
+	}
+	data, _, err := self.file("launch-foundation/journal.jsonl")
 	if err != nil {
 		return nil, err
 	}
-	scanner := bufio.NewScanner(bytes.NewReader(data))
-	scanner.Buffer(make([]byte, 64*1024), 4*1024*1024)
-	entries := make([]JournalEntry, 0)
-	for scanner.Scan() {
-		var entry JournalEntry
-		if err := decodeStrictJSONBytes(scanner.Bytes(), &entry); err != nil {
-			return nil, fmt.Errorf("decode captured journal line %d: %w", len(entries)+1, err)
-		}
-		entries = append(entries, entry)
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	if len(entries) == 0 {
-		return nil, errors.New("captured setup journal is empty")
-	}
-	return entries, nil
+	return decodeFinalSemanticJournalBytes(data)
 }
 
 func (a *finalSemanticArchive) actionFinalized(actionID string) (JournalEntry, error) {
@@ -2637,7 +2625,7 @@ func (a *finalSemanticArchive) buildPoolWeight(cycle *FinalCRv4Cycle, epochDepos
 	if err != nil {
 		return FinalPoolWeightEvidence{}, fmt.Errorf("decode operator %d source epoch %d payout: %w", audit.NoID, audit.SourceEpoch, err)
 	}
-	if payout.NoID != audit.NoID || payout.Epoch != audit.SourceEpoch || payout.ContentHash != audit.ArtifactHash || payout.TotalUsageBytes != audit.UsageBytes {
+	if payout.NoID != audit.NoID || payout.Epoch != audit.SourceEpoch || payout.ContentHash != audit.ArtifactHash || payout.TotalUsageBytes != audit.UsageBytes || payout.TotalUsers != audit.Users {
 		return FinalPoolWeightEvidence{}, fmt.Errorf("operator %d source epoch %d payout differs from signed deposit audit", audit.NoID, audit.SourceEpoch)
 	}
 	valueByUID, err := finalSemanticValueByUID(intent)
@@ -2668,8 +2656,8 @@ func (a *finalSemanticArchive) buildPoolWeight(cycle *FinalCRv4Cycle, epochDepos
 		return FinalPoolWeightEvidence{}, err
 	}
 	return FinalPoolWeightEvidence{
-		NoID: audit.NoID, UID: pool.UID, SourceEpoch: audit.SourceEpoch, UsageBytes: audit.UsageBytes,
-		ConvictionBeforeRao: audit.ConvictionBeforeRao, RateNumeratorRaoPerGiB: audit.RateNumeratorRaoPerGiB, RateDenominator: audit.RateDenominator,
+		NoID: audit.NoID, UID: pool.UID, SourceEpoch: audit.SourceEpoch, UsageBytes: audit.UsageBytes, Users: audit.Users,
+		ConvictionBeforeRao: audit.ConvictionBeforeRao, RateNumeratorRaoPerGiB: audit.RateNumeratorRaoPerGiB, RateNumeratorRaoPerUser: audit.RateNumeratorRaoPerUser, RateDenominator: audit.RateDenominator,
 		EpochDepositCapRao: strconv.FormatUint(epochDepositCap, 10), RequiredDepositRao: audit.RequiredDepositRao, ObservedDepositRao: audit.ObservedDepositRao,
 		QualityPPM: qualityPPM, QualityFactor: quality, ImpliedUsageGiB: implied, RawScore: raw, Formula: finalDepositFormula,
 		AuditStatus: audit.Status, AuditCompliant: audit.Compliant, AuditDisposition: audit.Disposition, AuditError: audit.Error,

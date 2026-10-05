@@ -1,0 +1,138 @@
+{
+  "artifact_bindings_verified": 39,
+  "artifact_sha256": {
+    "ancestry-preflight-normal.txt": "b4345c849669ce9728b69e72945520a39652a01adc3ed399b423fc943f9934ec",
+    "ancestry-preflight-race.txt": "b4345c849669ce9728b69e72945520a39652a01adc3ed399b423fc943f9934ec",
+    "ancestry-preflight-vet.txt": "b4345c849669ce9728b69e72945520a39652a01adc3ed399b423fc943f9934ec",
+    "caller16-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "caller16-normal.jsonl": "158ca5974b4755ca596af595d8e1b52aba7ae0ba807b935cdfe89997daa3bd0a",
+    "caller16-normal.phase": "0e84804c361b53e16d8f4963a6df52569d370b769d5739fb706c2811a66c7f7f",
+    "caller16-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "caller16-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "caller16-race.jsonl": "3341dc274b5c7521bd66eea5864a913023c4bd81ac618ad00abecb3a3f4200bd",
+    "caller16-race.phase": "b42c864b3bc9dc7fa33001c339696970e1d1149a2911142f37d8e083a581adc6",
+    "caller16-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "caller16-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "caller16-vet.phase": "3f652fb2eb00e8e9a734cc668bbbee46749af088c66f02e48f53f83aa5cd3708",
+    "caller16-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "caller16-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-observation-report-binding-omitted-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-observation-report-binding-omitted-normal.jsonl": "ef769bd61cb7db1a3fa6448d5100413165295fb209e6fd10a52fed930202cf70",
+    "control-observation-report-binding-omitted-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-observation-report-binding-omitted-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-observation-report-binding-omitted-race.jsonl": "3578957b4e77a3d5c281c3bf87b3f4c5ab89e2d7be7a6183158c15361f131d91",
+    "control-observation-report-binding-omitted-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-observation-report-binding-omitted.go": "85ef2dbd0f3dd0dc3a6adcb146f66dce69a3c37552b3d6ffadbd35a121a81d0c",
+    "control-observation-report-binding-omitted.overlay.json": "4fac990cb7ae93bd77848d39bb5ac226ba3d4e7d5577d2ff5ad89844f0b244a6",
+    "control-prepared.json": "b187c31f86381b6188486e6977a9eced67f87fd29477412a264989d2881f0687",
+    "control-profile-admission-omitted-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-profile-admission-omitted-normal.jsonl": "0604a0f6910ed99719d7aa868cdb9c560a5b9e3b940a96bf578a56682de1c9e5",
+    "control-profile-admission-omitted-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-profile-admission-omitted-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-profile-admission-omitted-race.jsonl": "b4bb9f8e25144a1e2d395a2b4317ed473254838288a15bdd74b49dd4e650cef1",
+    "control-profile-admission-omitted-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-profile-admission-omitted.go": "e2181d830531464642a5b2701db1028d809f07bd9d177d976eec45264c1710a1",
+    "control-profile-admission-omitted.overlay.json": "95ba54506ad535df67f2996cdcf230cafda49929a04835503c3934ec151acaed",
+    "e274-cross-engine-receipt.json": "0f303ef2869a3700d83fc486bc65c18cc94e957bb0a2ae4d5fc80270ecf8eaf8",
+    "modules.jsonl": "7a49f2447b73204c314bd5e0fe0ddb6242ebde9d3807a526aceaec87061ed5f0",
+    "root-preflight-normal.json": "857e35578515348d9aaff15eacbcbdace9fdc5c932619548db5f0c550c93dc02",
+    "root-preflight-race.json": "857e35578515348d9aaff15eacbcbdace9fdc5c932619548db5f0c550c93dc02",
+    "root-preflight-vet.json": "857e35578515348d9aaff15eacbcbdace9fdc5c932619548db5f0c550c93dc02",
+    "run-caller.sh": "dc3ff62f5aaaf95938e1c3e780c71d412f2b5769e4983dc7d6ec64b440d9c84e",
+    "source-readback.json": "d94415bec93de2c7a97b4c0948edabb15ab1171f5a108397978319654d18217b"
+  },
+  "failure": {
+    "assertion_excerpt": "=== RUN   TestHistoricalReplayOwnerDeadlineClipsChildAndJoins\n    historical_replay_test.go:238: owned replay deadline did not join actual child <nil> 0 context deadline exceeded\n--- FAIL: TestHistoricalReplayOwnerDeadlineClipsChildAndJoins (10.23s)\n",
+    "observation": "context deadline elapsed with pid0 before afterStart; cause under investigation, no relabel as product or pass",
+    "root": "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins"
+  },
+  "limits": [
+    "Original normal16PASS/race15PASS1FAIL retained; not full race qualification",
+    "Astra controlled-deadline test successor pending",
+    "Synthetic cross-engine commands remain separately scoped",
+    "No actual runtime fee or finality authority"
+  ],
+  "mainnet_vet_exit": 0,
+  "operative_controls": {
+    "observation-report-binding-omitted-normal": {
+      "exit": 1,
+      "intended_assertion": "contradictory observation was admitted by actual caller",
+      "test": "TestHistoricalReplayObservationBindsOriginalProfileTraceAndEvents"
+    },
+    "observation-report-binding-omitted-race": {
+      "exit": 1,
+      "intended_assertion": "contradictory observation was admitted by actual caller",
+      "test": "TestHistoricalReplayObservationBindsOriginalProfileTraceAndEvents"
+    },
+    "profile-admission-omitted-normal": {
+      "exit": 1,
+      "intended_assertion": "invalid observation profile reached a process",
+      "test": "TestHistoricalReplayObservationProfileRefusesBeforeProcessLaunch"
+    },
+    "profile-admission-omitted-race": {
+      "exit": 1,
+      "intended_assertion": "invalid observation profile reached a process",
+      "test": "TestHistoricalReplayObservationProfileRefusesBeforeProcessLaunch"
+    }
+  },
+  "physical_git_blobs_modes_verified": 20333,
+  "raw_root_outcomes": {
+    "normal": {
+      "TestHistoricalReplayAddressRefusesNoncanonicalArray": "pass",
+      "TestHistoricalReplayCanceledOwnerDoesNotLaunch": "pass",
+      "TestHistoricalReplayCancellationJoinsBlockedInput": "pass",
+      "TestHistoricalReplayCancellationJoinsPartialOutput": "pass",
+      "TestHistoricalReplayDescendantPipesCannotOutliveResult": "pass",
+      "TestHistoricalReplayExecutesSealedImageAfterSourceReplacement": "pass",
+      "TestHistoricalReplayInputPinsAndCanonicalDigestsPrecedeLaunch": "pass",
+      "TestHistoricalReplayObservationBindsOriginalProfileTraceAndEvents": "pass",
+      "TestHistoricalReplayObservationDistinguishesMissingAndActualZeroRefund": "pass",
+      "TestHistoricalReplayObservationProfileRefusesBeforeProcessLaunch": "pass",
+      "TestHistoricalReplayObservedOutputBoundCancelsActualChild": "pass",
+      "TestHistoricalReplayOutputBoundsCancelRealChild": "pass",
+      "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins": "pass",
+      "TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority": "pass",
+      "TestHistoricalReplayPublicObservationRetainsUnapprovedExactCandidate": "pass",
+      "TestHistoricalReplayReportBindsOriginalJobAndAuthority": "pass"
+    },
+    "race": {
+      "TestHistoricalReplayAddressRefusesNoncanonicalArray": "pass",
+      "TestHistoricalReplayCanceledOwnerDoesNotLaunch": "pass",
+      "TestHistoricalReplayCancellationJoinsBlockedInput": "pass",
+      "TestHistoricalReplayCancellationJoinsPartialOutput": "pass",
+      "TestHistoricalReplayDescendantPipesCannotOutliveResult": "pass",
+      "TestHistoricalReplayExecutesSealedImageAfterSourceReplacement": "pass",
+      "TestHistoricalReplayInputPinsAndCanonicalDigestsPrecedeLaunch": "pass",
+      "TestHistoricalReplayObservationBindsOriginalProfileTraceAndEvents": "pass",
+      "TestHistoricalReplayObservationDistinguishesMissingAndActualZeroRefund": "pass",
+      "TestHistoricalReplayObservationProfileRefusesBeforeProcessLaunch": "pass",
+      "TestHistoricalReplayObservedOutputBoundCancelsActualChild": "pass",
+      "TestHistoricalReplayOutputBoundsCancelRealChild": "pass",
+      "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins": "fail",
+      "TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority": "pass",
+      "TestHistoricalReplayPublicObservationRetainsUnapprovedExactCandidate": "pass",
+      "TestHistoricalReplayReportBindsOriginalJobAndAuthority": "pass"
+    }
+  },
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/e274-selected-original-receipt.json",
+    "sha256": "2db5956dffe210d6bfc064571b473e8288fd2702bbf05ddce0d432f364e7ed3b"
+  },
+  "source": {
+    "commit": "e274f89361749573e8f11bddff2506b77b39e9f0",
+    "peer_symlinks": {
+      "glog": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "goidenticons": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "gvisor": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+      "proxy": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "server": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server",
+      "userwireguard": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "warp": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp"
+    },
+    "tracked_count": 20333,
+    "tracked_entries_sha256": "b54b954d2b04f1a1e1c5a987c49930dcfe33833da73dff21d21ed75febb12fff",
+    "tree": "bada42a7d10b4c1636860edeed9297113d01f052"
+  },
+  "status": "ROOT_VERIFIED_ORIGINAL_PARTIAL_GATE",
+  "timing_limit": "Reported10.23s is whole test duration including fixture setup before the5s context. It does not prove production exceeded the caller deadline."
+}

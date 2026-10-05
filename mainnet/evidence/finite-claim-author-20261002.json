@@ -1,0 +1,318 @@
+{
+  "causal_failures_each_mode": 2,
+  "deployment_authorized": false,
+  "effective_connect": "0a5cda0ebe78f6200c4cff6fd3d1aa172a2b172c",
+  "files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-normal.command.json": {
+      "bytes": 498,
+      "sha256": "acda9e6b1a72da132b2f4f24da308419649ba5e1dcde3e50687116a225976a41"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-normal.jsonl": {
+      "bytes": 13695,
+      "sha256": "452ac88623e55a2cb3ac082ce1ded00fccf675f5057f60db887980f29f6e5a92"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-normal.result.json": {
+      "bytes": 244,
+      "sha256": "0fbb9f556ab61a8df32fc1fcc4790b89387df061bc1bd232b7afb7c821632787"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-outage-normal.command.json": {
+      "bytes": 498,
+      "sha256": "0bb6854d995a0ef5f5dc5b60e0e2f67d9bedfcaab7ebde0bf53204360d96a0e7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-outage-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-outage-normal.jsonl": {
+      "bytes": 14913,
+      "sha256": "df9f551ce15837cb438a18e043954a65ff3d676bf5818e086a65bf4329f2dd97"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-outage-normal.result.json": {
+      "bytes": 243,
+      "sha256": "ee7b8886ae019e50b9b816a9a786c345a2648a725995cbdfc5fc45fa6948cfac"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/baseline-public-outage-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/before-read-calls-overlay.json": {
+      "bytes": 209,
+      "sha256": "888ce33c6087612e254678c05583f01b94c0cfe565aa560f770c48bb55bacadd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/before-read-calls.go": {
+      "bytes": 15444,
+      "sha256": "d2026c01650b033ad06130e7f952696223be347ff7f82481981b0cf67014fba3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/before-sn.go": {
+      "bytes": 14293,
+      "sha256": "29523f96b5388f9ccdcd89520f8be54e4efadd39a85ee090576d55472cf83370"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/first-fixture-ecd.go": {
+      "bytes": 3827,
+      "sha256": "b1a40a75f4777f967e80d2ee6caeb979c17e2a5df6087b93eef07cbb22fbbb4c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-normal.command.json": {
+      "bytes": 513,
+      "sha256": "0154e72f4afa160df6bd3a7f2768224b27d0a0b53be674d9c81e84ec4f57e4fb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-normal.jsonl": {
+      "bytes": 12643,
+      "sha256": "b459240ee9d8b4005fa628a80fdcda3bd5d198bab17f72edba0972c76db491d9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-normal.result.json": {
+      "bytes": 644,
+      "sha256": "dd341d80b686d623bd114a3a42e878128ce08216bd1dde6072a37ca6bf773420"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-race.command.json": {
+      "bytes": 526,
+      "sha256": "708cdc30497366086bd019ab42d5073174b2633aaccd4aeb81e2c3ddd983ea55"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-race.jsonl": {
+      "bytes": 12644,
+      "sha256": "c85f1d9fdcd225307e952cbf183f0905d35f5b4a909da6ad7b2ea71387cae351"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-race.result.json": {
+      "bytes": 644,
+      "sha256": "5370a8bbc44b9e23da236e635a5ca5ff2dd6a7edff00b5e08bb35f1b6fb0cadb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-vet.command.json": {
+      "bytes": 406,
+      "sha256": "916c10b87e01982567c584ba4787eedabf6021ce7c581acf69a5bc39ec088071"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-vet.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-vet.result.json": {
+      "bytes": 153,
+      "sha256": "16d00d1833673d93c496dc09f7f6fef82e9dce312c93ed2ba6da1977e06de54c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/fixed-claim-vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/old-read-calls-race.command.json": {
+      "bytes": 640,
+      "sha256": "23d2ff1352b28927aa13d46f714b1bde559a9194d4a12ef5262d15051b387788"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/old-read-calls-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/old-read-calls-race.jsonl": {
+      "bytes": 6300,
+      "sha256": "57b7ebb775a6c218fbded84c4be6829cf5a3b47c7db9d5a942f31709e1cc568f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/old-read-calls-race.result.json": {
+      "bytes": 244,
+      "sha256": "1ee5144d066ce8090b9370778eeab9c75db62b152ff815d162b6d1c2ca8910d5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/old-read-calls-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/sn.mod": {
+      "bytes": 11692,
+      "sha256": "e478154abefe84436b2deaaf6259889c0114eb69caf03ecc804688cc9be05a6b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/evidence/sn.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/prepare-control.go": {
+      "bytes": 1392,
+      "sha256": "1ec9714d674b53e36cb47634edb829662556bcc273f9ceb176880844664faf12"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/refactor.go": {
+      "bytes": 3863,
+      "sha256": "a899de1471e1b8193534046207ba250a1cd82cf82877ec529aad8e3b69d76b56"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/run-scope.go": {
+      "bytes": 3965,
+      "sha256": "7d7a704a40016161273f7423f2b5f98a96469e3aa66c4ef49fe19cfe39e80e37"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/seal.go": {
+      "bytes": 6760,
+      "sha256": "2a88d7c712fa82749112b153431ef797a4f7d93d72ae3603c0330be65c66973f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn/go.mod": {
+      "bytes": 11211,
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn/go.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn/miner/run.go": {
+      "bytes": 40988,
+      "sha256": "aa21ff47eff000c16f2a3214b2b7ed92a46a8f6c4be2bddb81c81efae971a5e5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn/miner/sn.go": {
+      "bytes": 15623,
+      "sha256": "00d5df3610cedea20bf7dba86df3ddc1df3244eba4f8e20b9e33452eeea7cbb3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn/miner/sn_claim_command_test.go": {
+      "bytes": 3897,
+      "sha256": "fe483062b7015eec7ecabfce6c88a3aa72b275ac1ade1f33578e05427a7ef64e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn/miner/sn_claim_retry.go": {
+      "bytes": 3234,
+      "sha256": "fc970a0d2962b896507fa584d4c9012b4a025b944b9e628cace0c57481974e16"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn/miner/sn_claim_retry_test.go": {
+      "bytes": 9072,
+      "sha256": "3310dde394558afa9031f194559eef50b8c5fc2544ba65989fc2d31264535fb6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn/miner/sn_rpc_retry.go": {
+      "bytes": 4310,
+      "sha256": "a7f82a0123ab05cb248d37f4e64271a3c3df5a41e7629aea131748e28b608a5a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn/miner/sn_rpc_retry_test.go": {
+      "bytes": 15159,
+      "sha256": "e8258ffcd6dc7ccb12da8670b0e05ea1cd392b38fd9d016e70e8f6cebbc2321e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/go.mod": {
+      "bytes": 10468,
+      "sha256": "dcbc91ae9c6737a4d79921ef1f0d720352ad4bc41d26c0c9f49279d7ae662917"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/go.sum": {
+      "bytes": 67462,
+      "sha256": "ff45d3706f736fa6609b043be621109911ef2fe8d2cbbf094d2965f01ddabe2a"
+    }
+  },
+  "limitations": [
+    "Original parsed public Run on unchanged077 production panicked on typed503 after five parallel-route GETs and about0.6s for both epoch and pool routes. Baseline normal retains that actual behavior. The race overlay restores only the two original SDK calls under the new graceful-error boundary so all current test sources still compile; it is not an unchanged full-file race rerun.",
+    "The first ecd fixture incorrectly assumed two status responses exhausted the SDK. Parallel attempts reached recovery with five reads and its cardinality assertion failed. baseline-public-normal and the exact first test source are retained, explicitly excluded from product causal evidence. The corrected fixture sustains sixteen unavailable responses; success is based on actual verified command output and no mutation requests, not guessed route count.",
+    "Nine selected roots normal/race exercise both actual public parsed commands, real SDK65-second logical outages in each read, original300-second budget exhaustion, typed joined-cause precedence, terminal HTTP/JSON/null/epoch refusal, and cancellation before effects, during request and during retry wait. Logical time advances only after completed real reads; no65-second wall wait is claimed.",
+    "Only epoch and pool GETs enter the retry owner. Proof verification, signing and the single onchain.Submit call are outside it. Tests provide no key or RPC for public commands and perform no signed submission or live action; source scope does not independently qualify the signing branch.",
+    "Frozen server10a/Connect0a graph only. Current server/module adoption, independent qualification, full miner/release and deployment remain separate."
+  ],
+  "maximum_attempts": 256,
+  "minimum_retry_delay_seconds": 2,
+  "normal_roots": 9,
+  "original_main": "077453ff23c17f05bc7f58d926aa164aa8391b98",
+  "per_read_budget_seconds": 300,
+  "phases": {
+    "baseline-public-outage-normal": {
+      "causes": {
+        "TestFiniteClaimPublicEpochGetRecovers": true,
+        "TestFiniteClaimPublicPoolGetRecovers": true
+      },
+      "exit": 1,
+      "fail": [
+        "TestFiniteClaimPublicEpochGetRecovers",
+        "TestFiniteClaimPublicPoolGetRecovers"
+      ],
+      "pass": [],
+      "skip": [],
+      "typed_503": {
+        "TestFiniteClaimPublicEpochGetRecovers": true,
+        "TestFiniteClaimPublicPoolGetRecovers": true
+      }
+    },
+    "fixed-claim-normal": {
+      "causes": {},
+      "exit": 0,
+      "fail": [],
+      "pass": [
+        "TestFiniteClaimPublicEpochGetRecovers",
+        "TestFiniteClaimPublicPoolGetRecovers",
+        "TestFiniteClaimCommandRecoversMinuteOutagesInBothReads",
+        "TestFiniteClaimReadBudgetExpiresAtOriginalDeadline",
+        "TestFiniteClaimReadClassifiesEveryJoinedCause",
+        "TestFiniteClaimCommandRejectsTerminalResponsesWithoutRetry",
+        "TestFiniteClaimCommandCanceledBeforeEffects",
+        "TestFiniteClaimCommandCancellationJoinsActiveSdkRead",
+        "TestFiniteClaimReadCanceledDuringRetryWait"
+      ],
+      "skip": [],
+      "typed_503": {}
+    },
+    "fixed-claim-race": {
+      "causes": {},
+      "exit": 0,
+      "fail": [],
+      "pass": [
+        "TestFiniteClaimPublicEpochGetRecovers",
+        "TestFiniteClaimPublicPoolGetRecovers",
+        "TestFiniteClaimCommandRecoversMinuteOutagesInBothReads",
+        "TestFiniteClaimReadBudgetExpiresAtOriginalDeadline",
+        "TestFiniteClaimReadClassifiesEveryJoinedCause",
+        "TestFiniteClaimCommandRejectsTerminalResponsesWithoutRetry",
+        "TestFiniteClaimCommandCanceledBeforeEffects",
+        "TestFiniteClaimCommandCancellationJoinsActiveSdkRead",
+        "TestFiniteClaimReadCanceledDuringRetryWait"
+      ],
+      "skip": [],
+      "typed_503": {}
+    },
+    "fixed-claim-vet": {
+      "causes": {},
+      "exit": 0,
+      "fail": [],
+      "pass": [],
+      "skip": [],
+      "typed_503": {}
+    },
+    "old-read-calls-race": {
+      "causes": {
+        "TestFiniteClaimPublicEpochGetRecovers": true,
+        "TestFiniteClaimPublicPoolGetRecovers": true
+      },
+      "exit": 1,
+      "fail": [
+        "TestFiniteClaimPublicEpochGetRecovers",
+        "TestFiniteClaimPublicPoolGetRecovers"
+      ],
+      "pass": [],
+      "skip": [],
+      "typed_503": {
+        "TestFiniteClaimPublicEpochGetRecovers": true,
+        "TestFiniteClaimPublicPoolGetRecovers": true
+      }
+    }
+  },
+  "race_roots": 9,
+  "schema": "urnetwork-finite-claim-read-retry-v1",
+  "server_commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "source": "40d07ae67cf43e9870a0578faa6f51073346dd2a",
+  "source_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/finite-claim/sn",
+  "test_only_baseline": "56df5a4a01112fdc077461a86b192cc8b74591f7",
+  "tools": {
+    "/usr/local/go/bin/go": {
+      "bytes": 15434687,
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  },
+  "tree": "975dcf42f3f86adc2c99769ae7825dcf6ae15498",
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0
+}

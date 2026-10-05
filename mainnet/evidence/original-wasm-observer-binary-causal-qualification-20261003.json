@@ -1,0 +1,283 @@
+{
+  "artifact_bindings_verified": 45,
+  "binary": {
+    "bytes": 43367936,
+    "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/runtime-historical-proof",
+    "sha256": "a3d899a32a65ae7b60381f46a3384799027ccab04d994c019da275e62a6f4464"
+  },
+  "bindings": [
+    {
+      "bytes": 43367936,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/runtime-historical-proof",
+      "sha256": "a3d899a32a65ae7b60381f46a3384799027ccab04d994c019da275e62a6f4464"
+    },
+    {
+      "bytes": 3253,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/source-join.json",
+      "sha256": "5cf5ef2e8411b6253d3cd52a5fa3ae27dac3c2f42e2cd1e676243ee86d702eac"
+    },
+    {
+      "bytes": 2617,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-selected19-receipt.json",
+      "sha256": "cb40bb48516d229a370dffa2880bcdaf0a7dae42b26cc1d3886a8504fe7984e4"
+    },
+    {
+      "bytes": 1351,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/run-build-bounded.sh",
+      "sha256": "b9d2e47b625a644f6590b60f6b0534ed91a5c4dc946483ac41abcfd71ddf606a"
+    },
+    {
+      "bytes": 389,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/root-preflight-build.json",
+      "sha256": "702570da4e208dfe32ad6aa802428399ba939a2ded104c75430fc482532f50be"
+    },
+    {
+      "bytes": 77,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-build-bounded.phase",
+      "sha256": "5bcc73b39b248015455801364ef277d0bf2b840213b0ff3476c0a8c6be042497"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-build-bounded.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-build-bounded.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 5580,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-build-bounded.stderr",
+      "sha256": "9dbbdf53b80413fd4604bfc8f0497f1712739aee08e05bc9604721b8e1b76e55"
+    },
+    {
+      "bytes": 187,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-build-bounded.lock-before",
+      "sha256": "f8999f503bd091ffd1b9ba3671a5bcce0ca390cf63974d7947ca44ff733ba832"
+    },
+    {
+      "bytes": 187,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-build-bounded.lock-after",
+      "sha256": "f8999f503bd091ffd1b9ba3671a5bcce0ca390cf63974d7947ca44ff733ba832"
+    },
+    {
+      "bytes": 2909,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-binary-build-receipt.json",
+      "sha256": "f293e89c2e6a61f1e2e6b7159bb6496024ee5bc7b242ac4e9489418a51b2fc9f"
+    },
+    {
+      "bytes": 2009,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-controls-prepared.json",
+      "sha256": "94379a719d4c0d8f94770bed90de3b4c6bb06fce8c76427cff82b7ad01846d1c"
+    },
+    {
+      "bytes": 1633,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/run-controls.sh",
+      "sha256": "c5bc3cecf4ea11894190cfd99aaa8228b474c70dcad147f1f0748c944989994c"
+    },
+    {
+      "bytes": 1916,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/run-controls-rebuilt.sh",
+      "sha256": "a7be6444e683377ef0891d5bac4128d9133e6d15a15e6f0abe4583d084a54508"
+    },
+    {
+      "bytes": 389,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/root-preflight-controls.json",
+      "sha256": "702570da4e208dfe32ad6aa802428399ba939a2ded104c75430fc482532f50be"
+    },
+    {
+      "bytes": 389,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/root-preflight-controls-rebuilt.json",
+      "sha256": "702570da4e208dfe32ad6aa802428399ba939a2ded104c75430fc482532f50be"
+    },
+    {
+      "bytes": 698,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/controls.tsv",
+      "sha256": "1bcf51288549a7ab3753e78237b89218eb93f2d7b89c2bf56b4a1ccb5f5b20bc"
+    },
+    {
+      "bytes": 101,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-body-identity-omitted.phase",
+      "sha256": "c6a60c82d1796288e4902e3334d661e225e22af4df836808b9005eaab10f2fda"
+    },
+    {
+      "bytes": 4,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-body-identity-omitted.exit",
+      "sha256": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c"
+    },
+    {
+      "bytes": 343,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-body-identity-omitted.stdout",
+      "sha256": "4487cef2d4143374025bcebcce0c9a72d365abfdbd6ba2524b5871ac0b77826a"
+    },
+    {
+      "bytes": 5804,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-body-identity-omitted.stderr",
+      "sha256": "be5b1f32e250b3673cb57829389dfc53bfef82fa178c67903ee601012ad5e31e"
+    },
+    {
+      "bytes": 104,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-rollback-discard-omitted.phase",
+      "sha256": "7fc2101008f844e6e02a1c3c2ab8ff0ea86650b61923fefbccee606359d60729"
+    },
+    {
+      "bytes": 4,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-rollback-discard-omitted.exit",
+      "sha256": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c"
+    },
+    {
+      "bytes": 333,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-rollback-discard-omitted.stdout",
+      "sha256": "dfe731a8022ccc85d1682717a1532260c7d5f5609c9c3ede38c5385d87b97242"
+    },
+    {
+      "bytes": 3474,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-rollback-discard-omitted.stderr",
+      "sha256": "2c98803274957aabf07d1e9327541652e0dc2f09207d1d343da370a22bee0b18"
+    },
+    {
+      "bytes": 221,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-rollback-discard-omitted.source-before",
+      "sha256": "1f8ba49759ae9859ef09e2208e0c782ede23bd5ce2fa52b16415997e0d35ef3d"
+    },
+    {
+      "bytes": 221,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-rollback-discard-omitted.source-after",
+      "sha256": "1f8ba49759ae9859ef09e2208e0c782ede23bd5ce2fa52b16415997e0d35ef3d"
+    },
+    {
+      "bytes": 197,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-rollback-discard-omitted.source-mtime",
+      "sha256": "af156749e045dd1d955fb6b4a47f12dfe4d1238bc0e2457e993120cacb409625"
+    },
+    {
+      "bytes": 104,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-postroot-refusal-omitted.phase",
+      "sha256": "1ddb3af6fe09d0bb4b7df4165599adb826fead4c7e4ac0de14d795dc4c17c59d"
+    },
+    {
+      "bytes": 4,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-postroot-refusal-omitted.exit",
+      "sha256": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c"
+    },
+    {
+      "bytes": 339,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-postroot-refusal-omitted.stdout",
+      "sha256": "43b0aa71ff530c37dc805729d99e5b20bb0646f5792f679c1c6acb0505176e96"
+    },
+    {
+      "bytes": 5800,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-postroot-refusal-omitted.stderr",
+      "sha256": "93ff076f8e8ca91cf7460fed8e4195372e826970e7b45336d987d37b9fcb934f"
+    },
+    {
+      "bytes": 212,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-postroot-refusal-omitted.source-before",
+      "sha256": "cd2947c1a60b0726beb7efea84c5e5459448d5879e60377981e6c138cda067c6"
+    },
+    {
+      "bytes": 212,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-postroot-refusal-omitted.source-after",
+      "sha256": "cd2947c1a60b0726beb7efea84c5e5459448d5879e60377981e6c138cda067c6"
+    },
+    {
+      "bytes": 188,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rebuilt-postroot-refusal-omitted.source-mtime",
+      "sha256": "65cdc8ea70a6b312ed1fd3f6bc70a5d628fe351a2a9455fbb5fd9feb3492d851"
+    },
+    {
+      "bytes": 102,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rollback-discard-omitted.phase",
+      "sha256": "482fd8c17d85504c479e58d8e36a79c03e45aad10b11ddf93ac9840693bf2704"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rollback-discard-omitted.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 212,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rollback-discard-omitted.stdout",
+      "sha256": "bfddf96871981e5ad7db7ca9932c508bc5ca17fc880fe073e5f9f6b4989c6c02"
+    },
+    {
+      "bytes": 2987,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-rollback-discard-omitted.stderr",
+      "sha256": "d5285bab96ced16475eda67117e9f3375f988d90d0878acd9457081daf6c40fc"
+    },
+    {
+      "bytes": 102,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-postroot-refusal-omitted.phase",
+      "sha256": "09f800eb3d9c975159cbc7077f0beb81a944cb40dc8d8f7e70fc2bffd2a259f2"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-postroot-refusal-omitted.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 215,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-postroot-refusal-omitted.stdout",
+      "sha256": "ec6216ebc9ae7b19737281ead55f7acf29c039b6c6fed4a5fb5f61c4b5cd1523"
+    },
+    {
+      "bytes": 2987,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/control-postroot-refusal-omitted.stderr",
+      "sha256": "64ee52e3bed40deb487159c16235ce612637880479713cc7bd4860c92494a330"
+    },
+    {
+      "bytes": 9754,
+      "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/evidence/observer-three-causals-recompiled-receipt.json",
+      "sha256": "f993aaccc8a2add30c4380643882e671c8490abca71a5c4d97fea401ffbe9985"
+    }
+  ],
+  "exact_crate_git_files_verified": 15,
+  "invalid_prior_attempts": [
+    {
+      "cause": "stale Cargo package artifact, no crate recompilation",
+      "name": "rollback-discard-omitted",
+      "result": "INVALID_HARNESS_PASS"
+    },
+    {
+      "cause": "stale Cargo package artifact, no crate recompilation",
+      "name": "postroot-refusal-omitted",
+      "result": "INVALID_HARNESS_PASS"
+    }
+  ],
+  "limits": [
+    "Binary build and synthetic omission controls; not actual-chain runtime execution or fee authority",
+    "Two stale Cargo artifact passes remain invalid harness evidence",
+    "Supported original runtime host surface, complete parent witness, refund branches, finality and current release composition remain open"
+  ],
+  "locked_offline_binary_build_exit": 0,
+  "operative_controls": [
+    {
+      "actual_crate_recompile": true,
+      "behavioral_assertion_verified": true,
+      "exit": 101,
+      "name": "body-identity-omitted",
+      "only_changed_file": "src/historical_observer.rs",
+      "root": "historical_original_wasm_observer_refuses_relabelled_body_code_and_range"
+    },
+    {
+      "actual_crate_recompile": true,
+      "behavioral_assertion_verified": true,
+      "exit": 101,
+      "name": "rollback-discard-omitted",
+      "only_changed_file": "src/historical_observer.rs",
+      "root": "historical_original_wasm_observer_rollback_discards_effect_not_work"
+    },
+    {
+      "actual_crate_recompile": true,
+      "behavioral_assertion_verified": true,
+      "exit": 101,
+      "name": "postroot-refusal-omitted",
+      "only_changed_file": "src/historical.rs",
+      "root": "historical_original_wasm_observer_never_publishes_incomplete_poststate"
+    }
+  ],
+  "source_commit": "d022c648bd0d2c285353b12c4b6b1ca39fc9388d",
+  "source_tree": "e663f7aefaa16cc70044e2df37eb7f85e17abcc2",
+  "status": "ROOT_VERIFIED_SCOPED"
+}

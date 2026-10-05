@@ -1,0 +1,16 @@
+{
+  "head": "347605fd1d01b5404b969602c05cf3e8c5feef9f",
+  "next_writer": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-monitor/sn",
+  "next_writer_head": "a5372a8cf4354bf8b1c1bd8eb7bc3af1d54f1912",
+  "read_only_regular_files": 20208,
+  "read_only_source_directories": 1566,
+  "receipt": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/receipt.json",
+  "receipt_sha256": "5a857f31c7b2e3a43fe09062e9e0b9918888cf3d06f130b1603c7b5f8c9a111b",
+  "schema": "urnetwork-physical-evidence-freeze-v1",
+  "scope": "local evidence ownership; no runtime policy or live authority",
+  "source": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn",
+  "source_create_refused": true,
+  "source_write_refused": true,
+  "tree": "04199a9573b1e391062b532cf16dca2b08cfb6db",
+  "verified_bindings": 127
+}

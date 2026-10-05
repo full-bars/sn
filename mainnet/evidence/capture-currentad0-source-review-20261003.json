@@ -1,0 +1,129 @@
+{
+  "schema": "root-current-capture-source-review-v1",
+  "status": "SOURCE_JOIN_ONLY_BEHAVIOR_PENDING",
+  "base": "ad42742e1d2a0085250c1570bb0a369376edd926",
+  "candidate": "ad0d3125aa5b76ed4148f37c51f28bb866bd482a",
+  "candidate_tree": "f4abd3787603c1ccce3e6df3b4c8ac0877a23f59",
+  "collector_request_component": "e7128d3ffc1ada2a249c52164235693e348ab2ec",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-published-current/evidence/intake.json",
+    "bytes": 3694,
+    "sha256": "a99554571829b8e67422f5823297735a0b207de5ddd973968608b1c4de164d65"
+  },
+  "changed_paths": [
+    {
+      "path": "mainnet/historical_capture_request.go",
+      "bytes": 7651,
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10",
+      "git_entry": "100644 blob 42dbd40f23486e8c449108a54168b42192b5523e"
+    },
+    {
+      "path": "mainnet/main.go",
+      "bytes": 24443,
+      "sha256": "24acb59548766826a2bd2a7f5a3e7fce532fda673d2be7e666b298c5db6902ff",
+      "git_entry": "100644 blob 1920897eeef655b432c95cb9ed502a3329749776"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc",
+      "git_entry": "100644 blob a698109860741b88d661c29d95be93d81c62a160"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/bin/runtime-historical-capture.rs",
+      "bytes": 1275,
+      "sha256": "100f3e0993d2d34eb48b60d1f74b29c8e251a1e623f42ef25ab9563f44908f60",
+      "git_entry": "100644 blob 61315cd0d33258aacffe1b1391cd6535ba62b907"
+    },
+    {
+      "path": "mainnet/historical_capture_command.go",
+      "bytes": 1872,
+      "sha256": "b349e2c2df63d4eddf91a00915e184096e103f87f34e8340f2cfab16df263e26",
+      "git_entry": "100644 blob df6db42496363ff17003d2ddd704baf9f74c6d79"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture.rs",
+      "bytes": 21171,
+      "sha256": "02847d4fe85f9982008d73010e68c57bfa76bac8e47057bfdd8d8752a9bf36a2",
+      "git_entry": "100644 blob a5e095ad0409dc819be797436870bb1c9927bb1b"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical.rs",
+      "bytes": 17651,
+      "sha256": "cbd6303ff4a5663a45e4bb3a51507d1863c3edf15c3d6291c41148325e07b08f",
+      "git_entry": "100644 blob ccf432665de909b0956f508c58149eb81f0fe2fd"
+    },
+    {
+      "path": "mainnet/historical_capture_request_command.go",
+      "bytes": 2726,
+      "sha256": "dda75c0815c27f9ce0743a5db851ca854994790441aa9ca1aa4e8121eaaf1308",
+      "git_entry": "100644 blob 490e69bb127f0398cee1b6188509554796896d7d"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "bytes": 25187,
+      "sha256": "7f4fff8fd567160dd515018c1aa4747141e215217da05af3bd1776bcb13b846b",
+      "git_entry": "100644 blob 1a7bc96c5c24a77e7e3772f0dfe97af0e1fb2c78"
+    },
+    {
+      "path": "mainnet/historical_replay_supervisor.go",
+      "bytes": 3140,
+      "sha256": "eb02634d4a8ffba6931b31e36a591f1c133b8d138d9f5df4d65bf9e5196eec2b",
+      "git_entry": "100644 blob 0904906da7f402ad6930d52dd709a9c12a17971a"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/HISTORICAL-CAPTURE.md",
+      "bytes": 3257,
+      "sha256": "3fd15393729c0e6b3f783dbf1b63f50cce02c57367f24e1d8c04d98dfe5f79b2",
+      "git_entry": "100644 blob b4ac1a2e2a168f22a506cb4a9dd58ec69c1cf921"
+    },
+    {
+      "path": "mainnet/historical_capture_request_test.go",
+      "bytes": 12337,
+      "sha256": "e156007bf9d4b1294051042815352717652895eb271ac2e07adf17ba5e162fdb",
+      "git_entry": "100644 blob 7e091115103ac48baba8a11b8719d507a2683966"
+    },
+    {
+      "path": "mainnet/historical_capture_test.go",
+      "bytes": 11823,
+      "sha256": "35cfe80fce400c6011934882bb362e7ccab26b668d9b1fd86a2f80031ca4e0ab",
+      "git_entry": "100644 blob 3281553064cbdf9ae9c1f28461c73a11f09d5cfd"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_tests.rs",
+      "bytes": 49273,
+      "sha256": "692b62b86621c6d1601fa0ee9c3a3dbc2d94fd54c05c119bd034508fc08c444a",
+      "git_entry": "100644 blob 97efc11b7ec5884e0b23b61c538ea7b317ebd2eb"
+    },
+    {
+      "path": "mainnet/historical_capture.go",
+      "bytes": 7742,
+      "sha256": "e6ae20e8f51d376e7aa93036b6eca5014fc34073700987de0a90fdc224fa5e6b",
+      "git_entry": "100644 blob c498ec5ea723f20230da6aab18ae4fbec60eb758"
+    },
+    {
+      "path": "mainnet/historical_replay_test.go",
+      "bytes": 19576,
+      "sha256": "c6266993979eae237da0653a5ebf6bc27909ab00b01c1fdd64095a78defa6a81",
+      "git_entry": "100644 blob 2c912daf65ca245fab9b49b4e3a5abbd40a22dcb"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067",
+      "git_entry": "100644 blob 185310d18fcb00bcffd17ddacd80db8d34707651"
+    },
+    {
+      "path": "mainnet/historical_replay.go",
+      "bytes": 14770,
+      "sha256": "a6c13fe37fbd8dbb897388b7ee29f202359402dce9e6a158b73a71c9ca52c1fc",
+      "git_entry": "100644 blob df6c73d4615077ecb2cbf579089b68fcb55c85cf"
+    }
+  ],
+  "unchanged_git_entries": 20553,
+  "all_other_base_git_entries_retained": true,
+  "limits": [
+    "Author sparse checkout verifies changed files; no full physical archive or compile/behavior claim.",
+    "Eight current public-command/custody roots normal/race/vet remain a separate gate before integration."
+  ]
+}

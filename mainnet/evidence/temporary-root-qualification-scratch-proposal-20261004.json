@@ -1,0 +1,25 @@
+{
+  "schema": "temporary-root-qualification-scratch-proposal-v1",
+  "status": "PROPOSED_NOT_CREATED",
+  "observed_utc": "2026-10-04T19:21:30.075681+00:00",
+  "reason": "Data volume lacks capacity for108 finalServerimages; narrowly inspected old compilerintermediates recover less than1GiB. User requires futureSNtemp on/mnt/data, so temporary root exception requires explicit approval.",
+  "proposed_path": "/home/by/urnetwork/qualification-scratch/server-f67-20261004",
+  "destination_exists": false,
+  "root_available_bytes": 302205870080,
+  "root_original_baseline_bytes": 304423350272,
+  "future_root_cap_bytes": 68719476736,
+  "retained_image_forecast_bytes": 17179869184,
+  "one_warm_compiler_forecast_bytes": 6442450944,
+  "resource_margin": 2,
+  "root_minimum_available_bytes": 282948513792,
+  "scope": "Only NEW compilerTMPDIR and retained qualification testimages, private0700 tree, UMask0077. All active history/checkpoint/source/evidence paths remain on/mnt/data. No runningpath migration, no productionconfig or livekeys, no signing/deployment. Fresh combinedresource guards and exactimage bindings required. Data originalbaseline and104GiB budget remainunchanged. Move retainedoutputs to/mnt/data once space permits; cleanuproot copies onlyafter verified custodytransfer.",
+  "memory": "Use existing bounded onecompiler+long/body envelope; no addedparallel class.",
+  "previous_proposal": {
+    "path": "/home/by/sn-mainnet-qualification-emergency-20261004",
+    "cap_bytes": 42949672960,
+    "image_forecast_bytes": 12884901888,
+    "minimum_available_bytes": 300128382976
+  },
+  "cap_authority": "Standing user automatic budget increase approval; separate storage-location exception is pending and this destination remains uncreated.",
+  "sol_forecast_sha256": "5ff89d54d2fe40f535694626884d6e102669075f136407d66e95b92604d9b30a"
+}

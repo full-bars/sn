@@ -1,0 +1,45 @@
+{
+  "schema": "fee-retirement-logical-guard-source-finding-v1",
+  "observed_utc": "2026-10-04T05:15:06.869126+00:00",
+  "status": "SOURCE_FINDING_CORRECTION_REQUIRED_BEFORE_BODY_QUALIFICATION",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-retention-corrected/sn",
+    "head": "eca431e71ab97e21f7ca9a31112b89c7df0f8963",
+    "tree": "870a37974aa4db803f5fd094db6683417f4c1850",
+    "parents": [
+      "659e1fda37896b6c0f13e935c8551524ccf059c2",
+      "c04dd5def019f1d87bf5b2a147a8c0990a670793"
+    ],
+    "sparse": true,
+    "clean": true
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-retention-corrected/evidence/intake.json",
+    "sha256": "656ee739f0914246ec15c7b69bc9fdc40fd500ef378c510af1dbdf6946fae150"
+  },
+  "physical_git_bindings_verified": 19,
+  "ancestor_recipe_bindings_verified": 5,
+  "reviewed_production": [
+    "Retirement explicit over exact snapshot; proofs kept in held archived checkpoints.",
+    "Hot obligations retain original transaction/request/evidence identity; unresolved fees cannot become zero.",
+    "First known fee is deduplicated across requests; contradictions refused.",
+    "Worker reuses retained archive request hashes, avoiding deleted original replay jobs.",
+    "Legacy hot-proof grammar remains until explicit retirement; candidate capacities checked before publication."
+  ],
+  "masked_test_roots": [
+    "TestEconomicConservationPublicRetiredUnknownFeeMustRemainHot",
+    "TestEconomicConservationPublicFeeArchiveSummaryCannotSelfSealNewKnowledge"
+  ],
+  "cause": "Both fixtures directly overwrite a guarded physical checkpoint then accept generic code3/no output/no reads. Physical custody rejection can satisfy these assertions before the intended logical unknown-obligation or summary guard.",
+  "required_correction": [
+    "Publish forged logical state through actual owned snapshot publisher.",
+    "Assert the exact logical refusal and unchanged source/sibling progress.",
+    "Qualify operative omitted-guard controls only after the original positive reaches the named logical guard.",
+    "Retain separate physical-tamper rejection coverage."
+  ],
+  "qualification": "Do not execute uncorrected eca body merely to collect masked positives. Retain its source/graph history; qualify corrected successor41-root normal/race union and four operative controls. C04 separate49-root qualification continues.",
+  "limits": [
+    "Source review does not establish compilation or behavioral success.",
+    "Fee-retirement work does not close whole economic conservation or mainnet activation."
+  ]
+}

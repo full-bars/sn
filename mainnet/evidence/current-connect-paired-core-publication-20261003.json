@@ -1,0 +1,16 @@
+{
+  "core_files": 37,
+  "exact_mode_blob_union_verified": true,
+  "limits": "Core source and seven scoped normal/race/vet results retained. Current consumer graph and whole-release qualification remain required.",
+  "merge_commit": "631bcb282d392a24df6b509b89a0337c2fd4d7e7",
+  "merge_tree": "caaa492d5bc0b1a562f8b2ddb3f25287b8371447",
+  "preserved_upstream": "a8a71432830befe79fc1aa2a63e691b618895dc5",
+  "publication": {
+    "local_main_equals_origin_main": true,
+    "pull_ff_only_exit": 0,
+    "push_exit": 0,
+    "worktree_clean": true
+  },
+  "qualified_core_source": "1b1624f0aa09c0173f8a0457207d9d1329319beb",
+  "schema": "urnetwork-paired-core-publication-source-v1"
+}

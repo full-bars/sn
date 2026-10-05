@@ -1,0 +1,59 @@
+{
+  "schema": "b6-correction-source-review-v1",
+  "status": "SOURCE_REVIEWED_NOT_COMPILED_OR_EXECUTED",
+  "source": {
+    "archive_requirement": "Independent complete archive from exact Git commit; do not treat sparse absent files as missing source or run from repository root.",
+    "base": "b6b7880ea4059af1a77f232a1ed597fe11cc8999",
+    "commit": "c5737e0d91dabe1c7a89b1f3865e2316d33f0e58",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-monitor-corrections/sn",
+    "sparse": true,
+    "tree": "884402dd24ca422901bad00a7a40879d51a4e5b5"
+  },
+  "intake_sha256": "41e0bdcf48754e6214798667d28605f66c530c209f0c4371ea02186fcdf01aa8",
+  "verified_physical_bindings": [
+    "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/selected-sn-graph-receipt.json",
+    "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/selected-core-graph-receipt.json",
+    "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/selected-graphs-independent-verification.json",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-monitor-corrections/evidence/operative-controls.json",
+    "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/b6-mainnet-seven-behavioral-failures-original.jsonl",
+    "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/b6-race-six-behavioral-failures-original.jsonl",
+    "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/b6-mainnet-normal-cwd2-nine-failures.jsonl",
+    "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/b6-validator-normal-cwd2-four-failures.jsonl",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-monitor-corrections/evidence/source-and-root-census.json"
+  ],
+  "changed_files": [
+    "internal/durablehead/head_linux.go",
+    "internal/durablehead/head_test.go",
+    "mainnet/historical_fee_context_test.go",
+    "mainnet/monitor_cancellation_test.go",
+    "mainnet/monitor_claim_archive_test.go",
+    "mainnet/monitor_claim_restore_test.go",
+    "mainnet/monitor_claim_test.go",
+    "mainnet/monitor_claim_window_test.go",
+    "mainnet/monitor_directory.go",
+    "mainnet/monitor_economic_native_restore_test.go",
+    "mainnet/plan_input.go",
+    "mainnet/plan_test.go",
+    "mainnet/validator_capacity_test.go",
+    "validator/release_foreground_work_test.go"
+  ],
+  "production_findings": [
+    "Failed checkpoint acknowledgment cannot establish differing bytes; pending write and original cause remain.",
+    "Pure single-class cancellation is preserved before observation classification. Mixed cancellation classes require adjacent review.",
+    "Plan file reads preserve cancellation/stat/read/close causes and withhold bytes/digest on error."
+  ],
+  "qualification_scope": {
+    "roots": 52,
+    "operative_controls": 7,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "vets": 3
+  },
+  "limits": [
+    "Original failing outcomes retained.",
+    "Source review does not establish behavioral success or launch readiness.",
+    "Core read-cause successor and continuous native producer are separate unfinished work."
+  ]
+}

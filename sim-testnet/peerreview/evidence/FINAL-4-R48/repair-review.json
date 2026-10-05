@@ -1,0 +1,51 @@
+{
+  "schema": "urnetwork-r48-legacy-usage-repair-review-v1",
+  "epoch": 658,
+  "final_acceptance": false,
+  "credited_bytes": 0,
+  "live_writes_performed": false,
+  "operators": [
+    {
+      "no_id": 1,
+      "contract_count": 3151,
+      "retained_report_minimum": 2371940,
+      "report_classes": {
+        "both_zero": 2275,
+        "one_zero": 8,
+        "both_positive": 868
+      },
+      "manifest": {
+        "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-1-manifest.json",
+        "sha256": "5611def95cb1dfdfffaebd76a48e674088e8c585de74933b1d1f68f814784ad3",
+        "bytes": 3097442
+      },
+      "transaction": {
+        "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-1-apply.sql",
+        "sha256": "7011781a9f3fa65a5e2cc48104523ebb38d095fe8712c6d12863d21876989b6e",
+        "bytes": 3105647
+      }
+    },
+    {
+      "no_id": 2,
+      "contract_count": 1032,
+      "retained_report_minimum": 710788,
+      "report_classes": {
+        "both_zero": 747,
+        "one_zero": 0,
+        "both_positive": 285
+      },
+      "manifest": {
+        "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-2-manifest.json",
+        "sha256": "a3decb652ab6914ab9e8d64920868ee7585f851c605cb9a425f8a408394c1e6a",
+        "bytes": 1014912
+      },
+      "transaction": {
+        "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-2-apply.sql",
+        "sha256": "1a8934262ad43d4c6bb324691483e4f055e20d8395ca0a44bc380981e8cde2e0",
+        "bytes": 1023117
+      }
+    }
+  ],
+  "contract_count": 4183,
+  "retained_report_minimum": 3082728
+}

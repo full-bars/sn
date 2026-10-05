@@ -1,0 +1,160 @@
+{
+  "all_other_git_tree_entries_exact_to_current_d53": true,
+  "artifact_bindings_verified": 15,
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/evidence/modules.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/evidence/modules.stdout": {
+      "bytes": 174162,
+      "sha256": "14a5691dc196be4e820dc3d2165ebf202d37702f52f1791c07c8dd790485945c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/evidence/physical-source.json": {
+      "bytes": 10308007,
+      "sha256": "3a10026f92c77c0f988b2e0c1dc8b86514fa65fbd8571c2a837a75d0d13fef5d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/go.mod": {
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/go.sum": {
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/mainnet/historical_replay.go": {
+      "bytes": 13336,
+      "sha256": "34a1e584b3a95ab379485ffe3d3966cfa5870014b593d10ebdee838d7db79809"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/mainnet/historical_replay_observation.go": {
+      "bytes": 16417,
+      "sha256": "30c11df236092f8137f248b80c6998b144a7996a3b067a19461984e2b209cc57"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/mainnet/historical_replay_test.go": {
+      "bytes": 19452,
+      "sha256": "cf1b238495b34cf4e17ee4cf3a35d3aa0836211eca098eb72a3c1d7ba684cdc0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/HISTORICAL-REPLAY.md": {
+      "bytes": 7426,
+      "sha256": "72d2297ae534dccd2da0a1fadb216fdf358f8cad5b7d41cd507f0979ffa66d45"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical.rs": {
+      "bytes": 17600,
+      "sha256": "571df144e95c0da4fce199fb5b29364723814eb18098917923066fc50b61ac88"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical_backend.rs": {
+      "bytes": 7301,
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical_hosts.rs": {
+      "bytes": 13967,
+      "sha256": "49ee3c2f65680e25ea482eb2626fbdde977f765745e9cd37d15eab3a1765083d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical_pure_hosts.rs": {
+      "bytes": 5064,
+      "sha256": "f6187f0e022076c3a47e6c6de007a8618f84b5915480233733189d0bee7b3084"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical_tests.rs": {
+      "bytes": 49213,
+      "sha256": "973d555d8f1e9fe1e997540fb87b470acbf0708df1cebf1b3ea22ce2c4b68b18"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-peer-graph.json": {
+      "bytes": 2987,
+      "sha256": "67a567368a074ac5003d4986563a4ceffd7c96515a4b582f83715d990d1829a0"
+    }
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/evidence/intake.json",
+    "sha256": "8fa877f946a07ba34fc5b5b209371372f2958b372e7c5dbf809408d2ba0882fb"
+  },
+  "limits": [
+    "Author fullphysical inventory is bound, but root reread nine changed files only here.",
+    "Original Go-run setup failures retained; exact failed executable predicate field not observed. Owned normal7 passes; owned race and current GoRust still pending.",
+    "Current main guard workflow is separately qualified and must remain preserved on integration.",
+    "No actual mainnet runtime/profile/completewitness/finality/feeauthority claim."
+  ],
+  "nine_actual_changed_physical_blobs_and_modes_exact_to_9cf": [
+    {
+      "bytes": 13336,
+      "git_blob": "fb66c01fa3cca4c8a4ba1c056512ce2b8d9dba54",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/mainnet/historical_replay.go",
+      "relative": "mainnet/historical_replay.go",
+      "sha256": "34a1e584b3a95ab379485ffe3d3966cfa5870014b593d10ebdee838d7db79809"
+    },
+    {
+      "bytes": 16417,
+      "git_blob": "1f221f5c3ee0fe3fef73b50302a86d65ccf3cffd",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/mainnet/historical_replay_observation.go",
+      "relative": "mainnet/historical_replay_observation.go",
+      "sha256": "30c11df236092f8137f248b80c6998b144a7996a3b067a19461984e2b209cc57"
+    },
+    {
+      "bytes": 19452,
+      "git_blob": "c70e7b4eaf6fe8dc84f77d913751f5904adb20db",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/mainnet/historical_replay_test.go",
+      "relative": "mainnet/historical_replay_test.go",
+      "sha256": "cf1b238495b34cf4e17ee4cf3a35d3aa0836211eca098eb72a3c1d7ba684cdc0"
+    },
+    {
+      "bytes": 7426,
+      "git_blob": "138c372e7a3f5e6644bddc3e1efe948e5c8da472",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "relative": "tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "sha256": "72d2297ae534dccd2da0a1fadb216fdf358f8cad5b7d41cd507f0979ffa66d45"
+    },
+    {
+      "bytes": 17600,
+      "git_blob": "a65d3e5226495582170df4b5f23462d7d342fbc8",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical.rs",
+      "sha256": "571df144e95c0da4fce199fb5b29364723814eb18098917923066fc50b61ac88"
+    },
+    {
+      "bytes": 7301,
+      "git_blob": "21c5b74012cd45efef650d351b798d23e9cfe10f",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical_backend.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_backend.rs",
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137"
+    },
+    {
+      "bytes": 13967,
+      "git_blob": "f58bfb5d112ab127e8f2ed673d8263a24552b6c0",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "sha256": "49ee3c2f65680e25ea482eb2626fbdde977f765745e9cd37d15eab3a1765083d"
+    },
+    {
+      "bytes": 5064,
+      "git_blob": "928e63e002a4b8461ef019d3dfc4828cc6eddbc5",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical_pure_hosts.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_pure_hosts.rs",
+      "sha256": "f6187f0e022076c3a47e6c6de007a8618f84b5915480233733189d0bee7b3084"
+    },
+    {
+      "bytes": 49213,
+      "git_blob": "9c2f38f224d616a208023131958cbd796988a2c6",
+      "git_mode": "100644",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn/tools/runtime-metadata-probe/src/historical_tests.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_tests.rs",
+      "sha256": "973d555d8f1e9fe1e997540fb87b470acbf0708df1cebf1b3ea22ce2c4b68b18"
+    }
+  ],
+  "source": {
+    "head": "c59c3c414d024663f28e8a4e3cb8b4de85102813",
+    "parents": [
+      "d53a53471a0eff8ba034040a5b56a8915d19ca7a",
+      "9cfdd793260babe6ce3c5e440167f4abccbd996f"
+    ],
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-hosts/sn",
+    "tree": "f2b2b695ca237518e02b6ebd634028b4eff674a3"
+  },
+  "status": "ROOT_VERIFIED_CURRENT_HOST_SOURCE_JOIN_BEHAVIOR_PENDING"
+}

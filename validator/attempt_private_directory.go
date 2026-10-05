@@ -4,9 +4,13 @@ package validator
 // admission policies. They do not widen either caller's bounds or permissions.
 
 import (
+	"context"
 	"errors"
+	"github.com/urfoundation/sn/internal/durablepath"
+	"github.com/urnetwork/connect/durablevolume"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 // Comparable full-width native state, with timestamps supplied by the target
@@ -32,17 +36,33 @@ func (self attemptPrivateFileState) directory() bool { return self.mode&0o170000
 
 // One retained descriptor is never redirected by a pathname replacement.
 type attemptPrivateDirectory struct {
-	file   *os.File
-	path   string
-	anchor attemptPrivateFileState
+	stateLock   sync.Mutex
+	failure     error
+	statForTest func(*os.File) (os.FileInfo, error)
+	storage     *durablepath.Directory
+	storageCtx  context.Context
+	file        *os.File
+	path        string
+	anchor      attemptPrivateFileState
 }
 
 // Every component is opened natively with no-follow, nonblocking directory
 // flags. A FIFO or symlink replacement cannot block or redirect acquisition.
-func openAttemptPrivateDirectory(path string) (*attemptPrivateDirectory, error) {
+func openAttemptPrivateDirectory(path string, storageContexts ...context.Context) (*attemptPrivateDirectory, error) {
 	if !filepath.IsAbs(path) || filepath.Clean(path) != path || filepath.Dir(path) == path {
 		return nil, errors.New("private directory path is not canonical absolute non-root")
 	}
+	ctx := validatorStorageContext(storageContexts)
+	storage, err := openValidatorDurableDirectory(ctx, path, durablevolume.ReadWrite, false)
+	if err != nil {
+		return nil, err
+	}
+	transferred := false
+	defer func() {
+		if !transferred {
+			_ = storage.Close()
+		}
+	}()
 	file, err := openAttemptPrivateDirectoryFile(path)
 	if err != nil {
 		return nil, err
@@ -51,14 +71,37 @@ func openAttemptPrivateDirectory(path string) (*attemptPrivateDirectory, error) 
 	if err != nil || !state.directory() {
 		return nil, errors.Join(errors.New("private directory descriptor differs"), err, file.Close())
 	}
-	return &attemptPrivateDirectory{file: file, path: path, anchor: state}, nil
+	if err := checkValidatorDurableDirectory(storage, file); err != nil {
+		return nil, errors.Join(err, file.Close())
+	}
+	transferred = true
+	return &attemptPrivateDirectory{storage: storage, storageCtx: ctx, file: file, path: path, anchor: state}, nil
 }
 
 // Reopening uses the same safe component acquisition; only exact directory
 // identity, owner and mode are stable while its entries legitimately change.
-func (self *attemptPrivateDirectory) check() error {
+func (self *attemptPrivateDirectory) check() (resultErr error) {
 	if self == nil || self.file == nil {
 		return errors.New("private directory owner is closed")
+	}
+	self.stateLock.Lock()
+	failure := self.failure
+	self.stateLock.Unlock()
+	if failure != nil {
+		return failure
+	}
+	defer func() {
+		if errors.Is(resultErr, durablevolume.ErrIdentity) {
+			self.stateLock.Lock()
+			if self.failure == nil {
+				self.failure = resultErr
+			}
+			resultErr = self.failure
+			self.stateLock.Unlock()
+		}
+	}()
+	if err := checkValidatorDurableDirectoryWithStat(self.storage, self.file, self.statForTest); err != nil {
+		return err
 	}
 	current, err := openAttemptPrivateDirectory(self.path)
 	if err != nil {
@@ -66,11 +109,14 @@ func (self *attemptPrivateDirectory) check() error {
 	}
 	err = current.close()
 	if self.anchor.dev != current.anchor.dev || self.anchor.ino != current.anchor.ino || self.anchor.mode != current.anchor.mode || self.anchor.uid != current.anchor.uid {
-		return errors.Join(errors.New("private directory namespace changed after acquisition"), err)
+		return errors.Join(durablevolume.ErrIdentity, errors.New("private directory namespace changed after acquisition"), err)
 	}
 	state, statErr := statAttemptPrivateFile(self.file)
-	if statErr != nil || state.dev != self.anchor.dev || state.ino != self.anchor.ino || state.mode != self.anchor.mode || state.uid != self.anchor.uid {
-		return errors.Join(errors.New("private directory descriptor changed after acquisition"), err, statErr)
+	if statErr != nil {
+		return errors.Join(&durablevolume.UnavailableError{Reason: "cannot observe retained private directory"}, err, statErr)
+	}
+	if state.dev != self.anchor.dev || state.ino != self.anchor.ino || state.mode != self.anchor.mode || state.uid != self.anchor.uid {
+		return errors.Join(durablevolume.ErrIdentity, errors.New("private directory descriptor changed after acquisition"), err)
 	}
 	return err
 }
@@ -82,7 +128,7 @@ func (self *attemptPrivateDirectory) close() error {
 	}
 	file := self.file
 	self.file = nil
-	return file.Close()
+	return errors.Join(file.Close(), self.storage.Close())
 }
 
 // Leaf primitives accept one name only, never a path that could traverse an

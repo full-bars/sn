@@ -1,0 +1,22 @@
+{
+  "status": "ADOPTED_FUTURE_TWO_HISTORY_BODY_ONLY",
+  "root_observed_utc": "2026-10-04T20:40:48.435867+00:00",
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "physical_floor_bytes": 0,
+  "margin": 2,
+  "history_count": 2,
+  "compiler_count": 0,
+  "short_body_count": 0,
+  "DB_count": 0,
+  "history_forecast_disk_bytes": 4294967296,
+  "history_forecast_memory_bytes": 4294967296,
+  "data_minimum_available_bytes": 17179869184,
+  "memory_minimum_available_bytes": 120259084288,
+  "actual_data_available_bytes": 26368151552,
+  "actual_memory_available_bytes": 130477985792,
+  "scope": "Future at most two exact full129 history bodies, no compiler/short/DB/Rust. Existing healthy Restore owner and guards remain unchanged. Corrected Claim source1eb with original129 gate unchanged; each root14400s plus120s join. Fresh canonical lease and original resource guards mandatory. Preserve all completed original receipts; no readiness claim.",
+  "authorization": "Standing user automatic budget increases and maximum useful parallel work; no location exception or signing.",
+  "proposal_owner": "sol_release_independent and sol_parallel_qualification",
+  "source": "1eb679a4 test-only successor of b466; protected race image d19e1f2735f2d95cf7cbaa195610a990503c3e6afe559d32358ba838bebeeeac"
+}

@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"slices"
 	"sort"
@@ -32,10 +33,29 @@ var (
 )
 
 // Native registration/stake and EVM state have separate pinned hashes. The
-// native observation cannot be replaced with a claimed EVM-height identity.
-func readReleaseDecisionV2Context(ctx context.Context, chain *ChainClient, native *crv4.Chain, query releaseDecisionChainV2Query, schedule crv4.ValidatorScheduleQuery, runtimes ...crv4.RuntimeArtifactIdentity) (result *releaseDecisionChainV2Observation, observed crv4.ValidatorScheduleObservation, resultErr error) {
+// current reviewed owner supplies the complete reviewed historical profile;
+// individual callers cannot accidentally omit a predecessor runtime.
+func readReleaseDecisionV2Context(ctx context.Context, chain *ChainClient, native *crv4.Chain, query releaseDecisionChainV2Query, schedule crv4.ValidatorScheduleQuery, runtime crv4.RuntimeArtifactIdentity) (result *releaseDecisionChainV2Observation, observed crv4.ValidatorScheduleObservation, resultErr error) {
+	return readReleaseDecisionWithConfigV2Context(ctx, chain, native, query, schedule, runtime, nil)
+}
+
+// Mainnet decisions carry the whole independent config authority to their
+// native reader. A tuple-only wrapper cannot infer that authority from a domain.
+func readReleaseDecisionWithConfigV2Context(ctx context.Context, chain *ChainClient, native *crv4.Chain, query releaseDecisionChainV2Query, schedule crv4.ValidatorScheduleQuery, runtime crv4.RuntimeArtifactIdentity, cfg *ReleaseConfig) (result *releaseDecisionChainV2Observation, observed crv4.ValidatorScheduleObservation, resultErr error) {
 	if ctx == nil || schedule.GenesisHash != types.Hash(query.domain.GenesisHash) || schedule.Netuid != query.domain.Netuid {
 		return nil, observed, errors.New("decision native and EVM deployment authorities differ")
+	}
+	allowed := HistoricalReleaseRuntimeArtifacts(runtime)
+	if query.domain.ChainID == 964 || isOwnerRecycleProductionConfig(cfg) {
+		if !isOwnerRecycleProductionConfig(cfg) || cfg.ChainID != query.domain.ChainID || cfg.GenesisHash != schedule.GenesisHash.Hex() || cfg.Netuid != schedule.Netuid ||
+			common.HexToAddress(cfg.Coordinator) != common.Address(query.domain.Coordinator) {
+			return nil, observed, errors.New("production decision lost its independently approved configuration")
+		}
+		var err error
+		allowed, err = releaseHistoricalRuntimeArtifactsAt(cfg, schedule.BlockNumber)
+		if err != nil {
+			return nil, observed, err
+		}
 	}
 	// Capture all query slices before even the native reader's first callback.
 	query, budget, err := ownReleaseDecisionChainV2Query(ctx, query)
@@ -61,9 +81,9 @@ func readReleaseDecisionV2Context(ctx context.Context, chain *ChainClient, nativ
 			result, observed = nil, crv4.ValidatorScheduleObservation{}
 		}
 	}()
-	observed, err = crv4.ReadValidatorScheduleAtContext(ctx, native, schedule, runtimes...)
-	if err != nil || !observed.Stake.MeetsNonSelfStakeAndPermit() {
-		return nil, observed, errors.Join(errors.New("decision native signer lacks real stake/permit authority"), err)
+	observed, err = crv4.ReadValidatorScheduleAtContext(ctx, native, schedule, allowed...)
+	if err := releaseRpcObservationError(err, observed.Stake.MeetsNonSelfStakeAndPermit(), errors.New("decision native signer lacks real stake/permit authority")); err != nil {
+		return nil, observed, err
 	}
 	result, err = chain.readOwnedReleaseDecisionChainV2Context(ctx, query, budget)
 	if err != nil {
@@ -77,7 +97,8 @@ func readReleaseDecisionV2Context(ctx context.Context, chain *ChainClient, nativ
 }
 
 // Immutable replayed journals provide the provider census. Artifact fields
-// are compared only after independent native and complete EVM observations.
+// are compared after independent native and complete EVM observations. Only
+// exact configured policy selection occurs before the first chain read.
 func (self *releaseEvidenceV2StartupHistory) authenticateIntentChainReference(ctx context.Context, chain *ChainClient, native *crv4.Chain, runtime crv4.RuntimeArtifactIdentity, intent *SteeringIntent, artifact *ReleaseMeasurementArtifact) error {
 	if self == nil {
 		return errors.New("historical decision reference owner is absent")
@@ -118,9 +139,27 @@ func (self *releaseEvidenceV2StartupHistory) readIntentDecisionSourcesV2(ctx con
 			result = releaseIntentDecisionSourcesV2{}
 		}
 	}()
+	originalCfg, err := productionConfigForIntent(&self.cfg, intent)
+	if err != nil {
+		return result, err
+	}
+	decisionCfg, err := releaseConfigForPolicyHash(originalCfg, artifact.PolicyHash)
+	if err != nil {
+		return result, err
+	}
+	// Scope every historical policy, client-key and deposit read to its exact
+	// original document; the retained activation and cut remain unchanged.
+	owned := *self
+	owned.cfg = *decisionCfg
+	self = &owned
 	first := self.initial[self.participants[0].NoID].InitialCut
+	domain := first.Activation.Domain
+	domain.PolicyHash, err = self.cfg.Policy.Hash()
+	if err != nil {
+		return result, err
+	}
 	bounds := self.cfg.EvidenceV2.Bounds
-	query := releaseDecisionChainV2Query{domain: first.Activation.Domain, boundary: AttemptBoundary{SettlementEpoch: artifact.SettlementEpoch, EVMBlock: artifact.EVMSnapshotBlock, EVMBlockHash: artifact.EVMSnapshotHash}, policy: self.cfg.Policy, maxOperators: bounds.MaxOperators, maxProviders: bounds.MaxProviders, maxControlBytes: bounds.MaxControlBytes}
+	query := releaseDecisionChainV2Query{domain: domain, boundary: AttemptBoundary{SettlementEpoch: artifact.SettlementEpoch, EVMBlock: artifact.EVMSnapshotBlock, EVMBlockHash: artifact.EVMSnapshotHash}, policy: self.cfg.Policy, maxOperators: bounds.MaxOperators, maxProviders: bounds.MaxProviders, maxControlBytes: bounds.MaxControlBytes}
 	if uint64(len(self.participants)) > bounds.MaxOperators {
 		return result, errors.New("historical decision operator census exceeds its bound")
 	}
@@ -158,10 +197,10 @@ func (self *releaseEvidenceV2StartupHistory) readIntentDecisionSourcesV2(ctx con
 		return result, err
 	}
 	observationCtx, cancel := context.WithTimeout(ctx, releaseNativeEndpointTimeout(&self.cfg))
-	observed, schedule, err := readReleaseDecisionV2Context(observationCtx, chain, native, query, crv4.ValidatorScheduleQuery{GenesisHash: types.Hash(query.domain.GenesisHash), BlockHash: types.Hash(hash), BlockNumber: artifact.NativeSnapshotBlock, Netuid: query.domain.Netuid, Hotkey: first.Activation.Hotkey, MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, HistoricalReleaseRuntimeArtifacts(runtime)...)
+	observed, schedule, err := readReleaseDecisionWithConfigV2Context(observationCtx, chain, native, query, crv4.ValidatorScheduleQuery{GenesisHash: types.Hash(query.domain.GenesisHash), BlockHash: types.Hash(hash), BlockNumber: artifact.NativeSnapshotBlock, Netuid: query.domain.Netuid, Hotkey: first.Activation.Hotkey, MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, runtime, &self.cfg)
 	cancel()
-	if err != nil || schedule.SubnetEpochIndex != intent.SubnetEpoch || schedule.Stake.Identity.UID != intent.SelfUID {
-		return result, errors.Join(errors.New("historical decision signer or epoch differs from real chain observations"), err)
+	if err := releaseRpcObservationError(err, schedule.SubnetEpochIndex == intent.SubnetEpoch && schedule.Stake.Identity.UID == intent.SelfUID, errors.New("historical decision signer or epoch differs from real chain observations")); err != nil {
+		return result, err
 	}
 	// Complete chain observations retain inactive registry members; each intent
 	// participant still needs eligibility at this exact decision boundary.
@@ -222,8 +261,14 @@ func (self *releaseEvidenceV2StartupHistory) readIntentDecisionSourcesV2(ctx con
 				return result, err
 			}
 			encoded, err := custody.read(keyCtx, path, maximum, false)
-			if err != nil || ReleaseMeasurementContentHash(encoded) != contentHash {
-				return result, errors.Join(errReleaseHistoricalClientKeyV2, errors.New("retained client-key capture differs from its complete byte identity"), err)
+			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					return result, errors.Join(errReleaseHistoricalClientKeyV2, err)
+				}
+				return result, err
+			}
+			if ReleaseMeasurementContentHash(encoded) != contentHash {
+				return result, errors.Join(errReleaseHistoricalClientKeyV2, errors.New("retained client-key capture differs from its complete byte identity"))
 			}
 			if err := keyReads.reserveResponse(keyCtx, chain, domain, request, uint64(len(encoded))); err != nil {
 				return result, err
@@ -254,8 +299,9 @@ func (self *releaseEvidenceV2StartupHistory) readIntentDecisionSourcesV2(ctx con
 		registration, err := verifyReservedReleaseClientKeyCaptureV2(keyCtx, chain, source.encoded, source.maximum, source.domain, source.request, true)
 		position := keyPositions[index]
 		actual := observed.bindings[position]
-		if err != nil || !registration.Present || releaseHex32(registration.PublicKey) != actual.ClientKey || artifact.Bindings[position].LocalClientKey != actual.ClientKey {
-			return result, errors.Join(errors.New("historical client key differs from its retained operator-signed capture"), err)
+		matches := registration.Present && releaseHex32(registration.PublicKey) == actual.ClientKey && artifact.Bindings[position].LocalClientKey == actual.ClientKey
+		if err := releaseRpcObservationError(err, matches, errors.New("historical client key differs from its retained operator-signed capture")); err != nil {
+			return result, err
 		}
 		result.bindings[position].LocalClientKey = actual.ClientKey
 		result.bindings[position].ClientKeyObservationHash = artifact.Bindings[position].ClientKeyObservationHash
@@ -291,7 +337,9 @@ func (self *releaseEvidenceV2StartupHistory) readIntentDecisionSourcesV2(ctx con
 func (self *releaseEvidenceV2StartupHistory) historicalDepositAudit(ctx context.Context, observed *releaseDecisionChainV2Observation, operator releaseDecisionChainV2Operator, status string) (DepositAudit, error) {
 	epoch := observed.boundary.SettlementEpoch
 	var audit DepositAudit
-	if epoch < self.cfg.Policy.Deposit.UsageLagEpochs {
+	if self.cfg.Policy.IsZeroPrice() {
+		audit = ZeroPriceDepositAudit(epoch, depositAuditSourceEpoch(epoch, self.cfg.Policy.Deposit), operator.noID, operator.deposit, operator.convictionBefore)
+	} else if epoch < self.cfg.Policy.Deposit.UsageLagEpochs {
 		audit = baseDepositAudit(epoch, 0, operator.noID, operator.deposit, operator.convictionBefore)
 		audit.Status, audit.Disposition = DepositAuditBootstrap, "zero_pool_weight_bootstrap"
 		if operator.deposit.Sign() == 0 {
@@ -323,9 +371,10 @@ func (self *releaseEvidenceV2StartupHistory) historicalDepositAudit(ctx context.
 		if err != nil {
 			return DepositAudit{}, err
 		}
+		defer reader.CloseIdleConnections()
 		artifact, err := reader.readCommittedReleaseDecisionV2Artifact(ctx, operator.commitment.ArtifactHash, min(self.cfg.EvidenceV2.Bounds.MaxArtifactBytes, maximumPayoutArtifactBytes))
 		if err != nil {
-			return DepositAudit{}, errors.Join(errors.New("historical committed payout bytes are unavailable or invalid; current failure is not past outage evidence"), err)
+			return DepositAudit{}, fmt.Errorf("historical committed payout bytes are unavailable or invalid; current failure is not past outage evidence: %w", err)
 		}
 		audit = EvaluateDepositArtifact(artifact, DepositArtifactExpectation{DeploymentID: self.cfg.DeploymentID, ChainID: self.cfg.ChainID, GenesisHash: self.cfg.GenesisHash, Netuid: self.cfg.Netuid, Coordinator: common.HexToAddress(self.cfg.Coordinator), SettlementVault: common.HexToAddress(self.cfg.SettlementVault), PolicyHash: self.cfg.PolicyHash, Epoch: observed.sourceEpoch, NoID: operator.noID, Signer: common.HexToAddress(config.ArtifactSigner), Start: payoutartifact.Boundary{Number: observed.sourceStart, Hash: releaseHex32(observed.sourceStartHash)}, End: payoutartifact.Boundary{Number: observed.sourceEnd, Hash: releaseHex32(observed.sourceEndHash)}, PayoutRoot: operator.commitment.PayoutRoot, ArtifactHash: operator.commitment.ArtifactHash, Committer: operator.commitment.Committer, RootSigner: operator.sourceVersion.RootSigner, CommitBlock: operator.commitment.CommitBlock}, epoch, operator.deposit, operator.convictionBefore, self.cfg.Policy.Deposit)
 	}
@@ -333,9 +382,8 @@ func (self *releaseEvidenceV2StartupHistory) historicalDepositAudit(ctx context.
 	return audit, ctx.Err()
 }
 
-// Exact content has an independent commitment and a finite caller allowance.
-// Join the actual response body's Close, including cancellation at EOF; never
-// route a late failure through the historical unavailable-audit branch.
+// Exact content retains its original commitment and byte allowance through one
+// five-minute read owner. An earlier caller deadline still ends all attempts.
 func (self *HTTPArtifactReader) readCommittedReleaseDecisionV2Artifact(ctx context.Context, hash [32]byte, maximum uint64) (result *payoutartifact.Artifact, resultErr error) {
 	if ctx == nil || self == nil || self.baseURL == nil || self.client == nil || hash == ([32]byte{}) || maximum == 0 || maximum > maximumPayoutArtifactBytes {
 		return nil, errors.New("historical committed artifact reader or bound is invalid")
@@ -344,30 +392,73 @@ func (self *HTTPArtifactReader) readCommittedReleaseDecisionV2Artifact(ctx conte
 		return nil, err
 	}
 	contentHash := fmt.Sprintf("sha256:%x", hash)
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, self.endpoint("/sn/artifact", url.Values{"hash": []string{contentHash}}), nil)
+	endpoint := self.endpoint("/sn/artifact", url.Values{"hash": []string{contentHash}})
+	err := retryReleaseHttpGet(ctx, func(readCtx context.Context) error {
+		var err error
+		result, err = self.readCommittedReleaseDecisionV2ArtifactAttempt(readCtx, endpoint, contentHash, maximum)
+		return err
+	}, self.retryHooks)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// Close each actual response before retry or publication. Only physical I/O
+// earns transport provenance; complete framing, grammar and digest failures do not.
+func (self *HTTPArtifactReader) readCommittedReleaseDecisionV2ArtifactAttempt(ctx context.Context, endpoint, contentHash string, maximum uint64) (result *payoutartifact.Artifact, resultErr error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 	response, err := self.client.Do(request)
 	if err != nil {
+		if response != nil && response.Body != nil {
+			err = errors.Join(err, self.closeCommittedReleaseDecisionV2Body(endpoint, response.Body))
+		}
 		return nil, err
 	}
 	defer func() {
-		resultErr = errors.Join(resultErr, response.Body.Close(), ctx.Err())
+		resultErr = errors.Join(resultErr, self.closeCommittedReleaseDecisionV2Body(endpoint, response.Body), ctx.Err())
 		if resultErr != nil {
 			result = nil
 		}
 	}()
-	if response.StatusCode != http.StatusOK || response.ContentLength > int64(maximum) || strings.ToLower(strings.TrimSpace(strings.Split(response.Header.Get("Content-Type"), ";")[0])) != "application/json" {
-		return nil, errors.New("historical committed artifact response has invalid status, media type or size")
+	if response.StatusCode != http.StatusOK {
+		return nil, &releaseHttpGetStatusError{endpoint: endpoint, status: response.StatusCode, retryAfter: attemptStreamHttpRetryAfter(response.Header)}
+	}
+	if response.ContentLength > int64(maximum) || strings.ToLower(strings.TrimSpace(strings.Split(response.Header.Get("Content-Type"), ";")[0])) != "application/json" {
+		return nil, errors.New("historical committed artifact response has invalid media type or size")
 	}
 	encoded, err := io.ReadAll(io.LimitReader(response.Body, int64(maximum)+1))
-	if err != nil || uint64(len(encoded)) > maximum {
-		return nil, errors.Join(errors.New("historical committed artifact exceeds its exact byte allowance"), err)
+	err = committedReleaseDecisionHttpError(endpoint, "Read", err)
+	if uint64(len(encoded)) > maximum {
+		return nil, errors.Join(err, errors.New("historical committed artifact exceeds its exact byte allowance"))
+	}
+	if err != nil {
+		return nil, err
 	}
 	artifact, err := payoutartifact.Decode(encoded)
-	if err != nil || artifact == nil || artifact.ContentHash != contentHash {
-		return nil, errors.Join(errors.New("historical payout content differs from its independently committed digest"), err)
+	if err := releaseRpcObservationError(err, artifact != nil && artifact.ContentHash == contentHash, errors.New("historical payout content differs from its independently committed digest")); err != nil {
+		return nil, err
 	}
 	return artifact, ctx.Err()
+}
+
+// Complete EOF can return a connection to the idle pool before Close reports
+// failure. Discard that uncertain connection before any retry or publication.
+func (self *HTTPArtifactReader) closeCommittedReleaseDecisionV2Body(endpoint string, body io.ReadCloser) error {
+	err := body.Close()
+	if err != nil {
+		self.client.CloseIdleConnections()
+	}
+	return committedReleaseDecisionHttpError(endpoint, "Close", err)
+}
+
+// Wrapping only the actual body error preserves mixed permanent siblings.
+func committedReleaseDecisionHttpError(endpoint, operation string, err error) error {
+	if err == nil {
+		return nil
+	}
+	return &url.Error{Op: operation, URL: endpoint, Err: err}
 }

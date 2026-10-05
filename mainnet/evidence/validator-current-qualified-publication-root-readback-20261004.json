@@ -1,0 +1,24 @@
+{
+  "schema": "validator-current-qualified-publication-root-readback-v1",
+  "status": "EXACT_QUALIFIED_TWO_FILE_FIX_PUBLISHED_ON_MAIN",
+  "head": "61972f8325ca611500240b588833b7ccacabcf24",
+  "parent": "f08ae15d245cd607445271f8ddaffc31677c7d67",
+  "paths": [
+    {
+      "path": "validator/release_archive_decision_v2.go",
+      "sha256": "78dc49519f12c9532cbb073de99c9063708ffe1aa53ea9e60f0e99cdf277e5f9",
+      "bytes": 18806
+    },
+    {
+      "path": "validator/release_archive_terminal_custody_test.go",
+      "sha256": "812371ec2ce0b0280debcce4dfd403f924c3eff9802ad925fbfc12f03f18f275",
+      "bytes": 5322
+    }
+  ],
+  "remote_main_verified": true,
+  "qualification": "validator-current-e9-three-roots-vet-qualified-root-readback-20261004.json",
+  "limits": [
+    "Every other Git path and module unchanged; no economics/finality candidate ancestry included.",
+    "Broader historical lineage, capacity/contention and all-role/mainnet acceptance remain open."
+  ]
+}

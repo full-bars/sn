@@ -1,0 +1,197 @@
+{
+  "actual_new_test_declarations": [
+    "TestHistoricalFeeContextPublicJoinRetainsSignedHistoryAndUnknownAuthority",
+    "TestHistoricalFeeContextPublicMissingRefundIsNotZero",
+    "TestHistoricalFeeContextPublicRevertedReceiptKeepsObservedCandidate",
+    "TestHistoricalFeeContextPublicRefusesChangedNativeContextAndPayer",
+    "TestHistoricalFeeContextPublicKeepsForeignBlockCandidatesUnallocated",
+    "TestHistoricalFeeContextActualCryptographicRefusalPrecedesProcess",
+    "TestHistoricalFeeContextReadErrorsRemainObservationFailures",
+    "TestHistoricalFeeContextPublicStrictRequestAndInputPins"
+  ],
+  "bindings": [
+    {
+      "bytes": 12018,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn/mainnet/historical_fee_context.go",
+      "sha256": "7973e58b3b8ba2edde87d2c8a8673652f6a37472f7ab491329e952954bdb5853"
+    },
+    {
+      "bytes": 1733,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn/mainnet/historical_fee_context_command.go",
+      "sha256": "53a5864d6f3568bd3722f4ac91b260fa0fec2ea4d73a1f06603344a0b16b4cf3"
+    },
+    {
+      "bytes": 16499,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn/mainnet/historical_fee_context_test.go",
+      "sha256": "be985eac99d5e015ede07c744583ef888abc8ddf1edf03384b29d6317196e617"
+    },
+    {
+      "bytes": 19698,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn/mainnet/historical_replay_test.go",
+      "sha256": "c1e3230a4a26770a8a0571b7bbd8735a0a00d5cbcbf48ac29f4d48de5f234b77"
+    },
+    {
+      "bytes": 24584,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn/mainnet/main.go",
+      "sha256": "17cce0807bfd6d6716231be3ad9b1f5684f92ec8708f5d8cbdc6d929d614ce2e"
+    },
+    {
+      "bytes": 85566,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn/mainnet/testdata/historical-fee-context/reverted.json",
+      "sha256": "e3df5645a79f131341001a38f14fa51907a8537a57ac95853a77d131e64cd5ec"
+    },
+    {
+      "bytes": 85571,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn/mainnet/testdata/historical-fee-context/success.json",
+      "sha256": "2d01cad0c8793e244d68a41f66cbd149edf084e947a2c39499147b666b33d4fb"
+    },
+    {
+      "bytes": 16204,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/intake-v2.json",
+      "sha256": "fc3aee211f1aaebdf38c8425fc44ddc5a1c8987170b33628089bbc2a569e0b28"
+    },
+    {
+      "bytes": 11886,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/controls/native-state-join-omitted/historical_fee_context.go",
+      "sha256": "080c43ba52eee01c953c329ab2fa72dc8f60e5fea3b14c9c94580a93b04fddb5"
+    },
+    {
+      "bytes": 12018,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/sn/mainnet/historical_fee_context.go",
+      "sha256": "7973e58b3b8ba2edde87d2c8a8673652f6a37472f7ab491329e952954bdb5853"
+    },
+    {
+      "bytes": 291,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/controls/native-state-join-omitted/overlay.json",
+      "sha256": "524603744aec88d45e91c1725beeaa034d6db1da99aed7375554ac0d663d5fca"
+    },
+    {
+      "bytes": 12027,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/controls/signed-payer-join-omitted/historical_fee_context.go",
+      "sha256": "9b88cc3dee99fc02a3350f8d311955af80a90b23299127fa1da710ad720e6870"
+    },
+    {
+      "bytes": 291,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/controls/signed-payer-join-omitted/overlay.json",
+      "sha256": "66ebe07c380441c9e8b27325f2231d1f2e0a29da31bebad5fb3f36eb350b2beb"
+    },
+    {
+      "bytes": 12027,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/controls/proof-error-return-omitted/historical_fee_context.go",
+      "sha256": "bcaefb23e6b5935abb24f7c947ffd19d4f9b7afa4f37f346b63f6bf750db533a"
+    },
+    {
+      "bytes": 292,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/controls/proof-error-return-omitted/overlay.json",
+      "sha256": "33e6a3ee0912d548e5a99428d0b026eb43ed950f473d98c2f3e935bed97138af"
+    },
+    {
+      "bytes": 12027,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/controls/input-pin-omitted/historical_fee_context.go",
+      "sha256": "0e8ed448ccbd42e18f0fc5f426d52785574c5bf8eeb78f0eb8588c0b42d3afc2"
+    },
+    {
+      "bytes": 283,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/controls/input-pin-omitted/overlay.json",
+      "sha256": "5e05ba98b9282208f119ef375bf5e9e7b1a2b69c5552631d341e67fc275eab18"
+    },
+    {
+      "bytes": 2193,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/fixture-output/export1-manifest.json",
+      "sha256": "602e21049214307322dc94e667762fd7a7efd1e0547597ec7ee36656164eb960"
+    },
+    {
+      "bytes": 85566,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/fixture-output/export1/reverted.json",
+      "sha256": "e3df5645a79f131341001a38f14fa51907a8537a57ac95853a77d131e64cd5ec"
+    },
+    {
+      "bytes": 85571,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/fixture-output/export1/success.json",
+      "sha256": "2d01cad0c8793e244d68a41f66cbd149edf084e947a2c39499147b666b33d4fb"
+    },
+    {
+      "bytes": 2408,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/export_test.go",
+      "sha256": "f4dae16cf3a790bcfffdcf33b6ec50fb5a1f8fb4af3499e80713c56f2cc04da8"
+    },
+    {
+      "bytes": 2987,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-peer-graph.json",
+      "sha256": "67a567368a074ac5003d4986563a4ceffd7c96515a4b582f83715d990d1829a0"
+    },
+    {
+      "bytes": 11292,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn/go.mod",
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "bytes": 66649,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn/go.sum",
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "bytes": 5371,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/create_join.py",
+      "sha256": "3eca5629728c85ce2013c4dbe02da8d175890f819cd8213d2f5b0eed3981f05f"
+    },
+    {
+      "bytes": 4928,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/evidence/source-join.json",
+      "sha256": "95719bdeec3c36e2e6d7028a3e44f5de6f5c36324e154e210bf4d2ec3f720505"
+    },
+    {
+      "bytes": 16304,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/evidence/intake.json",
+      "sha256": "9e704b2ca2a13e11d0571980469fca6c21efcd2e1586711566195b3eeef371f8"
+    }
+  ],
+  "captured_utc": "2026-10-03T17:19:09.263065+00:00",
+  "limits": [
+    "No compile, positive/causal/race behavior or actual runtime472 authority established.",
+    "Preserve old3c source-only; target this current composition once under a separate bounded qualification instead of repeating an old-graph component gate and then a current join."
+  ],
+  "proposed_qualification": {
+    "actual_root_census_required": true,
+    "expected_top_level_roots_per_mode": 10,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "owned_protected_test_image_required": true,
+    "package": "./mainnet",
+    "resource_admission": "Separate future admission; not added to mixed V2 grant",
+    "rust_rerun": false,
+    "vet": [
+      "./mainnet"
+    ]
+  },
+  "schema": "urnetwork-root-current-fee-context-source-review-v1",
+  "source": {
+    "base": "ad0d3125aa5b76ed4148f37c51f28bb866bd482a",
+    "commit": "1b3aca48fbfd5c44e39a6e436cb01d52edc57129",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context-current/sn",
+    "tree": "c4e2df03e687dd409ad55dc463d252c2a22cff25"
+  },
+  "source_review": [
+    "Actual Server receipt/native/finality verification precedes owned replay; no imported derived report supplies verifier authority.",
+    "Replay parent/child hashes and both state roots bind unique verified native context; retained transaction receipt/payer comparisons preserve original signatures.",
+    "Actual withdrawal/refund/debit fields remain unset in this joining path; independent runtime/source/checkpoint and operational admission remain required."
+  ],
+  "source_union": {
+    "current_module_inputs_unchanged": true,
+    "dispatcher_byte_exact_component": true,
+    "every_other_git_entry_exact_current_base": true,
+    "feature_commit": "3c2a17ea4fef0eec611f1ac72c27723bc39877c9",
+    "seven_feature_paths_byte_exact_component": [
+      "mainnet/historical_fee_context.go",
+      "mainnet/historical_fee_context_command.go",
+      "mainnet/historical_fee_context_test.go",
+      "mainnet/historical_replay_test.go",
+      "mainnet/main.go",
+      "mainnet/testdata/historical-fee-context/reverted.json",
+      "mainnet/testdata/historical-fee-context/success.json"
+    ]
+  },
+  "status": "CURRENT_SOURCE_JOIN_ONLY_UNCOMPILED"
+}

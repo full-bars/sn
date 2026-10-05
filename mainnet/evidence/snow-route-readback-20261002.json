@@ -1,0 +1,279 @@
+{
+  "observations": {
+    "rao_archive": {
+      "evm_chain_id": "0x3c4",
+      "finalized_head": "0x490d95775d6a564ada866004374100f569fbeb1528cb2173f2fc9ddfb7d42577",
+      "finalized_header": {
+        "digest": {
+          "logs": [
+            "0x0661757261200642e50800000000",
+            "0x0466726f6e890101f4269f141403d49c89d95531484f80e80c8209bcd1628d6f0bc8f36193c86ee508b0aaffe5f92b2ded68d79cb0c9b155a1888abaa424cf44a732861251ef7fa942731ba6577b0c797b6dd4afa855b827e9506588efeaebf10e293a2ee98efbce60",
+            "0x0561757261010176ee6594ea4f15e7d6bc9f2ff8aa67234d07ebbc92453cd7eaebe1d7ab25bc09e5ea7cfdfb3e9fd6d0cafa3dd8cb9e8122e931086fc67a9a82360116bc3ef487"
+          ]
+        },
+        "extrinsicsRoot": "0x0da2538a547f667479174e298b859fac5aac339374efd84a2702bb1a8849df31",
+        "number": "0x8c42e1",
+        "parentHash": "0xde42c5798a8590d4b5e88b3f0c6fa5d72183a52b95af3cbaa4f3e39e188a384a",
+        "stateRoot": "0xcf5510c76e5e0793a64bfd81977ffc4c92e79eaafd5e26adf97b8768b04926dd"
+      },
+      "genesis": "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03",
+      "runtime_version": {
+        "apis": [
+          [
+            "0xdf6acb689907609b",
+            5
+          ],
+          [
+            "0x37e397fc7c91f5e4",
+            2
+          ],
+          [
+            "0x40fe3ad401f8959a",
+            6
+          ],
+          [
+            "0xfbc577b9d747efd6",
+            1
+          ],
+          [
+            "0xd2bc9897eed08f15",
+            3
+          ],
+          [
+            "0xf78b278be53f454c",
+            2
+          ],
+          [
+            "0xdd718d5cc53262d4",
+            1
+          ],
+          [
+            "0xab3c0572291feb8b",
+            1
+          ],
+          [
+            "0xed99c5acb25eedf5",
+            3
+          ],
+          [
+            "0xbc9d89904f5b923f",
+            1
+          ],
+          [
+            "0x37c8bb1350a9a2a8",
+            4
+          ],
+          [
+            "0xf3ff14d5ab527059",
+            3
+          ],
+          [
+            "0x582211f65bb14b89",
+            6
+          ],
+          [
+            "0xe65b00e46cedd0aa",
+            2
+          ],
+          [
+            "0x68b66ba122c93fa7",
+            2
+          ],
+          [
+            "0x42e62be4a39e5b60",
+            1
+          ],
+          [
+            "0x806df4ccaa9ed485",
+            1
+          ],
+          [
+            "0x8375104b299b74c5",
+            2
+          ],
+          [
+            "0x5d1fbfbe852f2807",
+            1
+          ],
+          [
+            "0xc6886e2f8e598b0a",
+            1
+          ],
+          [
+            "0x43580abff6baab45",
+            5
+          ],
+          [
+            "0xc0de4984d112f3b4",
+            1
+          ],
+          [
+            "0xcbca25e39f142387",
+            2
+          ],
+          [
+            "0xa8b093e6508d9e9c",
+            1
+          ],
+          [
+            "0x1c4585bd5c707202",
+            1
+          ]
+        ],
+        "authoringVersion": 1,
+        "implName": "node-subtensor",
+        "implVersion": 1,
+        "specName": "node-subtensor",
+        "specVersion": 470,
+        "stateVersion": 1,
+        "systemVersion": 1,
+        "transactionVersion": 1
+      },
+      "url": "https://archive.chain.opentensor.ai"
+    },
+    "rao_entrypoint": {
+      "evm_chain_id": "0x3c4",
+      "finalized_head": "0x39aa4e16b8bb599cb82a8bff30d6f2010e6d281d12ddf6667be7e79dd7e7a5b8",
+      "finalized_header": {
+        "digest": {
+          "logs": [
+            "0x0661757261200742e50800000000",
+            "0x0466726f6e890101627d753d9b0ec1441bea6edca601c758bb26839f61914ece5f38441befd024e108c2f28966c7f7b39e8f313a35560d3f10ba31d29a2499accf1b114f9405f60575bd4d5e9e654753017b5b2f8332c361174c9b64076dc04ecd9863728518b9d2f0",
+            "0x05617572610101a28d2b5c5934a2ebaf5f761602eeacc83881a3409b407728b9ec9339ec01ea63ab06a747b2feab8ea2ec1fc0350dcf3f17fd9494a6b4753820a69341c3ef358e"
+          ]
+        },
+        "extrinsicsRoot": "0xaff0dfc926e945ffa912546610c9975d7758ae599e320bf6ce60f60f0edf6da7",
+        "number": "0x8c42e2",
+        "parentHash": "0x490d95775d6a564ada866004374100f569fbeb1528cb2173f2fc9ddfb7d42577",
+        "stateRoot": "0xe538dda2a614610f84cc942171a15a17c470d53580b65196710aa7d9717010aa"
+      },
+      "genesis": "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03",
+      "runtime_version": {
+        "apis": [
+          [
+            "0xdf6acb689907609b",
+            5
+          ],
+          [
+            "0x37e397fc7c91f5e4",
+            2
+          ],
+          [
+            "0x40fe3ad401f8959a",
+            6
+          ],
+          [
+            "0xfbc577b9d747efd6",
+            1
+          ],
+          [
+            "0xd2bc9897eed08f15",
+            3
+          ],
+          [
+            "0xf78b278be53f454c",
+            2
+          ],
+          [
+            "0xdd718d5cc53262d4",
+            1
+          ],
+          [
+            "0xab3c0572291feb8b",
+            1
+          ],
+          [
+            "0xed99c5acb25eedf5",
+            3
+          ],
+          [
+            "0xbc9d89904f5b923f",
+            1
+          ],
+          [
+            "0x37c8bb1350a9a2a8",
+            4
+          ],
+          [
+            "0xf3ff14d5ab527059",
+            3
+          ],
+          [
+            "0x582211f65bb14b89",
+            6
+          ],
+          [
+            "0xe65b00e46cedd0aa",
+            2
+          ],
+          [
+            "0x68b66ba122c93fa7",
+            2
+          ],
+          [
+            "0x42e62be4a39e5b60",
+            1
+          ],
+          [
+            "0x806df4ccaa9ed485",
+            1
+          ],
+          [
+            "0x8375104b299b74c5",
+            2
+          ],
+          [
+            "0x5d1fbfbe852f2807",
+            1
+          ],
+          [
+            "0xc6886e2f8e598b0a",
+            1
+          ],
+          [
+            "0x43580abff6baab45",
+            5
+          ],
+          [
+            "0xc0de4984d112f3b4",
+            1
+          ],
+          [
+            "0xcbca25e39f142387",
+            2
+          ],
+          [
+            "0xa8b093e6508d9e9c",
+            1
+          ],
+          [
+            "0x1c4585bd5c707202",
+            1
+          ]
+        ],
+        "authoringVersion": 1,
+        "implName": "node-subtensor",
+        "implVersion": 1,
+        "specName": "node-subtensor",
+        "specVersion": 470,
+        "stateVersion": 1,
+        "systemVersion": 1,
+        "transactionVersion": 1
+      },
+      "url": "https://entrypoint-finney.opentensor.ai"
+    },
+    "snow_vpn": {
+      "evm_chain_id": {
+        "transport_error": "HTTP Error 502: Bad Gateway"
+      },
+      "finalized_head": {
+        "transport_error": "HTTP Error 502: Bad Gateway"
+      },
+      "genesis": {
+        "transport_error": "HTTP Error 502: Bad Gateway"
+      },
+      "url": "http://172.28.208.185:9944"
+    }
+  },
+  "time_utc": "2026-10-02T02:35:14.934174+00:00"
+}

@@ -1,0 +1,277 @@
+{
+  "author_intake_sha256": "d89f8b11ab20b70d209f025450d451c85218eced1785c04264b7764248781a76",
+  "bindings": {
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-geolite.log": {
+      "bytes": 49,
+      "sha256": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-job1.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-job1.jsonl": {
+      "bytes": 170408,
+      "sha256": "f190e37ee3c01238bab658f4840347e155c0a71c6ce26603f73df68613025140"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-job1.phase": {
+      "bytes": 121,
+      "sha256": "5230d45a7b8f75cf52c9ddf96313575a00c206dd29d984b90a15f16a3fc78c50"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-job1.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-job2.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-job2.jsonl": {
+      "bytes": 245942,
+      "sha256": "bb4d3c5ce052fe534d41be967092899bf414792540ebeaf6b686463d36ef7df7"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-job2.phase": {
+      "bytes": 131,
+      "sha256": "6419b7db8dd5c550526719282438b3a24e717f3ae0807cfc5060932983811e78"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-job2.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-jobs.tsv": {
+      "bytes": 868,
+      "sha256": "0faba30a01ef4b3eb69524a705c4e5391e16a507aba6014d1c8bcf13ad2c1c68"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-network-cleanup.log": {
+      "bytes": 65,
+      "sha256": "f7c0e831d73d925d8e66033ab1682f1f392986de9366d5a52f43421ef35bacf6"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-network.id": {
+      "bytes": 65,
+      "sha256": "f7c0e831d73d925d8e66033ab1682f1f392986de9366d5a52f43421ef35bacf6"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-network.owner": {
+      "bytes": 33,
+      "sha256": "15a80a6ab0eab3aa1581eae4845fc77fdf79e7d506a6f20a6cb2bcb9b202859e"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-runner.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-services-cleanup.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-services-cleanup.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-services-start.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-services-start.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-normal-test-env.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-geolite.log": {
+      "bytes": 49,
+      "sha256": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-job1.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-job1.jsonl": {
+      "bytes": 169622,
+      "sha256": "cd5f4a1f862b50ba0276a099098da3b3a9a0f9ac05b919d8bd9b1234c73299a3"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-job1.phase": {
+      "bytes": 117,
+      "sha256": "5e2f0798893275e06726e52e7d30a1ee091e7228ad3c6976689ae90986825ae8"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-job1.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-job2.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-job2.jsonl": {
+      "bytes": 244844,
+      "sha256": "e3db3dd6690e388d344267bfea9edb9abb8fc8ea7117db3814fda125a4eabe99"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-job2.phase": {
+      "bytes": 127,
+      "sha256": "3cb7270353a5d9568b64a0f3585e7952ea9d8e447cfe318821a738b660ffc7e8"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-job2.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-jobs.tsv": {
+      "bytes": 868,
+      "sha256": "0faba30a01ef4b3eb69524a705c4e5391e16a507aba6014d1c8bcf13ad2c1c68"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-network-cleanup.log": {
+      "bytes": 65,
+      "sha256": "0fcaa3d9ded21a85659881ca64acb4c7b3049aa9643cb81a299863333a686a13"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-network.id": {
+      "bytes": 65,
+      "sha256": "0fcaa3d9ded21a85659881ca64acb4c7b3049aa9643cb81a299863333a686a13"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-network.owner": {
+      "bytes": 33,
+      "sha256": "a9b6a7a8ac760eb4e31cda8da77ae610639d970ea0b382a9fb7c65d51d0b2451"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-runner.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-services-cleanup.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-services-cleanup.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-services-start.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-services-start.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/customer-server-race-test-env.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/make-empty-geolite.go": {
+      "bytes": 1729,
+      "sha256": "42ba7065e6a8c7bd07a4a2524072ae1c2bd24afa58ab93c851d908781463d711"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/release-gate-services-private-network-current.sh": {
+      "bytes": 13206,
+      "sha256": "fc57687ff22d07af9fba1ad25ef9e24f1278291e3d639f40d9b73a6e15c117a4"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/run-server.sh": {
+      "bytes": 3490,
+      "sha256": "e614171a998c679359c71319c5045236ef53222c4f00ee0e6b5b8e616dc39cfb"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/server-modules.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/server-modules.jsonl": {
+      "bytes": 177076,
+      "sha256": "a9e6f155656854570a6623396cb343219078e16bf56a6155b417e2c5899ed6d2"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/server-modules.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/server-vet.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/server-vet.stderr": {
+      "bytes": 255,
+      "sha256": "56e98f417c81730585d156fb490a7329755843e8feac0a840ec5cc2bb894fd62"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/server-vet.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/source-fence.json": {
+      "bytes": 1282,
+      "sha256": "7192af8e2554522eaa05e363e55378dc36d73dd33c84dc24cb42b7aa8d81d053"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/source-readback.json": {
+      "bytes": 324,
+      "sha256": "e34c3aeffb3796d4125ed0caedd8f473c7e132a36ef4b87f5d155f7b65c255fe"
+    }
+  },
+  "created_utc": "2026-10-03T04:01:52.829779+00:00",
+  "fixture_cleanup": {
+    "normal": 0,
+    "race": 0
+  },
+  "limits": [
+    "Original Server530 source passed selected14 product roots normal/race, but failed controller vet; not a full qualification.",
+    "Separate test-only a85 correction requires its own affected-root and vet gate.",
+    "No current published dependency or full model claim."
+  ],
+  "modes": {
+    "normal": [
+      {
+        "exit": 0,
+        "package": "model",
+        "roots": {
+          "TestCustomerTransferConcurrentIntentRetainsOneKey": "pass",
+          "TestCustomerTransferContradictionAndHistoryRemainRetained": "pass",
+          "TestCustomerTransferDisabledCustodyGuardCannotSubmit": "pass",
+          "TestCustomerTransferExactDecimalAmount": "pass",
+          "TestCustomerTransferObservationCommitFailureRetainsUnknownRequest": "pass",
+          "TestCustomerTransferRetainedTermsCannotChange": "pass"
+        }
+      },
+      {
+        "exit": 0,
+        "package": "controller",
+        "roots": {
+          "TestCustomerChallengeCancellationAfterRealResponseRetainsOriginalRequest": "pass",
+          "TestCustomerChallengeConcurrentRetriesCannotMintDistinctChallenges": "pass",
+          "TestCustomerChallengeKnownObservationFailureNeverFallsBackToPost": "pass",
+          "TestCustomerChallengeKnownReadCannotMutateWithoutCustodyGuards": "pass",
+          "TestCustomerChallengeLostResponseReusesExactDurableKeyAndBody": "pass",
+          "TestCustomerChallengeMalformedAcceptedResponseRemainsUnknown": "pass",
+          "TestCustomerChallengeMissingIdAndInexactAmountRefuseBeforeEffects": "pass",
+          "TestCustomerChallengeRepeatedObservationPreservesTerminalCapacity": "pass"
+        }
+      }
+    ],
+    "race": [
+      {
+        "exit": 0,
+        "package": "model",
+        "roots": {
+          "TestCustomerTransferConcurrentIntentRetainsOneKey": "pass",
+          "TestCustomerTransferContradictionAndHistoryRemainRetained": "pass",
+          "TestCustomerTransferDisabledCustodyGuardCannotSubmit": "pass",
+          "TestCustomerTransferExactDecimalAmount": "pass",
+          "TestCustomerTransferObservationCommitFailureRetainsUnknownRequest": "pass",
+          "TestCustomerTransferRetainedTermsCannotChange": "pass"
+        }
+      },
+      {
+        "exit": 0,
+        "package": "controller",
+        "roots": {
+          "TestCustomerChallengeCancellationAfterRealResponseRetainsOriginalRequest": "pass",
+          "TestCustomerChallengeConcurrentRetriesCannotMintDistinctChallenges": "pass",
+          "TestCustomerChallengeKnownObservationFailureNeverFallsBackToPost": "pass",
+          "TestCustomerChallengeKnownReadCannotMutateWithoutCustodyGuards": "pass",
+          "TestCustomerChallengeLostResponseReusesExactDurableKeyAndBody": "pass",
+          "TestCustomerChallengeMalformedAcceptedResponseRemainsUnknown": "pass",
+          "TestCustomerChallengeMissingIdAndInexactAmountRefuseBeforeEffects": "pass",
+          "TestCustomerChallengeRepeatedObservationPreservesTerminalCapacity": "pass"
+        }
+      }
+    ]
+  },
+  "schema": "sol-independent-customer-server530-scoped-v1",
+  "server_source": "530726fcd8067d2551ec45356096eab9e09f930c",
+  "server_tree": "417bbe2a68b8c88f6c59a13a5c6318017b4ffece",
+  "source_fence_sha256": "7192af8e2554522eaa05e363e55378dc36d73dd33c84dc24cb42b7aa8d81d053",
+  "vet": {
+    "exit": 1,
+    "failure": "test context.CancelFunc not used on all paths; controller/circle_transfer_request_test.go:217,225"
+  }
+}

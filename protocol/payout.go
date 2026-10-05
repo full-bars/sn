@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"math/big"
 	"sort"
@@ -33,6 +34,18 @@ type allocationRemainder struct {
 // Only eligible, non-head providers with a payout coldkey and positive
 // usage*reliability enter the payout set. The result always sums to 10,000 bps.
 func AllocateShares(in []ProviderAllocation) ([]PayoutShare, error) {
+	return AllocateSharesWithContext(context.Background(), in)
+}
+
+// Preserve exact largest-remainder arithmetic while allowing the actual
+// operation owner to stop the input, weight and remainder work.
+func AllocateSharesWithContext(ctx context.Context, in []ProviderAllocation) ([]PayoutShare, error) {
+	if ctx == nil {
+		return nil, errors.New("allocation requires an owner context")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	type weighted struct {
 		ProviderAllocation
 		weight *big.Int
@@ -45,6 +58,9 @@ func AllocateShares(in []ProviderAllocation) ([]PayoutShare, error) {
 	byColdkey := map[[32]byte]weighted{}
 	total := new(big.Int)
 	for _, p := range in {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		if !p.Eligible || p.HeadExcluded || p.Coldkey == ([32]byte{}) || p.UsageBytes == 0 || p.ReliabilityPPM == 0 {
 			continue
 		}
@@ -65,6 +81,9 @@ func AllocateShares(in []ProviderAllocation) ([]PayoutShare, error) {
 	}
 	eligible := make([]weighted, 0, len(byColdkey))
 	for _, p := range byColdkey {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		eligible = append(eligible, p)
 	}
 	if len(eligible) == 0 || total.Sign() == 0 {
@@ -81,6 +100,9 @@ func AllocateShares(in []ProviderAllocation) ([]PayoutShare, error) {
 	var allocated uint64
 	den := new(big.Int).Set(total)
 	for i, p := range eligible {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		num := new(big.Int).Mul(p.weight, big.NewInt(10_000))
 		q, r := new(big.Int), new(big.Int)
 		q.QuoRem(num, den, r)
@@ -97,14 +119,23 @@ func AllocateShares(in []ProviderAllocation) ([]PayoutShare, error) {
 	})
 	remaining := uint64(10_000) - allocated
 	for i := uint64(0); i < remaining; i++ {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		out[remainders[i%uint64(len(remainders))].index].ShareBPS++
 	}
 	var sum uint64
 	for _, share := range out {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		sum += share.ShareBPS
 	}
 	if sum != 10_000 {
 		return nil, errors.New("internal payout allocation error")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	return out, nil
 }

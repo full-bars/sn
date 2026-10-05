@@ -1,0 +1,523 @@
+{
+  "schema": "server5b-selected-model-two-mode-root-readback-v1",
+  "status": "32_ROOTS_PASS_BOTH_MODES_CONTROLS_AND_VET_PENDING",
+  "head": "5b22f984f51b279f88a83d6f3fb41b19ab46b22a",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3.terminal.json",
+      "bytes": 6081,
+      "sha256": "e0d887bda45caabb2ab41d53d1afa6db2811b70cc4b42d51032a6c224aa4ccb1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/model-selected-job-v3.json",
+      "bytes": 12319,
+      "sha256": "786e652a681f2289de47d43a5c45fe0720a6e5b4fabd4b4078c687e57d81ccc9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/run-selected-model-v3.py",
+      "bytes": 13580,
+      "sha256": "66c8c6e55cf2f4880e295d6b2b00094bf124b5b963244861e2bb2ba652164ced"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/run-selected-model-v3.sh",
+      "bytes": 4698,
+      "sha256": "faaca15b5480e8d3838095f1de04e75c6f5b4570fb1da32910a425d019f8bdb6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/model-selected-adoption-v3.json",
+      "bytes": 488,
+      "sha256": "faf5002ca175db988302a174ce4e7a0363cd447b96562d4f9f4854ee1a5a9b56"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-normal-batch-0.jsonl",
+      "bytes": 469947,
+      "sha256": "ee6fdacd39425341c722024b560704591d5582ca75e6e362faf70342f0568363"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-normal-batch-0.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-normal-batch-1.jsonl",
+      "bytes": 509699,
+      "sha256": "64aba7520be032f57f1c7811625e4876bb303d9abbe444ab86e54174a0260263"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-normal-batch-1.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-race-batch-0.jsonl",
+      "bytes": 470235,
+      "sha256": "d61eadb4baa332128cb6711f63c7d7940fa9fd01d63a3697d677aae290c73bfe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-race-batch-0.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-race-batch-1.jsonl",
+      "bytes": 509648,
+      "sha256": "d8d8a3ab0a9494c3ec135ec88cf609d7978dbf0573bf000edf4267e67debe37e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-race-batch-1.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/images/server5b-model-normal-compile.test",
+      "bytes": 79586776,
+      "sha256": "d8ac5907417b4c6e25a91c6471cbcc3680c3304a61d96f01cf52eaef6f0af18f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/images/server5b-model-race-compile.test",
+      "bytes": 106897928,
+      "sha256": "760bfb6f014d47c75239d2dd86c924c395be9946d24721e88918168360b72e46"
+    }
+  ],
+  "results": {
+    "normal": {
+      "TestStContractUsagePaidStreamRetryKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageFreeStreamRetryKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageCompanionJoinKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageEndpointStreamIdentityConflictStaysLocal": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageStreamExtenderIdentityConflictStaysLocal": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageMissingFirstParticipantRecoversAtomically": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageFirstParticipantInsertRollbackRecovers": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageCanceledFirstParticipantRecovers": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageRemovedParticipantRetryKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageRemovedParticipantCompanionKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEvenContractPayoutShare": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestAllocateContractParticipantPayouts": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestAllocateContractParticipantPayoutEligibilityMatrix": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestContractPayoutParticipantMatrix": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestCompanionContractPayoutParticipantsJoinByStreamId": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestContractParticipantPayoutDisputeOutcomes": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestContractParticipantOrphanSweep": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestContractExtenderPayoutParticipantMatrix": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestCompanionContractExtenderPayoutPaysTheReversedParties": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsagePaidFreeAndNoEscrowEqual": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageNormalizedReturnProvider": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageFreeStreamHistoricalStability": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageForcedCloseDoesNotInventBilateralReport": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageOutcomeRollbackAndReplay": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageAdjudicatedOutcome": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageArchiveSurvivesRealPaidContractReaper": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageArchiveCaptureRollbackAndRetry": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageExpiryCreditsOriginalCheckpointReports": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageExpiryBillingQuarantinePreservesProof": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestProviderTransitionFreeAndPaidUsageHaveEqualSubnetWeight": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestProviderTransitionPlannerPartitionAndDelayedSweep": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestProviderTransitionPublicPayoutStatsRetainLegacyAsset": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      }
+    },
+    "race": {
+      "TestStContractUsagePaidStreamRetryKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageFreeStreamRetryKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageCompanionJoinKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageEndpointStreamIdentityConflictStaysLocal": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageStreamExtenderIdentityConflictStaysLocal": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageMissingFirstParticipantRecoversAtomically": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageFirstParticipantInsertRollbackRecovers": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageCanceledFirstParticipantRecovers": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageRemovedParticipantRetryKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageRemovedParticipantCompanionKeepsOriginalIdentity": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEvenContractPayoutShare": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestAllocateContractParticipantPayouts": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestAllocateContractParticipantPayoutEligibilityMatrix": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestContractPayoutParticipantMatrix": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestCompanionContractPayoutParticipantsJoinByStreamId": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestContractParticipantPayoutDisputeOutcomes": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestContractParticipantOrphanSweep": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestContractExtenderPayoutParticipantMatrix": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestCompanionContractExtenderPayoutPaysTheReversedParties": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsagePaidFreeAndNoEscrowEqual": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageNormalizedReturnProvider": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageFreeStreamHistoricalStability": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageForcedCloseDoesNotInventBilateralReport": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageOutcomeRollbackAndReplay": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageAdjudicatedOutcome": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageArchiveSurvivesRealPaidContractReaper": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageArchiveCaptureRollbackAndRetry": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageExpiryCreditsOriginalCheckpointReports": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestStContractUsageExpiryBillingQuarantinePreservesProof": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestProviderTransitionFreeAndPaidUsageHaveEqualSubnetWeight": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestProviderTransitionPlannerPartitionAndDelayedSweep": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestProviderTransitionPublicPayoutStatsRetainLegacyAsset": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      }
+    }
+  },
+  "terminal": {
+    "shell_exit": 0,
+    "cleanup_exit": 0,
+    "owned_group_joined": true,
+    "protected_images_rehashed": true
+  },
+  "resource_observation": {
+    "container_available_samples": {
+      "postgres": 306,
+      "redis": 301
+    },
+    "container_coverage_complete": true,
+    "csv_bytes": 54607,
+    "csv_complete": true,
+    "csv_sha256": "9fa2dc693db20638427996ef7515a2c76bd39dc575e6bb5f2b68b6a7abf2623d",
+    "errors": [],
+    "final": {
+      "data_available_bytes": 60436373504,
+      "data_available_inodes": 93352648,
+      "data_status": "available",
+      "docker_root_available_bytes": 303526264832,
+      "docker_root_available_inodes": 50987285,
+      "docker_root_status": "available",
+      "kind": "final",
+      "memory_available_bytes": 121067204608,
+      "memory_status": "available",
+      "postgres_cgroup_memory_bytes": null,
+      "postgres_error_type": "",
+      "postgres_status": "absent",
+      "redis_cgroup_memory_bytes": null,
+      "redis_error_type": "",
+      "redis_status": "absent",
+      "sequence": 308,
+      "utc": "2026-10-04T13:59:04.520465+00:00"
+    },
+    "final_sample": true,
+    "minimum": {
+      "data": 60436373504,
+      "docker_root": 303525990400,
+      "memory": 120594894848
+    },
+    "observation_failures": 0,
+    "qualified": true,
+    "rows": 308,
+    "status": "COMPLETE"
+  },
+  "limits": [
+    "Selected model scope only; three causal-control groups and model vet remain required.",
+    "Original v2 pre-body workspace refusal is retained; this corrected execution does not erase it.",
+    "No full Server suite, signed physical-work provenance, deployed migration or production activation qualification."
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "coordinator-tuple-ab48-root-source-review-v1",
+  "status": "SOURCE_REVIEWED_EXECUTION_PENDING",
+  "head": "ab48c41d0f1d196a8311905f81d635c868f13dfe",
+  "parent": "e0f1011d467712f32b9d3d75293a4b57a20040e2",
+  "tree": "185d363022f005ee30ec9fd12ae629cbd622b0fe",
+  "bindings": [
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/entitlement-coordinator-tuple-fixture/sn",
+      "head": "ab48c41d0f1d196a8311905f81d635c868f13dfe",
+      "relative": "mainnet/economic_conservation_entitlement_fixture_test.go",
+      "blob": "9ffc2d81f66832f6c0dd8f4ef0684bc3c7998670",
+      "bytes": 10764,
+      "sha256": "b1eac70cb109759512545eb5cf6c16375ff38b13e77b0d087ceae160829f72bc"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/entitlement-coordinator-tuple-fixture/sn",
+      "head": "ab48c41d0f1d196a8311905f81d635c868f13dfe",
+      "relative": "mainnet/economic_conservation_entitlement_tuple_test.go",
+      "blob": "9288952a412cdfd8585ea73de68f09570cd00f05",
+      "bytes": 5243,
+      "sha256": "0fa119b23d7b1e4fde06294ff70ea401d1ae1646c9f3bfe4977a8d90c72ea8de"
+    }
+  ],
+  "review": [
+    "Exact two-file delta read. Existing policyAt fixture now explicitly initializes both generated uint256 deposit cap pointers to zero. Production retry budgets and code unchanged.",
+    "New deterministic test uses actual HTTP handler and generated ABI decoding for policyAt, operatorAt, rootCommitments, settlementVault and epoch boundaries; preserves signer/commitment identities and rejects unexpected artifact acquisition.",
+    "One-minute test HTTP liveness bound avoids waiting through production 300-second EOF retries; it does not shorten production retry policy."
+  ],
+  "limits": "Source review only. Four original recovery failures retained; corrected normal/race bodies and operative omission control are not yet qualified."
+}

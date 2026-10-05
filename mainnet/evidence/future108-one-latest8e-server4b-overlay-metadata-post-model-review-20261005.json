@@ -1,0 +1,161 @@
+{
+  "author_validation": "ExactGit HEAD/clean/tree/diff/module checks and each31 blob SHA; Python AST parse only. No stage/Go list/compiler/body/DB by author.",
+  "closed_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "owned_containers": [
+      {
+        "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "postgres"
+      },
+      {
+        "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "redis"
+      }
+    ],
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 4294967296,
+    "MemorySwapMax": 0,
+    "unit": "sn-latest8e-server4b-overlay-metadata-v1-20261005.service"
+  },
+  "expected_elapsed_seconds": [
+    60,
+    180
+  ],
+  "forecast": {
+    "actual_model_count": 0,
+    "basis": "Same actual-qualified31k-file archive verifier and Go-list machinery;31 individually bounded1MiB Git show captures plus3 maximum64MiB Go-list logs. Newoverlay under1MiB; no physical fullsource copies. Former4GiB model reserve retained despite model_count0; forecast is not peak proof.",
+    "held_former_model_disk_bytes": 4294967296,
+    "held_former_model_memory_bytes": 4294967296,
+    "margin": 2,
+    "metadata_disk_bytes": 2147483648,
+    "metadata_memory_bytes": 2147483648
+  },
+  "healthy_guards": {
+    "data_active_formula": "max(6307319808, immediate_available-4294967296)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "rebased_or_retargeted": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server4b-overlay-metadata-post-model-job-v1.json",
+    "sha256": "0e25b6b7db639e4f589978903af8d6bde218eb9f792862b0a7e70f91eeb6d5ec"
+  },
+  "overlay_bytes": 830903,
+  "overlay_files": 31,
+  "parent_actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server-final-overlay-metadata-v1.receipt.json",
+    "sha256": "b1f643fd0458667b782a8b71aeef7f12c7119070c6e5508ae1d87fe4e6521535"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 12884901888,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "0e25b6b7db639e4f589978903af8d6bde218eb9f792862b0a7e70f91eeb6d5ec",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "runner_sha256": "0104e5c60ee4c761100f0846c9e542c4cc18beac56c973d22d79f8d92cc168d5",
+    "short_count": 0,
+    "status": "ADOPTED_ONE_BOUNDED_METADATA_STAGE_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest8e-server4b-overlay-metadata-post-model-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest8e-server4b-overlay-metadata-post-model-v1.py",
+    "sha256": "0104e5c60ee4c761100f0846c9e542c4cc18beac56c973d22d79f8d92cc168d5"
+  },
+  "schema": "latest8e-server4b-post-model-metadata-review-v1",
+  "scope": "Exact31 immutable Go blobs and three offline dependency graphs for8e/Core25a/Server4b only. No compiler/body/DB/Rust/downloads/fullcopy. Actual model_count0 after exact oldmodel cleanup proof; prior active short must join before separate Root admission.",
+  "source_changes": "SN8e and Core25a exact unchanged. Server2f8\u21924b twelve files/six additions including migration779 and production JSON repair; metadata includes root/model/controller/monitor. No claim from protected2f8 compiler or oldc60 body transfers to4b.",
+  "source_deltas": [
+    {
+      "all_changed_paths": [
+        "M\tmainnet/economic_conservation_funding.go",
+        "M\tmainnet/economic_conservation_funding_archive.go",
+        "A\tmainnet/economic_conservation_funding_flow.go",
+        "A\tmainnet/economic_conservation_funding_flow_public_test.go",
+        "A\tmainnet/economic_conservation_funding_flow_test.go",
+        "M\tmainnet/owner_recycle_custody_integrity_test.go",
+        "M\tmainnet/owner_recycle_store.go",
+        "M\tmainnet/owner_signing_import_test.go",
+        "M\tmainnet/owner_trim_custody_test.go",
+        "M\tmainnet/owner_trim_store.go",
+        "M\tmainnet/repair_operator_authority.go",
+        "A\tmainnet/repair_operator_environment_test.go"
+      ],
+      "base": "b0371195eb9d2127adab8dfe917e1516838b010a",
+      "go_mod_sum_unchanged": true,
+      "head": "8e0104964cfb13e81c8510aab0b2917713669654",
+      "module": "sn",
+      "repo": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-owner-fixture-final/sn",
+      "tree": "569542d5dc7e4053d4de5cc9cfe990c33b81a7a5"
+    },
+    {
+      "all_changed_paths": [
+        "M\tdb_migration_catalog.go",
+        "M\tdb_migrations.go",
+        "M\tdb_verify_original_request.go",
+        "A\tdb_verify_original_request_identity.go",
+        "A\tdb_verify_original_request_json.go",
+        "A\tdb_verify_original_request_json_test.go",
+        "A\tdb_verify_original_request_legacy_test.go",
+        "M\tdb_verify_request_closure.go",
+        "M\tmodel/contract_usage_db_test.go",
+        "M\tmodel/provider_url_probe_completed_priority_test.go",
+        "M\tmodel/provider_url_probe_due_test.go",
+        "M\tmodel/provider_url_probe_recovery_pacing_test.go",
+        "M\tmodel/st_provider_closed_work_test.go",
+        "M\tmodel/subscription_force_close_dispute_test.go",
+        "M\tmodel/subscription_settlement_amplification_test.go",
+        "A\tmodel/verify_original_request_json_test.go",
+        "M\tmodel/verify_original_request_test.go",
+        "A\tmonitor/migrations_verify_original_json_test.go",
+        "M\tmonitor/signal_migrations.go"
+      ],
+      "base": "0f6a48a1b896d0cf3b2dbdabb94114659980648e",
+      "go_mod_sum_unchanged": true,
+      "head": "4b917455396419606fcff33cf45a6f362549203e",
+      "module": "server",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261005/server-final-json-repair/server",
+      "tree": "8c88c4ef258b3f1de7920969bef20d2ea57bb437"
+    }
+  ],
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "4b917455396419606fcff33cf45a6f362549203e",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_SEQUENTIAL_ADOPTION_AFTER_ACTIVE_SHORT_JOIN"
+}

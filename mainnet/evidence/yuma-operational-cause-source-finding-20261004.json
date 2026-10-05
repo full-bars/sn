@@ -1,0 +1,32 @@
+{
+  "schema": "yuma-operational-cause-source-finding-v1",
+  "status": "CONFIRMED_SOURCE_FINDING_NOT_BEHAVIORALLY_REPRODUCED",
+  "source_head": "58e2aab48d8abffb8b70eb80c43e9fa9c2007b39",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-witness/sn/mainnet/economic_native_yuma.go",
+      "bytes": 11307,
+      "sha256": "de240bce6e982498a632fe108405c2092af7db1b3e44cf279fb1186ded34c5d6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-witness/sn/mainnet/economic_native_execution.go",
+      "bytes": 30624,
+      "sha256": "5fe0f0335e6705772a6c7016d3569f209d83f2ddab45e9b59f2999d40dd4a15e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-witness/sn/mainnet/monitor_economic_native_worker.go",
+      "bytes": 24921,
+      "sha256": "2747e4e3e50d88e2e65cc51b8378504bf7ae63f6dc5ca124ccb80ba6068c3995"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-witness/sn/mainnet/economic_conservation_command.go",
+      "bytes": 24277,
+      "sha256": "a2e342205ab2de6ed7472db011c466fad6e2313e77bbf5cf6b1d521b7c559e55"
+    }
+  ],
+  "finding": "validateNativeExecutionReplay joins errRpcIntegrity to every deriveNativeYuma error, including actual owner cancellation/deadline and retained-witness capacity. monitorEconomicNativeReadCode prioritizes that integrity marker and sampleEconomicConservation sets NativeHeld, even without conflicting original evidence. Adjacent appendNative failure handling treats every noncapacity error as hard, including cancellation during complete Yuma recalculation after its earlier owner check.",
+  "required_fix": "Preserve typed cancellation, deadline and capacity at actual derivation/sample/save/follow boundaries; do not synthesize a conflict. Retain genuine observed integrity precedence and isolate only affected source. Public tests must verify delayed-canceled append/replay, same-authority healthy continuation, capacity continuity and genuine simultaneous conflicts; qualify named production omission controls.",
+  "review_scope": "Complete Yuma algorithm/projection/decoder/conservation production files read, affected error wrapper and consumer branches inspected. Full integration/test scope remains under review; no runtime failure claimed.",
+  "assigned": "Astra Integration; separate frozen successor, compose into actual capture join later.",
+  "whole_mainnet_complete": false
+}

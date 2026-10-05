@@ -1,0 +1,86 @@
+{
+  "fail": 1,
+  "failure_cause": "new model test queried legacy network_point table but current migration renamed it account_point; SQLSTATE 42P01 before original allocation assertion",
+  "fixture": "owned PG18/Redis8, cleanup0",
+  "limits": [
+    "No full model suite or 36/36 claim on this source.",
+    "Later 630 test-only correction requires separate qualification."
+  ],
+  "pass": 35,
+  "schema": "sol-provider-cutover-97d-normal-v1",
+  "scopes": [
+    {
+      "exit": 0,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "f31908c29ae591a07bfddefac773a0888bc0bac5439f58d2387e902f3e7b275b",
+      "package_terminal": "pass",
+      "pass": 4,
+      "scope": "root",
+      "selected": 4,
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 1,
+      "fail": 1,
+      "failed_roots": [
+        "TestProviderTransitionLegacyComponentsRetainOriginalAllocation"
+      ],
+      "jsonl_sha256": "88e4cb29d4807ae55ca102b3a0aeeb5c07cc7beea164d1e3ee9428d81bffca8c",
+      "package_terminal": "fail",
+      "pass": 12,
+      "scope": "model",
+      "selected": 13,
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "c2e991feabdd9740a534eb2c44ec4052ea2de5314c2b7739b94c331366d04ab2",
+      "package_terminal": "pass",
+      "pass": 17,
+      "scope": "controller",
+      "selected": 17,
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "3286ed911a90ffad58ac2e7f1e72bd072c5a1709ac3fa79b8920724ff5eaeabc",
+      "package_terminal": "pass",
+      "pass": 1,
+      "scope": "taskworker",
+      "selected": 1,
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "49774ade7d91314d9b5a079c7d45ed607aed204a2675e50cd3ff28dbd1d3ba83",
+      "package_terminal": "pass",
+      "pass": 1,
+      "scope": "bringyourctl",
+      "selected": 1,
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "skip": 0,
+  "source": {
+    "config_commit": "93dc65fd84da9a0f5423b5cab9bfc650692fded8",
+    "module_graph_sha256": "8dd665554b2c1fd819e5fdb07e491de9fabe7a1bb4b239663bc78d8c09eb89e4",
+    "server_commit": "97d22989d6a1cbfc8276fb38a2997f301762c07d",
+    "server_tree": "225e5e886abb25f824a7ea474437c2609f0c29a3",
+    "source_fence_sha256": "96c93020120fec1634c1042c883d86dee70a58c09a744ee3f3e42697fd5e48c4",
+    "test_dependencies_sha256": "cba25ca1c2629147c74a340d1382f8e1729416a86e5ebb947afd0d612afe6ad4"
+  },
+  "status": "FAIL_SCOPED",
+  "total_selected": 36
+}

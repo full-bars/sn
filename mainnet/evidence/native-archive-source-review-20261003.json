@@ -1,0 +1,137 @@
+{
+  "schema": "root-native-archive-source-review-v1",
+  "source": {
+    "changedPaths": [
+      "mainnet/durable_volume_owner.go",
+      "mainnet/evidence/native-monitor-archive-20261003.md",
+      "mainnet/main.go",
+      "mainnet/monitor_economic_native.go",
+      "mainnet/monitor_economic_native_archive.go",
+      "mainnet/monitor_economic_native_archive_command.go",
+      "mainnet/monitor_economic_native_archive_test.go",
+      "mainnet/monitor_economic_native_worker.go",
+      "mainnet/monitor_history_archive.go"
+    ],
+    "commit": "3bc2f9a5212de972b9c14f802c1b60d9e2d803aa",
+    "modulesUnchanged": true,
+    "parent": "b18e76dc53948d7fd6e7bf4dab0422db21062d87",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn",
+    "tree": "a646d8e41c1e512c51cdc9cee76816995371832e"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-composition-compile.go",
+      "bytes": 3641,
+      "sha256": "30190d80e34336046a0e3b961481bf5524745e7650ef7a1128336ec4b48bf577"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/native-3bc-mainnet-compile.json",
+      "bytes": 940,
+      "sha256": "0e41a56b3b2cb42303e1e0ec25ddeec8068983ffdaddd4ea13cab33b68c167c4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/native-3bc-mainnet-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/native-3bc-peer-graph.json",
+      "bytes": 2996,
+      "sha256": "82f7ee38106ee26c9ebca4eeb975da2781f64cc57214acdc59ecc1180fea2443"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/native-3bc-sn-modules.json",
+      "bytes": 778,
+      "sha256": "e8ad4e134061febea12ead9d530b088af6f39500f3c64729c56db4e3be5d55a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/native-3bc-sn-modules.log",
+      "bytes": 175012,
+      "sha256": "4cf94463b96765ffb14d734198175862a36c1b65df22ab7b671adf0e4da8ed3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/native-3bc-sn-preflight.json",
+      "bytes": 862,
+      "sha256": "c3bffe9a37041e10c87ef2f7296fe8ab67d034e890a674845ed37176d07c60d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/native-3bc-sn-preflight.log",
+      "bytes": 35130,
+      "sha256": "cdd2c3fb918a3fc521cf67f75586f74746c9f4f5a0748fb3591b5fc9fa4f2e2c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/prepare-ready-866-native-3bc-graphs.go",
+      "bytes": 4082,
+      "sha256": "1a03adad30ed29ffede332a18e04fab3dc67759e1ab51df42624e860a33b9f0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-native-3bc-compile-jobs.json",
+      "bytes": 5576,
+      "sha256": "7ad84d6cbdf7614fbdc878fa2271b013067e2d61c80f88a69fe47031a3bd5be5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-native-3bc-intake.go",
+      "bytes": 5441,
+      "sha256": "de5d333ff27ad9fdeca7710871f9186a00c1bd1eb3836c724dc22696c23c8fa9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/go.sum",
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/mainnet/durable_volume_owner.go",
+      "bytes": 16570,
+      "sha256": "85e596f835e85627860b0b0b798ea03524a5132fd8b5c01b435eee97591282f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/mainnet/evidence/native-monitor-archive-20261003.md",
+      "bytes": 3436,
+      "sha256": "1d05d07024a4fe65049442e28176eacb89bd0a5041c41a6f6900f71415c0ec54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/mainnet/main.go",
+      "bytes": 23201,
+      "sha256": "96af226631fffb5d3d8d5d1a4bd851691e7ae191ffec3f9600d52f83d0c44cf6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/mainnet/monitor_economic_native.go",
+      "bytes": 23187,
+      "sha256": "46e74d1c0b774e04f995cd26eedec7a1e4e902aa32958ad81b69706631c8b6e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/mainnet/monitor_economic_native_archive.go",
+      "bytes": 7027,
+      "sha256": "33c31eacbfbfe2d7cd4b49092681eca657e7aa74ada2608b21adb51a6285d834"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/mainnet/monitor_economic_native_archive_command.go",
+      "bytes": 14493,
+      "sha256": "858b1484d672ebdc7294ba7ebdcedc7005c57e0182661ac31602551098c3f7d5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/mainnet/monitor_economic_native_archive_test.go",
+      "bytes": 18132,
+      "sha256": "08e83b69b294fc87b4d625a250cd954c142a41d6c02e327f8b15decaf8ffa608"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/mainnet/monitor_economic_native_worker.go",
+      "bytes": 21389,
+      "sha256": "7cb23d86cd6c1b30923883132ebc2e4a2e10c816878e215744d657c43ef24363"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-history-archive/sn/mainnet/monitor_history_archive.go",
+      "bytes": 4465,
+      "sha256": "04d1cae5d3a54dc6a965c33dfbe6fcfda9d302c2dc7bd437e7d9220d94629d9d"
+    }
+  ],
+  "scope": "Native public plan/apply authenticates original and compact heads, pins unchanged policy/declaration and joined fence, archives acknowledged events only, retains all prior segments/cursor/pending/totals/runtime authority. Real directory-sync acknowledgment loss recovers exact heads after join. Active leases and omitted/forged/deleted archives refuse; healthy peer continues. Source prepares one segment payload at a time; retained readers check named identity without replaying payloads.",
+  "limits": "Initial128x1MiB profile, explicit positive forecast and2x segment/byte/inode margins. Signed catalog-capacity revision, claim/EVM adapters, composed source gate, whole archive backup/restore and live activation/ingestion remain required. Server5f is exact published peer; this is new published631/SDK9ae/SCTP644/gvisor21c2 graph, not historical qualification inheritance. No behavioral tests run by Astra.",
+  "qualification": "SOURCE_AND_BINDINGS_ONLY_BEHAVIOR_PENDING",
+  "review": "128bounded1MiB segments;archivepublishedbeforeactivecompaction;retainedpendingcursor/totals/runtimehistory;2xforecastfloors;namedreaderleases;noimplicitfreshauthority"
+}

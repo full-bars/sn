@@ -1,0 +1,105 @@
+{
+  "actual_declared_test_roots": 311,
+  "candidate": "86f5eedf782e6732371145cfc4644332ef6e9d5e",
+  "classification": "Actual exit0 and joined tree, exact311 individual expected IDs each ok, one Ran311 summary and finalOK, zero skip/fail/error/expectedfail/unexpectedsuccess; unchanged source/tool/adoption pins; no OOM or resource errors. Built-in declared controls are included, extra independent mutation control is not.",
+  "execution_mechanism": {
+    "data_active_formula": "max(6307319808, immediate_admission_data_available-2147483648)",
+    "log_limit_bytes": 33554432,
+    "payload_argv": [
+      "/home/by/urnetwork/.virtualenv/brien/bin/python3",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final86f5-xops311-v1.py",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final86f5-xops311-job-v1.json"
+    ],
+    "predecessor_compiler_wait": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compile-v2.process-result.json",
+    "required_properties": {
+      "KillMode": "control-group",
+      "MemoryMax": 2147483648,
+      "MemorySwapMax": 0
+    },
+    "timeout_seconds": 900,
+    "unit": "sn-final86f5-xops311-v1-20261004.service",
+    "wait_mechanism": "Unchanged qualified ChildContext/run_process with durable actual wait before context/source/classification; sampled original96GiB memory and Docker active floors; only its own descendants joined."
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/domain-dashboard-86f5eedf-intake.json",
+    "sha256": "e41f0f0c4ec5849ca7d8183d693d8ae7baee27b429318903d9a62dda166e18ef"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final86f5-xops311-job-v1.json",
+    "sha256": "7622d44dd743991faba29ffb955d437cd98c968913de0fbf915f17eb4099a463"
+  },
+  "mandatory_tools": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+      "sha256": "e59210d5474e2c811a4460fb1593d708b94d58107ae62e9d44e88029bb7e5805"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/prometheus",
+      "sha256": "4ee49f574d80682b6571f017c8f42f2532aa3603b725b51ecb0cb864f06c2282"
+    }
+  ],
+  "model_forecast_evidence": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/model-body4g-memory-prospective-basis-20261004.json",
+    "sha256": "6394c57b6e551be5cd39bb667f5d3bdd3f6a10e42ac2f063864cb5c29eaa3bab"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "history_count": 0,
+    "job_sha256": "7622d44dd743991faba29ffb955d437cd98c968913de0fbf915f17eb4099a463",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 1,
+    "runner_sha256": "dce6f604d0e6312d05edec071e2914ca2a0f6a36668f05182c92913875ad1d86",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_MODEL_PLUS_ONE_XOPS311_AFTER_COMPILER_JOIN"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-xops311-adoption-20261004.json",
+  "resource_forecasts": {
+    "basis": "Prospective estimate for sequential Python/Promtool plus one temporary loopback Prometheus;2.46MB materialized source, fixed synthetic fixtures,32MiB captured log bound,900s child timeout,2GiB enforced memory and whole-data-growth limit. Prior144 actual successful wait confirms mechanism but provides no owned memory/disk peak upper bound. Exact311 is unexecuted; resource-limit breach is failure.",
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final86f5-xops311-v1.py",
+    "sha256": "dce6f604d0e6312d05edec071e2914ca2a0f6a36668f05182c92913875ad1d86"
+  },
+  "schema": "future108-model-one-xops311-concrete-review-v1",
+  "scope_exclusions": [
+    "No concurrent compiler/history/second short",
+    "No live host activation, routing, deployment or notification",
+    "No additional mutation control outside311",
+    "No qualification claim before actual independent execution"
+  ],
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final86f5-xops311-source-closure-v1.json",
+    "sha256": "fa0f5d4680763c97aa98800aedc9f970190d256536403242fb5d3b470708705d"
+  },
+  "source_commit": "09f8f989f88660dda442730a18ed99d505ba1988",
+  "source_verification": {
+    "AST_census": 311,
+    "bodies_executed": 0,
+    "materialized_bytes": 2462888,
+    "materialized_files": 261,
+    "pinned_python_dependency_files": 739
+  },
+  "status": "RECOMMEND_SEPARATE_ROOT_ADOPTION_AFTER_COMPILER_JOIN_FRESH_GUARDS_REQUIRED",
+  "time_ns": 1791156843729423299,
+  "unchanged_active_floors": {
+    "data_available_bytes": 6307319808,
+    "docker_available_bytes": 295833415680,
+    "docker_launch_available_bytes": 300128382976,
+    "healthy_guards_changed": false,
+    "memory_available_bytes": 103079215104,
+    "original_data_baseline_rebased": false
+  }
+}

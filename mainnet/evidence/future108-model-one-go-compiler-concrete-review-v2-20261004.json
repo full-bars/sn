@@ -1,0 +1,144 @@
+{
+  "execution_mechanism": {
+    "canonical_lease_and_cgroup_limits": "Verified before payload and continuously sampled. No modification of model/history units.",
+    "compile_argv": [
+      "/usr/local/go/bin/go",
+      "test",
+      "-c",
+      "-vet=off",
+      "-o",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/tmp/current5aaf-mainnet-normal-compile-v2/compile.test",
+      "./mainnet"
+    ],
+    "data_active_formula": "max(6307319808, immediate_admission_data_available-8589934592)",
+    "image_max_bytes": 536870912,
+    "log_limit_bytes": 134217728,
+    "payload_argv": [
+      "/home/by/urnetwork/.virtualenv/brien/bin/python3",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-current5aaf-compiler-v2.py",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compiler-job-v2.json"
+    ],
+    "qualified_tools": [
+      "child_context.py retains actual wait before context postchecks",
+      "guard-model-owner-floors.py joins descendants and enforces original memory/Docker floors plus supplied data minimum",
+      "go_test_image.py creates and verifies unique protected retained ELF"
+    ],
+    "required_properties": {
+      "KillMode": "control-group",
+      "MemoryMax": 8589934592,
+      "MemorySwapMax": 0
+    },
+    "timeout_seconds": 1800,
+    "unit": "sn-current5aaf-mainnet-normal-compile-v2-20261004.service"
+  },
+  "history_completion_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/corrected-claim129-two-mode-independent-readback-v1.json",
+    "sha256": "7180df0695caaf5fb07e78f909882fa1d199ae3b220952059651fa6e7742ee9a"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compiler-job-v2.json",
+    "sha256": "7ec1c8c1856eaf514228b857a261ed610764052408d9b5a30b9ef5d4e3bc03b4"
+  },
+  "later_scope": "Future bb75/Server91/gas deltas and any xops short body require separate sealed source/admission decisions.",
+  "latest_non_admitting_snapshot": {
+    "candidate_thresholds_fit": true,
+    "data_available_bytes": 26312392704,
+    "docker_available_bytes": 301505679360,
+    "fresh_runner_admission_still_required": true,
+    "memory_available_bytes": 129943195648,
+    "utc": "2026-10-04T23:20:19Z"
+  },
+  "metadata_independent_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-metadata-independent-readback-v1.json",
+    "sha256": "2eac3364504160b33a68efe176e6688ec692fc5979631bd86a0444042b138ce2"
+  },
+  "metadata_terminal": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-golist-v3-terminal.json",
+    "sha256": "d55689e15344de2d5507b8754a96d77e59a09c5e0fd992fa4b99bddb0c1de0be"
+  },
+  "model_forecast_evidence": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/model-body4g-memory-prospective-basis-20261004.json",
+    "sha256": "6394c57b6e551be5cd39bb667f5d3bdd3f6a10e42ac2f063864cb5c29eaa3bab"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 1,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_minimum_available_bytes": 17179869184,
+    "history_count": 0,
+    "job_sha256": "7ec1c8c1856eaf514228b857a261ed610764052408d9b5a30b9ef5d4e3bc03b4",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "model_count": 1,
+    "runner_sha256": "5b554d4f4281bfbfe07561a91522bbe1b2c1983c78fb57d5b08675a276e64b55",
+    "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_GO_COMPILER"
+  },
+  "required_root_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-go-compiler-adoption-20261004.json",
+  "resource_forecasts": {
+    "compiler_disk_bytes": 4294967296,
+    "compiler_memory_bytes": 4294967296,
+    "explanation": "New concrete4GiB compiler estimate covers final graph incremental or uncached work; it does not borrow old b870 warm-only2GiB scope. Enforced8GiB compiler cgroup and8GiB data-growth stop complement forecasts; exceeding limits is failure, never qualification.",
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-current5aaf-compiler-v2.py",
+    "sha256": "5b554d4f4281bfbfe07561a91522bbe1b2c1983c78fb57d5b08675a276e64b55"
+  },
+  "schema": "future108-model-one-go-compiler-concrete-review-v2",
+  "scope": "One normal Go test -c -vet=off ./mainnet on exact staged SN5aaf/Core25a/Server80, no test bodies/vet/controls/overlays. Existing c60 model remains independent and unchanged.",
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-compiler-source-closure-v1.json",
+    "sha256": "37b266488973b88af5a9afe232b9a2709596709816d7afecd3a11ff7f2ab849a"
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "80bcc28578b177626e0080fda2d1af26932b3b6f",
+    "sn": "5aaf88a6cbcee131164dd99f670a111df4313b5d"
+  },
+  "source_verification": {
+    "closed_source_dependency_workspace_files_pinned": 41643,
+    "go_list_package_errors": 0,
+    "selected_core_graph_packages": 167,
+    "selected_server_graph_packages": 1023,
+    "selected_sn_graph_packages": 1078,
+    "staged_git_blob_and_file_census_verified": 30858,
+    "verification": "All staged files independently compared with exact Git blob IDs while sealing SHA256 closure. Runner checks complete staged file census and all closure SHA256 before and after compile.",
+    "warm_cache_upper_bound_claimed": false
+  },
+  "status": "RECOMMEND_ROOT_ADOPTION_EXACT_NORMAL_MAINNET_JOB_FRESH_GUARDS_REQUIRED",
+  "time_ns": 1791156458998112995,
+  "unchanged_active_floors": {
+    "data_available_bytes": 6307319808,
+    "docker_available_bytes": 295833415680,
+    "docker_launch_available_bytes": 300128382976,
+    "healthy_guards_changed": false,
+    "memory_available_bytes": 103079215104,
+    "original_data_baseline_rebased": false
+  },
+  "v2_delta": {
+    "changes": [
+      "Explicit -vet=off in go test -c argv",
+      "Fresh v2 runner/job/phase/unit/output names; v1 artifacts preserved"
+    ],
+    "new_execution_performed": false,
+    "parent_review": {
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-go-compiler-concrete-review-20261004.json",
+      "sha256": "99b75029ceb488e49e45879ecb775cee9d5b3e6eecf5cf54912726965ff6fe77"
+    },
+    "source_closure_unchanged": true
+  },
+  "verification_performed": [
+    "Python AST parse PASS",
+    "All frozen recipe and compiler tool bindings rehashed PASS",
+    "Exact model2278433/start102548058 and tracer2278428/start102548057 live",
+    "Both old Claim history PIDs absent at23:20 readback",
+    "Source tree and closure hashes sealed; no compiler or product body launched by reviewer",
+    "v2 Python AST parse PASS; full bindings and compiler tool hashes rechecked; no execution"
+  ]
+}

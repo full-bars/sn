@@ -1,0 +1,101 @@
+{
+  "bound_receipts": {
+    "author_owner_local": {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-receipt.json",
+      "sha256": "dde420a78b5cfca4e0aba18628bd2e48387028134bda8160cbd9e009dd39a972"
+    },
+    "independent_inventory": {
+      "path": "/mnt/data/sn-testnet/sol-connect-durable-core-independent-20261002/additive-receipt.json",
+      "sha256": "a98b2345845adba8f0466080687cb927764e0c421f662d2d4444376c1f34fced"
+    },
+    "independent_owner_local": {
+      "path": "/mnt/data/sn-testnet/sol-connect-durable-core-independent-20261002/owner-local-receipt.json",
+      "sha256": "a7e9426c227c51044dae204ecd5a475ebeeacc86ce4b04602027078e00e9f211"
+    }
+  },
+  "changed_from_origin": [
+    "durablevolume/config.go",
+    "durablevolume/host_linux.go",
+    "durablevolume/inventory.go",
+    "durablevolume/inventory_linux.go",
+    "durablevolume/inventory_other.go",
+    "durablevolume/inventory_test.go",
+    "durablevolume/owner.go",
+    "durablevolume/owner_local_test.go",
+    "durablevolume/owner_test.go"
+  ],
+  "commit": "cb2e3ffe5db724ea2bae32e395aa258d79c9393e",
+  "compiler": {
+    "path": "/usr/local/go/bin/go",
+    "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+  },
+  "context_before_reference_read_fix_included": false,
+  "downstream_adoption_qualification": false,
+  "full_connect_qualification": false,
+  "literal_rootfs_io_performed": false,
+  "observed_origin_main": "6c728b9446252598dec3da04f88dd4bd482677ea",
+  "phases": {
+    "normal": {
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "fail": 0,
+      "passed_roots": 35,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/primitives-current-normal.jsonl",
+      "sha256": "f722f43b9ab0453b5a2b59cc7ae47390a5e4d43f859bcf71ced52d5fb994309e",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "race": {
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "fail": 0,
+      "passed_roots": 35,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/primitives-current-race.jsonl",
+      "sha256": "df9957b5860581c4cad91355842f22601f70f8293d3f12076635176f0465f7be",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "preserved_upstream_files": {
+    "extender/extender_feed_client_test.go": "b4bc1a24bec2c70f2f526ba8d46a9697f61c70fc33b34da1ead5ccaa3688ef39",
+    "extender/extender_feed_probe_startup_test.go": "1509483bf0769d22e55b969e4ff2be6ac0fd047d60810829df6e5684e06bdbcc",
+    "ip_remote_multi_client_h1_close_join_test.go": "bce10b114cee03316e23b782739e825fdbb36328edbde7278fd7726c12e58144",
+    "net_extender_doh_first_answer_test.go": "32d0887fbc6cb825a673ed5cef9070a9366368685db71cc859e47806a2dd7299",
+    "net_extender_network.go": "f40c5cebba81f7da5ac0bdb988d072225f36ba9e90b220f759a86632168e6f86",
+    "net_extender_network_probe_startup_test.go": "0a8f83c4e9c0959e3113dc0cf78674097b055c19c74b632d5239aba2d3f6701d",
+    "net_extender_network_probe_test.go": "fc319467ad6e8eedefffd25191c6d9340b43056ec225c3cb3f32f95cd3aecd47",
+    "net_extender_quic_send.go": "a766d1fe51fe250b02228b7daf31e77ea12372e083aab3ab9fd175718908ef2e",
+    "net_extender_quic_send_reset_test.go": "84f342e10ee056e6e0e1826318588f645aab9071838d5207bee1406465aa022c",
+    "net_http_alt_memory.go": "8ec234ced9bb45c348094619f441a255350f1b2c1ad6f9fa22848413e2f48cb2",
+    "net_http_alt_memory_stop_test.go": "dda354a6a1800e1d0005c9e099d58ba5eb9b25f87bd9453d12b5a5307f319c9e"
+  },
+  "prior_join": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/primitives-integration-join.json",
+    "sha256": "168fe872c8e79d483dad70a188d822718eab4127e08cb72d8e4b0be0527580bd"
+  },
+  "production_deployment_qualification": false,
+  "qualified_peer_and_module_files_identical": true,
+  "qualified_primitives_commit": "c339095c5d41a0103cccc6a14925116a8e02d41d",
+  "schema": "urnetwork-durable-primitives-current-main-integration-v1",
+  "sealed_utc": "2026-10-02T06:48:46.463141521Z",
+  "sealer_sha256": "0ea46cbef28492b1d7f5887dc912e958cb08f19a5c68ab41339a60f2dce5ba4a",
+  "source": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/connect-integration",
+  "source_files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/primitives-current-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/primitives-current-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/primitives-current-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "durablevolume/config.go": "824fa0d616e7379af23dfb891248474403b2996986f682960ddd69e69f4ebb40",
+    "durablevolume/host_linux.go": "efa8cf81425a4799dbeefb059f807d6aa11d2ffd5172e3332f84608c40cca3b8",
+    "durablevolume/host_other.go": "0cfc69f5270174b165f6979795d98dbc530126fa6d5b7b77e1e851110a05fc13",
+    "durablevolume/inventory.go": "0b70aa614e31f7d9ae3f42b8bc5b14157ac44ebd25f8b9bf1360ce3906bf5c39",
+    "durablevolume/inventory_linux.go": "0165f8ebb23fd90f21b8a0935d268efc90162196cbad46b68e8eaa516f9cd6c8",
+    "durablevolume/inventory_other.go": "7f170caeea9d988d1f860903c27291afb0bf19ba2b7894746fdaba84a099d5bf",
+    "durablevolume/inventory_test.go": "1f5dcbf1a5f1a1fcbe3a82a46831b8aaa50bfe467dccbaafb0affbb2af5aab51",
+    "durablevolume/owner.go": "f17c42b0653c4c37469a07030dac0f5878cefc702e270a4238b7c2de528d0a66",
+    "durablevolume/owner_local_test.go": "47319b05303324d4b04881f720fa54c43707185ec226bf7520e819daea7348aa",
+    "durablevolume/owner_test.go": "bc97774b5c975443f4b50bd07c9247f3ed7dd5e1b8c156990b78605a0af927d7",
+    "go.mod": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7",
+    "go.sum": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+  },
+  "status": "PASS_SCOPED_PEER_ONLY",
+  "tree": "a38760c914644c7634e4d6fb8e955a5cb29752b5",
+  "vet_exit": 0
+}

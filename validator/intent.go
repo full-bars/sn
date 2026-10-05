@@ -44,45 +44,46 @@ type StaleHeadBinding struct {
 }
 
 type SteeringIntent struct {
-	Schema                  string                   `json:"schema"`
-	ValidatorID             uint64                   `json:"validator_id"`
-	Netuid                  uint16                   `json:"netuid"`
-	SubnetEpoch             uint64                   `json:"subnet_epoch"`
-	NativeSnapshotBlock     uint64                   `json:"native_snapshot_block"`
-	NativeSnapshotHash      string                   `json:"native_snapshot_hash"`
-	EVMSnapshotBlock        uint64                   `json:"evm_snapshot_block"`
-	EVMSnapshotHash         string                   `json:"evm_snapshot_hash"`
-	SettlementEpoch         uint64                   `json:"settlement_epoch"`
-	PolicyHash              string                   `json:"policy_hash"`
-	MeasurementArtifactPath string                   `json:"measurement_artifact_path"`
-	MeasurementArtifactHash string                   `json:"measurement_artifact_hash"`
-	MeasurementArtifactSize uint64                   `json:"measurement_artifact_size"`
-	MeasurementEnvelopePath string                   `json:"measurement_envelope_path"`
-	MeasurementEnvelopeHash string                   `json:"measurement_envelope_hash"`
-	MeasurementEnvelopeSize uint64                   `json:"measurement_envelope_size"`
-	SelfUID                 uint16                   `json:"self_uid"`
-	MaskedUIDs              []uint16                 `json:"masked_uids"`
-	EligibleHeadUIDs        []uint16                 `json:"eligible_head_uids"`
-	EligibleHeadScores      []RationalJSON           `json:"eligible_head_scores,omitempty"`
-	SelectedHeadUIDs        []uint16                 `json:"selected_head_uids"`
-	RejectedHeadUIDs        []uint16                 `json:"rejected_head_uids"`
-	StaleHeadBindings       []StaleHeadBinding       `json:"stale_head_bindings"`
-	DepositAudits           []DepositAudit           `json:"deposit_audits"`
-	UIDs                    []uint16                 `json:"uids"`
-	Scores                  []RationalJSON           `json:"scores"`
-	Prepared                *crv4.PreparedSubmission `json:"prepared"`
-	Values                  []uint16                 `json:"values,omitempty"`
-	VectorHash              string                   `json:"vector_hash"`
-	Status                  string                   `json:"status"`
-	CreatedAt               string                   `json:"created_at"`
-	UpdatedAt               string                   `json:"updated_at"`
-	ExtrinsicHash           string                   `json:"extrinsic_hash,omitempty"`
-	FinalizedBlock          uint64                   `json:"finalized_block,omitempty"`
-	FinalizedBlockHash      string                   `json:"finalized_block_hash,omitempty"`
-	RevealBlock             uint64                   `json:"reveal_block,omitempty"`
-	ApplicationBlock        uint64                   `json:"application_block,omitempty"`
-	ApplicationBlockHash    string                   `json:"application_block_hash,omitempty"`
-	Error                   string                   `json:"error,omitempty"`
+	Schema                  string                        `json:"schema"`
+	ValidatorID             uint64                        `json:"validator_id"`
+	Netuid                  uint16                        `json:"netuid"`
+	SubnetEpoch             uint64                        `json:"subnet_epoch"`
+	NativeSnapshotBlock     uint64                        `json:"native_snapshot_block"`
+	NativeSnapshotHash      string                        `json:"native_snapshot_hash"`
+	EVMSnapshotBlock        uint64                        `json:"evm_snapshot_block"`
+	EVMSnapshotHash         string                        `json:"evm_snapshot_hash"`
+	SettlementEpoch         uint64                        `json:"settlement_epoch"`
+	PolicyHash              string                        `json:"policy_hash"`
+	MeasurementArtifactPath string                        `json:"measurement_artifact_path"`
+	MeasurementArtifactHash string                        `json:"measurement_artifact_hash"`
+	MeasurementArtifactSize uint64                        `json:"measurement_artifact_size"`
+	MeasurementEnvelopePath string                        `json:"measurement_envelope_path"`
+	MeasurementEnvelopeHash string                        `json:"measurement_envelope_hash"`
+	MeasurementEnvelopeSize uint64                        `json:"measurement_envelope_size"`
+	OwnerRecycle            *OwnerRecycleProductionIntent `json:"owner_recycle,omitempty"`
+	SelfUID                 uint16                        `json:"self_uid"`
+	MaskedUIDs              []uint16                      `json:"masked_uids"`
+	EligibleHeadUIDs        []uint16                      `json:"eligible_head_uids"`
+	EligibleHeadScores      []RationalJSON                `json:"eligible_head_scores,omitempty"`
+	SelectedHeadUIDs        []uint16                      `json:"selected_head_uids"`
+	RejectedHeadUIDs        []uint16                      `json:"rejected_head_uids"`
+	StaleHeadBindings       []StaleHeadBinding            `json:"stale_head_bindings"`
+	DepositAudits           []DepositAudit                `json:"deposit_audits"`
+	UIDs                    []uint16                      `json:"uids"`
+	Scores                  []RationalJSON                `json:"scores"`
+	Prepared                *crv4.PreparedSubmission      `json:"prepared"`
+	Values                  []uint16                      `json:"values,omitempty"`
+	VectorHash              string                        `json:"vector_hash"`
+	Status                  string                        `json:"status"`
+	CreatedAt               string                        `json:"created_at"`
+	UpdatedAt               string                        `json:"updated_at"`
+	ExtrinsicHash           string                        `json:"extrinsic_hash,omitempty"`
+	FinalizedBlock          uint64                        `json:"finalized_block,omitempty"`
+	FinalizedBlockHash      string                        `json:"finalized_block_hash,omitempty"`
+	RevealBlock             uint64                        `json:"reveal_block,omitempty"`
+	ApplicationBlock        uint64                        `json:"application_block,omitempty"`
+	ApplicationBlockHash    string                        `json:"application_block_hash,omitempty"`
+	Error                   string                        `json:"error,omitempty"`
 }
 
 type steeringIntentFile struct {
@@ -111,6 +112,9 @@ func NewIntentStore(stateDir string) (*IntentStore, error) {
 // readMeasurementArtifactLocked resolves only the content-addressed path that
 // can be derived from the declared hash. The caller must hold the store lock.
 func (s *IntentStore) readMeasurementArtifactLocked(intent *SteeringIntent) (*ReleaseMeasurementArtifact, *VerifiedReleaseMeasurement, error) {
+	if intent != nil && intent.OwnerRecycle != nil {
+		return nil, nil, errors.New("owner-recycle production intent requires the authenticated V2 runtime owner")
+	}
 	if intent == nil || intent.MeasurementArtifactSize == 0 || intent.MeasurementArtifactSize > 64*1024*1024 {
 		return nil, nil, errors.New("steering intent measurement artifact size is invalid")
 	}

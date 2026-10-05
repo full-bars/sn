@@ -1,0 +1,835 @@
+{
+  "schema": "mainnet-independent-causal-control-review-v1",
+  "status": "SCOPED_CAUSAL_CONTROLS_PASS",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-bounded-causes-controls.receipt.json",
+    "sha256": "6835f91da7b33150c928dafb92108ef4b8f76827a9e7426ce8297fccc89e907d"
+  },
+  "positive_root_review": {
+    "path": "mainnet/evidence/server1709-bounded-causes-positive-root-review-20261004.json",
+    "sha256": "da70e298978360e6d51511f94fb27a7e7c92ec25bd6648961409a4584a7d6990"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-bounded-causes-controls-adoption-v1.json",
+      "bytes": 668,
+      "sha256": "9e5726329155451318acd02c5857e2f7ec658d1177acb91497083643f9fe7fb7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/operative-controls.json",
+      "bytes": 9402,
+      "sha256": "0fcf2d1885bffa8b4fb32cf80f0f74fe5146f287fb4246ec7267fb512a94dabe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-bounded-causes-selected.receipt.json",
+      "bytes": 6811,
+      "sha256": "de7c3b4cd996446515b1da2d5210e8a4a4b9dfffe86ac3a09c2cfb278a361372"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-root.receipt.json",
+      "bytes": 5894,
+      "sha256": "038afaab91e32a4792cd50c68fa40f12455087b3deb030fffd5892105bd7f572"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-controller.receipt.json",
+      "bytes": 6176,
+      "sha256": "a27118bb01f4291f8134cf41145caf9526aaac253ed274b9396c3113d4b32c9f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-model.receipt.json",
+      "bytes": 4601,
+      "sha256": "4094e28b09c2b3a33256bf1879b125531b1b85302f9a3ccf36d469a8e5300c02"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-monitor.receipt.json",
+      "bytes": 5273,
+      "sha256": "dc76a28e5ed98e6a15c18578b0d07f22d7bc46980c19e1ed726e5099002ce1f3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-task.receipt.json",
+      "bytes": 5315,
+      "sha256": "dbe62f8c4260f629a2e8577dc80529e32c65d9ec44f2969237d5e209c1a02545"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-normal-taskworker_work.receipt.json",
+      "bytes": 4391,
+      "sha256": "7428510429c6dab1e558e1d2ea352fc3d45ab6a61ce9efa2b529b21ad3c099fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-root.receipt.json",
+      "bytes": 5894,
+      "sha256": "cc25b5c9125d7cbc69f518b3049099bb79fed1e0f89e438f8423668bbbd0f2bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-controller.receipt.json",
+      "bytes": 6175,
+      "sha256": "6913b2813d2ea1e029ff310da495f31271d4eba3713c33b3055dd7dae4ac08fc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-model.receipt.json",
+      "bytes": 4601,
+      "sha256": "f2b1f221f91e747be47f82be7ebd2e3dcdc82043e33cc86aba9634ee853ab14f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-monitor.receipt.json",
+      "bytes": 5273,
+      "sha256": "4b8978caf8fd9b7564d8d3a16c13c836a1637433849add9113f1dc8464e90b9c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-task.receipt.json",
+      "bytes": 5314,
+      "sha256": "fa891cda3b86827b86511e3ede2f9ee1517674e4f4746427a4359ff467e7edf6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-causes-race-taskworker_work.receipt.json",
+      "bytes": 4390,
+      "sha256": "f3546172358635a03775323347948948fca8373413f6d198cf8d3460236a7f63"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-empty-cause-completeness-omitted.receipt.json",
+      "bytes": 6036,
+      "sha256": "19ee3da9ecd7398d66b48e90d4eb9b0c1212371f05b9e83f233347a7d0e77982"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/empty-cause-completeness-omitted/overlay.json",
+      "bytes": 280,
+      "sha256": "b8500bf53045b943e0653247d1d17c20e54695e0578853b0a551a15ee0566970"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-empty-cause-completeness-omitted-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-empty-cause-completeness-omitted-body.stdout",
+      "bytes": 2788,
+      "sha256": "23846bc63ca6cb701e3d734768145d5cc1f6b1b63de287b0ac355565808ea92d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-empty-cause-completeness-omitted-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-empty-cause-completeness-omitted-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-normal-empty-cause-completeness-omitted.test",
+      "bytes": 104936448,
+      "sha256": "8c84c46f7495d61084a8ee00f15a37e8b70c57ab6a74b7f9b4cb9f2552f12c04"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/empty-cause-completeness-omitted/error_causes.go",
+      "bytes": 2867,
+      "sha256": "dd23a9d1cf00dc0e0dc7614efeb1bfbfc9686c705429a698665cbfa35503e882"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/error_causes.go",
+      "bytes": 2858,
+      "sha256": "497908f319d59839097ed289884df417f3dfc82996a90d79a6d06aa11e0f71fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-empty-cause-completeness-omitted.overlay.json",
+      "bytes": 259,
+      "sha256": "b7165c2b7589c4a706af1941e7df7fc5ce6804ecb42456b0d39f6d623a6dd62d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-depth-budget-raised.receipt.json",
+      "bytes": 5189,
+      "sha256": "bdeb628bb2a9de52623e018cdd85e8185152f5829112ca2185e1637291257a4f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/depth-budget-raised/overlay.json",
+      "bytes": 267,
+      "sha256": "5d58d573a1df149ac2dcd7c52ff1b1ccd236631012026f74f75c41632a9ca4bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-depth-budget-raised-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-depth-budget-raised-body.stdout",
+      "bytes": 1868,
+      "sha256": "de5eed9165c9ad4b95812e661ff682c483b92d2fbc7b0de0b52294c4da051930"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-depth-budget-raised-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-depth-budget-raised-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-normal-depth-budget-raised.test",
+      "bytes": 77816400,
+      "sha256": "f3a188f89bdf12bf3286317ec51710b4d658da8b53a48a9bfd32e0fd2776d74b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/depth-budget-raised/error_causes.go",
+      "bytes": 2860,
+      "sha256": "d5c8cf6a8580c40e1d8fcbe90e623ae7e8e761352c0e0f6041c5e3a97c4be924"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/error_causes.go",
+      "bytes": 2858,
+      "sha256": "497908f319d59839097ed289884df417f3dfc82996a90d79a6d06aa11e0f71fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-depth-budget-raised.overlay.json",
+      "bytes": 246,
+      "sha256": "5e9844a6479d8cd0381bec189d26708ab6b17cacdf0bca10311dd64970870803"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-node-budget-raised.receipt.json",
+      "bytes": 5178,
+      "sha256": "50a95be65c62d1227cd0a97b9aa0f4c2acbd6121afe770bbf154d0b59d3f30a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/node-budget-raised/overlay.json",
+      "bytes": 266,
+      "sha256": "5adfaa8d0cd50b218cf92d33e90579f944e8cce2448bb106d4b0e65c46d593e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-node-budget-raised-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-node-budget-raised-body.stdout",
+      "bytes": 1870,
+      "sha256": "7f02ca85b796c1fc5f5e41ee628a17a5065fc88b7d0b4f69ec1af56678f8c1b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-node-budget-raised-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-node-budget-raised-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-normal-node-budget-raised.test",
+      "bytes": 77816392,
+      "sha256": "e6403113ab73e6f37b381899dcbbee39ba5b2007a7cb4ea3cf3072887b55e147"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/node-budget-raised/error_causes.go",
+      "bytes": 2859,
+      "sha256": "1c6907ed7b9d60daf9ff6f22dfa23527011249182be95684a5670f91889ffa68"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/error_causes.go",
+      "bytes": 2858,
+      "sha256": "497908f319d59839097ed289884df417f3dfc82996a90d79a6d06aa11e0f71fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-node-budget-raised.overlay.json",
+      "bytes": 245,
+      "sha256": "548381e5d10e193f01f13a3dd8d36d234a913e3e84624a36b14738e41d7c29d1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-observed-boundary-hard-cause-omitted.receipt.json",
+      "bytes": 5503,
+      "sha256": "a4aad1ac6788de9495ae6fed82f02126907152626197eb44a6f8d89043f6208a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/observed-boundary-hard-cause-omitted/overlay.json",
+      "bytes": 314,
+      "sha256": "9fb6d7f3453ef8d8cb5dba4814bdce68e2de73ba657441866f15a031fb87461c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-observed-boundary-hard-cause-omitted-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-observed-boundary-hard-cause-omitted-body.stdout",
+      "bytes": 1935,
+      "sha256": "122f8db3e4ba77cda8ae26063e8e0b843a062b409f3a5fe587cda987293647f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-observed-boundary-hard-cause-omitted-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-observed-boundary-hard-cause-omitted-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-normal-observed-boundary-hard-cause-omitted.test",
+      "bytes": 77812056,
+      "sha256": "361eeff997e6d3b60b9ec1a75924c3491cd0acd8e5e02c693e5e5fbd7b0f0654"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/observed-boundary-hard-cause-omitted/db_provider_payout_boundary.go",
+      "bytes": 13345,
+      "sha256": "e742acd63a8746644c66839f066785803d95a4a25e874ed01c609879281efbae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/db_provider_payout_boundary.go",
+      "bytes": 13336,
+      "sha256": "903b2b74c16a10c1d7db69b0569de386c31c943df87b63d413eb4d157434ee3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-observed-boundary-hard-cause-omitted.overlay.json",
+      "bytes": 293,
+      "sha256": "3c714d03d2dcee17e4b5a775db8b824bd738e1225817912f86fa0ddeabf9210d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-boundary-exclusive-absence-omitted.receipt.json",
+      "bytes": 5496,
+      "sha256": "aae5c4d16513ad4552f88b468d0c82a5210f76ba13e4150cc375894b71dbfbd8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/boundary-exclusive-absence-omitted/overlay.json",
+      "bytes": 312,
+      "sha256": "4cfac5b1cb684152ea2bc2f769ad3c713f1f201b47ada9ee0bb8fd5da1e8460b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-boundary-exclusive-absence-omitted-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-boundary-exclusive-absence-omitted-body.stdout",
+      "bytes": 1959,
+      "sha256": "834f2a9fd496a2eb4c85096eefccd2116b533da8ca6428307cc49c24ebccc608"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-boundary-exclusive-absence-omitted-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-boundary-exclusive-absence-omitted-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-normal-boundary-exclusive-absence-omitted.test",
+      "bytes": 77816296,
+      "sha256": "de6a8f0963306c7af0a88cbda19e27208c2f5357479146b431634ff7870320f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/boundary-exclusive-absence-omitted/db_provider_payout_boundary.go",
+      "bytes": 13345,
+      "sha256": "0da85d96a5270eca0973b4489c1490688d6fdb7c64b1a1f78a5037c7dd38f67c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/db_provider_payout_boundary.go",
+      "bytes": 13336,
+      "sha256": "903b2b74c16a10c1d7db69b0569de386c31c943df87b63d413eb4d157434ee3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-boundary-exclusive-absence-omitted.overlay.json",
+      "bytes": 291,
+      "sha256": "7c3d3b0b7d23ffb81a96688b72d3edac3642587a92255feff98942f8424e270a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-payment-transport-origin-omitted.receipt.json",
+      "bytes": 5471,
+      "sha256": "4e2a2a6456cabcd6f33d1332e7ac5dbee2bac59a2a9d4bb8a62715c8e81ada5f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/payment-transport-origin-omitted/overlay.json",
+      "bytes": 303,
+      "sha256": "1352ffdfcd5553a235923f7cada7b4eafb4d382c61d2cdc8dc00f765f7cb5fab"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-payment-transport-origin-omitted-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-payment-transport-origin-omitted-body.stdout",
+      "bytes": 1941,
+      "sha256": "7b75e20197648ed15d4a73dcf74c1f82f3cfc4d49df3d8dd8df82cd3b438d0ad"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-payment-transport-origin-omitted-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-payment-transport-origin-omitted-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-normal-payment-transport-origin-omitted.test",
+      "bytes": 104936440,
+      "sha256": "8b9d3cd0eea29977fde775584843aafe45ea5618dc93b33a3f932f7fe958f9af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/payment-transport-origin-omitted/payment_read_retry.go",
+      "bytes": 10647,
+      "sha256": "22c88bb67002949df1383aae0a397a512a226b73bcfbbce0a7fdba49b46dd5c6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/controller/payment_read_retry.go",
+      "bytes": 10675,
+      "sha256": "7db29cb550b98db3c6e98eb034ca08982c59dd21b8bf83e6a22cd8d59d409e59"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-normal-payment-transport-origin-omitted.overlay.json",
+      "bytes": 282,
+      "sha256": "e245ad487975fa9a00e65536bd83b15594859c17ba5a53b085ccb7ffcd21a903"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-empty-cause-completeness-omitted.receipt.json",
+      "bytes": 6031,
+      "sha256": "c65a977baee44f6e7e0d9e3039e21546d5d75d351c272671c03d69b4af526ecf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/empty-cause-completeness-omitted/overlay.json",
+      "bytes": 280,
+      "sha256": "b8500bf53045b943e0653247d1d17c20e54695e0578853b0a551a15ee0566970"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-empty-cause-completeness-omitted-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-empty-cause-completeness-omitted-body.stdout",
+      "bytes": 2787,
+      "sha256": "042e002fd226680aad883b2a9f0c4bb912a1a325c5f446e26191b58a57830789"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-empty-cause-completeness-omitted-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-empty-cause-completeness-omitted-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-race-empty-cause-completeness-omitted.test",
+      "bytes": 138557336,
+      "sha256": "b35f24bc46a195cb4a3c0a683b70c5a3fd2460b4780ffa5f72b4b32efe439ed6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/empty-cause-completeness-omitted/error_causes.go",
+      "bytes": 2867,
+      "sha256": "dd23a9d1cf00dc0e0dc7614efeb1bfbfc9686c705429a698665cbfa35503e882"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/error_causes.go",
+      "bytes": 2858,
+      "sha256": "497908f319d59839097ed289884df417f3dfc82996a90d79a6d06aa11e0f71fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-empty-cause-completeness-omitted.overlay.json",
+      "bytes": 259,
+      "sha256": "b7165c2b7589c4a706af1941e7df7fc5ce6804ecb42456b0d39f6d623a6dd62d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-depth-budget-raised.receipt.json",
+      "bytes": 5185,
+      "sha256": "ac6858d13033e57aec00dbd39f4674fdb0a9f9cf98ee2836ce1c8019071a6b68"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/depth-budget-raised/overlay.json",
+      "bytes": 267,
+      "sha256": "5d58d573a1df149ac2dcd7c52ff1b1ccd236631012026f74f75c41632a9ca4bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-depth-budget-raised-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-depth-budget-raised-body.stdout",
+      "bytes": 1882,
+      "sha256": "2cbd19fada4fdd29fb9a6ce6fd2c7949d83847f53d8457ad6c43c628f9ef2b36"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-depth-budget-raised-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-depth-budget-raised-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-race-depth-budget-raised.test",
+      "bytes": 102244864,
+      "sha256": "22a7abf1f75cfc1661f6f2c07d68e47ea6631617aa01c54de0a02fa23a240722"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/depth-budget-raised/error_causes.go",
+      "bytes": 2860,
+      "sha256": "d5c8cf6a8580c40e1d8fcbe90e623ae7e8e761352c0e0f6041c5e3a97c4be924"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/error_causes.go",
+      "bytes": 2858,
+      "sha256": "497908f319d59839097ed289884df417f3dfc82996a90d79a6d06aa11e0f71fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-depth-budget-raised.overlay.json",
+      "bytes": 246,
+      "sha256": "5e9844a6479d8cd0381bec189d26708ab6b17cacdf0bca10311dd64970870803"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-node-budget-raised.receipt.json",
+      "bytes": 5174,
+      "sha256": "ad51a114c78d493e91c2932f75436f08f860a9acbdb472d0691d1e4565129ef9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/node-budget-raised/overlay.json",
+      "bytes": 266,
+      "sha256": "5adfaa8d0cd50b218cf92d33e90579f944e8cce2448bb106d4b0e65c46d593e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-node-budget-raised-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-node-budget-raised-body.stdout",
+      "bytes": 1883,
+      "sha256": "d45639774a04247a3709b979de84d058ad474367485d876fbe4a4b3d9086e6cf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-node-budget-raised-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-node-budget-raised-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-race-node-budget-raised.test",
+      "bytes": 102244952,
+      "sha256": "5a2ea28e550cfaaf04453704c67bebb95e7f18f352f5b196135332ab428e0412"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/node-budget-raised/error_causes.go",
+      "bytes": 2859,
+      "sha256": "1c6907ed7b9d60daf9ff6f22dfa23527011249182be95684a5670f91889ffa68"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/error_causes.go",
+      "bytes": 2858,
+      "sha256": "497908f319d59839097ed289884df417f3dfc82996a90d79a6d06aa11e0f71fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-node-budget-raised.overlay.json",
+      "bytes": 245,
+      "sha256": "548381e5d10e193f01f13a3dd8d36d234a913e3e84624a36b14738e41d7c29d1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-observed-boundary-hard-cause-omitted.receipt.json",
+      "bytes": 5499,
+      "sha256": "4e5bfc22489b93f469f1568c986d2d7ee78241eecbd72506e0474725f6856cd0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/observed-boundary-hard-cause-omitted/overlay.json",
+      "bytes": 314,
+      "sha256": "9fb6d7f3453ef8d8cb5dba4814bdce68e2de73ba657441866f15a031fb87461c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-observed-boundary-hard-cause-omitted-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-observed-boundary-hard-cause-omitted-body.stdout",
+      "bytes": 1934,
+      "sha256": "e7a661c1d62b2e09dd4b72df0e803d5f4f39965cc264f1e8079c23bca39f0c5e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-observed-boundary-hard-cause-omitted-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-observed-boundary-hard-cause-omitted-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-race-observed-boundary-hard-cause-omitted.test",
+      "bytes": 102244768,
+      "sha256": "7f666d5526c2803fc1e2581e2af783f57744a205c15db5fb4893acaa7598538a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/observed-boundary-hard-cause-omitted/db_provider_payout_boundary.go",
+      "bytes": 13345,
+      "sha256": "e742acd63a8746644c66839f066785803d95a4a25e874ed01c609879281efbae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/db_provider_payout_boundary.go",
+      "bytes": 13336,
+      "sha256": "903b2b74c16a10c1d7db69b0569de386c31c943df87b63d413eb4d157434ee3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-observed-boundary-hard-cause-omitted.overlay.json",
+      "bytes": 293,
+      "sha256": "3c714d03d2dcee17e4b5a775db8b824bd738e1225817912f86fa0ddeabf9210d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-boundary-exclusive-absence-omitted.receipt.json",
+      "bytes": 5492,
+      "sha256": "770cf2fa80396689c488679e3ccc9601bd4e73e2b2200ff183ac5b1e9fc5a1c9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/boundary-exclusive-absence-omitted/overlay.json",
+      "bytes": 312,
+      "sha256": "4cfac5b1cb684152ea2bc2f769ad3c713f1f201b47ada9ee0bb8fd5da1e8460b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-boundary-exclusive-absence-omitted-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-boundary-exclusive-absence-omitted-body.stdout",
+      "bytes": 1956,
+      "sha256": "4be96abe75034d5ce04c3e63ad18705f7db73c23bb3fd9c1cdf3a41da42cf705"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-boundary-exclusive-absence-omitted-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-boundary-exclusive-absence-omitted-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-race-boundary-exclusive-absence-omitted.test",
+      "bytes": 102244888,
+      "sha256": "a54dbf2c1e6cf0f2e77626718a832cf3d627b54e0c76e08e9b58a1e2ba8163e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/boundary-exclusive-absence-omitted/db_provider_payout_boundary.go",
+      "bytes": 13345,
+      "sha256": "0da85d96a5270eca0973b4489c1490688d6fdb7c64b1a1f78a5037c7dd38f67c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/db_provider_payout_boundary.go",
+      "bytes": 13336,
+      "sha256": "903b2b74c16a10c1d7db69b0569de386c31c943df87b63d413eb4d157434ee3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-boundary-exclusive-absence-omitted.overlay.json",
+      "bytes": 291,
+      "sha256": "7c3d3b0b7d23ffb81a96688b72d3edac3642587a92255feff98942f8424e270a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-payment-transport-origin-omitted.receipt.json",
+      "bytes": 5466,
+      "sha256": "3ff84230ce86c593d3283912a6d950fce9623ff3455fc86b2111d7eafaa7ff9f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/payment-transport-origin-omitted/overlay.json",
+      "bytes": 303,
+      "sha256": "1352ffdfcd5553a235923f7cada7b4eafb4d382c61d2cdc8dc00f765f7cb5fab"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-payment-transport-origin-omitted-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-payment-transport-origin-omitted-body.stdout",
+      "bytes": 1940,
+      "sha256": "0157df7d678080a6d4007f3562ceaf0fc3df4142aa7540d8f0108d11871ba48d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-payment-transport-origin-omitted-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-payment-transport-origin-omitted-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-cause-control-race-payment-transport-origin-omitted.test",
+      "bytes": 138557488,
+      "sha256": "00db5b2218dd0ff127e8985299b3be5c32a70c1018727df53cea1309f10ec677"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-error-cause-bounds/evidence/controls/payment-transport-origin-omitted/payment_read_retry.go",
+      "bytes": 10647,
+      "sha256": "22c88bb67002949df1383aae0a397a512a226b73bcfbbce0a7fdba49b46dd5c6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/controller/payment_read_retry.go",
+      "bytes": 10675,
+      "sha256": "7db29cb550b98db3c6e98eb034ca08982c59dd21b8bf83e6a22cd8d59d409e59"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-cause-control-race-payment-transport-origin-omitted.overlay.json",
+      "bytes": 282,
+      "sha256": "e245ad487975fa9a00e65536bd83b15594859c17ba5a53b085ccb7ffcd21a903"
+    }
+  ],
+  "results": [
+    {
+      "mode": "normal",
+      "group": "empty-cause-completeness-omitted",
+      "roots": [
+        "TestPaymentReadCircleBoundsMalformedTransportCauses",
+        "TestStReceiptCensusRejectsMalformedAndMixedAbsenceCauses"
+      ],
+      "named_assertions_reproduced": [
+        "malformed public GET cause retried or lost original custody",
+        "incomplete receipt census authorized replacement"
+      ],
+      "receipt_sha256": "19ee3da9ecd7398d66b48e90d4eb9b0c1212371f05b9e83f233347a7d0e77982"
+    },
+    {
+      "mode": "normal",
+      "group": "depth-budget-raised",
+      "roots": [
+        "TestErrorCauseInspectionBoundsCyclesDepthWidthAndNil"
+      ],
+      "named_assertions_reproduced": [
+        "incomplete cause graph gained a complete census"
+      ],
+      "receipt_sha256": "bdeb628bb2a9de52623e018cdd85e8185152f5829112ca2185e1637291257a4f"
+    },
+    {
+      "mode": "normal",
+      "group": "node-budget-raised",
+      "roots": [
+        "TestErrorCauseInspectionBoundsCyclesDepthWidthAndNil"
+      ],
+      "named_assertions_reproduced": [
+        "incomplete cause graph gained a complete census"
+      ],
+      "receipt_sha256": "50a95be65c62d1227cd0a97b9aa0f4c2acbd6121afe770bbf154d0b59d3f30a1"
+    },
+    {
+      "mode": "normal",
+      "group": "observed-boundary-hard-cause-omitted",
+      "roots": [
+        "TestProviderBoundaryObservedHardCauseSurvivesCyclicSibling"
+      ],
+      "named_assertions_reproduced": [
+        "observed hard cause lost sentinel or original error custody"
+      ],
+      "receipt_sha256": "a4aad1ac6788de9495ae6fed82f02126907152626197eb44a6f8d89043f6208a"
+    },
+    {
+      "mode": "normal",
+      "group": "boundary-exclusive-absence-omitted",
+      "roots": [
+        "TestProviderBoundaryAbsentReadRequiresCompleteExclusiveNoRows"
+      ],
+      "named_assertions_reproduced": [
+        "failed observation became completed payout-boundary absence"
+      ],
+      "receipt_sha256": "aae5c4d16513ad4552f88b468d0c82a5210f76ba13e4150cc375894b71dbfbd8"
+    },
+    {
+      "mode": "normal",
+      "group": "payment-transport-origin-omitted",
+      "roots": [
+        "TestPaymentReadCauseOriginsRetainHardAndCancellationDominance"
+      ],
+      "named_assertions_reproduced": [
+        "hard or unowned cause borrowed sibling transport permission"
+      ],
+      "receipt_sha256": "4e2a2a6456cabcd6f33d1332e7ac5dbee2bac59a2a9d4bb8a62715c8e81ada5f"
+    },
+    {
+      "mode": "race",
+      "group": "empty-cause-completeness-omitted",
+      "roots": [
+        "TestPaymentReadCircleBoundsMalformedTransportCauses",
+        "TestStReceiptCensusRejectsMalformedAndMixedAbsenceCauses"
+      ],
+      "named_assertions_reproduced": [
+        "malformed public GET cause retried or lost original custody",
+        "incomplete receipt census authorized replacement"
+      ],
+      "receipt_sha256": "c65a977baee44f6e7e0d9e3039e21546d5d75d351c272671c03d69b4af526ecf"
+    },
+    {
+      "mode": "race",
+      "group": "depth-budget-raised",
+      "roots": [
+        "TestErrorCauseInspectionBoundsCyclesDepthWidthAndNil"
+      ],
+      "named_assertions_reproduced": [
+        "incomplete cause graph gained a complete census"
+      ],
+      "receipt_sha256": "ac6858d13033e57aec00dbd39f4674fdb0a9f9cf98ee2836ce1c8019071a6b68"
+    },
+    {
+      "mode": "race",
+      "group": "node-budget-raised",
+      "roots": [
+        "TestErrorCauseInspectionBoundsCyclesDepthWidthAndNil"
+      ],
+      "named_assertions_reproduced": [
+        "incomplete cause graph gained a complete census"
+      ],
+      "receipt_sha256": "ad51a114c78d493e91c2932f75436f08f860a9acbdb472d0691d1e4565129ef9"
+    },
+    {
+      "mode": "race",
+      "group": "observed-boundary-hard-cause-omitted",
+      "roots": [
+        "TestProviderBoundaryObservedHardCauseSurvivesCyclicSibling"
+      ],
+      "named_assertions_reproduced": [
+        "observed hard cause lost sentinel or original error custody"
+      ],
+      "receipt_sha256": "4e5bfc22489b93f469f1568c986d2d7ee78241eecbd72506e0474725f6856cd0"
+    },
+    {
+      "mode": "race",
+      "group": "boundary-exclusive-absence-omitted",
+      "roots": [
+        "TestProviderBoundaryAbsentReadRequiresCompleteExclusiveNoRows"
+      ],
+      "named_assertions_reproduced": [
+        "failed observation became completed payout-boundary absence"
+      ],
+      "receipt_sha256": "770cf2fa80396689c488679e3ccc9601bd4e73e2b2200ff183ac5b1e9fc5a1c9"
+    },
+    {
+      "mode": "race",
+      "group": "payment-transport-origin-omitted",
+      "roots": [
+        "TestPaymentReadCauseOriginsRetainHardAndCancellationDominance"
+      ],
+      "named_assertions_reproduced": [
+        "hard or unowned cause borrowed sibling transport permission"
+      ],
+      "receipt_sha256": "3ff84230ce86c593d3283912a6d950fce9623ff3455fc86b2111d7eafaa7ff9f"
+    }
+  ],
+  "reproduced_failed_roots_per_mode": {
+    "normal": 7,
+    "race": 7
+  },
+  "limits": [
+    "Scope is six original-production mutations and their positive counterparts; full final source composition and all38 requirements remain unproved.",
+    "No ordinary test failure, setup refusal, timeout, skipped body or panic accepted as causal protection."
+  ]
+}

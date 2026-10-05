@@ -1,0 +1,347 @@
+{
+  "schema": "mainnet-independent-component-terminal-v1",
+  "status": "ORIGINAL_RACE_PARTIAL_SUCCESS_RETAINED",
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/c04-race-49root-receipt.json",
+      "bytes": 15223,
+      "sha256": "f63aa7672a444bac097ff40577babeffec242fb19d73bda4cc2c7df4e2b51748"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/c04-race-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 37603,
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/c04-race-body.stdout",
+      "sha256": "03f6cfc82ca0e238660f4d37b5edd7b14f92d38493ad145ec3b212a0473fc5ef"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/c04-race-compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/c04-race-compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 44108,
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/selected-import-graph-receipt.json",
+      "sha256": "92fdeeacd5e113d46c8625a7ad26caea063bdf492f836c21931bf853ae74691b"
+    },
+    {
+      "bytes": 3424,
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/peer-links-receipt.json",
+      "sha256": "1fefd3d423c22ba9dd8a1aff8165fa6e835a2847f06cea2f15a5d891be946ca0"
+    },
+    {
+      "bytes": 105874728,
+      "ctime_ns": 1791093481704884066,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 17599975,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791093481451893794,
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/images/c04-mainnet-race.test",
+      "sha256": "1a60a4df50bcdbc8ad40a1dbd43579cc9b7a28823314590a7af6012a23c3b2c6",
+      "type": 32768,
+      "uid": 1000
+    },
+    {
+      "bytes": 1897,
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/selected-compile-receipt.json",
+      "sha256": "4283dfb59b5b98a6bdd556a46f59fa25bfb878b445723e8d2c2c12fa6af014b3"
+    },
+    {
+      "bytes": 15022,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-fixture-correction/evidence/selectors.json",
+      "sha256": "e96ccaa31cf0a691333798ed827a1bb9833bb270930937d39a4e72429bd05951"
+    },
+    {
+      "bytes": 1635,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server964-export-receipt.json",
+      "sha256": "b077a455bad0b0058b8173add48108ca47c49515223ca97146f54815fc5d10e5"
+    },
+    {
+      "bytes": 11922,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/sn663-selected-mainnet-graph-receipt-v2.json",
+      "sha256": "d3a2124cb5fda4cfb8b0a413a155ee0d0ab0e315666e24edff3379ef7821bf24"
+    },
+    {
+      "bytes": 1057,
+      "path": "/mnt/data/sn-testnet/sol-fee-fixture-c04-20261004/evidence/source-stage-receipt.json",
+      "sha256": "c5138bc051de94cedb9576cb55ab3565c656d97dac89fee3f980c842720955d9"
+    }
+  ],
+  "raw_census": {
+    "TestEconomicConservationArchiveCanceledReadNeverInventsIdentityDifference": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationArchiveChangedCustodyStopsBeforeNextSourceRead": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationArchivePublicAdmitsOnceThenUsesRetainedIndex": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationArchivePublicForecastRefusesWithoutDroppingUnknowns": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationArchivePublicLostAcknowledgmentsReconcileExactHeads": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan": {
+      "run": 1,
+      "output": 4,
+      "fail": 1
+    },
+    "TestEconomicConservationConsumesOriginalNativeFeeProofAndKeepsPartialCensusUnknown": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationFeeHandoffConflictPreservesLatestKnownProof": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationFeeWorkerUsesOriginalFiniteReadBudget": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationLegacyPolicyCannotEnrollResourceApprover": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationNativeFeeAbsenceAndObservedZeroStayDistinct": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationNativeFeeArchivedOriginalCannotDisappearFromRestoredHead": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationNativeFeeCancellationPreservesCauseEvenForRetainedInput": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationNativeFeeCapacityRefusalPreservesCompletePriorProofs": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationNativeFeeConflictingOriginalRefundCannotReplaceKnownEvidence": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationNativeFeeOverlappingArchivesCountOriginalOnce": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationNativeFeeRetryDoesNotRerunOrRecount": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicCancelJoinsHeldFeeReplayAfterHealthyPublication": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicFeeInputCannotEnrollItsOwnAuthority": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicFeeIntegrityQuarantinesOnlyExactRequest": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicFollowJoinsOwnedReadsAndOutput": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicMissingFeeRequestRecoversWithoutCursorRollback": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicMoreThan128ReviewsRetainsOriginalLiabilities": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicReceiptRefreshRetainsFirstArchiveBytes": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicRetainsOriginalEarningsCarryAndAggregatePayment": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationPublicUnknownReceiptPaymentRemainsHotUntilKnown": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationRenewalPublicPreservesOriginalPolicyAndReviewChain": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicConservationRenewalPublicRejectsUnsignedShrunkOrForeignRevisions": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeeApprovalCanonicalSignatureRoundTrip": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeeApprovalRejectsCanonicalForeignSignature": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeeApprovalRejectsNoncanonicalSignatureWire": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeePublicAdmitsOriginalWithdrawalRefundOnly": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeePublicCancellationPreservesCause": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeePublicKeepsPayerAndNativeProofJoins": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeePublicMissingRefundRemainsUnknown": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeePublicObservedZeroRefundStaysExplicit": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeePublicRefusesChangedSemanticAuthority": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestEconomicNativeFeePublicRevertedCallRetainsSurvivingFee": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestHistoricalFeeContextActualCryptographicRefusalPrecedesProcess": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestHistoricalFeeContextPublicJoinRetainsSignedHistoryAndUnknownAuthority": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestHistoricalFeeContextPublicKeepsForeignBlockCandidatesUnallocated": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestHistoricalFeeContextPublicMissingRefundIsNotZero": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestHistoricalFeeContextPublicRefusesChangedNativeContextAndPayer": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestHistoricalFeeContextPublicRevertedReceiptKeepsObservedCandidate": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestHistoricalFeeContextPublicStrictRequestAndInputPins": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    },
+    "TestHistoricalFeeContextReadErrorsRemainObservationFailures": {
+      "run": 1,
+      "output": 2,
+      "pass": 1
+    }
+  },
+  "pass": 48,
+  "fail": 1,
+  "skip": 0,
+  "unrun": 0,
+  "body_exit": 1,
+  "package_timed_out": false,
+  "actual_elf_processes": [],
+  "failure": {
+    "root": "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan",
+    "original_output": [
+      "=== RUN   TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan\n",
+      "    economic_conservation_receipt_test.go:58: public archived receipt contradiction was overwritten or reached another source read 2  economic archive: economic archived original Claim receipt contradicts retained evidence\n",
+      "        \n",
+      "--- FAIL: TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan (30.27s)\n"
+    ],
+    "assessment": "Exact retained archive contradiction was refused before a fresh source read; CLI emitted code2 while the fixture expected code3. Separate6820 test-only correction already source-reviewed and incorporated in3e7/6580. This original result remains failed."
+  },
+  "greater_than128_history_pass_elapsed_seconds": 2845.19,
+  "next_action": "Retain48successes; qualify corrected affected source plus genuinely changed incremental behavior and causal controls. Do not repeat this unchanged48-minute history body for the fixture-only status correction. Complete semantic restore and current union qualification remain separate.",
+  "requirement_closure": false
+}

@@ -1,0 +1,135 @@
+{
+  "schema": "current-native-evm0f-qualification-root-review-v1",
+  "source": {
+    "bytes": 223404309,
+    "count": 20544,
+    "errors": [],
+    "head": "0f8886946b7d58808ef9ae89dbdd968f31e77298",
+    "tree": "e1451e54384a531040c113163e58978761326816"
+  },
+  "receipt": "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/current0f-final-receipt.json",
+  "receipt_sha256": "2a9d8ca5247a598de1cd28d1c4a9ad5ba50385d45e3f045af9b9af9e62bf7f7f",
+  "verified_bindings": {
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/eight-normal-packagecwd.command.json": {
+      "sha256": "ac5ab7dd378102fc685756be07e70647d16e66f83bef79d7b43812305b90f0b9",
+      "bytes": 1642
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/eight-normal-packagecwd.jsonl": {
+      "sha256": "07ed629f26b99c06ba9439f4cbb6241a8ab16a22f1199e9bd771e7156f894a99",
+      "bytes": 6026
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/eight-normal-packagecwd.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/eight-normal-packagecwd.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/bin/mainnet-owned.test": {
+      "sha256": "a3f1407b37600b7aadf0f16dfba43fb70f0f9d2e65304ab7adb68d14e09f2555",
+      "bytes": 74679360
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/eight-race-packagecwd.command.json": {
+      "sha256": "d64923d22ec74e2f9cc32b89aa0ce1b0e922768b35d8a0a0d3c76d824dcd2032",
+      "bytes": 1560
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/eight-race-packagecwd.jsonl": {
+      "sha256": "708aba45d1558f0a4e3e72d160fdb1a2173f2a9e678737f988e5c221d943aff7",
+      "bytes": 6033
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/eight-race-packagecwd.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/eight-race-packagecwd.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/bin/mainnet-race-owned.test": {
+      "sha256": "ea09a275496b680cc4a1f31f72cef50a4d3fbf025aab769cdf13927209e95f4d",
+      "bytes": 100102320
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/mainnet-vet.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/mainnet-vet.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/mainnet-vet.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/modules.jsonl": {
+      "sha256": "5c9eed6f97ed0e7f04b5cd8d6ab9f28e48cb2a1c87126f9a9de96319050f4266",
+      "bytes": 173862
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/mainnet-deps.stdout": {
+      "sha256": "c67cb81be39eb8d0b79109790b52bdc0c77c45d330000c79c029d5382f29a3b4",
+      "bytes": 28557
+    },
+    "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/evidence/eight-normal.jsonl": {
+      "sha256": "95d7209dc965f78bbf8914fc91f9d0b4d9cd19fe58173ba3843bfe6e16203855",
+      "bytes": 7127
+    }
+  },
+  "root_census": {
+    "normal": [
+      "TestHistoricalReplayPublicBoundedHostProfileRetainsUnknownAuthority",
+      "TestMonitorEvmArchivePublicRolloverContinuesCreditCarryAndCosts",
+      "TestMonitorEvmArchivePublicRefusesActiveAndUnreviewedOwners",
+      "TestMonitorEvmCatalogPublicSignedGrowthKeepsOriginalPendingRange",
+      "TestMonitorNativeArchivePublicRolloverContinuesOriginalPendingRange",
+      "TestMonitorNativeArchivePublicRefusesActiveAndUnreviewedOwners",
+      "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange",
+      "TestValidatorCapacityPreviewRequiresDeclarationAndExactInput"
+    ],
+    "race": [
+      "TestHistoricalReplayPublicBoundedHostProfileRetainsUnknownAuthority",
+      "TestMonitorEvmArchivePublicRolloverContinuesCreditCarryAndCosts",
+      "TestMonitorEvmArchivePublicRefusesActiveAndUnreviewedOwners",
+      "TestMonitorEvmCatalogPublicSignedGrowthKeepsOriginalPendingRange",
+      "TestMonitorNativeArchivePublicRolloverContinuesOriginalPendingRange",
+      "TestMonitorNativeArchivePublicRefusesActiveAndUnreviewedOwners",
+      "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange",
+      "TestValidatorCapacityPreviewRequiresDeclarationAndExactInput"
+    ]
+  },
+  "owned_images": {
+    "normal": {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/bin/mainnet-owned.test",
+      "sha256": "a3f1407b37600b7aadf0f16dfba43fb70f0f9d2e65304ab7adb68d14e09f2555",
+      "bytes": 74679360,
+      "mode": "0500",
+      "links": 1
+    },
+    "race": {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/bin/mainnet-race-owned.test",
+      "sha256": "ea09a275496b680cc4a1f31f72cef50a4d3fbf025aab769cdf13927209e95f4d",
+      "bytes": 100102320,
+      "mode": "0500",
+      "links": 1
+    }
+  },
+  "original_setup_failure": {
+    "cause": "direct test ELF started at module root rather than mainnet package cwd; package-relative ../miner/testdata unavailable",
+    "events_sha256": "95d7209dc965f78bbf8914fc91f9d0b4d9cd19fe58173ba3843bfe6e16203855",
+    "exit": 1,
+    "failed": [
+      "TestMonitorNativeArchivePublicRolloverContinuesOriginalPendingRange",
+      "TestMonitorNativeArchivePublicRefusesActiveAndUnreviewedOwners",
+      "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange",
+      "TestValidatorCapacityPreviewRequiresDeclarationAndExactInput"
+    ],
+    "passed": [
+      "TestHistoricalReplayPublicBoundedHostProfileRetainsUnknownAuthority",
+      "TestMonitorEvmArchivePublicRolloverContinuesCreditCarryAndCosts",
+      "TestMonitorEvmArchivePublicRefusesActiveAndUnreviewedOwners",
+      "TestMonitorEvmCatalogPublicSignedGrowthKeepsOriginalPendingRange"
+    ]
+  },
+  "vet_exit": 0,
+  "scope": "Eight selected normal/race roots through current public archive/catalog/admission/historical/capacity commands, unchanged component results retained. Original4PASS4setupFAIL preserved. Actual runtime fee authority, Claim/native conservation, restorecohort, production hosts and deployment remain."
+}

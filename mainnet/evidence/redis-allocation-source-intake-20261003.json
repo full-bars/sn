@@ -1,0 +1,35 @@
+{
+  "intake_path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-allocation/evidence/intake.json",
+  "intake_sha256": "baf13a9169ddbbbc602b6cd630509d880454d3aa3a9ff86d7da8a1a748795cee",
+  "limits": [
+    "Original full-model failures are retained; current reported count is seven, while this frozen intake retained the earlier count of four.",
+    "Source and scope verification do not prove behavioral qualification or deployment."
+  ],
+  "physical_git_blobs_verified": 5386,
+  "policy": {
+    "capacity": "At >=80% a finite-label warning is counted. Limit gauges and per-request fractions are exposed. Capacity hold reports examined cursor and unknown remaining funding; increasing reviewed limits re-examines original order without dropping debt.",
+    "configuration_example": "max_rows: 4096\nmax_selected: 256\n",
+    "consistency": "No shared SQL financial locks added; Redis approximate concurrency policy remains. Post-client-lock expiry recheck refuses stale grants. Malformed/negative reservation observations are retained, never clamped to zero; only pre-mutation typed counter refusal can try a valid peer.",
+    "fallback": "Original earliest expiry/start/id financial order; keyset pages <=64 rows. Existing transfer_balance_active_network_end_start_id index, schema unchanged.",
+    "limits": "Request-owned defaults4096 decoded rows/256 selected grants; immutable optional redis_contract_admission.yml supports rows64..65536 and selected1..min(rows,4096). No global mutable budget.",
+    "preferred": "Existing independently scoped prober free-grant eligibility; payer-client hash chooses within unchanged16/48 discovery order, at most4 whole-grant attempts per window; companion uses original payer client."
+  },
+  "qualification": {
+    "causal_groups": 5,
+    "expected_causal_failures_per_mode": 7,
+    "neighbors": 17,
+    "new_roots": 8,
+    "terminal_results": "pending"
+  },
+  "schema": "root-allocator-source-intake-v1",
+  "source": {
+    "base": "f30583a5738654c5bf2d779645768785229b5aef",
+    "fixture_component": "754eb8837a3f02e785f9ce9a8385969cc3118aa0",
+    "head": "4aaf440289bfeb81eb93e86ee967607892148ab2",
+    "original_full_model_source": "3f32d7301c9e381eac4de368c62357c14dfc36a7",
+    "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-allocation/server",
+    "tree": "6db16abe6327daf5d62a350b7a4810645ff85a50"
+  },
+  "status": "SOURCE_VERIFIED_NOT_QUALIFIED",
+  "verified_file_bindings": 44
+}

@@ -1,0 +1,25 @@
+{
+  "status": "ADOPTED_RUST38_MAIN_SERIAL_SHORT_POST_MODEL",
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "accounting_floor_bytes": 0,
+  "margin": 2,
+  "history_count": 0,
+  "model_count": 0,
+  "compiler_count": 0,
+  "short_count": 1,
+  "data_minimum_available_bytes": 10737418240,
+  "memory_minimum_available_bytes": 113816633344,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "data_growth_stop_bytes": 2147483648,
+  "job_sha256": "56a61312b19d1e7618da105cf129dc401218ec073c48e11d6f138cbb5e9553ab",
+  "runner_sha256": "0f5b09c2d4a5e6d5f564fd77f6bd170eeecb3661cdb3d479ab5feb169d7ff949",
+  "execution_owner": "SolParallel only, user systemd manager",
+  "independent_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-rust38-main-normal-independent-review-v2-20261005.json",
+    "sha256": "3bb99acfc6352d0992886a31f0986d3661188d4b5616979470628c785c46d1b4"
+  },
+  "adopted_at": "2026-10-05T05:33:46.405773+00:00",
+  "scope": "38 pending Rust roots,29 new original exports on proved identical main Rust inputs. No Go, compiler, DB, deployment or signing."
+}

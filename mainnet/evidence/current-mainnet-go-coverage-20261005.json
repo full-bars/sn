@@ -1,0 +1,13 @@
+{
+  "schema": "current-mainnet-go-coverage-result-v1",
+  "source_handoff": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/server-current-c198-review-coverage/HANDOFF-v2.json",
+    "sha256": "f6097ea36b04fd825c70bb7c645536b26e2361dd798e38ac586fb448feee647c"
+  },
+  "go_roots_per_mode": 2503,
+  "server_roots": 1895,
+  "server_full_model_roots": 1824,
+  "core_sn_vless_roots": 608,
+  "controls_retained": 227,
+  "status": "Source selections reviewed; actual bodies not qualified."
+}

@@ -100,7 +100,7 @@ func TestReleaseHistoryAdoptionV2ReplaysEveryInteriorTerminal(t *testing.T) {
 	}
 	current.artifact.PreviousArtifactHash = ReleaseMeasurementContentHash(previousBytes)
 	first := previous.operators[9].seal
-	cfg := ReleaseConfig{ChainID: 945, Policy: previous.artifact.Policy, EvidenceV2: ReleaseEvidenceV2Config{Bounds: ReleaseEvidenceV2Bounds{
+	cfg := ReleaseConfig{ChainID: 945, Policy: previous.artifact.Policy, PolicyHash: previous.artifact.PolicyHash, EvidenceV2: ReleaseEvidenceV2Config{Bounds: ReleaseEvidenceV2Bounds{
 		Cut: first.bounds, Replay: first.replay, MaxParticipants: 2, MaxTransitionBytes: 256 * 1024, MaxClosureBytes: 1024 * 1024, MaxProviders: 16, MaxEgressHashes: 16, MaxFleetPrefixes: 64}}}
 	for _, input := range previous.artifact.Inputs {
 		operator := previous.operators[input.NoID]

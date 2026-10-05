@@ -1,0 +1,44 @@
+rule_files:
+  - root-monitor-alerts.example.yml
+evaluation_interval: 30s
+tests:
+  - name: independent census diagnoses missing optional publication
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_root_monitor_expected{host="synthetic.example",role="primary"}'
+        values: '1+0x8'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetRootMonitorMissing
+        exp_alerts:
+          - exp_labels: {host: synthetic.example, role: primary, severity: critical}
+            exp_annotations: {summary: "Root monitor primary telemetry is absent on synthetic.example"}
+  - name: fresh observations do not conceal unavailable logs
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_root_monitor_sample_timestamp_seconds{host="synthetic.example",role="primary"}'
+        values: '0+30x8'
+      - series: 'sn_mainnet_root_monitor_output_status{host="synthetic.example",role="primary",stream="events"}'
+        values: '3+0x8'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetRootMonitorOutputUnavailable
+        exp_alerts:
+          - exp_labels: {host: synthetic.example, role: primary, stream: events, severity: warning}
+            exp_annotations: {summary: "Root monitor primary diagnostic output is unavailable on synthetic.example"}
+      - eval_time: 3m
+        alertname: SnMainnetRootMonitorStale
+        exp_alerts: []
+  - name: retained output ages despite formerly healthy read
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_root_monitor_sample_timestamp_seconds{host="synthetic.example",role="primary"}'
+        values: '60+0x40'
+      - series: 'sn_mainnet_root_monitor_read_only_ready{host="synthetic.example",role="primary"}'
+        values: '1+0x40'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: SnMainnetRootMonitorStale
+        exp_alerts:
+          - exp_labels: {host: synthetic.example, role: primary, severity: critical}
+            exp_annotations: {summary: "Root monitor primary observations stopped on synthetic.example"}

@@ -1,0 +1,47 @@
+{
+  "bindings": {
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/sdk-missing-intent-check-omitted.go": {
+      "bytes": 121907,
+      "sha256": "3bbe1643d245e860eb7700a3743b66df6d8afacbe051c90f48407073b77c372e"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/sdk-missing-intent-check-omitted.overlay.json": {
+      "bytes": 233,
+      "sha256": "82c20e59f80aff828e87f29ff6a4c3add616ae4ff1203a70e0d59e84ca770a95"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-causal-go-sum-after.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-causal-go-sum-before.sha256": {
+      "bytes": 73,
+      "sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-causal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-causal.jsonl": {
+      "bytes": 1474,
+      "sha256": "e5dbd2235bc8ba2aef4c4458aca13c445461cd8b4e89ceef0cf0ba785155b6e6"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-causal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-missing-intent-overlay.json": {
+      "bytes": 236,
+      "sha256": "978807c515559c6883a9b5542f7b7306b0c7931bd7a8a547880bb60bb9f0d637"
+    },
+    "/mnt/data/sn-testnet/sol-customer-transfer-530-independent-20261003/evidence/sdk-qualification-receipt.json": {
+      "bytes": 12781,
+      "sha256": "4bae1407925e8b12c6cadf48f67aded37c142bd014d46b17305604779ec7673f"
+    }
+  },
+  "created_utc": "2026-10-03T04:05:16.689512+00:00",
+  "kind": "operative omission of missing-intent guard, not historical whole-source baseline",
+  "qualified_sdk_receipt_sha256": "4bae1407925e8b12c6cadf48f67aded37c142bd014d46b17305604779ec7673f",
+  "result": "one intended assertion failure; package exit1; unchanged tracked go.sum",
+  "schema": "sol-independent-customer-sdk-causal-v1",
+  "selector": "^TestWalletTransferOldCallerRefusesBeforeHttp$",
+  "source_sdk": "9ae95704a2303f94963e9d2fad81fa5705a4698c"
+}

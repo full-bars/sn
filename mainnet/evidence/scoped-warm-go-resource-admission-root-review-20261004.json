@@ -1,0 +1,41 @@
+{
+  "schema": "mainnet-scoped-warm-go-phase-admission-review-v1",
+  "reviewed_utc": "2026-10-04T05:52:24.155636+00:00",
+  "status": "SCOPED_PHASE_ADMISSION_NOT_TEST_QUALIFICATION",
+  "allowed": "At most one warm Go compile phase plus one direct-owned Go normal/race body concurrently with retained complete model; recheck before launch. Metadata graph remains separate.",
+  "forecast_not_measured_peak": {
+    "warm_compile_bytes": 4294967296,
+    "go_body_bytes": 1073741824,
+    "multiplier": 2,
+    "retained_host_minimum_bytes": 103079215104,
+    "required_available_bytes": 113816633344
+  },
+  "current_memory_available_bytes": 120769011712,
+  "current_margin_bytes": 6952378368,
+  "sampler_prefix": {
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.resource.csv",
+    "complete_bytes": 926572,
+    "sha256": "c9fc10e82c1a4d09083c27008948709be1909fde3d94abd7f3d1b96cba314eb6",
+    "samples": 5206,
+    "initial_memory_available_bytes": 121593585664,
+    "lowest_observed_memory_available_bytes": 116827684864,
+    "historical_low_margin_bytes": 3011051520
+  },
+  "resource_continuity": {
+    "original_baseline_bytes": 113681502208,
+    "cumulative_cap_bytes": 51539607552,
+    "data_available_floor_bytes": 62141894656,
+    "data_available_bytes": 90204684288,
+    "data_inodes_available": 93939587,
+    "lease_pid": 620836,
+    "lease_start_ticks": 94830154,
+    "lock_inode": 16941991,
+    "lock_device": 2081
+  },
+  "limits": [
+    "Compiler peak unmeasured;4GiB conservative forecast is not a proven upper bound.",
+    "No live runner guard mutation, no healthy body restart and no blanket parallel body admission.",
+    "Retain prior112GiB preflight refusals and all original outputs.",
+    "Sampled host decline includes concurrent unrelated work; no per-body attribution inferred."
+  ]
+}

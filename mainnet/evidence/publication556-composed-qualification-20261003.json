@@ -1,0 +1,567 @@
+{
+  "schema": "root-publication556-composed-qualification-v1",
+  "source": "556e14767fddbaf4db469fb5f1019bcbdd2bc9ce",
+  "tree": "32c3727d17f9252ee4073f3a853b9e41982f3424",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/publication556-final-selected-qualification-receipt.json",
+      "bytes": 1635,
+      "sha256": "80fa82e9f5b2370003774eaed8be6994f9daf895f3ac764a47afdc2125cb8acf"
+    },
+    {
+      "bytes": 173658,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/modules.jsonl",
+      "sha256": "07be414ecb9f73961099db63481a8d03fb4f74ab3f65e9cb4ee7779a7c925e10"
+    },
+    {
+      "bytes": 1058,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/source-readback.json",
+      "sha256": "4596773242368597a62504504a1272b26c53dd0804882e7505449c80ae4f0e89"
+    },
+    {
+      "bytes": 7894,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/publication556-selected16-normal-receipt.json",
+      "sha256": "2dda255ca12c6cd9442ebdf494d885cdcd60bfa35faad38b756b14f03dae65f5"
+    },
+    {
+      "bytes": 371,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/root-preflight-normal.json",
+      "sha256": "e72c2599447ab1bc6a2fa9b2fe4a81964ee9039be92bbf8127824a0a92ea81a0"
+    },
+    {
+      "bytes": 145,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/ancestry-preflight-normal.txt",
+      "sha256": "2545d615506c3525d028d1751e0e389f8a89e5b3a301db8ba1b87851f263420d"
+    },
+    {
+      "bytes": 1024,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/commands-normal.tsv",
+      "sha256": "5d3fcc364595dafb28c0e81da61567a46db9f293d0a8bde11c2f1eaf4b86c1e5"
+    },
+    {
+      "bytes": 2137,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/run-publication.sh",
+      "sha256": "d78ab28ef18934298b4ddbbad63057564fe7de6313333441683e7e1e15cc0809"
+    },
+    {
+      "bytes": 106,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/mainnet-normal.phase",
+      "sha256": "a38812b3d9d944dbe93ad0010fd9e7e4d0ba95aa1a889c8c3b794f4f8f2d2d96"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/mainnet-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 11290,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/mainnet-normal.jsonl",
+      "sha256": "43df205b853a464f0357a6c8ad3833d32f2647221c8ff898953030faef62894b"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/mainnet-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 107,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/validator-normal.phase",
+      "sha256": "791ddd15168acf14b055a5fb586a492d0a0ee7a193fd0886889a89628421ce97"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/validator-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1372,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/validator-normal.jsonl",
+      "sha256": "e67aa1b8f3ae044ae8447a28e4b3c0e91379d19afe060098c724e3a05694849a"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/validator-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 103,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/miner-normal.phase",
+      "sha256": "3bd90819f00a15f6e4006fa947b27e40f3b0f382251afd8c3862ac6358458388"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/miner-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 3264,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/miner-normal.jsonl",
+      "sha256": "795a24c0f3afcb4b33c7bd61b8b69135a8fd0fb282f2f3cb1468a9b9c0abb7e7"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/miner-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 103,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/chain-normal.phase",
+      "sha256": "c119286db902a987bf45cbe38b62b50b8c0d1e371bf4bc6504dedea92a4b0ff6"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/chain-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1345,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/chain-normal.jsonl",
+      "sha256": "1841410cd89e94f2cb96e99eaeed95fe7a01113cd475c476ec6caee184f57cea"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/chain-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7858,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/publication556-selected16-race-receipt.json",
+      "sha256": "faa99934a60a8ac53bb66d02fe5ee636f80585a41cb865ae4f28657c89abdedd"
+    },
+    {
+      "bytes": 371,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/root-preflight-race.json",
+      "sha256": "e72c2599447ab1bc6a2fa9b2fe4a81964ee9039be92bbf8127824a0a92ea81a0"
+    },
+    {
+      "bytes": 145,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/ancestry-preflight-race.txt",
+      "sha256": "2545d615506c3525d028d1751e0e389f8a89e5b3a301db8ba1b87851f263420d"
+    },
+    {
+      "bytes": 1024,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/commands-race.tsv",
+      "sha256": "5d3fcc364595dafb28c0e81da61567a46db9f293d0a8bde11c2f1eaf4b86c1e5"
+    },
+    {
+      "bytes": 104,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/mainnet-race.phase",
+      "sha256": "50dd5155bb52dc43fe279906988d11c91e785d10fbb514434dcda978ad1f91fb"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/mainnet-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 11291,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/mainnet-race.jsonl",
+      "sha256": "afdfdc511d9edadf54e06c70ae8661893be452a7aa06336ab41ce8fcaf120e5f"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/mainnet-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 105,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/validator-race.phase",
+      "sha256": "95c81d3a83137891d76aa9fe50a9c0a2750acc163a214e39a3c4caaf6f35c0d5"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/validator-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1376,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/validator-race.jsonl",
+      "sha256": "c492498168d5519a6306a13b152d435e0693b707d836fb180583f84a7de3f642"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/validator-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 101,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/miner-race.phase",
+      "sha256": "ba46c9cf2fa9683dad9321a007fa317e13bb7305c8ed2d02a91c7c6aab8f78dd"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/miner-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 3263,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/miner-race.jsonl",
+      "sha256": "4ab55c32f3ce1cdbf2e664401b6e897295490cf404122c5ade53a889b52a065a"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/miner-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 101,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/chain-race.phase",
+      "sha256": "17d51e97497b5d470834cb031be6f6957d81ccd73b64f7d1005f28623adebdd6"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/chain-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1349,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/chain-race.jsonl",
+      "sha256": "df13d1568774e9b9f90e0bbc91b6bf3d2e7f16253af470debbcfd3bb7f3fe18d"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/chain-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 5809,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/publication556-five-vet-receipt.json",
+      "sha256": "84579a76c9c39e5e2d9b2accd25e37608a4e5d238276a8b43527781d16ea2a4a"
+    },
+    {
+      "bytes": 1386,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/run-vets.sh",
+      "sha256": "a2261f1f4f65c85fbfb5d38aaa7efcb2dd6587ecc7876d7f156072354b9cee8f"
+    },
+    {
+      "bytes": 371,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/root-preflight-vet.json",
+      "sha256": "e72c2599447ab1bc6a2fa9b2fe4a81964ee9039be92bbf8127824a0a92ea81a0"
+    },
+    {
+      "bytes": 145,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/ancestry-preflight-vet.txt",
+      "sha256": "2545d615506c3525d028d1751e0e389f8a89e5b3a301db8ba1b87851f263420d"
+    },
+    {
+      "bytes": 85,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-mainnet.phase",
+      "sha256": "43905b322ef24912e1be4c0b78353fdff415cc3a5b6ebedb2b8c8296a2aa708a"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-mainnet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-mainnet.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-mainnet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 87,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-validator.phase",
+      "sha256": "f73c04e3dba0499b42729c84017e7dda39ff36ac60a87144b3b2e598695d5d7d"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-validator.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-validator.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-validator.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 83,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-miner.phase",
+      "sha256": "2688e798a47b70f654fd02eb0c94133236a77a2794eefe12cef663f4854eaeb5"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-miner.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-miner.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-miner.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 83,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-chain.phase",
+      "sha256": "729fde761f84b519d922aa2217cc6b117c7e2963a6a406713b0ae85bdac12b0d"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-chain.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-chain.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-chain.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 82,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-crv4.phase",
+      "sha256": "e6d89e696a066b35496730ce5f33dd4cfc3429c6725897a5ba80dd622d0b7a10"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-crv4.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-crv4.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-publication-556-independent-20261003/evidence/vet-crv4.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "verified_results": [
+    {
+      "mode": "normal",
+      "roots": [
+        {
+          "action": "pass",
+          "elapsed": 107.57,
+          "package": "./mainnet",
+          "test": "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.84,
+          "package": "./mainnet",
+          "test": "TestMonitorEconomicEvmRetainedCheckpointRefusesNonAdjacentReviewReuse"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.84,
+          "package": "./mainnet",
+          "test": "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.88,
+          "package": "./mainnet",
+          "test": "TestMonitorEconomicRuntimePublicOldCheckpointUsesLargerOwnedBudget"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.51,
+          "package": "./mainnet",
+          "test": "TestMonitorClaimPublicRenewalRetainsOriginalLiability"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.46,
+          "package": "./mainnet",
+          "test": "TestMonitorProviderPublicBudgetRenewalKeepsIncidentAndRoster"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.24,
+          "package": "./mainnet",
+          "test": "TestMonitorProviderPublicRateLimitKeepsPeerCurrent"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.28,
+          "package": "./mainnet",
+          "test": "TestMonitorClaimPublicRateLimitKeepsPeerCurrent"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.67,
+          "package": "./mainnet",
+          "test": "TestStoragePreparationNativeStartupObservationRetainsOriginalCustody"
+        },
+        {
+          "action": "pass",
+          "elapsed": 1.26,
+          "package": "./mainnet",
+          "test": "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.52,
+          "package": "./mainnet",
+          "test": "TestValidatorCapacityPreviewBindsJoinedRetainedCensus"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.71,
+          "package": "./mainnet",
+          "test": "TestValidatorCapacityConfigRefusesAuthorityDriftAndRetainsOutputCustody"
+        },
+        {
+          "action": "pass",
+          "elapsed": 5.67,
+          "package": "./validator",
+          "test": "TestProductionCapacityRetainsOriginalSignedSidecar"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.25,
+          "package": "./miner",
+          "test": "TestMinerPreparationFleetActualConstructorKeepsFreshCustody"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.19,
+          "package": "./miner",
+          "test": "TestMinerPreparationClaimActualConstructorRetainsProgress"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0,
+          "package": "./chain",
+          "test": "TestNativePreparationCheckpointRefusesRetainedIntent"
+        }
+      ]
+    },
+    {
+      "mode": "race",
+      "roots": [
+        {
+          "action": "pass",
+          "elapsed": 519.15,
+          "package": "./mainnet",
+          "test": "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome"
+        },
+        {
+          "action": "pass",
+          "elapsed": 1.65,
+          "package": "./mainnet",
+          "test": "TestMonitorEconomicEvmRetainedCheckpointRefusesNonAdjacentReviewReuse"
+        },
+        {
+          "action": "pass",
+          "elapsed": 1.44,
+          "package": "./mainnet",
+          "test": "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment"
+        },
+        {
+          "action": "pass",
+          "elapsed": 5.04,
+          "package": "./mainnet",
+          "test": "TestMonitorEconomicRuntimePublicOldCheckpointUsesLargerOwnedBudget"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.78,
+          "package": "./mainnet",
+          "test": "TestMonitorClaimPublicRenewalRetainsOriginalLiability"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.77,
+          "package": "./mainnet",
+          "test": "TestMonitorProviderPublicBudgetRenewalKeepsIncidentAndRoster"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.47,
+          "package": "./mainnet",
+          "test": "TestMonitorProviderPublicRateLimitKeepsPeerCurrent"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.51,
+          "package": "./mainnet",
+          "test": "TestMonitorClaimPublicRateLimitKeepsPeerCurrent"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.97,
+          "package": "./mainnet",
+          "test": "TestStoragePreparationNativeStartupObservationRetainsOriginalCustody"
+        },
+        {
+          "action": "pass",
+          "elapsed": 2.35,
+          "package": "./mainnet",
+          "test": "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners"
+        },
+        {
+          "action": "pass",
+          "elapsed": 2.67,
+          "package": "./mainnet",
+          "test": "TestValidatorCapacityPreviewBindsJoinedRetainedCensus"
+        },
+        {
+          "action": "pass",
+          "elapsed": 4.27,
+          "package": "./mainnet",
+          "test": "TestValidatorCapacityConfigRefusesAuthorityDriftAndRetainsOutputCustody"
+        },
+        {
+          "action": "pass",
+          "elapsed": 20.37,
+          "package": "./validator",
+          "test": "TestProductionCapacityRetainsOriginalSignedSidecar"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.41,
+          "package": "./miner",
+          "test": "TestMinerPreparationFleetActualConstructorKeepsFreshCustody"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.33,
+          "package": "./miner",
+          "test": "TestMinerPreparationClaimActualConstructorRetainsProgress"
+        },
+        {
+          "action": "pass",
+          "elapsed": 0.01,
+          "package": "./chain",
+          "test": "TestNativePreparationCheckpointRefusesRetainedIntent"
+        }
+      ]
+    },
+    {
+      "vet": {
+        "chain": 0,
+        "crv4": 0,
+        "mainnet": 0,
+        "miner": 0,
+        "validator": 0
+      }
+    }
+  ],
+  "scope": "current composed16 roots and five affected package vets only; no historical full-suite/replay/fee proof closure",
+  "limits": [
+    "Qualified16publicrootsnormally/race+fivevets only",
+    "Priorcomponent/fullmodel scopes retainoriginalsources",
+    "Nativearchive,replay,feeobserver increments excluded",
+    "Noactualhost/custody/runtimeauthority/signing/deployment/liveacceptanceclaim"
+  ]
+}

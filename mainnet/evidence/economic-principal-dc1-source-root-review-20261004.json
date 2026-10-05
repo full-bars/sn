@@ -1,0 +1,379 @@
+{
+  "schema": "mainnet-independent-source-review-v1",
+  "status": "SOURCE_REVIEWED_NOT_BEHAVIORALLY_QUALIFIED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn",
+    "head": "dc1aeb156f48434e36242e189901caa4f1bc8279",
+    "tree": "272b1510254b2f92dbdd8700e3edaf476ad72da1",
+    "parent": "3e7feec728d5666ad355942177cfa42a161359ce",
+    "clean": true,
+    "sparse": true,
+    "materialization": "Exact Git archive/owned complete source; never copy sparse working directory as complete source."
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/intake.json",
+    "sha256": "125a2efa90ae21c5e18be5351d6d8e717ea12b4c2fdeb65d2f00ef8f5105b83e"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_conservation.go",
+      "bytes": 36572,
+      "sha256": "90a628c49c251190be390f076a2d50d256a9f98edcd89a81cf00d4b3e54bcb4a",
+      "relative": "mainnet/economic_conservation.go",
+      "git_blob": "974227181cb6ce0cf3496f3593ca05bb394b5fd8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 24613,
+      "sha256": "c662c2079883272817320367bcfd94af3d311d0b29eb53a196a840a6bb0b84a0",
+      "relative": "mainnet/economic_conservation_archive.go",
+      "git_blob": "bc67441e4ffd21df18cabb3a35b56d15e4df0e5c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_conservation_command.go",
+      "bytes": 23320,
+      "sha256": "5c92c9dbe2cce3f2cc8d28756351c885213c66e21bfa3851f47672d51f2d8c14",
+      "relative": "mainnet/economic_conservation_command.go",
+      "git_blob": "526bffcc1b28d482ed3b75b6381aecd3f9354f58"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_conservation_principal.go",
+      "bytes": 8858,
+      "sha256": "27c3543cfb3168ed42222ad01d9d01fd854e837752138cda8351f09a7539ac81",
+      "relative": "mainnet/economic_conservation_principal.go",
+      "git_blob": "e67bbee5b4ba9fe222d3171aa31994f938fe64bd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 16279,
+      "sha256": "51170b25ecfdb878f2151a44fe3c88cb242703ddc569a6bcb3b4f940713a7b84",
+      "relative": "mainnet/economic_conservation_principal_test.go",
+      "git_blob": "238ad8f19ac8b0e7307054e113f12e3c4d43bcac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_emission.go",
+      "bytes": 12378,
+      "sha256": "687e167a53ff93ec71984d6af50d5e4be7e8d3262492bf8cdbc1566f656da1b0",
+      "relative": "mainnet/economic_emission.go",
+      "git_blob": "76750baa8bdce919f431e8ecf22de59c4f4e26f1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_native_execution.go",
+      "bytes": 29503,
+      "sha256": "488ebf4ecba6f2b6b459596537381ee4fa84ac20ebf13f997481df8d09a52b7e",
+      "relative": "mainnet/economic_native_execution.go",
+      "git_blob": "8511091e37928a2472d3d8571be2658cefd29ace"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_native_principal.go",
+      "bytes": 7702,
+      "sha256": "980df7c25239405281bd7c63ed1016d1748d46cbfcb8eaf3fb8e4d321b975092",
+      "relative": "mainnet/economic_native_principal.go",
+      "git_blob": "8e151f672dbf6022e4cd7066e18fbc07c509586e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_native_producer.go",
+      "bytes": 20666,
+      "sha256": "7676bf66c7b2244864b0978605dbef16090e59e16e5c325680981da02725b7fd",
+      "relative": "mainnet/economic_native_producer.go",
+      "git_blob": "2b086e1b35bc2fc7528bd9a918d169d2faf6f912"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_native_producer_authority.go",
+      "bytes": 14927,
+      "sha256": "9764ed314b36eee3525e684f85e88bf1d1a6019e90929470adc4a64342f09d57",
+      "relative": "mainnet/economic_native_producer_authority.go",
+      "git_blob": "ef34aaec567560645aef751bb5f0bd9f0c259aeb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_native_producer_renewal.go",
+      "bytes": 22952,
+      "sha256": "4fcdf3d1b4b6fd604f2a414615aac04c291720fe11ced24bd99ad747a297ff24",
+      "relative": "mainnet/economic_native_producer_renewal.go",
+      "git_blob": "e51b37414041ad14566f2f40b56947256adc51af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_native_producer_test.go",
+      "bytes": 29100,
+      "sha256": "b7a34f891e372d0352a12ab8277955cd1299ac109cfcf021dc344822ef1b4f8f",
+      "relative": "mainnet/economic_native_producer_test.go",
+      "git_blob": "4e8bac22de242b10483593edfbf29ffcb440304e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/historical_capture.go",
+      "bytes": 8443,
+      "sha256": "83ba428d363ef1a11bf7255a9ba69050d484be5806427e1fc0a9301085a3115d",
+      "relative": "mainnet/historical_capture.go",
+      "git_blob": "2f4647bb958a2f05f5506f9524b58db5a2ad6bfa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/historical_principal.go",
+      "bytes": 4327,
+      "sha256": "e341b121bc6dc471053d6d4eb458b4d1ad05a9f386a2eea4ec44a808355298db",
+      "relative": "mainnet/historical_principal.go",
+      "git_blob": "864b1fbeea47cb082a295455cc17babe8e99e1e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/historical_principal_test.go",
+      "bytes": 3960,
+      "sha256": "9960de417a51be0a0b8e2f2c12040932d61a9d547fa3a112f4a038028bc1f351",
+      "relative": "mainnet/historical_principal_test.go",
+      "git_blob": "6d132043b9c64ec44e1e69be6597766c389dd9c8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/historical_replay.go",
+      "bytes": 17497,
+      "sha256": "4667f345cce401e834e93e357afeebbe2cdc272368ac6c8690f198b03784f575",
+      "relative": "mainnet/historical_replay.go",
+      "git_blob": "39129f645831760ef86a12ce4f5517b384dadb97"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical.rs",
+      "bytes": 19460,
+      "sha256": "4f612ad35a5a62d73b15993ea33be9d850f0010959c988c55ae14d40992bda8b",
+      "relative": "tools/runtime-metadata-probe/src/historical.rs",
+      "git_blob": "035f12f215e4194df6a86b293b9c71e8ea9a8e4b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical_capture.rs",
+      "bytes": 24962,
+      "sha256": "043ba6d9a98830900dd3b6f9ae9ce1ce574d51f45aed495a218098ab2510050e",
+      "relative": "tools/runtime-metadata-probe/src/historical_capture.rs",
+      "git_blob": "b359129bf5d16f253319b4b134e58ecc026656fb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "bytes": 25390,
+      "sha256": "9fda81eb0ab7d4c975600c17b8973abc8926ec0ad18caccfd9a94fac3fb29074",
+      "relative": "tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "git_blob": "ae4c1e0fc7bdbbff50a9cca7fb1d79162282a804"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "bytes": 14924,
+      "sha256": "ec3580ada4e2866da1468727aa7ea25b807cc6818d8791972b15f7dc0f8bb110",
+      "relative": "tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "git_blob": "2035374bfb5a95b5c8da66daa0ff0db6d3140cd2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 22560,
+      "sha256": "aec38df699377975549f8576d209d731c7c6795c57edb9de07c75dfd60d9ea92",
+      "relative": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "git_blob": "4c242c4f67e3d6e0e2c6e8684393246abdb8bcc1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical_principal.rs",
+      "bytes": 5324,
+      "sha256": "fbba49e9d28c5256a3254c36cf7b5477098fd04760dc2edcf6951b15719f932b",
+      "relative": "tools/runtime-metadata-probe/src/historical_principal.rs",
+      "git_blob": "4746110db20d24b56a166fa834ff284928e6c513"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical_principal_tests.rs",
+      "bytes": 6978,
+      "sha256": "1373e4d5bc08e88bbebab9d4411d5a2d2974d54fd054bdffcdb4b20953ad5987",
+      "relative": "tools/runtime-metadata-probe/src/historical_principal_tests.rs",
+      "git_blob": "ac416847d602f34c4814285bdf05ff03f74ad337"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical_tests.rs",
+      "bytes": 57180,
+      "sha256": "7c5d7b80502fda7d22245bdd6618459c016de6a19b1fdd4522d2ee68266e22cb",
+      "relative": "tools/runtime-metadata-probe/src/historical_tests.rs",
+      "git_blob": "8991572f1356557f472ee330d57f2c997f81e3b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31",
+      "relative": "go.mod",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981",
+      "relative": "go.sum",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc",
+      "relative": "tools/runtime-metadata-probe/Cargo.toml",
+      "git_blob": "a698109860741b88d661c29d95be93d81c62a160"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067",
+      "relative": "tools/runtime-metadata-probe/Cargo.lock",
+      "git_blob": "185310d18fcb00bcffd17ddacd80db8d34707651"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/selectors.json",
+      "bytes": 22779,
+      "sha256": "7e6696950b30e6dbb96588ad0fa08df9ab0a331c8dcd4d4c0a4badb427a9e319"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/operative-controls.json",
+      "bytes": 11522,
+      "sha256": "41d002bdbe23331f0f2dce90b59bc08e0328689c494fbb5c0cadb22244879287"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/recipe.json",
+      "bytes": 2699,
+      "sha256": "a12114c9241699c842999bbf9dd83a38196bfd2f6b40f9eb770bb48d351c1cf9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/api-layout-source-review.json",
+      "bytes": 4118,
+      "sha256": "67ff7c61c4b6761d5690e50edee8ec2fc6215e1e9502f22e12bec7a8c3f42351"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/evidence/intake.json",
+      "bytes": 5501,
+      "sha256": "2b9324b5c57285b35ae78e72eaa6cffc4cc2f86eff83e65c552fc701067d0032"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_native_producer_authority.go",
+      "bytes": 14927,
+      "sha256": "9764ed314b36eee3525e684f85e88bf1d1a6019e90929470adc4a64342f09d57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-original-principal-authority-signature/economic_native_producer_authority.go",
+      "bytes": 14938,
+      "sha256": "f7132ea63e81d3fb9835fbd5500885cbb6d3901203b49dea0ad01b8703e2f883"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-original-principal-authority-signature/overlay.json",
+      "bytes": 361,
+      "sha256": "e7fbbc9dbfe2530fa2e07c24349dbd1329b8b1a6d850d454679f3db8e44bac8d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_conservation_principal.go",
+      "bytes": 8858,
+      "sha256": "27c3543cfb3168ed42222ad01d9d01fd854e837752138cda8351f09a7539ac81"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-exact-opening-frontier-join/economic_conservation_principal.go",
+      "bytes": 8795,
+      "sha256": "fe7eea7aeef939e2d857254b4483e70cb1e718c671c206fa6cc0f81a1ae306d3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-exact-opening-frontier-join/overlay.json",
+      "bytes": 344,
+      "sha256": "4e130e35a805b7e7710fb674e6aa9482f050902e806e72e8f4b805282f68b491"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_conservation_principal.go",
+      "bytes": 8858,
+      "sha256": "27c3543cfb3168ed42222ad01d9d01fd854e837752138cda8351f09a7539ac81"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-first-archived-principal-identity/economic_conservation_principal.go",
+      "bytes": 8801,
+      "sha256": "bb0f13b612e83356bd72587e8694541d352582afe39eb6d619ea8e4646a091af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-first-archived-principal-identity/overlay.json",
+      "bytes": 350,
+      "sha256": "205820a2e6d6e05c19a9bdd7c06040088bfa60b3ecbabf158edafd1d9b55f12a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/economic_conservation_principal.go",
+      "bytes": 8858,
+      "sha256": "27c3543cfb3168ed42222ad01d9d01fd854e837752138cda8351f09a7539ac81"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-complete-opening-pool-census/economic_conservation_principal.go",
+      "bytes": 8817,
+      "sha256": "365c47bf226f89e424e0b1fb94af4440f981722a6e429df22319782877a443b0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-complete-opening-pool-census/overlay.json",
+      "bytes": 345,
+      "sha256": "49603ae4ff7608e1c89f66a8cc17eefd8c4bb224ab6eec35c5a81c31a736d4df"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/historical_principal.go",
+      "bytes": 4327,
+      "sha256": "e341b121bc6dc471053d6d4eb458b4d1ad05a9f386a2eea4ec44a808355298db"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-independent-principal-scalar/historical_principal.go",
+      "bytes": 4338,
+      "sha256": "215aed547971cbb7bcd567bbbb6fd844837a1781aba78ec415ef244e57600b39"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-independent-principal-scalar/overlay.json",
+      "bytes": 323,
+      "sha256": "9d39504b615edd89629ea19f24621c9d2f9a8c71206afa05741da0c0a4fcf8f2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/mainnet/historical_principal.go",
+      "bytes": 4327,
+      "sha256": "e341b121bc6dc471053d6d4eb458b4d1ad05a9f386a2eea4ec44a808355298db"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-absent-principal-knowledge-refusal/historical_principal.go",
+      "bytes": 4254,
+      "sha256": "66a467ea3c67995ef84c89cebb92e0e55a7d2de2747bca5c5ea45072e3f6019e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-absent-principal-knowledge-refusal/overlay.json",
+      "bytes": 329,
+      "sha256": "16a0706b7c6797faaea4f399b4daf97646dcc067c5856bdc0a07a5c4e13a32b1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "bytes": 14924,
+      "sha256": "ec3580ada4e2866da1468727aa7ea25b807cc6818d8791972b15f7dc0f8bb110"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-read-only-principal-host-guard/historical_hosts.rs",
+      "bytes": 14932,
+      "sha256": "ece17d0cce8c16bf93a2c0ebdce0d11d434d8ec14ed3bea9c2639636391bb342"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/sn/tools/runtime-metadata-probe/src/historical_principal.rs",
+      "bytes": 5324,
+      "sha256": "fbba49e9d28c5256a3254c36cf7b5477098fd04760dc2edcf6951b15719f932b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/controls/omit-original-principal-returned-identity/historical_principal.rs",
+      "bytes": 5333,
+      "sha256": "28929b0ed06363a564c0c7e349799e3ef94579de85aa0e4e37208bfa31a94a9f"
+    }
+  ],
+  "review": [
+    "Exact original signed execution and producer authority bind API/layout/review, original parent and query census without supplying amounts. Parent SCALE header is re-encoded and authenticated before its Frontier digest joins the exact vault opening hash.",
+    "Capture and replay execute original parent API against the same proof; returned Option<StakeInfo> identity, canonical layout and result-derived scalar are independently checked in Go. Absent, zero and unavailable remain distinct.",
+    "Read-only host guard precedes top/child/transaction mutations, including rolled-back writes; original execution budget and normal child execution remain intact.",
+    "One original stock projection and execution basis are retained through archive/reopen; first archived identity is checked before new reads. Foreign/failed native observations preserve healthy vault and Claim progress. Incomplete pool census remains unknown.",
+    "Actual Rust tests and separate exporter produce present, zero, absent and missing-API jobs; public Go producer tests require distinct actual capture/replay ELFs. Six Go and two Rust operative mutations are source-reviewed, not yet qualified.",
+    "Opening stock does not erase capture differences, earning lots, RootMissed carry or payments, and grants no full quantization, TargetMet or activation authority."
+  ],
+  "qualification_required": {
+    "go_roots_per_mode": 38,
+    "rust_roots": 24,
+    "go_controls_per_mode": 6,
+    "rust_controls": 2,
+    "vets": [
+      "./mainnet"
+    ],
+    "new_rust": 7,
+    "new_go": 13
+  },
+  "remaining_mechanisms": [
+    "Execution principal/deposit/withdrawal effects beyond original opening stock",
+    "Complete original Yuma branch/denominator and propagated quantization witness",
+    "Complete entitlement/root/Claim/funding census and whole-provider fee census",
+    "Independent live runtime/profile/finality/economic approval remains external authority"
+  ],
+  "limits": [
+    "No compile, body, operative control, mainnet runtime approval or activation is established by this source review.",
+    "Rust build admission is separate from the current Go-only resource envelope."
+  ]
+}

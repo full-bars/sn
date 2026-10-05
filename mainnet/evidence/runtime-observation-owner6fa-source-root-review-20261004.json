@@ -1,0 +1,279 @@
+{
+  "schema": "mainnet-independent-source-review-v1",
+  "reviewed_utc": "2026-10-04T05:46:31.481768+00:00",
+  "status": "SOURCE_REVIEWED_NOT_BEHAVIORALLY_QUALIFIED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn",
+    "head": "6fa7c4adbc85a99d809a9f00e658d4db6b0d9cff",
+    "tree": "905f5490ecf8da9b76abcc7e92dfcf3f750d03b9",
+    "base": "f89e7e2e5fb37b583595253ddbee80c29aa9110e",
+    "direct_parent": "426e6687e9ee283e9151e94386b5a442034137b6",
+    "clean": true,
+    "sparse": true
+  },
+  "intake_sha256": "f2dd80657a85249118b81b9e7b6451b41de8c998c96c9445fab1a5784d70ab16",
+  "verified_changed_git_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/chain/runtime.go",
+      "bytes": 3203,
+      "sha256": "7f470e1c70131b839a4cb5de9c7fc06d21da66a2a89f4a0a16410c928be0221e",
+      "relative": "chain/runtime.go",
+      "git_blob": "2497d279a01d62d26c6d5ce576ac8a2b35d43571"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/chain.go",
+      "bytes": 62138,
+      "sha256": "051a005d8ff9acc1eb8501864569ef73508f83b9d1442d7933d7c90c810053c0",
+      "relative": "crv4/chain.go",
+      "git_blob": "6090556ce25e6a02d349eedc302e8c5668abaeff"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/evm_checkpoint.go",
+      "bytes": 6956,
+      "sha256": "e5b15105fdea2dbc867b5377ea60e26fe204ccf1986d1f3f7bbbe4f95c4340c2",
+      "relative": "crv4/evm_checkpoint.go",
+      "git_blob": "855dc9e624ce402415b9f96ec09b3ad687c3bda1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/runtime_observation_read.go",
+      "bytes": 5133,
+      "sha256": "8f9662c79fdf4cd92723405150f4dc221165718d615b8040e5775883a032049e",
+      "relative": "crv4/runtime_observation_read.go",
+      "git_blob": "f0640c6c79ebfa7d8add7e94dda8f96e04112ef9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/runtime_observation_read_test.go",
+      "bytes": 11172,
+      "sha256": "317df5e4666bedbe4998f5c32e24a2720f45003964de35b6d2c430822f2bccbd",
+      "relative": "crv4/runtime_observation_read_test.go",
+      "git_blob": "29f4d624b7e830ac1ff111fb3133f9e0f557293d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/runtime_transport_test.go",
+      "bytes": 20741,
+      "sha256": "560c592e464c5daabdf6cc804027923090ef0642c25e520b2b89bd4c0ac63f27",
+      "relative": "crv4/runtime_transport_test.go",
+      "git_blob": "65d1ac7ad5e4e347532829986eed1d9ce255e2c8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/validator_identity.go",
+      "bytes": 12578,
+      "sha256": "6fa3f7b1a211cc9a67ddff4194a3aa6eba6f61320ee19342c39ee982426d878d",
+      "relative": "crv4/validator_identity.go",
+      "git_blob": "b1e53f9186f850698b587f9300eafd8e6fab628d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/validator_identity_test.go",
+      "bytes": 37279,
+      "sha256": "f0640c79ec03f5228d932a6897510c03c8087b3f071d4bb0213ee1b087970c39",
+      "relative": "crv4/validator_identity_test.go",
+      "git_blob": "3922163bf04ba1f8bc99445d3d565b60dbff68e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/validator_schedule.go",
+      "bytes": 6329,
+      "sha256": "18d53ecbb045d944b2cbc861fdeceab621b48c672d440ecbfb950f1683321732",
+      "relative": "crv4/validator_schedule.go",
+      "git_blob": "a5ee87fd0499fb1974946237c2e8fcf5e26156bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/validator_stake.go",
+      "bytes": 13804,
+      "sha256": "0af17bf8a4d923cc69f6bcd823103ed82ed5475e3d1fc654b893330a6abcfad0",
+      "relative": "crv4/validator_stake.go",
+      "git_blob": "49434620cf2f3164c0b38018bc05efd9aca356ed"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/validator_stake_census.go",
+      "bytes": 3246,
+      "sha256": "51a67591ac5654a904a1ddbb21d2de2162ab558fc7e022c6e7222cf27c8f0518",
+      "relative": "crv4/validator_stake_census.go",
+      "git_blob": "0901ca34d16dd17cdff3db7a4ade98ac17244b59"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/validator_stake_runtime_test.go",
+      "bytes": 13201,
+      "sha256": "00d5809fbb5d078cc267260bd5e569161133e058ca2c4a7c1095559e0c3c2cef",
+      "relative": "crv4/validator_stake_runtime_test.go",
+      "git_blob": "6ec586d61aadaddbb348eab658276d25b86463c6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/crv4/validator_stake_test.go",
+      "bytes": 40467,
+      "sha256": "4320a913344c48ea1a83a4754d69b2b1f2482a60b796691043f317c80741a26d",
+      "relative": "crv4/validator_stake_test.go",
+      "git_blob": "043946654875a31eabc88fd71d4b7a00f93dcea1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/miner/fleet_mainnet_runtime.go",
+      "bytes": 13065,
+      "sha256": "0f6a760babf8c3a46ccaeb7dcbd7431e4802ba7e642b775ac42d46885bc85075",
+      "relative": "miner/fleet_mainnet_runtime.go",
+      "git_blob": "8e0a5bdab01deef86d2be2ce0f8a472e01b6c4eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/miner/fleet_runtime.go",
+      "bytes": 5903,
+      "sha256": "7ff2958f3144e04e4fe883f27dd22c2700baeb9397264dc6ee008503c23127ab",
+      "relative": "miner/fleet_runtime.go",
+      "git_blob": "78dc95951ac9fe46bb4aed40fd308199e5a5591a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/sim-testnet/final_semantic_checkpoint_read_v2.go",
+      "bytes": 5304,
+      "sha256": "464d7d2f59fa91d02bcfcfeb79b7a7a8b304aa76e5defd29a2681e562f08c727",
+      "relative": "sim-testnet/final_semantic_checkpoint_read_v2.go",
+      "git_blob": "6c81391d02b6069ded269f5cb3f9cdcc028767f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/sim-testnet/final_semantic_native_reward_read_v2.go",
+      "bytes": 6977,
+      "sha256": "7b0bc7b6d8385b226ad64cf5662bc4f076744c2e73d8f2d571c728f4e5bc5122",
+      "relative": "sim-testnet/final_semantic_native_reward_read_v2.go",
+      "git_blob": "db95f59bf55c269a829951cedacb561b3d648de6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/sim-testnet/final_semantic_public_rpc.go",
+      "bytes": 92935,
+      "sha256": "d59095245b885f8a7e502f8474a4d44abfe2b15be5d009ba64262ca5d25433d2",
+      "relative": "sim-testnet/final_semantic_public_rpc.go",
+      "git_blob": "097fe5005462bee99115ac94098092ac14e4d62f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/sim-testnet/runtime_identity.go",
+      "bytes": 22974,
+      "sha256": "db7ca70b42d2f2f96dc782b66abb0a956678384e07cf21dc33bbd6ff02b02342",
+      "relative": "sim-testnet/runtime_identity.go",
+      "git_blob": "ad3a1a98c1e411b6a6dd7ae013cde8b8befadaa6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/mainnet_runtime_observation.go",
+      "bytes": 6215,
+      "sha256": "506207d7566a155f8cf5990f78780710b4981ae5fc91ed10062dda991ba1fcc5",
+      "relative": "validator/mainnet_runtime_observation.go",
+      "git_blob": "78afa7fc4a641d62e1a003e2625d02b2a9c4ab9b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/production_runtime.go",
+      "bytes": 5427,
+      "sha256": "7919b74196b18b897082922c86824162bc5ae2debc1afd262918d77a29703a21",
+      "relative": "validator/production_runtime.go",
+      "git_blob": "4bbf2b06d78cef84b78520725a529962e6fcca5e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/production_runtime_continuity.go",
+      "bytes": 18420,
+      "sha256": "285b38b45b22425c2b4d5ca2c3c84a17db3081b10fa4a5756d4438523e04e3fa",
+      "relative": "validator/production_runtime_continuity.go",
+      "git_blob": "49059dafcd9e84f5490b52bfe5984dec0763ddae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/provisional_runtime_compatibility.go",
+      "bytes": 6728,
+      "sha256": "20a33e9a41d5a05cd47169bcc509484b29a239c6c9f97146bef81a61aeaca06e",
+      "relative": "validator/provisional_runtime_compatibility.go",
+      "git_blob": "b619d7470397d69478514a19f67e9116cae28f78"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/recycle_observation.go",
+      "bytes": 17823,
+      "sha256": "becb069156f68d2e536942f45d0a8ffde1907d20a92836794792ad7fbe897729",
+      "relative": "validator/recycle_observation.go",
+      "git_blob": "629a46badb59d586b5bbec23a361cc015d260bff"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/recycle_production_observation.go",
+      "bytes": 10638,
+      "sha256": "5901bb47f940b9256d973b37d9d6e3a954430700b5fee2744a557efaa138f453",
+      "relative": "validator/recycle_production_observation.go",
+      "git_blob": "d79413dfc6a241c4c1e3ba2e27336a8fd0ad835a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/release_capture_native_v2.go",
+      "bytes": 9742,
+      "sha256": "8499320512304a3d3e1a99b8d04e65a0b9c9dd6d57646848462a28470c8b4046",
+      "relative": "validator/release_capture_native_v2.go",
+      "git_blob": "31ee310e02cd7c00482bdf43f006357bf9f912b0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/release_native_validator_test.go",
+      "bytes": 17105,
+      "sha256": "372c0fa6971233188f0bea90f3cafa4df3e9aa7b76e782c80b328ec234f46abe",
+      "relative": "validator/release_native_validator_test.go",
+      "git_blob": "a434f3c61acb1d6736c34c3e1de28710ebb4e4c3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/runtime_identity.go",
+      "bytes": 8402,
+      "sha256": "f4bc460710c7e14e6ba3e73642205b6a0091a0d545b5461005e3e986f07a9e94",
+      "relative": "validator/runtime_identity.go",
+      "git_blob": "301fcf2dfd8fb78dd80b1a2881c13d9b0b75483d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/runtime_transport_test.go",
+      "bytes": 4977,
+      "sha256": "358a326ec9a87911109781e01e77bb11d42b8a8ad71f10abae9dafa777dd08fc",
+      "relative": "validator/runtime_transport_test.go",
+      "git_blob": "3eb6357484c783740d382f4dd209c48260ab6307"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/runtime_transport_websocket_test.go",
+      "bytes": 6071,
+      "sha256": "b618393f7853c7478f2df0eb976a7c53ba05f9f36c7cd0a9c7ffda1590ae6c32",
+      "relative": "validator/runtime_transport_websocket_test.go",
+      "git_blob": "429728515c5f9efe996fd9d55e9070c18b649d03"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/sn/validator/validator_upload_authority.go",
+      "bytes": 17645,
+      "sha256": "e6e729783b87acb8aa9fe85adfcbf837b81e7a370eff8516fd15f23cbd01d7fe",
+      "relative": "validator/validator_upload_authority.go",
+      "git_blob": "b1599cbdc1bf3b3236005a26c07eddf5c3bf1f83"
+    }
+  ],
+  "verified_modules": {
+    "go.mod": {
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d",
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    "go.sum": {
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57",
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    }
+  },
+  "recipe": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/evidence/qualification-recipe.json",
+    "bytes": 19673,
+    "sha256": "83d220ca8af0b2f99b39c9d18e44cbcca8f83dc062658acd7b83fc27d5930b02"
+  },
+  "controls": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-observation-owner-nil/evidence/operative-controls.json",
+    "bytes": 15522,
+    "sha256": "4c1eb2cb2f49b4050c294d89fb7eb1a172500403e97c5599c75201bab882723e"
+  },
+  "scope": {
+    "roots_per_mode": 50,
+    "new_roots": 10,
+    "compile_vet_packages": [
+      "./crv4",
+      "./validator",
+      "./chain",
+      "./miner",
+      "./sim-testnet",
+      "./mainnet"
+    ],
+    "operative_groups": 12,
+    "intended_red_assertions_per_mode": 16
+  },
+  "review": [
+    "Whole-read owner keeps a shared outer 300-second budget, original pinned query and copied allowlist across generation-expiry reobservation.",
+    "Only bounded pure private transport expiry authorizes repeat; hard contradictions and cancellation retain precedence.",
+    "Two-file child rejects typed nil values before leaf authority or custom unwrap dispatch; deterministic leaf and joined-wrapper tests added.",
+    "Actual WebSocket public production owner is included; direct authentication remains one attempt."
+  ],
+  "limits": [
+    "No executed 6fa compile or body result at review.",
+    "Original f3 normal/race each32PASS1FAIL retained.",
+    "This scope does not prove every late purpose read has an enclosing owner or close all-role/runtime readiness."
+  ]
+}

@@ -1,0 +1,45 @@
+rule_files:
+  - diagnostic-alerts.example.yml
+evaluation_interval: 30s
+tests:
+  - name: unavailable role is separate from idle healthy role
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_output_status{host="first.example",role="alpha",stream="events"}'
+        values: '3+0x10'
+      - series: 'sn_mainnet_validator_output_status{host="first.example",role="beta",stream="events"}'
+        values: '0+0x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetMonitorDiagnosticUnavailable
+        exp_alerts:
+          - exp_labels: {host: first.example, role: alpha, stream: events, severity: warning}
+            exp_annotations: {summary: "Monitor diagnostic destination is unavailable on first.example"}
+  - name: only fresh producer output state claims current outage
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_producer_diagnostic_status{host="first.example",role="alpha",domain="steering"}'
+        values: '3+0x10'
+      - series: 'sn_mainnet_validator_producer_diagnostic_current{host="first.example",role="alpha",domain="steering"}'
+        values: '0+0x10'
+      - series: 'sn_mainnet_validator_producer_diagnostic_status{host="first.example",role="beta",domain="steering"}'
+        values: '2+0x10'
+      - series: 'sn_mainnet_validator_producer_diagnostic_current{host="first.example",role="beta",domain="steering"}'
+        values: '1+0x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetProducerDiagnosticUnavailable
+        exp_alerts:
+          - exp_labels: {host: first.example, role: beta, domain: steering, severity: warning}
+            exp_annotations: {summary: "Validator beta diagnostic destination is unavailable on first.example"}
+  - name: monitor drops are visible and a new owner resets counters safely
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_monitor_output_dropped_total{host="first.example",stream="events"}'
+        values: '0 0 2 2 2 2 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: SnMainnetMonitorDiagnosticDropped
+        exp_alerts:
+          - exp_labels: {host: first.example, stream: events, severity: warning}
+            exp_annotations: {summary: "Monitor diagnostic records were dropped on first.example"}

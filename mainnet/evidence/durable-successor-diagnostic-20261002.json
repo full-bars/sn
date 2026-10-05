@@ -1,0 +1,183 @@
+{
+  "schema": "urnetwork-successor-diagnostic-fixture-author-v1",
+  "verdict": "PASS_SCOPED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-diagnostic/sn",
+    "commit": "33e57ee7c6049be13793c2c1a45ee443a3da0b0d",
+    "tree": "60a24d3b2387c5f486443269e3fff11d7360524d"
+  },
+  "dependencies": {
+    "connect": {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/source/connect",
+      "commit": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+      "tree": "010533a40c31403c14a810828fee3c47e324c143"
+    },
+    "glog": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/source/server",
+      "commit": "1b7cc78b2dc43f5191cc7b0d3d22f0754fedc662",
+      "tree": "e8097e705ab2479e181bcfe37ec2d3926d3afab4"
+    },
+    "sn": {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-diagnostic/sn",
+      "commit": "33e57ee7c6049be13793c2c1a45ee443a3da0b0d",
+      "tree": "60a24d3b2387c5f486443269e3fff11d7360524d"
+    },
+    "userwireguard": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "toolchain": "go1.26.6",
+  "platform": "linux/amd64",
+  "scopes": {
+    "normal": {
+      "Source": "33e57ee7c6049be13793c2c1a45ee443a3da0b0d",
+      "Tree": "60a24d3b2387c5f486443269e3fff11d7360524d",
+      "Job": "normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=30m",
+        "./mainnet",
+        "-run",
+        "^TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-diagnostic/sn",
+      "Started": "2026-10-02T15:42:05.4207914Z",
+      "Finished": "2026-10-02T15:45:47.125824552Z",
+      "AvailableBytesBefore": 127948283904,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "9fcfe4201882e3e924705424990bed2b5fbdc629d033bf1cdd68fd9275e0d62a"
+    },
+    "old-race": {
+      "Source": "33e57ee7c6049be13793c2c1a45ee443a3da0b0d",
+      "Tree": "60a24d3b2387c5f486443269e3fff11d7360524d",
+      "Job": "old-race",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=30m",
+        "-race",
+        "-overlay",
+        "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/evidence/diagnostic-33-old-overlay.json",
+        "./mainnet",
+        "-run",
+        "^TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-diagnostic/sn",
+      "Started": "2026-10-02T15:28:58.900969125Z",
+      "Finished": "2026-10-02T15:42:05.160221344Z",
+      "AvailableBytesBefore": 128488493056,
+      "ExitCode": 1,
+      "Expected": "fail",
+      "Census": {
+        "TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor": "fail"
+      },
+      "Matched": true,
+      "LogSha256": "d9839dc40ef00f7790bdf9e9e0da82eaf0a85a59ac12fb656e99f884d8d6e27e"
+    },
+    "race": {
+      "Source": "33e57ee7c6049be13793c2c1a45ee443a3da0b0d",
+      "Tree": "60a24d3b2387c5f486443269e3fff11d7360524d",
+      "Job": "race",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=30m",
+        "-race",
+        "./mainnet",
+        "-run",
+        "^TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-diagnostic/sn",
+      "Started": "2026-10-02T15:45:47.380441959Z",
+      "Finished": "2026-10-02T15:56:58.278649829Z",
+      "AvailableBytesBefore": 127316299776,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "f7a168ec0fc7e85a6419d6ec37c2c34ffb0d49abf9d1efda46a45a68d6de2897"
+    },
+    "vet": {
+      "Source": "33e57ee7c6049be13793c2c1a45ee443a3da0b0d",
+      "Tree": "60a24d3b2387c5f486443269e3fff11d7360524d",
+      "Job": "vet",
+      "Args": [
+        "vet",
+        "-p=1",
+        "./mainnet"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-diagnostic/sn",
+      "Started": "2026-10-02T15:56:58.554547241Z",
+      "Finished": "2026-10-02T15:57:12.509568974Z",
+      "AvailableBytesBefore": 125832839168,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "manifest": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/evidence/diagnostic-33-author-manifest.json",
+    "size": 8179,
+    "sha256": "8b6f71cd1a31a7ce8842f6d93b04abda6b574d1780609aa7dbc15a91ff147578"
+  },
+  "archive": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/evidence/diagnostic-33-author-raw.tar.gz",
+    "size": 116996,
+    "sha256": "9ba68a0faeb2b4ee8e3a568a1f3b95edd60299db139f7ac7dee6cab49e246255"
+  },
+  "source_bundle": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/evidence/diagnostic-33-source.bundle",
+    "size": 628,
+    "sha256": "3786909dca4321f8c692ff566b63c4fa0b4e64aba93dfc89169e6a57eee8b50f"
+  },
+  "prior_receipt": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/evidence/write-f3-author-receipt.json",
+    "size": 40413,
+    "sha256": "fa8a66b8f3b84fa0a7989cd89eddad150c3b549e4d9508028fe4a27d8aa127ac"
+  },
+  "limits": [
+    "One test-only diagnostic assertion changes; production, signed data and module files remain identical to f3.",
+    "The one affected root passes normal and race; package vet passes. Exact old test overlay reproduces the stale assertion under race. Original f3 broad normal remains84PASS/1fixtureFAIL and is not relabeled or rerun.",
+    "Prior f3 author and independent write-admission scopes remain separate; this does not qualify the combined observer source or member-census successor.",
+    "The source bundle requires f3; all dependency worktrees were clean and rechecked at seal.",
+    "No live signing, send, deployment, volume enrollment, remote database/object restoration or release claim."
+  ]
+}

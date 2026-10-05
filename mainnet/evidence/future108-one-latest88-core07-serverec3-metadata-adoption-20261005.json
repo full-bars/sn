@@ -1,0 +1,23 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 12884901888,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "8fb8ea07e63706bec14f89adb9208d16536ff688ebd3da5aff34dbfa470f8630",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "runner_sha256": "5049146264753c5b3479c810649158abf9cc6748bc18052dd818ac230e1f1285",
+  "short_count": 0,
+  "status": "ADOPTED_ONE_BOUNDED_METADATA_STAGE_POST_MODEL",
+  "adopted_at": "2026-10-05T04:05:24.911552+00:00",
+  "review_sha256": "2fc8d41dca53bdf4f852b61f676e783588c0e0b30a2b9a43663f3c4c29417de5",
+  "scope": "Exactly45 Git blobs (SN38/Core3/Server4) over immutable actual338/Core87/1ea overlay and three offline Go-list dependency/test graphs. Exact88/Core07/ec3 only; no compile/export/body/download/DB startup or qualification inheritance. Prior30PASS and native exports remain attributed to original338/Core87/1ea."
+}

@@ -1,0 +1,358 @@
+{
+  "schema": "root-capacity-e606-failure-and-producer-review-v1",
+  "source": {
+    "baseline": "ec396f3ad0719e99e9bfa5d83031e896c2f337ba",
+    "changedPaths": [
+      "mainnet/evidence/validator-capacity-wire-20261003.md",
+      "mainnet/validator_capacity_test.go",
+      "validator/production_capacity_preview_linux.go",
+      "validator/production_capacity_test.go"
+    ],
+    "commit": "e606947d216b10457f1a11e9c251781078ec90c9",
+    "fixtureOnlyParent": "569dc0d2c2d76d897d0aaaa6f924605605909b70",
+    "moduleBytesUnchanged": true,
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/sn",
+    "productionChangedPaths": [
+      "validator/production_capacity_preview_linux.go"
+    ],
+    "tree": "026f356d099b6061fdba73f4dc411d15317a2de5"
+  },
+  "author_intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-intake.json",
+    "bytes": 10718,
+    "sha256": "47b851fcc24628c77bc8a6cab293339eeadb717722c666833f7378f5b42a59d7"
+  },
+  "test_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/capacity-e606-two-affected-normal-race-vet-failed-receipt.json",
+    "bytes": 9515,
+    "sha256": "8cbbd7abb37b73d1423afbb12acd92b5824b02a38d7d84a1d74968afe0628ba9"
+  },
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/go.work",
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/sn/go.mod",
+      "bytes": 11252,
+      "sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/sn/go.sum",
+      "bytes": 65954,
+      "sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/sn/mainnet/evidence/validator-capacity-wire-20261003.md",
+      "bytes": 1616,
+      "sha256": "31768ed670e3392c7245b4eb2b9cfb002117345b7009232c7baa306501ff4bb7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/sn/mainnet/validator_capacity_test.go",
+      "bytes": 13703,
+      "sha256": "9e019a86642be30bc9b10d18546781425fc8d0ac319e5ddd53fd77e4f5b7729f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/sn/validator/production_capacity_preview_linux.go",
+      "bytes": 13204,
+      "sha256": "04d530f56dc48f0ad1521efc0aaaac3615e80d499d094bcfccca5129caaa416b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/sn/validator/production_capacity_test.go",
+      "bytes": 16963,
+      "sha256": "9149eb1c40a76372f3fbb2e8a007e81181b45b9bf1a08cfb6109d819c2cf7076"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-intake.json",
+      "bytes": 14376,
+      "sha256": "e6cc20b3e021d31bead7a861c87ac5612c290c218851db6a248c09759fe724d1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-composition-compile.go",
+      "bytes": 3641,
+      "sha256": "30190d80e34336046a0e3b961481bf5524745e7650ef7a1128336ec4b48bf577"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-compile-jobs.json",
+      "bytes": 2551,
+      "sha256": "d0b7db549574b3509c50713d2cb2fc1cca417ac77d0c2fda11faa311dc3b77bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-mainnet-compile.json",
+      "bytes": 1015,
+      "sha256": "5fae67db46065ed931a97c700fcb3590d62c99c915eee1707030486a0c39536b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-mainnet-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-modules.json",
+      "bytes": 844,
+      "sha256": "70f65dca0ff9dfdab463b0f148f480f60fa9ec786edc7c10fd3fe64e882a011a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-modules.log",
+      "bytes": 221126,
+      "sha256": "9f5b78132f7e3b4d3df823f8b5f0dcd32462f21610bd1bbd9bc9acb825e7e312"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-peer-graph.json",
+      "bytes": 2611,
+      "sha256": "3ee4bc82771b2398fda2cc0c367763d0a642f0e3d4f67588d41ec1fcc2974f88"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-preflight.json",
+      "bytes": 878,
+      "sha256": "c87e157ba9ead7b082795093d0332594c62cc47070d86bfd0b391ac275e5c021"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-preflight.log",
+      "bytes": 28697,
+      "sha256": "91e195a2c2f6c5beeb17f60d44f11c9c0e38bba91bb8587c9dd8c7f7bef6ce1d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-validator-compile.json",
+      "bytes": 1023,
+      "sha256": "229172ba0e2c58ca84d0ab4bc9ff3a3cf9203b7557958aabd5cd0ff49f3f7d9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-e606-validator-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-ec396-intake.json",
+      "bytes": 7943,
+      "sha256": "ea5bda3b4cc5164abd2db0e835c7f29fa4b24b0ddf836ad1064427e94d780b60"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/prepare-capacity-e606-graph.go",
+      "bytes": 2748,
+      "sha256": "5058ceb59236314c99546ca7c1febf07f4013cd67f5a2d7ce1512e754bf543a9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-capacity-e606-intake.go",
+      "bytes": 5027,
+      "sha256": "514acc593d8c853d5b88a6eb83a78f26164abab69b5dd095a5cc3e0d98887c69"
+    },
+    {
+      "bytes": 1767,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/source-join.json",
+      "sha256": "94b2a5c3650c1f12380202c881a7be65cd948f7b87debbbe2e297dddc2471517"
+    },
+    {
+      "bytes": 980,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/overlay.json",
+      "sha256": "152c684200089a199432a29ae2700c917356cf1186231ee3cd83f11f2cb78779"
+    },
+    {
+      "bytes": 96,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-normal.phase",
+      "sha256": "3997db11778dd16d6790989dc5b53fc6774707ace7c9fd7c8dbebd452d58863b"
+    },
+    {
+      "bytes": 162,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-normal.preflight",
+      "sha256": "bb0639bfeeaacc6228381ae33eed3305ef212c7ad6e8ef9609c0eff97a2559cd"
+    },
+    {
+      "bytes": 1905,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-normal.jsonl",
+      "sha256": "b59044668c1e0a92f6370dcc114039e9f433867e220b9f3876292d59a42cb748"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 94,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-race.phase",
+      "sha256": "56b7dc2a130bf962cf1805ff04f50992d8fb17901d6ed52c8ec2f9eff13ff66b"
+    },
+    {
+      "bytes": 162,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-race.preflight",
+      "sha256": "bb0639bfeeaacc6228381ae33eed3305ef212c7ad6e8ef9609c0eff97a2559cd"
+    },
+    {
+      "bytes": 1909,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-race.jsonl",
+      "sha256": "572c4e837718432899de86104ef6c951965e0db2544cdd1f01192d326efad445"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/validator-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 94,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-normal.phase",
+      "sha256": "435e721222878f16c85bb408d1306d5d6f90e37099fa658eacd7ecaced98d35d"
+    },
+    {
+      "bytes": 162,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-normal.preflight",
+      "sha256": "bb0639bfeeaacc6228381ae33eed3305ef212c7ad6e8ef9609c0eff97a2559cd"
+    },
+    {
+      "bytes": 2097,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-normal.jsonl",
+      "sha256": "e416be1cbf158cd9d9d30d7c617fb7a3b52331fb8ee64c90b5c01137f07af1e9"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 92,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-race.phase",
+      "sha256": "5714f65b101a4942dfaf6f60e292f2567d768a8148d78a81f88fd41387bfd90b"
+    },
+    {
+      "bytes": 162,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-race.preflight",
+      "sha256": "bb0639bfeeaacc6228381ae33eed3305ef212c7ad6e8ef9609c0eff97a2559cd"
+    },
+    {
+      "bytes": 2099,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-race.jsonl",
+      "sha256": "5c1a376db9ef32a95347abe8d7d12478d2f3b1f1a58d35d602ba693e91e9c18a"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/mainnet-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 59,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/vet.phase",
+      "sha256": "1363d66eee91d8c1db79f50606a46c83dd51185264f67ac7ce8b4902b8b03197"
+    },
+    {
+      "bytes": 162,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/vet.preflight",
+      "sha256": "bb0639bfeeaacc6228381ae33eed3305ef212c7ad6e8ef9609c0eff97a2559cd"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/vet.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/evidence/vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    }
+  ],
+  "verified_changed_git_files": [
+    {
+      "path": "mainnet/evidence/validator-capacity-wire-20261003.md",
+      "bytes": 1616,
+      "sha256": "31768ed670e3392c7245b4eb2b9cfb002117345b7009232c7baa306501ff4bb7",
+      "git_blob": "8761f2734a0b310c7f3eb59154649fa672682b60"
+    },
+    {
+      "path": "mainnet/validator_capacity_test.go",
+      "bytes": 13703,
+      "sha256": "9e019a86642be30bc9b10d18546781425fc8d0ac319e5ddd53fd77e4f5b7729f",
+      "git_blob": "b4217e412ce2a29b078ce0687e299413ab1e1450"
+    },
+    {
+      "path": "validator/production_capacity_preview_linux.go",
+      "bytes": 13204,
+      "sha256": "04d530f56dc48f0ad1521efc0aaaac3615e80d499d094bcfccca5129caaa416b",
+      "git_blob": "49a5d912840ae7d62602085268a82a0af26be136"
+    },
+    {
+      "path": "validator/production_capacity_test.go",
+      "bytes": 16963,
+      "sha256": "9149eb1c40a76372f3fbb2e8a007e81181b45b9bf1a08cfb6109d819c2cf7076",
+      "git_blob": "a03e0225c89505da91456ac9bcd5ca4c53f2abe2"
+    }
+  ],
+  "verified_failed_results": [
+    {
+      "assertion": "production_capacity_test.go:278: complete original sidecar config failed the public loader validator production config /mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/tmp/TestProductionCapacityRetainsOriginalSignedSidecar2067933543/013/validator.yml: evidence_v2 metadata allowances conflict with the retained envelope bound",
+      "cause_classification": "fixture mixed completed profile allowances",
+      "exit": 1,
+      "mode": "normal",
+      "package": "validator",
+      "root": "TestProductionCapacityRetainsOriginalSignedSidecar"
+    },
+    {
+      "assertion": "production_capacity_test.go:278: complete original sidecar config failed the public loader validator production config /mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/tmp/TestProductionCapacityRetainsOriginalSignedSidecar1465831227/013/validator.yml: evidence_v2 metadata allowances conflict with the retained envelope bound",
+      "cause_classification": "fixture mixed completed profile allowances",
+      "exit": 1,
+      "mode": "race",
+      "package": "validator",
+      "root": "TestProductionCapacityRetainsOriginalSignedSidecar"
+    },
+    {
+      "assertion": "validator_capacity_test.go:144: public capacity preview refused original retained owners 1 storage inspection: decode validator config /mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/tmp/TestValidatorCapacityPreviewBindsJoinedRetainedCensus2074021600/001/validator-1.yml: evidence_v2 YAML has unknown field \"MaxRecordBytes\"",
+      "cause_classification": "production preview serializes nested bounds with Go names instead of strict YAML field names",
+      "exit": 1,
+      "mode": "normal",
+      "package": "mainnet",
+      "root": "TestValidatorCapacityPreviewBindsJoinedRetainedCensus"
+    },
+    {
+      "assertion": "validator_capacity_test.go:144: public capacity preview refused original retained owners 1 storage inspection: decode validator config /mnt/data/sn-testnet/sol-validator-capacity-e606-independent-20261003/tmp/TestValidatorCapacityPreviewBindsJoinedRetainedCensus2591214520/001/validator-1.yml: evidence_v2 YAML has unknown field \"MaxRecordBytes\"",
+      "cause_classification": "production preview serializes nested bounds with Go names instead of strict YAML field names",
+      "exit": 1,
+      "mode": "race",
+      "package": "mainnet",
+      "root": "TestValidatorCapacityPreviewBindsJoinedRetainedCensus"
+    }
+  ],
+  "vet_exit": 0,
+  "producer_source_evidence": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/sn/validator/production_capacity_preview_linux.go",
+    "sha256": "04d530f56dc48f0ad1521efc0aaaac3615e80d499d094bcfccca5129caaa416b",
+    "issue": "JSON output for nested untagged bounds disagrees with strict YAML document grammar"
+  },
+  "nested_bounds_source_evidence": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-wire/sn/validator/attempt_ledger_stream.go",
+    "sha256": "1ff15aa5ca3ecc2c1cb3d69301332056ac537971685ed9907c6c74bacd4ada80"
+  },
+  "required_successor": [
+    "Emit exact loader-compatible config document and bind signing to its decoded semantics",
+    "Public test signs emitted bytes then exports/reloads exact emitted document",
+    "Complete original fixture profile must pass all evidence envelope/allowance checks before approval"
+  ],
+  "limits": [
+    "Two failures each mode; no capacity behavior acceptance",
+    "Baseline full independent physical source join verification remains separate",
+    "Frozen failure preserved; production and fixture fixes use distinct successor",
+    "No weakening of economic approvals or retained envelope bounds"
+  ]
+}

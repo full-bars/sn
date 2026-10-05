@@ -145,6 +145,39 @@ func TestAppendRecoveredFinalityPropagatesCallerContext(t *testing.T) {
 	}
 }
 
+// A carried fleet proof reads historical runtime metadata before its storage
+// item. It must retain the action deadline at that first, potentially stalled
+// RPC boundary so the remaining audit workers can report their own findings.
+func TestFleetCommitmentHistoryPropagatesCallerContext(t *testing.T) {
+	type callerContextKey struct{}
+	const callerContextValue = "fleet-commitment-history"
+	var reachedOnce sync.Once
+	reached := make(chan struct{})
+	client := &releaseRuntimeTestClient{callContext: func(ctx context.Context, _ any, method string, _ ...any) error {
+		if method != "state_getRuntimeVersion" {
+			return errors.New("unexpected fleet commitment history RPC")
+		}
+		reachedOnce.Do(func() { close(reached) })
+		if ctx.Value(callerContextKey{}) != callerContextValue {
+			return errors.New("fleet commitment history lost caller context")
+		}
+		<-ctx.Done()
+		return ctx.Err()
+	}}
+	manager := &SubstrateManager{chain: &crv4.Chain{API: &gsrpc.SubstrateAPI{Client: client}}, cfg: testResolvedConfig(t)}
+	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), callerContextKey{}, callerContextValue))
+	done := make(chan error, 1)
+	go func() {
+		_, err := manager.fleetCommitmentAtContext(ctx, [32]byte{1}, types.Hash{1})
+		done <- err
+	}()
+	<-reached
+	cancel()
+	if err := <-done; !errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "lost caller context") {
+		t.Fatalf("canceled fleet commitment history error=%v", err)
+	}
+}
+
 // Uses the exact authenticated metadata on a private chain copy, leaving the
 // shared signing metadata untouched while proving the receipt.
 func TestAuthenticatedFinalizedExtrinsicBindsExactMetadataAndContext(t *testing.T) {
@@ -425,6 +458,45 @@ func TestRuntimeDefaultMinTransferBindingRejectsRuntimeAndManifestDrift(t *testi
 				t.Fatalf("drift was accepted or reported unclearly: %v", err)
 			}
 		})
+	}
+}
+
+func TestAuthenticatedRuntimeDefaultMinTransferBindingAcceptsApprovedProvisionalArtifact(t *testing.T) {
+	cfg := testResolvedConfig(t)
+	raw := make([]byte, 8)
+	binary.LittleEndian.PutUint64(raw, cfg.Public.Chain.ExpectedDefaultMinTransferRao)
+	reviewed := authenticatedRuntimeMetadata{CodeHash: cfg.Release.Runtime.CodeHash}
+	if got, err := validateAuthenticatedRuntimeDefaultMinTransferBinding(raw, reviewed, cfg); err != nil || got != cfg.Public.Chain.ExpectedDefaultMinTransferRao {
+		t.Fatalf("reviewed transfer floor=%d error=%v", got, err)
+	}
+	provisional := authenticatedRuntimeMetadata{
+		CodeHash:             "0x9745e3f66053c3c7cb30ea45b88c66438b5076da78154f477e8660b0ded43869",
+		CompatibilityProfile: crv4.ProvisionalRuntimeCompatibilityProfile,
+	}
+	if got, err := validateAuthenticatedRuntimeDefaultMinTransferBinding(raw, provisional, cfg); err != nil || got != cfg.Public.Chain.ExpectedDefaultMinTransferRao {
+		t.Fatalf("provisional transfer floor=%d error=%v", got, err)
+	}
+	for _, test := range []struct {
+		name          string
+		authenticated authenticatedRuntimeMetadata
+		cfg           *ResolvedConfig
+		message       string
+	}{
+		{name: "strict-code-drift", authenticated: authenticatedRuntimeMetadata{CodeHash: provisional.CodeHash}, cfg: cfg, message: "runtime code hash"},
+		{name: "foreign-profile", authenticated: authenticatedRuntimeMetadata{CodeHash: provisional.CodeHash, CompatibilityProfile: "foreign"}, cfg: cfg, message: "runtime code hash"},
+		{name: "malformed-provisional-code", authenticated: authenticatedRuntimeMetadata{CodeHash: "invalid", CompatibilityProfile: crv4.ProvisionalRuntimeCompatibilityProfile}, cfg: cfg, message: "invalid finalized"},
+		{name: "missing-manifests", authenticated: provisional, message: "manifests are unavailable"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if _, err := validateAuthenticatedRuntimeDefaultMinTransferBinding(raw, test.authenticated, test.cfg); err == nil || !strings.Contains(err.Error(), test.message) {
+				t.Fatalf("invalid authenticated binding was accepted or reported unclearly: %v", err)
+			}
+		})
+	}
+	changed := testResolvedConfig(t)
+	changed.Public.Chain.ExpectedDefaultMinTransferRao++
+	if _, err := validateAuthenticatedRuntimeDefaultMinTransferBinding(raw, provisional, changed); err == nil || !strings.Contains(err.Error(), "reviewed manifest") {
+		t.Fatalf("provisional runtime changed the approved transfer floor: %v", err)
 	}
 }
 

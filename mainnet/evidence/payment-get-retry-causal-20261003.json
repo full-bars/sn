@@ -1,0 +1,90 @@
+{
+  "files": {
+    "evidence/causal-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/causal-normal.jsonl": "c94a6a927bb7f3a03ba3b51507e6c58f125fa7b532d12de6c95be2f0f674e749",
+    "evidence/causal-normal.phase": "4ae58f5a2c052d4d3f13d4456debf4e7936ae759fad9ebc2a1e910a18ae56225",
+    "evidence/causal-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/causal-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/causal-race.jsonl": "e900bd7e50fd99230ebc3df5892dc392dcca51d80ce48cfc388f20117e4ebc1c",
+    "evidence/causal-race.phase": "b40210a0d2c44c3d7fd77ee25a58d27697e074bf6fb8d0ea1d4bcece1fe87e33",
+    "evidence/causal-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/module-graph.jsonl": "3688934bf751473abda3009aa421a989c0302f89b86d5c412cf30bffb8577444",
+    "evidence/retry-omission.go": "e6de9dd89a6ff7933541e78e9ca32acabe8512ac0d476ec51696396222b8286f",
+    "evidence/retry-omission.overlay.json": "e87deb6d91a53018a855e71a0e47c9f85d2dc8d3a702df6129a8b89ab5689e37",
+    "evidence/run-get-causal.sh": "ff41f401bc60bfbf5219fc1173e7f965127e868c30be50f531810980d81a8474",
+    "source/server/controller/payment_read_retry.go": "38d6f1958fb87ba7684437d29f2fe3d918b7a0f071466a10c7a554b8f4fbc836",
+    "source/server/controller/payment_read_retry_test.go": "0c57384cd5217667e7f28217e003c693ea0ef7c856a16821127132ed988fb7b3"
+  },
+  "limits": [
+    "Four intended no-retry failures and two hard/permanent positive controls per mode; no broader wallet GET claim."
+  ],
+  "schema": "sol-provider-payment-get-5c93-causal-v1",
+  "scopes": [
+    {
+      "exit": 1,
+      "failure_assertions": {
+        "TestPaymentReadCircleExhaustsOwnedBudget": [
+          "payment_read_retry_test.go:181: GET did not retain its full virtual budget 5m0s: Bad status: 503 Service Unavailable still unavailable elapsed=0s calls=1 closed=1"
+        ],
+        "TestPaymentReadCircleRetriesTypedTransportTimeoutAndDisconnect": [
+          "payment_read_retry_test.go:150: typed transport failures did not recover: read tcp: context deadline exceeded calls=1 closed=0"
+        ],
+        "TestPaymentReadCircleSurvivesTransientOutageBeyondOneMinute": [
+          "payment_read_retry_test.go:126: actual GET did not recover after the virtual 65-second outage: result=<nil> err=Bad status: 503 Service Unavailable temporary outage calls=1 closed=1 elapsed=0s"
+        ],
+        "TestPaymentReadCoinbaseTransientRecoveryAndCurrencyIdentity": [
+          "payment_read_retry_test.go:427: exchange-rate GET retry ownership failed: Bad status: 503 Service Unavailable temporary outage calls=1 closed=1 waits=0"
+        ]
+      },
+      "jsonl_sha256": "c94a6a927bb7f3a03ba3b51507e6c58f125fa7b532d12de6c95be2f0f674e749",
+      "mode": "normal",
+      "race_reports": 0,
+      "roots": {
+        "TestPaymentReadCircleExhaustsOwnedBudget": "fail",
+        "TestPaymentReadCircleJoinedHardCauseDominatesRetry": "pass",
+        "TestPaymentReadCirclePermanentResponsesDoNotRetry": "pass",
+        "TestPaymentReadCircleRetriesTypedTransportTimeoutAndDisconnect": "fail",
+        "TestPaymentReadCircleSurvivesTransientOutageBeyondOneMinute": "fail",
+        "TestPaymentReadCoinbaseTransientRecoveryAndCurrencyIdentity": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 1,
+      "failure_assertions": {
+        "TestPaymentReadCircleExhaustsOwnedBudget": [
+          "payment_read_retry_test.go:181: GET did not retain its full virtual budget 5m0s: Bad status: 503 Service Unavailable still unavailable elapsed=0s calls=1 closed=1"
+        ],
+        "TestPaymentReadCircleRetriesTypedTransportTimeoutAndDisconnect": [
+          "payment_read_retry_test.go:150: typed transport failures did not recover: read tcp: context deadline exceeded calls=1 closed=0"
+        ],
+        "TestPaymentReadCircleSurvivesTransientOutageBeyondOneMinute": [
+          "payment_read_retry_test.go:126: actual GET did not recover after the virtual 65-second outage: result=<nil> err=Bad status: 503 Service Unavailable temporary outage calls=1 closed=1 elapsed=0s"
+        ],
+        "TestPaymentReadCoinbaseTransientRecoveryAndCurrencyIdentity": [
+          "payment_read_retry_test.go:427: exchange-rate GET retry ownership failed: Bad status: 503 Service Unavailable temporary outage calls=1 closed=1 waits=0"
+        ]
+      },
+      "jsonl_sha256": "e900bd7e50fd99230ebc3df5892dc392dcca51d80ce48cfc388f20117e4ebc1c",
+      "mode": "race",
+      "race_reports": 0,
+      "roots": {
+        "TestPaymentReadCircleExhaustsOwnedBudget": "fail",
+        "TestPaymentReadCircleJoinedHardCauseDominatesRetry": "pass",
+        "TestPaymentReadCirclePermanentResponsesDoNotRetry": "pass",
+        "TestPaymentReadCircleRetriesTypedTransportTimeoutAndDisconnect": "fail",
+        "TestPaymentReadCircleSurvivesTransientOutageBeyondOneMinute": "fail",
+        "TestPaymentReadCoinbaseTransientRecoveryAndCurrencyIdentity": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source": {
+    "overlay_kind": "operative retry omission; not exact old-body claim",
+    "overlay_sha256": "e87deb6d91a53018a855e71a0e47c9f85d2dc8d3a702df6129a8b89ab5689e37",
+    "replacement_sha256": "e6de9dd89a6ff7933541e78e9ca32acabe8512ac0d476ec51696396222b8286f",
+    "server_commit": "5c93b8121c04857b8ccf14cbbf81ccc52c28a9e2",
+    "server_tree": "e9052e18fc729d0631eb9ee53208dbbf5b3c6ba6"
+  },
+  "status": "PASS_CAUSAL_SCOPED"
+}

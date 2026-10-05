@@ -1,0 +1,23 @@
+{
+  "accounting_floor_bytes": 0,
+  "adopted_at": "2026-10-05T01:20:17.123679+00:00",
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "1ac6e991eec39aa0d4687b8d4d77c26a2482bc76e7837fa1e022f10c22fb2121",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_count": 0,
+  "review_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest8e-mainnet-priority13-post-model-v2-review-20261005.json",
+  "review_sha256": "e179e20859b7cb17276495e5f2d48384fc93db4238df3061930b29fe7d018a2d",
+  "runner_sha256": "ac5c5f6afde1058262be7deb82823af23d927be66a6d03d0aa1286939f2b71c3",
+  "scope": "Exact8e/Core25/2f8 priority13 synthetic normal body only. Oldmodel actualterminal qualifiedcleanup0/ownedDBgone; model_count0. No othercompiler/short/DB/history. Sameconservativefloorsunchanged;779/780excluded.",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_ONE_RETAINED_MAINNET_PRIORITY13_SHORT_POST_MODEL"
+}

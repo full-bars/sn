@@ -1,0 +1,257 @@
+{
+  "scope": "Original six normal ordinary behavioral invocations on frozen b6/Core2ea; no passing overall qualification",
+  "status": "ORIGINAL_NORMAL_ORDINARY_FAILED",
+  "batch_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/direct-owned-runtime-normal_ordinary-batch-receipt.json",
+    "sha256": "e228229604ab59069f10803a2953384980cb26353afe1cb26dcae53dc9511830"
+  },
+  "selected_top_level_counts": {
+    "pass": 137,
+    "fail": 66,
+    "skip": 0
+  },
+  "unfinished_selected_roots": 0,
+  "phases": [
+    {
+      "phase_id": "17-test-mainnet-ordinary-normal",
+      "status": "TEST_OR_SAMPLER_FAILED",
+      "receipt": {
+        "phase_id": "17-test-mainnet-ordinary-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/17-test-mainnet-ordinary-normal-runtime-receipt.json",
+        "receipt_sha256": "91fbc5cf0f6a3f996360b7cff1c155677250ac285b4eb3c98d6cf7e9e3c4bcc8",
+        "status": "TEST_OR_SAMPLER_FAILED"
+      },
+      "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn",
+      "execution": {
+        "exit_code": 1,
+        "failure": null,
+        "jsonl": {
+          "bytes": 162776,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/17-test-mainnet-ordinary-normal.jsonl",
+          "sha256": "3c58613c297538bde6efc6e7afbc94c8da16505defdc0ece3af988a381e13386"
+        },
+        "stderr": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/17-test-mainnet-ordinary-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "selected_count": 159,
+      "failing_roots": [
+        "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome",
+        "TestEconomicEmissionCollectsContiguousEvidenceWithoutClaimingTarget",
+        "TestEconomicNativeExecutionCanceledAdmissionKeepsAmountsUnknown",
+        "TestEconomicNativeExecutionConservingWrongSplitStaysExplicitlyUnapproved",
+        "TestEconomicNativeExecutionFiltersOtherSubnetAndRetainsNoEmissionBlock",
+        "TestEconomicNativeExecutionMissingAdmissionLeavesAmountsUnknown",
+        "TestEconomicNativeExecutionObservedAbsenceUsesOnlyAuthenticatedDefault",
+        "TestEconomicNativeExecutionPublicApprovalDriftCannotEnrollAuthority",
+        "TestEconomicNativeExecutionPublicObserverDerivesOriginalDrainAndRecipients",
+        "TestEconomicNativeExecutionRefusesOmittedReorderedAndForgedCapture",
+        "TestEconomicNativeExecutionZeroIncentiveRetainsPositiveTranche",
+        "TestHistoricalFeeContextActualCryptographicRefusalPrecedesProcess",
+        "TestHistoricalFeeContextPublicJoinRetainsSignedHistoryAndUnknownAuthority",
+        "TestHistoricalFeeContextPublicKeepsForeignBlockCandidatesUnallocated",
+        "TestHistoricalFeeContextPublicMissingRefundIsNotZero",
+        "TestHistoricalFeeContextPublicRefusesChangedNativeContextAndPayer",
+        "TestHistoricalFeeContextPublicRevertedReceiptKeepsObservedCandidate",
+        "TestHistoricalFeeContextPublicStrictRequestAndInputPins",
+        "TestHistoricalFeeContextReadErrorsRemainObservationFailures",
+        "TestMonitorClaimArchiveActualHistoryReadOnceAndCustodyAfterAdmission",
+        "TestMonitorClaimArchiveRefusesOmittedForgedAndRegressedEvidence",
+        "TestMonitorClaimCatalogCannotEnrollLegacyOrReplaceOriginalKey",
+        "TestMonitorClaimRestorePublicCohortRetainsUnresolvedAndDeferred",
+        "TestMonitorClaimWindowPublicFull128RolloverCohortRestoreAndWork",
+        "TestMonitorClaimWindowPublicUnknownEpochAndReviewGuards",
+        "TestMonitorEconomicEvmPublicAdjacentAdmissionCancellationJoinsOwners",
+        "TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage",
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees",
+        "TestMonitorEconomicRuntimePublicOldCheckpointUsesLargerOwnedBudget",
+        "TestMonitorNativeCohortRestoreAdmitsAll512SegmentsAndBothHeads",
+        "TestMonitorNativeCohortRestoreChecksOriginalAndStagedCustodyBeforeEffects",
+        "TestMonitorNativeCohortRestoreKeepsOriginalPendingOutcome",
+        "TestMonitorNativeCohortRestoreRefusesLateRootBeforeEffects",
+        "TestMonitorNativeCohortRestoreResumesPartialRootsWithHealthyPeer",
+        "TestMonitorNativeCohortRestoreRetainsCompletedPeerAcrossSourceLoss",
+        "TestMonitorNativeExecutionPublicRestartRetainsCumulativeAmounts",
+        "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure",
+        "TestMonitorNativeRestoreDeepestInventoryNamespaceContinues",
+        "TestMonitorNativeRestoreNestedCohortRetainsPendingOutcome",
+        "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory",
+        "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome",
+        "TestMonitorStartupArchiveReadWithoutCleanupFailureCanResume",
+        "TestMonitorStartupNativeNestedCleanupCannotRetry",
+        "TestMonitorStartupPublicBlockedAdmissionPreservesEveryPeerFamily",
+        "TestValidatorCapacityConfigRefusesAuthorityDriftAndRetainsOutputCustody",
+        "TestValidatorCapacityPreviewBindsJoinedRetainedCensus"
+      ]
+    },
+    {
+      "phase_id": "20-test-durablevolume-normal",
+      "status": "PASS",
+      "receipt": {
+        "phase_id": "20-test-durablevolume-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/20-test-durablevolume-normal-runtime-receipt.json",
+        "receipt_sha256": "4d558a1c12dc4cbb31eea1bf2c3aec2df29c9abb4dd0d7c27c4d03356164b90e",
+        "status": "PASS"
+      },
+      "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/connect",
+      "execution": {
+        "exit_code": 0,
+        "failure": null,
+        "jsonl": {
+          "bytes": 16780,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/20-test-durablevolume-normal.jsonl",
+          "sha256": "e1a1b6bb3504f358f9ff9a62a2de3341519835bc16bcc6f48d89f6bae2ff8013"
+        },
+        "stderr": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/20-test-durablevolume-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "selected_count": 18,
+      "failing_roots": []
+    },
+    {
+      "phase_id": "21-test-validator-normal",
+      "status": "TEST_OR_SAMPLER_FAILED",
+      "receipt": {
+        "phase_id": "21-test-validator-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/21-test-validator-normal-runtime-receipt.json",
+        "receipt_sha256": "1cc7abb57669a7c9279f8c3e36d1b1334b786be56a2bd340cee5b01f9bf9b944",
+        "status": "TEST_OR_SAMPLER_FAILED"
+      },
+      "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn",
+      "execution": {
+        "exit_code": 1,
+        "failure": null,
+        "jsonl": {
+          "bytes": 31909,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/21-test-validator-normal.jsonl",
+          "sha256": "9133e3692747ffbbb3a0373ad4801a0d6c88da1026115c0bf38c844bb1deba06"
+        },
+        "stderr": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/21-test-validator-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "selected_count": 22,
+      "failing_roots": [
+        "TestAttemptCutV2SealHeadSnapshotExcludesLaterAppends",
+        "TestAttemptCutV2SealObjectCallbackCanAppend",
+        "TestProductionCapacityRetainsOriginalSignedSidecar",
+        "TestReleaseArchiveFullLineageBlockedReplayAllowsOwnedForegroundRead",
+        "TestReleaseArchiveFullLineageCancellationRetainsFreshReplay",
+        "TestReleaseArchiveFullLineageCountsNonemptyHeadAndRefusesDoubleFold",
+        "TestReleaseArchiveFullLineageLateObservationPublishesNoCache",
+        "TestReleaseArchiveFullLineageOwnedReadsDoNotReplayHistory",
+        "TestReleaseArchiveFullLineageRejectsLateEnvelopeWithoutPartialOwner",
+        "TestReleaseArchiveFullLineageRejectsRemovedPredecessor",
+        "TestReleaseArchiveV2RejectsArchiveByteBudgetBeforeReads",
+        "TestReleaseArchiveV2RejectsSelfDeclaredEMAAndChangedSourceBytes",
+        "TestReleaseForegroundCancellationJoinsBlockedUploadWithoutLosingAppend",
+        "TestReleaseForegroundCapacityRefusesBeforeBackgroundEffects",
+        "TestReleaseForegroundProgressDuringBlockedHttpAndReplay",
+        "TestReleaseForegroundProgressDuringContinuousActualReplay",
+        "TestReleaseMeasurementV2SettlementLineageAcceptsRealPrefixAndNativeRetry",
+        "TestReleaseMeasurementV2SettlementNativeRetryRejectsDoubleFoldedHead",
+        "TestReleaseRuntimeV2CollectRetainsSiblingProgressAfterOperatorFailure",
+        "TestReleaseRuntimeV2CollectsNativeOperatorsConcurrently"
+      ]
+    },
+    {
+      "phase_id": "22-test-miner-normal",
+      "status": "PASS",
+      "receipt": {
+        "phase_id": "22-test-miner-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/22-test-miner-normal-runtime-receipt.json",
+        "receipt_sha256": "322f7ab7e77fe0af825a8e351d5f907c782e202da8800be804f44d07de6cbc46",
+        "status": "PASS"
+      },
+      "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn",
+      "execution": {
+        "exit_code": 0,
+        "failure": null,
+        "jsonl": {
+          "bytes": 3098,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/22-test-miner-normal.jsonl",
+          "sha256": "4905d92d84b97a8d83e11c7f383fe8b02c8ec60315491c7d3308bd7be3c7c4ee"
+        },
+        "stderr": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/22-test-miner-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "selected_count": 2,
+      "failing_roots": []
+    },
+    {
+      "phase_id": "23-test-chain-normal",
+      "status": "PASS",
+      "receipt": {
+        "phase_id": "23-test-chain-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/23-test-chain-normal-runtime-receipt.json",
+        "receipt_sha256": "cb23d9514752067bda901db806465fc76ea4be925e1822c57f5d9e0fd44f1756",
+        "status": "PASS"
+      },
+      "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn",
+      "execution": {
+        "exit_code": 0,
+        "failure": null,
+        "jsonl": {
+          "bytes": 1180,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/23-test-chain-normal.jsonl",
+          "sha256": "2a712b8291d3878f0f4c094bf0b4bb932aac4572b173a0769dec9ed8996f4ef2"
+        },
+        "stderr": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/23-test-chain-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "selected_count": 1,
+      "failing_roots": []
+    },
+    {
+      "phase_id": "24-test-protocol-normal",
+      "status": "PASS",
+      "receipt": {
+        "phase_id": "24-test-protocol-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/24-test-protocol-normal-runtime-receipt.json",
+        "receipt_sha256": "2f6d031051f3f20db9abb8b5a250fa2da151d848e877524e91a6b9951f308601",
+        "status": "PASS"
+      },
+      "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/connect",
+      "execution": {
+        "exit_code": 0,
+        "failure": null,
+        "jsonl": {
+          "bytes": 1191,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/24-test-protocol-normal.jsonl",
+          "sha256": "db9169da345e65c29928f1e9b308ee2c011d03d41b293d529c3d5f308045a608"
+        },
+        "stderr": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/24-test-protocol-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "selected_count": 1,
+      "failing_roots": []
+    }
+  ],
+  "triage": {
+    "package_relative_fixture_failures": 59,
+    "separate_behavioral_failures": 7,
+    "root_cause_harness": "Direct test images were launched from module roots; Go normally executes tests in package directories. Incorrect cwd prevents relative testdata and peer-package fixtures from resolving.",
+    "behavioral_evidence": {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/b6-mainnet-seven-behavioral-failures-original.jsonl",
+      "sha256": "e951871ae8833379acc47511c98ab73753101f36b4c1896a48d9d8466d1c1f79"
+    },
+    "implementation_owner": "Astra max isolated successor; source authority, cleanup and Claim cohort failures require root-cause analysis rather than assuming cwd resolves them."
+  },
+  "continuity": "Retain original raw/test receipts and all source/package/graph/compiler successes. Correct package cwd for runtime and adjacent controls; requalify affected behavior without rearchiving or recompilation of unchanged images."
+}

@@ -1,0 +1,653 @@
+{
+  "schema": "root-http-progress-attempt-operative-normal-race-qualification-v1",
+  "source_commit": "ff42a433726655559ac49bef0732add09b785dd4",
+  "receipts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/evidence/http-ff42-seven-controls-normal-receipt.json",
+      "sha256": "2ac07155e515dfa5e0db39fdbf0fce7647db66879849859a48ff4f19282127ef",
+      "bytes": 19285
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/evidence/http-ff42-seven-controls-race-receipt.json",
+      "sha256": "c4531ef9c677337c7f7dcd4c6874101d7982487345a205bd62e96340382d93ea",
+      "bytes": 19490
+    }
+  ],
+  "verified_artifacts": [
+    {
+      "bytes": 1729,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/evidence/source-join.json",
+      "sha256": "e4f1941e798f61f4c6de784e84ed10ba99709d5fa39c91e1bddf8b0e8c6b1485"
+    },
+    {
+      "bytes": 5121,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/evidence/control-bindings.json",
+      "sha256": "b4ebefc6a15c276789e8a3d2ba70086d6bb77c5c668e4d09e606d13862c16b4e"
+    },
+    {
+      "bytes": 94,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/evidence/controls-normal.phase",
+      "sha256": "f6c42401ece979789e325933fb54f5608ec172ad0aac9d4d8ef4d1f62b0bd9b3"
+    },
+    {
+      "bytes": 948,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/overlay.json",
+      "sha256": "e41bc7352bb9ca0b01ecd692c9d4788eb64cee21fa91cdda96c5d07fe5b9baaf"
+    },
+    {
+      "bytes": 227,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/selector.txt",
+      "sha256": "a92c41a8daae39613f4941aaac15c442bf3bbe7fb3c749397b858add8137eb53"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/normal.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 97,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/normal.phase",
+      "sha256": "c4069411475a901ab418d1ba256c03a3761d2bdd15413de382ad6bdc7cc2ccce"
+    },
+    {
+      "bytes": 5182,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/normal.jsonl",
+      "sha256": "e54d626bef6ed9731fec3d973a7d918226d4f377b196564967f7db2d5b0338d5"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 965,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/overlay.json",
+      "sha256": "4bbc1afbab8dc12cdc9960ea9c37ccaf6c4dc4364081faddec0c98a91470b657"
+    },
+    {
+      "bytes": 59,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/selector.txt",
+      "sha256": "572f65bb07596afa7fb970b37ac1d27b624166114a69db6c2ecdcc222c9b9e77"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/normal.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 131,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/normal.phase",
+      "sha256": "9fcaf491accf86f5b3793f187b9345685d5efbe1bd5d34a327c7732389777c24"
+    },
+    {
+      "bytes": 1661,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/normal.jsonl",
+      "sha256": "62d083ecfab04d842720851d914294649fd0353afbff9025fcc96d654d2b8104"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 961,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/overlay.json",
+      "sha256": "91d5977ded322dc2854c51c8a6c8386bd659b65db4f243905d3631dbb04079e6"
+    },
+    {
+      "bytes": 73,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/selector.txt",
+      "sha256": "cb3bd31b61306d63e30b1dd8153780f716169909556b96df0f7d94b7a704e91a"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/normal.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 123,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/normal.phase",
+      "sha256": "479ae2cc0db9e2fba7e8813c6fc3c64aaf9f32d109845bbf84647b2129c846f6"
+    },
+    {
+      "bytes": 1822,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/normal.jsonl",
+      "sha256": "d1de61c964b4c8c366f875dedf1deb3f71c78a9d94f66bcc8e6ae4b66a04bdf6"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1460,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/overlay.json",
+      "sha256": "32f2f30964b6021c84ac82df0a600636a9a9f38e2738bb1e94587d0ef03c10ef"
+    },
+    {
+      "bytes": 69,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/selector.txt",
+      "sha256": "a5ffa2fb0e6528c52ca23390a0e5adb69001d6f7931b63d2695bbe89dac43bd3"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/normal.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 137,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/normal.phase",
+      "sha256": "d5ac3c82710be34a5536fafdee6a4a71db1cab80bc0a5e4b26b6ffd3cf847e58"
+    },
+    {
+      "bytes": 1772,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/normal.jsonl",
+      "sha256": "b826a8a3a078e77d76b8362a3fa157714864ccf3c1cf71e0e0c729fcd7457c8d"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1209,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/overlay.json",
+      "sha256": "bd2ae9a6182c267202fc7c8ee1526ef3789a8314ac48a92a8807f0da07028263"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/selector.txt",
+      "sha256": "2f2d5d085a7aa7881fbd094ddd25094cc9522f30dac064f26c50a21711dbb42b"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/normal.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 133,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/normal.phase",
+      "sha256": "02435de3da7eb5da0590e03a6fec377643e927113d6ad83a2baf96d77c7af3e9"
+    },
+    {
+      "bytes": 1732,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/normal.jsonl",
+      "sha256": "eda38d855a44278680edb75ee3a7c67a58cce4f0c2d34cbb8330e4781a896f57"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 952,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/overlay.json",
+      "sha256": "969b68b6e350fd5bb59307d254a8420799053396f66573fe597e8dbcd49437e6"
+    },
+    {
+      "bytes": 223,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/selector.txt",
+      "sha256": "4ad7b6cfe62f5e3ec2306610a42dcc7e9a79c5594ddafd928f2c74598199217a"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/normal.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 105,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/normal.phase",
+      "sha256": "bb2d6ddc75dbbbebe93de8f7f15155b182bff50d3ca1e31585322aefc0406d92"
+    },
+    {
+      "bytes": 5312,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/normal.jsonl",
+      "sha256": "4d5926a1da9ba9b776ffaac5d0a8c68ea55acac9c69b139fad09185c287776e0"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 956,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/overlay.json",
+      "sha256": "326f6095566253b4ad4ecc4e68524d099a3fd52b099dbed96d555ed197fdc823"
+    },
+    {
+      "bytes": 117,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/selector.txt",
+      "sha256": "fb0d508ca360a7efa8152b8d156bc086db23a9e9fb3fd6350080e64e9fd51f22"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/normal.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 113,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/normal.phase",
+      "sha256": "dc20c6468f4502e6274a9ae87b0acbb1fd9ef0a93461bb05f05d35bbaf28b657"
+    },
+    {
+      "bytes": 2927,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/normal.jsonl",
+      "sha256": "8f2ce991b39474a4902ec840fd3ca4f203875eb88d8e3f9cccb822df1118f853"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 12455,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/evidence/http-ff42-selected29-normal-race-vet-receipt.json",
+      "sha256": "5f8149f7821584e12dbf099ca5e2916ea5ca61062d67e9634bb3c8cdcf05e8b3"
+    },
+    {
+      "bytes": 90,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/evidence/controls-race.phase",
+      "sha256": "4589099866c173e86b9b77739e79b0aab1380a7f453119b0169a8f7cf8a5bc61"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/race.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 97,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/race.phase",
+      "sha256": "b9bb0cd8964ac4973b01bcfc8f86af73f31b06362443e9092db92940f73555da"
+    },
+    {
+      "bytes": 5183,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/race.jsonl",
+      "sha256": "3ebed26649c2b113195cdf8ee72fc3418b1aec14e300dd4e40cafe12cbab73d8"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/omit-owned-retries/race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/race.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 131,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/race.phase",
+      "sha256": "d17b1e4c96256ca1a38dab82759c891501269668afc95b4cf11ad3d1da6a780a"
+    },
+    {
+      "bytes": 1662,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/race.jsonl",
+      "sha256": "2efd02ef69ddffed221dae352e333cf5755199c039c936189d154bdf543b448c"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-transient-status-classification/race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/race.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 123,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/race.phase",
+      "sha256": "96c1a9a9c9d710debb841f581aa775f2579bb4f9fc42cbaae3cdfe53ccdf71b7"
+    },
+    {
+      "bytes": 1822,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/race.jsonl",
+      "sha256": "608fa70bc818d573c36ab3c40e1b5a3be6dfc916a59c8fef73ce9e2c21b99923"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/joined-timeout-masks-hard-cause/race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/race.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 137,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/race.phase",
+      "sha256": "c878ff8647fdd395bbd36a8f796dd53c2783ee732a5c688b4e3ef4ace40d5c47"
+    },
+    {
+      "bytes": 1773,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/race.jsonl",
+      "sha256": "e2d400898f34e10560141c8c0865e97e49a6d6e7620297824514f1b575fe6556"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/cancellation-masks-observed-hard-cause/race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/race.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 133,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/race.phase",
+      "sha256": "84b97c37a6f44ab7e51a4b3a8b1b8978bfc0f087388d4cef53a3a2ea9340b937"
+    },
+    {
+      "bytes": 1733,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/race.jsonl",
+      "sha256": "0517c037c7afa6689b60460b891cb1787f4fc329f5a62e0ff03a0d6e8134d6a9"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/close-masks-complete-malformed-reply/race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/race.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 105,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/race.phase",
+      "sha256": "582cd74fe72a60bff67ed25ad2585e435177cf1a73d86b7b292726edc8d7aed4"
+    },
+    {
+      "bytes": 5313,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/race.jsonl",
+      "sha256": "c19795aa566ae22e6db7d1cfbff169730f7d61dc1e1fc843ac8ab1a4534dcf67"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-five-second-client/race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 159,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/race.preflight",
+      "sha256": "0f9f5f7192ec2a34cb3f207582abf5693bf479ba6a9f11e248ccac8ea4cd7a17"
+    },
+    {
+      "bytes": 113,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/race.phase",
+      "sha256": "b1e27ed0a7b08b18f8207a5d23341f78f9e69b586e4247b03e8a71f5f1bf66e3"
+    },
+    {
+      "bytes": 2927,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/race.jsonl",
+      "sha256": "c4f4ed0150905ce31a1dbcbf66e7086ef04e07e5dfd20eca49e44cc09f4e0fad"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-monitor-progress-ff42-independent-20261003/controls/old-network-classification/race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    }
+  ],
+  "verified_groups": [
+    {
+      "mode": "normal",
+      "control": "omit-owned-retries",
+      "failed_roots": [
+        "TestMonitorProgressEarlyTransportOutageRetainsOwnerBudget",
+        "TestMonitorProgressResponseBodiesCloseBeforeRetry",
+        "TestMonitorProgressRetryKeepsSingleBudgetBeyondSixtySeconds",
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressEarlyTransportOutageRetainsOwnerBudget": "monitor_progress_retry_test.go:278: early read transport outage escaped its owner budget provider EOF unavailable 1 0",
+        "TestMonitorProgressResponseBodiesCloseBeforeRetry": "monitor_progress_retry_test.go:237: failed body-close produced a fresh sample or leaked a body provider false unavailable 0 1 1",
+        "TestMonitorProgressRetryKeepsSingleBudgetBeyondSixtySeconds": "monitor_progress_retry_test.go:137: progress GET stopped below owned transient budget or reset it provider unavailable 0 1",
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter": "monitor_progress_retry_test.go:93: transient progress response did not retry provider 408 unavailable"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "normal",
+      "control": "old-transient-status-classification",
+      "failed_roots": [
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter": "monitor_progress_retry_test.go:93: transient progress response did not retry provider 408 invalid"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "normal",
+      "control": "joined-timeout-masks-hard-cause",
+      "failed_roots": [
+        "TestMonitorProgressJoinedPermanentTransportCauseDoesNotBorrowTimeout"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressJoinedPermanentTransportCauseDoesNotBorrowTimeout": "monitor_progress_retry_test.go:298: joined hard or canceled read borrowed transient retry permission provider synthetic permanent transport refusal true ok 2 1"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "normal",
+      "control": "cancellation-masks-observed-hard-cause",
+      "failed_roots": [
+        "TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation": "monitor_progress_retry_public_test.go:270: parent cancellation erased an observed hard progress cause provider 200 false 0 starting 1 1"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "normal",
+      "control": "close-masks-complete-malformed-reply",
+      "failed_roots": [
+        "TestMonitorProgressCompleteMalformedBodyDominatesCloseOutage"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressCompleteMalformedBodyDominatesCloseOutage": "monitor_progress_retry_test.go:315: complete malformed reply became retryable after body close provider false unavailable 1 1 1"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "normal",
+      "control": "old-five-second-client",
+      "failed_roots": [
+        "TestMonitorProgressActualClientClipsAttemptToOriginalOwner",
+        "TestMonitorProgressOwnedWorkersUseActualClientReadWindow",
+        "TestMonitorProgressSlowHeadersCompleteOneAttempt",
+        "TestMonitorProgressSlowPartialBodyCompletesOneAttempt"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressActualClientClipsAttemptToOriginalOwner": "monitor_progress_attempt_test.go:47: actual client could not complete within its clipped read window provider 20s 4.999924066s false unavailable 1",
+        "TestMonitorProgressOwnedWorkersUseActualClientReadWindow": "monitor_progress_attempt_test.go:234: owned worker could not publish using actual client attempt budget provider 0 1 {urnetwork-mainnet-provider-event-v1 provider-a unavailable false true}",
+        "TestMonitorProgressSlowHeadersCompleteOneAttempt": "monitor_progress_attempt_test.go:91: healthy slow response was repeatedly cut below the owned read budget provider false false unavailable 1 1",
+        "TestMonitorProgressSlowPartialBodyCompletesOneAttempt": "monitor_progress_attempt_test.go:95: healthy slow response was repeatedly cut below the owned read budget provider true false unavailable 1 1"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "normal",
+      "control": "old-network-classification",
+      "failed_roots": [
+        "TestMonitorProgressPermanentDnsDominatesTemporaryCauses",
+        "TestMonitorProgressTypedNetworkOutagesRecoverWithinOwner"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressPermanentDnsDominatesTemporaryCauses": "monitor_progress_attempt_test.go:269: permanent DNS or cancellation borrowed temporary retry permission provider lookup absent.example:  false unavailable 1 1",
+        "TestMonitorProgressTypedNetworkOutagesRecoverWithinOwner": "monitor_progress_attempt_test.go:254: typed transient network outage escaped owned retry provider network is unreachable false unavailable 1 0"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "race",
+      "control": "omit-owned-retries",
+      "failed_roots": [
+        "TestMonitorProgressEarlyTransportOutageRetainsOwnerBudget",
+        "TestMonitorProgressResponseBodiesCloseBeforeRetry",
+        "TestMonitorProgressRetryKeepsSingleBudgetBeyondSixtySeconds",
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressEarlyTransportOutageRetainsOwnerBudget": "monitor_progress_retry_test.go:278: early read transport outage escaped its owner budget provider EOF unavailable 1 0",
+        "TestMonitorProgressResponseBodiesCloseBeforeRetry": "monitor_progress_retry_test.go:237: failed body-close produced a fresh sample or leaked a body provider false unavailable 0 1 1",
+        "TestMonitorProgressRetryKeepsSingleBudgetBeyondSixtySeconds": "monitor_progress_retry_test.go:137: progress GET stopped below owned transient budget or reset it provider unavailable 0 1",
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter": "monitor_progress_retry_test.go:93: transient progress response did not retry provider 408 unavailable"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "race",
+      "control": "old-transient-status-classification",
+      "failed_roots": [
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressTransientStatusesUseOwnedRetryAfter": "monitor_progress_retry_test.go:93: transient progress response did not retry provider 408 invalid"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "race",
+      "control": "joined-timeout-masks-hard-cause",
+      "failed_roots": [
+        "TestMonitorProgressJoinedPermanentTransportCauseDoesNotBorrowTimeout"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressJoinedPermanentTransportCauseDoesNotBorrowTimeout": "monitor_progress_retry_test.go:298: joined hard or canceled read borrowed transient retry permission provider synthetic permanent transport refusal true ok 2 1"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "race",
+      "control": "cancellation-masks-observed-hard-cause",
+      "failed_roots": [
+        "TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressOwnedWorkersRetainHardCauseDuringCancellation": "monitor_progress_retry_public_test.go:270: parent cancellation erased an observed hard progress cause provider 200 false 0 starting 1 1"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "race",
+      "control": "close-masks-complete-malformed-reply",
+      "failed_roots": [
+        "TestMonitorProgressCompleteMalformedBodyDominatesCloseOutage"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressCompleteMalformedBodyDominatesCloseOutage": "monitor_progress_retry_test.go:315: complete malformed reply became retryable after body close provider false unavailable 1 1 1"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "race",
+      "control": "old-five-second-client",
+      "failed_roots": [
+        "TestMonitorProgressActualClientClipsAttemptToOriginalOwner",
+        "TestMonitorProgressOwnedWorkersUseActualClientReadWindow",
+        "TestMonitorProgressSlowHeadersCompleteOneAttempt",
+        "TestMonitorProgressSlowPartialBodyCompletesOneAttempt"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressActualClientClipsAttemptToOriginalOwner": "monitor_progress_attempt_test.go:47: actual client could not complete within its clipped read window provider 20s 4.999843203s false unavailable 1",
+        "TestMonitorProgressOwnedWorkersUseActualClientReadWindow": "monitor_progress_attempt_test.go:234: owned worker could not publish using actual client attempt budget provider 0 1 {urnetwork-mainnet-provider-event-v1 provider-a unavailable false true}",
+        "TestMonitorProgressSlowHeadersCompleteOneAttempt": "monitor_progress_attempt_test.go:91: healthy slow response was repeatedly cut below the owned read budget provider false false unavailable 1 1",
+        "TestMonitorProgressSlowPartialBodyCompletesOneAttempt": "monitor_progress_attempt_test.go:95: healthy slow response was repeatedly cut below the owned read budget provider true false unavailable 1 1"
+      },
+      "exact_overlay_verified": true
+    },
+    {
+      "mode": "race",
+      "control": "old-network-classification",
+      "failed_roots": [
+        "TestMonitorProgressPermanentDnsDominatesTemporaryCauses",
+        "TestMonitorProgressTypedNetworkOutagesRecoverWithinOwner"
+      ],
+      "intended_assertions": {
+        "TestMonitorProgressPermanentDnsDominatesTemporaryCauses": "monitor_progress_attempt_test.go:269: permanent DNS or cancellation borrowed temporary retry permission provider lookup absent.example:  false unavailable 1 1",
+        "TestMonitorProgressTypedNetworkOutagesRecoverWithinOwner": "monitor_progress_attempt_test.go:254: typed transient network outage escaped owned retry provider network is unreachable false unavailable 1 0"
+      },
+      "exact_overlay_verified": true
+    }
+  ],
+  "outcome": "Seven isolated groups each mode produce14 intended behavioral failures, no compile/setup/race-diagnostic failure",
+  "limits": [
+    "Separate from29-root normal/race product proof",
+    "Not whole old-source causality",
+    "Body-error successor, rolling policy and archive adoption, composed release and real economic authority remain pending"
+  ]
+}

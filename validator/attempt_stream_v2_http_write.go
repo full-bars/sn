@@ -8,15 +8,18 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/urfoundation/sn/protocol"
 )
+
+// Upload acknowledgement has separate ownership from retryable public reads.
+const attemptStreamV2HttpWriteIoTimeout = 30 * time.Second
 
 // Safe for concurrent calls with independently owned immutable input bytes.
 // The getter must be the release API session's live getter, not a startup JWT
@@ -55,7 +58,7 @@ func newHttpAttemptStreamV2Writer(origin string, bounds AttemptCutV2Bounds, meta
 	// Stream readers pause their I/O budget while replay owns CPU work. An
 	// upload instead owns one request and acknowledgement, both under the
 	// original finite HTTP budget even when its release context is long lived.
-	reader.client.Timeout = attemptStreamV2HTTPIOTimeout
+	reader.client.Timeout = attemptStreamV2HttpWriteIoTimeout
 	return &HTTPAttemptStreamV2Writer{endpoint: reader.endpoint, metadataBytes: reader.metadataBytes, recordBytes: reader.recordBytes, proofBytes: reader.proofBytes, byJwt: byJwt, client: reader.client}, nil
 }
 
@@ -145,10 +148,7 @@ func (self *HTTPAttemptStreamV2Writer) write(ctx context.Context, kind, contentH
 			strings.Contains(strings.ToLower(detail), "bearer ") {
 			detail = "[redacted client session]"
 		}
-		if detail == "" {
-			return errors.Join(fmt.Errorf("attempt upload response status is %d", response.StatusCode), readErr)
-		}
-		return errors.Join(fmt.Errorf("attempt upload response status is %d: %q", response.StatusCode, detail), readErr)
+		return errors.Join(&attemptStreamHttpStatusError{status: response.StatusCode, upload: true, detail: detail, retryAfter: attemptStreamHttpRetryAfter(response.Header)}, readErr)
 	}
 	if len(response.Header.Values("ETag")) != 1 || response.Header.Get("ETag") != `"`+contentHash+`"` || response.ContentLength > 0 || response.Uncompressed || len(response.Header.Values("Content-Encoding")) != 0 || len(response.Header.Values("Content-Range")) != 0 {
 		return errors.New("attempt upload acknowledgement differs from exact immutable object")

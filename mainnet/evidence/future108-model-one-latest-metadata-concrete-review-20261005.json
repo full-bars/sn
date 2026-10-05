@@ -1,0 +1,126 @@
+{
+  "execution_mechanism": {
+    "actual_wait": "Qualified ChildContext/guard for each archive pipeline and GoList, actual wait durable before postchecks; each own tree joined. Old archive Git-blob verifier and successful one-module v3 workspace layout reused.",
+    "archive_log_limit_bytes": 4194304,
+    "data_active_formula": "max(6307319808, immediate_admission_data_available-4294967296)",
+    "go_list_log_limit_bytes": 67108864,
+    "payload_argv": [
+      "/home/by/urnetwork/.virtualenv/brien/bin/python3",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latestb037-metadata-v1.py",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latestb037-metadata-job-v1.json"
+    ],
+    "phase_time_limit_seconds": 600,
+    "predecessor_wait_paths": [
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-owner-cli65-v1-list.process-result.json",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-xops311-retry2-v1.process-result.json"
+    ],
+    "required_properties": {
+      "KillMode": "control-group",
+      "MemoryMax": 4294967296,
+      "MemorySwapMax": 0
+    },
+    "unit": "sn-latestb037-metadata-v1-20261005.service"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latestb037-metadata-job-v1.json",
+    "sha256": "aba0c7f64ad34b7c14fba1f731ed7893a7fb60d6de2dabfc9e814fc90e6af82d"
+  },
+  "later_compiler": "Prepare only after actual metadata closure succeeds, with exact final source tuple and compiler4GiB forecast/hard8GiB class separately adopted.",
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 12884901888,
+    "history_count": 0,
+    "job_sha256": "aba0c7f64ad34b7c14fba1f731ed7893a7fb60d6de2dabfc9e814fc90e6af82d",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 1,
+    "runner_sha256": "5441a7a85cf1a3da55017aebd055ba231a50bc29f3ba5bbca8521f65a34d183b",
+    "short_count": 0,
+    "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_METADATA_STAGE"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest-metadata-adoption-20261005.json",
+  "resource_forecasts": {
+    "basis": "Only SN/Server archived into fresh paths; original Core3840 files verified and reused. Metadata sequential, no exports/builds/dependency downloads;64MiB per-list capture. Bound4GiB memory/swap0 and4GiB whole-data-growth; estimate is prospective, not a peak proof.",
+    "margin": 2,
+    "metadata_disk_bytes": 2147483648,
+    "metadata_memory_bytes": 2147483648,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latestb037-metadata-v1.py",
+    "sha256": "5441a7a85cf1a3da55017aebd055ba231a50bc29f3ba5bbca8521f65a34d183b"
+  },
+  "schema": "future108-model-one-latest-metadata-review-v1",
+  "source_limit": "b037 still has known mainnet global regexp init panic; metadata can pass without executing init and cannot qualify runtime. Future Operator/funding source child requires a separately pinned exact delta before compilation/body.",
+  "source_manifest": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latestb037-metadata-source-manifest-v1.json",
+    "sha256": "4478c888af21c82174dab7b6d0a6a215ba653d1371e6f8a06e4619c16e93ee55"
+  },
+  "source_summary": {
+    "connect": {
+      "action": "reuse",
+      "entries": 3840,
+      "logical_bytes": 264184770
+    },
+    "server": {
+      "action": "archive",
+      "entries": 5749,
+      "logical_bytes": 603189798
+    },
+    "sn": {
+      "action": "archive",
+      "entries": 21316,
+      "logical_bytes": 231336438
+    }
+  },
+  "sources": [
+    {
+      "action": "archive",
+      "head": "b0371195eb9d2127adab8dfe917e1516838b010a",
+      "module": "sn",
+      "repo": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-open-work-consumer/sn",
+      "target": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/sn",
+      "tree": "2dcb05802e1d3ce8a275610318006da5c71bbc10"
+    },
+    {
+      "action": "reuse",
+      "head": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+      "module": "connect",
+      "repo": "/mnt/data/sn-testnet/mainnet-sdk-creation-custody-20261004/connect",
+      "target": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/current5aaf-source/connect",
+      "tree": "dbba7a7fff5e598f6deb44d4a26061c6276da3d5"
+    },
+    {
+      "action": "archive",
+      "head": "0f6a48a1b896d0cf3b2dbdabb94114659980648e",
+      "module": "server",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261004/server-final-followup-union/server",
+      "target": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/server",
+      "tree": "b12c728c4f7aeaea06efe38788fb4508db4126f3"
+    }
+  ],
+  "status": "RECOMMEND_ROOT_ADOPTION_EXACT_B037_25A_0F6A_METADATA_AFTER_JOINED_OLD_SHORTS",
+  "time_ns": 1791159120322792902,
+  "unchanged_active_floors": {
+    "data_available_bytes": 6307319808,
+    "docker_available_bytes": 295833415680,
+    "docker_launch_available_bytes": 300128382976,
+    "healthy_guards_changed": false,
+    "memory_available_bytes": 103079215104,
+    "original_data_baseline_rebased": false
+  },
+  "verification_performed": [
+    "Exact immutable Git trees/mode/blob/size manifest sealed",
+    "Old Core3840 physical file SHA256 rechecked against compiled5a source closure",
+    "New SN and Server go.mod/go.sum byte-identical to old5a/80 counterparts",
+    "Runner AST/full bindings verified; no archive/GoList/compiler/body performed by author"
+  ]
+}

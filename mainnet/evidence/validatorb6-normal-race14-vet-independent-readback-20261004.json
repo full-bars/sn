@@ -1,0 +1,296 @@
+{
+  "schema": "validatorb6-normal-race14-vet-independent-readback-v1",
+  "status": "FOURTEEN_SELECTED_ROOTS_PASS_BOTH_MODES_VET_PASS_CONTROLS_PENDING",
+  "head": "b6f05dc5df9ef84898b25d6aac47ebdb0a04e27a",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-bodies-v1.terminal.json",
+      "bytes": 969,
+      "sha256": "fac1bf2568eb5529646d4596efa162c16c7b25f52264fe26a23c45039a5a67e1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.receipt.json",
+      "bytes": 8896,
+      "sha256": "adefcdfb2403c7de47a372b682ae03cb92de60341c022959592751bd92b84b9b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/images/b6-go-validator-normal-compile.test",
+      "bytes": 82034256,
+      "sha256": "c43d8431f04fd4da18252135b7bab0e2aadae624c1c82ed3fd896933b6cc0902"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-go-validator-normal-compile.receipt.json",
+      "bytes": 7803,
+      "sha256": "c79350cb2084858d9eddf94bfa8e2befccbb114aee41a724cef844e6c65c6586"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.resources.csv",
+      "bytes": 22619,
+      "sha256": "393c27d071975328176365c7477f6562f5a88f40fb1ae0235dfb4b6945c7e655"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.stdout",
+      "bytes": 13641,
+      "sha256": "600be24b613c5be2fe2d5cbaba1b920bd0f5118e5e4157663d8dcf61a7243927"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-race-selected14.receipt.json",
+      "bytes": 8880,
+      "sha256": "65acb501cd63d6d6ee0c95b71742578a59a8e18df64b4ecf2fab1bd4f73bf2ec"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/images/b6-go-validator-race-compile.test",
+      "bytes": 108947040,
+      "sha256": "548971ce637296af37e42aacf6d3ae3459c7aeddc416103d723aefce524d244a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-go-validator-race-compile.receipt.json",
+      "bytes": 7820,
+      "sha256": "ec7dcf2682dd9041e3ccec12ac3d3f7f3c225b9e0e91876c4d48f7f24852fc1c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-race-selected14.resources.csv",
+      "bytes": 136518,
+      "sha256": "e802f0c26d308a91bb5ff2041a9e54004682517ad63b317a573014f13102e5ae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-race-selected14.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-race-selected14.stdout",
+      "bytes": 13668,
+      "sha256": "5cdea11d1205d4bb189792cefb1f9807b662df058d82a63430ccde00f348e123"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-vet-v1.receipt.json",
+      "bytes": 2274,
+      "sha256": "4e60465a01f1ec74335eb6ae4ee12884bae858f127eb31d73f882effe7c02f26"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-vet.resources.csv",
+      "bytes": 1141,
+      "sha256": "6e6643fb86f5efa3f7987509070e1d00019b62044b9df4515bfb0b8cbc77a054"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "results": [
+    {
+      "mode": "normal",
+      "census": {
+        "run": 14,
+        "pass": 14,
+        "fail": 0,
+        "skip": 0
+      },
+      "events": {
+        "TestReleaseArchiveFullLineageOwnedReadsDoNotReplayHistory": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageRejectsRemovedPredecessor": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageCountsNonemptyHeadAndRefusesDoubleFold": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageRejectsLateEnvelopeWithoutPartialOwner": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageLateObservationPublishesNoCache": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageCancellationRetainsFreshReplay": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageBlockedReplayAllowsOwnedForegroundRead": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveV2RejectsArchiveByteBudgetBeforeReads": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveV2RejectsSelfDeclaredEMAAndChangedSourceBytes": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseMeasurementV2SettlementLineageAcceptsRealPrefixAndNativeRetry": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseMeasurementV2SettlementNativeRetryRejectsDoubleFoldedHead": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageTerminalRefusesLostOwner": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageTerminalOwnerCancellation": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveV2ReplaysCompleteSignedHistoryWithoutLiveState": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "exit": 0,
+      "tree_joined": true,
+      "image_sha256": "c43d8431f04fd4da18252135b7bab0e2aadae624c1c82ed3fd896933b6cc0902"
+    },
+    {
+      "mode": "race",
+      "census": {
+        "run": 14,
+        "pass": 14,
+        "fail": 0,
+        "skip": 0
+      },
+      "events": {
+        "TestReleaseArchiveFullLineageOwnedReadsDoNotReplayHistory": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageRejectsRemovedPredecessor": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageCountsNonemptyHeadAndRefusesDoubleFold": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageRejectsLateEnvelopeWithoutPartialOwner": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageLateObservationPublishesNoCache": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageCancellationRetainsFreshReplay": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageBlockedReplayAllowsOwnedForegroundRead": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveV2RejectsArchiveByteBudgetBeforeReads": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveV2RejectsSelfDeclaredEMAAndChangedSourceBytes": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseMeasurementV2SettlementLineageAcceptsRealPrefixAndNativeRetry": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseMeasurementV2SettlementNativeRetryRejectsDoubleFoldedHead": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageTerminalRefusesLostOwner": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveFullLineageTerminalOwnerCancellation": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestReleaseArchiveV2ReplaysCompleteSignedHistoryWithoutLiveState": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "exit": 0,
+      "tree_joined": true,
+      "image_sha256": "548971ce637296af37e42aacf6d3ae3459c7aeddc416103d723aefce524d244a"
+    }
+  ],
+  "vet": {
+    "package": "./validator",
+    "exit": 0,
+    "tree_joined": true
+  },
+  "limits": "Exact selected signed-history/terminal-custody positives plus vet. Six original causal control groups and complete release remain separately required; no production install/activation claimed."
+}

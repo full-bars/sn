@@ -1,0 +1,44 @@
+{
+  "schema": "root-subprocess-fast-copy-bypass-source-review-v1",
+  "root_main_source": "083b694f1c4ad6a51b53be1313204657b09f84ad",
+  "replay_source": "45417d92",
+  "verified_source_bindings": [
+    {
+      "path": "/home/by/urnetwork/sn/mainnet/owner_signing_device.go",
+      "bytes": 17705,
+      "sha256": "38a8b42e806974e6c1d0ddb0e3f6f88083c716e239fa3df10b2f8d43c5db64ee"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/mainnet/durable_volume_unit_inspector.go",
+      "bytes": 5450,
+      "sha256": "cb866c12c095e3e54aa2a06fd8396639f6458270912e76248a07466cc7cd2d06"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-production-lifecycle/sn/mainnet/historical_replay.go",
+      "bytes": 12382,
+      "sha256": "d427d9e5304099dee5053e52a1813bcd8162218eb772db7a7acd0af7b2c72b3e"
+    },
+    {
+      "path": "/usr/local/go/src/io/io.go",
+      "bytes": 23003,
+      "sha256": "3945d328a9072e4f5970b7d4bc0eb834eec29fd22889a1ed9f3fb76ad41c3274"
+    },
+    {
+      "path": "/usr/local/go/src/bytes/buffer.go",
+      "bytes": 16922,
+      "sha256": "4457385c174f963728d57902c5b474dacf5c2b7226f103045371a2b4cde7f119"
+    }
+  ],
+  "finding": "Anonymousbytes.Buffer exposesReaderFrom;io.Copy maydispatchthatmethodratherthan guardedWrite,skippingoutputbound andafterOutputcancellation",
+  "adjacent_sources": [
+    "ownerSigningBoundedOutput",
+    "serviceStorageInspectionOutput"
+  ],
+  "scope": "Structural source review;originalSolreplayteststillownedandliveattimeofobservation;notnewbehaviorqualification",
+  "required_fix": "Namedprivatebuffer;boundedactivecancellation;realpipe/io.Copy+subprocesscontrols;fullrelatedwrappercensus",
+  "limits": [
+    "PendingAstrasuccessor andindependentSoltests",
+    "Noauthority/signing/deploymentsemantics changed",
+    "Do nottreattimeouts ascompletedtestsorstoplivejobsonobservationtimeout"
+  ]
+}

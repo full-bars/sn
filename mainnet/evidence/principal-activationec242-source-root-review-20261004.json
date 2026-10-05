@@ -1,0 +1,176 @@
+{
+  "schema": "principal-activationec242-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_UNQUALIFIED",
+  "source_head": "ec242e3bc31c6e5d38d5dfd62ade410b305d08c2",
+  "source_tree": "97192918809a250bb1ea6ad902fcee791a08af85",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/intake.json",
+      "bytes": 9205,
+      "sha256": "667b81e73f18a5f07dbb6b2469e1bd01cdbdf3a886f2f4cc612bc32c372b7040"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/economic_conservation_fixture_test.go",
+      "bytes": 12948,
+      "sha256": "617cb5aaf0a1a7f2797306e29739157369e8facd685cd657babe9bb4a03c3e9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/economic_conservation_principal_activation_test.go",
+      "bytes": 1385,
+      "sha256": "86ba5234914ce5f48ef3ccdfa6754866ae98b8010559f7af70fc1fccf351806a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/economic_conservation_principal_custody_test.go",
+      "bytes": 3008,
+      "sha256": "859dc2d5b15fb7b9a1eee9a502f9690241117b93be946209cfe602929d2788d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 17089,
+      "sha256": "09b4bc791fd4bedfde12f2dfb912ee67715d5e6e80f9ae8bc3f86821b80c017e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/economic_native_accounting.go",
+      "bytes": 11126,
+      "sha256": "9e24837cd0b2a6ec6017b3bfa20b3542b650e6ede340884e7007e91935b242c7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/economic_native_producer_test.go",
+      "bytes": 29100,
+      "sha256": "b7a34f891e372d0352a12ab8277955cd1299ac109cfcf021dc344822ef1b4f8f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/historical_capture.go",
+      "bytes": 8443,
+      "sha256": "83ba428d363ef1a11bf7255a9ba69050d484be5806427e1fc0a9301085a3115d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/historical_capture_test.go",
+      "bytes": 11823,
+      "sha256": "35cfe80fce400c6011934882bb362e7ccab26b668d9b1fd86a2f80031ca4e0ab"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/historical_replay.go",
+      "bytes": 18202,
+      "sha256": "239eb24da5cf24be1379e0b96f918f620398f5bda682dcacb986b2c159e0e21a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/historical_replay_diagnostic_test.go",
+      "bytes": 2294,
+      "sha256": "ec482b180db4fab019450d0a58a5662a7ee6e1d155ba9fae89830def2d0de1e2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/historical_replay_supervisor.go",
+      "bytes": 4134,
+      "sha256": "846fa5e974714eb62f7515812f1ffc527150aed9dd2430b666c38ccf49d47063"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/historical_replay_test.go",
+      "bytes": 20190,
+      "sha256": "7d1fc1a281a64d57be53e04f09c98d028e401acff4c058fe6b44d5feedfb82a8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 25689,
+      "sha256": "518a9b9b584341af3d5dcd84c66f88b30a1d6552ccd835d8864740354234456a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/intake-v2.json",
+      "bytes": 7617,
+      "sha256": "52122a82106488abbfa8dd6865de193e993a26207ee67f82814500cd05b57fb6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/selectors.json",
+      "bytes": 7965,
+      "sha256": "dc7814b65395880e20ec03958c1a4a062b31394201166c34d8adc8d84a158c38"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/operative-controls.json",
+      "bytes": 6877,
+      "sha256": "8dacf5386f5ae242a609e3fef3f3853dfa2bc911bdb9f1c9737d9a596cfdd7d9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/recipe.json",
+      "bytes": 2738,
+      "sha256": "4510e209785f7ed80fad67e25b76c25df3298fe15915495065738b041aa0eebc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/cause-review.json",
+      "bytes": 1880,
+      "sha256": "a934ca4731aa408ea472819fbd3ed14ba834df0ac48a9965ad03645d04da65d8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 17089,
+      "sha256": "09b4bc791fd4bedfde12f2dfb912ee67715d5e6e80f9ae8bc3f86821b80c017e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/controls/omit-fixture-matching-drained-rpc-parent/economic_conservation_principal_test.go",
+      "bytes": 17091,
+      "sha256": "6424accc6d3d6e9240a9e9ac737e5e2cfd741359718e64ea68b3e1f0691ad78c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/economic_native_accounting.go",
+      "bytes": 11126,
+      "sha256": "9e24837cd0b2a6ec6017b3bfa20b3542b650e6ede340884e7007e91935b242c7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/controls/omit-required-drained-activation/economic_native_accounting.go",
+      "bytes": 11072,
+      "sha256": "9a74f9f41c4cd23925f5158e07de89684e1600cd3f03cd73b50819a462d16222"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/mainnet/historical_replay.go",
+      "bytes": 18202,
+      "sha256": "239eb24da5cf24be1379e0b96f918f620398f5bda682dcacb986b2c159e0e21a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/controls/omit-bounded-original-child-diagnostic/historical_replay.go",
+      "bytes": 18205,
+      "sha256": "4eb657295d66917bd5c9b62ab9e7b4ed6d146a138c61c97022516954bf71f338"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 25689,
+      "sha256": "518a9b9b584341af3d5dcd84c66f88b30a1d6552ccd835d8864740354234456a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/controls/restore-undrained-original-proof-parent/historical_native_execution_tests.rs",
+      "bytes": 25698,
+      "sha256": "f81577971657b64bbf6df16db0567bce6ef3be29faf944a799848288efd35706"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 25689,
+      "sha256": "518a9b9b584341af3d5dcd84c66f88b30a1d6552ccd835d8864740354234456a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/controls/omit-original-per-block-accrual/historical_native_execution_tests.rs",
+      "bytes": 25698,
+      "sha256": "363689488759670eff3cde63b52fa318babe829ea27717555023c5a2a74182b6"
+    }
+  ],
+  "review": "Read complete six-path successor diff, recipe, selectors, five full control diffs and shared subprocess join/cause path. Independently verify clean HEAD/tree, exact Git blobs and sixteen declared Go roots. Original parent proofs are drained, actual next-block program accrues before drain; no fake RPC-only zero. Shared capture/replay diagnostic retains wrapped joined cause after child join, normalizes controls and limits input to 2048 bytes; words cannot select retry or integrity classification. Actual supervisor converts child exit to exit1, matching the new assertion.",
+  "scope": "Sixteen Go roots per mode, three exact Rust roots/exporters, vet and three Go/two Rust control groups remain unexecuted. Reuse unchanged production engines only after closure/custody checks; fresh principal fixtures required. No complete economic witness or production admission claimed.",
+  "whole_mainnet_complete": false
+}

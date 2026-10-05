@@ -1,0 +1,68 @@
+{
+  "base": "b409ea4200e9662dae8c275a3db64ce4b97aa9c7",
+  "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f",
+  "staged_tree": "cee3f0ff87e0c0f653cb434bb882d1eb13d09301",
+  "files": [
+    {
+      "path": "miner/claim_daemon.go",
+      "bytes": 39776,
+      "sha256": "84e8e1d69b6bb6580caccd649359e93a8ca2b2ea418eab1d8fa06773a434e074"
+    },
+    {
+      "path": "miner/claim_observation.go",
+      "bytes": 6322,
+      "sha256": "442f72420c71e3ae3dbfee239d5571b4c060c1857f9dfdade482200c4ceced15"
+    },
+    {
+      "path": "miner/claim_observation_capacity.go",
+      "bytes": 2611,
+      "sha256": "16023a89985caa48ba909cd84ce22f363b41c49990d6a9435b05ef914bc86fb4"
+    },
+    {
+      "path": "miner/claim_progress.go",
+      "bytes": 8099,
+      "sha256": "1352b7f1aa308e4b8f2c3ab418cfe8ed493e19e593dda9e6bd229839d426aca8"
+    },
+    {
+      "path": "miner/claim_progress_custody_test.go",
+      "bytes": 12456,
+      "sha256": "3ea4da60aef943e1019aa52b143d53b2fa401e5ec1fb7a0e023e537d1f4e5e7b"
+    },
+    {
+      "path": "miner/claim_progress_source_test.go",
+      "bytes": 10054,
+      "sha256": "f59228895301cbfa08012c7d910dfa3ff90e43f451983b55912db80151f6a2c1"
+    },
+    {
+      "path": "miner/claim_progress_test.go",
+      "bytes": 5313,
+      "sha256": "9f455dd0292aefed4e59eb1b3b2aabc828406b0df0567c1d713b1c1ac902d6b4"
+    },
+    {
+      "path": "miner/claim_signed_outcome.go",
+      "bytes": 5934,
+      "sha256": "31bb9c16e587ba8def36399884d84766c3cf9a786147645c5789b63b48212ba8"
+    },
+    {
+      "path": "miner/claim_swarm.go",
+      "bytes": 10361,
+      "sha256": "3aa62a7cbf307f4d2bdcd1c864e8d6624f386752126147cd6cc6f1773240a213"
+    },
+    {
+      "path": "protocol/claim_progress.go",
+      "bytes": 15382,
+      "sha256": "a8c1fb000e7a043e180d7cb1cce26e85685cf124b66c2f24e4b827239ad1af9c"
+    },
+    {
+      "path": "protocol/claim_progress_test.go",
+      "bytes": 5935,
+      "sha256": "a7d33795388bb73b8a882f6addb3a10250bdd25dee1e6fbcbacce081b0afed22"
+    }
+  ],
+  "limits": [
+    "Exact11-file source integration; other main files and module bytes unchanged.",
+    "Author37 and independent29 are separate source scopes; new current-server release still needs qualification."
+  ],
+  "merge_commit": "bd5e7e72",
+  "independent_receipt_sha256": "1eda6ff63df36aa0b4260573f31076676badac83224fead862eda57ce4e86a9e"
+}

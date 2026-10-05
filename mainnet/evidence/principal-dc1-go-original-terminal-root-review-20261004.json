@@ -1,0 +1,111 @@
+{
+  "schema": "principal-dc1-go-original-terminal-root-review-v1",
+  "status": "ORIGINAL_BATCH_TERMINAL_FIXTURE_REFUSALS_RETAINED",
+  "results": [
+    {
+      "mode": "normal",
+      "pass": 19,
+      "fail": 19,
+      "skip": 0,
+      "failed_roots": [
+        "TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt",
+        "TestEconomicConservationArchivePublicAdmitsOnceThenUsesRetainedIndex",
+        "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt",
+        "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan",
+        "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed",
+        "TestEconomicConservationPublicFeeRevisionRetainsOriginalKeyReviewAndArchivedPolicies",
+        "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings",
+        "TestEconomicConservationPublicMissingPrincipalProofKeepsSiblings",
+        "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome",
+        "TestEconomicConservationPublicOutageRetainsOneDomainAndRecoversOriginalPage",
+        "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive",
+        "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative",
+        "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative",
+        "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown",
+        "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping",
+        "TestEconomicConservationPublicPrincipalReviewCannotReplaceOriginalSignature",
+        "TestEconomicConservationPublicRetainsOriginalEarningsCarryAndAggregatePayment",
+        "TestEconomicConservationPublicRetiredUnknownFeeMustRemainHot",
+        "TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress"
+      ]
+    },
+    {
+      "mode": "race",
+      "pass": 19,
+      "fail": 19,
+      "skip": 0,
+      "failed_roots": [
+        "TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt",
+        "TestEconomicConservationArchivePublicAdmitsOnceThenUsesRetainedIndex",
+        "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt",
+        "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan",
+        "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed",
+        "TestEconomicConservationPublicFeeRevisionRetainsOriginalKeyReviewAndArchivedPolicies",
+        "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings",
+        "TestEconomicConservationPublicMissingPrincipalProofKeepsSiblings",
+        "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome",
+        "TestEconomicConservationPublicOutageRetainsOneDomainAndRecoversOriginalPage",
+        "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive",
+        "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative",
+        "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative",
+        "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown",
+        "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping",
+        "TestEconomicConservationPublicPrincipalReviewCannotReplaceOriginalSignature",
+        "TestEconomicConservationPublicRetainsOriginalEarningsCarryAndAggregatePayment",
+        "TestEconomicConservationPublicRetiredUnknownFeeMustRemainHot",
+        "TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress"
+      ]
+    },
+    {
+      "mode": "vet",
+      "status": "PASS"
+    }
+  ],
+  "review": [
+    "Independently parsed exact normal/race38-root raw terminal events: each19pass19fail0skip; failed partition identical. Actual mainnet vet passes. Original wrapper and both ELF handles absent after joined terminal.",
+    "Narrow fixture8d3 continuation addresses the physical root custody blocker. Original successful public native capture/replay bodies remain retained; this mixed outcome is not whole principal qualification. Six Go production causal groups remain separate."
+  ],
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-fd4-positives-v1.terminal.json",
+      "bytes": 2361,
+      "sha256": "37ab4ba17439efc278388ebac703b6bf9a66c7283f5478e7df1a3c050193cdf4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-normal.receipt.json",
+      "bytes": 22872,
+      "sha256": "8004f6146715eb7bdf661cd9eb0225451477e3eebb68cc59d302a943c76169f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-normal-body.stdout",
+      "bytes": 44807,
+      "sha256": "ebf73805af785e9886493d39edb688cd2aac3ec8ea04a72f17d72d68c0fe069d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-go-normal.test",
+      "bytes": 78905024,
+      "sha256": "345072f3513079c3e325b5293199763400888010ada57ee556b3bf0e2f510097"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-race.receipt.json",
+      "bytes": 22879,
+      "sha256": "f1eb5efbd5a707431439c9bd8a3194aed92a0d8e10280a34e1dd02ff3f45b5c0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-race-body.stdout",
+      "bytes": 44863,
+      "sha256": "6a1b7ba982a75a98dbec3ecb47a147c1cd12de6079a804f04e306f57d1354c7d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-go-race.test",
+      "bytes": 106375376,
+      "sha256": "42341912bd3c192c6ef82559b1fce3f23f0a2d56dbe4841f69e992e9f7843ba4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-vet.receipt.json",
+      "bytes": 1832,
+      "sha256": "1a7baf746c8b55cb6f9e6ee5a85a25645e934f4559b74f59691f291b9707a5b2"
+    }
+  ],
+  "requirement_closure": false
+}

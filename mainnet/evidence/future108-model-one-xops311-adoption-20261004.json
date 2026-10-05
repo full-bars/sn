@@ -1,0 +1,35 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "history_count": 0,
+  "job_sha256": "7622d44dd743991faba29ffb955d437cd98c968913de0fbf915f17eb4099a463",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_count": 1,
+  "runner_sha256": "dce6f604d0e6312d05edec071e2914ca2a0f6a36668f05182c92913875ad1d86",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_MODEL_PLUS_ONE_XOPS311_AFTER_COMPILER_JOIN",
+  "schema": "root-model-one-xops311-adoption-v1",
+  "adopted_at_ns": 1791156934999058639,
+  "review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-xops311-concrete-review-20261004.json",
+    "sha256": "8f66e653c9752cb164e91435648050049b7e259d2c1cef861cfa2924818dd4e2"
+  },
+  "candidate": "86f5eedf782e6732371145cfc4644332ef6e9d5e",
+  "source_commit": "09f8f989f88660dda442730a18ed99d505ba1988",
+  "condition": "Launch only after exact compiler v2 durable joined wait and zero compiler census; fresh runner guards required. Existing model retained unchanged. No live deployment or additional bodies authorized.",
+  "unchanged_active_floors": {
+    "data_available_bytes": 6307319808,
+    "docker_available_bytes": 295833415680,
+    "docker_launch_available_bytes": 300128382976,
+    "healthy_guards_changed": false,
+    "memory_available_bytes": 103079215104,
+    "original_data_baseline_rebased": false
+  }
+}

@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/urfoundation/sn/internal/durablefixture"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -65,7 +66,11 @@ func attemptLedgerDiskTestJSONL(t *testing.T, records []AttemptRecord) []byte {
 // Every constructor-owned backend is joined even when a later assertion fails.
 func openAttemptLedgerDiskTest(t *testing.T, dir string, fixture attemptRecordStoreTestFixture, hooks attemptLedgerDiskHooks) *AttemptLedger {
 	t.Helper()
-	ledger, err := newDiskAttemptLedgerWithHooks(context.Background(), dir, fixture.identity, attemptLedgerDiskTestCoordinator, fixture.validatorKey, attemptLedgerDiskTestLimits(), hooks)
+	ctx := t.Context()
+	if fixture.identity.ChainID == 964 {
+		ctx = durablefixture.New(t, ctx, dir).Context
+	}
+	ledger, err := newDiskAttemptLedgerWithHooks(ctx, dir, fixture.identity, attemptLedgerDiskTestCoordinator, fixture.validatorKey, attemptLedgerDiskTestLimits(), hooks)
 	if err != nil {
 		t.Fatal(err)
 	}

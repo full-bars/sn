@@ -1,0 +1,171 @@
+{
+  "baseline": {
+    "normal": {
+      "fail": [
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerTransientKernelObservationRetainsGeneration"
+      ],
+      "pass": [],
+      "run": [
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerTransientKernelObservationRetainsGeneration"
+      ],
+      "skip": []
+    },
+    "race": {
+      "fail": [
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerTransientKernelObservationRetainsGeneration"
+      ],
+      "pass": [],
+      "run": [
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerTransientKernelObservationRetainsGeneration"
+      ],
+      "skip": []
+    }
+  },
+  "created_utc": "2026-10-02T05:48:26.306349+00:00",
+  "files_sha256": {
+    "baseline-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "baseline-normal.jsonl": "d257c39e96449f7fbffd460f4f1252a0f458bad7ce584a7dc2abdedd5260ee73",
+    "baseline-overlay.json": "f464e4532c4387f007382e0dd28dd6e99f17bcdf0545546eff27b3e20ba687e6",
+    "baseline-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "baseline-race.jsonl": "6a3a3d736e56f9253972874e725a14c94ebdad7b713f4da6055035fde9c78efa",
+    "baseline-runner.log": "d976f9341b25848d6419ed7b33c74c62e3aad422b60ea5bc1caa3eacb031ecbb",
+    "normal-attempt-1.jsonl": "ac83525e3e551bb9b98b6cfa638a530217daf255d5e2e8cc19f8cb34e90451d4",
+    "normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "normal.jsonl": "921c7c35fde0d7be171caffd62d52f36d8b6883c382cad4575b499cc1dbfae4e",
+    "race-attempt-1.jsonl": "066aba68e98394e11a07756c72e4eb3bd32d0b97fe05f1e447f13bba6402cd96",
+    "race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "race.jsonl": "ff4aa7787fdf3ac4677d04d250bcf8804ec743ff460b14dd486b889dc3cc6f2e",
+    "run_baseline.sh": "d3ac0f974fd1d397042021ff670120a0c7cf05640f89a41b5e1528b2c02c6c7e",
+    "run_core.sh": "ca9482efef9cc57b21649ba26f0dbc52e1144ecbfa639e9e3694b601a8ab1ffe",
+    "runner-attempt-1.log": "f6d4399cfcb89c5674ca391aa0e527edf79b2691a0215beb1c36be2fb6fe61b9",
+    "runner.log": "d38947d7819cee197c7599c1150b5904ba358a55eae1a44ae4d5f611f74293c6",
+    "vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fixed": {
+    "normal": {
+      "fail": [],
+      "pass": [
+        "TestLoadRejectsAmbiguousDeclaration",
+        "TestMountParserPreservesEscapedCoordinates",
+        "TestOwnerAdmitsDeclaredRootAndDescendant",
+        "TestOwnerCallerErrorsDoNotPoisonIdentity",
+        "TestOwnerCloseJoinsCheckAndRejectsLateAdmission",
+        "TestOwnerConcurrentCheckAndClose",
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerReadOnlyInspectionCannotMutate",
+        "TestOwnerRefusesAbsentMountBeforeCreatingState",
+        "TestOwnerRefusesMissingRootWithoutRecreation",
+        "TestOwnerRefusesReadOnlyAndExhaustedReserve",
+        "TestOwnerRefusesWrongUuidAndRootFilesystem",
+        "TestOwnerRejectsLeaseInsideStateRootAndLeaseReplacement",
+        "TestOwnerRejectsReplacementRootAndMarker",
+        "TestOwnerRejectsSymlinkAndReplacedDescendant",
+        "TestOwnerRewalkRejectsAncestorSymlinkToRetainedInode",
+        "TestOwnerRewalkRejectsWritableAncestor",
+        "TestOwnerSameVolumeRecoveryPreservesCustody",
+        "TestOwnerSnapshotLeaseConflictsWithoutWaiting",
+        "TestOwnerSnapshotOfStoppedRootCoexistsWithOtherRootWriter",
+        "TestOwnerTransientKernelObservationRetainsGeneration",
+        "TestOwnerZeroAndNilStayClosed"
+      ],
+      "run": [
+        "TestLoadRejectsAmbiguousDeclaration",
+        "TestMountParserPreservesEscapedCoordinates",
+        "TestOwnerAdmitsDeclaredRootAndDescendant",
+        "TestOwnerCallerErrorsDoNotPoisonIdentity",
+        "TestOwnerCloseJoinsCheckAndRejectsLateAdmission",
+        "TestOwnerConcurrentCheckAndClose",
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerReadOnlyInspectionCannotMutate",
+        "TestOwnerRefusesAbsentMountBeforeCreatingState",
+        "TestOwnerRefusesMissingRootWithoutRecreation",
+        "TestOwnerRefusesReadOnlyAndExhaustedReserve",
+        "TestOwnerRefusesWrongUuidAndRootFilesystem",
+        "TestOwnerRejectsLeaseInsideStateRootAndLeaseReplacement",
+        "TestOwnerRejectsReplacementRootAndMarker",
+        "TestOwnerRejectsSymlinkAndReplacedDescendant",
+        "TestOwnerRewalkRejectsAncestorSymlinkToRetainedInode",
+        "TestOwnerRewalkRejectsWritableAncestor",
+        "TestOwnerSameVolumeRecoveryPreservesCustody",
+        "TestOwnerSnapshotLeaseConflictsWithoutWaiting",
+        "TestOwnerSnapshotOfStoppedRootCoexistsWithOtherRootWriter",
+        "TestOwnerTransientKernelObservationRetainsGeneration",
+        "TestOwnerZeroAndNilStayClosed"
+      ],
+      "skip": []
+    },
+    "race": {
+      "fail": [],
+      "pass": [
+        "TestLoadRejectsAmbiguousDeclaration",
+        "TestMountParserPreservesEscapedCoordinates",
+        "TestOwnerAdmitsDeclaredRootAndDescendant",
+        "TestOwnerCallerErrorsDoNotPoisonIdentity",
+        "TestOwnerCloseJoinsCheckAndRejectsLateAdmission",
+        "TestOwnerConcurrentCheckAndClose",
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerReadOnlyInspectionCannotMutate",
+        "TestOwnerRefusesAbsentMountBeforeCreatingState",
+        "TestOwnerRefusesMissingRootWithoutRecreation",
+        "TestOwnerRefusesReadOnlyAndExhaustedReserve",
+        "TestOwnerRefusesWrongUuidAndRootFilesystem",
+        "TestOwnerRejectsLeaseInsideStateRootAndLeaseReplacement",
+        "TestOwnerRejectsReplacementRootAndMarker",
+        "TestOwnerRejectsSymlinkAndReplacedDescendant",
+        "TestOwnerRewalkRejectsAncestorSymlinkToRetainedInode",
+        "TestOwnerRewalkRejectsWritableAncestor",
+        "TestOwnerSameVolumeRecoveryPreservesCustody",
+        "TestOwnerSnapshotLeaseConflictsWithoutWaiting",
+        "TestOwnerSnapshotOfStoppedRootCoexistsWithOtherRootWriter",
+        "TestOwnerTransientKernelObservationRetainsGeneration",
+        "TestOwnerZeroAndNilStayClosed"
+      ],
+      "run": [
+        "TestLoadRejectsAmbiguousDeclaration",
+        "TestMountParserPreservesEscapedCoordinates",
+        "TestOwnerAdmitsDeclaredRootAndDescendant",
+        "TestOwnerCallerErrorsDoNotPoisonIdentity",
+        "TestOwnerCloseJoinsCheckAndRejectsLateAdmission",
+        "TestOwnerConcurrentCheckAndClose",
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerReadOnlyInspectionCannotMutate",
+        "TestOwnerRefusesAbsentMountBeforeCreatingState",
+        "TestOwnerRefusesMissingRootWithoutRecreation",
+        "TestOwnerRefusesReadOnlyAndExhaustedReserve",
+        "TestOwnerRefusesWrongUuidAndRootFilesystem",
+        "TestOwnerRejectsLeaseInsideStateRootAndLeaseReplacement",
+        "TestOwnerRejectsReplacementRootAndMarker",
+        "TestOwnerRejectsSymlinkAndReplacedDescendant",
+        "TestOwnerRewalkRejectsAncestorSymlinkToRetainedInode",
+        "TestOwnerRewalkRejectsWritableAncestor",
+        "TestOwnerSameVolumeRecoveryPreservesCustody",
+        "TestOwnerSnapshotLeaseConflictsWithoutWaiting",
+        "TestOwnerSnapshotOfStoppedRootCoexistsWithOtherRootWriter",
+        "TestOwnerTransientKernelObservationRetainsGeneration",
+        "TestOwnerZeroAndNilStayClosed"
+      ],
+      "skip": []
+    }
+  },
+  "initial_setup_failure": "Scratch ancestor was group-writable; protectedAncestor refused all owner fixtures. Corrected mode to 0700 and repeated exact immutable source; initial outputs retained.",
+  "limits": [
+    "Injected kernel facts and real files/leases; no live mount or production storage",
+    "Additive backup and downstream adopter source not qualified"
+  ],
+  "schema": "sol-connect-durable-core-independent-v1",
+  "source": {
+    "baseline_commit": "9df4fd87e5f0b83f6f39388afdaea673a2259cf9",
+    "clean_physical_no_alternates": true,
+    "connect_commit": "5930a97086733acd9ba5b09ab891dcd1b03be651",
+    "connect_tree": "4decadaced2af5327db835c7c08d49e5eb7cd247",
+    "glog_commit": "892ade4a6be396b32ea82a550f243190b5992180",
+    "test_sha256": "cc839e25807a4d5bd1879311d6cf47b706010da1f6ff968c9bff420a91b7ce60"
+  },
+  "verdict": "PASS_SCOPED_CORE_ONLY",
+  "vet_exit": 0
+}

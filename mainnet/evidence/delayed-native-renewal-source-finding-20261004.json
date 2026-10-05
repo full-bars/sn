@@ -1,0 +1,22 @@
+{
+  "schema": "delayed-native-renewal-source-finding-v1",
+  "status": "MUTABLE_SUCCESSOR_DESIGN_REVIEW_FIX_PENDING",
+  "reviewed_working_source": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-producer-renewal/sn/mainnet/economic_native_producer_renewal.go",
+    "sha256": "3af8fd9e39053b3e9dc01fa14459af15fe15fa86ca50d070be727db15c8fc49d",
+    "frozen": false
+  },
+  "finding": "Exact-current cursor/count/completion-chain adoption can make a signed renewal stale when an already-authorized pending block completes or ordinary observation advances during review. It preserves data but can still stall continuation.",
+  "required_behavior": [
+    "Authenticate the signed predecessor as an immutable retained ancestor, without guessing a cursor or replacing evidence.",
+    "Retain intervening original-scope completions and pending intent authority; adopt the new reviewed scope at the next untouched boundary.",
+    "Recheck actual cumulative resource usage and approved monotonic bounds before new effects.",
+    "Reject unrelated, rewritten, missing or regressed predecessor evidence.",
+    "Add deterministic delayed-review and pending-old-scope completion controls."
+  ],
+  "limits": [
+    "Mutable source design finding; no failing executable or production incident claimed.",
+    "No permission to rewrite an approval or weaken economic/runtime/recipient authority.",
+    "Frozen native source and qualification inputs remain unchanged."
+  ]
+}

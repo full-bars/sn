@@ -1,0 +1,27 @@
+{
+  "schema": "coordinator-customer-library-publication-v1",
+  "sources": [
+    {
+      "repository": "sdk",
+      "published_commit": "9ae95704a2303f94963e9d2fad81fa5705a4698c",
+      "remote_main": "9ae95704a2303f94963e9d2fad81fa5705a4698c",
+      "clean": true,
+      "pull_exit": 0,
+      "push_exit": 0
+    },
+    {
+      "repository": "connect",
+      "published_commit": "a53ed36a6e5d0c3d1c2b8c6951ce853fcfd83e06",
+      "remote_main": "a53ed36a6e5d0c3d1c2b8c6951ce853fcfd83e06",
+      "clean": true,
+      "pull_exit": 0,
+      "push_exit": 0
+    }
+  ],
+  "qualification": "SDK9ae scoped receipt4bae1407 and causal18d4ed4f; APIYAML exact565 generated client scope. Connect non-API source exact08d.",
+  "source_join": "customer-current-source-join-20261003.json",
+  "limits": [
+    "Public source only; deployed clients and server not observed.",
+    "Final Server graph composition/full model still pending."
+  ]
+}

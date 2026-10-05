@@ -1,0 +1,555 @@
+{
+  "author_validation": "Source/hash/AST and actual joined-wait/closed-DB readback only. No test body, compiler, service start or deployment.",
+  "candidate": "482050c3194412b620940d22d87acc00a91847b2",
+  "canonical_lease_unit": {
+    "expected_properties": {
+      "ActiveState": "active",
+      "ExecMainStartTimestampMonotonic": "1050376633119",
+      "InvocationID": "b71e5474e5274fc3bc60009f2ddbb418",
+      "MainPID": "3404159",
+      "RuntimeMaxUSec": "8h"
+    },
+    "expiry_monotonic_us": 1079176633119,
+    "name": "sn-canonical-host-lease-108-successor-v2-20261005.service"
+  },
+  "canonical_main": "/home/by/urnetwork/xops",
+  "closed_owned_db_readbacks": [
+    {
+      "label": "selected4b-model37",
+      "readback": {
+        "actual_waits": [
+          {
+            "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-owned-db-v1.process-result.json",
+            "sha256": "b52b5cc46529554b84177af0ec933c0e5aef04095324abbcc180956d8c61b97e"
+          },
+          {
+            "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-normal-v1.process-result.json",
+            "sha256": "d0cfe582165cb70bdfacd83d72d49c78144cc52ba3d6fbbfd6d6139f1c09e902"
+          }
+        ],
+        "body_receipt": {
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-normal-v1.receipt.json",
+          "sha256": "47374c493124786dcf0f29bb2a2758319b4df2c546ba8e17c746c670cc647cae"
+        },
+        "body_status": "PASS",
+        "cleanup_exit": "0",
+        "fallback_cleanup": {
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-owned-db-v1.fallback-cleanup.json",
+          "sha256": "747bbfc159c2f867734b27872261a8cf60110c257104fb596677fdb1b14e7b13"
+        },
+        "owned_containers_absent": {
+          "postgres": {
+            "id": "9b8deb8d1da0156137e8ceed0652630eef78c8bdc67b2f2ab5fc6259828d781b",
+            "remaining": ""
+          },
+          "redis": {
+            "id": "d146d1670b8fc1b022243ad9b6a412419321933b4b3d35ba1179de87dde54391",
+            "remaining": ""
+          }
+        },
+        "owned_network_absent": {
+          "id": "b409e00c21d6f905790b8d9b7a4d9a5eef7b2987b770f638d3e7b6de7083786f",
+          "owner": "72becb9cf81011c27ad7ca026eb39f47"
+        },
+        "owner_terminal": {
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server4b-model37-owned-db-v1.terminal.json",
+          "sha256": "b61f97fc10add12ab4da69e7388600ee9c1a0b3b79c7edba61c07c1a1f62060c"
+        },
+        "resource_qualified": true,
+        "scope": "Exact prior selected4b model37 actually joined and cleaned; no prior body PASS inferred."
+      }
+    },
+    {
+      "label": "selected-server9430262c-monitor17",
+      "readback": {
+        "actual_waits": [
+          {
+            "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-owned-db-v1.process-result.json",
+            "sha256": "058b349e5c39bfb5f1b7eb167e680139e346ba74d4aa37477ad68e500def81a7"
+          },
+          {
+            "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-normal-v1.process-result.json",
+            "sha256": "d7a7c207da3caade7376fe4473c4ff62d3d0e6f313780fe1714492ac190d16b4"
+          }
+        ],
+        "body_receipt": {
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-normal-v1.receipt.json",
+          "sha256": "c74f448d4ad16e77a45e62105c372664345e4c569998a12350903f8b6414237c"
+        },
+        "body_status": "FAIL_OR_INCOMPLETE",
+        "cleanup_exit": "0",
+        "fallback_cleanup": {
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-owned-db-v1.fallback-cleanup.json",
+          "sha256": "402b009acc8e7725360d8067bd236ed82d3245ed4032e64d9aedfa871113d7c5"
+        },
+        "owned_containers_absent": {
+          "postgres": {
+            "id": "d7b35c0abfb9ee9fb145523f6d8902bba4a4fd06999d597c2839fcedcab57266",
+            "remaining": ""
+          },
+          "redis": {
+            "id": "0677c19802a3d00e53a8dd4f04b73549815087b207ddb573c8542dfc7d25e2ba",
+            "remaining": ""
+          }
+        },
+        "owned_network_absent": {
+          "id": "798442300bef2e3caf79c9b826d3f86ae640b320da9af3ecda4861ab309bd86a",
+          "owner": "2d3473f10a0e379ed82a2d24ef543f19"
+        },
+        "owner_terminal": {
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-owned-db-v1.terminal.json",
+          "sha256": "04b2366c40ef6260f444730c07ea4c391b65c5dcc3cdde1c695584021309c500"
+        },
+        "resource_qualified": true,
+        "scope": "Exact prior selected4b model37 actually joined and cleaned; no prior body PASS inferred."
+      }
+    },
+    {
+      "label": "selected1ea-native-model30",
+      "readback": {
+        "actual_waits": [
+          {
+            "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server1ea-native-model30-owned-db-v1.process-result.json",
+            "sha256": "3c04b170ab62ae9ad1b0c578c8be12ab94df8b4fc40ee0e55a3c3e441a663297"
+          },
+          {
+            "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server1ea-native-model30-normal-v1.process-result.json",
+            "sha256": "f550e5f5f7936d74f7d4a499eb6e42729cbafa3b604db07cdcf7e73a8710b525"
+          }
+        ],
+        "body_receipt": {
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server1ea-native-model30-normal-v1.receipt.json",
+          "sha256": "479661de38fcca52623bcd970ca1325006f9702219274a9f9ac96a57a3d6c5c9"
+        },
+        "body_status": "PASS",
+        "cleanup_exit": "0",
+        "fallback_cleanup": {
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server1ea-native-model30-owned-db-v1.fallback-cleanup.json",
+          "sha256": "779242c141ce350c9f093ee45f4686a0262f06768cf91d7108818ea1175baa9d"
+        },
+        "owned_containers_absent": {
+          "postgres": {
+            "id": "e3fc79eb07af05615c495d32fef21e51d25469cf9fb811a0b1cca860f6b6ec6e",
+            "remaining": ""
+          },
+          "redis": {
+            "id": "bcd626481930a2cbc376c118dfa55b65e9f66393c67ced392a5751d0fee984d3",
+            "remaining": ""
+          }
+        },
+        "owned_network_absent": {
+          "id": "d14947762cc0b5afd44f032a1c4d0ed94f2d783155c66eba119c9246329bfe58",
+          "owner": "607ba5297bc76af78d8a3f45b331806f"
+        },
+        "owner_terminal": {
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server1ea-native-model30-owned-db-v1.terminal.json",
+          "sha256": "1a3acc6a60a2523968bb1ad0d62fbc26bf46fe9ced7db93f346239cfc5214eaa"
+        },
+        "resource_qualified": true,
+        "scope": "Exact prior selected4b model37 actually joined and cleaned; no prior body PASS inferred."
+      }
+    }
+  ],
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 2147483648,
+    "MemorySwapMax": 0,
+    "log_limit_each_bytes": 33554432,
+    "manager": "user",
+    "timeout_seconds": 900,
+    "uid": 1000,
+    "unit": "sn-final482050-main-xops-control1-conservation33-v3-20261005.service"
+  },
+  "forecast": {
+    "basis": "Existing one-short forecasts and limits retained for serial control1 plus33, with33 unique roots. No measured future peak claim.",
+    "held_former_model_disk_bytes": 4294967296,
+    "held_former_model_memory_bytes": 4294967296,
+    "margin": 2,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "healthy_guards": {
+    "data_active_formula": "max(6307319808, immediate_available-2147483648)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "rebased_or_retargeted": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-main-xops-control1-conservation33-job-v3.json",
+    "sha256": "ec8194f280cb9a79583a46d5bdd6fb3cbab6687b0a8fd0479ab5f5f63f8a0afa"
+  },
+  "mandatory_environment": {
+    "GOMAXPROCS": "2",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/by/urnetwork/.virtualenv/brien/bin:/usr/local/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "SN_MAINNET_PROMETHEUS": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/prometheus",
+    "SN_MAINNET_PROMTOOL": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+    "SN_MAINNET_SOURCE": "/mnt/data/urnetwork/astra-domain-dashboard-20261004/sn-source-09f8f989"
+  },
+  "metadata_delta_from_v2": [
+    "adoption_path",
+    "bindings",
+    "label",
+    "predecessor_wait_paths",
+    "scratch",
+    "systemd_unit"
+  ],
+  "phase_order": [
+    "control1",
+    "conservation33 only if control passes"
+  ],
+  "predecessor_waits": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server9430262c-monitor-normal-compile-v1.process-result.json",
+      "sha256": "c2a4d944a13e0b185ead8ec87610def0d785988ee2745c5f405d2f1cb5a1d0b7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-owned-db-v1.process-result.json",
+      "sha256": "058b349e5c39bfb5f1b7eb167e680139e346ba74d4aa37477ad68e500def81a7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-normal-v1.process-result.json",
+      "sha256": "d7a7c207da3caade7376fe4473c4ff62d3d0e6f313780fe1714492ac190d16b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-xops311-retry3-v1.process-result.json",
+      "sha256": "2be851a78935c598187405c33acb85b1832a48d9fc49e66863fe73161fc5e710"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final2f1043-xops-conservation33-v1.process-result.json",
+      "sha256": "cf246d6d20befc1467afc318f09832b1fe8e2b8f054369741b0fde7e37dd9df6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server1ea-native-model30-owned-db-v1.process-result.json",
+      "sha256": "3c04b170ab62ae9ad1b0c578c8be12ab94df8b4fc40ee0e55a3c3e441a663297"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server1ea-native-model30-normal-v1.process-result.json",
+      "sha256": "f550e5f5f7936d74f7d4a499eb6e42729cbafa3b604db07cdcf7e73a8710b525"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-payoutartifact.process-result.json",
+      "sha256": "f044b6360281a7e6d5133639e88bd8aa00d99eda0eeceb3b9e2ef5ae62f6b9f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-mainnet.process-result.json",
+      "sha256": "4992d6d9f6e3f66d712b64dac6df79f59e2dc3f49ef025462ea0511b643f4a15"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-miner.process-result.json",
+      "sha256": "b16956de74fdd86fbbab7fdcbf28c57183c0dd9b8c5a1c33da7ce86715ad3239"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-onchain.process-result.json",
+      "sha256": "9892c708abfda1de7f9781892c9611946d7d053301ff45536985b8f451eb3fa6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-validator.process-result.json",
+      "sha256": "7a6ebe3ebd4bf20d4885c8312309de24bd42a12379a71fe4cfda9685321e4119"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-crv4.process-result.json",
+      "sha256": "ce37ffca9b4837c3a8bcd64a42c5b1923fb9f12ffa122bd4a0a58326ad5e56f3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest475-core07-server87d-recovery7-compile-v1-core.process-result.json",
+      "sha256": "38b4300c829576952762993d0c07b9c8a0ae5bbf97d703904d814628cac87bb5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-stage-sn.process-result.json",
+      "sha256": "e5ccda358eae43edeb7dfeb6de4a55cd287283ec7602f196cfd2ddd1c3dd7857"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-stage-connect.process-result.json",
+      "sha256": "ddbcc2f125d848fc50f3dd09d414d87986f96edbc0ea2d302c29b474fa59dbf8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-stage-server.process-result.json",
+      "sha256": "b722a3e9c101c31b57150ba95d7e639a58551d1510d144f0e8adb32c3cd97ae8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-fetch-gvisor.process-result.json",
+      "sha256": "063c3dc15c86c8f6cb6d19a5f890b99126abb2b5c3746948879fca322206da03"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-sn.process-result.json",
+      "sha256": "11af6eca6d9fd61099c673f65c3f92305abcf9ae008d853cf8139adcb328fce8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-connect.process-result.json",
+      "sha256": "b1f0a024ef9589ab9b6b5040035e5f58badc1fdd63183ef2cecdc2127de58d1c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-babb-7ca-3e1-metadata-v1-list-server.process-result.json",
+      "sha256": "009f2ebeb211130be8cca4588991e4764f961bd9b2060f35f26ab88092be9b81"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-normal-v1-list.process-result.json",
+      "sha256": "ab20c620ce73f595c1e03f9a2d63102b3624ef703a295a18a9849d88dae2b23e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-native-carry3-normal-v1.process-result.json",
+      "sha256": "a18590c23b5a29eef8e9414d4f8c8536293202716a1756b2c52212f6ac426966"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-01.process-result.json",
+      "sha256": "24c7229de13a0b47b153636c2780ba7811b50ecf3d13a919b10446b0d16f25d9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-02.process-result.json",
+      "sha256": "1d9b2f15d8dd50407960f8e5a9c5d4549bf357c1672229273386ad367a58be57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-03.process-result.json",
+      "sha256": "6db67a21e08ecbf9243890f19d6cdd7cd064cc26da6c478ea8ec1799366ab51c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-04.process-result.json",
+      "sha256": "96e328790c5d73bd8ec62cc7eae8cb30f00eb8779459c7e94adf60ce35b5606d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-05.process-result.json",
+      "sha256": "fbecc2c6a6b8d1815ca898801a12bc6dec27d5de17222f65adfd3f4644f4c9a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-06.process-result.json",
+      "sha256": "4eedf2c4489edfc46c1a04c115e99f6a8305563a819979d61c7a0ed46ac069b9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-07.process-result.json",
+      "sha256": "fd2830ae346f64f5f200672a7605e4e5a9794971fd0d572678ad69b4e905d00d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-08.process-result.json",
+      "sha256": "779e5dc543446201e0b0ed2c688d201eab80746c0244fe34d463fab8c466bcc4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-09.process-result.json",
+      "sha256": "5dd08a60bfa432f6f44fd42566c750872c24daa9fa4f7e2abeab5fc159640ee3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-10.process-result.json",
+      "sha256": "ca5e130d8df6a191725c6eae3b9342d772628f081d1863792b1fa3ce0134ad15"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-11.process-result.json",
+      "sha256": "107e7d9cf6f89dd2f81aa9b1bc96c471bb321661c7bb4f6ce29af835dee45b3e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-12.process-result.json",
+      "sha256": "fa8f9d3f578d06658023401d1dff6a706189c1113321223ce44a7f3d1bcfae2f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-13.process-result.json",
+      "sha256": "949e064402738d6db4c3a1c518f5b558fcfb955002f5ac65204fecd14b928354"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-14.process-result.json",
+      "sha256": "afd7bf233bff4052bae13e725bd8dcc2d58d1bc3384214b8eb4c5799e18a1c62"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-15.process-result.json",
+      "sha256": "7a803dbecbfacdcc01d7e385615b503617ffed4cbc3b8d90dcf46f0b1d0343af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-16.process-result.json",
+      "sha256": "641201fff49732f707995f072ed23e01202b052493422440ca69a3b3aaa30fe7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-17.process-result.json",
+      "sha256": "93d26eec02f71a08264b2da1374b40ada355daf216e4f2d2b0d6d818015113e2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-18.process-result.json",
+      "sha256": "63ef81b89b32d3838fcde9bc168f330518dd46eaf6f63fcbe6d0ac409d36bfbb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-19.process-result.json",
+      "sha256": "10d660ca372fe4cc0ee9b0951970f8a7b6f0db4b8c026b3332ca04aea327e577"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-20.process-result.json",
+      "sha256": "7ec8a566a00eaa898ae4afb8bd5464f671c3afebb9bdd9c6c27328d802ddd9e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-21.process-result.json",
+      "sha256": "985081f73babd932355041defcab0dc3589a9bee75896776c749f5e1fe16b017"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-22.process-result.json",
+      "sha256": "6d8a815781eb085f07798a8cbf08ac07b873c8be1407c9032c61880a56b47d7e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-23.process-result.json",
+      "sha256": "a9170d26cd07711ca88f8f677b940393dbbf2c516aaf99d76ba919cfc427f167"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-24.process-result.json",
+      "sha256": "c9c638401805c344bf924fc640c6a0a707402e95a45fb9e2363eac5bb986e183"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-25.process-result.json",
+      "sha256": "f0013a27e6057bb209e3ef5b7ae2fc45454d65ebda9c43da3191ab33a85ee5b1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-26.process-result.json",
+      "sha256": "ad8a2f7154021738bdf8a0a630bd2291bad91e4d08956bb8b7599f5287abf3c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-27.process-result.json",
+      "sha256": "8ff6745c43a881e9d11dbc8806f6e50fc912f4222413704cd241e1b2bcc29d44"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-28.process-result.json",
+      "sha256": "d1b674b0aaf0c9701df4f319f8e3716b65268ebd3c013caa3392db391d62f693"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-29.process-result.json",
+      "sha256": "2f0c32a493529c4cc040a0e98c7c32df58891e842716194ee98e4be7715fcd1d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-30.process-result.json",
+      "sha256": "0289261295df9548e96a4fc4e47edb795c292d7f2ef5ce239de5caec7614e2b3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-31.process-result.json",
+      "sha256": "1b8c19bb69f0300c5575cff88fb2ae3ee998c6a9e8cc72a5bda299238d4aa1ce"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-32.process-result.json",
+      "sha256": "64b69d8da2a1f30a42a1262c5f6df40db593d06e6d07e9efd3605dc28dc09676"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-33.process-result.json",
+      "sha256": "db23d404aa3e0a4cfef96e2f9fbfca0e69f330b219ce4c8a847089101000b22c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-34.process-result.json",
+      "sha256": "0f2d279260969c466347f8aae97d5378964f48b83969ab00427abc2f8ae22598"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-35.process-result.json",
+      "sha256": "123a52d4246f2a462524207d6badaa9a12d7b5882409fd711ad74a4fb07bc77a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-36.process-result.json",
+      "sha256": "d1b1c970d9a8b06f6e913ea0b2385b7018d21218cbfa988401ace433a23b85b1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-37.process-result.json",
+      "sha256": "504281962bafdc900355ca0c0c8179814b7c80f5f5b8ad0bc2115c759c1a6890"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-38.process-result.json",
+      "sha256": "959bd2b4f4f11017afe4ce9703a648ee1f11cbed7fb564b4b07ae829290a8d35"
+    }
+  ],
+  "prior_failed_2f_actual": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final2f1043-xops-conservation33-v1.receipt.json",
+    "sha256": "56748837d4ee77742f4af3250d30a34916566469739a05cdbaad3aa64e18ee2b"
+  },
+  "prior_failed_2f_raw": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final2f1043-xops-conservation33-v1.stderr",
+    "sha256": "dc3e011ea0c26840d485e44b6d8463a519653da4057a1d5bba70abc8dbe7e960"
+  },
+  "prior_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-final482050-main-xops-control1-conservation33-review-v2-20261005.json",
+    "sha256": "f52685b24f828feb9f18a84e6f098d4aa2cc65b51d0a1e1fc97ca04252f38bbb"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "ec8194f280cb9a79583a46d5bdd6fb3cbab6687b0a8fd0479ab5f5f63f8a0afa",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 0,
+    "runner_sha256": "8cb4165f20ade11003551636ba2d4d98678b4d1aaf790572ea67c59ece1927c0",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_ONE_MAIN_XOPS_CONTROL1_CONSERVATION33_AFTER_JOIN"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-final482050-main-xops-control1-conservation33-adoption-v3-20261005.json",
+  "retained_prior_outcome": {
+    "fail": 1,
+    "new_execution": "UNRUN",
+    "pass": 32,
+    "skip": 0
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final482050-main-xops-control1-conservation33-v2.py",
+    "sha256": "8cb4165f20ade11003551636ba2d4d98678b4d1aaf790572ea67c59ece1927c0"
+  },
+  "rust38_predecessor": {
+    "all_actual_waits_joined": true,
+    "receipt": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2.receipt.json",
+      "sha256": "50d38265e783204d8c1868d1e013600c73ed4e8ae2411dbc58bb79bb7304a950"
+    },
+    "retained_totals": {
+      "fail": 1,
+      "not_run": 0,
+      "pass": 37,
+      "planned": 38,
+      "run": 38,
+      "skip": 0
+    },
+    "scope": "Completed predecessor custody only; its failed body outcome is preserved.",
+    "user_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-user-terminal-readback.json",
+      "sha256": "248101b124f23084aab69626b66749abacc7548bb2c15790737c0e589d8d4eeb"
+    }
+  },
+  "schema": "final482050-main-xops-control1-conservation33-concrete-review-v3",
+  "scope": "Targeted verification on canonical Xops main: control1 then conservation33 serial,33 unique roots/34 invocations.",
+  "sealer": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/seal-final482050-main-xops-control1-conservation33-after-rust38-v3.py",
+    "sha256": "2540afa852d917823b0f82ff3c81174e9f1d8d431967e51e6a6ee9259e8eb7aa"
+  },
+  "selected_test_invocations": 34,
+  "selected_unique_roots": 33,
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-main-xops-control1-conservation33-source-closure-v2.json",
+    "sha256": "a1d89bb00947b7c07b86e354b42dbde7e0fce91572fd527b7916a31fdb1cc9ef"
+  },
+  "source_commit": "09f8f989f88660dda442730a18ed99d505ba1988",
+  "status": "SOURCE_SEALED_PENDING_INDEPENDENT_RESOURCE_REVIEW",
+  "template": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final482050-main-xops-control1-conservation33-job-v2.json",
+    "sha256": "324f5d5d3c63c9fa28a3c30c5138b83afabaa7e9a46f48f62cc4903dbb61362c"
+  },
+  "tools": [
+    {
+      "path": "/home/by/.pyenv/versions/3.14.7/bin/python3.14",
+      "sha256": "5f4016bc51761a8b135d601ed5714a58ce3e74831aea2838d0d72f1be5bd6e6c"
+    },
+    {
+      "path": "/usr/bin/bash",
+      "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"
+    },
+    {
+      "path": "/usr/bin/git",
+      "sha256": "2a8c18fbf43da9f692d75474c72bea9dfd796c260b0f3dfe456376abc3bbd668"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+      "sha256": "e59210d5474e2c811a4460fb1593d708b94d58107ae62e9d44e88029bb7e5805"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/prometheus",
+      "sha256": "4ee49f574d80682b6571f017c8f42f2532aa3603b725b51ecb0cb864f06c2282"
+    }
+  ],
+  "whole_owner_horizon_seconds": 1290
+}

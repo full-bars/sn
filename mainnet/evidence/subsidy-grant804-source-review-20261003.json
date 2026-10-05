@@ -1,0 +1,65 @@
+{
+  "captured_utc": "2026-10-03T19:21:41.547956+00:00",
+  "git_bindings": [
+    {
+      "bytes": 65567,
+      "git_blob": "c28829ec14e92bbc4050fa2faf2d5c4fd058617b",
+      "path": "model/account_payment_model_test.go",
+      "sha256": "96032d99a9633370d9928861cf273d6f405781fb319c3a422a5273fbf7b4c3c6"
+    },
+    {
+      "bytes": 209917,
+      "git_blob": "c891da1ee845e48e3af77de4c3365351cd81760b",
+      "path": "model/subscription_model.go",
+      "sha256": "4c702f4ad67452a78c7eab454bf7ff33923e3788733ff751f7a6e78db4a828d7"
+    },
+    {
+      "bytes": 19942,
+      "git_blob": "e5e612140da17a90663529fe286a783d33a0d7de",
+      "path": "model/subscription_redis_admission.go",
+      "sha256": "2d84b50e1ec3faaa39c5b59a5bb469a6958d6f57b01d4a71130d8b7af9a20bef"
+    },
+    {
+      "bytes": 15322,
+      "git_blob": "337aa821f606ec5a9b5127b653efd48e2917b894",
+      "path": "model/subscription_escrow_shrink_test.go",
+      "sha256": "77720ccdb11977d0f4848fed930c2b02770978f4a0c14ddf3263368e5e81c894"
+    },
+    {
+      "bytes": 10651,
+      "git_blob": "a190544065db636d96cb7fe4e8a4595fa9a90e58",
+      "path": "go.mod",
+      "sha256": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8"
+    },
+    {
+      "bytes": 69535,
+      "git_blob": "64196defd4d83f778c42fecd14a1677f154d000e",
+      "path": "go.sum",
+      "sha256": "faf759f6bd62a41e196e796268466aadb3dcc13ac3b65fb724bbdc870f53e5b6"
+    }
+  ],
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/payment-grant-fixture/evidence/intake.json",
+    "sha256": "28d705bee04420eeb9c973dc4a7e2637916c41d9757a6eab616bd78d80b08349"
+  },
+  "qualification": "After original full suite is terminal, Sol must execute affected root and two declared neighbors normally/race with exact source join and finite resource admission. Retain original failed full-suite result; no all-green original invocation is claimed.",
+  "readiness": "No behavioral pass, merge or requirement closure.",
+  "schema": "urnetwork-root-subsidy-grant-source-review-v1",
+  "source": {
+    "base": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+    "changed_paths": [
+      "model/account_payment_model_test.go"
+    ],
+    "commit": "80485878bde4e0761e45669643b0f5eb794ae9f2",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/payment-grant-fixture/server",
+    "tree": "339a93d20a08b11f6d048b88330e1e448ce50eff"
+  },
+  "status": "SOURCE_REVIEWED_BEHAVIOR_PENDING",
+  "verified": [
+    "Exact clean HEAD/tree and sole changed path over published Server5f.",
+    "All6 Git blob/physical source hash/size bindings verified from Git objects; sparse checkout is not a complete filesystem census.",
+    "All3 declared test roots exist. Existing Testing_NetEscrowByteCount helper exists in full source.",
+    "Changed TestPaymentPlanSubsidy body consumes actual returned grant and checks both close results; requires reduced tail, exact1TiB consumed, no open contracts, zero available bytes and reservations.",
+    "Original empty-active-row and subsequent payout assertions are retained; production and module inputs are unchanged."
+  ]
+}

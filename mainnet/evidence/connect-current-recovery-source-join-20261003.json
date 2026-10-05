@@ -1,0 +1,18 @@
+{
+  "schema": "mainnet-connect-current-recovery-source-join-v1",
+  "observed_utc": "2026-10-03T03:01Z",
+  "repository": "/home/by/urnetwork/connect",
+  "published_main": "5def2fa4391ba7a1028af048c99c91cc1c7254fc",
+  "merge_parents": [
+    "9e7ec0afa426472c083c750196155f5708e7d23b",
+    "b8bd3c9948552f8390e1f66bb0697551ec3979a8"
+  ],
+  "qualified_restore_source": "9e7ec0afa426472c083c750196155f5708e7d23b",
+  "new_local_discovery_source": "b8bd3c9948552f8390e1f66bb0697551ec3979a8",
+  "identical_durablevolume_tree": "205b2e9b1613f44d1ab204363f2e413219ddf3cd",
+  "changed_paths_from_qualified_source": [
+    "ip_remote_multi_client_api.go",
+    "ip_remote_multi_client_discovery_local_test.go"
+  ],
+  "scope": "Git source identity only; consumer compilation, behavior and deployment not established"
+}

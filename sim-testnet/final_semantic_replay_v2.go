@@ -167,7 +167,7 @@ func openFinalValidatorReplayV2(ctx context.Context, evidence *FinalSemanticEvid
 	readControl := func(locator FinalArtifactLocator) ([]byte, error) {
 		return loadFinalV2Source(ctx, load, locator, maximumCampaignEvidenceRawFileBytes)
 	}
-	planBytes, err := readControl(evidence.PlanArtifact)
+	planBytes, err := loadFinalV2Source(ctx, load, evidence.PlanArtifact, maximumSetupPlanFileBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func openFinalValidatorReplayV2(ctx context.Context, evidence *FinalSemanticEvid
 	if err != nil {
 		return nil, err
 	}
-	sourceBytes, err := readControl(manifest.SourcePlan)
+	sourceBytes, err := loadFinalV2Source(ctx, load, manifest.SourcePlan, maximumSetupPlanFileBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -194,6 +194,9 @@ func openFinalValidatorReplayV2(ctx context.Context, evidence *FinalSemanticEvid
 	for index, source := range manifest.Capture.Sources {
 		if index > 0 && finalCaptureSourceV2Key(source.Source) <= finalCaptureSourceV2Key(manifest.Capture.Sources[index-1].Source) || source.Artifact.Kind != "validator-evidence-v2-source" {
 			return nil, errors.New("final V2 source census is not complete and canonical")
+		}
+		if err := validateFinalJournalCaptureSourceV2(source); err != nil {
+			return nil, err
 		}
 		census[source.Source] = source.Artifact
 	}
@@ -267,7 +270,11 @@ func openFinalValidatorReplayV2(ctx context.Context, evidence *FinalSemanticEvid
 		if !found {
 			return nil, errors.New("final V2 source escaped its closed census")
 		}
-		return loadFinalV2Source(ctx, load, locator, max(maximumCampaignEvidenceRawFileBytes, release.EvidenceV2.Bounds.IntentFileLimit()))
+		maximum := max(maximumCampaignEvidenceRawFileBytes, release.EvidenceV2.Bounds.IntentFileLimit())
+		if finalJournalCapturePathV2(locator.URI) {
+			maximum = maximumFinalJournalBytes
+		}
+		return loadFinalV2Source(ctx, load, locator, maximum)
 	}, ScratchRoot: owner.root, MaximumBytes: limits.dataBytes + limits.controlBytes, MaximumObjects: limits.maximumObjects, Adoption: adoption})
 	if err != nil {
 		return nil, err

@@ -1,0 +1,80 @@
+{
+  "baseline_commit": "6cfc4773038fae8b1de07807eeeb4a97c32d07d3",
+  "clean_physical_no_alternates": true,
+  "created_utc": "2026-10-02T06:11:31.930384+00:00",
+  "delta_from_baseline": [
+    "mainnet/MAINNET.md",
+    "mainnet/PRELAUNCH-FIXES.md",
+    "mainnet/evidence/monitor-deployment-independent-20261002.json",
+    "mainnet/evidence/monitor-deployment-offline-20261002.md",
+    "mainnet/evidence/native-economics-context-and-schedule-20261002.md",
+    "mainnet/evidence/release-1320845d-server0aa1-20261002.json",
+    "mainnet/evidence/release-1320845d-server0aa1-20261002.md",
+    "mainnet/evidence/release-258e25b4-server0aa1-20261002.json",
+    "mainnet/evidence/release-258e25b4-server0aa1-20261002.md",
+    "sim-testnet/evidence_relay_provisional_continuation_test.go",
+    "sim-testnet/runtime_evidence_activation_rpc_v2_test.go"
+  ],
+  "files_sha256": {
+    "run_sn_fixture.sh": "a1f6a0033cbf2e8e421ea765d3c91a69957d94ab7a47b274ef301591c33b9866",
+    "sim-testnet-vet.log": "e46199c293c949f98ffb1eb1bf6c452df1d963f391c8c803569d3760de46b628",
+    "sn-fixture-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn-fixture-normal.jsonl": "23146c2ece61d80c50875c53b29162ae56d50094070d2c365c4f1c620bc81c99",
+    "sn-fixture-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn-fixture-race.jsonl": "4453dac4d6ec7a776c2ac571d437ba13db92b5e085e2e4aeffb08a57c5ed6343",
+    "sn-fixture-runner.log": "fae949e0ac3a78637bb0b7caee75738f424b351e4a70d7ad72d8708aa487b523",
+    "sn-fixture-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn-fixture-vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": [
+    "Two directly affected roots normal; ten related roots race; full sim-testnet package vet",
+    "No production Go/module change or launch claim"
+  ],
+  "normal": {
+    "fail": [],
+    "pass": [
+      "TestProvisionalRelayContinuationForecastEndIsAdvisoryAcrossRestart",
+      "TestProvisionalRelayContinuationPreparesActualHorizonWithoutReapproval"
+    ],
+    "run": [
+      "TestProvisionalRelayContinuationForecastEndIsAdvisoryAcrossRestart",
+      "TestProvisionalRelayContinuationPreparesActualHorizonWithoutReapproval"
+    ],
+    "skip": []
+  },
+  "original_baseline_vet_failure": "sim-testnet evidence relay fixture copied sync.Mutex at lines139 and218",
+  "production_go_and_module_bytes_unchanged": true,
+  "race": {
+    "fail": [],
+    "pass": [
+      "TestProvisionalRelayContinuationForecastEndIsAdvisoryAcrossRestart",
+      "TestProvisionalRelayContinuationPreparesActualHorizonWithoutReapproval",
+      "TestProvisionalRelayContinuationRejectsCorruptDebit",
+      "TestProvisionalRelayContinuationRejectsCorruptPendingCensus",
+      "TestProvisionalRelayContinuationRetainsExactSignedCensus",
+      "TestRuntimeEvidenceActivationRpcV2PreparesFourActualSignedSources",
+      "TestRuntimeEvidenceActivationRpcV2RejectsChangedHistoricalUid",
+      "TestRuntimeEvidenceActivationRpcV2RejectsLostHistoricalPermit",
+      "TestRuntimeEvidenceActivationRpcV2RejectsRawAlphaWithoutCalculatedStake",
+      "TestRuntimeEvidenceActivationRpcV2RetryRetainsOriginalSignedBytes"
+    ],
+    "run": [
+      "TestProvisionalRelayContinuationForecastEndIsAdvisoryAcrossRestart",
+      "TestProvisionalRelayContinuationPreparesActualHorizonWithoutReapproval",
+      "TestProvisionalRelayContinuationRejectsCorruptDebit",
+      "TestProvisionalRelayContinuationRejectsCorruptPendingCensus",
+      "TestProvisionalRelayContinuationRetainsExactSignedCensus",
+      "TestRuntimeEvidenceActivationRpcV2PreparesFourActualSignedSources",
+      "TestRuntimeEvidenceActivationRpcV2RejectsChangedHistoricalUid",
+      "TestRuntimeEvidenceActivationRpcV2RejectsLostHistoricalPermit",
+      "TestRuntimeEvidenceActivationRpcV2RejectsRawAlphaWithoutCalculatedStake",
+      "TestRuntimeEvidenceActivationRpcV2RetryRetainsOriginalSignedBytes"
+    ],
+    "skip": []
+  },
+  "schema": "sol-sn-relay-fixture-independent-v1",
+  "source_commit": "734a82dc338e3a00ef790c7574f5110051475fcd",
+  "source_tree": "e1f7e290d029aa7c300b71ce6c9d03bad6ea0944",
+  "verdict": "PASS_SCOPED_TEST_FIXTURE",
+  "vet_exit": 0
+}

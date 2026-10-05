@@ -1,0 +1,55 @@
+{
+  "active_fault_file_present": false,
+  "all_supervised_healthy": true,
+  "files": {
+    "anomalies": {
+      "bytes": 52328,
+      "path": "runs/20260926T202718.915754659Z-release-1.0/anomalies.json",
+      "sha256": "1374ee6eda54dacd1aa37bccaab0bc709b6526a4ba7fc21277f677bc975099d0"
+    },
+    "attempt": {
+      "bytes": 73863,
+      "path": "campaign-attempts/release-1.0.recovery.48.evidence.json",
+      "sha256": "400aa804ddc95173672ec82ff6fcf3e0389cb6029c8e5e7b391d09bcea0b7d86"
+    },
+    "faults": {
+      "bytes": 58546,
+      "path": "runs/20260926T202718.915754659Z-release-1.0/faults.json",
+      "sha256": "3850a3d11b09d63f58523e0131ddd8496b23ce42ade1ea889537c1c868ce1628"
+    },
+    "observations": {
+      "bytes": 23944564,
+      "path": "runs/20260926T202718.915754659Z-release-1.0/observations.jsonl",
+      "sha256": "318f4e97d0aa4d4c6601512d7492706bd8aa07284b273359a78c516bbb79e951"
+    },
+    "process_logs": {
+      "bytes": 83678,
+      "path": "runs/20260926T202718.915754659Z-release-1.0/process-logs.json",
+      "sha256": "39bdfff426a567f2b461c97adfed143b084e1c68b55e6934db200b37cbc8f3f1"
+    },
+    "result": {
+      "bytes": 240434,
+      "path": "runs/20260926T202718.915754659Z-release-1.0/result.json",
+      "sha256": "289c3331282546b22289f1ccc4ccf4cb02c26e70af731dc55a451e4ff3179aef"
+    }
+  },
+  "owner_alive": false,
+  "qualification": {
+    "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/qualification-final.json",
+    "sha256": "f2753b6a975219d83af78a70e593b4789ea06f123d0da25b520cb602fc3a8173"
+  },
+  "read_at": "2026-09-26T23:04:28.019802+00:00",
+  "repair_receipt": {
+    "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/live-repair-receipt.json",
+    "sha256": "6f4aef7de67f1a36f9bbb5d1980b2561e5dcf0df9f0415724dbebcc8c806684c"
+  },
+  "run_id": "20260926T202718.915754659Z-release-1.0",
+  "schema": "urnetwork-r48-terminal-local-readback-v1",
+  "supervised_process_count": 33,
+  "supervisor_pid": 1919178,
+  "supervisor_start_time_ticks": 32282272,
+  "validator_filter_file_present": {
+    "1": false,
+    "2": false
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/default-hydration-evidence-recovery-adoption-v1.json",
+  "base_runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-joint-adapter-main-tests-v4.py",
+    "sha256": "5b8be9299c969b1dd2fc903744890c075c88847eac7383e303552ace8d1e460a"
+  },
+  "binding_count": 322,
+  "checker": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/check-default-hydration-evidence-v1.py",
+    "sha256": "b1436bb2962a1fb62d34a7843f91315757a1f950714da58adf3d565ef125c787"
+  },
+  "data_growth_stop_bytes": 67108864,
+  "data_minimum_available_bytes": 10737418240,
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-hydration-evidence-recovery-job-v1.json",
+    "sha256": "19226d0c8c057634daa4f6fb94928a277aed916c0c0631ffc7527f095be5dbb1"
+  },
+  "limits": {
+    "KillMode": "control-group",
+    "MemoryMax": 268435456,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 300,
+    "TimeoutStopSec": 10
+  },
+  "memory_minimum_available_bytes": 113816633344,
+  "required_adoption_status": "ADOPTED_BOUNDED_ORIGINAL_HYDRATION_EVIDENCE_RECOVERY",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-hydration-evidence-recovery-v1.py",
+    "sha256": "41ebd58876595b451dabcb67cab09d601a985b1c285445a6699cafaa65b19e99"
+  },
+  "scope": "One bounded checker over retained original hydration outputs/waits and source stage; no Go command, download, body, archive, network or source edit. Original USER exit1 and absent final sample retained explicitly.",
+  "source_check": "AST only; no checker, runtime helper or tests imported/executed.",
+  "status": "SOURCE_REVIEW_READY_NO_EXECUTION",
+  "whole_owner_horizon_seconds": 310
+}

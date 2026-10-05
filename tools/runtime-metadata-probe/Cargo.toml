@@ -3,21 +3,38 @@ name = "runtime-metadata-probe"
 version = "0.1.0"
 edition = "2021"
 publish = false
+default-run = "runtime-metadata-probe"
 
 # Keep this audit tool independent from any Cargo workspace that may later be
 # added above it in the repository.
 [workspace]
 resolver = "2"
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(substrate_runtime)"] }
+
 [dependencies]
 frame-metadata = "=23.0.0"
 hex = "=0.4.3"
+libc = "=0.2.189"
 parity-scale-codec = "=3.7.5"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
 sc-executor = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
+sc-executor-common = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
+sp-wasm-interface = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a", features = ["wasmtime"] }
+wasmtime = { version = "=8.0.1", default-features = false }
 sp-core = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
 sp-io = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
 sp-state-machine = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
 sp-version = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
+sp-externalities = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
+sp-runtime-interface = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
+sp-runtime = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
+sp-trie = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
+sp-maybe-compressed-blob = { git = "https://github.com/RaoFoundation/polkadot-sdk.git", rev = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a" }
+wasmparser = "=0.102.0"
+scale-info = "=2.11.6"
 
 [dev-dependencies]
 wat = "=1.0.70"

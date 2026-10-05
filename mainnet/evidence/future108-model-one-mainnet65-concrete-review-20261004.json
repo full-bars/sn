@@ -1,0 +1,122 @@
+{
+  "classification": "Actual normal body exit0/tree_joined; exact65 root run/pass pairs; one package pass; no root/subtest skip/fail; source/tool/image/adoption pins rechecked; no resource error/OOM. Listing alone is not body qualification.",
+  "compile_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compile-v2.receipt.json",
+    "sha256": "074bfdc3e0d30047a3bce22f887d2127848fdbbaf32c607099b20cb32379a405"
+  },
+  "execution_mechanism": {
+    "body": "Pinned existing test2json runs exact image -test.count=1 -test.parallel=1 -test.timeout=600s; outer body660s, preflight60s",
+    "data_active_formula": "max(6307319808, immediate_admission_data_available-2147483648)",
+    "log_limit_bytes": {
+      "body": 33554432,
+      "list": 4194304
+    },
+    "ownership": "Unchanged qualified ChildContext/run_process stores actual wait and joins own descendants before classification. Separate pure Python sampler starts/stops for each list/body child. No healthy model cleanup.",
+    "payload_argv": [
+      "/home/by/urnetwork/.virtualenv/brien/bin/python3",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-current5aaf-mainnet65-body-v1.py",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-owner-cli65-job-v1.json"
+    ],
+    "predecessor_wait_paths": [
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compile-v2.process-result.json",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-xops311-retry2-v1.process-result.json"
+    ],
+    "preflight": "Qualified durable run of exact protected image -test.list anchored65 roots; exact65 actual names required before body",
+    "required_properties": {
+      "KillMode": "control-group",
+      "MemoryMax": 2147483648,
+      "MemorySwapMax": 0
+    },
+    "unit": "sn-current5aaf-mainnet-normal-owner-cli65-v1-20261004.service"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-owner-cli65-job-v1.json",
+    "sha256": "dea1f7cc55198d8a6bbd7362c82142d95aa080a832ed6977a56fd71b8eb6b019"
+  },
+  "model_forecast_evidence": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/model-body4g-memory-prospective-basis-20261004.json",
+    "sha256": "6394c57b6e551be5cd39bb667f5d3bdd3f6a10e42ac2f063864cb5c29eaa3bab"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "history_count": 0,
+    "job_sha256": "dea1f7cc55198d8a6bbd7362c82142d95aa080a832ed6977a56fd71b8eb6b019",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 1,
+    "runner_sha256": "f0ee1b73f352df45dcfa7962a32a6725cd6f2759495927ecaf304f641daf0396",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_MODEL_PLUS_ONE_RETAINED_MAINNET65_SHORT"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-mainnet65-adoption-20261004.json",
+  "resource_forecasts": {
+    "basis": "Prospective1GiB selected normal body: existing127324112B protected image reused without compiling/copying,65 synthetic local roots atparallel1, fixed temporary fixtures and32MiB body logs.2GiB hard memory/swap0 and2GiB whole-data growth cutoff. No measured peak upper bound claimed for this unexecuted selected body.",
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "retained_image": {
+    "bytes": 127324112,
+    "ctime_ns": 1791157036827233736,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120126520,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791157036827233736,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/current5aaf-mainnet-normal-compile-v2.test",
+    "sha256": "23dee2aa04bf6ef47566eca49c09db3d9fb924c8cf4ea3802d58241fe2348ae7",
+    "type": 32768,
+    "uid": 1000
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-current5aaf-mainnet65-body-v1.py",
+    "sha256": "f0ee1b73f352df45dcfa7962a32a6725cd6f2759495927ecaf304f641daf0396"
+  },
+  "schema": "future108-model-one-retained-mainnet65-review-v1",
+  "scope_exclusions": [
+    "No later source tuple or whole-release qualification inferred",
+    "No race or omission-control result",
+    "No compiler, DB helper or second short overlap",
+    "No physical signing or live chain/host effects"
+  ],
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-owner-cli65-selection-v1.json",
+    "sha256": "83bc9a20528a2eed32e8d8c35af47881a639f9859d2c0fb72103025274926936"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-compiler-source-closure-v1.json",
+    "sha256": "37b266488973b88af5a9afe232b9a2709596709816d7afecd3a11ff7f2ab849a"
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "80bcc28578b177626e0080fda2d1af26932b3b6f",
+    "sn": "5aaf88a6cbcee131164dd99f670a111df4313b5d"
+  },
+  "status": "RECOMMEND_ROOT_ADOPTION_EXACT_RETAINED_MAINNET65_AFTER_XOPS_RETRY_JOIN_FRESH_GUARDS_REQUIRED",
+  "time_ns": 1791158441889794135,
+  "unchanged_active_floors": {
+    "data_available_bytes": 6307319808,
+    "docker_available_bytes": 295833415680,
+    "docker_launch_available_bytes": 300128382976,
+    "healthy_guards_changed": false,
+    "memory_available_bytes": 103079215104,
+    "original_data_baseline_rebased": false
+  },
+  "verification_performed": [
+    "Runner AST and every frozen binding/tool SHA256 verified",
+    "All65 roots declared exactly once in compile-sealed test source; CLI test files match later partition bytes",
+    "Owner dispatcher/workflow Go files match exact59-root handoff",
+    "Image unique owned0500 bytes checked; compiler durable wait joined exit0",
+    "No actual listing/body/compiler/DB helper executed by author"
+  ]
+}

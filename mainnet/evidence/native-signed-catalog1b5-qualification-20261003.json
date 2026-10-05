@@ -1,0 +1,178 @@
+{
+  "artifact_bindings_verified": 40,
+  "artifact_sha256": {
+    "ancestry-preflight-normal.txt": "ebefaf8f92b2e4ebd1d051bd02677a55782671dcee0ca1e3dfca6cd75119ad62",
+    "ancestry-preflight-race.txt": "ebefaf8f92b2e4ebd1d051bd02677a55782671dcee0ca1e3dfca6cd75119ad62",
+    "ancestry-preflight-vet.txt": "ebefaf8f92b2e4ebd1d051bd02677a55782671dcee0ca1e3dfca6cd75119ad62",
+    "catalog12-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "catalog12-normal.jsonl": "393c202ac161efaab712acf618b7efda554c0ae9e9ff7db5b695a122b23728b1",
+    "catalog12-normal.phase": "15fe3156ce27e599c94525a46bf07105c2bcf5d4753c0ff2bcb48c934db4dd1a",
+    "catalog12-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "catalog12-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "catalog12-race.jsonl": "7ec0bb850bbbc55eb53543b0ff83d52cf956f88fb7b4bfd71a501168d0c5fec8",
+    "catalog12-race.phase": "257dd9164b336880fab81e7d6124cd621e62eef184922ae2ec8d0d9e6acea3be",
+    "catalog12-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "catalog12-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "catalog12-vet.phase": "11752d41733dd1d94069d4af6ca0866c9279da03d20a3392dba6089b074a5dc1",
+    "catalog12-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "catalog12-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-new-catalog-test.go": "e2bc3e5656021f9e90ce35d253187fdd4fd30613f6500c78bc17871b65ef5ad2",
+    "control-old08f-frame-overlay.json": "a582d7b1ea184e3cbdb58bc09661292faf67cc52c6df6309f749c601c82dae54",
+    "control-old08f-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-old08f-normal.jsonl": "c8b20a9c266164aea356dd4de35c99b50588a92ab78b71815015650a2a2d1cb5",
+    "control-old08f-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-old08f-prepared.json": "c2c6bcd85891181b52bb944ac78fa6d98b0d051364d7d853f4a66c6c05435f08",
+    "control-old08f-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-old08f-race.jsonl": "6d95b5cdcae63ca545d9f2b8594aa17c9ca51182f75f812e707901212bf0224b",
+    "control-old08f-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-old3bc-dispatch-overlay.json": "bdc2878d422baea8bc0db58335148986777d49591f7632479c9cd221bc141a73",
+    "control-old3bc-main.go": "96af226631fffb5d3d8d5d1a4bd851691e7ae191ffec3f9600d52f83d0c44cf6",
+    "control-old3bc-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-old3bc-normal.jsonl": "f080dab236411c6a08b418ae8999644c91c15e89c65322b269aa70e5e7c908e1",
+    "control-old3bc-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-old3bc-prepared.json": "71fa3875d681b3bfce7c9b5e7309614da159e116add24d25dc3a443393bbf302",
+    "control-old3bc-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-old3bc-race.jsonl": "453a4282d09660014e2dff860214f66d49a650d6cfdc5947cfacc21be5eb5281",
+    "control-old3bc-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "modules.jsonl": "ee92393255b738a50a9d0a235c3cae898511eb824570dd187e3cf6d2a423686d",
+    "old08f-source-readback.json": "6a484e2b444dc378d290c393654213de608e3313c117b71c6eb87604c5baeecc",
+    "root-preflight-normal.json": "5b4f3c2bc141464200a1cfab6a145807954bd050b31dec7d112258f3166a8fc4",
+    "root-preflight-race.json": "5b4f3c2bc141464200a1cfab6a145807954bd050b31dec7d112258f3166a8fc4",
+    "root-preflight-vet.json": "5b4f3c2bc141464200a1cfab6a145807954bd050b31dec7d112258f3166a8fc4",
+    "run-catalog.sh": "acb278e5aac3e072c48679e79400165ed6a9db15c6a8d5664ec974e0c42218b9",
+    "source-readback.json": "47e6263a209ca2a2ac5d572cc402239020ab8f1c638e207266c063abaa19313e"
+  },
+  "control_source_join": "Exact old3bc dispatcher overlay; exact entire old08f production tree with only current catalog test overlaid. Both modes retain signed-growth positive and complete-frame refusal.",
+  "historical_control_source": {
+    "commit": "08f4218c9ab2c1f84104d2628dec9edf1a71fc0b",
+    "tracked_count": 20386,
+    "tracked_entries_sha256": "83a1f2114c2926768284685c2d6475444eb79b4627e5cdd5a53bd0c51090fc33",
+    "tree": "8506b25c6810d6c401c81e501fcd6351a6e970c5"
+  },
+  "limits": [
+    "Twelve selected public catalog/archive roots; not full economics or release composition",
+    "Signed operational approver key cannot be autoenrolled",
+    "Complete signed capacity frame is bounded separately from revision payload",
+    "Whole accepted archive-union restore and claim/EVM adapters remain separate requirements",
+    "No actual runtime/finality authority or production deployment acceptance"
+  ],
+  "mainnet_vet_exit": 0,
+  "operative_controls": {
+    "control-old08f-normal": {
+      "assertion_excerpt": "=== RUN   TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange\n--- PASS: TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange (2.11s)\n=== RUN   TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame\n    monitor_economic_native_catalog_test.go:438: public independently signed catalog adoption failed 2 native catalog: plan input is empty, oversized or not a regular file\n        \n--- FAIL: TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame (1.66s)\n",
+      "events": {
+        "fail": [
+          "TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame"
+        ],
+        "pass": [
+          "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange"
+        ],
+        "run": [
+          "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange",
+          "TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame"
+        ],
+        "skip": []
+      },
+      "exit": 1
+    },
+    "control-old08f-race": {
+      "assertion_excerpt": "=== RUN   TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange\n--- PASS: TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange (12.08s)\n=== RUN   TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame\n    monitor_economic_native_catalog_test.go:438: public independently signed catalog adoption failed 2 native catalog: plan input is empty, oversized or not a regular file\n        \n--- FAIL: TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame (11.39s)\n",
+      "events": {
+        "fail": [
+          "TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame"
+        ],
+        "pass": [
+          "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange"
+        ],
+        "run": [
+          "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange",
+          "TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame"
+        ],
+        "skip": []
+      },
+      "exit": 1
+    },
+    "control-old3bc-normal": {
+      "assertion_excerpt": "=== RUN   TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange\n    monitor_economic_native_catalog_test.go:113: public catalog plan did not reach the reviewed original owner 2 storage reports: sn-mainnet storage-inventory|storage-verify --durable-volumes FILE --durable-volumes-sha256 sha256:DIGEST --root DIR --former-writer-fence FILE --former-writer-fence-sha256 sha256:DIGEST [--inventory FILE --inventory-sha256 sha256:DIGEST]; reports do not authorize restart\n        owner-local storage reports: storage-owner-inventory|storage-owner-verify selects only the owner-local declaration schema; --max-owner-attributes and --max-owner-attribute-bytes bound retained custody metadata; verification --compare-reviewed-rebound only repor",
+      "events": {
+        "fail": [
+          "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange"
+        ],
+        "pass": [],
+        "run": [
+          "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange"
+        ],
+        "skip": []
+      },
+      "exit": 1
+    },
+    "control-old3bc-race": {
+      "assertion_excerpt": "=== RUN   TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange\n    monitor_economic_native_catalog_test.go:113: public catalog plan did not reach the reviewed original owner 2 storage reports: sn-mainnet storage-inventory|storage-verify --durable-volumes FILE --durable-volumes-sha256 sha256:DIGEST --root DIR --former-writer-fence FILE --former-writer-fence-sha256 sha256:DIGEST [--inventory FILE --inventory-sha256 sha256:DIGEST]; reports do not authorize restart\n        owner-local storage reports: storage-owner-inventory|storage-owner-verify selects only the owner-local declaration schema; --max-owner-attributes and --max-owner-attribute-bytes bound retained custody metadata; verification --compare-reviewed-rebound only repor",
+      "events": {
+        "fail": [
+          "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange"
+        ],
+        "pass": [],
+        "run": [
+          "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange"
+        ],
+        "skip": []
+      },
+      "exit": 1
+    }
+  },
+  "physical_git_blobs_and_modes_verified": {
+    "old08f_source": 20386,
+    "source": 20386
+  },
+  "raw_positive_roots": {
+    "normal": {
+      "TestMonitorNativeArchivePublicLostAcknowledgmentsReuseExactHeads": "pass",
+      "TestMonitorNativeArchivePublicRolloverContinuesOriginalPendingRange": "pass",
+      "TestMonitorNativeCatalogLegacyCheckpointCannotEnrollAuthority": "pass",
+      "TestMonitorNativeCatalogPublicBoundsAllForecastDimensions": "pass",
+      "TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame": "pass",
+      "TestMonitorNativeCatalogPublicLostAcknowledgmentReusesExactApproval": "pass",
+      "TestMonitorNativeCatalogPublicRefusesActiveOwnerAndCanceledImport": "pass",
+      "TestMonitorNativeCatalogPublicRefusesForeignAndRewrittenAuthority": "pass",
+      "TestMonitorNativeCatalogPublicRefusesLegacyEnrollmentAndPolicySwap": "pass",
+      "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange": "pass",
+      "TestMonitorNativeCatalogRequiresBothPhysicalForecastReserves": "pass",
+      "TestMonitorNativeCatalogSignedPrefixSurvivesLaterCapacityAndRefusesDrop": "pass"
+    },
+    "race": {
+      "TestMonitorNativeArchivePublicLostAcknowledgmentsReuseExactHeads": "pass",
+      "TestMonitorNativeArchivePublicRolloverContinuesOriginalPendingRange": "pass",
+      "TestMonitorNativeCatalogLegacyCheckpointCannotEnrollAuthority": "pass",
+      "TestMonitorNativeCatalogPublicBoundsAllForecastDimensions": "pass",
+      "TestMonitorNativeCatalogPublicImportsCompleteBoundedApprovalFrame": "pass",
+      "TestMonitorNativeCatalogPublicLostAcknowledgmentReusesExactApproval": "pass",
+      "TestMonitorNativeCatalogPublicRefusesActiveOwnerAndCanceledImport": "pass",
+      "TestMonitorNativeCatalogPublicRefusesForeignAndRewrittenAuthority": "pass",
+      "TestMonitorNativeCatalogPublicRefusesLegacyEnrollmentAndPolicySwap": "pass",
+      "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange": "pass",
+      "TestMonitorNativeCatalogRequiresBothPhysicalForecastReserves": "pass",
+      "TestMonitorNativeCatalogSignedPrefixSurvivesLaterCapacityAndRefusesDrop": "pass"
+    }
+  },
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-native-catalog-1b5-independent-20261003/evidence/catalog1b5-selected-final-receipt.json",
+    "sha256": "a561520f475f3a89a2a23e05af1c694eacd8faaf4e32c98f3e56c1de1fb24733"
+  },
+  "source": {
+    "commit": "1b512df652d2d1ee0ab81ec38368559da95aa4f6",
+    "peer_symlinks": {
+      "glog": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "goidenticons": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "gvisor": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+      "proxy": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "server": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server",
+      "userwireguard": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "warp": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp"
+    },
+    "tracked_count": 20386,
+    "tracked_entries_sha256": "e865278574c85f8265ce98be48a3777df782d160fa9e20c4c1e4e3304a0eaa67",
+    "tree": "c3df52d64f2d0fe788a0641300dcc99c8ee3c6e6"
+  },
+  "status": "ROOT_VERIFIED_SCOPED"
+}

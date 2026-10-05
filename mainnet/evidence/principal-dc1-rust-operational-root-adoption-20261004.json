@@ -1,0 +1,156 @@
+{
+  "schema": "principal-dc1-rust-operational-adoption-v1",
+  "status": "ADOPTED_DC1_RUST_ONLY",
+  "runner_sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472",
+  "job_sha256": "fdefcc2d76b80cfce62560f9937745d9c74efa59bed350dec6d4a4f10cabbc97",
+  "proposal_sha256": "04dc72dade623482791970e09319090ee81cb818d0ed9c30a261e58137b4fcf6",
+  "helper_sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c",
+  "guard_sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e",
+  "stage_sha256": "e65b865f88cabb059a1fc40940aaa6e929e786a5baed91f60ac17a5155c77fb3",
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-rust-only-v3.py",
+      "bytes": 20536,
+      "sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/principal-dc1-rust-only-job-v1.json",
+      "bytes": 12683,
+      "sha256": "fdefcc2d76b80cfce62560f9937745d9c74efa59bed350dec6d4a4f10cabbc97"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/principal-dc1-rust-finite-resource-proposal-v1.json",
+      "bytes": 14520,
+      "sha256": "04dc72dade623482791970e09319090ee81cb818d0ed9c30a261e58137b4fcf6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/sampler-v3-actual-process-control.receipt.json",
+      "bytes": 1319,
+      "sha256": "2bc065882da7e8fb45ff325174889f8ef838a3b171fbc3502fe3e2d5073d3b34"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/source-stage-receipt.json",
+      "bytes": 1017,
+      "sha256": "e65b865f88cabb059a1fc40940aaa6e929e786a5baed91f60ac17a5155c77fb3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "bytes": 58569,
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "bytes": 23340,
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "bytes": 39124328,
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "5b32bd53b8a08d8e206daed51f3fce40cdc0729038ff96bd0ca845596a2c1019"
+    },
+    {
+      "bytes": 15425,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/intake.json",
+      "sha256": "125a2efa90ae21c5e18be5351d6d8e717ea12b4c2fdeb65d2f00ef8f5105b83e"
+    },
+    {
+      "bytes": 118692,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "bytes": 2260,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "bytes": 11522,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/operative-controls.json",
+      "sha256": "41d002bdbe23331f0f2dce90b59bc08e0328689c494fbb5c0cadb22244879287"
+    },
+    {
+      "bytes": 3385,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/peer-links-receipt.json",
+      "sha256": "2fcc64413b4df0d88a530564ca2891a6c42e514e6afe9b1ed74552f3d7cdf4dd"
+    },
+    {
+      "bytes": 7119,
+      "path": "/mnt/data/sn-testnet/sol-native-incremental-20261004/evidence/04-compile-distinct-native-engines-receipt.json",
+      "sha256": "88d86d59a24a5d7aaf080a6e7ebc555bdadc21edf4909726e4da7d27ed3a5b79"
+    },
+    {
+      "bytes": 5184,
+      "path": "/mnt/data/sn-testnet/sol-native-incremental-20261004/evidence/05-compile-native-rust-test-receipt.json",
+      "sha256": "445e9c9878b85f4186ff14a3ee3ca649fe469deeb4d85f8f6be575adcbd212ce"
+    },
+    {
+      "bytes": 2699,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/recipe.json",
+      "sha256": "a12114c9241699c842999bbf9dd83a38196bfd2f6b40f9eb770bb48d351c1cf9"
+    },
+    {
+      "bytes": 654128,
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "c6ac0142c05a60b0f6c15e1a118bd5ac3bd04924cd6dc0c328f501c5f86e4142"
+    },
+    {
+      "bytes": 69128,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/principal-dc1-selected-mainnet-graph.receipt.json",
+      "sha256": "3b195bc796ad3828ed5b034f81e0477aed04b258a2b50dd9742cd387afd74dd4"
+    },
+    {
+      "bytes": 22779,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/selectors.json",
+      "sha256": "7e6696950b30e6dbb96588ad0fa08df9ab0a331c8dcd4d4c0a4badb427a9e319"
+    },
+    {
+      "bytes": 1017,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/source-stage-receipt.json",
+      "sha256": "e65b865f88cabb059a1fc40940aaa6e929e786a5baed91f60ac17a5155c77fb3"
+    },
+    {
+      "bytes": 285,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/sampler-v3-actual-process-control/actual-child.resources.csv",
+      "sha256": "8f76cfd5faba07716f493c39c05b09d27d7b8b13c12184a0d40ddec41248a83c"
+    },
+    {
+      "bytes": 17,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/sampler-v3-actual-process-control/actual-child.stdout",
+      "sha256": "dd5bd369d0bbe7c488bc78be4ecad22aa323e520246cc078a067ce4348575bb0"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/sampler-v3-actual-process-control/actual-child.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "readback": {
+    "data_available_bytes": 80018427904,
+    "memory_available_bytes": 121987416064,
+    "free_inodes": 93724484,
+    "active_compilers_or_c04": [],
+    "holder_pid": 620836,
+    "holder_starttime": "94830154",
+    "lock_inode": 16941991
+  },
+  "decision": {
+    "original_baseline_bytes": 113681502208,
+    "cumulative_cap_bytes": 60129542144,
+    "fresh_data_threshold_bytes": 77174280192,
+    "fresh_memory_threshold_without_c04_bytes": 120259084288,
+    "one_compiler_at_a_time": true,
+    "actual_rust_positives": 24,
+    "fresh_owned_executables": 3,
+    "export_groups": 3,
+    "two_controls_follow_separately": true,
+    "go_roots_not_admitted": true
+  },
+  "review": [
+    "Full v1 runner and v2 delta read; finalv3 changes only exclusive text CSV mode. Git29-file crate/source census and helper pins authenticate actual inputs before compilation.",
+    "Actual sampler fixture records three rows, live childRSS and stdout/exit0. Resource peaks are sampled maxima, not upper bounds.",
+    "Qualified result classifier raises on missing/extra/skipped/failed positive roots. Independent roots continue after assertions; missing compiler/export dependencies remain explicit.",
+    "Original v1/v2 unexecuted drafts retained. No product compilation or test success inferred by this admission."
+  ],
+  "resource": "Recheck current canonical lease, source bindings, disk/inodes/memory and absence of concurrent compilers before every phase. Keep original fixed baseline and retained results. Shared warm Cargo target serial only.",
+  "requirement_closure": false
+}

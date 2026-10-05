@@ -121,7 +121,7 @@ func readHeadEMAStoreV2(ctx context.Context, stateDir string, limit uint64, hook
 	if limit == 0 || limit > maxHeadEMAStoreV2Bytes {
 		return nil, false, errors.New("bounded head EMA file allowance is invalid")
 	}
-	directory, err := openAttemptPrivateDirectory(stateDir)
+	directory, err := openAttemptPrivateDirectory(stateDir, ctx)
 	if err != nil {
 		return nil, false, fmt.Errorf("bounded head EMA requires a provisioned physical path without symlinked ancestors: %w", err)
 	}
@@ -142,7 +142,7 @@ func readHeadEMAStoreV2(ctx context.Context, stateDir string, limit uint64, hook
 		}
 		// This final witness has no observer recursion. It validates changes
 		// caused by either owned real Close boundary before returning bytes.
-		witness, witnessErr := openAttemptPrivateDirectory(stateDir)
+		witness, witnessErr := openAttemptPrivateDirectory(stateDir, ctx)
 		if witnessErr == nil {
 			if witness.anchor.dev != anchor.dev || witness.anchor.ino != anchor.ino || witness.anchor.mode != anchor.mode || witness.anchor.uid != anchor.uid {
 				witnessErr = errors.New("bounded head EMA directory changed after Close")

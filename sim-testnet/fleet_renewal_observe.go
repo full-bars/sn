@@ -20,11 +20,12 @@ import (
 )
 
 type fleetRenewalObservation struct {
-	Renewal  FleetRenewal
-	Records  map[[16]byte]fleetBindingVersionRead
-	Native   map[[32]byte]ExistingUIDFact
-	Accounts map[[32]byte]subtensorAccountInfo
-	Evidence map[[16]byte][]FleetBindingEvidence
+	Renewal        FleetRenewal
+	Records        map[[16]byte]fleetBindingVersionRead
+	Native         map[[32]byte]ExistingUIDFact
+	Accounts       map[[32]byte]subtensorAccountInfo
+	Evidence       map[[16]byte][]FleetBindingEvidence
+	JournalEntries []JournalEntry
 }
 
 // STCoordinator retains an effective oracle schedule in its pending fields.
@@ -187,7 +188,7 @@ func prepareFleetRenewal(cfg *ResolvedConfig, stateDir string, base *SetupPlan, 
 					continue
 				}
 				binding, err := fleetRenewalBinding(priorManifest, member, candidate)
-				if err != nil || !fleetBindingRecordMatches(read.Record, binding, candidate.ValidToEpoch, candidate.UID) {
+				if err != nil || read.Record.ValidToEpoch > candidate.ValidToEpoch || !fleetBindingRecordMatches(read.Record, binding, read.Record.ValidToEpoch, candidate.UID) {
 					continue
 				}
 				if prior != nil && (prior.TransactionHash != candidate.TransactionHash || prior.BindingDigest != candidate.BindingDigest) {
@@ -198,6 +199,10 @@ func prepareFleetRenewal(cfg *ResolvedConfig, stateDir string, base *SetupPlan, 
 			}
 			if prior == nil {
 				return renewal, fmt.Errorf("fleet %d member %x has no exact retained signed predecessor", fleet, member.ClientID)
+			}
+			priorRevocation, err := fleetRenewalObservedPriorRevocation(base, observation.JournalEntries, fleet, member, *prior, read.Record.ValidToEpoch, renewal.EVMHead.Number)
+			if err != nil {
+				return renewal, err
 			}
 			miner := 0
 			for index := 1; index <= cfg.Config.Topology.ClientsPerHeadFleet; index++ {
@@ -232,8 +237,8 @@ func prepareFleetRenewal(cfg *ResolvedConfig, stateDir string, base *SetupPlan, 
 				return renewal, err
 			}
 			next := FleetBindingEvidence{Schema: "urnetwork-fleet-binding-evidence-v1", ClientID: fleetLifecycleHex16(member.ClientID), ClientKey: fleetLifecycleHex(member.ClientKey), FleetID: fleetLifecycleHex(manifest.FleetID), Hotkey: fleetLifecycleHex(manifest.Hotkey), Generation: manifest.Generation, ValidFromEpoch: renewal.ValidFromEpoch, ValidToEpoch: renewal.ValidToEpoch, CommitmentHash: fleetLifecycleHex(binding.CommitmentHash), BindingDigest: fleetLifecycleHex(digest), ClientSignature: "0x" + hex.EncodeToString(clientSig), HotkeySignature: "0x" + hex.EncodeToString(hotSig), UID: prepared.UID}
-			preparedMember := FleetRenewalMember{Miner: miner, VersionCount: read.Count.Uint64(), Prior: *prior, Binding: next}
-			if prior.ValidToEpoch >= renewal.ValidFromEpoch {
+			preparedMember := FleetRenewalMember{Miner: miner, VersionCount: read.Count.Uint64(), Prior: *prior, PriorRevocation: priorRevocation, Binding: next}
+			if read.Record.ValidToEpoch >= renewal.ValidFromEpoch {
 				revoke := protocol.FleetRevoke{ChainID: manifest.ChainID, Netuid: manifest.Netuid, Coordinator: manifest.Coordinator, ClientID: member.ClientID, Generation: prior.Generation, EffectiveEpoch: renewal.ValidFromEpoch}
 				sig, err := revoke.SignClient(private)
 				if err != nil {
@@ -249,7 +254,7 @@ func prepareFleetRenewal(cfg *ResolvedConfig, stateDir string, base *SetupPlan, 
 }
 
 func observeFleetRenewal(ctx context.Context, cfg *ResolvedConfig, stateDir string, base *SetupPlan, roles *RoleSecrets, entries []JournalEntry, o cliOptions) (fleetRenewalObservation, error) {
-	result := fleetRenewalObservation{Records: map[[16]byte]fleetBindingVersionRead{}, Native: map[[32]byte]ExistingUIDFact{}, Accounts: map[[32]byte]subtensorAccountInfo{}}
+	result := fleetRenewalObservation{Records: map[[16]byte]fleetBindingVersionRead{}, Native: map[[32]byte]ExistingUIDFact{}, Accounts: map[[32]byte]subtensorAccountInfo{}, JournalEntries: entries}
 	if len(entries) == 0 {
 		return result, errors.New("renewal requires the retained deployment journal")
 	}
@@ -287,7 +292,7 @@ func observeFleetRenewal(ctx context.Context, cfg *ResolvedConfig, stateDir stri
 	}
 	defer manager.Close()
 	coordinator := stabi.NewSTCoordinator()
-	nativeHash, nativeNumber, err := native.finalizedHeadContext(ctx)
+	native, nativeHash, nativeNumber, err := native.finalizedManagerContext(ctx)
 	if err != nil {
 		return result, err
 	}
@@ -333,7 +338,7 @@ func observeFleetRenewal(ctx context.Context, cfg *ResolvedConfig, stateDir stri
 	if err != nil {
 		return result, err
 	}
-	if err := validateFleetRenewalNonceCoverage(roles, exposure, result.Renewal.EVMNonces); err != nil {
+	if err := validateFleetRenewalSignerNonceCoverage(roles, exposure, result.Renewal.EVMNonces, []common.Address{result.Renewal.Oracle, result.Renewal.Keeper}); err != nil {
 		return result, err
 	}
 	if result.Renewal.MaximumFeePerGasWei == 0 {
@@ -430,8 +435,26 @@ func observeFleetRenewal(ctx context.Context, cfg *ResolvedConfig, stateDir stri
 	return result, nil
 }
 
+func bindFleetRenewalRuntimeIdentity(cfg *ResolvedConfig, plan *SetupPlan) (*SetupPlan, error) {
+	if cfg == nil || plan == nil {
+		return nil, errors.New("renewal runtime identity is unavailable")
+	}
+	if cfg.PolicyHash != plan.PolicyHash || cfg.ownedRPCAuthority != plan.OwnedRPCAuthority {
+		return nil, errors.New("renewal runtime identity cannot change policy or owned Rpc authority")
+	}
+	hash, err := resolvedInputsHash(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return rebindFleetRenewalRuntimePlan(plan, cfg.ConfigHash, hash)
+}
+
 func buildFleetRenewalPlan(ctx context.Context, cfg *ResolvedConfig, stateDir string, o cliOptions) (*SetupPlan, error) {
-	base, err := loadPersistedPlan(cfg, stateDir)
+	cfg, err := prepareProvisionalRetainedReader(ctx, cfg, stateDir, "fleet-renew", o)
+	if err != nil {
+		return nil, err
+	}
+	base, err := loadFleetRenewalBase(cfg, stateDir)
 	if err != nil {
 		return nil, fmt.Errorf("renewal requires an admitted current setup plan: %w", err)
 	}
@@ -454,7 +477,78 @@ func buildFleetRenewalPlan(ctx context.Context, cfg *ResolvedConfig, stateDir st
 	if err != nil {
 		return nil, err
 	}
-	return appendFleetRenewalPlan(base, renewal)
+	actions, err := fleetRenewalActions(base, renewal)
+	if err != nil {
+		return nil, err
+	}
+	manager, err := DialEvmTxManager(ctx, cfg, stateDir, nil, roles, "commitment-oracle")
+	if err != nil {
+		return nil, err
+	}
+	defer manager.Close()
+	if err := verifyFleetRenewalDeadline(ctx, manager, base.Deployment.CoordinatorProxy, renewal, "", actions, nil); err != nil {
+		return nil, err
+	}
+	spend, err := maximumActionSpend(actions)
+	if err != nil {
+		return nil, err
+	}
+	renewal.AllowanceExtensionWei = spend.EVMGasWei
+	renewal.AllowanceTotalTAORao = cfg.MaximumTAORao
+	renewal.AllowanceTotalEVMWei = cfg.MaximumEVMGasWei
+	plan, err := appendFleetRenewalPlan(base, renewal)
+	if err != nil {
+		return nil, err
+	}
+	return bindFleetRenewalRuntimeIdentity(cfg, plan)
+}
+
+// Fleet renewal is the one successor which must outlive the release which
+// installed its fleets.  The source plan remains byte-authenticated and its
+// immutable chain, policy, RPC route, and public custody identities must
+// still agree with this invocation.  A changed release-lock or operational
+// configuration fingerprint alone cannot force an expired binding generation
+// to be abandoned.  Current runtime approval and every live predecessor are
+// checked again before planning and before the first write.
+func loadFleetRenewalBase(cfg *ResolvedConfig, stateDir string) (*SetupPlan, error) {
+	base, err := loadPersistedPlan(cfg, stateDir)
+	if err == nil {
+		return base, nil
+	}
+	if !errors.Is(err, errPersistedPlanIdentityMismatch) {
+		return nil, err
+	}
+	base, readErr := readPersistedPlan(stateDir)
+	if readErr != nil {
+		return nil, readErr
+	}
+	if cfg == nil || cfg.Config == nil || cfg.Public == nil ||
+		base.Schema != currentSetupPlanSchema || base.Release != "1.0" ||
+		base.DeploymentID != cfg.Config.Deployment.DeploymentID ||
+		base.ChainID != testnetChainID || base.GenesisHash != testnetGenesis ||
+		base.Netuid != cfg.Netuid || base.PolicyHash != cfg.PolicyHash ||
+		base.OwnedRPCAuthority != cfg.ownedRPCAuthority {
+		return nil, errors.New("retained renewal source differs in immutable testnet identity")
+	}
+	if err := validateRuntimeConfigIdentityPlan(cfg, base); err != nil {
+		return nil, err
+	}
+	roles, err := derivePublicRoles(cfg)
+	if err != nil {
+		return nil, err
+	}
+	roleHash, err := canonicalHashHex(roles)
+	if err != nil {
+		return nil, err
+	}
+	baseRoleHash, err := canonicalHashHex(base.Roles)
+	if err != nil || roleHash != baseRoleHash {
+		return nil, errors.New("retained renewal source differs in public custody identity")
+	}
+	if err := validatePlanBudget(base); err != nil {
+		return nil, fmt.Errorf("retained renewal source budget: %w", err)
+	}
+	return base, nil
 }
 
 // Use both deterministic public roles and the unchanged key store on apply.

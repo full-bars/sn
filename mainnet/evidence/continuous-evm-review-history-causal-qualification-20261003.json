@@ -1,0 +1,455 @@
+{
+  "artifact_sha256": {
+    "causal-overlay-manifest.json": "1c6da247a25da6dd9241d2f176d5861d29ed31e4836046106ae1ca4e821312c3",
+    "control-adjacent-cancellation-refused-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-adjacent-cancellation-refused-normal.jsonl": "b01aa33f46a4cd60b2d5031a3225f182a41b09f9a9a459050109ce6823c51d19",
+    "control-adjacent-cancellation-refused-normal.phase": "fcc78690df3966d6fc34b1966eee412514e4f416bdad89c0858204fd2d139f3a",
+    "control-adjacent-cancellation-refused-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-adjacent-cancellation-refused-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-adjacent-cancellation-refused-race.jsonl": "a0041bf69ba835f73765c6eaae03582cde33fddad155688aa2bb2e685dd7a33e",
+    "control-adjacent-cancellation-refused-race.phase": "83e96d90fd0026c44c27b2c6c17c5de73748fd0d23453958f314485f962fe63e",
+    "control-adjacent-cancellation-refused-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-cancel-masks-hard-close-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-cancel-masks-hard-close-normal.jsonl": "035d57e415e909715134fae5ba5aeb5598f508de461e5179e444d8bc296d2231",
+    "control-cancel-masks-hard-close-normal.phase": "2b14d8845dbe907f379336b0f76b35895090dd08673646b1d13714eb430710f2",
+    "control-cancel-masks-hard-close-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-cancel-masks-hard-close-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-cancel-masks-hard-close-race.jsonl": "b4d43d6c51079b87e7fc9af3263571a69c967a5a68438daaf00b1929e23ef88a",
+    "control-cancel-masks-hard-close-race.phase": "f7268e7a8629182ed35be5f23e511582a3611aff42ed977f1e16f6e0827dcd51",
+    "control-cancel-masks-hard-close-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-chain-cancellation-refused-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-chain-cancellation-refused-normal.jsonl": "ab049f402707973a9805b434a82e10696cec470c51a997ddcc7b880b4828a6ac",
+    "control-chain-cancellation-refused-normal.phase": "98685c1eb0e13c1caf7f9b08163303f9b9218ba67a28988504ee6f13e02a848a",
+    "control-chain-cancellation-refused-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-chain-cancellation-refused-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-chain-cancellation-refused-race.jsonl": "90c19ac1822419538934c2abbc4ae4108d968143a283523266a30896fa7b99ce",
+    "control-chain-cancellation-refused-race.phase": "04c625c693224754380d2b797a81f50a89b35275a1bf899b166f07966afd17c2",
+    "control-chain-cancellation-refused-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-contract-ledger-omitted-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-contract-ledger-omitted-normal.jsonl": "f841e7a3a67e7b6b41be35d03a607d9a44e4d7d969481c76ff2d7e5f2c0d4c05",
+    "control-contract-ledger-omitted-normal.phase": "2e3007d1504ca1d784d235223001e04dbf03a6c7604861d51b6ff98bc95dd37f",
+    "control-contract-ledger-omitted-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-contract-ledger-omitted-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-contract-ledger-omitted-race.jsonl": "9c17b71abe8a89522f776a20cfa5901473a1b1b027c41e348664c6959c244f0c",
+    "control-contract-ledger-omitted-race.phase": "76822f88b569a2d3cbe7c203e74178c628dc4be1892d516afee4a6baff062fa4",
+    "control-contract-ledger-omitted-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-original-cursor-reset-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-original-cursor-reset-normal.jsonl": "d5e6e5028476f6d9bf5f74593699c974de5d43f9f1dec3bfcace7e2ce2f580c9",
+    "control-original-cursor-reset-normal.phase": "80fa90cfa9a6d3ffd9514afc903aecae3ef24774a3f0a20e4f518e86a74405db",
+    "control-original-cursor-reset-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-original-cursor-reset-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-original-cursor-reset-race.jsonl": "d45b9bd725ce732db06a74a542199e024e4302b0229f589f7fb0be9bb977820e",
+    "control-original-cursor-reset-race.phase": "6e8c278ce8dc1ca25f5d9f8a323d4aebdfb08dc1b2f07e2ecfbb306496fc5d37",
+    "control-original-cursor-reset-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-page-byte-budget-omitted-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-page-byte-budget-omitted-normal.jsonl": "2296fd46a772199e5e3439a49f35e11c7cbfa402c079b07f9c00d2953b30163c",
+    "control-page-byte-budget-omitted-normal.phase": "7e0426403f85eb27bdb4661111fd33e03f9ce6dfda21c7d27e43cf814762cb2f",
+    "control-page-byte-budget-omitted-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-page-byte-budget-omitted-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-page-byte-budget-omitted-race.jsonl": "28acc0bbac02a86a1bfd6c588f6420aa6ee0c0cf2c6fe88c4f694d2639b0b441",
+    "control-page-byte-budget-omitted-race.phase": "cae99d5cec8c622e1816b9ccf9da037c89c3c984d82d214467c2f11038ce99c4",
+    "control-page-byte-budget-omitted-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-receipt-cumulative-gas-omitted-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-receipt-cumulative-gas-omitted-normal.jsonl": "0257142ddc72065513f9ecc9f6f3bf260a1deb846e157d74b085f77fc407439f",
+    "control-receipt-cumulative-gas-omitted-normal.phase": "fb999cd55009764274ca1c6b64f4eec8a4b2a0326b61f7d791e79ae0981d0215",
+    "control-receipt-cumulative-gas-omitted-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-receipt-cumulative-gas-omitted-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-receipt-cumulative-gas-omitted-race.jsonl": "da9d6287ad12ca67f2455fc8b11a33b2f102bdac03e38e50b4a02f6b8aa869f0",
+    "control-receipt-cumulative-gas-omitted-race.phase": "45df838e6bcd65acf3a8f036c0dbc328423b3ac806e5a502820cbab7c6abaac5",
+    "control-receipt-cumulative-gas-omitted-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-resource-ack-before-publication-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-resource-ack-before-publication-normal.jsonl": "ae5bffc53dd41afad72203e94e2abc5a640a0f32e1a07509d732f1122f1e2afc",
+    "control-resource-ack-before-publication-normal.phase": "6567413ababac5e2ba1a829a5c81d6f848da3a32070b68509d1d9ce110808114",
+    "control-resource-ack-before-publication-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-resource-ack-before-publication-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-resource-ack-before-publication-race.jsonl": "b4bf434abefba1cd68ebb2a65d41f83995d113abcbc22988c2e445930ca1a8b5",
+    "control-resource-ack-before-publication-race.phase": "19a9da2033718af22be7035517b520bd41974704b74fe4b596b349408f537284",
+    "control-resource-ack-before-publication-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-resource-history-latest-only-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-resource-history-latest-only-normal.jsonl": "8af889914748132355b384a68b3b7dfdbf72bcaa46c47f16c58c9fa868a06a87",
+    "control-resource-history-latest-only-normal.phase": "755d9d7e671b5f0e457c014604f7134edd13bae94af1cb16cc23e66f6c46943a",
+    "control-resource-history-latest-only-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-resource-history-latest-only-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-resource-history-latest-only-race.jsonl": "6442c9e9eba94b6b4c9075ff1462df10d1db9116463b9764ff233562ddedf788",
+    "control-resource-history-latest-only-race.phase": "02e21491aa6547e04e16cd4646d8b8c4ac5d78cc7969045dd1d84be1588e2b9d",
+    "control-resource-history-latest-only-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-unproved-fee-authority-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-unproved-fee-authority-normal.jsonl": "f020e21fb5386543568fe6401d9afd9d861696fda2e4ffff0fbd25bc7e06359c",
+    "control-unproved-fee-authority-normal.phase": "c15743c23ac750e75f7562d2e8503dd162e34e559b11f81536998080ca64799a",
+    "control-unproved-fee-authority-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-unproved-fee-authority-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-unproved-fee-authority-race.jsonl": "525833c6c7ad01bc453b50408f10d26e0b62e9a5884c798c21424aeabe67d192",
+    "control-unproved-fee-authority-race.phase": "464ca237020061b3f3c25d97d93bda4409539467e9ec8a0e7c06d05a54e1efa6",
+    "control-unproved-fee-authority-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "f83d885ffbb9ada53189bfbd15102c1edc4597c9990d00ae05876e479744c175",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "overlay-adjacent-cancellation-refused.json": "b657bc5ed2853ac321537e3878d5281e307a27ae42c02f852609761c2af9e34d",
+    "overlay-cancel-masks-hard-close.json": "3fca792633803729d7fbec467b400cc0a558c19e9b6ea0758a33cc68bf41c473",
+    "overlay-chain-cancellation-refused.json": "c93253d91f0d99fae609acbe2dc3d81860a4d549ee5303c93a6f247b381bfa71",
+    "overlay-contract-ledger-omitted.json": "f66fd6d1c827c04fbc696da4b11ca487f4653ced57f50180d4eb98af6e31c1d4",
+    "overlay-original-cursor-reset.json": "5b941ff7e7ec6e89c93153b58c9ecf4155de67d0a03fe165c145d4b7032759f9",
+    "overlay-page-byte-budget-omitted.json": "cf7fcdc2ef692af786271a5c750c5dfae9dfb500febfa50ef4449dbbb3059ab0",
+    "overlay-receipt-cumulative-gas-omitted.json": "88ef422ffc2f930df4a0bdee0240f7c313919638ca88f39169f2169895047c7a",
+    "overlay-resource-ack-before-publication.json": "8e685eec6af5f570de16edfe7eb94a7162dd04f3766253713033c1cd6f284d90",
+    "overlay-resource-history-latest-only.json": "d0a9f781fac636fa5307bbee0162f290c67e499c794275e9919aa6e6967f3080",
+    "overlay-unproved-fee-authority.json": "a42527039fa2bff6f1f8ea9353666717d3610f5864bdde59639fa2187358c579",
+    "run-all-controls.sh": "eb4f9b6b5f5a71dcd25978f4dc58bc4efc803d4304ec1cc0035529deb6dc77fa",
+    "run-control.sh": "fe683b7a97712c4cf3ffad0b96c50ef9d5af0b93d5371c17a59050917771f247",
+    "sn.mod": "0c58ace6cb326782fe9d4f049f675e391ccdec30e71c120a20729a747fdd0d5f",
+    "sn.sum": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5",
+    "source-readback.json": "00d9f3344c435a816dac544da2c7637ce04a05702b064b7e56ea81eb736d231e"
+  },
+  "classification": "CAUSAL_PASS_SCOPED",
+  "groups": [
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment"
+          ],
+          "intended_assertions_reached": [
+            "restart lost original carry, aggregate credit or exact transaction costs"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment"
+          ],
+          "intended_assertions_reached": [
+            "restart lost original carry, aggregate credit or exact transaction costs"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "original-cursor-reset"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment"
+          ],
+          "intended_assertions_reached": [
+            "economic ledger accepted a payment/carry authority substitution"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment"
+          ],
+          "intended_assertions_reached": [
+            "economic ledger accepted a payment/carry authority substitution"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "contract-ledger-omitted"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole"
+          ],
+          "intended_assertions_reached": [
+            "receipt contradiction advanced affected EVM role"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole"
+          ],
+          "intended_assertions_reached": [
+            "receipt contradiction advanced affected EVM role"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "receipt-cumulative-gas-omitted"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues"
+          ],
+          "intended_assertions_reached": [
+            "bounded EVM byte page stalled or lost complete original prefix"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues"
+          ],
+          "intended_assertions_reached": [
+            "bounded EVM byte page stalled or lost complete original prefix"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "page-byte-budget-omitted"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment"
+          ],
+          "intended_assertions_reached": [
+            "owned observations were promoted to independent economic authority"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment"
+          ],
+          "intended_assertions_reached": [
+            "owned observations were promoted to independent economic authority"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "unproved-fee-authority"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication"
+          ],
+          "intended_assertions_reached": [
+            "unacknowledged resource renewal advertised a completed checkpoint"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication"
+          ],
+          "intended_assertions_reached": [
+            "unacknowledged resource renewal advertised a completed checkpoint"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "resource-ack-before-publication"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicResourceReviewsRemainAppendOnly"
+          ],
+          "intended_assertions_reached": [
+            "resource growth discarded an acknowledged review"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicResourceReviewsRemainAppendOnly"
+          ],
+          "intended_assertions_reached": [
+            "resource growth discarded an acknowledged review"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "resource-history-latest-only"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicCancellationDuringChainCheckpointLoad"
+          ],
+          "intended_assertions_reached": [
+            "canceled retained chain load became a terminal custody failure"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicCancellationDuringChainCheckpointLoad"
+          ],
+          "intended_assertions_reached": [
+            "canceled retained chain load became a terminal custody failure"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "chain-cancellation-refused"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 2,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicAdjacentAdmissionCancellationJoinsOwners",
+            "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure"
+          ],
+          "intended_assertions_reached": [
+            "canceled adjacent admission was fatal or left owners unjoined",
+            "native cancellation lost ordinary stop or genuine joined close failure"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorEconomicEvmPublicAdjacentAdmissionCancellationJoinsOwners",
+            "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure"
+          ],
+          "intended_assertions_reached": [
+            "canceled adjacent admission was fatal or left owners unjoined",
+            "native cancellation lost ordinary stop or genuine joined close failure"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "adjacent-cancellation-refused"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 2,
+      "modes": {
+        "normal": {
+          "failed_roots": [
+            "TestMonitorCheckpointCancellationRetainsHardCausePrecedence",
+            "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure"
+          ],
+          "intended_assertions_reached": [
+            "cancellation erased an independently observed hard cause",
+            "native cancellation lost ordinary stop or genuine joined close failure"
+          ],
+          "positive_roots": []
+        },
+        "race": {
+          "failed_roots": [
+            "TestMonitorCheckpointCancellationRetainsHardCausePrecedence",
+            "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure"
+          ],
+          "intended_assertions_reached": [
+            "cancellation erased an independently observed hard cause",
+            "native cancellation lost ordinary stop or genuine joined close failure"
+          ],
+          "positive_roots": []
+        }
+      },
+      "name": "cancel-masks-hard-close"
+    }
+  ],
+  "groups_per_mode": 10,
+  "intake_sha256": "cb0cd380720ac10c76565d7a948789e6e2cfe2f272acefaf4f19c222a4289703",
+  "intended_failed_roots_per_mode": 12,
+  "limits": [
+    "The overlays are ten narrow operative omissions on exact81de, not old whole-source baselines; each of twelve selected roots reached the named behavioral assertion in both modes.",
+    "These intentionally failing controls do not replace the passing product scope or qualify current modules, devices, runtime fee authority, or deployment."
+  ],
+  "prior_normal_causal_receipt_sha256": "f479afa2a9b7b8ee2e997e73404fe85d4412d5535045a09c68108c2f2754d9a2",
+  "product38_pass_receipt_sha256": "2ec2c55b2f4ba2aeaad47aaa99177d6fdc6a6dac56d6f19bc685a397ab5d3b34",
+  "root_verification": {
+    "artifact_bindings_rehashed": 99,
+    "each_named_behavior_assertion_verified": true,
+    "exact_declared_selectors_verified": true,
+    "limits": "Operative invariant omissions; no full original-source or natural a9 failure diagnosis inferred.",
+    "normal_overlay_bindings": "Forty source/replacement/overlay bindings and ten tables previously independently verified in continuous-evm-review-history-causal-normal-20261003.json",
+    "raw_control_censuses": {
+      "normal": {
+        "adjacent-cancellation-refused": {
+          "TestMonitorEconomicEvmPublicAdjacentAdmissionCancellationJoinsOwners": "fail",
+          "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure": "fail"
+        },
+        "cancel-masks-hard-close": {
+          "TestMonitorCheckpointCancellationRetainsHardCausePrecedence": "fail",
+          "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure": "fail"
+        },
+        "chain-cancellation-refused": {
+          "TestMonitorEconomicEvmPublicCancellationDuringChainCheckpointLoad": "fail"
+        },
+        "contract-ledger-omitted": {
+          "TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment": "fail"
+        },
+        "original-cursor-reset": {
+          "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment": "fail"
+        },
+        "page-byte-budget-omitted": {
+          "TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues": "fail"
+        },
+        "receipt-cumulative-gas-omitted": {
+          "TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole": "fail"
+        },
+        "resource-ack-before-publication": {
+          "TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication": "fail"
+        },
+        "resource-history-latest-only": {
+          "TestMonitorEconomicEvmPublicResourceReviewsRemainAppendOnly": "fail"
+        },
+        "unproved-fee-authority": {
+          "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment": "fail"
+        }
+      },
+      "race": {
+        "adjacent-cancellation-refused": {
+          "TestMonitorEconomicEvmPublicAdjacentAdmissionCancellationJoinsOwners": "fail",
+          "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure": "fail"
+        },
+        "cancel-masks-hard-close": {
+          "TestMonitorCheckpointCancellationRetainsHardCausePrecedence": "fail",
+          "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure": "fail"
+        },
+        "chain-cancellation-refused": {
+          "TestMonitorEconomicEvmPublicCancellationDuringChainCheckpointLoad": "fail"
+        },
+        "contract-ledger-omitted": {
+          "TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment": "fail"
+        },
+        "original-cursor-reset": {
+          "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment": "fail"
+        },
+        "page-byte-budget-omitted": {
+          "TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues": "fail"
+        },
+        "receipt-cumulative-gas-omitted": {
+          "TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole": "fail"
+        },
+        "resource-ack-before-publication": {
+          "TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication": "fail"
+        },
+        "resource-history-latest-only": {
+          "TestMonitorEconomicEvmPublicResourceReviewsRemainAppendOnly": "fail"
+        },
+        "unproved-fee-authority": {
+          "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment": "fail"
+        }
+      }
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-economic-evm-monitor-81d-independent-20261003/evidence/evm-81d-causal-normal-race-receipt.json",
+    "receipt_sha256": "0762981d8ccc8e2c5f96db59ff0921fd5a8d08e2067a9ee31331bb14b2f4878a"
+  },
+  "schema": "sol-economic-evm-81d-causal-normal-race-v1",
+  "source_commit": "81de314bbe55920c30bd73589ae48a9b351ad812",
+  "source_tree": "88d6c63c9faeb2bae992b27c20d82dc9e9b37110"
+}

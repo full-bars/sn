@@ -1,0 +1,85 @@
+{
+  "schema": "core-c618-publication-root-review-v1",
+  "status": "PUBLISHED_QUALIFIED_COMPONENT",
+  "published_head": "492794ba205df16f0beee244e5e941d8a0f4e378",
+  "remote_main": "492794ba205df16f0beee244e5e941d8a0f4e378",
+  "source": "c6186b79caaaae7f7a35beee42e815c0c0ca7170",
+  "module_pin": "v0.0.0-20261004075743-c6186b79caaa",
+  "publication": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/publication.json",
+    "sha256": "33a55bd749db05833e0fe84997a09cd9996fad5dcb4871b7e4ab155873f70fcc",
+    "bytes": 4387
+  },
+  "verified_source_files": [
+    {
+      "path": "/home/by/urnetwork/connect/durablevolume/inventory_physical_linux.go",
+      "relative": "durablevolume/inventory_physical_linux.go",
+      "git_blob": "39dd0184df7929086cf96f63bd9d0904eb3e8e8d",
+      "bytes": 4590,
+      "sha256": "725eaccd1dd908a4f593c38e928740f25f3ca924507b11ec9aa0ec2eff44412e"
+    },
+    {
+      "path": "/home/by/urnetwork/connect/durablevolume/preparation_restore_linux.go",
+      "relative": "durablevolume/preparation_restore_linux.go",
+      "git_blob": "e97cbec178211358db6c37eb569bf94c8ea42704",
+      "bytes": 23908,
+      "sha256": "893fadf21ff6b8c61f18b22aa6d5c0fc4056719ce1ebe2838bd71dd9537945f5"
+    },
+    {
+      "path": "/home/by/urnetwork/connect/durablevolume/preparation_restore_mode_test.go",
+      "relative": "durablevolume/preparation_restore_mode_test.go",
+      "git_blob": "0f0814d82b0c2f9e4d764753b6db5c0c6dc06b56",
+      "bytes": 5098,
+      "sha256": "0e2b2a8f976f56308e08cf2c237f3b3284d6de01554c6f121688b4b104648842"
+    },
+    {
+      "path": "/home/by/urnetwork/connect/durablevolume/preparation_restore_test.go",
+      "relative": "durablevolume/preparation_restore_test.go",
+      "git_blob": "3e7b1f8035d1f1bc8f3cd4c65a7ddbaff0aeff9f",
+      "bytes": 14301,
+      "sha256": "da9ae39404cf3074c398b376e29789442a062e1bc5a2eb50092151f25e0f043b"
+    },
+    {
+      "path": "/home/by/urnetwork/connect/go.mod",
+      "relative": "go.mod",
+      "git_blob": "b5de586f79dfa4b9d1264dde72a5be28fb20bd0d",
+      "bytes": 3887,
+      "sha256": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d"
+    },
+    {
+      "path": "/home/by/urnetwork/connect/go.sum",
+      "relative": "go.sum",
+      "git_blob": "11555eee4473212e338379a8fc49e2af83b0490c",
+      "bytes": 21922,
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+    }
+  ],
+  "other_changes": [
+    "docs/integration/audited-branches-20261004.md",
+    "docs/integration/historical-diagrams.md",
+    "docs/integration/historical-split.md",
+    "research/historical-branches-20261004/README.md",
+    "research/historical-branches-20261004/add-nix-flake-and-single-mod.patch.gz",
+    "research/historical-branches-20261004/add-peer-to-peer-connections.patch.gz",
+    "research/historical-branches-20261004/api-network-user.patch.gz",
+    "research/historical-branches-20261004/codex--astra-r43-transport-recovery-20260924.patch.gz",
+    "research/historical-branches-20261004/codex--astra-receive-gap-ordering-20260925.patch.gz",
+    "research/historical-branches-20261004/diagrams.patch.gz",
+    "research/historical-branches-20261004/extender-fixes.patch.gz",
+    "research/historical-branches-20261004/find-providers-tune1.patch.gz",
+    "research/historical-branches-20261004/geode-api.patch.gz",
+    "research/historical-branches-20261004/gvisor-test.patch.gz",
+    "research/historical-branches-20261004/inspect-occurrence-data.patch.gz",
+    "research/historical-branches-20261004/inspect.patch.gz",
+    "research/historical-branches-20261004/manifest.json",
+    "research/historical-branches-20261004/merge-protocol.patch.gz",
+    "research/historical-branches-20261004/multi-key.patch.gz",
+    "research/historical-branches-20261004/net-fixes.patch.gz",
+    "research/historical-branches-20261004/p2p-stream.patch.gz",
+    "research/historical-branches-20261004/privacytxt-01.patch.gz",
+    "research/historical-branches-20261004/provider-mips-fixes.patch.gz",
+    "research/historical-branches-20261004/split.patch.gz"
+  ],
+  "scope": "Live remote main equals clean published head; exact qualified production/test/module bytes retained. Only docs/history changes outside qualified source. Native adapter and final composed release remain separate.",
+  "whole_mainnet_complete": false
+}

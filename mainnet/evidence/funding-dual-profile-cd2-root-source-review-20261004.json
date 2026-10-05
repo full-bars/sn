@@ -1,0 +1,126 @@
+{
+  "schema": "funding-dual-profile-cd2-root-source-controls-review-v1",
+  "head": "cd2d6b58330af2f4fd655511149c7afe62d11666",
+  "tree": "f3f9071e21b5b6cc40fc4485277868f34fd75eb6",
+  "base": "f51a170dbd7ea73bc7586801beb76218df76b11c",
+  "source_blobs": [
+    {
+      "path": "mainnet/economic_conservation_capture_artifact_test.go",
+      "git_blob": "42e428e8afde5e677b6575799eafd50798bdedef",
+      "bytes": 1578,
+      "sha256": "ad8e93edd0b7a8e72837ad41f1e7f021ff4848c6f463cd087aad898febb41a7a"
+    },
+    {
+      "path": "mainnet/economic_conservation_capture_fixture_test.go",
+      "git_blob": "24f04e58a364fda098c8a01d2ebd16725bfeb2e4",
+      "bytes": 14762,
+      "sha256": "c73d413168384dd9e78b7a79c074cb3ed7163239c4da0b11edc26dbad716e3f4"
+    },
+    {
+      "path": "mainnet/economic_conservation_funding_custody_test.go",
+      "git_blob": "fcb1282d6c3449c476fb4ee1f591853a4cb8b244",
+      "bytes": 13806,
+      "sha256": "392703e24edc71f6f18f252425a29268ddf64195246059081e6e8cf67d8c8a14"
+    },
+    {
+      "path": "mainnet/historical_capture.go",
+      "git_blob": "049d99c7a0a6b653428a4cf9b3a399d7b5af02db",
+      "bytes": 8834,
+      "sha256": "0655a2c51a255ced0095664a899dfdefd28de793d6cd8db533782ed02f99739a"
+    },
+    {
+      "path": "mainnet/historical_capture_profile_test.go",
+      "git_blob": "18680ff33b28173a5ee0ff7813769d564392a63b",
+      "bytes": 4633,
+      "sha256": "960b664768305957ee7c10f1a9d7f632c6f090247d33269f2ddcdd96be09cd80"
+    }
+  ],
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/intake.json",
+      "bytes": 3360,
+      "sha256": "49850945b0418f73489104c22a6b757dc0f8c5eb1d5908065f323869598b7b2f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/source-census.json",
+      "bytes": 8288,
+      "sha256": "51756f3e8c7f7986fc2bc7187f56385cdd295a4b3f78723f79e2bed35840d00e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/selectors.json",
+      "bytes": 3652,
+      "sha256": "7ab0482afed756120b0aeb32dfbfa9ee23b9001d33e5e9935e7550b30dafe86e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/operative-controls.json",
+      "bytes": 5317,
+      "sha256": "8e6b9a167414a5e45e1cd47920bf2599f3dd7888cf34c6267d0a207d7f6fffa9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/qualification-recipe.json",
+      "bytes": 5213,
+      "sha256": "c99d3b046f7a1d04055955da91ccc84cb04113ecfd70159e3e3e42300191e095"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/cause-and-adjacent-audit.json",
+      "bytes": 2478,
+      "sha256": "5218e01d0fa6880a347042ffabe0e51f9b5cc836d07a4329d52c6a35afd0dbca"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-remaining-v1.terminal.json",
+      "bytes": 4207,
+      "sha256": "7fc17290c389809273c296621785d5c08ce06cd615386f985ba5f8c1aa74b541"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-funding-matched-dual9-v1.terminal.json",
+      "bytes": 3906,
+      "sha256": "3e89cd7b6b75db3e17b042fb5fbd4b8a8530dc2e1c3e0cc16814be1981ce00ec"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturef51/evidence/f51-single-root-v2.terminal.json",
+      "bytes": 1798,
+      "sha256": "f7dd5cf69c6dcdf3f4b02c7340ae2e8262a4d4fe78306b95909ffdb4660c86ef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-owned-engines-v3.terminal.json",
+      "bytes": 1572,
+      "sha256": "92320b91f0c0753938669419d2622aa5d26c5951ff87f2e9871acec94ef2828c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-capture-positives-v1.terminal.json",
+      "bytes": 3398,
+      "sha256": "548debe390124678b04918b36a3541e7abe55e12cd99a51ef70f19ea2974cd6e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/controls/original-principal-surcharge-restored/historical_capture.go",
+      "bytes": 8764,
+      "sha256": "893c495182dedcb688e32ae1c6013578a9f48c0d67dcf2e5db496f9238400c44"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/controls/worker-output-ceiling-omitted/historical_replay.go",
+      "bytes": 18626,
+      "sha256": "6cfd77547ddb4cd2fcf6f01293ce78ab93ee38aa9e17a9d4e0e45defee3289e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/controls/original-vault-name-restored/economic_conservation_capture_fixture_test.go",
+      "bytes": 14764,
+      "sha256": "3597196366e72d3914b901ed60ea90ead40ae4abfd89d73e9121f0142e80ff42"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-dual-profile-correction/evidence/controls/archived-claim-expectation-reused/economic_conservation_funding_custody_test.go",
+      "bytes": 13811,
+      "sha256": "c50e6b0e7cfa07c19b3aa31473c16971958d72b9dc731c55aa301c90d34e45c4"
+    }
+  ],
+  "new_roots_reviewed": 4,
+  "declared_roots_per_mode": 19,
+  "controls_per_mode": 4,
+  "review": [
+    "Sole production change removes unsupported Go capture surcharge. Exact Rust whole-response profile remains272MiB native/104MiB legacy; worker and Rust ceilings unchanged.",
+    "Three public worker roots cover five principal/profile combinations at sealed engine handoff, exact inclusive worker ceiling/+1/zero/negative refusal, and missing-query semantic rejection; deterministic cancellation before actual launch.",
+    "Real geth maintained-vault regression checks both successful transfer/accounting and revert with unchanged stake and zero logs/captured counter.",
+    "Complete candidate-isolation root now retires matched epoch1 and expects epoch2 via existing signed-window derivation, with explicit exact proposal census. Original held-index/counters/retry/refusal checks remain.",
+    "All four exact control overlays checked against frozen source. Two production controls and two fixture-owned controls remain labelled separately. Actual compile + intended assertions still required."
+  ],
+  "status": "SOURCE_REVIEWED_EXECUTION_PENDING"
+}

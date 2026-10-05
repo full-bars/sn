@@ -190,8 +190,29 @@ func TestFinalSemanticReceiptPayloadBindsRootMissed(t *testing.T) {
 	}
 }
 
-// Binds credit deferral after a claim.
+// Binds every zero-based Solidity payment-deferral enum member after a claim.
 func TestFinalSemanticReceiptPayloadBindsDeferredClaim(t *testing.T) {
+	for _, reason := range []uint8{0, 1, 2} {
+		fixture, receipt, logs := finalDeferredClaimPayloadFixture(t, reason)
+		if _, err := verifyFinalSemanticReceiptPayload(fixture.evidence, receipt, logs); err != nil {
+			t.Errorf("defined deferral reason %d: %v", reason, err)
+		}
+	}
+}
+
+// Refuses adjacent undefined values even when the receipt and claim are otherwise coherent.
+func TestFinalSemanticReceiptPayloadRejectsUndefinedDeferralReason(t *testing.T) {
+	for _, reason := range []uint8{3, 255} {
+		fixture, receipt, logs := finalDeferredClaimPayloadFixture(t, reason)
+		if _, err := verifyFinalSemanticReceiptPayload(fixture.evidence, receipt, logs); err == nil || !strings.Contains(err.Error(), "reason is invalid") {
+			t.Errorf("undefined deferral reason %d: %v", reason, err)
+		}
+	}
+}
+
+// Builds an authenticated claim receipt with the requested serialized enum value.
+func finalDeferredClaimPayloadFixture(t *testing.T, reason uint8) (*finalReceiptPayloadFixture, FinalEVMReceipt, []finalCanonicalEVMLog) {
+	t.Helper()
 	fixture := newFinalReceiptPayloadFixture(t)
 	block := ChainHead{Number: 59, Hash: finalPayloadTestHash(0x59).Hex()}
 	payee := finalPayloadTestBytes32(0x74)
@@ -200,15 +221,13 @@ func TestFinalSemanticReceiptPayloadBindsDeferredClaim(t *testing.T) {
 			"epoch": big.NewInt(20), "noId": big.NewInt(1), "coldkey": payee, "shareBps": big.NewInt(10_000), "amount": big.NewInt(100), "relayer": common.HexToAddress("0x6000000000000000000000000000000000000006"),
 		}),
 		finalPayloadTestEvent(t, SettlementVaultABI, "ClaimPaymentDeferred", fixture.evidence.Deployment.SettlementVault, finalPayloadTestHash(0xa9).Hex(), block, 1, map[string]any{
-			"coldkey": payee, "creditAlphaRao": big.NewInt(100), "taoEquivalentRao": big.NewInt(0), "minimumTransferTaoRao": uint64(9), "reason": uint8(1),
+			"coldkey": payee, "creditAlphaRao": big.NewInt(100), "taoEquivalentRao": big.NewInt(0), "minimumTransferTaoRao": uint64(9), "reason": reason,
 		}),
 	}
 	receipt := finalPayloadTestReceipt(t, logs)
 	claim := &fixture.evidence.Epochs[0].Claims[0]
 	claim.PaidRao, claim.DeferredRao, claim.Receipt = "0", "100", receipt
-	if _, err := verifyFinalSemanticReceiptPayload(fixture.evidence, receipt, logs); err != nil {
-		t.Fatal(err)
-	}
+	return fixture, receipt, logs
 }
 
 // Accepts historic initial authority after a later terminal rotation.

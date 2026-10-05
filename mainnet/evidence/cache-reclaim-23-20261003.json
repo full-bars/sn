@@ -1,0 +1,90 @@
+{
+  "schema": "root-inactive-cache-reclaim23-verification-v1",
+  "task_root": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003",
+  "basis_helper": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-22-20261003/reclaim.go",
+  "only_helper_change": "task receipt directory; exact reverse comparison verified",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/reclaim.go",
+      "bytes": 7050,
+      "sha256": "aff490b27299dcd98814bd9310238d7f8e81a83b6f2b17507409105c86d834f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/helper-changes.json",
+      "bytes": 395,
+      "sha256": "4136851834be141fc13e863839ee22ff2540847593b4c647b6980772409c1ed6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/plan.json",
+      "bytes": 780593,
+      "sha256": "84ca00f2058ec2adea107cc184bc2eee65bcfc201e2677d84de80bcad79ebcf5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/plan.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/process-census-plan.json",
+      "bytes": 73,
+      "sha256": "1b8057875098e0062dbafd880074ca9ce0a85216e71ae627abc8f9d38a305d44"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/process-census-apply.json",
+      "bytes": 73,
+      "sha256": "7ce99d5ce44cc1e0cf3800045aa9c14c65ca40fffce8969291f42ceca2accc1f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/reference-command.json",
+      "bytes": 1022,
+      "sha256": "b4271026b56b00d2c79f9f8d41320c2af83cbd3132e4cc24787831aed1de82bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/reference-scope.json",
+      "bytes": 815,
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/reference-scan.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/reference-scan.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/reference-scan.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/receipt.json",
+      "bytes": 780874,
+      "sha256": "cd5ba857b603adf75585aec0b75448e4e24c5afec0af84127d8851a4a323af0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/apply.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-23-20261003/apply.stdout",
+      "bytes": 47,
+      "sha256": "c3ff519148dbc6b1b343f99d68f8383a5e58d1219242cd2a4626e099cf6368a0"
+    }
+  ],
+  "deleted_archives": 2568,
+  "reclaimed_bytes": 3538898944,
+  "all_selected_paths_absent": true,
+  "all_identity_process_age_size_archive_reference_guards_unchanged": true,
+  "unprivileged_scan_attempt": "Retained permission refusal in unprivileged-scan-attempt; no deletion from failed scan; subsequent privileged scan exit1 with zero output/stderr",
+  "free_bytes_after": 126004269056,
+  "free_gib_after": 117.35062026977539,
+  "limits": [
+    "Only old unused regenerable compiler archives deleted",
+    "Active warm cache, sources, module cache, evidence and ELF binaries retained",
+    "Admission headroom is not a reason to stop/restart existing work"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 15032385536,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "1ec9f26fd78712402fa345fa3337dd7185d505fcfd1672b0fc2c620c81c959bf",
+  "margin": 2,
+  "memory_minimum_available_bytes": 120259084288,
+  "model_count": 0,
+  "runner_sha256": "e2298b41cce2fe540f802a4efca7c5afc89feb3107b44ba35b81b4a7d1542bc5",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_ONE_SELECTED338_PRINCIPAL_EXPORTER_SHORT_POST_MODEL",
+  "adopted_at": "2026-10-05T04:02:09.842772+00:00",
+  "review_sha256": "ab9f9c40ab488ceaf6ce7feb18030bf8d900cbd8d841ebbb5f61ab3cf201f848",
+  "scope": "One exact selected338 Rust libtest principal exporter root into a fresh private persistent directory; four bounded original JSON files sealed0400, directory0500. New capture/historical-proof ELFs separately pinned; no Go carry consumers, mutation controls or old8ad5 asset inheritance."
+}

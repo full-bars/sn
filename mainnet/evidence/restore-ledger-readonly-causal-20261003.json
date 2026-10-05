@@ -1,0 +1,51 @@
+{
+  "files": {
+    "old198/evidence/attempt_ledger_preparation_retained_test.go": "631fcde4d4ef8537446bf35296c5ba8ad54c2ebda074927409c7a70a1bf53cd1",
+    "old198/evidence/normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "old198/evidence/normal.jsonl": "1b020eeb2b3ec272773cbc63c6c23f4103ff5ebd33df7f031f28e445d83061a0",
+    "old198/evidence/normal.phase": "776f6f7f07fc1466ae956ba29da7486b01eadaf73cd8c21e378f88f217b1b0dd",
+    "old198/evidence/normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "old198/evidence/overlay.json": "e903bbd37bf4959ccbb01fd3380d20c69cf9cf0bd4ae6107bb5dea0f3afaa713",
+    "old198/evidence/race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "old198/evidence/race.jsonl": "2ffc353898d7148eb0d18c8efc28eb676253dc7e68c076cf60774e79bafaca13",
+    "old198/evidence/race.phase": "9844dd6a0893e076d97f371570dec7459a163e9dfb97db57babf0a09a7d7ed3a",
+    "old198/evidence/race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "old198/source/sn/go.mod": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "old198/source/sn/go.sum": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61",
+    "old198/source/sn/validator/attempt_record_store.go": "bd721884c0622db9ec24010d84ed476e80286007b6cf5c6d4fb182e5793143de",
+    "run-old198-control.sh": "3d13ca3e9251320b46deedfc8948e1c8a52ba13fc01b9e6d8ef6a74c863bc118"
+  },
+  "limits": [
+    "Only valid-prefix nil-hook causal failure; no broader old198 qualification.",
+    "No live ledger/device restore."
+  ],
+  "schema": "sol-restore-ledger-old198-causal-v1",
+  "scopes": [
+    {
+      "exit": 1,
+      "jsonl_sha256": "1b020eeb2b3ec272773cbc63c6c23f4103ff5ebd33df7f031f28e445d83061a0",
+      "mode": "normal",
+      "outcome": "intended_fail_nil_writable_hook",
+      "panic": "attemptRecordStore.decodeRecord at old attempt_record_store.go:363",
+      "root": "TestAttemptPreparationInspectsRetainedSignedPrefixWithoutWriter",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 1,
+      "jsonl_sha256": "2ffc353898d7148eb0d18c8efc28eb676253dc7e68c076cf60774e79bafaca13",
+      "mode": "race",
+      "outcome": "intended_fail_nil_writable_hook",
+      "panic": "attemptRecordStore.decodeRecord at old attempt_record_store.go:363",
+      "root": "TestAttemptPreparationInspectsRetainedSignedPrefixWithoutWriter",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source": {
+    "commit": "1982267c0bd317fffa9d931bc7267d04195a5a0c",
+    "overlay_sha256": "e903bbd37bf4959ccbb01fd3380d20c69cf9cf0bd4ae6107bb5dea0f3afaa713",
+    "production_sha256": "bd721884c0622db9ec24010d84ed476e80286007b6cf5c6d4fb182e5793143de",
+    "test_only_overlay_from": "d3c84fe31934133f319a4adde8bdc4ad2d4a5807",
+    "test_sha256": "631fcde4d4ef8537446bf35296c5ba8ad54c2ebda074927409c7a70a1bf53cd1"
+  },
+  "status": "PASS_CAUSAL_SCOPED"
+}

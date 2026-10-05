@@ -1,0 +1,192 @@
+{
+  "schema": "admission-ab0-normal21-and-b1-source-review-v1",
+  "status": "NORMAL20_PASS1_FAIL_RETAINED_ASSERTION_SUCCESSOR_SOURCE_ONLY",
+  "source_head": "ab0b1a6fc58f4d0be4bfe84d26d4bb892ddd6a64",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-ordinary.receipt.json",
+      "bytes": 13432,
+      "sha256": "eb8f0416e710410e6c41317bc8c84d7ecb274ca39bceb9edf709949ea0cbf985"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-ordinary.stdout",
+      "bytes": 17082,
+      "sha256": "fb8929125136ae1aa6807ffebe7f1cbe94d27ba3c2ee41b437ea53fa30e9e2a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-ordinary.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-ordinary.resources.csv",
+      "bytes": 10955,
+      "sha256": "ba1d87e7f57735cdefa23e7e111497861704dd38861dd0d99a9b4c7c0a6fab68"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-policy-refusal-fixture/evidence/intake.json",
+      "bytes": 2552,
+      "sha256": "0f7e2f63609255f06f1d877ed077a6c228e0b0c415b667b305bd5a07b20f1004"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-policy-refusal-fixture/sn/mainnet/economic_conservation_native_renewal_test.go",
+      "bytes": 26581,
+      "sha256": "4bbee11a5ee973ff6bc60e3f8b8dd596b6d212d443a92c8c3515fdde636f4e62"
+    }
+  ],
+  "events": {
+    "TestEconomicConservationArchiveFailedJoinedAdoptionKeepsOriginalEvidence": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationArchiveJoinsFeeRetirementClaimAndNativeAdoption": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationInitialClaimCensusRequiresActualObservation": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalCanceledProposalAndUnownedIndexHaveNoEffects": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalExternalPolicyChangeDoesNotResetOwner": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalHeldArchiveCustodyBeforeDispatch": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalPublicLostAckAndShortOutputReconcile": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalPublicMissingReviewRemainsUnavailable": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalPublicPreservesOriginalPolicyAndArchive": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalPublicRejectsForeignSignerAndLineage": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalPublicRejectsReviewReuseAndChangedPrefix": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalPublicRequiresIndependentInnerApproval": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationNativeRenewalRestoreAuthenticatesCompleteOriginalHistory": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicFeeRevisionRetainsOriginalKeyReviewAndArchivedPolicies": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationRestoreProtectsFreshAncestorBeforePreparation": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationRestorePublicReconstructsOriginalClaimHead": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationRestorePublicRejectsChangedAuthorityAndReserve": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationRestorePublicRequiresEverySourceAndCoowner": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationRestorePublicSingleRootKeepsFullClaimWindow": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePreparesFreshTargetWithoutPriorGeneration": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    }
+  },
+  "normal_census": {
+    "run": 21,
+    "pass": 20,
+    "fail": 1,
+    "skip": 0
+  },
+  "critical_normal_pass_roots": [
+    "TestEconomicConservationArchiveFailedJoinedAdoptionKeepsOriginalEvidence",
+    "TestEconomicConservationArchiveJoinsFeeRetirementClaimAndNativeAdoption",
+    "TestEconomicConservationInitialClaimCensusRequiresActualObservation",
+    "TestEconomicConservationPublicFeeRevisionRetainsOriginalKeyReviewAndArchivedPolicies"
+  ],
+  "failure": {
+    "root": "TestEconomicConservationNativeRenewalExternalPolicyChangeDoesNotResetOwner",
+    "raw_observation": "Exit3 refusal: economic archive changed its original capacity or review basis; fixture requires policy basis substring.",
+    "independent_limit": "Combined original assertion does not print namespace/output predicates separately; no independent assertion that each predicate succeeded from raw log alone. No demonstrated owner-reset or changed-policy admission."
+  },
+  "successor": {
+    "head": "b1be6f7dde95deafd8adbdfe2e064598e855ac4a",
+    "scope": "One affected test only; production/modules/engines unchanged fromab0.",
+    "source_review": "Complete sole delta read. Mutated policy must validate and change identity; only either actual original-basis refusal accepted, retaining exit3/zero output/exact namespace and subsequent original checkpoint identity validation."
+  },
+  "limits": [
+    "Race21, vet, nineteen dual-engine roots, long129 and controls remain separately unqualified.",
+    "Normal critical-root passes do not qualify original-guard omission behavior or final joined source.",
+    "b1 assertion correction not executed by this proof."
+  ]
+}

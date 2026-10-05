@@ -1,0 +1,49 @@
+{
+  "connect_commit": "332b1f438a62edddb4747119fbcc1fed8047ecbc",
+  "files": {
+    "evidence/normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/normal.jsonl": "5ffc5e946c122902174008614feec5a4dc778bc77466936abb329ec709e8816b",
+    "evidence/normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/race.jsonl": "62b5333242db08565d2282e8647e889a527e8835400b21d7bc2d436bec98c716",
+    "evidence/race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/source-fence.json": "521e2dfeaf5cccfd629b4ce5295d9f1716d21ec4632c53852a5d8193cfa0dcb8",
+    "evidence/vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": [
+    "Single corrected assertion root and mainnet vet only; original five passing f4e roots remain a distinct source scope."
+  ],
+  "only_changed_file": "mainnet/storage_prepare_member_restore_test.go",
+  "original_failed_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-member-restore-f4e-independent-20261003/evidence/original-failed-receipt.json",
+    "sha256": "e28a1265b63dd68d78db2e276c5bbb37e64d24943387c2f553d67507835f22ab"
+  },
+  "outcomes": {
+    "normal": {
+      "exit": 0,
+      "failed": [],
+      "passed": [
+        "TestStoragePreparationRestoreMemberRetainsOriginalExecutionRootGate"
+      ],
+      "race_reports": []
+    },
+    "race": {
+      "exit": 0,
+      "failed": [],
+      "passed": [
+        "TestStoragePreparationRestoreMemberRetainsOriginalExecutionRootGate"
+      ],
+      "race_reports": []
+    }
+  },
+  "parent": "f4e420667adb9eb7f1198119c13d90cd22efbeee",
+  "production_and_modules_unchanged": true,
+  "schema": "sol-member-6b23-affected-root-v1",
+  "server_commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+  "sn_commit": "6b23b772865a5190e706e59429debceb55da480b",
+  "sn_tree": "d89dca3e71a2bbc27fdd97f432f49699221d7acd",
+  "status": "PASS_SCOPED",
+  "vet_exit": 0
+}

@@ -1,0 +1,20 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 67108864,
+  "data_minimum_available_bytes": 10737418240,
+  "history_count": 0,
+  "job_sha256": "925e0a7ce9a5f2e84d2614efc489dd3dd004573179fd5bc850b0627aa57e36fd",
+  "margin": 2,
+  "memory_max_bytes": 268435456,
+  "memory_minimum_available_bytes": 113816633344,
+  "memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "runner_sha256": "5b8be9299c969b1dd2fc903744890c075c88847eac7383e303552ace8d1e460a",
+  "short_count": 1,
+  "status": "ADOPTED_ONE_JOINT_ADAPTER_PURE_TEST_SUITE",
+  "adopted_at": "2026-10-05T06:58:13.678314+00:00",
+  "root_review": "All exactbindings and ASTchecked. Execute33 canonicalmain deterministic purequalification tests; preserve29P1F and all14 joined dependencyphases. No compiler/network/Docker/productbody/deployment."
+}

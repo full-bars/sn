@@ -1,0 +1,170 @@
+{
+  "schema": "native-adoptionade5-environment-ancestry-root-finding-v1",
+  "status": "BAD_SCRATCH_ANCESTOR_CONFIRMED_CORRECTED_ENVIRONMENT_REPLAY_PENDING",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/ade5-environment-ancestry/evidence/source-finding.json",
+      "bytes": 8023,
+      "sha256": "abb1e12d7b34ac04354232b94ddb1c015c83b41fe0b5957b2dcd034792595a7b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-normal-ade-ordinary.stdout",
+      "bytes": 24145,
+      "sha256": "2746046b63ccb66d26740588fc4b009a6ace99d96f6d043ba0ac1cb177b5e1f1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/run-go-bodies-v4.py",
+      "bytes": 15724,
+      "sha256": "338a3a04e6463089b59e13993fdefb4439db679f1490d5795dd8c7833f0930ff"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/connect/durablevolume/host_linux.go",
+      "bytes": 25838,
+      "sha256": "428a719730f02f3309bb735b6d1d52d63234fbac6b0953062f4e96cbf610d050"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_fixture_protection_test.go",
+      "bytes": 1931,
+      "sha256": "644bafa7b394613c9b75ade45161cebb935376b880d7c005bfd23a1142057e0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_fixture_test.go",
+      "bytes": 12948,
+      "sha256": "617cb5aaf0a1a7f2797306e29739157369e8facd685cd657babe9bb4a03c3e9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_native_producer_restore_test.go",
+      "bytes": 31110,
+      "sha256": "9ce71fd2f268f4bdaad1f66ef05d0c9081937514168e8b51e8c71de1abfd376f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_restore_test.go",
+      "bytes": 22962,
+      "sha256": "4a09de3a8208e7a3aaf5edeba103bcafd5cbe605d205a89051a107f8750bb746"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_native_producer_test.go",
+      "bytes": 29404,
+      "sha256": "df030c3a42bb858df9fc5f4c1361b877e6bc1e78ca4e6686aaafe5ef0a0772e8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/historical_replay.go",
+      "bytes": 18617,
+      "sha256": "d6023645b3ebe83762282c36ec98618bb6a935138d3ae18a0d6ce310455f6acd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/plan_input.go",
+      "bytes": 14194,
+      "sha256": "52334698059fd6a7d89c7f219c34e8ac505957fa8fbcecbbbc5c87fc5da473ea"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-core-c618-concurrent-20261004/source-v3/connect/durablevolume/host_linux.go",
+      "bytes": 25838,
+      "sha256": "428a719730f02f3309bb735b6d1d52d63234fbac6b0953062f4e96cbf610d050"
+    }
+  ],
+  "finding": "Actual runner TMPDIR points below uid1000 mode0775 fixtureade5. Core descriptor walk from / rejects that ancestor even though tmp and each new test root are0700. Raw public protected-fixture failure agrees; no product defect established.",
+  "observed_ancestors": [
+    {
+      "path": "/",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "device": 64512,
+      "inode": 2,
+      "symlink": false,
+      "protected_by_core_rule": true
+    },
+    {
+      "path": "/mnt",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "device": 64512,
+      "inode": 54001665,
+      "symlink": false,
+      "protected_by_core_rule": true
+    },
+    {
+      "path": "/mnt/data",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0,
+      "device": 2081,
+      "inode": 2,
+      "symlink": false,
+      "protected_by_core_rule": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet",
+      "mode": "0o755",
+      "uid": 1000,
+      "gid": 1000,
+      "device": 2081,
+      "inode": 119013377,
+      "symlink": false,
+      "protected_by_core_rule": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004",
+      "mode": "0o700",
+      "uid": 1000,
+      "gid": 1000,
+      "device": 2081,
+      "inode": 18148744,
+      "symlink": false,
+      "protected_by_core_rule": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5",
+      "mode": "0o775",
+      "uid": 1000,
+      "gid": 1000,
+      "device": 2081,
+      "inode": 18767980,
+      "symlink": false,
+      "protected_by_core_rule": false
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/tmp",
+      "mode": "0o700",
+      "uid": 1000,
+      "gid": 1000,
+      "device": 2081,
+      "inode": 18793795,
+      "symlink": false,
+      "protected_by_core_rule": true
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/images",
+      "mode": "0o700",
+      "uid": 1000,
+      "gid": 1000,
+      "device": 2081,
+      "inode": 18793675,
+      "symlink": false,
+      "protected_by_core_rule": true
+    }
+  ],
+  "continuation": {
+    "keep_original_run_and_source_immutable": true,
+    "keep_same_authenticated_go_images": true,
+    "wait_for_original_terminal": true,
+    "new_temp_parent": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004",
+    "new_temp_directory_requirement": "Create a distinct owned0700 TMPDIR directly under protected parent; verify every ancestor without changing any existing shared path.",
+    "first_existing_control": "TestEconomicConservationFixtureProtectsFreshRootWithoutWeakeningCustody",
+    "then": "Use exact failed-root census for environment-only normal/race continuations after fresh admission. Preserve all original successes and failures; no rebuild is required for environment change.",
+    "remaining_inputs": "External Rust fixture exports use bounded readPlanFile; engines use hash-pinned immutable memfd. Actual durable fixture directories are freshly created below TMPDIR. No additional Core ancestry root outside TMPDIR was found in these selected constructors."
+  },
+  "lessons": [
+    "Qualification and production preflight must validate complete physical ancestry under the actual runtime account, not only the leaf directory or free capacity.",
+    "Preserve original binary/source/receipts and finish collecting both modes; use a fresh protected sibling TMPDIR then replay exact failed roots. Previously successful roots remain retained.",
+    "Run an existing public protected-fixture root as actual same-image safe-environment counterpart before broad replay.",
+    "Non-blocking diagnostics improvement: report exact failing ancestor prefix and mode/uid while retaining typed integrity disposition; current generic ancestor message hid the operational cause."
+  ],
+  "limits": [
+    "Corrected-environment test result is not yet established.",
+    "Astra confirmed external exports use bounded plan reads and engines immutable memfd; selected durable fixtures use TMPDIR.",
+    "No live application owner permissions or production custody are relaxed."
+  ]
+}

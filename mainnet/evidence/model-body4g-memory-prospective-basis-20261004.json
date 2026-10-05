@@ -1,0 +1,216 @@
+{
+  "schema": "model-owned-memory-prospective-review-basis-v1",
+  "time_ns": 1791153734355652354,
+  "legacy_full_model_observations": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.resource.csv",
+      "sha256": "500b22e755cb18b104e00845562a8779de2ac7e67fb067a252f0149d263155f8",
+      "bytes": 1099376,
+      "samples": 6177,
+      "first_utc": "2026-10-04T04:18:17.855766+00:00",
+      "last_utc": "2026-10-04T06:09:56.874721+00:00",
+      "postgres_sampled_max_bytes": 2134396928,
+      "redis_sampled_max_bytes": 61431808,
+      "initial_to_min_host_memory_decline_bytes": 4765900800,
+      "missing_or_error_samples": [
+        {
+          "sequence": "6176",
+          "kind": "periodic",
+          "utc": "2026-10-04T06:09:56.105660+00:00",
+          "data_available_bytes": "87885606912",
+          "data_available_inodes": "93846989",
+          "data_status": "available",
+          "data_error_type": "",
+          "docker_root_available_bytes": "304102199296",
+          "docker_root_available_inodes": "50989274",
+          "docker_root_status": "available",
+          "docker_root_error_type": "",
+          "memory_available_bytes": "122271485952",
+          "memory_status": "available",
+          "memory_error_type": "",
+          "postgres_cgroup_memory_bytes": "",
+          "postgres_status": "unavailable",
+          "postgres_error_type": "ValueError",
+          "redis_cgroup_memory_bytes": "",
+          "redis_status": "absent",
+          "redis_error_type": ""
+        }
+      ]
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/phase-fixture_full_model_joined_cleanup.resource.csv",
+      "sha256": "7794b2fb63d7516db6ae01a02a0fabe100260e20f0af463a0da6df2eb2d54853",
+      "bytes": 1397662,
+      "samples": 7806,
+      "first_utc": "2026-10-03T19:02:39.218799+00:00",
+      "last_utc": "2026-10-03T21:23:38.366779+00:00",
+      "postgres_sampled_max_bytes": 2248339456,
+      "redis_sampled_max_bytes": 64466944,
+      "initial_to_min_host_memory_decline_bytes": 3512700928,
+      "missing_or_error_samples": []
+    }
+  ],
+  "current_partial_run": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.resources.jsonl",
+    "observed_complete_prefix_bytes": 1885101,
+    "prefix_sha256": "2fdabdb21a0fb9ec9fb82a66517137fd9a283db3fef824b7c3f93a229d21a3fb",
+    "samples": 810,
+    "errors": [],
+    "first_time_ns": 1791153208380647431,
+    "last_time_ns": 1791153733749850898,
+    "observed_peaks": {
+      "owner_cgroup_memory": 419328000,
+      "owner_cgroup_peak": 430866432,
+      "postgres_memory": 716840960,
+      "postgres_memory_peak": 717803520,
+      "redis_memory": 11075584,
+      "redis_memory_peak": 12222464
+    },
+    "last_sample": {
+      "time_ns": 1791153733749850898,
+      "lease": {
+        "owner": {
+          "pid": 2132303,
+          "state": "S",
+          "start": "102349612"
+        },
+        "kernel": [
+          "95: FLOCK  ADVISORY  WRITE 2132303 08:21:16941991 0 EOF"
+        ],
+        "device": 2081,
+        "inode": 16941991
+      },
+      "phase": "body",
+      "data": {
+        "available": 27663290368,
+        "inodes": 92685683
+      },
+      "docker": {
+        "available": 301572804608,
+        "inodes": 50977001
+      },
+      "memory": 129582260224,
+      "owned": {
+        "/mnt/data/sn-testnet/sol-server-final-f67-20261004/tmp": {
+          "status": "available",
+          "allocated": 90374144,
+          "inodes": 4
+        },
+        "/mnt/data/sn-testnet/sol-server-final-f67-20261004/gate-final-model-retry3": {
+          "status": "available",
+          "allocated": 253952,
+          "inodes": 64
+        },
+        "/mnt/data/sn-testnet/sol-server-final-f67-20261004/final-c60-source/server/model": {
+          "status": "available",
+          "allocated": 8499200,
+          "inodes": 539
+        },
+        "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence": {
+          "status": "available",
+          "allocated": 31211520,
+          "inodes": 151
+        }
+      },
+      "containers": {
+        "postgres": {
+          "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 2276783,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-10-04T22:33:29.262407689Z",
+            "FinishedAt": "0001-01-01T00:00:00Z"
+          },
+          "memory": 458113024,
+          "status": "available",
+          "memory_peak": 717803520,
+          "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+          "pid": 2276783,
+          "start": "102547233",
+          "cgroup": "system.slice/docker-f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523.scope"
+        },
+        "redis": {
+          "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+          "state": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 2277893,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-10-04T22:33:32.995121001Z",
+            "FinishedAt": "0001-01-01T00:00:00Z"
+          },
+          "memory": 10588160,
+          "status": "available",
+          "memory_peak": 12222464,
+          "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+          "pid": 2277893,
+          "start": "102547607",
+          "cgroup": "system.slice/docker-068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b.scope"
+        }
+      },
+      "owner_cgroup_memory": 133525504,
+      "owner_cgroup_peak": 430866432,
+      "owner_cgroup_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n"
+    }
+  },
+  "live_process_cgroups": {
+    "1970944": {
+      "start": "101917367",
+      "state": "S",
+      "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-claim-full129-1eb-race-v2-20261004.service",
+      "memory": {
+        "memory.current": "230895616",
+        "memory.peak": "322863104",
+        "memory.max": "max",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.swap.max": "max"
+      }
+    },
+    "2278433": {
+      "start": "102548058",
+      "state": "S",
+      "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-final-c60-full-model-db-retry3-20261004.service",
+      "memory": {
+        "memory.current": "132304896",
+        "memory.peak": "430866432",
+        "memory.max": "max",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.swap.max": "max"
+      }
+    },
+    "2276368": {
+      "start": "102546201",
+      "state": "S",
+      "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-final-c60-full-model-db-retry3-20261004.service",
+      "memory": {
+        "memory.current": "132304896",
+        "memory.peak": "430866432",
+        "memory.max": "max",
+        "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+        "memory.swap.max": "max"
+      }
+    }
+  },
+  "scope_limits": [
+    "Legacy DB figures are maxima of sampled memory.current, not lifetime cgroup peaks.",
+    "Current dedicated owner/body memory.peak is partial because the model remains live.",
+    "No combined future maximum or architectural lower bound inferred.",
+    "Legacy aggregate host decline includes compilers, helpers, unrelated activity; not an owned model peak."
+  ],
+  "candidate_model_memory_forecast_bytes": 4294967296,
+  "two_times_model_reservation_bytes": 8589934592,
+  "existing_forecast_bytes": 8589934592,
+  "original_guards_changed": false
+}

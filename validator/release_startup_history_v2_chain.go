@@ -25,7 +25,14 @@ func (self *ChainClient) authenticateReleaseStartupBoundaryV2Context(ctx context
 
 // Only startup's complete validated provisional handoff waives repeated
 // external history comparisons; all runtime callers retain the strict wrapper.
-func (self *ChainClient) authenticateReleaseStartupBoundaryV2ContextWithRetainedHistory(ctx context.Context, domain protocol.ValidatorEvidenceDomain, noID uint64, boundary AttemptBoundary, terminal, retained bool) (resultErr error) {
+func (self *ChainClient) authenticateReleaseStartupBoundaryV2ContextWithRetainedHistory(ctx context.Context, domain protocol.ValidatorEvidenceDomain, noID uint64, boundary AttemptBoundary, terminal, retained bool) error {
+	return self.authenticateReleaseStartupBoundaryV2WithPolicy(ctx, domain, noID, boundary, terminal, retained, nil, "")
+}
+
+// The immutable activation retains its original policy. A configured amendment
+// admits only its exact successor at an independently observed policyAt block.
+// Ordinary journals additionally pin the policy named by their original owner.
+func (self *ChainClient) authenticateReleaseStartupBoundaryV2WithPolicy(ctx context.Context, domain protocol.ValidatorEvidenceDomain, noID uint64, boundary AttemptBoundary, terminal, retained bool, cfg *ReleaseConfig, expectedPolicyHash string) (resultErr error) {
 	if ctx == nil || self == nil || self.client == nil || self.coordinator == nil || self.chainId == nil {
 		return errors.New("startup history EVM owner is absent")
 	}
@@ -45,6 +52,16 @@ func (self *ChainClient) authenticateReleaseStartupBoundaryV2ContextWithRetained
 	hash, err := canonicalAttemptHex32("startup history EVM hash", boundary.EVMBlockHash, false)
 	if err != nil {
 		return err
+	}
+	if cfg != nil {
+		if _, err := ReleasePolicyForHash(cfg, releaseHex32(domain.PolicyHash)); err != nil {
+			return err
+		}
+		if expectedPolicyHash != "" {
+			if _, err := ReleasePolicyForHash(cfg, expectedPolicyHash); err != nil {
+				return err
+			}
+		}
 	}
 	if retained {
 		return ctx.Err()
@@ -66,8 +83,8 @@ func (self *ChainClient) authenticateReleaseStartupBoundaryV2ContextWithRetained
 		return err
 	}
 	current, err := self.coordinator.UnpackCurrentEpoch(outputs[0])
-	if err != nil || current == nil || !current.IsUint64() || current.Uint64() != boundary.SettlementEpoch {
-		return errors.Join(errors.New("startup history boundary belongs to another on-chain epoch"), err)
+	if err := releaseRpcObservationError(err, current != nil && current.IsUint64() && current.Uint64() == boundary.SettlementEpoch, errors.New("startup history boundary belongs to another on-chain epoch")); err != nil {
+		return err
 	}
 	if err := canonicalReleaseActivationV2View("currentEpoch", outputs[0], current); err != nil {
 		return err
@@ -79,8 +96,8 @@ func (self *ChainClient) authenticateReleaseStartupBoundaryV2ContextWithRetained
 	if err := canonicalReleaseActivationV2View("policyAt", outputs[1], policy); err != nil {
 		return err
 	}
-	if policy.PolicyHash != domain.PolicyHash || policy.EffectiveEpoch > boundary.SettlementEpoch || policy.EffectiveBlock == 0 || policy.EpochBlocks == 0 {
-		return errors.New("startup history policy differs from independent deployment authority")
+	if err := validateReleaseStartupBoundaryPolicyV2(cfg, domain, boundary, expectedPolicyHash, policy); err != nil {
+		return err
 	}
 	start := new(big.Int).Mul(new(big.Int).SetUint64(boundary.SettlementEpoch-policy.EffectiveEpoch), new(big.Int).SetUint64(policy.EpochBlocks))
 	start.Add(start, new(big.Int).SetUint64(policy.EffectiveBlock))
@@ -104,8 +121,8 @@ func (self *ChainClient) authenticateReleaseStartupBoundaryV2ContextWithRetained
 			return errors.New("startup history terminal does not end its independently observed window")
 		}
 		actualEnd, err := self.ReleaseEpochEndBlockAtHashContext(ctx, finalized, finalizedHash, epoch)
-		if err != nil || actualEnd != end.Uint64() {
-			return errors.Join(errors.New("startup history terminal differs from the actual rolled epoch end"), err)
+		if err := releaseRpcObservationError(err, actualEnd == end.Uint64(), errors.New("startup history terminal differs from the actual rolled epoch end")); err != nil {
+			return err
 		}
 	}
 	return ctx.Err()
@@ -119,10 +136,28 @@ func authenticateReleaseStartupNativeV2Context(ctx context.Context, native *crv4
 }
 
 func authenticateReleaseStartupNativeV2ContextWithRetainedHistory(ctx context.Context, native *crv4.Chain, initial ReleaseEvidenceV2ActivationContext, journal *releaseMeasurementInputJournal, runtime crv4.RuntimeArtifactIdentity, legacy, retained bool) error {
+	return authenticateReleaseStartupNativeV2ContextWithConfig(ctx, native, initial, journal, runtime, legacy, retained, nil)
+}
+
+// The complete production config survives startup and archive wrappers. The
+// old identity-only entry cannot acquire current or historical mainnet authority.
+func authenticateReleaseStartupNativeV2ContextWithConfig(ctx context.Context, native *crv4.Chain, initial ReleaseEvidenceV2ActivationContext, journal *releaseMeasurementInputJournal, runtime crv4.RuntimeArtifactIdentity, legacy, retained bool, cfg *ReleaseConfig) error {
 	if ctx == nil || journal == nil {
 		return errors.New("startup ordinary native context is absent")
 	}
 	input := journal.MeasurementInput
+	allowed := HistoricalReleaseRuntimeArtifacts(runtime)
+	if initial.Activation.Domain.ChainID == 964 || isOwnerRecycleProductionConfig(cfg) {
+		if !isOwnerRecycleProductionConfig(cfg) || cfg.ChainID != initial.Activation.Domain.ChainID || cfg.GenesisHash != releaseHex32(initial.Activation.Domain.GenesisHash) ||
+			cfg.Netuid != initial.Activation.Domain.Netuid || retained || legacy {
+			return errors.New("production startup native history lost independent configuration or inherited provisional replay")
+		}
+		var err error
+		allowed, err = releaseHistoricalRuntimeArtifactsAt(cfg, input.CutNativeBlock)
+		if err != nil {
+			return err
+		}
+	}
 	hash, err := canonicalAttemptHex32("startup ordinary native hash", input.CutNativeBlockHash, false)
 	if err != nil {
 		return err
@@ -136,7 +171,7 @@ func authenticateReleaseStartupNativeV2ContextWithRetainedHistory(ctx context.Co
 	observed, err := crv4.ReadValidatorScheduleAtContext(ctx, native, crv4.ValidatorScheduleQuery{
 		GenesisHash: types.Hash(initial.Activation.Domain.GenesisHash), BlockHash: types.Hash(hash), BlockNumber: input.CutNativeBlock,
 		Netuid: initial.Activation.Domain.Netuid, Hotkey: initial.Activation.Hotkey, MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs,
-	}, HistoricalReleaseRuntimeArtifacts(runtime)...)
+	}, allowed...)
 	if err != nil {
 		return err
 	}

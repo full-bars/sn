@@ -1,0 +1,63 @@
+{
+  "schema": "mainnet-independent-source-review-v1",
+  "status": "SOURCE_REVIEWED_NOT_BEHAVIORALLY_QUALIFIED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-control-composition/sn",
+    "head": "549f692688319a77887546a66cb901ca3a79e524",
+    "tree": "d53458dd9d22954ef86b1b57af50cf614035622e",
+    "base": "6fa7c4adbc85a99d809a9f00e658d4db6b0d9cff",
+    "clean": true,
+    "sparse": true
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-control-composition/evidence/intake.json",
+    "sha256": "6e37debf95d4aa082f4d6a259cb4260aee3b05471693e5946f89c35802b3c904"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-control-composition/sn/miner/swarm_control_composition_fixture.go",
+      "bytes": 3381,
+      "sha256": "b809f98508cec7286934738178d1a381c4c84cb97295063232ef45e6342ff9b4",
+      "relative": "miner/swarm_control_composition_fixture.go",
+      "git_blob": "08a404e53163bd23201c6362d71338b0ac54042a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-control-composition/sn/sim-testnet/miner_fault_manager_composition_test.go",
+      "bytes": 15260,
+      "sha256": "d051300c6daed27670acc0239695afe5c4fda5c0277c408eb7191cae4ceefa06",
+      "relative": "sim-testnet/miner_fault_manager_composition_test.go",
+      "git_blob": "5ff555b7d16a4f11f2eaf04d59c2543f59728494"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-control-composition/evidence/qualification-recipe.json",
+      "bytes": 7487,
+      "sha256": "c8aac40844c16c9c13c9e5ffdc020d2e533a991c8821b28356e8c05cb9374b5d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-control-composition/evidence/operative-controls.json",
+      "bytes": 5070,
+      "sha256": "797c29a87e87d279f56ee0d901298250e5cf3a032763f70f439863ec3f33345c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-control-composition/evidence/source-audit.json",
+      "bytes": 1546,
+      "sha256": "97aad579b736f198b1644e3403b68d0d74ae60a5569f41c78448e75037a6a287"
+    }
+  ],
+  "review": [
+    "Four real ProviderSwarm managers control96 synthetic instance lifetimes through production HTTP handlers and durable simulator driver.",
+    "A completed16-member wave is retained across same-owner continuation and fresh-owner reconciliation; replacing one manager invalidates only its four completed members.",
+    "Durable write barrier precedes HTTP dispatch; lost socket reply is reconciled after restart without another selected mutation.",
+    "Five causal production omissions target prefix reuse, manager generation, reopened observation, durable dispatch and ambiguous completion.",
+    "Explicit test-only build tag isolates fixture constructor; ordinary production binaries contain no new scheduler or SDK/signing path."
+  ],
+  "limits": [
+    "Source only:15roots per normal/race mode, two package compiles/vets and five causal controls remain.",
+    "Does not prove actual SDK registration, fleet resource sizing or every repair component."
+  ],
+  "qualification": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/miner-control-composition/evidence/qualification-recipe.json",
+    "bytes": 7487,
+    "sha256": "c8aac40844c16c9c13c9e5ffdc020d2e533a991c8821b28356e8c05cb9374b5d"
+  }
+}

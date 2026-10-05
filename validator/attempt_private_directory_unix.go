@@ -54,6 +54,14 @@ func (self *attemptPrivateDirectory) openFile(name string, flags int, mode uint3
 	if self == nil || self.file == nil || !validAttemptPrivateLeaf(name) {
 		return nil, errors.New("private metadata open has invalid owner or name")
 	}
+	if err := self.check(); err != nil {
+		return nil, err
+	}
+	if self.storage != nil && flags&(unix.O_WRONLY|unix.O_RDWR|unix.O_CREAT|unix.O_TRUNC) != 0 {
+		if err := self.storage.CheckWrite(); err != nil {
+			return nil, err
+		}
+	}
 	path := filepath.Join(self.path, name)
 	fd, err := unix.Openat(int(self.file.Fd()), name, flags|unix.O_NOFOLLOW|unix.O_NONBLOCK|unix.O_CLOEXEC, mode)
 	if err != nil {

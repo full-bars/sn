@@ -1,0 +1,153 @@
+{
+  "failure": {
+    "classification": "diagnostic assertion mismatch after real refusal; not setup failure",
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "observed": "public refusal: durable JSON contains a duplicate key",
+    "root": "TestStoragePreparationRestoreRawNominationRequiresExactDelta",
+    "scope_limit": "No all-12-pass qualification on 00a.",
+    "test_expected": "raw-specific ambiguous repeated raw nomination diagnostic"
+  },
+  "files": {
+    "evidence/module-graph.jsonl": "4995267da5c7429563e18606164c9e7f1e9576b04989969cf0a40d2cac17f3dc",
+    "evidence/normal-chain.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/normal-chain.jsonl": "db071873d246f1e7cde6b623257a33599a60051bf998a9f1d9d22676d40c60d2",
+    "evidence/normal-chain.phase": "b3a2b62d3ea0759d4f3d3a224dcb618daec164bdccc20158a15d39034261ee24",
+    "evidence/normal-chain.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/normal-mainnet.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/normal-mainnet.jsonl": "6fc60a07df19a6b3cf212abb75271c4338d572f75003847f5eaa1e6043a3cbe3",
+    "evidence/normal-mainnet.phase": "770321f49c2d278a7a9912071531662657db5f96d99ad995b7bc2053d66847c3",
+    "evidence/normal-mainnet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/race-chain.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/race-chain.jsonl": "5105f637d4e95a387d50492ce944ec44c6b1e69857d907b5ba5efe273a788a2e",
+    "evidence/race-chain.phase": "cad3ea9817a01dd0be46474badeab7c02b85eb10f033a4ab715f91bde716da58",
+    "evidence/race-chain.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/race-mainnet.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/race-mainnet.jsonl": "ba3ef6c29e3a42418fcefe7282dff065bfe2937b5d114d4fc18c5cec6d80aa4c",
+    "evidence/race-mainnet.phase": "7985de6bf750f238da862314924f37358d35f27716add1b1ef4faa0a72e2fded",
+    "evidence/race-mainnet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/run-00a.sh": "5b4e8938c22877b6b92e8e03aac1a27f12273701e29f255effaadc6777940c8d",
+    "evidence/vet-chain.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/vet-chain.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/vet-chain.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/vet-mainnet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/vet-mainnet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/vet-mainnet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source/go.work": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778",
+    "source/sn/chain/journal_restore_scope_test.go": "590653a7f0338ae7de6483d0ae9955a9755b57db3f1eabd876f4637d3b9a5156",
+    "source/sn/go.mod": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "source/sn/go.sum": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61",
+    "source/sn/mainnet/storage_prepare_raw_restore_test.go": "39b207f726ccd180d4088b3e825ef88615e13928e95dfee57ed0e2ba83491d46"
+  },
+  "private_tmp_ancestry": [
+    {
+      "mode": "0o755",
+      "owner_uid": 0,
+      "path": "/"
+    },
+    {
+      "mode": "0o755",
+      "owner_uid": 0,
+      "path": "/mnt"
+    },
+    {
+      "mode": "0o755",
+      "owner_uid": 0,
+      "path": "/mnt/data"
+    },
+    {
+      "mode": "0o755",
+      "owner_uid": 1000,
+      "path": "/mnt/data/sn-testnet"
+    },
+    {
+      "mode": "0o700",
+      "owner_uid": 1000,
+      "path": "/mnt/data/sn-testnet/sol-restore-private-tmp-20261003"
+    },
+    {
+      "mode": "0o700",
+      "owner_uid": 1000,
+      "path": "/mnt/data/sn-testnet/sol-restore-private-tmp-20261003/00a"
+    }
+  ],
+  "schema": "sol-restore-native-raw-00a-independent-v1",
+  "scopes": [
+    {
+      "exit": 1,
+      "jsonl_sha256": "6fc60a07df19a6b3cf212abb75271c4338d572f75003847f5eaa1e6043a3cbe3",
+      "mode": "normal",
+      "package": "./mainnet",
+      "race_reports": 0,
+      "roots": {
+        "TestStoragePreparationRawWitnessIsRestoreOnly": "pass",
+        "TestStoragePreparationRestoreNamedRawKeepsOriginalCheckpoint": "pass",
+        "TestStoragePreparationRestoreNativeCopiedArchiveRetainsOriginalIntent": "pass",
+        "TestStoragePreparationRestoreNativePendingAppendKeepsReconciliation": "pass",
+        "TestStoragePreparationRestorePartialRawRemainsStopped": "pass",
+        "TestStoragePreparationRestoreRawNamesRejectAliasesAndCollisions": "pass",
+        "TestStoragePreparationRestoreRawNominationCannotCreateIntent": "pass",
+        "TestStoragePreparationRestoreRawNominationRequiresExactDelta": "fail",
+        "TestStoragePreparationRestoreRawRejectsMalformedCheckpointBounds": "pass",
+        "TestStoragePreparationRestoreRefusesAmbiguousOriginalRawIntent": "pass",
+        "TestStoragePreparationRestoreTemporaryRawKeepsOriginalCheckpoint": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "db071873d246f1e7cde6b623257a33599a60051bf998a9f1d9d22676d40c60d2",
+      "mode": "normal",
+      "package": "./chain",
+      "race_reports": 0,
+      "roots": {
+        "TestNativeRestoreScopeRetainsOriginalOmissionBytes": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 1,
+      "jsonl_sha256": "ba3ef6c29e3a42418fcefe7282dff065bfe2937b5d114d4fc18c5cec6d80aa4c",
+      "mode": "race",
+      "package": "./mainnet",
+      "race_reports": 0,
+      "roots": {
+        "TestStoragePreparationRawWitnessIsRestoreOnly": "pass",
+        "TestStoragePreparationRestoreNamedRawKeepsOriginalCheckpoint": "pass",
+        "TestStoragePreparationRestoreNativeCopiedArchiveRetainsOriginalIntent": "pass",
+        "TestStoragePreparationRestoreNativePendingAppendKeepsReconciliation": "pass",
+        "TestStoragePreparationRestorePartialRawRemainsStopped": "pass",
+        "TestStoragePreparationRestoreRawNamesRejectAliasesAndCollisions": "pass",
+        "TestStoragePreparationRestoreRawNominationCannotCreateIntent": "pass",
+        "TestStoragePreparationRestoreRawNominationRequiresExactDelta": "fail",
+        "TestStoragePreparationRestoreRawRejectsMalformedCheckpointBounds": "pass",
+        "TestStoragePreparationRestoreRefusesAmbiguousOriginalRawIntent": "pass",
+        "TestStoragePreparationRestoreTemporaryRawKeepsOriginalCheckpoint": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "5105f637d4e95a387d50492ce944ec44c6b1e69857d907b5ba5efe273a788a2e",
+      "mode": "race",
+      "package": "./chain",
+      "race_reports": 0,
+      "roots": {
+        "TestNativeRestoreScopeRetainsOriginalOmissionBytes": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source": {
+    "commit": "00a306555a7e4fc3c7fe3b465f992ea3c5f415d4",
+    "connect": "53bc92fabb28a79e26f5e3c5c78a6718751e5e79",
+    "module_graph_sha256": "4995267da5c7429563e18606164c9e7f1e9576b04989969cf0a40d2cac17f3dc",
+    "server": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+    "tree": "71744eab32eac55a7401acda0f3313b48006d047"
+  },
+  "status": "SCOPED_FAILURE",
+  "vet_chain_exit": 0,
+  "vet_mainnet_exit": 0
+}

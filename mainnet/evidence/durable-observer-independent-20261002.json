@@ -1,0 +1,299 @@
+{
+  "author_receipt_sha256": "f232919f77119b81afa5f307249b3d105a1089007f6ce71783b8529c48329a75",
+  "dependencies": {
+    "glog": {
+      "head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "head": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+      "tree": "622c52b73f71b7652cf508856198ffa6aa85f574"
+    },
+    "userwireguard": {
+      "head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "limits": [
+    "Frozen 6d test-only successor with production bytes from 97; 17 selected observer roots only.",
+    "First independent normal and first correction failed 16 roots at private fixture ancestry due mode/umask; both raw logs remain invalid product checks.",
+    "Five old 653 body controls failed at intended continuation/terminal precedence assertions in normal and race; checkpoint uncertainty remained a positive control.",
+    "No f3 writer inclusion or combined SN/server composition qualification; no live signing, submission, deployment, or volume provisioning."
+  ],
+  "module_selection_sha256": "d6d6adc26828201eefa3f3a211d48bcc8f8b20ed68015d1d1da29f0ce10ba725",
+  "old653_body_sha256": "970d89f37b8e1f39d71b0e56fc6a0b132e728b6647daa9c90880a6956b40213c",
+  "original_setup_failure_cause": {
+    "actual_mode": "0o775",
+    "diagnostic_exit": 1,
+    "fixture_source": "source/sn/mainnet/root_offline_custody_test.go:59 t.TempDir()/private-offline-custody",
+    "go_testing_source": "/usr/local/go/src/testing/testing.go:1480 os.Mkdir(dir, 0o777)",
+    "parent": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/observer-6d/tmp",
+    "parent_mode": "0o700",
+    "requested_mode": "0o777",
+    "schema": "sol-test-tempdir-umask-cause-v1",
+    "strace_sha256": "346a581c51aa918ed4ecfc448cc767f86e522aa6040585a64078693e56429a2f",
+    "umask": "0o002"
+  },
+  "private_ancestry_preflight": {
+    "pass": true,
+    "paths": [
+      {
+        "device": 64512,
+        "inode": 2,
+        "mode": "0o755",
+        "path": "/",
+        "uid": 0
+      },
+      {
+        "device": 64512,
+        "inode": 54001665,
+        "mode": "0o755",
+        "path": "/mnt",
+        "uid": 0
+      },
+      {
+        "device": 2081,
+        "inode": 2,
+        "mode": "0o755",
+        "path": "/mnt/data",
+        "uid": 0
+      },
+      {
+        "device": 2081,
+        "inode": 119013377,
+        "mode": "0o755",
+        "path": "/mnt/data/sn-testnet",
+        "uid": 1000
+      },
+      {
+        "device": 2081,
+        "inode": 3451606,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002",
+        "uid": 1000
+      },
+      {
+        "device": 2081,
+        "inode": 4589555,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/observer-6d",
+        "uid": 1000
+      },
+      {
+        "device": 2081,
+        "inode": 4589558,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/observer-6d/tmp",
+        "uid": 1000
+      }
+    ],
+    "schema": "sol-private-fixture-ancestry-preflight-v1"
+  },
+  "production_parent": "97c7ae85aaa7a3db60d4f6050ec93023ae0f47f7",
+  "schema": "sol-independent-observer-soft-6d-v1",
+  "scopes": {
+    "fixed-normal": {
+      "elapsed_seconds": 159.08367776870728,
+      "exit_code": 1,
+      "expected_roots": [
+        "TestDurableCompositionDeclaredRootObserverRetainsCompletedCheckpoint",
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassiveJoinedIdentityRemainsTerminal",
+        "TestDurableCompositionPassiveObservationCancellationJoinsOwners",
+        "TestDurableCompositionPassiveObservationRetriesAfterRpc",
+        "TestDurableCompositionPassiveObservationRetriesBeforeRpc",
+        "TestDurableCompositionPassiveObservationRetryBudgetIsFinite",
+        "TestDurableCompositionPassivePreparationLossDuringRpcStopsOnlyOwner",
+        "TestDurableCompositionPassivePreparationRequiresRetainedHead",
+        "TestDurableCompositionPassiveReadersSharePreparationWithoutWriteReserve",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity",
+        "TestDurableCompositionPassiveUnavailableCannotRetryUncertainCheckpoint",
+        "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+        "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops",
+        "TestDurableCompositionRootPersistentEntrypointsRequireDeclaration"
+      ],
+      "fail": 16,
+      "log_sha256": "dfeda2e987e00aba37846de2ae33d79b151e3d7139a14d0a27b4f6f784efc413",
+      "matched": false,
+      "pass": 1,
+      "result_sha256": "768371d5d28f713ce1c6b008a653ea107f63fb0411f4ca5760fa7173c26734a2",
+      "skip": 0
+    },
+    "fixed-normal-correction": {
+      "elapsed_seconds": 31.585872888565063,
+      "exit_code": 1,
+      "expected_roots": [
+        "TestDurableCompositionDeclaredRootObserverRetainsCompletedCheckpoint",
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassiveJoinedIdentityRemainsTerminal",
+        "TestDurableCompositionPassiveObservationCancellationJoinsOwners",
+        "TestDurableCompositionPassiveObservationRetriesAfterRpc",
+        "TestDurableCompositionPassiveObservationRetriesBeforeRpc",
+        "TestDurableCompositionPassiveObservationRetryBudgetIsFinite",
+        "TestDurableCompositionPassivePreparationLossDuringRpcStopsOnlyOwner",
+        "TestDurableCompositionPassivePreparationRequiresRetainedHead",
+        "TestDurableCompositionPassiveReadersSharePreparationWithoutWriteReserve",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity",
+        "TestDurableCompositionPassiveUnavailableCannotRetryUncertainCheckpoint",
+        "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+        "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops",
+        "TestDurableCompositionRootPersistentEntrypointsRequireDeclaration"
+      ],
+      "fail": 16,
+      "log_sha256": "8ab9b44e2a61a190b0582ed4d7c35da381551f6c2b3e67253f6ce28139be5660",
+      "matched": false,
+      "pass": 1,
+      "result_sha256": "ad0c8df1d1a47fc532076ae19a3f925ab9785df0b1195b1bda70aedef03407aa",
+      "skip": 0
+    },
+    "fixed-normal-private": {
+      "elapsed_seconds": 56.46677112579346,
+      "exit_code": 0,
+      "expected_roots": [
+        "TestDurableCompositionDeclaredRootObserverRetainsCompletedCheckpoint",
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassiveJoinedIdentityRemainsTerminal",
+        "TestDurableCompositionPassiveObservationCancellationJoinsOwners",
+        "TestDurableCompositionPassiveObservationRetriesAfterRpc",
+        "TestDurableCompositionPassiveObservationRetriesBeforeRpc",
+        "TestDurableCompositionPassiveObservationRetryBudgetIsFinite",
+        "TestDurableCompositionPassivePreparationLossDuringRpcStopsOnlyOwner",
+        "TestDurableCompositionPassivePreparationRequiresRetainedHead",
+        "TestDurableCompositionPassiveReadersSharePreparationWithoutWriteReserve",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity",
+        "TestDurableCompositionPassiveUnavailableCannotRetryUncertainCheckpoint",
+        "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+        "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops",
+        "TestDurableCompositionRootPersistentEntrypointsRequireDeclaration"
+      ],
+      "fail": 0,
+      "log_sha256": "ad0f2414acd43010f3f78744b7541028b3f4e75a12f11b0cab43c3218ae6679d",
+      "matched": true,
+      "pass": 17,
+      "result_sha256": "7e8486202d98ad69d52cb901d804655a9cba57ac8926d49b14daa1d7bdd1acac",
+      "skip": 0
+    },
+    "fixed-race": {
+      "elapsed_seconds": 448.60678124427795,
+      "exit_code": 0,
+      "expected_roots": [
+        "TestDurableCompositionDeclaredRootObserverRetainsCompletedCheckpoint",
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassiveJoinedIdentityRemainsTerminal",
+        "TestDurableCompositionPassiveObservationCancellationJoinsOwners",
+        "TestDurableCompositionPassiveObservationRetriesAfterRpc",
+        "TestDurableCompositionPassiveObservationRetriesBeforeRpc",
+        "TestDurableCompositionPassiveObservationRetryBudgetIsFinite",
+        "TestDurableCompositionPassivePreparationLossDuringRpcStopsOnlyOwner",
+        "TestDurableCompositionPassivePreparationRequiresRetainedHead",
+        "TestDurableCompositionPassiveReadersSharePreparationWithoutWriteReserve",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity",
+        "TestDurableCompositionPassiveUnavailableCannotRetryUncertainCheckpoint",
+        "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+        "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops",
+        "TestDurableCompositionRootPersistentEntrypointsRequireDeclaration"
+      ],
+      "fail": 0,
+      "log_sha256": "2c2f64c9fff236ab3f07c911d772293c89274f3c460d161f36c4d4875d437425",
+      "matched": true,
+      "pass": 17,
+      "result_sha256": "fe0ea71dbfa2f961e7df99544cb3369dc84a7753ccea503b8806a216d1242005",
+      "skip": 0
+    },
+    "old653-checkpoint-normal": {
+      "elapsed_seconds": 9.494597911834717,
+      "exit_code": 0,
+      "expected_roots": [
+        "TestDurableCompositionPassiveUnavailableCannotRetryUncertainCheckpoint"
+      ],
+      "fail": 0,
+      "log_sha256": "80aac4aa5a4ad083a6d7ec0c3ad3909a5092b1a3c3090837483927ed0f5bc038",
+      "matched": true,
+      "pass": 1,
+      "result_sha256": "59534b584e7ebb759ca98e9bfd82d6881109a201f557d63cba2b2b796b9850ad",
+      "skip": 0
+    },
+    "old653-checkpoint-race": {
+      "elapsed_seconds": 24.283299446105957,
+      "exit_code": 0,
+      "expected_roots": [
+        "TestDurableCompositionPassiveUnavailableCannotRetryUncertainCheckpoint"
+      ],
+      "fail": 0,
+      "log_sha256": "b589de6799012fa1a1b81c4ea71a62a758176db64272b66dd55b235e6067ddfe",
+      "matched": true,
+      "pass": 1,
+      "result_sha256": "0c82561880a1db70cabc83aa008557c076d3913ec920c690a1a4428009903985",
+      "skip": 0
+    },
+    "old653-normal": {
+      "elapsed_seconds": 58.97760367393494,
+      "exit_code": 1,
+      "expected_roots": [
+        "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+        "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity"
+      ],
+      "fail": 5,
+      "log_sha256": "0d8b1d065ce0906caa7d66c21431497e7d30a94d7e5fbbf580c4b6796234bba8",
+      "matched": true,
+      "pass": 0,
+      "result_sha256": "2e38ccbc7ec3dc9deaa63ad76226a20500db690859372244a9d815223ac42852",
+      "skip": 0
+    },
+    "old653-race": {
+      "elapsed_seconds": 143.52575993537903,
+      "exit_code": 1,
+      "expected_roots": [
+        "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+        "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity"
+      ],
+      "fail": 5,
+      "log_sha256": "786ecc5b4af8fae181b6e1cb984c4a20313a3bb244d1f31a8d6900f060c9dab2",
+      "matched": true,
+      "pass": 0,
+      "result_sha256": "45e738c2e2d84ce89cb1d4f4b7bbf83a4c14755481d0729e899d8c3f54be41f1",
+      "skip": 0
+    }
+  },
+  "source": {
+    "blobs_verified": 20005,
+    "commit": "6d3986625455ec841528fd6eff795b8f93478414",
+    "own_mod_sha256": "4821950c5f571776df6ea9eb8620fc976af5f6318967532334ac73b6e20608a4",
+    "tree": "6e1e11966fd2d0ba7e7346052d4daf5edb3b0cf0"
+  },
+  "source_module_sha256": "4821950c5f571776df6ea9eb8620fc976af5f6318967532334ac73b6e20608a4",
+  "source_sum_sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545",
+  "verdict": "PASS_SCOPED",
+  "vet": {
+    "exit_code": 0,
+    "free_after_bytes": 127654277120,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "matched": true
+  }
+}

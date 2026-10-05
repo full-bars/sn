@@ -1,0 +1,65 @@
+{
+  "bindings": [
+    {
+      "bytes": 3708,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/adoption-v2.json",
+      "sha256": "ffd4e9b3dc8b22b4a9de81f287e700a25b14ff5dd504f88cffa44b1631cf2c32"
+    },
+    {
+      "bytes": 4316,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/full-job-v3.json",
+      "sha256": "88b8f84c30b99b4c19e02a92570a70ac8b47b1aa5cf0aef72c62876f11f7d2f3"
+    },
+    {
+      "bytes": 19685,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/run-a2-full-model-v5.py",
+      "sha256": "2fb401186b8abc53dfb1da7212811127d68ceff48a6c2853b6add20aa34ecad8"
+    },
+    {
+      "bytes": 3496,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/run-a2-full-model-v4.sh",
+      "sha256": "d01fc6adb44a31654be62d6a75a326235598c55cf61427a3c6d8b9a1d22e7c31"
+    },
+    {
+      "bytes": 5002,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/evidence/source-stage-receipt.json",
+      "sha256": "87804897cf0c8d1177951ccdb1ca75219336b20bd60ead25cdc540d72d6acbb1"
+    },
+    {
+      "bytes": 9408,
+      "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/evidence/a2-selected-model-graph-receipt-v2.json",
+      "sha256": "84d7a7a0bfb13244097b8a3ff9edcba7606e488778ec9952d51473d3864bb9fc"
+    }
+  ],
+  "core_module": "v0.0.0-20261004025941-ad6fc3a191a3",
+  "observed_utc": "2026-10-04T04:03:50.892323+00:00",
+  "original_405_resource_qualified": false,
+  "original_resource_baseline_preserved": true,
+  "prelaunch_only_refusal_preserved": {
+    "bytes": 3599,
+    "path": "/mnt/data/sn-testnet/sol-server-a2-current-model-20261004/adoption.json",
+    "sha256": "6fcbecb5a0ee8ebeddcbead111ea766dcb6e8260a27bd67be4857d2642e21aae"
+  },
+  "processes": [
+    {
+      "command": "/home/by/urnetwork/.virtualenv/brien/bin/python3 -B /mnt/data/sn-testnet/sol-server-a2-current-model-20261004/run-a2-full-model-v5.py --adoption /mnt/data/sn-testnet/sol-server-a2-current-model-20261004/adoption-v2.json",
+      "pid": 784250,
+      "start_ticks": "95883532"
+    },
+    {
+      "command": "bash /mnt/data/sn-testnet/sol-server-a2-current-model-20261004/run-a2-full-model-v4.sh",
+      "pid": 784321,
+      "start_ticks": "95883590"
+    },
+    {
+      "command": "go test -json -count=1 -parallel=2 -p=2 -timeout=165m -run . ./model",
+      "pid": 785301,
+      "start_ticks": "95884534"
+    }
+  ],
+  "qualification_complete": false,
+  "schema": "current-combined-model-live-root-readback-v1",
+  "scope": "One complete normal ./model suite; frozen SN peer protocol/merkle/payoutartifact only; no final SN mainnet qualification",
+  "server_head": "a2b191890d6e87539d99aa1ba084a4f7da29064a",
+  "status": "LIVE_NOT_TERMINAL"
+}

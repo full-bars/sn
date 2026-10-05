@@ -1,0 +1,56 @@
+{
+  "scope": "Selected import graphs of frozen SN b6/Core2ea only; no compile/test/vet or new producer qualification",
+  "status": "SELECTED_GRAPHS_PASS",
+  "verification_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/selected-graphs-independent-verification.json",
+    "sha256": "a757d08e92a1308a066b3800ea4315b332d8eafecabb0af684e9103b7e60b1f2"
+  },
+  "retained_result": {
+    "adoption_sha256": "50a5f15ddc06160b0ce5169020bde4b36bf7d45ae6480067eb114243af9104ea",
+    "all_job_inputs_readback": true,
+    "canonical_kernel_lease_held": true,
+    "core_cache": {
+      "cache_info_origin_hash": "2ea8d82ea5cbc8bdebdee05f5b90a9f21b64128f",
+      "cache_info_sha256": "79cedbaa3aecce95957c57ac514fcbc1822036e5a10148ce3007cbac8624cf9a",
+      "info_version_time_equal": true,
+      "note": "Go cache .info includes an Origin field absent from private proxy .info; exact version/time and reviewed commit match, while ZIP/MOD bytes and official ziphash are exact.",
+      "proxy_info_sha256": "8a37580ffb79f346f843a2fd56902c602306f45afb8777d6c8a7a052fc5aa07d",
+      "zip_mod_exact_proxy_bytes": {
+        ".mod": true,
+        ".zip": true
+      },
+      "ziphash": "h1:Ihrc8pJrVL6CnJt8jQLiAgRPnNEZsG+0h3lBLpYN5yE="
+    },
+    "data_available_bytes": 112669794304,
+    "graph_receipts": [
+      {
+        "module_count": 176,
+        "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/selected-sn-graph-receipt.json",
+        "raw_bytes": 4662588,
+        "raw_sha256": "77cca519bb3d55483d17cb6aa7fb9e58e0dc3dd98b08cb9aca30d89684c2e642",
+        "scope": "sn",
+        "sha256": "e890a0b234628631beb20894221780b98a9f1dac4368ed6adef3969153ff95ee",
+        "status": "PASS",
+        "stderr_bytes": 80,
+        "stderr_sha256": "d08aef186edfe1ab4b10950ff9c3a61f4895a4c5441ca2f30f8ffe67ad4f091f"
+      },
+      {
+        "module_count": 2,
+        "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/selected-core-graph-receipt.json",
+        "raw_bytes": 355222,
+        "raw_sha256": "7879859ca7103cda61f643f827d35711b659ae7f0e6a9da3db210be77cc054e6",
+        "scope": "core",
+        "sha256": "eacca0bb112624ebdf3b763626d64a7d308717082aa3fafd7d9f21c8175dc702",
+        "status": "PASS",
+        "stderr_bytes": 0,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "job_sha256": "8da5ec0ca96e8e61541e21dae25846a1470abedf5846d06e92b6ea0eb31cff7c",
+    "schema": "independent-b6-core2ea-selected-graphs-v1",
+    "status": "PASS",
+    "verified_unix_ns": 1791064758797382652
+  },
+  "root_review": "Both graph receipts and raw outputs independently rehashed; zero exit, exact Core, unchanged source modules, no package errors or missing selected packages. Cache metadata adds reviewed Git Origin while version/time and ZIP/MOD remain exact.",
+  "next_action": "Compile six packages in ordinary and race modes on retained source; preserve all successful phases."
+}

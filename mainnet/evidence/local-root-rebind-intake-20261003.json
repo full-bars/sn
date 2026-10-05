@@ -1,0 +1,209 @@
+{
+  "adjacentScope": [
+    "Both registry and local receipt exceptions use the same exact authenticated inventory for loadEvents and checkpointExecutionHistory; no prefix-wide exemption.",
+    "Original preparation readers retain their strict signed-root behavior without an explicit private inspected capability; only independently verified local approval grants the writer bit.",
+    "Review of co-owner snapshots is bounded to 32 fixed owners with the unchanged capacities, shared marker locks and exact original/derived head bytes; unchanged signed preparation/counter/nonce fields never receive new physical coordinates."
+  ],
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-2689-compile-jobs.json": {
+      "bytes": 1273,
+      "sha256": "83aaff6d67cd01c943c260e1a7d3d170ee5da2a290a9ebbdc21181a3531c1e09"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-2689-compile.json": {
+      "bytes": 1077,
+      "sha256": "1f83071691b7206c220835cf05025fa0f9f75c1f6371b51ebad2d1e51e43a24c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-2689-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-2689-preflight.json": {
+      "bytes": 953,
+      "sha256": "a1904d0b4d5c7c11a08d69f429c0f830f069b9c95d1a2997f3980d48d7897ae5"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-2689-preflight.jsonl": {
+      "bytes": 3645547,
+      "sha256": "483bdbc681fca5b5859b32725d036bb28312cf4b84b4f67446b7145cda8463df"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-88ce-compile-jobs.json": {
+      "bytes": 1249,
+      "sha256": "0c7b6b7e5c02160e9414e7eaa0b1b20f5a42ae54f7320eb7dae60bd60e82547f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-88ce-compile.json": {
+      "bytes": 1065,
+      "sha256": "ba2217f69e5041f14fc663b3229a9561c59285887c36db875780177321243b0d"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-88ce-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-88ce-preflight.json": {
+      "bytes": 941,
+      "sha256": "8b58320d6771ab23e35ac18e94c1ffdde22d5982e66194cbd2504fb095d1a8d0"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-88ce-preflight.jsonl": {
+      "bytes": 3643573,
+      "sha256": "d09b29f887b04443ba389a2bd652cedf16b2a2ea44a3aea41631ed1d5c4a462e"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/registry-08f-intake.json": {
+      "bytes": 8749,
+      "sha256": "d7b7c483bf18d305d6c28c4a1aacae608b224f21ec604c6a365d6251f94850d5"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-local-2689-intake.go": {
+      "bytes": 6924,
+      "sha256": "21523493445a676969b86e32ffd41bccde4b906a748189345920764238c84549"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/split-local-causal-fixture.go": {
+      "bytes": 1403,
+      "sha256": "b4af074c5b86fb1b0a0606808a1843374eeeedb120cec7999caab8c4a5f4fee9"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-148-9fb-intake.json": {
+      "bytes": 12862,
+      "sha256": "aaabab504c90226015d7981a51205350dd6daf363e656be65c4789557389b658"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/MAINNET.md": {
+      "bytes": 275997,
+      "sha256": "5102487a4b62df7d7eebe60d11147109b1536bfef8743cafab954b2a3f9631ac"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/PRELAUNCH-FIXES.md": {
+      "bytes": 432216,
+      "sha256": "93322d4d580f2734b9252fdf8a69de209c165a09886af829783766e7c2f70912"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/bootstrap_successor_execution_command.go": {
+      "bytes": 23566,
+      "sha256": "9edf8467b53b05b38119a7d3b64ad8d4763f2a1e0f285a072cb000ce4c3bef2a"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/bootstrap_successor_execution_store.go": {
+      "bytes": 21171,
+      "sha256": "bb0fe85a3792c6e0864793719016415df3c66871dc59072aeeb6ba73c77413a9"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/bootstrap_successor_local_rebind.go": {
+      "bytes": 20043,
+      "sha256": "8b2c7490c9f79cf6c6900d49984b4ab3e29020bdda40460f1cf62a53b1a4ef8c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/bootstrap_successor_local_rebind_command_test.go": {
+      "bytes": 16850,
+      "sha256": "a18df5c65ab96610896c121e9c5f90c8d72401478986b8d4a0bb2e9ada8f8b48"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/bootstrap_successor_local_rebind_test.go": {
+      "bytes": 5180,
+      "sha256": "e8a577bfcbfa0360a079bc8c87649ef4e8722cd4313e0f72af36f7b53b8e6e15"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/bootstrap_successor_preparation_reader.go": {
+      "bytes": 5978,
+      "sha256": "24845c9e0fa1e26accbda487d0159df77cf803d1e546e136617296a4f89b1a51"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/bootstrap_successor_preparation_store.go": {
+      "bytes": 14047,
+      "sha256": "f2c04fee9ca925c397cc2474b78b2b55ce4aa443de97ac24362d45355818282b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/bootstrap_successor_registry_rebind.go": {
+      "bytes": 16839,
+      "sha256": "cc3f22fc27bb77bc98d01d7a2ce20b4a000b7c08994eda3f05b3f2edb0c299a5"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn/mainnet/evidence/successor-local-rebind-profile-20261003.md": {
+      "bytes": 3454,
+      "sha256": "d015a16bfd8c9992e121a43dfaca6575d38ce193b2a3c988e1b5dad4fab9f7cd"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/qualify-scoped.go": {
+      "bytes": 3425,
+      "sha256": "1a7b115440ecd7ce543810e9a08a751f4e2c1bb213ee2439b8a9e55455753e26"
+    }
+  },
+  "causal": {
+    "base": "c0bd674d9cbef1d02452d6e980a45e1c45d2e556",
+    "expectedBoundary": "Old public dispatcher refuses contract-successor-execution-local-rebind-preview after actual complete-union storage restore. Original ordinary resume first refuses old signed physical authority on both sources. Capture actual failure boundary; do not assume a parser or setup failure is causal.",
+    "overlay": [
+      "mainnet/bootstrap_successor_local_rebind_command_test.go"
+    ],
+    "roots": [
+      "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority"
+    ]
+  },
+  "controls": [
+    "Actual public complete co-owner export/plan/apply -\u003e original no-approval refusal -\u003e independent local preview -\u003e repeat retained resume.",
+    "Six wrong approver/domain/generation/plan/declaration/original-root cases refuse without changing local/nonces; separately signed omitted co-owner and repeated source plans refuse.",
+    "Actual changed root generation refuses; fresh claim with local approval refuses; original signed files and nonces remain byte-identical; exactly one settled physical receipt is appended.",
+    "Real completed receipt acknowledgement loss resumes the exact retained bytes; passive inspection cannot borrow an exclusive writer; a fixed but unauthenticated local receipt is rejected by live and reopen census; acknowledged receipt loss is not recreated."
+  ],
+  "dependencies": {
+    "connect": {
+      "commit": "9fb897f8d880ab813dd61dc02fa187e3d85f13a5",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/connect",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect",
+      "tree": "a3500ca8e57b70c78951fe91871d6bdc7a93f7c7"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/glog",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/goidenticons",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/proxy",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/server",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/userwireguard",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/warp",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "graphScope": "Inherited Serverc256/Connect9fb; not current published Server29ce/Connect08d composition.",
+  "remaining": [
+    "Original pending member outcome/outer-head reconciliation, rebind chaining, retained in-place preparation, joined capacity/retention revision remain required.",
+    "Combined local+registry restore and actual current published SN/Server/Connect role composition require their own joined qualification.",
+    "This source has no live signature, broadcast, deployment, service start, remote PostgreSQL or MinIO recovery claim."
+  ],
+  "schema": "urnetwork-author-source-handoff-v1",
+  "scope": {
+    "expectedPass": 4,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "package": "./mainnet",
+    "roots": [
+      "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority",
+      "TestBootstrapSuccessorLocalRebindLostAcknowledgementResumesOriginalReceipt",
+      "TestBootstrapSuccessorLocalInspectionCannotBorrowWriterAuthority",
+      "TestBootstrapSuccessorUnapprovedLocalReceiptCannotAcquireAuthority"
+    ],
+    "vet": true
+  },
+  "source": {
+    "causalBase": "c0bd674d9cbef1d02452d6e980a45e1c45d2e556",
+    "commit": "2689fced35b5438bb00d957971813bbdd7eea44e",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/sn",
+    "productionCheckpoint": "88ce38f5f07216f0027c9c757df3b8433fd807e8",
+    "tree": "5a2cf1a72cea874926c972da59ed6efd2659a384"
+  },
+  "status": "COMPILE_ONLY_NO_BEHAVIORAL_EXECUTION",
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-rebind-final/go.work"
+}

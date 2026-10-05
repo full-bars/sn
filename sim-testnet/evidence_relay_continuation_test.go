@@ -245,6 +245,33 @@ func TestEvidenceRelayContinuationVersionsPreserveHistoryAndApprovedFees(t *test
 	}
 }
 
+func TestEvidenceRelayContinuationSurvivesUnrelatedSuccessorConfigRevision(t *testing.T) {
+	fixture, _, continuation := evidenceRelayContinuationTest(t)
+	continued, err := appendEvidenceRelayContinuationPlan(fixture.plan, continuation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// An allowance-only successor has a new config and plan identity but must
+	// retain the prior, fixed relay authorization exactly as it was approved.
+	revised := *continued
+	revised.ConfigHash = common.Hash{0x99}.Hex()
+	revised.PriorPlanHashes = append(revised.PriorPlanHashes, continued.PlanHash)
+	revised.PlanHash = ""
+	revised.PlanHash, err = revised.hash()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateEvidenceRelayContinuationPlan(&revised); err != nil {
+		t.Fatalf("unrelated successor config stranded retained continuation: %v", err)
+	}
+	// The carried original identity is still authenticated as a canonical hash;
+	// a substituted approval identity cannot use the successor exception.
+	revised.EvidenceRelayContinuation.ConfigHash = "not-a-hash"
+	if err := validateEvidenceRelayContinuationPlan(&revised); err == nil {
+		t.Fatal("noncanonical original approval identity was accepted")
+	}
+}
+
 func TestEvidenceRelayContinuationLiabilityDivisionNeverRefundsOrRoundsUp(t *testing.T) {
 	debit := EvidenceRelayContinuationDebit{PlanHash: common.Hash{1}.Hex(), ActionID: evidenceRelayActionPrefix + stringsTrim0x(common.Hash{2}.Hex()), AllowanceWei: "100000000000000000"}
 	for _, sample := range []struct {
@@ -408,7 +435,7 @@ func TestEvidenceRelayContinuationCapacityRetainsFullMeasuredLifetimeAndTail(t *
 			t.Fatal("retained source use was treated as fresh capacity")
 		}
 	}
-	if cfg.Config.ValidatorEvidenceRelay.MaxSlots != 256 {
+	if cfg.Config.ValidatorEvidenceRelay.MaxSlots != 2048 {
 		t.Fatal("relay partition silently enlarged source storage admission")
 	}
 }

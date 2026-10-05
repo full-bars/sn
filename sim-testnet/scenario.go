@@ -36,13 +36,14 @@ import (
 // assertions.json and junit.xml. ObservationHash points at the exact snapshot
 // on which the assertion was evaluated.
 type AssertionRecord struct {
-	ID              string  `json:"id"`
-	Passed          bool    `json:"passed"`
-	Message         string  `json:"message"`
-	StartedAt       string  `json:"started_at"`
-	CompletedAt     string  `json:"completed_at"`
-	DurationSeconds float64 `json:"duration_seconds"`
-	ObservationHash string  `json:"observation_hash"`
+	ID                        string  `json:"id"`
+	Passed                    bool    `json:"passed"`
+	DeferredToFinalAcceptance bool    `json:"deferred_to_final_acceptance,omitempty"`
+	Message                   string  `json:"message"`
+	StartedAt                 string  `json:"started_at"`
+	CompletedAt               string  `json:"completed_at"`
+	DurationSeconds           float64 `json:"duration_seconds"`
+	ObservationHash           string  `json:"observation_hash"`
 }
 
 type VerifyKeyObservation struct {
@@ -78,43 +79,46 @@ type ProvisionalPayoutCohortObservation struct {
 }
 
 type OperatorObservation struct {
-	NoID                        int                                          `json:"no_id"`
-	APIURL                      string                                       `json:"api_url"`
-	Healthy                     bool                                         `json:"healthy"`
-	StatusCode                  int                                          `json:"status_code"`
-	StatsRows                   int                                          `json:"stats_rows"`
-	Assignments                 uint64                                       `json:"assignments"`
-	Confirmations               uint64                                       `json:"confirmations"`
-	ReliabilityPPM              uint32                                       `json:"reliability_ppm"`
-	ProofRows                   int                                          `json:"proof_rows"`
-	VerifyKeyIDs                []byte                                       `json:"verify_key_ids,omitempty"`
-	VerifyKeys                  []VerifyKeyObservation                       `json:"verify_keys,omitempty"`
-	ProofKeyIDs                 []byte                                       `json:"proof_key_ids,omitempty"`
-	StatsHash                   string                                       `json:"stats_hash,omitempty"`
-	ProofsHash                  string                                       `json:"proofs_hash,omitempty"`
-	StatsPolicyHash             string                                       `json:"stats_policy_hash,omitempty"`
-	ProofsPolicyHash            string                                       `json:"proofs_policy_hash,omitempty"`
-	ArtifactHistoryObjects      int                                          `json:"artifact_history_objects"`
-	ValidArtifacts              int                                          `json:"valid_artifacts"`
-	MatchingArtifacts           int                                          `json:"matching_onchain_artifacts"`
-	ExpectedFinalizedArtifacts  int                                          `json:"expected_finalized_artifacts"`
-	ArtifactHashes              []string                                     `json:"artifact_hashes,omitempty"`
-	LatestArtifactEpoch         uint64                                       `json:"latest_artifact_epoch,omitempty"`
-	LatestArtifactHash          string                                       `json:"latest_artifact_hash,omitempty"`
-	LatestPayoutRoot            string                                       `json:"latest_payout_root,omitempty"`
-	LatestLeafClientIDs         []string                                     `json:"latest_leaf_client_ids,omitempty"`
-	LatestHeadExcludedClientIDs []string                                     `json:"latest_head_excluded_client_ids,omitempty"`
-	LifecyclePayoutArtifacts    []OperatorLifecyclePayoutArtifactObservation `json:"lifecycle_payout_artifacts,omitempty"`
-	LatestArtifactProviders     int                                          `json:"latest_artifact_providers,omitempty"`
-	CandidateProviders          int                                          `json:"candidate_providers,omitempty"`
-	CandidateHeadExcluded       int                                          `json:"candidate_head_excluded,omitempty"`
-	CandidateLeaves             int                                          `json:"candidate_leaves,omitempty"`
-	PoolTailProviders           int                                          `json:"pool_tail_providers,omitempty"`
-	PoolTailHeadExcluded        int                                          `json:"pool_tail_head_excluded,omitempty"`
-	PoolTailLeaves              int                                          `json:"pool_tail_leaves,omitempty"`
-	TierMembershipValid         bool                                         `json:"tier_membership_valid"`
-	ProvisionalPayoutCohort     *ProvisionalPayoutCohortObservation          `json:"provisional_payout_cohort,omitempty"`
-	Error                       string                                       `json:"error,omitempty"`
+	NoID                          int                                          `json:"no_id"`
+	APIURL                        string                                       `json:"api_url"`
+	Healthy                       bool                                         `json:"healthy"`
+	StatusCode                    int                                          `json:"status_code"`
+	StatsRows                     int                                          `json:"stats_rows"`
+	Assignments                   uint64                                       `json:"assignments"`
+	Confirmations                 uint64                                       `json:"confirmations"`
+	ReliabilityPPM                uint32                                       `json:"reliability_ppm"`
+	ProofRows                     int                                          `json:"proof_rows"`
+	VerifyKeyIDs                  []byte                                       `json:"verify_key_ids,omitempty"`
+	VerifyKeys                    []VerifyKeyObservation                       `json:"verify_keys,omitempty"`
+	ProofKeyIDs                   []byte                                       `json:"proof_key_ids,omitempty"`
+	StatsHash                     string                                       `json:"stats_hash,omitempty"`
+	ProofsHash                    string                                       `json:"proofs_hash,omitempty"`
+	StatsPolicyHash               string                                       `json:"stats_policy_hash,omitempty"`
+	ProofsPolicyHash              string                                       `json:"proofs_policy_hash,omitempty"`
+	ArtifactHistoryObjects        int                                          `json:"artifact_history_objects"`
+	ValidArtifacts                int                                          `json:"valid_artifacts"`
+	MatchingArtifacts             int                                          `json:"matching_onchain_artifacts"`
+	ExpectedFinalizedArtifacts    int                                          `json:"expected_finalized_artifacts"`
+	ArtifactHashes                []string                                     `json:"artifact_hashes,omitempty"`
+	PayoutTierArtifacts           []OperatorPayoutTierArtifactObservation      `json:"payout_tier_artifacts,omitempty"`
+	LatestArtifactEpoch           uint64                                       `json:"latest_artifact_epoch,omitempty"`
+	LatestArtifactHash            string                                       `json:"latest_artifact_hash,omitempty"`
+	LatestPayoutRoot              string                                       `json:"latest_payout_root,omitempty"`
+	LatestLeafClientIDs           []string                                     `json:"latest_leaf_client_ids,omitempty"`
+	LatestHeadExcludedClientIDs   []string                                     `json:"latest_head_excluded_client_ids,omitempty"`
+	LifecyclePayoutArtifacts      []OperatorLifecyclePayoutArtifactObservation `json:"lifecycle_payout_artifacts,omitempty"`
+	LatestArtifactProviders       int                                          `json:"latest_artifact_providers,omitempty"`
+	ExcludedUnconfiguredProviders int                                          `json:"excluded_unconfigured_providers,omitempty"`
+	RateSource                    *PolicyRateSourceObservation                 `json:"rate_source,omitempty"`
+	CandidateProviders            int                                          `json:"candidate_providers,omitempty"`
+	CandidateHeadExcluded         int                                          `json:"candidate_head_excluded,omitempty"`
+	CandidateLeaves               int                                          `json:"candidate_leaves,omitempty"`
+	PoolTailProviders             int                                          `json:"pool_tail_providers,omitempty"`
+	PoolTailHeadExcluded          int                                          `json:"pool_tail_head_excluded,omitempty"`
+	PoolTailLeaves                int                                          `json:"pool_tail_leaves,omitempty"`
+	TierMembershipValid           bool                                         `json:"tier_membership_valid"`
+	ProvisionalPayoutCohort       *ProvisionalPayoutCohortObservation          `json:"provisional_payout_cohort,omitempty"`
+	Error                         string                                       `json:"error,omitempty"`
 }
 
 type IntentWeightObservation struct {
@@ -156,9 +160,11 @@ type HeadDecisionObservation struct {
 }
 
 func headDecisionCandidateIdentities(artifact *validatorpkg.ReleaseMeasurementArtifact, eligible []uint16) ([]uint16, []string, error) {
-	if artifact == nil || len(eligible) == 0 || len(uint16Set(eligible)) != len(eligible) {
+	if artifact == nil || len(uint16Set(eligible)) != len(eligible) {
 		return nil, nil, errors.New("validator measurement has no exact eligible candidate set")
 	}
+	// A verified pool-only vector has no head identities. Required head
+	// coverage belongs to the final gate, independently of native progress.
 	eligibleSet := uint16Set(eligible)
 	hotkeyByUID := make(map[uint16]string, len(eligible))
 	for _, binding := range artifact.Bindings {
@@ -184,6 +190,37 @@ func headDecisionCandidateIdentities(artifact *validatorpkg.ReleaseMeasurementAr
 		}
 	}
 	return uids, hotkeys, nil
+}
+
+// Source authentication precedes projection. An empty head is valid, but an
+// empty, malformed or entirely zero applied vector is never native progress.
+func scenarioAppliedIntentWeights(intent *validatorpkg.SteeringIntent) ([]IntentWeightObservation, error) {
+	if intent == nil || len(intent.UIDs) == 0 || len(intent.UIDs) != len(intent.Scores) || len(intent.UIDs) != len(intent.Values) {
+		return nil, errors.New("applied native vector is empty or has unequal uid/score/value counts")
+	}
+	weights := make([]IntentWeightObservation, 0, len(intent.UIDs))
+	seen := make(map[uint16]bool, len(intent.UIDs))
+	positive := false
+	for index, uid := range intent.UIDs {
+		score := intent.Scores[index]
+		numerator, numeratorOK := new(big.Int).SetString(score.Numerator, 10)
+		denominator, denominatorOK := new(big.Int).SetString(score.Denominator, 10)
+		if seen[uid] || !numeratorOK || !denominatorOK || numerator.Sign() < 0 || denominator.Sign() <= 0 || numerator.String() != score.Numerator || denominator.String() != score.Denominator {
+			return nil, fmt.Errorf("applied native vector UID %d is duplicated or has an invalid score", uid)
+		}
+		if intent.Values[index] > 0 {
+			if numerator.Sign() == 0 {
+				return nil, fmt.Errorf("applied native vector UID %d has positive weight with zero score", uid)
+			}
+			positive = true
+		}
+		seen[uid] = true
+		weights = append(weights, IntentWeightObservation{UID: uid, Numerator: score.Numerator, Denominator: score.Denominator, Value: intent.Values[index]})
+	}
+	if !positive {
+		return nil, errors.New("applied native vector has no positive weight")
+	}
+	return weights, nil
 }
 
 type ValidatorObservation struct {
@@ -219,16 +256,18 @@ type ValidatorObservation struct {
 }
 
 type ClaimObservation struct {
-	MinerID    int    `json:"miner_id"`
-	NoID       int    `json:"no_id"`
-	Discovered int    `json:"discovered"`
-	Finalized  int    `json:"finalized"`
-	NoClaim    int    `json:"no_claim"`
-	Pending    int    `json:"pending"`
-	Uncertain  int    `json:"uncertain"`
-	Failed     int    `json:"failed"`
-	LastTxHash string `json:"last_tx_hash,omitempty"`
-	Error      string `json:"error,omitempty"`
+	MinerID        int                     `json:"miner_id"`
+	NoID           int                     `json:"no_id"`
+	Discovered     int                     `json:"discovered"`
+	Finalized      int                     `json:"finalized"`
+	NoClaim        int                     `json:"no_claim"`
+	Pending        int                     `json:"pending"`
+	Uncertain      int                     `json:"uncertain"`
+	Failed         int                     `json:"failed"`
+	LastTxHash     string                  `json:"last_tx_hash,omitempty"`
+	Error          string                  `json:"error,omitempty"`
+	LastDiscovered int64                   `json:"last_discovered,omitempty"`
+	EpochOutcomes  []ClaimEpochObservation `json:"epoch_outcomes,omitempty"`
 }
 
 type NativeRewardObservation struct {
@@ -240,51 +279,55 @@ type NativeRewardObservation struct {
 }
 
 type ScenarioObservation struct {
-	Schema                     string                         `json:"schema"`
-	ObservedAt                 string                         `json:"observed_at"`
-	Status                     *DeploymentStatus              `json:"status"`
-	Operators                  []OperatorObservation          `json:"operators"`
-	Validators                 []ValidatorObservation         `json:"validators"`
-	Claims                     []ClaimObservation             `json:"claims"`
-	PublicIdentityCount        int                            `json:"public_identity_count"`
-	PublicIdentitiesValid      bool                           `json:"public_identities_valid"`
-	FleetCommitmentValid       bool                           `json:"fleet_commitment_valid"`
-	FleetBindingCount          int                            `json:"fleet_binding_count"`
-	FleetBindingsValid         bool                           `json:"fleet_bindings_valid"`
-	CandidateFleetUIDs         []uint16                       `json:"candidate_fleet_uids"`
-	CandidateFleetHotkeys      []string                       `json:"candidate_fleet_hotkeys"`
-	CandidateFleetMiners       [][]int                        `json:"candidate_fleet_miners"`
-	NativeRewards              *NativeRewardObservation       `json:"native_rewards,omitempty"`
-	NativeRewardsError         string                         `json:"native_rewards_error,omitempty"`
-	NativeWarmupV2             *ScenarioNativeWarmupV2        `json:"native_warmup_v2,omitempty"`
-	ReserveValidatorRegistered bool                           `json:"reserve_validator_registered"`
-	ReserveValidatorUID        uint16                         `json:"reserve_validator_uid"`
-	ReserveDelegateTake        *uint16                        `json:"reserve_delegate_take,omitempty"`
-	EscrowHotkeyRegistered     bool                           `json:"escrow_hotkey_registered"`
-	EscrowHotkeyUID            uint16                         `json:"escrow_hotkey_uid"`
-	NativeCustodyError         string                         `json:"native_custody_error,omitempty"`
-	VoluntaryConviction        *VoluntaryConvictionEvidence   `json:"voluntary_conviction,omitempty"`
-	VoluntaryConvictionValid   bool                           `json:"voluntary_conviction_valid"`
-	VoluntaryConvictionError   string                         `json:"voluntary_conviction_error,omitempty"`
-	GovernanceDrill            *GovernanceDrillEvidence       `json:"governance_drill,omitempty"`
-	GovernanceDrillError       string                         `json:"governance_drill_error,omitempty"`
-	FleetLifecycle             *FleetLifecycleEvidence        `json:"fleet_lifecycle,omitempty"`
-	PrecompileConformance      *PrecompileConformanceEvidence `json:"precompile_conformance,omitempty"`
-	PrecompileConformanceValid bool                           `json:"precompile_conformance_valid"`
-	PrecompileConformanceError string                         `json:"precompile_conformance_error,omitempty"`
-	DishonestDeposit           *DishonestDepositEvidence      `json:"dishonest_deposit,omitempty"`
-	DishonestDepositValid      bool                           `json:"dishonest_deposit_valid"`
-	DishonestDepositError      string                         `json:"dishonest_deposit_error,omitempty"`
-	ProcessLogFindings         []ProcessLogFinding            `json:"process_log_findings,omitempty"`
-	ExpectedFaultIDs           []string                       `json:"expected_fault_ids,omitempty"`
-	ExpectedFaultTargets       []string                       `json:"expected_fault_targets,omitempty"`
-	ObservationHash            string                         `json:"observation_hash"`
+	legacyByteAuthenticated    bool
+	Schema                     string                          `json:"schema"`
+	ObservedAt                 string                          `json:"observed_at"`
+	RecoveryStartedAt          string                          `json:"recovery_started_at,omitempty"`
+	Status                     *DeploymentStatus               `json:"status"`
+	Operators                  []OperatorObservation           `json:"operators"`
+	Validators                 []ValidatorObservation          `json:"validators"`
+	Claims                     []ClaimObservation              `json:"claims"`
+	PublicIdentityCount        int                             `json:"public_identity_count"`
+	PublicIdentitiesValid      bool                            `json:"public_identities_valid"`
+	FleetCommitmentValid       bool                            `json:"fleet_commitment_valid"`
+	FleetBindingCount          int                             `json:"fleet_binding_count"`
+	FleetBindingsValid         bool                            `json:"fleet_bindings_valid"`
+	CandidateFleetUIDs         []uint16                        `json:"candidate_fleet_uids"`
+	CandidateFleetHotkeys      []string                        `json:"candidate_fleet_hotkeys"`
+	CandidateFleetMiners       [][]int                         `json:"candidate_fleet_miners"`
+	NativeRewards              *NativeRewardObservation        `json:"native_rewards,omitempty"`
+	NativeRewardsError         string                          `json:"native_rewards_error,omitempty"`
+	NativeWarmupV2             *ScenarioNativeWarmupV2         `json:"native_warmup_v2,omitempty"`
+	PolicyRateReadiness        *PolicyRateReadinessObservation `json:"policy_rate_readiness,omitempty"`
+	ReserveValidatorRegistered bool                            `json:"reserve_validator_registered"`
+	ReserveValidatorUID        uint16                          `json:"reserve_validator_uid"`
+	ReserveDelegateTake        *uint16                         `json:"reserve_delegate_take,omitempty"`
+	EscrowHotkeyRegistered     bool                            `json:"escrow_hotkey_registered"`
+	EscrowHotkeyUID            uint16                          `json:"escrow_hotkey_uid"`
+	NativeCustodyError         string                          `json:"native_custody_error,omitempty"`
+	VoluntaryConviction        *VoluntaryConvictionEvidence    `json:"voluntary_conviction,omitempty"`
+	VoluntaryConvictionValid   bool                            `json:"voluntary_conviction_valid"`
+	VoluntaryConvictionError   string                          `json:"voluntary_conviction_error,omitempty"`
+	GovernanceDrill            *GovernanceDrillEvidence        `json:"governance_drill,omitempty"`
+	GovernanceDrillError       string                          `json:"governance_drill_error,omitempty"`
+	FleetLifecycle             *FleetLifecycleEvidence         `json:"fleet_lifecycle,omitempty"`
+	PrecompileConformance      *PrecompileConformanceEvidence  `json:"precompile_conformance,omitempty"`
+	PrecompileConformanceValid bool                            `json:"precompile_conformance_valid"`
+	PrecompileConformanceError string                          `json:"precompile_conformance_error,omitempty"`
+	DishonestDeposit           *DishonestDepositEvidence       `json:"dishonest_deposit,omitempty"`
+	DishonestDepositValid      bool                            `json:"dishonest_deposit_valid"`
+	DishonestDepositError      string                          `json:"dishonest_deposit_error,omitempty"`
+	ProcessLogFindings         []ProcessLogFinding             `json:"process_log_findings,omitempty"`
+	ExpectedFaultIDs           []string                        `json:"expected_fault_ids,omitempty"`
+	ExpectedFaultTargets       []string                        `json:"expected_fault_targets,omitempty"`
+	ObservationHash            string                          `json:"observation_hash"`
 }
 
 type ScenarioResult struct {
 	Provisional          bool                           `json:"provisional,omitempty"`
 	FinalAcceptance      *bool                          `json:"final_acceptance,omitempty"`
 	ProvisionalDriver    *provisionalScenarioProvenance `json:"provisional_driver,omitempty"`
+	ProvisionalEpoch     *provisionalEpochOutcome       `json:"provisional_epoch,omitempty"`
 	Schema               string                         `json:"schema"`
 	Release              string                         `json:"release"`
 	RunID                string                         `json:"run_id"`
@@ -353,13 +396,40 @@ type scenarioProbe interface {
 }
 
 type liveScenarioProbe struct {
-	cfg                  *ResolvedConfig
-	stateDir             string
-	client               *http.Client
+	cfg *ResolvedConfig
+	// The campaign proxy is a transport derivative, not the persisted plan's
+	// resolved-input identity. Local evidence retains the approved authority.
+	authorizedCfg *ResolvedConfig
+	stateDir      string
+	client        *http.Client
+	pathProofs    *scenarioPathProofCache
+	// payoutArtifacts retains artifacts already authenticated by this live
+	// probe. The cache is scoped to one scenario process: every new hash still
+	// reaches the operator, and strict final acceptance creates a fresh probe.
+	payoutArtifacts      map[string]payoutArtifact
 	trustedEvidenceOwner common.Address
 	publicManifestURI    string
 	finalSemanticVerify  campaignFinalSemanticVerifier
 	campaignResultVerify func(*ResolvedConfig, *ScenarioResult, string) error
+	// One scenario retains its authenticated immutable source approval. Each
+	// new observation still validates its current evidence and completion state.
+	precompilePlan         *SetupPlan
+	precompileJournal      *Journal
+	precompileSourcePlan   *SetupPlan
+	precompileContinuation func(context.Context) error
+}
+
+// FinalizedHead is the bounded scheduler read paired with Snapshot. It avoids
+// making block-timed fault delivery wait for the full evidence census.
+func (p *liveScenarioProbe) FinalizedHead(ctx context.Context) (ChainHead, error) {
+	client, err := dialConfiguredEVMClient(ctx, p.cfg, p.cfg.OperationalEVM)
+	if err != nil {
+		return ChainHead{}, err
+	}
+	defer client.Close()
+	// Scheduler and post-transition reads must not reuse an earlier snapshot's
+	// context-bound head. Their purpose is to observe progress after that cut.
+	return finalizedEVMHeadFromReader(ctx, ethEVMBlockReader{client: client})
 }
 
 type scenarioCheck struct {
@@ -394,9 +464,11 @@ type scenarioRunOptions struct {
 	FaultDriver                 scenarioFaultDriver
 	Adversaries                 adversaryCampaign
 	Prepare                     func(context.Context) error
+	BeforeFleetLifecycle        func(context.Context) error
 	NativeWarmupV2              scenarioNativeWarmupReadV2
 	NativeWarmupCompleteV2      func(context.Context) error
 	NativeWarmupBudgetV2        *ScenarioNativeWarmupBudgetV2
+	MinimumAcceptanceEpoch      uint64
 	ProcessLogs                 scenarioProcessLogGate
 	CollectFinalSemantic        finalSemanticCampaignInputCollector
 	WaitFinalSettlementClosures func(context.Context, *ResolvedConfig, string, *ScenarioObservation, *ScenarioAcceptanceWindow, time.Time, time.Duration) error
@@ -447,6 +519,11 @@ func buildScenarioAcceptanceWindow(cfg *ResolvedConfig, definition scenarioDefin
 	}
 	if scenarioNeedsNativeWarmupV2(cfg, definition.Name) && (baseline.NativeWarmupV2 == nil || !baseline.NativeWarmupV2.Ready || baseline.NativeWarmupV2.Phase != definition.Name) {
 		return nil, errors.New("strict V2 acceptance requires both fresh native applications and payout readiness")
+	}
+	if cfg.previousPolicy != nil && definition.Name == "release-1.0" {
+		if err := validateScenarioPolicyRateAdmission(cfg, baseline); err != nil {
+			return nil, err
+		}
 	}
 	contracts := baseline.Status.Contracts
 	policy := contracts.Policy
@@ -499,10 +576,12 @@ func buildScenarioAcceptanceWindow(cfg *ResolvedConfig, definition scenarioDefin
 }
 
 // acceptedEpochsTerminal proves that every operator position in every accepted
-// epoch reached the immutable vault's terminal entitlement state. A deliberate
-// missed root may carry zero value, but it must still be explicitly finalized.
+// epoch reached the immutable vault's terminal entitlement state. Finalization
+// with no committed root explicitly records RootMissed and carries that
+// operator's funding; it does not produce a Finalized claim entitlement. The
+// separate settlement checks prove roots, carry, claims and payments.
 func acceptedEpochsTerminal(contracts *ContractView, window *ScenarioAcceptanceWindow, operators int) (bool, string) {
-	if contracts == nil || window == nil || operators < 1 {
+	if contracts == nil || window == nil || window.EpochCount == 0 || operators < 1 {
 		return false, "accepted epoch terminal state is unavailable"
 	}
 	epochs := make(map[uint64]EpochView, len(contracts.Epochs))
@@ -523,7 +602,11 @@ func acceptedEpochsTerminal(contracts *ContractView, window *ScenarioAcceptanceW
 		}
 		seen := make(map[uint64]bool, operators)
 		for _, operator := range epoch.Operators {
-			if operator.NoID == 0 || operator.NoID > uint64(operators) || seen[operator.NoID] || operator.Status != 2 {
+			// STSettlementVault.EpochStatus: Finalized=2, RootMissed=3.
+			// Carried=4 is an expired claim entitlement, not proof of the
+			// timely terminal state required by this acceptance interval.
+			terminal := operator.Status == 2 || operator.Status == 3
+			if operator.NoID == 0 || operator.NoID > uint64(operators) || seen[operator.NoID] || !terminal {
 				return false, fmt.Sprintf("accepted epoch %d operator %d has duplicate/invalid terminal status %d", epochID, operator.NoID, operator.Status)
 			}
 			seen[operator.NoID] = true
@@ -555,6 +638,11 @@ func acceptanceScenarioChecks() []scenarioCheck {
 }
 
 func (p *liveScenarioProbe) Snapshot(ctx context.Context) (*ScenarioObservation, error) {
+	return precompileContinuationSnapshot(ctx, p.precompileContinuation, p.observeSnapshot)
+}
+
+// Collects the ordinary observation after any bounded durable continuation turn.
+func (p *liveScenarioProbe) observeSnapshot(ctx context.Context) (*ScenarioObservation, error) {
 	status, err := Status(ctx, p.cfg, p.stateDir)
 	if err != nil {
 		return nil, err
@@ -602,7 +690,7 @@ func (p *liveScenarioProbe) Snapshot(ctx context.Context) (*ScenarioObservation,
 			observation.PrecompileConformanceError = "contract deployment is unavailable"
 		} else {
 			probe := contractViewPrecompileProbe(status.Contracts)
-			if validateErr := validatePrecompileEvidenceIdentity(p.cfg, probe, evidence); validateErr != nil {
+			if validateErr := p.validatePrecompileEvidence(probe, evidence); validateErr != nil {
 				observation.PrecompileConformanceError = validateErr.Error()
 			} else {
 				observation.PrecompileConformanceValid = precompileEvidenceComplete(evidence)
@@ -612,30 +700,22 @@ func (p *liveScenarioProbe) Snapshot(ctx context.Context) (*ScenarioObservation,
 		observation.PrecompileConformanceError = readErr.Error()
 	}
 	observation.DishonestDeposit, observation.DishonestDepositValid, observation.DishonestDepositError = inspectDishonestDepositEvidence(ctx, p.cfg, p.stateDir, status.Contracts)
-	for noID := 1; noID <= p.cfg.Config.Topology.Operators; noID++ {
-		observation.Operators = append(observation.Operators, p.inspectOperator(ctx, status.Contracts, noID, expectedSigners[noID], minerClients))
+	observation.Operators = p.inspectOperators(ctx, status.Contracts, expectedSigners, minerClients)
+	if p.cfg.previousPolicy != nil {
+		observation.PolicyRateReadiness = p.observePolicyRateReadiness(ctx, status.Contracts, observation.Operators)
 	}
-	for validatorID := 1; validatorID <= p.cfg.Config.Topology.Validators; validatorID++ {
-		var validator ValidatorObservation
-		if provisionalResumeEnabled(p.cfg) {
-			validator = inspectProvisionalValidatorIntent(ctx, p.cfg, p.stateDir, validatorID)
-		} else if finalUsesEvidenceV2(p.cfg) {
-			validator = inspectValidatorIntentV2(ctx, p.cfg, p.stateDir, validatorID)
-		} else {
-			validator = inspectValidatorIntent(p.stateDir, validatorID, p.cfg.Config.Topology.HeadSlots, p.cfg.Config.Topology.fleetCandidates())
+	observation.Validators, err = p.inspectValidators(ctx, observation.Operators)
+	if err != nil {
+		return nil, err
+	}
+	var claimEpochs []uint64
+	if status.Contracts != nil {
+		for _, epoch := range status.Contracts.Epochs {
+			claimEpochs = append(claimEpochs, epoch.Epoch)
 		}
-		validator.PathProofCounts, err = inspectValidatorPathProofs(p.cfg, p.stateDir, validatorID, observation.Operators)
-		if err != nil {
-			if validator.Error == "" {
-				validator.Error = err.Error()
-			} else {
-				validator.Error += "; " + err.Error()
-			}
-		}
-		observation.Validators = append(observation.Validators, validator)
 	}
 	for minerID := 1; minerID <= p.cfg.Config.Topology.Miners; minerID++ {
-		observation.Claims = append(observation.Claims, inspectClaimQueue(p.cfg, p.stateDir, minerID))
+		observation.Claims = append(observation.Claims, inspectClaimQueue(p.cfg, p.stateDir, minerID, claimEpochs...))
 	}
 	observation.ObservationHash = ""
 	observation.ObservationHash, err = canonicalHashHex(observation)
@@ -973,47 +1053,16 @@ func inspectMinerClientIDsBytes(cfg *ResolvedConfig, b []byte) (map[[16]byte]int
 }
 
 func inspectFleetEvidence(cfg *ResolvedConfig, stateDir string, epoch uint64) (bool, int, bool, []uint16, []string, [][]int) {
-	setup := map[string]json.RawMessage{}
 	descriptors, err := fleetLifecycleEvidenceDescriptors(cfg, stateDir, epoch)
 	if err != nil || len(descriptors) != cfg.Config.Topology.fleetCandidates() {
 		return false, 0, false, nil, nil, nil
-	}
-	minerGroups := make([][]int, 0, len(descriptors))
-	for index, descriptor := range descriptors {
-		fleet := index + 1
-		paths := map[string]string{
-			fmt.Sprintf("fleet_%d_manifest", fleet):   filepath.Join(stateDir, "public", descriptor.ManifestName),
-			fmt.Sprintf("fleet_%d_commitment", fleet): filepath.Join(stateDir, "public", descriptor.CommitmentName),
-		}
-		for member, name := range descriptor.BindingNames {
-			paths[fmt.Sprintf("fleet_%d_binding_%d", fleet, member+1)] = filepath.Join(stateDir, "public", name)
-		}
-		for name, path := range paths {
-			b, readErr := os.ReadFile(path)
-			if readErr != nil {
-				return false, 0, false, nil, nil, nil
-			}
-			setup[name] = b
-		}
-		minerGroups = append(minerGroups, append([]int(nil), descriptor.MinerIDs...))
 	}
 	deployment, err := loadContractDeployment(stateDir)
 	if err != nil {
 		return false, 0, false, nil, nil, nil
 	}
-	commitments, count, bindings, uids := inspectCurrentFleetEvidenceBytes(cfg, setup, deployment.CoordinatorProxy, epoch)
-	if !bindings || len(uids) != len(minerGroups) {
-		return commitments, count, false, uids, nil, nil
-	}
-	hotkeys := make([]string, 0, len(descriptors))
-	for fleet := 1; fleet <= len(descriptors); fleet++ {
-		manifest, parseErr := protocol.ParseFleetManifest(setup[fmt.Sprintf("fleet_%d_manifest", fleet)])
-		if parseErr != nil {
-			return commitments, count, false, uids, nil, nil
-		}
-		hotkeys = append(hotkeys, fleetLifecycleHex(manifest.Hotkey))
-	}
-	return commitments, count, true, uids, hotkeys, minerGroups
+	cache := newFleetCensusCache(cfg, stateDir, deployment.CoordinatorProxy)
+	return inspectFleetEvidenceCensus(cfg, deployment.CoordinatorProxy, epoch, descriptors, cache)
 }
 
 func evidenceFixedHex(value string, size int) ([]byte, bool) {
@@ -1154,11 +1203,16 @@ func inspectOneFleetEvidenceBytes(cfg *ResolvedConfig, setup map[string]json.Raw
 }
 
 func (p *liveScenarioProbe) get(ctx context.Context, url string, limit int64) ([]byte, int, error) {
+	return getScenarioProbeWithClient(ctx, p.client, url, limit)
+}
+
+// Request owners may copy a client to select one bounded timeout. Redirect,
+// body capacity, Close and status handling stay common to ordinary reads.
+func getScenarioProbeWithClient(ctx context.Context, client *http.Client, url string, limit int64) ([]byte, int, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, 0, err
 	}
-	client := p.client
 	if client == nil {
 		client = http.DefaultClient
 	}
@@ -1173,7 +1227,7 @@ func (p *liveScenarioProbe) get(ctx context.Context, url string, limit int64) ([
 		return nil, resp.StatusCode, err
 	}
 	if resp.StatusCode/100 != 2 {
-		return b, resp.StatusCode, fmt.Errorf("HTTP %d", resp.StatusCode)
+		return b, resp.StatusCode, &evidenceRequestStatusError{status: resp.StatusCode}
 	}
 	return b, resp.StatusCode, nil
 }
@@ -1184,13 +1238,14 @@ func bytesSHA256(b []byte) string {
 }
 
 type payoutTierMembership struct {
-	Providers             int
-	CandidateProviders    int
-	CandidateHeadExcluded int
-	CandidateLeaves       int
-	PoolTailProviders     int
-	PoolTailHeadExcluded  int
-	PoolTailLeaves        int
+	Providers                     int
+	ExcludedUnconfiguredProviders int
+	CandidateProviders            int
+	CandidateHeadExcluded         int
+	CandidateLeaves               int
+	PoolTailProviders             int
+	PoolTailHeadExcluded          int
+	PoolTailLeaves                int
 }
 
 // The release's configured cohort is distinct from actual epoch binding state.
@@ -1212,17 +1267,6 @@ func summarizePayoutTierMembershipForCandidates(cfg *ResolvedConfig, noID int, a
 	if cfg == nil || artifact == nil || len(minerClients) != cfg.Config.Topology.Miners || artifact.NoID != uint64(noID) || len(candidates) != cfg.Config.Topology.fleetCandidateMiners() {
 		return result, errors.New("payout tier membership inputs are incomplete")
 	}
-	expectedCandidate, expectedTail := 0, 0
-	for miner := 1; miner <= cfg.Config.Topology.Miners; miner++ {
-		if operatorForMiner(cfg, miner) != noID {
-			continue
-		}
-		if candidates[miner] {
-			expectedCandidate++
-		} else {
-			expectedTail++
-		}
-	}
 	leaves := make(map[[16]byte]bool, len(artifact.Leaves))
 	for _, leaf := range artifact.Leaves {
 		miner := minerClients[leaf.ClientID]
@@ -1236,13 +1280,35 @@ func summarizePayoutTierMembershipForCandidates(cfg *ResolvedConfig, noID int, a
 			result.PoolTailLeaves++
 		}
 	}
+	// The signed provider census also contains usage from clients without a
+	// payout wallet. They cannot join either configured payout tier. Authenticate
+	// their operator network against the configured providers before excluding
+	// only unpaid, unbound rows with no verification activity from the cohort.
+	operatorNetworks := map[[16]byte]bool{}
+	for _, provider := range artifact.Providers {
+		if miner := minerClients[provider.ClientID]; miner != 0 && operatorForMiner(cfg, miner) == noID && provider.NetworkID != ([16]byte{}) {
+			operatorNetworks[provider.NetworkID] = true
+		}
+	}
 	providers := make(map[[16]byte]bool, len(artifact.Providers))
 	for _, provider := range artifact.Providers {
 		miner := minerClients[provider.ClientID]
-		if miner == 0 || operatorForMiner(cfg, miner) != noID || providers[provider.ClientID] {
+		if provider.ClientID == ([16]byte{}) || providers[provider.ClientID] {
 			return result, fmt.Errorf("artifact provider has an unknown, foreign, or duplicate client id")
 		}
 		providers[provider.ClientID] = true
+		if miner == 0 && unpaidAuxiliaryPayoutProvider(provider, operatorNetworks) {
+			result.ExcludedUnconfiguredProviders++
+			continue
+		}
+		if miner == 0 || operatorForMiner(cfg, miner) != noID {
+			return result, fmt.Errorf("artifact provider has an unknown, foreign, or duplicate client id")
+		}
+	}
+	for clientID := range leaves {
+		if !providers[clientID] {
+			return result, errors.New("artifact payout leaf lacks its provider row")
+		}
 	}
 	// Validate every provider identity before classifying a cohort mismatch.
 	// Otherwise an early candidate mismatch could hide a later corrupt entry.
@@ -1250,6 +1316,9 @@ func summarizePayoutTierMembershipForCandidates(cfg *ResolvedConfig, noID int, a
 	for _, provider := range artifact.Providers {
 		miner := minerClients[provider.ClientID]
 		result.Providers++
+		if miner == 0 {
+			continue
+		}
 		if candidates[miner] {
 			result.CandidateProviders++
 			if provider.HeadExcluded {
@@ -1271,8 +1340,12 @@ func summarizePayoutTierMembershipForCandidates(cfg *ResolvedConfig, noID int, a
 	if cohortError != nil {
 		return result, cohortError
 	}
-	if result.CandidateProviders != expectedCandidate || result.CandidateHeadExcluded != expectedCandidate || result.PoolTailProviders != expectedTail || result.CandidateLeaves != 0 || result.PoolTailHeadExcluded != 0 || result.PoolTailLeaves == 0 {
-		return result, &payoutCohortExpectationError{fmt.Sprintf("tier membership candidate=%d/%d excluded=%d leaves=%d tail=%d/%d excluded=%d leaves=%d", result.CandidateProviders, expectedCandidate, result.CandidateHeadExcluded, result.CandidateLeaves, result.PoolTailProviders, expectedTail, result.PoolTailHeadExcluded, result.PoolTailLeaves)}
+	// Provider rows represent completed usage in this epoch, not the registered
+	// miner inventory. Inactive configured clients can be absent. Every present
+	// row and leaf must still prove its exact tier, with actual head exclusion
+	// and pool payout evidence. Runtime and assignment checks own the full fleet.
+	if result.CandidateProviders == 0 || result.CandidateHeadExcluded != result.CandidateProviders || result.PoolTailProviders == 0 || result.CandidateLeaves != 0 || result.PoolTailHeadExcluded != 0 || result.PoolTailLeaves == 0 {
+		return result, &payoutCohortExpectationError{fmt.Sprintf("tier membership candidate=%d excluded=%d leaves=%d tail=%d excluded=%d leaves=%d", result.CandidateProviders, result.CandidateHeadExcluded, result.CandidateLeaves, result.PoolTailProviders, result.PoolTailHeadExcluded, result.PoolTailLeaves)}
 	}
 	return result, nil
 }
@@ -1418,6 +1491,11 @@ func (p *liveScenarioProbe) inspectOperator(ctx context.Context, contracts *Cont
 }
 
 func (p *liveScenarioProbe) inspectOperatorAt(ctx context.Context, contracts *ContractView, noID int, expectedSigner, base string, minerClients map[[16]byte]int) OperatorObservation {
+	surfaces := p.readOperatorSurfaces(ctx, []string{base})
+	return p.inspectOperatorWithSurfaces(ctx, contracts, noID, expectedSigner, base, minerClients, surfaces[0])
+}
+
+func (p *liveScenarioProbe) inspectOperatorWithSurfaces(ctx context.Context, contracts *ContractView, noID int, expectedSigner, base string, minerClients map[[16]byte]int, surfaces scenarioOperatorSurfaces) OperatorObservation {
 	base = strings.TrimSuffix(base, "/")
 	o := OperatorObservation{NoID: noID, APIURL: base}
 	if contracts != nil {
@@ -1429,14 +1507,14 @@ func (p *liveScenarioProbe) inspectOperatorAt(ctx context.Context, contracts *Co
 			}
 		}
 	}
-	_, statusCode, statusErr := p.get(ctx, base+"/status", 1*1024*1024)
+	statusCode, statusErr := surfaces[scenarioOperatorStatus].status, surfaces[scenarioOperatorStatus].err
 	o.StatusCode = statusCode
 	o.Healthy = statusErr == nil
 	var problems []string
 	if statusErr != nil {
 		problems = append(problems, "status: "+statusErr.Error())
 	}
-	keysBytes, _, err := p.get(ctx, base+"/verify/keys", 1*1024*1024)
+	keysBytes, err := surfaces[scenarioOperatorKeys].data, surfaces[scenarioOperatorKeys].err
 	if err != nil {
 		problems = append(problems, "verify keys: "+err.Error())
 	} else {
@@ -1463,7 +1541,7 @@ func (p *liveScenarioProbe) inspectOperatorAt(ctx context.Context, contracts *Co
 			sort.Slice(o.VerifyKeys, func(i, j int) bool { return o.VerifyKeys[i].ServerKeyID < o.VerifyKeys[j].ServerKeyID })
 		}
 	}
-	statsBytes, _, err := p.get(ctx, base+"/verify/stats?limit=100000", 32*1024*1024)
+	statsBytes, err := surfaces[scenarioOperatorStats].data, surfaces[scenarioOperatorStats].err
 	if err != nil {
 		problems = append(problems, "stats: "+err.Error())
 	} else {
@@ -1486,7 +1564,7 @@ func (p *liveScenarioProbe) inspectOperatorAt(ctx context.Context, contracts *Co
 			o.ReliabilityPPM = protocol.ReliabilityPPM(o.Confirmations, o.Assignments, p.cfg.Policy.Verify.ReliabilityAMin)
 		}
 	}
-	proofBytes, _, err := p.get(ctx, base+"/verify/proofs?limit=10000", 32*1024*1024)
+	proofBytes, err := surfaces[scenarioOperatorProofs].data, surfaces[scenarioOperatorProofs].err
 	if err != nil {
 		problems = append(problems, "proofs: "+err.Error())
 	} else {
@@ -1532,24 +1610,40 @@ func (p *liveScenarioProbe) inspectOperatorAt(ctx context.Context, contracts *Co
 				continue
 			}
 			seen[hash] = true
-			artifactBytes, _, artifactErr := p.get(ctx, base+"/sn/artifact?hash=sha256:"+hash, 32*1024*1024)
-			if artifactErr != nil {
-				problems = append(problems, "artifact "+hash+": "+artifactErr.Error())
-				continue
+			cacheKey := fmt.Sprintf("%d/%s", noID, hash)
+			artifact, cached := payoutArtifact{}, false
+			if provisionalResumeEnabled(p.cfg) && p.payoutArtifacts != nil {
+				artifact, cached = p.payoutArtifacts[cacheKey]
 			}
-			var artifact payoutArtifact
-			if json.Unmarshal(artifactBytes, &artifact) != nil || verifyPayoutArtifact(&artifact) != nil {
-				problems = append(problems, "artifact "+hash+": integrity failure")
-				continue
+			if !cached {
+				artifactBytes, _, artifactErr := p.get(ctx, base+"/sn/artifact?hash=sha256:"+hash, 32*1024*1024)
+				if artifactErr != nil {
+					problems = append(problems, "artifact "+hash+": "+artifactErr.Error())
+					continue
+				}
+				if json.Unmarshal(artifactBytes, &artifact) != nil || verifyPayoutArtifact(&artifact) != nil || artifact.ContentHash != "sha256:"+hash {
+					problems = append(problems, "artifact "+hash+": integrity failure")
+					continue
+				}
+				if provisionalResumeEnabled(p.cfg) {
+					if p.payoutArtifacts == nil {
+						p.payoutArtifacts = map[string]payoutArtifact{}
+					}
+					p.payoutArtifacts[cacheKey] = artifact
+				}
 			}
-			if artifact.DeploymentID != p.cfg.Config.Deployment.DeploymentID || artifact.ChainID != p.cfg.ChainID || artifact.Netuid != p.cfg.Netuid || artifact.NoID != uint64(noID) || !strings.EqualFold(artifact.GenesisHash, p.cfg.Public.Chain.GenesisHash) || !strings.EqualFold(artifact.PolicyHash, p.cfg.PolicyHash) || (expectedSigner != "" && !strings.EqualFold(artifact.Signer.Hex(), expectedSigner)) {
+			if artifact.DeploymentID != p.cfg.Config.Deployment.DeploymentID || artifact.ChainID != p.cfg.ChainID || artifact.Netuid != p.cfg.Netuid || artifact.NoID != uint64(noID) || !strings.EqualFold(artifact.GenesisHash, p.cfg.Public.Chain.GenesisHash) || !policyRateAmendmentHistoryHash(p.cfg, artifact.PolicyHash) || (expectedSigner != "" && !strings.EqualFold(artifact.Signer.Hex(), expectedSigner)) {
 				problems = append(problems, "artifact "+hash+": deployment identity mismatch")
 				continue
 			}
 			o.ValidArtifacts++
+			if p.cfg.previousPolicy != nil && contracts != nil && artifact.PolicyHash == p.cfg.PolicyHash && artifact.Epoch < contracts.CurrentEpoch && (o.RateSource == nil || artifact.Epoch > o.RateSource.Epoch) {
+				o.RateSource = &PolicyRateSourceObservation{NoId: uint64(noID), Epoch: artifact.Epoch, PolicyHash: artifact.PolicyHash, ContentHash: artifact.ContentHash, TotalUsageBytes: artifact.TotalUsageBytes, TotalUsers: artifact.TotalUsers}
+			}
 			o.ArtifactHashes = append(o.ArtifactHashes, artifact.ContentHash)
 			if payoutArtifactMatchesChain(&artifact, contracts) {
 				o.MatchingArtifacts++
+				o.PayoutTierArtifacts = append(o.PayoutTierArtifacts, observeOperatorPayoutTierArtifact(p.cfg, noID, &artifact, minerClients, lifecycle))
 				if lifecycleEpochs[artifact.Epoch] {
 					if lifecycleArtifacts[artifact.Epoch] {
 						problems = append(problems, fmt.Sprintf("artifact epoch %d: duplicate lifecycle payout artifact", artifact.Epoch))
@@ -1567,6 +1661,7 @@ func (p *liveScenarioProbe) inspectOperatorAt(ctx context.Context, contracts *Co
 			}
 		}
 	}
+	sort.Slice(o.PayoutTierArtifacts, func(i, j int) bool { return o.PayoutTierArtifacts[i].Epoch < o.PayoutTierArtifacts[j].Epoch })
 	sort.Slice(o.LifecyclePayoutArtifacts, func(i, j int) bool {
 		return o.LifecyclePayoutArtifacts[i].Epoch < o.LifecyclePayoutArtifacts[j].Epoch
 	})
@@ -1586,6 +1681,7 @@ func (p *liveScenarioProbe) inspectOperatorAt(ctx context.Context, contracts *Co
 		sort.Strings(o.LatestHeadExcludedClientIDs)
 		membership, membershipErr := summarizePayoutTierMembershipForCandidates(p.cfg, noID, latestMatching, minerClients, fleetLifecycleCandidateMinerSet(p.cfg, lifecycle, latestMatching.Epoch))
 		o.LatestArtifactProviders = membership.Providers
+		o.ExcludedUnconfiguredProviders = membership.ExcludedUnconfiguredProviders
 		o.CandidateProviders = membership.CandidateProviders
 		o.CandidateHeadExcluded = membership.CandidateHeadExcluded
 		o.CandidateLeaves = membership.CandidateLeaves
@@ -1807,6 +1903,19 @@ func inspectValidatorIntent(stateDir string, validatorID, headSlots, candidateFl
 		result.Error = err.Error()
 		return result
 	}
+	return projectValidatorIntent(all, validatorID, headSlots, candidateFleets, func(item *validatorpkg.SteeringIntent) (*validatorpkg.ReleaseMeasurementArtifact, error) {
+		artifact, verified, err := intentStore.MeasurementArtifact(item)
+		if err == nil {
+			err = validatorpkg.VerifyReleaseMeasurementIntent(item, artifact, verified)
+		}
+		return artifact, err
+	})
+}
+
+// Projection shares the ordinary operational fields. Its caller owns source
+// authentication and must keep local observations separate from strict receipts.
+func projectValidatorIntent(all []validatorpkg.SteeringIntent, validatorID, headSlots, candidateFleets int, measurement func(*validatorpkg.SteeringIntent) (*validatorpkg.ReleaseMeasurementArtifact, error)) ValidatorObservation {
+	result := ValidatorObservation{ValidatorID: validatorID}
 	if len(all) != 0 {
 		current := all[len(all)-1]
 		result.CurrentStatus = current.Status
@@ -1834,25 +1943,21 @@ func inspectValidatorIntent(stateDir string, validatorID, headSlots, candidateFl
 				SelectedHeadUIDs:   append([]uint16(nil), item.SelectedHeadUIDs...), RejectedHeadUIDs: append([]uint16(nil), item.RejectedHeadUIDs...),
 				StaleHeadBindings: len(item.StaleHeadBindings),
 			}
-			artifact, verified, measurementErr := intentStore.MeasurementArtifact(item)
-			if measurementErr == nil {
-				measurementErr = validatorpkg.VerifyReleaseMeasurementIntent(item, artifact, verified)
-			}
+			artifact, measurementErr := measurement(item)
 			if measurementErr == nil {
 				decision.CandidateFleetUIDs, decision.CandidateFleetHotkeys, measurementErr = headDecisionCandidateIdentities(artifact, item.EligibleHeadUIDs)
 			}
 			if measurementErr != nil {
 				decision.Error = "authenticated measurement candidate identity: " + measurementErr.Error()
 			}
-			if len(item.UIDs) != len(item.Scores) || len(item.UIDs) != len(item.Values) {
-				decision.Error = strings.TrimSpace(decision.Error + " " + fmt.Sprintf("uids/scores/values=%d/%d/%d", len(item.UIDs), len(item.Scores), len(item.Values)))
+			weights, weightErr := scenarioAppliedIntentWeights(item)
+			if weightErr != nil {
+				decision.Error = strings.TrimSpace(decision.Error + " " + weightErr.Error())
 			} else {
-				for weightIndex, uid := range item.UIDs {
-					decision.AppliedWeights = append(decision.AppliedWeights, IntentWeightObservation{UID: uid, Numerator: item.Scores[weightIndex].Numerator, Denominator: item.Scores[weightIndex].Denominator, Value: item.Values[weightIndex]})
-				}
+				decision.AppliedWeights = weights
 			}
 			result.HeadDecisions = append(result.HeadDecisions, decision)
-			if latestApplied == nil || item.SubnetEpoch > latestApplied.SubnetEpoch {
+			if weightErr == nil && (latestApplied == nil || item.SubnetEpoch > latestApplied.SubnetEpoch) {
 				latestApplied = item
 			}
 			if len(item.Values) != 0 {
@@ -1891,6 +1996,10 @@ func inspectValidatorIntent(stateDir string, validatorID, headSlots, candidateFl
 // operator's published key history verifies FINAL signatures across rotations.
 // A missing store is a valid zero baseline before the first completed trail.
 func inspectValidatorPathProofs(cfg *ResolvedConfig, stateDir string, validatorID int, operators []OperatorObservation) (map[int]int, error) {
+	return inspectValidatorPathProofsCached(context.Background(), cfg, stateDir, validatorID, operators, nil)
+}
+
+func inspectValidatorPathProofsCached(ctx context.Context, cfg *ResolvedConfig, stateDir string, validatorID int, operators []OperatorObservation, cache *scenarioPathProofCache) (map[int]int, error) {
 	if cfg == nil || cfg.Config == nil || validatorID < 1 || validatorID > cfg.Config.Topology.Validators {
 		return nil, errors.New("validator path-proof identity is invalid")
 	}
@@ -1910,36 +2019,74 @@ func inspectValidatorPathProofs(cfg *ResolvedConfig, stateDir string, validatorI
 			serverKeys[operator.NoID][key.ServerKeyID] = append(ed25519.PublicKey(nil), key.PublicKey...)
 		}
 	}
-	authority, err := loadFinalOperatorPathAuthority(cfg, stateDir, []uint64{uint64(validatorID)})
+	authority, generation, err := loadScenarioPathAuthorityV2(ctx, cfg, stateDir, validatorID)
 	if err != nil {
 		return nil, fmt.Errorf("validator %d client seed is unavailable or invalid: %w", validatorID, err)
 	}
 	counts := make(map[int]int, cfg.Config.Topology.Operators)
+	limits, cacheConfigured, cacheErr := configuredScenarioPathProofLimits(cfg, validatorID)
+	if generation != nil {
+		limits, cacheErr = scenarioPathProofLimitsV2(generation.Evidence.Bounds)
+		cacheConfigured = true
+	}
+	if cache != nil {
+		if cacheErr != nil {
+			return nil, cacheErr
+		}
+		if !cacheConfigured {
+			// Legacy configurations have no trustworthy disk/replay bounds for an
+			// incremental prefix. Keep their established full validation path.
+			cache = nil
+		}
+	}
 	for noID := 1; noID <= cfg.Config.Topology.Operators; noID++ {
 		root := filepath.Join(stateDir, "runtime", fmt.Sprintf("validator-%d", validatorID), "state", "operators", fmt.Sprintf("no-%d", noID))
+		if generation != nil {
+			root = filepath.Join(generation.ClientStateDir, "operators", fmt.Sprintf("no-%d", noID))
+		}
 		expectedVPK := authority.keysByValidator[uint64(validatorID)][uint64(noID)]
-		lines, err := completedReleaseProofLines(filepath.Join(root, "proofs.jsonl"))
-		if err != nil {
-			return nil, fmt.Errorf("validator %d operator %d path proofs: %w", validatorID, noID, err)
-		}
-		for lineIndex, line := range lines {
-			var record validatorpkg.ProofRecord
-			if err := json.Unmarshal(line, &record); err != nil {
-				return nil, fmt.Errorf("validator %d operator %d proof %d decode: %w", validatorID, noID, lineIndex+1, err)
-			}
+		path := filepath.Join(root, "proofs.jsonl")
+		verify := func(record *validatorpkg.ProofRecord, lineIndex int) error {
 			if record.Epoch == 0 {
-				return nil, fmt.Errorf("validator %d operator %d proof %d has no contract epoch", validatorID, noID, lineIndex+1)
+				return fmt.Errorf("validator %d operator %d proof %d has no contract epoch", validatorID, noID, lineIndex+1)
 			}
-			if err := validatorpkg.VerifyProofRecord(&record, expectedVPK, serverKeys[noID], cfg.Policy.Verify.TrailDepth); err != nil {
-				return nil, fmt.Errorf("validator %d operator %d proof %d: %w", validatorID, noID, lineIndex+1, err)
+			if err := validatorpkg.VerifyProofRecord(record, expectedVPK, serverKeys[noID], cfg.Policy.Verify.TrailDepth); err != nil {
+				return fmt.Errorf("validator %d operator %d proof %d: %w", validatorID, noID, lineIndex+1, err)
+			}
+			return nil
+		}
+		var count int
+		if cache == nil {
+			lines, err := completedReleaseProofLines(path)
+			if err != nil {
+				return nil, fmt.Errorf("validator %d operator %d path proofs: %w", validatorID, noID, err)
+			}
+			for lineIndex, line := range lines {
+				var record validatorpkg.ProofRecord
+				if err := json.Unmarshal(line, &record); err != nil {
+					return nil, fmt.Errorf("validator %d operator %d proof %d decode: %w", validatorID, noID, lineIndex+1, err)
+				}
+				if err := verify(&record, lineIndex); err != nil {
+					return nil, err
+				}
+			}
+			count = len(lines)
+		} else {
+			verifierHash, err := scenarioPathProofVerifierHash(expectedVPK, serverKeys[noID], cfg.Policy.Verify.TrailDepth)
+			if err != nil {
+				return nil, err
+			}
+			count, err = cache.inspect(ctx, path, verifierHash, limits, verify)
+			if err != nil {
+				return nil, fmt.Errorf("validator %d operator %d path proofs: %w", validatorID, noID, err)
 			}
 		}
-		counts[noID] = len(lines)
+		counts[noID] = count
 	}
 	return counts, nil
 }
 
-func inspectClaimQueue(cfg *ResolvedConfig, stateDir string, minerID int) ClaimObservation {
+func inspectClaimQueue(cfg *ResolvedConfig, stateDir string, minerID int, observedEpochs ...uint64) ClaimObservation {
 	result := ClaimObservation{MinerID: minerID, NoID: operatorForMiner(cfg, minerID)}
 	b, err := os.ReadFile(filepath.Join(stateDir, "runtime", fmt.Sprintf("miner-%d", minerID), "claims", "claim-queue.json"))
 	if err != nil {
@@ -1947,8 +2094,10 @@ func inspectClaimQueue(cfg *ResolvedConfig, stateDir string, minerID int) ClaimO
 		return result
 	}
 	var queue struct {
-		Schema  string `json:"schema"`
-		Entries map[string]struct {
+		Schema         string `json:"schema"`
+		LastDiscovered int64  `json:"last_discovered"`
+		Entries        map[string]struct {
+			Epoch  int64  `json:"epoch"`
 			Status string `json:"status"`
 			TxHash string `json:"tx_hash"`
 		} `json:"entries"`
@@ -1958,7 +2107,14 @@ func inspectClaimQueue(cfg *ResolvedConfig, stateDir string, minerID int) ClaimO
 		return result
 	}
 	result.Discovered = len(queue.Entries)
-	for _, entry := range queue.Entries {
+	result.LastDiscovered = queue.LastDiscovered
+	latestTxEpoch := int64(-1)
+	for key, entry := range queue.Entries {
+		epoch, parseErr := strconv.ParseInt(key, 10, 64)
+		if parseErr != nil || epoch < 0 || strconv.FormatInt(epoch, 10) != key || entry.Epoch != epoch {
+			result.Error = "claim queue contains a noncanonical or mismatched epoch identity"
+			return result
+		}
 		switch entry.Status {
 		case "finalized":
 			result.Finalized++
@@ -1971,9 +2127,27 @@ func inspectClaimQueue(cfg *ResolvedConfig, stateDir string, minerID int) ClaimO
 		default:
 			result.Pending++
 		}
-		if entry.TxHash != "" {
+		if entry.TxHash != "" && entry.Epoch > latestTxEpoch {
+			latestTxEpoch = entry.Epoch
 			result.LastTxHash = entry.TxHash
 		}
+	}
+	observedEpochs = append([]uint64(nil), observedEpochs...)
+	sort.Slice(observedEpochs, func(i, j int) bool { return observedEpochs[i] < observedEpochs[j] })
+	for index, epoch := range observedEpochs {
+		if index > 0 && observedEpochs[index-1] == epoch {
+			result.Error = fmt.Sprintf("claim observation repeats contract epoch %d", epoch)
+			return result
+		}
+		outcome := ClaimEpochObservation{Epoch: epoch, Status: "undiscovered"}
+		if entry, ok := queue.Entries[strconv.FormatUint(epoch, 10)]; ok {
+			if entry.Epoch < 0 || uint64(entry.Epoch) != epoch {
+				result.Error = fmt.Sprintf("claim queue epoch %d key and entry identity differ", epoch)
+				return result
+			}
+			outcome.Status = entry.Status
+		}
+		result.EpochOutcomes = append(result.EpochOutcomes, outcome)
 	}
 	return result
 }
@@ -2608,6 +2782,14 @@ func globalHeadBoundaryDiverged(cfg *ResolvedConfig, start, current *ScenarioObs
 }
 
 func faultConditionMet(cfg *ResolvedConfig, start, current *ScenarioObservation, condition string) (bool, error) {
+	// A bypass may reach an operational handoff without any of these native
+	// transitions. Its stage is not evidence that an installation or payout ran.
+	if current != nil && current.FleetLifecycle != nil && current.FleetLifecycle.ProvisionalBypass != nil {
+		switch condition {
+		case "fleet-lifecycle-fallback-installed", "fleet-lifecycle-provider-installed", "fleet-lifecycle-provider-paid", "fleet-lifecycle-terminal-effective":
+			return false, nil
+		}
+	}
 	switch condition {
 	case "":
 		return false, nil
@@ -2845,14 +3027,7 @@ func releaseScenarioChecks() []scenarioCheck {
 			}
 			return len(e.Current.Validators) == e.Cfg.Config.Topology.Validators, "all validators independently accepted exact signed-usage deposits"
 		}},
-		{ID: "payout_artifacts_enforce_one_tier", Check: func(e *scenarioEvaluation) (bool, string) {
-			for _, operator := range e.Current.Operators {
-				if !operator.TierMembershipValid || operator.CandidateProviders == 0 || operator.CandidateHeadExcluded != operator.CandidateProviders || operator.CandidateLeaves != 0 || operator.PoolTailProviders == 0 || operator.PoolTailHeadExcluded != 0 || operator.PoolTailLeaves == 0 {
-					return false, fmt.Sprintf("no=%d epoch=%d candidates=%d excluded=%d leaves=%d tail=%d tail_excluded=%d tail_leaves=%d", operator.NoID, operator.LatestArtifactEpoch, operator.CandidateProviders, operator.CandidateHeadExcluded, operator.CandidateLeaves, operator.PoolTailProviders, operator.PoolTailHeadExcluded, operator.PoolTailLeaves)
-				}
-			}
-			return len(e.Current.Operators) == e.Cfg.Config.Topology.Operators, "every live fleet is excluded from pool artifacts and pool-tail providers retain leaves"
-		}},
+		{ID: "payout_artifacts_enforce_one_tier", Check: scenarioPayoutTiersForAcceptance},
 		{ID: "signed_weight_cap_enforced", Check: func(e *scenarioEvaluation) (bool, string) {
 			cap := e.Cfg.Policy.Steering.MaxWeightLimitU16
 			for _, validator := range e.Current.Validators {
@@ -3055,9 +3230,13 @@ func releaseScenarioChecks() []scenarioCheck {
 			return compared > 0, fmt.Sprintf("unaffiliated_validator_comparisons=%d", compared)
 		}},
 		{ID: "claims_finalized_per_no", Check: func(e *scenarioEvaluation) (bool, string) {
+			claims, err := scenarioClaimsForAcceptance(e)
+			if err != nil {
+				return false, err.Error()
+			}
 			finalized := map[int]int{}
 			uncertain := 0
-			for _, claim := range e.Current.Claims {
+			for _, claim := range claims {
 				finalized[claim.NoID] += claim.Finalized
 				uncertain += claim.Uncertain + claim.Failed
 			}
@@ -3069,8 +3248,12 @@ func releaseScenarioChecks() []scenarioCheck {
 			return uncertain == 0, fmt.Sprintf("finalized_by_no=%v uncertain_or_failed=%d", finalized, uncertain)
 		}},
 		{ID: "tier_exclusive_claim_outcomes", Check: func(e *scenarioEvaluation) (bool, string) {
+			claims, err := scenarioClaimsForAcceptance(e)
+			if err != nil {
+				return false, err.Error()
+			}
 			candidateNoClaim, tailFinalized := 0, 0
-			for _, claim := range e.Current.Claims {
+			for _, claim := range claims {
 				if claim.Error != "" || claim.Uncertain != 0 || claim.Failed != 0 {
 					return false, fmt.Sprintf("miner=%d error=%s uncertain=%d failed=%d", claim.MinerID, claim.Error, claim.Uncertain, claim.Failed)
 				}
@@ -3171,7 +3354,7 @@ func annotateScenarioExpectedFaults(observation *ScenarioObservation, records []
 	observation.ExpectedFaultTargets = nil
 	seenTargets := map[string]bool{}
 	for _, record := range records {
-		if record.Status != "active" {
+		if record.Status != "active" && !scenarioFaultApplyPending(record) {
 			continue
 		}
 		observation.ExpectedFaultIDs = append(observation.ExpectedFaultIDs, record.ID)
@@ -3193,7 +3376,7 @@ func annotateScenarioExpectedFaults(observation *ScenarioObservation, records []
 func scenarioFaultTargets(records []ScenarioFaultRecord, head uint64, includeDue bool) []string {
 	seen := map[string]bool{}
 	for _, record := range records {
-		expected := record.Status == "active"
+		expected := record.Status == "active" || scenarioFaultApplyPending(record)
 		if includeDue && record.Status == "pending" && head >= record.TriggerBlock {
 			expected = true
 		}
@@ -3230,9 +3413,15 @@ func scenarioDefinitionFor(cfg *ResolvedConfig, name string) (scenarioDefinition
 	if name == "" {
 		name = cfg.Config.Scenarios.Launch
 	}
+	epochChecks := epochScenarioChecks()
+	if provisionalResumeEnabled(cfg) {
+		epochChecks = provisionalEpochScenarioChecks()
+	}
 	definition := scenarioDefinition{Name: name, Checks: commonScenarioChecks()}
 	switch name {
 	case "smoke":
+		return definition, nil
+	case precompilePreparationScenario:
 		return definition, nil
 	case "precompile-conformance":
 		definition.Checks = append(definition.Checks, scenarioCheck{ID: "precompile_conformance_complete", Check: func(e *scenarioEvaluation) (bool, string) {
@@ -3241,10 +3430,9 @@ func scenarioDefinitionFor(cfg *ResolvedConfig, name string) (scenarioDefinition
 		return definition, nil
 	case "epoch":
 		definition.GoalEpochs = 1
+		definition.Checks = append(definition.Checks, epochChecks...)
 		if provisionalResumeEnabled(cfg) {
-			definition.Checks = append(definition.Checks, provisionalEpochScenarioChecks()...)
-		} else {
-			definition.Checks = append(definition.Checks, epochScenarioChecks()...)
+			definition.Checks = append(definition.Checks, scenarioCheck{ID: provisionalEpochActivityAssertionID, Check: provisionalEpochActivity})
 		}
 		return definition, nil
 	case "release-1.0":
@@ -3257,18 +3445,41 @@ func scenarioDefinitionFor(cfg *ResolvedConfig, name string) (scenarioDefinition
 			return scenarioDefinition{}, err
 		}
 		definition.Faults = faults
-		definition.Checks = append(definition.Checks, epochScenarioChecks()...)
+		definition.Checks = append(definition.Checks, epochChecks...)
 		definition.Checks = append(definition.Checks, releaseScenarioChecks()...)
+		if provisionalResumeEnabled(cfg) {
+			definition.Checks = append(definition.Checks, precompileContinuationCompleteCheck())
+		}
 		definition.Checks = append(definition.Checks, acceptanceScenarioChecks()...)
 		matrix, err := loadScenarioMatrix(cfg.Repos.SN)
 		if err != nil {
 			return scenarioDefinition{}, fmt.Errorf("release scenario matrix: %w", err)
 		}
 		definition.MatrixHash = matrix.Hash
-		if err := validateScenarioMatrixCoverage(matrix, definition.Checks, definition.Faults); err != nil {
+		coverageMatrix := matrix
+		if provisionalResumeEnabled(cfg) {
+			// Keep the approved matrix immutable and name the one operational
+			// substitution explicitly; it does not attest strict intent replay.
+			copied := *matrix
+			copied.Rows = slices.Clone(matrix.Rows)
+			for index := range copied.Rows {
+				row := &copied.Rows[index]
+				row.LiveAssertions = slices.Clone(row.LiveAssertions)
+				for assertion, id := range row.LiveAssertions {
+					if id == "validator_intents_finalized" {
+						row.LiveAssertions[assertion] = "validator_local_v2_receipts_finalized_and_applied"
+					}
+				}
+			}
+			coverageMatrix = &copied
+		}
+		if err := validateScenarioMatrixCoverage(coverageMatrix, definition.Checks, definition.Faults); err != nil {
 			return scenarioDefinition{}, err
 		}
 		definition.Checks = append(definition.Checks, scenarioCheck{ID: "scenario_matrix_coverage", Check: func(*scenarioEvaluation) (bool, string) {
+			if provisionalResumeEnabled(cfg) {
+				return true, fmt.Sprintf("20/20 matrix rows mapped with local V2 receipt observation; strict_intent_replay=unrun final_acceptance=false; hash=%s", matrix.Hash)
+			}
 			return true, fmt.Sprintf("20/20 matrix rows mapped; hash=%s", matrix.Hash)
 		}})
 		if err := enableContinuousAdversaries(cfg, &definition); err != nil {
@@ -3284,7 +3495,7 @@ func scenarioDefinitionFor(cfg *ResolvedConfig, name string) (scenarioDefinition
 		// epochs are accepted.
 		definition.GoalEpochs = uint64(cfg.Config.Scenarios.ProductionEpochs)
 		definition.Faults = productionRollingFaults(cfg)
-		definition.Checks = append(definition.Checks, epochScenarioChecks()...)
+		definition.Checks = append(definition.Checks, epochChecks...)
 		definition.Checks = append(definition.Checks, releaseScenarioChecks()...)
 		definition.Checks = append(definition.Checks, productionScenarioChecks()...)
 		definition.Checks = append(definition.Checks, acceptanceScenarioChecks()...)
@@ -3504,7 +3715,7 @@ func evaluateScenario(cfg *ResolvedConfig, definition scenarioDefinition, start,
 	assertions := make([]AssertionRecord, 0, len(definition.Checks))
 	for _, check := range definition.Checks {
 		passed, message := check.Check(evaluation)
-		assertions = append(assertions, AssertionRecord{ID: check.ID, Passed: passed, Message: message, StartedAt: started.UTC().Format(time.RFC3339Nano), CompletedAt: now.Format(time.RFC3339Nano), DurationSeconds: now.Sub(started).Seconds(), ObservationHash: current.ObservationHash})
+		assertions = append(assertions, AssertionRecord{ID: check.ID, Passed: passed, DeferredToFinalAcceptance: provisionalEpochEnabled(cfg, definition.Name) && provisionalEpochDeferredAssertion(check.ID), Message: message, StartedAt: started.UTC().Format(time.RFC3339Nano), CompletedAt: now.Format(time.RFC3339Nano), DurationSeconds: now.Sub(started).Seconds(), ObservationHash: current.ObservationHash})
 	}
 	sort.Slice(assertions, func(i, j int) bool { return assertions[i].ID < assertions[j].ID })
 	return assertions
@@ -3513,10 +3724,16 @@ func evaluateScenario(cfg *ResolvedConfig, definition scenarioDefinition, start,
 func appendFaultAssertions(assertions []AssertionRecord, records []ScenarioFaultRecord, started time.Time, current *ScenarioObservation) []AssertionRecord {
 	now := time.Now().UTC()
 	for _, record := range records {
-		timingValid := record.RestoredBlock >= record.RestoreBlock
+		durationValid := record.RestoreBlock >= record.TriggerBlock
+		var duration uint64
+		if durationValid {
+			duration = record.RestoreBlock - record.TriggerBlock
+		}
+		minimumRestore, minimumOK := checkedAdd(record.AppliedBlock, duration)
+		timingValid := durationValid && minimumOK && record.RestoredBlock >= record.RestoreBlock && record.RestoredBlock >= minimumRestore
 		if record.RestoreCondition != "" {
-			minimumRestore, ok := checkedAdd(record.AppliedBlock, record.MinimumDurationBlocks)
-			timingValid = ok && record.RestoredBlock >= minimumRestore && (record.RestoredBlock >= record.RestoreBlock || record.RestoreConditionMet && record.RestoreConditionBlock >= minimumRestore && record.RestoreConditionBlock <= record.RestoredBlock)
+			minimumRestore, minimumOK = checkedAdd(record.AppliedBlock, record.MinimumDurationBlocks)
+			timingValid = minimumOK && record.RestoredBlock >= minimumRestore && (record.RestoredBlock >= record.RestoreBlock || record.RestoreConditionMet && record.RestoreConditionBlock >= minimumRestore && record.RestoreConditionBlock <= record.RestoredBlock)
 		}
 		passed := record.Status == "restored" && record.AppliedBlock >= record.TriggerBlock && timingValid && len(record.Processes) == len(record.Targets)
 		if record.PreAcceptance {
@@ -3611,9 +3828,15 @@ func assertionsPass(assertions []AssertionRecord) bool {
 func writeInitialScenarioFailure(cfg *ResolvedConfig, runDir, runID, definitionHash string, definition scenarioDefinition, started time.Time, observation *ScenarioObservation, attempt *scenarioCampaignAttempt, failure error) (*ScenarioResult, error) {
 	completed := time.Now().UTC()
 	observationHash := ""
+	var observationErr error
 	if observation != nil {
 		observationHash = observation.ObservationHash
-		_ = appendObservation(filepath.Join(runDir, "observations.jsonl"), observation)
+		observationErr = appendObservation(filepath.Join(runDir, "observations.jsonl"), observation)
+	} else if attempt == nil || attempt.payload.AcceptanceBoundary == nil {
+		observationErr = ensurePreAcceptanceObservationLog(runDir)
+	}
+	if observationErr != nil {
+		return nil, errors.Join(failure, fmt.Errorf("persist initial scenario observation: %w", observationErr))
 	}
 	assertion := AssertionRecord{ID: "initial_observation", Passed: false, Message: failure.Error(), StartedAt: started.Format(time.RFC3339Nano), CompletedAt: completed.Format(time.RFC3339Nano), DurationSeconds: completed.Sub(started).Seconds(), ObservationHash: observationHash}
 	result := &ScenarioResult{
@@ -3624,11 +3847,12 @@ func writeInitialScenarioFailure(cfg *ResolvedConfig, runDir, runID, definitionH
 		Assertions: []AssertionRecord{assertion}, Result: "fail",
 	}
 	applyProvisionalScenarioProvenance(cfg, result)
+	markProvisionalEpochInterruption(result, failure)
 	applyScenarioAttemptBinding(result, attempt)
 	attachScenarioAnomalyGate(result, completed, nil, observation)
 	result.EvidenceHash, _ = canonicalScenarioResultHash(result)
 	if err := writeScenarioOutputs(cfg, runDir, result, observation); err != nil {
-		return result, err
+		return result, errors.Join(failure, err)
 	}
 	return result, failure
 }
@@ -3649,8 +3873,17 @@ func beginScenarioCampaignPreparation(ctx context.Context, phase, runID string, 
 			return errors.New("production fleet lifecycle cannot authenticate an exact release handoff")
 		}
 		gate := options.Attempt.payload.PriorRelease
-		if err := authenticator.AuthenticateReleaseHandoff(immutableHandoff, gate.LifecycleHandoff.ContentHash, gate.RunID); err != nil {
+		releaseRunID := gate.RunID
+		if gate.LifecycleHandoff.InheritedReleaseRunID != "" {
+			releaseRunID = gate.LifecycleHandoff.InheritedReleaseRunID
+		}
+		if err := authenticator.AuthenticateReleaseHandoff(immutableHandoff, gate.LifecycleHandoff.ContentHash, releaseRunID); err != nil {
 			return fmt.Errorf("bind exact release lifecycle handoff to production successor: %w", err)
+		}
+	}
+	if validator, ok := options.FleetLifecycle.(scenarioFleetLifecycleResumeValidator); ok {
+		if err := validator.ValidatePhaseResume(phase, runID); err != nil {
+			return fmt.Errorf("validate fleet lifecycle resume before preparation: %w", err)
 		}
 	}
 	if options.Prepare != nil && (options.Attempt == nil || !options.Attempt.payload.PreparationComplete) {
@@ -3668,8 +3901,22 @@ func beginScenarioCampaignPreparation(ctx context.Context, phase, runID string, 
 			return fmt.Errorf("commit empty scenario preparation boundary: %w", err)
 		}
 	}
+	// Lifecycle launch validation observes the validator view. Install the
+	// explicitly pre-acceptance filters first so the launch census can reach the
+	// intended zero-emission prune boundary inside this invocation.
+	if options.BeforeFleetLifecycle != nil {
+		if err := options.BeforeFleetLifecycle(ctx); err != nil {
+			return fmt.Errorf("before fleet lifecycle initialization: %w", err)
+		}
+	}
 	if options.FleetLifecycle != nil {
-		if err := options.FleetLifecycle.BeginPhase(phase, runID); err != nil {
+		var err error
+		if contextual, ok := options.FleetLifecycle.(scenarioFleetLifecycleContext); ok {
+			err = contextual.BeginPhaseContext(ctx, phase, runID)
+		} else {
+			err = options.FleetLifecycle.BeginPhase(phase, runID)
+		}
+		if err != nil {
 			if phase == "production-soak" {
 				return fmt.Errorf("initialize authenticated production fleet lifecycle successor: %w", err)
 			}
@@ -3679,7 +3926,7 @@ func beginScenarioCampaignPreparation(ctx context.Context, phase, runID string, 
 	return nil
 }
 
-func finalizeAdversaryEvidence(campaign adversaryCampaign, runDir string, started time.Time, observationHash string, completed time.Time) (*AdversaryCampaignEvidence, []AssertionRecord, error) {
+func finalizeAdversaryEvidence(campaign adversaryCampaign, runDir string, started time.Time, observationHash string, completed time.Time, evaluate bool) (*AdversaryCampaignEvidence, []AssertionRecord, error) {
 	if campaign == nil {
 		return nil, nil, nil
 	}
@@ -3696,7 +3943,10 @@ func finalizeAdversaryEvidence(campaign adversaryCampaign, runDir string, starte
 			stopErr = errors.Join(stopErr, err)
 		}
 	}
-	assertions := adversaryAssertions(evidence, started, observationHash)
+	var assertions []AssertionRecord
+	if evaluate {
+		assertions = adversaryAssertions(evidence, started, observationHash)
+	}
 	if stopErr != nil {
 		now := time.Now().UTC()
 		assertions = append(assertions, AssertionRecord{ID: "adversary_campaign_stop", Passed: false, Message: stopErr.Error(), StartedAt: started.UTC().Format(time.RFC3339Nano), CompletedAt: now.Format(time.RFC3339Nano), DurationSeconds: now.Sub(started).Seconds(), ObservationHash: observationHash})
@@ -3754,15 +4004,33 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		if err := options.Attempt.invalidateAcceptance(reason, options.Now().UTC()); err != nil {
 			return nil, fmt.Errorf("invalidate interrupted scenario acceptance: %w", err)
 		}
-		interrupted := fmt.Errorf("scenario campaign acceptance was interrupted (%s); a fresh signed deployment and lifecycle namespace is required", reason)
+		interrupted := fmt.Errorf("scenario campaign acceptance was interrupted (%s); a fresh signed acceptance interval is required", reason)
 		if options.FaultDriver != nil {
-			cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			cleanupCtx, cancel := newScenarioFaultRecoveryContext(options.FaultDriver)
 			defer cancel()
 			if err := options.FaultDriver.Recover(cleanupCtx); err != nil {
 				interrupted = errors.Join(interrupted, fmt.Errorf("recover interrupted scenario faults: %w", err))
 			}
 		}
+		// The signed attempt is now permanently invalidated. Persist its terminal
+		// provisional failure before returning so a later recovery can authenticate
+		// exactly why it was superseded. Without this record a killed runner leaves
+		// an open attempt that cannot be recovered, despite the fault cleanup above.
+		result, _ := writeInitialScenarioFailure(cfg, runDir, runID, definitionHash, definition, started, nil, options.Attempt, interrupted)
+		if result == nil {
+			return nil, errors.Join(interrupted, errors.New("persist interrupted scenario terminal result"))
+		}
+		if _, err := os.Lstat(filepath.Join(runDir, "result.json")); err != nil {
+			return nil, errors.Join(interrupted, fmt.Errorf("persist interrupted scenario terminal result: %w", err))
+		}
 		return nil, interrupted
+	}
+	observationLogPrefix := scenarioObservationLogPrefix{ContentHash: bytesSHA256(nil)}
+	if options.Attempt != nil {
+		observationLogPrefix, err = captureScenarioObservationLogPrefix(filepath.Join(runDir, "observations.jsonl"))
+		if err != nil {
+			return nil, fmt.Errorf("capture retained scenario observation log: %w", err)
+		}
 	}
 	scenarioCompleted := false
 	defer func() {
@@ -3775,6 +4043,9 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		return nil, errors.New("release and production scenarios require the persisted process log gate")
 	}
 	if options.ProcessLogs != nil {
+		if err := beginScenarioProcessLogAttempt(options.ProcessLogs); err != nil {
+			return nil, fmt.Errorf("initialize scenario process log acceptance scope: %w", err)
+		}
 		if err := options.ProcessLogs.WriteEvidence(runDir); err != nil {
 			return nil, fmt.Errorf("initialize scenario process log evidence: %w", err)
 		}
@@ -3789,14 +4060,17 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		options.Adversaries.MarkHappyPathStarted(options.Now().UTC())
 	}
 	adversariesFinalized := false
+	snapshotRetries := &scenarioSnapshotRetryState{runDir: runDir, phase: definition.Name, now: options.Now, wait: waitFinalSemanticRPCRetry}
+	snapshotRetries.provisional = provisionalResumeEnabled(cfg) && cfg.provisionalResume.Record.Provisional && !cfg.provisionalResume.Record.FinalAcceptance
 	observationHistory := []*ScenarioObservation{}
 	var faults []ScenarioFaultRecord
+	prearmedFaults := map[string][]FaultProcessEvidence{}
 	faultCleanupComplete := false
 	recoverInterruptedFaults := func() error {
 		if options.FaultDriver == nil || faultCleanupComplete {
 			return nil
 		}
-		cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		cleanupCtx, cancel := newScenarioFaultRecoveryContext(options.FaultDriver)
 		defer cancel()
 		if err := options.FaultDriver.Recover(cleanupCtx); err != nil {
 			return err
@@ -3814,13 +4088,18 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		_, _ = options.Adversaries.Stop(cleanupCtx)
 	}()
 	initialFailure := func(observation *ScenarioObservation, failure error) (*ScenarioResult, error) {
-		if options.Attempt != nil && options.Attempt.payload.AcceptanceBoundary != nil {
+		// Take the terminal log cut while the scenario's fault topology is still
+		// intact. Recovery can intentionally stop or restart workers, which may
+		// emit transport shutdown diagnostics after the scenario has already
+		// reached its terminal verdict. Those cleanup bytes remain in the private
+		// logs, but are not observations from the acceptance interval.
+		if logErr := scanScenarioProcessLogs(options.ProcessLogs, runDir, observation, true, activeProcessLogFaultScopes(faults)...); logErr != nil {
+			failure = errors.Join(failure, fmt.Errorf("final process log gate: %w", logErr))
+		}
+		if len(prearmedFaults) != 0 || (options.Attempt != nil && options.Attempt.payload.AcceptanceBoundary != nil) {
 			if cleanupErr := recoverInterruptedFaults(); cleanupErr != nil {
 				failure = errors.Join(failure, fmt.Errorf("recover interrupted scenario faults: %w", cleanupErr))
 			}
-		}
-		if logErr := scanScenarioProcessLogs(options.ProcessLogs, runDir, observation, true, activeProcessLogFaultScopes(faults)...); logErr != nil {
-			failure = errors.Join(failure, fmt.Errorf("final process log gate: %w", logErr))
 		}
 		failureHistory := append([]*ScenarioObservation(nil), observationHistory...)
 		if observation != nil && (len(failureHistory) == 0 || failureHistory[len(failureHistory)-1] != observation) {
@@ -3831,19 +4110,24 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		if len(failureHistory) != 0 {
 			observationHash = failureHistory[len(failureHistory)-1].ObservationHash
 		}
-		evidence, adversaryRecords, stopErr := finalizeAdversaryEvidence(options.Adversaries, runDir, started, observationHash, options.Now().UTC())
+		evidence, adversaryRecords, stopErr := finalizeAdversaryEvidence(options.Adversaries, runDir, started, observationHash, options.Now().UTC(), false)
 		adversariesFinalized = true
 		var rewriteErr error
 		if result != nil {
 			applyScenarioAttemptBinding(result, options.Attempt)
 			result.Adversaries = evidence
 			result.Assertions = append(result.Assertions, adversaryRecords...)
+			result.Assertions = append(result.Assertions, snapshotRetries.assertions()...)
 			attachScenarioAnomalyGate(result, options.Now().UTC(), nil, observation, failureHistory...)
 			result.EvidenceHash, _ = canonicalScenarioResultHash(result)
 			rewriteErr = writeScenarioOutputs(cfg, runDir, result, observation)
 		}
 		return result, errors.Join(resultErr, stopErr, rewriteErr)
 	}
+	if err := snapshotRetries.load(); err != nil {
+		return initialFailure(nil, fmt.Errorf("load scenario snapshot retry evidence: %w", err))
+	}
+	probe = snapshotRetries.wrap(probe)
 	// An owner-signed acceptance boundary may only be created by this process
 	// invocation. Any pre-existing boundary was rejected above as an interrupted
 	// attempt, so post-boundary execution can never be resumed.
@@ -3853,7 +4137,6 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 	}
 	var start, current, campaignStart *ScenarioObservation
 	var window *ScenarioAcceptanceWindow
-	prearmedFaults := map[string][]FaultProcessEvidence{}
 	defer func() {
 		// A post-boundary exit permanently fails the attempt. Best-effort exact
 		// restoration prevents its injected state from lingering, while the signed
@@ -3861,7 +4144,7 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		if options.FaultDriver == nil || faultCleanupComplete {
 			return
 		}
-		cleanupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		cleanupCtx, cancel := newScenarioFaultRecoveryContext(options.FaultDriver)
 		defer cancel()
 		restored := map[string]bool{}
 		for index := len(definition.Faults) - 1; index >= 0; index-- {
@@ -3919,19 +4202,35 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 	// Public-RPC deployment can consume arbitrary epochs, while precompile,
 	// governance, key rotation, and dishonest-deposit preparation remain in
 	// the observed happy path before the exact acceptance baseline is signed.
+	preAcceptanceArmed := false
 	if options.Prepare != nil || options.FleetLifecycle != nil || options.Attempt != nil {
-		if err := beginScenarioCampaignPreparation(preparationCtx, definition.Name, runID, options); err != nil {
+		preparationOptions := options
+		preparationOptions.BeforeFleetLifecycle = func(armCtx context.Context) error {
+			var armErr error
+			prearmedFaults, armErr = armPreAcceptanceFaults(armCtx, definition.Faults, options.FaultDriver)
+			if armErr == nil {
+				preAcceptanceArmed = true
+			}
+			return armErr
+		}
+		if err := beginScenarioCampaignPreparation(preparationCtx, definition.Name, runID, preparationOptions); err != nil {
 			return initialFailure(start, err)
 		}
 	}
 	if err := preparationCtx.Err(); err != nil {
+		// The relay owns the parent cancellation cause. Its failure must remain
+		// distinguishable from this preparation child's readiness deadline.
+		if cause := context.Cause(ctx); cause != nil {
+			return initialFailure(start, fmt.Errorf("scenario preparation canceled by parent: %w", cause))
+		}
 		return initialFailure(start, fmt.Errorf("scenario preparation exhausted native readiness deadline: %w", err))
 	}
-	if !needsNativeWarmup {
+	if !needsNativeWarmup && !preAcceptanceArmed {
 		prearmedFaults, err = armPreAcceptanceFaults(ctx, definition.Faults, options.FaultDriver)
 		if err != nil {
 			return initialFailure(start, err)
 		}
+		preAcceptanceArmed = true
 	}
 	if options.Prepare != nil {
 		prepared, prepareErr := probe.Snapshot(preparationCtx)
@@ -3961,9 +4260,12 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		return initialFailure(current, fmt.Errorf("native readiness before acceptance: %w", err))
 	}
 	if needsNativeWarmup {
-		prearmedFaults, err = armPreAcceptanceFaults(ctx, definition.Faults, options.FaultDriver)
-		if err != nil {
-			return initialFailure(current, err)
+		if !preAcceptanceArmed {
+			prearmedFaults, err = armPreAcceptanceFaults(ctx, definition.Faults, options.FaultDriver)
+			if err != nil {
+				return initialFailure(current, err)
+			}
+			preAcceptanceArmed = true
 		}
 		if len(prearmedFaults) != 0 {
 			armed, readErr := probe.Snapshot(ctx)
@@ -3989,9 +4291,22 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 	// A release acceptance interval begins only at the next contract boundary
 	// after preparation. The current partial epoch remains in history but
 	// cannot count toward the exact acceptance gate.
+	current, err = waitScenarioPolicyRateReadiness(preparationCtx, cfg, definition.Name, current, probe, options.PollInterval, func(observed *ScenarioObservation) error {
+		if err := scanScenarioProcessLogs(options.ProcessLogs, runDir, observed, false); err != nil {
+			return err
+		}
+		observationHistory = append(observationHistory, observed)
+		return appendObservation(filepath.Join(runDir, "observations.jsonl"), observed)
+	})
+	if err != nil {
+		return initialFailure(current, err)
+	}
 	window, err = buildScenarioAcceptanceWindow(cfg, definition, current)
 	if err != nil {
 		return initialFailure(current, fmt.Errorf("build complete-epoch acceptance window: %w", err))
+	}
+	if err := requireScenarioAcceptanceEpochFloor(window, options.MinimumAcceptanceEpoch); err != nil {
+		return initialFailure(current, err)
 	}
 	if window != nil {
 		start = current
@@ -4020,7 +4335,12 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		if options.Adversaries != nil {
 			adversaryStart = options.Adversaries.Snapshot()
 		}
-		if err := options.Attempt.bindAcceptanceBoundary(runDir, processSessionID, definitionHash, adversaryStart, options.Now().UTC(), campaignStart, current, window, faults); err != nil {
+		acceptanceStarted := options.Now().UTC()
+		processLogBoundaryHash, processLogErr := bindScenarioProcessLogAcceptance(options.ProcessLogs, runDir, acceptanceStarted)
+		if processLogErr != nil {
+			return initialFailure(current, fmt.Errorf("commit process log acceptance boundary: %w", processLogErr))
+		}
+		if err := options.Attempt.bindAcceptanceBoundary(runDir, processSessionID, definitionHash, adversaryStart, acceptanceStarted, campaignStart, current, window, faults, observationLogPrefix, processLogBoundaryHash); err != nil {
 			return initialFailure(current, fmt.Errorf("commit scenario acceptance boundary: %w", err))
 		}
 		boundaryCommitted = true
@@ -4029,7 +4349,13 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		return initialFailure(current, fmt.Errorf("persist initial scenario faults: %w", err))
 	}
 	if options.FleetLifecycle != nil {
-		if err := options.FleetLifecycle.BindAcceptanceWindowForPhase(definition.Name, window); err != nil {
+		lifecycleWindow := window
+		if retained, ok := options.FleetLifecycle.(scenarioFleetLifecycleRetainedWindow); ok {
+			if priorWindow, present := retained.RetainedAcceptanceWindowForPhase(definition.Name); present {
+				lifecycleWindow = priorWindow
+			}
+		}
+		if err := options.FleetLifecycle.BindAcceptanceWindowForPhase(definition.Name, lifecycleWindow); err != nil {
 			return initialFailure(current, fmt.Errorf("bind fleet lifecycle acceptance window: %w", err))
 		}
 	}
@@ -4049,27 +4375,96 @@ func runScenarioWithProbe(ctx context.Context, cfg *ResolvedConfig, stateDir str
 		}
 		return nil
 	}
-	assertions := appendFaultAssertions(evaluateScenario(cfg, definition, start, current, window, started), faults, started, current)
-	assertions = appendAcceptanceFaultAssertion(assertions, faults, window, started, current)
+	assertions := evaluateScenarioInterval(cfg, definition, start, current, window, faults, started)
+	provisionalFindings := map[string]string{}
+	logProvisionalEpochFindings(assertions, provisionalFindings)
+	deferredProcessLogMessage := ""
+	scanRuntimeProcessLogs := func(observation *ScenarioObservation, scopes ...processLogFaultScope) error {
+		failure := scanScenarioProcessLogs(options.ProcessLogs, runDir, observation, false, scopes...)
+		if !scenarioProcessLogFailureDeferred(cfg, definition.Name, failure) {
+			return failure
+		}
+		if message := failure.Error(); message != deferredProcessLogMessage {
+			deferredProcessLogMessage = message
+			fmt.Fprintf(os.Stderr, "sim-testnet: provisional runtime process finding retained; observation_continues=true final_gate_unchanged=true; %s\n", message)
+		}
+		return nil
+	}
 	// Preparation actions have their own bounded waits. Give the exact accepted
 	// interval its complete timeout instead of consuming it during preparation.
 	deadline := options.Now().Add(options.Timeout)
 	var faultErr error
 	var terminalErr error
 	var runtimeAssertions []AssertionRecord
+	var cleanupHandoff *ScenarioLifecycleHandoff
+	provisionalTerminalComplete := false
 	snapshotFailureCount := 0
 scenarioLoop:
-	for (!assertionsPass(assertions) || !faultsComplete(faults) || (options.FleetLifecycle != nil && !options.FleetLifecycle.Complete()) || (options.Adversaries != nil && !options.Adversaries.Ready())) && options.Now().Before(deadline) {
-		timer := time.NewTimer(options.PollInterval)
-		select {
-		case <-ctx.Done():
-			timer.Stop()
-			terminalErr = ctx.Err()
-			break scenarioLoop
-		case <-timer.C:
-		}
-		next, snapshotErr := probe.Snapshot(ctx)
+	for (!scenarioAcceptanceIntervalObserved(window, current) || !scenarioAssertionsComplete(cfg, definition, assertions) || !faultsComplete(faults) || (options.FleetLifecycle != nil && !options.FleetLifecycle.Complete()) || (options.Adversaries != nil && !options.Adversaries.Ready())) && options.Now().Before(deadline) {
+		var heartbeatErr error
+		next, snapshotErr := waitScenarioSnapshot(ctx, probe, options.PollInterval, func(heartbeatCtx context.Context, head ChainHead) error {
+			if len(faults) == 0 {
+				return nil
+			}
+			faultScopesBefore := activeProcessLogFaultScopes(faults)
+			if options.Adversaries != nil {
+				options.Adversaries.SetExpectedFaultTargets(scenarioFaultTargets(faults, head.Number, true))
+			}
+			beforeFaults, err := canonicalHashHex(faults)
+			if err != nil {
+				heartbeatErr = fmt.Errorf("hash heartbeat scenario faults: %w", err)
+				return heartbeatErr
+			}
+			// Evidence-gated transitions remain owned by a complete observation.
+			// The heartbeat advances only their hard restoration deadline; it does
+			// not turn stale evidence into an early activation or restoration.
+			faultErr = advanceFaultsWithConditions(heartbeatCtx, head, definition.Faults, faults, options.FaultDriver, nil, nil)
+			if options.Adversaries != nil {
+				options.Adversaries.SetExpectedFaultTargets(scenarioFaultTargets(faults, head.Number, false))
+			}
+			afterFaults, hashErr := canonicalHashHex(faults)
+			if hashErr != nil {
+				heartbeatErr = fmt.Errorf("rehash heartbeat scenario faults: %w", hashErr)
+				return heartbeatErr
+			}
+			if beforeFaults == afterFaults && faultErr == nil {
+				return nil
+			}
+			if err := writeScenarioFaultEvidence(runDir, faults); err != nil {
+				heartbeatErr = fmt.Errorf("persist heartbeat scenario faults: %w", err)
+				return heartbeatErr
+			}
+			if options.Attempt != nil && options.Attempt.payload.AcceptanceBoundary != nil {
+				if err := options.Attempt.updateAuthenticatedRuntime(runDir, faults); err != nil {
+					heartbeatErr = fmt.Errorf("commit signed heartbeat fault checkpoint: %w", err)
+					return heartbeatErr
+				}
+			}
+			transitionScopes := mergeProcessLogFaultScopes(faultScopesBefore, activeProcessLogFaultScopes(faults))
+			// A heartbeat is not a complete observation. Keep its newly scanned
+			// findings from mutating the retained baseline/history snapshot.
+			heartbeatObservation := *current
+			if err := scanRuntimeProcessLogs(&heartbeatObservation, transitionScopes...); err != nil {
+				heartbeatErr = fmt.Errorf("heartbeat process log gate: %w", err)
+				return heartbeatErr
+			}
+			heartbeatErr = faultErr
+			return heartbeatErr
+		})
 		if snapshotErr != nil {
+			if heartbeatErr != nil {
+				terminalErr = heartbeatErr
+				break scenarioLoop
+			}
+			if ctx.Err() != nil {
+				terminalErr = ctx.Err()
+				break scenarioLoop
+			}
+			var terminalSnapshot *scenarioSnapshotTerminalError
+			if errors.As(snapshotErr, &terminalSnapshot) {
+				terminalErr = terminalSnapshot
+				break scenarioLoop
+			}
 			snapshotFailureCount++
 			now := options.Now().UTC()
 			runtimeAssertions = append(runtimeAssertions, AssertionRecord{
@@ -4085,7 +4480,7 @@ scenarioLoop:
 		if err := annotateScenarioExpectedFaults(current, faults); err != nil {
 			return initialFailure(current, fmt.Errorf("annotate expected scenario faults: %w", err))
 		}
-		processLogErr := scanScenarioProcessLogs(options.ProcessLogs, runDir, current, false, activeProcessLogFaultScopes(faults)...)
+		processLogErr := scanRuntimeProcessLogs(current, activeProcessLogFaultScopes(faults)...)
 		observationHistory = append(observationHistory, current)
 		if current.Status == nil || current.Status.Contracts == nil {
 			snapshotFailureCount++
@@ -4130,7 +4525,7 @@ scenarioLoop:
 				return initialFailure(current, fmt.Errorf("persist scenario faults: %w", err))
 			}
 			transitionScopes := mergeProcessLogFaultScopes(faultScopesBefore, activeProcessLogFaultScopes(faults))
-			if logErr := scanScenarioProcessLogs(options.ProcessLogs, runDir, current, false, transitionScopes...); logErr != nil {
+			if logErr := scanRuntimeProcessLogs(current, transitionScopes...); logErr != nil {
 				processLogErr = errors.Join(processLogErr, fmt.Errorf("fault-transition process log gate: %w", logErr))
 			}
 		}
@@ -4149,13 +4544,41 @@ scenarioLoop:
 		if err := persistRuntimeObservation(current); err != nil {
 			return initialFailure(current, fmt.Errorf("persist scenario observation: %w", err))
 		}
-		assertions = appendFaultAssertions(evaluateScenario(cfg, definition, start, current, window, started), faults, started, current)
-		assertions = appendAcceptanceFaultAssertion(assertions, faults, window, started, current)
+		if faultErr == nil && definition.Name == "release-1.0" && provisionalResumeEnabled(cfg) && scenarioAcceptanceIntervalObserved(window, current) {
+			if authority, ok := options.FleetLifecycle.(scenarioLifecycleCleanupAuthority); ok && cleanupHandoff == nil {
+				cleanupHandoff, faultErr = authority.provisionalTerminalCleanup(options.Attempt, window, current)
+			}
+			if faultErr == nil && cleanupHandoff != nil {
+				faultErr = advanceScenarioLifecycleCleanup(ctx, cfg, window, current, cleanupHandoff, faults, options.FaultDriver, func() error {
+					if err := writeScenarioFaultEvidence(runDir, faults); err != nil {
+						return err
+					}
+					return options.Attempt.updateAuthenticatedRuntime(runDir, faults)
+				})
+			}
+		}
+		assertions = evaluateScenarioInterval(cfg, definition, start, current, window, faults, started)
+		logProvisionalEpochFindings(assertions, provisionalFindings)
 		if faultErr != nil {
 			break
 		}
+		if cleanupHandoff != nil && options.FleetLifecycle.Complete() && (options.Adversaries == nil || options.Adversaries.Ready()) && scenarioLifecycleOperationalCompletion(cfg, definition, window, current, cleanupHandoff, faults, assertions) {
+			provisionalTerminalComplete = true
+			break
+		}
 	}
-	acceptanceIncomplete := terminalErr != nil || faultErr != nil || !assertionsPass(assertions) || !faultsComplete(faults) || options.FleetLifecycle != nil && !options.FleetLifecycle.Complete() || options.Adversaries != nil && !options.Adversaries.Ready()
+	if faultErr != nil && !errors.Is(terminalErr, faultErr) {
+		terminalErr = errors.Join(terminalErr, faultErr)
+	}
+	intervalObserved := scenarioAcceptanceIntervalObserved(window, current)
+	if !intervalObserved {
+		assertions = []AssertionRecord{scenarioInterruptedIntervalAssertion(window, current, started, options.Now())}
+	} else if terminalErr != nil || faultErr != nil {
+		// Heartbeats may update faults after the last full snapshot. Rebuild the
+		// final verdict from the latest retained values, never an earlier poll.
+		assertions = evaluateScenarioInterval(cfg, definition, start, current, window, faults, started)
+	}
+	acceptanceIncomplete := !intervalObserved || terminalErr != nil || faultErr != nil || !scenarioAssertionsComplete(cfg, definition, assertions) || !faultsComplete(faults) || options.FleetLifecycle != nil && !options.FleetLifecycle.Complete() || options.Adversaries != nil && !options.Adversaries.Ready()
 	if !acceptanceIncomplete && options.Publish && (definition.Name == "release-1.0" || definition.Name == "production-soak") {
 		waitClosures := options.WaitFinalSettlementClosures
 		if waitClosures == nil {
@@ -4166,7 +4589,7 @@ scenarioLoop:
 			acceptanceIncomplete = true
 		}
 	}
-	if boundaryCommitted && acceptanceIncomplete {
+	if boundaryCommitted && acceptanceIncomplete && !provisionalTerminalComplete {
 		if terminalErr == nil {
 			terminalErr = errors.New("signed scenario acceptance ended before every assertion, fault, lifecycle, and adversary gate completed")
 		}
@@ -4180,7 +4603,7 @@ scenarioLoop:
 		sort.Slice(assertions, func(i, j int) bool { return assertions[i].ID < assertions[j].ID })
 	}
 	completed := options.Now().UTC()
-	adversaryEvidence, adversaryRecords, adversaryErr := finalizeAdversaryEvidence(options.Adversaries, runDir, started, current.ObservationHash, completed)
+	adversaryEvidence, adversaryRecords, adversaryErr := finalizeAdversaryEvidence(options.Adversaries, runDir, started, current.ObservationHash, completed, intervalObserved)
 	adversariesFinalized = true
 	if options.Attempt != nil && options.Attempt.payload.AcceptanceBoundary != nil {
 		boundary := options.Attempt.payload.AcceptanceBoundary
@@ -4197,13 +4620,17 @@ scenarioLoop:
 			DurationSeconds: completed.Sub(acceptanceStarted).Seconds(), ObservationHash: current.ObservationHash,
 		})
 	}
+	if provisionalTerminalComplete {
+		assertions = append(assertions, AssertionRecord{ID: "provisional_lifecycle_terminal_cleanup", Passed: false, Message: "full signed interval observed; local lifecycle filters cleaned under exact bypass handoff " + cleanupHandoff.ContentHash + "; lifecycle mutations remain unproved; final_acceptance=false", StartedAt: started.Format(time.RFC3339Nano), CompletedAt: completed.Format(time.RFC3339Nano), ObservationHash: current.ObservationHash})
+	}
 	assertions = append(assertions, runtimeAssertions...)
+	assertions = append(assertions, snapshotRetries.assertions()...)
 	assertions = append(assertions, adversaryRecords...)
 	var lifecycleHandoff *ScenarioLifecycleHandoff
-	if options.FleetLifecycle != nil {
+	if options.FleetLifecycle != nil && intervalObserved {
 		passed, message := fleetLifecycleCompletionStatus(options.FleetLifecycle)
 		if passed && definition.Name == "release-1.0" && options.Attempt != nil {
-			binding, err := captureScenarioLifecycleHandoff(cfg, stateDir, runDir, runID)
+			binding, err := captureScenarioLifecycleHandoff(cfg, stateDir, runDir, runID, options.Attempt)
 			if err != nil {
 				passed = false
 				message = err.Error()
@@ -4257,11 +4684,15 @@ scenarioLoop:
 	}
 	result.LifecycleHandoff = lifecycleHandoff
 	applyProvisionalScenarioProvenance(cfg, result)
+	markProvisionalEpochInterruption(result, errors.Join(terminalErr, ctx.Err()))
 	applyScenarioAttemptBinding(result, options.Attempt)
 	attachScenarioAnomalyGate(result, completed, campaignStart, current, observationHistory...)
 	result.EvidenceHash, _ = canonicalScenarioResultHash(result)
 	if err := writeScenarioOutputs(cfg, runDir, result, current); err != nil {
 		return nil, err
+	}
+	if provisionalEpochEnabled(cfg, definition.Name) {
+		return finishProvisionalEpochObservation(ctx, cfg, stateDir, runDir, result, campaignStart, current, observationHistory, options)
 	}
 	publishedBundlePayloadHash := ""
 	publishedBundleResultHash := ""
@@ -4777,6 +5208,12 @@ func executePrecompileActions(ctx context.Context, executor *Executor) error {
 	return nil
 }
 
+// releaseStartupGatesRequired preserves the approval-wide provisional waiver
+// across succession and every authenticated recovery generation.
+func releaseStartupGatesRequired(cfg *ResolvedConfig, _ *scenarioCampaignAttempt) bool {
+	return !provisionalResumeEnabled(cfg)
+}
+
 func RunScenario(ctx context.Context, cfg *ResolvedConfig, stateDir, name string, journal *Journal, executor *Executor) error {
 	return runScenarioCampaignAttempt(ctx, cfg, stateDir, name, journal, executor, nil)
 }
@@ -4786,6 +5223,22 @@ func runScenarioCampaignAttempt(ctx context.Context, cfg *ResolvedConfig, stateD
 }
 
 func runScenarioCampaignAttemptWithTimeout(ctx context.Context, cfg *ResolvedConfig, stateDir, name string, journal *Journal, executor *Executor, attempt *scenarioCampaignAttempt, observationTimeout time.Duration) error {
+	commandCfg := cfg
+	if executor != nil && executor.plan != nil && executor.plan.PolicyRateAmendment != nil {
+		resolved, err := configWithPolicyRateAmendment(cfg, executor.plan)
+		if err != nil {
+			return err
+		}
+		cfg = resolved
+	}
+	if name == precompilePreparationScenario {
+		if observationTimeout != 0 || attempt != nil {
+			return errors.New("precompile preparation cannot carry a campaign interval or timeout override")
+		}
+		// Standalone preparation borrows the original command's connections;
+		// the authenticated history copy belongs to the nested campaign below.
+		return runPrecompilePreparation(ctx, commandCfg, stateDir, journal, executor)
+	}
 	if observationTimeout < 0 || observationTimeout > 6*time.Hour {
 		return errors.New("provisional observation timeout must be between 0 and 6h")
 	}
@@ -4810,10 +5263,22 @@ func runScenarioCampaignAttemptWithTimeout(ctx context.Context, cfg *ResolvedCon
 		if executor == nil || executor.plan == nil || !validCanonicalHashHex(executor.plan.PlanHash) {
 			return errors.New("release campaign attempt requires the approved setup plan")
 		}
+		if name == "production-soak" && cfg.provisionalProductionSourceRunID != "" {
+			if _, err := prepareProvisionalProductionHandoff(ctx, cfg, stateDir, roles, executor.plan, journal, cfg.provisionalProductionSourceRunID); err != nil {
+				return fmt.Errorf("prepare provisional production predecessor: %w", err)
+			}
+		}
 		if attempt == nil {
 			loaded, loadErr := readScenarioCampaignAttempt(cfg, stateDir, roles, executor.plan.PlanHash, name)
 			if loadErr == nil {
-				attempt = loaded
+				if name == "release-1.0" && scenarioCampaignAttemptNeedsRecovery(loaded) {
+					attempt, loadErr = loadOrCreateScenarioCampaignAttempt(cfg, stateDir, roles, executor.plan.PlanHash, name, nil, time.Now().UTC(), journal)
+					if loadErr != nil {
+						return fmt.Errorf("create scenario campaign recovery: %w", loadErr)
+					}
+				} else {
+					attempt = loaded
+				}
 			} else if !errors.Is(loadErr, os.ErrNotExist) && name != "release-1.0" {
 				return fmt.Errorf("load scenario campaign attempt: %w", loadErr)
 			} else {
@@ -4839,6 +5304,10 @@ func runScenarioCampaignAttemptWithTimeout(ctx context.Context, cfg *ResolvedCon
 			}
 			attempt = loaded
 		}
+	}
+	attempt, err = recoverScenarioCampaignProcessSession(ctx, attempt, journal, scenarioProcessSessionID, time.Now().UTC())
+	if err != nil {
+		return fmt.Errorf("recover scenario campaign process before startup: %w", err)
 	}
 	runtimeCfg, err := campaignRPCConfig(cfg)
 	if err != nil {
@@ -4889,8 +5358,11 @@ func runScenarioCampaignAttemptWithTimeout(ctx context.Context, cfg *ResolvedCon
 			if scenarioExecutor == nil {
 				return errors.New("release scenario requires the approved deployment executor")
 			}
-			if provisionalResumeEnabled(cfg) {
-				fmt.Fprintln(os.Stderr, "sim-testnet: provisional precompile_conformance_startup_waived=true governance_drill_startup_waived=true; retained failures and unrun actions are not passes; final_acceptance=false")
+			if !releaseStartupGatesRequired(cfg, attempt) {
+				if err := executePrecompilePreparation(prepareCtx, scenarioExecutor.plan, scenarioExecutor.Execute); err != nil {
+					return fmt.Errorf("release precompile preparation: %w", err)
+				}
+				fmt.Fprintln(os.Stderr, "sim-testnet: precompile preparation verified; native dividend continuation runs during release; governance_drill_startup_waived=true; incomplete proof cannot pass; final_acceptance=false")
 			} else {
 				precompile, readErr := loadPrecompileEvidence(stateDir)
 				if readErr != nil || !precompileEvidenceComplete(precompile) {
@@ -4909,7 +5381,7 @@ func runScenarioCampaignAttemptWithTimeout(ctx context.Context, cfg *ResolvedCon
 				if scenarioExecutor.payloads == nil {
 					return errors.New("release scenario requires installed deployment payloads")
 				}
-				if identityErr := validatePrecompileEvidenceIdentity(cfg, scenarioExecutor.payloads.PrecompileProbeAddress, precompile); identityErr != nil {
+				if identityErr := scenarioExecutor.validatePrecompileEvidence(scenarioExecutor.payloads.PrecompileProbeAddress, precompile); identityErr != nil {
 					return fmt.Errorf("release scenario precompile evidence identity: %w", identityErr)
 				}
 				if !precompileEvidenceComplete(precompile) {
@@ -4960,15 +5432,21 @@ func runScenarioCampaignAttemptWithTimeout(ctx context.Context, cfg *ResolvedCon
 		}
 		return nil
 	}
-	probe := &liveScenarioProbe{cfg: runtimeCfg, stateDir: stateDir, client: &http.Client{Timeout: 30 * time.Second}}
+	probe := &liveScenarioProbe{cfg: runtimeCfg, authorizedCfg: cfg, stateDir: stateDir, client: &http.Client{Timeout: 30 * time.Second}}
+	if scenarioExecutor != nil {
+		probe.precompilePlan, probe.precompileJournal = scenarioExecutor.plan, journal
+		if name == "release-1.0" && provisionalResumeEnabled(cfg) {
+			probe.precompileContinuation = scenarioExecutor.advancePrecompileContinuation
+		}
+	}
 	var fleetLifecycle scenarioFleetLifecycle
 	if name == "release-1.0" || name == "production-soak" {
 		if scenarioExecutor == nil {
 			return errors.New("release scenario requires an approved executor for the live fleet lifecycle")
 		}
-		fleetLifecycle = &liveFleetLifecycle{cfg: runtimeCfg, stateDir: stateDir, executor: scenarioExecutor}
+		fleetLifecycle = &liveFleetLifecycle{cfg: runtimeCfg, stateDir: stateDir, executor: scenarioExecutor, attempt: attempt}
 	}
-	faultDriver := &liveScenarioFaultDriver{stateDir: stateDir, cfg: cfg}
+	faultDriver := &liveScenarioFaultDriver{stateDir: stateDir, cfg: cfg, faultCompletionHead: probe.FinalizedHead}
 	if scenarioExecutor != nil && scenarioExecutor.plan != nil && scenarioExecutor.payloads != nil {
 		faultDriver.planHash = scenarioExecutor.plan.PlanHash
 		faultDriver.coordinator = strings.ToLower(scenarioExecutor.payloads.Manifest.CoordinatorProxy.Hex())

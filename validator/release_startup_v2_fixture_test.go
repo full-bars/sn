@@ -31,18 +31,19 @@ import (
 
 type releaseStartupV2TestFixture struct {
 	*releaseInitialBoundaryV2TestFixture
-	inputs        []releaseEvidenceV2ActivationInput
-	disk          *releaseEvidenceV2DiskState
-	nativeFixture *releaseNativeValidatorTestFixture
-	nativeEpoch   map[string]uint64
-	blocks        map[uint64][32]byte
-	finalized     uint64
-	boundary      AttemptBoundary
-	servers       []*mockVerifyServer
-	engines       []*TrailEngine
-	keys          map[uint64]map[byte]ed25519.PublicKey
-	replicas      [2]AttemptCutV2Replica
-	stores        [2]*attemptCutV2ReplicaTestStore
+	inputs           []releaseEvidenceV2ActivationInput
+	disk             *releaseEvidenceV2DiskState
+	nativeFixture    *releaseNativeValidatorTestFixture
+	nativePoints     []releaseStartupNativeTestPoint
+	nativeHashPoints map[string]releaseStartupNativeTestPoint
+	blocks           map[uint64][32]byte
+	finalized        uint64
+	boundary         AttemptBoundary
+	servers          []*mockVerifyServer
+	engines          []*TrailEngine
+	keys             map[uint64]map[byte]ed25519.PublicKey
+	replicas         [2]AttemptCutV2Replica
+	stores           [2]*attemptCutV2ReplicaTestStore
 }
 
 // Independent pins are chosen by the existing actual bootstrap before any
@@ -58,7 +59,7 @@ func newReleaseStartupV2TestFixtureWithBounds(t *testing.T, active bool, bounds 
 	if bounds != nil {
 		base.cfg.EvidenceV2.Bounds = *bounds
 	}
-	fixture := &releaseStartupV2TestFixture{releaseInitialBoundaryV2TestFixture: base, inputs: inputs, nativeEpoch: map[string]uint64{}, blocks: map[uint64][32]byte{}, keys: map[uint64]map[byte]ed25519.PublicKey{}}
+	fixture := &releaseStartupV2TestFixture{releaseInitialBoundaryV2TestFixture: base, inputs: inputs, nativeHashPoints: map[string]releaseStartupNativeTestPoint{}, blocks: map[uint64][32]byte{}, keys: map[uint64]map[byte]ed25519.PublicKey{}}
 	fixture.boundary = inputs[0].Context.InitialCut.Boundary
 	fixture.finalized = fixture.boundary.EVMBlock
 	fixture.blocks[fixture.finalized] = base.contexts[0].ObservedEVMHash
@@ -132,17 +133,29 @@ func (self *releaseStartupV2TestFixture) prepareNative(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	self.nativeEpoch[fixture.block.Hex()] = 1
+	for _, input := range self.inputs {
+		activation := input.Context.Activation
+		if activation.NativeBlock != fixture.blockNumber || activation.NativeHash != [32]byte(fixture.block) {
+			t.Fatal("startup native fixture differs from the authenticated activation header")
+		}
+	}
+	point := releaseStartupNativeTestPoint{header: fixture.header, hash: fixture.block, epoch: 1}
+	self.nativePoints = []releaseStartupNativeTestPoint{point}
+	self.nativeHashPoints[point.hash.Hex()] = point
 	fixture.chain.API.Client = &validatorRuntimeIdentityTestClient{callContext: func(ctx context.Context, result any, method string, args ...any) error {
 		fixture.ctx = ctx
+		if method == "chain_getBlockHash" && len(args) == 1 {
+			if number, ok := args[0].(uint64); ok && number >= uint64(self.nativePoints[0].header.Number) {
+				index := number - uint64(self.nativePoints[0].header.Number)
+				if index < uint64(len(self.nativePoints)) {
+					self.selectNativePoint(self.nativePoints[index])
+				}
+			}
+		}
 		for _, value := range args {
 			if hash, ok := value.(string); ok {
-				if epoch, exists := self.nativeEpoch[hash]; exists {
-					parsed, err := types.NewHashFromHexString(hash)
-					if err != nil {
-						return err
-					}
-					fixture.block, fixture.blockNumber = parsed, 99+epoch
+				if point, exists := self.nativeHashPoints[hash]; exists {
+					self.selectNativePoint(point)
 				}
 			}
 		}
@@ -156,10 +169,41 @@ func (self *releaseStartupV2TestFixture) prepareNative(t *testing.T) {
 			if args[1] != fixture.block.Hex() {
 				return errors.New("startup schedule index is not block pinned")
 			}
-			return setValidatorRuntimeIdentityTestResult(result, hexutil.Encode(binary.LittleEndian.AppendUint64(nil, self.nativeEpoch[fixture.block.Hex()])))
+			return setValidatorRuntimeIdentityTestResult(result, hexutil.Encode(binary.LittleEndian.AppendUint64(nil, self.nativeHashPoints[fixture.block.Hex()].epoch)))
 		}
 		return original.CallContext(ctx, result, method, args...)
 	}}
+}
+
+// Each retained native point keeps its exact header, digest and schedule epoch.
+type releaseStartupNativeTestPoint struct {
+	header types.Header
+	hash   types.Hash
+	epoch  uint64
+}
+
+// Later observations extend the original authenticated header without changing
+// earlier points. The finite fixture census also covers later deposit audits.
+func (self *releaseStartupV2TestFixture) nativePoint(t *testing.T, epoch uint64) releaseStartupNativeTestPoint {
+	t.Helper()
+	if epoch == 0 || epoch > 64*1024 || len(self.nativePoints) == 0 {
+		t.Fatal("startup native epoch exceeds its initialized fixture census")
+	}
+	for uint64(len(self.nativePoints)) < epoch {
+		previous := self.nativePoints[len(self.nativePoints)-1]
+		header, hash := releaseReceiptTestHeader(t, previous.hash, uint64(previous.header.Number)+1)
+		point := releaseStartupNativeTestPoint{header: header, hash: hash, epoch: previous.epoch + 1}
+		self.nativePoints = append(self.nativePoints, point)
+		self.nativeHashPoints[hash.Hex()] = point
+	}
+	return self.nativePoints[epoch-1]
+}
+
+// The strict native reader sees one coherent selected point through every Rpc.
+func (self *releaseStartupV2TestFixture) selectNativePoint(point releaseStartupNativeTestPoint) {
+	self.nativeFixture.header = point.header
+	self.nativeFixture.block = point.hash
+	self.nativeFixture.blockNumber = uint64(point.header.Number)
 }
 
 // The EVM endpoint serves each independently defined canonical historical
@@ -296,12 +340,11 @@ func (self *releaseStartupV2TestFixture) sealOptions(t *testing.T, index int) re
 func (self *releaseStartupV2TestFixture) ordinary(t *testing.T, index int, epoch uint64, crash bool) *releaseMeasurementInputJournal {
 	t.Helper()
 	participant := self.disk.participants[index]
-	nativeHash := types.Hash{byte(epoch + 1)}
-	self.nativeEpoch[nativeHash.Hex()] = epoch
+	point := self.nativePoint(t, epoch)
 	var journal *releaseMeasurementInputJournal
 	stop := errors.New("actual ordinary journal durable before snapshot and Begin")
 	_, _, err := participant.Stats.detachReleaseStatsMeasurementV2(t.Context(), participant.StateDir, self.boundary, self.sealOptions(t, index), func(stats ReleaseStatsMeasurement, cut AttemptCutV2) error {
-		journal = &releaseMeasurementInputJournal{Schema: releaseMeasurementInputV2Schema, DeploymentID: self.cfg.DeploymentID, ChainID: self.cfg.ChainID, GenesisHash: strings.ToLower(self.cfg.GenesisHash), Coordinator: self.cfg.Coordinator, ValidatorID: self.cfg.ValidatorID, Netuid: self.cfg.Netuid, SubnetEpoch: epoch, PolicyHash: strings.ToLower(self.cfg.PolicyHash), MeasurementInput: ReleaseMeasurementInput{NoID: participant.NoID, SettlementEpoch: self.boundary.SettlementEpoch, CutNativeBlock: 99 + epoch, CutNativeBlockHash: nativeHash.Hex(), CutEVMSnapshotBlock: self.boundary.EVMBlock, CutEVMSnapshotHash: self.boundary.EVMBlockHash, EgressGeneration: cut.Context.EgressGeneration, Stats: stats, AttemptCutV2: &cut}}
+		journal = &releaseMeasurementInputJournal{Schema: releaseMeasurementInputV2Schema, DeploymentID: self.cfg.DeploymentID, ChainID: self.cfg.ChainID, GenesisHash: strings.ToLower(self.cfg.GenesisHash), Coordinator: self.cfg.Coordinator, ValidatorID: self.cfg.ValidatorID, Netuid: self.cfg.Netuid, SubnetEpoch: epoch, PolicyHash: strings.ToLower(self.cfg.PolicyHash), MeasurementInput: ReleaseMeasurementInput{NoID: participant.NoID, SettlementEpoch: self.boundary.SettlementEpoch, CutNativeBlock: uint64(point.header.Number), CutNativeBlockHash: point.hash.Hex(), CutEVMSnapshotBlock: self.boundary.EVMBlock, CutEVMSnapshotHash: self.boundary.EVMBlockHash, EgressGeneration: cut.Context.EgressGeneration, Stats: stats, AttemptCutV2: &cut}}
 		encoded, err := canonicalReleaseMeasurementInputBytes(journal)
 		if err != nil {
 			return err

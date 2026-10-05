@@ -32,11 +32,11 @@ const (
 	reviewedRuntimeSourceRepository         = "https://github.com/RaoFoundation/subtensor"
 	reviewedRuntimeSourceTag                = ""
 	reviewedRuntimeSourceRefKind            = "commit"
-	reviewedRuntimeSourceRefName            = "7c9d45ebd423c7f6b0b477e11414fe2fe3a3794b"
-	reviewedRuntimeSourceCommit             = "7c9d45ebd423c7f6b0b477e11414fe2fe3a3794b"
+	reviewedRuntimeSourceRefName            = "c6bcb4a7400764c94c1d1b1938514c6c2dd3d33b"
+	reviewedRuntimeSourceCommit             = "c6bcb4a7400764c94c1d1b1938514c6c2dd3d33b"
 	reviewedRuntimeCodeHash                 = crv4.ReviewedRuntimeCodeHash
 	reviewedRuntimeMetadataHash             = crv4.ReviewedRuntimeMetadataHash
-	reviewedRuntimeCompressedWasmSHA256     = "0xa236f7d2ac285615ee1789953e5e009464cc96f357d48278a848f82cdc771cc4"
+	reviewedRuntimeCompressedWasmSHA256     = "0x5a4218a3198cf276bf531643ca6813438781b72dc9fac57fa83a3ffe49f9a81a"
 	reviewedRuntimeUpstreamReleaseCallHash  = ""
 	reviewedRuntimeUpstreamReleaseTimepoint = ""
 	reviewedRuntimeSpecVersion              = crv4.ReviewedRuntimeSpecVersion
@@ -867,27 +867,9 @@ func observeReleaseLockUnchecked(cfg *ResolvedConfig) (*releaseLockObservation, 
 	if err != nil {
 		return nil, err
 	}
-	observation.EVMBuild["reserve_sink_runtime_hash"] = ReserveSinkRuntimeBytecodeHash
-	observation.EVMBuild["settlement_vault_runtime_hash"] = SettlementVaultRuntimeBytecodeHash
-	observation.EVMBuild["coordinator_implementation_runtime_hash"] = CoordinatorRuntimeBytecodeHash
-	observation.EVMBuild["coordinator_proxy_runtime_hash"] = ERC1967ProxyRuntimeBytecodeHash
-	observation.EVMBuild["governance_drill_implementation_runtime_hash"] = CoordinatorAdversaryRuntimeBytecodeHash
-	observation.EVMBuild["precompile_probe_runtime_hash"] = SubnetProbeRuntimeBytecodeHash
-	observation.EVMBuild["fleet_batcher_runtime_hash"] = FleetBatcherRuntimeBytecodeHash
-	observation.EVMBuild["reserve_sink_artifact_hash"] = ReserveSinkFoundryArtifactHash
-	observation.EVMBuild["settlement_vault_artifact_hash"] = SettlementVaultFoundryArtifactHash
-	observation.EVMBuild["coordinator_implementation_artifact_hash"] = CoordinatorFoundryArtifactHash
-	observation.EVMBuild["coordinator_proxy_artifact_hash"] = ERC1967ProxyFoundryArtifactHash
-	observation.EVMBuild["governance_drill_implementation_artifact_hash"] = CoordinatorAdversaryFoundryArtifactHash
-	observation.EVMBuild["precompile_probe_artifact_hash"] = SubnetProbeFoundryArtifactHash
-	observation.EVMBuild["fleet_batcher_artifact_hash"] = FleetBatcherFoundryArtifactHash
-	observation.EVMBuild["governance_drill_storage_layout_hash"] = CoordinatorAdversaryStorageLayoutHash
-	observation.EVMBuild["fleet_batcher_storage_layout_hash"] = FleetBatcherStorageLayoutHash
-	observation.EVMBuild["validator_evidence_runtime_hash"] = ValidatorEvidenceRuntimeBytecodeHash
-	observation.EVMBuild["validator_evidence_artifact_hash"] = ValidatorEvidenceFoundryArtifactHash
-	observation.EVMBuild["validator_evidence_storage_layout_hash"] = ValidatorEvidenceStorageLayoutHash
-	observation.EVMBuild["abi_hash"] = generatedABIHash()
-	observation.EVMBuild["coordinator_storage_layout_hash"] = CoordinatorStorageLayoutHash
+	for key, value := range generatedReleaseBuildObservation() {
+		observation.EVMBuild[key] = value
+	}
 
 	parent := filepath.Dir(cfg.Repos.SN)
 	modules := map[string]string{"sn": cfg.Repos.SN, "server": cfg.Repos.Server}
@@ -1011,13 +993,13 @@ func validateReleaseRepositorySchema(repositories map[string]any) error {
 }
 
 // Bind the operational testnet profile to the source and finalized Wasm
-// independently reviewed for runtime 461. Exact-commit testnet provenance is
+// independently reviewed for runtime 467. Exact-commit testnet provenance is
 // distinct from a tagged mainnet proposal; no such proposal is asserted here.
 // The node image is pinned separately:
 // an older compatible binary may execute this on-chain Wasm while it syncs.
 func validateReviewedRuntimeIdentity(lock *ReleaseLock) error {
 	if lock == nil || lock.Runtime.SourceRepository != reviewedRuntimeSourceRepository || lock.Runtime.SourceTag != reviewedRuntimeSourceTag || lock.Runtime.SourceRefKind != reviewedRuntimeSourceRefKind || lock.Runtime.SourceRefName != reviewedRuntimeSourceRefName || lock.Runtime.SourceCommit != reviewedRuntimeSourceCommit || lock.Runtime.SpecVersion != reviewedRuntimeSpecVersion || lock.Runtime.TransactionVersion != reviewedRuntimeTransactionVersion || lock.Runtime.StateVersion != reviewedRuntimeStateVersion || !strings.EqualFold(lock.Runtime.CodeHash, reviewedRuntimeCodeHash) || !strings.EqualFold(lock.Runtime.MetadataHash, reviewedRuntimeMetadataHash) || !strings.EqualFold(lock.Runtime.CompressedWasmSHA256, reviewedRuntimeCompressedWasmSHA256) || lock.Runtime.UpstreamReleaseCallHash != reviewedRuntimeUpstreamReleaseCallHash || lock.Runtime.UpstreamReleaseTimepoint != reviewedRuntimeUpstreamReleaseTimepoint {
-		return errors.New("release lock runtime identity is not the reviewed testnet runtime 461 release")
+		return errors.New("release lock runtime identity is not the reviewed testnet runtime 467 release")
 	}
 	return nil
 }

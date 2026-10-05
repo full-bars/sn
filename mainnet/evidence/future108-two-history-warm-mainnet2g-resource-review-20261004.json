@@ -1,0 +1,515 @@
+{
+  "accounting": {
+    "accounting_floor_bytes": 0,
+    "comparison_old6GiB_compiler_data_threshold_bytes": 30064771072,
+    "data_cap_bytes": 115964116992,
+    "data_formula": "max(0,113681502208-108GiB)+2*(2*4GiBhistory+2GiBcompiler)",
+    "data_launch_minimum_bytes": 21474836480,
+    "healthy_running_guards_changed": false,
+    "healthy_v3_existing_active_data_floor_bytes": 6307319808,
+    "memory_floor_bytes": 103079215104,
+    "memory_formula": "96GiB+2*(2*4GiBhistory+4GiBcompiler)",
+    "memory_launch_minimum_bytes": 128849018880,
+    "negative_floor_offsets_physical_margin": false,
+    "original_data_baseline_bytes": 113681502208
+  },
+  "compiler_or_test_execution": false,
+  "control_deltas": [
+    {
+      "changed_source": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/acef-source/sn/mainnet/economic_conservation_command.go",
+      "imports_unchanged": true,
+      "mutant": {
+        "bytes": 32443,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-1eb-mainnet-controls/repeat-original-live-archive-fences/economic_conservation_command.go",
+        "sha256": "39891d90ac66f83845ecfe41180004b0650afca16ec9335ed3cf89d55f739ce6"
+      },
+      "name": "repeat-original-live-archive-fences",
+      "overlay": {
+        "bytes": 7444,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-1eb-mainnet-controls/repeat-original-live-archive-fences/overlay.json",
+        "sha256": "05a22e0cd00cd71721d5ad3fb1c5f951cee80e4739d639ac500d4659035fb2bb"
+      }
+    },
+    {
+      "changed_source": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/acef-source/sn/mainnet/economic_conservation_command.go",
+      "imports_unchanged": true,
+      "mutant": {
+        "bytes": 32359,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-1eb-mainnet-controls/omit-fresh-sample-archive-fence/economic_conservation_command.go",
+        "sha256": "9cbbec5734c33c8c5665301e9eb1d057b69f34c780a4a046bbcd92458f1da576"
+      },
+      "name": "omit-fresh-sample-archive-fence",
+      "overlay": {
+        "bytes": 7440,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-1eb-mainnet-controls/omit-fresh-sample-archive-fence/overlay.json",
+        "sha256": "6b65b2e7a3104dad309fadd6b10d824161361070d354269e39be8891f6e3c56f"
+      }
+    },
+    {
+      "changed_source": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/acef-source/sn/mainnet/economic_conservation_command.go",
+      "imports_unchanged": true,
+      "mutant": {
+        "bytes": 32378,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-1eb-mainnet-controls/omit-final-publication-archive-fence/economic_conservation_command.go",
+        "sha256": "ba9b6934a9b14f5b3d65c7fb1756ac4cd2523fcb7c49b5b702dfc624cebcce68"
+      },
+      "name": "omit-final-publication-archive-fence",
+      "overlay": {
+        "bytes": 7445,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-1eb-mainnet-controls/omit-final-publication-archive-fence/overlay.json",
+        "sha256": "6385b650e3124d4c2776b55c81f669c6c0c3dd4e6ac09903bcacd88c66ef03bc"
+      }
+    }
+  ],
+  "decision": {
+    "compiler_disk_forecast_bytes": 2147483648,
+    "compiler_memory_forecast_bytes": 4294967296,
+    "forecast_type": "A new prospective estimate for this exact warm source and cache class, not an observed owned peak, an upper bound, or an architectural lower bound.",
+    "history_count_max": 2,
+    "history_disk_forecast_bytes_each": 4294967296,
+    "history_memory_forecast_bytes_each": 4294967296,
+    "margin": 2,
+    "old_general_compiler_forecast_bytes": 6442450944,
+    "old_general_forecast_replaced": false
+  },
+  "evidence_bindings": [
+    {
+      "bytes": 3180,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/warm-mainnet2g-resource-proposal-v1.json",
+      "sha256": "84f4e40ef9402ef40ec024bbd9fa03f33059cc56999803065a0cfb20bff7c062"
+    },
+    {
+      "bytes": 1414,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/future-two-history-one-warm-mainnet-compiler-proposal-v1.json",
+      "sha256": "c374fbb66b9617af0ea2c20813c4b0ac2f5120c61b904283ad6bec75bb7c018b"
+    },
+    {
+      "bytes": 603,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/work-final-role-miner/go.work",
+      "sha256": "f4354d2a5e1ba87fd65b8528576495abbe34fbcf956fc50596781cbbb9443162"
+    },
+    {
+      "bytes": 920,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b466-mainnet-selected-graph.receipt.json",
+      "sha256": "f49898944af8d69254669d79c1a56f2c1e8d435c6e7fafa1cffbe673d9d17bd5"
+    },
+    {
+      "bytes": 3888953,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b466-mainnet-selected-graph.stdout",
+      "sha256": "2ce5abefff926f23ed948bdd4aeeeb920aaded15aa56f98dfcf1b45753613f60"
+    },
+    {
+      "bytes": 3280,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-mainnet-overlay/overlay.json",
+      "sha256": "e3ca21f22de9fc5c29c8a36d63937667af7e0b8c863a55a450ad0c95e0171eb3"
+    },
+    {
+      "bytes": 3336,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-522-mainnet-overlay/overlay.json",
+      "sha256": "95def43142460565b6695a24230a6097cfc6575485b9bdd01d690b7afa45641e"
+    },
+    {
+      "bytes": 6400,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-f111-mainnet-overlay/overlay.json",
+      "sha256": "a158809e6df83ed5ef75dbb53569a941c24751dcf958ca7cc0935908fe338848"
+    },
+    {
+      "bytes": 6373,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-733-mainnet-overlay/overlay.json",
+      "sha256": "f24fb15351a295762c7e02b3fcaaf61f8975d7f3fc951fc93b4ed54f3c1c7c28"
+    },
+    {
+      "bytes": 7438,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-b870-mainnet-overlay/overlay.json",
+      "sha256": "a89159467fb77e708d9adc3207e4e9bf03e49efbced1ac4d4512a7f2a5d76d59"
+    },
+    {
+      "bytes": 7407,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-1eb-mainnet-overlay/overlay.json",
+      "sha256": "2d322dc4b8852d1a218252e7c98005e5dad83a87706d7f07e8ce9b144f210dc1"
+    },
+    {
+      "bytes": 11292,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/acef-source/sn/go.mod",
+      "sha256": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6"
+    },
+    {
+      "bytes": 66880,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/acef-source/sn/go.sum",
+      "sha256": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+    },
+    {
+      "bytes": 3887,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/acef-source/connect/go.mod",
+      "sha256": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d"
+    },
+    {
+      "bytes": 21922,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/acef-source/connect/go.sum",
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+    },
+    {
+      "bytes": 10651,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/go.mod",
+      "sha256": "c86080573d84c0c926713755825d746c12bf18009f9e174df1958d004efd1225"
+    },
+    {
+      "bytes": 69997,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/go.sum",
+      "sha256": "b13655dba19d86f0b2acc266d8fa2ae1b598df9876f392d7339788a8df52d710"
+    },
+    {
+      "bytes": 8039,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b870-mainnet-overlay-stage-v1.json",
+      "sha256": "604adca31bf481a695eee89b521b56e17de9c723ffe908bb702b22216e8c028b"
+    },
+    {
+      "bytes": 8115,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-overlay-stage-v1.json",
+      "sha256": "8d95341e4cdd174d5e0e010adbace02b2110e77b342b99e8961dbb3917ceba94"
+    },
+    {
+      "bytes": 3380,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-controls-stage-v1.json",
+      "sha256": "7f1d8434130f9df39b4bf8fcf8827391b730110b29deae9c47b31fe3005c9c37"
+    },
+    {
+      "bytes": 6675,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final-b870-mainnet-compile-twohistory-v1.py",
+      "sha256": "0dcc2737b54beede5430048a5c6eeb0f7532cf996c3efc5b1782eac032c92cef"
+    },
+    {
+      "bytes": 7455,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final-1eb-control-compile-twohistory-v1.py",
+      "sha256": "00d3a524cff887fbd8546be1c0a4f6b4b7892c84d310d849bf28141aa9d2630f"
+    }
+  ],
+  "launch_conditions": [
+    "Root must explicitly adopt this narrow warm forecast; it does not retroactively reclassify earlier refusals or qualify any test.",
+    "Bind the exact compiler/toolchain, workspace/module/source graph and overlay before launch. Preserve the same warmed normal/race dependency caches; explicitly record their absolute paths. Existing scripts inherit GOCACHE/GOMODCACHE and this review does not infer their values. A changed source/import/module/toolchain/cache class returns to the general forecast and fresh review.",
+    "Before EACH compiler phase verify canonical lease1557107/start100584860/dev2081/inode16941991, exact active histories and compiler/process/DB census, free bytes/inodes and MemAvailable. Use at most two histories and one compiler with zero DB/short/Rust overlap.",
+    "New admission guards use20GiBdata and120GiBmemory thresholds while retaining original113681502208 baseline, max0 accounting floor and all2x forecasts. The existing twohistory runner scripts still hard-code28GiBdata/6GiBcompiler and must be replaced prospectively with an adopted-bound runner; never edit or signal a healthy running job.",
+    "Retain the original healthy floor6307319808 and independently applicable active guards. Do not let additional work consume below a healthy peer reserve.",
+    "Record actual compiler descendants, owned scratch/cache/output growth and immutable completed output. Retain actual Unix wait/tree join and failures. A payload checkpoint cannot replace completed-image verification."
+  ],
+  "limitations": [
+    "No compiler, body, cleanup or process signal was performed.",
+    "Resource adoption is separate from source/behavior qualification and from the concrete runner custody review.",
+    "Memory4GiBcompiler and4GiBperhistory remain unchanged; this receipt does not use the separate2GiBhistory memory estimate."
+  ],
+  "reviewed_utc": "2026-10-04T21:37:56.761268+00:00",
+  "reviewer": "/root/astra_qualification_resource_review",
+  "runtime_mutations": false,
+  "sample_evidence": [
+    {
+      "mode": "normal",
+      "phase": "final-a96-mainnet-normal-compile",
+      "receipt": {
+        "bytes": 2087,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-mainnet-normal-compile.receipt.json",
+        "sha256": "a9b0387b94de65dc012de1e01b95ae9f802fd6a8bab6e99d8cfc3ae902db4982"
+      },
+      "retained_image_record": {
+        "bytes": 94362256,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/final-a96-mainnet-normal-compile.test",
+        "sha256": "7af10d11cc5cd1a1c397194a0fc057e79c61c06449e0701b583f641c6bb8eace"
+      },
+      "sample_count": 97,
+      "sample_is_owned_peak_or_future_bound": false,
+      "sampled_aggregate_data_decline_bytes": 621957120,
+      "sampled_aggregate_memory_decline_bytes": 2331967488,
+      "samples": {
+        "bytes": 4270,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-mainnet-normal-compile.resources.csv",
+        "sha256": "869443e8b1492f9fb7c00d0bf6ea55256a9d48ceadc71986a91615a5ce5a0713"
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "final-522-mainnet-normal-compile",
+      "receipt": {
+        "bytes": 2088,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-522-mainnet-normal-compile.receipt.json",
+        "sha256": "52af8a63e5c28edd949369036a36393496e7c34876b09fc2d2aa584490bb87d7"
+      },
+      "retained_image_record": {
+        "bytes": 94368032,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/final-522-mainnet-normal-compile.test",
+        "sha256": "0a291c68f9b2ad4558de6878d611f1fd2a41006514184a7c7e166bc25402ece8"
+      },
+      "sample_count": 69,
+      "sample_is_owned_peak_or_future_bound": false,
+      "sampled_aggregate_data_decline_bytes": 430968832,
+      "sampled_aggregate_memory_decline_bytes": 2445639680,
+      "samples": {
+        "bytes": 3057,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-522-mainnet-normal-compile.resources.csv",
+        "sha256": "bb60609766e653b5ece0cc2c5df2990e5dac7ab2fb6fc7e22403c54d06079d0d"
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "final-f111-mainnet-normal-compile",
+      "receipt": {
+        "bytes": 2198,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-f111-mainnet-normal-compile.receipt.json",
+        "sha256": "da14f996d58cda26d8af88ca2e6aed25b75b347dbe59aa52d11e77cce6e76396"
+      },
+      "retained_image_record": {
+        "bytes": 94529480,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/final-f111-mainnet-normal-compile.test",
+        "sha256": "5ad4e9bb070a937dbb5fd38676e01ba1452452216bf1d24fe2c138131409c444"
+      },
+      "sample_count": 70,
+      "sample_is_owned_peak_or_future_bound": false,
+      "sampled_aggregate_data_decline_bytes": 432906240,
+      "sampled_aggregate_memory_decline_bytes": 2522992640,
+      "samples": {
+        "bytes": 3097,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-f111-mainnet-normal-compile.resources.csv",
+        "sha256": "192cfd611ed8049efd0ba83dcc5273c64b89e290da0f3b16fa9cdc01826cb37b"
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "final-733-mainnet-normal-compile",
+      "receipt": {
+        "bytes": 2194,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-733-mainnet-normal-compile.receipt.json",
+        "sha256": "19980238849033c3224c8dd9117295b18327e8913a715846803a113cc339a078"
+      },
+      "retained_image_record": {
+        "bytes": 94535136,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/final-733-mainnet-normal-compile.test",
+        "sha256": "66104705048cd980cece2adeeb806bf2e269e18a16809e3a415f7c7ba0e6ad77"
+      },
+      "sample_count": 70,
+      "sample_is_owned_peak_or_future_bound": false,
+      "sampled_aggregate_data_decline_bytes": 432406528,
+      "sampled_aggregate_memory_decline_bytes": 2911092736,
+      "samples": {
+        "bytes": 3092,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-733-mainnet-normal-compile.resources.csv",
+        "sha256": "ec3910d5e1bb3cb90ca3c16b03cc96845932f89279cf1d5dc5783cf3e27f1429"
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "final-b870-mainnet-normal-compile",
+      "receipt": {
+        "bytes": 2266,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b870-mainnet-normal-compile.receipt.json",
+        "sha256": "f5148f2c58a2601ad9009ca0ad6256ed880ed36c8fd162e929eb14d1a5860edc"
+      },
+      "retained_image_record": {
+        "bytes": 94574616,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/final-b870-mainnet-normal-compile.test",
+        "sha256": "da7fabd9909ea9f855878fbb17286888014bce1cca67a784817a65704642858f"
+      },
+      "sample_count": 73,
+      "sample_is_owned_peak_or_future_bound": false,
+      "sampled_aggregate_data_decline_bytes": 432803840,
+      "sampled_aggregate_memory_decline_bytes": 2209300480,
+      "samples": {
+        "bytes": 3226,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b870-mainnet-normal-compile.resources.csv",
+        "sha256": "6e268e2554dbefac2454394a5776d00d4c7037190c6f25b6f6cd66fe8bd661a9"
+      }
+    },
+    {
+      "mode": "race",
+      "phase": "final-b870-mainnet-race-compile",
+      "receipt": {
+        "bytes": 2277,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b870-mainnet-race-compile.receipt.json",
+        "sha256": "d626be33c113684a8b7af813b426e74bc653274165dd31c4a871b203c563067c"
+      },
+      "retained_image_record": {
+        "bytes": 127476096,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/final-b870-mainnet-race-compile.test",
+        "sha256": "7912c5ee0497ed1a1737928831755750527234c38d241ca0970d1b31747fa022"
+      },
+      "sample_count": 101,
+      "sample_is_owned_peak_or_future_bound": false,
+      "sampled_aggregate_data_decline_bytes": 544747520,
+      "sampled_aggregate_memory_decline_bytes": 2055389184,
+      "samples": {
+        "bytes": 4454,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b870-mainnet-race-compile.resources.csv",
+        "sha256": "131135b9ee06e0df38a40a7342cb3d79989f0f6c321c7c6b59d4f6df393dd90d"
+      }
+    },
+    {
+      "mode": "normal",
+      "phase": "final-1eb-mainnet-normal-compile",
+      "receipt": {
+        "bytes": 2193,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-normal-compile.receipt.json",
+        "sha256": "2c074aec0a04e64533efe2bb9bcd0aaa3549719aca0532e9f9af33ede54c81ed"
+      },
+      "retained_image_record": {
+        "bytes": 94574080,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/final-1eb-mainnet-normal-compile.test",
+        "sha256": "617d1bf273d11037145a02f2b04c290b9b3f65bfcb893d404a907060d560aa84"
+      },
+      "sample_count": 72,
+      "sample_is_owned_peak_or_future_bound": false,
+      "sampled_aggregate_data_decline_bytes": 441528320,
+      "sampled_aggregate_memory_decline_bytes": 2180562944,
+      "samples": {
+        "bytes": 3189,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-normal-compile.resources.csv",
+        "sha256": "1bee3b7864c1873ac4276173278f14d356f81c0061ba01fc0be2a42ea9e175dc"
+      }
+    },
+    {
+      "mode": "race",
+      "phase": "final-1eb-mainnet-race-compile",
+      "receipt": {
+        "bytes": 2201,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-race-compile.receipt.json",
+        "sha256": "631e0ee839459a836a0166daefbd55566d305a7e6f6506af40ec7656c167df16"
+      },
+      "retained_image_record": {
+        "bytes": 127476224,
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/final-1eb-mainnet-race-compile.test",
+        "sha256": "d19e1f2735f2d95cf7cbaa195610a990503c3e6afe559d32358ba838bebeeeac"
+      },
+      "sample_count": 105,
+      "sample_is_owned_peak_or_future_bound": false,
+      "sampled_aggregate_data_decline_bytes": 544542720,
+      "sampled_aggregate_memory_decline_bytes": 2020712448,
+      "samples": {
+        "bytes": 4627,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-race-compile.resources.csv",
+        "sha256": "de55470d0daa2b018ae8d4744c83f2ad4e203dd6642d47379a119a01707b16fc"
+      }
+    }
+  ],
+  "schema": "future108-twohistory-warm-mainnet2g-independent-resource-review-v1",
+  "scope": {
+    "DB_count": 0,
+    "compiler_count_max": 1,
+    "control_names": [
+      "repeat-original-live-archive-fences",
+      "omit-fresh-sample-archive-fence",
+      "omit-final-publication-archive-fence"
+    ],
+    "effective_heads": [
+      "b870f2f3174f15dcd61bf97e0f0838262f1744fe",
+      "1eb679a4fdc8097735af0a07137baa6cc7ba0f16"
+    ],
+    "exclusions": [
+      "new modules or imports",
+      "dependency downloads",
+      "cold caches or cache relocation/clearing",
+      "new Server or Core source",
+      "other packages",
+      "source copies/LFS hydration",
+      "new test fixtures or expanded compilation graphs",
+      "multiple compilers",
+      "body execution under this compiler forecast"
+    ],
+    "history_count_max": 2,
+    "mainnet_package_only": true,
+    "normal_mode": true,
+    "race_mode": "Included only because completed b870 and1eb warm race receipts and independent sample recalculation are added in this new review; the earlier normal-only proposal itself did not authorize race.",
+    "rust_count": 0,
+    "short_body_count": 0
+  },
+  "snapshot": {
+    "data_available_bytes": 28808519680,
+    "data_available_inodes": 92701214,
+    "data_fits": true,
+    "data_margin_bytes": 7333683200,
+    "memory_available_bytes": 129459077120,
+    "memory_fits": true,
+    "memory_margin_bytes": 610058240,
+    "utc": "2026-10-04T21:37:56.761268+00:00"
+  },
+  "source_sets": [
+    {
+      "direct_import_count": 99,
+      "direct_imports_sha256": "69a963060ec5f8812cff7815a06fdb4e8d22e1b25c38f0a84320817aba4efe20",
+      "effective_file_count": 696,
+      "overlay": {
+        "bytes": 3280,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-mainnet-overlay/overlay.json",
+        "sha256": "e3ca21f22de9fc5c29c8a36d63937667af7e0b8c863a55a450ad0c95e0171eb3"
+      }
+    },
+    {
+      "direct_import_count": 99,
+      "direct_imports_sha256": "69a963060ec5f8812cff7815a06fdb4e8d22e1b25c38f0a84320817aba4efe20",
+      "effective_file_count": 696,
+      "overlay": {
+        "bytes": 3336,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-522-mainnet-overlay/overlay.json",
+        "sha256": "95def43142460565b6695a24230a6097cfc6575485b9bdd01d690b7afa45641e"
+      }
+    },
+    {
+      "direct_import_count": 99,
+      "direct_imports_sha256": "69a963060ec5f8812cff7815a06fdb4e8d22e1b25c38f0a84320817aba4efe20",
+      "effective_file_count": 700,
+      "overlay": {
+        "bytes": 6400,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-f111-mainnet-overlay/overlay.json",
+        "sha256": "a158809e6df83ed5ef75dbb53569a941c24751dcf958ca7cc0935908fe338848"
+      }
+    },
+    {
+      "direct_import_count": 99,
+      "direct_imports_sha256": "69a963060ec5f8812cff7815a06fdb4e8d22e1b25c38f0a84320817aba4efe20",
+      "effective_file_count": 700,
+      "overlay": {
+        "bytes": 6373,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-733-mainnet-overlay/overlay.json",
+        "sha256": "f24fb15351a295762c7e02b3fcaaf61f8975d7f3fc951fc93b4ed54f3c1c7c28"
+      }
+    },
+    {
+      "direct_import_count": 99,
+      "direct_imports_sha256": "69a963060ec5f8812cff7815a06fdb4e8d22e1b25c38f0a84320817aba4efe20",
+      "effective_file_count": 702,
+      "overlay": {
+        "bytes": 7438,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-b870-mainnet-overlay/overlay.json",
+        "sha256": "a89159467fb77e708d9adc3207e4e9bf03e49efbced1ac4d4512a7f2a5d76d59"
+      }
+    },
+    {
+      "direct_import_count": 99,
+      "direct_imports_sha256": "69a963060ec5f8812cff7815a06fdb4e8d22e1b25c38f0a84320817aba4efe20",
+      "effective_file_count": 702,
+      "overlay": {
+        "bytes": 7407,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/final-1eb-mainnet-overlay/overlay.json",
+        "sha256": "2d322dc4b8852d1a218252e7c98005e5dad83a87706d7f07e8ce9b144f210dc1"
+      }
+    }
+  ],
+  "status": "RECOMMEND_EXPLICIT_ROOT_ADOPTION_NARROW_WARM_FORECAST",
+  "support": {
+    "already_present_payload_checkpoint": "A separately identity-bound already-allocated116MB payload/link object may be treated as present state. It is not a reason to subtract reserved physical margin or skip binding the pending output/link work. No such payload path was supplied for direct independent hash verification in this review.",
+    "equivalent_sample_count": 8,
+    "forecast_to_largest_observed_aggregate_drop_ratio": 3.452784089038164,
+    "four_original_sample_bindings_verified": true,
+    "largest_image_below_180MiB": true,
+    "largest_retained_image_record_bytes": 127476224,
+    "largest_sampled_aggregate_data_decline_bytes": 621957120,
+    "same_core": "e77caf3047c2ef26e87fd611fe5c7295f7818160",
+    "same_server": "f67c7ff76a8ae23e180f83b78f98e4f4dea1f744",
+    "same_workspace_hash": "f4354d2a5e1ba87fd65b8528576495abbe34fbcf956fc50596781cbbb9443162",
+    "sample_interpretation": "Filesystem and host memory drops include concurrent work and can hide transient peaks or reclamation. These observations support conservative estimation with2x reserve; they prove neither allocation upper bounds nor that6GiB was an unavoidable minimum.",
+    "source_interpretation": "Read-only lexical inspection of all effective mainnet Go import declarations yields99 identical direct imports across six sources. Three control mutants change only economic_conservation_command.go and preserve its imports. The existing selected dependency-graph receipt and current module/workspace files are bound; fresh final source/graph matching remains a launch requirement."
+  }
+}

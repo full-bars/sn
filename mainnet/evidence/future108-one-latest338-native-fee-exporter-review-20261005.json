@@ -1,0 +1,105 @@
+{
+  "actual_compiler": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-core87-server1ea-mainnet-normal-compile-v1.receipt.json",
+    "sha256": "84173c3b84c6ce2f37b89f3d89d4f6469b74bc4e18abd52a11ffff1724d85a43"
+  },
+  "author_validation": "Actual compiler wait0/treejoined and protected image replayed; source declaration and full original fixture hash read; Python AST only. No author body, asset export, Rust compiler or source materialization.",
+  "closed_model37_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+    "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+  },
+  "closed_monitor943_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+    "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 2147483648,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 900,
+    "TimeoutStopSec": 10,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-latest338-native-fee-exporter-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-latest338-native-fee-exporter-v1-20261005.service"
+  },
+  "expected_elapsed_seconds": [
+    10,
+    120
+  ],
+  "healthy_guards": {
+    "active_data_formula": "max(6307319808, launch_data_available-2147483648)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "retargeted_or_rebased": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-native-fee-exporter-job-v1.json",
+    "sha256": "686b64fdc64660023cda058c363fdceeec714d87c5126caa1c985b0206971326"
+  },
+  "output_custody": "Fresh0700 persistent output, exact three cases and24 files, seven original references each, selected retained ELF authority, all SHA pins checked; after actual PASS, originals0400 and directories0500 with fsync. No exports exist or are claimed before actual body.",
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "686b64fdc64660023cda058c363fdceeec714d87c5126caa1c985b0206971326",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 0,
+    "runner_sha256": "e21c239720fe7c0a9df8bd6544c32a9c6ea1ae23188a23e5bb727ad1f41f36aa",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_ONE_RETAINED_NATIVE_FEE_EXPORTER_SHORT_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest338-native-fee-exporter-adoption-20261005.json",
+  "resource_forecast": {
+    "actual_model_count": 0,
+    "basis": "One sequential exporter root using retained mainnet.test and its bounded owned synthetic verifier children; three24-file total original fixture outputs capped64MiB after actual root plus32MiB body log. Prospective1GiB forecast,2GiB hard/no swap/growth2, former4GiB reserve retained; no observed-peak upper bound claim.",
+    "held_former_model_disk_bytes": 4294967296,
+    "held_former_model_memory_bytes": 4294967296,
+    "margin": 2,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "retained_image": {
+    "bytes": 128830768,
+    "ctime_ns": 1791169789079310406,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120127691,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791169789079310406,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest338-core87-server1ea-mainnet-normal-compile-v1.test",
+    "sha256": "4c5f912c392ba91b7d20d35207fd71bacb37237bebf373a6aba9252a19e974a7",
+    "type": 32768,
+    "uid": 1000
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest338-native-fee-exporter-v1.py",
+    "sha256": "e21c239720fe7c0a9df8bd6544c32a9c6ea1ae23188a23e5bb727ad1f41f36aa"
+  },
+  "schema": "latest338-native-fee-exporter-review-v1",
+  "scope": "Real signed receipt and GRANDPA checks with a synthetic nested runtime in the selected mainnet.test. No original Wasm engine, production denomination policy or carry qualification.",
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-native-fee-exporter-selection-v1.json",
+    "sha256": "6385e7633deafaaca2bb6c8ac20658a9f348849aa857f67c816f8df1b0f240c4"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest338-core87-server1ea-compiler-source-closure-v1.json",
+    "sha256": "6f3f8fc9b6cf9c5242ff396bb671173c8facc6fd89a429917cd89c88f59e0fd4"
+  },
+  "source_tuple": {
+    "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+    "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+    "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

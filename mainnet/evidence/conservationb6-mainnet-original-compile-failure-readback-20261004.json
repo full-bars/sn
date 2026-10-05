@@ -1,0 +1,79 @@
+{
+  "schema": "conservationb6-mainnet-original-compile-failure-readback-v1",
+  "status": "ORIGINAL_COMPILE_FAILURE_RETAINED_BODY_NOT_RUN",
+  "head": "b6f05dc5df9ef84898b25d6aac47ebdb0a04e27a",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-go-mainnet-normal-compile.receipt.json",
+      "bytes": 4397,
+      "sha256": "ed8ada7a152ac254b1f7d8b4fbb92fd734563dc09dd2d43ba0d65a68a887fadc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/source-stage-receipt-v1.json",
+      "bytes": 1134,
+      "sha256": "70f792101e190e8f55b4a1428ef4d266475beb05c20805017e5ed156820e965b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/source-full-readback-v1.json",
+      "bytes": 5908691,
+      "sha256": "120864f9ebd7f6f32c8675b055a0ccda7f16b3713f8ffbba801fc9fef04a216d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/go-peer-stage-receipt-v1.json",
+      "bytes": 3064,
+      "sha256": "49f0dfa3a157b8ec71131a417d617bddd05da8690e08bf168c8127857eb15df6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/selected-graph-v1.receipt.json",
+      "bytes": 34659,
+      "sha256": "d445564c4c8b8b31edcf84175aac2833a6a60e5ad34e4799b30f570bebed01c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/selected-effective-peers-v1.receipt.json",
+      "bytes": 1087,
+      "sha256": "0c09e16e77d389c25c30aaffdaaf2121bdd44999333b36f626991e5ae47e35f1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-terminal/evidence/qualification-recipe.json",
+      "bytes": 4217,
+      "sha256": "42896dd3ceac264ac5967d6187129587d2ef9d753be573d3bb637e2cd8d466eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/go.work",
+      "bytes": 495,
+      "sha256": "5667a6a06e9e159910124782fc3e1fa8258147ee599f78a691044fed09f5532f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/source/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/source/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-go-mainnet-normal-compile.resources.csv",
+      "bytes": 5754,
+      "sha256": "51595c0f41061ac2a58d888dcc5c998ad8ca81c788050e225d248ede69bb9fbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-go-mainnet-normal-compile.stderr",
+      "bytes": 914,
+      "sha256": "cf8cbfccd7ce8435a3d2909e11a2b9fd26ebe737b5a7015ac6525de115c803cb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-go-mainnet-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "compile_exit": 1,
+  "tree_joined": true,
+  "test_bodies_executed": 0,
+  "diagnostics": "# github.com/urfoundation/sn/mainnet [github.com/urfoundation/sn/mainnet.test]\nmainnet/economic_conservation_capture_fixture_test.go:160:47: cannot use stake (variable of type *economicCapturePrecompile) as vm.PrecompiledContract value in assignment: *economicCapturePrecompile does not implement vm.PrecompiledContract (missing method Name)\nmainnet/economic_conservation_capture_fixture_test.go:161:47: cannot use &economicCapturePrecompile{\u2026} (value of type *economicCapturePrecompile) as vm.PrecompiledContract value in assignment: *economicCapturePrecompile does not implement vm.PrecompiledContract (missing method Name)\nmainnet/economic_conservation_capture_fixture_test.go:162:47: cannot use &economicCapturePrecompile{\u2026} (value of type *economicCapturePrecompile) as vm.PrecompiledContract value in assignment: *economicCapturePrecompile does not implement vm.PrecompiledContract (missing method Name)\n",
+  "root_cause": "Original economicCapturePrecompile test fixture does not implement Name required by the effective vm.PrecompiledContract interface. Three assignments fail compilation.",
+  "continuation": "Astra Integration owns narrow fixture and adjacent interface corrections. Sol continues independent validator builds and bodies, retaining the original source, full graph, module closure and compiler diagnostics.",
+  "limits": "This compiler result does not establish a production VM bug or a passing corrected source. No stopped live history run or fresh setup is required."
+}

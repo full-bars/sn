@@ -1,0 +1,28 @@
+{
+  "schema": "capture-precompile-3f-root-source-review-v1",
+  "head": "3f10265955d502719793b414ead53477ac133dee",
+  "changed": [
+    {
+      "path": "mainnet/economic_conservation_capture_artifact_test.go",
+      "sha256": "adc4c898749f350e4ebe3c7c37dad3b64112b6135c60858d4f1ddca525fb3a1a",
+      "git_blob": "bda4718c41508607086ef22542024a3c639b19de"
+    },
+    {
+      "path": "mainnet/economic_conservation_capture_fixture_test.go",
+      "sha256": "a0fa33f0bbf9716e5a5d53aa3fd90b4f23a637a90be8751cea4ede378ec9639c",
+      "git_blob": "75b7708437ffd7d9f4347aebe3200ca0274fa7a7"
+    }
+  ],
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/capture-precompile-custody-correction/evidence/intake.json",
+      "sha256": "e3ab3b1d834221fa0973b07959343984bcc75f47e529d67d7682ca36cd023854"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/capture-precompile-custody-correction/evidence/operative-controls.json",
+      "sha256": "28b6b076778c337b6ac412b1ad11bdaab649fd918ae4fccf8199c0470453c72b"
+    }
+  ],
+  "review": "Entire two-file diff and synthetic precompile Run/forwarder/registration/actual transaction path reviewed. Explicit code-bearing accounts satisfy Solidity typed void-call existence checks; actual precompile still performs execution. Real registration/getUid/move selector counts asserted in addition to exact success and rollback financial outcomes. Single fixture-only omitted-code control must reproduce original setup revert. No production contract or runtime semantics changed.",
+  "status": "SOURCE_REVIEWED_BEHAVIOR_PENDING"
+}

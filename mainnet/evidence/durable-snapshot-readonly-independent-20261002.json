@@ -1,0 +1,172 @@
+{
+  "author_receipt": {
+    "artifact_count_rehashed": 45,
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-receipt.json",
+    "sha256": "67b836274acf3d6bb2331bfc1298768af699094429acc10e9407ab8ea7f94f66"
+  },
+  "causal": {
+    "normal": {
+      "exit": 1,
+      "failed_test": "TestSnapshotHeadReadOnlyViewsComposeWithoutUpgrade",
+      "failure": "predecessor SH\u2192EX upgrade rejected shared second reader"
+    },
+    "race": {
+      "exit": 1,
+      "failed_test": "TestSnapshotHeadReadOnlyViewsComposeWithoutUpgrade",
+      "failure": "predecessor SH\u2192EX upgrade rejected shared second reader"
+    }
+  },
+  "created_utc": "2026-10-02T11:38:16.277247+00:00",
+  "files_sha256": {
+    "run_snapshot.py": "d01e30f673170d31120bf3de9ca78f05da0b19ed0814eed7d171d1b440607302",
+    "run_snapshot_causal.py": "0e530b70e8dd913200ebc899170b94fd7ccd6a963f509d7c20b3f0d69f263711",
+    "snapshot-ae6.mod": "04f93629072e1e0a7f1552c9fcf652e3595e9746d6c914c945a22c02d37a0ffc",
+    "snapshot-ae6.sum": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3",
+    "snapshot-causal-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "snapshot-causal-normal.log": "b32b86deed208af8c0311338b4e3d3d8e93a2bb216f7d8149c4d783453a269dd",
+    "snapshot-causal-overlay.json": "f2309da5d4d3e1d1452861675585306e9ceffb215b57e757191928d7374529c7",
+    "snapshot-causal-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "snapshot-causal-race.log": "801d9c76cb257d92264247ace463678960254fc2a351266aaeb381bd04b84fa0",
+    "snapshot-causal-runner-schema-error.log": "faeb0f24f76726914c4ca262de9f30b40f2dd3c0c1d0864b5ffd21dd9228fcde",
+    "snapshot-causal-runner.log": "3859bf8798b8506f8b1ad464cc8d04fb73a215d1b61703be6bf9bce62148f121",
+    "snapshot-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "snapshot-normal.log": "a4e02821e3f7934d41dbdd63862a2582c9ecb1e23c16f7dc718c2ad15c381e94",
+    "snapshot-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "snapshot-race.log": "8436af1fefa3738aaedd76e61d1a3d64b0f1da787949a7b15b411ad15bbf90a0",
+    "snapshot-runner.log": "9949ba6f4e55713bc71f514d85d9b551b38af22579a5a0e095b4cf8321969668",
+    "snapshot-source-readback.json": "554c22659cb5233348e1785da1bafc470c1bf9f1826b5ce67d311d716fa2812c",
+    "snapshot-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "snapshot-vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "snapshot.mod": "779827f547783da9cc026562e5ffe3f8a6a603e481ad472a95ecbbf14ba5724a",
+    "snapshot.sum": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3",
+    "verify_snapshot_trees.py": "db72b72bacb22ce929e7eb215dbd7a29cdc23e532f6aac005549969d5511c01f"
+  },
+  "fixed": {
+    "normal": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestSnapshotHeadAuxiliaryAdmission",
+        "TestSnapshotHeadCloseAndCancellation",
+        "TestSnapshotHeadConcurrentLeafLossIsScoped",
+        "TestSnapshotHeadCrashChild",
+        "TestSnapshotHeadExclusiveWriterAndCapacity",
+        "TestSnapshotHeadJoinedCrashRecovery",
+        "TestSnapshotHeadLegacyDeclarationRequiresExplicitRebind",
+        "TestSnapshotHeadLostAcknowledgementRecovery",
+        "TestSnapshotHeadManyOwnersShareDirectory",
+        "TestSnapshotHeadNamedObservationTaxonomy",
+        "TestSnapshotHeadReadOnlyOwnerNeverMutates",
+        "TestSnapshotHeadReadOnlyRefusesPendingWithoutReconciliation",
+        "TestSnapshotHeadReadOnlyRetainsObservedLeafLoss",
+        "TestSnapshotHeadReadOnlyViewsComposeWithoutUpgrade",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes",
+        "TestSnapshotHeadRequiresProvisionedAuthorityAndRetainedMember",
+        "TestSnapshotHeadSameOwnerReadAndPressureRecovery"
+      ],
+      "skip": 0,
+      "subtests": [
+        "TestSnapshotHeadJoinedCrashRecovery/predecessor-removed",
+        "TestSnapshotHeadJoinedCrashRecovery/snapshot-directory-synced",
+        "TestSnapshotHeadJoinedCrashRecovery/snapshot-renamed",
+        "TestSnapshotHeadJoinedCrashRecovery/temporary-created",
+        "TestSnapshotHeadJoinedCrashRecovery/temporary-written",
+        "TestSnapshotHeadLostAcknowledgementRecovery/committed-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/pending-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/predecessor-removed",
+        "TestSnapshotHeadLostAcknowledgementRecovery/snapshot-directory-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/snapshot-renamed",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-created",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-written",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/collision",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/extra",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/hash",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/partial"
+      ]
+    },
+    "race": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestSnapshotHeadAuxiliaryAdmission",
+        "TestSnapshotHeadCloseAndCancellation",
+        "TestSnapshotHeadConcurrentLeafLossIsScoped",
+        "TestSnapshotHeadCrashChild",
+        "TestSnapshotHeadExclusiveWriterAndCapacity",
+        "TestSnapshotHeadJoinedCrashRecovery",
+        "TestSnapshotHeadLegacyDeclarationRequiresExplicitRebind",
+        "TestSnapshotHeadLostAcknowledgementRecovery",
+        "TestSnapshotHeadManyOwnersShareDirectory",
+        "TestSnapshotHeadNamedObservationTaxonomy",
+        "TestSnapshotHeadReadOnlyOwnerNeverMutates",
+        "TestSnapshotHeadReadOnlyRefusesPendingWithoutReconciliation",
+        "TestSnapshotHeadReadOnlyRetainsObservedLeafLoss",
+        "TestSnapshotHeadReadOnlyViewsComposeWithoutUpgrade",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes",
+        "TestSnapshotHeadRequiresProvisionedAuthorityAndRetainedMember",
+        "TestSnapshotHeadSameOwnerReadAndPressureRecovery"
+      ],
+      "skip": 0,
+      "subtests": [
+        "TestSnapshotHeadJoinedCrashRecovery/predecessor-removed",
+        "TestSnapshotHeadJoinedCrashRecovery/snapshot-directory-synced",
+        "TestSnapshotHeadJoinedCrashRecovery/snapshot-renamed",
+        "TestSnapshotHeadJoinedCrashRecovery/temporary-created",
+        "TestSnapshotHeadJoinedCrashRecovery/temporary-written",
+        "TestSnapshotHeadLostAcknowledgementRecovery/committed-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/pending-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/predecessor-removed",
+        "TestSnapshotHeadLostAcknowledgementRecovery/snapshot-directory-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/snapshot-renamed",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-created",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-written",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/collision",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/extra",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/hash",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/partial"
+      ]
+    }
+  },
+  "invalid_attempt": "First causal wrapper rejected the author artifact size field as bytes before any Go test; preserved parser failure, then corrected wrapper only.",
+  "native_parent_receipt_sha256": "d0fc6021be65a0b0556989b398a8d5b3563da4d56ceb5a54e6e71a9eac67fba2",
+  "predecessor_capacity_receipt": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-head-capacity-receipt.json",
+    "sha256": "e9361c9ccf66bd3234a98dfc826d932ed095051c787fe926c40779440296af4b"
+  },
+  "schema": "sol-independent-snapshot-readonly-a5-v1",
+  "scope_limits": [
+    "Read-only snapshot helper primitive only; no passive/writer downstream adoption, provisioning, restore, deployment or full SN release qualification.",
+    "Predecessor ae6 causal uses exact source plus two test-only overlay files; no claim that the test existed in ae6.",
+    "No live signing, broadcast or service start."
+  ],
+  "sources": [
+    {
+      "archive": "sna5",
+      "commit": "a5c765c4b0c9342350acf185d35042bbab894dac",
+      "tree": "10db36162c8b256c11d805c8fc30b14b219e6b33",
+      "verdict": "PASS",
+      "verified_blobs": 19933,
+      "verified_bytes": 216680660
+    },
+    {
+      "archive": "snae6",
+      "commit": "ae6ca602755ab5e1981e21f14069a04cdcf1d863",
+      "tree": "fd7201f3791c73576ca5773aa09b7b86f4b1ca2e",
+      "verdict": "PASS",
+      "verified_blobs": 19932,
+      "verified_bytes": 216672385
+    }
+  ],
+  "unchanged_go_mod_sum_between_ae6_and_a5": true,
+  "verdict": "PASS_SCOPED",
+  "vet": {
+    "exit": 0,
+    "packages": [
+      "./internal/durablehead",
+      "./internal/durablefixture",
+      "./internal/durablepath"
+    ]
+  }
+}

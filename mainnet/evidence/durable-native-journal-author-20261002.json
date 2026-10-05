@@ -1,0 +1,1012 @@
+{
+  "artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-normal.command.json",
+      "sha256": "96cbf3fede2cc09137a8810894999616bf12050736f6a1de0a6b988ee17b0b7a",
+      "bytes": 1133
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-normal.jsonl",
+      "sha256": "27c423e6b0b67d64537ff4114baf49e2368a6c15ab88972ea5ff2f80d1f8475a",
+      "bytes": 8565
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-normal.result.json",
+      "sha256": "c2cb7805dd6802925f967e4dc799f4f1c90223271958d2d65c60524435b938f2",
+      "bytes": 231
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-race.command.json",
+      "sha256": "ef7a5d772e3b65e4e176903ec4847df1ec593a7111a86c8d488554c68e3d4411",
+      "bytes": 1146
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-race.jsonl",
+      "sha256": "aa0ed382d36b670bff455b68b84c50316dc12e6e0daf79afac3c3728cf13d524",
+      "bytes": 8564
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-race.result.json",
+      "sha256": "9b4b28afae3d929aaa76bb731721a6ca81dd2fdc1d72997b7c3b114a9c98470b",
+      "bytes": 229
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-intermediate-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-normal.command.json",
+      "sha256": "c7eef9f07a56da9f68e0cb37c25a55d298d1c7598dbb2ac36e472c00dd245c97",
+      "bytes": 1064
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-normal.jsonl",
+      "sha256": "6a114f7a9437e774eb27a42959039b58cc0404189f8d0ebc14c32afddbe75edc",
+      "bytes": 2871
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-normal.result.json",
+      "sha256": "5c211d7b41b9f6e8c9a414acbd960d5ff1ac754d4e52faa30874494b3ecac598",
+      "bytes": 233
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-race.command.json",
+      "sha256": "a5c68a5bbfec5c52d52345cf69490e30f65d6772f8f3a274b9c0ba6fd5c80bbe",
+      "bytes": 1077
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-race.jsonl",
+      "sha256": "1205d89502bf776757e7a8972be15bb0d55b52da53d0881909a2479b72ab9612",
+      "bytes": 2870
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-race.result.json",
+      "sha256": "eed8b4fb88b8017dd14f6c064c1f055a69d70f95112c701348a5cd283ae4e8d2",
+      "bytes": 231
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-late-admission-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-normal.command.json",
+      "sha256": "53afff39f184a269d6fefe268c4c7e46d1402f7df654bba7753214e88223e23f",
+      "bytes": 1012
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-normal.jsonl",
+      "sha256": "7cb9faacf44763a0c9b92537fc21a92315134048371f35d0a4a9bb9fd00cdc36",
+      "bytes": 1662
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-normal.result.json",
+      "sha256": "b2fc68d9ef53482385495f0cf872373583576a6f06fe11c66d666e98a912952c",
+      "bytes": 232
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-race.command.json",
+      "sha256": "e925a18b5ca83efe6ef3bce3482887bfa3c058350e22641594d79275d81bbcc2",
+      "bytes": 1025
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-race.jsonl",
+      "sha256": "2478464c8a4bb8e6137559460d67276f6e30c46e9bb60eac2a02797a0b7462e2",
+      "bytes": 1659
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-race.result.json",
+      "sha256": "122e3833a2eee7282199b4ff2ae6a4f99447968dee4a6719ac9b52e4f848e40e",
+      "bytes": 230
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-public-submit-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-normal.command.json",
+      "sha256": "150851cf3fa7c2fef5d1cbb8acc8f559d8600731504743f3a0d247b4c7e69926",
+      "bytes": 1165
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-normal.jsonl",
+      "sha256": "3deedb9405b2c63f5da264edb2e6eab809cf120698bc0109db560999c05def3d",
+      "bytes": 8010
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-normal.result.json",
+      "sha256": "9f3e230813d197357d9c9d107e2622e25005a99bc166694b78a941877f3fcba1",
+      "bytes": 235
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-race.command.json",
+      "sha256": "dce4e97c3340c31156180f8356da4c5bea9d31e53ce6f5f9433641bb60b4da98",
+      "bytes": 1178
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-race.jsonl",
+      "sha256": "179f9e22428c70d01ec4284b42d2718bf18d1422a85803e20ae758cce5545bde",
+      "bytes": 8004
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-race.result.json",
+      "sha256": "19aaae7e724a402b95ba972f7e0f2525002582c0a53d7aa69cf243152320c906",
+      "bytes": 231
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-causal-restart-callback-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-connect-download.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-connect-download.json",
+      "sha256": "5dbe679b900dcd86c08b74a91b06e4ae2b48c8f888f591f16fb0e97c41608889",
+      "bytes": 1122
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-connect-download.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-intermediate-overlay.json",
+      "sha256": "27ef6907043faa5c5784213ebca7c6990cb7af9c6e64a4f89d724cdb48dd5c37",
+      "bytes": 1479
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-late-admission-overlay.json",
+      "sha256": "4b45fac789b00d8e74056fdb39b4101c51ddc760113fbd71dff6b6a15f34169d",
+      "bytes": 1143
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-normal.command.json",
+      "sha256": "7d9f349470f77fa11c49aedd797899788e4ab202dc3735ca4a5e220d7c9a0d49",
+      "bytes": 819
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-normal.jsonl",
+      "sha256": "42ce33916dcc2c3457fbb3213084878bbb8a3d664f53f8083137d76d9494fce5",
+      "bytes": 35369
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-normal.result.json",
+      "sha256": "52920e69d9af78f82e3e6325c2626c3eab126dbfc48d895152d47a21d7608cb9",
+      "bytes": 212
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-public-submit-overlay.json",
+      "sha256": "9e138dc56e6ecfa4d16b272e65eec0ea0e3c32d4d19891f3fb2f8775719b693f",
+      "bytes": 226
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-race.command.json",
+      "sha256": "a428ae195405b210aa50a70a8e846bb086685f28dc4d8c67722ff2e2875c84f6",
+      "bytes": 832
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-race.jsonl",
+      "sha256": "02aa4a79813a0e7f2ee4f3c47f7dd852e6fe2ceeedd7ce33de8e65a1fdcb67d0",
+      "bytes": 35372
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-race.result.json",
+      "sha256": "6da6a8b7a4695e050c73349e899ce7861c5301afaf88b93c5de4af22470f649d",
+      "bytes": 211
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-restart-callback-overlay.json",
+      "sha256": "346b27611a7d6299195b31cfa7480452e7b7ac621a9fe845f327dde311a9bac3",
+      "bytes": 911
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-run.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-run.stdout",
+      "sha256": "62d7fd7216743aedf82fb683d28d41708b0a53b36d8ed1cbd9bd9a6fdb1efb89",
+      "bytes": 702
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-vet.command.json",
+      "sha256": "33d7d291ef62b4fb00762d04adfddc5417ea613c9c5953c3a606e049b8725480",
+      "bytes": 813
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-vet.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-vet.result.json",
+      "sha256": "e89a39ac1d72e846dbb2f439380e8fafc5d3a0b71ec46625a97407fb188af177",
+      "bytes": 208
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint-vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint.mod",
+      "sha256": "3a8be26f67ac1fa95372c1163cd2b2d68f1b35e6b04a7a1afe9e7494d8d0af3d",
+      "bytes": 11671
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-checkpoint.sum",
+      "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3",
+      "bytes": 65112
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-custody-expanded-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-custody-expanded-normal.jsonl",
+      "sha256": "3f05245f711a220d7be9f55974a3d2dbfaea18430fd70d17d9e651c3a4ec4de6",
+      "bytes": 35368
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-custody-expanded-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-custody-final-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-custody-final-race.jsonl",
+      "sha256": "3687eba48dc578c1a62c31000e4ef06ff03ce0045de4d0835373b935efc2f3e9",
+      "bytes": 35373
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-custody-final-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-custody-first-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-custody-first-normal.jsonl",
+      "sha256": "c003f1968ac8cd8e2ae0231dbae30936e5f84789eeeb101e55a99e27c78202e4",
+      "bytes": 27172
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-custody-first-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-baseline-overlay.json",
+      "sha256": "6439f95b419c440d3d5eb2dfb72d6f5fd49f80115ad48d58b082c899d0341708",
+      "bytes": 1206
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-initial-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-initial-normal.jsonl",
+      "sha256": "957bc37bf4c7cce02a0601e6b9d7ae1885bb53c946e3f0f8a4af1ada5a3b125c",
+      "bytes": 4705
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-initial-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-normal.jsonl",
+      "sha256": "e3b25b314cc2b63a4d6812a090434956d50d4ccf6ca8bcdfa3e1f2683bd02864",
+      "bytes": 21017
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-race.jsonl",
+      "sha256": "9de57c25acd5345db5bc5087425a9d974b4827102ce92276fe07acc5de4a5eed",
+      "bytes": 21022
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-fixed-vet.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-baseline-normal.jsonl",
+      "sha256": "a7a372dde30be98b2b844c1aaa92665b5ec17a7970c7212afeea76d7693a147d",
+      "bytes": 8561
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-baseline-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-baseline-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-baseline-race.jsonl",
+      "sha256": "5af8317e61b7bc34f5c379ff8561c18b287ef64473c36ff28959d003bbaab081",
+      "bytes": 8566
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-baseline-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-source/journal.go",
+      "sha256": "f895756ede17ef27036fce49ed747e851901ae8aae145494a6f9cb63cc2d0555",
+      "bytes": 5564
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-source/journal_durable_linux.go",
+      "sha256": "c0fc59cd2f94dc674f7259bdea9ca72178eb0786210aeaf373f4caa6d6adcfd6",
+      "bytes": 7389
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-source/journal_durable_other.go",
+      "sha256": "f999227bce9c3d9a5ee74279f303ae96c2bcc6984ac31aa84e836ea529f05e23",
+      "bytes": 559
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-source/journal_durable_test.go",
+      "sha256": "807e5dede55c0bce94ec8caddb10809c248a754a5d49576a48c9b103698d6555",
+      "bytes": 6894
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-intermediate-source/submit.go",
+      "sha256": "d3f56f819344820251ef0feb9923933eef7775cb8db11d218208ef1a8262b268",
+      "bytes": 4461
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-late-admission-baseline/journal_durable_linux.go",
+      "sha256": "e9503abf19d3f9c8776ad1809825e4f70d9528a7075a41b0c696e2885138d44f",
+      "bytes": 19173
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-late-admission-baseline/submit.go",
+      "sha256": "b9abd4e92947f58ceae29f250a3e1424569c1ae10790cbbccc732227f31f0d0b",
+      "bytes": 4745
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-late-admission-baseline-fixture-corrected-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-late-admission-baseline-fixture-corrected-normal.jsonl",
+      "sha256": "3f834ff83c0827dd4b8323e3fefb4105a177a46235f92dae6802b76b59f1fdda",
+      "bytes": 2871
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-late-admission-baseline-fixture-corrected-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-late-admission-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-late-admission-baseline-normal.jsonl",
+      "sha256": "7e71770d0eeac823fad4fa05afe529acc41519b1ee028200c02b325d7cc68d02",
+      "bytes": 6576
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-late-admission-baseline-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-reconciliation-baseline-alias.go",
+      "sha256": "d400e357786f6534d5354c553593af6d9b60f17c2ce8095e61d4d0b8f972a30e",
+      "bytes": 220
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-restart-callback-baseline-corrected-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-restart-callback-baseline-corrected-normal.jsonl",
+      "sha256": "1a5bd7e276cfdc0b6ceb7b651517b31054aba3c4f2ee9e310304d6e0bdc1b63d",
+      "bytes": 1252
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-restart-callback-baseline-corrected-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-restart-callback-baseline-final-fixture-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-restart-callback-baseline-final-fixture-normal.jsonl",
+      "sha256": "0a427e1b2e3225dc11aa4f80450f87bc7733454119da8e5621740118835485ce",
+      "bytes": 8007
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-restart-callback-baseline-final-fixture-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-restart-callback-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-restart-callback-baseline-normal.jsonl",
+      "sha256": "be74f69fa9adf68175c8a1aef24b45dffa792a005faf8736d3d17f652ca48476",
+      "bytes": 11990
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-restart-callback-baseline-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-submit-control-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-submit-control-normal.jsonl",
+      "sha256": "37de7b84c2f64c39a8597671da68d73adf978771c0b17c21ab9179a53dafb9f3",
+      "bytes": 6435
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-submit-control-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-submit-control-overlay.json",
+      "sha256": "f8c9362c2a396fb65d8cf7a149d90714e5f4815fd120240c4200bdde345b80df",
+      "bytes": 218
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-submit-control-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-submit-control-race.jsonl",
+      "sha256": "6087ddec1318d2271c8b488cfd63aff7558f2c04df0b781dffd53f83fd897c2b",
+      "bytes": 6429
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-submit-control-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "causal_scopes": [
+    {
+      "name": "intermediate",
+      "roots": 5,
+      "source": "retained intermediate native-adopter source; no published-baseline claim"
+    },
+    {
+      "name": "public-submit",
+      "roots": 1,
+      "source": "unchanged parent105e54c3 SubmitCall with final guarded owner and valid synthetic signer fixture"
+    },
+    {
+      "name": "late-admission",
+      "roots": 2,
+      "source": "retained subsequent intermediate journal and SubmitCall; old empty-journal fixture selected explicitly"
+    },
+    {
+      "name": "restart-callback",
+      "roots": 5,
+      "source": "same retained intermediate product source with current preprovisioned fixture; test-only recovery alias is not invoked by selected controls"
+    }
+  ],
+  "compiler": {
+    "path": "/usr/local/go/bin/go",
+    "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45",
+    "bytes": 15434687
+  },
+  "connect_downloaded_peer_and_modules": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/config.go",
+      "sha256": "68ac9ed2bbc8e0fded670b4a0e6ceb1c418136be19cc7682f7736e4d5cdb5e5c",
+      "bytes": 9464
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/host_linux.go",
+      "sha256": "b2591196fe70dd89e97267e1137d19b7b5878d07d1f8b6dae98c87e5ee4f5a5d",
+      "bytes": 25756
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/host_other.go",
+      "sha256": "7b903f7e9d161423f7f4bfc1eb3d549491599f6b2e94d3261df651e89b58ef1b",
+      "bytes": 1303
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/inventory.go",
+      "sha256": "79e9e8390e1a7653806eb71a73e387fd02d6a1ca2acd8d7d8c7998a642dbca7b",
+      "bytes": 10780
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/inventory_linux.go",
+      "sha256": "ec06d0769cc932e4905c128e4a5a441487ff5bd2c88e5975eeb91da846745879",
+      "bytes": 5883
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/inventory_other.go",
+      "sha256": "7f170caeea9d988d1f860903c27291afb0bf19ba2b7894746fdaba84a099d5bf",
+      "bytes": 299
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/inventory_test.go",
+      "sha256": "9144d619e9cf52002d9f5998cb0d326420e96f5d1f4e6940b113020f70c81108",
+      "bytes": 12162
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/observation_test.go",
+      "sha256": "abb872fdbb47ca38b8ae86ab234fa19781ad3ae7f95c14ef6f6f25283c1d31d9",
+      "bytes": 3154
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/owner.go",
+      "sha256": "1f38fc38c537ad4cfef3fa2c1526ff1816dce113349ca9a7fb513e26b4138cd9",
+      "bytes": 9266
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/owner_local_test.go",
+      "sha256": "47319b05303324d4b04881f720fa54c43707185ec226bf7520e819daea7348aa",
+      "bytes": 10388
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/owner_test.go",
+      "sha256": "aefb0b5e1a7c577a3733d3871dd9e2e15f4ff29232ea81bf58a94d49a2bc6eb7",
+      "bytes": 25194
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/read_admission_test.go",
+      "sha256": "cef81dbe80934fdcd7e9f2c64011fc25427f1bab56855304125840a8ca269cd5",
+      "bytes": 3829
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/root_generation_linux.go",
+      "sha256": "e9b80675ec957ce9313f7dd856647b360f0bf35398527c171a8adefd8c908cda",
+      "bytes": 2547
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/durablevolume/root_generation_test.go",
+      "sha256": "7b17b640358a450010d780724195f16c2a80b2b3ac3d51e34b24799eec11a633",
+      "bytes": 6657
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/go.mod",
+      "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7",
+      "bytes": 3847
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002072506-6cd720cf50a4/go.sum",
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693",
+      "bytes": 21922
+    }
+  ],
+  "dependencies": {
+    "connect": {
+      "commit": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect",
+      "tree": "010533a40c31403c14a810828fee3c47e324c143"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "025802a50e2dc56dc56c3cb749db7375aa9f72be",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/server",
+      "tree": "adf05777aca3ad4fb97c4befd2163a74064d635b"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "excluded_attempts": [
+    "native-submit-control-normal and race: invalid zero-key fixture panic, excluded",
+    "native-late-admission-baseline-normal: invalid zero-key fixture panic, excluded",
+    "native-restart-callback-baseline-normal: missing synthetic Subscribe implementation panicked; corrected control retained separately",
+    "native-restart-callback-baseline-corrected-normal: test import alias build failure, excluded"
+  ],
+  "independent_primitive_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-connect-durable-core-independent-20261002/v2-receipt.json",
+    "sha256": "3c134a458a542b4e423b2d0d7119462aba14af583e5ea707becd56fe7b0e07e4",
+    "bytes": 19159
+  },
+  "launch_ready": false,
+  "limits": {
+    "journal_bytes": 16777216,
+    "journal_line_bytes": 1048576,
+    "raw_member_bytes": 1048576,
+    "raw_members": 10000,
+    "raw_total_bytes": 67108864
+  },
+  "phases": [
+    {
+      "elapsed_seconds": 12.667840782,
+      "exit_code": 0,
+      "expectation_met": true,
+      "fail": 0,
+      "panic": false,
+      "pass": 42,
+      "phase": "normal",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:02.07287522Z"
+    },
+    {
+      "elapsed_seconds": 25.056514724,
+      "exit_code": 0,
+      "expectation_met": true,
+      "fail": 0,
+      "panic": false,
+      "pass": 42,
+      "phase": "race",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:14.741190268Z"
+    },
+    {
+      "elapsed_seconds": 1.521646524,
+      "exit_code": 0,
+      "expectation_met": true,
+      "fail": 0,
+      "panic": false,
+      "pass": 0,
+      "phase": "vet",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:39.798242112Z"
+    },
+    {
+      "elapsed_seconds": 2.188456426,
+      "exit_code": 1,
+      "expectation_met": true,
+      "fail": 5,
+      "panic": false,
+      "pass": 0,
+      "phase": "causal-intermediate-normal",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:41.320793394Z"
+    },
+    {
+      "elapsed_seconds": 2.941617207,
+      "exit_code": 1,
+      "expectation_met": true,
+      "fail": 5,
+      "panic": false,
+      "pass": 0,
+      "phase": "causal-intermediate-race",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:43.509803909Z"
+    },
+    {
+      "elapsed_seconds": 2.503173075,
+      "exit_code": 1,
+      "expectation_met": true,
+      "fail": 1,
+      "panic": false,
+      "pass": 0,
+      "phase": "causal-public-submit-normal",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:46.452233109Z"
+    },
+    {
+      "elapsed_seconds": 4.139674098,
+      "exit_code": 1,
+      "expectation_met": true,
+      "fail": 1,
+      "panic": false,
+      "pass": 0,
+      "phase": "causal-public-submit-race",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:48.955766072Z"
+    },
+    {
+      "elapsed_seconds": 2.138478319,
+      "exit_code": 1,
+      "expectation_met": true,
+      "fail": 2,
+      "panic": false,
+      "pass": 0,
+      "phase": "causal-late-admission-normal",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:53.095766882Z"
+    },
+    {
+      "elapsed_seconds": 3.166233075,
+      "exit_code": 1,
+      "expectation_met": true,
+      "fail": 2,
+      "panic": false,
+      "pass": 0,
+      "phase": "causal-late-admission-race",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:55.234600416Z"
+    },
+    {
+      "elapsed_seconds": 2.366687679,
+      "exit_code": 1,
+      "expectation_met": true,
+      "fail": 5,
+      "panic": false,
+      "pass": 0,
+      "phase": "causal-restart-callback-normal",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:38:58.401236572Z"
+    },
+    {
+      "elapsed_seconds": 3.69082882,
+      "exit_code": 1,
+      "expectation_met": true,
+      "fail": 5,
+      "panic": false,
+      "pass": 0,
+      "phase": "causal-restart-callback-race",
+      "skip": 0,
+      "started_utc": "2026-10-02T08:39:00.76871344Z"
+    }
+  ],
+  "schema": "astra-native-journal-custody-qualification-v1",
+  "scope_exclusions": [
+    "no live mainnet signing, broadcast, deployment, mount or production start",
+    "no whole-history anti-rollback proof against replacement by all valid predecessor bytes",
+    "no production provisioning command, restore automation, backup correctness, cross-host or database qualification",
+    "no downstream validator/bootstrap/miner/monitor/claim adoption qualification; native fleet one-attempt reconciliation wiring remains WIP outside this commit",
+    "capacity warning/planning/retained-head rotation remains open; fixed bounded limits are not a months-long capacity forecast",
+    "no current full-SN/Connect/server or composed release qualification; server025 is only the exact dependency fence"
+  ],
+  "sealed_utc": "2026-10-02T08:42:20.200338839Z",
+  "source": {
+    "changed_files": [
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/chain/journal.go",
+        "sha256": "140cf42ec177c058614531989d807fd8f210d479bdbc6e59c0187acd4faf0ed1",
+        "bytes": 6165
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/chain/journal_custody_linux.go",
+        "sha256": "71fef7f71e5472bbe7be096d8d35692171c83afeb84e7d135c856d791233c905",
+        "bytes": 16740
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/chain/journal_custody_test.go",
+        "sha256": "e42be7606434182097650a96214e4351430ea08fcc623aba61f60ecac0ecf318",
+        "bytes": 15097
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/chain/journal_durable_linux.go",
+        "sha256": "1190c9eb5a9d36721888ca6d06e36f34337e0a2399d1a8eac4ee5df2f7e2fbe0",
+        "bytes": 22491
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/chain/journal_durable_other.go",
+        "sha256": "f29712e9ae1f3345995145e6fc2cdfb4e1cbb7f30b9d0a5999b4c7751a705f1a",
+        "bytes": 944
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/chain/journal_durable_successor_test.go",
+        "sha256": "0a4863b5e2c184d02cd9962860b3606a639ee581d17f721411e4a71f09d9b065",
+        "bytes": 17141
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/chain/journal_durable_test.go",
+        "sha256": "aacf0398fca4cf3b8df2666d8bcaa5af8b17c77d145d6c9b7316e798c0d3f97c",
+        "bytes": 6968
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/chain/submit.go",
+        "sha256": "e69aa304be3fd0de12500c59c8a47db36970d3b80a8493e382bdd6a7054ca6cd",
+        "bytes": 5335
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/go.mod",
+        "sha256": "44ae2f38cf56c4981e2b3dcf393bc611dc79a95d4e3115b6387da45d9678ffdd",
+        "bytes": 11191
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/go.sum",
+        "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3",
+        "bytes": 65112
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/internal/durablefixture/fixture_linux.go",
+        "sha256": "1b6ec23982cd2140f7f0ee2afd9c90b3f0b20307b1c4592a6bd34bc9b3b43ff1",
+        "bytes": 7064
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/internal/durablefixture/native_journal_linux.go",
+        "sha256": "9b18cd1b51f0b034903d3675780b3b6c311b35723f9057c1591cea22de3914e7",
+        "bytes": 1941
+      },
+      {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint/internal/durablepath/directory.go",
+        "sha256": "fd1a7da327cb3aa776db9aecaa22725ac7ae5e688e606186c14e3443cadd2835",
+        "bytes": 5825
+      }
+    ],
+    "clean": true,
+    "commit": "695f6683173889e66926150fed7cc06bd78d8a23",
+    "parent": "105e54c3acdc30ce37e32075342dc5f9421beb3f",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-checkpoint",
+    "tree": "efee94605757eeca1ba0535e31488b87de7c10de"
+  },
+  "verdict": "PASS_SCOPED",
+  "verified_behavior": [
+    "42 full chain roots pass normal and race with no skips; three package vet exits zero",
+    "required daemon or separately selected owner-local v2 declaration; missing journal/root/anchor is never initialized by admission",
+    "read admission under same-owner full/read-only pressure; real leaf/root identity loss remains sticky; observation outages retry without invented identity loss",
+    "request and retained-owner cancellation remain distinct, including RuntimeAdmission and BeforeBroadcast callbacks",
+    "incremental acknowledged log digest and raw census; required preprovisioned checkpoint and durable pending state before data mutation",
+    "one bounded explicit joined reconciliation accepts exact committed/intended bytes, syncs them, and may rename one exact anchored raw temporary with no replacement",
+    "forced child exits at append sync and raw create/write/sync/rename retain physical custody; unknown/partial/duplicate/colliding bytes remain stopped",
+    "barrier-driven concurrent root-A readback loss does not stop root-B; same approved root reopens only after old owner joins"
+  ]
+}

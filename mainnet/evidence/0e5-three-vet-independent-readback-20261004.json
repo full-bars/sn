@@ -1,0 +1,31 @@
+{
+  "schema": "0e5-three-vet-independent-readback-v1",
+  "status": "PASS",
+  "batch": {
+    "path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-three-vet-batch-receipt.json",
+    "sha256": "d66a75afd75b60f65b1a7393ac1c5d10c7579821a035338ac0ed70337e885b5e"
+  },
+  "packages": [
+    {
+      "phase_id": "0e5-15-vet-mainnet",
+      "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-15-vet-mainnet-vet-receipt.json",
+      "receipt_sha256": "f9ef083a80c9bd198419ea3d6a5fd1fa7ec01c3fb93b876003e87c7538ed2da3",
+      "status": "PASS"
+    },
+    {
+      "phase_id": "0e5-16-vet-validator",
+      "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-16-vet-validator-vet-receipt.json",
+      "receipt_sha256": "cc75a01e79e7b54c8225a86be004aadd87d48de69538b4c1a756aa3ca43300c8",
+      "status": "PASS"
+    },
+    {
+      "phase_id": "0e5-17-vet-internal-durablehead",
+      "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-17-vet-internal-durablehead-vet-receipt.json",
+      "receipt_sha256": "c5e09de331fa9500cdf9ad45215c6c16222b27c52bd84410a6be29c77cfce394",
+      "status": "PASS"
+    }
+  ],
+  "limits": [
+    "Vet passes do not prove behavioral correctness or launch readiness."
+  ]
+}

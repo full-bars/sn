@@ -1,0 +1,13 @@
+{
+  "captured_utc": "2026-10-03T19:48:22.033782+00:00",
+  "completion": "Consumercomponent alone does not finalize continuous mainnet behavior.",
+  "finding": "Native observation consumer reads independently signed per-boundary admission/job/provider-generation evidence from a directory. It does not implement a continuous independent finality/provider verifier and producer. Preseeded signed fixtures exercise consumer paths only.",
+  "qualification": "Actual producer to ownedRust to publicGo consumer, restart/no-gap continuity, canonicalchange, omittedwitness and authority replacement controls. Actualnetwork/runtime/genesis approval remains distinct.",
+  "required": "Reuse independently approved runtime/layout/engine scope while automatically collecting and independently verifying fresh boundary/job/finality/provider evidence under bounded retry and retained checkpoints. Admit producer authority explicitly; do not infer onlineLedger authority or self-sign unverified artifacts as proof. Preserve unknown for incomplete/unapproved evidence.",
+  "schema": "urnetwork-root-native-continuous-admission-gap-v1",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-execution-witness/sn/mainnet/economic_native_execution.go",
+    "sha256": "bbe0d1dcd1df097e01902a7e97f46531732da60affa57028b53d5c8b49a3aee2"
+  },
+  "status": "UNSEALED_CONSUMER_SOURCE_PRODUCER_MISSING"
+}

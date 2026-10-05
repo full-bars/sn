@@ -1,0 +1,75 @@
+{
+  "active_sampler_unchanged": true,
+  "immutable_bindings": [
+    {
+      "bytes": 3765,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/full-adoption.json",
+      "sha256": "e931bd26d91b117f53ed9ec07fee36687cc7868468e3f1a2bcd3d1e6261b5998"
+    },
+    {
+      "bytes": 4766,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/full-job-v1.json",
+      "sha256": "6823d8c44f920034559b5c34dffccef34e1d4eddf3348a0fbd1298a930ff662f"
+    },
+    {
+      "bytes": 19954,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/run-full-model-v2.py",
+      "sha256": "af1c0f131b2c16347353fc74c5be2bc87074076b6b832892f7aa46ba8b19f2dd"
+    },
+    {
+      "bytes": 3517,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/run-full-model-v1.sh",
+      "sha256": "d85bbaea2c6a4cb34ec1dd52d534dbcb360b03bae8f4843eacb4e177451971ed"
+    },
+    {
+      "bytes": 1619,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/full-adoption-description-clarification-v1.json",
+      "sha256": "644ecde561581eafdfbd0247ff2b6695238aca8355aa051354eab457140a8e96"
+    }
+  ],
+  "job_bindings_verified": 12,
+  "observed_utc": "2026-10-04T04:23:21.309344+00:00",
+  "original_405_resource_false_retained": true,
+  "original_failed_a2_retained": true,
+  "processes": [
+    {
+      "command": "/home/by/urnetwork/.virtualenv/brien/bin/python3 -B /mnt/data/sn-testnet/sol-fee-consumer-663-20261004/run-full-model-v2.py --adoption /mnt/data/sn-testnet/sol-fee-consumer-663-20261004/full-adoption.json",
+      "pid": 796310,
+      "start_ticks": "95976037"
+    },
+    {
+      "command": "bash /mnt/data/sn-testnet/sol-fee-consumer-663-20261004/run-full-model-v1.sh",
+      "pid": 796380,
+      "start_ticks": "95976088"
+    },
+    {
+      "command": "go test -json -count=1 -parallel=2 -p=2 -timeout=165m -run . ./model",
+      "pid": 797295,
+      "start_ticks": "95976719"
+    },
+    {
+      "command": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/tmp/go-build858421693/b001/model.test -test.paniconexit0 -test.v=test2json -test.count=1 -test.parallel=2 -test.timeout=2h45m0s -test.run=.",
+      "pid": 797639,
+      "start_ticks": "95977510"
+    }
+  ],
+  "raw_prefix": {
+    "bytes": 1144180,
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current-model.jsonl",
+    "scope": "Complete-line prefix observed while append-only run remains live; not final raw-file digest",
+    "sha256": "03adb71600e1455f5e04dc3570ebe87acfb0241daf9588b50f7c1684d8719755"
+  },
+  "requirements_closed": false,
+  "schema": "server1709-complete-model-live-root-review-v1",
+  "source_pair": {
+    "core": "v0.0.0-20261004025941-ad6fc3a191a3",
+    "server": "1709ffe03ffa59ae31441374f3e673793d099764",
+    "sn_peer": "663a0ea299e21411a92b9eb064443d7cc9b0b851"
+  },
+  "status": "LIVE_BEHAVIOR_TESTS_RUNNING_NOT_QUALIFIED",
+  "top_level_events": {
+    "output": 3136,
+    "pass": 40,
+    "run": 41
+  }
+}

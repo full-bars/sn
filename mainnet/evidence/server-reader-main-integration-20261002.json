@@ -1,0 +1,51 @@
+{
+  "schema": "qualified-server-reader-main-integration-v1",
+  "main_commit": "1d72f577c083f402f7d61ca546d3d6067a4c2699",
+  "upstream_preserved": "d150e2f561abd5204dec29c6e0ae185044d68ec8",
+  "qualified_source": "2c4e5dca72fff0ba505119ff59dfa2a0ac88c04e",
+  "changed_files": {
+    "blob.go": {
+      "bytes": 43623,
+      "sha256": "6fc7da6ca6277a2751507ab701107130fda3881123845e9dd356a982f0f5808e"
+    },
+    "blob_batch.go": {
+      "bytes": 10900,
+      "sha256": "d75ada72209ef9f62fd71ad8831a05db853c9af69779428fb2f9c6ffeb836f51"
+    },
+    "blob_capacity.go": {
+      "bytes": 7298,
+      "sha256": "5198fcb4a11f311da2954ed3bd235ac207f1702c6fbf872a3138b3359ae11098"
+    },
+    "blob_durable.go": {
+      "bytes": 23247,
+      "sha256": "aba74c57e0dc4810a82112abd21c35dee3d4712c46ec1e07fd9c0aad8d8d81e2"
+    },
+    "blob_durable_test.go": {
+      "bytes": 22721,
+      "sha256": "ed8536e90d3900ace0a68eb98d71d748501554b0e35e108e9af7f7347cd99e63"
+    },
+    "blob_reader_contract_test.go": {
+      "bytes": 8830,
+      "sha256": "6b2c58f1d1bafed2f274ed409f832c56fda64c504221b3eb1d093069bcdd4408"
+    },
+    "blob_test.go": {
+      "bytes": 38509,
+      "sha256": "34ac4d51f9b2ea5721d65486ec4dcafacfa0676234e2c5e82b21bcded3782b81"
+    },
+    "go.mod": {
+      "bytes": 10468,
+      "sha256": "ad4b307433de35ab9f40df50d0c6906ec2eef1a4bfdec1adad700c3b3c842147"
+    },
+    "go.sum": {
+      "bytes": 67934,
+      "sha256": "a805fb68cf119986df0d3fb630081d7b0fcac1e7b0470181934bc6b763616555"
+    }
+  },
+  "independent_receipt_sha256": "403a7d8cd9c68f29c83a3e231452291b215c9ce13cdfda1bd9fcc9edf59e2c8d",
+  "source_verification": "Exactly nine files differ from upstream and each matches qualified source; all other upstream tree entries preserved.",
+  "qualification_scope": "26 unique selected reader/blob consumers normal/race, server vet, old body7 failures/6 positives each mode on frozen2c e0d/SCTP644/SN69 graph.",
+  "limits": [
+    "Newer unrelated model/monitor upstream code preserved; final current-main dependency/release composition still requires qualification.",
+    "No broad model suite or compiler/provenance/deployment/activation claim."
+  ]
+}

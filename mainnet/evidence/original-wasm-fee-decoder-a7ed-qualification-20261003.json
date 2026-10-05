@@ -1,0 +1,524 @@
+{
+  "actual_crate_git_files_verified": {
+    "Cargo.lock": {
+      "bytes": 118683,
+      "git_blob": "ae63def29a1e18534fa944321492baada3c31980",
+      "sha256": "2440fcbe35c1a6359e78c4d42e9bbfca9c81c6afceccc0e2b7c8892648bb6e82"
+    },
+    "Cargo.toml": {
+      "bytes": 2242,
+      "git_blob": "1ce942efc9d378510cde7671fc113da2f3c018b3",
+      "sha256": "6c70b093da6045f99b5a7abac4fc70429ef61952f202dc4b32d367be5758fe7d"
+    },
+    "HISTORICAL-REPLAY.md": {
+      "bytes": 6107,
+      "git_blob": "bbbf35171d7697ddd631cbc618d843a5065e5ebc",
+      "sha256": "7533b688d8d4f9fe25f5a6a9a39091912216ea9e6c302e1a8c13711848a8a3b7"
+    },
+    "rust-toolchain.toml": {
+      "bytes": 104,
+      "git_blob": "7c8c246e55d9ca56c631d7143464f526acc3a486",
+      "sha256": "fb3f87a4bf579a0dc02e69de34f9cda59f20b1224d3511464ee64c90885ddb49"
+    },
+    "src/bin/runtime-historical-proof.rs": {
+      "bytes": 1182,
+      "git_blob": "ff781544810d8ed9d7c3a02c90f041cd0f103bee",
+      "sha256": "06310aec3708943ce37b097c33d2fda13f240ddcac6fb99fe1f5ad69227a7f21"
+    },
+    "src/bin/runtime-transition-replay.rs": {
+      "bytes": 1062,
+      "git_blob": "d068be3a9c592be7b98ee422abef9a33fc8c3441",
+      "sha256": "27932de27ef19775c9c01781c275617991e1d857ef657d26de7d92531ead7e77"
+    },
+    "src/historical.rs": {
+      "bytes": 17419,
+      "git_blob": "73e819f48a0a818dff74c3f8f61707ffe8ae520e",
+      "sha256": "49daff04f06f45766dff4ec4ee86ec9335f68a8c0d3b46d825652794eadd302f"
+    },
+    "src/historical_backend.rs": {
+      "bytes": 6330,
+      "git_blob": "6e46286459bf2b0ed44a80aec7dadb5d9bac7e35",
+      "sha256": "1a62ea226930f693a8c3e67a88d890df1a4d62ccf7a23dbd50cd0aa073577e4a"
+    },
+    "src/historical_fee_events.rs": {
+      "bytes": 20107,
+      "git_blob": "15185dd9ce4c9849d833f5be321938e4ec0987df",
+      "sha256": "beb7d149d7b2e3c1adfdb5b11c15c1003ec96e14ca20e96bba7ebbc1a14e395b"
+    },
+    "src/historical_hosts.rs": {
+      "bytes": 9933,
+      "git_blob": "725b750193c4d0e9dc7eec52458488f53dfaf602",
+      "sha256": "98771e9be5adef72dc7201c861947b757397067dd0c4b6a1f84464ae1bda1ea3"
+    },
+    "src/historical_observer.rs": {
+      "bytes": 14534,
+      "git_blob": "3aaab0c3dbc6c85718f5759c365490c7b14bd79f",
+      "sha256": "80911cd4449c89ef00d30ce529c806a0310d084d8f248382106ebc7b8a5ad855"
+    },
+    "src/historical_tests.rs": {
+      "bytes": 37639,
+      "git_blob": "0d39fefbd2c594a9c634d9d76c0197853e7557b6",
+      "sha256": "6bd767f0197e2185e39229dee0d0803b6e32eea6c406ebf73a29bb2f91a83edc"
+    },
+    "src/lib.rs": {
+      "bytes": 17694,
+      "git_blob": "c5a94fee89cdeffe163d58dac63424153e36cbee",
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39"
+    },
+    "src/main.rs": {
+      "bytes": 3292,
+      "git_blob": "ebbb3e96e22dd0a931885c9eaf8fbb64a835a630",
+      "sha256": "83f55935f40f8803c4552038a5be26983747a51176dc7f94b3cc535c3f1108c9"
+    },
+    "src/replay.rs": {
+      "bytes": 16621,
+      "git_blob": "46d4e0c1792caf24ebaa4de7a48fbf920e8c4beb",
+      "sha256": "36030a50a42eb083aa8725b5abef025c9cf5fd6d0793ea8cc53c3a0cede2da54"
+    },
+    "src/replay_tests.rs": {
+      "bytes": 11565,
+      "git_blob": "10967c726187ee532ce1c3c30db656277b105452",
+      "sha256": "8dc046e4abc8de0de10a9c8dba4966433711f0ddd60f13050b6fc6c68bccbe3c"
+    }
+  },
+  "artifact_bindings_verified": 71,
+  "bindings": [
+    {
+      "bytes": 1834,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/source-join.json",
+      "sha256": "5f6cc3bd5d038c98eae00d18dad14311f7be188e97adc07b76d580883a76ec22"
+    },
+    {
+      "bytes": 7433,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/cargo-metadata.json",
+      "sha256": "45baee28da527109948c2ddc43c8080c6c3c04bf501975856e54b58cb1785290"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/cargo-metadata.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/cargo-metadata.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1735,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/run-selected.sh",
+      "sha256": "9be884b5b3ff7ea0f8e597d79e1f5c6111f37caf7e060ccc5c0a9f65beaa2476"
+    },
+    {
+      "bytes": 395,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/root-preflight-selected.json",
+      "sha256": "c388f82f0b652d6adb203386c84d259fe5219078c11e962b0cedc360df695341"
+    },
+    {
+      "bytes": 111,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-selected27.phase",
+      "sha256": "580f1eea87e947e6146071fa15221cec1db5c9c4eaeb1a34a4c70523f5e8444e"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-selected27.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 2800,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-selected27.stdout",
+      "sha256": "b5675917edde94c067e12fc89db4fd452f9643fc5a945c7212ee07973744fa48"
+    },
+    {
+      "bytes": 5438,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-selected27.stderr",
+      "sha256": "0309079bd7b831d717d93dbce3a034170aff3ae223f19267abfa3c4dbe6e1175"
+    },
+    {
+      "bytes": 181,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-selected27.lock-before",
+      "sha256": "d919e09762a476a37cf63506c862a2a0caa4f03a3ecbc691346b8bdf680ffb91"
+    },
+    {
+      "bytes": 181,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-selected27.lock-after",
+      "sha256": "d919e09762a476a37cf63506c862a2a0caa4f03a3ecbc691346b8bdf680ffb91"
+    },
+    {
+      "bytes": 199,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-selected27.source-before",
+      "sha256": "92f02d0425a5054b44bd12fe3e127a3dac1661c55c6468323c5de1575ca75272"
+    },
+    {
+      "bytes": 199,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-selected27.source-after",
+      "sha256": "92f02d0425a5054b44bd12fe3e127a3dac1661c55c6468323c5de1575ca75272"
+    },
+    {
+      "bytes": 175,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-selected27.source-mtime",
+      "sha256": "2286895e9851e60bc161c19206cfc4276be505db4c204a8246117a171732c61a"
+    },
+    {
+      "bytes": 4078,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-a7ed-selected27-receipt.json",
+      "sha256": "86ed2f6bc8633dd69834a4a36d7efe1e28c821615dd19fe2037f39e679648dd7"
+    },
+    {
+      "bytes": 3420,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/controls-prepared.json",
+      "sha256": "5263ca0ba22cd7e7a52720a255db10fe1d739547f14b0b005bf5277efca11aff"
+    },
+    {
+      "bytes": 1980,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/run-controls.sh",
+      "sha256": "927131a9eb0a3dc584dccaa9964c99bdd084fc6d611ad7f316c0a3f35c116087"
+    },
+    {
+      "bytes": 395,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/root-preflight-controls.json",
+      "sha256": "c388f82f0b652d6adb203386c84d259fe5219078c11e962b0cedc360df695341"
+    },
+    {
+      "bytes": 2036,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/controls.tsv",
+      "sha256": "e6ec38dd3a46b49822120ad916cf605567b7026e096aaebdc1131424fcab2d88"
+    },
+    {
+      "bytes": 100,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-pin-omitted.phase",
+      "sha256": "76e603b56740d9146ec33b8cafdb0d0e691c386844eee9a30eed2c8872b415e9"
+    },
+    {
+      "bytes": 4,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-pin-omitted.exit",
+      "sha256": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c"
+    },
+    {
+      "bytes": 313,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-pin-omitted.stdout",
+      "sha256": "606393146d172084b4ab7ad6f49c23e5b847f16fc48ea9db6b904816c0c0d594"
+    },
+    {
+      "bytes": 9544,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-pin-omitted.stderr",
+      "sha256": "04517ab80e467ae331f2f73b1fdfce957e3e66383f0f60845658faedca13df9b"
+    },
+    {
+      "bytes": 222,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-pin-omitted.source-before",
+      "sha256": "9324a6fc29f49ed2605d6614d5a0b7e7fd026f2c7c57c9f04cb8eb626438f321"
+    },
+    {
+      "bytes": 222,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-pin-omitted.source-after",
+      "sha256": "9324a6fc29f49ed2605d6614d5a0b7e7fd026f2c7c57c9f04cb8eb626438f321"
+    },
+    {
+      "bytes": 198,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-pin-omitted.source-mtime",
+      "sha256": "a796f78d29097803da812ac41ed2a6351f7bc0b24e2d1967545565de5bf0a4a8"
+    },
+    {
+      "bytes": 204,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-pin-omitted.lock-before",
+      "sha256": "fdad51a9b2eff76d3a97e3813361514e81cba5dfe0717094b7358c4b0ddf95d7"
+    },
+    {
+      "bytes": 204,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-pin-omitted.lock-after",
+      "sha256": "fdad51a9b2eff76d3a97e3813361514e81cba5dfe0717094b7358c4b0ddf95d7"
+    },
+    {
+      "bytes": 101,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-payer-binding-omitted.phase",
+      "sha256": "fd12815cd4b484eb809b4e868ca9bf3d8098bf729d5dd5b635f77a9e78bc6faa"
+    },
+    {
+      "bytes": 4,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-payer-binding-omitted.exit",
+      "sha256": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c"
+    },
+    {
+      "bytes": 329,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-payer-binding-omitted.stdout",
+      "sha256": "f814b102e1ba0f8b46305e2dd028c577a62af9e00c0834b590f1c6dc2ed2015a"
+    },
+    {
+      "bytes": 9532,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-payer-binding-omitted.stderr",
+      "sha256": "11a80aea9970138783cda6138f1f7cbb174f1b01d5178c343ae5cc583ef3a4b8"
+    },
+    {
+      "bytes": 223,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-payer-binding-omitted.source-before",
+      "sha256": "d23b4044c4ad0b40b09bc39e786e7b8e64eeefaa49564f57d398f7bb659d279c"
+    },
+    {
+      "bytes": 223,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-payer-binding-omitted.source-after",
+      "sha256": "d23b4044c4ad0b40b09bc39e786e7b8e64eeefaa49564f57d398f7bb659d279c"
+    },
+    {
+      "bytes": 199,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-payer-binding-omitted.source-mtime",
+      "sha256": "991d2719d53c47a2b2923433b926ce4ca4f8e28b3360b93aa93e7899757db292"
+    },
+    {
+      "bytes": 205,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-payer-binding-omitted.lock-before",
+      "sha256": "061dda8dd1a7afaf88d13ca0403ac0816e909e0228faf44c6756a05e853a6814"
+    },
+    {
+      "bytes": 205,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-payer-binding-omitted.lock-after",
+      "sha256": "061dda8dd1a7afaf88d13ca0403ac0816e909e0228faf44c6756a05e853a6814"
+    },
+    {
+      "bytes": 110,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-absent-refund-invented-as-zero.phase",
+      "sha256": "73ec8547ce66318a1dbd904793f2df43ecdbd4021c1e91b87f62c0171982322f"
+    },
+    {
+      "bytes": 4,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-absent-refund-invented-as-zero.exit",
+      "sha256": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c"
+    },
+    {
+      "bytes": 331,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-absent-refund-invented-as-zero.stdout",
+      "sha256": "1162c1d807936738e45c9cddfc1ef7aedfbd957380c31a6b16298cdbaadf9681"
+    },
+    {
+      "bytes": 4825,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-absent-refund-invented-as-zero.stderr",
+      "sha256": "90b4e25c18db2eeb300446ca70a6153b7212b5297596d0003d7f7b20dc6ad40a"
+    },
+    {
+      "bytes": 232,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-absent-refund-invented-as-zero.source-before",
+      "sha256": "1ff930db6069d65ddf5e1786deb6588a0058cfe272b0cde951b4e54ecdf633e4"
+    },
+    {
+      "bytes": 232,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-absent-refund-invented-as-zero.source-after",
+      "sha256": "1ff930db6069d65ddf5e1786deb6588a0058cfe272b0cde951b4e54ecdf633e4"
+    },
+    {
+      "bytes": 208,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-absent-refund-invented-as-zero.source-mtime",
+      "sha256": "3740618553093930db72fb28d758df915706af849660b938eca31a94defdab30"
+    },
+    {
+      "bytes": 214,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-absent-refund-invented-as-zero.lock-before",
+      "sha256": "648d60703457dca50537d4f69d7153a364be8efdddc9f403838294d7b2153cff"
+    },
+    {
+      "bytes": 214,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-absent-refund-invented-as-zero.lock-after",
+      "sha256": "648d60703457dca50537d4f69d7153a364be8efdddc9f403838294d7b2153cff"
+    },
+    {
+      "bytes": 111,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-economic-shape-omitted.phase",
+      "sha256": "8d9ffb97f8e47fc6770e109989dea96e67d900c880bf3b82b722966ae36d53f9"
+    },
+    {
+      "bytes": 4,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-economic-shape-omitted.exit",
+      "sha256": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c"
+    },
+    {
+      "bytes": 359,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-economic-shape-omitted.stdout",
+      "sha256": "61f42bde0b4dba2a663d2f23ea87a6866bb4ca3cec9130ec197c1f6ae46bdd79"
+    },
+    {
+      "bytes": 9877,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-economic-shape-omitted.stderr",
+      "sha256": "31a7cf74b09ea3ffc35a57e3822251b127812d33ebe03a74112090e9107b5d13"
+    },
+    {
+      "bytes": 233,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-economic-shape-omitted.source-before",
+      "sha256": "01fe4f3c8947b35799973d9260096624569cd8f35f85037325a65387f197a09c"
+    },
+    {
+      "bytes": 233,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-economic-shape-omitted.source-after",
+      "sha256": "01fe4f3c8947b35799973d9260096624569cd8f35f85037325a65387f197a09c"
+    },
+    {
+      "bytes": 209,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-economic-shape-omitted.source-mtime",
+      "sha256": "481d65126371d49433f174d1866ca48afd15946950f356c315f27acdd47a88d3"
+    },
+    {
+      "bytes": 215,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-economic-shape-omitted.lock-before",
+      "sha256": "30fb51c95a90e0b9111dfee0fb013db1a11439dd5271a18ff5186607462962c2"
+    },
+    {
+      "bytes": 215,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-metadata-economic-shape-omitted.lock-after",
+      "sha256": "30fb51c95a90e0b9111dfee0fb013db1a11439dd5271a18ff5186607462962c2"
+    },
+    {
+      "bytes": 113,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-extrinsic-placement-bound-omitted.phase",
+      "sha256": "28b58cf10dd219c515be64f5b86add75e763058f70649e6d4c80cfe33745c046"
+    },
+    {
+      "bytes": 4,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-extrinsic-placement-bound-omitted.exit",
+      "sha256": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c"
+    },
+    {
+      "bytes": 365,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-extrinsic-placement-bound-omitted.stdout",
+      "sha256": "6d92381df8bafef7f1701c7ad8eaa36ff059a0976dd7f1073accb702f543cde8"
+    },
+    {
+      "bytes": 9565,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-extrinsic-placement-bound-omitted.stderr",
+      "sha256": "a7462a238828535d81871ffdf858c826044acf56d195598ce25bf85d9e6a3a30"
+    },
+    {
+      "bytes": 235,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-extrinsic-placement-bound-omitted.source-before",
+      "sha256": "ef78697f9af9648873c05c50d127591aedc38a549e5d4a50b39af9f9d5807f76"
+    },
+    {
+      "bytes": 235,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-extrinsic-placement-bound-omitted.source-after",
+      "sha256": "ef78697f9af9648873c05c50d127591aedc38a549e5d4a50b39af9f9d5807f76"
+    },
+    {
+      "bytes": 211,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-extrinsic-placement-bound-omitted.source-mtime",
+      "sha256": "f737bd2cf683959ab4f6af6acef4e14bf517452502a178d0bf6c7de75d0d7501"
+    },
+    {
+      "bytes": 217,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-extrinsic-placement-bound-omitted.lock-before",
+      "sha256": "feb47eefc46120ee521ed60a3e0bb99d61aaeb725b8ad648f869cdfe2508b675"
+    },
+    {
+      "bytes": 217,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/control-extrinsic-placement-bound-omitted.lock-after",
+      "sha256": "feb47eefc46120ee521ed60a3e0bb99d61aaeb725b8ad648f869cdfe2508b675"
+    },
+    {
+      "bytes": 20078,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/controls/metadata-pin-omitted/runtime-metadata-probe/src/historical_fee_events.rs",
+      "sha256": "2f10873e371709365a2f483a7d69d831b670eba9fceb52d8f9368f20e187f01e"
+    },
+    {
+      "bytes": 20116,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/controls/payer-binding-omitted/runtime-metadata-probe/src/historical_fee_events.rs",
+      "sha256": "c136862b2736963bfdebc0f8e86f8557b0020b2140dea374a84dbe16ce7b4f1b"
+    },
+    {
+      "bytes": 20189,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/controls/absent-refund-invented-as-zero/runtime-metadata-probe/src/historical_fee_events.rs",
+      "sha256": "28f14e88ed60e07da641134d09819c693f4a52a1b079dc729b6c6ebb1babadb7"
+    },
+    {
+      "bytes": 19794,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/controls/metadata-economic-shape-omitted/runtime-metadata-probe/src/historical_fee_events.rs",
+      "sha256": "2556bc09a5765c2613193eda325841f7f790614c64620385122980767ead0279"
+    },
+    {
+      "bytes": 20116,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/controls/extrinsic-placement-bound-omitted/runtime-metadata-probe/src/historical_fee_events.rs",
+      "sha256": "3525081087d469a97abf2d12a528257277a8002c20b08c2b4bab2c6b7c6353dc"
+    },
+    {
+      "bytes": 16533,
+      "path": "/mnt/data/sn-testnet/sol-historical-fee-decoder-a7ed-independent-20261003/evidence/decoder-a7ed-five-causals-receipt.json",
+      "sha256": "d23f029fcf12f999bec67191ad6ca205fc231b051fcb106122d088cecc7a298f"
+    }
+  ],
+  "limits": [
+    "Synthetic original-Wasm fixtures; not actual chain runtime fee authority",
+    "Missing refund remains unknown, not zero expenditure",
+    "Current Go caller cross-engine integration pending",
+    "Complete parent witness, original runtime profile and host surface, failed-refund branches, finality and production acceptance remain open"
+  ],
+  "locked_offline": true,
+  "operative_controls": [
+    {
+      "actual_crate_recompile": true,
+      "behavioral_failure_verified": true,
+      "exit": 101,
+      "name": "metadata-pin-omitted",
+      "only_changed_file": "src/historical_fee_events.rs",
+      "test": "historical_fee_runtime_metadata_pin_cannot_be_substituted"
+    },
+    {
+      "actual_crate_recompile": true,
+      "behavioral_failure_verified": true,
+      "exit": 101,
+      "name": "payer-binding-omitted",
+      "only_changed_file": "src/historical_fee_events.rs",
+      "test": "historical_fee_foreign_payer_and_excess_refund_refuse_attribution"
+    },
+    {
+      "actual_crate_recompile": true,
+      "behavioral_failure_verified": true,
+      "exit": 101,
+      "name": "absent-refund-invented-as-zero",
+      "only_changed_file": "src/historical_fee_events.rs",
+      "test": "historical_fee_missing_refund_never_relabels_prior_deposit_or_zero"
+    },
+    {
+      "actual_crate_recompile": true,
+      "behavioral_failure_verified": true,
+      "exit": 101,
+      "name": "metadata-economic-shape-omitted",
+      "only_changed_file": "src/historical_fee_events.rs",
+      "test": "historical_fee_exact_metadata_rejects_changed_amount_units_and_duplicate_pallets"
+    },
+    {
+      "actual_crate_recompile": true,
+      "behavioral_failure_verified": true,
+      "exit": 101,
+      "name": "extrinsic-placement-bound-omitted",
+      "only_changed_file": "src/historical_fee_events.rs",
+      "test": "historical_fee_original_event_bytes_reject_bad_phase_topics_and_duplicate_execution"
+    }
+  ],
+  "selected_raw_pass_roots": [
+    "historical::tests::historical_missing_write_path_refuses_unchanged_declared_root",
+    "historical::tests::historical_empty_block_and_sealed_header_keep_original_identity",
+    "historical::tests::historical_complete_parent_proof_retains_unread_top_and_child_nodes",
+    "historical::tests::historical_missing_read_node_is_not_authenticated_absence",
+    "historical::tests::historical_original_wasm_observer_refuses_relabelled_body_code_and_range",
+    "historical::tests::historical_missing_child_write_path_refuses_unchanged_declared_root",
+    "historical::tests::historical_original_wasm_observer_never_publishes_incomplete_poststate",
+    "historical::tests::historical_original_wasm_unobserved_calls_and_zero_events_remain_unknown",
+    "historical::tests::historical_original_wasm_observer_rollback_discards_effect_not_work",
+    "historical::tests::historical_missing_child_read_refuses_before_empty_value",
+    "historical::tests::historical_complete_parent_proof_replays_top_and_child_writes",
+    "historical::tests::historical_original_wasm_stack_observes_real_host_calls_without_fee_authority",
+    "historical::tests::historical_complete_proof_supports_same_key_rollback_and_child_delete",
+    "historical::tests::historical_original_wasm_nested_ambiguous_attribution_refuses_complete_block",
+    "historical::tests::historical_unsupported_host_is_not_a_successful_noop",
+    "historical::tests::historical_header_body_parent_code_and_post_root_are_independent_guards",
+    "historical::tests::historical_public_decoder_refuses_unknown_trailing_duplicate_and_bounded_inputs",
+    "historical::tests::historical_fee_runtime_metadata_pin_cannot_be_substituted",
+    "historical::tests::historical_fee_missing_refund_never_relabels_prior_deposit_or_zero",
+    "historical::tests::historical_fee_original_metadata_separates_actual_refund_from_same_phase_effects",
+    "historical::tests::historical_fee_observed_zero_refund_differs_from_missing",
+    "historical::tests::historical_fee_foreign_payer_and_excess_refund_refuse_attribution",
+    "historical::tests::historical_fee_init_phase_and_late_refund_remain_unassigned",
+    "historical::tests::historical_fee_exact_metadata_rejects_changed_amount_units_and_duplicate_pallets",
+    "historical::tests::historical_fee_original_event_bytes_reject_bad_phase_topics_and_duplicate_execution",
+    "historical::tests::historical_original_wasm_observer_cumulative_bound_survives_rollback",
+    "historical::tests::historical_unfinished_transaction_and_work_exhaustion_publish_no_fact"
+  ],
+  "source_and_lock_unchanged_during_execution": true,
+  "source_commit": "a7edc3df93033b0df1aab328bf1ed983301dede3",
+  "source_tree": "4f43a0d77bf4f81964a1ad44084c7e071466ff20",
+  "status": "ROOT_VERIFIED_SCOPED"
+}

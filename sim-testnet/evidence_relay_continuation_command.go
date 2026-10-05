@@ -5,23 +5,31 @@ package main
 import (
 	"context"
 	"errors"
-	"os"
 	"path/filepath"
 )
 
 func validateEvidenceRelayContinuationOptions(command string, o cliOptions) error {
-	used := o.RelayContinuationPlan != "" || o.RelayEndBlock != 0
+	used := o.RelayContinuationPlan != "" || o.RelayEndBlock != 0 || o.RelaySlots != 0 || o.RelaySourceLimitMultiplier != 0 || o.ProvisionalCapture
 	if command != "relay-continuation" {
 		if used {
 			return errors.New("relay continuation options require relay-continuation")
 		}
 		return nil
 	}
+	if err := validateProvisionalRelayCaptureOptions(command, o); err != nil {
+		return err
+	}
 	if o.ProvisionalResume || o.Detach || o.Name != "" || o.Manifest != "" {
 		return errors.New("relay continuation requires strict stopped operation and cannot start a topology")
 	}
+	if o.RelaySlots != 0 && o.RelaySlots != evidenceRelayContinuationExpandedSlots {
+		return errors.New("relay funding revision requires exactly --relay-slots 2048")
+	}
+	if o.RelaySourceLimitMultiplier != 0 && o.RelaySourceLimitMultiplier != 2 {
+		return errors.New("relay source lifetime revision requires exactly --relay-source-limit-multiplier 2")
+	}
 	if o.RelayContinuationPlan != "" {
-		if !filepath.IsAbs(o.RelayContinuationPlan) || filepath.Clean(o.RelayContinuationPlan) != o.RelayContinuationPlan || o.RelayEndBlock != 0 {
+		if !filepath.IsAbs(o.RelayContinuationPlan) || filepath.Clean(o.RelayContinuationPlan) != o.RelayContinuationPlan || o.RelayEndBlock != 0 || o.RelaySlots != 0 || o.RelaySourceLimitMultiplier != 0 {
 			return errors.New("imported relay continuation requires one canonical absolute plan and no replacement end")
 		}
 	} else if o.RelayEndBlock == 0 || o.Apply {
@@ -37,22 +45,22 @@ func runEvidenceRelayContinuation(ctx context.Context, cfg *ResolvedConfig, stat
 	if err := validateEvidenceRelayContinuationOptions("relay-continuation", o); err != nil {
 		return err
 	}
-	base, err := loadPersistedPlan(cfg, stateDir)
+	commandConfig := cfg
+	var base *SetupPlan
+	var err error
+	if o.ProvisionalCapture {
+		cfg, base, err = prepareProvisionalRelayCapture(ctx, cfg, stateDir, o)
+	} else {
+		cfg, base, err = prepareStrictRelayCapture(cfg, stateDir)
+	}
 	if err != nil {
 		return err
 	}
 	var plan *SetupPlan
 	if o.RelayContinuationPlan == "" {
-		plan, err = captureEvidenceRelayContinuation(ctx, cfg, stateDir, base, o.RelayEndBlock)
+		plan, err = captureEvidenceRelayContinuationWithLimitsAt(ctx, cfg, stateDir, base, o.RelayEndBlock, o.RelaySlots, o.RelaySourceLimitMultiplier, nil)
 	} else {
-		info, statErr := os.Lstat(o.RelayContinuationPlan)
-		if statErr != nil {
-			return statErr
-		}
-		if !info.Mode().IsRegular() || info.Size() <= 0 || info.Size() > maximumCampaignEvidenceRawFileBytes {
-			return errors.New("relay continuation approval is not a bounded regular plan")
-		}
-		raw, readErr := os.ReadFile(o.RelayContinuationPlan)
+		raw, readErr := readSetupPlanFileBytes(o.RelayContinuationPlan)
 		if readErr != nil {
 			return readErr
 		}
@@ -65,6 +73,11 @@ func runEvidenceRelayContinuation(ctx context.Context, cfg *ResolvedConfig, stat
 		return err
 	}
 	if !o.Apply {
+		if o.ProvisionalCapture {
+			if _, err := archiveReviewedSetupPlan(stateDir, plan); err != nil {
+				return err
+			}
+		}
 		return printResult(o.Format, plan, nil)
 	}
 	if err := requireApproved(true, o.PlanHash, plan.PlanHash); err != nil {
@@ -109,7 +122,7 @@ func runEvidenceRelayContinuation(ctx context.Context, cfg *ResolvedConfig, stat
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if err := writeRunInputs(cfg, stateDir, plan, roles); err != nil {
+	if err := writeRunInputs(commandConfig, stateDir, plan, roles); err != nil {
 		return err
 	}
 	return printResult(o.Format, map[string]any{"command": "relay-continuation", "plan_hash": plan.PlanHash, "end_block": plan.EvidenceRelayContinuation.EndBlock, "status": "adopted", "chain_transactions": 0}, nil)

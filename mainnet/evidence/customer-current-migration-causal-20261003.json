@@ -1,0 +1,43 @@
+{
+  "phases": {
+    "normal": {
+      "assertion": "db_customer_current_migration_test.go:22: customer custody migration was not appended after the published financial prefix",
+      "cleanup_exit": 0,
+      "failed_roots": [
+        "TestCustomerCurrentMigrationRetainsPublishedFinancialAuthority"
+      ]
+    },
+    "race": {
+      "assertion": "db_customer_current_migration_test.go:22: customer custody migration was not appended after the published financial prefix",
+      "cleanup_exit": 0,
+      "failed_roots": [
+        "TestCustomerCurrentMigrationRetainsPublishedFinancialAuthority"
+      ]
+    }
+  },
+  "schema": "sol-customer-current-migration-omission-v1",
+  "scope": "One operative migration-append omission overlay; old whole-source behavior not claimed",
+  "server_commit": "3f32d7301c9e381eac4de368c62357c14dfc36a7",
+  "server_tree": "34e5c3c129673fb0d51db8e1af2dda9c5adcb503",
+  "sha256": {
+    "causal-customer-migration-old.go": "fe17df6c5922a695d3fe7700ef1db222550162440410bc659e5ea4f4240123bd",
+    "causal-customer-migration.overlay.json": "1996692db38acb99747899a430c745d45e5eec7e68b80784ca50b07433cd6bf7",
+    "customer-current-causal-normal-job1.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "customer-current-causal-normal-job1.jsonl": "b7c428565bb1598821d03d5995385fbddc90801dac53401f73b3992c8b290a04",
+    "customer-current-causal-normal-job1.phase": "6c65cdb6759d6ef3e4727c9de48c35022a89dbc4655d84844209bc042796f6e5",
+    "customer-current-causal-normal-job1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "customer-current-causal-normal-jobs.tsv": "4da7672be72f2d6be069aad1fdfb500b4f62752e6dd2a7ffd7e9d92a63caef2a",
+    "customer-current-causal-normal-runner.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "customer-current-causal-normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "customer-current-causal-race-job1.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "customer-current-causal-race-job1.jsonl": "6045ffd3d5af0f20573db55384e0962d9c99e4a7fb71ef1ca0b9a003e47beabc",
+    "customer-current-causal-race-job1.phase": "be08114d5c6602d8d8431468b0863b3644029726fed00c2ffef95929c78da26a",
+    "customer-current-causal-race-job1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "customer-current-causal-race-jobs.tsv": "4da7672be72f2d6be069aad1fdfb500b4f62752e6dd2a7ffd7e9d92a63caef2a",
+    "customer-current-causal-race-runner.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "customer-current-causal-race-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "full-source-readback.json": "83d041e8f8572a47abe5a18f0291db69ed15a465f0dd9484089269c43113c6e4",
+    "run-causal-customer.sh": "50b348822ac8d936503b3f1e6683d4db012ecc2ab8f319e32742902080bdbcfb",
+    "source-preflight.json": "785b8ff911c6fe0adb4bee3edbb52d2a5c46d28fc9557a3d400a7b8c1f0a4b8a"
+  }
+}

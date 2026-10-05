@@ -1,0 +1,855 @@
+{
+  "schema": "collector550-scoped-qualification-root-review-v1",
+  "source": {
+    "bytes": 223074421,
+    "count": 20521,
+    "errors": [],
+    "head": "5501f9ac8be4c61ada7bc8d1ef1d5054a35c67a7",
+    "tree": "8cdb69298f1d2f7b96cd3da65326b64bec141d48"
+  },
+  "receipt": "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/capture550-final-scoped-receipt.json",
+  "receipt_sha256": "4f711d9430748e7e8797371d4feab3d0b6343a651ec341b897cc0d362df67541",
+  "verified_bindings": {
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/rust12.stdout": {
+      "sha256": "f348498f2ddeb1ea28e948a4e4dc4404310ffa3a5e19cfbcd8410f0cd411ab43",
+      "bytes": 1574
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/rust12.exits": {
+      "sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "bytes": 4
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/rust12.stderr": {
+      "sha256": "41ee19d6359d7847438a1e5137885d7b1bd84b343adf304071f2cbe3becb927f",
+      "bytes": 4041
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/bin/capture12.testelf": {
+      "sha256": "0b4492c93dd608a67fa28fa3595f9b357ce6eab0b22f1731c2621b2cfed8e97c",
+      "bytes": 61659576
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/bin/runtime-historical-capture": {
+      "sha256": "6c3f3193ce57a02619fd7d703f2389f66aed07a22a7541e5e795157f9f75f7df",
+      "bytes": 52024608
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/bin/sn-mainnet-owned": {
+      "sha256": "3fadeeb0859da765719d789b7e95c829500bc55daa883e89bdd5ea32a3642372",
+      "bytes": 55632752
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/expected-report.json": {
+      "sha256": "b7df4dacafa3253b156c08a8c4265d7a4172dec1fd8ae9279cf5999c4d985b5d",
+      "bytes": 14104
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/0385d8d31cc7ac10ea49bb293cf0dd9df80fbd89e02930424bebf2cf0a80fea1": {
+      "sha256": "a9ebc8f7b64877747ee3d27ada8ffa9dbecf41b14edacc6ebd2f66f18cca4958",
+      "bytes": 71
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/0ac868a6dc71a8ed8e822d684a32a56b961bda2bbf57b4056dc07517ed563b3f": {
+      "sha256": "7ccfa872810a04b39b870ead99f3433b8d1ebed577d932d959d2f37de04f35fd",
+      "bytes": 51
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/464b773c5153dd13f200b95a3ef7dfdd29bd0f298659023f5a40bda25b04d597": {
+      "sha256": "50c5d9ba5c3b5cbb82f435df7cb869857d539933b62fbf84cb0f2f7e6cfc8f1d",
+      "bytes": 69
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/4fa06a7f6096bcfc2826b79a62045ebba23ae9822c23fc32adc28fbff8fcbdb3": {
+      "sha256": "004ef3f0b1a7dc2438d20210f86adb84694cd9ce944bb7a1f683b130b0176edc",
+      "bytes": 69
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/51d987be24a9add43f5c353b6a14b6f5d32e525c4bc126208e94335da37b016f": {
+      "sha256": "d37df6f5b7150e69fc713077a1c0e220862c5271667d6661e2b5c0f5b0752ffc",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/66b2299c88aed2a19943af89aff9c1a68c3dc4a2632c71a5533b6ad66ddfb004": {
+      "sha256": "eba40111b62982cbb56761dbb31c358a6839087eea0680c4fa615155ca7f87d2",
+      "bytes": 1767
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/7004f5086fd0b8a3787c7daa9af03623107fa518df0e64afd95dc695ce2c3524": {
+      "sha256": "29b39623c23443d579b1cd0ac1738219d892203367b336543b1d572bda21e70c",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/738f89cde4d9a03837861be4bf440a4e5b99c1f39b3e61e01459f704f726ad5c": {
+      "sha256": "8a7a756425fb9b888f1a60cfe84d854053ba2cc716f3ddcc3a1c63560192b1ec",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/80eff7e4651388394555432df9696c17f58ab5650553fc580364ab132d2e8858": {
+      "sha256": "bfddc70b7803c495ea3c7c9ef47abc02db0249d4fb7b54e25865ede7365b8d0f",
+      "bytes": 37
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/91fcfbb157c688dd93f2d984317e297c681a585328a76bdeee7ca1d00b6c0e63": {
+      "sha256": "85f549ec7e74f90b9c0f1facdb95271f89b2071412a0f198814dfba775e24664",
+      "bytes": 44
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/9a80df6bb9ee202aa5132da587c3701a95dc8687c73336ca234e167284f1757f": {
+      "sha256": "ce7fba6fea0fe3b59a12852772ebad419ee478bf8622f0e20b157f3023a1303e",
+      "bytes": 70
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/b4ce31e3746eb41980054fd3adafcb64cbb8a235a70bd9e40e74b2573e080763": {
+      "sha256": "fd9d094c0678578b81587847b1b4cd49a8b5e5633fbf8b62d46fcfd662474a20",
+      "bytes": 33
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/b8c7723e88ad84e01d1932fe0c685b37f2866e70b2d4d71f61b7dc520d9928b8": {
+      "sha256": "430bd7e75fac41bd00b7e81a433cd4701e87cc51eff2b1c264dcd183de213a66",
+      "bytes": 70
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/e97356f77693cb9d7c93c6717594df75c2ec2a5dcc138622d754d3aec98b6251": {
+      "sha256": "676a4eee16107f290847cdb95c0a6bbba14c3ca8181fb9dbac617e864475dfab",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/nodes/ff612bc433977a4812433ce03a1e4c7f555e60a021418c4f95b3a0f116d24b52": {
+      "sha256": "6df89131af11212294250355ab41da490e3feba58f6abdf7f20d41d444843245",
+      "bytes": 35
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/missing/request.json": {
+      "sha256": "70f895b4ce4dc89854b091eb9f909bb14e0cb687638f5fffb3adcddf5698f26e",
+      "bytes": 2024
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/expected-report.json": {
+      "sha256": "4241190c30e0634643e0d50a6973dc971dfe1b8812a5fe9bbb8cc90f1b125ac3",
+      "bytes": 15467
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/070b4329958da5c549a942109fb644e536497bb89bcf77376e281851d70c6db5": {
+      "sha256": "e5dca4040f4e28bbf685e8f148ea254f54ca151cb9a83a28a61e02aa6166b8b9",
+      "bytes": 69
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/0ac868a6dc71a8ed8e822d684a32a56b961bda2bbf57b4056dc07517ed563b3f": {
+      "sha256": "7ccfa872810a04b39b870ead99f3433b8d1ebed577d932d959d2f37de04f35fd",
+      "bytes": 51
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/36b6dfee234ca193bbe45bcf805ebf82608ad8ec6a49e88fe785f5aa40574946": {
+      "sha256": "e698f0b29b7f621d4e29c96056fc811f411257bdcd2f6f2501d63febf9ff24e3",
+      "bytes": 71
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/464b773c5153dd13f200b95a3ef7dfdd29bd0f298659023f5a40bda25b04d597": {
+      "sha256": "50c5d9ba5c3b5cbb82f435df7cb869857d539933b62fbf84cb0f2f7e6cfc8f1d",
+      "bytes": 69
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/51d987be24a9add43f5c353b6a14b6f5d32e525c4bc126208e94335da37b016f": {
+      "sha256": "d37df6f5b7150e69fc713077a1c0e220862c5271667d6661e2b5c0f5b0752ffc",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/7004f5086fd0b8a3787c7daa9af03623107fa518df0e64afd95dc695ce2c3524": {
+      "sha256": "29b39623c23443d579b1cd0ac1738219d892203367b336543b1d572bda21e70c",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/738f89cde4d9a03837861be4bf440a4e5b99c1f39b3e61e01459f704f726ad5c": {
+      "sha256": "8a7a756425fb9b888f1a60cfe84d854053ba2cc716f3ddcc3a1c63560192b1ec",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/795b467732fab34dd5c41c8ee4f20369f11931b5d46eb9695658349108a02a50": {
+      "sha256": "a949fdcdd94c28387b87bc55272636874fa4c69b51b91c6ec475157da5da0796",
+      "bytes": 1860
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/80eff7e4651388394555432df9696c17f58ab5650553fc580364ab132d2e8858": {
+      "sha256": "bfddc70b7803c495ea3c7c9ef47abc02db0249d4fb7b54e25865ede7365b8d0f",
+      "bytes": 37
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/91fcfbb157c688dd93f2d984317e297c681a585328a76bdeee7ca1d00b6c0e63": {
+      "sha256": "85f549ec7e74f90b9c0f1facdb95271f89b2071412a0f198814dfba775e24664",
+      "bytes": 44
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/9a80df6bb9ee202aa5132da587c3701a95dc8687c73336ca234e167284f1757f": {
+      "sha256": "ce7fba6fea0fe3b59a12852772ebad419ee478bf8622f0e20b157f3023a1303e",
+      "bytes": 70
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/b4ce31e3746eb41980054fd3adafcb64cbb8a235a70bd9e40e74b2573e080763": {
+      "sha256": "fd9d094c0678578b81587847b1b4cd49a8b5e5633fbf8b62d46fcfd662474a20",
+      "bytes": 33
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/b8c7723e88ad84e01d1932fe0c685b37f2866e70b2d4d71f61b7dc520d9928b8": {
+      "sha256": "430bd7e75fac41bd00b7e81a433cd4701e87cc51eff2b1c264dcd183de213a66",
+      "bytes": 70
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/dae728de29642ea538453878504c0c0f83d10e208bf8d0a8ee878cd4d7b979fe": {
+      "sha256": "7891787de7355fb4039a8ddb7258e92ced077118f3fa4d4ce02dc2885bcca57e",
+      "bytes": 35
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/nodes/e97356f77693cb9d7c93c6717594df75c2ec2a5dcc138622d754d3aec98b6251": {
+      "sha256": "676a4eee16107f290847cdb95c0a6bbba14c3ca8181fb9dbac617e864475dfab",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/pair/request.json": {
+      "sha256": "efe1a57a3fbffb09d6621df9a5541cd0b4b3c6cd67ffd129be2de4883fb206f9",
+      "bytes": 2229
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/expected-report.json": {
+      "sha256": "a12fcbe912dfabd5da128f7957925361f041d2d22f432938a103d24ebaa439f2",
+      "bytes": 15453
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/075c6f10519be4f476b03c667a0d7aefad62ff4b794f8108cbf3e66c1e8c376f": {
+      "sha256": "794af7827a6c780785972fa3ce1d3fafc043d4d260d09a23e04a9b4e10bb9c54",
+      "bytes": 71
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/0ac868a6dc71a8ed8e822d684a32a56b961bda2bbf57b4056dc07517ed563b3f": {
+      "sha256": "7ccfa872810a04b39b870ead99f3433b8d1ebed577d932d959d2f37de04f35fd",
+      "bytes": 51
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/11b0b10cccd3e2c44c861303ec4fefba0a07934dd9d7f499106f666a7d0c6b1f": {
+      "sha256": "4c236b2c593cbf78620156cb38e08dfc9159e30d35326527a79651275ffac560",
+      "bytes": 69
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/464b773c5153dd13f200b95a3ef7dfdd29bd0f298659023f5a40bda25b04d597": {
+      "sha256": "50c5d9ba5c3b5cbb82f435df7cb869857d539933b62fbf84cb0f2f7e6cfc8f1d",
+      "bytes": 69
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/51d987be24a9add43f5c353b6a14b6f5d32e525c4bc126208e94335da37b016f": {
+      "sha256": "d37df6f5b7150e69fc713077a1c0e220862c5271667d6661e2b5c0f5b0752ffc",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/7004f5086fd0b8a3787c7daa9af03623107fa518df0e64afd95dc695ce2c3524": {
+      "sha256": "29b39623c23443d579b1cd0ac1738219d892203367b336543b1d572bda21e70c",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/733afb6ce2820a02a9bd12a6361e234f46eb7220390e3432b6ac75a5da5f81de": {
+      "sha256": "9a0f169f4914a20b0301f1d33a745c235d5896678cc68f97d18c883b79c9f9c6",
+      "bytes": 1860
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/738f89cde4d9a03837861be4bf440a4e5b99c1f39b3e61e01459f704f726ad5c": {
+      "sha256": "8a7a756425fb9b888f1a60cfe84d854053ba2cc716f3ddcc3a1c63560192b1ec",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/80eff7e4651388394555432df9696c17f58ab5650553fc580364ab132d2e8858": {
+      "sha256": "bfddc70b7803c495ea3c7c9ef47abc02db0249d4fb7b54e25865ede7365b8d0f",
+      "bytes": 37
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/91fcfbb157c688dd93f2d984317e297c681a585328a76bdeee7ca1d00b6c0e63": {
+      "sha256": "85f549ec7e74f90b9c0f1facdb95271f89b2071412a0f198814dfba775e24664",
+      "bytes": 44
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/9a80df6bb9ee202aa5132da587c3701a95dc8687c73336ca234e167284f1757f": {
+      "sha256": "ce7fba6fea0fe3b59a12852772ebad419ee478bf8622f0e20b157f3023a1303e",
+      "bytes": 70
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/b4ce31e3746eb41980054fd3adafcb64cbb8a235a70bd9e40e74b2573e080763": {
+      "sha256": "fd9d094c0678578b81587847b1b4cd49a8b5e5633fbf8b62d46fcfd662474a20",
+      "bytes": 33
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/b4fe39596b47d3e5b5fbe91c6ab9c373c3680ad225403cf85466a0c7cc694e86": {
+      "sha256": "96bc9e108b208d5e55251605c5b5fb907ed9b88d27a46e3b24fbed0ee8ebdef3",
+      "bytes": 35
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/b8c7723e88ad84e01d1932fe0c685b37f2866e70b2d4d71f61b7dc520d9928b8": {
+      "sha256": "430bd7e75fac41bd00b7e81a433cd4701e87cc51eff2b1c264dcd183de213a66",
+      "bytes": 70
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/nodes/e97356f77693cb9d7c93c6717594df75c2ec2a5dcc138622d754d3aec98b6251": {
+      "sha256": "676a4eee16107f290847cdb95c0a6bbba14c3ca8181fb9dbac617e864475dfab",
+      "bytes": 96
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/export/zero/request.json": {
+      "sha256": "ccd31a307932530297f242c6b720d4a8144e1ae9f42bc87f3345574d63f64a48",
+      "bytes": 2226
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/exporter.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/exporter.stdout": {
+      "sha256": "b299319d07d0093cc84ec8d9e03eef84a8b94e02270e096538b3982a4c83393a",
+      "bytes": 206
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/exporter.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-missing.command.json": {
+      "sha256": "d71a359bea8ccf07eef66100e5f719299014f62ebd7a5c18854245252e4e55e9",
+      "bytes": 980
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-missing.stdout": {
+      "sha256": "2bc12ff41a2711744139efc8c48b82b96206145743cc8d8b93bcb69f220fe2f8",
+      "bytes": 14105
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-missing.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-missing.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-pair.command.json": {
+      "sha256": "d28e5239491d79e18c5c11557b14f338acb7480cd14eb320ea472323bdc15a7e",
+      "bytes": 974
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-pair.stdout": {
+      "sha256": "7c9307c287de6d3c35c64fd0e17cbdc780d56524528ef6418597106eb2e3ca72",
+      "bytes": 15468
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-pair.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-pair.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-zero.command.json": {
+      "sha256": "bf52c101574d1a01704c0eff2e048a7759fb61c11263d15a4e59e760da42491d",
+      "bytes": 974
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-zero.stdout": {
+      "sha256": "775e9dbe9df6bcbce8b63b7361bfe6c909bc2d64cf48a2da6e2265245ece8079",
+      "bytes": 15454
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-zero.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/cross-zero.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/completed-refusal-before-cancel/receipt.json": {
+      "sha256": "61bff0b548d22686eed981d37a554299f9bbafd220dac876520a894516ac225a",
+      "bytes": 6881
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/completed-refusal-before-cancel.recipe.json": {
+      "sha256": "6c38a4de4ad175c6bc4a43d05bbf093359df8aa3ffe31be0daba9c74b051320b",
+      "bytes": 4846
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/Cargo.lock": {
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067",
+      "bytes": 118692
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/Cargo.toml": {
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc",
+      "bytes": 2260
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/HISTORICAL-CAPTURE.md": {
+      "sha256": "3fd15393729c0e6b3f783dbf1b63f50cce02c57367f24e1d8c04d98dfe5f79b2",
+      "bytes": 3257
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/HISTORICAL-REPLAY.md": {
+      "sha256": "72d2297ae534dccd2da0a1fadb216fdf358f8cad5b7d41cd507f0979ffa66d45",
+      "bytes": 7426
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/rust-toolchain.toml": {
+      "sha256": "fb3f87a4bf579a0dc02e69de34f9cda59f20b1224d3511464ee64c90885ddb49",
+      "bytes": 104
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/bin/runtime-historical-capture.rs": {
+      "sha256": "100f3e0993d2d34eb48b60d1f74b29c8e251a1e623f42ef25ab9563f44908f60",
+      "bytes": 1275
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/bin/runtime-historical-proof.rs": {
+      "sha256": "06310aec3708943ce37b097c33d2fda13f240ddcac6fb99fe1f5ad69227a7f21",
+      "bytes": 1182
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/bin/runtime-transition-replay.rs": {
+      "sha256": "27932de27ef19775c9c01781c275617991e1d857ef657d26de7d92531ead7e77",
+      "bytes": 1062
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/historical.rs": {
+      "sha256": "cbd6303ff4a5663a45e4bb3a51507d1863c3edf15c3d6291c41148325e07b08f",
+      "bytes": 17651
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/historical_backend.rs": {
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137",
+      "bytes": 7301
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/historical_capture.rs": {
+      "sha256": "4da04c6a16172537d745fc09e8a8a9e4b27d55f410312630ae9a0c69a588f083",
+      "bytes": 21276
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/historical_capture_tests.rs": {
+      "sha256": "7f4fff8fd567160dd515018c1aa4747141e215217da05af3bd1776bcb13b846b",
+      "bytes": 25187
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/historical_fee_events.rs": {
+      "sha256": "beb7d149d7b2e3c1adfdb5b11c15c1003ec96e14ca20e96bba7ebbc1a14e395b",
+      "bytes": 20107
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/historical_hosts.rs": {
+      "sha256": "49ee3c2f65680e25ea482eb2626fbdde977f765745e9cd37d15eab3a1765083d",
+      "bytes": 13967
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/historical_observer.rs": {
+      "sha256": "80911cd4449c89ef00d30ce529c806a0310d084d8f248382106ebc7b8a5ad855",
+      "bytes": 14534
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/historical_pure_hosts.rs": {
+      "sha256": "f6187f0e022076c3a47e6c6de007a8618f84b5915480233733189d0bee7b3084",
+      "bytes": 5064
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/historical_tests.rs": {
+      "sha256": "692b62b86621c6d1601fa0ee9c3a3dbc2d94fd54c05c119bd034508fc08c444a",
+      "bytes": 49273
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/lib.rs": {
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39",
+      "bytes": 17694
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/main.rs": {
+      "sha256": "83f55935f40f8803c4552038a5be26983747a51176dc7f94b3cc535c3f1108c9",
+      "bytes": 3292
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/replay.rs": {
+      "sha256": "36030a50a42eb083aa8725b5abef025c9cf5fd6d0793ea8cc53c3a0cede2da54",
+      "bytes": 16621
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/completed-refusal-before-cancel/src/replay_tests.rs": {
+      "sha256": "8dc046e4abc8de0de10a9c8dba4966433711f0ddd60f13050b6fc6c68bccbe3c",
+      "bytes": 11565
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/completed-refusal-before-cancel/clean.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/completed-refusal-before-cancel/clean.stderr": {
+      "sha256": "df421ddece98de901e4f7615928a648a8f0e7457f26d716814616295634172b7",
+      "bytes": 168
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/completed-refusal-before-cancel/compile.stdout": {
+      "sha256": "b04f93654f9698d707bcb0edb51da939ca8aaaf548a505a9307dba9ede7c8417",
+      "bytes": 503251
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/completed-refusal-before-cancel/compile.stderr": {
+      "sha256": "fdf6108886f7ef588ea177e355f48f06e36bbe46919d45cad43a5934c6113077",
+      "bytes": 212
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/completed-refusal-before-cancel/test.stdout": {
+      "sha256": "2a2b25b3c2cd9db4065ab96266c9223653e3527788072cf704acd23bcef96db0",
+      "bytes": 369
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/completed-refusal-before-cancel/test.stderr": {
+      "sha256": "0f0f190ca73a8cd3082ee42c1212b84c25fd46e0aaf856cf640dc3c13955a515",
+      "bytes": 284
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/completed-refusal-before-cancel/control-test": {
+      "sha256": "f1a296fc3234380d799f7f4445c8bad7e363d6d47c2483a6de91d4f2efbf7f5d",
+      "bytes": 61663632
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/original-cause-before-sdk-translation/receipt.json": {
+      "sha256": "3925e07596ea4309ad1f4b33b49c79ea2de1254b3d8a8813bb2ca96dfc385912",
+      "bytes": 6921
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/original-cause-before-sdk-translation.recipe.json": {
+      "sha256": "d0e6bed8a4968857c924ae2a042310cf011a03a98018a147fb87a93135bdb6a5",
+      "bytes": 4893
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/Cargo.lock": {
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067",
+      "bytes": 118692
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/Cargo.toml": {
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc",
+      "bytes": 2260
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/HISTORICAL-CAPTURE.md": {
+      "sha256": "3fd15393729c0e6b3f783dbf1b63f50cce02c57367f24e1d8c04d98dfe5f79b2",
+      "bytes": 3257
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/HISTORICAL-REPLAY.md": {
+      "sha256": "72d2297ae534dccd2da0a1fadb216fdf358f8cad5b7d41cd507f0979ffa66d45",
+      "bytes": 7426
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/rust-toolchain.toml": {
+      "sha256": "fb3f87a4bf579a0dc02e69de34f9cda59f20b1224d3511464ee64c90885ddb49",
+      "bytes": 104
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/bin/runtime-historical-capture.rs": {
+      "sha256": "100f3e0993d2d34eb48b60d1f74b29c8e251a1e623f42ef25ab9563f44908f60",
+      "bytes": 1275
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/bin/runtime-historical-proof.rs": {
+      "sha256": "06310aec3708943ce37b097c33d2fda13f240ddcac6fb99fe1f5ad69227a7f21",
+      "bytes": 1182
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/bin/runtime-transition-replay.rs": {
+      "sha256": "27932de27ef19775c9c01781c275617991e1d857ef657d26de7d92531ead7e77",
+      "bytes": 1062
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/historical.rs": {
+      "sha256": "cbd6303ff4a5663a45e4bb3a51507d1863c3edf15c3d6291c41148325e07b08f",
+      "bytes": 17651
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/historical_backend.rs": {
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137",
+      "bytes": 7301
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/historical_capture.rs": {
+      "sha256": "7034b945edbf5d68bffee4efc695eb4434bf1a74069c55e2111fc7b315b01fad",
+      "bytes": 21047
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/historical_capture_tests.rs": {
+      "sha256": "7f4fff8fd567160dd515018c1aa4747141e215217da05af3bd1776bcb13b846b",
+      "bytes": 25187
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/historical_fee_events.rs": {
+      "sha256": "beb7d149d7b2e3c1adfdb5b11c15c1003ec96e14ca20e96bba7ebbc1a14e395b",
+      "bytes": 20107
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/historical_hosts.rs": {
+      "sha256": "49ee3c2f65680e25ea482eb2626fbdde977f765745e9cd37d15eab3a1765083d",
+      "bytes": 13967
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/historical_observer.rs": {
+      "sha256": "80911cd4449c89ef00d30ce529c806a0310d084d8f248382106ebc7b8a5ad855",
+      "bytes": 14534
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/historical_pure_hosts.rs": {
+      "sha256": "f6187f0e022076c3a47e6c6de007a8618f84b5915480233733189d0bee7b3084",
+      "bytes": 5064
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/historical_tests.rs": {
+      "sha256": "692b62b86621c6d1601fa0ee9c3a3dbc2d94fd54c05c119bd034508fc08c444a",
+      "bytes": 49273
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/lib.rs": {
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39",
+      "bytes": 17694
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/main.rs": {
+      "sha256": "83f55935f40f8803c4552038a5be26983747a51176dc7f94b3cc535c3f1108c9",
+      "bytes": 3292
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/replay.rs": {
+      "sha256": "36030a50a42eb083aa8725b5abef025c9cf5fd6d0793ea8cc53c3a0cede2da54",
+      "bytes": 16621
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/original-cause-before-sdk-translation/src/replay_tests.rs": {
+      "sha256": "8dc046e4abc8de0de10a9c8dba4966433711f0ddd60f13050b6fc6c68bccbe3c",
+      "bytes": 11565
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/original-cause-before-sdk-translation/clean.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/original-cause-before-sdk-translation/clean.stderr": {
+      "sha256": "6de9a7b7c3a22812405d8583a4d6d4d379f21ddcac5f3295c008b5bafecbadbb",
+      "bytes": 170
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/original-cause-before-sdk-translation/compile.stdout": {
+      "sha256": "3017a382983d81f7a57832aa53bebf9fbe34430815ba2632ef7fa400bb5a1fc1",
+      "bytes": 503683
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/original-cause-before-sdk-translation/compile.stderr": {
+      "sha256": "287e06b5f985890b5c68a032f6863747f0589f6aa373d9984c63fe29f3dbcdd6",
+      "bytes": 218
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/original-cause-before-sdk-translation/test.stdout": {
+      "sha256": "f3249cc7e2782449f386c7a93a8082a7296ff7f882b6bf302935ed6dcb5b3535",
+      "bytes": 391
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/original-cause-before-sdk-translation/test.stderr": {
+      "sha256": "d3d9b5c699f0f737406efe56b58c1011448974bcf1fbcce57e7e39cff2932894",
+      "bytes": 393
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/original-cause-before-sdk-translation/control-test": {
+      "sha256": "c5fcf0c620d1f6be17ce9c3b8214c2c5aea81e0500e520f8711ec8c3ec9afff5",
+      "bytes": 61662136
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/report-publication-cancel/receipt.json": {
+      "sha256": "cf2e07a4e87419f090bf35f98e6a83341ca881b5e944de9d91fd0fc6b93675d4",
+      "bytes": 6853
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/report-publication-cancel.recipe.json": {
+      "sha256": "068be7441e68a4c37483a53e4b613574250a186c6d4c981384083068097f2ec8",
+      "bytes": 4862
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/Cargo.lock": {
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067",
+      "bytes": 118692
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/Cargo.toml": {
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc",
+      "bytes": 2260
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/HISTORICAL-CAPTURE.md": {
+      "sha256": "3fd15393729c0e6b3f783dbf1b63f50cce02c57367f24e1d8c04d98dfe5f79b2",
+      "bytes": 3257
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/HISTORICAL-REPLAY.md": {
+      "sha256": "72d2297ae534dccd2da0a1fadb216fdf358f8cad5b7d41cd507f0979ffa66d45",
+      "bytes": 7426
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/rust-toolchain.toml": {
+      "sha256": "fb3f87a4bf579a0dc02e69de34f9cda59f20b1224d3511464ee64c90885ddb49",
+      "bytes": 104
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/bin/runtime-historical-capture.rs": {
+      "sha256": "100f3e0993d2d34eb48b60d1f74b29c8e251a1e623f42ef25ab9563f44908f60",
+      "bytes": 1275
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/bin/runtime-historical-proof.rs": {
+      "sha256": "06310aec3708943ce37b097c33d2fda13f240ddcac6fb99fe1f5ad69227a7f21",
+      "bytes": 1182
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/bin/runtime-transition-replay.rs": {
+      "sha256": "27932de27ef19775c9c01781c275617991e1d857ef657d26de7d92531ead7e77",
+      "bytes": 1062
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/historical.rs": {
+      "sha256": "cbd6303ff4a5663a45e4bb3a51507d1863c3edf15c3d6291c41148325e07b08f",
+      "bytes": 17651
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/historical_backend.rs": {
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137",
+      "bytes": 7301
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/historical_capture.rs": {
+      "sha256": "2d3e100661eed4f843ff3ed967dd3a0e6f03550bb364b59d45947c48001e9229",
+      "bytes": 21136
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/historical_capture_tests.rs": {
+      "sha256": "7f4fff8fd567160dd515018c1aa4747141e215217da05af3bd1776bcb13b846b",
+      "bytes": 25187
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/historical_fee_events.rs": {
+      "sha256": "beb7d149d7b2e3c1adfdb5b11c15c1003ec96e14ca20e96bba7ebbc1a14e395b",
+      "bytes": 20107
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/historical_hosts.rs": {
+      "sha256": "49ee3c2f65680e25ea482eb2626fbdde977f765745e9cd37d15eab3a1765083d",
+      "bytes": 13967
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/historical_observer.rs": {
+      "sha256": "80911cd4449c89ef00d30ce529c806a0310d084d8f248382106ebc7b8a5ad855",
+      "bytes": 14534
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/historical_pure_hosts.rs": {
+      "sha256": "f6187f0e022076c3a47e6c6de007a8618f84b5915480233733189d0bee7b3084",
+      "bytes": 5064
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/historical_tests.rs": {
+      "sha256": "692b62b86621c6d1601fa0ee9c3a3dbc2d94fd54c05c119bd034508fc08c444a",
+      "bytes": 49273
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/lib.rs": {
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39",
+      "bytes": 17694
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/main.rs": {
+      "sha256": "83f55935f40f8803c4552038a5be26983747a51176dc7f94b3cc535c3f1108c9",
+      "bytes": 3292
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/replay.rs": {
+      "sha256": "36030a50a42eb083aa8725b5abef025c9cf5fd6d0793ea8cc53c3a0cede2da54",
+      "bytes": 16621
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/report-publication-cancel/src/replay_tests.rs": {
+      "sha256": "8dc046e4abc8de0de10a9c8dba4966433711f0ddd60f13050b6fc6c68bccbe3c",
+      "bytes": 11565
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/report-publication-cancel/clean.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/report-publication-cancel/clean.stderr": {
+      "sha256": "df421ddece98de901e4f7615928a648a8f0e7457f26d716814616295634172b7",
+      "bytes": 168
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/report-publication-cancel/compile.stdout": {
+      "sha256": "5a75a7e17e11907c4904cdd96913fe3d52722e56ee10d1ed5b8b760444a0f0a3",
+      "bytes": 502819
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/report-publication-cancel/compile.stderr": {
+      "sha256": "ff47ada8df31d1d9c494d2db35d12fcab3b3205a61075e24872272648707573c",
+      "bytes": 206
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/report-publication-cancel/test.stdout": {
+      "sha256": "30ec2e68c58f7be742e64ce10b9f1fa91085d68abaa1a92f982f63c8e241176d",
+      "bytes": 369
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/report-publication-cancel/test.stderr": {
+      "sha256": "e0e625b8d5324e0cac362ba7ddcb222a426269e9302e66ac01ed461a9373ec4e",
+      "bytes": 31483
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/report-publication-cancel/control-test": {
+      "sha256": "17feab0a623e6a2a0eab87c0b443d561bac73dafafab3ddf90f9a92e14d48415",
+      "bytes": 61659072
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/returned-integrity-before-cancel/receipt.json": {
+      "sha256": "032a08bc0119e2762caf1499ec4d542323c88f0a6f066e345641351546732a87",
+      "bytes": 6885
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/returned-integrity-before-cancel.recipe.json": {
+      "sha256": "953f44c75a457d62c9c043bf27b44bd0343bc1c64c10caa77c01987e4d80945f",
+      "bytes": 4858
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/Cargo.lock": {
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067",
+      "bytes": 118692
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/Cargo.toml": {
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc",
+      "bytes": 2260
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/HISTORICAL-CAPTURE.md": {
+      "sha256": "3fd15393729c0e6b3f783dbf1b63f50cce02c57367f24e1d8c04d98dfe5f79b2",
+      "bytes": 3257
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/HISTORICAL-REPLAY.md": {
+      "sha256": "72d2297ae534dccd2da0a1fadb216fdf358f8cad5b7d41cd507f0979ffa66d45",
+      "bytes": 7426
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/rust-toolchain.toml": {
+      "sha256": "fb3f87a4bf579a0dc02e69de34f9cda59f20b1224d3511464ee64c90885ddb49",
+      "bytes": 104
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/bin/runtime-historical-capture.rs": {
+      "sha256": "100f3e0993d2d34eb48b60d1f74b29c8e251a1e623f42ef25ab9563f44908f60",
+      "bytes": 1275
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/bin/runtime-historical-proof.rs": {
+      "sha256": "06310aec3708943ce37b097c33d2fda13f240ddcac6fb99fe1f5ad69227a7f21",
+      "bytes": 1182
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/bin/runtime-transition-replay.rs": {
+      "sha256": "27932de27ef19775c9c01781c275617991e1d857ef657d26de7d92531ead7e77",
+      "bytes": 1062
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/historical.rs": {
+      "sha256": "cbd6303ff4a5663a45e4bb3a51507d1863c3edf15c3d6291c41148325e07b08f",
+      "bytes": 17651
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/historical_backend.rs": {
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137",
+      "bytes": 7301
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/historical_capture.rs": {
+      "sha256": "81325a601a37a0a68a4ea5cfad32698459606c0db5be193665fb9517e3872008",
+      "bytes": 21020
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/historical_capture_tests.rs": {
+      "sha256": "7f4fff8fd567160dd515018c1aa4747141e215217da05af3bd1776bcb13b846b",
+      "bytes": 25187
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/historical_fee_events.rs": {
+      "sha256": "beb7d149d7b2e3c1adfdb5b11c15c1003ec96e14ca20e96bba7ebbc1a14e395b",
+      "bytes": 20107
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/historical_hosts.rs": {
+      "sha256": "49ee3c2f65680e25ea482eb2626fbdde977f765745e9cd37d15eab3a1765083d",
+      "bytes": 13967
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/historical_observer.rs": {
+      "sha256": "80911cd4449c89ef00d30ce529c806a0310d084d8f248382106ebc7b8a5ad855",
+      "bytes": 14534
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/historical_pure_hosts.rs": {
+      "sha256": "f6187f0e022076c3a47e6c6de007a8618f84b5915480233733189d0bee7b3084",
+      "bytes": 5064
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/historical_tests.rs": {
+      "sha256": "692b62b86621c6d1601fa0ee9c3a3dbc2d94fd54c05c119bd034508fc08c444a",
+      "bytes": 49273
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/lib.rs": {
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39",
+      "bytes": 17694
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/main.rs": {
+      "sha256": "83f55935f40f8803c4552038a5be26983747a51176dc7f94b3cc535c3f1108c9",
+      "bytes": 3292
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/replay.rs": {
+      "sha256": "36030a50a42eb083aa8725b5abef025c9cf5fd6d0793ea8cc53c3a0cede2da54",
+      "bytes": 16621
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/controls/returned-integrity-before-cancel/src/replay_tests.rs": {
+      "sha256": "8dc046e4abc8de0de10a9c8dba4966433711f0ddd60f13050b6fc6c68bccbe3c",
+      "bytes": 11565
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/returned-integrity-before-cancel/clean.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/returned-integrity-before-cancel/clean.stderr": {
+      "sha256": "df421ddece98de901e4f7615928a648a8f0e7457f26d716814616295634172b7",
+      "bytes": 168
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/returned-integrity-before-cancel/compile.stdout": {
+      "sha256": "de507a65b4941fac01c6385b40f56e62a6c4f42e5bd2bd67bd53f5e966733e49",
+      "bytes": 503323
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/returned-integrity-before-cancel/compile.stderr": {
+      "sha256": "11afe5d466a4059050f0cb0f0bcdd5df1665eec2160c125e5dfed7ca35b52740",
+      "bytes": 213
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/returned-integrity-before-cancel/test.stdout": {
+      "sha256": "dbb653f084cc0c6a9a78e43049ee3f3607a8d34196091f6cfc8bf8e51ec5f50f",
+      "bytes": 365
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/returned-integrity-before-cancel/test.stderr": {
+      "sha256": "d0dce6bb27e4ec20a787a323bb9945c501c3b30aa2c8eab1d111360655b8bab3",
+      "bytes": 439
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-550-independent-20261003/evidence/control-runs/returned-integrity-before-cancel/control-test": {
+      "sha256": "6877ecd82196a2103d3b334b2a1398ccdc1bcd2becbb260a5e5ac3199d7796bc",
+      "bytes": 61659576
+    }
+  },
+  "rust12_passed": [
+    "historical::tests::capture_tests::historical_capture_complete_parent_replays_top_and_child_without_committing",
+    "historical::tests::capture_tests::historical_capture_incomplete_read_proof_never_claims_completeness",
+    "historical::tests::capture_tests::historical_capture_missing_write_paths_cannot_reuse_declared_parent_root",
+    "historical::tests::capture_tests::historical_capture_parent_body_and_runtime_identity_are_independent",
+    "historical::tests::capture_tests::historical_capture_cancellation_before_and_after_real_backend_read_refuses_output",
+    "historical::tests::capture_tests::historical_capture_cancellation_after_completed_phases_never_publishes",
+    "historical::tests::capture_tests::historical_capture_backend_cancellation_survives_heap_execution_and_root_translation",
+    "historical::tests::capture_tests::historical_capture_returned_node_refusal_precedes_later_cancellation",
+    "historical::tests::capture_tests::historical_capture_completed_refusals_survive_later_phase_cancellation",
+    "historical::tests::capture_tests::historical_capture_missing_refund_and_observed_zero_remain_distinct_and_unadmitted",
+    "historical::tests::capture_tests::historical_capture_exact_decoder_refuses_unknown_duplicate_trailing_and_bounds",
+    "historical::tests::capture_tests::historical_capture_retained_directory_uses_content_addressed_nodes_without_writes"
+  ],
+  "controls": [
+    {
+      "name": "completed-refusal-before-cancel",
+      "expected_assertion": "phase Code: historical capture canceled",
+      "fresh_compile": true,
+      "cargo_fresh_flag": false,
+      "test_exit": 101,
+      "joined": true
+    },
+    {
+      "name": "original-cause-before-sdk-translation",
+      "expected_assertion": "historical capture parent code: Trie lookup error: Invalid state root",
+      "fresh_compile": true,
+      "cargo_fresh_flag": false,
+      "test_exit": 101,
+      "joined": true
+    },
+    {
+      "name": "report-publication-cancel",
+      "expected_assertion": "completed-phase cancellation published a historical proof job",
+      "fresh_compile": true,
+      "cargo_fresh_flag": false,
+      "test_exit": 101,
+      "joined": true
+    },
+    {
+      "name": "returned-integrity-before-cancel",
+      "expected_assertion": "returned integrity evidence was erased or translated",
+      "fresh_compile": true,
+      "cargo_fresh_flag": false,
+      "test_exit": 101,
+      "joined": true
+    }
+  ],
+  "actual_crossengine_cases": [
+    {
+      "case": "missing",
+      "refund_rao": null,
+      "exact_expected_report_match": true,
+      "native_fee_admitted": false
+    },
+    {
+      "case": "pair",
+      "refund_rao": "250",
+      "exact_expected_report_match": true,
+      "native_fee_admitted": false
+    },
+    {
+      "case": "zero",
+      "refund_rao": "0",
+      "exact_expected_report_match": true,
+      "native_fee_admitted": false
+    }
+  ],
+  "unchanged_go10_scope": {
+    "path": "mainnet/evidence/proof-capture7b81-go10-review-20261003.json",
+    "sha256": "2e6fa10224d2ec7a5147908044c8633be0b603651b158d1727ec80785bfffddf"
+  },
+  "limits": "Synthetic complete-parent capture/strict replay and public Go/Rust protocol qualified. Parent Go10 results retained by exact unchanged source/module join; original7b81 failure retained. Current-main/request971 composition, actual archive parent witness, source/profile/finality and fee authority remain."
+}

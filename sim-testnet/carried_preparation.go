@@ -26,29 +26,20 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 	if ctx == nil || self == nil || self.plan == nil || self.journal == nil || readEntries == nil || readSource == nil {
 		return errors.New("plan/journal or preparation reader is unavailable")
 	}
+	readOnlyAudit := self.cfg != nil && self.cfg.readOnlyAudit
 	self.carriedVerificationKeys = nil
 	if provisionalResumeEnabled(self.cfg) {
-		return self.verifyProvisionalActionHistory(ctx)
+		return self.verifyProvisionalActionHistoryWithReaders(ctx, readEntries, readSource)
 	}
+	// One immutable source-plan decoder belongs to this reconciliation, shared
+	// by receipt admission and authenticated descendant-cache checks.
+	sources := &historicalAuditPlanReader{readSource: readSource, plans: map[string]*SetupPlan{}}
+	ctx = context.WithValue(ctx, historicalAuditPlanReaderKey{}, sources)
 	entries := readEntries()
 	verified := newCarriedPreparationIndex(self.plan, entries)
-	sourcePlanKVs := map[string]*SetupPlan{}
-	readPostcondition := func(entry JournalEntry) (*ActionPostcondition, error) {
-		return self.readPersistedPostconditionWithSource(entry, func(stateDir, hash string) (*SetupPlan, error) {
-			if err := ctx.Err(); err != nil {
-				return nil, err
-			}
-			if source := sourcePlanKVs[hash]; source != nil {
-				return source, nil
-			}
-			source, err := readSource(stateDir, hash)
-			if err = errors.Join(err, ctx.Err()); err != nil {
-				return nil, err
-			}
-			sourcePlanKVs[hash] = source
-			return source, nil
-		})
-	}
+	readPostcondition := self.carriedPreparationPostconditionReader(ctx, func(stateDir, hash string) (*SetupPlan, error) {
+		return sources.read(ctx, stateDir, hash)
+	})
 	var stages []error
 	var carryErr error
 	if self.plan.ValidatorEvidenceCarry != nil {
@@ -66,16 +57,16 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 	for index, action := range self.plan.Actions {
 		actionIndexes[action.ID] = index
 		entry, ok := verified.find(action, false)
-		if !ok && action.ID == "topology.launch" {
+		if action.ID == "topology.launch" && (!ok || readOnlyAudit) {
 			entry, ok = verified.find(action, true)
-			if ok && entry.PlanHash != self.plan.PlanHash {
+			if ok && (entry.PlanHash != self.plan.PlanHash || readOnlyAudit) {
 				if _, err := readPostcondition(entry); err != nil {
 					actionErrors[index] = fmt.Errorf("action %s: persisted ancestor process receipt: %w", action.ID, err)
 				}
 			}
 			continue
 		}
-		if !ok || entry.PlanHash == self.plan.PlanHash {
+		if !ok || entry.PlanHash == self.plan.PlanHash && !readOnlyAudit {
 			continue
 		}
 		if err := ctx.Err(); err != nil {
@@ -92,7 +83,7 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 	var payloadErr error
 	if len(audits) > 0 && planUsesContractDeploymentEnvelope(self.plan.Schema) {
 		if carryErr != nil {
-			payloadErr = errors.New("blocked by validator evidence immutable source history")
+			payloadErr = fmt.Errorf("blocked by validator evidence immutable source history: %w", carryErr)
 		} else if self.payloads == nil && self.roles == nil {
 			payloadErr = errors.New("blocked by role secrets")
 		} else {
@@ -106,7 +97,7 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 	if payloadErr == nil {
 		self.carriedFleetHistoryKeys, fleetErr = self.verifyCarriedFleetGenerationOneHistory(ctx, audits)
 	} else {
-		fleetErr = errors.New("blocked by carried contract payloads")
+		fleetErr = fmt.Errorf("blocked by carried contract payloads: %w", payloadErr)
 	}
 	if fleetErr != nil {
 		stages = append(stages, fmt.Errorf("prepare carried fleet history: %w", fleetErr))
@@ -154,7 +145,7 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 		break
 	}
 	var completed atomic.Uint64
-	results := collectOrderedReadOnlyAudits(ctx, len(audits), carriedActionVerificationWorkers, func(index int) error {
+	results := collectOrderedReadOnlyAudits(ctx, len(audits), carriedActionVerificationWorkersFor(self.cfg), func(index int) error {
 		audit := audits[index]
 		defer func() {
 			count := completed.Add(1)
@@ -162,9 +153,16 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 				fmt.Fprintf(os.Stderr, "sim-testnet: carried action audit %d/%d\n", count, len(audits))
 			}
 		}()
-		blocked := func(stage string) error { return fmt.Errorf("action %s: blocked by %s", audit.action.ID, stage) }
+		blocked := func(stage string, causes ...error) error {
+			if cause := errors.Join(causes...); cause != nil {
+				return fmt.Errorf("action %s: blocked by %s: %w", audit.action.ID, stage, cause)
+			}
+			return fmt.Errorf("action %s: blocked by %s", audit.action.ID, stage)
+		}
 		if self.carriedFleetHistoryKeys[carriedVerificationKey(audit.entry)] {
-			return self.verifyVerifiedActionStateWithRecord(ctx, audit.action, audit.entry, audit.record, sharedEvmHead, sharedNativeHead)
+			return verifyCarriedActionWithTimeoutFor(ctx, self.cfg, func(auditCtx context.Context) error {
+				return self.verifyVerifiedActionStateWithRecord(auditCtx, audit.action, audit.entry, audit.record, sharedEvmHead, sharedNativeHead)
+			})
 		}
 		consumed := false
 		if !actionRequiresCurrentPostcondition(audit.action) {
@@ -172,7 +170,7 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 			consumed = err == nil
 		}
 		if consumed && nativeErr != nil {
-			return blocked("carried native checkpoint")
+			return blocked("carried native checkpoint", nativeErr)
 		}
 		needsNative := consumed || strings.HasPrefix(audit.action.Kind, "substrate-") || audit.action.ID == "config.render" || strings.HasPrefix(audit.action.ID, "evidence.activate.") || audit.action.ID == runtimeEvidenceActivationBoundaryActionId || isFleetRenewalAction(audit.action) || strings.HasPrefix(audit.action.ID, "operator.register.") || strings.HasPrefix(audit.action.ID, "alpha.") || strings.HasPrefix(audit.action.ID, "precompile.") && audit.action.ID != "precompile.probe-deploy"
 		if self.preparationIncomplete && independentRPCRequired(self.cfg) {
@@ -185,10 +183,10 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 		}
 		needsPayloads := !consumed && (actionPostStateRequiresEVMCheckpoint(audit.action) || audit.action.ID == "config.render" || strings.HasPrefix(audit.action.ID, "fleet.mirror.") || strings.HasPrefix(audit.action.ID, "fleet.bind."))
 		if needsPayloads && payloadErr != nil {
-			return blocked("carried contract payloads")
+			return blocked("carried contract payloads", payloadErr)
 		}
 		if !consumed && actionPostStateRequiresEVMCheckpoint(audit.action) && evmErr != nil {
-			return blocked("carried EVM checkpoint")
+			return blocked("carried EVM checkpoint", evmErr)
 		}
 		if self.roles == nil && !carriedActionWithoutRoles(audit.action) {
 			return blocked("role secrets")
@@ -218,13 +216,13 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 					return fmt.Errorf("action %s generation-1 successor: %w", audit.action.ID, err)
 				}
 				if superseded {
-					return blocked("carried fleet history")
+					return blocked("carried fleet history", fleetErr)
 				}
 			}
 		}
-		auditCtx, cancel := context.WithTimeout(ctx, carriedActionVerificationTimeout)
-		defer cancel()
-		if err := self.verifyVerifiedActionStateWithRecord(auditCtx, audit.action, audit.entry, audit.record, sharedEvmHead, sharedNativeHead); err != nil {
+		if err := verifyCarriedActionWithTimeoutFor(ctx, self.cfg, func(auditCtx context.Context) error {
+			return self.verifyVerifiedActionStateWithRecord(auditCtx, audit.action, audit.entry, audit.record, sharedEvmHead, sharedNativeHead)
+		}); err != nil {
 			return fmt.Errorf("action %s: %w", audit.action.ID, err)
 		}
 		return nil
@@ -249,6 +247,68 @@ func (self *Executor) collectCarriedActionHistoryWithReaders(ctx context.Context
 		self.carriedVerificationKeys = verifiedKeys
 	}
 	return errors.Join(errors.Join(append(stages, actionErrors...)...), ctx.Err())
+}
+
+// Every carried receipt can trigger historical RPC reads, including entries
+// already classified by the fleet-history cache. Bound each action uniformly
+// so one slow archive response reaches the retry/recovery path instead of
+// holding the preparation collector indefinitely.
+func verifyCarriedActionWithTimeout(ctx context.Context, verify func(context.Context) error) error {
+	return verifyCarriedActionWithTimeoutFor(ctx, nil, verify)
+}
+
+// The dedicated LAN archive is unpaced but may take longer to materialize a
+// large historical EVM proof. Keep that transient capacity condition inside a
+// recoverable read-only window instead of treating it as failed evidence.
+func verifyCarriedActionWithTimeoutFor(ctx context.Context, cfg *ResolvedConfig, verify func(context.Context) error) error {
+	if ctx == nil || verify == nil {
+		return errors.New("carried action verification context or callback is unavailable")
+	}
+	timeout := carriedActionVerificationTimeout
+	if cfg != nil && cfg.OperationalRPCMode == rpcModeOwnedNode {
+		timeout = carriedActionOwnedVerificationTimeout
+	}
+	// Each RPC owns its retry budget. Reopening this entire action after its
+	// deadline repeats successful reads and occupies the same worker again.
+	// Return the exact unfinished result for independent audit continuation.
+	auditCtx, cancel := context.WithTimeout(ctx, timeout)
+	err := verify(auditCtx)
+	deadlineErr := auditCtx.Err()
+	cancel()
+	return errors.Join(err, deadlineErr, ctx.Err())
+}
+
+// The owned LAN archive node has no request-rate gate. Bound its historical
+// reads to a modest pool so recovery is substantially faster without turning
+// a transiently slow archive response into an unbounded fan-out. Each action
+// still has its own cancellation deadline and retry budget.
+func carriedActionVerificationWorkersFor(cfg *ResolvedConfig) int {
+	if cfg != nil && cfg.OperationalRPCMode == rpcModeOwnedNode {
+		return carriedActionOwnedVerificationWorkers
+	}
+	return carriedActionVerificationWorkers
+}
+
+// Share only authenticated immutable source decoding within one read-only
+// call. Every receipt's bytes, hash and original route remain freshly checked.
+func (self *Executor) carriedPreparationPostconditionReader(ctx context.Context, readSource func(string, string) (*SetupPlan, error)) func(JournalEntry) (*ActionPostcondition, error) {
+	sourcePlanKVs := map[string]*SetupPlan{}
+	return func(entry JournalEntry) (*ActionPostcondition, error) {
+		return self.readPersistedPostconditionWithSource(entry, func(stateDir, hash string) (*SetupPlan, error) {
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
+			if source := sourcePlanKVs[hash]; source != nil {
+				return source, nil
+			}
+			source, err := readSource(stateDir, hash)
+			if err = errors.Join(err, ctx.Err()); err != nil {
+				return nil, err
+			}
+			sourcePlanKVs[hash] = source
+			return source, nil
+		})
+	}
 }
 
 // These local/native checks do not dereference derived topology secrets.

@@ -1,0 +1,72 @@
+{
+  "all_other_paths_byte_identical_to_current_upstream": true,
+  "current_upstream_parent": "59864c2b5b2af1d5555784065a12b8e7c3e03efa",
+  "head": "c5b10cc7e0ebbb984a98e70ee9a3c745bfb83d21",
+  "limits": [
+    "No new dependency graph, compiler, tests or publication was executed.",
+    "The previous exact-tree Core2ea qualification remains the original basis; current upstream9-file changes remain separately attributable.",
+    "SN module pins and qualified source do not change in this refresh."
+  ],
+  "modules": [
+    {
+      "bytes": 3887,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/connect/go.mod",
+      "sha256": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d"
+    },
+    {
+      "bytes": 21922,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/connect/go.sum",
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+    }
+  ],
+  "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/connect",
+  "prior_integration": {
+    "bytes": 8303,
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/evidence/qualified-base-source-integration-v1.json",
+    "sha256": "85092c436dfdc595e05516bdafc32513d5f78eb29fbf0818fdf440bb92aa0916"
+  },
+  "qualified_restore_parent": "5322cf5146f469217571f4de7aa344383f77b921",
+  "qualified_restore_subtree_byte_identical": true,
+  "restore_changes_from_upstream": [
+    "durablevolume/preparation.go",
+    "durablevolume/preparation_apply_linux.go",
+    "durablevolume/preparation_capacity_linux.go",
+    "durablevolume/preparation_cohort.go",
+    "durablevolume/preparation_cohort_admission_linux.go",
+    "durablevolume/preparation_cohort_declaration_linux.go",
+    "durablevolume/preparation_cohort_declaration_test.go",
+    "durablevolume/preparation_cohort_linux.go",
+    "durablevolume/preparation_cohort_test.go",
+    "durablevolume/preparation_inventory_depth_test.go",
+    "durablevolume/preparation_many_owners_test.go",
+    "durablevolume/preparation_other.go",
+    "durablevolume/preparation_plan_artifact_linux.go",
+    "durablevolume/preparation_plan_linux.go",
+    "durablevolume/preparation_restore_admission_test.go",
+    "durablevolume/preparation_restore_linux.go"
+  ],
+  "root_review": {
+    "head_tree_clean_state_verified": true,
+    "main_adopted_pushed": "c5b10cc7e0ebbb984a98e70ee9a3c745bfb83d21",
+    "new_execution_claimed": false,
+    "original_intake_sha256": "13c87616c2e25803ca750a6f557f9e7188df6b30fceb404a545a020e742c8f41",
+    "other_source_paths_identical_to_current_upstream": true,
+    "qualified_durablevolume_subtree_identical": true
+  },
+  "schema": "mainnet-connect-upstream-refresh-source-integration-v1",
+  "sn_retains_exact_core_version": "v0.0.0-20261003195725-2ea8d82ea5cb",
+  "sn_unchanged_head": "4a2c2681f40b42355b99a02a8f5e27efd185d741",
+  "status": "SOURCE_MERGED_CLEANLY_NO_NEW_EXECUTION",
+  "tree": "b125b602cd0744005b88ee69a79d6c907f43be8a",
+  "upstream_changes_from_prior_qualified_join": [
+    "memory_owner_ledger.go",
+    "memory_owner_ledger_test.go",
+    "memory_owner_snapshot_fence_test.go",
+    "transfer.go",
+    "transfer_ack_handoff_lifetime_test.go",
+    "transfer_ack_owner_memory_test.go",
+    "transfer_close_report_identity_test.go",
+    "transfer_contract_manager.go",
+    "transfer_logical_lane_test.go"
+  ]
+}

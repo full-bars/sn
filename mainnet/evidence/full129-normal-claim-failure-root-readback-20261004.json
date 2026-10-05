@@ -1,0 +1,18 @@
+{
+  "schema": "full129-normal-claim-failure-root-readback-v1",
+  "observed_utc": "2026-10-04T19:34:59.789973+00:00",
+  "receipt_path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/evidence/full129-normal-2.receipt.json",
+  "receipt_sha256": "3ac447b26b4b71f6f14675516a08d26db9a2d83c52fead98c67ccbcc4f9d0982",
+  "actual_exit": 1,
+  "tree_joined": true,
+  "counts": {
+    "TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage": {
+      "fail": 1,
+      "pass": 0,
+      "run": 1,
+      "skip": 0
+    }
+  },
+  "observed_failure": "Aggregate work2184 per transition exceeded original2048 threshold; initial129 payload reads retained. Stage reclassification alone does not prove bounded total foreground work; actual architecture remains under Astra review.",
+  "other_scope": "Restore normal passed; independent race remains active. Claim race/wholehistory acceptance unproven."
+}

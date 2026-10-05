@@ -1,0 +1,48 @@
+{
+  "schema": "native-qualification-lease-continuity-root-review-v1",
+  "classification": "Qualification coordination recovery; production capacity and runtime authority remain separate",
+  "cause": "The original canonical holder exited before native66 v2 preflight. Runner conflated its immutable filesystem baseline with that process identity. No phase ran before refusal.",
+  "correction": "Additive v3 keeps the exact original free-space baseline and cumulative48GiB allowance, authenticates the replacement holder separately, and preserves all66 phases.",
+  "root_review": {
+    "v2_v3_complete_diff_reviewed": true,
+    "input_bindings_matched": 56,
+    "phase_inventory_byte_equal": true,
+    "replacement_holder_independently_live_and_lock_conflicting": true,
+    "runner_pid_live": 623118,
+    "runner_proc_starttime": "94863231",
+    "exec_session": 20538,
+    "qualification_terminal_result": null
+  },
+  "artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/native-finite66-v2-missing-holder-refusal.json",
+      "bytes": 628,
+      "sha256": "21d6609d869791f7fd657a27c7dc2f1e72cfe4238d1fdecc5770fc79925536f3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/native-finite66-replacement-host-lease-v1.json",
+      "bytes": 1105,
+      "sha256": "2693a381bdd1a0b9b78e6962f099c27eeaa228b2883ded0fcd3f7e1ab510517e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/native-finite66-runner-v3.diff",
+      "bytes": 4613,
+      "sha256": "08c2270206fb004496e3f674e3a337941b5e675655f3e1f8a2ea6ea789dc1b77"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-finite66-v3.py",
+      "bytes": 46530,
+      "sha256": "06b0f3f5018e5e8d541ac87abc8a3073ef400c5f7752374d0b662afcb51705b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/native-finite66-job-v3.json",
+      "bytes": 75187,
+      "sha256": "c3f72ae3155ad7e325aff43e7924b60fefaa7821bbc263c4addbd77e7e805595"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/native-finite66-mechanism-adoption-v3.json",
+      "bytes": 1075,
+      "sha256": "167233a61ca7c2bca0eedc2164f482ea11ca5792b97fa7cb19e942c7e05f9192"
+    }
+  ]
+}

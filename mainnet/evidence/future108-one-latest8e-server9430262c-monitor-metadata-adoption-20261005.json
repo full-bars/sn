@@ -1,0 +1,23 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 12884901888,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "6f8d7143074fe96e2da5134d34af4e594aafbb7a29ea176ecd4961b5bcab7163",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "runner_sha256": "9b0a70697d24ab677b665c8fb1e1e79eb692b0bd7e5950889f344dbf63c96de9",
+  "short_count": 0,
+  "status": "ADOPTED_ONE_BOUNDED_METADATA_STAGE_POST_MODEL",
+  "adopted_at": "2026-10-05T02:23:31.529807+00:00",
+  "review_sha256": "295990a88e189a8d248a94a305f64a28632e561f81ffbffb70ec9d9cc7ad83bd",
+  "scope": "One exact monitor assertion-join test correction plus one offline ./monitor Go-list graph; immutable873e source and its successful compiler plus earlier7885 failed compiler retained. No compiler/body/DB overlap or native780/newSN/newCore inheritance."
+}

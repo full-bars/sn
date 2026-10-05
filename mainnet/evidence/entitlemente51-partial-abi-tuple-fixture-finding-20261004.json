@@ -1,0 +1,42 @@
+{
+  "schema": "entitlemente51-partial-abi-tuple-fixture-finding-v1",
+  "status": "THREE_ACTUAL_PARTIAL_BODY_FAILURES_ROOT_CAUSE_SOURCE_CONFIRMED_CORRECTION_ASSIGNED",
+  "head": "e51dfea301ed048c530877bfed3b04ee770e0032",
+  "source_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/source/sn/mainnet/economic_conservation_entitlement_fixture_test.go",
+      "bytes": 10622,
+      "sha256": "4e015c2ffd476e265604f95baec5f346dea1401555a29de69a11421422f39c66"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/source/sn/stabi/stcoordinator.go",
+      "bytes": 197436,
+      "sha256": "24021ebe5ff2bc0a4de7562e502df80fe0073ba5f269220ce1275ca1f6007bdd"
+    }
+  ],
+  "observed_failed_roots": [
+    {
+      "test": "TestEconomicEntitlementPublicArchiveKeepsOriginalCensusAndColdClaims",
+      "elapsed": 305.29
+    },
+    {
+      "test": "TestEconomicEntitlementPublicArchiveCannotDropOriginalReceipt",
+      "elapsed": 305.28
+    },
+    {
+      "test": "TestEconomicEntitlementPublicHeldHttpKeepsNativeVaultAndClaimProgress",
+      "elapsed": 65.33
+    }
+  ],
+  "observed_log_path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-02.stdout",
+  "retained_observation_excerpts": [
+    "PublicArchiveKeepsOriginalCensusAndColdClaims\n2026/10/04 12:50:30 http: panic serving 127.0.0.1:55106: reflect: call of reflect.Value.Type on zero Value\ngoroutine 431 [running]:\nnet/http.(*conn).serve.func1()\n\t/usr/local/go/src/net/http/server.go:1897 +0xbd\npanic({0x21cd880?, 0x655f87a0048?})\n\t/usr/local/go/src/runtime/panic.go:860 +0x13a\nreflect.Value.abiTypeSlow({0x0?, 0x0?, 0x655f7dcabf0?})\n\t/usr/local/go/src/reflect/value.go:2501 +0xee\nreflect.Value.typeSlow({0x0?, 0x0?, 0x0?})\n\t/usr/local/go/src/reflect/value.",
+    ", 0x655f8690780}, 0x655f8798b40)\n\t/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/source/sn/mainnet/economic_conservation_entitlement_fixture_test.go:264 +0xeb1\nnet/http.HandlerFunc.ServeHTTP(0x4285e5?, {0x281e210?, 0x655f8690780?}, 0x655f8690701?)\n\t/usr/local/go/src/net/http/server.go:2284 +0x29\nnet/http.serverHandler.ServeHTTP({0x2815218?}, {0x281e210?, 0x655f8690780?}, 0x1?)\n\t/usr/local/go/src/net/http/server.go:3309 +0x8e\nnet/http.(*conn).serve(0x655f8239dd0, {0x28227c8, 0x655f83da1b0})\n\t/us",
+    "oroutine 27\n\t/usr/local/go/src/net/http/server.go:3462 +0x485\n    economic_conservation_entitlement_archive_test.go:58: original entitlement archive source did not reach second public page 3 \n--- FAIL: TestEconomicEntitlementPublicArchiveKeepsOriginalCensusAndColdClaims (305.29s)\n=== RUN   TestEconomicEntitlementPublicArchiveCannotDropOriginalReceipt\n2026/10/04 12:55:35 http: panic serving 127.0.0.1:35660: reflect: call of reflect.Value.Type on zero Value\ngoroutine 1207 [running]:\nnet/http.(*conn).serve.func1()\n\t/u",
+    " in goroutine 1577\n\t/usr/local/go/src/net/http/server.go:3462 +0x485\n    economic_conservation_entitlement_test.go:307: artifact liveness guard expired before actual HTTP entry\n--- FAIL: TestEconomicEntitlementPublicHeldHttpKeepsNativeVaultAndClaimProgress (65.33s)\n=== RUN   TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress\n--- PASS: TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress (5.42s)\n=== RUN   TestEconomicConservationPublicCancelJoinsHeldFeeReplayAfterHealthyPublicat"
+  ],
+  "root_cause": "policyAt fixture initializes PolicyHash and RootCommitWindowBlocks only. Generated STCoordinatorPolicySnapshot includes EpochDepositCapRao and CampaignDepositCapRao as *big.Int, both nil in that literal. Actual ABI Outputs.Pack panics before serving its RPC response.",
+  "retry_observation": "Original GET retry continues on repeated EOF until the300-second budget expires. Held-artifact guard expires without reaching its HTTP entry because the earlier policy response keeps panicking. This does not establish a lack of transient GET retries.",
+  "correction": "Astra Current owns narrow fixture initialization plus adjacent generated-tuple review and deterministic regression tests; preserve all original outcomes and continue unaffected partitions.",
+  "limits": "Partial live batch observation, not final20-root terminal or all failure census. Growing log is named with retained excerpts, not falsely sealed as immutable complete output. No live chain/node slowdown or production ABI failure inferred."
+}

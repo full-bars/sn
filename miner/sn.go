@@ -2,23 +2,23 @@ package miner
 
 // sn.go — subnet (bittensor) subcommands for the provider
 // (sn/PLAN.md 7.3): `provider wallet set` registers the claim coldkey
-// with the platform (decision D-2), and `provider claim` fetches and
-// verifies this network's pool payout claim for an epoch (decision
-// D-6). Claim recomputes the merkle leaf and checks the inclusion proof
-// with sn/merkle, cross-checks the payout root on-chain via a minimal
-// eth_call when --rpc is given, and builds the claimMiner calldata with
-// the shared sn/stabi packer. With a --key_file it signs and submits the
-// transaction through sn/miner/onchain (go-ethereum); without one it
-// prints the ready-to-submit calldata for the offline/air-gapped snclaim
-// path. The ABI encoding, keccak, merkle and ss58 all come from the
-// shared sn packages — this file owns only the flow and the stdlib
+// with the platform (decision D-2; the signed set lives in sn_wallet.go),
+// and `provider claim` fetches and verifies this network's pool payout
+// claim for an epoch (decision D-6). Claim recomputes the merkle leaf and
+// checks the inclusion proof with sn/merkle, cross-checks the payout root
+// on-chain via a minimal eth_call when --rpc is given, and builds the
+// settlement vault's claim(uint256,uint256,bytes32,uint256,bytes32[])
+// calldata with the shared sn/stabi packer. With a --key_file it signs and
+// submits the transaction through sn/miner/onchain (go-ethereum); without
+// one it prints the ready-to-submit calldata for the offline/air-gapped
+// snclaim path. Head-tier membership is `provider fleet` (fleet.go):
+// register_limit on the native chain, then the coordinator's dual-signed
+// fleet bindings. The ABI encoding, keccak, merkle and ss58 all come from
+// the shared sn packages — this file owns only the flow and the stdlib
 // read-side eth_call transport (sn_rpc.go).
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/ed25519"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -31,14 +31,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/urnetwork/connect"
 	"github.com/urnetwork/sdk"
 
 	"github.com/urfoundation/sn/merkle"
 	"github.com/urfoundation/sn/miner/onchain"
-	"github.com/urfoundation/sn/ss58"
 	"github.com/urfoundation/sn/stabi"
 )
 
@@ -46,11 +44,10 @@ import (
 // fleet membership always targets the coordinator.
 var stSettlementVault = stabi.NewSTSettlementVault()
 var stCoordinator = stabi.NewSTCoordinator()
-var legacySTSubnet = stabi.NewSTSubnet()
 
 // readNetworkJwt loads the network jwt written by `provider auth` from
 // ~/.urnetwork/jwt — the same bootstrap credential `provider provide`
-// uses to mint its client JWT (clientauth.LoadOrCreateClientJwt).
+// uses for its durable versioned client operation (clientauth.LoadOrRegisterClientJwt).
 func readNetworkJwt() (string, error) {
 	jwtPath, err := providerStatePath("jwt")
 	if err != nil {
@@ -64,60 +61,6 @@ func readNetworkJwt() (string, error) {
 		return "", err
 	}
 	return strings.TrimSpace(string(byJwtBytes)), nil
-}
-
-// snSetWallet validates the ss58 coldkey locally and idempotently sets
-// it as the network's subnet claim wallet via the authenticated
-// `POST /sn/wallet` route. Prints the result on success.
-func snSetWallet(ctx context.Context, clientStrategy *connect.ClientStrategy, apiUrl string, coldkeySs58 string) error {
-	pubkey, err := ss58.DecodeWithPrefix(coldkeySs58, ss58.BittensorPrefix)
-	if err != nil {
-		return fmt.Errorf("invalid ss58 coldkey %q: %s", coldkeySs58, err)
-	}
-	byJwt, err := readNetworkJwt()
-	if err != nil {
-		return err
-	}
-	api := sdk.NewApi(ctx, clientStrategy, apiUrl)
-	defer func() {
-		_ = api.CloseAndWait(context.Background())
-	}()
-	api.SetByJwt(byJwt)
-	result, err := api.SnSetWalletSync(&sdk.SnSetWalletArgs{
-		ColdkeySs58: coldkeySs58,
-	})
-	if err != nil {
-		return err
-	}
-	if result.Error != nil {
-		return fmt.Errorf("%s", result.Error.Message)
-	}
-	fmt.Printf("subnet wallet set to %s (pubkey 0x%x)\n", coldkeySs58, pubkey)
-	return nil
-}
-
-// walletSet implements `provider wallet set <coldkey_ss58>`.
-func walletSet(opts docopt.Opts) {
-	apiUrl, err := resolveApiUrl(opts)
-	if err != nil {
-		fmt.Printf("network config error: %s\n", err)
-		os.Exit(1)
-	}
-
-	event := connect.NewEventWithContext(context.Background())
-	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-
-	ctx, cancel := context.WithCancel(event.Ctx())
-	defer cancel()
-
-	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
-	defer clientStrategy.Close()
-
-	coldkeySs58, _ := opts.String("<coldkey_ss58>")
-	if err := snSetWallet(ctx, clientStrategy, apiUrl, coldkeySs58); err != nil {
-		fmt.Printf("subnet wallet not set: %s\n", err)
-		os.Exit(1)
-	}
 }
 
 // claim implements `provider claim [--epoch=<epoch>] [--rpc=<rpc_url>]...
@@ -139,19 +82,31 @@ func walletSet(opts docopt.Opts) {
 // a verified claim is signed and submitted via sn/miner/onchain;
 // otherwise the ready-to-submit calldata is printed for snclaim.
 func claim(opts docopt.Opts) {
-	apiUrl, err := resolveApiUrl(opts)
-	if err != nil {
-		fmt.Printf("network config error: %s\n", err)
-		os.Exit(1)
-	}
-
 	event := connect.NewEventWithContext(context.Background())
 	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+	if err := runFiniteClaim(event.Ctx(), opts, finiteClaimHooks{}); err != nil {
+		fmt.Fprintf(os.Stderr, "claim: %v\n", err)
+		os.Exit(1)
+	}
+}
 
-	ctx, cancel := context.WithCancel(event.Ctx())
+// The complete finite flow owns and joins its SDK before returning an error.
+// Read retries never enclose proof validation, signing or submission.
+func runFiniteClaim(parent context.Context, opts docopt.Opts, hooks finiteClaimHooks) error {
+	if err := parent.Err(); err != nil {
+		return err
+	}
+	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
-
-	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
+	apiUrl, err := resolveApiUrl(opts)
+	if err != nil {
+		return fmt.Errorf("network config: %w", err)
+	}
+	settings := hooks.strategySettings
+	if settings == nil {
+		settings = defaultClaimReadStrategySettings()
+	}
+	clientStrategy := connect.NewClientStrategy(ctx, settings)
 	defer clientStrategy.Close()
 
 	dryRun, _ := opts.Bool("--dry-run")
@@ -162,7 +117,7 @@ func claim(opts docopt.Opts) {
 
 	byJwt, err := readNetworkJwt()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	api := sdk.NewApi(ctx, clientStrategy, apiUrl)
 	defer func() {
@@ -177,7 +132,7 @@ func claim(opts docopt.Opts) {
 	// submitting needs an rpc endpoint to broadcast through
 	if keyFile != "" && len(rpcUrls) == 0 {
 		fmt.Printf("claim: --key_file needs --rpc to submit\n")
-		os.Exit(1)
+		return errors.New("claim refused; see diagnostic")
 	}
 
 	epoch := int64(0)
@@ -185,57 +140,67 @@ func claim(opts docopt.Opts) {
 	if epochStr, epochErr := opts.String("--epoch"); epochErr == nil && epochStr != "" {
 		epoch, err = strconv.ParseInt(epochStr, 10, 64)
 		if err != nil {
-			panic(fmt.Errorf("bad --epoch %q: %s", epochStr, err))
+			return fmt.Errorf("bad --epoch %q: %s", epochStr, err)
 		}
 		if epoch < 0 {
-			panic(fmt.Errorf("bad --epoch %q: must be non-negative", epochStr))
+			return fmt.Errorf("bad --epoch %q: must be non-negative", epochStr)
 		}
 	} else {
-		epochResult, err := api.SnEpochSync()
+		epochResult, err := retryClaimApiRead(ctx, hooks.retry, api.SnEpochSyncWithContext)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		if epochResult.Epoch == 0 {
-			panic(fmt.Errorf("current epoch is 0; no finalized epoch to claim yet"))
+		if epochResult == nil || epochResult.Epoch <= 0 {
+			return fmt.Errorf("current epoch is 0; no finalized epoch to claim yet")
 		}
 		epoch = epochResult.Epoch - 1
 		epochNote = fmt.Sprintf(" (last finalized; current epoch is %d. Use --epoch to override)", epochResult.Epoch)
 	}
 
-	poolClaim, err := api.SnPoolClaimSync(&sdk.SnPoolClaimArgs{
-		Epoch: epoch,
+	poolClaim, err := retryClaimApiRead(ctx, hooks.retry, func(readCtx context.Context) (*sdk.SnPoolClaimResult, error) {
+		return api.SnPoolClaimSyncWithContext(readCtx, &sdk.SnPoolClaimArgs{Epoch: epoch})
 	})
 	if err != nil {
-		panic(err)
+		return err
+	}
+
+	if poolClaim == nil {
+		return errors.New("claim response is null")
+	}
+	if poolClaim.Error != nil {
+		return fmt.Errorf("claim refused by platform: %s", poolClaim.Error.Message)
+	}
+	if poolClaim.Epoch != epoch {
+		return fmt.Errorf("claim epoch %d differs from requested %d", poolClaim.Epoch, epoch)
 	}
 
 	// decode and sanity-check the claim fields
 	if len(poolClaim.NoId) == 0 {
-		panic(fmt.Errorf("claim has no no_id"))
+		return fmt.Errorf("claim has no no_id")
 	}
 	if 32 < len(poolClaim.NoId) {
-		panic(fmt.Errorf("bad no_id length %d; expected <= 32", len(poolClaim.NoId)))
+		return fmt.Errorf("bad no_id length %d; expected <= 32", len(poolClaim.NoId))
 	}
 	noId := new(big.Int).SetBytes(poolClaim.NoId)
 	if len(poolClaim.Coldkey) != 32 {
-		panic(fmt.Errorf("bad coldkey length %d; expected 32", len(poolClaim.Coldkey)))
+		return fmt.Errorf("bad coldkey length %d; expected 32", len(poolClaim.Coldkey))
 	}
 	var coldkey [32]byte
 	copy(coldkey[:], poolClaim.Coldkey)
 	if len(poolClaim.PayoutRoot) != 32 {
-		panic(fmt.Errorf("bad payout root length %d; expected 32", len(poolClaim.PayoutRoot)))
+		return fmt.Errorf("bad payout root length %d; expected 32", len(poolClaim.PayoutRoot))
 	}
 	var serverRoot [32]byte
 	copy(serverRoot[:], poolClaim.PayoutRoot)
 	if poolClaim.ShareBps < 0 {
-		panic(fmt.Errorf("bad share_bps %d", poolClaim.ShareBps))
+		return fmt.Errorf("bad share_bps %d", poolClaim.ShareBps)
 	}
 	shareBps := uint64(poolClaim.ShareBps)
 	shareBpsBig := new(big.Int).SetUint64(shareBps)
 	proof := make([][32]byte, len(poolClaim.Proof))
 	for i, proofElement := range poolClaim.Proof {
 		if len(proofElement) != 32 {
-			panic(fmt.Errorf("bad proof element %d length %d; expected 32", i, len(proofElement)))
+			return fmt.Errorf("bad proof element %d length %d; expected 32", i, len(proofElement))
 		}
 		copy(proof[i][:], proofElement)
 	}
@@ -246,7 +211,8 @@ func claim(opts docopt.Opts) {
 	proofVerifiesServer := merkle.Verify(serverRoot, leaf, proof)
 
 	// read the on-chain root, trying each --rpc endpoint in order until one
-	// answers both eth_chainId and eth_call. The noCommit read calldata is
+	// answers both eth_chainId and eth_call; semantic refusals stop failover.
+	// The noCommit read calldata is
 	// built with sn/stabi; only the http transport is hand-rolled (sn_rpc.go).
 	epochBig := big.NewInt(epoch)
 	chainChecked := false
@@ -254,19 +220,12 @@ func claim(opts docopt.Opts) {
 	var chainId uint64
 	var chainRpcUrl string
 	if 0 < len(rpcUrls) {
+		if poolClaim.ChainId < 0 {
+			return fmt.Errorf("claim: server chain id %d is invalid", poolClaim.ChainId)
+		}
 		entitlementCalldata := stSettlementVault.PackEntitlement(epochBig, noId)
 		for _, rpcUrl := range rpcUrls {
-			chainIdHex, rpcErr := ethRpcHexResult(ctx, rpcUrl, "eth_chainId", []any{})
-			if rpcErr != nil {
-				fmt.Printf("rpc %s: %s\n", rpcUrl, rpcErr)
-				continue
-			}
-			rpcChainId, rpcErr := parseEthHexQuantity(chainIdHex)
-			if rpcErr != nil {
-				fmt.Printf("rpc %s: bad eth_chainId %q\n", rpcUrl, chainIdHex)
-				continue
-			}
-			callHex, rpcErr := ethRpcHexResult(ctx, rpcUrl, "eth_call", []any{
+			returnData, rpcErr := ethRpcHexView(ctx, rpcUrl, uint64(poolClaim.ChainId), []any{
 				map[string]any{
 					"to":   poolClaim.ContractAddress,
 					"data": fmt.Sprintf("0x%x", entitlementCalldata),
@@ -274,24 +233,25 @@ func claim(opts docopt.Opts) {
 				"latest",
 			})
 			if rpcErr != nil {
+				if !retryableEthRpcError(rpcErr, false) || ctx.Err() != nil {
+					return fmt.Errorf("claim: rpc %s refused: %w", rpcUrl, rpcErr)
+				}
 				fmt.Printf("rpc %s: %s\n", rpcUrl, rpcErr)
 				continue
 			}
-			returnData, rpcErr := parseEthHexBytes(callHex)
-			if rpcErr != nil || len(returnData) < 32 {
-				fmt.Printf("rpc %s: entitlement returned %d bytes; expected >= 32 (wrong vault address?)\n", rpcUrl, len(returnData))
-				continue
+			if len(returnData) < 32 {
+				return fmt.Errorf("rpc %s: entitlement returned %d bytes; expected >= 32 (wrong vault address?)", rpcUrl, len(returnData))
 			}
 			// entitlement returns the tuple with payoutRoot as its first word.
 			copy(chainRoot[:], returnData[:32])
-			chainId = rpcChainId
+			chainId = uint64(poolClaim.ChainId)
 			chainRpcUrl = rpcUrl
 			chainChecked = true
 			break
 		}
 		if !chainChecked {
 			fmt.Printf("status: UNVERIFIED — no --rpc endpoint answered\n")
-			os.Exit(1)
+			return errors.New("claim refused; see diagnostic")
 		}
 	}
 
@@ -341,7 +301,7 @@ func claim(opts docopt.Opts) {
 		Proof:    proof,
 	})
 	if err != nil {
-		panic(fmt.Errorf("pack settlement-vault claim: %s", err))
+		return fmt.Errorf("pack settlement-vault claim: %s", err)
 	}
 
 	if 0 < len(mismatches) {
@@ -350,7 +310,7 @@ func claim(opts docopt.Opts) {
 			fmt.Printf("mismatch: %s\n", mismatch)
 		}
 		fmt.Printf("status: MISMATCH — do not submit\n")
-		os.Exit(1)
+		return errors.New("claim refused; see diagnostic")
 	}
 
 	// verified. With an EVM key, sign+send through onchain.Submit; otherwise
@@ -358,17 +318,17 @@ func claim(opts docopt.Opts) {
 	if keyFile != "" {
 		if !common.IsHexAddress(poolClaim.ContractAddress) {
 			fmt.Printf("claim: server contract address %q is not a valid EVM address\n", poolClaim.ContractAddress)
-			os.Exit(1)
+			return errors.New("claim refused; see diagnostic")
 		}
 		if poolClaim.ChainId < 0 {
 			fmt.Printf("claim: server chain id %d is invalid\n", poolClaim.ChainId)
-			os.Exit(1)
+			return errors.New("claim refused; see diagnostic")
 		}
 		contract := common.HexToAddress(poolClaim.ContractAddress)
 		key, err := onchain.LoadKeyFile(keyFile)
 		if err != nil {
 			fmt.Printf("claim: %s\n", err)
-			os.Exit(1)
+			return errors.New("claim refused; see diagnostic")
 		}
 		receipt, err := onchain.Submit(ctx, onchain.SubmitParams{
 			Contract: contract,
@@ -380,22 +340,23 @@ func claim(opts docopt.Opts) {
 		})
 		if err != nil {
 			fmt.Printf("claim submit failed: %s\n", err)
-			os.Exit(1)
+			return errors.New("claim refused; see diagnostic")
 		}
 		if receipt == nil {
-			return // dry run; onchain.Submit printed the preflight
+			return nil // dry run; onchain.Submit printed the preflight
 		}
 		printMinerClaimed(receipt, contract)
-		return
+		return nil
 	}
 
 	fmt.Printf("claim calldata:\n0x%x\n", claimCalldata)
-	fmt.Printf("submit with: snclaim submit --rpc=<rpc_url> --contract=%s --calldata=0x%x --key_file=<evm_key_file>\n", poolClaim.ContractAddress, claimCalldata)
+	fmt.Printf("submit with: snclaim submit --calldata=0x%x --contract=%s --rpc=<rpc_url> --key_file=<evm_key_file>\n", claimCalldata, poolClaim.ContractAddress)
 	if chainChecked {
 		fmt.Printf("status: VERIFIED (proof, server, and on-chain roots agree)\n")
 	} else {
 		fmt.Printf("status: VERIFIED against the server root only\n")
 	}
+	return nil
 }
 
 type minerClaimReceiptEvents struct {
@@ -449,377 +410,5 @@ func printMinerClaimed(receipt *types.Receipt, contract common.Address) {
 		fmt.Printf("warning: no Claimed event decoded from the receipt\n")
 	} else if len(events.Paid) == 0 && len(events.Deferred) == 0 {
 		fmt.Printf("claim accepted with zero credit; no runtime transfer was required\n")
-	}
-}
-
-// ---------------------------------------------------------------------
-// Head-tier claim — client_id <-> hotkey binding (WHITEPAPER §8.4/§11.4,
-// decisions D-6/D-18). A top-level (head) miner runs its own UID and is
-// steered by validators on pure measured quality; to be measured it must
-// publish a dual-signed association between the client_id its trails are
-// measured under and its subnet hotkey. This binary owns the client key,
-// so it produces the client_id signature. The head-bind digest read and
-// the bindHead/unbindHead calldata are packed with sn/stabi; with a
-// --key_file the transaction is signed and submitted via sn/miner/onchain,
-// otherwise the calldata is printed for snclaim.
-// ---------------------------------------------------------------------
-
-// snBindHeadIntent is the signed-head-binding bundle: everything needed to
-// pack and submit bindHead, plus the digest that was signed (for display).
-type snBindHeadIntent struct {
-	hotkey      [32]byte
-	clientId    [32]byte // the provider's client Ed25519 public key (ckey)
-	registrant  common.Address
-	digest      [32]byte
-	clientIdSig []byte // 64-byte Ed25519 signature (R‖S) by clientId over digest
-}
-
-// snSignBindHead signs the on-chain headBindDigest with the provider's
-// client Ed25519 private key (the `.provider.key` identity, the same key
-// that produces the `/verify` vpk signatures). ed25519.Sign returns the
-// standard 64-byte signature R‖S; the contract splits it r=sig[0:32],
-// s=sig[32:64] and verifies via the 0x402 precompile (whose r is "the
-// first 32 bytes" and s "the second 32 bytes"), so this byte order maps
-// directly with no reordering — exactly as registerValidator's
-// ed25519Sig is split (sn/evm/src/STSubnet.sol bindHead).
-func snSignBindHead(clientPrivateKey ed25519.PrivateKey, registrant common.Address, hotkey [32]byte, digest [32]byte) *snBindHeadIntent {
-	intent := &snBindHeadIntent{
-		hotkey:      hotkey,
-		registrant:  registrant,
-		digest:      digest,
-		clientIdSig: ed25519.Sign(clientPrivateKey, digest[:]),
-	}
-	copy(intent.clientId[:], clientPrivateKey.Public().(ed25519.PublicKey))
-	return intent
-}
-
-// snLoadClientKey loads the provider's long-lived Ed25519 identity key
-// from ~/.urnetwork/.provider.key (the raw 32-byte seed). This is the
-// client_id/ckey used for `/verify`; `provider provide` generates and
-// persists it on first run.
-func snLoadClientKey() (ed25519.PrivateKey, error) {
-	seed, err := readProviderClientKeySeed()
-	if err != nil {
-		return nil, err
-	}
-	if len(seed) == 0 {
-		p, _ := providerStatePath(".provider.key")
-		return nil, fmt.Errorf("provider client key not found at %s. Run `provider provide` once to generate the client identity key", p)
-	}
-	if len(seed) != ed25519.SeedSize {
-		return nil, fmt.Errorf("provider client key seed length %d; expected %d", len(seed), ed25519.SeedSize)
-	}
-	return ed25519.NewKeyFromSeed(seed), nil
-}
-
-// snReadHeadBindDigest reads the exact 32-byte headBindDigest from the
-// contract via eth_call, trying each rpc endpoint in order until one
-// answers both eth_chainId and eth_call (failover, like `provider
-// claim`). Per-endpoint failures are printed; the digest binds
-// block.chainid and the contract address internally, so no chain id
-// needs to be supplied. The read calldata is packed by the caller with
-// sn/stabi (headBindDigest).
-func snReadHeadBindDigest(ctx context.Context, rpcUrls []string, contractHex string, calldata []byte) (digest [32]byte, chainId uint64, rpcUrl string, err error) {
-	for _, url := range rpcUrls {
-		chainIdHex, rpcErr := ethRpcHexResult(ctx, url, "eth_chainId", []any{})
-		if rpcErr != nil {
-			fmt.Printf("rpc %s: %s\n", url, rpcErr)
-			continue
-		}
-		cid, rpcErr := parseEthHexQuantity(chainIdHex)
-		if rpcErr != nil {
-			fmt.Printf("rpc %s: bad eth_chainId %q\n", url, chainIdHex)
-			continue
-		}
-		callHex, rpcErr := ethRpcHexResult(ctx, url, "eth_call", []any{
-			map[string]any{
-				"to":   contractHex,
-				"data": fmt.Sprintf("0x%x", calldata),
-			},
-			"latest",
-		})
-		if rpcErr != nil {
-			fmt.Printf("rpc %s: %s\n", url, rpcErr)
-			continue
-		}
-		returnData, rpcErr := parseEthHexBytes(callHex)
-		if rpcErr != nil || len(returnData) < 32 {
-			fmt.Printf("rpc %s: headBindDigest returned %d bytes; expected >= 32 (wrong contract address?)\n", url, len(returnData))
-			continue
-		}
-		copy(digest[:], returnData[:32])
-		return digest, cid, url, nil
-	}
-	return digest, 0, "", fmt.Errorf("no --rpc endpoint answered headBindDigest")
-}
-
-// parseBytes32Arg parses a 0x-optional 32-byte hex argument (hotkey or
-// client_id).
-func parseBytes32Arg(field string, s string) ([32]byte, error) {
-	var out [32]byte
-	h := strings.TrimPrefix(strings.TrimPrefix(strings.TrimSpace(s), "0x"), "0X")
-	b, err := hex.DecodeString(h)
-	if err != nil {
-		return out, fmt.Errorf("%s: %s", field, err)
-	}
-	if len(b) != 32 {
-		return out, fmt.Errorf("%s: %d hex bytes; expected 32", field, len(b))
-	}
-	copy(out[:], b)
-	return out, nil
-}
-
-// parseEvmAddressArg parses a 0x-optional 20-byte hex EVM address.
-func parseEvmAddressArg(field string, s string) ([20]byte, error) {
-	var out [20]byte
-	h := strings.TrimPrefix(strings.TrimPrefix(strings.TrimSpace(s), "0x"), "0X")
-	b, err := hex.DecodeString(h)
-	if err != nil {
-		return out, fmt.Errorf("%s: %s", field, err)
-	}
-	if len(b) != 20 {
-		return out, fmt.Errorf("%s: %d hex bytes; expected a 20-byte EVM address", field, len(b))
-	}
-	copy(out[:], b)
-	return out, nil
-}
-
-// bindHead implements `provider bind-head --hotkey=<hex>
-// --registrant=<0xEVMaddr> --contract=<addr> [--rpc=<rpc_url>]...
-// [--key_file=<key_file>] [--dry-run]`. It signs the on-chain
-// headBindDigest with the provider's client key, packs bindHead with
-// sn/stabi, and either submits it via sn/miner/onchain (when --key_file
-// is given) or prints the ready-to-submit calldata for snclaim.
-func bindHead(opts docopt.Opts) {
-	fail := func(err error) {
-		fmt.Printf("bind-head failed: %s\n", err)
-		os.Exit(1)
-	}
-
-	hotkeyStr, _ := opts.String("--hotkey")
-	hotkey, err := parseBytes32Arg("--hotkey", hotkeyStr)
-	if err != nil {
-		fail(err)
-	}
-	registrantStr, _ := opts.String("--registrant")
-	registrantBytes, err := parseEvmAddressArg("--registrant", registrantStr)
-	if err != nil {
-		fail(err)
-	}
-	registrant := common.Address(registrantBytes)
-	contractStr, _ := opts.String("--contract")
-	contractBytes, err := parseEvmAddressArg("--contract", contractStr)
-	if err != nil {
-		fail(err)
-	}
-	contract := common.Address(contractBytes)
-	var rpcUrls []string
-	if rpcAny, ok := opts["--rpc"]; ok && rpcAny != nil {
-		rpcUrls = append(rpcUrls, rpcAny.([]string)...)
-	}
-	if len(rpcUrls) == 0 {
-		fail(fmt.Errorf("--rpc: at least one endpoint required to read headBindDigest"))
-	}
-	dryRun, _ := opts.Bool("--dry-run")
-	keyFile, _ := opts.String("--key_file")
-
-	privateKey, err := snLoadClientKey()
-	if err != nil {
-		fail(err)
-	}
-	var clientId [32]byte
-	copy(clientId[:], privateKey.Public().(ed25519.PublicKey))
-
-	// If we will submit, the EVM key must be the registrant the digest is
-	// bound to — catch a mismatch locally before signing/spending gas.
-	var key *ecdsa.PrivateKey
-	if keyFile != "" {
-		key, err = onchain.LoadKeyFile(keyFile)
-		if err != nil {
-			fail(err)
-		}
-		if from := crypto.PubkeyToAddress(key.PublicKey); from != registrant {
-			fail(fmt.Errorf("--key_file address %s does not equal --registrant %s (the head-bind digest is bound to the registrant)", from.Hex(), registrant.Hex()))
-		}
-	}
-
-	event := connect.NewEventWithContext(context.Background())
-	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-	ctx, cancel := context.WithCancel(event.Ctx())
-	defer cancel()
-
-	contractHex := contract.Hex()
-	digestCalldata := legacySTSubnet.PackHeadBindDigest(registrant, hotkey, clientId)
-	digest, chainId, rpcUrl, err := snReadHeadBindDigest(ctx, rpcUrls, contractHex, digestCalldata)
-	if err != nil {
-		fail(err)
-	}
-
-	intent := snSignBindHead(privateKey, registrant, hotkey, digest)
-
-	bindCalldata, err := onchain.BuildBindHeadCalldata(intent.hotkey, intent.clientId, intent.clientIdSig)
-	if err != nil {
-		fail(fmt.Errorf("pack bindHead: %s", err))
-	}
-
-	fmt.Printf("head binding intent (bindHead)\n")
-	fmt.Printf("hotkey: 0x%x\n", intent.hotkey)
-	fmt.Printf("client_id (ckey): 0x%x\n", intent.clientId)
-	fmt.Printf("client_id_sig: 0x%x (64-byte Ed25519 R‖S by client_id over the digest)\n", intent.clientIdSig)
-	fmt.Printf("digest: 0x%x (headBindDigest, via %s, chain id %d)\n", intent.digest, rpcUrl, chainId)
-	fmt.Printf("registrant: %s\n", intent.registrant.Hex())
-	fmt.Printf("contract: %s (chain id %d)\n", contractHex, chainId)
-
-	if key != nil {
-		receipt, err := onchain.Submit(ctx, onchain.SubmitParams{
-			Contract: contract,
-			Rpcs:     rpcUrls,
-			Key:      key,
-			Calldata: bindCalldata,
-			ChainID:  new(big.Int).SetUint64(chainId),
-			DryRun:   dryRun,
-		})
-		if err != nil {
-			fail(err)
-		}
-		if receipt == nil {
-			return // dry run
-		}
-		printHeadBound(receipt, contract)
-		return
-	}
-
-	fmt.Printf("note: registrant MUST equal the snclaim EVM sender. The digest is bound to it, and bindHead reverts unless mirror(sender) equals the hotkey's on-chain coldkey (mirror-gated, like registerValidator).\n")
-	fmt.Printf("bindHead calldata:\n0x%x\n", bindCalldata)
-	fmt.Printf("submit with: snclaim bind-head --hotkey=0x%x --client_id=0x%x --sig=0x%x --contract=%s --rpc=%s --key_file=<evm_key_file>\n",
-		intent.hotkey, intent.clientId, intent.clientIdSig, contractHex, rpcUrl)
-}
-
-// printHeadBound decodes and prints the HeadBound event(s) from a bind receipt.
-func printHeadBound(receipt *types.Receipt, contract common.Address) {
-	decoded := false
-	for _, lg := range receipt.Logs {
-		if lg.Address != contract {
-			continue
-		}
-		ev, err := legacySTSubnet.UnpackHeadBoundEvent(lg)
-		if err != nil {
-			continue
-		}
-		fmt.Printf("HeadBound: uid %d, registrant %s\n", ev.Uid, ev.Registrant.Hex())
-		fmt.Printf("  hotkey:    0x%x\n", ev.Hotkey)
-		fmt.Printf("  client_id: 0x%x\n", ev.ClientId)
-		decoded = true
-	}
-	if !decoded {
-		fmt.Printf("warning: no HeadBound event decoded from the receipt\n")
-	}
-}
-
-// unbindHead implements `provider unbind-head --hotkey=<hex>
-// [--contract=<addr>] [--rpc=<rpc_url>]... [--key_file=<key_file>]
-// [--dry-run]`. Unbind is mirror-gated only (no client signature), so this
-// packs unbindHead with sn/stabi and either submits it via sn/miner/onchain
-// (when --key_file is given) or prints the calldata for snclaim.
-func unbindHead(opts docopt.Opts) {
-	fail := func(err error) {
-		fmt.Printf("unbind-head failed: %s\n", err)
-		os.Exit(1)
-	}
-
-	hotkeyStr, _ := opts.String("--hotkey")
-	hotkey, err := parseBytes32Arg("--hotkey", hotkeyStr)
-	if err != nil {
-		fail(err)
-	}
-	var rpcUrls []string
-	if rpcAny, ok := opts["--rpc"]; ok && rpcAny != nil {
-		rpcUrls = append(rpcUrls, rpcAny.([]string)...)
-	}
-	dryRun, _ := opts.Bool("--dry-run")
-	keyFile, _ := opts.String("--key_file")
-
-	// contract is optional for the offline print, required to submit
-	var contract common.Address
-	haveContract := false
-	if contractStr, _ := opts.String("--contract"); strings.TrimSpace(contractStr) != "" {
-		contractBytes, err := parseEvmAddressArg("--contract", contractStr)
-		if err != nil {
-			fail(err)
-		}
-		contract = common.Address(contractBytes)
-		haveContract = true
-	}
-
-	calldata, err := onchain.BuildUnbindHeadCalldata(hotkey)
-	if err != nil {
-		fail(fmt.Errorf("pack unbindHead: %s", err))
-	}
-
-	fmt.Printf("head unbind intent (unbindHead)\n")
-	fmt.Printf("hotkey: 0x%x\n", hotkey)
-	fmt.Printf("note: unbind needs no signature — it is mirror-gated only. The snclaim EVM sender's mirror must equal the hotkey's on-chain coldkey.\n")
-	fmt.Printf("unbindHead calldata:\n0x%x\n", calldata)
-
-	if keyFile != "" {
-		if !haveContract {
-			fail(fmt.Errorf("--contract required to submit"))
-		}
-		if len(rpcUrls) == 0 {
-			fail(fmt.Errorf("--rpc required to submit"))
-		}
-		key, err := onchain.LoadKeyFile(keyFile)
-		if err != nil {
-			fail(err)
-		}
-
-		event := connect.NewEventWithContext(context.Background())
-		event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-		ctx, cancel := context.WithCancel(event.Ctx())
-		defer cancel()
-
-		receipt, err := onchain.Submit(ctx, onchain.SubmitParams{
-			Contract: contract,
-			Rpcs:     rpcUrls,
-			Key:      key,
-			Calldata: calldata,
-			DryRun:   dryRun,
-		})
-		if err != nil {
-			fail(err)
-		}
-		if receipt == nil {
-			return // dry run
-		}
-		printHeadUnbound(receipt, contract)
-		return
-	}
-
-	contractHint := "<contract>"
-	if haveContract {
-		contractHint = contract.Hex()
-	}
-	fmt.Printf("submit with: snclaim unbind-head --hotkey=0x%x --contract=%s --rpc=<rpc_url> --key_file=<evm_key_file>\n", hotkey, contractHint)
-}
-
-// printHeadUnbound decodes and prints the HeadUnbound event(s) from an unbind
-// receipt.
-func printHeadUnbound(receipt *types.Receipt, contract common.Address) {
-	decoded := false
-	for _, lg := range receipt.Logs {
-		if lg.Address != contract {
-			continue
-		}
-		ev, err := legacySTSubnet.UnpackHeadUnboundEvent(lg)
-		if err != nil {
-			continue
-		}
-		fmt.Printf("HeadUnbound: uid %d, registrant %s\n", ev.Uid, ev.Registrant.Hex())
-		fmt.Printf("  hotkey:    0x%x\n", ev.Hotkey)
-		fmt.Printf("  client_id: 0x%x\n", ev.ClientId)
-		decoded = true
-	}
-	if !decoded {
-		fmt.Printf("warning: no HeadUnbound event decoded from the receipt\n")
 	}
 }

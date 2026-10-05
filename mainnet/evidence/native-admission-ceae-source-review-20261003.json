@@ -1,0 +1,42 @@
+{
+  "actual_physical_test_blobs_verified": [
+    {
+      "bytes": 4120,
+      "git_blob": "585b4f8c03d54852d895ab1616b84e6a1d19b6fc",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-archive-admission-barrier/sn/mainnet/monitor_economic_native_admission_test.go",
+      "relative": "mainnet/monitor_economic_native_admission_test.go",
+      "sha256": "49d9893c502325e0286403937b1cfbf4fff4f4cf65f16659d49c26f89aa926fd"
+    },
+    {
+      "bytes": 18651,
+      "git_blob": "ac32296508093c60d5d31666b21086952443f92c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-archive-admission-barrier/sn/mainnet/monitor_economic_native_restore_test.go",
+      "relative": "mainnet/monitor_economic_native_restore_test.go",
+      "sha256": "e440f0b4cd2855097baebaf22cb2ad6dac4f8c254db38da82ee88f84b9bc5638"
+    }
+  ],
+  "all_other_source_and_module_tree_entries_unchanged": true,
+  "finding_sent_to_astra": [
+    "Setup failure/cleanup ignores file.Close errors; next successor must check errors without mutating frozen test source."
+  ],
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/native-ceae-intake.json",
+    "sha256": "403ca0813811bf6c0226b02b1fe65381e673ad04e6d9fdeaab3a828e632c5909"
+  },
+  "limits": [
+    "No behavioral result for ceae here; original full512 race60s timeout retained.",
+    "Complete512 race, omissionneighbors and crossrootcohort remain pending."
+  ],
+  "review": [
+    "Watches each exact retained segment inode before publicworker startup.",
+    "Finite300s readprogress wait observes actualaccess, earlyworkerexit and cancellation distinctly.",
+    "Positive access does not waive hash/custody/admission; original publicsample remains required.",
+    "Observer reader joined before cleanup returns."
+  ],
+  "source": {
+    "commit": "ceae8d5fce0f3e5638f656d278dbefc5a866fb67",
+    "parent": "259abc3c27fcf870b097c1cd7183c3e76538d319",
+    "tree": "34d949b52289d3752bee6acb0d7bf504fb2a225a"
+  },
+  "status": "ROOT_VERIFIED_TEST_ONLY_SOURCE_NOT_BEHAVIOR"
+}

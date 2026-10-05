@@ -1,0 +1,33 @@
+{
+  "schema": "default-local-module-actual-result-v1",
+  "checked_at": "2026-10-05T06:57:37.022101+00:00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1.receipt.json",
+    "sha256": "236f5965da9e1434565677aa20026c392dcb02b56985a5a409aebd904a1886fc"
+  },
+  "user_terminal_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-9c7a-026b-89b-metadata-v1-user-terminal-readback.json",
+    "sha256": "a655e78d47499fe4e1b0ce3968c0a10d2e3fa1890337e51eaf074b8a31f078ce"
+  },
+  "source_tuple": {
+    "core": "026b850248352b72255be7a966e391e0a15e74c1",
+    "server": "89b1d5b153dcae55566c75b0b9753d0a1c4c8697",
+    "sn": "9c7a2842d2df41bc7f2757234f378d78a6b6dc9b"
+  },
+  "status": "METADATA_COLLECTED_GRAPH_FAILURES",
+  "graph_failures": [
+    "sn",
+    "connect",
+    "server",
+    "vlessinterop"
+  ],
+  "phase_count": 14,
+  "all_waits_joined": true,
+  "resource_errors": [],
+  "diagnosis": {
+    "sn_server": "Missing go.sum for utls imported through local Connect.",
+    "connect": "utls1.8.2 not in offline module cache.",
+    "vlessinterop": "xray-core1.260327.0 and utls1.8.3 pseudo-version not in offline cache."
+  },
+  "limit": "No compiler or product tests ran. Dependency preparation failed, not evidence of a runtime defect."
+}

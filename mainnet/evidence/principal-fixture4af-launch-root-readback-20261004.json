@@ -1,0 +1,25 @@
+{
+  "schema": "principal-fixture4af-launch-root-readback-v1",
+  "status": "ACTUAL_COMPILATION_LIVE_AT_READBACK",
+  "adoption": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/adoption-v1.json",
+    "bytes": 913,
+    "sha256": "520be15e6aac6d248df87783eae19d11077df64fcb64eff0d2f4f9498d584e93"
+  },
+  "processes": [
+    {
+      "pid": 1162229,
+      "state": "S",
+      "start_ticks": "97538205",
+      "argv": "/home/by/urnetwork/.virtualenv/brien/bin/python3 -B /mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/run-fixture4af-v1.py /mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/adoption-v1.json"
+    },
+    {
+      "pid": 1162273,
+      "state": "S",
+      "start_ticks": "97538387",
+      "argv": "go test -c -overlay /mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/go-overlay-effective-v2.json -o /mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/fixture4af-normal.test ./mainnet"
+    }
+  ],
+  "scope": "Exact reviewed runner and effectivefour-fileoverlay compile started. Behavioral outcomes remain unproven; retain same handles and prior successes.",
+  "whole_mainnet_complete": false
+}

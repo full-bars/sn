@@ -1,0 +1,59 @@
+{
+  "binding_count": 39,
+  "created_at": "2026-10-05T06:25:55.302489+00:00",
+  "enforcement": {
+    "child_timeout_seconds": 60,
+    "docker_active_floor_bytes": 295833415680,
+    "hard_memory_bytes": 268435456,
+    "healthy_data_bytes": 6307319808,
+    "healthy_memory_bytes": 103079215104,
+    "log_limit_bytes": 4194304,
+    "swap_bytes": 0,
+    "whole_data_growth_cutoff_bytes": 67108864,
+    "whole_owner_horizon_seconds": 180
+  },
+  "entry": {
+    "data_minimum_available_bytes": 10737418240,
+    "docker_minimum_available_bytes": 300128382976,
+    "held_old_model_reserve": "retained conservatively for this exclusive helper test; only later joint pair explicitly releases it",
+    "memory_minimum_available_bytes": 113816633344
+  },
+  "independent_wrapper_review": "Operator Recovery requested; author did not import runner or execute tests.",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/joint-adapter30-gc-v2-job-v1.json",
+    "sha256": "66363af54fd0bea9db4636eadbb4cf1657fd85e30715c9b86d7416782976ae23"
+  },
+  "no_launch": true,
+  "observed_capacity": {
+    "data_available_bytes": 16490057728,
+    "memory_available_bytes": 129956757504,
+    "scope": "read-only planning snapshot, runtime must freshly recheck"
+  },
+  "original_limits": {
+    "accounting_floor_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "margin": 2
+  },
+  "predecessor_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-sn-core9-normal-v1-user-terminal-readback.json",
+    "sha256": "6ad2d06887a12e35f2ae1fefafce4572753bd4c1f23e62f70f61a5152b85e696"
+  },
+  "predecessor_terminal": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-sn-core9-normal-v1.receipt.json",
+    "sha256": "1150f93836263e5035a4f1fc8809e3d989d79c773a9a9ed85c5e6a52a1b490cb"
+  },
+  "required_root_adoption": "/home/by/urnetwork/sn/mainnet/evidence/joint-adapter30-gc-v2-adoption.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-joint-adapter-tests-v2.py",
+    "sha256": "81b63dd5d01052b9a2f2d23501658ef727b1a3cab38a11061ff1bde9441568a9"
+  },
+  "schema": "joint-adapter30-concrete-qualification-review-v1",
+  "scope": "Exactly30 deterministic pure adapter tests, no product/compiler/Docker body, exclusive after actual Main9 closed owner. Passing does not adopt a joint product cohort.",
+  "source_basis": "Thirty bounded synthetic tests; real local locks/immutable small JSON/memfd bytes; real process/compiler/systemd/Docker observations are mocked in test child. All original24 test ASTs retained and6GC roots added.",
+  "source_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/joint-peer-adapter-v2-source-and-prospective-class-review.json",
+    "sha256": "f1135651c5abd70962f9ed8502b35b10b4e0ebd2c991967d358a9e3c630b2821"
+  },
+  "status": "READY_FOR_INDEPENDENT_WRAPPER_ACK_AND_ROOT_ADOPTION"
+}

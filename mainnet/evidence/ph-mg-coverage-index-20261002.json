@@ -1,0 +1,654 @@
+{
+  "created_utc": "2026-10-02T08:20:38.632906+00:00",
+  "highest_uncovered": [
+    {
+      "behavior": "Public owner entry must reject missing/changed v2 root declaration before mkdir, config, unit, sign or send; named-leaf journal continuity and uncertain-write recovery across reopen remain unqualified.",
+      "ids": [
+        "PH-09",
+        "MG-03",
+        "MG-09"
+      ],
+      "rank": 1
+    },
+    {
+      "behavior": "Four-role chain phase through actual two UR validators, netuid-0 host and operator/contracts lacks approved device, external custody, host service and live side-effect evidence.",
+      "ids": [
+        "MG-08",
+        "PH-14",
+        "PH-07"
+      ],
+      "rank": 2
+    },
+    {
+      "behavior": "Actual native 10/90 outcome, lifetime reserve conservation, operator deposits, settlement carry/claims and runtime rollback lack composed production proof.",
+      "ids": [
+        "MG-06",
+        "PH-11",
+        "PH-12"
+      ],
+      "rank": 3
+    },
+    {
+      "behavior": "Last artifact is frozen258/server0aa; newer server/Connect source has scoped tests only; original025 full model has one failed root and ten optional skips, repaired0739 has eight-root normal/race/vet only.",
+      "ids": [
+        "MG-02",
+        "MG-10",
+        "PH-16"
+      ],
+      "rank": 4
+    },
+    {
+      "behavior": "Offline monitor/repair tests do not prove installed independent collector, delivered alerts, real systemd control or on-call response.",
+      "ids": [
+        "MG-07",
+        "PH-15",
+        "PH-28"
+      ],
+      "rank": 5
+    },
+    {
+      "behavior": "Fault controller, transport, finite capacity, lineage-cache, workload-stop and large-evidence transport remain simulator-led or selected-test scope without composed production/size tests.",
+      "ids": [
+        "PH-21",
+        "PH-22",
+        "PH-23",
+        "PH-24",
+        "PH-25",
+        "PH-26"
+      ],
+      "rank": 6
+    }
+  ],
+  "items": [
+    {
+      "coverage": "scoped_only",
+      "id": "MG-01",
+      "production_path_example": "mainnet/runtime_snapshot.go",
+      "required_outcome": "MG-01 / P0 \u2014 Mainnet identity",
+      "sealed_receipt_ids": [
+        "release258"
+      ],
+      "test_path_example": "mainnet/runtime_snapshot_test.go",
+      "tracker_line": 347,
+      "tracker_next_action": "Review the exact unsigned bundle, independently approve genesis/runtime/source identity, and repeat finalized checks before signing. Keep finite public-RPC concurrency; local target declarations and matching public routes are not authority.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "Planning-only exact v470 exception; independent chain/checkpoint authority and Snow route cutover missing."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "MG-02",
+      "production_path_example": "mainnet/release_inventory.go",
+      "required_outcome": "MG-02 / P0 \u2014 Reproducible production release",
+      "sealed_receipt_ids": [
+        "release258"
+      ],
+      "test_path_example": "mainnet/release_inventory_test.go",
+      "tracker_line": 348,
+      "tracker_next_action": "Independently reproduce the selected release, close production configuration/policy, role behavior and migration/restore gates, bind actual published/running identity, then review one immutable manifest for approval. Keep 363 SN and 372 server incomplete module qualifications explicit; later implementation changes require a successor composition. Local repeats, selected tests and readback grant no deployment authority.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "Frozen258/server0aa artifacts qualified locally; later server025/0739 and Connect6cd are outside that release."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "MG-03",
+      "production_path_example": "mainnet/evm_action_store_checkpoint.go",
+      "required_outcome": "MG-03 / P0 \u2014 Durable recovery and complete evidence",
+      "sealed_receipt_ids": [
+        "evm_custody_writer",
+        "readiness_custody",
+        "durable_v2"
+      ],
+      "test_path_example": "mainnet/evm_action_custody_test.go",
+      "tracker_line": 349,
+      "tracker_next_action": "Migrate the retained-evidence model into every production owner; reconcile every original/replacement/cancellation signature and historical approval. Crash/restart and cold/warm-cache qualification must preserve finalized work, custody, failed evidence and single ownership without repeated spend.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "Cross-owner consumer storage adoption and original signed-attempt reconciliation remain incomplete."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "MG-04",
+      "production_path_example": "crv4/runtime_compatibility.go",
+      "required_outcome": "MG-04 / P0 \u2014 Runtime and native continuity",
+      "sealed_receipt_ids": [
+        "schedule258"
+      ],
+      "test_path_example": "mainnet/monitor_tempo_drift_test.go",
+      "tracker_line": 350,
+      "tracker_next_action": "Complete remaining consumers, both validator roles, automatic compatible-upgrade and missed-boundary qualification. Arbitrary policy/key/custody changes require separate transitions. Preserve original pending bytes and finalized work; no backdated native success.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "Automatic complete runtime semantic continuity and all role consumers still missing."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "MG-05",
+      "production_path_example": "validator/production_authority_history.go",
+      "required_outcome": "MG-05 / P0 \u2014 Policy and identity rollover",
+      "sealed_receipt_ids": [],
+      "test_path_example": "validator/production_authority_history_test.go",
+      "tracker_line": 351,
+      "tracker_next_action": "Migrate both operators before APIs, retain old signed histories, activate all validator/operator evidence domains and authenticate persistent peer-key transitions. Prove production processed-key readiness and fresh proof progress through a future policy boundary; retain prior-epoch payout policy authority for successor deposit sizing.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "Actual dual-operator policy/key cutover and processed-key readiness unproven."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "MG-06",
+      "production_path_example": "mainnet/economic_emission_observe.go",
+      "required_outcome": "MG-06 / P0 \u2014 Economics, settlement and custody",
+      "sealed_receipt_ids": [
+        "schedule258",
+        "recycle25aa_author"
+      ],
+      "test_path_example": "mainnet/economic_emission_context_test.go",
+      "tracker_line": 352,
+      "tracker_next_action": "Obtain actual mainnet identity, reviewed source/code mapping, signed production approval, recognized owner recipients and eligible independent validators. Supply complete real activation, operator API/key/payout custody and authenticated history; qualify production receipt/restart and the runtime's exact native rounding. Monitor inclusion, reveal/application and the actual 10% native-miner / 90% recycle outcome after first submission; that outcome is not a circular first-send prerequisite. Complete vault rollback, reserve funding, deposits/capture/carry/claims and NetEscrow cutover. Recycling does not fund the reserve.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "Native denominator/rounding/recipient generations, actual 10/90 and settlement/claim cycle unproven."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "MG-07",
+      "production_path_example": "mainnet/monitor_services.go",
+      "required_outcome": "MG-07 / P0 \u2014 Continuous monitoring and bounded repair",
+      "sealed_receipt_ids": [
+        "monitor_b98_author"
+      ],
+      "test_path_example": "mainnet/monitor_services_test.go",
+      "tracker_line": 353,
+      "tracker_next_action": "Deploy and verify actual collector ingestion and delivered alerts against an independent expected-host roster. Implement the remaining [operating model](MAINNET.md#continuous-monitoring-and-repair), approve its SLOs and repair envelopes, provision primary/backup on-call, and rehearse outage, wrong chain, missed deadline, uncertain send, full disk and monitor failure. Independent alerts must survive a stopped application and a stopped controller.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "No actual install, ingestion, delivered independent alert or on-call rehearsal."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "MG-08",
+      "production_path_example": "mainnet/bootstrap_chain.go",
+      "required_outcome": "MG-08 / P0 \u2014 Mainnet bootstrap and both validator roles",
+      "sealed_receipt_ids": [
+        "role132",
+        "installation_ebf",
+        "owner0f7_author",
+        "passive_host"
+      ],
+      "test_path_example": "mainnet/bootstrap_chain_test.go",
+      "tracker_line": 354,
+      "tracker_next_action": "Complete live identity/census and custody effects; use the ranked owner trim, exact recheck/reconciliation and bounded protected-identity conditions, retaining explicit old-miner dispositions. Finish production safe-trim authority/execution and the remaining durable chain phases: complete contract installation including the evidence journal/anchor, two UR validators plus netuid-0 role, Safe authority and bounded funding. Qualify production current authority, custody/device and owned route, wire service activation, and observe actual 10/90 native outcomes after approved activation.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "Four-role public chain/device/host effects unqualified; synthetic action tests do not authorize launch."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "MG-09",
+      "production_path_example": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/owner.go",
+      "required_outcome": "MG-09 / P1 \u2014 Sustained resource and storage capacity",
+      "sealed_receipt_ids": [
+        "durable_v2"
+      ],
+      "test_path_example": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/root_generation_test.go",
+      "tracker_line": 355,
+      "tracker_next_action": "Measure backlog, bytes, memory, RPC work and queue fairness with the proposed fleet and retention. Bind finite capacity with reviewed margin; monitor device media errors and backup integrity; prove missing/full-volume behavior, copy verification, backup restore, multi-gigabyte log drainage and foreground deadline headroom. Required before unattended operation.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "Production capacity, journal-leaf recovery, deployment declarations and restore proof absent."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "MG-10",
+      "production_path_example": "mainnet/source_lock.go",
+      "required_outcome": "MG-10 / P0 \u2014 Qualification, rollout and actual acceptance",
+      "sealed_receipt_ids": [
+        "release258",
+        "server025_full_failed",
+        "server0739_integrated"
+      ],
+      "test_path_example": "mainnet/source_lock_test.go",
+      "tracker_line": 356,
+      "tracker_next_action": "Before activation, complete production-path causal regressions, affected normal/race suites and a controlled upgrade/outage/restart/repair rehearsal; retain failed and reused scopes. After bounded activation, observe at least three complete native emission intervals and one full 50,400-block UR settlement/claim cycle before declaring program acceptance. Record pending live evidence as pending.",
+      "tracker_status": "open_or_in_progress",
+      "unclosed_behavior": "No accepted composed source, rollout/restart rehearsal or post-activation intervals/cycle."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-01",
+      "production_path_example": "mainnet/bootstrap_successor_execution_checkpoint.go",
+      "required_outcome": "Operator, validators, bootstrap: durable recovery with independent audit and runtime owners",
+      "sealed_receipt_ids": [],
+      "test_path_example": "mainnet/bootstrap_successor_execution_checkpoint_test.go",
+      "tracker_line": 2545,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "No all-owner dependency graph or independent audit/run recovery proof."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-02",
+      "production_path_example": "mainnet/evm_action_store_checkpoint.go",
+      "required_outcome": "Native/EVM submitters: one logical action, reconciled signed attempts and exact custody",
+      "sealed_receipt_ids": [
+        "evm_custody_writer"
+      ],
+      "test_path_example": "mainnet/evm_action_custody_test.go",
+      "tracker_line": 2546,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Eight-action custody is scoped; global native/EVM signer and nonce ownership is unproven."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-03",
+      "production_path_example": "mainnet/rpc_read_retry.go",
+      "required_outcome": "RPC, artifact and HTTP clients: bounded transient recovery without duplicate writes",
+      "sealed_receipt_ids": [],
+      "test_path_example": "mainnet/rpc_read_retry_test.go",
+      "tracker_line": 2547,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "No complete production I/O inventory and end-to-end retry budget qualification."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-04",
+      "production_path_example": "crv4/runtime_compatibility.go",
+      "required_outcome": "Native-chain consumers: compatible upgrades and block-correct historical decoding",
+      "sealed_receipt_ids": [
+        "schedule258"
+      ],
+      "test_path_example": "mainnet/monitor_tempo_drift_test.go",
+      "tracker_line": 2548,
+      "tracker_status": "In progress",
+      "unclosed_behavior": "Signed schedule and selected runtime readers tested; automatic complete historical/current semantic continuity remains open."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-05",
+      "production_path_example": "validator/production_receipt_cache_state.go",
+      "required_outcome": "Historical verifiers: durable, dependency-bound successful proof reuse",
+      "sealed_receipt_ids": [],
+      "test_path_example": "mainnet/safe_history_test.go",
+      "tracker_line": 2549,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "No complete dependency-bound successful-proof reuse and invalidation scope."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-06",
+      "production_path_example": "mainnet/release_inventory.go",
+      "required_outcome": "Release/configuration tooling: explicit release identity and lossless plan migration",
+      "sealed_receipt_ids": [
+        "release258"
+      ],
+      "test_path_example": "mainnet/release_inventory_test.go",
+      "tracker_line": 2550,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Local artifact repeats pass; independent compiler/module provenance and accepted production config remain open."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-07",
+      "production_path_example": "mainnet/validator_activation_host.go",
+      "required_outcome": "Service supervision: independent restart, single ownership and meaningful readiness",
+      "sealed_receipt_ids": [
+        "passive_host",
+        "role132"
+      ],
+      "test_path_example": "mainnet/root_passive_host_test.go",
+      "tracker_line": 2551,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Synthetic host ownership tested; actual unit installation/start, full process-tree joins and readiness unverified."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-08",
+      "production_path_example": "mainnet/bootstrap_successor_execution.go",
+      "required_outcome": "Replay and workload scheduling: bounded work, memory and foreground latency",
+      "sealed_receipt_ids": [],
+      "test_path_example": "mainnet/bootstrap_successor_execution_test.go",
+      "tracker_line": 2552,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "No composed backlog/memory/fairness and foreground-deadline production test."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-09",
+      "production_path_example": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/owner.go",
+      "required_outcome": "State and artifact storage: explicit durable volume, atomic publication and recovery",
+      "sealed_receipt_ids": [
+        "durable_v2"
+      ],
+      "test_path_example": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/root_generation_test.go",
+      "tracker_line": 2553,
+      "tracker_status": "In progress \u2014 shared primitives `cb2e3ffe`; public-owner adoption, canceled reference reads and production restore qualification pending",
+      "unclosed_behavior": "Primitive v2 passes; consumer/public-entry admission, named journal leaves, provisioning and restore remain open."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-10",
+      "production_path_example": "mainnet/owner_recycle_action.go",
+      "required_outcome": "Epoch, fleet and evidence scheduling: resumable partial renewals and correct windows",
+      "sealed_receipt_ids": [
+        "recycle25aa_author",
+        "schedule258"
+      ],
+      "test_path_example": "mainnet/owner_recycle_test.go",
+      "tracker_line": 2554,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Selected epoch/recycle and schedule scopes pass; complete partial-renewal/live boundary flow remains open."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-11",
+      "production_path_example": "mainnet/evm_action.go",
+      "required_outcome": "Treasury and bootstrap: conserved lifetime spend, reserve and funding semantics",
+      "sealed_receipt_ids": [
+        "installation_ebf"
+      ],
+      "test_path_example": "mainnet/evm_plan_graph_test.go",
+      "tracker_line": 2555,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "First CREATE reservation regression passes; cumulative lifetime/native reserve and actual funding unproven."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-12",
+      "production_path_example": "mainnet/economic_emission_observe.go",
+      "required_outcome": "Contracts, operator and claims: complete settlement conservation and authorization",
+      "sealed_receipt_ids": [
+        "release258"
+      ],
+      "test_path_example": "mainnet/economic_emission_context_test.go",
+      "tracker_line": 2556,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Observer included in release; end-to-end entitlement, carry, claims and payout conservation unproven."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-13",
+      "production_path_example": "validator/production_operator_authentication.go",
+      "required_outcome": "Provider, operator and validator protocol: identity isolation and durable proof progress",
+      "sealed_receipt_ids": [],
+      "test_path_example": "validator/production_bootstrap_test.go",
+      "tracker_line": 2557,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Selected identity/proof paths exist; both-operator/provider client-key and eligible traffic continuity incomplete."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-14",
+      "production_path_example": "mainnet/bootstrap_chain_validators.go",
+      "required_outcome": "Governance/bootstrap: actual capabilities, activated policy and both validator roles",
+      "sealed_receipt_ids": [
+        "role132"
+      ],
+      "test_path_example": "mainnet/bootstrap_chain_validators_test.go",
+      "tracker_line": 2558,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Synthetic two-UR/root admission does not establish actual governance capability or activation."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-15",
+      "production_path_example": "mainnet/monitor_output.go",
+      "required_outcome": "Status/operations: actionable failure classes, progress and evidence-based ETA",
+      "sealed_receipt_ids": [
+        "monitor_b98_author"
+      ],
+      "test_path_example": "mainnet/monitor_output_test.go",
+      "tracker_line": 2559,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Offline status and alerts tested; real incident delivery, progress/ETA and independent monitoring not exercised."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-16",
+      "production_path_example": "mainnet/source_lock.go",
+      "required_outcome": "Qualification and evidence: deterministic faults, composed coverage and independent replay",
+      "sealed_receipt_ids": [
+        "release258",
+        "server025_full_failed",
+        "server_evidence_correction"
+      ],
+      "test_path_example": "mainnet/source_lock_test.go",
+      "tracker_line": 2560,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Component tests/release readback do not equal composed final acceptance; one full model run failed with ten optional skips."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-17",
+      "production_path_example": "mainnet/bootstrap_successor_execution_store.go",
+      "required_outcome": "Plan-derived indexes: bind cached lookup structures to their immutable plan/generation owner",
+      "sealed_receipt_ids": [],
+      "test_path_example": "mainnet/bootstrap_successor_execution_store_test.go",
+      "tracker_line": 2561,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Simulator causal index fix exists; no production-wide plan/generation-derived-index census."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-18",
+      "production_path_example": "mainnet/runtime_snapshot.go",
+      "required_outcome": "Strict readers: re-authorize connection/runtime provenance at every boundary after provisional work",
+      "sealed_receipt_ids": [
+        "schedule258"
+      ],
+      "test_path_example": "mainnet/runtime_snapshot_test.go",
+      "tracker_line": 2562,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "No every-strict-reader fresh authority proof after provisional pooled/restarted connections."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-19",
+      "production_path_example": "validator/production_runtime_history.go",
+      "required_outcome": "Historical snapshots: use the reviewed historical runtime authority without weakening current writes",
+      "sealed_receipt_ids": [],
+      "test_path_example": "validator/production_runtime_continuity_test.go",
+      "tracker_line": 2563,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Selected historical reader evidence exists; full purpose-bound historical runtime coverage not sealed here."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-20",
+      "production_path_example": "mainnet/owner_trim_bounded.go",
+      "required_outcome": "Relay capacity: distinguish funded slots, retained history, scan pages and resident bytes",
+      "sealed_receipt_ids": [
+        "owner0f7_author"
+      ],
+      "test_path_example": "mainnet/owner_trim_bounded_test.go",
+      "tracker_line": 2564,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Slots/history/scan pages/resident bytes not jointly measured and funded on proposed fleet."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-21",
+      "production_path_example": null,
+      "required_outcome": "Fault controller: bounded parallel, idempotent component control with durable partial recovery",
+      "sealed_receipt_ids": [],
+      "test_path_example": null,
+      "tracker_line": 2565,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Simulator fault-controller lessons; no verified production durable parallel controller/test path in this census."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-22",
+      "production_path_example": "mainnet/rpc_read_retry.go",
+      "required_outcome": "Service clients: retryable transport incidents, connection recovery and final error budgets",
+      "sealed_receipt_ids": [],
+      "test_path_example": "mainnet/rpc_read_retry_test.go",
+      "tracker_line": 2566,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Transport status/retry behavior not qualified across every production service client and final incident budget."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-23",
+      "production_path_example": "mainnet/owner_trim_bounded.go",
+      "required_outcome": "Capacity revisions: bind funded slots, history horizon and every finite storage dimension",
+      "sealed_receipt_ids": [],
+      "test_path_example": "mainnet/owner_trim_bounded_test.go",
+      "tracker_line": 2567,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "No joined funded slots, history horizon, upload quota and archive metadata profile at production size."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-24",
+      "production_path_example": null,
+      "required_outcome": "Recovery performance: authenticate each retained plan once per immutable lineage",
+      "sealed_receipt_ids": [],
+      "test_path_example": null,
+      "tracker_line": 2568,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Simulator lineage cache precedent; no verified production once-per-lineage performance/invalidation proof."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-25",
+      "production_path_example": "mainnet/validator_activation_host.go",
+      "required_outcome": "Supervisor lifecycle: explicit deployment stop joins every owned workload child",
+      "sealed_receipt_ids": [
+        "role132"
+      ],
+      "test_path_example": "mainnet/validator_activation_production_test.go",
+      "tracker_line": 2569,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "Offline unit lifecycle scope does not demonstrate deployment stop joining all owned workload children."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-26",
+      "production_path_example": "mainnet/safe_history_capture.go",
+      "required_outcome": "Large evidence transport: typed, cancellable public replay with finite admission",
+      "sealed_receipt_ids": [],
+      "test_path_example": "mainnet/safe_history_test.go",
+      "tracker_line": 2570,
+      "tracker_status": "Planned",
+      "unclosed_behavior": "No end-to-end typed large-evidence admission/cancellation/public replay at selected size."
+    },
+    {
+      "coverage": "path_or_simulator_only",
+      "id": "PH-27",
+      "production_path_example": "validator/production_authority_history.go",
+      "required_outcome": "Policy activation: coherent validator evidence and client-key domains across operators",
+      "sealed_receipt_ids": [],
+      "test_path_example": "validator/production_authority_history_test.go",
+      "tracker_line": 2571,
+      "tracker_status": "In progress",
+      "unclosed_behavior": "Policy history source exists; coordinated validator evidence activation across both operators is not proven."
+    },
+    {
+      "coverage": "scoped_only",
+      "id": "PH-28",
+      "production_path_example": "mainnet/monitor_services.go",
+      "required_outcome": "Continuous operations: independent monitoring, bounded authorized repair and exercised on-call",
+      "sealed_receipt_ids": [
+        "monitor_b98_author"
+      ],
+      "test_path_example": "mainnet/monitor_services_test.go",
+      "tracker_line": 2572,
+      "tracker_status": "In progress",
+      "unclosed_behavior": "Offline alert/repair controls only; host deployment, delivered alerts and exercised on-call remain open."
+    }
+  ],
+  "live_gates_separate": [
+    "independent genesis/runtime/checkpoint and route authority",
+    "approved signing devices and actor custody",
+    "actual host/service installation and observed health",
+    "funded addresses and submitted/finalized mainnet actions",
+    "post-activation three native intervals and 50,400-block settlement/claim cycle"
+  ],
+  "method": "Read-only representative source/test path and exact receipt census. A path, test name, prior-source receipt or artifact repeat never marks a gate complete. Separate source qualification from live authority/device/deployment.",
+  "receipt_catalog": {
+    "durable_v2": {
+      "path": "/mnt/data/sn-testnet/sol-connect-durable-core-independent-20261002/v2-receipt.json",
+      "scope_note": "Connect6cd primitive only",
+      "sha256": "3c134a458a542b4e423b2d0d7119462aba14af583e5ea707becd56fe7b0e07e4"
+    },
+    "evm_custody_writer": {
+      "path": "/mnt/data/sn-testnet/original-evm-custody-20261001/author-evidence/independent-writer-receipt.json",
+      "scope_note": "SNcb9/serverac868",
+      "sha256": "2044cffa929b403f420208412f44477627a5f57f36fe04407e2e2334b2699a29"
+    },
+    "installation_ebf": {
+      "path": "/mnt/data/sn-testnet/mainnet-installation-path-astra-20261002/evidence/sol-independent-receipt.json",
+      "scope_note": "SNebf/serverac868",
+      "sha256": "1fa49a4db32451677e92eb19634a78827203fd4f89406d875ff96c16fe819f90"
+    },
+    "monitor_b98_author": {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/evidence/receipt.json",
+      "scope_note": "xopsb98/SN6cfc offline",
+      "sha256": "6effb657654e46d7dd160f3be4715826259c103b5135ac2eaaddd77015a63e0d"
+    },
+    "owner0f7_author": {
+      "path": "/mnt/data/sn-testnet/native-owner-retained-intent-20261002/evidence/owner-trim-retained-intent-receipt.json",
+      "scope_note": "SN0f7/serverac868",
+      "sha256": "7a13eb21ef2ed7be97f62418213fd9b78618f0c08230ce8900dcaff0ac14008b"
+    },
+    "passive_host": {
+      "path": "/mnt/data/sn-testnet/sol-passive-root-host-independent-20261001/receipt.json",
+      "scope_note": "earlier SN passive-host source; separate frozen receipt",
+      "sha256": "75b9d8bcda1bad2f7661242fc7d121527afc8ff070aa86b20379106ddbead183"
+    },
+    "readiness_custody": {
+      "path": "/mnt/data/sn-testnet/sol-mainnet-custody-successor-independent-20261001/readiness-custody-receipt.json",
+      "scope_note": "SN3d/serverac868",
+      "sha256": "eb083cf71318778ac3fcb4973fa4217f9fe134856a03a8904e1eb916e23ce18e"
+    },
+    "recycle25aa_author": {
+      "path": "/mnt/data/sn-testnet/owner-recycle-transition-20261002/evidence/receipt.json",
+      "scope_note": "SN25aa/serverac868",
+      "sha256": "786639eb899a8ebed97440ddadfe14d465ba1d558f42c1e7c6733e070bd4e7a7"
+    },
+    "release258": {
+      "path": "/mnt/data/sn-testnet/sol-mainnet-mg06-release-independent-20261002/receipt.json",
+      "scope_note": "SN258/server0aa",
+      "sha256": "273e865992334f3277fb5975c5b4ae9073022fcb24f1f01ef93e59f8daf47450"
+    },
+    "role132": {
+      "path": "/mnt/data/sn-testnet/sol-mainnet-bootstrap-role-audit-current-server-20261002/receipt.json",
+      "scope_note": "SN132/server0aa",
+      "sha256": "08d62b9d7903e11234df047cf23d09eace2a228dfe39057a0f092b2203026244"
+    },
+    "schedule258": {
+      "path": "/mnt/data/sn-testnet/sol-mainnet-native-schedule-independent-20261002/receipt.json",
+      "scope_note": "SN258/serverac868",
+      "sha256": "5835480892b2973e0567ffd8ff5f30b7b83b6b37979f7bc1a0cce990731c625d"
+    },
+    "server025_focused": {
+      "path": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/focused-causal-receipt.json",
+      "scope_note": "server025/SN6cfc",
+      "sha256": "484ada95842abdc5eed1b24a57bc0460d541c16c90d61884648ccb3055b9c31d"
+    },
+    "server025_full_failed": {
+      "path": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/full-model-receipt.json",
+      "scope_note": "server025 model full, verdict FAIL",
+      "sha256": "4e580a88539860f503f8ac0f0d77a3978634c731a9ce5a3dd18565c7a6e92373"
+    },
+    "server0739_integrated": {
+      "path": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/integrated-receipt.json",
+      "scope_note": "server0739 eight affected model roots only",
+      "sha256": "2adc095af94c4abf6081b6a7157daf52540c633c21d358619abd994288cad38b"
+    },
+    "server_evidence_correction": {
+      "path": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/binding-correction-receipt.json",
+      "scope_note": "historical evidence runner binding, no product code",
+      "sha256": "9ce6ac74279fa5d993ddcdb61199abd98b5bdadcf8a5c45cfed86a8d9f5ee59d"
+    }
+  },
+  "schema": "sol-mainnet-ph-mg-coverage-census-v1",
+  "source": {
+    "commit": "105e54c3acdc30ce37e32075342dc5f9421beb3f",
+    "relation_to_release258": {
+      "all_non_documentation_changes_since_base": [
+        "sim-testnet/evidence_relay_provisional_continuation_test.go",
+        "sim-testnet/runtime_evidence_activation_rpc_v2_test.go"
+      ],
+      "base_commit": "258e25b4dd2c8b210bd8932b415e7d39776e23a0",
+      "base_is_ancestor": true,
+      "meaning": "Current SN production Go/Solidity/module bytes match frozen258; later test-only fixture change has a separate scope. This does not retarget frozen server0aa or its release artifact."
+    },
+    "repo": "SN",
+    "tracker_path": "mainnet/PRELAUNCH-FIXES.md",
+    "tracker_sha256": "9dae704b172ccfce0a0377e61384fcc83cb1571a7caf292cb9c425acae4c6bdf",
+    "tree": "ee6ccf928ca7eb9cc84610a435b5e8c64f7c7489"
+  }
+}

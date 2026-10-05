@@ -1,0 +1,42 @@
+{
+  "schema": "server5b-selected-model-runner-root-review-v1",
+  "status": "MECHANISM_ADOPTED_EXECUTION_PENDING",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/model-selected-job-v2.json",
+      "bytes": 11360,
+      "sha256": "3a21d6385286dcf17a55b8afceaebdd1086403176966f08b42b7f2b99f3336fc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/model-selected-adoption-v2.json",
+      "bytes": 485,
+      "sha256": "057680b5c471edbfee84bfe45da04c27a1303f732d9ba7d345b78345e49de44a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/run-selected-model-v2.py",
+      "bytes": 13529,
+      "sha256": "9b7470bbef3f520ef5764b02ecc47e6817ef441b2b4e4191c6a6f1302f6c10c1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/run-selected-model-v2.sh",
+      "bytes": 4695,
+      "sha256": "44779c91b4aade7aea649b30d64388e37740e3a983584f7d1390fd6db4535c39"
+    }
+  ],
+  "scope": {
+    "source": "5b22f984f51b279f88a83d6f3fb41b19ab46b22a",
+    "roots_per_mode": 32,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "batches_per_mode": 2
+  },
+  "review": [
+    "Read complete shell/Python selected-model runner and verified all24 frozen job input byte hashes and mode/device/inode bindings.",
+    "Actual protected compiled images checked before every16-root batch. Exact source/module graph and source closure required. Private labeled PostgreSQL/Redis services and network cleaned with ownership checks.",
+    "Preserves all four independent batch outputs and failures; process tree joined and cleanup/result records retained. Root event census must independently establish all32 run/pass/no skip; wrapper success is insufficient.",
+    "Enforces original113681502208-byte data baseline and64GiB cumulative cap. Two-times forecast4GiB data,2GiB Docker root,4GiB RAM plus existing old long/e51 body reservations. Fresh admission and absence of controls/compiler required before launch."
+  ],
+  "limits": "Execution not claimed; selected scope does not qualify all Server model tests, newer provider producer changes, deployed service or full launch."
+}

@@ -92,7 +92,7 @@ func TestDialChainAllDown(t *testing.T) {
 		http.Error(w, "nope", 500)
 	}))
 	defer bad.Close()
-	if _, err := DialChain([]string{bad.URL}, common.Address{}); err == nil {
+	if _, err := dialChainWithReadRetryContext(t.Context(), []string{bad.URL}, common.Address{}, false, chainReadRetryTestHooks(chainReadTestFailureAttempts)); err == nil {
 		t.Fatal("expected failure when every endpoint is down")
 	}
 	if _, err := DialChain(nil, common.Address{}); err == nil {

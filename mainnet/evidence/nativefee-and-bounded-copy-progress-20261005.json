@@ -1,0 +1,212 @@
+{
+  "author_actions": {
+    "compiler": false,
+    "database": false,
+    "deployment": false,
+    "original_receipt_hashes_and_waits_checked": true,
+    "source_readback": true,
+    "test_body": false
+  },
+  "coverage_delta": {
+    "added_control_groups_source_only": 3,
+    "added_control_ids": [
+      "output_copy_bypasses_admission",
+      "release_metadata_readfrom_bypass",
+      "inventory_output_readfrom_bypass"
+    ],
+    "all38_original_outcomes_preserved": true,
+    "bounded_copy_added": [
+      {
+        "child_only_helper_root": "TestReleaseBuildQueryOutputChild",
+        "helper_not_counted_as_independent_qualification": true,
+        "new_qualifying_roots": [
+          "TestReleaseBuildBufferCopyRejectsExcessMetadata",
+          "TestReleaseBuildBufferCopyPreservesExactLimit",
+          "TestReleaseBuildQueryRejectsOversizedChildMetadata",
+          "TestReleaseBuildQueryPreservesBoundedChildMetadata"
+        ],
+        "package": "./scripts/mainnet-release-build",
+        "repository": "sn"
+      },
+      {
+        "child_only_helper_root": "TestCaptureInventoryOutputChild",
+        "helper_not_counted_as_independent_qualification": true,
+        "new_qualifying_roots": [
+          "TestCaptureInventoryCopyRejectsExcessOutput",
+          "TestCaptureInventoryCopyPreservesExactLimit",
+          "TestCaptureDockerRejectsOversizedChildOutput",
+          "TestCaptureDockerPreservesBoundedChildOutput"
+        ],
+        "package": "./arinshadowctl",
+        "repository": "server"
+      }
+    ],
+    "count_limit": "This is the exact2508+2+8+3 additive subtotal. Additional current Server upstream declaration/adjacent scope is being sealed separately;2521 is not claimed as the complete current-source total.",
+    "known_subtotal_per_mode": 2521,
+    "known_subtotal_split": {
+      "core": 224,
+      "mainnet": 184,
+      "server": 1899,
+      "sn": 390,
+      "vlessinterop": 8
+    },
+    "mainnet_added_roots": [
+      "TestHistoricalReplayFixturePreservesProtectedEngine",
+      "TestHistoricalReplayFixtureOwnsTemporaryEngine",
+      "TestHistoricalReplayFixtureRejectsUnboundedOrNonregularEngine"
+    ],
+    "nativefee_added_roots": [
+      "TestInvokeNativeFeeStderrOverflowCancelsAndJoins",
+      "TestNativeFeeOutputCopyPreservesBoundAndError"
+    ],
+    "original_control_groups_preserved": 227,
+    "original_master": {
+      "bytes": 5377,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/default-current-large-scope/HANDOFF-v2.json",
+      "sha256": "f8a0ac00d16fef80338d2b6b28e01b6780d7ebf843eee0c5909d74e231b41493"
+    },
+    "original_roots_per_mode": 2508,
+    "outcomes_closed_by_this_checkpoint": 0,
+    "rebase_not_extra_control": "Original native-failed_child_output uses current f58afe6c patch; prior recipe remains historical."
+  },
+  "fixes": {
+    "bounded_copy_packages": {
+      "bytes": 11413,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/bounded-copy-review/handoff/INTAKE.json",
+      "sha256": "570bc2a79c952818600102e8f6298a57e2b343f407921c18abe0ec8d8bf4895a"
+    },
+    "mainnet_test_engine_custody": {
+      "bytes": 4556,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/mainnet-test-engine-custody/handoff/INTAKE.json",
+      "sha256": "3ef07be728c797170aa39f19fb9c34e69a42ba940849f2f3644099b9d430c9f9"
+    },
+    "nativefee_output_owner": {
+      "bytes": 11262,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/native-fee-output-owner-fix/handoff/INTAKE.json",
+      "sha256": "4abe96d410fb867e59f56339d423372af0c7e78b9d5dd734dc2ba734c9da7162"
+    },
+    "nativefee_protected_fixture": {
+      "bytes": 10661,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/native-fee-fixture-custody-fix/handoff/INTAKE.json",
+      "sha256": "8f2460695848699095d14a2e7dc302656462bc601bd8a0ba224e6467f6debe03"
+    },
+    "selected_status": "All source fixes are published by SN4991966f/Server9836322d. Bounded-copy8 and mainnet fixture3 bodies were not present in the nativefee13 result; their exact actual results remain separate."
+  },
+  "nativefee_actual": {
+    "actual_roots": [
+      "TestInvokeNativeFeeCancellationAfterOutputCannotSettle",
+      "TestInvokeNativeFeeFailureCannotPublishPlausibleOutput",
+      "TestInvokeNativeFeeOutputOverflowCancelsAndJoins",
+      "TestInvokeNativeFeeOwnsImmutableResult",
+      "TestInvokeNativeFeeRejectsTrailingOutput",
+      "TestInvokeNativeFeeRejectsUnreapedSeparateGroupDescendant",
+      "TestInvokeNativeFeeSealedExecutableCannotChangeAfterHash",
+      "TestInvokeNativeFeeStderrOverflowCancelsAndJoins",
+      "TestNativeFeeOriginalCustodyRejectsChangedInput",
+      "TestNativeFeeOriginalCustodyRejectsPartialSinkAndMissingFile",
+      "TestNativeFeeOriginalCustodyStreamsCompleteOrderedProofs",
+      "TestNativeFeeOutputCopyPreservesBoundAndError",
+      "TestNativeFeeStatementRejectsUnknownAndOverwidthAmounts"
+    ],
+    "actual_source_delta": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/nativefee470-two-file-source-proof-v2.json",
+      "sha256": "ddf41a299de1ff01e6dcb5ddf12058893ddfe740071b19ac3715f3a803a1402e"
+    },
+    "actual_source_inputs": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-main470-nativefee13-v1.source-pins.json",
+      "sha256": "0cc5b0f567f062e0e1178e030e4776a499673bc437497e02629902a31fb69ce4"
+    },
+    "applicability_to_selected_sn": {
+      "actual_input_bytes_rehashed": 21295573,
+      "actual_input_files_rehashed": 2017,
+      "changed_or_missing": 0,
+      "conclusion": "Preserve both actual13PASS receipts for this unchanged nativefee component. No duplicate positive bodies required solely for these later unrelated source additions.",
+      "control_limit": "Five nativefee causal controls remain separate pending execution; a positive PASS is not a mutant kill.",
+      "nativefee_and_module_git_changes_since_actual470": []
+    },
+    "counts_per_mode": {
+      "normal": {
+        "fail": 0,
+        "pass": 13,
+        "run": 13,
+        "skip": 0
+      },
+      "race": {
+        "fail": 0,
+        "pass": 13,
+        "run": 13,
+        "skip": 0
+      }
+    },
+    "origin": "Actual selected nativefee470 normal/race under default readonly offline module resolution; no whole-current-Server claim.",
+    "receipt": {
+      "bytes": 11086,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-main470-nativefee13-v1.receipt.json",
+      "sha256": "05e64ffd6ede3b59035aa047b756d9e5a57a7193d08aa8c32f7669465675e4cc"
+    },
+    "shared_input_closure": {
+      "bytes": 16140475,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-nativefee470-026b-c198-compiler-source-closure-v1.json",
+      "sha256": "c8abf263adca779b8ad2bb7c86ffa0646f522d338a231517fb5505947e367dbe"
+    },
+    "user_terminal": {
+      "bytes": 1969,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-main470-nativefee13-v1-user-terminal-readback.json",
+      "sha256": "b98b6d1d8660cd64c479e8fc04a609557d57b4da798a54543eaf4fc797f1b83b"
+    }
+  },
+  "optional_source_verification_helper": {
+    "active_runner_adoption": "not imported by active jobs; complete hashing remains unchanged",
+    "actual_execution": "unexecuted",
+    "controls_authored": 18,
+    "go_root_count_change": 0,
+    "lesson": "Bound namespace enumeration and retain hard causes across optional immutable source-proof verification.",
+    "python_tests_authored": 31,
+    "selected_commit": "4991966f658e149da2658c41a4fba785c91e5798"
+  },
+  "peer_tooling_actual": {
+    "actual_wait": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-peer-admission50-v1.process-result.json",
+      "sha256": "6a3803dc73d2bd8fc71fb5ab6e6407ba9a99fc71fdca70bc65c81972e070fbef"
+    },
+    "limit": "Qualification harness only; no Go product root or deploy outcome added.",
+    "receipt": {
+      "bytes": 6294,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-peer-admission50-v1.receipt.json",
+      "sha256": "65507657bef3046ac0d22e9df9f246755e9a926b703eb70afe5064a79e4d8015"
+    },
+    "source_files_match_current": true,
+    "status": "PASS",
+    "tests": 50,
+    "user_terminal": {
+      "bytes": 1859,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-peer-admission50-v1-user-terminal-readback.json",
+      "sha256": "c18f61716a9b737fb819766710bbddcdc2ad8b1c08b126bfebd72ea1dcb34aad"
+    }
+  },
+  "preserved_failures": {
+    "interpretation": "Original10PASS1FAIL and later5PASS8FAIL per mode remain historical. The promoted bytes.Buffer.ReadFrom bypass was a production defect; the later early refusal was test executable custody. Neither receipt is rewritten as PASS.",
+    "original96_normal_race": {
+      "bytes": 11068,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-main96-nativefee13-v3.receipt.json",
+      "sha256": "a6084ea12694abc36f7a6a926760b8c98aad11a89c2304b32da9355851789bda"
+    },
+    "retained11_normal": {
+      "bytes": 6667,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-nativefee11-direct-v1.receipt.json",
+      "sha256": "509003ed2df3d0ceffcc488d77591afddbae331e07e10827b37c8af50dd4da90"
+    }
+  },
+  "remaining_software_and_external_requirements": [
+    "Complete current normal/race source scopes and causal controls without shrinking original129/2048 requirements.",
+    "Run bounded-copy8 and mainnet fixture3 on their selected source; source integration is not qualification.",
+    "Rebind and validate current Server upstream changes through Composer scope; nativefee success does not qualify its consumers.",
+    "Retain all38 original live authority, rollout, signed custody and sustained-operation requirements independently of synthetic/software results."
+  ],
+  "schema": "nativefee-current-source-and-actual-result-progress-v1",
+  "selected_source": {
+    "core": "026b850248352b72255be7a966e391e0a15e74c1",
+    "server": "9836322d6c06ce0207fd5d754b025fc48cb11c83",
+    "sn": "4991966f658e149da2658c41a4fba785c91e5798"
+  }
+}

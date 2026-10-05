@@ -1,0 +1,1117 @@
+{
+  "causal_controls": {
+    "classification": "These controls change only the named checkpoint admission or restore exact retained pre-fix files. Earlier unmerged-candidate failures remain separately retained.",
+    "normal_intended_failures": 5,
+    "race_intended_failures": 5,
+    "scope": [
+      "Two frozen-source bootstrap monitor-head omissions",
+      "Two frozen-source validator ledger-head omissions",
+      "One captured pre-fix local-blob reaper overlay"
+    ]
+  },
+  "coverage_checkpoint": {
+    "bytes": 33769,
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/coverage-index.json",
+    "sha256": "09490f3cd5f21973feee09db8dab15094e8223f049d6c1996f6725c9db0be98f"
+  },
+  "evidence_archive": {
+    "bytes": 2118299,
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/adopter-eb0abe22-evidence.tar.gz",
+    "sha256": "0d2fe558786987d7725e592b704650bf8c4e4300a8614799a4953f1feb4d86e4"
+  },
+  "independent_adopter_qualification": "pending; primitive receipts do not qualify consumers",
+  "independent_primitive_receipts": [
+    {
+      "bytes": 20593,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/native-independent.json",
+      "sha256": "d0fc6021be65a0b0556989b398a8d5b3563da4d56ceb5a54e6e71a9eac67fba2"
+    },
+    {
+      "bytes": 9035,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/snapshot-independent.json",
+      "sha256": "c714c4b75bb343b2885dd95859eca4bc2c6eaf44fcccadd3a26d28812948caa5"
+    }
+  ],
+  "limits": [
+    "No full-package, full-model, composed-release or live qualification.",
+    "No production signing, broadcast, deployment, service start, PostgreSQL or MinIO operation.",
+    "No remote database/object-store physical restore claim.",
+    "Linux owner-local qualification does not qualify Darwin.",
+    "The frozen SN258/server0aa release remains unchanged.",
+    "Real host/device/custody/approval, four-role bootstrap, native10/90, settlement/claim cycle and delivered alerts remain distinct open gates."
+  ],
+  "raw_entries": 189,
+  "raw_manifest": {
+    "bytes": 66818,
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/adopter-eb0abe22-manifest.json",
+    "sha256": "6269ca581e142cd1ed2f73af2f20b3a40016065c5ef84936d2bb62d4478c1592"
+  },
+  "remaining_implementation": [
+    "Immutable successor registries need persistent member census.",
+    "Steering-intent, EMA and receipt-history owners need explicit cross-reopen member-custody audit.",
+    "Production storage-prepare plan/apply and owner-kind enrollment adapters remain unqualified.",
+    "Peer miner/monitor/public backup consumers need separate qualification and source integration.",
+    "Some older whole-directory-empty and missing-context fixtures need explicit preprovisioned-custody migration before broader package qualification.",
+    "Root recovery is at most four opens in24h; continuous renewal and unattended controller remain open."
+  ],
+  "schema": "urnetwork-mainnet-retained-owner-qualification-v1",
+  "sealed_utc": "2026-10-02T12:25:19.132069+00:00",
+  "server_module_successor": {
+    "change": "Select already-tested published Connect6cd instead of legacy e1b, which lacks durablevolume.",
+    "commit": "005a906609340f6348d33b398b56b987b1024865",
+    "delta": [
+      "go.mod",
+      "go.sum"
+    ],
+    "download": {
+      "bytes": 1034,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-module-download.json",
+      "sha256": "1036f167c131e73556cff79c490f19279ddb7f24ffabac4f07ca5da02ae7a544"
+    },
+    "fixed_resolution": {
+      "bytes": 4883,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-cached-after-go-list.json",
+      "sha256": "f3949657ea85ed5fad7caa872751c2f393f40677e71b40fd5913bf8e29782472"
+    },
+    "include_path_join": {
+      "bytes": 1529,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-include-join.json",
+      "sha256": "57afb3821595d271b71da71fc46e5e8b37f27416362c50a7cb24fc41227dd095"
+    },
+    "initial_after_probe_cache_refusal": {
+      "bytes": 118,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-after-go-list.json",
+      "sha256": "457686dc3308e07fd6b0e541ab611c874d055988e0008680030882cdf8b38305"
+    },
+    "old_resolution": {
+      "bytes": 121,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-before-go-list.log",
+      "sha256": "22104d9813d8a2507d5ef651517b422d508a40060f0e149ae65f170720a13fe9"
+    },
+    "scope": "Standalone selected test-package graph and source join:1025 of1026 match directly; the remaining -I flags resolve to the same two physical directories. No standalone recompile/rerun is claimed.",
+    "source_join": {
+      "bytes": 3481473,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-source-join.json",
+      "sha256": "cca30dca0ad25d86edd929212c83bab6ac642e902673491f0929bc440c0b0454"
+    },
+    "tree": "4e8ec674d28cd44fe201b4a2a37832b901dbf6a5"
+  },
+  "service_credential_scope": "Real Linux mount/UUID facts and root-to-approved-UID/GID subprocess, exact executable/declaration check; manager transport captured, no system service activation.",
+  "shared_source_join": {
+    "bytes": 5238,
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/shared-source-join.json",
+    "sha256": "1257573fb2ed5dffe9e9266e1786bf6a14069212310db8f222112e27de94ac74"
+  },
+  "source_bundles": [
+    {
+      "bytes": 205307,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/sn-adopter-eb0abe22.bundle",
+      "sha256": "a3a730a01fc778cd6a76aecf91ee9c54828df6a820d302da9f11318768f5083c"
+    },
+    {
+      "bytes": 13897,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-blob-1b7cc78b.bundle",
+      "sha256": "f5ffe53bbe941b5be852910af8c81b4379b6793e1dffe2e7938b15daa3bd565d"
+    },
+    {
+      "bytes": 757,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-blob-module-005a9066.bundle",
+      "sha256": "cedd426fb24273fe0b197fb2f4d19b95f3a52938ff18639f818785f8f00eea12"
+    }
+  ],
+  "source_fence": {
+    "bytes": 2584,
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/source-fence-terminal.json",
+    "sha256": "09c208a1c13ee99635a664b9a278e68d3bec3f0c2dd6f8c303b0fd785592c5ad"
+  },
+  "sources": {
+    "connect": {
+      "commit": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+      "physical_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/source/connect",
+      "status": "",
+      "tree": "010533a40c31403c14a810828fee3c47e324c143"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "physical_path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "status": "",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "physical_path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "status": "",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "physical_path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "status": "",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "1b7cc78b2dc43f5191cc7b0d3d22f0754fedc662",
+      "physical_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/source/server",
+      "status": "",
+      "tree": "e8097e705ab2479e181bcfe37ec2d3926d3afab4"
+    },
+    "sn": {
+      "commit": "eb0abe22b6cca75fd17bd349821cfaf8b22add18",
+      "physical_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/source/sn",
+      "status": "",
+      "tree": "527c650382d2efe6b465bdfdc44296c2ba02262b"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "physical_path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "status": "",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "physical_path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "status": "",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "status": "PASS_SCOPED",
+  "tests": {
+    "normal_real_credential_roots": 1,
+    "normal_roots": 111,
+    "race_real_credential_roots": 1,
+    "race_roots": 111,
+    "results": [
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T11:33:08.218690291Z",
+        "log": {
+          "bytes": 31332,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-blob.jsonl",
+          "sha256": "547f9d2901b80cf1faec8a44b9b9f6a5a25f92cee382802a5e73bf352c42f69a"
+        },
+        "name": "normal-blob",
+        "pass": [
+          "TestConfiguredLocalBlobRequiresExactDeclaration",
+          "TestDurableLocalBlobBatchRefusesRemountUntilReopen",
+          "TestDurableLocalBlobReaderReplacementRemainsRefusedAfterRestore",
+          "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate",
+          "TestDurableLocalBlobReaperUncertainSyncReopensOriginalRoot",
+          "TestDurableLocalBlobReopenRequiresApprovedRootGeneration",
+          "TestDurableLocalBlobStoreCanceledAdmissionHasNoEffects",
+          "TestDurableLocalBlobStoreLostSyncRequiresOriginalReopen",
+          "TestDurableLocalBlobStoreRefusesMissingRootAndMixedPolicy",
+          "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations",
+          "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+          "TestDurableLocalBlobStoreStagedSyncFailureKeepsPriorBytes",
+          "TestLoadBlobStoreConfigBackendSelection",
+          "TestLocalBlobBatchAccountsAliasesCollisionsAndExactLimit",
+          "TestLocalBlobBatchRejectsForeignMutableAndNestedOwners",
+          "TestLocalBlobBatchRejectsRetargetedPhysicalRoot",
+          "TestLocalBlobBatchReleasesPartialOwnersBeforeWaiting",
+          "TestLocalBlobStoreCapacity",
+          "TestLocalBlobStoreCapacityContentionPreservesCancellation",
+          "TestLocalBlobStoreCapacityReaperJoinsOwnerAndPreservesPrivateFiles",
+          "TestLocalBlobStoreConcurrentInstancesShareCapacity",
+          "TestLocalBlobStoreListPageBoundsAndContinues",
+          "TestLocalBlobStorePutIfAbsentIsAtomicAcrossInstances",
+          "TestLocalBlobStorePutIfAbsentPreservesCapacity",
+          "TestLocalBlobStoreReaper",
+          "TestLocalBlobStoreRoundTrip"
+        ],
+        "result": {
+          "bytes": 6653,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-blob-result.json",
+          "sha256": "3abc161889e9a427a9a4fe467ebbee7253482bf3a8d1df1869c1921a3001c7cc"
+        },
+        "run": [
+          "TestConfiguredLocalBlobRequiresExactDeclaration",
+          "TestDurableLocalBlobBatchRefusesRemountUntilReopen",
+          "TestDurableLocalBlobReaderReplacementRemainsRefusedAfterRestore",
+          "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate",
+          "TestDurableLocalBlobReaperUncertainSyncReopensOriginalRoot",
+          "TestDurableLocalBlobReopenRequiresApprovedRootGeneration",
+          "TestDurableLocalBlobStoreCanceledAdmissionHasNoEffects",
+          "TestDurableLocalBlobStoreLostSyncRequiresOriginalReopen",
+          "TestDurableLocalBlobStoreRefusesMissingRootAndMixedPolicy",
+          "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations",
+          "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+          "TestDurableLocalBlobStoreStagedSyncFailureKeepsPriorBytes",
+          "TestLoadBlobStoreConfigBackendSelection",
+          "TestLocalBlobBatchAccountsAliasesCollisionsAndExactLimit",
+          "TestLocalBlobBatchRejectsForeignMutableAndNestedOwners",
+          "TestLocalBlobBatchRejectsRetargetedPhysicalRoot",
+          "TestLocalBlobBatchReleasesPartialOwnersBeforeWaiting",
+          "TestLocalBlobStoreCapacity",
+          "TestLocalBlobStoreCapacityContentionPreservesCancellation",
+          "TestLocalBlobStoreCapacityReaperJoinsOwnerAndPreservesPrivateFiles",
+          "TestLocalBlobStoreConcurrentInstancesShareCapacity",
+          "TestLocalBlobStoreListPageBoundsAndContinues",
+          "TestLocalBlobStorePutIfAbsentIsAtomicAcrossInstances",
+          "TestLocalBlobStorePutIfAbsentPreservesCapacity",
+          "TestLocalBlobStoreReaper",
+          "TestLocalBlobStoreRoundTrip"
+        ],
+        "skip": [],
+        "started": "2026-10-02T11:32:15.139996104Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T11:32:15.139259702Z",
+        "log": {
+          "bytes": 2418,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-inspect.jsonl",
+          "sha256": "e6c8d396632a34c65c8748a17652035501e65fd008bc50b83a1556e9df937803"
+        },
+        "name": "normal-inspect",
+        "pass": [
+          "TestInspectionCommandBindsInputsAndJoinsBeforeOutput",
+          "TestInspectionReadOnlyRefusesMissingAndReplacedRoots"
+        ],
+        "result": {
+          "bytes": 1250,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-inspect-result.json",
+          "sha256": "2ceaba04d9f53361dd723bfb5f791e53497d57e65a85e319f08e716ee28bf03d"
+        },
+        "run": [
+          "TestInspectionCommandBindsInputsAndJoinsBeforeOutput",
+          "TestInspectionReadOnlyRefusesMissingAndReplacedRoots"
+        ],
+        "skip": [],
+        "started": "2026-10-02T11:32:14.43774064Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T11:30:27.927935263Z",
+        "log": {
+          "bytes": 47268,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-mainnet.jsonl",
+          "sha256": "e8d093b29a2d1cc4357c600e1c25c4fa33b473385d3cd98466cefa9bebc1b678"
+        },
+        "name": "normal-mainnet",
+        "pass": [
+          "TestBootstrapContractFreshMarkersRequireExplicitHeads",
+          "TestBootstrapContractReadinessDistinguishesUnclaimedAndPartialChild",
+          "TestBootstrapContractReadinessRetainsOriginalSignedCustody",
+          "TestBootstrapPassivePreparationRejectsLostMonitorAnchor",
+          "TestBootstrapPassivePreparationRequiresFreshMonitorHead",
+          "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement",
+          "TestBootstrapReadinessSharedSnapshotsRemainReadOnly",
+          "TestEvmDurableEarlierJournalCannotRestoreAllowanceAcrossEightActions",
+          "TestEvmDurableLostMembersCannotRecreateAcrossEightActions",
+          "TestEvmEvidenceCreateLostPredecessorCustodyRefusesSend",
+          "TestMainnetDurableCustodyAbsentReferenceHasNoEffects",
+          "TestMainnetDurableCustodyCancellationStopsPublication",
+          "TestMainnetDurableCustodyMissingRootCannotRecreate",
+          "TestMainnetDurableCustodyPostRenameSyncRequiresOriginalReopen",
+          "TestMainnetDurableCustodyRemountRefusesPublication",
+          "TestMainnetDurableCustodyReplacementIsSticky",
+          "TestMainnetDurableCustodyReserveRecoversSameOwner",
+          "TestMainnetDurableMissingOwnerHasNoPathFallback",
+          "TestMainnetDurableReadOnlyInspectionSurvivesFullVolume",
+          "TestMainnetDurableUnitEffectsRejectMissingDeclaration",
+          "TestMainnetDurableUnitRejectsDifferentControllerDeclaration",
+          "TestMainnetDurableVolumeArgumentsPreserveCommand",
+          "TestMainnetDurableVolumeArgumentsRejectAmbiguity",
+          "TestOwnerRecycleDurableSignedRollbackRefusedAfterClose",
+          "TestOwnerSigningCommandRequiresOwnerLocalCustody",
+          "TestOwnerSigningDeviceMissingJournalAndForeignReplyCannotReissue",
+          "TestOwnerSigningDeviceRecoversDurableResponseWithoutResigning",
+          "TestOwnerSigningDeviceUnknownIssuanceRequiresOriginalResponse",
+          "TestOwnerSigningInvalidCustodyCannotReachAdapter",
+          "TestOwnerSigningLocalCustodyReplaysOriginalResponse",
+          "TestRepairActiveValidatorCommandStopsJoinsAndStartsOnce",
+          "TestRepairValidatorCommandResumesStoppedGenerationOnce",
+          "TestRootActionDurableLostMembersCannotRenewClaim",
+          "TestRootOfflineCustodyAmbiguousDurability",
+          "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss",
+          "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart",
+          "TestRootServiceAmbiguousIntentWrites",
+          "TestRootServiceDurableLostMembersCannotRecreate",
+          "TestRootServiceDurableReserveContinuesSameOwner",
+          "TestRootServiceDurableUncertainRunRetainsOriginalOwner",
+          "TestRootServiceRecoveryCrashRetainsAllowanceAndCadence",
+          "TestRootServiceRecoveryJoinsAndReopensOriginalOwner",
+          "TestRootServiceRecoveryMissingJournalDoesNotRecreate",
+          "TestRootServiceRecoveryPreservesIssuedNativeBytes",
+          "TestRootServiceRecoveryPublicPolicyIsSeparate",
+          "TestRootServiceRecoveryPublicRunPreservesLegacyEncoding",
+          "TestRootServiceRecoveryRefusesIdentityLoss",
+          "TestRootServiceRecoveryReserveAndCancellationDoNotConsume",
+          "TestRootServiceRecoveryUncertainReservationStopsBeforeOpen",
+          "TestRootServiceRecoveryWaitsForCounterAdmission",
+          "TestRootServiceRecoveryWaitsForPhysicalOwner",
+          "TestRootSubmissionAmbiguousJournalWrites",
+          "TestServiceStorageInspectionIncludesOperationalAndProtocolRoots",
+          "TestValidatorActivationDurableLostMembersCannotRenewOperations",
+          "TestValidatorActivationInstallsAndAdmitsBothWithoutStarting"
+        ],
+        "result": {
+          "bytes": 13846,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-mainnet-result.json",
+          "sha256": "5172a4c1b115e9c71511b22309cb274ec296410b83a79d055206a60519a635c4"
+        },
+        "run": [
+          "TestBootstrapContractFreshMarkersRequireExplicitHeads",
+          "TestBootstrapContractReadinessDistinguishesUnclaimedAndPartialChild",
+          "TestBootstrapContractReadinessRetainsOriginalSignedCustody",
+          "TestBootstrapPassivePreparationRejectsLostMonitorAnchor",
+          "TestBootstrapPassivePreparationRequiresFreshMonitorHead",
+          "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement",
+          "TestBootstrapReadinessSharedSnapshotsRemainReadOnly",
+          "TestEvmDurableEarlierJournalCannotRestoreAllowanceAcrossEightActions",
+          "TestEvmDurableLostMembersCannotRecreateAcrossEightActions",
+          "TestEvmEvidenceCreateLostPredecessorCustodyRefusesSend",
+          "TestMainnetDurableCustodyAbsentReferenceHasNoEffects",
+          "TestMainnetDurableCustodyCancellationStopsPublication",
+          "TestMainnetDurableCustodyMissingRootCannotRecreate",
+          "TestMainnetDurableCustodyPostRenameSyncRequiresOriginalReopen",
+          "TestMainnetDurableCustodyRemountRefusesPublication",
+          "TestMainnetDurableCustodyReplacementIsSticky",
+          "TestMainnetDurableCustodyReserveRecoversSameOwner",
+          "TestMainnetDurableMissingOwnerHasNoPathFallback",
+          "TestMainnetDurableReadOnlyInspectionSurvivesFullVolume",
+          "TestMainnetDurableUnitEffectsRejectMissingDeclaration",
+          "TestMainnetDurableUnitRejectsDifferentControllerDeclaration",
+          "TestMainnetDurableVolumeArgumentsPreserveCommand",
+          "TestMainnetDurableVolumeArgumentsRejectAmbiguity",
+          "TestOwnerRecycleDurableSignedRollbackRefusedAfterClose",
+          "TestOwnerSigningCommandRequiresOwnerLocalCustody",
+          "TestOwnerSigningDeviceMissingJournalAndForeignReplyCannotReissue",
+          "TestOwnerSigningDeviceRecoversDurableResponseWithoutResigning",
+          "TestOwnerSigningDeviceUnknownIssuanceRequiresOriginalResponse",
+          "TestOwnerSigningInvalidCustodyCannotReachAdapter",
+          "TestOwnerSigningLocalCustodyReplaysOriginalResponse",
+          "TestRepairActiveValidatorCommandStopsJoinsAndStartsOnce",
+          "TestRepairValidatorCommandResumesStoppedGenerationOnce",
+          "TestRootActionDurableLostMembersCannotRenewClaim",
+          "TestRootOfflineCustodyAmbiguousDurability",
+          "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss",
+          "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart",
+          "TestRootServiceAmbiguousIntentWrites",
+          "TestRootServiceDurableLostMembersCannotRecreate",
+          "TestRootServiceDurableReserveContinuesSameOwner",
+          "TestRootServiceDurableUncertainRunRetainsOriginalOwner",
+          "TestRootServiceRecoveryCrashRetainsAllowanceAndCadence",
+          "TestRootServiceRecoveryJoinsAndReopensOriginalOwner",
+          "TestRootServiceRecoveryMissingJournalDoesNotRecreate",
+          "TestRootServiceRecoveryPreservesIssuedNativeBytes",
+          "TestRootServiceRecoveryPublicPolicyIsSeparate",
+          "TestRootServiceRecoveryPublicRunPreservesLegacyEncoding",
+          "TestRootServiceRecoveryRefusesIdentityLoss",
+          "TestRootServiceRecoveryReserveAndCancellationDoNotConsume",
+          "TestRootServiceRecoveryUncertainReservationStopsBeforeOpen",
+          "TestRootServiceRecoveryWaitsForCounterAdmission",
+          "TestRootServiceRecoveryWaitsForPhysicalOwner",
+          "TestRootSubmissionAmbiguousJournalWrites",
+          "TestServiceStorageInspectionIncludesOperationalAndProtocolRoots",
+          "TestValidatorActivationDurableLostMembersCannotRenewOperations",
+          "TestValidatorActivationInstallsAndAdmitsBothWithoutStarting"
+        ],
+        "skip": [],
+        "started": "2026-10-02T11:26:07.597448497Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T11:32:14.434520596Z",
+        "log": {
+          "bytes": 39076,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-validator.jsonl",
+          "sha256": "ca308fbbdeccf2c002fbfd81d04dbb2e261c2392f8389d23e8eef47077b36b1a"
+        },
+        "name": "normal-validator",
+        "pass": [
+          "TestAttemptRecordStoreCloseCancelsAndJoinsWalk",
+          "TestAttemptRecordStorePreservesCanonicalV1Bytes",
+          "TestAttemptRecordStoreReplaysInterleavedPendingTrails",
+          "TestAttemptRecordStoreWALFailuresRequireReopen",
+          "TestDiskAttemptLedgerAppendFaultRequiresVerifiedReopen",
+          "TestDiskAttemptLedgerCloseCancelsAndJoinsStreamingVisitor",
+          "TestDiskAttemptLedgerImportsExactV1BytesWithoutHistoryMaps",
+          "TestDurableAttemptLedgerAdmissionPrecedesRecordSigning",
+          "TestDurableAttemptLedgerAnchorLossIsSticky",
+          "TestDurableAttemptLedgerIncompletePendingKeepsExactExpectation",
+          "TestDurableAttemptLedgerLostPendingRecordCannotRetry",
+          "TestDurableAttemptLedgerMissingMembersCannotReset",
+          "TestDurableAttemptLedgerPendingCrashReplaysOriginalRecord",
+          "TestDurableAttemptLedgerPriorDatabaseCannotReset",
+          "TestDurableAttemptLedgerReplacementBlocksCachedState",
+          "TestDurableAttemptLedgerReserveKeepsOriginalPrefix",
+          "TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes",
+          "TestDurableValidatorDirectoryClosedDescriptorIsNotIdentity",
+          "TestDurableValidatorDirectoryDifferentDescriptorIsSticky",
+          "TestDurableValidatorDirectoryObservationFailureCanRetry",
+          "TestMainnetAttemptLedgerPublicConstructorsRequireCustody",
+          "TestProductionNativeJournalRejectsDaemonPolicyAndCancellation",
+          "TestProductionNativeJournalRequiresOwnerCustody",
+          "TestProductionNativeJournalRetainsOriginalAfterClose",
+          "TestProductionPublicLifecyclesRequirePhysicalCustody",
+          "TestProductionStartupRunReleaseInitialDeploymentBecomesReady",
+          "TestProductionStartupRunReleaseReconcilesBeforeCurrentPreparation",
+          "TestReleaseMeasurementV2MatchesRealM8WholeArtifact"
+        ],
+        "result": {
+          "bytes": 7517,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-validator-result.json",
+          "sha256": "5fd3c948206ffe860259517c04fa05224e4031a00b8b7fec22e6a4411fb7dc80"
+        },
+        "run": [
+          "TestAttemptRecordStoreCloseCancelsAndJoinsWalk",
+          "TestAttemptRecordStorePreservesCanonicalV1Bytes",
+          "TestAttemptRecordStoreReplaysInterleavedPendingTrails",
+          "TestAttemptRecordStoreWALFailuresRequireReopen",
+          "TestDiskAttemptLedgerAppendFaultRequiresVerifiedReopen",
+          "TestDiskAttemptLedgerCloseCancelsAndJoinsStreamingVisitor",
+          "TestDiskAttemptLedgerImportsExactV1BytesWithoutHistoryMaps",
+          "TestDurableAttemptLedgerAdmissionPrecedesRecordSigning",
+          "TestDurableAttemptLedgerAnchorLossIsSticky",
+          "TestDurableAttemptLedgerIncompletePendingKeepsExactExpectation",
+          "TestDurableAttemptLedgerLostPendingRecordCannotRetry",
+          "TestDurableAttemptLedgerMissingMembersCannotReset",
+          "TestDurableAttemptLedgerPendingCrashReplaysOriginalRecord",
+          "TestDurableAttemptLedgerPriorDatabaseCannotReset",
+          "TestDurableAttemptLedgerReplacementBlocksCachedState",
+          "TestDurableAttemptLedgerReserveKeepsOriginalPrefix",
+          "TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes",
+          "TestDurableValidatorDirectoryClosedDescriptorIsNotIdentity",
+          "TestDurableValidatorDirectoryDifferentDescriptorIsSticky",
+          "TestDurableValidatorDirectoryObservationFailureCanRetry",
+          "TestMainnetAttemptLedgerPublicConstructorsRequireCustody",
+          "TestProductionNativeJournalRejectsDaemonPolicyAndCancellation",
+          "TestProductionNativeJournalRequiresOwnerCustody",
+          "TestProductionNativeJournalRetainsOriginalAfterClose",
+          "TestProductionPublicLifecyclesRequirePhysicalCustody",
+          "TestProductionStartupRunReleaseInitialDeploymentBecomesReady",
+          "TestProductionStartupRunReleaseReconcilesBeforeCurrentPreparation",
+          "TestReleaseMeasurementV2MatchesRealM8WholeArtifact"
+        ],
+        "skip": [],
+        "started": "2026-10-02T11:30:27.930601398Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T12:03:01.111840996Z",
+        "log": {
+          "bytes": 31345,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-blob.jsonl",
+          "sha256": "e64afa46161821f3fd44154a7048208aa50d06246551af28ac6f77020524e7de"
+        },
+        "name": "race-blob",
+        "pass": [
+          "TestConfiguredLocalBlobRequiresExactDeclaration",
+          "TestDurableLocalBlobBatchRefusesRemountUntilReopen",
+          "TestDurableLocalBlobReaderReplacementRemainsRefusedAfterRestore",
+          "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate",
+          "TestDurableLocalBlobReaperUncertainSyncReopensOriginalRoot",
+          "TestDurableLocalBlobReopenRequiresApprovedRootGeneration",
+          "TestDurableLocalBlobStoreCanceledAdmissionHasNoEffects",
+          "TestDurableLocalBlobStoreLostSyncRequiresOriginalReopen",
+          "TestDurableLocalBlobStoreRefusesMissingRootAndMixedPolicy",
+          "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations",
+          "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+          "TestDurableLocalBlobStoreStagedSyncFailureKeepsPriorBytes",
+          "TestLoadBlobStoreConfigBackendSelection",
+          "TestLocalBlobBatchAccountsAliasesCollisionsAndExactLimit",
+          "TestLocalBlobBatchRejectsForeignMutableAndNestedOwners",
+          "TestLocalBlobBatchRejectsRetargetedPhysicalRoot",
+          "TestLocalBlobBatchReleasesPartialOwnersBeforeWaiting",
+          "TestLocalBlobStoreCapacity",
+          "TestLocalBlobStoreCapacityContentionPreservesCancellation",
+          "TestLocalBlobStoreCapacityReaperJoinsOwnerAndPreservesPrivateFiles",
+          "TestLocalBlobStoreConcurrentInstancesShareCapacity",
+          "TestLocalBlobStoreListPageBoundsAndContinues",
+          "TestLocalBlobStorePutIfAbsentIsAtomicAcrossInstances",
+          "TestLocalBlobStorePutIfAbsentPreservesCapacity",
+          "TestLocalBlobStoreReaper",
+          "TestLocalBlobStoreRoundTrip"
+        ],
+        "result": {
+          "bytes": 6664,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-blob-result.json",
+          "sha256": "9fd83a2ef1c8f67cfdeb4b8c5ef3d618d05f71cdd0a9bf63eafd6744821fb8e9"
+        },
+        "run": [
+          "TestConfiguredLocalBlobRequiresExactDeclaration",
+          "TestDurableLocalBlobBatchRefusesRemountUntilReopen",
+          "TestDurableLocalBlobReaderReplacementRemainsRefusedAfterRestore",
+          "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate",
+          "TestDurableLocalBlobReaperUncertainSyncReopensOriginalRoot",
+          "TestDurableLocalBlobReopenRequiresApprovedRootGeneration",
+          "TestDurableLocalBlobStoreCanceledAdmissionHasNoEffects",
+          "TestDurableLocalBlobStoreLostSyncRequiresOriginalReopen",
+          "TestDurableLocalBlobStoreRefusesMissingRootAndMixedPolicy",
+          "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations",
+          "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+          "TestDurableLocalBlobStoreStagedSyncFailureKeepsPriorBytes",
+          "TestLoadBlobStoreConfigBackendSelection",
+          "TestLocalBlobBatchAccountsAliasesCollisionsAndExactLimit",
+          "TestLocalBlobBatchRejectsForeignMutableAndNestedOwners",
+          "TestLocalBlobBatchRejectsRetargetedPhysicalRoot",
+          "TestLocalBlobBatchReleasesPartialOwnersBeforeWaiting",
+          "TestLocalBlobStoreCapacity",
+          "TestLocalBlobStoreCapacityContentionPreservesCancellation",
+          "TestLocalBlobStoreCapacityReaperJoinsOwnerAndPreservesPrivateFiles",
+          "TestLocalBlobStoreConcurrentInstancesShareCapacity",
+          "TestLocalBlobStoreListPageBoundsAndContinues",
+          "TestLocalBlobStorePutIfAbsentIsAtomicAcrossInstances",
+          "TestLocalBlobStorePutIfAbsentPreservesCapacity",
+          "TestLocalBlobStoreReaper",
+          "TestLocalBlobStoreRoundTrip"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:01:08.777880325Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T12:01:08.777447804Z",
+        "log": {
+          "bytes": 2420,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-inspect.jsonl",
+          "sha256": "0f5ed12c79b394688a883ddfed7ede3aacf7b194a623cf43eb75d6ae0056c228"
+        },
+        "name": "race-inspect",
+        "pass": [
+          "TestInspectionCommandBindsInputsAndJoinsBeforeOutput",
+          "TestInspectionReadOnlyRefusesMissingAndReplacedRoots"
+        ],
+        "result": {
+          "bytes": 1262,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-inspect-result.json",
+          "sha256": "fca9ad2066ff747286d5058a899f9b7f58c0c87d5c6a38946077a030e758f331"
+        },
+        "run": [
+          "TestInspectionCommandBindsInputsAndJoinsBeforeOutput",
+          "TestInspectionReadOnlyRefusesMissingAndReplacedRoots"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:01:06.334406425Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T11:53:13.306869248Z",
+        "log": {
+          "bytes": 47320,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-mainnet.jsonl",
+          "sha256": "4e5aeefe3fb24916f77c277ba786db258b99faac183b15afb3dc5829d99ae2ff"
+        },
+        "name": "race-mainnet",
+        "pass": [
+          "TestBootstrapContractFreshMarkersRequireExplicitHeads",
+          "TestBootstrapContractReadinessDistinguishesUnclaimedAndPartialChild",
+          "TestBootstrapContractReadinessRetainsOriginalSignedCustody",
+          "TestBootstrapPassivePreparationRejectsLostMonitorAnchor",
+          "TestBootstrapPassivePreparationRequiresFreshMonitorHead",
+          "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement",
+          "TestBootstrapReadinessSharedSnapshotsRemainReadOnly",
+          "TestEvmDurableEarlierJournalCannotRestoreAllowanceAcrossEightActions",
+          "TestEvmDurableLostMembersCannotRecreateAcrossEightActions",
+          "TestEvmEvidenceCreateLostPredecessorCustodyRefusesSend",
+          "TestMainnetDurableCustodyAbsentReferenceHasNoEffects",
+          "TestMainnetDurableCustodyCancellationStopsPublication",
+          "TestMainnetDurableCustodyMissingRootCannotRecreate",
+          "TestMainnetDurableCustodyPostRenameSyncRequiresOriginalReopen",
+          "TestMainnetDurableCustodyRemountRefusesPublication",
+          "TestMainnetDurableCustodyReplacementIsSticky",
+          "TestMainnetDurableCustodyReserveRecoversSameOwner",
+          "TestMainnetDurableMissingOwnerHasNoPathFallback",
+          "TestMainnetDurableReadOnlyInspectionSurvivesFullVolume",
+          "TestMainnetDurableUnitEffectsRejectMissingDeclaration",
+          "TestMainnetDurableUnitRejectsDifferentControllerDeclaration",
+          "TestMainnetDurableVolumeArgumentsPreserveCommand",
+          "TestMainnetDurableVolumeArgumentsRejectAmbiguity",
+          "TestOwnerRecycleDurableSignedRollbackRefusedAfterClose",
+          "TestOwnerSigningCommandRequiresOwnerLocalCustody",
+          "TestOwnerSigningDeviceMissingJournalAndForeignReplyCannotReissue",
+          "TestOwnerSigningDeviceRecoversDurableResponseWithoutResigning",
+          "TestOwnerSigningDeviceUnknownIssuanceRequiresOriginalResponse",
+          "TestOwnerSigningInvalidCustodyCannotReachAdapter",
+          "TestOwnerSigningLocalCustodyReplaysOriginalResponse",
+          "TestRepairActiveValidatorCommandStopsJoinsAndStartsOnce",
+          "TestRepairValidatorCommandResumesStoppedGenerationOnce",
+          "TestRootActionDurableLostMembersCannotRenewClaim",
+          "TestRootOfflineCustodyAmbiguousDurability",
+          "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss",
+          "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart",
+          "TestRootServiceAmbiguousIntentWrites",
+          "TestRootServiceDurableLostMembersCannotRecreate",
+          "TestRootServiceDurableReserveContinuesSameOwner",
+          "TestRootServiceDurableUncertainRunRetainsOriginalOwner",
+          "TestRootServiceRecoveryCrashRetainsAllowanceAndCadence",
+          "TestRootServiceRecoveryJoinsAndReopensOriginalOwner",
+          "TestRootServiceRecoveryMissingJournalDoesNotRecreate",
+          "TestRootServiceRecoveryPreservesIssuedNativeBytes",
+          "TestRootServiceRecoveryPublicPolicyIsSeparate",
+          "TestRootServiceRecoveryPublicRunPreservesLegacyEncoding",
+          "TestRootServiceRecoveryRefusesIdentityLoss",
+          "TestRootServiceRecoveryReserveAndCancellationDoNotConsume",
+          "TestRootServiceRecoveryUncertainReservationStopsBeforeOpen",
+          "TestRootServiceRecoveryWaitsForCounterAdmission",
+          "TestRootServiceRecoveryWaitsForPhysicalOwner",
+          "TestRootSubmissionAmbiguousJournalWrites",
+          "TestServiceStorageInspectionIncludesOperationalAndProtocolRoots",
+          "TestValidatorActivationDurableLostMembersCannotRenewOperations",
+          "TestValidatorActivationInstallsAndAdmitsBothWithoutStarting"
+        ],
+        "result": {
+          "bytes": 13857,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-mainnet-result.json",
+          "sha256": "d28028806ae709030d6b941c4dc20fe739d17a88420cc065cac0f59c8d75854d"
+        },
+        "run": [
+          "TestBootstrapContractFreshMarkersRequireExplicitHeads",
+          "TestBootstrapContractReadinessDistinguishesUnclaimedAndPartialChild",
+          "TestBootstrapContractReadinessRetainsOriginalSignedCustody",
+          "TestBootstrapPassivePreparationRejectsLostMonitorAnchor",
+          "TestBootstrapPassivePreparationRequiresFreshMonitorHead",
+          "TestBootstrapReadinessRejectsEveryBorrowedMarkerReplacement",
+          "TestBootstrapReadinessSharedSnapshotsRemainReadOnly",
+          "TestEvmDurableEarlierJournalCannotRestoreAllowanceAcrossEightActions",
+          "TestEvmDurableLostMembersCannotRecreateAcrossEightActions",
+          "TestEvmEvidenceCreateLostPredecessorCustodyRefusesSend",
+          "TestMainnetDurableCustodyAbsentReferenceHasNoEffects",
+          "TestMainnetDurableCustodyCancellationStopsPublication",
+          "TestMainnetDurableCustodyMissingRootCannotRecreate",
+          "TestMainnetDurableCustodyPostRenameSyncRequiresOriginalReopen",
+          "TestMainnetDurableCustodyRemountRefusesPublication",
+          "TestMainnetDurableCustodyReplacementIsSticky",
+          "TestMainnetDurableCustodyReserveRecoversSameOwner",
+          "TestMainnetDurableMissingOwnerHasNoPathFallback",
+          "TestMainnetDurableReadOnlyInspectionSurvivesFullVolume",
+          "TestMainnetDurableUnitEffectsRejectMissingDeclaration",
+          "TestMainnetDurableUnitRejectsDifferentControllerDeclaration",
+          "TestMainnetDurableVolumeArgumentsPreserveCommand",
+          "TestMainnetDurableVolumeArgumentsRejectAmbiguity",
+          "TestOwnerRecycleDurableSignedRollbackRefusedAfterClose",
+          "TestOwnerSigningCommandRequiresOwnerLocalCustody",
+          "TestOwnerSigningDeviceMissingJournalAndForeignReplyCannotReissue",
+          "TestOwnerSigningDeviceRecoversDurableResponseWithoutResigning",
+          "TestOwnerSigningDeviceUnknownIssuanceRequiresOriginalResponse",
+          "TestOwnerSigningInvalidCustodyCannotReachAdapter",
+          "TestOwnerSigningLocalCustodyReplaysOriginalResponse",
+          "TestRepairActiveValidatorCommandStopsJoinsAndStartsOnce",
+          "TestRepairValidatorCommandResumesStoppedGenerationOnce",
+          "TestRootActionDurableLostMembersCannotRenewClaim",
+          "TestRootOfflineCustodyAmbiguousDurability",
+          "TestRootPassiveHostNeverPublishesCompletionAfterCustodyLoss",
+          "TestRootPassiveHostRejectsBorrowedCustodyBeforeStart",
+          "TestRootServiceAmbiguousIntentWrites",
+          "TestRootServiceDurableLostMembersCannotRecreate",
+          "TestRootServiceDurableReserveContinuesSameOwner",
+          "TestRootServiceDurableUncertainRunRetainsOriginalOwner",
+          "TestRootServiceRecoveryCrashRetainsAllowanceAndCadence",
+          "TestRootServiceRecoveryJoinsAndReopensOriginalOwner",
+          "TestRootServiceRecoveryMissingJournalDoesNotRecreate",
+          "TestRootServiceRecoveryPreservesIssuedNativeBytes",
+          "TestRootServiceRecoveryPublicPolicyIsSeparate",
+          "TestRootServiceRecoveryPublicRunPreservesLegacyEncoding",
+          "TestRootServiceRecoveryRefusesIdentityLoss",
+          "TestRootServiceRecoveryReserveAndCancellationDoNotConsume",
+          "TestRootServiceRecoveryUncertainReservationStopsBeforeOpen",
+          "TestRootServiceRecoveryWaitsForCounterAdmission",
+          "TestRootServiceRecoveryWaitsForPhysicalOwner",
+          "TestRootSubmissionAmbiguousJournalWrites",
+          "TestServiceStorageInspectionIncludesOperationalAndProtocolRoots",
+          "TestValidatorActivationDurableLostMembersCannotRenewOperations",
+          "TestValidatorActivationInstallsAndAdmitsBothWithoutStarting"
+        ],
+        "skip": [],
+        "started": "2026-10-02T11:33:08.221145858Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T12:01:06.330659313Z",
+        "log": {
+          "bytes": 45656,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-validator.jsonl",
+          "sha256": "e9bc5775ec1031d1b1c7dfbc94cd748a4589103972398b7dc15ef08c05f15c77"
+        },
+        "name": "race-validator",
+        "pass": [
+          "TestAttemptRecordStoreCloseCancelsAndJoinsWalk",
+          "TestAttemptRecordStorePreservesCanonicalV1Bytes",
+          "TestAttemptRecordStoreReplaysInterleavedPendingTrails",
+          "TestAttemptRecordStoreWALFailuresRequireReopen",
+          "TestDiskAttemptLedgerAppendFaultRequiresVerifiedReopen",
+          "TestDiskAttemptLedgerCloseCancelsAndJoinsStreamingVisitor",
+          "TestDiskAttemptLedgerImportsExactV1BytesWithoutHistoryMaps",
+          "TestDurableAttemptLedgerAdmissionPrecedesRecordSigning",
+          "TestDurableAttemptLedgerAnchorLossIsSticky",
+          "TestDurableAttemptLedgerIncompletePendingKeepsExactExpectation",
+          "TestDurableAttemptLedgerLostPendingRecordCannotRetry",
+          "TestDurableAttemptLedgerMissingMembersCannotReset",
+          "TestDurableAttemptLedgerPendingCrashReplaysOriginalRecord",
+          "TestDurableAttemptLedgerPriorDatabaseCannotReset",
+          "TestDurableAttemptLedgerReplacementBlocksCachedState",
+          "TestDurableAttemptLedgerReserveKeepsOriginalPrefix",
+          "TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes",
+          "TestDurableValidatorDirectoryClosedDescriptorIsNotIdentity",
+          "TestDurableValidatorDirectoryDifferentDescriptorIsSticky",
+          "TestDurableValidatorDirectoryObservationFailureCanRetry",
+          "TestMainnetAttemptLedgerPublicConstructorsRequireCustody",
+          "TestProductionNativeJournalRejectsDaemonPolicyAndCancellation",
+          "TestProductionNativeJournalRequiresOwnerCustody",
+          "TestProductionNativeJournalRetainsOriginalAfterClose",
+          "TestProductionPublicLifecyclesRequirePhysicalCustody",
+          "TestProductionStartupRunReleaseInitialDeploymentBecomesReady",
+          "TestProductionStartupRunReleaseReconcilesBeforeCurrentPreparation",
+          "TestReleaseMeasurementV2MatchesRealM8WholeArtifact"
+        ],
+        "result": {
+          "bytes": 7528,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-validator-result.json",
+          "sha256": "4b90ea191042d044d622a90b4bc242a461cbdc1441e3b0752a550c16d4913e6c"
+        },
+        "run": [
+          "TestAttemptRecordStoreCloseCancelsAndJoinsWalk",
+          "TestAttemptRecordStorePreservesCanonicalV1Bytes",
+          "TestAttemptRecordStoreReplaysInterleavedPendingTrails",
+          "TestAttemptRecordStoreWALFailuresRequireReopen",
+          "TestDiskAttemptLedgerAppendFaultRequiresVerifiedReopen",
+          "TestDiskAttemptLedgerCloseCancelsAndJoinsStreamingVisitor",
+          "TestDiskAttemptLedgerImportsExactV1BytesWithoutHistoryMaps",
+          "TestDurableAttemptLedgerAdmissionPrecedesRecordSigning",
+          "TestDurableAttemptLedgerAnchorLossIsSticky",
+          "TestDurableAttemptLedgerIncompletePendingKeepsExactExpectation",
+          "TestDurableAttemptLedgerLostPendingRecordCannotRetry",
+          "TestDurableAttemptLedgerMissingMembersCannotReset",
+          "TestDurableAttemptLedgerPendingCrashReplaysOriginalRecord",
+          "TestDurableAttemptLedgerPriorDatabaseCannotReset",
+          "TestDurableAttemptLedgerReplacementBlocksCachedState",
+          "TestDurableAttemptLedgerReserveKeepsOriginalPrefix",
+          "TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes",
+          "TestDurableValidatorDirectoryClosedDescriptorIsNotIdentity",
+          "TestDurableValidatorDirectoryDifferentDescriptorIsSticky",
+          "TestDurableValidatorDirectoryObservationFailureCanRetry",
+          "TestMainnetAttemptLedgerPublicConstructorsRequireCustody",
+          "TestProductionNativeJournalRejectsDaemonPolicyAndCancellation",
+          "TestProductionNativeJournalRequiresOwnerCustody",
+          "TestProductionNativeJournalRetainsOriginalAfterClose",
+          "TestProductionPublicLifecyclesRequirePhysicalCustody",
+          "TestProductionStartupRunReleaseInitialDeploymentBecomesReady",
+          "TestProductionStartupRunReleaseReconcilesBeforeCurrentPreparation",
+          "TestReleaseMeasurementV2MatchesRealM8WholeArtifact"
+        ],
+        "skip": [],
+        "started": "2026-10-02T11:53:13.309304854Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T12:03:33.518903321Z",
+        "log": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/vet-blob.jsonl",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "name": "vet-blob",
+        "pass": [],
+        "result": {
+          "bytes": 639,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/vet-blob-result.json",
+          "sha256": "334bac0b24748cfadff7484f6cb6216374c0de2463a86fb3c53ec02a5ce3f615"
+        },
+        "run": [],
+        "skip": [],
+        "started": "2026-10-02T12:03:22.871864002Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T12:03:22.871345127Z",
+        "log": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/vet-sn.jsonl",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "name": "vet-sn",
+        "pass": [],
+        "result": {
+          "bytes": 695,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/vet-sn-result.json",
+          "sha256": "4b435faadc4d69ae979abf7903cd8b64c25b21f5d7887ed2bdc76f63ee634500"
+        },
+        "run": [],
+        "skip": [],
+        "started": "2026-10-02T12:03:01.113866762Z"
+      }
+    ],
+    "skips": 0,
+    "supplemental_results": [
+      {
+        "exit_code": 1,
+        "fail": [
+          "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate"
+        ],
+        "finished": "2026-10-02T12:08:19.960293216Z",
+        "log": {
+          "bytes": 2799,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-blob-reaper-before.jsonl",
+          "sha256": "91e231aefee416dae8597b5c8029c828c4dae92d8e1e0815ec2410fcc134581f"
+        },
+        "name": "normal-blob-reaper-before",
+        "pass": [],
+        "result": {
+          "bytes": 1272,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-blob-reaper-before-result.json",
+          "sha256": "092ef7920d3c6f34fc2612166419fdc9b2e3f4e0523a8cb2f69ce1f87c5df790"
+        },
+        "run": [
+          "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:07:31.897639137Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T12:16:49.703991335Z",
+        "log": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-inspector-build.jsonl",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "name": "normal-inspector-build",
+        "pass": [],
+        "result": {
+          "bytes": 950,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-inspector-build-result.json",
+          "sha256": "0fbce9d92c52f6b6e3d0a047dd78def018e8e0b13498c11e2c989b0c40cbe727"
+        },
+        "run": [],
+        "skip": [],
+        "started": "2026-10-02T12:16:37.174988033Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T12:16:56.361125348Z",
+        "log": {
+          "bytes": 967,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-inspector-real.jsonl",
+          "sha256": "bb6601b88046b20a1ca97cf241660c39f10ec2b106666b9c1c3ff59d462df959"
+        },
+        "name": "normal-inspector-real",
+        "pass": [
+          "TestServiceStorageCredentialInspectorRealHost"
+        ],
+        "result": {
+          "bytes": 1483,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-inspector-real-result.json",
+          "sha256": "796b3b9149e2d11c4a34fc1e88649cc8e3823c6a57190ba67772235109c287d9"
+        },
+        "run": [
+          "TestServiceStorageCredentialInspectorRealHost"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:16:49.745400284Z"
+      },
+      {
+        "exit_code": 1,
+        "fail": [
+          "TestDurableAttemptLedgerMissingMembersCannotReset",
+          "TestDurableAttemptLedgerPriorDatabaseCannotReset"
+        ],
+        "finished": "2026-10-02T12:07:31.894340064Z",
+        "log": {
+          "bytes": 3067,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-ledger-omission.jsonl",
+          "sha256": "aaa72a829fb97532affec02676cae682a8ffe35987bedd42a9e6d642dd88772e"
+        },
+        "name": "normal-ledger-omission",
+        "pass": [],
+        "result": {
+          "bytes": 1328,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-ledger-omission-result.json",
+          "sha256": "21a3fb275a8d8d9663179b0b89931015336732156099ad225dc45708bbfd14d7"
+        },
+        "run": [
+          "TestDurableAttemptLedgerMissingMembersCannotReset",
+          "TestDurableAttemptLedgerPriorDatabaseCannotReset"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:06:53.34985642Z"
+      },
+      {
+        "exit_code": 1,
+        "fail": [
+          "TestBootstrapPassivePreparationRejectsLostMonitorAnchor",
+          "TestBootstrapPassivePreparationRequiresFreshMonitorHead"
+        ],
+        "finished": "2026-10-02T12:06:53.346355187Z",
+        "log": {
+          "bytes": 2818,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-passive-omission.jsonl",
+          "sha256": "b030778b4579e185fb50e6637f149ea269d1b7f6daf2efb6cd88d5e8b589e646"
+        },
+        "name": "normal-passive-omission",
+        "pass": [],
+        "result": {
+          "bytes": 1381,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-passive-omission-result.json",
+          "sha256": "6ab453199f9ba226f7e19f1abef130e3763caa3890aa2ade751d9e9aee2a84e7"
+        },
+        "run": [
+          "TestBootstrapPassivePreparationRejectsLostMonitorAnchor",
+          "TestBootstrapPassivePreparationRequiresFreshMonitorHead"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:05:22.096530545Z"
+      },
+      {
+        "exit_code": 1,
+        "fail": [
+          "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate"
+        ],
+        "finished": "2026-10-02T12:16:37.172116249Z",
+        "log": {
+          "bytes": 2801,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-blob-reaper-before.jsonl",
+          "sha256": "42af79863cc123533aa69ee600d4373d08fcbf55c03137e51fdfe2a865374d08"
+        },
+        "name": "race-blob-reaper-before",
+        "pass": [],
+        "result": {
+          "bytes": 1283,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-blob-reaper-before-result.json",
+          "sha256": "cae642f446797686c745ac31bb7c0a546971c5c7ba5a6bc072a0dcdd8758b6e5"
+        },
+        "run": [
+          "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:14:51.872701913Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T12:17:08.80444425Z",
+        "log": {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-inspector-build.jsonl",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "name": "race-inspector-build",
+        "pass": [],
+        "result": {
+          "bytes": 958,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-inspector-build-result.json",
+          "sha256": "b12cbdba3769f11578c2170e5af46e7866fec193643244e0e159b20faf758c8b"
+        },
+        "run": [],
+        "skip": [],
+        "started": "2026-10-02T12:16:56.372210484Z"
+      },
+      {
+        "exit_code": 0,
+        "fail": [],
+        "finished": "2026-10-02T12:17:41.045638412Z",
+        "log": {
+          "bytes": 969,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-inspector-real.jsonl",
+          "sha256": "837c011d9f8f500921dece845bebedd2d1a4f73116a58b80b4c83d6e2013a970"
+        },
+        "name": "race-inspector-real",
+        "pass": [
+          "TestServiceStorageCredentialInspectorRealHost"
+        ],
+        "result": {
+          "bytes": 1477,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-inspector-real-result.json",
+          "sha256": "3c207de06551173a606f9cb76f0bef17bd072b3bfc6652e63272553c0cd64f61"
+        },
+        "run": [
+          "TestServiceStorageCredentialInspectorRealHost"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:17:08.885357261Z"
+      },
+      {
+        "exit_code": 1,
+        "fail": [
+          "TestDurableAttemptLedgerMissingMembersCannotReset",
+          "TestDurableAttemptLedgerPriorDatabaseCannotReset"
+        ],
+        "finished": "2026-10-02T12:14:51.855745048Z",
+        "log": {
+          "bytes": 3066,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-ledger-omission.jsonl",
+          "sha256": "2ea2f4f75be3e58f2755d64ccf7a4c6ba5ec6da51af3637171ac54a7aced3c46"
+        },
+        "name": "race-ledger-omission",
+        "pass": [],
+        "result": {
+          "bytes": 1340,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-ledger-omission-result.json",
+          "sha256": "99382b34e247a915df9fd9ae062f77456547278d93c1e34df8d36a440975d387"
+        },
+        "run": [
+          "TestDurableAttemptLedgerMissingMembersCannotReset",
+          "TestDurableAttemptLedgerPriorDatabaseCannotReset"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:11:56.246421556Z"
+      },
+      {
+        "exit_code": 1,
+        "fail": [
+          "TestBootstrapPassivePreparationRejectsLostMonitorAnchor",
+          "TestBootstrapPassivePreparationRequiresFreshMonitorHead"
+        ],
+        "finished": "2026-10-02T12:11:56.243399621Z",
+        "log": {
+          "bytes": 2809,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-passive-omission.jsonl",
+          "sha256": "e2ff0842faf06646d6310633cf397873b356f6c3b2d68c4621c8555a180d7bf8"
+        },
+        "name": "race-passive-omission",
+        "pass": [],
+        "result": {
+          "bytes": 1392,
+          "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-passive-omission-result.json",
+          "sha256": "47aa7355f59433324327802bbce8d6529ca3743a50e38649f855855efea7f748"
+        },
+        "run": [
+          "TestBootstrapPassivePreparationRejectsLostMonitorAnchor",
+          "TestBootstrapPassivePreparationRequiresFreshMonitorHead"
+        ],
+        "skip": [],
+        "started": "2026-10-02T12:08:19.963446195Z"
+      }
+    ],
+    "vet_packages": [
+      "sn/mainnet",
+      "sn/validator",
+      "sn/internal/durableinspect",
+      "server root"
+    ]
+  },
+  "toolchain": {
+    "go_version": "go version go1.26.6 linux/amd64",
+    "recorded_at_seal": true,
+    "scope": "Local compiler fingerprint, not independent compiler provenance.",
+    "tools": [
+      {
+        "bytes": 15434687,
+        "path": "/usr/local/go/bin/go",
+        "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+      },
+      {
+        "bytes": 25779081,
+        "path": "/usr/local/go/pkg/tool/linux_amd64/compile",
+        "sha256": "73da54c06c0702ae7c8cff309dd3958980af7ae0307cf319d7d0cb2bbd3fafd2"
+      },
+      {
+        "bytes": 6684577,
+        "path": "/usr/local/go/pkg/tool/linux_amd64/link",
+        "sha256": "048670775edfd89c6551149c197816dacdcc12c518b29ff1c533751b2dc4b976"
+      }
+    ]
+  }
+}

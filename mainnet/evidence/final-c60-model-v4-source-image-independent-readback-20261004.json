@@ -1,0 +1,43 @@
+{
+  "utc": "2026-10-04T22:00:33.321782+00:00",
+  "owner_job_sha256": "e90101f2049bf5b7d5ce957f4f6f2604e71a86a895d0e8f34df736394cc4485e",
+  "body_job_sha256": "a3175cb900dc2f4e2346b3887ef39113e21a89a76602e123caf72d78ff0cc669",
+  "physical_source_stages": [
+    {
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-source-stage.receipt.json",
+        "sha256": "8cbc33b705495c2caa99789b0e08953abcca67522a0f509e55dd26c6ae9e731c"
+      },
+      "physical_source": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/final-c60-source/server",
+      "commit": "c60b2bc173758fd1507c8385311a772ddee37730",
+      "files_verified": 5708,
+      "mismatches": []
+    },
+    {
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-connect-stage.receipt.json",
+        "sha256": "a308b26392600ef711e842669147151293f746f9770db3eb274c5a227c30f4f9"
+      },
+      "physical_source": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/final-c60-source/connect",
+      "commit": "7de1d3e8d1d3012742da653ec80be899143f620e",
+      "files_verified": 3818,
+      "mismatches": []
+    },
+    {
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-sn-stage.receipt.json",
+        "sha256": "95fd74380b7f399fdc1950b7b7f5517790d53c4a929d33b0641ac85355bc35ee"
+      },
+      "physical_source": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/final-c60-source/sn",
+      "commit": "0fbb0ccfe6285dbc160c3496bfccf8c3e1c9b281",
+      "files_verified": 21191,
+      "mismatches": []
+    }
+  ],
+  "dependency_files_verified": 11058,
+  "image_sha256": "9c68f35a6fe3a0f5bc2883c2d813aa83f6a8c32ae0b675055b1dbecc88c1e33b",
+  "image_bytes": 81532896,
+  "binary_root_count": 1703,
+  "no_new_run": true,
+  "status": "READ_ONLY_SOURCE_IMAGE_GRAPH_MATCH"
+}

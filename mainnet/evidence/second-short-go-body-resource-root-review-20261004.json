@@ -1,0 +1,46 @@
+{
+  "schema": "mainnet-scoped-second-short-go-body-admission-v1",
+  "status": "SCOPED_RESOURCE_ADMISSION_NOT_TEST_QUALIFICATION",
+  "reviewed_utc": "2026-10-04T06:08:44.064124+00:00",
+  "allowed": "One warm Go compiler plus existing direct Go body plus at most one additional short6fa or tagged549 direct Go body beside retained model; recheck all conditions before launch.",
+  "forecast_not_proven_peak": {
+    "warm_compile_bytes": 4294967296,
+    "existing_body_bytes": 1073741824,
+    "additional_short_body_bytes": 1073741824,
+    "multiplier": 2,
+    "retained_host_floor_bytes": 103079215104,
+    "required_memory_available_bytes": 115964116992,
+    "additional_phase_disk_forecast_bytes": 6442450944,
+    "additional_phase_disk_required_2x_bytes": 12884901888
+  },
+  "memory_available_bytes": 121600045056,
+  "memory_margin_bytes": 5635928064,
+  "sampled_model_low_bytes": 116827684864,
+  "sampled_low_margin_bytes": 863567872,
+  "sampler_prefix": {
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.resource.csv",
+    "bytes": 1087306,
+    "sha256": "e05e63a03f5514ef2ca149fb00c3b0150b5c237e58535f50a6c383f3127f1cdf",
+    "complete_samples": 6109
+  },
+  "capacity": {
+    "original_baseline_bytes": 113681502208,
+    "cumulative_cap_bytes": 51539607552,
+    "data_available_floor_bytes": 62141894656,
+    "data_available_bytes": 87824650240,
+    "phase_margin_bytes": 12797853696,
+    "inodes_available": 93846138
+  },
+  "lease": {
+    "pid": 620836,
+    "start_ticks": 94830154,
+    "device": 2081,
+    "inode": 16941991
+  },
+  "limits": [
+    "No third added body, no second concurrent compiler and no second long mainnet history batch.",
+    "Conservative forecast, not a guaranteed measured compiler/body peak; keep ongoing telemetry and bounded cleanup.",
+    "No live guard or workload mutation. Earlier refusals/admissions remain retained.",
+    "No signing, deployment, production privilege change or behavioral qualification."
+  ]
+}

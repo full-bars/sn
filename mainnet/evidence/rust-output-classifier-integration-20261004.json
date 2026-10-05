@@ -1,0 +1,23 @@
+{
+  "scope": "Qualified Rust output classifier integrated on main; retained output reclassification only",
+  "commit": "cccc5a6f1aaf4b8611dbfd6549a5411eb5b81c3f",
+  "qualification": {
+    "unit_tests_passed": 14,
+    "old_predicate_controls": 2,
+    "retained_false_failures_reclassified_pass": 12,
+    "prefix_positive_total": 15,
+    "prefix_controls_remaining": 4
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-incremental-20261004/evidence/rust-classifier-scoped-qualification-v1.json",
+      "sha256": "2755ef6c89d65eb7c6b79fd0ee1339413f0c0f81d3c5b53a2f2364acbe607979"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-incremental-20261004/evidence/rust-classifier-controls-terminal-v1.json",
+      "sha256": "b7ee4bcf0afa87e68e7d3df9269c98ec2be52821b40f0f326f3b9866e672117e"
+    }
+  ],
+  "original_results_preserved": true,
+  "production_activation": false
+}

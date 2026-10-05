@@ -1,0 +1,86 @@
+{
+  "schema": "funding-corrected-historical-proof-four-root-readback-v1",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturecd2/evidence/cd2-funding-corrected-proof4-v1.terminal.json",
+      "bytes": 4188,
+      "sha256": "4a6b852ffab98cf89480077fb01d429609d2c269505ffb037556e4a538f1d6b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturecd2/evidence/cd2-funding-proof-normal-corrected-proof4.receipt.json",
+      "bytes": 5704,
+      "sha256": "26cd2d02a5505d0e6f75b56d4ee325648086aa103d20df0289f17cc4fae6a0f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturecd2/evidence/cd2-funding-proof-normal-corrected-proof4.stdout",
+      "bytes": 4719,
+      "sha256": "1b44c8d37f5e1dfc0b799ca4c49426d470a486446231f4e0445eea7c2c3a8ea1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturecd2/evidence/cd2-funding-proof-race-corrected-proof4.receipt.json",
+      "bytes": 5691,
+      "sha256": "332d2a5aeb1d90f4f1b715a26531907fb05c365f4bccfb51eff1f314cbf4fa78"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturecd2/evidence/cd2-funding-proof-race-corrected-proof4.stdout",
+      "bytes": 4703,
+      "sha256": "c5fff3e15c1d59d8240261714dc757fc8209f9b360b61d7feb5ef5155316065e"
+    }
+  ],
+  "results": [
+    {
+      "mode": "normal",
+      "events": {
+        "run": 4,
+        "pass": 3,
+        "fail": 1
+      },
+      "roots": {
+        "TestEconomicFundingPublicOriginalIncomeFundsLaterAuthorizedPayment": {
+          "run": 1,
+          "pass": 1
+        },
+        "TestEconomicFundingPublicMissedRootPaysOriginalStockWithoutEarningItAgain": {
+          "run": 1,
+          "fail": 1
+        },
+        "TestEconomicFundingPublicLostAckRetainsPaidSourceComposition": {
+          "run": 1,
+          "pass": 1
+        },
+        "TestEconomicFundingPublicCompleteYumaComparesOriginalTenNinety": {
+          "run": 1,
+          "pass": 1
+        }
+      }
+    },
+    {
+      "mode": "race",
+      "events": {
+        "run": 4,
+        "pass": 3,
+        "fail": 1
+      },
+      "roots": {
+        "TestEconomicFundingPublicOriginalIncomeFundsLaterAuthorizedPayment": {
+          "run": 1,
+          "pass": 1
+        },
+        "TestEconomicFundingPublicMissedRootPaysOriginalStockWithoutEarningItAgain": {
+          "run": 1,
+          "fail": 1
+        },
+        "TestEconomicFundingPublicLostAckRetainsPaidSourceComposition": {
+          "run": 1,
+          "pass": 1
+        },
+        "TestEconomicFundingPublicCompleteYumaComparesOriginalTenNinety": {
+          "run": 1,
+          "pass": 1
+        }
+      }
+    }
+  ],
+  "scope": "Actual correct runtime-historical-proof executable enables three public roots to pass in each mode: original income/later payment, lost-ack source composition and complete Yuma10/90. RootMissed source-page root remains failed in both modes. Original wrong executable and vault fixture failures remain separate. Selected synthetic proof qualification does not authorize live runtime/economic policy.",
+  "status": "SIX_PASS_TWO_FAILURES_RETAINED"
+}

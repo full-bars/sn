@@ -1,0 +1,104 @@
+{
+  "schema": "one-history-model-bounded-compiler-prospective-review-v1",
+  "status": "MEMORY_ESTIMATES_SUPPORTED_EXACT_COMPILER_GRAPH_BINDING_PENDING",
+  "time_ns": 1791154054921000758,
+  "review_only": true,
+  "root_adoption_required": true,
+  "forecasts": {
+    "history_disk_bytes": 4294967296,
+    "history_memory_bytes": 2147483648,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296,
+    "compiler_disk_bytes": 2147483648,
+    "compiler_memory_bytes": 2147483648,
+    "margin": 2
+  },
+  "candidate_admission": {
+    "data_original_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "accounting_floor_bytes": 0,
+    "accounting_floor_formula": "max(0,113681502208-108GiB)",
+    "minimum_data_available_bytes": 21474836480,
+    "minimum_memory_available_bytes": 120259084288,
+    "memory_free_floor_bytes": 103079215104,
+    "healthy_active_data_floor_bytes": 6307319808,
+    "docker_root_original_baseline_bytes": 304423350272,
+    "docker_root_minimum_available_bytes": 300128382976,
+    "docker_root_active_floor_bytes": 295833415680,
+    "max_history_bodies": 1,
+    "max_model_bodies": 1,
+    "max_compilers": 1,
+    "max_other_short_bodies": 0,
+    "max_rust_compilers_or_bodies": 0,
+    "original_baseline_rebased": false,
+    "healthy_guards_changed": false
+  },
+  "model_memory_decision": {
+    "decision": "4GiB is a defensible prospective estimate for the exact already-running prebuilt normal c60 model fixture, with an additional2x reservation; not a measured complete-run upper bound.",
+    "basis": {
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/model-body4g-memory-prospective-basis-20261004.json",
+      "sha256": "6394c57b6e551be5cd39bb667f5d3bdd3f6a10e42ac2f063864cb5c29eaa3bab"
+    },
+    "actual_source_tuple": {
+      "server": "c60b2bc173758fd1507c8385311a772ddee37730",
+      "core": "7de1d3e8d1d3012742da653ec80be899143f620e",
+      "sn": "0fbb0ccfe6285dbc160c3496bfccf8c3e1c9b281"
+    },
+    "actual_body": {
+      "pid": 2278433,
+      "start": "102548058"
+    },
+    "image_sha256": "9c68f35a6fe3a0f5bc2883c2d813aa83f6a8c32ae0b675055b1dbecc88c1e33b",
+    "exact_roots": 1703,
+    "scope": "Normal prebuilt test2json/image/helpers only; serial suite -test.parallel=2; exact synthetic fixture, PG32GiB and Redis8GiB tmpfs; no compiler inside model owner."
+  },
+  "compiler_memory_decision": {
+    "decision": "2GiB prospective estimate is supportable only with a dedicated verified4GiB memory.max cgroup containing the entire compiler/tool/linker family and zero swap. Memory pressure or OOM remains a compiler failure, never qualification.",
+    "required_memory_max_bytes": 4294967296,
+    "required_memory_swap_max_bytes": 0,
+    "required_parallelism": "one compiler job; GOMAXPROCS<=2 and Go -p<=2 (prefer -p=1 for first new-controller closure).",
+    "observed_support": "Earlier final3d model compilation sampled1,776,840,704 B forest RSS; earlier root compilation1,358,991,360 B; earlier controller attempt1,506,856,960 B but COMPILE_FAIL. Sample maxima are not upper bounds."
+  },
+  "compiler_disk_scope": {
+    "decision": "2GiB is plausible for one graph-bound incremental normal compiler, but the exact final09f8 workspace/source/module closure is not yet supplied and no compiler launch is cleared by this review.",
+    "target_sn_commit": "09f8f989f88660dda442730a18ed99d505ba1988",
+    "static_mainnet_go_files": 753,
+    "static_mainnet_source_bytes": 9065005,
+    "static_mainnet_direct_imports": 101,
+    "imports_changed_since_0b2": false,
+    "c60_model_packages": 853,
+    "old_b466_mainnet_packages": 906,
+    "controller_packages_absent_from_old_normal_graph_union": 64,
+    "those_selected_source_files": 673,
+    "those_selected_source_bytes": 12061517,
+    "controller_packages_absent_from_old_race_mainnet_graph": 164,
+    "new_c60_controller_import_vs_f67": "github.com/urfoundation/sn/payoutartifact",
+    "all_dependencies_warm_claimed": false,
+    "cache_limit": "c60 normal model compile excludes controller; older f67 controller attempt used different GOCACHE and failed. Neither establishes final normal/race cache warmth.",
+    "required_additional_data_growth_stop_bytes": 4294967296,
+    "growth_stop_semantics": "Additional stop threshold from fresh compiler admission for aggregate data-volume decline, not an accounting-baseline rebase or a measured owned peak. Existing global/healthy floors also remain active.",
+    "forbidden_expansion": [
+      "dependency downloads",
+      "cache clearing",
+      "large source copies or LFS hydration",
+      "parallel compiler jobs",
+      "unreviewed new packages or modules",
+      "Rust compilation",
+      "extra short test bodies during compiler class"
+    ]
+  },
+  "before_compiler_adoption_required": [
+    "Freeze exact final SN/Core/Server/workspace/overlay/module versions and actual selected-package dependency closure.",
+    "Bind exact Go/toolchain, GOCACHE/GOMODCACHE and offline environment; explicitly account for controller and other uncovered packages.",
+    "Seal runner/job implementing verified dedicated memory.max4294967296, memory.swap.max0, whole-data growth stop4294967296 and unchanged active floors; stop/join only its own compiler tree.",
+    "Recheck canonical lease, one exact live history and exact live model/tracer plus authenticated PG/Redis IDs; no unexpected compiler/body/containers.",
+    "Fresh launch values must meet data21474836480, memory120259084288 and Docker300128382976 bytes."
+  ],
+  "metadata_stage_option": "A separately adopted bounded metadata-only go list -deps -test -json stage (no -export and no compiler/test bodies; offline readonly graph) can produce the missing closure before compiler adoption.",
+  "old_estimate_alternative": {
+    "keep_model_memory_bytes": 8589934592,
+    "memory_minimum_with_history2_and_compiler2_bytes": 128849018880,
+    "note": "May fit a fresh observation without lowering the model estimate; must not round a failing read up."
+  },
+  "no_launch_compilation_signaling_cleanup_or_guard_change_performed": true
+}

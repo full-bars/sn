@@ -1,0 +1,68 @@
+{
+  "schema": "runtime-transport-f3-compile-root-review-v1",
+  "observed_utc": "2026-10-04T05:09:43.808527+00:00",
+  "status": "THREE_SELECTED_PACKAGES_COMPILE_PASS_BEHAVIOR_PENDING",
+  "source_head": "f3baff84b70d047039680210d14a48d784b24a28",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/selected-compile-receipt.json",
+    "sha256": "d112245d79f0460ffd554528887a926c28d0f8c235d48eeb8b25f8d72b358829"
+  },
+  "independently_rehashed_bindings": [
+    {
+      "bytes": 13916,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/runtime-transport-capability/evidence/qualification-recipe.json",
+      "sha256": "73abcd2be0b37999e7994a5db200fd03bcf6978a1c4a6ca4ab4ebd8247518707"
+    },
+    {
+      "bytes": 41622,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/selected-import-graph-receipt.json",
+      "sha256": "4d097013c7ac20f6f2fe49428301c35da027b4a84c97109163bd01ee955e0850"
+    },
+    {
+      "bytes": 1019,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/source-stage-receipt.json",
+      "sha256": "d9d97778c26ad121cea57ff7b755074c40eaa4fdd4a8ac2da10f6f7d4d977079"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-compile-0.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-compile-0.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-compile-1.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-compile-1.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-compile-2.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-compile-2.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "compiled_packages": [
+    "./crv4",
+    "./validator",
+    "github.com/centrifuge/go-substrate-rpc-client/v4/gethrpc"
+  ],
+  "required_behavior": "33 public/neighbor roots per normal and race mode plus eight operative omission groups. Reobserve original pinned block after transport expiry within original read budget; genuine semantic contradictions remain hard.",
+  "limits": [
+    "Compilation executes no test body.",
+    "Generic all-role capability and canonical-observation correction remain open.",
+    "No runtime semantic authority or mainnet activation is inferred."
+  ]
+}

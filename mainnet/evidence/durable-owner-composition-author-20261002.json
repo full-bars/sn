@@ -1,0 +1,1835 @@
+{
+  "changed_component_files": 287,
+  "deployment_authorized": false,
+  "effective_sn_connect": "0a5cda0ebe78f6200c4cff6fd3d1aa172a2b172c",
+  "effective_standalone_server_connect": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+  "files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd-driver.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd-driver.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd-driver.stdout": {
+      "bytes": 670,
+      "sha256": "c3fbfd0415ff3e6a910877122c178b98643743e500ce2708f346a131808142b5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/ancestry-preflight.json": {
+      "bytes": 1747,
+      "sha256": "bd4c026406ba6f259db30a1fe2e956d924f0e248ee5a56085b77da05c3314dd8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/jobs.json": {
+      "bytes": 8356,
+      "sha256": "b454d08cffbc54b4e6a9825a2660677e7933b813c50fad38544cd23667304d42"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-blob.command.json": {
+      "bytes": 2052,
+      "sha256": "4bd49a9d3a563f76b7bcd7648c1b50a8b32a646364c33e3c7cefbcbebbf71e64"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-blob.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-blob.jsonl": {
+      "bytes": 14156,
+      "sha256": "0adadb28a78b02db4a19e0bb920494c71f3a7966a8d8dd6d34b6610ef57bd2e3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-blob.result.json": {
+      "bytes": 945,
+      "sha256": "60b231ea46c6c73ee3e8bef56d999f9ba4e66454bc920d013abb94861b2f7847"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-blob.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-inspect.command.json": {
+      "bytes": 1310,
+      "sha256": "ba5e73d56a9d74a71f6e31b7ca9577194fde368d0a21b62e8208cec113b3c359"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-inspect.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-inspect.jsonl": {
+      "bytes": 2418,
+      "sha256": "b5ecff53a49d3bdb1d95faffb25b331ce7c9d3ef13c15eafdd30b35606deddf0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-inspect.result.json": {
+      "bytes": 305,
+      "sha256": "ce5eaa2a30270929f309b0eb80026f0aee94536ad8f2ec004e10ba7869167f5e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-inspect.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-mainnet.command.json": {
+      "bytes": 3640,
+      "sha256": "83fad1ade3520cefa08ec8febccf76af4189f3b7beacd172631fd170e32e604c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-mainnet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-mainnet.jsonl": {
+      "bytes": 18309,
+      "sha256": "7db59e0979c6b30d81ee819ce0f9d2ea8177ea9492237d52dea8864e948b399f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-mainnet.result.json": {
+      "bytes": 1454,
+      "sha256": "5221b081d42c2ef429fd1cab737897228431c4c379394aac6f37dae4b074e09b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-mainnet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-miner.command.json": {
+      "bytes": 1937,
+      "sha256": "fc59a67a2985e9d9d8c9c54a7715faaeff5478c26cbc88ed1834712de4e45bd7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-miner.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-miner.jsonl": {
+      "bytes": 6760,
+      "sha256": "f5ea8f8a83798c67e3221d21f2d0ddbb5d498a155522dd09362f34eae0780613"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-miner.result.json": {
+      "bytes": 474,
+      "sha256": "35e91a5e78262542eebcf5a1096af4974bce270f095221e4808267cf0771d549"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-miner.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-observer.command.json": {
+      "bytes": 2407,
+      "sha256": "2bcfdd8383ab638cee0c637ad855a71116f3d402a059c45aca9db3a329ee97b0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-observer.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-observer.jsonl": {
+      "bytes": 15978,
+      "sha256": "8abf0a4da33abe85fe6d8cf9a48ee5897c8a4de58d5463f09fe164d04a8b7614"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-observer.result.json": {
+      "bytes": 1389,
+      "sha256": "5c5595496a56daf53665318a3814a6bfb39a872a1b632eb4b2b724677383e057"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-observer.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-successor.command.json": {
+      "bytes": 3757,
+      "sha256": "00d72eda78100904a245b88542ec1ac76f5a4ac4dc7dc1d52b1a5216059533f4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-successor.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-successor.jsonl": {
+      "bytes": 12406,
+      "sha256": "341fe066cd52dfd2280d86ebb275f8b7de3541a02ad93d0917256e93ef270ae4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-successor.result.json": {
+      "bytes": 1116,
+      "sha256": "2292dc267f11a62d928935f08c7db493a4b60a6e4b014108f9aced5c2408bb9c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-successor.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-validator.command.json": {
+      "bytes": 2253,
+      "sha256": "669bc32dd19662c75a685e9afc9b385abf4131649b46492192a9a47f776162ac"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-validator.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-validator.jsonl": {
+      "bytes": 10479,
+      "sha256": "a566e7057a522603eaabef4585190d207ad52b92361e3c14e849130216ab7727"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-validator.result.json": {
+      "bytes": 939,
+      "sha256": "3f78e511169f2b73c2b5b0f9e04b7a2d7705d139daa1d3d700a450da49731725"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/normal-validator.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-blob.command.json": {
+      "bytes": 2063,
+      "sha256": "09174b39abc511debeaee9ae2db3f3faee6588e87f982dded7ff342f831ee9b9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-blob.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-blob.jsonl": {
+      "bytes": 14152,
+      "sha256": "0b12cd924c8fa119d1a77d06d80f6e99acb953d48e8cff0641e4d769b1ce2e4f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-blob.result.json": {
+      "bytes": 942,
+      "sha256": "f252a43e0dcafc9f732db831d83c04a3a22d5d8aa6be76a4a39b3e56dd3f92ed"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-blob.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-inspect.command.json": {
+      "bytes": 1321,
+      "sha256": "facdac091a24c2d57cfedb202a75301af18f11fd87ea7cc710ff9fedc815b4f9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-inspect.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-inspect.jsonl": {
+      "bytes": 2418,
+      "sha256": "375dfd3c12e8efa463b104ed2792c246c89df6d7d0515fe8913e8afbc3438612"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-inspect.result.json": {
+      "bytes": 310,
+      "sha256": "6003ea2704f1bc58d866f8a8e2cdabe37d1b8bf2f846f66f72c057c5df5ff0e7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-inspect.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-mainnet.command.json": {
+      "bytes": 3651,
+      "sha256": "2060433a3f5c8005c196efc98d4974bd17256489ac33e048d9391776c3569523"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-mainnet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-mainnet.jsonl": {
+      "bytes": 18314,
+      "sha256": "240cfecfac9a13d4f7d5a43ee0bfed01193b687c51e9699b4e7c61e413f5b978"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-mainnet.result.json": {
+      "bytes": 1453,
+      "sha256": "fb32857f7822f30bd0152dac15521629d673d61458d7fa7f7ed83616f2321aa0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-mainnet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-miner.command.json": {
+      "bytes": 1948,
+      "sha256": "d01e1baca959263c6312d47e68ee96464d8b6771e079856046fc58e13d89a102"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-miner.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-miner.jsonl": {
+      "bytes": 6757,
+      "sha256": "b256a26ed52b2905e52236411446506bf5344012283375b4a17df6ef9c36bf29"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-miner.result.json": {
+      "bytes": 473,
+      "sha256": "8123d94de496aa23cf5a49dd350c7e69738b457545a36c9d33314d2954821407"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-miner.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-observer.command.json": {
+      "bytes": 2418,
+      "sha256": "d3a00303ac4bcab751e7dfc35205fa14dee226f80ec446ff7ff7f547f804ebdd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-observer.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-observer.jsonl": {
+      "bytes": 16017,
+      "sha256": "c6f01ef745fb9e9692ee3fa4181ded34395652f40d417db897b48c81a07848ee"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-observer.result.json": {
+      "bytes": 1387,
+      "sha256": "5a456862dc5d964d85af63b9e915c1de0b0c13a70252977556d2df98b2df7aa9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-observer.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-successor.command.json": {
+      "bytes": 3768,
+      "sha256": "8cbdbb865da044831dd7eb9b8ab24fc77af467e6dd76e080a4d285611bbda8b3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-successor.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-successor.jsonl": {
+      "bytes": 12417,
+      "sha256": "546589fe0a56e46a24e892ccf3ab21a08e40a1b7eb249887c7cf9a13042b5596"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-successor.result.json": {
+      "bytes": 1115,
+      "sha256": "7959dc799ff58d444700a6c4ce43ed24c3d744a7a7cf827262908bbd47225375"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-successor.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-validator.command.json": {
+      "bytes": 2264,
+      "sha256": "78eb6858ecd0e08ffb2a1631e7dbbe5917aac53e4e8a4fbac40510ba65f89047"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-validator.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-validator.jsonl": {
+      "bytes": 10477,
+      "sha256": "9e155859707a2c5af0f4e46b6bf47f10db1485c61705ecb2dc14f60df9aa5f5d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-validator.result.json": {
+      "bytes": 938,
+      "sha256": "b75f22c5b48323925f5fc0ec0b971833b3f337996e89fe3ceaa47818c2f4b8d7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/race-validator.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/results.json": {
+      "bytes": 14326,
+      "sha256": "d1e3bf7ccc8b66b9da4a1d836de91f1503ec3b25d2209a652994b4c4aa08c903"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-server.command.json": {
+      "bytes": 1066,
+      "sha256": "3f8c4b1d95e813f08a112fe237b9d4a95b8de9bd413d8d806ca442c1fe9fedd6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-server.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-server.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-server.result.json": {
+      "bytes": 181,
+      "sha256": "9c694ca21e6b94ccc2348cae1adce0714aea1bff6af6475faffbc1c75b63bf29"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-server.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-sn.command.json": {
+      "bytes": 1430,
+      "sha256": "ce63ab4ff3ccfe55cf592e7837af38f6cbd31a14dd9aec0059c4f988f10878ff"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-sn.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-sn.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-sn.result.json": {
+      "bytes": 178,
+      "sha256": "44231c9ec3f21580b465b569c9ea0b97b69b0d2de34080a0535689c8d5f39b68"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/composition-69f4bbd/vet-sn.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/join-composition-69f4.go": {
+      "bytes": 3903,
+      "sha256": "8cb69ef6933dfa5fdcea790e8bc9bf98c53064b6db2e12977c65b25efed72454"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/qualify-composition-69f4.go": {
+      "bytes": 9137,
+      "sha256": "0743ac3e091078c894455c9b6a77eeb9748cbe2cb8105e287e61f9ba581604fb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/seal-composition-69f4.go": {
+      "bytes": 7379,
+      "sha256": "e165a1c08b81d821360eee2e8d0e206d38f499b9d7082eea19abbf9575a6727d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/server.mod": {
+      "bytes": 10820,
+      "sha256": "70e49df70dff9f13004757a19c9632186b58aad6edc7a73c06c1cfa0927f9901"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/server.sum": {
+      "bytes": 67462,
+      "sha256": "ff45d3706f736fa6609b043be621109911ef2fe8d2cbbf094d2965f01ddabe2a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/sn.mod": {
+      "bytes": 11690,
+      "sha256": "5ee854f6e2e8d56554eb3f91830aa526c511197a09f0674b94d3acb5790452d4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/sn.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/source-join-69f4bbd.json": {
+      "bytes": 132381,
+      "sha256": "63238579bc1844c44bc2fdfdd210f24aebf85739b4b02041867e3b612cdf655f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/blob.go": {
+      "bytes": 43623,
+      "sha256": "6fc7da6ca6277a2751507ab701107130fda3881123845e9dd356a982f0f5808e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/blob_batch.go": {
+      "bytes": 10900,
+      "sha256": "d75ada72209ef9f62fd71ad8831a05db853c9af69779428fb2f9c6ffeb836f51"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/blob_capacity.go": {
+      "bytes": 7207,
+      "sha256": "e2b78bfcdd6a4d66b2fac740c6cf7b4e14b8d55205d8aeca1b6639be343713fe"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/blob_durable.go": {
+      "bytes": 22921,
+      "sha256": "818ddf3d9cf6b55852fcd51a6600b250a6509e6ee3a7d3df786c6afba4dc685b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/blob_durable_test.go": {
+      "bytes": 22721,
+      "sha256": "ed8536e90d3900ace0a68eb98d71d748501554b0e35e108e9af7f7347cd99e63"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/blob_test.go": {
+      "bytes": 38509,
+      "sha256": "34ac4d51f9b2ea5721d65486ec4dcafacfa0676234e2c5e82b21bcded3782b81"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/go.mod": {
+      "bytes": 10468,
+      "sha256": "dcbc91ae9c6737a4d79921ef1f0d720352ad4bc41d26c0c9f49279d7ae662917"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/go.sum": {
+      "bytes": 67462,
+      "sha256": "ff45d3706f736fa6609b043be621109911ef2fe8d2cbbf094d2965f01ddabe2a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/chain/journal.go": {
+      "bytes": 6165,
+      "sha256": "140cf42ec177c058614531989d807fd8f210d479bdbc6e59c0187acd4faf0ed1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/chain/journal_custody_linux.go": {
+      "bytes": 16740,
+      "sha256": "71fef7f71e5472bbe7be096d8d35692171c83afeb84e7d135c856d791233c905"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/chain/journal_custody_test.go": {
+      "bytes": 15097,
+      "sha256": "e42be7606434182097650a96214e4351430ea08fcc623aba61f60ecac0ecf318"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/chain/journal_durable_linux.go": {
+      "bytes": 22491,
+      "sha256": "1190c9eb5a9d36721888ca6d06e36f34337e0a2399d1a8eac4ee5df2f7e2fbe0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/chain/journal_durable_other.go": {
+      "bytes": 944,
+      "sha256": "f29712e9ae1f3345995145e6fc2cdfb4e1cbb7f30b9d0a5999b4c7751a705f1a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/chain/journal_durable_successor_test.go": {
+      "bytes": 17141,
+      "sha256": "0a4863b5e2c184d02cd9962860b3606a639ee581d17f721411e4a71f09d9b065"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/chain/journal_durable_test.go": {
+      "bytes": 6968,
+      "sha256": "aacf0398fca4cf3b8df2666d8bcaa5af8b17c77d145d6c9b7316e798c0d3f97c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/chain/submit.go": {
+      "bytes": 5335,
+      "sha256": "e69aa304be3fd0de12500c59c8a47db36970d3b80a8493e382bdd6a7054ca6cd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/go.mod": {
+      "bytes": 11211,
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/go.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durablefixture/fixture_linux.go": {
+      "bytes": 7064,
+      "sha256": "1b6ec23982cd2140f7f0ee2afd9c90b3f0b20307b1c4592a6bd34bc9b3b43ff1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durablefixture/native_journal_linux.go": {
+      "bytes": 1941,
+      "sha256": "9b18cd1b51f0b034903d3675780b3b6c311b35723f9057c1591cea22de3914e7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durablefixture/snapshot_linux.go": {
+      "bytes": 3107,
+      "sha256": "39fa14256ff241830f1642aaa9eba1eb6c8c29d751698872afa2c192410b7245"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durablehead/head.go": {
+      "bytes": 2880,
+      "sha256": "9f43ffb336995eb3e2a30db0335ad50f99c1ef7635567e9c498f9b8de3f11491"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durablehead/head_linux.go": {
+      "bytes": 29282,
+      "sha256": "a16e16e66b042f0864b8693284f606fda1deea5d1aafed700e1efc1632128872"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durablehead/head_other.go": {
+      "bytes": 1462,
+      "sha256": "17331b56442176c2e52d916dbb27967732c895739f3f81671778317632b00e20"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durablehead/head_readonly_test.go": {
+      "bytes": 7342,
+      "sha256": "8e263951a866bac7587cc49e8f11f48975d51459a19e0587523ee34bf950053e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durablehead/head_test.go": {
+      "bytes": 18580,
+      "sha256": "26e4d51c7124e7c4c99fafd389a41cf2b5a5c85d3779e61ebf48aec07d083f95"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durableinspect/inspect_linux.go": {
+      "bytes": 2275,
+      "sha256": "3ba87ad4aff0eb04b5d13ff4da836d605ecbb3ee800eb95e0686ec596dbb4508"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durableinspect/inspect_linux_test.go": {
+      "bytes": 3233,
+      "sha256": "db8f376cd88c741026db6cbd11c0c3c88a7d0dbfc6f07cb70dac910709b06356"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durableinspect/inspect_other.go": {
+      "bytes": 454,
+      "sha256": "835a0556c112e101d02c5fda973f52c4a4da9665443db2ae7c6b30381846be24"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durableinspect/run.go": {
+      "bytes": 4663,
+      "sha256": "9d3900a548dfb0ac8c82f2e1eed65e64bdc180d6d9d86913d15e1da4a868e8de"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/internal/durablepath/directory.go": {
+      "bytes": 7500,
+      "sha256": "6097f14511f651ed0df4c584716b01e670404a7bc6da4c25e8909292ef293adf"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain.go": {
+      "bytes": 5951,
+      "sha256": "4886e097cf07e8bd26c7ec1c4c35d8c2fc936fee1887ec383b8ae790ae70f3f7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain_command.go": {
+      "bytes": 4126,
+      "sha256": "ba16bfa68b081d20e6cb1b8d2caef7611ed6b5264d0bf516ad6ccc09e47433bc"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain_contracts_state.go": {
+      "bytes": 11724,
+      "sha256": "4393970e4cd18a15476607c9699bd29f2668d14eacd6db486944cbaa6e62da18"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain_contracts_test.go": {
+      "bytes": 21414,
+      "sha256": "28f476c348dcef41207a4dbc878b2581a980daaf6a0e5fffae95e1fdbebbbdbe"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain_readiness_state.go": {
+      "bytes": 9284,
+      "sha256": "b62611545eb76ae50e3e99eef267bf3ec4edaadecb24a7c0a9edf718c8d2ca53"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain_readiness_test.go": {
+      "bytes": 16755,
+      "sha256": "77d8a50ef86a949bbaa253838f59fe47e4b050dad02334d5359bcb5be0930329"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain_root_test.go": {
+      "bytes": 19605,
+      "sha256": "74082acd63308acccf9c769660a8e6776788025ebc7c8041471f64f509b1c42e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain_store.go": {
+      "bytes": 8918,
+      "sha256": "326a9c4a93aea031950d6463356d8e6908fed302af22f47d1c7a2413a463b80a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain_test.go": {
+      "bytes": 29077,
+      "sha256": "d1c7ae961cd8db050c1ad75822af29356f9d88ec0fbbe74396bdb3933c36f9fd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_chain_validators_test.go": {
+      "bytes": 15873,
+      "sha256": "6bd87d686d13f9e0cab275efe29acb0d89ab3a28851cc714efd1557351a31b3f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_command.go": {
+      "bytes": 12501,
+      "sha256": "37677c47720bdc245581609fdbd2a6407f990c9ed3a58bc279befb659de528c5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_current_test.go": {
+      "bytes": 14665,
+      "sha256": "6be99c9a89f784c396a961403b2538dfd47afcefbfc126ee3c22e8badcb0b361"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_custody_read_test.go": {
+      "bytes": 3898,
+      "sha256": "da78e1bcafeeaca3c8cec296fd48de4ae5dce493f84bb2f20e5516f81b06e762"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_installation_clock_test.go": {
+      "bytes": 5647,
+      "sha256": "c226a68b51cbbbff16b615363e1ccb246a5d30965969f341219b9d859a0f6659"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_installation_test.go": {
+      "bytes": 17120,
+      "sha256": "139287a81699b59be2696d83ad96f0a0bd5f29fc645385dff49a37a2077aff2d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_receipts.go": {
+      "bytes": 15378,
+      "sha256": "63f95b98797a8edc24eaa743f1b4b80255bd3f7f4872560c920ffa277a496dff"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_receipts_test.go": {
+      "bytes": 11920,
+      "sha256": "eed910cd11b93eef713905e0412f3598c095be72cb6a51f7ddc3ecca4a3a056c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_roles_test.go": {
+      "bytes": 12007,
+      "sha256": "f9e988ff220a429c49cab4da9d98bf279176ee240afdb2b3b94cf756344b8017"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_successor_command_test.go": {
+      "bytes": 10644,
+      "sha256": "55fb8ad231361729e4fec360d512e75270f260025d3495cebd442ae826568e20"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_contract_successor_test.go": {
+      "bytes": 17094,
+      "sha256": "7b6aeded9285669ece61c885a4b24125a90a616ce962b49cd5f91d92aaebf9eb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_readiness_custody_consumers_test.go": {
+      "bytes": 4561,
+      "sha256": "ce33796a09e142de67e3b184731fada1eb39c10c0c9cd8a7847c2f65c941ba61"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_readiness_custody_lifecycle_test.go": {
+      "bytes": 6751,
+      "sha256": "9804cad5bbc36d8aa82dd22e79f5a26edf09ea5b1e705b848dbe74f248ad73ea"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_readiness_custody_test.go": {
+      "bytes": 7572,
+      "sha256": "7d5d25ca6f17927fb455ff6c01f58c63f78ab16ebab8c4632051e2f391e579d6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_root.go": {
+      "bytes": 10020,
+      "sha256": "3c03a9eeca4d93e833bda776d226f98f729cfa1ededf847e5313eab4524ce74e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_root_command.go": {
+      "bytes": 3727,
+      "sha256": "fcb611ca411ffcaf59c74fd2ca02cccddaaaf0a679e8e18b728b0db1ca89685c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_root_passive_test.go": {
+      "bytes": 17697,
+      "sha256": "f5f01b2b9768f0edd6473fcf97820596f664e15475d52bcc3c667a18d4a8fc98"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_root_store.go": {
+      "bytes": 10002,
+      "sha256": "c637cd22f3924673c451abfa3f86014d7ed898e64e43f742869fb407f181efe7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_root_test.go": {
+      "bytes": 33412,
+      "sha256": "44950fee604f66442ae24da528c832d66942a9932bde48f3bf178be623fc3001"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_canonical.go": {
+      "bytes": 12389,
+      "sha256": "e4b68fffb62c0a447f0fc4cde17dc0bfdd26edfcb232772395957d251cda90ee"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_canonical_command_test.go": {
+      "bytes": 17661,
+      "sha256": "f232e6a56b3da841a36e89d2f2992051b94a4130923db0fafa8669ba3d0b61fd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_canonical_fixture_test.go": {
+      "bytes": 19285,
+      "sha256": "6a8c0fb2f8dc23036904bb1e58ab586027b28d6e5c9acab3a5028658dd3cb543"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_canonical_test.go": {
+      "bytes": 13231,
+      "sha256": "1193989a2427cb559a57bc79e868610631191570c010f9f1803c83600aae3861"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_execution_command_test.go": {
+      "bytes": 9966,
+      "sha256": "1d103c6b1f63b41e9474ed60a050373e0400bcffa4a7f7999f88f5c44e31090f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_execution_directory.go": {
+      "bytes": 8098,
+      "sha256": "4d3a1c575095b363edcc6b0aa60c7d7a684fba8a1582d69d47c14a101d62c61c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_execution_fixture_test.go": {
+      "bytes": 11822,
+      "sha256": "952f9b825a21cec6faf73c87c1a0b03f5298f99d0ab72983737fc987a0b2d3a1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_execution_store.go": {
+      "bytes": 16859,
+      "sha256": "ea5fcc3b665ae47b847ab5cdd3955d09942ac861cd8421edc436fc469ef1bdeb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_execution_store_test.go": {
+      "bytes": 8502,
+      "sha256": "6fd9430896d0339e2fc6504ba06f49bfe0b3fa345df65a7bfd346f06a4009be7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_execution_test.go": {
+      "bytes": 23352,
+      "sha256": "614894c4346df139207b181e7e129ee70f9c53296a627f47794cd4906b27342f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_preparation_reader.go": {
+      "bytes": 4559,
+      "sha256": "df4998cbfeb1385145b20e65b1bba4663b2b7ba1393be79ff9347514f3ffa842"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_preparation_reader_test.go": {
+      "bytes": 10054,
+      "sha256": "3adb4f6364f3e818f1695807c32807c9d79a4fcc83660f8b7363e40999b343a3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_preparation_store.go": {
+      "bytes": 11858,
+      "sha256": "4288ae3260d84c386efb9bfc956db8cdd3c458423f79d07fca9afc8fe454e078"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_preparation_test.go": {
+      "bytes": 31938,
+      "sha256": "b82e582cbd334a04f21804d45b665400eb749798a0bc8c41c6928916f66685a8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_runtime_command_test.go": {
+      "bytes": 10752,
+      "sha256": "72f9f149e008406dd135f3bced98a29c684be1d31b3919faa73de9b2601928b8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_runtime_store_test.go": {
+      "bytes": 16211,
+      "sha256": "12e9cab8c5c4ce41eab134f6105d021181c3aaccc23c840993ddd687a662014c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_safe_current_capability_test.go": {
+      "bytes": 21909,
+      "sha256": "7ec4430e06871f33a82e6bc000fb4c9317d9283dd73e2b9e8794550576c82b74"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_safe_current_store_test.go": {
+      "bytes": 17851,
+      "sha256": "569f3e821e8139ba1e7c21aae488a59d06d124a87e58e8eb7d5e1434ed64f3b8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/bootstrap_successor_write_admission_test.go": {
+      "bytes": 13176,
+      "sha256": "8fa5f24744d0ecec54acaa282c2438295edbf278eb1ceab0de258258980c9b12"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_action_restart_test.go": {
+      "bytes": 4773,
+      "sha256": "82e0fb9e74e7eb345def891575dd36f766dcde34fa7204d5434a97beddca57c0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_admission_test.go": {
+      "bytes": 1866,
+      "sha256": "ea88d8d3f12c9916fd4ae61c73b6c1aacc4f3c8c89323a92281c2b43e62ff6ab"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_arguments.go": {
+      "bytes": 1926,
+      "sha256": "492a07552705457f0f769b02cb0e3dac0edd2fe4b34522b6e177bfaf0db95537"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_arguments_test.go": {
+      "bytes": 2522,
+      "sha256": "340a4378a9cf431ab9f2001450f01ff60b0d2e6cbb0360d4b18fe62dd83b337e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_composition_test.go": {
+      "bytes": 4806,
+      "sha256": "be3a5c620cafa44e19f2f2435ba04ab3c6dbd7d8711e2e1f519b46b87dabcf26"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_continuation_test.go": {
+      "bytes": 6662,
+      "sha256": "4396b0606a9ab06a11b29b1167cb4fa0929d689f72438bbf671c3b662e2e4378"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_custody_test.go": {
+      "bytes": 17596,
+      "sha256": "0510b7e60a411709b66aef582ad8f3c2f2998a7c6d70de69e4e4b50cf47afedb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_evm_test.go": {
+      "bytes": 4462,
+      "sha256": "8581b989fbc88f28c35a62b5aa22959bfb9a9641427880b9568a70ab1d12ef3a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_host_fixture_test.go": {
+      "bytes": 1349,
+      "sha256": "e6906d9c8ff16aa45bfe3889f09e5434cdc694fefad91c702345e6567b884e9e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_observer_continuation_test.go": {
+      "bytes": 14359,
+      "sha256": "e2e5da51b61da3c378b12dcba107dedfa13548110265799dc6dc1f81fc844c23"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_observer_test.go": {
+      "bytes": 15017,
+      "sha256": "21bafee6931738342a01a21b358fc67cef40a8b861bb6807ef5561c2b52b6511"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_owner.go": {
+      "bytes": 16544,
+      "sha256": "377d99b0a02144fb53af4307ab64c0fa8e9866e7920a8d65273c65c3e13c22ec"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_readiness_test.go": {
+      "bytes": 7832,
+      "sha256": "cb10ecb761598ce69ac2decd0e13fb3eda9de4e78326d34d79e73deff3a96311"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_snapshot.go": {
+      "bytes": 5262,
+      "sha256": "eb3c12ae9a3d377ee0778e1d53f078954d5a95f7ecdcf48c34585626271d1893"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_snapshot_fixture_test.go": {
+      "bytes": 2399,
+      "sha256": "5d9223145f8c45c99bdb0705c18ca3ac5c333cb5863f98b4e9654131b485caf5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_unit.go": {
+      "bytes": 1570,
+      "sha256": "b3c17d430644715d7df11d2761ae7a558174d911fa7ff6f7dcd763a379c38366"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_unit_inspector.go": {
+      "bytes": 5450,
+      "sha256": "cb866c12c095e3e54aa2a06fd8396639f6458270912e76248a07466cc7cd2d06"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/durable_volume_unit_inspector_test.go": {
+      "bytes": 5575,
+      "sha256": "36bbf8d42908e94fa39dd17d04bd84c4bee4a7b7cde2ae3c6825729d694dda99"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_action.go": {
+      "bytes": 26236,
+      "sha256": "85788c02ba1a10bc36eb51b06edb4cd2d97cf976c3a2f85d5802b71a9a8ed812"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_action_custody_test.go": {
+      "bytes": 12999,
+      "sha256": "43748d29f2436b52d4b9c4091675f73b45a6ef324716e4a2dac8fbc8d53bc230"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_action_finality_test.go": {
+      "bytes": 5453,
+      "sha256": "acfdadad7062cd892776fab75d5b0b0f94d8712b1cd6246b76ceaa9de17d2c7a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_action_store.go": {
+      "bytes": 20400,
+      "sha256": "d324996a37d536443a9641f6d9aacd39e74f0044e82e25dce5da3a6aae57c5b5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_action_store_checkpoint.go": {
+      "bytes": 3180,
+      "sha256": "d953c60617c3d307339d604cef1383791d2b45c7052cb486879949fd518ad764"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_coordinator_create_test.go": {
+      "bytes": 34591,
+      "sha256": "4c09ba4e4196e613b627fcda35f178929402f5654a2916a10b4cd23e2ede60c9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_create_fixture_test.go": {
+      "bytes": 28594,
+      "sha256": "de6b208b550f88754aae0233b2be6ceeb2a6f93e5889d7deb1778045f0792fd1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_create_test.go": {
+      "bytes": 30640,
+      "sha256": "c4cbec576d73d92314af49114ef78f19574ba08ede57464e50a012cbda965754"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_escrow_fixture_test.go": {
+      "bytes": 6157,
+      "sha256": "a09165697f91135e3943f41f8fe183730432d4f114b20bd2f2ca8d90f8bbb66a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_escrow_register_test.go": {
+      "bytes": 40327,
+      "sha256": "0e3f901d1dafe8e339534475f575575e03e67673cfe350c2b18cebc46fe25f6a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_evidence_create_test.go": {
+      "bytes": 34376,
+      "sha256": "151e680eddd5e7ed7e0e4fa92814ea015e58c770264fde9e89836e522bb80bf4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_evidence_fixture_test.go": {
+      "bytes": 3948,
+      "sha256": "c5942788d5ea0408831cf6ed0f27b42eb004acb6f9a30adfadfecc98368ea3f7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_evidence_recovery_test.go": {
+      "bytes": 19826,
+      "sha256": "0a95524aef8513a59e3db83eb7dafaede4ab77a7deef82c96a67f4bcbfd177f1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_installation_admission_test.go": {
+      "bytes": 6748,
+      "sha256": "f271c3045ead4ba6e3ed8b0fbac6d63c5ee57cea68da521e2c469ceb694de2c9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_phase_preview_test.go": {
+      "bytes": 12162,
+      "sha256": "a4b3c82f3ee8dbc251ea552e1a30cf14f8fe6eb2b7bc3e5f11d75833d8a1405b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_proxy_create_test.go": {
+      "bytes": 43896,
+      "sha256": "0084222107e2874cbbef63e74cce33331146f3dc659b1ca5689acf1027110484"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_proxy_fixture_test.go": {
+      "bytes": 4560,
+      "sha256": "22238898f7384a2bfa603762bd1d40301b909d387935acaa37240f1d31e0cc8c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_reserve_link_fixture_test.go": {
+      "bytes": 3734,
+      "sha256": "ce5e78df1af1961fc68d2a268bc8611131ce490ad66a08e21665dbdceff5c3df"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_reserve_link_recovery_test.go": {
+      "bytes": 18118,
+      "sha256": "f11d71188a5d9460c016002c47e4212fbc8e62e22f6534a6c1720e3a1258c265"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_reserve_link_test.go": {
+      "bytes": 34439,
+      "sha256": "6258b90d36a6a1a6bb4ef9e58c37faac233861297efbaafe514107581afd4ffa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_vault_create_test.go": {
+      "bytes": 37733,
+      "sha256": "eaa7b3624d92e9bf765e746220416ef6d843f504034bd342cc9e14964a877f26"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_vault_link_fixture_test.go": {
+      "bytes": 3358,
+      "sha256": "f6fe5ca685d50397e5b309d92cf7f479198d327988254742ef4a66f399af88aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_vault_link_recovery_test.go": {
+      "bytes": 19073,
+      "sha256": "5c3e21bebfd8f21c3e376c962feec538207cfea21d6a3cec0bfbb654d8ca4bbe"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/evm_vault_link_test.go": {
+      "bytes": 38673,
+      "sha256": "38fd62ecbe5e0ba4edcc12714a89dcd0a3faa788578fd61387229bb7d192acf3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/identity_finality_test.go": {
+      "bytes": 22408,
+      "sha256": "66b256dfaaae4b524e604e2539ed197e81376a3e3bac8c20a358486994a26818"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/main.go": {
+      "bytes": 22866,
+      "sha256": "1998a0ff325084c24be0ee8bdaa16b7e894835eee05537bdd9f9939b841cb814"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_checkpoint.go": {
+      "bytes": 10538,
+      "sha256": "c10b12bff5bf9019bb81e495f67c4b038e1f0fb7ec3305cfc9daac8819851f72"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_checkpoint_test.go": {
+      "bytes": 6195,
+      "sha256": "869b57802d4448aced2bf67b2d249d42fb6bfeee2128cd2505929fe273668eae"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_directory.go": {
+      "bytes": 9520,
+      "sha256": "3196c637513e0f8f567781268ea4477dd0cac44fc93250e7399c5bcac250e7d2"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_durable_census_test.go": {
+      "bytes": 1293,
+      "sha256": "3b9c9508c1f2fcc13ab3dd503e73f1a5cd144ce76aaeef4515f90cfdc137d612"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_durable_owner_test.go": {
+      "bytes": 6698,
+      "sha256": "272cbf9fa78d4c2112709c723606280c0f8627fd8958bc1dade1878d1b18a9cc"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_initial_outage_test.go": {
+      "bytes": 8908,
+      "sha256": "b843395df7e9e1b3e5ec2fc47b18e59ec2ac03b68572f792f88655d54ecc9631"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_metrics.go": {
+      "bytes": 9083,
+      "sha256": "5332b287b2fdf052a7ca931b9a2713aeb45fb7fe94e60fef1f9d36abe4166089"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_metrics_test.go": {
+      "bytes": 12039,
+      "sha256": "c4ecf0c514e08887e3efb6f3c2a35fc7ffaf26b23c5a1b72e22edb34da54a792"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_operator.go": {
+      "bytes": 26823,
+      "sha256": "872542c39333013bd26d3d05571db194e11d8807d5e1f0121e4ba2bdb0694904"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_operator_test.go": {
+      "bytes": 19397,
+      "sha256": "398299023db1af88c9a8b88f0b5f6b3812d82f65e6e23f10e2044628c1939eaa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_output_fixture_test.go": {
+      "bytes": 4658,
+      "sha256": "b2852ab4d3598e8852a623d09763ce01c3cbc1f4e5f96903909f16e11c87c7e9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_output_test.go": {
+      "bytes": 9542,
+      "sha256": "498d3de5a6d76f56e0edba623a06da7e8cc5b3c5f5a32a9d2961dada8dad9eb4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_read_incident_test.go": {
+      "bytes": 28096,
+      "sha256": "e97cf6fe5c7db4dc73f12c8ee3853b15bba1ee7015766b1139fd34c8a3b3ffe1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_restart_publication_test.go": {
+      "bytes": 10692,
+      "sha256": "7af3ea6d332d859dc91ad69df71aacd1c5bf225587c8241a30bb20fff2f69648"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_services.go": {
+      "bytes": 12256,
+      "sha256": "2dc9e1189ad7a17d1fddca043d73c3492306ac0c1108924d2c3e4329fb5a5ebc"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_services_checkpoint.go": {
+      "bytes": 8948,
+      "sha256": "3f621707e2026822de5177ce18ef54bab0c1938158be13dff7c3eec3f67d9cae"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_services_file_test.go": {
+      "bytes": 12568,
+      "sha256": "a12906b25eae9497ecade6912bfaf998fad4e981dbf320b1f9038fcfe3e3d56a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_services_test.go": {
+      "bytes": 22717,
+      "sha256": "78e104783be870920008f516f98ee85178f87eff53d45bde8dd8bad3f7e17d73"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_services_workers_test.go": {
+      "bytes": 5866,
+      "sha256": "c8b34cb9018f217cf4b795cab97c099020b8cea555034dfa4f55a998c954a0be"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_storage_fixture_test.go": {
+      "bytes": 2497,
+      "sha256": "305f1a8f8c65d38012fa2ffbfe4713798200923f3c5cdeeb145ab52b5a9a5973"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_storage_recovery.go": {
+      "bytes": 1592,
+      "sha256": "b4a4c938d5b5d0b9d2bc934dd4417afc10eb351788b419ff9a30b813a2e490d1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_storage_recovery_test.go": {
+      "bytes": 19589,
+      "sha256": "0e83c73223fbcf1aa5c4ad92e6ba8712367da5bf694ffa3ac46bef8d24357311"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/monitor_unavailable_test.go": {
+      "bytes": 7301,
+      "sha256": "dad890ca1f0de74d816d8408bd7f2998af543e256bfe95592a2bba3ef68c7a75"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_recycle_command.go": {
+      "bytes": 10729,
+      "sha256": "cb176a5e11e9e3294c1f78a335f885210e8ee2f0ac485dbbbbf6dba75371ffc5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_recycle_command_test.go": {
+      "bytes": 10852,
+      "sha256": "ba1909be8ce637b8d50c021ef9f7767eb37796f1b6522f5ff7aeaa36cdc02430"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_recycle_custody.go": {
+      "bytes": 11771,
+      "sha256": "624a78555e27563145912c792465807e09e0891668989d437f675e8ad71da736"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_recycle_custody_integrity_test.go": {
+      "bytes": 12137,
+      "sha256": "e8780c6f586b0a4bb17f4e5343f8a89951ca7176fb36bdb61c4ebf06eb933ee3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_recycle_store.go": {
+      "bytes": 7441,
+      "sha256": "29256f376ba18d78766a5ff7ecf71b53d24bf9b50aaf10ef8566994c96bdc84c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_recycle_store_checkpoint.go": {
+      "bytes": 2842,
+      "sha256": "fb1b7db1f29a6529963dc6c72462510fb0a7fb09d43161132df4c36923cc7c2e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_recycle_test.go": {
+      "bytes": 29612,
+      "sha256": "7c3423b1cf5af7efa2bbb350516e01e87c02f82e77ea3aa0a5251c4ce9f1c094"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_signing_command.go": {
+      "bytes": 9511,
+      "sha256": "f9211aa51b8acb69931a0b600b03fc7453186c9ffcd89f3499fd071678cfd1dc"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_signing_device.go": {
+      "bytes": 17705,
+      "sha256": "38a8b42e806974e6c1d0ddb0e3f6f88083c716e239fa3df10b2f8d43c5db64ee"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_signing_device_test.go": {
+      "bytes": 20752,
+      "sha256": "0e3cd5979d3adb3a8d307e1f489e0e99f7050abe7949ae7401fcec989a98c5df"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_trim_best_effort_test.go": {
+      "bytes": 22221,
+      "sha256": "5bee403e80cd62ecf0e4257f2f75f8926146c59c0e80fffca0cc485604075cda"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_trim_custody_test.go": {
+      "bytes": 7603,
+      "sha256": "8434c321f81d835a41a2a2f23beed895dbd6b9e3953c95063ea9a2b19ad10475"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_trim_execution.go": {
+      "bytes": 20416,
+      "sha256": "96382a62c52f2ae2cdeeb96e80f76a028c779e38c334abb6f618931648fb14f9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_trim_execution_test.go": {
+      "bytes": 28541,
+      "sha256": "54f1d3f9e5f4a522a7eb159cabffe8dde7ea3aa4970b559fe22f253261a0f31c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_trim_store.go": {
+      "bytes": 10489,
+      "sha256": "3b28657cbfa0d6b175663a4258bb1c1e708faf8b577251731b2c9b5022780be0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/owner_trim_store_checkpoint.go": {
+      "bytes": 3016,
+      "sha256": "308d0b274cde32c5877cc1156cf92d37c145cf6fbaecf9f7de6f50a5e14ebfbd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/repair_active_validator_store.go": {
+      "bytes": 8030,
+      "sha256": "177c9666919204875feac2d2cf113030e1744bec7b25a15f05e519f3131a7cd1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/repair_active_validator_test.go": {
+      "bytes": 32641,
+      "sha256": "4e6a45ddb8638aab9fa66f1be8af0247c555a22d4f11d8b7ee6c598500158f40"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/repair_validator_authority.go": {
+      "bytes": 10275,
+      "sha256": "c19d0f65da7d8325e485546cc469348315d5ba9f6bfd63557a03c83d42ea2477"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/repair_validator_host.go": {
+      "bytes": 21526,
+      "sha256": "d5ceeb423e7509020b19443bf02afadbaf4bdc5b449936279fa1abc6cb8e6ccd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/repair_validator_store.go": {
+      "bytes": 10878,
+      "sha256": "98c77f92ad7119f092d520cd1e7d1301fe1fbce64867586e33107c6da5aff890"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/repair_validator_test.go": {
+      "bytes": 32427,
+      "sha256": "56ee56366c7f31e16b9c542a909a756a4ffdb785158d093ec68c9fdaebe28d68"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_action.go": {
+      "bytes": 20187,
+      "sha256": "299325c3ca309b5c08e15d3ddde2b2627d4ab90bd376d1c411ca61a8b5cecb4c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_action_store.go": {
+      "bytes": 6498,
+      "sha256": "9348bd7e258fd1adb06dba3ef05585953b506d1d42161fc83b43cadbf280200b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_action_test.go": {
+      "bytes": 30551,
+      "sha256": "fb7d6d95c7955179b0a9fe4b320b810e02f0e4c8d97f882499fddeb42bbea1bc"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_command.go": {
+      "bytes": 17838,
+      "sha256": "24b04cde590dc0c180a18e3a5fddf7311db8627d31a3fa6c6633511d6eaf8c07"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_monitor_metrics.go": {
+      "bytes": 4279,
+      "sha256": "9ed0487612836f73412d7e378f5db692f87b4cad0da72dd800ce14a8f9b667e1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_offline_custody.go": {
+      "bytes": 13649,
+      "sha256": "9809d85dbb9f3cc6a4276746fa53c3f1ccee324a61af61f72cecd8d187128f82"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_offline_custody_store.go": {
+      "bytes": 6271,
+      "sha256": "6ee86776bd8d40de353cca16726873079379ff119fd8470040c8cba76d241803"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_offline_custody_test.go": {
+      "bytes": 25948,
+      "sha256": "e0b4e9445e38b44f401e008f7e4100c8be26e24fc73760d1554312abb1a2e1f5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_passive_command.go": {
+      "bytes": 7619,
+      "sha256": "7ab491a3899b90fd84ac06b56048e680c087e9b0c0e399a411dfcc39ab73b36a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_passive_host.go": {
+      "bytes": 16211,
+      "sha256": "1fd8323eceae7e52e9934ca30976cdcac6ac0c3174c8e471d3e65804bdedf126"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_passive_host_authority.go": {
+      "bytes": 9620,
+      "sha256": "b88ac8f6c58511e9d78adb69fd80a8657d703ca37cd48e94125372291c94c7f9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_passive_host_store.go": {
+      "bytes": 7860,
+      "sha256": "5556bbba5a43bc04a9692a9fca1274ef2b0838bdf09ffc13caf3b7575e9b497f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_passive_host_test.go": {
+      "bytes": 22913,
+      "sha256": "8356dd069ab4b5041d45c08d5d3301679b77f493408226e50906fa265cdc4a80"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_service.go": {
+      "bytes": 21043,
+      "sha256": "7a128e1f7f0c6ead84175a632f4428106b53bb41f51bf1661d609826949704c7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_service_bounded_recovery.go": {
+      "bytes": 11763,
+      "sha256": "5be09b19b5fa832a9d045d4697c3f2fdebba37f93db2caadf65a1835aa544e10"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_service_bounded_recovery_test.go": {
+      "bytes": 22107,
+      "sha256": "bdf528bc911232955d64c36e49f2c7e9235c4711dc1cabc0d997da92c44c4b51"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_service_command.go": {
+      "bytes": 11409,
+      "sha256": "e589588b4dd342ee434165fb5c78146b0908f5917870f1997de54c1e2547e9da"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_service_runtime.go": {
+      "bytes": 12908,
+      "sha256": "e835ecca37ca45ad6e2803683364c1403bbab753bc0114c802236d114e8ca92b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_service_runtime_test.go": {
+      "bytes": 16680,
+      "sha256": "a88740e3bbe472171e5dc1976627f34af66169df552f6bb7aaac0c9297219593"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_service_store.go": {
+      "bytes": 5998,
+      "sha256": "254c966ecc3fe1bdbc75a8437aa0c4cb0b77a5b4c3af953ae6f7b67749f73f2c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_service_test.go": {
+      "bytes": 32202,
+      "sha256": "ab9396468636990b197e9e3eab2c1d7b8ca00d7cef886a7494a2acd651bbd08a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_submission.go": {
+      "bytes": 16934,
+      "sha256": "7930c85894e1567c86861cd7ed69a800b264889360904038617f527112d22b3e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_submission_store.go": {
+      "bytes": 5567,
+      "sha256": "c71d6c911241f016d1722e92a964677f2c63deb2c6458bf92387c50b73a19193"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/root_submission_test.go": {
+      "bytes": 29360,
+      "sha256": "0687215c9041589b24bd2d1de22c69efd570ef79ab28b37ce77331e5819d3e17"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/storage_inventory.go": {
+      "bytes": 5997,
+      "sha256": "9960d53bbbf79ad04d733b7da088d9666f5d79a1fcce68508dd799c9350658a7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/storage_inventory_custody_test.go": {
+      "bytes": 10237,
+      "sha256": "105832dc49ede0ff9ff1956922ddfcdee5ae6e7f7a2375035ff39bd3e0301c45"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/storage_inventory_test.go": {
+      "bytes": 9568,
+      "sha256": "1747ca62705f85c668139a575a304c1d9bea8fe113fea2d1c8c73628691ef114"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/validator_activation_authority.go": {
+      "bytes": 10583,
+      "sha256": "4ef4b91af738443bb531dde433ff5043b4824aa1add5384f48327f270e9772b7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/validator_activation_host.go": {
+      "bytes": 7658,
+      "sha256": "616efd600b0b5493f7b4290fe979b58764036442847d9c1693ef2a1f82f77c08"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/validator_activation_native_test.go": {
+      "bytes": 27137,
+      "sha256": "293dcbf1ffc13e11d17efd799e4c0d8927182a4d8dd85971dff597bbe5b57fb9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/validator_activation_stake_test.go": {
+      "bytes": 20018,
+      "sha256": "8d4d26b92b32113b327328ddbc56bac83a0866d0f7801bb14ab34f3273198983"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/validator_activation_store.go": {
+      "bytes": 15682,
+      "sha256": "62a92b0eae517396b8347cc5cd8c7fcbaf0b7e2c56dfe7c9def74cd0cce98c47"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/mainnet/validator_activation_test.go": {
+      "bytes": 35093,
+      "sha256": "6463c4284774a4dbaa7d3cb31c75dc377b83c23c94dd0df78bf3a6d6d4b27eb7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_daemon.go": {
+      "bytes": 37657,
+      "sha256": "452f796d296dbfd1c197bcb3c1db6ddbf96414e38381e1765aada82fab5b7447"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_daemon_test.go": {
+      "bytes": 10464,
+      "sha256": "95c4c1db0897de86bbe789251163b93cb749e5a3a3863b45fd069b51cd825a66"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_durable_fixture_test.go": {
+      "bytes": 4661,
+      "sha256": "e391aad4f6df9405686678e52fbff42f5834bc8bb067ef3a77aa9b13832be4df"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_finality_closure_test.go": {
+      "bytes": 5130,
+      "sha256": "7b1a132921220af701ad89bc8e412623a0ff535ff3d947849c55025bdc5a9f77"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_finality_test.go": {
+      "bytes": 16181,
+      "sha256": "c81e14a5e7405806f87581da721d702aa20793bb215af8d1246c7da54efa357e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_nonce.go": {
+      "bytes": 3094,
+      "sha256": "067a233ad9d4ebe9fc702dbdc0de8556ec10bbc396ef14569c18f35423af369d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_nonce_rpc_test.go": {
+      "bytes": 9408,
+      "sha256": "855f335a5113d6c1610e71c6483f69260b55a3d20e61e72df5c05ca712d067c8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_queue_capacity_test.go": {
+      "bytes": 12303,
+      "sha256": "75116410a5f90ae2d9aa32774368f7792816f1d19041c63c75dbd9c172e161af"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_queue_owner_test.go": {
+      "bytes": 23006,
+      "sha256": "f83d5d8b1cafcd9a17a23d3a3e3415c1c74e6dfbb65533ec280cbc0b146088dd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_queue_owner_unix_test.go": {
+      "bytes": 796,
+      "sha256": "d9e576d33349d9ab1dab4ca2783dc30a16c304929f11f3ac187d0cd0de3ad147"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_queue_poll_test.go": {
+      "bytes": 17774,
+      "sha256": "7c74b10afd202b7e87100be7c733634f626cb8ce2592e9706d43762fc9ad9bf7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_queue_store_other.go": {
+      "bytes": 1204,
+      "sha256": "163cbcd4c38298af413f564cf0b008fcee908d8bd5d7dc817a51be98b10e621d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_queue_store_unix.go": {
+      "bytes": 5110,
+      "sha256": "deb7fe8a1603f1a4e4bd071f38487c60911cba62c7bfb6af1c4bd00a35e2d304"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_signed_outcome.go": {
+      "bytes": 5856,
+      "sha256": "df5077a814499b2052f8be6f6efb06384603c4f8b998c81b54710c4ed7a0bc70"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_signed_outcome_test.go": {
+      "bytes": 15699,
+      "sha256": "b68b44af384e20ad2d1145bbe0ba59e30c9f9e7c47a202a1eca637b9c8c26c2e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_storage_recovery.go": {
+      "bytes": 2825,
+      "sha256": "ab3f1d0062c9983621e7ee3dd8babd803b4065385bddc6de00d014b7a30ccffe"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_storage_recovery_test.go": {
+      "bytes": 14613,
+      "sha256": "46b86ce4c53d354eab6b676dc202e7468ebb6b142a4816b1d31a52c6d2eb2a40"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/claim_swarm.go": {
+      "bytes": 9612,
+      "sha256": "502ce3185319e0499c0a7df372eba8643329925117c1d9554e5c205c91bec019"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/durable_census_test.go": {
+      "bytes": 1992,
+      "sha256": "b3204dfa2cae5c585eae6bf645220960482ff5f0c951270d0dc4afc973a5802c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/durable_volume.go": {
+      "bytes": 675,
+      "sha256": "5602954515bb9b9047bf2c5bf277a8d01231a2879aa4e6b93520542cca769b7c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/durable_volume_admission_test.go": {
+      "bytes": 1480,
+      "sha256": "9d49bcdad65f97602b09cbbed53f274fe890e6494147be63239bdf4402717f25"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/evm_http_admission_test.go": {
+      "bytes": 6627,
+      "sha256": "71d189ede4c930cf6eb6b7382ec04e8104c3c39da3a2190c3e75ef288c458086"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet.go": {
+      "bytes": 20078,
+      "sha256": "1546a4d574bfba59953a949f68bce6f59f0d30f877a7b3cf17c804c158da5ba0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_current_header_test.go": {
+      "bytes": 9836,
+      "sha256": "cdaef3bfa587fd3caa3578d4a595da3f952146dc99325e180dfdf37e6b1cdc95"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_mainnet_admission_test.go": {
+      "bytes": 10628,
+      "sha256": "6eb0059adf5dd236c48a68d8e5dfa6b9e062216b0b256654e5d53ced6aaa40bb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_mainnet_fixture_test.go": {
+      "bytes": 16869,
+      "sha256": "ccc7f1f066d917c6e9de2474ba2fbc4c258caec3ce3d5bb9e3125c24431b6484"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_mainnet_native_test.go": {
+      "bytes": 11875,
+      "sha256": "33db21bd5f3f17af487fc60f746a3fb275f0e643ec6904623c5e4824179ddd6f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_recovery_chunk_test.go": {
+      "bytes": 6514,
+      "sha256": "41204f056827cca278ab53e221576740eb56231866340682166c6c388270b144"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_recovery_command_test.go": {
+      "bytes": 25941,
+      "sha256": "2cc7a39236652abdd57de841d60ba6cc529188ed3284303d36d8eef060952f25"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_recovery_evm.go": {
+      "bytes": 19100,
+      "sha256": "caa02fd7ac99618ecdb570120bbfb66437e33b75e2ee9cd675c4d5d4bc45b3d4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_recovery_native.go": {
+      "bytes": 18224,
+      "sha256": "157863dc42a861c60e912b13f68e488b80c58cec4da0157773b7ff3f8628f517"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_recovery_read_cause_test.go": {
+      "bytes": 4565,
+      "sha256": "8916d7cee4586c95e75db55eca10f4a4768d62892ad59c4c4b34b0de4fb29067"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_recovery_receipt_test.go": {
+      "bytes": 9935,
+      "sha256": "630e3b787297994f752e43aae966f156254c9fb2e1f39361b66a82fa272abb8e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_recovery_store.go": {
+      "bytes": 23698,
+      "sha256": "3becf05ca51af5a41e8376a60a4005bbe4b36caa56721641c63adb479383f32e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_recovery_store_test.go": {
+      "bytes": 10309,
+      "sha256": "f73a0d5bcab7536596d3aa28836ef969a6c22d06aa6982b955624ec3932896fe"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/fleet_runtime_compatibility_test.go": {
+      "bytes": 10803,
+      "sha256": "b6f15a40da2043cccee38f3612b1f2a7f671752d4220a7640ab31dac3703830a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/miner/run.go": {
+      "bytes": 40988,
+      "sha256": "aa21ff47eff000c16f2a3214b2b7ed92a46a8f6c4be2bddb81c81efae971a5e5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_closure_v2_persist.go": {
+      "bytes": 20498,
+      "sha256": "f303d8e0d425dda6646b2fbe86c15776e88e2a0d7d7d5fc293691791f2630dd0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_cut_v2_seal_test.go": {
+      "bytes": 25594,
+      "sha256": "597f3e58ef8886a359036a73c4ffb92689622c3348f94f3a6f05be0a4e3dac6c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_ledger.go": {
+      "bytes": 56042,
+      "sha256": "95d69ea83fdd60dc3ba795983177fc840e69088882a80801fb463add9ee708f8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_ledger_custody.go": {
+      "bytes": 18694,
+      "sha256": "15a7a7325d446aa9225e3ad35ecdb360d0727a5537ec6bb5083e0a8e6f012023"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_ledger_custody_darwin.go": {
+      "bytes": 538,
+      "sha256": "0daa208769ab02d0e513dcfbe78cfd585c8566e7b51a6b9d9667a9e135d15c9e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_ledger_custody_linux.go": {
+      "bytes": 848,
+      "sha256": "fda91b087f0053565ecd88621831fd1827bbc44dc5257b7163a3e416e61925de"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_ledger_directory.go": {
+      "bytes": 13191,
+      "sha256": "a2a6ab450bf3344f731274793879f730ad3dbdecfc36c9caacd19513cac72641"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_ledger_disk.go": {
+      "bytes": 13524,
+      "sha256": "262761ba45f37473ce54c3560acd6c5b2487a648997c61605a0b97b95a02a7ca"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_ledger_disk_test.go": {
+      "bytes": 30851,
+      "sha256": "6b9cb00d5b98cc7f74cede2f3fc2330cec83f82db7e64685943780bbac8bf66f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_ledger_stream.go": {
+      "bytes": 10375,
+      "sha256": "1ff15aa5ca3ecc2c1cb3d69301332056ac537971685ed9907c6c74bacd4ada80"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_private_directory.go": {
+      "bytes": 4915,
+      "sha256": "67b10ad03e7209b16ac9e46f639d138bbd33b87a26a9ac638320c299f75e552e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_private_directory_unix.go": {
+      "bytes": 3258,
+      "sha256": "2d9179840a854cda27649d25bcc1c55ff681b9881c3736677c817435e3540fbb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_proof_stream.go": {
+      "bytes": 11010,
+      "sha256": "74d6679723c7c7c7b63a142cb6b8cca58350ff4f7278b1c936971a8b3b6ce857"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_record_store.go": {
+      "bytes": 56620,
+      "sha256": "bd721884c0622db9ec24010d84ed476e80286007b6cf5c6d4fb182e5793143de"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_record_store_test.go": {
+      "bytes": 46818,
+      "sha256": "0aadce160cc65c594e9b414de6017c2e04f50c94ded5d755ac545a4f2d8764e4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/attempt_settlement_v2_witness.go": {
+      "bytes": 10009,
+      "sha256": "e8a4113f451f8e51ddc26d68fc04a2c5c2ea90b8a301741d773d9791a63426d7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/durable_volume_directory_test.go": {
+      "bytes": 3027,
+      "sha256": "74c1e256f88a834951da4101fab281716f445aaeffeb2f249dd60f513ffead5a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/durable_volume_entrypoint_test.go": {
+      "bytes": 3376,
+      "sha256": "330dd4783efdbf2f545101ea2575551349df723f2d5ab750d3b290c5e3945e5e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/durable_volume_ledger_fixture_test.go": {
+      "bytes": 4552,
+      "sha256": "4145e885901fe767bdbb9c899ee987e1854e1d12a9071183f94b0199eef201f2"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/durable_volume_ledger_pending_test.go": {
+      "bytes": 8685,
+      "sha256": "6d46894a0467617f825cfd021446172a5a6c477bc4f723e6f67df16b80d4cb23"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/durable_volume_ledger_restart_test.go": {
+      "bytes": 5258,
+      "sha256": "81be2bd5f89874d16152a7f9fa34c12d1f62f8b99e76413cd8b3020e30c003b0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/durable_volume_ledger_test.go": {
+      "bytes": 9473,
+      "sha256": "0838694251be70acf4326e25d97b64be404ed7ff470b4277cbcf1813aecfaf9b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/durable_volume_native_test.go": {
+      "bytes": 4776,
+      "sha256": "9c145834bc57e1a1f9e30c91cc86fbdda8cbc4ec8b85a3ce395a412127942459"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/durable_volume_owner.go": {
+      "bytes": 5536,
+      "sha256": "0e8d50ee4fcb3d75f908ee6390b078652df521cc6bf19888e3f64a2733d85471"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/head_ema_v2_load_unix.go": {
+      "bytes": 8343,
+      "sha256": "32b7ec4aa55890607e96c0b32f1ed2d78b829bfed776d25e270793172cf900e9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/head_ema_v2_write_unix.go": {
+      "bytes": 18485,
+      "sha256": "20e7d9bfff7e1608058944dc081f0d8d5185ba2ab6d49408d6a1959776303e60"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/native_commands.go": {
+      "bytes": 15592,
+      "sha256": "c3701c7e24fedc85a88dd80c2e7398c536d6e28dcf7366b1dc75d12ea60f0065"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/production_bootstrap_committed.go": {
+      "bytes": 20025,
+      "sha256": "f8b0b1952d573918ad3003eb52fa050883846486861beec52752163ed800a3be"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/production_operator_authentication_test.go": {
+      "bytes": 26042,
+      "sha256": "54fa7cc7f2bb3d691f943feb19773a27528da775e49ef33e6c3f9ea31273d28a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/production_receipt_checkpoint.go": {
+      "bytes": 11141,
+      "sha256": "fbf7f14e6d5b5835c9fc8e062e7c0467fa80a2d9cc884dc497d427f06f194ac1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/production_startup_fixture_test.go": {
+      "bytes": 32627,
+      "sha256": "7faf876b87627fcaccfdc71d5d2693605d46167aec087158eacf5e8a20a97dd7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/production_startup_test.go": {
+      "bytes": 5823,
+      "sha256": "f1a18387d806d64221ba239e74b7692134b7c90a66b81d79093fa3b7349a1e2f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_activation_setup_v2.go": {
+      "bytes": 35389,
+      "sha256": "a8e8fbf1bd523f89f7eeda485ba5ee00b48578f256c68543548d1a11785a309a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_client_key_history_v2.go": {
+      "bytes": 21358,
+      "sha256": "4af445425d17bb9dca8ea8eba4a7378864d3beffde507f63f7503c251b98ec81"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_config_rewrite_durable_unix.go": {
+      "bytes": 3263,
+      "sha256": "65bfec460c1f9e647bb31d4ece0a613cd9262b17afd619223a51d3512c2dd1d0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_config_rewrite_durable_unsupported.go": {
+      "bytes": 349,
+      "sha256": "2eded8af6d2c64a50a55bc0577bc9976c661f10a28ef874df3a701eb664b6e16"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_config_rewrite_v2.go": {
+      "bytes": 4140,
+      "sha256": "b37dbf3062327d3e5108b216786b59e7024255f33d29fddb8731a4eb89aa430d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_evidence_deposit_audit_manifest_v2.go": {
+      "bytes": 8508,
+      "sha256": "2779d20bf0200b3e2344c06fd78c1127f38eb862a78c83b2094880437bc06689"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_evidence_publication_discovery_v2.go": {
+      "bytes": 3509,
+      "sha256": "097aed48b0d10e8293064d651e7b023c86b07475085a4e40896bc93ed730d0a3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_measurement_input_v2_read.go": {
+      "bytes": 12158,
+      "sha256": "5d22ce886bf677d67926a67ee4dd0e6f10be30a0cd8d411356e5b14be59fdd07"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_measurement_input_v2_write.go": {
+      "bytes": 11296,
+      "sha256": "76752d715cd55666061d31a5ba91dc26e727b9b1712820f336030c6eca1ccaea"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_measurement_v2_test.go": {
+      "bytes": 52561,
+      "sha256": "352f17ee3c5e4a4bc8aa5edeace58e1fb6da0b1d211313944b081f2cbb95e631"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_proof_state_v2.go": {
+      "bytes": 6248,
+      "sha256": "fb2f0c53b6317cc0437f48304a471cbd8a00032e2a8630d4bcc825ebed9fa30f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_run.go": {
+      "bytes": 42033,
+      "sha256": "a729ab3f1fcb44e642220d82e38ef2198c52f7473b209ef8d2f580a1ef020298"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/release_startup_history_v2_read.go": {
+      "bytes": 15105,
+      "sha256": "bfa64ae576e727b27fa3e011a02d3cd2ad709bc548aee56ca78d1f8cea83d89f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/run.go": {
+      "bytes": 17571,
+      "sha256": "a96341198ee51496e7356cfb9a87ffd5b3e4b30d13b9e13361613a29a744af22"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/stats_snapshot_write.go": {
+      "bytes": 4661,
+      "sha256": "63d808631ddfc267c7974587517a97f035f285f749cde7d58140f25b199c36ed"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/stats_snapshot_write_native.go": {
+      "bytes": 16590,
+      "sha256": "bf7f049bdad46e2f4c40948adb352be7e4f2db76b32e93820b0c846ad7f00386"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/stats_snapshot_write_unsupported.go": {
+      "bytes": 2245,
+      "sha256": "4783d358465417ecdb90b4a88e9d3230f6358817f196dd64b921a6264c939bd4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn/validator/trail.go": {
+      "bytes": 47079,
+      "sha256": "cd0ded2a513852887ab08619f005aeec4164ca7c0a0aee1ea1274d6ad3115154"
+    },
+    "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/composition-69f/receipt.json": {
+      "bytes": 8643,
+      "sha256": "fc6bd88f6313411ab602f4e568d2393160b0281a143c4cf7e52abc6741d1f4af"
+    }
+  },
+  "independent_receipt": {
+    "normal_roots": 12,
+    "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/composition-69f/receipt.json",
+    "race_roots": 12,
+    "scope": "separate independent bounded public and role composition; no inheritance of author78",
+    "sha256": "fc6bd88f6313411ab602f4e568d2393160b0281a143c4cf7e52abc6741d1f4af"
+  },
+  "limits": [
+    "Exact selected composition scope only; original native, snapshot, miner, monitor, adopter, observer and exclusive-write component receipts retain their own scopes.",
+    "Incoming server6387 code outside the eight-file local-blob composition is preserved, not broadly qualified.",
+    "Connect71df consumer uptake, provider resilience/progress, fixture-private-root successor, member census and executable offline provisioning are separate successors.",
+    "No full package suite, independent compiler provenance, reproducible production artifact release, mainnet signing, broadcast, deployment, service start or restart authority."
+  ],
+  "normal_roots": 78,
+  "phases": {
+    "normal-blob": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestConfiguredLocalBlobRequiresExactDeclaration",
+        "TestDurableLocalBlobBatchRefusesRemountUntilReopen",
+        "TestDurableLocalBlobReaderReplacementRemainsRefusedAfterRestore",
+        "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate",
+        "TestDurableLocalBlobReaperUncertainSyncReopensOriginalRoot",
+        "TestDurableLocalBlobReopenRequiresApprovedRootGeneration",
+        "TestDurableLocalBlobStoreCanceledAdmissionHasNoEffects",
+        "TestDurableLocalBlobStoreLostSyncRequiresOriginalReopen",
+        "TestDurableLocalBlobStoreRefusesMissingRootAndMixedPolicy",
+        "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations",
+        "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+        "TestDurableLocalBlobStoreStagedSyncFailureKeepsPriorBytes"
+      ],
+      "skip": 0
+    },
+    "normal-inspect": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestInspectionCommandBindsInputsAndJoinsBeforeOutput",
+        "TestInspectionReadOnlyRefusesMissingAndReplacedRoots"
+      ],
+      "skip": 0
+    },
+    "normal-mainnet": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestBootstrapPassivePreparationRequiresFreshMonitorHead",
+        "TestBootstrapReadinessSharedSnapshotsRemainReadOnly",
+        "TestMainnetDurableCustodyAbsentReferenceHasNoEffects",
+        "TestMainnetDurableUnitEffectsRejectMissingDeclaration",
+        "TestMainnetDurableVolumeArgumentsPreserveCommand",
+        "TestMainnetDurableVolumeArgumentsRejectAmbiguity",
+        "TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer",
+        "TestMonitorStorageReserveRecoversOnSameOwner",
+        "TestMonitorStorageStoppedRoleReleasesOwnersBeforePeerStops",
+        "TestOwnerSigningCommandRequiresOwnerLocalCustody",
+        "TestRootServiceDurableReserveContinuesSameOwner",
+        "TestRootServiceDurableUncertainRunRetainsOriginalOwner",
+        "TestStorageInspectionBoundsAndCancellationEmitNoReport",
+        "TestStorageInspectionBusyRootRetainsCustody",
+        "TestStorageInspectionOwnerLocalCommandsRemainSeparate",
+        "TestStorageInspectionPublicDispatchRequiresAndRetainsAuthority",
+        "TestStorageInspectionPublicInventoryPreservesOwnerAttributesAndBounds",
+        "TestStorageInspectionReboundComparisonRequiresExplicitOption",
+        "TestStorageInspectionRejectsShortOutput",
+        "TestStorageInspectionRequiresExplicitDeclaration",
+        "TestStorageInspectionRetainedLocalVerification"
+      ],
+      "skip": 0
+    },
+    "normal-miner": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestClaimQueueMissingVolumeDoesNotCreateFreshCustody",
+        "TestClaimStoragePreparedLostAckRetainsNonceFloor",
+        "TestClaimStoragePublicEntrypointsRequireDeclaration",
+        "TestClaimStorageSwarmLossDoesNotCancelSibling",
+        "TestFleetRecoveryMissingVolumeDoesNotCreateFreshCustody"
+      ],
+      "skip": 0
+    },
+    "normal-observer": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestDurableCompositionDeclaredRootObserverRetainsCompletedCheckpoint",
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassiveJoinedIdentityRemainsTerminal",
+        "TestDurableCompositionPassiveObservationCancellationJoinsOwners",
+        "TestDurableCompositionPassiveObservationRetriesAfterRpc",
+        "TestDurableCompositionPassiveObservationRetriesBeforeRpc",
+        "TestDurableCompositionPassiveObservationRetryBudgetIsFinite",
+        "TestDurableCompositionPassivePreparationLossDuringRpcStopsOnlyOwner",
+        "TestDurableCompositionPassivePreparationRequiresRetainedHead",
+        "TestDurableCompositionPassiveReadersSharePreparationWithoutWriteReserve",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity",
+        "TestDurableCompositionPassiveUnavailableCannotRetryUncertainCheckpoint",
+        "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+        "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops",
+        "TestDurableCompositionRootPersistentEntrypointsRequireDeclaration"
+      ],
+      "skip": 0
+    },
+    "normal-successor": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor",
+        "TestBootstrapSuccessorCanonicalCommandExecutesAndRecovers",
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission",
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorExecutionRefusesMissingReboundAndUnsafeCustody",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPreparationReaderRejectsUnsafeOrReplacedCustody",
+        "TestBootstrapSuccessorPreparationRecoversEveryPublicationBoundary",
+        "TestBootstrapSuccessorPublicExclusiveClaimRetainsWriteAdmission"
+      ],
+      "skip": 0
+    },
+    "normal-validator": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestDurableAttemptLedgerMissingMembersCannotReset",
+        "TestDurableAttemptLedgerPendingCrashReplaysOriginalRecord",
+        "TestDurableValidatorDirectoryObservationFailureCanRetry",
+        "TestMainnetAttemptLedgerPublicConstructorsRequireCustody",
+        "TestProductionNativeJournalRejectsDaemonPolicyAndCancellation",
+        "TestProductionNativeJournalRequiresOwnerCustody",
+        "TestProductionNativeJournalRetainsOriginalAfterClose",
+        "TestProductionPublicLifecyclesRequirePhysicalCustody"
+      ],
+      "skip": 0
+    },
+    "race-blob": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestConfiguredLocalBlobRequiresExactDeclaration",
+        "TestDurableLocalBlobBatchRefusesRemountUntilReopen",
+        "TestDurableLocalBlobReaderReplacementRemainsRefusedAfterRestore",
+        "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate",
+        "TestDurableLocalBlobReaperUncertainSyncReopensOriginalRoot",
+        "TestDurableLocalBlobReopenRequiresApprovedRootGeneration",
+        "TestDurableLocalBlobStoreCanceledAdmissionHasNoEffects",
+        "TestDurableLocalBlobStoreLostSyncRequiresOriginalReopen",
+        "TestDurableLocalBlobStoreRefusesMissingRootAndMixedPolicy",
+        "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations",
+        "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+        "TestDurableLocalBlobStoreStagedSyncFailureKeepsPriorBytes"
+      ],
+      "skip": 0
+    },
+    "race-inspect": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestInspectionCommandBindsInputsAndJoinsBeforeOutput",
+        "TestInspectionReadOnlyRefusesMissingAndReplacedRoots"
+      ],
+      "skip": 0
+    },
+    "race-mainnet": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestBootstrapPassivePreparationRequiresFreshMonitorHead",
+        "TestBootstrapReadinessSharedSnapshotsRemainReadOnly",
+        "TestMainnetDurableCustodyAbsentReferenceHasNoEffects",
+        "TestMainnetDurableUnitEffectsRejectMissingDeclaration",
+        "TestMainnetDurableVolumeArgumentsPreserveCommand",
+        "TestMainnetDurableVolumeArgumentsRejectAmbiguity",
+        "TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer",
+        "TestMonitorStorageReserveRecoversOnSameOwner",
+        "TestMonitorStorageStoppedRoleReleasesOwnersBeforePeerStops",
+        "TestOwnerSigningCommandRequiresOwnerLocalCustody",
+        "TestRootServiceDurableReserveContinuesSameOwner",
+        "TestRootServiceDurableUncertainRunRetainsOriginalOwner",
+        "TestStorageInspectionBoundsAndCancellationEmitNoReport",
+        "TestStorageInspectionBusyRootRetainsCustody",
+        "TestStorageInspectionOwnerLocalCommandsRemainSeparate",
+        "TestStorageInspectionPublicDispatchRequiresAndRetainsAuthority",
+        "TestStorageInspectionPublicInventoryPreservesOwnerAttributesAndBounds",
+        "TestStorageInspectionReboundComparisonRequiresExplicitOption",
+        "TestStorageInspectionRejectsShortOutput",
+        "TestStorageInspectionRequiresExplicitDeclaration",
+        "TestStorageInspectionRetainedLocalVerification"
+      ],
+      "skip": 0
+    },
+    "race-miner": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestClaimQueueMissingVolumeDoesNotCreateFreshCustody",
+        "TestClaimStoragePreparedLostAckRetainsNonceFloor",
+        "TestClaimStoragePublicEntrypointsRequireDeclaration",
+        "TestClaimStorageSwarmLossDoesNotCancelSibling",
+        "TestFleetRecoveryMissingVolumeDoesNotCreateFreshCustody"
+      ],
+      "skip": 0
+    },
+    "race-observer": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestDurableCompositionDeclaredRootObserverRetainsCompletedCheckpoint",
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassiveJoinedIdentityRemainsTerminal",
+        "TestDurableCompositionPassiveObservationCancellationJoinsOwners",
+        "TestDurableCompositionPassiveObservationRetriesAfterRpc",
+        "TestDurableCompositionPassiveObservationRetriesBeforeRpc",
+        "TestDurableCompositionPassiveObservationRetryBudgetIsFinite",
+        "TestDurableCompositionPassivePreparationLossDuringRpcStopsOnlyOwner",
+        "TestDurableCompositionPassivePreparationRequiresRetainedHead",
+        "TestDurableCompositionPassiveReadersSharePreparationWithoutWriteReserve",
+        "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity",
+        "TestDurableCompositionPassiveUnavailableCannotRetryUncertainCheckpoint",
+        "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+        "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+        "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops",
+        "TestDurableCompositionRootPersistentEntrypointsRequireDeclaration"
+      ],
+      "skip": 0
+    },
+    "race-successor": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor",
+        "TestBootstrapSuccessorCanonicalCommandExecutesAndRecovers",
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission",
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorExecutionRefusesMissingReboundAndUnsafeCustody",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPreparationReaderRejectsUnsafeOrReplacedCustody",
+        "TestBootstrapSuccessorPreparationRecoversEveryPublicationBoundary",
+        "TestBootstrapSuccessorPublicExclusiveClaimRetainsWriteAdmission"
+      ],
+      "skip": 0
+    },
+    "race-validator": {
+      "exit": 0,
+      "fail": 0,
+      "roots": [
+        "TestDurableAttemptLedgerMissingMembersCannotReset",
+        "TestDurableAttemptLedgerPendingCrashReplaysOriginalRecord",
+        "TestDurableValidatorDirectoryObservationFailureCanRetry",
+        "TestMainnetAttemptLedgerPublicConstructorsRequireCustody",
+        "TestProductionNativeJournalRejectsDaemonPolicyAndCancellation",
+        "TestProductionNativeJournalRequiresOwnerCustody",
+        "TestProductionNativeJournalRetainsOriginalAfterClose",
+        "TestProductionPublicLifecyclesRequirePhysicalCustody"
+      ],
+      "skip": 0
+    },
+    "vet-server": {
+      "exit": 0
+    },
+    "vet-sn": {
+      "exit": 0
+    }
+  },
+  "race_roots": 78,
+  "restart_authorized": false,
+  "schema": "urnetwork-durable-owner-composition-qualification-v1",
+  "source_join_sha256": "63238579bc1844c44bc2fdfdd210f24aebf85739b4b02041867e3b612cdf655f",
+  "sources": {
+    "server": {
+      "commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server",
+      "tree": "622c52b73f71b7652cf508856198ffa6aa85f574"
+    },
+    "sn": {
+      "commit": "69f4bbdd68f3ba933fc0e6b8994708664689acbc",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/sn",
+      "tree": "4e49dc8fba437bb55939eaea09ef190fde89c8e4"
+    }
+  },
+  "tools": {
+    "/usr/local/go/bin/go": {
+      "bytes": 15434687,
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  },
+  "verdict": "PASS_SCOPED"
+}

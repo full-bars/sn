@@ -1,0 +1,69 @@
+{
+  "schema": "final-miner-selected-scope-root-readback-v1",
+  "observed_utc": "2026-10-04T19:09:52.528013+00:00",
+  "status": "REFERENCED_RECEIPT_BYTES_MATCH",
+  "source_disposition": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-miner-17-qualified-disposition-v1.json",
+  "source_disposition_sha256": "3d81fa9d79be226fcaaa686423e21fbc03ce9cd5155990e0e44d1b16f9c3483f",
+  "selected_roots_per_mode": 17,
+  "retained_roots_per_mode": 16,
+  "fresh_roots_per_mode": 1,
+  "checks": [
+    {
+      "name": "final_graph",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-miner-effective-graph-v1.json",
+      "sha256": "d9438aee3cd8624e29bcc1808e9fc19faa51eafc590d5226beb24e8681edda03",
+      "bytes": 2418,
+      "matches": true
+    },
+    {
+      "name": "final_normal_image",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-miner-normal-compile.receipt.json",
+      "sha256": "b6ad2e0cf577e10485974759a0bfdce6f95c86a0df37c5442370c21d79d78367",
+      "bytes": 5037,
+      "matches": true
+    },
+    {
+      "name": "final_normal_root",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-miner-normal-one.receipt.json",
+      "sha256": "ede0f3278464099e2c171ed0f4ddc1fad35f4e1403f2e95b43bf7931e630bbd5",
+      "bytes": 5307,
+      "matches": true
+    },
+    {
+      "name": "final_race_image",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-miner-race-compile.receipt.json",
+      "sha256": "4b069a84e09d8f9a0f51e2a49062b2ea56a7fe4d0e4e459662922d6b39a8fc65",
+      "bytes": 5025,
+      "matches": true
+    },
+    {
+      "name": "final_race_root",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-miner-race-one.receipt.json",
+      "sha256": "aa4b4793460b8c526931d0feba7f7fc17128d3e52f59b8ffcb8a62b646e0e129",
+      "bytes": 5292,
+      "matches": true
+    },
+    {
+      "name": "imported_packages",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-miner-imported-packages.txt",
+      "sha256": "e264258bbf4a7ebf5e25c05f6360f5f575c5724ce67740a4e11fa4fce798361f",
+      "bytes": 31256,
+      "matches": true
+    },
+    {
+      "name": "imported_packages_stderr",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-a96-miner-imported-packages.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "matches": true
+    },
+    {
+      "name": "prior_disposition",
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/miner-165-component-disposition-v1.json",
+      "sha256": "5c0393629ca94f93b1e842470367dd59261037618d92d238015e7ad228bf8058",
+      "bytes": 7785,
+      "matches": true
+    }
+  ],
+  "scope": "Root independently checks disposition and every directly referenced receipt/graph byte. Retained+fresh behavioral conclusion is scoped to unchanged imported miner closure documented by Sol. This does not qualify all miner code, other roles, omission controls, or launch."
+}

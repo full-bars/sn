@@ -1,0 +1,118 @@
+{
+  "scope": "Independent frozen-source and operative-control review only; not test qualification",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/model-retention-final/server",
+    "commit": "c2b0cf6582ff375f49ef2546b49f61112ac8b084",
+    "tree": "5ad68c8bfff9e37104200eb42d8373b5ea017ce8",
+    "base": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+    "prior_fixture": "4754cca86f600c86927fba713c5f32ed9a86043a",
+    "intermediate_retained": "744f5144b6e5296377b6814c52e24657aefcf104",
+    "changed_paths": [
+      "model/account_payment_model_test.go",
+      "model/contract_lifecycle_clock_guard_test.go",
+      "model/contract_payout_test.go",
+      "model/subscription_balance_retention_test.go",
+      "model/subscription_force_close_dispute_test.go",
+      "model/subscription_model_test.go",
+      "model/subscription_payout_debit_fixture_test.go",
+      "model/subscription_reservation_domains_test.go",
+      "model/subscription_retention_model_test.go"
+    ],
+    "git_entries": 5440,
+    "unchanged_non_test_entries": 3989,
+    "checkout": "Sparse nine test files plus modules. Unchecked-out source is present in exact Git blobs and the existing full Server5f archive; archive it before compilation."
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/model-retention-final/evidence/intake.json",
+    "sha256": "7c7bd54de9943fca64f170b047fc0bdf777b2c9572a4edd56de9cadce5929580"
+  },
+  "verified_git_bindings": 30,
+  "verified_physical_artifacts": 29,
+  "verified_changed_test_files": 9,
+  "production_and_modules": "All changed Git paths are tests; non-test production and module bytes remain exact Server5f",
+  "original_failures_covered": [
+    "TestPaymentPlanSubsidy",
+    "TestContractLifecycleEscrowBranchClockGuardRejectsMissingOrLateLocks",
+    "TestContractLifecycleWritesUsePrimaryDatabaseClockAfterLocks",
+    "TestContractPayoutParticipantMatrix",
+    "TestCompanionContractPayoutParticipantsJoinByStreamId",
+    "TestContractParticipantPayoutDisputeOutcomes",
+    "TestContractExtenderPayoutParticipantMatrix",
+    "TestCompanionContractExtenderPayoutPaysTheReversedParties",
+    "TestContractPayoutPreservesSharedNetworkProviderUsage",
+    "TestStatsProviderPayoutsPreserveSharedNetworkSettlement",
+    "TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy",
+    "TestForceCloseCheckpointDisputeConvergesInOneSweep",
+    "TestForceCloseHealthyFinalizationSkipsDisputeSettlement",
+    "TestEscrow",
+    "TestCompanionEscrowAndCheckpoint",
+    "TestPublicRedisLongLivedGrantRetainsOriginalRequestLease",
+    "TestRemoveCompletedContractsCascades"
+  ],
+  "model_roots_each_mode": 45,
+  "worker_roots_each_mode": 1,
+  "neighbor_roots": [
+    "TestPaymentPlanSubsidyEqualWeight",
+    "TestCreateTransferEscrowShrinkToFit",
+    "TestAsyncDebitLostPostsReplayAndRedisPrecedence",
+    "TestAsyncDebitCommittedBatchSurvivesRedisFailureAndLostAck",
+    "TestAsyncDebitBusyGrantAdvancesFairCursor",
+    "TestAsyncDebitRollbackCannotPublishOrConsume",
+    "TestCompletedTransferBalanceRetentionAdvancesPastRetainedPage",
+    "TestCompletedTransferBalanceRetentionConcurrentReservations",
+    "TestCompletedTransferBalanceRetentionPlansStayIndexed",
+    "TestAsyncDebitPendingAndAppliedRowsFenceBalanceRetention",
+    "TestAsyncDebitOldReaperCannotDeleteUnflushedBalance",
+    "TestCompletedContractRetentionResumesInBatches",
+    "TestForceCloseDisputeSettlementFailureRollsBack",
+    "TestForceCloseDisputeCancellationPreservesReservation",
+    "TestForceCloseAccountingRejectionReportsVerifiedProgress",
+    "TestForceCloseAccountingRejectionReportsZeroProgress",
+    "TestForceCloseVerifiedQuarantineDoesNotParkAccountingBatch",
+    "TestForceCloseVerifiedQuarantineReportsTerminalAccountingProgress",
+    "TestForceCloseAccountingDatabaseFailureKeepsOrdinaryError",
+    "TestForceCloseAccountingNewDisputeRequiresFirstPassVerification",
+    "TestPublicDisputeAndLegacyPeerKeepSeparateReservations",
+    "TestEscrowSettlementLegacyRowsPreserveAccounting",
+    "TestEscrowSettlementZeroUseOmitsEmptyPosts",
+    "TestEscrowSettlementLegacyRejectionKeepsReservation",
+    "TestEscrowSettlementZeroQuarantinePreservesUnrelatedMirror",
+    "TestSettlementReadPreservesFinancialPosts",
+    "TestSettlementReadPreservesUncappedPosts",
+    "TestSettlementReadPreservesExpiryTies"
+  ],
+  "operative_controls": [
+    {
+      "name": "available-reservation-projection-omitted",
+      "target": "model/subscription_model.go",
+      "roots": [
+        "TestForceCloseHealthyFinalizationSkipsDisputeSettlement"
+      ],
+      "expected_assertion": "healthy finalization changed one-sweep settlement accounting"
+    },
+    {
+      "name": "payer-debit-subtraction-omitted",
+      "target": "model/subscription_transfer_debit.go",
+      "roots": [
+        "TestForceCloseHealthyFinalizationSkipsDisputeSettlement"
+      ],
+      "expected_assertion": "public debit page did not conserve exact consumption"
+    },
+    {
+      "name": "zero-token-release-omitted",
+      "target": "model/subscription_transfer_debit.go",
+      "roots": [
+        "TestPublicRedisLongLivedGrantRetainsOriginalRequestLease"
+      ],
+      "expected_assertion": "acknowledged zero debit did not release the exact original request"
+    }
+  ],
+  "review_findings": [
+    "Reported usage and revenue follow actual returned grants; close and force-close errors are checked",
+    "Before public debit flushing, raw balances retain committed pending consumption, reservation and original journal identities; public available credit excludes consumed bytes",
+    "Each bounded public debit page applies and releases exact obligations; provider allocations/account balances remain unchanged",
+    "Zero-amount journals retain original request expiry until acknowledgment; token removal is checked immediately after public flush, after empty replay and after late reconciliation",
+    "Contract metadata removal preserves independent original debit IDs/amounts; expired balance removal waits for actual debt discharge"
+  ],
+  "qualification": "Pending separate source archive, effective graph, resource admission, normal/race/vet and actual operative assertion census. Original full-model results retained; no broad rerun."
+}

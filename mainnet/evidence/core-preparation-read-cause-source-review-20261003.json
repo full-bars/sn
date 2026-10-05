@@ -1,0 +1,37 @@
+{
+  "schema": "core-preparation-read-cause-source-review-v1",
+  "status": "SOURCE_REVIEWED_UNCOMPILED_UNEXECUTED",
+  "source": {
+    "base": "2ea8d82ea5cbc8bdebdee05f5b90a9f21b64128f",
+    "commit": "ac65cff4e87c0e85443c0edb3774486da06e8fb8",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/core-preparation-read-causes/connect",
+    "sparse": true,
+    "tree": "35b1e94c6762ef7a060bced234d94ca913d867fd"
+  },
+  "intake_sha256": "60d481c91a76506656d30b3c3fe1c3bafd4143c134965b744471493ab4f09081",
+  "verified_physical_bindings": [
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/core-preparation-read-causes/connect/durablevolume/preparation_observation_test.go",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/core-preparation-read-causes/connect/durablevolume/preparation_plan_artifact_linux.go",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/core-preparation-read-causes/connect/durablevolume/preparation_root_linux.go",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/core-preparation-read-causes/evidence/operative-controls.json"
+  ],
+  "changed_files": [
+    "durablevolume/preparation_observation_test.go",
+    "durablevolume/preparation_plan_artifact_linux.go",
+    "durablevolume/preparation_root_linux.go"
+  ],
+  "review": [
+    "RetainPreparationPlan preserves failed reference read before checking successfully returned bytes.",
+    "Moved-root reservation read distinguishes observation errors from actual absent/empty reservation.",
+    "Deterministic real interrupted-rename fixture retains journal and original inode, retries healthy public operation and proves exact completed replay.",
+    "Injected EIO boundary is distinguished from actual closed-descriptor attribute syscall and actual canceled context."
+  ],
+  "selected_roots": 16,
+  "new_roots": 4,
+  "operative_controls": 2,
+  "limits": [
+    "No module publication, SN repin, compile or behavioral test was performed by this review.",
+    "SN0e5 qualification remains pinned to original Core2ea and is not altered.",
+    "True observed changed request/reservation remains rejected."
+  ]
+}

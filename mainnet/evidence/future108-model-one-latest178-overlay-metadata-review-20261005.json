@@ -1,0 +1,228 @@
+{
+  "effective_source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "ba5260285eb73650667665627f015e415afd9d82",
+    "sn": "178639735c0e9f4f2309b187557204a2bbf65f1e"
+  },
+  "execution_mechanism": {
+    "actual_wait": "Qualified ChildContext/guard for five git-show children and three GoList children; actual wait durable before postchecks. Exact Git blobs verified before publishing immutable overlay. Existing physical archives remain byte-identical.",
+    "archive_log_limit_bytes": 1048576,
+    "data_active_formula": "max(6307319808, immediate_admission_data_available-4294967296)",
+    "go_list_log_limit_bytes": 67108864,
+    "payload_argv": [
+      "/home/by/urnetwork/.virtualenv/brien/bin/python3",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest178-overlay-metadata-v1.py",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest178-overlay-metadata-job-v1.json"
+    ],
+    "phase_time_limit_seconds": {
+      "go_list": 300,
+      "source_blob": 60
+    },
+    "predecessor_wait_paths": [
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-owner-cli65-v1-list.process-result.json",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-xops311-retry2-v1.process-result.json"
+    ],
+    "required_properties": {
+      "KillMode": "control-group",
+      "MemoryMax": 4294967296,
+      "MemorySwapMax": 0
+    },
+    "unit": "sn-latest178-overlay-metadata-v1-20261005.service"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest178-overlay-metadata-job-v1.json",
+    "sha256": "8f123e5ff0d47bf1f06fe0b80de4f078c15ec85879d06dc6ca4819d6923ee965"
+  },
+  "later_compiler": "Immediate priority exact SN178/Core25a/Serverba526 mainnet normal compiler, then66 retained-image roots; Server compiler later, each separate class/adoption.",
+  "overlay_json_sha256": "fbf2ef696032262b0d9f094c9e278f905b18727095e2d77d06ff0f601808c2b4",
+  "overlays": [
+    {
+      "bytes": 21842,
+      "change": "M",
+      "git_blob": "1bcc2856a1937a9e828e834d63036a1efd4dc1f0",
+      "head": "178639735c0e9f4f2309b187557204a2bbf65f1e",
+      "logical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/sn/mainnet/repair_operator_authority.go",
+      "module": "sn",
+      "physical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latest178-ba526-overlay-v1/sn/mainnet/repair_operator_authority.go",
+      "relative_path": "mainnet/repair_operator_authority.go",
+      "repo": "/mnt/data/urnetwork/sn-operator-regex-bound-20261005",
+      "sha256": "32042f353d251dba98b99ef0ba3d44dc8f8d39a5b921091fd322e38d912d1d97"
+    },
+    {
+      "bytes": 1747,
+      "change": "A",
+      "git_blob": "692459ecffd74a91fc7a0cce3976cf70c570fbe9",
+      "head": "178639735c0e9f4f2309b187557204a2bbf65f1e",
+      "logical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/sn/mainnet/repair_operator_environment_test.go",
+      "module": "sn",
+      "physical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latest178-ba526-overlay-v1/sn/mainnet/repair_operator_environment_test.go",
+      "relative_path": "mainnet/repair_operator_environment_test.go",
+      "repo": "/mnt/data/urnetwork/sn-operator-regex-bound-20261005",
+      "sha256": "8f680c3b25a519983282c31d8ec0f8e1bc654a044c839428867a9bd21fd03c34"
+    },
+    {
+      "bytes": 12743,
+      "change": "M",
+      "git_blob": "f7c4a81b5684ec87721181efdb3474ba609d934e",
+      "head": "ba5260285eb73650667665627f015e415afd9d82",
+      "logical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/server/model/provider_url_probe_completed_priority_test.go",
+      "module": "server",
+      "physical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latest178-ba526-overlay-v1/server/model/provider_url_probe_completed_priority_test.go",
+      "relative_path": "model/provider_url_probe_completed_priority_test.go",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261005/astra-url-renewal-fixture/server",
+      "sha256": "48e6b68e5a0686eab1ebcc0e6800a5feae020b14ac5edb88ec2f3d189a305625"
+    },
+    {
+      "bytes": 26936,
+      "change": "M",
+      "git_blob": "3c61d4ce33d33aae95520f44aa3d1e5e3a6296b0",
+      "head": "ba5260285eb73650667665627f015e415afd9d82",
+      "logical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/server/model/provider_url_probe_due_test.go",
+      "module": "server",
+      "physical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latest178-ba526-overlay-v1/server/model/provider_url_probe_due_test.go",
+      "relative_path": "model/provider_url_probe_due_test.go",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261005/astra-url-renewal-fixture/server",
+      "sha256": "2a72f82eaa4d1d084cdbf7a6ad7c83ee6f5b9fbb675f1ddcb458362edc3bc67c"
+    },
+    {
+      "bytes": 3525,
+      "change": "M",
+      "git_blob": "ce1507a1b82e1cc3c422169fe384159b7731d6f9",
+      "head": "ba5260285eb73650667665627f015e415afd9d82",
+      "logical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/server/model/provider_url_probe_recovery_pacing_test.go",
+      "module": "server",
+      "physical_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latest178-ba526-overlay-v1/server/model/provider_url_probe_recovery_pacing_test.go",
+      "relative_path": "model/provider_url_probe_recovery_pacing_test.go",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261005/astra-url-renewal-fixture/server",
+      "sha256": "1218f63980e970f7e3e7bf00937a4ed07888b08c7d625acad3b23d2a47900fd6"
+    }
+  ],
+  "parent_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latestb037-metadata-v1.receipt.json",
+    "sha256": "8409c2068de8eba4bcf3fd0f2e5ce9feef66efcb7ed5157e7c0695820c78696e"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 12884901888,
+    "history_count": 0,
+    "job_sha256": "8f123e5ff0d47bf1f06fe0b80de4f078c15ec85879d06dc6ca4819d6923ee965",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 1,
+    "runner_sha256": "06f3cb64b062fbff82df993d015399062a6c7fa7c8fadfb71dad2331cba01cc5",
+    "short_count": 0,
+    "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_METADATA_STAGE"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest178-overlay-metadata-adoption-20261005.json",
+  "resource_forecasts": {
+    "basis": "Same prospective2GiB metadata class, now only five Go blobs 66793 bytes plus three bounded64MiB metadata streams and small new workspaces; no whole source copy/download/export/compiler/body.4GiB hard memory/swap0 and4GiB whole-data growth cutoff; peak not proven.",
+    "margin": 2,
+    "metadata_disk_bytes": 2147483648,
+    "metadata_memory_bytes": 2147483648,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest178-overlay-metadata-v1.py",
+    "sha256": "06f3cb64b062fbff82df993d015399062a6c7fa7c8fadfb71dad2331cba01cc5"
+  },
+  "schema": "future108-model-one-latest178-overlay-metadata-review-v1",
+  "source_deltas": [
+    {
+      "all_changed_paths": [
+        "M\tmainnet/repair_operator_authority.go",
+        "A\tmainnet/repair_operator_environment_test.go"
+      ],
+      "base": "b0371195eb9d2127adab8dfe917e1516838b010a",
+      "go_mod_sum_unchanged": true,
+      "head": "178639735c0e9f4f2309b187557204a2bbf65f1e",
+      "module": "sn",
+      "repo": "/mnt/data/urnetwork/sn-operator-regex-bound-20261005",
+      "tree": "131695ab37f3029d5067527c225e68bbc1a05e6d"
+    },
+    {
+      "all_changed_paths": [
+        "M\tmodel/provider_url_probe_completed_priority_test.go",
+        "M\tmodel/provider_url_probe_due_test.go",
+        "M\tmodel/provider_url_probe_recovery_pacing_test.go"
+      ],
+      "base": "0f6a48a1b896d0cf3b2dbdabb94114659980648e",
+      "go_mod_sum_unchanged": true,
+      "head": "ba5260285eb73650667665627f015e415afd9d82",
+      "module": "server",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261005/astra-url-renewal-fixture/server",
+      "tree": "414d0db1d5021791ea4ba7dca3b14a35bd287b70"
+    }
+  ],
+  "source_limit": "Effective SN178 fixes source init regexp; metadata alone cannot establish runtime behavior. Root-selected66 body and actual compiler remain separately gated. Funding child excluded pending explicit later source/admission delta.",
+  "source_manifest": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latestb037-metadata-source-manifest-v1.json",
+    "sha256": "4478c888af21c82174dab7b6d0a6a215ba653d1371e6f8a06e4619c16e93ee55"
+  },
+  "source_summary": {
+    "connect": {
+      "action": "reuse",
+      "entries": 3840,
+      "logical_bytes": 264184770
+    },
+    "server": {
+      "action": "archive",
+      "entries": 5749,
+      "logical_bytes": 603189798
+    },
+    "sn": {
+      "action": "archive",
+      "entries": 21316,
+      "logical_bytes": 231336438
+    }
+  },
+  "sources": [
+    {
+      "action": "archive",
+      "head": "b0371195eb9d2127adab8dfe917e1516838b010a",
+      "module": "sn",
+      "repo": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-open-work-consumer/sn",
+      "target": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/sn",
+      "tree": "2dcb05802e1d3ce8a275610318006da5c71bbc10"
+    },
+    {
+      "action": "reuse",
+      "head": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+      "module": "connect",
+      "repo": "/mnt/data/sn-testnet/mainnet-sdk-creation-custody-20261004/connect",
+      "target": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/current5aaf-source/connect",
+      "tree": "dbba7a7fff5e598f6deb44d4a26061c6276da3d5"
+    },
+    {
+      "action": "archive",
+      "head": "0f6a48a1b896d0cf3b2dbdabb94114659980648e",
+      "module": "server",
+      "repo": "/mnt/data/sn-testnet/mainnet-parallel-20261004/server-final-followup-union/server",
+      "target": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latestb037-source/server",
+      "tree": "b12c728c4f7aeaea06efe38788fb4508db4126f3"
+    }
+  ],
+  "status": "RECOMMEND_ROOT_ADOPTION_EXACT_FIVE_FILE_OVERLAY_METADATA",
+  "time_ns": 1791159856469266733,
+  "unchanged_active_floors": {
+    "data_available_bytes": 6307319808,
+    "docker_available_bytes": 295833415680,
+    "docker_launch_available_bytes": 300128382976,
+    "healthy_guards_changed": false,
+    "memory_available_bytes": 103079215104,
+    "original_data_baseline_rebased": false
+  },
+  "verification_performed": [
+    "Exact two direct-child Git deltas exhaustively inspected:SN2 paths,Server3 paths; no deletion/rename/module changes",
+    "Five Go blobs/head/tree/bytes/SHA256 pinned; no overlay source materialized by author",
+    "Runner AST and every fixed tool/source binding rechecked",
+    "Parent actual metadata PASS and all child waits retained; old shorts joined"
+  ]
+}

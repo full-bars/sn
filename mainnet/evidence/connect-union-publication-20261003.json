@@ -1,0 +1,17 @@
+{
+  "schema": "mainnet-connect-qualified-recovery-publication-v1",
+  "published_commit": "08d4840087a7e4cb60a747eabc81785361a01562",
+  "published_tree": "b7409c48e05909a3d2329fe1aaebf806576d527f",
+  "remote_main": "08d4840087a7e4cb60a747eabc81785361a01562",
+  "qualified_core": "9fb897f8d880ab813dd61dc02fa187e3d85f13a5",
+  "incoming_main": "ed82d3582ac4332a1121b01515e1d2d3524d331d",
+  "qualified_source_join": "59ae073daa0bf2cc0c36a4c6cce15bbf50d3616f",
+  "trees": {
+    "durablevolume": "b599636111611e1266d43ebb2b194a6e96b33cb7",
+    "go.mod": "da7de4a178b8f7cd5da18042d54c8950956e4aac",
+    "go.sum": "11555eee4473212e338379a8fc49e2af83b0490c"
+  },
+  "all_outside_paths_exact_incoming": true,
+  "scope": "Publication/source identity only. Existing qualified scoped outcomes retained; current consumer adoption, complete release and live recovery remain unproven.",
+  "history_note": "Pull/rebase refused rewritten add/add ancestry before push; rebase aborted, ordinary merge preserved reviewed core and incoming paths, pull --ff-only and push completed."
+}

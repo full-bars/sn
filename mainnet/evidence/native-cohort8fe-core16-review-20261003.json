@@ -1,0 +1,134 @@
+{
+  "schema": "native-cohort8fe-core16-root-review-v1",
+  "receipt": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/cohort8fe-core16-receipt.json",
+  "receipt_sha256": "567ddbfa7617832ff9e0aba523ad216c1dc74ae2df5b0c85674b77278e423ed7",
+  "sources": {
+    "connect": {
+      "bytes": 263821367,
+      "count": 3787,
+      "errors": [],
+      "head": "1610f7a55e5efe4809a87b695fdebc4161709e49",
+      "tree": "313a79ffe7d39d9e89e46ba220d0e91dc0f4117b"
+    },
+    "sn": {
+      "bytes": 221633599,
+      "count": 20395,
+      "errors": [],
+      "head": "8fe0172272d32e4db76ac7fef436b604d182b105",
+      "tree": "2f9434e68114ee5a8926d381b1d324d24bb2afc0"
+    }
+  },
+  "verified_bindings": {
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core16-normal.jsonl": {
+      "sha256": "8c2cc3a08effda8658112c1cbc241883c20427d5bf22faf57b3a3d42481aeb33",
+      "bytes": 15120
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core16-normal.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core16-normal.command.json": {
+      "sha256": "73d54a1b9ae0a3c91ec6fbdee8ecb98568495f1cf35057875cf332872789bf88",
+      "bytes": 2313
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core16-normal.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core16-race.jsonl": {
+      "sha256": "3724b13455a62e9271af3cafe604cc335b958a21be8e341d5e619017ba726965",
+      "bytes": 15119
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core16-race.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core16-race.command.json": {
+      "sha256": "feaedc8a51355167e53faf1eeb63db597c88987f71684026a67d546b85609e2b",
+      "bytes": 2326
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core16-race.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core-vet.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/core-vet.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-vet.stdout": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-vet.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/source-readback.json": {
+      "sha256": "6237118226f79b259de1f7dc609871f7dcf8ae3eb2f645d3c181a5164fe7fb88",
+      "bytes": 382
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/preflight.exits": {
+      "sha256": "a17138988e1387532b5cb0bd7a23f18a11d537123873e67154dada3c6359e53e",
+      "bytes": 6
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/vets.exits": {
+      "sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101",
+      "bytes": 4
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/modules.jsonl": {
+      "sha256": "ba08e8b7930fa45990405dd9a144190874679c01831e30c91e55b20637ac2166",
+      "bytes": 220146
+    }
+  },
+  "root_census": {
+    "normal": [
+      "TestPreparationCohortDeclarationJoinsExactPerMountBoundary",
+      "TestPreparationCohortDeclarationJoinsExactTotalBoundary",
+      "TestPreparationCohortDeclarationOverflowPrecedesFirstMutation",
+      "TestPreparationCohortCombinedDeclarationPreservesHealthyOwner",
+      "TestPreparationCohortChecksAllRootsBeforeFirstMutation",
+      "TestPreparationCohortResumesCompletedPeerAndPendingWrite",
+      "TestPreparationCohortBindsOriginalMembershipAcrossRestart",
+      "TestPreparationCohortRefusesPartialPeerWithoutRewritingCompletion",
+      "TestPreparationCohortCreatesSiblingRootsFromOriginalStagedInodes",
+      "TestPreparationCohortJoinsAggregateCapacityBeforeEffects",
+      "TestPreparationManyOwnersRefusesUnreviewedAndUnboundedProfiles",
+      "TestPreparationManyOwnersReconcilesOriginalPartialHeadUnion",
+      "TestPreparationPrivateRootParentSyncLossResumesOriginal",
+      "TestPreparationPrivateRootUnavailableAndCompetingTarget",
+      "TestPreparationReviewedPlanOpensActualGuard",
+      "TestPreparationPendingLostAcknowledgementResumesExactBytes"
+    ],
+    "race": [
+      "TestPreparationCohortDeclarationJoinsExactPerMountBoundary",
+      "TestPreparationCohortDeclarationJoinsExactTotalBoundary",
+      "TestPreparationCohortDeclarationOverflowPrecedesFirstMutation",
+      "TestPreparationCohortCombinedDeclarationPreservesHealthyOwner",
+      "TestPreparationCohortChecksAllRootsBeforeFirstMutation",
+      "TestPreparationCohortResumesCompletedPeerAndPendingWrite",
+      "TestPreparationCohortBindsOriginalMembershipAcrossRestart",
+      "TestPreparationCohortRefusesPartialPeerWithoutRewritingCompletion",
+      "TestPreparationCohortCreatesSiblingRootsFromOriginalStagedInodes",
+      "TestPreparationCohortJoinsAggregateCapacityBeforeEffects",
+      "TestPreparationManyOwnersRefusesUnreviewedAndUnboundedProfiles",
+      "TestPreparationManyOwnersReconcilesOriginalPartialHeadUnion",
+      "TestPreparationPrivateRootParentSyncLossResumesOriginal",
+      "TestPreparationPrivateRootUnavailableAndCompetingTarget",
+      "TestPreparationReviewedPlanOpensActualGuard",
+      "TestPreparationPendingLostAcknowledgementResumesExactBytes"
+    ]
+  },
+  "vet": {
+    "core_exit": 0,
+    "core_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "core_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_exit": 0,
+    "public_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": "16 core roots in normal/race verified. Independent source inventory bound, not separately fully reread by root. Public10, causal controls, full512 cross-root behavior and actual host restore remain unqualified by this receipt."
+}

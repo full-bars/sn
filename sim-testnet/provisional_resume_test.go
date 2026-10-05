@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -25,9 +26,48 @@ func provisionalResumeTestContext(t *testing.T) (*ResolvedConfig, *SetupPlan, st
 	return cfg, plan, dir, cliOptions{Apply: true, ProvisionalResume: true, PlanHash: plan.PlanHash, Name: releaseCandidateCampaignName}
 }
 
+func TestProvisionalStoppedTopologyRequiresExactInactiveRetainedGeneration(t *testing.T) {
+	cfg, _, _, _ := provisionalResumeTestContext(t)
+	cfg.provisionalResume.Record = &provisionalResumeRecord{PlanHash: "0x" + strings.Repeat("ab", 32)}
+	manifest := SupervisorFile{
+		Schema: "urnetwork-sim-supervisor-v1", DeploymentID: cfg.Config.Deployment.DeploymentID,
+		BinaryHash: "sha256:" + strings.Repeat("12", 32),
+		Specs:      []ProcessSpec{{ID: "operator-1", Role: "operator-api", Identity: "no:1"}},
+	}
+	hash, err := canonicalHashHex(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	state := SupervisorState{
+		Schema: "urnetwork-sim-supervisor-state-v1", UpdatedAt: "2026-09-20T00:00:00Z", ContractCleanupCutoff: "2026-09-20T00:00:00Z",
+		ManifestHash: hash, SupervisorPID: 73, SupervisorStartTimeTicks: 91,
+		Processes: []ProcessState{{ID: "operator-1", Role: "operator-api", Identity: "no:1", PID: 0, StartedAt: "2026-09-20T00:00:00Z", ExitError: "controlled stop"}},
+	}
+	inactive := supervisorServiceStatus{ActiveState: "inactive", SubState: "dead"}
+	if err := provisionalStoppedTopologyEligible(cfg, "resume", manifest, hash, state, inactive); err != nil {
+		t.Fatalf("exact stopped retained generation was rejected: %v", err)
+	}
+	for name, mutate := range map[string]func(*SupervisorState, *supervisorServiceStatus){
+		"active service":                func(_ *SupervisorState, s *supervisorServiceStatus) { s.ActiveState, s.SubState = "active", "running" },
+		"changed manifest":              func(s *SupervisorState, _ *supervisorServiceStatus) { s.ManifestHash = "0x" + strings.Repeat("cd", 32) },
+		"missing supervisor generation": func(s *SupervisorState, _ *supervisorServiceStatus) { s.SupervisorPID = 0 },
+	} {
+		t.Run(name, func(t *testing.T) {
+			gotState, gotService := state, inactive
+			mutate(&gotState, &gotService)
+			if err := provisionalStoppedTopologyEligible(cfg, "resume", manifest, hash, gotState, gotService); err == nil {
+				t.Fatal("ambiguous stopped topology was admitted")
+			}
+		})
+	}
+	if err := provisionalStoppedTopologyEligible(cfg, "scenario", manifest, hash, state, inactive); err == nil {
+		t.Fatal("non-resume command was admitted as a stopped topology recovery")
+	}
+}
+
 func TestProvisionalResumeRequiresExplicitExactApprovalAndCommand(t *testing.T) {
 	_, plan, _, options := provisionalResumeTestContext(t)
-	for _, command := range []string{"resume", "scenario"} {
+	for _, command := range []string{"setup", "resume", "scenario"} {
 		if err := validateProvisionalResumeOptions(command, options); err != nil {
 			t.Fatal(err)
 		}
@@ -38,7 +78,7 @@ func TestProvisionalResumeRequiresExplicitExactApprovalAndCommand(t *testing.T) 
 			t.Fatalf("strict default changed to %d", got)
 		}
 	}
-	for _, command := range []string{"setup", "launch", "release-lock", "retire", "stop", "doctor"} {
+	for _, command := range []string{"launch", "release-lock", "retire", "stop", "doctor"} {
 		if err := validateProvisionalResumeOptions(command, options); err == nil {
 			t.Fatalf("provisional flag accepted on %s", command)
 		}
@@ -259,5 +299,25 @@ func TestProvisionalResumeHonestBuildAndNoFinalAcceptance(t *testing.T) {
 	encoded, err := json.Marshal(strict)
 	if err != nil || strings.Contains(string(encoded), "provisional") || strings.Contains(string(encoded), "final_acceptance") {
 		t.Fatalf("strict result wire format changed: %s %v", encoded, err)
+	}
+}
+
+func TestProvisionalResumeAdmitsExactAuthenticatedPlanLineage(t *testing.T) {
+	cfg, plan, dir, options := provisionalResumeTestContext(t)
+	predecessor := "0x" + strings.Repeat("57", 32)
+	plan.PriorPlanHashes = []string{predecessor}
+	if err := prepareProvisionalResume(context.Background(), cfg, dir, "scenario", options, plan); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(cfg.provisionalResume.AcceptedPlanHashes, []string{plan.PlanHash, predecessor}) {
+		t.Fatalf("accepted plan lineage=%v", cfg.provisionalResume.AcceptedPlanHashes)
+	}
+	cfg, plan, dir, options = provisionalResumeTestContext(t)
+	plan.PriorPlanHashes = []string{"not-a-hash"}
+	if err := prepareProvisionalResume(context.Background(), cfg, dir, "scenario", options, plan); err == nil {
+		t.Fatal("noncanonical predecessor was admitted")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "provisional-resumes")); !os.IsNotExist(err) {
+		t.Fatalf("rejected lineage wrote provenance: %v", err)
 	}
 }

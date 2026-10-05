@@ -1,0 +1,110 @@
+{
+  "schema": "validator-current-e9-two-image-root-readback-v1",
+  "status": "NORMAL_RACE_COMPILE_PASS_BODIES_AND_VET_PENDING",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/current-e9-go-images-v1.terminal.json",
+      "bytes": 1140,
+      "sha256": "3b3b39e033e8f80b9965f7397bf4e86e3d2a0dde0b1214080219780344e4a333"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/current-e9-go-validator-normal-compile.receipt.json",
+      "bytes": 7862,
+      "sha256": "9c2018a8a445c8463a6337603a6095688d246fde8af636dccc799c0982b40a72"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/current-e9-go-validator-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/current-e9-go-validator-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/current-e9-go-validator-normal-compile.resources.csv",
+      "bytes": 14781,
+      "sha256": "c52256da2ab1c65ca44c8df78af957d69f1e15b491bcac31098e68311f25bcf2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/images/current-e9-go-validator-normal-compile.test",
+      "bytes": 81992208,
+      "sha256": "2d03a53aaa0b1b8eae28d41bfa7cf527866b9202764330d082d470c0986e3d20"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/current-e9-go-validator-race-compile.receipt.json",
+      "bytes": 7878,
+      "sha256": "341230316b793017aab258a63a98549979724fd45e216072785d9ddc73b0e6e3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/current-e9-go-validator-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/current-e9-go-validator-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/current-e9-go-validator-race-compile.resources.csv",
+      "bytes": 21564,
+      "sha256": "b0e9d086d172abf811f618f4075a32d2f980cdc64fe285d0a10741a972e9a0fa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/images/current-e9-go-validator-race-compile.test",
+      "bytes": 108895424,
+      "sha256": "0484d5d2f9f11e7915e5a3fb9fceb9f27965fc1f4ffc4709137baa8c27f8ddee"
+    }
+  ],
+  "images": [
+    {
+      "mode": "normal",
+      "image": {
+        "bytes": 81992208,
+        "ctime_ns": 1791123182432856599,
+        "device": 2081,
+        "gid": 1000,
+        "inode": 19714961,
+        "links": 1,
+        "mode": 320,
+        "mtime_ns": 1791123182432856599,
+        "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/images/current-e9-go-validator-normal-compile.test",
+        "sha256": "2d03a53aaa0b1b8eae28d41bfa7cf527866b9202764330d082d470c0986e3d20",
+        "type": 32768,
+        "uid": 1000
+      },
+      "sampled_peaks": {
+        "forest_process_count": 6,
+        "forest_rss_bytes": 1964019712
+      }
+    },
+    {
+      "mode": "race",
+      "image": {
+        "bytes": 108895424,
+        "ctime_ns": 1791123373633404850,
+        "device": 2081,
+        "gid": 1000,
+        "inode": 19714966,
+        "links": 1,
+        "mode": 320,
+        "mtime_ns": 1791123373633404850,
+        "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/images/current-e9-go-validator-race-compile.test",
+        "sha256": "0484d5d2f9f11e7915e5a3fb9fceb9f27965fc1f4ffc4709137baa8c27f8ddee",
+        "type": 32768,
+        "uid": 1000
+      },
+      "sampled_peaks": {
+        "forest_process_count": 5,
+        "forest_rss_bytes": 1869234176
+      }
+    }
+  ],
+  "limits": [
+    "Actual current dependency closure compiles in both modes; no executed test result inferred.",
+    "Three original affected roots in each mode plus vet remain required before integration publication.",
+    "Sampled process maxima are not measured upper bounds."
+  ]
+}

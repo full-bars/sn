@@ -19,6 +19,15 @@ func carryFleetRenewalRevision(revised, prior *SetupPlan) error {
 	if len(revised.FleetRenewals) != 0 || revised.FleetLifecycleRenewal != nil {
 		return errors.New("fleet renewal revision was already applied")
 	}
+	// A completed live renewal persists its signed renewal record and receipts;
+	// successor reconstruction restores any compacted deterministic actions before
+	// validating the append-only lineage. Existing actions must still match
+	// exactly, so compaction cannot authorize a modified action.
+	priorForValidation, err := restoreFleetRenewalActions(prior)
+	if err != nil {
+		return err
+	}
+	prior = priorForValidation
 	if err := validateFleetRenewalPlan(prior); err != nil {
 		return err
 	}
@@ -44,7 +53,7 @@ func carryFleetRenewalRevision(revised, prior *SetupPlan) error {
 	var renewalActions []Action
 	future := map[string]Action{}
 	for _, action := range retained.Actions {
-		if isFleetRenewalAction(action) {
+		if isFleetRenewalAction(action) || isFleetRenewalExtensionAction(action) {
 			renewalActions = append(renewalActions, action)
 		}
 		if fleetLifecycleRenewalFutureAction(action.ID) {
@@ -104,7 +113,14 @@ func validateFleetRenewalReservedLiability(plan *SetupPlan) error {
 	if plan == nil || len(plan.FleetRenewals) == 0 {
 		return nil
 	}
-	liability := plan.FleetRenewals[len(plan.FleetRenewals)-1].CampaignLiabilityWei
+	latest := plan.FleetRenewals[len(plan.FleetRenewals)-1]
+	liability := latest.CampaignLiabilityWei
+	// A reviewed allowance extension funds the renewal signers separately. Its
+	// signed transaction exposure must not be charged to the campaign reserve a
+	// second time; retain the exact campaign reserve that approved the extension.
+	if !latest.AllowanceExtensionWei.IsZero() {
+		liability = latest.CampaignReserveBeforeWei
+	}
 	for _, action := range plan.Actions {
 		if action.ID != "campaign.evm-gas-reserve" {
 			continue
@@ -116,4 +132,50 @@ func validateFleetRenewalReservedLiability(plan *SetupPlan) error {
 		return nil
 	}
 	return errors.New("renewed plan lost its signed campaign liability reserve")
+}
+
+func restoreFleetRenewalActions(plan *SetupPlan) (*SetupPlan, error) {
+	if plan == nil || len(plan.FleetRenewals) == 0 {
+		return plan, nil
+	}
+	raw, err := json.Marshal(plan)
+	if err != nil {
+		return nil, err
+	}
+	var restored SetupPlan
+	if err := json.Unmarshal(raw, &restored); err != nil {
+		return nil, err
+	}
+	expected := map[string]Action{}
+	presentActionKVs := make(map[string]bool, len(restored.Actions))
+	for _, action := range restored.Actions {
+		presentActionKVs[action.ID] = true
+	}
+	for _, renewal := range restored.FleetRenewals {
+		actions, err := fleetRenewalPlanActions(&restored, renewal)
+		if err != nil {
+			return nil, err
+		}
+		for _, action := range actions {
+			expected[action.ID] = action
+			// A later round can authenticate a prior revocation by action id.
+			// Restore each earlier round before deriving that successor.
+			if !presentActionKVs[action.ID] {
+				restored.Actions = append(restored.Actions, action)
+				presentActionKVs[action.ID] = true
+			}
+		}
+	}
+	for _, action := range restored.Actions {
+		if !isFleetRenewalAction(action) && !isFleetRenewalExtensionAction(action) {
+			continue
+		}
+		want, ok := expected[action.ID]
+		gotHash, _ := canonicalHashHex(action)
+		wantHash, _ := canonicalHashHex(want)
+		if !ok || gotHash != wantHash {
+			return nil, fmt.Errorf("renewal action %s differs from its approved generation", action.ID)
+		}
+	}
+	return &restored, nil
 }

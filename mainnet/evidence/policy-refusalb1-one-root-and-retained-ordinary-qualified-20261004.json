@@ -1,0 +1,93 @@
+{
+  "schema": "policy-refusal-b1-joined-qualified-ordinary-scope-v1",
+  "status": "ONE_CHANGED_ROOT_NORMAL_RACE_PASS_PLUS20_UNCHANGED_ORIGINAL_PASSES_PER_MODE",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb1/evidence/b1-go-one-root-v2.terminal.json",
+      "bytes": 2333,
+      "sha256": "0452a2cdbec103421f393b9d8f620b8fbf3bfa7ff624a0d6c59a84ef89efc21d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb1/evidence/b1-go-normal-changed-policy-refusal.receipt.json",
+      "bytes": 4379,
+      "sha256": "2af65e96fe837ea3190d4e05fea0eabe6c973df60fffe9ea1986eb1216bf1eab"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb1/evidence/b1-go-normal-changed-policy-refusal.stdout",
+      "bytes": 1001,
+      "sha256": "367518f5cedcdb26e9911c15a9e114aa3b6f2358c625bc7a792782b42825a95c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb1/evidence/b1-go-normal-changed-policy-refusal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb1/evidence/b1-go-normal-changed-policy-refusal.resources.csv",
+      "bytes": 408,
+      "sha256": "f5f2a355c7b069d3530d72086fd8e10edce17893bccbf81c6917635706b292ba"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb1/evidence/b1-go-race-changed-policy-refusal.receipt.json",
+      "bytes": 4366,
+      "sha256": "a56295cba8bc071bcbe0eb3acd6634109142bb74c54591bab4ad68a8e041ae88"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb1/evidence/b1-go-race-changed-policy-refusal.stdout",
+      "bytes": 1003,
+      "sha256": "d72d9fb648f8ace5f24f2308fe7b1dcb7758446f20b1d6382db1ef11d057850b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb1/evidence/b1-go-race-changed-policy-refusal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb1/evidence/b1-go-race-changed-policy-refusal.resources.csv",
+      "bytes": 1548,
+      "sha256": "98ab6486bec8f1b2a69ea231877499fa1150761570d014b39db52e9d4ea7c138"
+    },
+    {
+      "path": "mainnet/evidence/admissionab0-ordinary-terminal-and-drained-root-finding-20261004.json",
+      "bytes": 8189,
+      "sha256": "9fb9f916f450a6383add548a7bf9f9412aedfbe188933811a0fe99f09e83110e"
+    },
+    {
+      "path": "mainnet/evidence/admissionab0-normal21-failure-and-b1-source-root-review-20261004.json",
+      "bytes": 6648,
+      "sha256": "7be195433dd736c48dc3b8e981add6d575a00ce52aaf9e000039b7403dce5df7"
+    }
+  ],
+  "source_head": "b1be6f7dde95deafd8adbdfe2e064598e855ac4a",
+  "base": "ab0b1a6fc58f4d0be4bfe84d26d4bb892ddd6a64",
+  "new_runs": [
+    {
+      "mode": "normal",
+      "census": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      }
+    },
+    {
+      "mode": "race",
+      "census": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      }
+    }
+  ],
+  "inherited_scope": "Twenty unaffected original roots pass separately in each ab0 mode; original ab0 ordinary batches retain20PASS1FAIL and their raw outputs. ab0 vet passed. Sole child change is inside one test function; no production,module,engine or helper delta.",
+  "joined_scope": {
+    "roots_per_mode": 21,
+    "qualified_via": "20 retained ab0 successes +1 b1 corrected assertion success; not a single21-pass invocation"
+  },
+  "limits": [
+    "Nineteen dual-engine roots, long129 and operative controls remain required.",
+    "Corrected drained-export fixture dependency and later large-profile/entitlement/populated join remain separate.",
+    "No deployment, source/runtime authority or mainnet acceptance inferred."
+  ]
+}

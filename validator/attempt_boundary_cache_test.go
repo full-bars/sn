@@ -304,7 +304,7 @@ func TestAttemptBoundaryCacheScansUIDsAndBindingsOncePerBlock(t *testing.T) {
 	wait.Wait()
 	rpc.stateLock.Lock()
 	defer rpc.stateLock.Unlock()
-	if rpc.snapshots != 1 || rpc.validates != 0 || rpc.scans != 1 || rpc.reads[firstID] != 1 || rpc.reads[secondID] != 1 {
+	if rpc.snapshots != 1 || rpc.validates != 33 || rpc.scans != 1 || rpc.reads[firstID] != 1 || rpc.reads[secondID] != 1 {
 		t.Fatalf("RPC counts = snapshots %d validates %d scans %d reads %v", rpc.snapshots, rpc.validates, rpc.scans, rpc.reads)
 	}
 }

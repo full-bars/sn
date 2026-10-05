@@ -1,0 +1,37 @@
+{
+  "schema": "mainnet-claim-payment-source-semantics-v1",
+  "source_commit": "e99493515eb12b2bb2ade50c087250473da4730d",
+  "files": {
+    "evm/src/STSettlementVault.sol": {
+      "bytes": 21716,
+      "sha256": "ac76e47f8744bf65d621005b4765985002e17a706f380c914987af4af55ede4a"
+    },
+    "evm/test/ReleaseClaimRecovery.t.sol": {
+      "bytes": 9259,
+      "sha256": "9734ca76ce9aae6f96110e60043b781cc8f9e57705a43cdee9512552761f88c0"
+    },
+    "evm/test/ReleaseSettlementMinimums.t.sol": {
+      "bytes": 13553,
+      "sha256": "9c3a7c1a6eab1a278c3b346e58029519d36aa0f97b6075d184f7dca7d27123ac"
+    },
+    "miner/claim_signed_outcome.go": {
+      "bytes": 5856,
+      "sha256": "df5077a814499b2052f8be6f6efb06384603c4f8b998c81b54710c4ed7a0bc70"
+    },
+    "miner/sn.go": {
+      "bytes": 15623,
+      "sha256": "00d5df3610cedea20bf7dba86df3ddc1df3244eba4f8e20b9e33452eeea7cbb3"
+    }
+  },
+  "scope": "Read-only source and existing test assertion inspection; no tests executed in this review",
+  "accepted_claim": "Exact Claimed receipt may be finalized while runtime payment is deferred. Existing signed claim reconciliation authenticates acceptance, not ClaimPaid.",
+  "payment": "ClaimPaid follows successful nested exact-delta transfer; amount is total accumulated coldkey credit, not necessarily current claim amount.",
+  "attribution": "Credit accumulates across operator and epoch claims; pool-specific paid attribution requires complete retained credit history and an explicit allocation rule.",
+  "controls_required": [
+    "successful receipt with Claimed and ClaimPaymentDeferred retains accepted liability but unknown/unpaid transfer",
+    "later aggregate ClaimPaid larger than current Claimed must not be attributed in full to every pool",
+    "expired entitlement does not erase accepted unpaid credit",
+    "missing credit history or closing finality yields unavailable attribution, not zero"
+  ],
+  "verdict": "IMPLEMENTATION_REQUIREMENT_REFINED_NOT_QUALIFIED"
+}

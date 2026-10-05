@@ -1,0 +1,112 @@
+{
+  "schema": "validator-current-e9-image-runner-root-adoption-v1",
+  "status": "ADOPTED_COMPILATION_AND_BODY_RESULTS_PENDING",
+  "head": "e9b274ee64fcd5533d163e40063800117e39a922",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/go-images-job-v1.json",
+    "sha256": "377cc05eac0855a36367f28a1522104d5e34cf9d8e9a7eafed90edeed3eb49ef"
+  },
+  "bindings": [
+    {
+      "bytes": 10574,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/run-go-images-v1.py",
+      "sha256": "37edd03140a805bfd16f1e16ee78fcec353dc9a048e62760b5e144f775e7117c"
+    },
+    {
+      "bytes": 6878102,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/source-readback-v1.json",
+      "sha256": "ba65db0245feca5c91fb9bef729d957cf4dd98b01d79d42d543e53ec2b485d4f"
+    },
+    {
+      "bytes": 2885,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/peer-bindings-v1.json",
+      "sha256": "4cab3792c120b29d1d480f451f6a76df865ee098fb1f0ae52aab64e95326caf3"
+    },
+    {
+      "bytes": 4504,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/selected-graph-v2.receipt.json",
+      "sha256": "1670e7b9197d7fcb4b09d266bcdd15e33a19393cd98f484fa0cd8f3d84d81455"
+    },
+    {
+      "bytes": 2285,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/validator-terminal-current/evidence/source-review.json",
+      "sha256": "bfb200770ec1be68937472e6b29cd5efe26384f857842ac67d6456d06ade0b61"
+    },
+    {
+      "bytes": 20536,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-rust-only-v3.py",
+      "sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472"
+    },
+    {
+      "bytes": 23340,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "bytes": 10122,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/go_test_image.py",
+      "sha256": "63444702ee731ef3a1b22d6073fb7b4e436691c7cf6a41b475e237f25286bb11"
+    },
+    {
+      "bytes": 15434687,
+      "path": "/usr/local/go/bin/go",
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    },
+    {
+      "bytes": 11292,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/source/go.mod",
+      "sha256": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6"
+    },
+    {
+      "bytes": 66880,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/source/go.sum",
+      "sha256": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+    }
+  ],
+  "source": {
+    "file_count": 20849,
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/source-readback-v1.json",
+      "bytes": 6878102,
+      "sha256": "ba65db0245feca5c91fb9bef729d957cf4dd98b01d79d42d543e53ec2b485d4f"
+    }
+  },
+  "peers": {
+    "peer_count": 7,
+    "binding": {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/validatorcurrent/evidence/peer-bindings-v1.json",
+      "bytes": 2885,
+      "sha256": "4cab3792c120b29d1d480f451f6a76df865ee098fb1f0ae52aab64e95326caf3"
+    }
+  },
+  "admission": {
+    "phase": "root-current-e9-before-adoption",
+    "available_bytes": 60498903040,
+    "memory_available_bytes": 120987328512,
+    "free_inodes": 93352591,
+    "data_threshold_bytes": 53551960064,
+    "memory_threshold_bytes": 113816633344,
+    "baseline_bytes": 113681502208,
+    "cumulative_cap_bytes": 68719476736,
+    "lease_pid": 620836,
+    "lease_starttime": "94830154",
+    "lock_inode": 16941991
+  },
+  "selected_roots": [
+    "TestReleaseArchiveFullLineageTerminalRefusesLostOwner",
+    "TestReleaseArchiveFullLineageTerminalOwnerCancellation",
+    "TestReleaseArchiveV2ReplaysCompleteSignedHistoryWithoutLiveState"
+  ],
+  "review": [
+    "Two exact protected validator images, normal and race, are built from current release Core2ea dependency closure rather than old Corec618.",
+    "Full20849 source entries and seven clean physical peer links/HEADs/trees/modules are verified at entry and after each compiler.",
+    "Actual766-package import graph passes; model package is not part of this selected validator closure.",
+    "Inherited owned-process supervisor retains raw bounded outputs/resources and joins descendants; exact Go image guard stages and verifies separate immutable normal/race images.",
+    "Same original baseline and64GiB cumulative cap retain2x compiler forecast and old long body reserve. No Rust/Go compiler overlap."
+  ],
+  "limits": [
+    "Compilation is not an executed-test result; three selected roots in each mode and vet still required.",
+    "Earlier14-root component qualification and12 causal control results remain separate; no broad result inferred from this integration scope.",
+    "No production activation or full38-requirement closure."
+  ]
+}

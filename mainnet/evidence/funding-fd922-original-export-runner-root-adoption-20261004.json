@@ -1,0 +1,126 @@
+{
+  "schema": "fd922-original-export-runner-root-adoption-v1",
+  "status": "ADOPTED_SUBJECT_TO_RUNNER_FRESH_ADMISSION",
+  "head": "fd9229f26db7788b84584f2287d194760ada4eb2",
+  "bindings": [
+    {
+      "bytes": 11994,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/run-required-rust-exports-v1.py",
+      "sha256": "9a9307ac56a1c3446602e0dc2430b350d0b2cf03c3a441374d35fb0b0bef90db"
+    },
+    {
+      "bytes": 7013,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/crate-stage-v1.json",
+      "sha256": "9758cc6924cf1c56010a43b492a7d80e8f96ef7d87c922c23ea0c2e5c741293d"
+    },
+    {
+      "bytes": 3663,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/evidence/fd922-required-rust-exports-resource-proposal-v1.json",
+      "sha256": "0b6d300df6201ef72b4877a3338b1628075ac072936c9d3139b3c9f221c7c8c8"
+    },
+    {
+      "bytes": 1733,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-codec-fixture/evidence/intake.json",
+      "sha256": "b2533715cfffaa1919b44ccd12c535c01232655ba393fd5e7202f26d66f36b7f"
+    },
+    {
+      "bytes": 8433,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-codec-fixture/evidence/qualification-recipe.json",
+      "sha256": "2e40e9e9d80382cb2c5344cdbaa85be1ab333f50025f203513a90b127529aa52"
+    },
+    {
+      "bytes": 10735,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-codec-fixture/evidence/crate-source-census.json",
+      "sha256": "54649c018b0bef8dbc200502755295e28c2e7aedda1a41472c9d7c5c1f8b63de"
+    },
+    {
+      "bytes": 24979,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-codec-fixture/evidence/operative-controls.json",
+      "sha256": "f28e0e42904eed7b3e13f5492bc2f9aaf447c54cfb9b00f34c398e8f3f113d00"
+    },
+    {
+      "bytes": 6951496,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/source-full-readback-v1.json",
+      "sha256": "070512ffcb58a95b4c3171e30803b586cdfa50fc93fc8d71debdee39e5dee5ab"
+    },
+    {
+      "bytes": 3244,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-required-rust-exports-v1.terminal.json",
+      "sha256": "f1fda14dc73c5558f0955291d6813ddc459664aaa73e8432220459275e167208"
+    },
+    {
+      "bytes": 6081,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3.terminal.json",
+      "sha256": "e0d887bda45caabb2ab41d53d1afa6db2811b70cc4b42d51032a6c224aa4ccb1"
+    },
+    {
+      "bytes": 20536,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-rust-only-v3.py",
+      "sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472"
+    },
+    {
+      "bytes": 58569,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    },
+    {
+      "bytes": 23340,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "bytes": 39124328,
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "5b32bd53b8a08d8e206daed51f3fce40cdc0729038ff96bd0ca845596a2c1019"
+    },
+    {
+      "bytes": 654128,
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "c6ac0142c05a60b0f6c15e1a118bd5ac3bd04924cd6dc0c328f501c5f86e4142"
+    },
+    {
+      "bytes": 3996,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-libtest-build.resources.csv",
+      "sha256": "11fcc7943c10e3d89dfccd0b522052b69a85d76ea84ebc5d68ca80197ab6554b"
+    },
+    {
+      "bytes": 3143,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-bins-build.resources.csv",
+      "sha256": "56da489ba97eca2376706889cfdebd2094bc849d57e375c15891d20ac0abd83a"
+    },
+    {
+      "bytes": 2008,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-required-rust-libtest-failure-census-v1.json",
+      "sha256": "6dfdb355e0b707ccc99dc5b45d9cf2246e03c5121781a30b28a4b4e8a6cf57e1"
+    }
+  ],
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/required-rust-exports-job-v1.json",
+    "sha256": "2a3532c68cd81008c8dcd1ac06d3be6eb98e9d2982499c96c77e690946b4f5f4"
+  },
+  "adoption": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturefd922/required-rust-exports-adoption-v1.json",
+    "sha256": "2d6f72d615b5cb1a4290533cd5abc2826e82107b6131f0d312cd4e0777ba3199"
+  },
+  "scope": {
+    "causal_controls": 5,
+    "fresh_libtest_images_maximum": 6,
+    "no_go_or_server_compiler_overlap": true,
+    "positive_outputs": 14,
+    "positive_roots": 4,
+    "prior_rust_engines_reuse_only_after_closure": true,
+    "serial": true
+  },
+  "review": [
+    "Complete corrected33-file private crate verified against original source plus exact sole changed Git child file.",
+    "Reviewed executable delta changes only run namespace, corrected source comparator and recipe/intake/failure bindings; inherited actual process/ELF/classifier/guard mechanisms unchanged.",
+    "Four exporter definitions and fourteen member sets including liveness bounds are byte-for-byte equal to the original recipe. Five exact rebased controls remain separate.",
+    "Existing Go and production runtime engines are not rebuilt for this test-only import repair.",
+    "No additional allowance or compiler overlap: runner rechecks canonical lease,2x reserve and absence of another compiler before each phase."
+  ],
+  "limits": [
+    "Adoption is not a fresh compiler-slot admission; current validator race compile remains live. Sol must wait for that compiler to join and execute the existing fresh guard.",
+    "Original ab48 failed compiler remains bound; no new successful body/output claimed.",
+    "All original funding41 and five causal controls remain required."
+  ]
+}

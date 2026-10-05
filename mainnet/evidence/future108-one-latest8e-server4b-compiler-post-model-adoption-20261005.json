@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "adopted_at": "2026-10-05T01:36:38.811090+00:00",
+  "compiler_count": 1,
+  "compiler_memory_max_bytes": 8589934592,
+  "compiler_memory_swap_max_bytes": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 8589934592,
+  "data_minimum_available_bytes": 17179869184,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "ba28c1a531c6dde4b752649d5c912fd9a6e310638436673a15bbf03de37222e5",
+  "margin": 2,
+  "memory_minimum_available_bytes": 120259084288,
+  "model_count": 0,
+  "review_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest8e-server4b-compiler-post-model-review-20261005.json",
+  "review_sha256": "3b77282b4ca620cbf49164b567cfb93423eae3879ee750dbc9fc2e2d4dc8d470",
+  "runner_sha256": "1daa4f5e8c831574f10dbcb985038d333c728f565394ba40a1a59046d5954e52",
+  "scope": "Exact8e/Core25/Server4b NUL779 repair normal model compile only after metadata/allpriorbodies joined; zero model/DB/othercompiler/short/history. Original conservative floors retained. Later monitor931+a634, nativefee780 and carry correction excluded.",
+  "status": "ADOPTED_ONE_BOUNDED_GO_COMPILER_POST_MODEL"
+}

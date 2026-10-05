@@ -1,0 +1,42 @@
+{
+  "active_model_sampler_unchanged": true,
+  "exact_control_names": [
+    "test_absence_before_exit_and_unavailable_inspect_are_not_zero",
+    "test_actual_memory_zero_is_distinct_from_unavailable",
+    "test_live_unknown_and_foreign_states_retain_actual_observation",
+    "test_process_disappearance_before_workload_exit_is_unknown",
+    "test_process_disappearance_reobserves_container_before_absence",
+    "test_removing_requires_confirmed_exact_identity_absence",
+    "test_retained_identity_replacement_or_loss_cannot_be_absence",
+    "test_teardown_restarted_process_and_budget_exhaustion_stay_unknown",
+    "test_terminal_absence_is_retained_and_inputs_are_bounded"
+  ],
+  "observed_utc": "2026-10-04T04:24:52.777077+00:00",
+  "original_resource_false_retained": true,
+  "raw": {
+    "bytes": 1576,
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/container-observation-v1-stdlib.raw.txt",
+    "sha256": "8604e3e6a4d8dca52e47feb72f26ab62841e18e3862982f4f9e486a630aa24f7"
+  },
+  "receipt": {
+    "bytes": 1556,
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/container-observation-v1-stdlib-raw-qualification.json",
+    "sha256": "4c6dbcf7dde631ecea0e7035116ab3f2a8f8be268375c08b5316aaf413a7ba34"
+  },
+  "reviewed_source": [
+    {
+      "bytes": 10313,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/qualification-container-lifecycle/container_observation_v1.py",
+      "sha256": "c10c21298f5f16acb2e9b797d09b9a78b36a9ccf7a69c34ebe8ebd0d3a287499"
+    },
+    {
+      "bytes": 7479,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/qualification-container-lifecycle/test_container_observation_v1.py",
+      "sha256": "29aa6188c8fa2061baf790dc19edc04c78731f56590ec21757c930aa4ce15619"
+    }
+  ],
+  "schema": "container-lifecycle-source-and-control-root-review-v1",
+  "scope_limit": "Mock Docker and physical local proc/cgroup fixtures; no actual active sampler integration qualification.",
+  "source_review": "Bounded same-ID observation and trace; retry teardown only after actual workload exit; require observed terminal absence. Live/foreign/restarted/unknown observations remain unavailable, never zero.",
+  "status": "SCOPED_NINE_STDLIB_CONTROLS_PASS"
+}

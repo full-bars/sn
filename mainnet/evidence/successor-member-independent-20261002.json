@@ -1,0 +1,119 @@
+{
+  "author_manifest_entries_rehashed": 86,
+  "author_manifest_sha256": "23c2f45f740360cb6fff6f845eda25180ac38c5f27b8f201be51c601a5dd510d",
+  "author_receipt_sha256": "9b00d2fa3365efbcc739abc0035a7e90b863bf2853f55ba213fa6faa18775da4",
+  "baseline_commit": "f3c8a618ecb5f636b538abef760135ce6203546d",
+  "baseline_tree": "a8d3c6269e29d47e6f40e8daf96c6fd99a29bca6",
+  "causal": {
+    "expected_assertions": [
+      "completed preparation member loss became a fresh claim",
+      "completed execution member loss renewed original attempt allowance",
+      "lost counted tail became an earlier valid execution prefix",
+      "missing global nonce member became new claimant authority",
+      "byte-identical replacement became original member custody"
+    ],
+    "normal": {
+      "exit_code": 1,
+      "raw_sha256": "04c14fbf71bd184210e81b4c59d56596e30f57c64670f5a9c2ec7b52c7f53c13",
+      "terminal_expected_failures": 5
+    },
+    "race": {
+      "exit_code": 1,
+      "raw_sha256": "f8260c930e63ae0551249f93411175f047fe01b7dee3f56bf017b86f4417153c",
+      "terminal_expected_failures": 5
+    },
+    "test_only_overlay_sha256": "35eccb028a5885c2dc48f3d389852f9ba9fd504a86ab5a0495f1593a66f36279"
+  },
+  "dependency_pins": {
+    "connect": {
+      "commit": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+      "tree": "010533a40c31403c14a810828fee3c47e324c143"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "1b7cc78b2dc43f5191cc7b0d3d22f0754fedc662",
+      "tree": "e8097e705ab2479e181bcfe37ec2d3926d3afab4"
+    },
+    "sn": {
+      "commit": "2c8017f59bff318f762624b62641d437358f8d4f",
+      "tree": "3d513a8b019a37f3472a715fd50b65108de907f0"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "limits": [
+    "Bounded ten-root independent scope; author full38 is separately scoped.",
+    "Test-only old f3 overlay controls do not claim a whole historical build.",
+    "No live signing, deployment, or launch authorization.",
+    "Test execution is independent; no clean release compiler/OCI provenance claim."
+  ],
+  "manifest_entries": 30,
+  "manifest_sha256": "7ca0fb8153eeae255971d2420a4b6ea33e3c6fbfd98639e7344c7a0182ce089c",
+  "normal": {
+    "exit_code": 0,
+    "package_seconds": 117.173,
+    "raw_sha256": "ababfa8a8e339bf200a4f26d6fd4c1f77573d365e02e2444253a24b2101a9d49",
+    "terminal_passes": 10
+  },
+  "physical_source_readback": {
+    "initial_sha256": "e3b7cc20602ab6c83cb9f20e147324f52fbdee1744b5a8fad065b86a99df1049",
+    "mismatches": 0,
+    "terminal_sha256": "7d923855a073b536e84be77869e74cba8c605dfb9afa960b5530e378db995974",
+    "tracked_blobs": 19950
+  },
+  "preserved_setup_failure": {
+    "corrected_preflight_sha256": "5f56e56111c2863925de16ac60a0afc3520023b939af8400ae2fbe5a960e8424",
+    "first_syntactic_preflight_false_alarm": "proxy transitive ../connect was overridden by go.work; original graph-preflight.json retained",
+    "initial_normal_exit_code": 1,
+    "raw_sha256": "11f803c619874ebbd14695345b944d4b9bf841b81c914fdbd3cade4eb805bcc6",
+    "reason": "missing local glog go.mod in first independent checkout before preflight"
+  },
+  "race": {
+    "exit_code": 0,
+    "package_seconds": 452.809,
+    "raw_sha256": "bc6b5673afd017df1482c8108b66b9b518c75fd590db369386751eb1c612ddc4",
+    "terminal_passes": 10
+  },
+  "schema": "sol-independent-member-census-2c801-v1",
+  "selected_roots": [
+    "TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus",
+    "TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus",
+    "TestBootstrapSuccessorExecutionRetainsCountedTailCensus",
+    "TestBootstrapSuccessorNonceRegistryRetainsMemberCensus",
+    "TestBootstrapSuccessorExecutionRetainsMemberInode",
+    "TestBootstrapSuccessorPublicClaimRequiresBothMemberHeads",
+    "TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering",
+    "TestBootstrapSuccessorMemberCrashResumesExactPreparedPayload",
+    "TestBootstrapSuccessorUnrelatedDirectoryPressureDoesNotPoisonCustody",
+    "TestBootstrapSuccessorExecutionResumesReservedCountedIntentBeforeStage"
+  ],
+  "source_commit": "2c8017f59bff318f762624b62641d437358f8d4f",
+  "source_tree": "3d513a8b019a37f3472a715fd50b65108de907f0",
+  "toolchain": {
+    "go_binary_sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45",
+    "go_version": "go version go1.26.6 linux/amd64"
+  },
+  "verdict": "PASS_SCOPED",
+  "vet": {
+    "exit_code": 0,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

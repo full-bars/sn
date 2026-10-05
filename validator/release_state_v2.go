@@ -139,6 +139,11 @@ func openReleaseEvidenceV2DiskStateWithObserver(ctx context.Context, cfg *Releas
 					return
 				}
 				states[index] = &releaseAttemptState{ledger: ledger, stats: NewStatsEngine(statsConfig)}
+				if err := validateProductionCapacityLedger(operationCtx, cfg, input.noID, ledger); err != nil {
+					failures[index] = fmt.Errorf("evidence capacity no_id %d: %w", input.noID, err)
+					cancel()
+					return
+				}
 				if observer.opened != nil {
 					observer.opened(input.noID, ledger)
 				}

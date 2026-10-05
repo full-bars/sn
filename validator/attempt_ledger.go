@@ -164,6 +164,7 @@ type attemptCutSignaturePayload struct {
 // AttemptLedger owns one append-only operator journal. Methods are safe for
 // concurrent use; callers serialize it after StatsEngine when both are held.
 type AttemptLedger struct {
+	storageCtx             context.Context
 	stateLock              sync.Mutex
 	path                   string
 	identity               AttemptLedgerIdentity
@@ -482,6 +483,18 @@ func appendAttemptLedgerFile(path string, payload []byte) error {
 // NewAttemptLedger loads and verifies one private operator ledger. A torn or
 // malformed line fails closed; measurement history is never silently skipped.
 func NewAttemptLedger(stateDir string, identity AttemptLedgerIdentity, vsk ed25519.PrivateKey) (result *AttemptLedger, resultErr error) {
+	return NewAttemptLedgerContext(context.Background(), stateDir, identity, vsk)
+}
+
+// Mainnet's context-aware constructor retains its explicit physical policy.
+// The historical API cannot start a mainnet writer through a missing context.
+func NewAttemptLedgerContext(ctx context.Context, stateDir string, identity AttemptLedgerIdentity, vsk ed25519.PrivateKey) (result *AttemptLedger, resultErr error) {
+	if err := requireAttemptDurableReference(ctx, identity); err != nil {
+		return nil, err
+	}
+	if identity.ChainID == 964 {
+		return nil, errors.Join(ErrAttemptLedgerStreamingRequired, errors.New("mainnet legacy JSONL is historical input; provision its exact signed prefix for the disk owner"))
+	}
 	if len(vsk) != ed25519.PrivateKeySize || !bytes.Equal(vsk, ed25519.NewKeyFromSeed(vsk[:ed25519.SeedSize])) {
 		return nil, errors.New("attempt ledger validator private key is invalid")
 	}
@@ -490,7 +503,7 @@ func NewAttemptLedger(stateDir string, identity AttemptLedgerIdentity, vsk ed255
 	if err := validateAttemptLedgerIdentity(identity, vpk); err != nil {
 		return nil, err
 	}
-	directory, err := openAttemptLedgerDirectory(stateDir, nil)
+	directory, err := openAttemptLedgerDirectory(stateDir, nil, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -500,7 +513,7 @@ func NewAttemptLedger(stateDir string, identity AttemptLedgerIdentity, vsk ed255
 			result = nil
 		}
 	}()
-	if err := directory.enter(context.Background()); err != nil {
+	if err := directory.enter(ctx); err != nil {
 		return nil, err
 	}
 	defer func() {
@@ -512,7 +525,8 @@ func NewAttemptLedger(stateDir string, identity AttemptLedgerIdentity, vsk ed255
 		return nil, err
 	}
 	ledger := &AttemptLedger{
-		path: filepath.Join(directory.path, "attempt-ledger.jsonl"), identity: identity, legacyAnchor: directory.anchor,
+		storageCtx: ctx,
+		path:       filepath.Join(directory.path, "attempt-ledger.jsonl"), identity: identity, legacyAnchor: directory.anchor,
 		vsk: append(ed25519.PrivateKey(nil), vsk...), vpk: append(ed25519.PublicKey(nil), vpk...),
 		pending: map[connect.Id]AttemptRecord{}, terminal: map[connect.Id]bool{},
 	}

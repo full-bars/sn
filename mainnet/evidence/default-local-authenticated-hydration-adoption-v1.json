@@ -1,0 +1,35 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 15032385536,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "125cfd983a270ba63d2551c26b7d88165b010f55d250c619802c8fd3c4f45464",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 0,
+  "network_context_count": 4,
+  "runner_sha256": "0229924632a94f451be02a89dd4dc524ed305921dac65c97591666887f349f82",
+  "short_count": 0,
+  "status": "ADOPTED_BOUNDED_AUTHENTICATED_PRIVATE_MODULE_HYDRATION",
+  "additional_predecessor_waits": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-read-omission-compile-v1.process-result.json",
+      "sha256": "2dae19ad96fb95c582e93948dff8715359bf92b104c5f7212cf659c84a726350"
+    }
+  ],
+  "adopted_at": "2026-10-05T07:06:06.469013+00:00",
+  "root_review": "All exactbindings/ASTverified. Private-module authenticateddependencydownloads/proposalgraphs only, no canonical/staged source edits or compiler. Prior graphfailures preserved. Actual isolated omissioncompiler exited0 joined; USERclosedverified atRoot. No actualdefaultbuildqualification fromproposalgraphs.",
+  "additional_closed_owner_readbacks": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/main-b13-renewal-read-omission-compile-v1-user-terminal-readback.json",
+      "sha256": "3be795db5eaeac3d82323d5d3d59fc43c7f4f8f0bbf8fcd091009cb0a77d0d0b"
+    }
+  ]
+}

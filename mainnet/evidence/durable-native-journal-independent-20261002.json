@@ -1,0 +1,408 @@
+{
+  "author_receipt": {
+    "artifact_count_rehashed": 125,
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-receipt.json",
+    "sha256": "c0569ceba8cf412f7447feeb60c1b90d7c01d31b08adc0354137454e8dbe57db"
+  },
+  "causal": {
+    "intermediate": {
+      "normal": {
+        "elapsed_seconds": 1.955,
+        "exit": 1,
+        "mode": "normal",
+        "scope": "intermediate",
+        "selector": "^TestDurableNativeJournal(ReadsUnderWritePressure|RejectsReplacedOpenedLeaves|PartialAppendRequiresReconciliation|PostRenameFailureCannotAcknowledge|CancellationPrecedesIo)$",
+        "tests": {
+          "fail": [
+            "TestDurableNativeJournalCancellationPrecedesIo",
+            "TestDurableNativeJournalPartialAppendRequiresReconciliation",
+            "TestDurableNativeJournalPostRenameFailureCannotAcknowledge",
+            "TestDurableNativeJournalReadsUnderWritePressure",
+            "TestDurableNativeJournalRejectsReplacedOpenedLeaves"
+          ],
+          "pass": [],
+          "run": [
+            "TestDurableNativeJournalCancellationPrecedesIo",
+            "TestDurableNativeJournalPartialAppendRequiresReconciliation",
+            "TestDurableNativeJournalPostRenameFailureCannotAcknowledge",
+            "TestDurableNativeJournalReadsUnderWritePressure",
+            "TestDurableNativeJournalRejectsReplacedOpenedLeaves"
+          ],
+          "skip": []
+        }
+      },
+      "race": {
+        "elapsed_seconds": 2.859,
+        "exit": 1,
+        "mode": "race",
+        "scope": "intermediate",
+        "selector": "^TestDurableNativeJournal(ReadsUnderWritePressure|RejectsReplacedOpenedLeaves|PartialAppendRequiresReconciliation|PostRenameFailureCannotAcknowledge|CancellationPrecedesIo)$",
+        "tests": {
+          "fail": [
+            "TestDurableNativeJournalCancellationPrecedesIo",
+            "TestDurableNativeJournalPartialAppendRequiresReconciliation",
+            "TestDurableNativeJournalPostRenameFailureCannotAcknowledge",
+            "TestDurableNativeJournalReadsUnderWritePressure",
+            "TestDurableNativeJournalRejectsReplacedOpenedLeaves"
+          ],
+          "pass": [],
+          "run": [
+            "TestDurableNativeJournalCancellationPrecedesIo",
+            "TestDurableNativeJournalPartialAppendRequiresReconciliation",
+            "TestDurableNativeJournalPostRenameFailureCannotAcknowledge",
+            "TestDurableNativeJournalReadsUnderWritePressure",
+            "TestDurableNativeJournalRejectsReplacedOpenedLeaves"
+          ],
+          "skip": []
+        }
+      }
+    },
+    "late-admission": {
+      "normal": {
+        "elapsed_seconds": 2.032,
+        "exit": 1,
+        "mode": "normal",
+        "scope": "late-admission",
+        "selector": "^TestDurableNative(SubmissionCancellationPrecedesOwnedIo|JournalCancellationDuringEmptyReadAdmission)$",
+        "tests": {
+          "fail": [
+            "TestDurableNativeJournalCancellationDuringEmptyReadAdmission",
+            "TestDurableNativeSubmissionCancellationPrecedesOwnedIo"
+          ],
+          "pass": [],
+          "run": [
+            "TestDurableNativeJournalCancellationDuringEmptyReadAdmission",
+            "TestDurableNativeSubmissionCancellationPrecedesOwnedIo"
+          ],
+          "skip": []
+        }
+      },
+      "race": {
+        "elapsed_seconds": 3.173,
+        "exit": 1,
+        "mode": "race",
+        "scope": "late-admission",
+        "selector": "^TestDurableNative(SubmissionCancellationPrecedesOwnedIo|JournalCancellationDuringEmptyReadAdmission)$",
+        "tests": {
+          "fail": [
+            "TestDurableNativeJournalCancellationDuringEmptyReadAdmission",
+            "TestDurableNativeSubmissionCancellationPrecedesOwnedIo"
+          ],
+          "pass": [],
+          "run": [
+            "TestDurableNativeJournalCancellationDuringEmptyReadAdmission",
+            "TestDurableNativeSubmissionCancellationPrecedesOwnedIo"
+          ],
+          "skip": []
+        }
+      }
+    },
+    "public-submit": {
+      "normal": {
+        "elapsed_seconds": 2.07,
+        "exit": 1,
+        "mode": "normal",
+        "scope": "public-submit",
+        "selector": "^TestDurableNativeSubmissionChecksStorageBeforeRpc$",
+        "tests": {
+          "fail": [
+            "TestDurableNativeSubmissionChecksStorageBeforeRpc"
+          ],
+          "pass": [],
+          "run": [
+            "TestDurableNativeSubmissionChecksStorageBeforeRpc"
+          ],
+          "skip": []
+        }
+      },
+      "race": {
+        "elapsed_seconds": 3.543,
+        "exit": 1,
+        "mode": "race",
+        "scope": "public-submit",
+        "selector": "^TestDurableNativeSubmissionChecksStorageBeforeRpc$",
+        "tests": {
+          "fail": [
+            "TestDurableNativeSubmissionChecksStorageBeforeRpc"
+          ],
+          "pass": [],
+          "run": [
+            "TestDurableNativeSubmissionChecksStorageBeforeRpc"
+          ],
+          "skip": []
+        }
+      }
+    },
+    "restart-callback": {
+      "normal": {
+        "elapsed_seconds": 2.364,
+        "exit": 1,
+        "mode": "normal",
+        "scope": "restart-callback",
+        "selector": "^TestDurableNative(Journal(ReopenRefusesMissing(Log|RawMember)|EmptyRawDirectoryLossStopsHandoff)|Submission(RuntimeCallbackCancellationPrecedesSigning|BeforeBroadcastCancellationRetainsPreparedOnly))$",
+        "tests": {
+          "fail": [
+            "TestDurableNativeJournalEmptyRawDirectoryLossStopsHandoff",
+            "TestDurableNativeJournalReopenRefusesMissingLog",
+            "TestDurableNativeJournalReopenRefusesMissingRawMember",
+            "TestDurableNativeSubmissionBeforeBroadcastCancellationRetainsPreparedOnly",
+            "TestDurableNativeSubmissionRuntimeCallbackCancellationPrecedesSigning"
+          ],
+          "pass": [],
+          "run": [
+            "TestDurableNativeJournalEmptyRawDirectoryLossStopsHandoff",
+            "TestDurableNativeJournalReopenRefusesMissingLog",
+            "TestDurableNativeJournalReopenRefusesMissingRawMember",
+            "TestDurableNativeSubmissionBeforeBroadcastCancellationRetainsPreparedOnly",
+            "TestDurableNativeSubmissionRuntimeCallbackCancellationPrecedesSigning"
+          ],
+          "skip": []
+        }
+      },
+      "race": {
+        "elapsed_seconds": 3.906,
+        "exit": 1,
+        "mode": "race",
+        "scope": "restart-callback",
+        "selector": "^TestDurableNative(Journal(ReopenRefusesMissing(Log|RawMember)|EmptyRawDirectoryLossStopsHandoff)|Submission(RuntimeCallbackCancellationPrecedesSigning|BeforeBroadcastCancellationRetainsPreparedOnly))$",
+        "tests": {
+          "fail": [
+            "TestDurableNativeJournalEmptyRawDirectoryLossStopsHandoff",
+            "TestDurableNativeJournalReopenRefusesMissingLog",
+            "TestDurableNativeJournalReopenRefusesMissingRawMember",
+            "TestDurableNativeSubmissionBeforeBroadcastCancellationRetainsPreparedOnly",
+            "TestDurableNativeSubmissionRuntimeCallbackCancellationPrecedesSigning"
+          ],
+          "pass": [],
+          "run": [
+            "TestDurableNativeJournalEmptyRawDirectoryLossStopsHandoff",
+            "TestDurableNativeJournalReopenRefusesMissingLog",
+            "TestDurableNativeJournalReopenRefusesMissingRawMember",
+            "TestDurableNativeSubmissionBeforeBroadcastCancellationRetainsPreparedOnly",
+            "TestDurableNativeSubmissionRuntimeCallbackCancellationPrecedesSigning"
+          ],
+          "skip": []
+        }
+      }
+    }
+  },
+  "created_utc": "2026-10-02T11:32:32.923743+00:00",
+  "dependencies": {
+    "connect": {
+      "clean": true,
+      "commit": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+      "tree": "010533a40c31403c14a810828fee3c47e324c143"
+    },
+    "glog": {
+      "clean": true,
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "clean": true,
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "clean": true,
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "clean": true,
+      "commit": "025802a50e2dc56dc56c3cb749db7375aa9f72be",
+      "tree": "adf05777aca3ad4fb97c4befd2163a74064d635b"
+    },
+    "userwireguard": {
+      "clean": true,
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "clean": true,
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "files_sha256": {
+    "causal-intermediate-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-intermediate-normal.log": "161769ed99374503075c9f9fe9efa6c98c2b3308a62a87984658753cbd681482",
+    "causal-intermediate-normal.result.json": "72adfa4c3d3cdb43b1d1157941a9bde901a0b02b8bc1994544664da0395a4f55",
+    "causal-intermediate-overlay.json": "fb886df3f75f1a65d47760bcd7259779568db8993db17437a73b6d6c22d52744",
+    "causal-intermediate-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-intermediate-race.log": "213729727f3ec255267cd9e9af383df1f8988bdee1c87f39aa864c7405c86319",
+    "causal-intermediate-race.result.json": "00f8d12f7f4c154b9c34ed8ced322641df2d366ec267cc0ddc013a95dc1a6663",
+    "causal-late-admission-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-late-admission-normal.log": "bcc57750c1b1fcf72433d635f9d6d4a701444a308f5e1c15399b820078e67097",
+    "causal-late-admission-normal.result.json": "a754f860f3fc9e5262984f353e17481e1bb230307647ed8b33844808deb67ed6",
+    "causal-late-admission-overlay.json": "3ff5def7c20b58044764ef1dca1c6fd45e8dac77ddbbb9b680f26e9aa93139eb",
+    "causal-late-admission-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-late-admission-race.log": "0899bb6fb602c5ec32049e4dbd98fe3e37c60493dbe0a34b00891d28a21e0aff",
+    "causal-late-admission-race.result.json": "44fd07d04a315639a097a00f22311f718eeb63e284351bbea7cf478867e8e905",
+    "causal-public-submit-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-public-submit-normal.log": "53c5c2ca2fb65e04605cc735c4b594cf7d47d70395a145d3b525d8568dc4c822",
+    "causal-public-submit-normal.result.json": "dd5ec22f9482adf70ee806f9ad23f216e02ace445729fd0f9712d554ae4c3aee",
+    "causal-public-submit-overlay.json": "8ca045ccf9642f5e5ffea9a66079ce8eeea689c67f49110e3366622b16de8c44",
+    "causal-public-submit-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-public-submit-race.log": "7cff1952234bb7993357ab214364787bef75448bfe8cd491a5d02b768107b34c",
+    "causal-public-submit-race.result.json": "cc766b2c264cc889dd2defb37c35e8b259bd29dbc472fadbfeadcf5c361482dc",
+    "causal-restart-callback-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-restart-callback-normal.log": "7c9e7d5d4ed23ea8c71fa6d9097f612c755d8cc351dd32e3e09fe787a2950b58",
+    "causal-restart-callback-normal.result.json": "ab3d7f1bc22f2f5a3a3d0af3e3e73aaf3ca2c89e5a145484317af4e50b03179b",
+    "causal-restart-callback-overlay.json": "c834149918225410872428abdb9d962a5d83053d843bd974d47c0fddfdce43b1",
+    "causal-restart-callback-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-restart-callback-race.log": "49fcbae9d3bd1cd9e3e3270c6bf08d418d96f3ddff1a5aab08f490a550c1342d",
+    "causal-restart-callback-race.result.json": "43ec3826749ff9fa84301f7fa1ea6251b2ca718d2edbdbb0a9d0d17648d4f243",
+    "native-causal-runner.log": "1c837b2afe17296162e6cb27af5f86adedcdb5810acbc4588e195af4dcb11c87",
+    "native-runner-invalid-fixture.log": "7a881a66a3c434b277d906c05da7501805f1cab912424486787cc80d32de7d07",
+    "native-runner-invalid-umask.log": "322895a38eadafa55f52f4baf3b253ab53174745793e3e5443000c6628ef2015",
+    "native-runner.log": "0c1ad3f623201bf99a6241f4d5a2b37464a17177baca74b876bea30d8144c6ba",
+    "native.mod": "4ef1cda25081faeb4c21fbab2abbcde844f7b95f25aca8589c1ad84ff4d09459",
+    "native.sum": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3",
+    "normal-invalid-fixture.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "normal-invalid-fixture.log": "6b1f272dc914e580e1d7f14a1f86f424be4a7e66b7d3f9e30524936822cf0987",
+    "normal-invalid-umask.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "normal-invalid-umask.log": "c947f8e65f1c82f4aa7bd59cbf04d5f760d308fc737d045e719e02e12e408040",
+    "normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "normal.log": "195d86c26174a2b37e5c635a2f56d1ed364edcbc162e08b72ca23e917369d2fa",
+    "race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "race.log": "7f08e7e737765d12f2de9820ae9d6336f8d28f995dca73cecc7ce5884acd89ea",
+    "run_native.py": "8e74cf084392d96ce2bcdd7ac1a0822acfd55de4c42c1d1be2974931ffa99fdd",
+    "run_native_causal.py": "4b4d59555b0eea68c1771d1c4048a15214851ee1d562e91531855dd35f78bec9",
+    "source-readback.json": "3becfc8e0f402b8b3ccc53f81eaed494a9c3863bc9e34c83ae8b65a7f23ba220",
+    "verify_tree.py": "7e6d3368c63791c8e1b2745431e8ee48a139f6aa94afb932068a7b120a3662d5",
+    "vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "invalid_fixture_attempts": {
+    "initial": "audit root and TMPDIR inherited mode0775; 28 custody roots failed protected-ancestor fixture admission",
+    "second": "audit root and TMPDIR corrected to0700 but Go test intermediate directory still mode0775 under umask0002; runner now sets umask0077; both failure logs retained"
+  },
+  "limits": [
+    "Public Submit baseline is exact parent105; other causal overlays use retained intermediate unpublished source and must not be called a parent-commit regression.",
+    "Native journal and chain package scope only; no downstream miner, validator, bootstrap, monitor or claim adoption, provisioning, deployment or release qualification.",
+    "No live mount, signing, RPC submission or production start."
+  ],
+  "normal_race": {
+    "normal": {
+      "exit": 0,
+      "fail": 0,
+      "pass": 42,
+      "run": 42,
+      "skip": 0,
+      "test_names": [
+        "TestAccountInfoDecodesReviewedRuntimeU64Balances",
+        "TestAddStakeDecisionTable",
+        "TestDurableNativeJournalCancellationDuringEmptyReadAdmission",
+        "TestDurableNativeJournalCancellationPrecedesIo",
+        "TestDurableNativeJournalEmptyRawDirectoryLossStopsHandoff",
+        "TestDurableNativeJournalObservationFailureCanRetry",
+        "TestDurableNativeJournalPartialAppendRequiresReconciliation",
+        "TestDurableNativeJournalPostDirectorySyncLeafLossIsUncertain",
+        "TestDurableNativeJournalPostRenameFailureCannotAcknowledge",
+        "TestDurableNativeJournalReadOnlyInspectionRetainsCustody",
+        "TestDurableNativeJournalReadsUnderWritePressure",
+        "TestDurableNativeJournalRejectsReplacedOpenedLeaves",
+        "TestDurableNativeJournalReopenRefusesMissingLog",
+        "TestDurableNativeJournalReopenRefusesMissingRawMember",
+        "TestDurableNativeJournalReopenRefusesPartialTail",
+        "TestDurableNativeJournalReopenRefusesPendingRawPublication",
+        "TestDurableNativeJournalRequiresCorrectExplicitPolicy",
+        "TestDurableNativeJournalSequentialLeafReplacementStopsHandoff",
+        "TestDurableNativeSubmissionBeforeBroadcastCancellationRetainsPreparedOnly",
+        "TestDurableNativeSubmissionCancellationPrecedesOwnedIo",
+        "TestDurableNativeSubmissionChecksStorageBeforeRpc",
+        "TestDurableNativeSubmissionRuntimeCallbackCancellationPrecedesSigning",
+        "TestJournalAppendsAndReadsBackStages",
+        "TestNativeJournalCustodyAnchorIsMandatory",
+        "TestNativeJournalCustodyConcurrentRootLossIsScoped",
+        "TestNativeJournalCustodyCrashChild",
+        "TestNativeJournalCustodyCrashRecoversExactSyncedBytes",
+        "TestNativeJournalCustodyExactLostAcknowledgementRecovers",
+        "TestNativeJournalCustodyInPlaceMutationStopsHandoff",
+        "TestNativeJournalCustodyObservationFailureRetriesSameOwner",
+        "TestNativeJournalCustodyOpenerDoesNotCreateLog",
+        "TestNativeJournalCustodyPendingRawRejectsAmbiguity",
+        "TestNativeJournalCustodyRecoveryRefusesPartialBytes",
+        "TestNativeTransactionFeeLimitCoversObservedRegistrationAndFailsClosed",
+        "TestNativeTransactionFeeParsingAcceptsExactIntegerEncodings",
+        "TestNativeTransactionFeeParsingRejectsMalformedAndLossyValues",
+        "TestPoolPriceIsTaoRaoPerAlpha",
+        "TestRegisterLimitCallMatchesReviewedRuntimeLayout",
+        "TestRegistrationDecisionTable",
+        "TestStakeCallsMatchReviewedRuntimeLayout",
+        "TestStorageFallbackKeepsAbsentOptionalQueryAbsent",
+        "TestStorageFallbackSuppliesAbsentValueQuery"
+      ]
+    },
+    "race": {
+      "exit": 0,
+      "fail": 0,
+      "pass": 42,
+      "run": 42,
+      "skip": 0,
+      "test_names": [
+        "TestAccountInfoDecodesReviewedRuntimeU64Balances",
+        "TestAddStakeDecisionTable",
+        "TestDurableNativeJournalCancellationDuringEmptyReadAdmission",
+        "TestDurableNativeJournalCancellationPrecedesIo",
+        "TestDurableNativeJournalEmptyRawDirectoryLossStopsHandoff",
+        "TestDurableNativeJournalObservationFailureCanRetry",
+        "TestDurableNativeJournalPartialAppendRequiresReconciliation",
+        "TestDurableNativeJournalPostDirectorySyncLeafLossIsUncertain",
+        "TestDurableNativeJournalPostRenameFailureCannotAcknowledge",
+        "TestDurableNativeJournalReadOnlyInspectionRetainsCustody",
+        "TestDurableNativeJournalReadsUnderWritePressure",
+        "TestDurableNativeJournalRejectsReplacedOpenedLeaves",
+        "TestDurableNativeJournalReopenRefusesMissingLog",
+        "TestDurableNativeJournalReopenRefusesMissingRawMember",
+        "TestDurableNativeJournalReopenRefusesPartialTail",
+        "TestDurableNativeJournalReopenRefusesPendingRawPublication",
+        "TestDurableNativeJournalRequiresCorrectExplicitPolicy",
+        "TestDurableNativeJournalSequentialLeafReplacementStopsHandoff",
+        "TestDurableNativeSubmissionBeforeBroadcastCancellationRetainsPreparedOnly",
+        "TestDurableNativeSubmissionCancellationPrecedesOwnedIo",
+        "TestDurableNativeSubmissionChecksStorageBeforeRpc",
+        "TestDurableNativeSubmissionRuntimeCallbackCancellationPrecedesSigning",
+        "TestJournalAppendsAndReadsBackStages",
+        "TestNativeJournalCustodyAnchorIsMandatory",
+        "TestNativeJournalCustodyConcurrentRootLossIsScoped",
+        "TestNativeJournalCustodyCrashChild",
+        "TestNativeJournalCustodyCrashRecoversExactSyncedBytes",
+        "TestNativeJournalCustodyExactLostAcknowledgementRecovers",
+        "TestNativeJournalCustodyInPlaceMutationStopsHandoff",
+        "TestNativeJournalCustodyObservationFailureRetriesSameOwner",
+        "TestNativeJournalCustodyOpenerDoesNotCreateLog",
+        "TestNativeJournalCustodyPendingRawRejectsAmbiguity",
+        "TestNativeJournalCustodyRecoveryRefusesPartialBytes",
+        "TestNativeTransactionFeeLimitCoversObservedRegistrationAndFailsClosed",
+        "TestNativeTransactionFeeParsingAcceptsExactIntegerEncodings",
+        "TestNativeTransactionFeeParsingRejectsMalformedAndLossyValues",
+        "TestPoolPriceIsTaoRaoPerAlpha",
+        "TestRegisterLimitCallMatchesReviewedRuntimeLayout",
+        "TestRegistrationDecisionTable",
+        "TestStakeCallsMatchReviewedRuntimeLayout",
+        "TestStorageFallbackKeepsAbsentOptionalQueryAbsent",
+        "TestStorageFallbackSuppliesAbsentValueQuery"
+      ]
+    }
+  },
+  "schema": "sol-independent-native-journal-695-v1",
+  "source": {
+    "commit": "695f6683173889e66926150fed7cc06bd78d8a23",
+    "tree": "efee94605757eeca1ba0535e31488b87de7c10de",
+    "verdict": "PASS",
+    "verified_blobs": 19927,
+    "verified_bytes": 216618007
+  },
+  "source_path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/source/sn695",
+  "verdict": "PASS_SCOPED",
+  "vet": {
+    "exit": 0,
+    "packages": [
+      "./chain",
+      "./internal/durablepath",
+      "./internal/durablefixture"
+    ]
+  }
+}

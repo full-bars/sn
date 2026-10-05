@@ -110,7 +110,7 @@ func newValidatorStakeTestFixture(t *testing.T) *validatorStakeTestFixture {
 		}
 		fixture.runtimeCalls++
 		expected := []any{"SubnetInfoRuntimeApi_get_selective_metagraph", "0x09021400001e00340039004500", identity.query.BlockHash.Hex()}
-		if ctx != identity.ctx || !reflect.DeepEqual(args, expected) {
+		if !validatorIdentityTestReadContext(ctx, identity.ctx) || !reflect.DeepEqual(args, expected) {
 			return true, fmt.Errorf("stake runtime call context/args differ: %v", args)
 		}
 		target, ok := result.(*json.RawMessage)
@@ -653,11 +653,7 @@ func useValidatorStakeHTTPFixture(t *testing.T, fixture *validatorStakeTestFixtu
 			return
 		}
 		var raw json.RawMessage
-		var header types.Header
 		var result any = &raw
-		if rpcRequest.Method == "chain_getHeader" {
-			result = &header
-		}
 		err := func() error {
 			stateLock.Lock()
 			defer stateLock.Unlock()

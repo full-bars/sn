@@ -1,0 +1,181 @@
+{
+  "current_git_go_files_verified": 2698,
+  "decision": {
+    "compile_timeout_seconds": 1800,
+    "cumulative_cap_bytes": 60129542144,
+    "disk_forecast_bytes": 6442450944,
+    "disk_two_times_bytes": 12884901888,
+    "fresh_data_threshold_bytes": 66436861952,
+    "internal_body_timeout_seconds": 3600,
+    "memory_threshold_bytes": 113816633344,
+    "no_other_compiler_or_body_overlap": true,
+    "original_baseline_bytes": 113681502208,
+    "outer_body_timeout_seconds": 3900,
+    "scope": "Exact38 public Go roots in normal/race, one vet; actual protected fd4 capture/replay+ten Rust jobs. Six causal groups follow separately under same resource forecast.",
+    "vet_timeout_seconds": 900
+  },
+  "elf_helper_sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c",
+  "go_helper_sha256": "63444702ee731ef3a1b22d6073fb7b4e436691c7cf6a41b475e237f25286bb11",
+  "precompile_refusals": [
+    {
+      "reason": "go_test_image sibling cargo_control import path absent",
+      "session_id": 48232
+    },
+    {
+      "reason": "Rust resource sampler has no elf attribute",
+      "session_id": 25733
+    }
+  ],
+  "prior_adoption": {
+    "bytes": 7522,
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/principal-dc1-go-fd4-operational-root-adoption-20261004.json",
+    "sha256": "9d7001e824aae2f590ce8a832ed60d06abe7d735435d74f892e87ecddd5ab268"
+  },
+  "process_local_PYTHONPATH": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification",
+  "proposal_sha256": "3638fed577a194845f0eff7944dc8f972414972073dcfe183e4aa06dc547cf85",
+  "readback": {
+    "data_available_bytes": 79754706944,
+    "free_inodes": 93724265,
+    "lease_pid": 620836,
+    "lease_starttime": "94830154",
+    "lock_inode": 16941991,
+    "memory_available_bytes": 121951465472,
+    "no_concurrent_compiler": true
+  },
+  "requirement_closure": false,
+  "review": [
+    "Read complete positive runner; isolated source/module/assets, shared sampler and process reaping remain authenticated. Protected Go images are fsynced and read back before/after actual public bodies.",
+    "Original query and actual distinct Rust protocol owners reach public consumers; exact root-mode census refuses missing/extra/failed/skipped roots.",
+    "Normal and race failures are retained independently; source-only or compile-only success does not qualify actual public integration. No chain transaction/deployment authority is granted."
+  ],
+  "reviewed_delta": "Exact ELF custody helper import and two existing before/after calls; no source, selector, resource, child argv, or fixture change.",
+  "runner_sha256": "d56ae51568f3b46cb802276e779de8566ce0f5bbdcb3d36e0099b9a2e139c9b4",
+  "rust_controls_sha256": "4bee5ff59148eae31e3993be33355ef6c77e8dbdbf1ed8bfb1799ba29612dee5",
+  "rust_helper_sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472",
+  "rust_terminal_sha256": "c3c038897d634714db5fc2fd08007858a8c8619b7cf629782b56e9d03ae501e5",
+  "schema": "principal-dc1-go-fd4-operational-adoption-v2",
+  "selectors_sha256": "7e6696950b30e6dbb96588ad0fa08df9ab0a331c8dcd4d4c0a4badb427a9e319",
+  "status": "ADOPTED_DC1_GO_FD4_POSITIVES",
+  "verified_bindings": [
+    {
+      "bytes": 5588,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/principal-dc1-go-fd4-finite-resource-proposal-v2.json",
+      "sha256": "3638fed577a194845f0eff7944dc8f972414972073dcfe183e4aa06dc547cf85"
+    },
+    {
+      "bytes": 13168,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-only-positives-v3.terminal.json",
+      "sha256": "c3c038897d634714db5fc2fd08007858a8c8619b7cf629782b56e9d03ae501e5"
+    },
+    {
+      "bytes": 1364,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-controls-v1.terminal.json",
+      "sha256": "4bee5ff59148eae31e3993be33355ef6c77e8dbdbf1ed8bfb1799ba29612dee5"
+    },
+    {
+      "bytes": 10122,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/go_test_image.py",
+      "sha256": "63444702ee731ef3a1b22d6073fb7b4e436691c7cf6a41b475e237f25286bb11"
+    },
+    {
+      "bytes": 20536,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-rust-only-v3.py",
+      "sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472"
+    },
+    {
+      "bytes": 22779,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/selectors.json",
+      "sha256": "7e6696950b30e6dbb96588ad0fa08df9ab0a331c8dcd4d4c0a4badb427a9e319"
+    },
+    {
+      "bytes": 53657192,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-capture",
+      "sha256": "bde25ccda67b5321849c190139f2ff1de7bc2caa0234df5514183f6059d2447d"
+    },
+    {
+      "bytes": 15165,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/exports/dc1-rust-root-16/native-job-101.json",
+      "sha256": "61c863ef0dfb57b7cabacbfd0ecc46067412bdaa3292e14fef462bcbdc9db74b"
+    },
+    {
+      "bytes": 1635,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server964-export-receipt.json",
+      "sha256": "b077a455bad0b0058b8173add48108ca47c49515223ca97146f54815fc5d10e5"
+    },
+    {
+      "bytes": 69128,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/principal-dc1-selected-mainnet-graph.receipt.json",
+      "sha256": "3b195bc796ad3828ed5b034f81e0477aed04b258a2b50dd9742cd387afd74dd4"
+    },
+    {
+      "bytes": 15005,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/exports/dc1-rust-root-17/native-job.json",
+      "sha256": "ac5a3976971af4324f8c466b555db4f1e697e4500dfafea70d40dcf8131de188"
+    },
+    {
+      "bytes": 11522,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/operative-controls.json",
+      "sha256": "41d002bdbe23331f0f2dce90b59bc08e0328689c494fbb5c0cadb22244879287"
+    },
+    {
+      "bytes": 3385,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/peer-links-receipt.json",
+      "sha256": "2fcc64413b4df0d88a530564ca2891a6c42e514e6afe9b1ed74552f3d7cdf4dd"
+    },
+    {
+      "bytes": 15165,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/exports/dc1-rust-root-07/principal-present.json",
+      "sha256": "d5359efd1e5811fda913836532a9d1fdd35abf3ab42a6d62d5ffb078a8270c0b"
+    },
+    {
+      "bytes": 51509672,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-replay",
+      "sha256": "abbbbae181a120c04359d39d8448b12034367f235131f4627d5106d0ddb5b5d0"
+    },
+    {
+      "bytes": 1364,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-controls-v1.terminal.json",
+      "sha256": "4bee5ff59148eae31e3993be33355ef6c77e8dbdbf1ed8bfb1799ba29612dee5"
+    },
+    {
+      "bytes": 13168,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-only-positives-v3.terminal.json",
+      "sha256": "c3c038897d634714db5fc2fd08007858a8c8619b7cf629782b56e9d03ae501e5"
+    },
+    {
+      "bytes": 22779,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/selectors.json",
+      "sha256": "7e6696950b30e6dbb96588ad0fa08df9ab0a331c8dcd4d4c0a4badb427a9e319"
+    },
+    {
+      "bytes": 1017,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/source-stage-receipt.json",
+      "sha256": "e65b865f88cabb059a1fc40940aaa6e929e786a5baed91f60ac17a5155c77fb3"
+    },
+    {
+      "bytes": 58569,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    },
+    {
+      "bytes": 23340,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "bytes": 12880,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-go-positives-v2.py",
+      "sha256": "d56ae51568f3b46cb802276e779de8566ce0f5bbdcb3d36e0099b9a2e139c9b4"
+    },
+    {
+      "bytes": 58569,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    },
+    {
+      "bytes": 19934,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/cargo_control.py",
+      "sha256": "b720d63c788c167c5afadc7c2d82e5c765c4f627fdc7032ec80be818c91820ce"
+    }
+  ]
+}

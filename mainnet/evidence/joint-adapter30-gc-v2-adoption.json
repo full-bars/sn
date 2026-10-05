@@ -1,0 +1,20 @@
+{
+  "status": "ADOPTED_ONE_JOINT_ADAPTER_PURE_TEST_SUITE",
+  "job_sha256": "66363af54fd0bea9db4636eadbb4cf1657fd85e30715c9b86d7416782976ae23",
+  "runner_sha256": "81b63dd5d01052b9a2f2d23501658ef727b1a3cab38a11061ff1bde9441568a9",
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "accounting_floor_bytes": 0,
+  "margin": 2,
+  "compiler_count": 0,
+  "model_count": 0,
+  "history_count": 0,
+  "short_count": 1,
+  "data_minimum_available_bytes": 10737418240,
+  "memory_minimum_available_bytes": 113816633344,
+  "memory_max_bytes": 268435456,
+  "memory_swap_max_bytes": 0,
+  "data_growth_stop_bytes": 67108864,
+  "adopted_at": "2026-10-05T06:29:34.389544+00:00",
+  "root_review": "40 unique pins and AST checked.30 pure deterministic tests; no compiler/Docker/product bodies. CurrentMain9 joined. A passing suite enables separately admitted parallel product cohorts, not deployment."
+}

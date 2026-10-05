@@ -1,0 +1,29 @@
+{
+  "cause": {
+    "correction": "separate mode755 fixture copy with byte-identical initdb script and distinct corrected runner; no source/test file mutation",
+    "observed": "owned PostgreSQL exited2 before tests; bind-mounted initdb directory mode700 prevented container postgres user from opening /docker-entrypoint-initdb.d",
+    "original_initdb_mode": "700"
+  },
+  "files": {
+    "evidence/module-graph.jsonl": "139cd61351f56c351dd83d4db64468cd706e98ff9aadb97e8b22c6edbde5434a",
+    "evidence/normal-network-cleanup.log": "6db347907c76bf564dcc45c18d42e648d7bcbc61c5770419ea848a4e0d6d63d2",
+    "evidence/normal-runner.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/normal-services-start.log": "9518678a978e1c02bbace3463e9acd504f10de698f442e1cc1086f262593b3ee",
+    "evidence/release-gate-services-private-network.sh": "bd4dfc1b3c3668f3fb7bab44a1768ba32dc368bbfc5605b54a336a407d571f1a",
+    "evidence/run-selected.sh": "50091495ad29b7f85bb1b57f02a981a644737883a8c99a6d7d71b35dba50a390",
+    "evidence/selection.json": "d829560a402bd26bfb619a59c4319bce73f881030fd27c961250438fa1642260",
+    "gate-normal/services/postgres.failure-log.txt": "d3c20c06d36fe60f7ffffeb52638644c512ba1dc20146f1ae4ac6b477d3680ee",
+    "gate-normal/services/postgres.failure-state.txt": "0e534080568fecb5cc4fd120a0669037d07f55243ae83590d0b3c12c7939bc71",
+    "gate-normal/services/postgres.failure.txt": "b81cba2340c9dacb19574f421f0677f7d3290a3d4e122e03e7c24f43202e48da",
+    "source/server/local/postgres/initdb/01-init-app-db.sh": "424c6fa9f136cb7323b887b00e013cf26f0529a6ceeecd2444e7eb5de20afe18"
+  },
+  "limits": [
+    "No product test result from this first attempt."
+  ],
+  "owned_service_cleanup_exit": 0,
+  "schema": "sol-provider-boundary-cdcb-initial-fixture-setup-v1",
+  "source_commit": "cdcb61fa3db72fb5c5844358224eeb0fb3cbd661",
+  "status": "SETUP_FAILURE_NOT_PRODUCT",
+  "zero_test_roots_started": true
+}

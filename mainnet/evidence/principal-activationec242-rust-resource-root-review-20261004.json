@@ -1,0 +1,59 @@
+{
+  "schema": "principal-activationec242-rust-resource-root-review-v1",
+  "status": "ADMITTED_AFTER_CURRENT_LANE_JOINS_AND_FRESH_RESOURCE_CHECK",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/rust-crate-stage-receipt-v2.json",
+      "bytes": 7957,
+      "sha256": "1adf04e71f73df3f29864f8c20c8c3da375d5576f2f99e08f10bf2fda7c7ef7a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/rust-testonly-resource-proposal-v1.json",
+      "bytes": 3960,
+      "sha256": "6d8b50a3cd57db14f72a5c9c38436634eb307800d5a2d6d7f4b5c3010e081a80"
+    },
+    {
+      "bytes": 5303,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/stage-receipt-v2.json",
+      "sha256": "4c7282c9731ef52cd33e36469314043ee78ab63189d06a24498a40264f70955c"
+    },
+    {
+      "bytes": 7957,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/rust-crate-stage-receipt-v2.json",
+      "sha256": "1adf04e71f73df3f29864f8c20c8c3da375d5576f2f99e08f10bf2fda7c7ef7a"
+    },
+    {
+      "bytes": 9205,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/intake.json",
+      "sha256": "667b81e73f18a5f07dbb6b2469e1bd01cdbdf3a886f2f4cc612bc32c372b7040"
+    },
+    {
+      "bytes": 7965,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/selectors.json",
+      "sha256": "dc7814b65395880e20ec03958c1a4a062b31394201166c34d8adc8d84a158c38"
+    },
+    {
+      "bytes": 6877,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/operative-controls.json",
+      "sha256": "8dacf5386f5ae242a609e3fef3f3853dfa2bc911bdb9f1c9737d9a596cfdd7d9"
+    },
+    {
+      "bytes": 2738,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/recipe.json",
+      "sha256": "4510e209785f7ed80fad67e25b76c25df3298fe15915495065738b041aa0eebc"
+    },
+    {
+      "bytes": 13168,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-rust-only-positives-v3.terminal.json",
+      "sha256": "c3c038897d634714db5fc2fd08007858a8c8619b7cf629782b56e9d03ae501e5"
+    },
+    {
+      "bytes": 10232,
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/principal-activationec242-source-root-review-20261004.json",
+      "sha256": "85acd92c683ac3eade72e5ad371f3584d2a5b31edb0e3096f5f3659de4162863"
+    }
+  ],
+  "review": "Full finite proposal read; independently verify eight input bindings and all29 private crate files against retained base; exactly one Rust test source differs, modules/production unchanged. Arithmetic preserves original cumulative cap/baseline and two-times data/memory forecast. Stage source plus four new Go virtual paths do not prove compiler success.",
+  "scope": "Existing reviewed Cargo/image classifier: one testlib compile, three exact Rust roots/four principal exports and two named independently compiled controls. No competing compiler/body; recheck exact lease/resources. Go qualification separate.",
+  "whole_mainnet_complete": false
+}

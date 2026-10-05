@@ -1,0 +1,131 @@
+{
+  "admission_floor_gib": 110,
+  "bindings": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/candidate-paths.txt": {
+      "bytes": 2466,
+      "sha256": "e3669591e82b650e5664f62f18643be840f1b444c28f9fd252a71fbe738a45e6"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/candidate-union-paths.txt": {
+      "bytes": 3474,
+      "sha256": "683ba92a96fed14d3b2b463c1ddfe1b908fa050838e1d4fa9418fa84cce39c9d"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/plan.json": {
+      "bytes": 6304,
+      "sha256": "368125ec2383410cfc2add2c0c0704632a5d9cc60594faa547a69fe1882613a7"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "d7670a33bc8b9401f21af49af7feaac6eb20d31dc45fd05bdd9ba96f5e2232f3"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "1da03c8787bd30e09a49333d54e235b8c4f22a5a6fcf00dcc052c6da53b7bae0"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/receipt.json": {
+      "bytes": 6546,
+      "sha256": "e376b09424e6462d6e6aa28bb901936d1d562654177595ae48e56131ce27f0a0"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/reclaim.go": {
+      "bytes": 7087,
+      "sha256": "f76d7db0dfb71248007f4f94a62993aae26ba2855984a01511e5283e21f9b97e"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/reference-command.json": {
+      "bytes": 1004,
+      "sha256": "9282ec894b66385a36f439ab0ec2b1aad81bd78fda9c73ef43bd2930a90a1541"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/reference-scan.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-18-20261003/reference-scope.json": {
+      "bytes": 815,
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/candidate-paths.txt": {
+      "bytes": 1008,
+      "sha256": "009433b0f3620387f398677cb95dadcf32a29d35272ff007e9761b89af9f9c84"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/candidate-union-paths.txt": {
+      "bytes": 3474,
+      "sha256": "683ba92a96fed14d3b2b463c1ddfe1b908fa050838e1d4fa9418fa84cce39c9d"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/plan.json": {
+      "bytes": 2778,
+      "sha256": "7baa78fad4c35d5e85cd11171e4959593101ecaf8b6bfd3925507591972686cc"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "c0d5f5bcd8f49869ac0dc3969309025791c1c40a01593c5eaf441acf70787980"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "7ae727220ccffd8d7f9458d3cea44dda1465af90215fb776df2b50bf483599a0"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/receipt.json": {
+      "bytes": 3031,
+      "sha256": "413f68acc601685a3850bf3cf3c837b568d699b296d468693ddd056e16f1e2dd"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/reclaim.go": {
+      "bytes": 7076,
+      "sha256": "8f3f9fbda8a399f7806e2b630a7c0fe136bec93810407a0bdc55baf142d1bdc2"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/reference-command.json": {
+      "bytes": 1004,
+      "sha256": "9282ec894b66385a36f439ab0ec2b1aad81bd78fda9c73ef43bd2930a90a1541"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/reference-scan.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-19-20261003/reference-scope.json": {
+      "bytes": 815,
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    }
+  },
+  "caches": [
+    {
+      "cache": "/mnt/data/sn-testnet/validator-mutable-prefix-sol-20260930/gocache",
+      "deleted_files": 18,
+      "helper_sha256": "f76d7db0dfb71248007f4f94a62993aae26ba2855984a01511e5283e21f9b97e",
+      "reclaimed_bytes": 786952192
+    },
+    {
+      "cache": "/mnt/data/sn-testnet/owner-ledger-sdk-20260930/go-cache",
+      "deleted_files": 8,
+      "helper_sha256": "8f3f9fbda8a399f7806e2b630a7c0fe136bec93810407a0bdc55baf142d1bdc2",
+      "reclaimed_bytes": 239935488
+    }
+  ],
+  "current_available_bytes": 121228771328,
+  "helper_changes": "Only taskRoot and cacheRoot constants; exact reverse comparison verified.",
+  "limits": [
+    "Local qualification host headroom only, not production capacity or backup acceptance."
+  ],
+  "preserves": "Active Sol cache, module cache, sources, evidence and ELF executables.",
+  "reclaimed_bytes": 1026887680,
+  "reclaimed_gib": 0.9563636779785156,
+  "schema": "urnetwork-guarded-inactive-cache-reclaim-v1",
+  "source_helper_sha256": "a49c13db37e0c2817ceabfab1f8aeff0d8cab9ba91d9628a1d3b22a353fdb0d8",
+  "status": "COMPLETE",
+  "verification": [
+    "Privileged all-process references absent before plan and apply.",
+    "Declared bounded metadata union scan returned exit1 with no stdout or stderr.",
+    "Repeated original device/inode/size/timestamps and archive magic guards; all selected paths absent after deletion."
+  ]
+}

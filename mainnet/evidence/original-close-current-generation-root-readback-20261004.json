@@ -1,0 +1,59 @@
+{
+  "schema": "original-close-current-generation-root-readback-v2",
+  "head": "7a805bd0661cc30be97769985f87dbe6d7da42e3",
+  "parent": "9ad0abd71b4223fc625420aae20193932c3dee43",
+  "tree": "973053b8e5604d1e7e3719e7568027533c17d4e4",
+  "supersedes_commit_only": "9b5dbce9b0d44dcb629a3ea15ebcb6c444c5376a",
+  "author": "Bitprecipice <bitprecipice@proton.me>",
+  "committer": "Bitprecipice <bitprecipice@proton.me>",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-proto-toolchain-20261004/generation-receipt-v2.json",
+      "bytes": 2586,
+      "sha256": "fff0d4555c114fc59d2d365dfd91b224f4e784ee95e888f897de15115d09010a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-proto-toolchain-20261004/connect-generated/protocol/transfer.pb.go",
+      "bytes": 110797,
+      "sha256": "e83126d5ce22cc29ea2e5972a7276d86e0b34230e8aaf68a9e811c0111ba096c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-proto-toolchain-20261004/connect-generated/protocol/transfer.proto",
+      "bytes": 34869,
+      "sha256": "f772a438956f80485d08a1db1c1c3b97f1b8a27fec6b1c1b3c8a4036e2315297"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-proto-toolchain-20261004/bin/protoc",
+      "bytes": 10618944,
+      "sha256": "65143da2d7a01c7ab24c287fb06de20fb07ef0a346f17d39fc284393f0ca0457"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-proto-toolchain-20261004/protoc-36.1-linux-x86_64.zip",
+      "bytes": 3678715,
+      "sha256": "c4bc672d9d49214dc8cafdceadf4df92182d6ca8e3ec65a56b2d7de5602669b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-proto-toolchain-20261004/bin/protoc-gen-go",
+      "bytes": 10719979,
+      "sha256": "9d01de81626d0a3ab034c6c6bd66a479aaf2b729036727e52e808f2a75bd25f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-proto-toolchain-20261004/evidence/core7a8-protocol-normal-compile.receipt.json",
+      "bytes": 3351,
+      "sha256": "09d2ba6c51f23bf8242c99855f929f1a7e29578a60820fbbb62c2800964cdfe9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-proto-toolchain-20261004/evidence/core7a8-protocol-normal-compile.stderr",
+      "bytes": 268,
+      "sha256": "5613b49d4e435c650aacc77c56cc8fcc705e1de9e8effe487a2b28f4e6549441"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-proto-toolchain-20261004/evidence/core7a8-protocol-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "status": "GENERATED_SOURCE_VERIFIED_PROTOCOL_COMPILE_FAILED",
+  "finding": "Author-only correction preserves the exact generated tree. Actual protocol compilation fails in the original test fixture because ed25519.PrivateKey is passed where ed25519.PublicKey is required. No test body ran. Astra owns fixture correction and adjacent verification call review; retain generated production bytes and qualify actual producer/consumer graph.",
+  "limitations": "No behavior qualification, final release publication, signature authorization or deployment inferred."
+}

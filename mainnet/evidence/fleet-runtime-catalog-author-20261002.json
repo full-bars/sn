@@ -1,0 +1,726 @@
+{
+  "causal_failures_each_mode": 6,
+  "changed_paths": [
+    "chain/register.go",
+    "chain/submit.go",
+    "crv4/chain.go",
+    "crv4/fleet_runtime_capability.go",
+    "crv4/runtime_identity.go",
+    "miner/fleet.go",
+    "miner/fleet_mainnet_evm.go",
+    "miner/fleet_mainnet_runtime.go",
+    "miner/fleet_recovery_evm.go",
+    "miner/fleet_recovery_native.go",
+    "miner/fleet_runtime_catalog.go",
+    "miner/fleet_runtime_catalog_test.go"
+  ],
+  "deployment_authorized": false,
+  "existing_neighbors": 9,
+  "files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/build-controls.go": {
+      "bytes": 4650,
+      "sha256": "ae3ac96a91da0617206a6cb7cb6d4e2e676ce64d302368f0d90215c634ae301d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/capture-graph.go": {
+      "bytes": 4868,
+      "sha256": "70f94c26f357ec404ad6097739eaeac38d78542dd31d85745e9332c7639d9620"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-catalog-normal.command.json": {
+      "bytes": 501,
+      "sha256": "cade0e8058f2993d226dfed0262520481342764b9f7d88ad937669e4946fdcfd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-catalog-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-catalog-normal.jsonl": {
+      "bytes": 5115,
+      "sha256": "bca38482efb814c640638e9e4a0a5c15b01ab897f3806f9c37338538556e6c8a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-catalog-normal.result.json": {
+      "bytes": 272,
+      "sha256": "424187cdb8510261afe020040bf1f3466a98aeaa2362398fc0be85ddf7779506"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-catalog-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-chain.go": {
+      "bytes": 60921,
+      "sha256": "41ae91b414a2d1720baeb3c2ee6379071ea4ca830a7c963a93df690c4dc7809d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-fleet.go": {
+      "bytes": 20078,
+      "sha256": "1546a4d574bfba59953a949f68bce6f59f0d30f877a7b3cf17c804c158da5ba0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-fleet_mainnet_evm.go": {
+      "bytes": 5815,
+      "sha256": "facf3e6c6d40a148474e715d9b46fda344d279d8cdf48809ee1bcbf1acb3ba3c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-fleet_mainnet_runtime.go": {
+      "bytes": 13146,
+      "sha256": "cad40a0c92845a190c5929090f87a3a8377a3834ab0c8a30394ea386123c1b94"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-fleet_recovery_evm.go": {
+      "bytes": 19100,
+      "sha256": "caa02fd7ac99618ecdb570120bbfb66437e33b75e2ee9cd675c4d5d4bc45b3d4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-fleet_recovery_native.go": {
+      "bytes": 18224,
+      "sha256": "157863dc42a861c60e912b13f68e488b80c58cec4da0157773b7ff3f8628f517"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-register.go": {
+      "bytes": 6183,
+      "sha256": "418eb81ccd6be4996dbf1ddb51cfbaaa2fb340742e3754676a31e0b2b603d2bb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/before-submit.go": {
+      "bytes": 5335,
+      "sha256": "e69aa304be3fd0de12500c59c8a47db36970d3b80a8493e382bdd6a7054ca6cd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-affected-vet.command.json": {
+      "bytes": 382,
+      "sha256": "c83864b8edfbc9b85335685c08bc19e8620f120a539ccb7259452000e30a741e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-affected-vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-affected-vet.result.json": {
+      "bytes": 111,
+      "sha256": "ec5ea1100190353f615c205aaaa4f4cb6e6b1799a23e3516f1ed923db2ce5c33"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-affected-vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-affected-vet.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-normal.command.json": {
+      "bytes": 1022,
+      "sha256": "64720804b12c72018c0c354c09f97e30e66d30d8bf44aa1a0f17639d7b609df3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-normal.jsonl": {
+      "bytes": 35564,
+      "sha256": "a969541880c4d6f66ba0f0400d3bf9a4ac80dda551fd17f4baa0a533f4312222"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-normal.result.json": {
+      "bytes": 1659,
+      "sha256": "2b4245689e4a1217b9eda741cb24090388e0a621d08276110655d37ecee41f92"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-race.command.json": {
+      "bytes": 1035,
+      "sha256": "fbd4c63fe518c8ebeb2bd5b842e8acf955a8d93ee4000d98984bb8bd20194aec"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-race.jsonl": {
+      "bytes": 35573,
+      "sha256": "858b79286e6ee12245d7eeb126c7125276a3c476bddad13076f7a906d8198912"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-race.result.json": {
+      "bytes": 1659,
+      "sha256": "c7577a187d611bdb549188359e7c16ce2b59e8ff31b138e680605b88fc5550be"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-bounded-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-first-normal.command.json": {
+      "bytes": 501,
+      "sha256": "3a9da47c56ede9bf94ea21c9ed9c5d6e5fd5bfd7affa9076b78be3cbd3822012"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-first-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-first-normal.jsonl": {
+      "bytes": 13915,
+      "sha256": "b1b8ae098ffd66aac789abaa4b3c7837bacffcc6fc68b14652e58a936173ce40"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-first-normal.result.json": {
+      "bytes": 891,
+      "sha256": "f59369fd07ada0b212424b051a06a1916084364d4a33903bbb8a20c9eb3015c9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/catalog-first-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-normal.command.json": {
+      "bytes": 690,
+      "sha256": "6812bf6f91b5e6945086d5cb4453de8ac3c59ab41300b9431285fa7537ba8c14"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-normal.jsonl": {
+      "bytes": 2755,
+      "sha256": "ad41abad667d251d26dc9558a19749b293d22f056ac7504970b09e4ad9b0af2d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-normal.result.json": {
+      "bytes": 231,
+      "sha256": "3a79a1a4b1d81cd48e481500a44f5c876c54a2b822e866cd5cc59a344b10ea08"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-race.command.json": {
+      "bytes": 703,
+      "sha256": "4dfe2deab764623d2697ba3fcf966e50270ad9492d1c584928ce6da803de4676"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-race.jsonl": {
+      "bytes": 2756,
+      "sha256": "48ee844ab7f8e28632807a4d8b2fb9e14ae007c127cd64f43c88c2b646c157e3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-race.result.json": {
+      "bytes": 231,
+      "sha256": "68a045973d98d1905baa80f806eea4905b1e0676d7d6c147666f26b45a43756d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission.go": {
+      "bytes": 7801,
+      "sha256": "d47319a3a45af49a6e576e476b3a3a45c8b16c51ac94d39b98fe8a75c3fe844a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-current-only-admission.overlay.json": {
+      "bytes": 243,
+      "sha256": "b5ef47b4a3ac5454fb2626ec3d4b4dbf6d2797d65f4192502016dc8632a21ff7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-normal.command.json": {
+      "bytes": 665,
+      "sha256": "7e2f8c6f70ac7cb5037eff51b2d5e8d1774874690ba00c0025d4d989bd1738cd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-normal.jsonl": {
+      "bytes": 3970,
+      "sha256": "1fa76d81054efbd62c9c28b65b5ae70b35d407f0129e3fb047276f0a68180207"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-normal.result.json": {
+      "bytes": 216,
+      "sha256": "2114d8e1c6ab2871bd6ea248606f72747226bd29b5f912972348422a025c4d7f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-race.command.json": {
+      "bytes": 678,
+      "sha256": "b42d8cbcbf24d7bc979657685eee82771dcaa15d43604b13ecf473d651a1ffdf"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-race.jsonl": {
+      "bytes": 3969,
+      "sha256": "f13dd6d6fdbbcd8d352c7db67ba6f074b92e8ff72563d841b71969e818dfac2d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-race.result.json": {
+      "bytes": 216,
+      "sha256": "a733f43f2c29a8ebaaa4c544338fcee2aa3dd1fbf452df1a90a4ec3f5845dde7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller.go": {
+      "bytes": 20078,
+      "sha256": "1546a4d574bfba59953a949f68bce6f59f0d30f877a7b3cf17c804c158da5ba0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-caller.overlay.json": {
+      "bytes": 217,
+      "sha256": "6d7ee748f444a1193d9ad3f06c2f0e4dda0dd877f346975369f9b378bd3c2301"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-normal.command.json": {
+      "bytes": 724,
+      "sha256": "c921826e18cdf612f3166b57a082ad7face4204996aa157fb2ed9e7cbb098bb2"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-normal.jsonl": {
+      "bytes": 4939,
+      "sha256": "d43ff20469891670f12943af4dc9cd7b93d2ead2e1b755b568e258c55820ae7b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-normal.result.json": {
+      "bytes": 344,
+      "sha256": "81df122d94ab6d6701a1576a74514cb4bb7454b3ad878418d900a40b8dc78936"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-race.command.json": {
+      "bytes": 737,
+      "sha256": "25675a9cb8f72556c02f13a426056b4468830aacc2c99c8acd83d4c39800baad"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-race.jsonl": {
+      "bytes": 4940,
+      "sha256": "25be5dc1a7b8cdd17b753417122fba2753983b5d325c8ad6185e75f83e5fb1ee"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-race.result.json": {
+      "bytes": 344,
+      "sha256": "6f4b71e5440f5cf7a4988bda9e15a7f2715e78b27b24bd3a793a881ebca5920b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch.go": {
+      "bytes": 61347,
+      "sha256": "7114b574253e92111c99f05064c180e126a0c1a36df378954a886df33c890524"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-prior-watch.overlay.json": {
+      "bytes": 215,
+      "sha256": "b4876fe75623443f3f864af0b7e5ccbc746e2216ee54795f3f5cd10f7751e6db"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-normal.command.json": {
+      "bytes": 663,
+      "sha256": "82ece095a4fb90819c6fd7d77343b4b379b3c8043198f3be5e314cec1b9706eb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-normal.jsonl": {
+      "bytes": 2763,
+      "sha256": "788706d608529f8bd61a028651c1701a296ac89a76ec665d5a87cc9f3856cf89"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-normal.result.json": {
+      "bytes": 211,
+      "sha256": "2f15266cf0ecdacd24435c1abac615c0f1d1e8df4507f785adf7abdd1283cf02"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-race.command.json": {
+      "bytes": 676,
+      "sha256": "183d0856630f45bfa591e565d735539fd09b48b9c609479ae19f0e745330bcd4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-race.jsonl": {
+      "bytes": 2763,
+      "sha256": "457420d93c50c32206d90899746e9eab8e98baf3c3175746bc73a45cae4db87b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-race.result.json": {
+      "bytes": 211,
+      "sha256": "6a4ebcb3b6e3c3dd8b2738c56c11eb92a973d3a201b41a1b846ade86e83137a6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector.go": {
+      "bytes": 13068,
+      "sha256": "97fbc2f9c9fa6e0084755d0df4374ec62bbd8ad916c9d73bfffe963e6fdb85d3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/control-single-selector.overlay.json": {
+      "bytes": 236,
+      "sha256": "db6fd974fce6d426677ea9c20ba38c328265ed5097a1ce161485801fa251d53c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/controls.json": {
+      "bytes": 3922,
+      "sha256": "e5093ad38ffc075d3ca3da1fa4d17b066c5fa1c462a139e7ff237618b267f947"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/effective-modules.json": {
+      "bytes": 211408,
+      "sha256": "34bb3540551d75e30165e1494ee9440345f177c0f36e2427f8b337daf762a736"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/effective-modules.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/graph.json": {
+      "bytes": 7191,
+      "sha256": "ff469f01af78428a398b24dc345dd365e8d08800abbddedc8fc5460a764c5600"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/initial-pin-preflight.txt": {
+      "bytes": 407,
+      "sha256": "7ce92b6d044ef2f389eafa5141a0828643d44d33e21bccf4e969aa75012cfa49"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/seal-attempt-1-note.json": {
+      "bytes": 875,
+      "sha256": "6a7926fb29cabc971ab683b4089900cbb146535520b280b1e67ba4658350bf16"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/sn.mod": {
+      "bytes": 11694,
+      "sha256": "fb9eaabc20586e5f427a15cb05d49b54e7ea10d29cdc334ad7134a4717651ad3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/evidence/sn.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/finish-controls.go": {
+      "bytes": 3647,
+      "sha256": "e9dc6621973e13f6edbbd0f3c06858287f44d78dab9468b99582de251747b9cf"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/run-scope.go": {
+      "bytes": 3966,
+      "sha256": "3119a3b40862fff146995af38827e59933e6acb29e72792318c5889c6cba6dbe"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/seal-attempt-1.go": {
+      "bytes": 8237,
+      "sha256": "fe3e99d209337c2a10ad095be9102a29d931982936e7cb7fd8f5a3b998ed9871"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/seal.go": {
+      "bytes": 8254,
+      "sha256": "3737df2363853dc412df8b1d1ab549a3cb8442b1f1e32cb4faefc5d66d406001"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/chain/register.go": {
+      "bytes": 6944,
+      "sha256": "bb6d219be45f2ce10d857296db26306fd14d9471a1a95a1630e5378b9899f798"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/chain/submit.go": {
+      "bytes": 5535,
+      "sha256": "10c8e025462aa0f0f9b1e1f96441d12b0bbc96afa9c1f40cb292cbf02b55108e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/crv4/chain.go": {
+      "bytes": 62011,
+      "sha256": "f5d94b1057f8d70af6dfed400816bb780339158438c3d650cb696a4aecdaed04"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/crv4/fleet_runtime_capability.go": {
+      "bytes": 3037,
+      "sha256": "dc45adf2562c5459ffbd9b108c2ad471bb40e10b8e61116c4d095fb125a82a38"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/crv4/runtime_identity.go": {
+      "bytes": 21885,
+      "sha256": "f56905017440aa930f5cd4aea928a422c9777982b5e7e36ba5b10c0238207372"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/crv4/runtime_profile.go": {
+      "bytes": 12192,
+      "sha256": "01263b058946c48c17ea5cdf4cbedae79b7a6148b89660fca12233ee164daf42"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/go.mod": {
+      "bytes": 11211,
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/go.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet.go": {
+      "bytes": 19993,
+      "sha256": "85e565f8fac60f150da9bc048a76e9763051165f5b2b1d8b8caf064e1b0b63cd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_mainnet_evm.go": {
+      "bytes": 6458,
+      "sha256": "016543e108b879ecb044f4d2ff946f87bb478e8c76776ad038d5bc08e5514d15"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_mainnet_fixture_test.go": {
+      "bytes": 16869,
+      "sha256": "ccc7f1f066d917c6e9de2474ba2fbc4c258caec3ce3d5bb9e3125c24431b6484"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_mainnet_runtime.go": {
+      "bytes": 13073,
+      "sha256": "4950432c79799cf5dd1b56f140a2457f4a51139111d60fb64e635bc995ca37e1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_mainnet_runtime_test.go": {
+      "bytes": 12273,
+      "sha256": "fe1ac1aaa9b873d053e4e927d7a535f537da3904d2489d4fe388e196e06dfc9d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_recovery_command_test.go": {
+      "bytes": 25941,
+      "sha256": "2cc7a39236652abdd57de841d60ba6cc529188ed3284303d36d8eef060952f25"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_recovery_evm.go": {
+      "bytes": 19360,
+      "sha256": "c620b7edb80885fbfdf813b34fd8b7c633c6b916f1f399634f9edc2b7ea52c25"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_recovery_native.go": {
+      "bytes": 19546,
+      "sha256": "e4d0ba14ae0b8696641bcd685257b975426566bfbfe8d668495567d4ebae5da6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_recovery_receipt_test.go": {
+      "bytes": 9935,
+      "sha256": "630e3b787297994f752e43aae966f156254c9fb2e1f39361b66a82fa272abb8e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_recovery_store.go": {
+      "bytes": 23698,
+      "sha256": "3becf05ca51af5a41e8376a60a4005bbe4b36caa56721641c63adb479383f32e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_runtime_catalog.go": {
+      "bytes": 8108,
+      "sha256": "1074d86560e084958516870e6d8d75c567beec30b20ad0bf95ca66e0402c4120"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn/miner/fleet_runtime_catalog_test.go": {
+      "bytes": 17517,
+      "sha256": "d99510ca658329b8289ea3379a9258262cd1aa12d28e59c0526c0e74f9156899"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/go.mod": {
+      "bytes": 10468,
+      "sha256": "dcbc91ae9c6737a4d79921ef1f0d720352ad4bc41d26c0c9f49279d7ae662917"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/go.sum": {
+      "bytes": 67462,
+      "sha256": "ff45d3706f736fa6609b043be621109911ef2fe8d2cbbf094d2965f01ddabe2a"
+    }
+  },
+  "limitations": [
+    "Original unchanged077 production plus two test-only roots rejects runtime_catalog and discards canceled public status context. Original normal evidence is retained. Later overlays are explicitly narrow: exact former caller/watch bodies plus single-selector expression and an adapted current-only admission body; they are not whole-old-source race reruns.",
+    "The v2 document requires exact reviewed source/build/artifact coordinates and explicit consumed semantic purposes; semantic shape agreement is not artifact approval. Read views are block-local, and unknown write capability does not authorize relabeling original recovery authority or signed bytes.",
+    "Actual unsigned local websocket watch tests authenticate execution-parent decoding separately from inclusion post-state and reject foreign-block/canceled callbacks. Existing nine neighbors use retained synthetic local signing/recovery fixtures. No live key, transaction, deployment or runtime approval is performed.",
+    "Synthetic runtimes8001/8002 only. The newly observed mainnet472 artifact is unapproved; earlier470 planning authorization does not apply. No upstream472 source attribution or clean runtime rebuild is claimed.",
+    "Exact effective server10a/Connect0a5/sdk5d37 graph only; graph.json records636 modules and local physical Git blob readback. Later server/module, full miner/chain/validator/release and deployment qualification remain separate.",
+    "The initial wrong-pin preflight refused before a product test. Intermediate e265 normal11 is retained with its own pin; final119 normal23/race23 is the scoped candidate. No failed setup is counted as a product causal result."
+  ],
+  "mainnet_runtime_authorized": false,
+  "new_roots": 14,
+  "normal_roots": 23,
+  "original_baseline_normal_failures": 2,
+  "phases": {
+    "before-catalog-normal": {
+      "exit": 1,
+      "fail": [
+        "TestFleetRuntimeCatalogCurrentAndHistoricalReads",
+        "TestFleetRuntimeCatalogPublicStatusHonorsCancellation"
+      ],
+      "intended_causes": {
+        "TestFleetRuntimeCatalogCurrentAndHistoricalReads": true,
+        "TestFleetRuntimeCatalogPublicStatusHonorsCancellation": true
+      },
+      "pass": [],
+      "skip": [],
+      "source": "ca73ca5f1ebe647ab2321fd76277e0e53bf75f67"
+    },
+    "catalog-bounded-normal": {
+      "exit": 0,
+      "fail": [],
+      "intended_causes": {},
+      "pass": [
+        "TestFleetMainnetPublishCommandSignsAndVerifiesApprovedReceipt",
+        "TestFleetMainnetRegisterCommandAppliesAndChecksReceiptAuthority",
+        "TestFleetMainnetRegisterCommandRejectsUpgradeBeforeBroadcast",
+        "TestFleetMainnetAuthorityRejectsIncompleteAndForeignScope",
+        "TestFleetMainnetRuntimeUsesIndependentExactArtifact",
+        "TestFleetMainnetReceiptBindsExactWriteBlock",
+        "TestFleetRecoveryPublishPreparedRestartReplaysExactBytes",
+        "TestFleetRecoveryNativeHistoricalReceiptAfterCurrentUpgrade",
+        "TestFleetRecoveryUpgradeAtReceiptRetainsOriginalAuthority",
+        "TestFleetRuntimeCatalogCurrentAndHistoricalReads",
+        "TestFleetRuntimeCatalogPublicStatusHonorsCancellation",
+        "TestFleetRuntimeCatalogReadOnlyStatusSurvivesWriteRefusal",
+        "TestFleetRuntimeCatalogCurrentReadDoesNotRequireHistoricalArtifact",
+        "TestFleetRuntimeCatalogUnknownPurposeRefusesBeforeRpc",
+        "TestFleetRuntimeCatalogApprovalRefusesAmbiguousAndUnboundedEntries",
+        "TestFleetRuntimeCatalogRetainedAuthorityNeverReloadsNewApproval",
+        "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain",
+        "TestFleetRuntimeCatalogExecutionAndPostStateStaySeparate",
+        "TestFleetRuntimeCatalogConsumedReadIgnoresUnrelatedWriteShape",
+        "TestFleetRuntimeCatalogForgedBlockViewIsNotAuthentication",
+        "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState",
+        "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock",
+        "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation"
+      ],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    },
+    "catalog-bounded-race": {
+      "exit": 0,
+      "fail": [],
+      "intended_causes": {},
+      "pass": [
+        "TestFleetMainnetPublishCommandSignsAndVerifiesApprovedReceipt",
+        "TestFleetMainnetRegisterCommandAppliesAndChecksReceiptAuthority",
+        "TestFleetMainnetRegisterCommandRejectsUpgradeBeforeBroadcast",
+        "TestFleetMainnetAuthorityRejectsIncompleteAndForeignScope",
+        "TestFleetMainnetRuntimeUsesIndependentExactArtifact",
+        "TestFleetMainnetReceiptBindsExactWriteBlock",
+        "TestFleetRecoveryPublishPreparedRestartReplaysExactBytes",
+        "TestFleetRecoveryNativeHistoricalReceiptAfterCurrentUpgrade",
+        "TestFleetRecoveryUpgradeAtReceiptRetainsOriginalAuthority",
+        "TestFleetRuntimeCatalogCurrentAndHistoricalReads",
+        "TestFleetRuntimeCatalogPublicStatusHonorsCancellation",
+        "TestFleetRuntimeCatalogReadOnlyStatusSurvivesWriteRefusal",
+        "TestFleetRuntimeCatalogCurrentReadDoesNotRequireHistoricalArtifact",
+        "TestFleetRuntimeCatalogUnknownPurposeRefusesBeforeRpc",
+        "TestFleetRuntimeCatalogApprovalRefusesAmbiguousAndUnboundedEntries",
+        "TestFleetRuntimeCatalogRetainedAuthorityNeverReloadsNewApproval",
+        "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain",
+        "TestFleetRuntimeCatalogExecutionAndPostStateStaySeparate",
+        "TestFleetRuntimeCatalogConsumedReadIgnoresUnrelatedWriteShape",
+        "TestFleetRuntimeCatalogForgedBlockViewIsNotAuthentication",
+        "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState",
+        "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock",
+        "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation"
+      ],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    },
+    "catalog-first-normal": {
+      "exit": 0,
+      "fail": [],
+      "intended_causes": {},
+      "pass": [
+        "TestFleetRuntimeCatalogCurrentAndHistoricalReads",
+        "TestFleetRuntimeCatalogPublicStatusHonorsCancellation",
+        "TestFleetRuntimeCatalogReadOnlyStatusSurvivesWriteRefusal",
+        "TestFleetRuntimeCatalogCurrentReadDoesNotRequireHistoricalArtifact",
+        "TestFleetRuntimeCatalogUnknownPurposeRefusesBeforeRpc",
+        "TestFleetRuntimeCatalogApprovalRefusesAmbiguousAndUnboundedEntries",
+        "TestFleetRuntimeCatalogRetainedAuthorityNeverReloadsNewApproval",
+        "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain",
+        "TestFleetRuntimeCatalogExecutionAndPostStateStaySeparate",
+        "TestFleetRuntimeCatalogConsumedReadIgnoresUnrelatedWriteShape",
+        "TestFleetRuntimeCatalogForgedBlockViewIsNotAuthentication"
+      ],
+      "skip": [],
+      "source": "e265cfd84d3ba4b4d5e6934c83cddadcbb69a541"
+    },
+    "control-current-only-admission-normal": {
+      "exit": 1,
+      "fail": [
+        "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain"
+      ],
+      "intended_causes": {
+        "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain": true
+      },
+      "pass": [],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    },
+    "control-current-only-admission-race": {
+      "exit": 1,
+      "fail": [
+        "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain"
+      ],
+      "intended_causes": {
+        "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain": true
+      },
+      "pass": [],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    },
+    "control-prior-caller-normal": {
+      "exit": 1,
+      "fail": [
+        "TestFleetRuntimeCatalogPublicStatusHonorsCancellation"
+      ],
+      "intended_causes": {
+        "TestFleetRuntimeCatalogPublicStatusHonorsCancellation": true
+      },
+      "pass": [],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    },
+    "control-prior-caller-race": {
+      "exit": 1,
+      "fail": [
+        "TestFleetRuntimeCatalogPublicStatusHonorsCancellation"
+      ],
+      "intended_causes": {
+        "TestFleetRuntimeCatalogPublicStatusHonorsCancellation": true
+      },
+      "pass": [],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    },
+    "control-prior-watch-normal": {
+      "exit": 1,
+      "fail": [
+        "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState",
+        "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock",
+        "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation"
+      ],
+      "intended_causes": {
+        "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState": true,
+        "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation": true,
+        "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock": true
+      },
+      "pass": [],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    },
+    "control-prior-watch-race": {
+      "exit": 1,
+      "fail": [
+        "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState",
+        "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock",
+        "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation"
+      ],
+      "intended_causes": {
+        "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState": true,
+        "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation": true,
+        "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock": true
+      },
+      "pass": [],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    },
+    "control-single-selector-normal": {
+      "exit": 1,
+      "fail": [
+        "TestFleetRuntimeCatalogCurrentAndHistoricalReads"
+      ],
+      "intended_causes": {
+        "TestFleetRuntimeCatalogCurrentAndHistoricalReads": true
+      },
+      "pass": [],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    },
+    "control-single-selector-race": {
+      "exit": 1,
+      "fail": [
+        "TestFleetRuntimeCatalogCurrentAndHistoricalReads"
+      ],
+      "intended_causes": {
+        "TestFleetRuntimeCatalogCurrentAndHistoricalReads": true
+      },
+      "pass": [],
+      "skip": [],
+      "source": "119717d69ecc81858d1c92fa532db7f4488f14d5"
+    }
+  },
+  "race_roots": 23,
+  "schema": "urnetwork-fleet-runtime-catalog-qualification-v1",
+  "signing_authorized": false,
+  "source": "119717d69ecc81858d1c92fa532db7f4488f14d5",
+  "source_parent": "bbdd0d463e82feb1f24d557e5338a6182cef0490",
+  "source_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/fleet-runtime/sn",
+  "test_only_baseline": "ca73ca5f1ebe647ab2321fd76277e0e53bf75f67",
+  "tools": {
+    "/usr/local/go/bin/go": {
+      "bytes": 15434687,
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  },
+  "tree": "c040540908eaa0eebe5a7db795e4ff18b8706c25",
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0,
+  "vet_packages": [
+    "./miner",
+    "./chain",
+    "./crv4"
+  ]
+}

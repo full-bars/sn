@@ -1,0 +1,99 @@
+{
+  "utc": "2026-10-04T22:12:24.215933+00:00",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owner-job-v6.json",
+    "sha256": "79b38b6a7736b174ec7d84b9b9139fe56793797a8c98efdffd412325590e420c"
+  },
+  "owner_sha256": "daaf36d7e59d0fb568121e067435ad98f1e5772fe28a709f442fb2cf8968f95a",
+  "bound_files_match": true,
+  "healthy_bodies": [
+    {
+      "pid": 1970944,
+      "start": "101917367",
+      "state": "S",
+      "argv": [
+        "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-20261004/images/claim-1eb-race.test",
+        "-test.v",
+        "-test.run=^TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage$",
+        "-test.count=1",
+        "-test.parallel=1",
+        "-test.timeout=14400s"
+      ]
+    },
+    {
+      "pid": 1970938,
+      "start": "101917366",
+      "state": "S",
+      "argv": [
+        "/mnt/data/sn-testnet/sol-mainnet-native-schedule-independent-20261002/gocache/7c/7c8af5c908e2de0cd509abe98e81fa7678667dce0d0d98ea65f26293816d6117-d/test2json",
+        "-t",
+        "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-20261004/images/claim-1eb-race.test",
+        "-test.v",
+        "-test.run=^TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage$",
+        "-test.count=1",
+        "-test.parallel=1",
+        "-test.timeout=14400s"
+      ]
+    },
+    {
+      "pid": 2156114,
+      "start": "102393445",
+      "state": "R",
+      "argv": [
+        "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-normal-v3-20261004/images/claim-1eb-normal.test",
+        "-test.v",
+        "-test.run=^TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage$",
+        "-test.count=1",
+        "-test.parallel=1",
+        "-test.timeout=3600s"
+      ]
+    },
+    {
+      "pid": 2156109,
+      "start": "102393445",
+      "state": "S",
+      "argv": [
+        "/mnt/data/sn-testnet/sol-mainnet-native-schedule-independent-20261002/gocache/7c/7c8af5c908e2de0cd509abe98e81fa7678667dce0d0d98ea65f26293816d6117-d/test2json",
+        "-t",
+        "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-normal-v3-20261004/images/claim-1eb-normal.test",
+        "-test.v",
+        "-test.run=^TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage$",
+        "-test.count=1",
+        "-test.parallel=1",
+        "-test.timeout=3600s"
+      ]
+    }
+  ],
+  "lease": {
+    "cumulative_cap_bytes": 115964116992,
+    "future_adoption": "/home/by/urnetwork/sn/mainnet/evidence/future108-narrow-compiler-adoption-20261004.json",
+    "healthy_owner_active_floor_bytes": 6307319808,
+    "kernel_lock_key": "08:21:16941991",
+    "lock_device": 2081,
+    "lock_fd": 3,
+    "lock_inode": 16941991,
+    "lock_path": "/mnt/data/sn-testnet/qualification-resource-mixed-63-collector-v2-20261003/host-admission.lock",
+    "no_baseline_reset": true,
+    "old_holder_pid": 1557107,
+    "original_baseline_bytes": 113681502208,
+    "pid": 2132303,
+    "schema": "sol-shared-host-lease-renewal-v1",
+    "scope": "future execution admission lease only; healthy guards unchanged",
+    "starttime": "102349612",
+    "status": "HELD"
+  },
+  "actual_kernel_lock": [
+    "202: FLOCK  ADVISORY  WRITE 2132303 08:21:16941991 0 EOF"
+  ],
+  "owned_directories": [
+    "/mnt/data/sn-testnet/sol-server-final-f67-20261004/tmp",
+    "/mnt/data/sn-testnet/sol-server-final-f67-20261004/gate-final-model-only",
+    "/mnt/data/sn-testnet/sol-server-final-f67-20261004/final-c60-source/server/model",
+    "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence"
+  ],
+  "memory_available_bytes": 129725399040,
+  "data_available_bytes": 27817574400,
+  "docker_available_bytes": 301708300288,
+  "running_container_ids": [],
+  "no_execution_by_reviewer": true
+}

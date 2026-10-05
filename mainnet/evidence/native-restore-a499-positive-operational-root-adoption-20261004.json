@@ -1,0 +1,105 @@
+{
+  "schema": "native-restore-a499-positive-operational-root-adoption-v2",
+  "status": "ADMITTED_AFTER_EXISTING_LANE_JOINS",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-capture",
+      "bytes": 53657192,
+      "sha256": "bde25ccda67b5321849c190139f2ff1de7bc2caa0234df5514183f6059d2447d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-replay",
+      "bytes": 51509672,
+      "sha256": "abbbbae181a120c04359d39d8448b12034367f235131f4627d5106d0ddb5b5d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/go_test_image.py",
+      "bytes": 10122,
+      "sha256": "63444702ee731ef3a1b22d6073fb7b4e436691c7cf6a41b475e237f25286bb11"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "bytes": 58569,
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "bytes": 23340,
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-go-positives-v2.py",
+      "bytes": 12880,
+      "sha256": "d56ae51568f3b46cb802276e779de8566ce0f5bbdcb3d36e0099b9a2e139c9b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/run-a499-positives-v2.py",
+      "bytes": 16154,
+      "sha256": "9c36a4fa9ca4825a4a943b1965260540db9b4651cfcc2f6ab9100a4632e5a20d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/sampler-fixture-v2/receipt.json",
+      "bytes": 2306,
+      "sha256": "7b2747dc904ab52df2a3d482fffe7fc2c2f0137c8f773f0d94d3cf8b593176be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/evidence/selected-graph-v3.receipt.json",
+      "bytes": 13323,
+      "sha256": "00314954e1d13379c3af252a9c30d7467c66b567ac69beb2916fee15a443fe91"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/go.work-v3",
+      "bytes": 491,
+      "sha256": "8c569f6d8d17711173261ea48aacb5e3370cb2f0311bde67bef8ee1283414673"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "bytes": 23340,
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/sampler-fixture-v2/actual-sampler-smoke-v2.resources.csv",
+      "bytes": 226,
+      "sha256": "b0bbf2e2c87fe453aacd40a6eb6324687ad47c86ba87a2f133ee1965b53158c3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/sampler-fixture-v2/actual-sampler-smoke-v2.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/sampler-fixture-v2/actual-sampler-smoke-v2.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/run-a499-positives-v2.py",
+      "bytes": 16154,
+      "sha256": "9c36a4fa9ca4825a4a943b1965260540db9b4651cfcc2f6ab9100a4632e5a20d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/actual-helper-preflight-v2.json",
+      "bytes": 2834,
+      "sha256": "18efd06943891700c794010c9da3db2eaec23ed0c36da112d63d00130939df13"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/finite-resource-proposal-v1.json",
+      "bytes": 6710,
+      "sha256": "19919428b15331b09e2d15ae6e056d323a9f8554c5927e6fe6e304e9beebeb69"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/sampler-fixture-v2/receipt.json",
+      "bytes": 2306,
+      "sha256": "7b2747dc904ab52df2a3d482fffe7fc2c2f0137c8f773f0d94d3cf8b593176be"
+    }
+  ],
+  "review": "Read original full runner and complete additivev2 diff. Retain actual guarded and joined children, protected distinctnormal/race images, exact24root partitions per mode, actualcapture/replayELF before/after, exactc618workspace, immutablemodules, rawnamedroot census and vet. Actual extracted sampler wrapper joins a real subprocess and fsyncs persistentCSV; sampled maxima are not bounds.",
+  "scope": "Positive24roots/mode+vet only; sixcontrols/mode remain separate. Do not discard raw successful bodies because independent sampler evidence is incomplete. No productionreadiness or whole gate claim.",
+  "conditions": [
+    "Wait until4af lane finishes and childrenjoin; no competingcompiler or longbody.",
+    "Fresh canonicallease and originalbaseline16GiB two-times admission beforeeveryphase.",
+    "Continue all admitted partitions after ordinary assertion failures; preserve each body and control counterpart.",
+    "No Rustrebuild or unaffectedscope rerun."
+  ],
+  "whole_mainnet_complete": false
+}

@@ -1,0 +1,60 @@
+{
+  "schema": "mainnet-cache-headroom-proof-v1",
+  "status": "VERIFIED_COMPLETE",
+  "reclaimed_bytes": 14768087040,
+  "deleted_files": 450,
+  "minimum_age_hours": 48,
+  "minimum_bytes": 8388608,
+  "guards": "Privileged process references checked at plan/apply; bounded metadata reference scan exit1/no diagnostics; regular single-link compiler archives; original physical identity rechecked before/during unlink; all selected paths verified absent.",
+  "initial_scan_setup_failure": "sudo PATH lacked rg; failed stdout/stderr/exit retained before absolute executable retry",
+  "files": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/reclaim.go": {
+      "bytes": 7049,
+      "sha256": "e9e3591b49cc90a2e33bbdbf5ad3250cba56e584688e97771d06b5222f6b3925"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/reclaim": {
+      "bytes": 3849124,
+      "sha256": "f89a7b1a0794e087fc3bd9fde81f94ac26b974180b7c64d4563a03871e08ad11"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/plan.json": {
+      "bytes": 137795,
+      "sha256": "53348357271d70187880dda2c448d4701ff18471907648595da7d50b5360716c"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/receipt.json": {
+      "bytes": 138077,
+      "sha256": "f6e698ea462d79e4bfde4ba233c3f677c9966d0f41492f9c66aa02b669eae473"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "a80ca5b381f64b4d3b0502274a1ba9ac92a705366e3f416a38c3f70d324164ee"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "341e305f5eede8ca669287f73257372115974c193bd235bd591b67874aa0a6dd"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/reference-scope.json": {
+      "bytes": 707,
+      "sha256": "cabb49896d9210f2ad0f65d26fd238ba5bb37cedf4c5023039a412645d4d82ca"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/reference-scan.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/reference-scan-sudo-path-failed.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-10-20261003/reference-scan-sudo-path-failed.stderr": {
+      "bytes": 28,
+      "sha256": "88abc6a0d98bac6f2039b84d679f52ae2179dc591ba5270cc160327cfbf7ee1d"
+    }
+  }
+}

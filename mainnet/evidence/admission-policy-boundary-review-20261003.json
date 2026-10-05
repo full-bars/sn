@@ -1,0 +1,36 @@
+{
+  "findings": [
+    "FP2FIX explicitly accepts approximate accounting at crash/reconciliation edges and supersedes absolute admission consistency for the contention-free replacement.",
+    "ReconcileRedisContractReservation releases a reservation when terminal or older than24hours; original horizon is not extended. This is declared exception recovery, not financial authority.",
+    "Taskworker schedules ReconcileNetEscrow every five minutes with30minute max run budget and reschedules after successful completion. Source reachability is not evidence that a deployed worker ran it.",
+    "Qualify approved admission/reconciliation windows separately from authoritative terminal settlement, unpaid obligations and provider usage. Do not substitute legacy-only counter tests for the current public path.",
+    "The operator admission document explicitly accepts cache-loss and still-open-after24hour over-admission; durable settlement and completed usage remain separately authoritative.",
+    "The reconcile_net_escrow CLI applies by default with optional --network_id and --dry-run, and uses context.Background; finite CLI deadline/cancellation is an operational improvement, not proven by scheduled task bounds."
+  ],
+  "required_followup": [
+    "Actual public TTL, drift and dispute rollback witnesses with exact original reservation token.",
+    "Demonstrate settlement conservation, independent live-peer continuation and operator-visible unresolved recovery under the approved approximate admission policy.",
+    "Preserve original full-suite failures and qualify the batch successor without changing intentional upstream economics."
+  ],
+  "schema": "mainnet-admission-policy-boundary-review-v1",
+  "source_commit": "4aaf440289bfeb81eb93e86ee967607892148ab2",
+  "source_files": {
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-allocation/server/FP2FIX.md": {
+      "bytes": 389616,
+      "sha256": "d6d983d12827b7d2252d699bbc9e7f3dfaad031f605699f8c242876a969076dc"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-allocation/server/docs/operator/contract-admission.md": {
+      "bytes": 8549,
+      "sha256": "34290bc8c6b1ace4ee214e8013c51ae4992190041721c55b50d1873638bf9e6c"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-allocation/server/model/subscription_redis_admission.go": {
+      "bytes": 16714,
+      "sha256": "7a16492043cb8346fde14117f68a5768ce7876bacf2372979bd301adb73c0332"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-allocation/server/taskworker/work/subscription_work.go": {
+      "bytes": 15330,
+      "sha256": "72d432090c548be9c3ddf1e4f97c52a494a54ba8c0a90e6ea2e234a78a41688f"
+    }
+  },
+  "status": "SOURCE_REVIEW_NOT_BEHAVIORAL_QUALIFICATION"
+}

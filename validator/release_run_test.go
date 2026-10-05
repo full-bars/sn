@@ -4,11 +4,14 @@ package validator
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"testing"
 	"time"
 
 	gethrpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/urfoundation/sn/protocol"
 )
 
 // Only conditions that can recover without a configuration change are retried.
@@ -158,6 +161,62 @@ func TestInitialReleaseSnapshotStopsOnParentCancellation(t *testing.T) {
 	}
 }
 
+// An interrupted authenticated lineage body is replayed in-process rather
+// than consuming another supervised validator restart.
+func TestReleaseV2StartupReplayRetriesTransientBodyInterruption(t *testing.T) {
+	want := &ReleaseSteerer{}
+	loads, waits := 0, 0
+	got, err := loadReleaseSteererV2WithRetry(t.Context(), func() (*ReleaseSteerer, error) {
+		loads++
+		if loads < 3 {
+			return nil, fmt.Errorf("compact attempt chunk ends before its complete JSONL rows: %w", context.DeadlineExceeded)
+		}
+		return want, nil
+	}, func(_ context.Context, delay time.Duration) error {
+		waits++
+		if delay != releaseSnapshotStartupRetryDelay {
+			t.Fatalf("retry delay = %s, want %s", delay, releaseSnapshotStartupRetryDelay)
+		}
+		return nil
+	})
+	if err != nil || got != want || loads != 3 || waits != 2 {
+		t.Fatalf("steerer=%p error=%v loads=%d waits=%d", got, err, loads, waits)
+	}
+}
+
+// A complete object whose authenticated content differs remains fail-fast;
+// the transport retry cannot turn a byte mismatch into accepted lineage.
+func TestReleaseV2StartupReplayFailsContentIntegrityErrorImmediately(t *testing.T) {
+	wantErr := errors.New("compact attempt chunk byte count or content hash differs")
+	loads, waits := 0, 0
+	got, err := loadReleaseSteererV2WithRetry(t.Context(), func() (*ReleaseSteerer, error) {
+		loads++
+		return nil, wantErr
+	}, func(context.Context, time.Duration) error {
+		waits++
+		return nil
+	})
+	if got != nil || !errors.Is(err, wantErr) || loads != 1 || waits != 0 {
+		t.Fatalf("steerer=%p error=%v loads=%d waits=%d", got, err, loads, waits)
+	}
+}
+
+// Persistent transport interruption remains bounded by the reviewed startup
+// budget, even though it no longer terminates after the first failed body.
+func TestReleaseV2StartupReplayBoundsPersistentInterruption(t *testing.T) {
+	loads, waits := 0, 0
+	got, err := loadReleaseSteererV2WithRetry(t.Context(), func() (*ReleaseSteerer, error) {
+		loads++
+		return nil, fmt.Errorf("compact attempt chunk could not authenticate its exact EOF: %w", io.ErrUnexpectedEOF)
+	}, func(context.Context, time.Duration) error {
+		waits++
+		return nil
+	})
+	if got != nil || err == nil || loads != releaseSnapshotStartupAttempts || waits != releaseSnapshotStartupAttempts-1 {
+		t.Fatalf("steerer=%p error=%v loads=%d waits=%d", got, err, loads, waits)
+	}
+}
+
 // Four production workers share one request budget; retries do not multiply
 // the configured per-minute rate because every SEED attempt is spaced by the
 // same policy-derived gate with explicit headroom.
@@ -198,6 +257,27 @@ func TestReleaseNativeEndpointTimeoutReservesMetadataHeadroom(t *testing.T) {
 	} {
 		if got := releaseNativeEndpointTimeout(test.cfg); got != test.wantTimeout {
 			t.Errorf("%s: native endpoint timeout=%s, want %s", test.name, got, test.wantTimeout)
+		}
+	}
+}
+
+func TestReleaseSteeringOperationTimeoutPreservesAdmittedClientKeyBatch(t *testing.T) {
+	batch := time.Duration(protocol.ClientKeyObservationBatchOperationSeconds) * time.Second
+	read := attemptStreamV2HttpReadIoTimeout
+	for _, test := range []struct {
+		name string
+		cfg  *ReleaseConfig
+		want time.Duration
+	}{
+		{name: "nil config", want: batch + time.Duration(releaseExpectedBlockSeconds*releaseNativeAuthenticationBlocks)*time.Second + read},
+		{name: "ordinary polling", cfg: &ReleaseConfig{PollSeconds: 15}, want: batch + time.Duration(releaseExpectedBlockSeconds*releaseNativeAuthenticationBlocks)*time.Second + read},
+		{name: "slow polling", cfg: &ReleaseConfig{PollSeconds: 60}, want: batch + 4*time.Minute + read},
+	} {
+		if got := releaseSteeringOperationTimeout(test.cfg); got != test.want {
+			t.Errorf("%s: steering operation timeout=%s, want %s", test.name, got, test.want)
+		}
+		if test.want < batch+read+time.Minute {
+			t.Errorf("%s: steering timeout %s truncates batch %s, read %s or native work", test.name, test.want, batch, read)
 		}
 	}
 }

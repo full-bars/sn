@@ -1,0 +1,66 @@
+{
+  "actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest127-server-final-overlay-metadata-v1.receipt.json",
+    "sha256": "9dacb512a86e18eff90555af179add0ed122c69f4c93ba1efbaa60bd5558ab21"
+  },
+  "closure_validation": "New actual metadata17 phases replayed exit0/joined; every old expected source/dependency digest retained and rechecked by compiler pre/post; exact14 new Git blobs and newly encountered current graph files bound. No expected digest silently updated.",
+  "elapsed_estimate_limit": "Uncertain cached compile duration; no deadline completion promise.",
+  "expected_elapsed_seconds": [
+    180,
+    360
+  ],
+  "healthy_guards": {
+    "active_data_formula": "max(6307319808, launch_data_available-8589934592)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "retargeted_or_rebased": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest127-server2f8-model-normal-compiler-job-v1.json",
+    "sha256": "521c32d9135609cc1da486d5b12df10e6755ac102b3442291473073a58cbe097"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 1,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_minimum_available_bytes": 17179869184,
+    "history_count": 0,
+    "job_sha256": "521c32d9135609cc1da486d5b12df10e6755ac102b3442291473073a58cbe097",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "model_count": 1,
+    "runner_sha256": "ed581ec4f86f63b762d24ae39a70d6aeec386d19f270899e8c580b0340182be0",
+    "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_GO_COMPILER"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest127-server2f8-compiler-adoption-20261005.json",
+  "resource_forecast": {
+    "basis": "Prospective bounded one-Go-compiler estimate, with unchanged offline modules/toolchain/cache and new actual source graph bound; not a fully-warm assertion or peak upper bound. Prior mainnet178 compile peak2915721216B is scope-limited supporting evidence, not a Server peak proof. Hard8GiB compiler/zeroSwap and wholedata growth8GiB fail-closed; protected image max512MiB, log128MiB.",
+    "compiler_disk_bytes": 4294967296,
+    "compiler_memory_bytes": 4294967296,
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest127-server-model-compiler-v1.py",
+    "sha256": "ed581ec4f86f63b762d24ae39a70d6aeec386d19f270899e8c580b0340182be0"
+  },
+  "schema": "latest127-server2f8-model-normal-compiler-review-v1",
+  "scope": "Only ./model normal compile. Later selected body needs separate retained-image/list/DB fixture ownership and resource admission. Current127 funding/mainnet fixtures unexecuted; BODY66 failed178 receipt and Xops311 actual PASS preserved.",
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest127-server-compiler-source-closure-v1.json",
+    "sha256": "b3567382895c122ce5b29cd4046272b064cf7583bf74c57b6b04d5c131742a95"
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "2f8a6ee4e4042d77ca3b257c2b2eaf495ba1e97d",
+    "sn": "127db99ce75858408464d46fdea6c49840efff02"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

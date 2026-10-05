@@ -38,12 +38,15 @@ type Check struct {
 	Detail string `json:"detail"`
 }
 type DoctorReport struct {
-	Schema      string  `json:"schema"`
-	GeneratedAt string  `json:"generated_at"`
-	ConfigHash  string  `json:"config_hash"`
-	PolicyHash  string  `json:"policy_hash"`
-	Checks      []Check `json:"checks"`
-	Ready       bool    `json:"ready"`
+	Schema           string  `json:"schema"`
+	GeneratedAt      string  `json:"generated_at"`
+	ConfigHash       string  `json:"config_hash"`
+	PolicyHash       string  `json:"policy_hash"`
+	Checks           []Check `json:"checks"`
+	Ready            bool    `json:"ready"`
+	Provisional      bool    `json:"provisional,omitempty"`
+	FinalAcceptance  *bool   `json:"final_acceptance,omitempty"`
+	ResumeRecordHash string  `json:"resume_record_hash,omitempty"`
 }
 
 func (r DoctorReport) Error() error {
@@ -202,10 +205,95 @@ func releaseRequiredTools(effectiveUserID int) []string {
 	return tools
 }
 
+// Manager degradation includes unrelated historical campaign failures. Retain
+// that evidence while checking this deployment's exact unit can be started.
+// This is launch capability, not live readiness or process ownership: those
+// gates still authenticate the current service, generation and child inventory.
+// An owned failed unit remains recoverable here; only launch may reset its latch.
+func inspectSystemdUserManager(run func(...string) ([]byte, error), ownedService string) (string, error) {
+	if run == nil || ownedService == "" {
+		return "", errors.New("systemd user manager inspection has no runner or owned service")
+	}
+	output, runErr := run("--user", "is-system-running")
+	state := strings.TrimSpace(string(output))
+	if runErr != nil {
+		// is-system-running reports degraded with exit 1. A canceled query,
+		// unavailable manager or joined error is not that status observation.
+		exit, ok := runErr.(interface{ ExitCode() int })
+		if state != "degraded" || !ok || exit.ExitCode() != 1 {
+			return state, fmt.Errorf("inspect systemd user manager: %w", runErr)
+		}
+	}
+	if state != "running" && state != "degraded" {
+		return state, fmt.Errorf("systemd user manager is %q", state)
+	}
+	detail := state
+	if state == "degraded" {
+		failedOutput, failedErr := run("--user", "list-units", "--state=failed", "--all", "--plain", "--no-legend", "--no-pager")
+		if failedErr != nil {
+			return detail, fmt.Errorf("list failed systemd user units: %w: %s", failedErr, strings.TrimSpace(string(failedOutput)))
+		}
+		var failedUnits []string
+		for _, line := range strings.Split(string(failedOutput), "\n") {
+			fields := strings.Fields(line)
+			if len(fields) != 0 {
+				failedUnits = append(failedUnits, fields[0])
+			}
+		}
+		detail += fmt.Sprintf("; failed_units=%q", failedUnits)
+		if len(failedUnits) == 0 {
+			return detail, errors.New("systemd user manager is degraded without observable failed units")
+		}
+	}
+	unitOutput, unitErr := run("--user", "show", ownedService, "--property=Id", "--property=LoadState", "--property=ActiveState", "--property=SubState", "--property=CanStart", "--no-pager")
+	if unitErr != nil {
+		return detail, fmt.Errorf("inspect owned systemd user unit %s: %w: %s", ownedService, unitErr, strings.TrimSpace(string(unitOutput)))
+	}
+	values := map[string]string{}
+	for _, line := range strings.Split(strings.TrimSuffix(string(unitOutput), "\n"), "\n") {
+		key, value, ok := strings.Cut(line, "=")
+		if !ok || key == "" || value == "" {
+			return detail, errors.New("owned systemd user unit observation is malformed")
+		}
+		if _, duplicate := values[key]; duplicate {
+			return detail, fmt.Errorf("owned systemd user unit observation repeats %s", key)
+		}
+		values[key] = value
+	}
+	for _, key := range []string{"Id", "LoadState", "ActiveState", "SubState", "CanStart"} {
+		if _, ok := values[key]; !ok {
+			return detail, fmt.Errorf("owned systemd user unit observation omits %s", key)
+		}
+	}
+	detail += fmt.Sprintf("; owned_service=%s load=%s active=%s/%s can_start=%s", values["Id"], values["LoadState"], values["ActiveState"], values["SubState"], values["CanStart"])
+	if len(values) != 5 || values["Id"] != ownedService {
+		return detail, errors.New("owned systemd user unit identity or property inventory differs")
+	}
+	switch values["LoadState"] {
+	case "loaded":
+		if values["CanStart"] != "yes" {
+			return detail, errors.New("owned systemd user unit cannot be started")
+		}
+	case "not-found":
+		// A fresh deployment has no installed unit yet. Never treat a
+		// masked, malformed or still-active unit as this absence case.
+		if values["ActiveState"] != "inactive" || values["SubState"] != "dead" || values["CanStart"] != "no" {
+			return detail, errors.New("absent owned systemd user unit has inconsistent state")
+		}
+	default:
+		return detail, fmt.Errorf("owned systemd user unit load state is %q", values["LoadState"])
+	}
+	return detail, nil
+}
+
 // The approved mode rechecks changing facts against only unverified spend;
 // the read-only mode additionally proves a newly generated plan is affordable.
 func runDoctor(ctx context.Context, cfg *ResolvedConfig, approved *doctorPlanBudget) DoctorReport {
 	r := DoctorReport{Schema: "urnetwork-sim-doctor-v1", GeneratedAt: time.Now().UTC().Format(time.RFC3339), ConfigHash: cfg.ConfigHash, PolicyHash: cfg.PolicyHash, Ready: true}
+	if provisionalResumeEnabled(cfg) {
+		finalAcceptance := false
+		r.Provisional, r.FinalAcceptance, r.ResumeRecordHash = true, &finalAcceptance, cfg.provisionalResume.RecordHash
+	}
 	r.add("host/linux-amd64", true, validateHostPlatform(runtime.GOOS, runtime.GOARCH), runtime.GOOS+"/"+runtime.GOARCH)
 	udpLimits, udpBufferErr := readReleaseUDPBufferLimits(os.ReadFile)
 	if udpBufferErr == nil {
@@ -231,24 +319,18 @@ func runDoctor(ctx context.Context, cfg *ResolvedConfig, approved *doctorPlanBud
 	if systemctl, err := exec.LookPath("systemctl"); err != nil {
 		r.add("supervisor/systemd-user", true, err, "")
 	} else {
-		cmd := exec.CommandContext(ctx, systemctl, "--user", "is-system-running")
-		output, runErr := cmd.CombinedOutput()
-		state := strings.TrimSpace(string(output))
-		if runErr != nil || state != "running" {
-			if runErr == nil {
-				runErr = fmt.Errorf("systemd user manager is %q", state)
-			}
-			r.add("supervisor/systemd-user", true, runErr, state)
-		} else {
-			r.add("supervisor/systemd-user", true, nil, state)
-		}
+		ownedService, nameErr := persistentSupervisorServiceName(cfg.Config.Deployment.DeploymentID)
+		detail, managerErr := inspectSystemdUserManager(func(args ...string) ([]byte, error) {
+			return exec.CommandContext(ctx, systemctl, args...).CombinedOutput()
+		}, ownedService)
+		r.add("supervisor/systemd-user", true, errors.Join(nameErr, managerErr), detail)
 	}
 	for name, path := range map[string]string{"sn": cfg.Repos.SN, "server": cfg.Repos.Server, "operator-proxy": cfg.Repos.OperatorProxy, "vault": cfg.Repos.Vault, "platform-config": cfg.Repos.PlatformConfig} {
 		err := validateRepoIdentity(name, path)
 		r.add("repository/"+name, true, err, path)
 	}
 	r.add("config/operator-resource-sources", true, validateOperatorConfigSources(cfg), cfg.Repos.PlatformConfig)
-	r.add("release-lock", true, validateReleaseLock(cfg), cfg.Release.Release)
+	checkDoctorReleaseLock(ctx, &r, cfg, approved, validateReleaseLock, authenticateRunningReleaseExecutable)
 	r.add("vault/wallet", true, nonempty(cfg.WalletMaterial, "testnet-wallet is empty"), cfg.WalletPublic)
 	r.add("vault/netuid", true, nonzero(uint64(cfg.Netuid), "testnet-netuid is zero"), fmt.Sprint(cfg.Netuid))
 	budgetErr := allNonzero(cfg.MaximumTAORao, cfg.MaximumAlphaRao)
@@ -695,11 +777,23 @@ func checkSubstrate(r *DoctorReport, cfg *ResolvedConfig, operational bool) {
 	if finalizedErr == nil {
 		runtimeVersion, finalizedErr = runtimeVersionAt(chain, finalized)
 	}
+	expectedVersion, expectedCode, expectedMetadata := currentReleaseRuntimeArtifact(cfg).Version, cfg.Release.Runtime.CodeHash, cfg.Release.Runtime.MetadataHash
+	var compatible *authenticatedRuntimeMetadata
+	if finalizedErr == nil && provisionalResumeEnabled(cfg) {
+		observed, runtimeErr := readAuthenticatedRuntimeMetadataAt(chain, cfg, finalized)
+		if runtimeErr != nil {
+			finalizedErr = runtimeErr
+		} else if observed.CompatibilityProfile != "" {
+			compatible = &observed
+			expectedVersion, expectedCode, expectedMetadata = observed.Version, observed.CodeHash, observed.MetadataHash
+			r.add("runtime/provisional-profile-"+name, true, nil, observed.CompatibilityProfile+"; final_acceptance=false")
+		}
+	}
 	if strings.ToLower(chain.GenesisHash.Hex()) != testnetGenesis {
 		err = fmt.Errorf("genesis %s, want %s", chain.GenesisHash.Hex(), testnetGenesis)
 	} else if finalizedErr != nil {
 		err = finalizedErr
-	} else if runtimeErr := validateRuntimeVersionIdentity(runtimeVersion, cfg.Public.Chain.ExpectedRuntimeSpec, cfg.Public.Chain.ExpectedTransactionVersion, cfg.Public.Chain.ExpectedStateVersion); runtimeErr != nil {
+	} else if runtimeErr := validateRuntimeVersionIdentity(runtimeVersion, expectedVersion.SpecVersion, expectedVersion.TransactionVersion, expectedVersion.StateVersion); runtimeErr != nil {
 		err = runtimeErr
 	}
 	r.add("rpc/substrate-"+name, true, err, fmt.Sprintf("%s genesis=%s finalized=%s spec=%d tx=%d state=%d", redactURL(endpoint), chain.GenesisHash.Hex(), finalized.Hex(), runtimeVersion.SpecVersion, runtimeVersion.TransactionVersion, runtimeVersion.StateVersion))
@@ -707,24 +801,31 @@ func checkSubstrate(r *DoctorReport, cfg *ResolvedConfig, operational bool) {
 	if err == nil {
 		codeHash, codeHashErr := runtimeCodeHashAt(chain, finalized)
 		if codeHashErr == nil {
-			codeHashErr = validateRuntimeCodeHash(codeHash, cfg.Release.Runtime.CodeHash)
+			codeHashErr = validateRuntimeCodeHash(codeHash, expectedCode)
 		}
 		r.add("runtime/code-hash-"+name, true, codeHashErr, fmt.Sprintf("%s finalized=%s", codeHash, finalized.Hex()))
 
 		exactMetadata, metadataHash, metadataHashErr := runtimeMetadataAt(chain, finalized)
 		if metadataHashErr == nil {
-			metadataHashErr = validateRuntimeMetadataHash(metadataHash, cfg.Release.Runtime.MetadataHash)
+			metadataHashErr = validateRuntimeMetadataHash(metadataHash, expectedMetadata)
 		}
 		r.add("runtime/metadata-hash-"+name, true, metadataHashErr, fmt.Sprintf("%s finalized=%s", metadataHash, finalized.Hex()))
 
 		if errors.Join(codeHashErr, metadataHashErr) == nil {
-			bindAuthenticatedRuntime(chain, authenticatedRuntimeMetadata{
+			binding := authenticatedRuntimeMetadata{
 				FinalizedHash: finalized,
 				Version:       runtimeVersion,
 				CodeHash:      codeHash,
 				MetadataHash:  metadataHash,
 				Metadata:      exactMetadata,
-			})
+			}
+			if compatible != nil {
+				binding = *compatible
+			}
+			if err := bindAuthenticatedRuntime(chain, binding); err != nil {
+				r.add("runtime/binding-"+name, true, err, "authenticated runtime view")
+				return
+			}
 			runtimeAuthenticated = true
 			metadata, metadataErr := chain.CheckMetadata()
 			metadataDetail := ""
@@ -1168,11 +1269,11 @@ func countMissingStorageKeysAt(keys []types.StorageKey, changeSets []types.Stora
 }
 
 func verifySubnetOwner(chain *crv4.Chain, cfg *ResolvedConfig, walletAddress string) (error, string) {
-	finalized, _, err := (&SubstrateManager{chain: chain, cfg: cfg}).finalizedHead()
+	manager, finalized, _, err := (&SubstrateManager{chain: chain, cfg: cfg}).finalizedManager()
 	if err != nil {
 		return err, ""
 	}
-	return verifySubnetOwnerAt(chain, cfg, walletAddress, finalized)
+	return verifySubnetOwnerAt(manager.chain, cfg, walletAddress, finalized)
 }
 
 func verifySubnetOwnerAt(chain *crv4.Chain, cfg *ResolvedConfig, walletAddress string, finalized types.Hash) (error, string) {

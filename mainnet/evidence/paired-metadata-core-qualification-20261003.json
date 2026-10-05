@@ -1,0 +1,52 @@
+{
+  "artifact_sha256": {
+    "connect-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "connect-normal.jsonl": "9df99b6c96b046f90db44ddb03e888d8b0c12488ec33db659d6edc9ba6ce23eb",
+    "connect-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "connect-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "connect-race.jsonl": "6672d668f23e499d6b1f8b03bbf05965964f756a86e2e84bc07e083467bad0df",
+    "connect-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "connect-selector.txt": "9fa0d5db3511ac0dfd9556981834d488f79e70ee203e395e57fd68711ed8258c",
+    "connect-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "connect-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "connect-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "changed_source_sha256": {
+    "durablevolume/preparation.go": "27606fa232491bed91d32f5823d2d2e05cba1b8749a1923941371e1bfa9dc761",
+    "durablevolume/preparation_derivation_linux.go": "15386a59fa25b91954c831bbbcd51ea3432d0d886fa1e75d263f413c4d3ec0d6",
+    "durablevolume/preparation_paired_metadata_test.go": "f30eb04f1992ef5d523f540a6c4a16d073b613b1f1bc160479d32d693501aa24"
+  },
+  "intake_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-11e-5c48-intake.json",
+  "intake_sha256": "e72ecbe915ce7f24f4643516295beaae2333ab11b4517c8aadbffea6b80bbfc9",
+  "limitations": "Scoped primitive and adjacent roots; SN outer-head public consumer, old-body controls, and full restore remain separate.",
+  "module_sha256": {
+    "go.mod": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7",
+    "go.sum": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+  },
+  "normal": {
+    "failed": 0,
+    "passed": 7,
+    "skipped": 0
+  },
+  "race": {
+    "failed": 0,
+    "passed": 7,
+    "skipped": 0
+  },
+  "schema": "sol-outer-head-connect-7-v1",
+  "scope": "Connect durablevolume seven exact roots only",
+  "selected_roots": [
+    "TestPreparationPairedMetadataReconcilesInterruptedMove",
+    "TestPreparationPairedMetadataRejectsChangedLineage",
+    "TestPreparationPairedMetadataRetainsExactOriginals",
+    "TestPreparationPhysicalMetadataRefusesChangedLineage",
+    "TestPreparationPhysicalMetadataRetainsBothCensuses",
+    "TestPreparationPhysicalMovesReconcileEachSyncedBoundary",
+    "TestPreparationPhysicalMovesRefuseAmbiguousAndLostMembers"
+  ],
+  "source_commit": "5c48c3e5f53b7f4654570193448b4da73b75aaff",
+  "source_parent": "08d4840087a7e4cb60a747eabc81785361a01562",
+  "source_physical": "/mnt/data/sn-testnet/sol-outer-head-11e-5c48-independent-20261003/source/connect",
+  "source_tree": "06a164cca3c72b776f69ec7ffd94b3c338ef622a",
+  "vet_exit": 0
+}

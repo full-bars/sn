@@ -1,0 +1,65 @@
+{
+  "adjacent": "Also review subsidy zero-reservation/empty-active-row expectations before async drain. Do not treat unchecked Redis lookup errors as zero; preserve explicit no-double-debit and participant payout conservation.",
+  "bindings": [
+    {
+      "bytes": 1280,
+      "json_records": 5,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestContractLifecycleEscrowBranchClockGuardRejectsMissingOrLateLocks-original-failure.jsonl",
+      "sha256": "bcd4a7b043a946940f6e19b2f7e99eaf86fd7a2938668d10dd1aa823878f4f9d"
+    },
+    {
+      "bytes": 1219,
+      "json_records": 5,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestContractLifecycleWritesUsePrimaryDatabaseClockAfterLocks-original-failure.jsonl",
+      "sha256": "0933ce3c2fc32dcb912ef624910ee60683d8be2a40aaebf20dcff378ae561e9c"
+    },
+    {
+      "bytes": 212163,
+      "json_records": 577,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-payout-participant-six-original-failures.jsonl",
+      "sha256": "42a1ad8bec472ed2927420bb9fd80254d3f9c5e95b307dd701f30ed563c46fb0"
+    },
+    {
+      "bytes": 8725,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/contract_lifecycle_clock_guard_test.go",
+      "sha256": "2a962fdba346839fe1b264c33cfa12082636e8d2673f9dd705632b1e4e559831"
+    },
+    {
+      "bytes": 43776,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/contract_payout_test.go",
+      "sha256": "833a8d183bf77f6b7891ae5210e98dcd22ace135528432bc0dd4d1bbe0073a95"
+    },
+    {
+      "bytes": 209917,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/subscription_model.go",
+      "sha256": "4c702f4ad67452a78c7eab454bf7ff33923e3788733ff751f7a6e78db4a828d7"
+    },
+    {
+      "bytes": 10342,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/subscription_transfer_debit.go",
+      "sha256": "30a4bb2f1b347eaad27e4f35082b4d85b51a9c401dec0e11c3754e098d070c57"
+    },
+    {
+      "bytes": 1768,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/taskworker/work/transfer_debit_work.go",
+      "sha256": "a75aa38da4d404bc96d91534733bf27b626c38f4631a771d564386b55052a92d"
+    }
+  ],
+  "captured_utc": "2026-10-03T19:27:09.414826+00:00",
+  "clock_source_triage": "The source-shape guard takes first positive byte-count branch as endpoint lock. New early checked test-balance-drain refusal precedes the real financial wait and endpoint lock; actual later checked lock remains. Guard and operative mutants need reviewed shape recognition.",
+  "completion": "No fixed code or behavior qualification is claimed.",
+  "debit_source_triage": "Six participant tests use shared raw-balance assertion immediately after terminal settlement. Async debit branch inserts retained journal rather than updating raw balance; explicit registered public flusher later applies debit/releases reservation. Fixtures must verify pending debt/available credit then exact idempotent flush before raw-debit assertion. Cause attribution remains pending Astra independent review and post-fix tests.",
+  "failed_roots": [
+    "TestContractLifecycleEscrowBranchClockGuardRejectsMissingOrLateLocks",
+    "TestContractLifecycleWritesUsePrimaryDatabaseClockAfterLocks",
+    "TestContractPayoutParticipantMatrix",
+    "TestCompanionContractPayoutParticipantsJoinByStreamId",
+    "TestContractParticipantPayoutDisputeOutcomes",
+    "TestContractExtenderPayoutParticipantMatrix",
+    "TestCompanionContractExtenderPayoutPaysTheReversedParties",
+    "TestContractPayoutPreservesSharedNetworkProviderUsage"
+  ],
+  "next": "Astra prepare distinct combined test successor, preserving804 and all original failures; Sol collects full suite without restart and qualifies final affected scopes once terminal.",
+  "schema": "urnetwork-root-server-model-clock-debit-failure-batch-v1",
+  "status": "ORIGINAL_FAILURES_RETAINED_FULL_SUITE_LIVE"
+}

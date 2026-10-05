@@ -71,7 +71,11 @@ func (self *releaseRuntimeV2) measurementOptionsForIntent(ctx context.Context, i
 	if self.history == nil || artifact == nil || intent == nil || artifact.Schema != ReleaseMeasurementSchemaV2 {
 		return result, errors.New("V2 intent replay has no independently reconstructed history")
 	}
-	bounds := self.cfg.EvidenceV2.Bounds
+	decisionCfg, err := productionConfigForIntent(&self.cfg, intent)
+	if err != nil {
+		return result, err
+	}
+	bounds := decisionCfg.EvidenceV2.Bounds
 	contexts := self.history.inputContextsByEpoch[intent.SubnetEpoch]
 	inputs := self.history.inputByEpoch[intent.SubnetEpoch]
 	if len(contexts) != len(self.history.participants) || len(inputs) != len(contexts) || len(artifact.Inputs) != len(contexts) {
@@ -88,9 +92,13 @@ func (self *releaseRuntimeV2) measurementOptionsForIntent(ctx context.Context, i
 	if err != nil {
 		return result, err
 	}
-	controlled := slices.Clone(self.cfg.ControlledNOIDs)
+	decisionPolicy, err := ReleasePolicyForHash(decisionCfg, sources.decision.PolicyHash)
+	if err != nil {
+		return result, err
+	}
+	controlled := slices.Clone(decisionCfg.ControlledNOIDs)
 	slices.Sort(controlled)
-	result = ReleaseMeasurementV2Options{Expected: sources.decision, Policy: self.cfg.Policy, ControlledNOIDs: controlled, Bindings: sources.bindings, Pools: sources.pools, DepositAudits: sources.audits, Operators: make(map[uint64]ReleaseMeasurementV2OperatorOptions, len(contexts)), MaxOperators: bounds.MaxOperators, MaxHeadEntries: bounds.MaxHeadEntries, MaxArtifactBytes: bounds.MaxArtifactBytes, MaxControlBytes: bounds.MaxControlBytes}
+	result = ReleaseMeasurementV2Options{Expected: sources.decision, Policy: decisionPolicy, ControlledNOIDs: controlled, Bindings: sources.bindings, Pools: sources.pools, DepositAudits: sources.audits, Operators: make(map[uint64]ReleaseMeasurementV2OperatorOptions, len(contexts)), MaxOperators: bounds.MaxOperators, MaxHeadEntries: bounds.MaxHeadEntries, MaxArtifactBytes: bounds.MaxArtifactBytes, MaxControlBytes: bounds.MaxControlBytes}
 	for index, participant := range self.history.participants {
 		input := inputs[participant.NoID]
 		expected, found := contexts[participant.NoID]
@@ -108,6 +116,10 @@ func (self *releaseRuntimeV2) measurementOptionsForIntent(ctx context.Context, i
 		operator, err := self.operator(ctx, expected, "intent-ordinary")
 		if err != nil {
 			return result, err
+		}
+		if index == 0 {
+			replayPolicy := operator.Policy
+			result.ReplayPolicy = &replayPolicy
 		}
 		// Retained keys remain value-owned after releasing the runtime gate.
 		keys := make(map[byte]ed25519.PublicKey, len(operator.Measurement.Replay.ServerKeys))

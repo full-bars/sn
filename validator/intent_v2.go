@@ -29,6 +29,9 @@ type releaseIntentV2Owner struct {
 	// Invocation authority comes only from the validated retained startup owner.
 	provisionalEpochGaps bool
 	historyAdoption      *releaseHistoryAdoptionV2
+	productionPrepared   *ownerRecyclePreparedAuthorization
+	// Fault observers run after physical reference operations, never instead.
+	referenceReadHooks releaseMeasurementInputV2ReadHooks
 }
 
 type releaseIntentV2Read struct {
@@ -66,6 +69,10 @@ func (self *IntentStore) readMeasurementV2(ctx context.Context, custody *release
 	nativeCopy := *runtime.native
 	native := &nativeCopy
 	var options ReleaseMeasurementV2Options
+	decisionCfg, err := productionConfigForIntent(&runtime.cfg, intent)
+	if err != nil {
+		return nil, nil, nil, options, err
+	}
 	measurement, err := runtime.history.readContentReference(ctx, custody, intent.MeasurementArtifactPath, intent.MeasurementArtifactHash, intent.MeasurementArtifactSize, bounds.MaxArtifactBytes, false)
 	if err != nil {
 		return nil, nil, nil, options, err
@@ -86,7 +93,11 @@ func (self *IntentStore) readMeasurementV2(ctx context.Context, custody *release
 	if err != nil {
 		return nil, nil, nil, options, err
 	}
-	if intent.Prepared == nil || intent.Prepared.SourceCommitment == nil || intent.Prepared.SourceCommitment.Hash != releaseHex32(releaseNativeSourceHashV2(measurement)) {
+	sourceHash, err := releaseIntentNativeSourceHash(ctx, measurement, intent)
+	if err != nil {
+		return nil, nil, nil, options, err
+	}
+	if intent.Prepared == nil || intent.Prepared.SourceCommitment == nil || intent.Prepared.SourceCommitment.Hash != releaseHex32(sourceHash) {
 		return nil, nil, nil, options, errors.New("V2 intent lacks its exact pre-Prepared native source commitment")
 	}
 	hotkey := runtime.hotkey.PublicKey()
@@ -94,6 +105,21 @@ func (self *IntentStore) readMeasurementV2(ctx context.Context, custody *release
 		return nil, nil, nil, options, errors.New("V2 prepared hotkey differs from independently owned validator identity")
 	}
 	_, verified, err := VerifyReleaseMeasurementEnvelopeV2(ctx, envelope, measurement, hotkey, intent.SelfUID, intent.Prepared.ExtrinsicHash, options)
+	if err != nil {
+		return nil, nil, nil, options, err
+	}
+	var productionStage *ownerRecycleProductionStage
+	if isOwnerRecycleProductionConfig(&runtime.cfg) {
+		productionOptions, err := runtime.measurementReplayOptionsV2(ctx, options, "intent-owner-recycle")
+		if err != nil {
+			return nil, nil, nil, options, err
+		}
+		productionStage, err = prepareOwnerRecycleProductionDecision(ctx, decisionCfg, native, runtime.chain, measurement, artifact, verified.Decision, productionOptions)
+		if err != nil {
+			return nil, nil, nil, options, err
+		}
+	}
+	verified.Decision, err = verifyOwnerRecycleProductionIntent(ctx, decisionCfg, productionStage, intent, measurement, artifact, verified.Decision)
 	if err != nil {
 		return nil, nil, nil, options, err
 	}
@@ -110,18 +136,25 @@ func (self *IntentStore) readMeasurementV2(ctx context.Context, custody *release
 	if err != nil {
 		return nil, nil, nil, options, err
 	}
-	if err := authenticateHistoricalNativeRuntimeAtContext(ctx, native, &runtime.cfg, preparedHash); err != nil {
+	if err := authenticateHistoricalNativeRuntimeAtContext(ctx, native, decisionCfg, preparedHash); err != nil {
 		return nil, nil, nil, options, err
 	}
-	if err := native.ValidatePreparedSourceWeightsContext(ctx, intent.Prepared, verified.Decision.UIDs, verified.Decision.Scores, releaseSubmitOptions(&runtime.cfg)); err != nil {
+	if err := native.ValidatePreparedSourceWeightsContext(ctx, intent.Prepared, verified.Decision.UIDs, verified.Decision.Scores, releaseSubmitOptions(decisionCfg)); err != nil {
 		return nil, nil, nil, options, err
 	}
-	return artifact, verified.Decision, measurement, options, custody.check()
+	if err := errors.Join(custody.check(), ctx.Err()); err != nil {
+		return nil, nil, nil, options, err
+	}
+	if err := self.retainOwnerRecyclePreparedAuthorization(intent); err != nil {
+		return nil, nil, nil, options, err
+	}
+	return artifact, verified.Decision, measurement, options, nil
 }
 
 func (self *IntentStore) readV2(ctx context.Context) (result *releaseIntentV2Read, resultErr error) {
+	self.v2.productionPrepared = nil
 	bounds := self.v2.runtime.cfg.EvidenceV2.Bounds
-	result = &releaseIntentV2Read{file: &steeringIntentFile{Schema: steeringIntentSchema}, custody: &releaseEvidenceV2StartupReferences{remaining: bounds.MaxHistoryBytes}}
+	result = &releaseIntentV2Read{file: &steeringIntentFile{Schema: steeringIntentSchema}, custody: &releaseEvidenceV2StartupReferences{remaining: bounds.MaxHistoryBytes, readHooks: self.v2.referenceReadHooks}}
 	defer func() {
 		if resultErr != nil {
 			resultErr = errors.Join(resultErr, result.custody.close())
@@ -173,6 +206,9 @@ func (self *IntentStore) readV2(ctx context.Context) (result *releaseIntentV2Rea
 	seen := make(map[string]bool, len(all))
 	var previous *SteeringIntent
 	for index, intent := range all {
+		if err := requireOwnerRecycleProductionFirstIntent(&self.v2.runtime.cfg, previous, intent.SubnetEpoch); err != nil {
+			return result, err
+		}
 		if err := validateSteeringIntentLifecycle(intent, index < len(result.file.History)); err != nil {
 			return result, err
 		}
@@ -329,7 +365,8 @@ func (self *IntentStore) currentV2(ctx context.Context) (result *SteeringIntent,
 	if err != nil {
 		return nil, err
 	}
-	defer release()
+	sequence := self.v2.runtime.progress.nextSequence()
+	defer func() { self.finishProgressV2(release, sequence, result, resultErr) }()
 	read, err := self.readV2(ctx)
 	if err != nil {
 		return nil, err
@@ -388,7 +425,8 @@ func (self *IntentStore) beginV2(ctx context.Context, intent SteeringIntent) (re
 	if err != nil {
 		return nil, err
 	}
-	defer release()
+	sequence := self.v2.runtime.progress.nextSequence()
+	defer func() { self.finishProgressV2(release, sequence, result, resultErr) }()
 	read, err := self.readV2(ctx)
 	if err != nil {
 		return nil, err
@@ -400,6 +438,9 @@ func (self *IntentStore) beginV2(ctx context.Context, intent SteeringIntent) (re
 		}
 	}()
 	current := read.file.Current
+	if err := requireOwnerRecycleProductionFirstIntent(&self.v2.runtime.cfg, current, intent.SubnetEpoch); err != nil {
+		return nil, err
+	}
 	if err := self.v2.historyAdoption.requireFirstEpoch(current, intent.SubnetEpoch); err != nil {
 		return nil, err
 	}
@@ -458,7 +499,9 @@ func (self *IntentStore) updateV2(ctx context.Context, vectorHash, status string
 	if err != nil {
 		return err
 	}
-	defer release()
+	sequence := self.v2.runtime.progress.nextSequence()
+	var current *SteeringIntent
+	defer func() { self.finishProgressV2(release, sequence, current, resultErr) }()
 	read, err := self.readV2(ctx)
 	if err != nil {
 		return err
@@ -467,6 +510,7 @@ func (self *IntentStore) updateV2(ctx context.Context, vectorHash, status string
 	if read.file.Current == nil || read.file.Current.VectorHash != vectorHash {
 		return errors.New("V2 intent differs from the current immutable vector")
 	}
+	current = read.file.Current
 	if mutate != nil {
 		if err := mutate(read.file.Current); err != nil {
 			return err

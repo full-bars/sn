@@ -1,5 +1,5 @@
-// A failed, unfunded probe may be replaced once without repeating the native
-// commitment drill or changing the retained coordinator and fleet deployment.
+// A failed, unfunded probe can gain an authenticated successor without repeating
+// the native commitment drill or changing the retained coordinator and fleet.
 package main
 
 import (
@@ -33,6 +33,7 @@ type PrecompileProbeSuccessor struct {
 	Write              JournalEntry                  `json:"write"`
 	Restore            JournalEntry                  `json:"restore"`
 	Evidence           PrecompileConformanceEvidence `json:"evidence"`
+	Retirement         *PrecompileProbeRetirement    `json:"retirement,omitempty"`
 }
 
 // Labels native proof carried into the replacement's fresh value evidence.
@@ -89,6 +90,9 @@ func publicPrecompileProbePlan(public *PublicDeploymentManifest, identities fina
 	}
 	if successor := plan.PrecompileProbeSuccessor; successor != nil {
 		plan.PriorPlanHashes = append(plan.PriorPlanHashes, successor.SourcePlanHash, successor.Write.PlanHash, successor.Restore.PlanHash)
+		if retirement := successor.Retirement; retirement != nil {
+			plan.PriorPlanHashes = append(plan.PriorPlanHashes, retirement.SourcePlanHash, retirement.Create.PlanHash, retirement.Battery.PlanHash, retirement.SeedFailure.PlanHash)
+		}
 		if err := validatePrecompileProbeSuccessor(plan); err != nil {
 			return nil, err
 		}
@@ -98,6 +102,9 @@ func publicPrecompileProbePlan(public *PublicDeploymentManifest, identities fina
 
 // Refuses partially attempted value phases as well as completed probe funding.
 func precompileProbeHasOnlyNativeEvidence(evidence *PrecompileConformanceEvidence) bool {
+	if evidence != nil && (evidence.Recovery != nil || evidence.RoundTripCredits != nil) {
+		return false
+	}
 	return evidence != nil && evidence.CommitmentSource == nil && !evidence.Complete &&
 		evidence.Battery == (PrecompileBatteryEvidence{}) && evidence.Seed == (PrecompileValueStep{}) &&
 		evidence.Forward == (PrecompileMoveStep{}) && evidence.Back == (PrecompileMoveStep{}) &&
@@ -114,10 +121,17 @@ func validatePrecompileProbeSuccessor(plan *SetupPlan) error {
 		return nil
 	}
 	baseline := plan.CoordinatorUpgradeBaseline
-	if successor.Schema != "urnetwork-precompile-probe-successor-v1" || plan.CoordinatorRepairCarry == nil || baseline.Schema != "urnetwork-coordinator-upgrade-baseline-v4" || successor.SourcePlanHash == plan.PlanHash || !plan.allowedPlanHashes()[successor.SourcePlanHash] {
+	if (successor.Schema != "urnetwork-precompile-probe-successor-v1" && successor.Schema != "urnetwork-precompile-probe-successor-v2") || plan.CoordinatorRepairCarry == nil || baseline.Schema != "urnetwork-coordinator-upgrade-baseline-v4" || successor.SourcePlanHash == plan.PlanHash || !plan.allowedPlanHashes()[successor.SourcePlanHash] {
 		return errors.New("precompile probe successor lacks its exact approved predecessor")
 	}
-	if successor.RetiredProbe != baseline.ReplacementPrecompileProbe || successor.RetiredRuntimeHash != baseline.ReplacementPrecompileProbeHash || !common.IsHexAddress(successor.Probe) || !common.IsHexAddress(plan.Roles.Deployer) || successor.DeployerNonce == ^uint64(0) || plan.CoordinatorUpgrade.DeployerNonce == ^uint64(0) || successor.DeployerNonce != plan.CoordinatorUpgrade.DeployerNonce+1 || common.HexToAddress(successor.Probe) != crypto.CreateAddress(common.HexToAddress(plan.Roles.Deployer), successor.DeployerNonce) || strings.EqualFold(successor.Probe, successor.RetiredProbe) || successor.RuntimeHash == successor.RetiredRuntimeHash {
+	if err := validatePrecompileProbeRetirement(plan); err != nil {
+		return err
+	}
+	expectedNonce := plan.CoordinatorUpgrade.DeployerNonce + 1
+	if successor.Retirement != nil {
+		expectedNonce = successor.Retirement.Predecessor.DeployerNonce + 1
+	}
+	if successor.RetiredProbe != baseline.ReplacementPrecompileProbe || successor.RetiredRuntimeHash != baseline.ReplacementPrecompileProbeHash || !common.IsHexAddress(successor.Probe) || !common.IsHexAddress(plan.Roles.Deployer) || successor.DeployerNonce == ^uint64(0) || plan.CoordinatorUpgrade.DeployerNonce == ^uint64(0) || successor.DeployerNonce != expectedNonce || common.HexToAddress(successor.Probe) != crypto.CreateAddress(common.HexToAddress(plan.Roles.Deployer), successor.DeployerNonce) || strings.EqualFold(successor.Probe, successor.RetiredProbe) || successor.RuntimeHash == successor.RetiredRuntimeHash {
 		return errors.New("precompile probe successor changes its deterministic CREATE or retired identity")
 	}
 	for _, value := range []string{successor.SourcePlanHash, successor.RuntimeHash, successor.CreationHash, successor.RetiredRuntimeHash, successor.JournalHash, successor.FinalizedHead.Hash} {
@@ -132,7 +146,7 @@ func validatePrecompileProbeSuccessor(plan *SetupPlan) error {
 	want := evidence.EvidenceHash
 	evidence.EvidenceHash = ""
 	hash, err := canonicalHashHex(&evidence)
-	if err != nil || hash != want || !evidence.Commitment.Restored || evidence.Commitment.CanonicalGeneration != precompileCanonicalFleetGeneration || evidence.Commitment.RestoreCommitmentBlock <= evidence.Commitment.WriteCommitmentBlock || evidence.ProbeAddress != successor.RetiredProbe || evidence.DeploymentID != plan.DeploymentID || evidence.ConfigHash != plan.ConfigHash || evidence.PolicyHash != plan.PolicyHash || evidence.ChainID != plan.ChainID || evidence.GenesisHash != plan.GenesisHash || evidence.Netuid != plan.Netuid || !strings.EqualFold(evidence.Owner, plan.Roles.Deployer) {
+	if err != nil || hash != want || !evidence.Commitment.Restored || evidence.Commitment.CanonicalGeneration != precompileCanonicalFleetGeneration || evidence.Commitment.RestoreCommitmentBlock <= evidence.Commitment.WriteCommitmentBlock || evidence.ProbeAddress != successor.RetiredProbe || evidence.DeploymentID != plan.DeploymentID || evidence.ChainID != plan.ChainID || evidence.GenesisHash != plan.GenesisHash || evidence.Netuid != plan.Netuid || !strings.EqualFold(evidence.Owner, plan.Roles.Deployer) {
 		return errors.New("precompile probe successor changed the original native evidence")
 	}
 	for index, entry := range []JournalEntry{successor.Write, successor.Restore} {
@@ -263,6 +277,11 @@ func readPrecompileProbeSuccessorSource(cfg *ResolvedConfig, stateDir string, pl
 	if err := validatePrecompileProbeSuccessorSource(cfg, stateDir, plan, source, entries); err != nil {
 		return nil, err
 	}
+	if plan.PrecompileProbeSuccessor.Retirement != nil {
+		if _, err := readPrecompileProbeRetirementSource(cfg, stateDir, plan, entries); err != nil {
+			return nil, err
+		}
+	}
 	return source, nil
 }
 
@@ -274,7 +293,7 @@ func validatePrecompileProbeSuccessorSource(cfg *ResolvedConfig, stateDir string
 	successor := plan.PrecompileProbeSuccessor
 	baseline := source.CoordinatorUpgradeBaseline
 	baseline.ReleaseDeploymentHash = plan.CoordinatorUpgradeBaseline.ReleaseDeploymentHash
-	if source.PrecompileProbeSuccessor != nil || source.PlanHash != successor.SourcePlanHash || !contractDeploymentAddressesEqual(source.Deployment, plan.Deployment) || !contractDeploymentRuntimeHashesCompatible(source.Deployment, plan.Deployment) || source.ConfigHash != plan.ConfigHash || source.PolicyHash != plan.PolicyHash || !reflect.DeepEqual(source.Roles, plan.Roles) || source.CoordinatorUpgrade != plan.CoordinatorUpgrade || baseline != plan.CoordinatorUpgradeBaseline || !reflect.DeepEqual(source.CoordinatorRepairCarry, plan.CoordinatorRepairCarry) {
+	if source.PrecompileProbeSuccessor != nil || source.PlanHash != successor.SourcePlanHash || !contractDeploymentAddressesEqual(source.Deployment, plan.Deployment) || !contractDeploymentRuntimeHashesCompatible(source.Deployment, plan.Deployment) || source.ConfigHash != successor.Evidence.ConfigHash || source.PolicyHash != successor.Evidence.PolicyHash || source.ChainID != successor.Evidence.ChainID || source.GenesisHash != successor.Evidence.GenesisHash || source.Netuid != successor.Evidence.Netuid || !strings.EqualFold(source.Roles.Deployer, successor.Evidence.Owner) || !reflect.DeepEqual(source.Roles, plan.Roles) || source.CoordinatorUpgrade != plan.CoordinatorUpgrade || baseline != plan.CoordinatorUpgradeBaseline || !reflect.DeepEqual(source.CoordinatorRepairCarry, plan.CoordinatorRepairCarry) {
 		return errors.New("precompile probe successor changes original approval or retained custody")
 	}
 	var prefix []JournalEntry
@@ -350,6 +369,11 @@ func rebindPrecompileProbeSuccessor(plan, source *SetupPlan, payloads *Deploymen
 			continue
 		}
 		action.Parameters = cloneStrings(action.Parameters)
+		if action.Parameters[precompileProbeAddressParameter] != successor.Probe || action.Parameters[precompileProbeRuntimeParameter] != successor.RuntimeHash {
+			// Gas-only aliases belong to the old contract and cannot authorize a
+			// receipt or resend against a different immutable probe generation.
+			action.AcceptedPriorIntentHashes = nil
+		}
 		action.Parameters[precompileProbeAddressParameter] = successor.Probe
 		action.Parameters[precompileProbeRuntimeParameter] = successor.RuntimeHash
 		if action.ID == "precompile.probe-deploy" {
@@ -385,8 +409,26 @@ func verifyPrecompileProbeSuccessorAt(ctx context.Context, cfg *ResolvedConfig, 
 	if _, err := readPrecompileProbeSuccessorSource(cfg, stateDir, plan, entries); err != nil {
 		return err
 	}
-	if allowed, err := precompileProbeSuccessorNonce(plan, entries, nonce); err != nil || !allowed {
+	var evidence *PrecompileConformanceEvidence
+	if nonce > plan.PrecompileProbeSuccessor.DeployerNonce+1 {
+		var err error
+		evidence, err = loadPrecompileEvidence(stateDir)
+		if err != nil {
+			return err
+		}
+		if common.HexToAddress(evidence.ProbeAddress) != common.HexToAddress(plan.PrecompileProbeSuccessor.Probe) {
+			return errors.New("probe successor receipt evidence belongs to another probe")
+		}
+	}
+	replayPlan, err := readPrecompileRecoveryHistoryPlan(cfg, stateDir, plan, entries, evidence)
+	if err != nil {
+		return err
+	}
+	if _, err := precompileProbeSuccessorPrefixWithRecovery(replayPlan, entries, nonce, evidence); err != nil {
 		return errors.Join(errors.New("precompile probe successor nonce is outside approval"), err)
+	}
+	if err := verifyPrecompileProbeRetirementAt(ctx, cfg, stateDir, plan, entries, client, head, nonce); err != nil {
+		return err
 	}
 	successor := plan.PrecompileProbeSuccessor
 	block := new(big.Int).SetUint64(head.Number)
@@ -546,6 +588,12 @@ func observePrecompileProbeSuccessor(ctx context.Context, cfg *ResolvedConfig, s
 		return nil, true, stateMismatchError(err, "precompile probe successor deployer has pending writes")
 	}
 	successor := prior.PrecompileProbeSuccessor
+	if successor != nil && (crypto.Keccak256Hash(built.PrecompileProbe).Hex() != successor.CreationHash || crypto.Keccak256Hash(built.ExpectedRuntime[built.PrecompileProbeAddress]).Hex() != successor.RuntimeHash) {
+		successor, err = newPrecompileProbeSeedSuccessor(cfg, stateDir, prior, built, entries, head, nonce)
+		if err != nil {
+			return nil, true, err
+		}
+	}
 	if successor == nil {
 		if nonce != prior.CoordinatorUpgrade.DeployerNonce+1 || len(entries) == 0 {
 			return nil, true, errors.New("failed precompile probe replacement changed its next CREATE boundary")
@@ -608,8 +656,17 @@ func precompileProbeSuccessorEvidence(plan *SetupPlan, identity, evidence *Preco
 		return nil, errors.New("precompile probe successor evidence generation is absent")
 	}
 	if evidence.ProbeAddress == successor.RetiredProbe {
-		if !reflect.DeepEqual(*evidence, successor.Evidence) {
+		if successor.Retirement != nil || !reflect.DeepEqual(*evidence, successor.Evidence) {
 			return nil, errors.New("precompile probe successor changed retired evidence before migration")
+		}
+		fresh := *identity
+		fresh.Commitment = successor.Evidence.Commitment
+		fresh.CommitmentSource = precompileProbeCommitmentSource(successor)
+		return &fresh, nil
+	}
+	if retirement := successor.Retirement; retirement != nil && evidence.ProbeAddress == retirement.Predecessor.Probe {
+		if !reflect.DeepEqual(*evidence, retirement.Evidence) {
+			return nil, errors.New("precompile probe successor changed retired seed evidence before migration")
 		}
 		fresh := *identity
 		fresh.Commitment = successor.Evidence.Commitment
@@ -655,12 +712,114 @@ func (self *Executor) precompileProbeNativeSource(action Action, verified Journa
 		}
 		source.plan = original
 	}
+	evidence := successor.Evidence
+	source.cfg = historicalPrecompileEvidenceConfig(self.cfg, source.plan, &evidence)
 	payloads := *self.payloads
 	payloads.PrecompileProbeAddress = common.HexToAddress(successor.RetiredProbe)
 	source.payloads = &payloads
-	evidence := successor.Evidence
 	source.precompileHistoryEvidence = &evidence
 	return &source, true, nil
+}
+
+// A battery receipt belongs to its archived probe generation. Later allowance
+// revisions can retain receipts for the current successor as well as the
+// retired probe; the original action decides which evidence to replay.
+func (self *Executor) precompileProbeHistoricalReadSource(action Action, verified JournalEntry, record *ActionPostcondition) (*Executor, bool, error) {
+	if self == nil || self.plan == nil || action.ID != "precompile.read-battery" || verified.PlanHash == self.plan.PlanHash {
+		return nil, false, nil
+	}
+	if self.payloads == nil || self.journal == nil || record == nil || record.PlanHash != verified.PlanHash || record.ActionID != action.ID || record.IntentHash != verified.IntentHash {
+		return nil, true, errors.New("precompile battery historical source identity is absent")
+	}
+	original, err := readValidatorEvidenceHistoricalPlan(self.stateDir, verified.PlanHash)
+	if err != nil {
+		return nil, true, err
+	}
+	originalAction, err := exactPlanActionByID(original, action.ID)
+	if err != nil || originalAction.IntentHash != verified.IntentHash || !self.plan.allowedPlanHashes()[original.PlanHash] {
+		return nil, true, errors.New("precompile battery receipt differs from its archived action")
+	}
+	probe := approvedPrecompileProbe(original)
+	var evidence *PrecompileConformanceEvidence
+	if probe == approvedPrecompileProbe(self.plan) {
+		if err := validatePrecompileEvidenceCarryScope(self.plan, original, probe); err != nil {
+			return nil, true, err
+		}
+		evidence, err = loadPrecompileEvidence(self.stateDir)
+		if err != nil {
+			return nil, true, err
+		}
+		if err := self.validatePrecompileEvidence(probe, evidence); err != nil {
+			return nil, true, err
+		}
+		evidence, err = precompileBatteryHistoricalEvidence(originalAction, evidence, record)
+		if err != nil {
+			return nil, true, err
+		}
+	} else {
+		successor := self.plan.PrecompileProbeSuccessor
+		if successor == nil {
+			return nil, true, errors.New("precompile battery receipt names an unapproved probe generation")
+		}
+		if _, err := readPrecompileProbeSuccessorSource(self.cfg, self.stateDir, self.plan, self.journal.Entries()); err != nil {
+			return nil, true, err
+		}
+		if probe == common.HexToAddress(successor.RetiredProbe) {
+			copy := successor.Evidence
+			evidence = &copy
+		} else if retirement := successor.Retirement; retirement != nil && probe == common.HexToAddress(retirement.Predecessor.Probe) {
+			source, err := readPrecompileProbeRetirementSource(self.cfg, self.stateDir, self.plan, self.journal.Entries())
+			if err != nil {
+				return nil, true, err
+			}
+			if err := validatePrecompileEvidenceCarryScope(source, original, probe); err != nil {
+				return nil, true, err
+			}
+			evidence, err = precompileBatteryHistoricalEvidence(originalAction, &retirement.Evidence, record)
+			if err != nil {
+				return nil, true, err
+			}
+		} else {
+			return nil, true, errors.New("precompile battery receipt names an unapproved probe generation")
+		}
+	}
+	source := *self
+	source.plan = original
+	source.cfg = historicalPrecompileEvidenceConfig(self.cfg, original, evidence)
+	payloads := *self.payloads
+	payloads.PrecompileProbeAddress = probe
+	source.payloads = &payloads
+	source.precompileHistoryEvidence = evidence
+	return &source, true, nil
+}
+
+// historicalPrecompileEvidenceConfig binds a replay to the immutable evidence
+// identity which validatePrecompileProbeSuccessorSource has already matched to
+// its archived source plan. A later allowance-only approval may carry an
+// intermediate plan identity, but it cannot change this retired probe proof.
+func historicalPrecompileEvidenceConfig(cfg *ResolvedConfig, plan *SetupPlan, evidence *PrecompileConformanceEvidence) *ResolvedConfig {
+	source := historicalPlanConfig(cfg, plan)
+	if source == nil || evidence == nil {
+		return source
+	}
+	copy := *source
+	copy.ConfigHash = evidence.ConfigHash
+	copy.PolicyHash = evidence.PolicyHash
+	return &copy
+}
+
+// Resolve the action from the same authenticated source plan as the retired
+// probe. Successor plans intentionally bind replacement probe parameters and
+// therefore cannot replay an old battery observation.
+func precompileBatteryHistoricalSourceAction(source *Executor, action Action) (Action, error) {
+	if source == nil || source.plan == nil {
+		return Action{}, errors.New("precompile battery historical source action is unavailable")
+	}
+	sourceAction, err := exactPlanActionByID(source.plan, action.ID)
+	if err != nil {
+		return Action{}, fmt.Errorf("precompile battery historical source action: %w", err)
+	}
+	return sourceAction, nil
 }
 
 // Reads only the original phase after the successor constructor authenticated it.

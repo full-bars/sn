@@ -1,0 +1,44 @@
+{
+  "status": "MODEL_TARGETED_RUNNING_NOT_QUALIFIED",
+  "observed_processes": [
+    {
+      "pid": 652636,
+      "stat": "652636 (python3) S 987168 652636 652636 0 -1 4194304 6331 666873 0 0 65 17 574 426 20 0 2 0 95199878 104337408 4944 18446744073709551615 108643550355456 108643550355817 140733573980176 0 0 0 0 16781312 2 0 0 0 17 6 0 0 0 0 0 108643550367128 108643550367760 108644154540032 140733573984388 140733573984604 140733573984604 140733573988295 0\n",
+      "command": "/home/by/urnetwork/.virtualenv/brien/bin/python3 -B /mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/run-c2b-targeted-v2.py --adoption /mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/adoption.json "
+    },
+    {
+      "pid": 652707,
+      "stat": "652707 (bash) S 652636 652707 652707 0 -1 4194304 5476 106777 0 3 3 3 131 74 20 0 1 0 95199932 9768960 1296 18446744073709551615 105226844512256 105226845487917 140724526203232 0 0 0 65536 4 1132560123 1 0 0 17 18 0 0 0 0 0 105226845710768 105226845759408 105227744169984 140724526211303 140724526211386 140724526211386 140724526215146 0\n",
+      "command": "bash /mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/run-selected-c2b.sh "
+    },
+    {
+      "pid": 653595,
+      "stat": "653595 (go) S 653594 653594 652707 0 -1 4194304 17459 667486 0 14 771 76 9215 455 20 0 7 0 95200504 1380106240 19187 18446744073709551615 4194304 11132561 140730357114448 0 0 0 0 0 2143420159 0 0 0 17 6 0 0 0 0 0 17973248 18407616 1053585408 140730357121746 140730357124136 140730357124136 140730357129187 0\n",
+      "command": "go test -json -count=1 -parallel=2 -p=2 -overlay=/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/overlay.json -timeout=120m -run ^(TestPaymentPlanSubsidy|TestContractLifecycleEscrowBranchClockGuardRejectsMissingOrLateLocks|TestContractLifecycleWritesUsePrimaryDatabaseClockAfterLocks|TestContractPayoutParticipantMatrix|TestCompanionContractPayoutParticipantsJoinByStreamId|TestContractParticipantPayoutDisputeOutcomes|TestContractExtenderPayoutParticipantMatrix|TestCompanionContractExtenderPayoutPaysTheReversedParties|TestContractPayoutPreservesSharedNetworkProviderUsage|TestStatsProviderPayoutsPreserveSharedNetworkSettlement|TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy|TestForceCloseCheckpointDisputeConvergesInOneSweep|TestForceCloseHealthyFinalizationSkipsDisputeSettlement|TestEscrow|TestCompanionEscrowAndCheckpoint|TestPublicRedisLongLivedGrantRetainsOriginalRequestLease|TestRemoveCompletedContractsCascades|TestPaymentPlanSubsidyEqualWeight|TestCreateTransferEscrowShrinkToFit|TestAsyncDebitLostPostsReplayAndRedisPrecedence|TestAsyncDebitCommittedBatchSurvivesRedisFailureAndLostAck|TestAsyncDebitBusyGrantAdvancesFairCursor|TestAsyncDebitRollbackCannotPublishOrConsume|TestCompletedTransferBalanceRetentionAdvancesPastRetainedPage|TestCompletedTransferBalanceRetentionConcurrentReservations|TestCompletedTransferBalanceRetentionPlansStayIndexed|TestAsyncDebitPendingAndAppliedRowsFenceBalanceRetention|TestAsyncDebitOldReaperCannotDeleteUnflushedBalance|TestCompletedContractRetentionResumesInBatches|TestForceCloseDisputeSettlementFailureRollsBack|TestForceCloseDisputeCancellationPreservesReservation|TestForceCloseAccountingRejectionReportsVerifiedProgress|TestForceCloseAccountingRejectionReportsZeroProgress|TestForceCloseVerifiedQuarantineDoesNotParkAccountingBatch|TestForceCloseVerifiedQuarantineReportsTerminalAccountingProgress|TestForceCloseAccountingDatabaseFailureKeepsOrdinaryError|TestForceCloseAccountingNewDisputeRequiresFirstPassVerification|TestPublicDisputeAndLegacyPeerKeepSeparateReservations|TestEscrowSettlementLegacyRowsPreserveAccounting|TestEscrowSettlementZeroUseOmitsEmptyPosts|TestEscrowSettlementLegacyRejectionKeepsReservation|TestEscrowSettlementZeroQuarantinePreservesUnrelatedMirror|TestSettlementReadPreservesFinancialPosts|TestSettlementReadPreservesUncappedPosts|TestSettlementReadPreservesExpiryTies)$ ./model "
+    }
+  ],
+  "inputs": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/adoption.json",
+      "bytes": 2222,
+      "sha256": "d462bacc145271da65c901b3ec3d9e658ffd3e50149175899e52e9d5c3c56811"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/targeted-job-v2.json",
+      "bytes": 5536,
+      "sha256": "4c66066c23bb7c9f53c3e49e4a748375f00ddd5ffb5e46e53ba04edc5c222347"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/run-c2b-targeted-v2.py",
+      "bytes": 11421,
+      "sha256": "2ba7068be2f5c67132b0d1b45a5d04a78622aa6d2afee95482dcebec89f1c25a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/evidence/selected-graph-terminal-v1.json",
+      "bytes": 2497,
+      "sha256": "9e59938c2951d4ef66f3697f3fe19fb665d55cc567c30f71d1a2e669d4db601a"
+    }
+  ],
+  "native_next": "26-phase corrected fixture continuation adopted, queued after model cleanup; completed scopes retained",
+  "activation": false
+}

@@ -1,0 +1,53 @@
+{
+  "status": "UNAPPROVED_READ_ONLY_OBSERVATION",
+  "identity": {
+    "schema": "urnetwork-mainnet-rpc-identity-v1",
+    "observed_at": "2026-10-02T19:02:15.168929377Z",
+    "rpc_url": "https://archive.chain.opentensor.ai",
+    "native_chain": "Bittensor",
+    "genesis_hash": "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03",
+    "evm_chain_id": 964,
+    "node_version": "4.0.0-dev-4b19dc31fc2",
+    "finalized_hash": "0xfdeec6085bdf6bdcdf141dc82b18a0802e3276b85b8310f597ec52c6e8bb175d",
+    "finalized_number": 9197096,
+    "runtime_spec_version": 472,
+    "runtime_transaction_version": 1
+  },
+  "code_hash": "0x43bc67be9df30636d7e948e7bdb1ed065f2fb92029458cc939abf89d76d8ada3",
+  "metadata_hash": "0x6a6d67dc139caa83749479736877b4b5202176088842800675b45623c1813e84",
+  "runtime_admission": "unapproved_observation",
+  "content_hash": "sha256:a9b7727bf422073f229433f07258a99bfa0f37193c8ed145ae4b0583de8f85ce",
+  "files": {
+    "/mnt/data/sn-testnet/root-mainnet-route-check-20261002/check.go": {
+      "bytes": 2890,
+      "sha256": "204c53ad1a405c24b547a2f1186bc41c95157dfbb0c082670f62a0fbb02c7ae9"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-route-check-20261002/observation.json": {
+      "bytes": 2947,
+      "sha256": "e0967421016f0c7bf496a681d2f27f542f8d230d932519fd8b077f48ffbbff70"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-route-check-20261002/runtime-snapshot.json": {
+      "bytes": 5834134,
+      "sha256": "ff19773735b9284f229d13731f303551a26e32eff2853ccca33156ce762b607c"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-route-check-20261002/runtime-snapshot.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-route-check-20261002/runtime-snapshot.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-public-unsigned-preparation-astra-20261001/bin/sn-mainnet": {
+      "bytes": 51109440,
+      "sha256": "fb26731a46378f26b58701ba0b26edcb31a5ceddc11fdd51277b984a1bf39dbc"
+    }
+  },
+  "limits": [
+    "RPC observations do not independently establish finality or source authority.",
+    "The existing v470 exception does not approve this v472 artifact.",
+    "Snow route returned HTTP502 during a60-second read-only budget; no Snow chain identity was established.",
+    "Initial state_getRuntimeVersion was unpinned; project runtime-snapshot is pinned at finalized9197096.",
+    "No signing, submission, deployment or activation occurred."
+  ]
+}

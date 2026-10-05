@@ -1,0 +1,336 @@
+{
+  "appended_neighbors": [
+    "TestClaimQueueStoreReacknowledgesPreviouslyVisibleBytes",
+    "TestClaimQueueCapacitySavePreservesExactLimitBytesOnExcess"
+  ],
+  "author_receipt_sha256": "5a857f31c7b2e3a43fe09062e9e0b9918888cf3d06f130b1603c7b5f8c9a111b",
+  "causal_old_bodies": {
+    "control-prior-capacity": {
+      "normal": {
+        "causal_output": [
+          "claim_progress_custody_test.go:120: prior monitoring metadata blocked operational growth claim queue exceeds the 16 MiB retained byte limit"
+        ],
+        "exit": 1,
+        "failed_roots": [
+          "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth"
+        ],
+        "package": "fail",
+        "passed_roots": [
+          "TestClaimProgressCapacityCannotBlockSignedOutcome"
+        ],
+        "skipped_roots": []
+      },
+      "race": {
+        "causal_output": [
+          "claim_progress_custody_test.go:120: prior monitoring metadata blocked operational growth claim queue exceeds the 16 MiB retained byte limit"
+        ],
+        "exit": 1,
+        "failed_roots": [
+          "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth"
+        ],
+        "package": "fail",
+        "passed_roots": [
+          "TestClaimProgressCapacityCannotBlockSignedOutcome"
+        ],
+        "skipped_roots": []
+      },
+      "replacement_sha256": "cba665c69b82ec610b17aadaf31c0a29750eae2d2664849a480ace5a17892996",
+      "selector": "^TestClaimProgress(CapacityCannotBlockSignedOutcome|PriorOptionalMetadataYieldsToCustodyGrowth)$",
+      "target_sha256": "16023a89985caa48ba909cd84ce22f363b41c49990d6a9435b05ef914bc86fb4"
+    },
+    "control-prior-paid-topic": {
+      "normal": {
+        "causal_output": [
+          "claim_progress_test.go:53: actual ClaimPaid was lost or allocated only to this epoch map[accepted_amount_rao:25 authority:configured-rpc-assertion block_hash:0xaad46c25ee81b4f9f636677c1b9197a146733e8f16d57114269030ddf26790e2 block_number:10 epoch:70 evidence_kind:signed-receipt genesis_status:unverified observed_at:2026-10-02T21:12:22.847789461Z payment_status:unknown pool:map[chain_id:945 coldkey:0x0102030000000000000000000000000000000000000000000000000000000000 no_id:7 vault:0x0000000000000000000000000000000000001234] proof_status:contract-accepted relayer:0xce4a124f965596db85719418775d70b645da31a8 schema:urnetwork-claim-observation-v1 share_bps:10000 transaction_hash:0xef757199bb03ea370492c5a824cabbed236c4fdc0a029f8d25c8482fc16a8374]"
+        ],
+        "exit": 1,
+        "failed_roots": [
+          "TestClaimProgressActualReceiptRetainsAggregatePayment"
+        ],
+        "package": "fail",
+        "passed_roots": [
+          "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit"
+        ],
+        "skipped_roots": []
+      },
+      "race": {
+        "causal_output": [
+          "claim_progress_test.go:53: actual ClaimPaid was lost or allocated only to this epoch map[accepted_amount_rao:25 authority:configured-rpc-assertion block_hash:0xaad46c25ee81b4f9f636677c1b9197a146733e8f16d57114269030ddf26790e2 block_number:10 epoch:70 evidence_kind:signed-receipt genesis_status:unverified observed_at:2026-10-02T21:14:37.812838449Z payment_status:unknown pool:map[chain_id:945 coldkey:0x0102030000000000000000000000000000000000000000000000000000000000 no_id:7 vault:0x0000000000000000000000000000000000001234] proof_status:contract-accepted relayer:0x7847016daa810ceef90373f11bfea7bafffb72be schema:urnetwork-claim-observation-v1 share_bps:10000 transaction_hash:0xb4350372739e3ed2ba7b1cb1e53e95452da6f692e2cf3791dc20da6878f2a679]"
+        ],
+        "exit": 1,
+        "failed_roots": [
+          "TestClaimProgressActualReceiptRetainsAggregatePayment"
+        ],
+        "package": "fail",
+        "passed_roots": [
+          "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit"
+        ],
+        "skipped_roots": []
+      },
+      "replacement_sha256": "0281806e5d16fb703f2071d37187dd00bc5b0522fec339e6e105203c8f24f380",
+      "selector": "^TestClaimProgressActualReceiptRetains(AggregatePayment|AcceptedAndDeferredCredit)$",
+      "target_sha256": "442f72420c71e3ae3dbfee239d5571b4c060c1857f9dfdade482200c4ceced15"
+    },
+    "control-prior-unresolved-order": {
+      "normal": {
+        "causal_output": [
+          "claim_progress_custody_test.go:211: public projection does not decode: claim progress byte bound"
+        ],
+        "exit": 1,
+        "failed_roots": [
+          "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat"
+        ],
+        "package": "fail",
+        "passed_roots": [],
+        "skipped_roots": []
+      },
+      "race": {
+        "causal_output": [
+          "claim_progress_custody_test.go:211: public projection does not decode: claim progress byte bound"
+        ],
+        "exit": 1,
+        "failed_roots": [
+          "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat"
+        ],
+        "package": "fail",
+        "passed_roots": [],
+        "skipped_roots": []
+      },
+      "replacement_sha256": "c74e152f95c502fa0b0342f30bf64ea9f28e4a666542ba579551aa79846b26db",
+      "selector": "^TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat$",
+      "target_sha256": "1352b7f1aa308e4b8f2c3ab418cfe8ed493e19e593dda9e6bd229839d426aca8"
+    }
+  },
+  "fixed": {
+    "normal": {
+      "appended-neighbors": {
+        "causal_output": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestClaimQueueCapacitySavePreservesExactLimitBytesOnExcess",
+          "TestClaimQueueStoreReacknowledgesPreviouslyVisibleBytes"
+        ],
+        "skipped_roots": []
+      },
+      "neighbors": {
+        "causal_output": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestClaimClockFreshSubmitAuthenticatesReconciledReceiptIdentityAndEvent",
+          "TestClaimClockFreshSubmitClosesFinalityBeforePublication",
+          "TestClaimQueueCannotClearSignedHistoryForRetryOrNoClaim",
+          "TestClaimQueuePollCannotSubmitAfterIntentCheckpointFailure",
+          "TestClaimStorageSwarmLossDoesNotCancelSibling",
+          "TestSignedClaimMissingReceiptCannotBecomeAPINoClaim",
+          "TestSignedClaimReconcilesCanonicalReceiptWithoutHistoricalAPI",
+          "TestSignedClaimRejectsReceiptWithoutMatchingIntentEvent"
+        ],
+        "skipped_roots": []
+      },
+      "new-miner": {
+        "causal_output": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit",
+          "TestClaimProgressActualReceiptRetainsAggregatePayment",
+          "TestClaimProgressApiAbsenceKeepsPaymentAndGenesisUnknown",
+          "TestClaimProgressCanceledReadAndMutationCannotExposeWriterState",
+          "TestClaimProgressCapacityCannotBlockSignedOutcome",
+          "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat",
+          "TestClaimProgressChangedFinalizedWitnessCannotPublishObservation",
+          "TestClaimProgressDeclaredPoolMismatchRemainsVisible",
+          "TestClaimProgressFailedDurableSaveCannotPublish",
+          "TestClaimProgressFutureObservationDegradesWithoutStoppingSave",
+          "TestClaimProgressPaymentAmbiguityCannotRewriteSignedOutcome",
+          "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth",
+          "TestClaimProgressPublicHandlerReportsUnknownBeforeWriterAdmission",
+          "TestClaimProgressPublicSwarmUsesActualWriterAndJoinedLifecycle",
+          "TestClaimProgressUnsignedLeafCannotInventReceiptOrPayment"
+        ],
+        "skipped_roots": []
+      },
+      "new-protocol": {
+        "causal_output": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestClaimProgressDecodeBoundsEntryCountAndGrammar",
+          "TestClaimProgressDecodeRejectsForgedAuthorityAndPayment",
+          "TestClaimProgressDecodeRejectsFutureOrContradictoryCensus",
+          "TestClaimProgressDecodeRetainsUnavailableAndClosedEvidence"
+        ],
+        "skipped_roots": []
+      }
+    },
+    "race": {
+      "appended-neighbors": {
+        "causal_output": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestClaimQueueCapacitySavePreservesExactLimitBytesOnExcess",
+          "TestClaimQueueStoreReacknowledgesPreviouslyVisibleBytes"
+        ],
+        "skipped_roots": []
+      },
+      "neighbors": {
+        "causal_output": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestClaimClockFreshSubmitAuthenticatesReconciledReceiptIdentityAndEvent",
+          "TestClaimClockFreshSubmitClosesFinalityBeforePublication",
+          "TestClaimQueueCannotClearSignedHistoryForRetryOrNoClaim",
+          "TestClaimQueuePollCannotSubmitAfterIntentCheckpointFailure",
+          "TestClaimStorageSwarmLossDoesNotCancelSibling",
+          "TestSignedClaimMissingReceiptCannotBecomeAPINoClaim",
+          "TestSignedClaimReconcilesCanonicalReceiptWithoutHistoricalAPI",
+          "TestSignedClaimRejectsReceiptWithoutMatchingIntentEvent"
+        ],
+        "skipped_roots": []
+      },
+      "new-miner": {
+        "causal_output": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit",
+          "TestClaimProgressActualReceiptRetainsAggregatePayment",
+          "TestClaimProgressApiAbsenceKeepsPaymentAndGenesisUnknown",
+          "TestClaimProgressCanceledReadAndMutationCannotExposeWriterState",
+          "TestClaimProgressCapacityCannotBlockSignedOutcome",
+          "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat",
+          "TestClaimProgressChangedFinalizedWitnessCannotPublishObservation",
+          "TestClaimProgressDeclaredPoolMismatchRemainsVisible",
+          "TestClaimProgressFailedDurableSaveCannotPublish",
+          "TestClaimProgressFutureObservationDegradesWithoutStoppingSave",
+          "TestClaimProgressPaymentAmbiguityCannotRewriteSignedOutcome",
+          "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth",
+          "TestClaimProgressPublicHandlerReportsUnknownBeforeWriterAdmission",
+          "TestClaimProgressPublicSwarmUsesActualWriterAndJoinedLifecycle",
+          "TestClaimProgressUnsignedLeafCannotInventReceiptOrPayment"
+        ],
+        "skipped_roots": []
+      },
+      "new-protocol": {
+        "causal_output": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestClaimProgressDecodeBoundsEntryCountAndGrammar",
+          "TestClaimProgressDecodeRejectsForgedAuthorityAndPayment",
+          "TestClaimProgressDecodeRejectsFutureOrContradictoryCensus",
+          "TestClaimProgressDecodeRetainsUnavailableAndClosedEvidence"
+        ],
+        "skipped_roots": []
+      }
+    }
+  },
+  "limits": [
+    "29 independent selected roots per mode: 19 new, eight signed/custody neighbors, two separately appended storage/capacity neighbors; not author37 suite.",
+    "Three old-body overlays produce one intended failure each mode; capacity and paid-topic controls each retain one passing positive.",
+    "Exact frozen Connect0a5/server10a graph only; no current-server, live signing, deployment, device, or independent compiler/release provenance claim."
+  ],
+  "manifest_entries": 76,
+  "manifest_sha256": "b6931e3416ff98f92a68cc981c0c9ab7a5e7470ddafb83cbc219af5dfa6d6d98",
+  "schema": "sol-independent-claim347-v1",
+  "selected_affected_neighbors": [
+    "TestClaimClockFreshSubmitClosesFinalityBeforePublication",
+    "TestClaimClockFreshSubmitAuthenticatesReconciledReceiptIdentityAndEvent",
+    "TestSignedClaimReconcilesCanonicalReceiptWithoutHistoricalAPI",
+    "TestSignedClaimRejectsReceiptWithoutMatchingIntentEvent",
+    "TestSignedClaimMissingReceiptCannotBecomeAPINoClaim",
+    "TestClaimQueueCannotClearSignedHistoryForRetryOrNoClaim",
+    "TestClaimQueuePollCannotSubmitAfterIntentCheckpointFailure",
+    "TestClaimStorageSwarmLossDoesNotCancelSibling"
+  ],
+  "selected_new_roots": [
+    "TestClaimProgressCapacityCannotBlockSignedOutcome",
+    "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth",
+    "TestClaimProgressFailedDurableSaveCannotPublish",
+    "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat",
+    "TestClaimProgressFutureObservationDegradesWithoutStoppingSave",
+    "TestClaimProgressCanceledReadAndMutationCannotExposeWriterState",
+    "TestClaimProgressPaymentAmbiguityCannotRewriteSignedOutcome",
+    "TestClaimProgressUnsignedLeafCannotInventReceiptOrPayment",
+    "TestClaimProgressApiAbsenceKeepsPaymentAndGenesisUnknown",
+    "TestClaimProgressChangedFinalizedWitnessCannotPublishObservation",
+    "TestClaimProgressPublicSwarmUsesActualWriterAndJoinedLifecycle",
+    "TestClaimProgressDeclaredPoolMismatchRemainsVisible",
+    "TestClaimProgressActualReceiptRetainsAggregatePayment",
+    "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit",
+    "TestClaimProgressPublicHandlerReportsUnknownBeforeWriterAdmission",
+    "TestClaimProgressDecodeBoundsEntryCountAndGrammar",
+    "TestClaimProgressDecodeRejectsForgedAuthorityAndPayment",
+    "TestClaimProgressDecodeRejectsFutureOrContradictoryCensus",
+    "TestClaimProgressDecodeRetainsUnavailableAndClosedEvidence"
+  ],
+  "source_commit": "347605fd1d01b5404b969602c05cf3e8c5feef9f",
+  "source_tree": "04199a9573b1e391062b532cf16dca2b08cfb6db",
+  "terminal_source_readback": {
+    "author_graph_sha256": "ca4f51f6e01b3924a60badf9b605123bae4bb5140d101242cb2866b924858c64",
+    "local_replacements": [
+      {
+        "go_mod_sha256": "2915174f97f9aeccd01002b6c61c86366eabcaa2e6f84a21e4ea880e8d45f8d9",
+        "module": "github.com/centrifuge/go-substrate-rpc-client/v4",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/claim-347/source/sn/third_party/go-substrate-rpc-client"
+      },
+      {
+        "go_mod_sha256": "5022a0fd461de289e6e84a4f0930a362613b5bcaaffe090a201e68b6714cb40b",
+        "module": "github.com/urnetwork/glog",
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/glog"
+      },
+      {
+        "go_mod_sha256": "67dd6efd0fafd9d54e4bbf953eb07c9526ba55ee0dd4eb3e752ef201f619f28c",
+        "module": "github.com/urnetwork/goidenticons",
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/goidenticons"
+      },
+      {
+        "go_mod_sha256": "bd538f2de13d314e5604022082b28bb692702e3b68aa869abf1df2dfeab3a4e1",
+        "module": "github.com/urnetwork/proxy",
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/proxy"
+      },
+      {
+        "go_mod_sha256": "dcbc91ae9c6737a4d79921ef1f0d720352ad4bc41d26c0c9f49279d7ae662917",
+        "module": "github.com/urnetwork/server",
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server"
+      },
+      {
+        "go_mod_sha256": "470b20749c9d46b715bce19db1e50618892417a2a4d72b2697efb0e55070f965",
+        "module": "github.com/urnetwork/userwireguard",
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/userwireguard"
+      },
+      {
+        "go_mod_sha256": "59af6d15db6f8d4765fc6a4df110651a895a4c7b3126c7882234cfa0ed9193d9",
+        "module": "gopkg.in/natefinch/npipe.v2",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/claim-347/source/sn/third_party/npipe"
+      }
+    ],
+    "mismatches": [],
+    "modfile_remap_count": 2,
+    "own_effective_module_count": 636,
+    "own_effective_modules_sha256": "eb09f2808a817c07f01aa9bf3bd93e0fb2a4e6a8f8029e7a415166f7fe4fc0f0",
+    "schema": "sol-claim347-preflight-v1",
+    "source_commit": "347605fd1d01b5404b969602c05cf3e8c5feef9f",
+    "source_graph_match": true,
+    "source_tree": "04199a9573b1e391062b532cf16dca2b08cfb6db",
+    "tracked_blobs": 20080
+  },
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0,
+  "vet_packages": [
+    "./miner",
+    "./protocol"
+  ]
+}

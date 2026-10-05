@@ -26,8 +26,8 @@ var errAttemptCutSnapshotStale = errors.New("attempt ledger cut is waiting for a
 
 // Callbacks stage durable immutable objects and fetch those exact objects
 // back; they never receive a signed header. Inputs must remain unchanged for
-// the call. Callbacks may append to the ledger but must not close it or start
-// a nested Walk, because the source walks one fixed snapshot at a time.
+// the call. Callbacks may append to or walk the ledger, but must not close it:
+// this call retains ledger lifetime ownership until callbacks have returned.
 // ScratchDirectory must be a fresh clean absolute path. The caller retains
 // all failed/successful scratch and staged objects; this API erases none.
 // Scratch data is bounded by ReplayBounds.MaxScratchBytes plus 104 bytes per
@@ -58,11 +58,25 @@ func sealAttemptCutV2WithHooks(ctx context.Context, ledger *AttemptLedger, expec
 	if ctx == nil || ledger == nil || options.WriteRecords == nil || options.WriteProofs == nil || options.WriteMetadata == nil || options.ReadMetadata == nil || options.OpenData == nil {
 		return nil, verified, errors.New("compact attempt sealer authority is incomplete")
 	}
+	if err := ledger.begin(ctx); err != nil {
+		return nil, verified, err
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	ownerCanceled := make(chan struct{})
+	stopOwner := context.AfterFunc(ledger.ctx, func() {
+		defer close(ownerCanceled)
+		cancel()
+	})
 	defer func() {
-		resultErr = errors.Join(resultErr, ctx.Err())
+		if !stopOwner() {
+			<-ownerCanceled
+		}
+		resultErr = errors.Join(resultErr, ctx.Err(), ledger.ctx.Err())
 		if resultErr != nil {
 			result, verified = nil, AttemptCutV2ReplayResult{}
 		}
+		cancel()
+		ledger.active.Done()
 	}()
 	if err := ctx.Err(); err != nil {
 		return nil, verified, err
@@ -225,12 +239,23 @@ func sealAttemptCutV2WithHooks(ctx context.Context, ledger *AttemptLedger, expec
 
 // The local reader authenticates each bounded canonical VPK-signed record.
 // Both passes additionally prove exactly the same policy, boundary and hash
-// prefix. Full server/proof/lifecycle checks run against fetched staged bytes,
-// never a producer-only in-memory projection. Appends after Head are excluded.
+// prefix. Committed record keys are immutable. Reading one record at a time
+// releases its storage owner before a visitor can upload or run a foreground
+// proof projection. No remote wait retains the sole snapshot iterator gate.
+// Sequence/prior-root checks and the final captured root bind the exact prefix;
+// full server/proof/lifecycle checks still run against fetched staged bytes.
 func walkAttemptCutV2SealPrefix(ctx context.Context, ledger *AttemptLedger, head AttemptLedgerHead, expected AttemptCutV2Context, depth int, visit func(AttemptRecord) error) error {
+	store, ok := ledger.disk.(*attemptRecordStore)
+	if !ok || store == nil || expected.FirstSequence == 0 || expected.FirstSequence > head.LastSequence || head.LastSequence == ^uint64(0) {
+		return errors.New("compact attempt source requires a checked immutable disk prefix")
+	}
 	previous, count := expected.PriorRoot, uint64(0)
-	err := ledger.Walk(ctx, expected.FirstSequence, head.LastSequence, func(record AttemptRecord) error {
+	for sequence := expected.FirstSequence; sequence <= head.LastSequence; sequence++ {
 		if err := ctx.Err(); err != nil {
+			return err
+		}
+		record, err := store.Read(ctx, sequence)
+		if err != nil {
 			return err
 		}
 		if record.Identity != expected.Identity || record.Sequence != expected.FirstSequence+count || record.PreviousHash != previous || record.M != depth {
@@ -247,10 +272,6 @@ func walkAttemptCutV2SealPrefix(ctx context.Context, ledger *AttemptLedger, head
 		}
 		previous = record.RecordHash
 		count++
-		return ctx.Err()
-	})
-	if err != nil {
-		return err
 	}
 	if count != head.LastSequence+1-expected.FirstSequence || previous != head.Root {
 		return errors.New("compact attempt walked prefix differs from the checked head")

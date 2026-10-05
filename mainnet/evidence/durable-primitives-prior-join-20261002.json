@@ -1,0 +1,57 @@
+{
+  "bound_receipts": {
+    "author_owner_local": {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-receipt.json",
+      "sha256": "dde420a78b5cfca4e0aba18628bd2e48387028134bda8160cbd9e009dd39a972"
+    },
+    "independent_inventory": {
+      "path": "/mnt/data/sn-testnet/sol-connect-durable-core-independent-20261002/additive-receipt.json",
+      "sha256": "a98b2345845adba8f0466080687cb927764e0c421f662d2d4444376c1f34fced"
+    },
+    "independent_owner_local": {
+      "path": "/mnt/data/sn-testnet/sol-connect-durable-core-independent-20261002/owner-local-receipt.json",
+      "sha256": "a7e9426c227c51044dae204ecd5a475ebeeacc86ce4b04602027078e00e9f211"
+    }
+  },
+  "changed_paths": [
+    "durablevolume/config.go",
+    "durablevolume/host_linux.go",
+    "durablevolume/inventory.go",
+    "durablevolume/inventory_linux.go",
+    "durablevolume/inventory_other.go",
+    "durablevolume/inventory_test.go",
+    "durablevolume/owner.go",
+    "durablevolume/owner_local_test.go",
+    "durablevolume/owner_test.go"
+  ],
+  "commit": "c339095c5d41a0103cccc6a14925116a8e02d41d",
+  "downstream_adoption_qualification": false,
+  "full_connect_qualification": false,
+  "module_files_unchanged": true,
+  "observed_origin_main": "6d0eca1e77cc7f84ebd9615ec43cc876201a1f92",
+  "origin_ancestor": true,
+  "production_deployment_qualification": false,
+  "qualification_scope": "Separate exact inventory28 and owner-local35 normal/race/vet receipts. Literal slash parser and kernel census were tested directly; actual root descriptor I/O stayed in a synthetic /mnt/data fixture.",
+  "qualified_commit_unchanged": true,
+  "schema": "urnetwork-durable-primitives-fast-forward-join-v1",
+  "sealed_utc": "2026-10-02T06:29:06.049694053Z",
+  "sealer_sha256": "bca389be4d56ac08f503a7511f5c84d567ea7eb8acb1e984c903601b45464fba",
+  "source": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/connect-integration",
+  "source_files": {
+    "durablevolume/config.go": "824fa0d616e7379af23dfb891248474403b2996986f682960ddd69e69f4ebb40",
+    "durablevolume/host_linux.go": "efa8cf81425a4799dbeefb059f807d6aa11d2ffd5172e3332f84608c40cca3b8",
+    "durablevolume/host_other.go": "0cfc69f5270174b165f6979795d98dbc530126fa6d5b7b77e1e851110a05fc13",
+    "durablevolume/inventory.go": "0b70aa614e31f7d9ae3f42b8bc5b14157ac44ebd25f8b9bf1360ce3906bf5c39",
+    "durablevolume/inventory_linux.go": "0165f8ebb23fd90f21b8a0935d268efc90162196cbad46b68e8eaa516f9cd6c8",
+    "durablevolume/inventory_other.go": "7f170caeea9d988d1f860903c27291afb0bf19ba2b7894746fdaba84a099d5bf",
+    "durablevolume/inventory_test.go": "1f5dcbf1a5f1a1fcbe3a82a46831b8aaa50bfe467dccbaafb0affbb2af5aab51",
+    "durablevolume/owner.go": "f17c42b0653c4c37469a07030dac0f5878cefc702e270a4238b7c2de528d0a66",
+    "durablevolume/owner_local_test.go": "47319b05303324d4b04881f720fa54c43707185ec226bf7520e819daea7348aa",
+    "durablevolume/owner_test.go": "bc97774b5c975443f4b50bd07c9247f3ed7dd5e1b8c156990b78605a0af927d7",
+    "go.mod": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7",
+    "go.sum": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+  },
+  "status": "PASS_SCOPED_SOURCE_AND_RECEIPT_JOIN",
+  "tests_rerun_by_join": false,
+  "tree": "851a58cca7933fa717346f12b3c9a43c9b9205fd"
+}

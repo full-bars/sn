@@ -1,0 +1,600 @@
+{
+  "accounting": {
+    "active_floor_reason": "The healthy owner continues with baseline minus its original 100GiB cap. Future admission must not consume its existing floor; no retargeting, restarting, or signaling that owner.",
+    "data_accounting_floor_bytes": 0,
+    "data_accounting_floor_formula": "max(0, original_data_baseline_bytes - future_data_cap_bytes)",
+    "data_launch_formula": "data_accounting_floor_bytes + 2 * (4GiB*history_count + 4GiB*model_DB_count + 6GiB*compiler_count)",
+    "docker_root_active_floor_bytes": 295833415680,
+    "docker_root_cap_bytes": 8589934592,
+    "docker_root_forecast_bytes": 2147483648,
+    "docker_root_launch_threshold_bytes": 300128382976,
+    "docker_root_original_baseline_bytes": 304423350272,
+    "future_data_cap_bytes": 115964116992,
+    "healthy_v3_active_data_floor_bytes": 6307319808,
+    "inodes_launch_minimum": 1000000,
+    "memory_floor_bytes": 103079215104,
+    "memory_launch_formula": "96GiB + 2 * (2GiB*history_count + 8GiB*model_DB_count + 4GiB*compiler_count)",
+    "negative_accounting_floor_may_offset_physical_reserve": false,
+    "new_owner_active_data_floor_while_v3_running_bytes": 6307319808,
+    "original_baseline_rebased": false,
+    "original_data_baseline_bytes": 113681502208
+  },
+  "cleanup_performed": false,
+  "decision": {
+    "existing_adoption_files_changed": false,
+    "forecast_type": "Prospective workload estimates under the exact listed scope, not measured future upper bounds or architectural lower bounds.",
+    "full129_memory_forecast_each_bytes": 2147483648,
+    "healthy_job_guards_changed": false,
+    "history_data_forecast_each_bytes": 4294967296,
+    "model_DB_data_forecast_bytes": 4294967296,
+    "model_DB_memory_forecast_bytes": 8589934592,
+    "resource_margin": 2,
+    "root_adoption_required": true
+  },
+  "evidence_bindings": [
+    {
+      "bytes": 1795,
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-narrow-compiler-adoption-20261004.json",
+      "sha256": "310dc27d5357af9996007051a2f8e74f2354c76b3c2a4486a944575463bb6fa6"
+    },
+    {
+      "bytes": 2232,
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/corrected-full129-history-resource-admission-20261004.json",
+      "sha256": "fa458dacf283ee4e136afbb4aac628f2a8a30fd415390f1b4147a03f61a3e881"
+    },
+    {
+      "bytes": 1615,
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/future-parallel-qualification-resource-admission-20261004.json",
+      "sha256": "6a9819622daec443a8f5e33174276d3477e218e259010010e92520cac60fe1c3"
+    },
+    {
+      "bytes": 4291,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/execute-final-model-only.py",
+      "sha256": "c0e8faf3871ddf3781096e2fe8ac508db439c8231a6522ce42fa5a1fb513632b"
+    },
+    {
+      "bytes": 2640,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/run-final-model-only.sh",
+      "sha256": "c4038b7e9c3a43d7636eb599c15b10246ebdf00dae4051ebf4422f9a44203e6c"
+    },
+    {
+      "bytes": 5709,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/prepare-final3d-future108.py",
+      "sha256": "24f3283bc65f11e0ab111e98f611929167695edb9bf9fd274fb2f7bac2227a58"
+    },
+    {
+      "bytes": 7498,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final3d-model-normal-compile.receipt.json",
+      "sha256": "bcb7335d8a1034bbab58661a546ab02970f489c293d6aa4d1919f1d817873104"
+    },
+    {
+      "bytes": 6994,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final3d-server-fixture-build.receipt.json",
+      "sha256": "4c9a4a440f9dfb0788a0b0756bea08290fd78987fb6def2713438b6fd1b40633"
+    },
+    {
+      "bytes": 7054,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final3d-empty-geolite-build.receipt.json",
+      "sha256": "878beabe8ba333fc9b92b2ecc45910446fc79c35b56cafd771a1482bd9599b55"
+    },
+    {
+      "bytes": 147668,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/full-model-roots.json",
+      "sha256": "749331a07585cab2489f0b6c8486d69626d085ac98d0c9ef98e3ba900407f047"
+    },
+    {
+      "bytes": 2473663,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/graph.receipt.json",
+      "sha256": "b386344e5ea7b47170f16501870ef7163c7352f564ad431a4f769107df087221"
+    },
+    {
+      "bytes": 1076,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/fixtures3d5400-effective-closure.receipt.json",
+      "sha256": "6e832f1d8c41bbab3443c80909671ed6ea49942518373079b0b7a02b6ef293b1"
+    },
+    {
+      "bytes": 121571,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/fixture-graph.receipt.json",
+      "sha256": "2cda44df9519310a9a33de1df77ef6df8d5f5a90926e5e6ee2162964b7727bd9"
+    },
+    {
+      "bytes": 3948,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/prior-full-model-disk-forecast-review.json",
+      "sha256": "30433af729d7fe629b3ea8cf71e8ae0be8de61a17c4bb7e521e1660a0a6b6e21"
+    },
+    {
+      "bytes": 5798,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.terminal.json",
+      "sha256": "b7deef9db4cbe0b0ee2e373b3c5f042c3134acac0685fcd3f4e2cb1d74142dd6"
+    },
+    {
+      "bytes": 1099376,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.resource.csv",
+      "sha256": "500b22e755cb18b104e00845562a8779de2ac7e67fb067a252f0149d263155f8"
+    },
+    {
+      "bytes": 3517,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/run-full-model-v1.sh",
+      "sha256": "d85bbaea2c6a4cb34ec1dd52d534dbcb360b03bae8f4843eacb4e177451971ed"
+    },
+    {
+      "bytes": 13214,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/release-gate-services-private-network-current-v2.sh",
+      "sha256": "f2dc4d6b18e7222d6337147784e58e9a1f15862a2d54b71569b25f684c26d1b0"
+    },
+    {
+      "bytes": 1729,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/make-empty-geolite.go",
+      "sha256": "42ba7065e6a8c7bd07a4a2524072ae1c2bd24afa58ab93c851d908781463d711"
+    },
+    {
+      "bytes": 23386,
+      "path": "/mnt/data/sn-testnet/sol-server-final-bd7369-20261004/guard-stream128-fsync.py",
+      "sha256": "375f3147e67afbacbeb5aa886818f266bfddea5421f056fbc1954bfe39fcaf02"
+    },
+    {
+      "bytes": 11437,
+      "path": "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/run-claim-full129-v3.py",
+      "sha256": "1094454a2b288429a8cd354fbbd1d1effc9fac05a5317e559cfe408f23c0eae7"
+    },
+    {
+      "bytes": 23385,
+      "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/guard-fsync.py",
+      "sha256": "e0db2b6bf734533d8bdd883998a18c6793b4c7432d2f7aa19c340e0729c4c80b"
+    },
+    {
+      "bytes": 1989,
+      "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/evidence/full129-race-1.intent.json",
+      "sha256": "0efacc3647e6b35ed27eaebb36479d470bc2f49f4382052b9bfebf24a5e5b5f4"
+    },
+    {
+      "bytes": 401,
+      "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/evidence/hold-v3-arm.receipt.json",
+      "sha256": "f39e16253ccf0044aacb65dba6dd5b37fe14b7207d5f52f82e57be5cd99ac634"
+    },
+    {
+      "bytes": 41710,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/test_util.go",
+      "sha256": "30ef27b64d73077b0d463fc1321b75ee51150bf805c791428723f42ea93e9907"
+    },
+    {
+      "bytes": 25356,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/env.go",
+      "sha256": "c6b7b11b258dc2c4c0c5ed823d2a072bbe81c2094b62616c5625c5616a3e1c45"
+    },
+    {
+      "bytes": 29450,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/test-env.sh",
+      "sha256": "843eec75d25a25c4209e1fd5034c0299346d442de80d7e2fbb82822d17ac44e4"
+    },
+    {
+      "bytes": 17703,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/model/arin_shadow_remote_collect_test.go",
+      "sha256": "9c0df708b823261e5d6d0fcb475857584c056fdf33673b68f961bfc7527ce8df"
+    },
+    {
+      "bytes": 5308,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/model/arin_shadow_collect_model_test.go",
+      "sha256": "2b28d6a02197de076e3b39528021aeb8fc9ece1f0405f6a800a4f639122fb0f5"
+    },
+    {
+      "bytes": 6400,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/model/network_client_location_model_stats_test.go",
+      "sha256": "8b370ac17e4d2edaaffede30cff97a38209024046ea3a98422a11e74bf9fd205"
+    },
+    {
+      "bytes": 8504,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/model/st_client_key_history_test.go",
+      "sha256": "03d7718950edb7a7e77749fc1153a8e8b0ae1ad8d3c6a8238a7982f6a86e8e10"
+    },
+    {
+      "bytes": 21345,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/server/model/account_point_model.go",
+      "sha256": "39345be3bbdefbe4b6e66643b8eaedf9d5272e955ab1b46a0d1c4ac1622b89dc"
+    },
+    {
+      "bytes": 7621,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/sn/scripts/server-fixture/main.go",
+      "sha256": "56dc93c6eb13d8f414eb3a92fa2705d46d19c11e1f939ad1685150d23f4d3298"
+    },
+    {
+      "bytes": 17296,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/source/sn/scripts/server-fixture/suite.go",
+      "sha256": "106d1edf50ea8a52e70832a6cbf9a68156a023d36c0902bb91f9298a0fd0c2d8"
+    },
+    {
+      "bytes": 23055,
+      "path": "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/claim-owner6a63-run2/source/sn/mainnet/economic_conservation_restore_test.go",
+      "sha256": "9d32ef4a0791a082666f575146607b4e6cd053ab3794e61b6d1f554a495af8bc"
+    },
+    {
+      "bytes": 19925,
+      "path": "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/claim-owner6a63-run2/source/sn/mainnet/economic_conservation_claim_window_test.go",
+      "sha256": "f90b6beac163381549e320933ce46f80d0a25f95f9225a4f28dd6b08efa63822"
+    },
+    {
+      "bytes": 13329,
+      "path": "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/claim-owner6a63-run2/source/sn/mainnet/economic_conservation_fixture_test.go",
+      "sha256": "919a06488b0e97710f8ebd4a1e10807e3700c9a157ff8de2290c56339bbe98d2"
+    },
+    {
+      "bytes": 12051,
+      "path": "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/claim-owner6a63-run2/source/sn/mainnet/economic_emission_fixture_test.go",
+      "sha256": "e99017652ce4d0fd29b2f01d54d1417d59534801c5f685c0492a22bc0088066b"
+    },
+    {
+      "bytes": 32574,
+      "path": "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/claim-owner6a63-run2/source/sn/mainnet/economic_native_execution_test.go",
+      "sha256": "6ca68d699946484d38c2c770446eeec20ebe846ccd84671d577385c26dfd44cc"
+    },
+    {
+      "bytes": 20190,
+      "path": "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/claim-owner6a63-run2/source/sn/mainnet/historical_replay_test.go",
+      "sha256": "7d1fc1a281a64d57be53e04f09c98d028e401acff4c058fe6b44d5feedfb82a8"
+    }
+  ],
+  "executed_tests_or_compilers": false,
+  "history_memory_basis": {
+    "earlier_VmHWM_disposition": "Superseded by the fresh byte-valued live readback; no frozen lower peak claimed.",
+    "earlier_reported_race_VmHWM_KiB": 174852,
+    "forecast_to_observed_cgroup_peak_ratio": 5.998169503935567,
+    "healthy_owner": {
+      "argv": [
+        "/home/by/urnetwork/.virtualenv/brien/bin/python3",
+        "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/run-claim-full129-v3.py"
+      ],
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/app.slice/sn-claim-full129-6a63-v3-20261004.service",
+      "cgroup_memory_current_bytes": 182325248,
+      "cgroup_memory_events": [
+        "low 0",
+        "high 0",
+        "max 0",
+        "oom 0",
+        "oom_kill 0",
+        "oom_group_kill 0"
+      ],
+      "cgroup_memory_max": "max",
+      "cgroup_memory_peak_bytes": 358023168,
+      "memory_status_bytes": {
+        "VmHWM": 46018560,
+        "VmPeak": 196440064,
+        "VmRSS": 46018560,
+        "VmSize": 129347584
+      },
+      "pid": 1672208,
+      "starttime": "101012004",
+      "state": "S"
+    },
+    "healthy_phase_watcher": {
+      "argv": [
+        "/home/by/urnetwork/.virtualenv/brien/bin/python3",
+        "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/hold-claim-race2-between-phases-v3.py"
+      ],
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/app.slice/sn-claim-full129-future-race2-hold-v3-20261004.service",
+      "cgroup_memory_current_bytes": 6160384,
+      "cgroup_memory_events": [
+        "low 0",
+        "high 0",
+        "max 0",
+        "oom 0",
+        "oom_kill 0",
+        "oom_group_kill 0"
+      ],
+      "cgroup_memory_max": "max",
+      "cgroup_memory_peak_bytes": 6422528,
+      "memory_status_bytes": {
+        "VmHWM": 16949248,
+        "VmPeak": 25133056,
+        "VmRSS": 16949248,
+        "VmSize": 25133056
+      },
+      "pid": 1797881,
+      "starttime": "101462652",
+      "state": "S"
+    },
+    "healthy_race_child": {
+      "argv": [
+        "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/claim-owner6a63-run2/images/claim-race-compile.test",
+        "-test.v",
+        "-test.run=^(TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues)$",
+        "-test.count=1",
+        "-test.parallel=1",
+        "-test.timeout=14400s"
+      ],
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/app.slice/sn-claim-full129-6a63-v3-20261004.service",
+      "cgroup_memory_current_bytes": 182325248,
+      "cgroup_memory_events": [
+        "low 0",
+        "high 0",
+        "max 0",
+        "oom 0",
+        "oom_kill 0",
+        "oom_group_kill 0"
+      ],
+      "cgroup_memory_max": "max",
+      "cgroup_memory_peak_bytes": 358023168,
+      "memory_status_bytes": {
+        "VmHWM": 180469760,
+        "VmPeak": 2155655168,
+        "VmRSS": 176553984,
+        "VmSize": 2155655168
+      },
+      "pid": 1778516,
+      "starttime": "101384329",
+      "state": "S"
+    },
+    "interpretation": "The cgroup peak covers the dedicated historical service and its children, including prior normal phases. The race is still running. Process VmHWM and half-second RSS observations are supporting evidence, not completion, a full lifetime upper bound, or a reason to weaken the original workload.",
+    "normal_phase_evidence": [
+      {
+        "phase": "full129-normal-1",
+        "receipt": {
+          "bytes": 5313,
+          "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/evidence/full129-normal-1.receipt.json",
+          "sha256": "542042330c45baabe323db26ee3dd79f233e942f6ed9b21743289d123b5e975d"
+        },
+        "sampled_peaks": {
+          "forest_process_count": 3,
+          "forest_rss_bytes": 114806784
+        },
+        "sampling_limit": "0.5 s samples; observed maxima are not upper bounds",
+        "terminal_status": "PASS"
+      },
+      {
+        "phase": "full129-normal-2",
+        "receipt": {
+          "bytes": 5343,
+          "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/evidence/full129-normal-2.receipt.json",
+          "sha256": "3ac447b26b4b71f6f14675516a08d26db9a2d83c52fead98c67ccbcc4f9d0982"
+        },
+        "sampled_peaks": {
+          "forest_process_count": 3,
+          "forest_rss_bytes": 121159680
+        },
+        "sampling_limit": "0.5 s samples; observed maxima are not upper bounds",
+        "terminal_status": "FAIL"
+      }
+    ],
+    "observed_cgroup_peak_bytes": 358023168,
+    "two_times_forecast_to_observed_cgroup_peak_ratio": 11.996339007871134
+  },
+  "launched_or_signaled_jobs": false,
+  "model_disk_basis": {
+    "combined_test_stdout_stderr_limit_bytes": 134217728,
+    "log_bound_source": "execute-final-model-only.py passes128MiB to guard-stream128-fsync.py; guard counts stdout and stderr together before writing and fsyncs every chunk. Wrapper/setup/container logs remain separate and require owned telemetry.",
+    "prebuilt_test2json_verified": {
+      "bytes": 2400418,
+      "path": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache/7c/7c8af5c908e2de0cd509abe98e81fa7678667dce0d0d98ea65f26293816d6117-d/test2json",
+      "sha256": "7c8af5c908e2de0cd509abe98e81fa7678667dce0d0d98ea65f26293816d6117"
+    },
+    "prior_aggregate_data_decline_bytes": 8064364544,
+    "prior_attribution": "Whole filesystem decline mixed retained/compiled Go artifacts, cache writes, go-run helpers and other activity; no owned-directory allocated-peak series. It is not a measured DB-owned peak and cannot justify either a4GiB owned upper bound or a requirement of at least8.06GB.",
+    "prior_gap": [
+      {
+        "component": "postgres",
+        "detail": "owned container lifecycle observation is inconsistent",
+        "error_type": "ValueError"
+      }
+    ],
+    "prior_host_memory_initial_to_min_decline_bytes": 4765900800,
+    "prior_postgres_sample_peak_bytes": 2134396928,
+    "prior_redis_sample_peak_bytes": 61431808,
+    "prior_terminal_resource_qualified": false,
+    "prior_terminal_resource_status": "COMPLETE_WITH_GAPS",
+    "recommendation_reason": "Removing all compiler/helper-build work, retaining a128MiB aggregate body-log limit, using synthetic file fixtures, and placing both service data stores on tmpfs makes4GiB a defensible new prospective data forecast with an additional2x physical margin. It requires explicit root adoption and fresh owned telemetry.",
+    "retained_inputs_verified": [
+      {
+        "phase": "final3d-model-normal-compile",
+        "retained": {
+          "bytes": 80941120,
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/images/final3d-model-normal-compile.test",
+          "sha256": "b8bbde509a45a7cf3fe97eb5f2810d386320df569ab23d4b65b27def1960ed93"
+        },
+        "status": "COMPILE_PASS"
+      },
+      {
+        "phase": "final3d-server-fixture-build",
+        "retained": {
+          "bytes": 5527087,
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/images/final3d-server-fixture-build.bin",
+          "sha256": "1f2366d815cd2d411665c0577887d95a3f2d4d1df1a748a60412bcf1b7cdf6b9"
+        },
+        "status": "COMPILE_PASS"
+      },
+      {
+        "phase": "final3d-empty-geolite-build",
+        "retained": {
+          "bytes": 3300532,
+          "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/images/final3d-empty-geolite-build.bin",
+          "sha256": "287c3237a367281242a651460c5e837f0dac09a8fc9a24dab654f846200d757f"
+        },
+        "status": "COMPILE_PASS"
+      }
+    ],
+    "service_data_mounts": {
+      "postgres": "tmpfs /var/lib/postgresql, 32GiB size cap",
+      "redis": "tmpfs /data, 8GiB size cap; persistence disabled"
+    },
+    "synthetic_file_writes": [
+      "server-fixture creates one protected private resource tree with literal configuration and bounded certificate alias census; no large resource copy",
+      "empty-geolite writes a synthetic one-node MMDB",
+      "direct model tests write small synthetic MMDBs, JSON socket lists, temporary Unix socket directories",
+      "one stats test writes one four-candidate sample segment",
+      "key-history test publishes four local immutable evidence objects",
+      "account_point_model.go contains a JSON payout report writer; no direct model test call found, but source/model cwd remains in owned-disk telemetry to cover transitive calls"
+    ],
+    "tmpfs_interpretation": "Data is charged to memory, not the /mnt/data data forecast. Mount size is a ceiling, not a reservation or measured footprint. Keep8GiB DB memory forecast and2x margin unchanged. Docker layers/logs remain a separate original-baseline rootfs budget.",
+    "unmeasured": "No dynamic4GiB owned-disk upper bound has been demonstrated."
+  },
+  "required_before_launch": [
+    "Root explicitly adopts the two prospective forecasts and exact intended concurrency; this review does not itself replace an adopted receipt.",
+    "Sol owns the existing canonical lease. Validate holder PID1557107/starttime100584860, dev/inode2081:16941991, kernel flock, all active bodies and compilers, and live DB container census immediately before each phase.",
+    "Re-read statvfs available blocks/inodes, MemAvailable and Docker-root availability immediately before launch; calculate from the original baselines with max0 only on the data accounting floor and2x on every forecast. Reject an unreviewed extra owner or changed resource shape.",
+    "The new owner must preserve the healthy v3 active data floor6307319808 and leave its source, image, guard, watcher and process untouched. Retain the existing phase-boundary mechanism preventing the old future Claim duplicate; require its actual ownership/join proof.",
+    "Resolve and hash every retained model/helper/test2json executable and dependency/source graph before DB setup, then bind the exact immutable job and runner. No test body or helper compilation is authorized by this review.",
+    "Use durable process-tree ownership, exact fresh owner labels/container IDs, private bridge, restart=no, and tmpfs service mounts. Independently verify these actual container properties after startup.",
+    "Retain initial, periodic and final host memory/data/rootfs samples; process/cgroup memory including memory.peak/events; exact owned PG/Redis cgroup memory; and allocated-byte/inode samples for the complete owned phase tree, TMPDIR, fixture tree and model cwd. Account for Docker-root logs/layers separately. Record misses and transient teardown states honestly; a sample series is not an upper bound.",
+    "Keep the128MiB combined model-body stream cap and bounded wrapper/setup/container logging. Before launch bind the durable outer owner that enforces active disk/rootfs floors and memory reserve, rather than treating the shell alone as an admission guard. No current outer owner/job was supplied in this review.",
+    "On a new-owner resource failure, stop and join only that exact new owner and its exact owned DB resources; never signal a healthy peer. Retain all failure and Unix-wait evidence, and verify exact owned cleanup at terminal."
+  ],
+  "review_limitations": [
+    "No compiler, DB, test body, cleanup, process signal or source modification was performed.",
+    "Healthy race completion, corrected Claim behavior, deadline completion and final-source coverage remain unknown.",
+    "Snapshot fit does not guarantee launch fit. The two-history plus DB combination has limited currently observed headroom and excludes compiler overlap.",
+    "Resource forecast adoption is separate from a behavior PASS and from the final outer-runner admission review."
+  ],
+  "reviewed_utc": "2026-10-04T20:43:15.767011+00:00",
+  "reviewer": "/root/astra_qualification_resource_review",
+  "scenario_thresholds": [
+    {
+      "DB_count": 0,
+      "DB_data_forecast_bytes": 0,
+      "compiler_count": 0,
+      "data_launch_threshold_bytes": 17179869184,
+      "data_snapshot_fits": true,
+      "data_snapshot_margin_bytes": 9187282944,
+      "history_count": 2,
+      "history_memory_forecast_each_bytes": 2147483648,
+      "memory_launch_threshold_bytes": 111669149696,
+      "memory_snapshot_fits": true,
+      "memory_snapshot_margin_bytes": 18788294656,
+      "name": "two_exact_full129_only",
+      "short_body_count": 0
+    },
+    {
+      "DB_count": 1,
+      "DB_data_forecast_bytes": 4294967296,
+      "compiler_count": 0,
+      "data_launch_threshold_bytes": 17179869184,
+      "data_snapshot_fits": true,
+      "data_snapshot_margin_bytes": 9187282944,
+      "history_count": 1,
+      "history_memory_forecast_each_bytes": 2147483648,
+      "memory_launch_threshold_bytes": 124554051584,
+      "memory_snapshot_fits": true,
+      "memory_snapshot_margin_bytes": 5903392768,
+      "name": "one_exact_full129_plus_model_DB",
+      "short_body_count": 0
+    },
+    {
+      "DB_count": 1,
+      "DB_data_forecast_bytes": 4294967296,
+      "compiler_count": 0,
+      "data_launch_threshold_bytes": 25769803776,
+      "data_snapshot_fits": true,
+      "data_snapshot_margin_bytes": 597348352,
+      "history_count": 2,
+      "history_memory_forecast_each_bytes": 2147483648,
+      "memory_launch_threshold_bytes": 128849018880,
+      "memory_snapshot_fits": true,
+      "memory_snapshot_margin_bytes": 1608425472,
+      "name": "two_exact_full129_plus_model_DB",
+      "short_body_count": 0
+    },
+    {
+      "DB_count": 0,
+      "DB_data_forecast_bytes": 0,
+      "compiler_count": 1,
+      "data_launch_threshold_bytes": 21474836480,
+      "data_snapshot_fits": true,
+      "data_snapshot_margin_bytes": 4892315648,
+      "history_count": 1,
+      "history_memory_forecast_each_bytes": 2147483648,
+      "memory_launch_threshold_bytes": 115964116992,
+      "memory_snapshot_fits": true,
+      "memory_snapshot_margin_bytes": 14493327360,
+      "name": "one_exact_full129_plus_one_warm_compiler",
+      "short_body_count": 0
+    },
+    {
+      "DB_count": 0,
+      "DB_data_forecast_bytes": 0,
+      "compiler_count": 1,
+      "data_launch_threshold_bytes": 30064771072,
+      "data_snapshot_fits": false,
+      "data_snapshot_margin_bytes": -3697618944,
+      "history_count": 2,
+      "history_memory_forecast_each_bytes": 2147483648,
+      "memory_launch_threshold_bytes": 120259084288,
+      "memory_snapshot_fits": true,
+      "memory_snapshot_margin_bytes": 10198360064,
+      "name": "two_exact_full129_plus_one_warm_compiler",
+      "short_body_count": 0
+    },
+    {
+      "DB_count": 1,
+      "DB_data_forecast_bytes": 4294967296,
+      "compiler_count": 1,
+      "data_launch_threshold_bytes": 38654705664,
+      "data_snapshot_fits": false,
+      "data_snapshot_margin_bytes": -12287553536,
+      "history_count": 2,
+      "history_memory_forecast_each_bytes": 2147483648,
+      "memory_launch_threshold_bytes": 137438953472,
+      "memory_snapshot_fits": false,
+      "memory_snapshot_margin_bytes": -6981509120,
+      "name": "two_exact_full129_plus_model_DB_plus_compiler_excluded",
+      "short_body_count": 0
+    },
+    {
+      "DB_count": 1,
+      "DB_data_forecast_bytes": 8589934592,
+      "compiler_count": 0,
+      "data_launch_threshold_bytes": 34359738368,
+      "data_snapshot_fits": false,
+      "data_snapshot_margin_bytes": -7992586240,
+      "history_count": 2,
+      "history_memory_forecast_each_bytes": 4294967296,
+      "memory_launch_threshold_bytes": 137438953472,
+      "memory_snapshot_fits": false,
+      "memory_snapshot_margin_bytes": -6981509120,
+      "name": "old4GiB_history_memory_and8GiB_DBdisk_comparison",
+      "short_body_count": 0
+    }
+  ],
+  "schema": "future108-full129-model-db-prospective-resource-review-v1",
+  "scope": {
+    "DB_scope": "One prebuilt full normal ./model image with prebuilt test2json, server-fixture and empty-geolite; test.parallel=2 and GOMAXPROCS=2. No compilation, go run, dependency downloads, source copies, LFS hydration, selected/race/control expansion, or second DB fixture during this scope.",
+    "combined_2history_DB_compiler_count": 0,
+    "combined_2history_DB_short_body_count": 0,
+    "history_exact_roots": [
+      "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues",
+      "TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage"
+    ],
+    "history_fixture_limits": "129 original reviews, 128 active epochs, at most two restored roots; synthetic self-ELF replay and local HTTP fixtures, no real Rust replay engine or external database",
+    "history_mode": "normal or race, one named root per body, test.parallel=1 and GOMAXPROCS=2",
+    "history_source_transfer": "Existing6a measurements support only these resource shapes. A corrected source/image must be separately pinned and reviewed to preserve these fixture bounds; this receipt does not qualify its behavior or final source graph.",
+    "history_total_concurrency_limit": 2,
+    "unqualified_scopes": [
+      "real Rust/native engine bodies",
+      "extra short bodies",
+      "DB race modes",
+      "concurrent compiler with DB",
+      "full image retention plan",
+      "rootfs storage relocation",
+      "production host or deploy rehearsal"
+    ]
+  },
+  "snapshot": {
+    "canonical_kernel_flock": [
+      "128: FLOCK  ADVISORY  WRITE 1557107 08:21:16941991 0 EOF"
+    ],
+    "compiler_census": [],
+    "data": {
+      "available_bytes": 26367152128,
+      "available_inodes": 92743225
+    },
+    "docker_root": {
+      "available_bytes": 301879009280,
+      "available_inodes": 50979163
+    },
+    "memory": {
+      "MemAvailable": 130457444352,
+      "MemTotal": 135037386752,
+      "SwapFree": 8478257152,
+      "SwapTotal": 8589930496
+    },
+    "running_containers": [],
+    "utc": "2026-10-04T20:43:15.767011+00:00"
+  },
+  "status": "RECOMMEND_EXPLICIT_ROOT_ADOPTION_FRESH_RUNNER_GUARDS_REQUIRED"
+}

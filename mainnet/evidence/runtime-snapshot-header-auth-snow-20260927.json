@@ -1,0 +1,29 @@
+{
+  "schema": "urnetwork-mainnet-runtime-observation-summary-v1",
+  "admission": "unapproved_observation",
+  "independent_mainnet_genesis_approved": false,
+  "rpc_route": "snow-vpn-owned-route",
+  "observed_at_utc": "2026-09-27T14:20:29.292879132Z",
+  "native_chain": "Bittensor",
+  "native_genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+  "evm_chain_id": 945,
+  "node_version": "4.0.0-dev-e18ca67f1a0",
+  "finalized_native_hash": "0x78e79a6f06695ef8d9fc9a1e9ce67fbdb2307505c328a499f987831511d06ed9",
+  "finalized_native_number": 8098046,
+  "runtime_version": {
+    "specName": "node-subtensor",
+    "specVersion": 471,
+    "transactionVersion": 1,
+    "stateVersion": 1
+  },
+  "runtime_code_bytes": 2559437,
+  "runtime_code_hash": "0x5b0168d2878c1fdcdc424dddca29111b8fe8960bd169742d1c14ce16b22ae381",
+  "runtime_metadata_bytes": 354056,
+  "runtime_metadata_hash": "0x78d6038b7e6d154114e294ffb664619e64701f11eb7e8ea79a8deedf6c8fabd6",
+  "snapshot_content_hash": "sha256:036a214cce2b55d16cda5767957400be2de973d6c8abe722c659a1c2a0c6027b",
+  "raw_snapshot_sha256": "43309679eb4fbbd2637d38de40d1e3f63852cba6380c630eb4b990642332068b",
+  "raw_snapshot_path": "/mnt/data/sn-testnet/evidence/mainnet-source-lock-v4-20260927/snow-unapproved.json",
+  "source_lock_content_hash": "0x136639cb51edd01fc3b880412280da8cdf52633247204efda6fd88782749736f",
+  "complete_finalized_header_authenticated": true,
+  "code_metadata_and_content_hashes_independently_reproduced": true
+}

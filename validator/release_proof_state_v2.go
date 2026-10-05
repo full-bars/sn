@@ -114,7 +114,7 @@ func prepareReleaseEvidenceV2ProofStoresObserved(ctx context.Context, disk *rele
 							cancel()
 						}
 					}()
-					store, err := NewProofStore(item.participant.StateDir)
+					store, err := NewProofStore(item.participant.StateDir, ownedCtx)
 					if err != nil {
 						outcome = err
 						return

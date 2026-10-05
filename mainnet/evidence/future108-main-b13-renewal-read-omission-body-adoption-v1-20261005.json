@@ -1,0 +1,61 @@
+{
+  "status": "ADOPTED_MAIN_B13_RENEWAL_SERIAL_SHORT",
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "accounting_floor_bytes": 0,
+  "margin": 2,
+  "history_count": 0,
+  "model_count": 0,
+  "compiler_count": 0,
+  "short_count": 1,
+  "data_minimum_available_bytes": 10737418240,
+  "memory_minimum_available_bytes": 113816633344,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "data_growth_stop_bytes": 2147483648,
+  "job_sha256": "d2c63a846c7e137fe1c84b30a992d7aca54565173887b98449c3c6a02eca52bf",
+  "runner_sha256": "831c82998d27e99a75ff6dbbc0b74621c4da2bc55590a842b2ef0500ca534492",
+  "execution_owner": "SolParallel only, user systemd manager",
+  "adopted_at": "2026-10-05T07:12:08.973979+00:00",
+  "root_review": "All exactbindings checked. Isolated missing-read-observation control using actualdistinctmutantimage, normal1PASS/export5 preserved. Require exact causal assertion, actual1FAIL/exit101; classify controlkill separately. Hydrationall8actualwaits exit0joined; wrapperserializationfailure retained, USERclosed, unrelated controlcancontinue.",
+  "additional_predecessor_waits": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-download-connect.process-result.json",
+      "sha256": "6f00be67f33a6ce891ce7095543c455818e1c19c37f23992e9d5084f1f72b6d9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-download-server.process-result.json",
+      "sha256": "bf137030e99a29e94952c8bab8af5b2a04feced007cc53b1ecc9a652c2556be2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-download-sn.process-result.json",
+      "sha256": "303ccaa59b6653c55d8ce466690af3ba23617dfc3726e9009c703c6f8a579cd3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-download-vlessinterop.process-result.json",
+      "sha256": "cc57f8c7f8db64c430a2c2b5c385a9387cd98bef4891a58cc547350ec933c105"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-propose-connect.process-result.json",
+      "sha256": "1d7f871ca5c7c5c5ba761bc0dcf66b1a3924a7f51dfd684bbed8bc1fb8b5f4b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-propose-server.process-result.json",
+      "sha256": "bd777e072acc0ae74706670c349b0c3e04608af43c0a483d68f9217ef4493737"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-propose-sn.process-result.json",
+      "sha256": "2e06f446bd1bc832b017820f640dab3b1736b3b0584f452d524b66d529ffd902"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-propose-vlessinterop.process-result.json",
+      "sha256": "421903a6b649cb174da0bd024cc9662f0334a186cb4007835c23673632a207b5"
+    }
+  ],
+  "additional_closed_owner_readbacks": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-local-authenticated-hydration-v1-user-terminal-readback.json",
+      "sha256": "c95751c8389195c145ac9cf6e126fc2aeec261661c162801d6deab9b281726ab"
+    }
+  ]
+}

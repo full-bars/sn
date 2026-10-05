@@ -1,0 +1,171 @@
+{
+  "connect": {
+    "branch": "integrate/mainnet-qualified-restore-20261004",
+    "exact_tree_basis": "2ea8d82ea5cbc8bdebdee05f5b90a9f21b64128f",
+    "head": "5322cf5146f469217571f4de7aa344383f77b921",
+    "modules": [
+      {
+        "bytes": 3887,
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/connect/go.mod",
+        "sha256": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d"
+      },
+      {
+        "bytes": 21922,
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/connect/go.sum",
+        "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+      }
+    ],
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/connect",
+    "root_base": "8ec41070",
+    "tree": "1fc3f0f491127ead2d4cfed8980e0d24520e3bbd",
+    "zero_tree_diff": true
+  },
+  "external_publication": true,
+  "limits": [
+    "Isolated sparse source integration; no new physical full-source stage or execution result claimed.",
+    "The qualified SN Core2ea version and module files remain exact; no original b32 graph is repinned.",
+    "No native source-only child or pending component is added by this join. The earlier ad1/fee-context bytes already present in0e5 are retained with their existing scope.",
+    "Current docs/evidence are preserved as inherited from root5bc98a63; no launch readiness claim follows."
+  ],
+  "no_compiler_or_tests_executed_by_integration_agent": true,
+  "qualification_history": {
+    "foreground_2477": {
+      "controls_each_mode": [
+        {
+          "count": 1,
+          "kind": "production operative old-iterator body"
+        },
+        {
+          "count": 1,
+          "kind": "test fixture capacity restoration"
+        }
+      ],
+      "normal_roots_pass": 20,
+      "race_roots_pass": 20,
+      "terminal": {
+        "bytes": 6407,
+        "path": "/mnt/data/sn-testnet/sol-2477-foreground-qualification-20261004/evidence/2477-foreground-scoped-terminal-v1.json",
+        "sha256": "1c88aaaedeb542d49b42689454c59552f7fd2bcc0ccf8324f11f5b190effcacf"
+      },
+      "vet_pass": 1
+    },
+    "monitor_0e5": {
+      "affected_vets_pass": 3,
+      "intended_old_body_controls": 16,
+      "normal": {
+        "fail": 3,
+        "pass": 49,
+        "selected": 52
+      },
+      "original_failures_preserved": true,
+      "race": {
+        "fail": 3,
+        "pass": 49,
+        "selected": 52
+      }
+    }
+  },
+  "root_review": {
+    "connect_candidate_tree_equals_qualified_2ea": true,
+    "connect_main_adoption_pending": "Fresh pull advanced Connect main to59864c2b; retain that upstream work in a refreshed join before adoption. SN module remains the exact qualified2ea pin.",
+    "exact_source_heads_trees_modules_and_clean_status_verified": true,
+    "original_intake_sha256": "85092c436dfdc595e05516bdafc32513d5f78eb29fbf0818fdf440bb92aa0916",
+    "sn_diff_against_2477_restricted_to_current_documentation_and_evidence": true,
+    "sn_main_adopted_and_pushed": "4a2c2681f40b42355b99a02a8f5e27efd185d741"
+  },
+  "schema": "mainnet-qualified-base-source-integration-v1",
+  "sn": {
+    "branch": "integrate/mainnet-qualified-base-20261004",
+    "head": "4a2c2681f40b42355b99a02a8f5e27efd185d741",
+    "merged_source_heads": [
+      "0e5ace17d6cdd419331a3dbca13fb3ec96c67808",
+      "2477a2cac00115a8936230a731e76c0635341302"
+    ],
+    "modules": [
+      {
+        "bytes": 11292,
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/sn/go.mod",
+        "sha256": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6"
+      },
+      {
+        "bytes": 66880,
+        "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/sn/go.sum",
+        "sha256": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+      }
+    ],
+    "only_differences_from_basis": [
+      "mainnet/MAINNET.md",
+      "mainnet/PRELAUNCH-FIXES.md",
+      "mainnet/evidence/0e5-durablehead-graph-independent-readback-20261003.json",
+      "mainnet/evidence/0e5-durablehead-positive-independent-readback-20261003.json",
+      "mainnet/evidence/0e5-finite-continuation-authority-20261003.json",
+      "mainnet/evidence/0e5-finite-resource-review-20261003.json",
+      "mainnet/evidence/0e5-four-normal-operative-controls-independent-review-20261004.json",
+      "mainnet/evidence/0e5-mainnet-normal-independent-readback-20261003.json",
+      "mainnet/evidence/0e5-mainnet-race-independent-readback-20261004.json",
+      "mainnet/evidence/0e5-peer-link-independent-readback-20261003.json",
+      "mainnet/evidence/0e5-peer-staging-compile-finding-20261003.json",
+      "mainnet/evidence/0e5-sixteen-operative-controls-independent-review-20261004.json",
+      "mainnet/evidence/0e5-source-stage-independent-readback-20261003.json",
+      "mainnet/evidence/0e5-three-vet-independent-readback-20261004.json",
+      "mainnet/evidence/0e5-validator-foreground-failure-source-review-20261003.json",
+      "mainnet/evidence/b6-correction-source-review-20261003.json",
+      "mainnet/evidence/claim-b6-control-source-review-20261003.json",
+      "mainnet/evidence/claim-final-source-review-20261003.json",
+      "mainnet/evidence/common-module-package-readback-20261003.json",
+      "mainnet/evidence/common-normal-corrected-assertions-20261003.json",
+      "mainnet/evidence/common-normal-ordinary-original-failures-20261003.json",
+      "mainnet/evidence/common-qualification-scope-review-20261003.json",
+      "mainnet/evidence/common-selected-graphs-readback-20261003.json",
+      "mainnet/evidence/common-six-normal-compiles-readback-20261003.json",
+      "mainnet/evidence/common-source-stage-readback-20261003.json",
+      "mainnet/evidence/common-twelve-compiles-readback-20261003.json",
+      "mainnet/evidence/core-preparation-read-cause-source-review-20261003.json",
+      "mainnet/evidence/current-readiness-checkpoint-20261003.json",
+      "mainnet/evidence/current-readiness-checkpoint-20261003.md",
+      "mainnet/evidence/delayed-native-renewal-source-finding-20261004.json",
+      "mainnet/evidence/durable-checkpoint-readback-identity-source-finding-20261003.json",
+      "mainnet/evidence/foreground-successor-controls-independent-review-20261004.json",
+      "mainnet/evidence/foreground-successor-normal-independent-readback-20261004.json",
+      "mainnet/evidence/foreground-successor-race-independent-readback-20261004.json",
+      "mainnet/evidence/foreground-successor-source-review-20261004.json",
+      "mainnet/evidence/full512-normal-retained-qualification-20261003.json",
+      "mainnet/evidence/full512-race-independent-readback-20261003.json",
+      "mainnet/evidence/hardening-composition-source-preview-20261003.json",
+      "mainnet/evidence/mixed-cancellation-source-finding-20261003.json",
+      "mainnet/evidence/mixed-cancellation-successor-source-review-20261003.json",
+      "mainnet/evidence/native-continuous-producer-source-review-20261004.json",
+      "mainnet/evidence/native-finite-resource-admission-20261004.json",
+      "mainnet/evidence/native-pending-file-sync-source-finding-20261003.json",
+      "mainnet/evidence/native-populated-capacity-source-review-20261003.json",
+      "mainnet/evidence/native-producer-integration-findings-20261003.json",
+      "mainnet/evidence/native-proof-feed-operation-review-20261003.json",
+      "mainnet/evidence/native-recipient-cross-domain-finding-20261004.json",
+      "mainnet/evidence/nested-cleanup-source-review-20261003.json",
+      "mainnet/evidence/producer-packaging-source-prerequisites-20261003.json",
+      "mainnet/evidence/rpc-retry-cause-traversal-finding-20261004.json",
+      "mainnet/evidence/server-additional-financial-original-failures-20261003.json",
+      "mainnet/evidence/server-full-model-terminal-20261003.json",
+      "mainnet/evidence/server-lease-retention-original-failures-20261003.json",
+      "mainnet/evidence/server-migration-plan-original-skip-20261003.json",
+      "mainnet/evidence/server-retention-c2b-source-review-20261003.json",
+      "mainnet/evidence/server-stats-original-failure-20261003.json",
+      "mainnet/evidence/startup-foreground-source-review-20261003.json"
+    ],
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/sn",
+    "qualified_code_module_test_basis": "2477a2cac00115a8936230a731e76c0635341302",
+    "root_base": "5bc98a6300ca6f79d277ba76b02f39e8551cb9b9",
+    "tree": "5d4974e8618c75582847b0048d563f2dd16184a5"
+  },
+  "source_changes_pending_other_scoped_qualification": [
+    "native b32/8eb dual-engine producer",
+    "native prefix724",
+    "populated capacityc74",
+    "native producer renewal child",
+    "native per-recipient/vault/Claim conservation child",
+    "RPC retry cause-tree successor",
+    "Coreac65 preparation read causes",
+    "Serverc2b test-only fixtures"
+  ],
+  "status": "SOURCE_INTEGRATED_EXISTING_QUALIFICATION_SCOPE_ONLY"
+}

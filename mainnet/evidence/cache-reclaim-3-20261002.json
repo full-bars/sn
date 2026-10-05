@@ -1,0 +1,45 @@
+{
+  "status": "COMPLETE_SCOPED",
+  "reclaimed_bytes": 8633323520,
+  "deleted_archives": 122,
+  "minimum_age_hours": 48,
+  "minimum_bytes": 16777216,
+  "cache": "/mnt/data/sn-testnet/gocache",
+  "reference_scan_scope": "Receipts, manifests, SHA256SUMS, Markdown and .sha256 files at most5MiB under SN and /mnt/data/sn-testnet; exclude compiler/module caches, cleanup task directories and docker/containerd data/state/run stores. No global raw-artifact reference absence is claimed.",
+  "post_absence_verified": true,
+  "private_member_cache": "No deletion; unique cache entries and executables preserved.",
+  "files": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-3-20261002/receipt.json": {
+      "bytes": 37711,
+      "sha256": "2bb8cfe49c1f7f5c3e24e021f4559bd01c383ee6094098a6ce3325548a269184"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-3-20261002/plan.json": {
+      "bytes": 37429,
+      "sha256": "8e779765072e2c7cbde9324d49ab6c19d1059eec2fda7096ceba3ee40963985f"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-3-20261002/reclaim.go": {
+      "bytes": 7049,
+      "sha256": "a09f69518e82ef5f2a424773ee332d903883e6ff0c98fa60e9ce4fcbf19301c2"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-3-20261002/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-3-20261002/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-3-20261002/reference-matches.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-3-20261002/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "2862dfae564b8ef08ad09392b9743e2595ac468f82ea3cfeb94c74d7b5c1b065"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-3-20261002/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "d8b9097d5c57ab2608e5e0f742f73ca35f14fadd8179fd4d3f775e99a21c8a75"
+    }
+  }
+}

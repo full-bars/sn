@@ -1,0 +1,35 @@
+{
+  "schema": "original-restore-race-stopped-root-readback-v1",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-race-restore-cross128.telemetry-gap-v2.json",
+      "bytes": 2505,
+      "sha256": "5e3461c2542c5bee11f3ce7cd8c3c625f35a10fabed65a2d7824372b1eb4d6d5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-race-restore-cross128.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-race-restore-cross128.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-race-restore-cross128.resources.csv",
+      "bytes": 1468655,
+      "sha256": "c2e76dc19c1383f9af206f37007d08d40fd13c482e92eae35a444467c8db4d9e"
+    }
+  ],
+  "actual_recovery_receipt_path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-race-restore-cross128.receipt.json",
+  "actual_recovery_receipt_absent": true,
+  "observed_pids_absent": [
+    1329332,
+    1329350,
+    1329357
+  ],
+  "outcome": "UNKNOWN_STOPPED",
+  "finding": "Original race worker and both converter handles are absent. Its raw logs are empty and no recovery wait receipt exists. Prior non-recovery receipt belongs to an earlier partition. Do not infer PASS/FAIL/timeout; retain original normal timeout and continue the corrected bounded-admission source.",
+  "lesson": "Test/run supervision must survive the parent session and persist raw output incrementally with an independently joined terminal receipt. Reuse retained source/images and completed phases; repeat only affected unfinished work."
+}

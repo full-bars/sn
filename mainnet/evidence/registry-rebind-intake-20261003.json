@@ -1,0 +1,151 @@
+{
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/member-f4e-332-intake.json": {
+      "bytes": 10065,
+      "sha256": "567e77e25e6d8a526c0df3cf0dfca048bbba2bbdc7b2ea85855f321f56f40c00"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/registry-94e-compile-jobs.json": {
+      "bytes": 1363,
+      "sha256": "0bc6aa86edbf983e99ede1840bcab867a5002107c34cab1b440dc4de7195d9ce"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/registry-94e-compile.json": {
+      "bytes": 1076,
+      "sha256": "9468b49ffe511e4095fefbe3c3613e8334ce480456b6bd1e4c10261ffddad096"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/registry-94e-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/registry-94e-preflight.json": {
+      "bytes": 951,
+      "sha256": "b2264fa26bce0ed608331ff2e48887d16e3ee34b170f79e6c7cc94e50dfdaaa3"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/registry-94e-preflight.jsonl": {
+      "bytes": 3643815,
+      "sha256": "6b6dc4134bc2793e2e66d506c69f692feec06b46736c7dba9324ca7f7249d7bb"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-registry-94e.go": {
+      "bytes": 5357,
+      "sha256": "81adb59fb50e6929ab1909c69f5b3850a7a78c66d1f9a8f7f83d8440c3131578"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/qualify-scoped.go": {
+      "bytes": 3425,
+      "sha256": "1a7b115440ecd7ce543810e9a08a751f4e2c1bb213ee2439b8a9e55455753e26"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/sn/mainnet/bootstrap_successor_execution_command.go": {
+      "bytes": 18721,
+      "sha256": "207481a4abe622ef2b35a2485c0ea86ed3204dd5e3adf9b3e981a3f40c84747f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/sn/mainnet/bootstrap_successor_execution_store.go": {
+      "bytes": 19485,
+      "sha256": "24a90a88eb5f3692bd8cfeaa9af04a48128551e951262d025c5f70cd05021ae9"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/sn/mainnet/bootstrap_successor_registry_rebind.go": {
+      "bytes": 16406,
+      "sha256": "c14c475f642c25ee1239ea05e4160a8bda5ec6b859f51129a422f92d90c8329d"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/sn/mainnet/bootstrap_successor_registry_rebind_test.go": {
+      "bytes": 14751,
+      "sha256": "c6bb905b5add870b9128dea89e9d4cba376b0f940497c9954773da692537f099"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/sn/mainnet/evidence/successor-registry-rebind-profile-20261003.md": {
+      "bytes": 2951,
+      "sha256": "e0974951d804a7fbb362225450c92f8ba64e6f5cb1ef10dbe2683ae9b8cebd4d"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/sn/mainnet/storage_prepare_export_test.go": {
+      "bytes": 7898,
+      "sha256": "ffd803f6c4ce2677a1da19f7b7ce200749f3f12e50ab81f81c46ad97d79da0b7"
+    }
+  },
+  "causal": {
+    "base": "f4e420667adb9eb7f1198119c13d90cd22efbeee",
+    "classification": "Tests/fixture-only overlay, no production behavior.",
+    "connect": "332b1f438a62edddb4747119fbcc1fed8047ecbc",
+    "expectedBoundary": "The old dispatcher refuses the newly required rebind preview after the actual original execution and registry restore. Capture actual boundary; no assumed result.",
+    "overlay": [
+      "mainnet/bootstrap_successor_registry_rebind_test.go",
+      "mainnet/storage_prepare_export_test.go"
+    ],
+    "roots": [
+      "TestBootstrapSuccessorRegistryRebindPublicResumeKeepsOriginalAuthority"
+    ]
+  },
+  "controls": [
+    "Actual public restore -\u003e old approved generation refusal -\u003e independently signed rebind preview/resume.",
+    "Wrong approver/domain/plan/declaration/restored generation refuse without mutation; actual changed root generation refuses.",
+    "Fresh claim refuses rebind input; repeated resume retains original signature/nonce/allowance/history, no network calls.",
+    "Acknowledged rebind receipt deletion and byte-identical inode replacement refuse without recreation."
+  ],
+  "dependencies": {
+    "connect": {
+      "commit": "332b1f438a62edddb4747119fbcc1fed8047ecbc",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/connect",
+      "tree": "7b58d775421439ccfa8e168f16d370ea8c5022fc"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "graphScope": "Exact inherited Serverc256/Connect332 workspace; not the published current-module composition.",
+  "limits": [
+    "Original local root and completed claim/nonce acquisition must remain intact; unrelated pending local publication refuses in this first profile.",
+    "Rebind is one original-approver physical adoption, not a new signer, nonce, transaction or allowance; ordinary online gates still apply.",
+    "Complete-union co-owned restore, local-root rebind, original pending-outcome adoption, pending outer head, retained/capacity revisions and published composition remain mandatory work."
+  ],
+  "schema": "urnetwork-author-source-handoff-v1",
+  "scope": {
+    "expectedPass": 4,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "package": "./mainnet",
+    "roots": [
+      "TestBootstrapSuccessorRegistryRebindPublicResumeKeepsOriginalAuthority",
+      "TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains",
+      "TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend",
+      "TestBootstrapSuccessorExecutionFencesRegistryReplacement"
+    ],
+    "vet": true
+  },
+  "source": {
+    "commit": "94e087da4448a32c600e4d98837c0db13400916f",
+    "parent": "f4e420667adb9eb7f1198119c13d90cd22efbeee",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/sn",
+    "tree": "050df94a9bd4bb221a262e7623b4bbe4fd5bf4f5"
+  },
+  "status": "COMPILE_ONLY_NO_BEHAVIORAL_EXECUTION",
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/registry-rebind/go.work"
+}

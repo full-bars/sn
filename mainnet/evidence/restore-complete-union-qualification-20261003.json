@@ -1,0 +1,207 @@
+{
+  "causal": {
+    "causal-core-normal": {
+      "assertions": [
+        "preparation_union_test.go:167: complete shared restore cannot plan both owners json: unknown field \"restore_coverage\""
+      ],
+      "exit": 1,
+      "failed": [
+        "TestPreparationRestoreCompleteUnionKeepsEveryHead"
+      ],
+      "passed": [],
+      "race_reports": []
+    },
+    "causal-core-race": {
+      "assertions": [
+        "preparation_union_test.go:167: complete shared restore cannot plan both owners json: unknown field \"restore_coverage\""
+      ],
+      "exit": 1,
+      "failed": [
+        "TestPreparationRestoreCompleteUnionKeepsEveryHead"
+      ],
+      "passed": [],
+      "race_reports": []
+    },
+    "causal-public-normal": {
+      "assertions": [
+        "storage_prepare_union_restore_test.go:177: fixed owner public planning failed 2 storage preparation: json: unknown field \"restore_coverage\"",
+        "storage_prepare_union_restore_test.go:239: fixed owner public planning failed 2 storage preparation: json: unknown field \"restore_coverage\""
+      ],
+      "exit": 1,
+      "failed": [
+        "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners",
+        "TestStoragePreparationRestoreUnionResumesOriginalPartialHeadSet"
+      ],
+      "passed": [],
+      "race_reports": []
+    },
+    "causal-public-race": {
+      "assertions": [
+        "storage_prepare_union_restore_test.go:177: fixed owner public planning failed 2 storage preparation: json: unknown field \"restore_coverage\"",
+        "storage_prepare_union_restore_test.go:239: fixed owner public planning failed 2 storage preparation: json: unknown field \"restore_coverage\""
+      ],
+      "exit": 1,
+      "failed": [
+        "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners",
+        "TestStoragePreparationRestoreUnionResumesOriginalPartialHeadSet"
+      ],
+      "passed": [],
+      "race_reports": []
+    }
+  },
+  "effective_modules": 636,
+  "files": {
+    "evidence/baseline-connect-overlay.sha256": "2052bd3419636bd90b2ff9dd748f9ad506cf50e1f64b869832ef0566ea802037",
+    "evidence/baseline-sn-overlay.sha256": "d534d73a3dace9da7c396bead3beb2f9ebda64e7362b947f5ba8b8d75b715c02",
+    "evidence/causal-core-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/causal-core-normal.jsonl": "1ea9296ada25e67c11eefb459f02c632ed969d7631c76605e5ea0acf82e5c151",
+    "evidence/causal-core-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/causal-core-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/causal-core-race.jsonl": "2a773aac098e2fe57b39d7f32646cf65b18522e711c74991e2baf0c161397b56",
+    "evidence/causal-core-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/causal-public-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/causal-public-normal.jsonl": "de37acd1543b1651ee0669ef5e386e1ec6fcedcd45174824f084d9d5d8891989",
+    "evidence/causal-public-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/causal-public-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/causal-public-race.jsonl": "0a70990237cce29ba19d10910adcbacd50b73ea21283695c8a8a72ea25e2df9a",
+    "evidence/causal-public-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/core-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/core-normal.jsonl": "44e92307a67ecdd9862ba1fbe459a74eeb4f800123a49c55c943fd6c5751bad3",
+    "evidence/core-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/core-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/core-race.jsonl": "6f39be826fc571a9cbfc5f9b840078545c0960734312f468729646c876329b61",
+    "evidence/core-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/core-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/core-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/core-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/module-graph.jsonl": "ff9da9bb2d7d093b664f40b3a9c26a4d64f1dd1ca7450b417bd52e7ee3852794",
+    "evidence/module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/public-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/public-normal.jsonl": "c04c4f8cd431fe2a25eb54138be73276655c377eb13f8cf2a150174a291792b3",
+    "evidence/public-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/public-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/public-race.jsonl": "34ea98a636266d4fc5b8b57e7aac703e108ed42623c6a1b06db9e3436080ce0d",
+    "evidence/public-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/public-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/public-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/public-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/readback.py": "12aed92c2a9e54161305a23ad5d60e3dbcd7f793362f4abe52260208e491285e",
+    "evidence/seal.py": "afc0bd8f0d4ee5426ef1ed02926b0a65a9ffd094fef5d6c72444eda1db359a93",
+    "evidence/source-fence.json": "46326dc54dd026b1eae6c34f07cd2c83caed35fd442815a8ffe6e27a05c9c795",
+    "evidence/source-readback.json": "9f8efa58de0744c98ff2e9411b549806602bd99f6aade8e03eabcc2a656e1839"
+  },
+  "fixed": {
+    "core-normal": {
+      "assertions": [],
+      "exit": 0,
+      "failed": [],
+      "passed": [
+        "TestPreparationPhysicalMetadataRetainsBothCensuses",
+        "TestPreparationPhysicalMovesReconcileEachSyncedBoundary",
+        "TestPreparationRestoreCopiedArchiveKeepsOriginalIntent",
+        "TestPreparationRestoreLostAcknowledgementsKeepOriginalTarget",
+        "TestPreparationRestoreCompleteUnionKeepsEveryHead",
+        "TestPreparationRestoreUnionRefusesMissingOverlapAndChangedClaims"
+      ],
+      "race_reports": []
+    },
+    "core-race": {
+      "assertions": [],
+      "exit": 0,
+      "failed": [],
+      "passed": [
+        "TestPreparationPhysicalMetadataRetainsBothCensuses",
+        "TestPreparationPhysicalMovesReconcileEachSyncedBoundary",
+        "TestPreparationRestoreCopiedArchiveKeepsOriginalIntent",
+        "TestPreparationRestoreLostAcknowledgementsKeepOriginalTarget",
+        "TestPreparationRestoreCompleteUnionKeepsEveryHead",
+        "TestPreparationRestoreUnionRefusesMissingOverlapAndChangedClaims"
+      ],
+      "race_reports": []
+    },
+    "public-normal": {
+      "assertions": [],
+      "exit": 0,
+      "failed": [],
+      "passed": [
+        "TestStoragePreparationRestoreMemberCensusOpensOriginalHistory",
+        "TestStoragePreparationRestoreMemberPendingKeepsOriginalPayload",
+        "TestStoragePreparationRestoreMonitorKeepsActualContinuation",
+        "TestStoragePreparationRestoreOwnerReservationKeepsOriginalBinding",
+        "TestStoragePreparationRestorePendingSnapshotKeepsExactReconciliation",
+        "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners",
+        "TestStoragePreparationRestoreUnionRefusesIncompleteAndOverlappingCoverage",
+        "TestStoragePreparationRestoreUnionResumesOriginalPartialHeadSet"
+      ],
+      "race_reports": []
+    },
+    "public-race": {
+      "assertions": [],
+      "exit": 0,
+      "failed": [],
+      "passed": [
+        "TestStoragePreparationRestoreMemberCensusOpensOriginalHistory",
+        "TestStoragePreparationRestoreMemberPendingKeepsOriginalPayload",
+        "TestStoragePreparationRestoreMonitorKeepsActualContinuation",
+        "TestStoragePreparationRestoreOwnerReservationKeepsOriginalBinding",
+        "TestStoragePreparationRestorePendingSnapshotKeepsExactReconciliation",
+        "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners",
+        "TestStoragePreparationRestoreUnionRefusesIncompleteAndOverlappingCoverage",
+        "TestStoragePreparationRestoreUnionResumesOriginalPartialHeadSet"
+      ],
+      "race_reports": []
+    }
+  },
+  "limits": [
+    "Exact inherited Serverc256 and workspace Connect9fb; no current published module composition claim.",
+    "Causal controls overlay only new test files onto old Connect332 or SN94e plus old Connect332; unknown restore_coverage is an intended old-source behavior failure, not a setup failure.",
+    "No source implementation, signing, device, or deployment action."
+  ],
+  "schema": "sol-union-148-9fb-independent-v1",
+  "source_readback": {
+    "baseline-connect": {
+      "commit": "332b1f438a62edddb4747119fbcc1fed8047ecbc",
+      "overlay_excluded": 0,
+      "overlay_path": "durablevolume/preparation_union_test.go",
+      "overlay_sha256": "38daff2ca47506550c2873fa44f4d0312c4e15df89a7440105bab07772ac760b",
+      "verified_git_blobs": 3726
+    },
+    "baseline-sn": {
+      "commit": "94e087da4448a32c600e4d98837c0db13400916f",
+      "overlay_excluded": 0,
+      "overlay_path": "mainnet/storage_prepare_union_restore_test.go",
+      "overlay_sha256": "11457df4fbcfea387c6bd74a5e0f92d81cfae5d160f86ce60d1ec61c0bbca6d5",
+      "verified_git_blobs": 20156
+    },
+    "fixed-connect": {
+      "commit": "9fb897f8d880ab813dd61dc02fa187e3d85f13a5",
+      "overlay_excluded": 0,
+      "verified_git_blobs": 3727
+    },
+    "fixed-sn": {
+      "commit": "148ab9b4123ab6f1be58b57d1c516abc8d361431",
+      "overlay_excluded": 0,
+      "verified_git_blobs": 20160
+    }
+  },
+  "sources": {
+    "connect": {
+      "commit": "9fb897f8d880ab813dd61dc02fa187e3d85f13a5",
+      "tree": "a3500ca8e57b70c78951fe91871d6bdc7a93f7c7"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "sn": {
+      "commit": "148ab9b4123ab6f1be58b57d1c516abc8d361431",
+      "tree": "6ccb84e4a744201be1019e93b382f97081de1f91"
+    }
+  },
+  "status": "PASS_SCOPED",
+  "vet_exit": {
+    "durablevolume": 0,
+    "mainnet_and_durablehead": 0
+  }
+}

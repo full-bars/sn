@@ -269,6 +269,28 @@ func TestFinalPublicValidatorSourcesV2NativeCheckpointAuthenticatesExactPublicSt
 	if !seenEVM || !seenNative || !seenRuntime || !seenAbsent {
 		t.Fatal("public checkpoint lost actual canonical/runtime/parent-absence reads")
 	}
+	// The final row read is outside the nested mapping/schedule readers. Its
+	// replacement must cross both the recording facade and whole checkpoint.
+	transport := &finalNativeTransportTestClientV2{Client: f.reader.native.Client}
+	transport.generation.Store(1)
+	f.reader.native.Client = transport
+	updatesReads, mappingReads := 0, 0
+	transport.after = func(method string, args []any) {
+		if method == "state_getStorage" && args[0] == mappingKey.Hex() && args[1] == f.nativeHead.Hash {
+			mappingReads++
+		}
+		if method == "state_getStorage" && args[0] == updatesKey {
+			updatesReads++
+			if updatesReads == 1 {
+				transport.generation.Add(1)
+			}
+		}
+	}
+	reobserved, repeated, err := read(1)
+	if err != nil || !reflect.DeepEqual(reobserved, got) || len(repeated) == 0 || mappingReads != 2 || updatesReads != 2 {
+		t.Fatalf("checkpoint facade hid late replacement or retained a partial census: mappings=%d updates=%d err=%v", mappingReads, updatesReads, err)
+	}
+	transport.after = nil
 	for _, fault := range []uint32{1, 2, 3, 4} {
 		mode.Store(fault)
 		partial, raw, err := read(1)

@@ -1,0 +1,57 @@
+{
+  "schema": "0e5-durablehead-positive-independent-readback-v1",
+  "status": "PASS_SIX_ROOTS_PER_MODE_ONLY",
+  "source_commit": "0e5ace17d6cdd419331a3dbca13fb3ec96c67808",
+  "phases": [
+    {
+      "mode": "normal",
+      "receipt_sha256": "bc76b78a9a4296926ec2ef92c1528080a41c40bca5d2ebe2d38dd4c22e785bf7",
+      "raw": {
+        "bytes": 16836,
+        "path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-11-test-internal-durablehead-normal.jsonl",
+        "sha256": "dba18b5c76866d0411e66c3c041e5ba4356c28fc111863919a97821d38cebdcd"
+      },
+      "roots": [
+        "TestSnapshotHeadAcknowledgmentObservedMismatchRemainsIdentity",
+        "TestSnapshotHeadAcknowledgmentReadFailureRetainsOriginalWrite",
+        "TestSnapshotHeadCloseAndCancellation",
+        "TestSnapshotHeadLostAcknowledgementRecovery",
+        "TestSnapshotHeadNamedObservationTaxonomy",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes"
+      ],
+      "image_sha256": "557c0e6b0513e9648adcb7531d06888cca1051c0b6b52014a491ef454819f970",
+      "image_custody_verified": true,
+      "cwd": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/source/sn/internal/durablehead"
+    },
+    {
+      "mode": "race",
+      "receipt_sha256": "a94b4c76bd85c7fd29cbb02ac8517034d7e41b9414be5bcee98bc218c794869a",
+      "raw": {
+        "bytes": 16834,
+        "path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-14-test-internal-durablehead-race.jsonl",
+        "sha256": "e65eb948a5deabb6e89f828f1492e1638ba6fa35a9617a357d33c6515b399f6c"
+      },
+      "roots": [
+        "TestSnapshotHeadAcknowledgmentObservedMismatchRemainsIdentity",
+        "TestSnapshotHeadAcknowledgmentReadFailureRetainsOriginalWrite",
+        "TestSnapshotHeadCloseAndCancellation",
+        "TestSnapshotHeadLostAcknowledgementRecovery",
+        "TestSnapshotHeadNamedObservationTaxonomy",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes"
+      ],
+      "image_sha256": "35d852fc9e898bc40aac9aaa8571d62cc86fd6f16333194c271fda56083d48e0",
+      "image_custody_verified": true,
+      "cwd": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/source/sn/internal/durablehead"
+    }
+  ],
+  "verified_behavior": [
+    "Failed checkpoint acknowledgment read preserves original cause and uncertain pending write.",
+    "Successfully observed different checkpoint bytes still establish identity conflict.",
+    "Lost acknowledgment recovery, close/cancellation and unknown-byte refusal retain original authority."
+  ],
+  "limits": [
+    "Operative old-body control and vet remain pending.",
+    "Mainnet/validator corrected behavioral scopes not implied.",
+    "No live host restore or mainnet launch acceptance."
+  ]
+}

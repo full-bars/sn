@@ -1,0 +1,138 @@
+{
+  "actual_compiler_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-normal-compile-v1.receipt.json",
+    "sha256": "b0ec48b1a9cd9fe5afb188687476da004ed3062ed2e3922bfc17668756384a6b"
+  },
+  "body_mechanism": "Identical qualified post-model retained-image runner/wait/guard, fixed34 selection/count/schema and exact owner66 prior receipt/wait gate. Actual list then count1/parallel1/600s body; zero-skip exact34 classifier. Author no tests or compilers.",
+  "closed_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "cleanup_exit": "0",
+    "model_count": 0,
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    },
+    "resource_qualified": true,
+    "totals": {
+      "fail": 19,
+      "pass": 1673,
+      "run": 1703,
+      "skip": 11
+    }
+  },
+  "healthy_guards": {
+    "active_data_formula": "max(6307319808, immediate_admission_data_available-2147483648)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "retargeted_or_rebased": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-normal-funding-remaining34-job-v1.json",
+    "sha256": "e5e67a822f58222df785d27c6effe0b2e5cd9737f0cd4f540fb5ab6fe8f6249f"
+  },
+  "previous_short": {
+    "job": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-normal-owner-remaining66-job-v1.json",
+      "sha256": "8c611781074af7baaa975ba1a728525a10fb359e4d10f934e7e491e853d45b05"
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-normal-owner-remaining66-v1.receipt.json",
+    "wait_path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-normal-owner-remaining66-v1.process-result.json"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "e5e67a822f58222df785d27c6effe0b2e5cd9737f0cd4f540fb5ab6fe8f6249f",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 0,
+    "runner_sha256": "87ba9bdb395dfa11056c094438767092399171570887cf333755cde4fa365de1",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_ONE_RETAINED_MAINNET_FUNDING_REMAINING34_SHORT_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest8e-mainnet-funding-remaining34-adoption-20261005.json",
+  "resource_forecasts": {
+    "basis": "Source-bounded synthetic in-memory funding algebra, archive/cold-index and temporary local files; no external fee export, native engine or populated fixture admitted. Same1GiB short forecasts at2x, hard2GiB/Swap0/growth2GiB, preserved former4GiB model reserves despite model_count0. No peak-upper-bound assertion.",
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "retained_image": {
+    "bytes": 128232424,
+    "ctime_ns": 1791162600944944151,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 120126878,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791162600944944151,
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/latest8e-mainnet-normal-compile-v1.test",
+    "sha256": "70f8bbeea414ddf88b754eff01ca8d1151758e740e338d5333c1703b8ad38bf3",
+    "type": 32768,
+    "uid": 1000
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest8e-mainnet-funding-remaining34-body-v1.py",
+    "sha256": "87ba9bdb395dfa11056c094438767092399171570887cf333755cde4fa365de1"
+  },
+  "schema": "latest8e-mainnet-funding-remaining34-concrete-review-v1",
+  "scope": "Remaining34 ordinary funding roots (9 new plus25 retained/adjacent), excluding initial4 priority13 and16 fixture-dependent roots. Same exact8e/Core25a/Server2f8 retained image; prior13 andowner66 must actually join. Model_count0, no compiler/DB/engine/other short; normal only.",
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-funding-remaining34-selection-v1.json",
+    "sha256": "e1f50b0687be17c1dd464fdd01fcd99fdc947d61e0a43959fb4cd25a0eb43ebe"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-mainnet-compiler-source-closure-v1.json",
+    "sha256": "8113272ce8f48bb5a2b0b268dfbdfa7ca97e998059b15647faf44e8d55123a5d"
+  },
+  "source_scope": {
+    "asset_free_batches": [
+      "new-funding-arithmetic-cold-carry",
+      "funding-retained-and-adjacent-without-external-export"
+    ],
+    "count": 34,
+    "declaration_byte_checks": "All34 exact function declarations SHA-bound to effective compiled8e closure; actual image LIST34 remains execution preflight. Source handoff asset classification bound.",
+    "excluded_initial_ordinary4": [
+      "TestEconomicFundingJointColdAndActiveExhaustionReplaysOriginalSegments",
+      "TestEconomicFundingJointColdSuccessorKeepsLatePredecessorPayment",
+      "TestEconomicFundingJointExpiredCarryAndLatePaymentShareOriginalSource",
+      "TestEconomicFundingJointPartialClaimsExhaustOriginalObligation"
+    ],
+    "remaining_fixture_gated": {
+      "fee_export_roots": 3,
+      "native_and_populated_roots": 13
+    }
+  },
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "2f8a6ee4e4042d77ca3b257c2b2eaf495ba1e97d",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "status": "REVIEWED_READY_FOR_CONDITIONAL_ROOT_ADOPTION_AFTER_OWNER66_JOIN"
+}

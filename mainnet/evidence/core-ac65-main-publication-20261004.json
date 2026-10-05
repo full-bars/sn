@@ -1,0 +1,23 @@
+{
+  "schema": "qualified-core-main-publication-v1",
+  "observed_utc": "2026-10-04T03:02:03.966637+00:00",
+  "head": "ad6fc3a191a3d777b9a18aae63a03c4554c95dd6",
+  "remote_main": "ad6fc3a191a3d777b9a18aae63a03c4554c95dd6",
+  "source_intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/core-ac65-join/evidence/intake.json",
+    "bytes": 3743,
+    "sha256": "132b4895ed5c3db891fc8c5e213daf4dc645596c599962dd87878ea158ab84b3"
+  },
+  "qualification": {
+    "path": "/mnt/data/sn-testnet/sol-core-ac65-concurrent-20261004/evidence/terminal.json",
+    "bytes": 34321,
+    "sha256": "32852ef396dd270b838dfbc100c1158b6388f9987820a164b6ad8985930a17c0"
+  },
+  "root_checks": [
+    "Exact three changed paths vs upstream c5b",
+    "Entire durablevolume Git subtree identical to scoped-qualified ac65",
+    "All five source/module file bindings match physical and Git bytes",
+    "Fast-forwarded main, pulled and pushed successfully"
+  ],
+  "scope": "Core read-cause fixes published; upstream ledger/transfer code preserved. Does not prove full-module or final SN/Server consumer qualification. Original Core631/2ea graphs untouched."
+}

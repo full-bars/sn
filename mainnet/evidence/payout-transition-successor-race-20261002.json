@@ -1,0 +1,90 @@
+{
+  "fail": 1,
+  "fixture": "owned PG18/Redis8 tmpfs network, cleanup0",
+  "limits": [
+    "The failed model fixture does not reach actual SN reader assertion.",
+    "No full model suite or launch claim."
+  ],
+  "pass": 24,
+  "race_reports": 0,
+  "root_count": 25,
+  "schema": "sol-provider-cutover-ffcc-race-v1",
+  "scopes": [
+    {
+      "exit": 0,
+      "expected": 4,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "2890fb1fad5235491b690216937504c04627f126ef6a4470c001458fc9bf9312",
+      "package_terminal": "pass",
+      "pass": 4,
+      "race_reports": 0,
+      "scope": "root",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 1,
+      "expected": 10,
+      "fail": 1,
+      "failed_roots": [
+        "TestProviderTransitionFreeAndPaidUsageHaveEqualSubnetWeight"
+      ],
+      "jsonl_sha256": "c46d75557a76cf609e961e813b9e7f0fb4a6b3e17d6a7539325bf297c738d4b1",
+      "package_terminal": "fail",
+      "pass": 9,
+      "race_reports": 0,
+      "scope": "model",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "expected": 9,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "4a4ce1612c48ab988fc5067827d9a0e1116b90a9ec88b8a6b2dda2e9a731dd4a",
+      "package_terminal": "pass",
+      "pass": 9,
+      "race_reports": 0,
+      "scope": "controller",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "expected": 1,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "89c6d8ec0dc80dbd00c7dfa20b6db3bb15b8438326bcf00882db3d513cac7c0b",
+      "package_terminal": "pass",
+      "pass": 1,
+      "race_reports": 0,
+      "scope": "taskworker",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "expected": 1,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "5413f51a0e4e6681b6e5fd9b12f8523bcb818286cc87504b91836b1805fe7b54",
+      "package_terminal": "pass",
+      "pass": 1,
+      "race_reports": 0,
+      "scope": "bringyourctl",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "skip": 0,
+  "source": {
+    "actual_module_graph_sha256": "32e33cc7c2e8dd53f8bcbefc2df6428aa3675921eec1aeec0c984fddbc53e115",
+    "config_commit": "93dc65fd84da9a0f5423b5cab9bfc650692fded8",
+    "server_commit": "ffcc77b86bc33822d64b9edd4238bc94697fedcb",
+    "server_tree": "d602d5e47b4c4c7d1f706664b73663c03f480449",
+    "source_fence_sha256": "f2a99cc7ab4936c258a5ab5af829b15efb378d7137e9959f428c3a3bf1cef778"
+  },
+  "status": "FAIL_SCOPED"
+}

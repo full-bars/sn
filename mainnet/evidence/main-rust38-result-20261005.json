@@ -1,0 +1,43 @@
+{
+  "schema": "main-rust38-actual-result-v1",
+  "checked_at": "2026-10-05T05:41:07.885890+00:00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2.receipt.json",
+    "sha256": "50d38265e783204d8c1868d1e013600c73ed4e8ae2411dbc58bb79bb7304a950"
+  },
+  "scope": "38 exact serial Rust normal roots run from main, component-equal to retained338 libtest; prior principal capture exporter1PASS/112filtered excluded. Eight exporters retain29 JSON, including9 new principal/Yuma consumer outputs. No Go test, compiler, listing, control, race, full113 Rust, or full-main dependency qualification.",
+  "totals": {
+    "pass": 37,
+    "fail": 1,
+    "skip": 0,
+    "run": 38
+  },
+  "failed_roots": [
+    {
+      "root": "historical::tests::native_execution_tests::runtime_renewal_tests::historical_native_runtime_renewal_exports_actual_upgrade_and_principal_jobs",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-22.receipt.json",
+        "sha256": "2f80c74bc7d30c4aedf4b00d943fdc91b3e5bb6f614dea538762324d22eb8153"
+      },
+      "exit": 101,
+      "stderr": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/rust38-main-normal-v2-22.stderr"
+    }
+  ],
+  "retained_export_files": 24,
+  "planned_export_files": 29,
+  "missing_failed_phase_export_files": 5,
+  "resource_errors": [],
+  "actual_main_component": {
+    "branch": "main",
+    "crate_tree": "d25b9b0f68a0a46337bddad23edc484768c60437",
+    "image_receipt_origin": {
+      "core": "87e1bf9f43bd52a083d6296859ce2745b38c90c3",
+      "server": "1ea80fa27eb8c4dd40aa36938bcc0c28df5c7211",
+      "sn": "3388840ad7a2bd2de6a68dc8bf7ba2c0b9a9ac65"
+    },
+    "matched_source_files": 37,
+    "observed_head": "3f477a86e6a9d7cb497a08a42a24bbfbd09780d2",
+    "selected_main_commit": "babb0af573f6bdfe95a7db6d8888bbe9327fc39b"
+  },
+  "qualification_limit": "37 passing roots retained; one runtime-renewal fixture assertion failed. Five exports missing. No complete Rust pass, live runtime authority or deployment inferred."
+}

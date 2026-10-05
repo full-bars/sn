@@ -1,0 +1,69 @@
+{
+  "schema": "current-server-migration-join-v1",
+  "status": "CONFIRMED_SOURCE_ORDER_COLLISION_NOT_YET_FIXED",
+  "base": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+  "sources": [
+    {
+      "label": "upstream",
+      "repository": "/mnt/data/sn-testnet/server-model-settlement-fixtures-20261002/server-integrated",
+      "commit": "18ec7c05123495cac9142a62b8df52c62f437f1e",
+      "tree": "1efb0acd0ab878091c972e0cf4b845eb242e1e89",
+      "migration_blob": "900e69dbcfbdb91f7eddf74860874d36e5db4805",
+      "migration_sha256": "d30e45bf513fb136c07c401e2eb2ead43360c81a06f5aa06f3ecd0cd9a71e2a4",
+      "migration_tail": [
+        "\t// true value. Fence every write, including schema-750 writers and no-op updates.",
+        "\tnewSqlMigration(subscriberQualityWriteGuardSchemaSql),",
+        "\t// Private probe passes own their disposable network and balance atomically.",
+        "\tnewSqlMigration(proberShardSchemaSql),",
+        "\t// Keep reservation-revision work proportional to the changed contracts,",
+        "\t// even when the unsettled partial index has stale false-zero statistics.",
+        "\tnewSqlMigration(netEscrowContractsRevisionPointLookupSql),",
+        "\t// Cache exact admission snapshots at the guarded durable revision.",
+        "\tnewSqlMigration(netEscrowAdmissionSnapshotSchemaSql),",
+        "\t// Reader compatibility only; approximate admission remains disabled.",
+        "\tnewSqlMigration(redisContractAdmissionSchemaSql),",
+        "}"
+      ]
+    },
+    {
+      "label": "candidate",
+      "repository": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-composition",
+      "commit": "2a453df9bd7967776889b5f15cd8724d6f9255cb",
+      "tree": "9a9307d81a3d431501fc40518214873ae4e4f92a",
+      "migration_blob": "86ddc2d6762a1185365f7f819f48114037ca7ecc",
+      "migration_sha256": "9a99b3c30aac6796ae0f22c2928892865eb36b0d9481e97c940895670cc96fee",
+      "migration_tail": [
+        "\t// Private probe passes own their disposable network and balance atomically.",
+        "\tnewSqlMigration(proberShardSchemaSql),",
+        "\t// Keep reservation-revision work proportional to the changed contracts,",
+        "\t// even when the unsettled partial index has stale false-zero statistics.",
+        "\tnewSqlMigration(netEscrowContractsRevisionPointLookupSql),",
+        "\t// Cache exact admission snapshots at the guarded durable revision.",
+        "\tnewSqlMigration(netEscrowAdmissionSnapshotSchemaSql),",
+        "\t// Corrections retain their original earning window across safe re-planning.",
+        "\tnewSqlMigration(providerPaymentBonusSchemaSql),",
+        "\t// The earning asset boundary is prepared explicitly and cannot drift with a file edit.",
+        "\tnewSqlMigration(providerPayoutBoundarySchemaSql),",
+        "}"
+      ]
+    }
+  ],
+  "upstream_changed_files": 87,
+  "candidate_changed_files": 44,
+  "overlap": [
+    "db_migrations.go"
+  ],
+  "module_changes": {
+    "upstream": "",
+    "candidate": ""
+  },
+  "required_behavior": [
+    "Preserve original production migration indexes and applied Redis schema; append payout bonus and earning-anchor migrations afterward.",
+    "Qualify an actual existing-current-schema upgrade, repeated migration and durable earning-policy initialization.",
+    "Preserve frozen630/cdcb/25f/2a evidence scopes; qualify changed final source separately."
+  ],
+  "limits": [
+    "Source inspection only; no production migration, merge or deployment performed.",
+    "Upstream deployment notes report Redis migration755; this checkpoint does not independently query production schema."
+  ]
+}

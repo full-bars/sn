@@ -1,0 +1,436 @@
+{
+  "author_review": {
+    "bytes": 20470,
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/full-scope-review-20261003/source-review.json",
+    "sha256": "9f5952fe120bf1f19f855382a2fcf8578d2226d06aa32c8df7d80a6fd4b04575"
+  },
+  "captured_utc": "2026-10-03T17:38:51.936465+00:00",
+  "immutable_source": {
+    "commit": "9576811da22c83687af31f38a0d3f25dab031db5",
+    "repository": "/home/by/urnetwork/sn",
+    "tree": "30395d222cf03db724a636a957b6eb8cc595a906"
+  },
+  "next_implementation": [
+    "Finish already-authored namespace/cohort intake without competing with the active grant.",
+    "Narrow repair observation-cause correction and real cross-role repair continuation.",
+    "Runtime-specific native denominator/recipient witness consumer coordinated with existing collector/fee owner.",
+    "Cross-domain economic reconciliation, Claim archive/adoption and actual cache/fairness work counters."
+  ],
+  "physical_product_readbacks": [
+    "mainnet/economic_emission_state.go",
+    "mainnet/economic_emission.go",
+    "mainnet/economic_emission_observe.go",
+    "mainnet/monitor_economic_native_worker.go",
+    "mainnet/monitor_economic_evm_ledger.go",
+    "mainnet/monitor_claim_worker.go",
+    "mainnet/monitor_claim_state.go",
+    "mainnet/monitor_progress_policy.go",
+    "mainnet/historical_capture.go",
+    "mainnet/historical_replay.go",
+    "mainnet/repair_validator_store.go",
+    "mainnet/repair_validator.go",
+    "mainnet/repair_active_validator.go",
+    "mainnet/repair_active_validator_test.go",
+    "mainnet/repair_validator_test.go",
+    "mainnet/main.go",
+    "mainnet/root_service_bounded_recovery.go",
+    "evm/src/STCoordinator.sol",
+    "evm/src/STReserveSink.sol",
+    "evm/src/STSettlementVault.sol",
+    "evm/test/ReleaseDemandEmissionAccounting.t.sol",
+    "evm/test/ReleaseInvariant.t.sol",
+    "evm/test/ReleaseClaimRecovery.t.sol",
+    "validator/production_receipt_cache_state.go",
+    "validator/attempt_ledger_capacity_cache_test.go",
+    "validator/release_attempt_upload_v2.go",
+    "validator/attempt_cut_v2_replay.go",
+    "miner/fleet_recovery_store.go",
+    "miner/claim_daemon.go"
+  ],
+  "schema": "urnetwork-root-full-hardening-source-gap-review-v1",
+  "scope_limits": [
+    "31 immutable Git blobs and their exact commit/tree bindings verified; newer mutable plan/evidence edits do not rewrite that retained snapshot.",
+    "Code-backed missing native denominator/recipient consumer is distinct from missing real-chain runtime/finality approval; implement the offline consumer rather than treating both as an external blocker.",
+    "Repair read-error classification requires deterministic no-new-effect continuation controls.",
+    "No new Solidity defect or passing contract-wide/live-runtime qualification established by source inspection.",
+    "All38 hardening requirements remain retained; this source census is not final acceptance."
+  ],
+  "source_git_bindings": [
+    {
+      "bytes": 11157,
+      "git_blob": "3ee9b8c8dd0eddb1b69e3e4ea2c558cdd5038a90",
+      "git_mode": "100644",
+      "relative_path": "mainnet/evidence/current-readiness-checkpoint-20261003.md",
+      "sha256": "e34c218e89879db24a7322aa94c21bc019a3404c7b509871428486cecb964b86"
+    },
+    {
+      "bytes": 623143,
+      "git_blob": "420ee369c71a823e6c91ae47a8a907be19cfce63",
+      "git_mode": "100644",
+      "relative_path": "mainnet/PRELAUNCH-FIXES.md",
+      "sha256": "e53fa9c8682715337d4db27819c240ecc8238d3838f36462a628d95d41564882"
+    },
+    {
+      "bytes": 10679,
+      "git_blob": "ba1febbf68e81169cd2bcaff6eacdfe29880c8e4",
+      "git_mode": "100644",
+      "relative_path": "mainnet/economic_emission_state.go",
+      "sha256": "6292dad1b7d995d7845a8c70dfd8c642d989eace2f578e0c9195572c28b7ce9d"
+    },
+    {
+      "bytes": 11488,
+      "git_blob": "a7eff890c233e3f9dab930b6c4fd35fd13837c77",
+      "git_mode": "100644",
+      "relative_path": "mainnet/economic_emission.go",
+      "sha256": "ea78676c97b2fe2befe53d82ff8540c005103838cb4257fba345542e01531feb"
+    },
+    {
+      "bytes": 13072,
+      "git_blob": "b827981f005d9fdc527fd96c44bcc00f1453a077",
+      "git_mode": "100644",
+      "relative_path": "mainnet/economic_emission_observe.go",
+      "sha256": "7b0b645b8b1ab30fd7758756d93b5d34e9eb012c37961a2167d9f4b32269479e"
+    },
+    {
+      "bytes": 22422,
+      "git_blob": "3442021f97c58a97909236973d2b3ad6302a3ac5",
+      "git_mode": "100644",
+      "relative_path": "mainnet/monitor_economic_native_worker.go",
+      "sha256": "f11b68eb2132780e15199fbf419f817a4f23cc21b01c30e7d8ff0392a474cb7c"
+    },
+    {
+      "bytes": 21064,
+      "git_blob": "67160080a8af3502542361d90dcf56a8b2ab9e95",
+      "git_mode": "100644",
+      "relative_path": "mainnet/monitor_economic_evm_ledger.go",
+      "sha256": "0518f01e24633ce06f1a91952d609e0861bf9c8ec5affb05d1892e9986084da0"
+    },
+    {
+      "bytes": 13895,
+      "git_blob": "7f4828b274103b6ad4c56af7aee1259605794d9c",
+      "git_mode": "100644",
+      "relative_path": "mainnet/monitor_claim_worker.go",
+      "sha256": "664cd8c5035f174a1e95d2a891a1ef119b6e9810ea10da0c28f1e993a8190a2b"
+    },
+    {
+      "bytes": 13384,
+      "git_blob": "4910ee08520a745d017c23640adbbf156e87f563",
+      "git_mode": "100644",
+      "relative_path": "mainnet/monitor_claim_state.go",
+      "sha256": "aa4794819e5779583d736618d681780006e81a7cdd32207405ce66f8ef84832b"
+    },
+    {
+      "bytes": 14056,
+      "git_blob": "a57ce55e94d44ac4e244a46cc8583f836bde3b0a",
+      "git_mode": "100644",
+      "relative_path": "mainnet/monitor_progress_policy.go",
+      "sha256": "1e3982d9234da7ee49d0eb06e929741c45a56695bd78111536fd0c2d08281a5f"
+    },
+    {
+      "bytes": 7742,
+      "git_blob": "c498ec5ea723f20230da6aab18ae4fbec60eb758",
+      "git_mode": "100644",
+      "relative_path": "mainnet/historical_capture.go",
+      "sha256": "e6ae20e8f51d376e7aa93036b6eca5014fc34073700987de0a90fdc224fa5e6b"
+    },
+    {
+      "bytes": 14770,
+      "git_blob": "df6c73d4615077ecb2cbf579089b68fcb55c85cf",
+      "git_mode": "100644",
+      "relative_path": "mainnet/historical_replay.go",
+      "sha256": "a6c13fe37fbd8dbb897388b7ee29f202359402dce9e6a158b73a71c9ca52c1fc"
+    },
+    {
+      "bytes": 10878,
+      "git_blob": "7c0ba44a4442ef591d6c46a4d491543b25df7616",
+      "git_mode": "100644",
+      "relative_path": "mainnet/repair_validator_store.go",
+      "sha256": "98c77f92ad7119f092d520cd1e7d1301fe1fbce64867586e33107c6da5aff890"
+    },
+    {
+      "bytes": 7870,
+      "git_blob": "b8784b8d3b82a19bfac340ebff76ad13eeb63319",
+      "git_mode": "100644",
+      "relative_path": "mainnet/repair_validator.go",
+      "sha256": "89b5fbc166e3646f0ac3b18b119bcfd3ba9e2206b5e2c566410faaa2e3e495ad"
+    },
+    {
+      "bytes": 9803,
+      "git_blob": "afe16d3c6b4fea7a3f63573d640c4c11cfbfe479",
+      "git_mode": "100644",
+      "relative_path": "mainnet/repair_active_validator.go",
+      "sha256": "02cca7e9a2b2aa477065efff2fa120a45d1c41ca6a1157e94b0ea0a9bcdc362a"
+    },
+    {
+      "bytes": 32641,
+      "git_blob": "ecdcdd1576df5ca09497adc6e266dce083786f0b",
+      "git_mode": "100644",
+      "relative_path": "mainnet/repair_active_validator_test.go",
+      "sha256": "4e6a45ddb8638aab9fa66f1be8af0247c555a22d4f11d8b7ee6c598500158f40"
+    },
+    {
+      "bytes": 32427,
+      "git_blob": "bbf907df594accf9684ee8348cd8a1dfb40a6458",
+      "git_mode": "100644",
+      "relative_path": "mainnet/repair_validator_test.go",
+      "sha256": "56ee56366c7f31e16b9c542a909a756a4ffdb785158d093ec68c9fdaebe28d68"
+    },
+    {
+      "bytes": 24443,
+      "git_blob": "1920897eeef655b432c95cb9ed502a3329749776",
+      "git_mode": "100644",
+      "relative_path": "mainnet/main.go",
+      "sha256": "24acb59548766826a2bd2a7f5a3e7fce532fda673d2be7e666b298c5db6902ff"
+    },
+    {
+      "bytes": 11763,
+      "git_blob": "e3f0729a63db6128dd96c5e2234b715efc3959fa",
+      "git_mode": "100644",
+      "relative_path": "mainnet/root_service_bounded_recovery.go",
+      "sha256": "5be09b19b5fa832a9d045d4697c3f2fdebba37f93db2caadf65a1835aa544e10"
+    },
+    {
+      "bytes": 38394,
+      "git_blob": "37dce20ed4b53257165089705b4d174493ba61a7",
+      "git_mode": "100644",
+      "relative_path": "evm/src/STCoordinator.sol",
+      "sha256": "e7c5a292a04ea9c7e9c354699416bf4184d20b4f2bb54facad48f1fb6384c6ea"
+    },
+    {
+      "bytes": 3110,
+      "git_blob": "b73443d418dce83ee4a24cf6b6d36a65c275642e",
+      "git_mode": "100644",
+      "relative_path": "evm/src/STReserveSink.sol",
+      "sha256": "18de7d37b11edcf1e6b57adb290acc5c568b43673557ebb74f94d68620db2a46"
+    },
+    {
+      "bytes": 21716,
+      "git_blob": "20152a65012a18248eb60fb3fba249bfc160eb64",
+      "git_mode": "100644",
+      "relative_path": "evm/src/STSettlementVault.sol",
+      "sha256": "ac76e47f8744bf65d621005b4765985002e17a706f380c914987af4af55ede4a"
+    },
+    {
+      "bytes": 4587,
+      "git_blob": "bbbb219e64ac2837656d899f4cb54865bba24bb9",
+      "git_mode": "100644",
+      "relative_path": "evm/test/ReleaseDemandEmissionAccounting.t.sol",
+      "sha256": "00aa1477210a50f4e7c40006504eaee67a3ca3a7ffddf66599f51468e48d2394"
+    },
+    {
+      "bytes": 4014,
+      "git_blob": "8fd1a5d3ff7f42251d31a22b65134e8031997bd3",
+      "git_mode": "100644",
+      "relative_path": "evm/test/ReleaseInvariant.t.sol",
+      "sha256": "b6b1e7c0e7cdd38909d3de3b71ab6073736310d2e7d1615660912bd0ace3f7bf"
+    },
+    {
+      "bytes": 9259,
+      "git_blob": "832c6e672f90701ec7b8b715581d57f7f97bccd0",
+      "git_mode": "100644",
+      "relative_path": "evm/test/ReleaseClaimRecovery.t.sol",
+      "sha256": "9734ca76ce9aae6f96110e60043b781cc8f9e57705a43cdee9512552761f88c0"
+    },
+    {
+      "bytes": 3055,
+      "git_blob": "a945c620591b620508578c2855267f4ae95602c7",
+      "git_mode": "100644",
+      "relative_path": "validator/production_receipt_cache_state.go",
+      "sha256": "ecbafefe74d066da1758ee2acc067e2809ba1153fd8bf34d5436076cb5e1c799"
+    },
+    {
+      "bytes": 15222,
+      "git_blob": "2d1cb44981b66c5ec1f13d91bdd54998f2efb468",
+      "git_mode": "100644",
+      "relative_path": "validator/attempt_ledger_capacity_cache_test.go",
+      "sha256": "766866a9f80edc9c2051b6523c8c1debd2eb70f71b88836b90046d64d135d0c6"
+    },
+    {
+      "bytes": 3723,
+      "git_blob": "5ee7261d143fafd78a14adacf894175d3ef53af1",
+      "git_mode": "100644",
+      "relative_path": "validator/release_attempt_upload_v2.go",
+      "sha256": "8123b978d2a381ce9d43a890340116e624ec8ac9a55478219f39d7b02c06d7b1"
+    },
+    {
+      "bytes": 26073,
+      "git_blob": "e679f1b27a9e4a72ce80ee0e5d3f1a14dbcc82ef",
+      "git_mode": "100644",
+      "relative_path": "validator/attempt_cut_v2_replay.go",
+      "sha256": "0af272c540420131f829b909c9d4f5e966ff3033fe882936750b859e8a7ebc3f"
+    },
+    {
+      "bytes": 23698,
+      "git_blob": "97cf6d71c6afeced0a7e09878aeb62b5b0601c5a",
+      "git_mode": "100644",
+      "relative_path": "miner/fleet_recovery_store.go",
+      "sha256": "3becf05ca51af5a41e8376a60a4005bbe4b36caa56721641c63adb479383f32e"
+    },
+    {
+      "bytes": 39776,
+      "git_blob": "f7b53a5dbe1c4a9634b9b9ece33d1e89d413b596",
+      "git_mode": "100644",
+      "relative_path": "miner/claim_daemon.go",
+      "sha256": "84e8e1d69b6bb6580caccd649359e93a8ca2b2ea418eab1d8fa06773a434e074"
+    }
+  ],
+  "status": "SOURCE_GAPS_CONFIRMED_IMPLEMENTATION_IN_PROGRESS",
+  "verified_findings": [
+    {
+      "actual": "Denominator production code always leaves Complete false and allocation/dust nil, explicitly lacking intra-block accrual/drain, runtime fixed-point normalization and execution-time UID/hotkey generations. Native summary leaves allocation/provider entitlement/owner recycle nil and emits three known flags as zero.",
+      "classification": "confirmed_missing_implementation_plus_separate_runtime_authority",
+      "evidence": [
+        "mainnet/economic_emission_state.go:economicEmissionDenominatorEvidence",
+        "mainnet/monitor_economic_native_worker.go:monitorEconomicNativeState.summary"
+      ],
+      "external": "Independent approved runtime semantics/code, authentic complete witness/finality and observed mainnet intervals remain separate. No live chain access or signer is needed to implement the offline verifier.",
+      "id": "native-denominator-and-recipient",
+      "next_bounded_implementation": "Define and implement a bounded runtime-specific economic witness consumer deriving the pre-withholding tranche, exact fixed-point truncation/fallback and recipient generation from authenticated execution-time state. First causal scope: positive intra-block drain, zero-incentive fallback, takeover/replaced UID, wrong parent runtime, omitted input and rounding edge; missing proof stays unknown.",
+      "requirements": [
+        "MG-03",
+        "MG-06",
+        "PH-11",
+        "PH-12",
+        "PH-19"
+      ],
+      "reuse": "Keep existing parent-execution/post-state runtime catalog, complete block/event reader, full-witness historical collector/replay and original-Wasm fee scope. They are prerequisites, not a denominator proof."
+    },
+    {
+      "actual": "Coordinator retains nonce/deadline/operator bounds and checks both movement legs with explicit rounding allowance. Immutable reserve has no withdrawal surface. Vault separates capture, pending funding, carry, accepted credit and aggregate payment; self-call payment rollback preserves credit, and exact source/destination deltas are checked.",
+      "classification": "implemented_contract_guards_no_new_contract_defect_established",
+      "evidence": [
+        "evm/src/STCoordinator.sol:_reserve",
+        "evm/src/STReserveSink.sol:recordPrincipal",
+        "evm/src/STSettlementVault.sol:transferClaimCredit",
+        "evm/src/STSettlementVault.sol:conservationHolds"
+      ],
+      "external": "Installed code/storage identity, runtime precompile semantics, actual funded reserves and native outcomes are not established by synthetic contract tests.",
+      "id": "reuse-existing-contract-invariants",
+      "next_bounded_implementation": "Compose these exact guards with actual runtime-backed capture/payment evidence; patch only a reproduced consumed-seam discrepancy.",
+      "requirements": [
+        "MG-06",
+        "PH-11",
+        "PH-12"
+      ],
+      "reuse": "Preserve the existing release contracts and their exact source-qualified minimum, mismatch, reentrancy, aggregate-credit and conservation components. Do not rewrite Solidity simply because actual-chain denominator/recipient admission is still missing."
+    },
+    {
+      "actual": "EVM event-to-state ledger checks reserve backing, captured=paid+escrow and escrow=pending+liability, selected carry/credit and complete aggregate ClaimPaid. Independent claim expectations are explicitly separate; native recipient/entitlement/recycle proof is absent. Three individually current cursors do not produce one authenticated complete economic join.",
+      "classification": "missing_joined_consumer_over_existing_separate_censuses",
+      "evidence": [
+        "mainnet/monitor_economic_evm_ledger.go:monitorEvmCheckLedger",
+        "mainnet/monitor_economic_native_worker.go:monitorEconomicNativeState.summary",
+        "mainnet/monitor_claim_worker.go"
+      ],
+      "external": "Only after the native witness verifier and approved identities can this report establish actual allocation/conservation; code and synthetic continuation can be completed offline.",
+      "id": "cross-domain-economic-join",
+      "next_bounded_implementation": "Add a read-only versioned reconciliation input/result binding exact native interval, pool/coldkey generation, vault capture/credit/carry/payment and independent claim roster. Reuse existing ledgers; preserve unallocated aggregate payments, omitted observations and deferred liabilities. Exercise capture revert, two-pool aggregate credit, expiry carry, omitted claim and restart with one role unavailable.",
+      "requirements": [
+        "MG-06",
+        "MG-07",
+        "PH-11",
+        "PH-12",
+        "PH-13",
+        "PH-28"
+      ]
+    },
+    {
+      "actual": "Repair owner combines Lstat/Stat errors with positive identity mismatch under physical-owner-changed; ReadAt errors lose their cause under marker-content-changed; guarded read errors are joined with retained-journal-changed. Some manager reread errors also acquire generation-changed wording. This does not establish a new unauthorized action, but observation failure is still mislabeled as contradictory custody.",
+      "classification": "concrete_adjacent_source_defect_requires_causal_controls",
+      "evidence": [
+        "mainnet/repair_validator_store.go:repairValidatorFileOwner.validateOwner",
+        "mainnet/repair_validator.go:resumeRepairValidator",
+        "mainnet/repair_active_validator.go:resumeRepairActiveValidator"
+      ],
+      "external": "None needed for the offline root-cause controls. Real manager/host acceptance remains distinct.",
+      "id": "repair-observation-cause",
+      "next_bounded_implementation": "Separate actual I/O/cancel/unavailable outcomes from observed path/marker/digest/generation contradictions across both public repair callers. Retain action reservations and sticky confirmed identity loss. Deterministic EIO/closed-fd/cancel versus real replacement/changed bytes and same-original recovery; no new stop/start on uncertain write.",
+      "requirements": [
+        "PH-01",
+        "PH-03",
+        "PH-21",
+        "PH-22",
+        "MG-07"
+      ]
+    },
+    {
+      "actual": "Stopped and active validator public repairs already retain independent approvals, one-stop/one-start lifetime claims, joins, duplicate-envelope exclusions and consumed uncertainty; root recovery has its own finite policy. The review did not establish a qualified aggregate controller across miner/operator/validator/claim roles.",
+      "classification": "composition_required_not_absent_per_unit_repair",
+      "evidence": [
+        "mainnet/repair_active_validator_test.go",
+        "mainnet/repair_validator_test.go",
+        "mainnet/root_service_bounded_recovery.go",
+        "mainnet/main.go"
+      ],
+      "external": "Approved repair envelope, exact units/cgroups, devices and real host transport remain external operational admission.",
+      "id": "multi-role-repair-continuation",
+      "next_bounded_implementation": "First compose existing real entrypoints under duplicate concurrent requests and interruption after one role commits, preserving healthy-role progress. Add aggregate per-action custody/renewal only where the required cross-role workflow demonstrates missing coordination; never reset per-unit consumed allowances.",
+      "requirements": [
+        "PH-07",
+        "PH-21",
+        "PH-25",
+        "MG-05",
+        "MG-07"
+      ]
+    },
+    {
+      "actual": "Fleet recovery/claim ownership and per-phase bootstrap/activation/recovery interfaces are present; broad Planned/absent labels would duplicate existing work. Source scopes do not establish two actual operators/four-role topology or final owner-device authority.",
+      "classification": "existing_components_need_current_role_composition_and_inputs",
+      "evidence": [
+        "miner/fleet_recovery_store.go",
+        "miner/claim_daemon.go",
+        "mainnet/main.go"
+      ],
+      "external": "Approved runtime/source/finality, owner keys and signer custody, installed contracts, eligible validator stake/permit, actual hosts/network routes and activation remain real external gates.",
+      "id": "miner-validator-authority-and-topology",
+      "next_bounded_implementation": "Compose actual current runtime renewal, route replacement, original approvals and two-operator role separation on current source; implement only a demonstrated omitted context/provenance/continuation seam.",
+      "requirements": [
+        "MG-03",
+        "MG-04",
+        "MG-05",
+        "MG-08",
+        "PH-04",
+        "PH-10",
+        "PH-14",
+        "PH-18",
+        "PH-27"
+      ]
+    },
+    {
+      "actual": "Public validator capacity preview/completion, native/EVM archive and signed native catalog exist. Copied-source/core63, EVM42 and nested32/1024 successors are separate pending scopes. Claim archive adapter remains peer-owned implementation; no arbitrary catalog key enrollment or history discard is permitted.",
+      "classification": "implemented_slices_plus_pending_consumers_and_finite_horizon",
+      "external": "Chosen fleet/resource forecast and real backup/restore/volume rehearsal. No slot count implies the same number of funded/resident workers.",
+      "id": "capacity-and-archive-remainder",
+      "next_bounded_implementation": "Qualify current accepted namespace/cohort fixes, join published dependencies, complete Claim archive consumer and retained obligation/policy history, then demonstrate reviewed growth/adoption before finite catalog/revision exhaustion while peers continue.",
+      "requirements": [
+        "PH-09",
+        "PH-13",
+        "PH-20",
+        "PH-23",
+        "PH-28",
+        "MG-09"
+      ]
+    },
+    {
+      "actual": "Receipt/client/boundary/capacity caches and bounded replay/upload already exist. Full-lineage repeated authentication work and foreground progress under the joined maximum backlog are not established by those component scopes. A keyword census is not proof that a new scheduler/cache is needed.",
+      "classification": "actual_work_count_and_joined_sizing_probe_required",
+      "evidence": [
+        "validator/production_receipt_cache_state.go",
+        "validator/attempt_ledger_capacity_cache_test.go",
+        "validator/release_attempt_upload_v2.go",
+        "validator/attempt_cut_v2_replay.go"
+      ],
+      "external": "Production resource/fleet/retention profile and host sizing rehearsal remain separate from offline work counters.",
+      "id": "cache-and-foreground-work",
+      "next_bounded_implementation": "Instrument actual public replay/upload and full lineage reads with deterministic byte/authentication counters and dependency mutation witnesses. Add bounded reuse or per-owner work admission only after a concrete repeated-work/starvation witness; preserve all byte/hash/authority validation.",
+      "requirements": [
+        "PH-05",
+        "PH-08",
+        "PH-17",
+        "PH-24",
+        "PH-26",
+        "MG-09"
+      ]
+    }
+  ]
+}

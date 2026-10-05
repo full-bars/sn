@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -25,11 +26,13 @@ type runtimeVersionIdentity = crv4.RuntimeVersionIdentity
 // metadata. On a cache hit, the large bytes were authenticated at another block
 // carrying the identical reviewed artifact.
 type authenticatedRuntimeMetadata struct {
-	FinalizedHash types.Hash
-	Version       runtimeVersionIdentity
-	CodeHash      string
-	MetadataHash  string
-	Metadata      *types.Metadata
+	FinalizedHash        types.Hash
+	Version              runtimeVersionIdentity
+	CodeHash             string
+	MetadataHash         string
+	Metadata             *types.Metadata
+	CompatibilityProfile string
+	artifact             crv4.AuthenticatedRuntimeArtifact
 }
 
 type historicalRuntimeArtifactIdentity struct {
@@ -121,7 +124,7 @@ func validatePublishedRuntimeIdentityShape(public *PublicDeploymentManifest) err
 		public.RuntimeSpec != reviewedRuntimeSpecVersion ||
 		public.TransactionVersion != reviewedRuntimeTransactionVersion ||
 		public.StateVersion != reviewedRuntimeStateVersion {
-		return errors.New("published runtime version identity is not the reviewed node-subtensor/461/1/1 release")
+		return errors.New("published runtime version identity is not the reviewed node-subtensor/467/1/1 release")
 	}
 	if err := validateRuntimeCodeHash(public.RuntimeCodeHash, reviewedRuntimeCodeHash); err != nil {
 		return fmt.Errorf("published runtime identity: %w", err)
@@ -223,18 +226,20 @@ func readRuntimeArtifactWithPolicy(ctx context.Context, chain *crv4.Chain, final
 	var authenticated crv4.AuthenticatedRuntimeArtifact
 	err := retryFinalSemanticRPCCall(ctx, nil, policy, func(attemptCtx context.Context) error {
 		var attemptErr error
-		authenticated, attemptErr = crv4.AuthenticateRuntimeArtifactAtContext(attemptCtx, chain, finalized, allowedIdentities...)
+		authenticated, attemptErr = crv4.ReadRuntimeArtifactAtContext(attemptCtx, chain, finalized, allowedIdentities...)
 		return attemptErr
 	})
 	if err != nil {
 		return result, err
 	}
 	return authenticatedRuntimeMetadata{
-		FinalizedHash: authenticated.BlockHash,
-		Version:       authenticated.Version,
-		CodeHash:      authenticated.CodeHash,
-		MetadataHash:  authenticated.MetadataHash,
-		Metadata:      authenticated.Metadata,
+		FinalizedHash:        authenticated.BlockHash,
+		Version:              authenticated.Version,
+		CodeHash:             authenticated.CodeHash,
+		MetadataHash:         authenticated.MetadataHash,
+		Metadata:             authenticated.Metadata,
+		CompatibilityProfile: authenticated.CompatibilityProfile,
+		artifact:             authenticated,
 	}, nil
 }
 
@@ -248,13 +253,28 @@ func validateRuntimeMetadataHash(observed, expected string) error {
 
 // Bind a chain to metadata and signing versions authenticated at one immutable
 // finalized hash. The state version has already been checked separately.
-func bindAuthenticatedRuntime(chain *crv4.Chain, authenticated authenticatedRuntimeMetadata) {
-	chain.Meta = authenticated.Metadata
-	chain.Runtime = &types.RuntimeVersion{
-		SpecName:           authenticated.Version.SpecName,
-		SpecVersion:        types.U32(authenticated.Version.SpecVersion),
-		TransactionVersion: types.U32(authenticated.Version.TransactionVersion),
+func bindAuthenticatedRuntime(chain *crv4.Chain, authenticated authenticatedRuntimeMetadata) error {
+	artifact := authenticated.artifact
+	if artifact.Metadata != nil {
+		if artifact.BlockHash != authenticated.FinalizedHash || artifact.Version != authenticated.Version || artifact.CodeHash != authenticated.CodeHash || artifact.MetadataHash != authenticated.MetadataHash || artifact.Metadata != authenticated.Metadata || artifact.CompatibilityProfile != authenticated.CompatibilityProfile {
+			return errors.New("retained runtime artifact differs from its authenticated view")
+		}
+	} else {
+		// Strict historical fixtures and doctor checks construct exact identity
+		// fields directly; they cannot synthesize provisional proof authority.
+		artifact = crv4.AuthenticatedRuntimeArtifact{BlockHash: authenticated.FinalizedHash, Version: authenticated.Version, CodeHash: authenticated.CodeHash, MetadataHash: authenticated.MetadataHash, Metadata: authenticated.Metadata, CompatibilityProfile: authenticated.CompatibilityProfile}
 	}
+	return chain.BindRuntimeArtifact(artifact)
+}
+
+// Interface compatibility does not preserve a signature's runtime domain.
+// This fence is required both before journaling fresh bytes and before replay
+// of a transaction that has no canonical finalized receipt.
+func requireSameNativeSigningRuntime(prepared, current authenticatedRuntimeMetadata) error {
+	if prepared.Version != current.Version || prepared.CodeHash != current.CodeHash || prepared.MetadataHash != current.MetadataHash {
+		return errors.New("native runtime changed across signing/recovery; retained bytes require a separately authorized replacement")
+	}
+	return nil
 }
 
 // Authenticate every runtime identity dimension at a caller-selected finalized
@@ -273,10 +293,19 @@ func readAuthenticatedRuntimeMetadataAtContext(ctx context.Context, chain *crv4.
 		cfg.Release.Runtime.StateVersion != cfg.Public.Chain.ExpectedStateVersion {
 		return result, errors.New("release/runtime manifest mismatch")
 	}
+	if err := enableProvisionalRuntimeCompatibility(chain, cfg); err != nil {
+		return result, err
+	}
 	var err error
 	result, err = readRuntimeArtifactWithPolicy(ctx, chain, finalized, []crv4.RuntimeArtifactIdentity{currentReleaseRuntimeArtifact(cfg)}, releaseRuntimeRPCRetryPolicy())
 	if err != nil {
 		return result, err
+	}
+	if result.CompatibilityProfile == crv4.ProvisionalRuntimeCompatibilityProfile {
+		if !provisionalResumeEnabled(cfg) {
+			return result, errors.New("provisional runtime artifact cannot authorize a strict runtime read")
+		}
+		return result, nil
 	}
 	if err := validateRuntimeVersionIdentity(result.Version, cfg.Public.Chain.ExpectedRuntimeSpec, cfg.Public.Chain.ExpectedTransactionVersion, cfg.Public.Chain.ExpectedStateVersion); err != nil {
 		return result, err
@@ -312,6 +341,9 @@ func readReleaseHistoryRuntimeMetadataAtContext(ctx context.Context, chain *crv4
 		cfg.Release.Runtime.StateVersion != cfg.Public.Chain.ExpectedStateVersion {
 		return result, errors.New("release/runtime manifest mismatch")
 	}
+	if err := enableProvisionalRuntimeCompatibility(chain, cfg); err != nil {
+		return result, err
+	}
 	allowed, err := releaseHistoryRuntimeArtifacts(cfg)
 	if err != nil {
 		return result, err
@@ -319,6 +351,12 @@ func readReleaseHistoryRuntimeMetadataAtContext(ctx context.Context, chain *crv4
 	result, err = readRuntimeArtifactWithPolicy(ctx, chain, finalized, allowed, releaseRuntimeRPCRetryPolicy())
 	if err != nil {
 		return result, err
+	}
+	if result.CompatibilityProfile == crv4.ProvisionalRuntimeCompatibilityProfile {
+		if !provisionalResumeEnabled(cfg) {
+			return result, errors.New("provisional runtime artifact cannot authorize strict historical evidence")
+		}
+		return result, nil
 	}
 	if currentErr := validateRuntimeVersionIdentity(result.Version, cfg.Public.Chain.ExpectedRuntimeSpec, cfg.Public.Chain.ExpectedTransactionVersion, cfg.Public.Chain.ExpectedStateVersion); currentErr == nil {
 		if err := validateRuntimeCodeHash(result.CodeHash, cfg.Release.Runtime.CodeHash); err != nil {
@@ -346,6 +384,26 @@ func readReleaseHistoryRuntimeMetadataAtContext(ctx context.Context, chain *crv4
 	return result, nil
 }
 
+// The approved provisional record keeps the original release/plan authority.
+// Runtime changes are recorded separately and never rewrite that provenance.
+func enableProvisionalRuntimeCompatibility(chain *crv4.Chain, cfg *ResolvedConfig) error {
+	if !provisionalResumeEnabled(cfg) {
+		return nil
+	}
+	record := cfg.provisionalResume.Record
+	if cfg.Public == nil || cfg.Config == nil || cfg.ChainID != testnetChainID || !strings.EqualFold(cfg.Public.Chain.GenesisHash, testnetGenesis) || record.Schema != "urnetwork-sim-provisional-resume-v1" || !record.Provisional || record.FinalAcceptance || record.ConfigHash != cfg.ConfigHash || record.DeploymentID != cfg.Config.Deployment.DeploymentID || !validCanonicalHashHex(record.PlanHash) || !filepath.IsAbs(cfg.provisionalResume.RecordPath) {
+		return errors.New("provisional runtime compatibility has no exact testnet resume authority")
+	}
+	genesis, err := types.NewHashFromHexString(cfg.Public.Chain.GenesisHash)
+	if err != nil {
+		return err
+	}
+	directory := filepath.Join(filepath.Dir(cfg.provisionalResume.RecordPath), "runtime-compatibility")
+	return chain.EnableProvisionalRuntimeCompatibility(genesis, func(artifact crv4.AuthenticatedRuntimeArtifact) error {
+		return crv4.WriteProvisionalRuntimeObservation(directory, artifact)
+	})
+}
+
 // Proves a carried native receipt using cancellable, retryable reads bound to
 // the exact runtime artifact present at its finalized block.
 func verifyReleaseHistoryFinalizedExtrinsicContext(ctx context.Context, chain *crv4.Chain, cfg *ResolvedConfig, blockHash, extrinsicHash types.Hash) error {
@@ -354,22 +412,38 @@ func verifyReleaseHistoryFinalizedExtrinsicContext(ctx context.Context, chain *c
 		return fmt.Errorf("authenticate finalized extrinsic runtime at %s: %w", blockHash.Hex(), err)
 	}
 	historical := *chain
-	bindAuthenticatedRuntime(&historical, authenticated)
+	if err := bindAuthenticatedRuntime(&historical, authenticated); err != nil {
+		return err
+	}
 	return retryFinalSemanticRPCCall(ctx, nil, releaseRuntimeRPCRetryPolicy(), func(attemptCtx context.Context) error {
 		return historical.VerifyFinalizedExtrinsicContext(attemptCtx, blockHash, extrinsicHash)
 	})
 }
 
+// An owned-node response can stall even after the WebSocket connects. Bound the
+// complete metadata/genesis/runtime admission so setup returns a recoverable
+// error instead of holding the deployment lock indefinitely. Callers with an
+// earlier deadline retain it.
+const releaseSubstrateDialTimeout = 45 * time.Second
+
 // Dial one release endpoint, authenticate genesis, then bind metadata and all
 // runtime versions from a single finalized hash.
-func dialReleaseSubstrateChain(cfg *ResolvedConfig, endpoint string) (*crv4.Chain, authenticatedRuntimeMetadata, error) {
+func dialReleaseSubstrateChainContext(ctx context.Context, cfg *ResolvedConfig, endpoint string) (*crv4.Chain, authenticatedRuntimeMetadata, error) {
+	if ctx == nil {
+		return nil, authenticatedRuntimeMetadata{}, errors.New("release substrate dial context is unavailable")
+	}
+	if _, bounded := ctx.Deadline(); !bounded {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, releaseSubstrateDialTimeout)
+		defer cancel()
+	}
 	if err := validateOwnedRPCDialEndpoint(cfg, endpoint); err != nil {
 		return nil, authenticatedRuntimeMetadata{}, err
 	}
 	if cfg == nil || cfg.Public == nil {
 		return nil, authenticatedRuntimeMetadata{}, errors.New("release public manifest is unavailable")
 	}
-	chain, err := crv4.DialChain(endpoint)
+	chain, err := crv4.DialChainContext(ctx, endpoint)
 	if err != nil {
 		return nil, authenticatedRuntimeMetadata{}, err
 	}
@@ -380,14 +454,22 @@ func dialReleaseSubstrateChain(cfg *ResolvedConfig, endpoint string) (*crv4.Chai
 	if !strings.EqualFold(chain.GenesisHash.Hex(), cfg.Public.Chain.GenesisHash) {
 		return closeWithError(fmt.Errorf("genesis %s, want %s", chain.GenesisHash.Hex(), cfg.Public.Chain.GenesisHash))
 	}
-	finalized, err := chain.API.RPC.Chain.GetFinalizedHead()
+	finalized, err := crv4.FinalizedHeadContext(ctx, chain)
 	if err != nil {
 		return closeWithError(err)
 	}
-	authenticated, err := readAuthenticatedRuntimeMetadataAt(chain, cfg, finalized)
+	authenticated, err := readAuthenticatedRuntimeMetadataAtContext(ctx, chain, cfg, finalized)
 	if err != nil {
 		return closeWithError(err)
 	}
-	bindAuthenticatedRuntime(chain, authenticated)
+	if err := bindAuthenticatedRuntime(chain, authenticated); err != nil {
+		return closeWithError(err)
+	}
 	return chain, authenticated, nil
+}
+
+// Preserves the contextless compatibility surface for legacy callers. New
+// release work must call dialReleaseSubstrateChainContext.
+func dialReleaseSubstrateChain(cfg *ResolvedConfig, endpoint string) (*crv4.Chain, authenticatedRuntimeMetadata, error) {
+	return dialReleaseSubstrateChainContext(context.Background(), cfg, endpoint)
 }

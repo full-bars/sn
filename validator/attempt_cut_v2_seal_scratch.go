@@ -232,7 +232,14 @@ func (self *attemptCutV2SealSpool) Read(data []byte) (int, error) {
 	}
 	n, err := self.file.Read(data)
 	self.position += uint64(n)
-	return n, errors.Join(err, self.check())
+	checkErr := errors.Join(self.owner.step("after-spool-read", self.name), self.check())
+	if checkErr == nil {
+		// Reader consumers require the original EOF sentinel on normal finish.
+		return n, err
+	}
+	// A complete count lets ReadFull or a decoder accept bytes despite err.
+	// The fd advanced, but none of this read is admitted after custody loss.
+	return 0, errors.Join(err, checkErr)
 }
 
 // Refuses an oversized write before changing the private file, then checks

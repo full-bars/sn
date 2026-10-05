@@ -1,0 +1,348 @@
+{
+  "schema": "proof-drained-continuation77-scoped-root-source-review-v1",
+  "status": "SOURCE_REVIEWED_BEHAVIOR_PENDING",
+  "head": "77a4ab3814e22afbbff4fe27fbb185b52c24b936",
+  "tree": "b394563f8f70fbb483fd3847c071011127a1eb3f",
+  "parent": "ab0b1a6fc58f4d0be4bfe84d26d4bb892ddd6a64",
+  "changed_paths": [
+    "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs"
+  ],
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 39956,
+      "sha256": "9a1e5ddef9f1e73f0910c20415c4eb1c6be0c1c517ede608a260dec99b13780f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/evidence/intake.json",
+      "bytes": 2317,
+      "sha256": "1b3733851927cc3066433790d72830ee162328622d363fc2cd4bb72fce17980f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/selectors.json",
+      "bytes": 3214,
+      "sha256": "59d66f7640f85ff6d3fe228f881974d3e8676ae66dcdfacd5403fb1ea89bc75a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/operative-controls.json",
+      "bytes": 7296,
+      "sha256": "85c0981fdc98df13800fcf4efaa3d190bb171bcdb6a380a643847df2795ff50b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/source-review.json",
+      "bytes": 6834,
+      "sha256": "6801f532bcf0647147599134f61b2c38a9878a795141d9efb8edae9bf41758b8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/crate-source-census.json",
+      "bytes": 14022,
+      "sha256": "c1816f1573d4a74389c71bdae89829e6415d92175f549ea2d19ecc88e5309340"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/qualification-recipe.json",
+      "bytes": 7364,
+      "sha256": "b14c292b941ff34748c5700ed979a52f9151d1ecd09910d5ef84dc312f10ff6d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/seal.py",
+      "bytes": 16735,
+      "sha256": "aec3b7cae323a39323660e4e3ef65695cf6d68737cb29f923faa898387c1bbee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-export-v1.terminal.json",
+      "bytes": 1870,
+      "sha256": "78eab50d30271e0e468ac85d424bebe7124808949edf1db54a03491e4cec0dde"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-export.receipt.json",
+      "bytes": 2891,
+      "sha256": "5109cbf36c71ec33ea0ef0e961e12343c633356b68ac2a3da4634aef998599a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-body.stdout",
+      "bytes": 383,
+      "sha256": "b457eea5e969359c15b981191ff1d0c9d754ab0249baf89171e930c6f214c52e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-body.stderr",
+      "bytes": 361,
+      "sha256": "c5b67aac3f546e739d678694d22bb9d89427d0716a20847f959eb69f5c834d32"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/evidence/qualification-recipe.json",
+      "bytes": 22921,
+      "sha256": "361dfa33df2b28ef63d7173e2fbdae454a4d0b9f0005533980d47b74be96a554"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/controls/restore-pending-before-first-accrual-guard/historical_native_execution_tests.rs",
+      "bytes": 39965,
+      "sha256": "6d1b0bc126f20194ed45a08603784f486c0656570cef86111fb2b03f73a9ef28"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/controls/restore-pending-before-first-accrual-guard/control.diff",
+      "bytes": 701,
+      "sha256": "3b56dbaad433e909c22c2dc6dcd83e5855443cf7be9d42b9c373cdfcd4a5ce82"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/controls/ignore-retained-epoch-on-later-block/historical_native_execution_tests.rs",
+      "bytes": 39931,
+      "sha256": "f16bd973c240b5c48a62ceac95728847d6a48365e3122e9b598dc36d7291db1c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/controls/ignore-retained-epoch-on-later-block/control.diff",
+      "bytes": 800,
+      "sha256": "085ca4876583fe63827c20435595af471977ed623ed4bc5959ecd39597269ee5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/controls/restore-nonzero-original-opening-pending/historical_native_execution_tests.rs",
+      "bytes": 39975,
+      "sha256": "33aa6bc0343f2eeb40c7dfedbdf59636d0878346b10d9d58e799251f5c0a508b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/controls/restore-nonzero-original-opening-pending/control.diff",
+      "bytes": 405,
+      "sha256": "44c718f9301872139a11acf054b47644dcf9cf8cf9d4e57f69ffc4305c5fdb16"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/evidence/intake.json",
+      "bytes": 23925,
+      "sha256": "2f61439159261916369a946df88748d75acfe85d1d33593b3cef0f92e84bd654"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 37880,
+      "sha256": "82b6c91f3bf01b5897eec45039a2c678862ac7e87cde91013e10357defd080e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/sn/tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "bytes": 8563,
+      "sha256": "dd3a0ace7c633121d3f124b178d1af869b1ce41abb4e74825307a73819e44494"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/sn/tools/runtime-metadata-probe/src/historical_native_yuma_tests.rs",
+      "bytes": 13503,
+      "sha256": "fe78b4f2e542a69ac54dd0eed394878acf7cdc353c2b69b97aaaef62bb3af90e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/sn/tools/runtime-metadata-probe/src/historical_native_yuma_capacity_tests.rs",
+      "bytes": 8693,
+      "sha256": "827c914b889114a2aba74eae6c7074505d89d019abf730f05aa2fb1b5c61ed7f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/sn/tools/runtime-metadata-probe/src/historical_native_yuma_populated_tests.rs",
+      "bytes": 21804,
+      "sha256": "2b7916646c669a894010db06e46f89e65e509d4576bf1c07e132ac8095540180"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/HISTORICAL-CAPTURE.md",
+      "bytes": 3257,
+      "sha256": "3fd15393729c0e6b3f783dbf1b63f50cce02c57367f24e1d8c04d98dfe5f79b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "bytes": 7426,
+      "sha256": "72d2297ae534dccd2da0a1fadb216fdf358f8cad5b7d41cd507f0979ffa66d45"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/examples/retained-wasm-node-profile.rs",
+      "bytes": 5055,
+      "sha256": "f766922b363a856b0b075afc2767f5fe49fee68fecf2495300e6d28095b8b376"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/rust-toolchain.toml",
+      "bytes": 104,
+      "sha256": "fb3f87a4bf579a0dc02e69de34f9cda59f20b1224d3511464ee64c90885ddb49"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-capture.rs",
+      "bytes": 2368,
+      "sha256": "3d743a086e9f30e872a05ebd269c064e1ac14df99005e0a01a5101a646f0324f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+      "bytes": 1174,
+      "sha256": "6043e5f07344b549fd5f86247151cfc19ee84ef61aa6ac197508f990ed7ea0d8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/bin/runtime-transition-replay.rs",
+      "bytes": 1062,
+      "sha256": "27932de27ef19775c9c01781c275617991e1d857ef657d26de7d92531ead7e77"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical.rs",
+      "bytes": 20332,
+      "sha256": "2cc540ced332c8fa583f9c9961bd984291a01fd9109146b52a48ac855de9eb6f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_backend.rs",
+      "bytes": 7301,
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_capture.rs",
+      "bytes": 25597,
+      "sha256": "791bfabaa0a8268de27f7ea5b64b6be82afb152baeb11c0dee72251bfd919759"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_capture_feed.rs",
+      "bytes": 5382,
+      "sha256": "8eeca1214faa52d939235e50f1a2ea8a0e0976da5a3d0c96dea7a30dca71b138"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_capture_scope.rs",
+      "bytes": 10123,
+      "sha256": "0deac7d787dcad7e7036dfcddb8134e54adc8894a24d7bc25e6973c47a44c0c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_capture_scope_tests.rs",
+      "bytes": 4170,
+      "sha256": "6ce5d2282749e40200341454502d673d4ca4e245e79f2d1a20b7a549118623ae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "bytes": 25440,
+      "sha256": "78b8cd2a92711611132ece01655b9c9a90a0855821ecdc4d7fb0592be396ff1a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_fee_events.rs",
+      "bytes": 20107,
+      "sha256": "beb7d149d7b2e3c1adfdb5b11c15c1003ec96e14ca20e96bba7ebbc1a14e395b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "bytes": 14924,
+      "sha256": "ec3580ada4e2866da1468727aa7ea25b807cc6818d8791972b15f7dc0f8bb110"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_node_profile_tests.rs",
+      "bytes": 3314,
+      "sha256": "7b270abebe54d3f270298d3a12142ae6cbe7fa6319029f8301e35183d07d9686"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_observer.rs",
+      "bytes": 32157,
+      "sha256": "0deee0ffe5e4865fb94e04fd8710e8926274562c4777b06211229203468baad8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_principal.rs",
+      "bytes": 7886,
+      "sha256": "863803f9fe16ea45eb155287068de15485e35dd59eb12c212511ba95a9ecee95"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_principal_tests.rs",
+      "bytes": 8831,
+      "sha256": "743cba18c8c7e29ca5974344d445e2aeb1b37aef4dc89ba26d550a3c25a3b2ba"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_pure_hosts.rs",
+      "bytes": 5064,
+      "sha256": "f6187f0e022076c3a47e6c6de007a8618f84b5915480233733189d0bee7b3084"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/historical_tests.rs",
+      "bytes": 57256,
+      "sha256": "131d248072a2a88415b62b8ae8288c7b922610196b9353ce44e3a3698b6f432d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/lib.rs",
+      "bytes": 17694,
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/main.rs",
+      "bytes": 3292,
+      "sha256": "83f55935f40f8803c4552038a5be26983747a51176dc7f94b3cc535c3f1108c9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/replay.rs",
+      "bytes": 16621,
+      "sha256": "36030a50a42eb083aa8725b5abef025c9cf5fd6d0793ea8cc53c3a0cede2da54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/sn/tools/runtime-metadata-probe/src/replay_tests.rs",
+      "bytes": 11565,
+      "sha256": "8dc046e4abc8de0de10a9c8dba4966433711f0ddd60f13050b6fc6c68bccbe3c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-corrections/evidence/operative-controls.json",
+      "bytes": 2034,
+      "sha256": "c6f3bdb38f6ee9e0e55077ee4084db368a8658c867cb50440128c0627cd1c4b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/rust-drained-export-job-v1.json",
+      "bytes": 3612,
+      "sha256": "a7963dcbab8b4d606dad3c2c484858bfdc72d735264bc14ce00153a1892dce5c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-ordinary-v1.terminal.json",
+      "bytes": 2643,
+      "sha256": "889e83051b52f41b2a1f138bca560cbb3efcc7605130ca3da5aa04090a1672b0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-images-v1.terminal.json",
+      "bytes": 950,
+      "sha256": "6403babcf024318cbc97cc39545713f933232c60645706a4e6b330eccbf10a6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-postbuild-source-closure.receipt.json",
+      "bytes": 33094,
+      "sha256": "2fbd0398402acb13b9c69fa076ccb546fc963786a78013088db51f64432bb73c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/intake.json",
+      "bytes": 5585,
+      "sha256": "ccccb33a7d6e8b6b6002316f69e33ca450722af1f1d5fa0be4a1874d5df994b3"
+    }
+  ],
+  "checks": {
+    "clean_exact_source": true,
+    "sole_test_file_changed": true,
+    "declared_git_blobs_match": true,
+    "three_exact_single_replacement_controls": true,
+    "export_groups": 5,
+    "required_export_members": 22
+  },
+  "source_review": [
+    "Complete sole Rust diff read: only drained continuous dispatch uses independently proved epoch-key absence; legacy undrained continuous program remains unchanged.",
+    "All five expected child roots are built from independent complete storage maps before replay. Original authenticated parent hashes, epoch markers and pending storage are checked; returned replay roots do not supply expectations.",
+    "First actual accrual/drain records remain100/100/0; later jobs preserve provider9/3/6 and owner89 and produce zero new observations.",
+    "Every drained original job additionally executes the actual capture collector, compares original parent/child/runtime code identity and executes the reduced captured job. All bodies precede exclusive export publication.",
+    "Three exact omission controls restore the old pending guard, repeat first-block accrual or substitute a nonzero opening parent. Require the positive root, successful fresh compilation and exact causal assertion before claiming discrimination."
+  ],
+  "qualification": {
+    "rust_roots": 6,
+    "control_groups": 3,
+    "fresh_package_only_libtest": true,
+    "reuse_unchanged_production_engines_and_go_images": "Exact unchanged source/import closure and owned-FD custody required",
+    "admission": "Already adopted finite warm Rust class:2GiB disk/4GiB memory forecast plus1GiB existing long-body reservation with2x margin, unchanged cumulative baseline/cap and host lease; fresh per-phase preflight required."
+  },
+  "retention": [
+    "Original ab0 exporter failure remains immutable.",
+    "Original ordinary normal/race successes and b1 one-root correction remain distinct qualified scopes.",
+    "Existing ade5 long recovery remains live; no second long body or history reduction authorized."
+  ],
+  "limits": [
+    "No corrected exporter behavior, control success or dependent Go outcome inferred from source review.",
+    "No deployed source, approved mainnet runtime, signer activation or full readiness gate closure inferred."
+  ]
+}

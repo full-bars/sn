@@ -1,0 +1,13 @@
+{
+  "schema": "mainnet-repair-closed-source-review-v1",
+  "status": "SOURCE_ONLY_UNCOMPILED_UNQUALIFIED",
+  "commit": "6d0612b8a1fd3a066e55b6d6900364658e040600",
+  "tree": "f69c17ebf5caadaf2062c0f160b24c59e317d377",
+  "intake_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/repair-observation-closed/evidence/intake.json",
+  "intake_sha256": "5eb74afcc785ce73b47bb0cbb3ffb6b4aeb110c1d041dee64151e09f024e9b0a",
+  "bindings_verified": 11,
+  "scope": "Repair-specific closed/EBADF observation classification at stopped generation and active pre/post-join action checks; integrity and publication uncertainty retain precedence.",
+  "new_public_roots": 4,
+  "proposed_union_roots_per_mode": 24,
+  "qualification_pending": true
+}

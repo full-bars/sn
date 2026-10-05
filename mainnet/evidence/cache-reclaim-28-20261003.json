@@ -1,0 +1,94 @@
+{
+  "artifact_bindings": [
+    {
+      "bytes": 7050,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/reclaim.go",
+      "sha256": "ade4a3e190f208039742112ac9e54c0e65ac608e1da7ec992f4fe0109f07e872"
+    },
+    {
+      "bytes": 279,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/helper-changes.json",
+      "sha256": "48271cb0f1a30cdc8d792eb4a50ae8f821a6f4b194f6c90b5ed22f36aa6c8bc8"
+    },
+    {
+      "bytes": 523672,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/plan.json",
+      "sha256": "504a7ae9833909ee0bf36ef37a7e9a281c39136bf823115bb3de3720871fb2c7"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/plan.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 116,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/bounded-subset.json",
+      "sha256": "a29269822de31c995a70264bc767d89bf4e879e829b432330a730e6f38535977"
+    },
+    {
+      "bytes": 73,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/process-census-plan.json",
+      "sha256": "4a2860c0084d3520e6daf529d7366db051e48bc2aee27ff94f1ed633932d94dc"
+    },
+    {
+      "bytes": 73,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/process-census-apply.json",
+      "sha256": "eda411fdd859ac3bfca2f421c8fcdf1b556b7f3162087132fe611690e9f7e469"
+    },
+    {
+      "bytes": 1016,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/reference-command.json",
+      "sha256": "67797cb4777bcd3634a87b3a766d3f137f6dee0a494b60f3d4041d862d9a2bee"
+    },
+    {
+      "bytes": 815,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/reference-scope.json",
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/reference-scan.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/reference-scan.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/reference-scan.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 47,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/apply.stdout",
+      "sha256": "686a75a294bed8e96680a1148faf163496e7df9650233cf6f37b4ac75edfc46e"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/apply.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/apply.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 523953,
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-28-20261003/receipt.json",
+      "sha256": "1d6c70a32a220317e18c6235fc5f7a69731fe419c99a1a7b7fdaf16a3b4a2ec3"
+    }
+  ],
+  "deleted_archives": 1722,
+  "free_bytes_after": 125233565696,
+  "free_gib_after": 116.63284683227539,
+  "limits": [
+    "Same age24h/archive magic/regular/single-link/physical identity/process/reference guards as reclaim27; helper task destination only changed.",
+    "No source, evidence, module, ELF executable or active cache removed; no process stopped.",
+    "Admission must recheck actual future job forecast, not inherit this free-space snapshot."
+  ],
+  "reclaimed_bytes": 5810118656,
+  "status": "VERIFIED_INACTIVE_COMPILER_ARCHIVES_RECLAIMED"
+}

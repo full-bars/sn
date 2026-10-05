@@ -1,0 +1,47 @@
+{
+  "schema": "runtime-source-refresh-v1",
+  "status": "READ_ONLY_UPSTREAM_NOT_AUTHORITY",
+  "observed_at": "2026-10-03T02:11:20.369731+00:00",
+  "latest_returned_release": "v471",
+  "main_commit": "c004cebf360f4088187ee49d851dfb1a1eaaf710",
+  "main_runtime_spec_version": 471,
+  "v471_manifest_spec_version": 471,
+  "previous_observed_runtime": 472,
+  "previous_observation": "runtime-472-route-observation-20261002.json",
+  "files": {
+    "/mnt/data/sn-testnet/root-runtime472-upstream-refresh-20261003/main-ref.txt": {
+      "bytes": 128,
+      "sha256": "b62ee6d031659366655c7dde2181cd1e31ef0d68bab669064f46f93d5ba50237"
+    },
+    "/mnt/data/sn-testnet/root-runtime472-upstream-refresh-20261003/main-runtime-lib.rs": {
+      "bytes": 116621,
+      "sha256": "b3c367cbac5b23638c9be41b2ea029008b9e451555c0a926092159c77bd90d7b"
+    },
+    "/mnt/data/sn-testnet/root-runtime472-upstream-refresh-20261003/releases.json": {
+      "bytes": 133437,
+      "sha256": "645a91bc4d7ca2a8ab843dd84b12f044db6e63e79b2610419e285293208ec635"
+    },
+    "/mnt/data/sn-testnet/root-runtime472-upstream-refresh-20261003/tags.txt": {
+      "bytes": 112,
+      "sha256": "41070ff2a25ee13ffe53aa5fe515ae8e1fd56497bb5c90bb7a02ccaf5c3d3750"
+    },
+    "/mnt/data/sn-testnet/root-runtime472-upstream-refresh-20261003/v471-pending-release.json": {
+      "bytes": 579,
+      "sha256": "fde3543cdbf689924c59af1d687fdf10fd635051ed00f3eda01041bbe1b9d002"
+    },
+    "/mnt/data/sn-testnet/root-runtime472-upstream-refresh-20261003/v471-subtensor-digest.json": {
+      "bytes": 4969,
+      "sha256": "963e32da9a3f96148905d257874fd4cc7428dc93e43e9980bc001e8f05711ef8"
+    },
+    "/mnt/data/sn-testnet/root-runtime472-upstream-refresh-20261003/v471-upgrade-manifest.json": {
+      "bytes": 1980,
+      "sha256": "c565d891517ea3dfc36cfe1ee283852a582d89e889bbce57ac49afdd5912e40c"
+    }
+  },
+  "limits": [
+    "Returned tags/releases/main do not establish global absence of v472 source or another branch.",
+    "No fresh chain runtime or finality observation was performed.",
+    "v471 release and source do not authorize previously observed v472 bytecode.",
+    "No signing, submission, deployment or activation."
+  ]
+}

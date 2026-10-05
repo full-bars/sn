@@ -1,0 +1,125 @@
+{
+  "control_manifest_sha256": "32157ee04af772e4b81c770ba9d33d373a588a47718505ae1eb74d226f6118ed",
+  "controls": [
+    {
+      "assertion_excerpts": [
+        "monitor_claim_test.go:111: public monitor refused independently configured claim expectations 2 monitor service policy: service policy requires at least one role, at most eight validators and four each of operators, providers and claim sources within shared output capacity"
+      ],
+      "intended_failed_roots": [
+        "TestMonitorClaimPublicExpectedPoolObservesAcceptedNotPaid"
+      ],
+      "kind": "exact old4e loadMonitorServices operative body; current declarations retained",
+      "name": "old-public-policy",
+      "race_reports": 0
+    },
+    {
+      "assertion_excerpts": [
+        "monitor_claim_state_test.go:64: fresh acknowledgement or later finalized block hid stalled acceptance &{2026-01-02 03:06:05 +0000 UTC 2026-01-02 03:06:05 +0000 UTC 2026-01-02 03:06:05 +0000 UTC 2026-01-02 03:06:05 +0000 UTC 2026-01-02 03:06:05 +0000 UTC 2026-01-02 03:06:05 +0000 UTC overdue 1 0 overdue 0x3229e8d9e1c0 [{7 0x3229e8f50dc0 0x3229e8f50580 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:06:05 +0000 UTC}] true}",
+        "monitor_claim_state_test.go:80: weaker API reporting reset actual retained proof progress 2026-01-02 03:04:06 +0000 UTC {1 0 0 0 1 1 0 0 0 1 2026-01-02 03:04:06 +0000 UTC}"
+      ],
+      "intended_failed_roots": [
+        "TestMonitorClaimHeartbeatCannotMoveAcceptanceDeadline",
+        "TestMonitorClaimWeakerReportingCannotResetProofProgress"
+      ],
+      "kind": "explicit invariant omission, not historical source",
+      "name": "heartbeat-progress-omission",
+      "race_reports": 0
+    },
+    {
+      "assertion_excerpts": [
+        "monitor_claim_state_test.go:103: receipt erased earlier proof or invented transferred payment {1 0 1 0 0 0 1 0 0 0 2026-01-02 03:04:06 +0000 UTC}"
+      ],
+      "intended_failed_roots": [
+        "TestMonitorClaimReceiptRetainsEarlierMerkleWitness"
+      ],
+      "kind": "explicit invariant omission, not historical source",
+      "name": "proof-retention-omission",
+      "race_reports": 0
+    },
+    {
+      "assertion_excerpts": [
+        "monitor_claim_state_test.go:188: contradiction replaced original receipt &{2026-01-02 03:04:06 +0000 UTC 2026-01-02 03:04:06 +0000 UTC 2026-01-02 03:04:06 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC  0 0 ok 0x1b5458fd61c0 [{7 0x1b545905cc60 <nil> 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC}] true}"
+      ],
+      "intended_failed_roots": [
+        "TestMonitorClaimContradictionCannotRewriteRetainedReceipt"
+      ],
+      "kind": "explicit retained-evidence comparison omission, not historical source",
+      "name": "receipt-contradiction-omission",
+      "race_reports": 0
+    },
+    {
+      "assertion_excerpts": [
+        "monitor_claim_composition_test.go:240: public claim monitor exited before the expected sample",
+        "monitor_claim_composition_test.go:243: public claim monitor exited before the expected sample"
+      ],
+      "intended_failed_roots": [
+        "TestMonitorClaimPublicOutageAndForeignIdentityPreservePeer",
+        "TestMonitorClaimPublicCompletedCheckpointLossPreservesPeer"
+      ],
+      "kind": "explicit healthy-peer isolation invariant omission",
+      "name": "peer-cancellation-omission",
+      "race_reports": 0
+    },
+    {
+      "assertion_excerpts": [
+        "monitor_claim_composition_test.go:428: public claim sample did not complete"
+      ],
+      "intended_failed_roots": [
+        "TestMonitorClaimPublicLostAckReopensExactCheckpoint"
+      ],
+      "kind": "explicit continuation invariant omission via premature terminal branch",
+      "name": "uncertain-continuation-omission",
+      "race_reports": 0
+    }
+  ],
+  "files": {
+    "evidence/controls-normal-heartbeat-progress-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-heartbeat-progress-omission.jsonl": "5623a02a0a97611cb94556211e327ba05083e656c8a95faa3a92e794d8f1ccf0",
+    "evidence/controls-normal-heartbeat-progress-omission.phase": "17ee56de25d5f022be97a63e8ed2703f235e26b771e38097b49b0db58e9f293d",
+    "evidence/controls-normal-heartbeat-progress-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-jobs.tsv": "fd005fbf5e11ec179f7f24b815e760c9168915a73e8e9ba04115656a1230fb86",
+    "evidence/controls-normal-old-public-policy.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-old-public-policy.jsonl": "d65855fa107d2b6d583888121b22ae4ca0eb6fac4cd987ba58093fe03f7f760b",
+    "evidence/controls-normal-old-public-policy.phase": "f5495ac659212d5f03671091f7c7477b7e26c5f0313ddc25b8b39f535066a100",
+    "evidence/controls-normal-old-public-policy.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-peer-cancellation-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-peer-cancellation-omission.jsonl": "98b4d02dc418fb0bc169b44a593b15e54ef2898156deb042c8c1751cb60e5af0",
+    "evidence/controls-normal-peer-cancellation-omission.phase": "9def05216bc0a2c379af41806587c4ec2fcd5a0b480da951a7fa5a208c8249e6",
+    "evidence/controls-normal-peer-cancellation-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-proof-retention-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-proof-retention-omission.jsonl": "2640e610d6674a81eee35326893ece2f19fe600567a93db5b7ebb881ceff6a5e",
+    "evidence/controls-normal-proof-retention-omission.phase": "af6b99af7d39d20d78e2532cbf58da19beb194dde40c6e4d98591621da6b99a7",
+    "evidence/controls-normal-proof-retention-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-receipt-contradiction-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-receipt-contradiction-omission.jsonl": "77594e38155a56117788c6148a8e5abcae09c3823a3b64284d3183df225a77be",
+    "evidence/controls-normal-receipt-contradiction-omission.phase": "66fcda845e459c947fef319d306ceb731fefca312b53a2899204816dcc912db7",
+    "evidence/controls-normal-receipt-contradiction-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-uncertain-continuation-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-uncertain-continuation-omission.jsonl": "602c166ac64b8a76dbed88751d5a8925329038ebae85e405a4078e3f60ddc2d0",
+    "evidence/controls-normal-uncertain-continuation-omission.phase": "abc743e054a9343b45d0b1b5911eab5757817b1787b6eef0dc970c7cca44ae3e",
+    "evidence/controls-normal-uncertain-continuation-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls/heartbeat-progress-omission/heartbeat-progress-omission.go": "b37b4198f10a7f56da4ffdbcab75090f995e5af12afb1f8629809af68fd17321",
+    "evidence/controls/heartbeat-progress-omission/overlay.json": "69d92a5956917dd08ff783fed2a35e46b935f7bc5455abfb1ca4f43c02b50959",
+    "evidence/controls/manifest.json": "32157ee04af772e4b81c770ba9d33d373a588a47718505ae1eb74d226f6118ed",
+    "evidence/controls/old-public-policy/old-public-policy.go": "6bb555ac9737b391d6631da58aa3a6e3218df673a74d288c2a3b8e212c010b85",
+    "evidence/controls/old-public-policy/overlay.json": "b9f0d34bb9bbbd12fb1d893d413e8124bd0a595d5f1bc8e902baea286a98cfe7",
+    "evidence/controls/peer-cancellation-omission/overlay.json": "f0877b6e1f99d9db7f65e2eccd385a8048db7c967e2146b6b383095946a607be",
+    "evidence/controls/peer-cancellation-omission/peer-cancellation-omission.go": "f34ab480092b4154240b38b2d27c45a62dfdff63f8523515d143bbe52fafbd43",
+    "evidence/controls/proof-retention-omission/overlay.json": "2c268a460c7e517c24d38d7a52d1190d74ff7ce26abd1007afd7d0074dcd578f",
+    "evidence/controls/proof-retention-omission/proof-retention-omission.go": "1ee1558f781fd731002b047b6c6a99b6a867426bb403ecd9a43ce5cd382ff331",
+    "evidence/controls/receipt-contradiction-omission/overlay.json": "b67e42d526028423530f5bf01d3f807a8ee38aa28b86b75df68eb33aff920d4b",
+    "evidence/controls/receipt-contradiction-omission/receipt-contradiction-omission.go": "492c83f124d9ff3ce732f474e18deffd84ea0fb0fcf980f6a61f9aff06d0fe6b",
+    "evidence/controls/uncertain-continuation-omission/overlay.json": "7506844f55f68e59b23d8bc760eb8fbca00d199229eca924e515759154d1f87f",
+    "evidence/controls/uncertain-continuation-omission/uncertain-continuation-omission.go": "01ce0bf572a1df06782ee6dc9d595025101896344002a69cd483282e00bb466d",
+    "evidence/run-controls.sh": "6b45d74164124bd1fe2cc7671b4c6b916a3dedfc9bd6384a7373efddce8f342e"
+  },
+  "intended_failed_roots": 8,
+  "limits": [
+    "One exact old public-policy body and five explicit invariant omissions.",
+    "No live claim submission or signing."
+  ],
+  "schema": "sol-claim-consumer-800-causal-normal-v1",
+  "source_commit": "80030acb1024f8a74967ae9948ceea6ed9e5faee",
+  "source_tree": "4249ab40291e6e5c6d48cba44ae0fb3a5eb185f6",
+  "status": "PASS_SCOPED_CAUSAL_NEGATIVES"
+}

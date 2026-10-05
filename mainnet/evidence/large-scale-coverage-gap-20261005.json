@@ -1,0 +1,43 @@
+{
+  "schema": "mainnet-large-scale-coverage-gap-v1",
+  "status": "IDENTIFIED_NOT_YET_QUALIFIED",
+  "review": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-body-budget-focused-review-v1.json",
+    "sha256": "b37e31fe54247027b95e1916ed9e65622edb608200804daa7bcae6eb4a43bbc8"
+  },
+  "additional_required_roots": [
+    "TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage",
+    "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues",
+    "TestEconomicConservationPublic2048UidPhysicalHeadArchiveAndRestore",
+    "TestEconomicConservationPublicLargeProfileRestoresCompleteProducerAndActiveWitness",
+    "TestEconomicConservationPublicLargeProfileRestoresCompleteProducerAndColdWitness"
+  ],
+  "capacity_finding": {
+    "basis": "The outer whole-root900 limit can expire before two individually admitted900-second reads complete. Assertions and1024/2048 census remain unchanged.",
+    "current_go_seconds": 900,
+    "each_read_budget_seconds": 900,
+    "proposed_child_seconds": 3720,
+    "proposed_normal_go_seconds": 3600,
+    "public_sample_count": 2,
+    "resource_review": "Resource owner message ACKed only this prospective finite normal correction and same guarded SHORT class; fresh exact source/image/adoption and lease fit are still required.",
+    "root": "TestEconomicConservationPublic1024UidPhysicalHeadAndArchive",
+    "standalone_runtime_max_seconds": 3960,
+    "stop_seconds": 90,
+    "whole_horizon_seconds": 4050
+  },
+  "claim129_mode_budgets": {
+    "normal": {
+      "child_seconds": 3720,
+      "go_seconds": 3600,
+      "runtime_with_new_list_seconds": 3960,
+      "whole_seconds": 4050
+    },
+    "race": {
+      "child_seconds": 14520,
+      "go_seconds": 14400,
+      "runtime_with_new_list_seconds": 14760,
+      "whole_seconds": 14850
+    }
+  },
+  "rule": "Retain all existing 2503 roots and 227 controls. Cover these five additional roots explicitly in both modes, or establish exact retained-result applicability. No implicit success, weakened scale, or repeated successful work."
+}

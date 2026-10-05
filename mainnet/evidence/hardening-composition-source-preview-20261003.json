@@ -1,0 +1,20 @@
+{
+  "schema": "mainnet-hardening-composition-source-preview-v1",
+  "status": "GIT_ONLY_NOT_QUALIFIED_NOT_PUBLISHED",
+  "fixture_resolution_commit": "5029c6c2636ec92b6b4f1e0aa53e20e649321628",
+  "additional_joins": [
+    {
+      "source": "6d0612b8a1fd3a066e55b6d6900364658e040600",
+      "commit": "6731a2a3ced6a5be458ec4b9a6e5f494d892753c",
+      "tree": "54790265fc502fca83946b1f8cd74e646fb54d3f"
+    },
+    {
+      "source": "e65bd674c5587998c1d9162dbe187c1aa7f7863b",
+      "commit": "b704fcde2c5781fe98aaacc22d79c6c748e07ccc",
+      "tree": "f273d27efb497360f07873c0b61fa9fe57c8a70f"
+    }
+  ],
+  "review_commit": "b704fcde2c5781fe98aaacc22d79c6c748e07ccc",
+  "main_unchanged": "f796211c34c3fa76a0bc4747ccabc9eb2c748fa7",
+  "remaining": "Final source census/intakes, exact composed dependency graph, qualification, host and runtime admission."
+}

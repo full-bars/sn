@@ -1,0 +1,138 @@
+{
+  "schema": "mainnet-independent-source-review-v1",
+  "status": "SOURCE_REVIEWED_UNCOMPILED_UNEXECUTED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn",
+    "head": "6580a2b48e9bb6d388869129a4f508d49f815817",
+    "tree": "ca168e7688fced6ff59e2ac7e0b5cc7b273960c3",
+    "base": "121e7eeb49c7bbffd43cd640c72a14f2bec7028d",
+    "clean": true,
+    "sparse": true
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/evidence/intake.json",
+    "sha256": "f714a9f1815e9b7010bd9f22faab6b3166a8025d9c7a007ed76788ed001f2bff"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31",
+      "relative": "go.mod",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981",
+      "relative": "go.sum",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 22724,
+      "sha256": "4b1783e38f44bc8e86c163aef7442e4ac2f791bd2df11c022f7fe7f7765a714e",
+      "relative": "mainnet/economic_conservation_archive.go",
+      "git_blob": "aa5bea37a13d92d3e0b0473238216fffb696bef8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/mainnet/economic_conservation_archive_index_test.go",
+      "bytes": 4031,
+      "sha256": "4cfbcfc8c776663368f627eb0019db8fd1d2833562cfe06d58f3521155047e7b",
+      "relative": "mainnet/economic_conservation_archive_index_test.go",
+      "git_blob": "f9117fedc05e4dfd4b4fa26f4c810f86644a7357"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/mainnet/economic_conservation_receipt_test.go",
+      "bytes": 8027,
+      "sha256": "d9ce5ac212ea843d03401c67a721aabb91e483401622c26bc44d836e9e98643f",
+      "relative": "mainnet/economic_conservation_receipt_test.go",
+      "git_blob": "c722ea3721daec1a7c31cf1c02542a794415ad85"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/mainnet/economic_conservation_fee_retention.go",
+      "bytes": 9583,
+      "sha256": "dd6465a308b1081ca82ef7f3eac63879d632fbf20daf43198b75bd418b744c08",
+      "relative": "mainnet/economic_conservation_fee_retention.go",
+      "git_blob": "03cb5af77417600d0e02a825fe8cbd019186831e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/mainnet/economic_conservation_fee_retention_test.go",
+      "bytes": 12710,
+      "sha256": "01af0eda7405deef30b70ee6a0af486b429b56787c0b5b0a510416047b93e46a",
+      "relative": "mainnet/economic_conservation_fee_retention_test.go",
+      "git_blob": "ddcda8e342df86a38fe111c37f12e4df0f337c81"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/mainnet/economic_conservation_fees.go",
+      "bytes": 14316,
+      "sha256": "434dda13e6f63ac811747ae56d626389bdb91bbd70c6fe547a806b79033ebc47",
+      "relative": "mainnet/economic_conservation_fees.go",
+      "git_blob": "e167e0a540e648fe1b601402b923488537de42cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/mainnet/economic_conservation_archive_test.go",
+      "bytes": 21418,
+      "sha256": "0a2d11cfb0099b7ef568a572e177b162cc7b4822b801d190b0f544af0832efb7",
+      "relative": "mainnet/economic_conservation_archive_test.go",
+      "git_blob": "9911502474ff188746177940433fa327fc2033a2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/sn/mainnet/economic_conservation_test.go",
+      "bytes": 27285,
+      "sha256": "a8053264fa890a531aca2c7011c100b54368cba94a85cb4a8f5566b5cfc3c807",
+      "relative": "mainnet/economic_conservation_test.go",
+      "git_blob": "e72540962f53727e76959a34971088d4f8084561"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/evidence/selectors.json",
+      "bytes": 20097,
+      "sha256": "eb85af4a9fd38985f2ac0acf2b0775041dcc33b96fba624d2bf335a3428e7167"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/evidence/operative-controls.json",
+      "bytes": 11002,
+      "sha256": "22f9c27a8a7ebab9d98301b9d59dbdc056a07bdd8811b4db9f61ba257504072d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-retention-logical/evidence/intake.json",
+      "bytes": 10284,
+      "sha256": "7c1e2dcf859f8e8fba612afb3c15fc1aa4a04b546d3429ad5fc487e11030aa49"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/evidence/intake.json",
+      "bytes": 4765,
+      "sha256": "3fe8a5f54800538fb6702fd224811ea078a998563a9582e6e2f7f4f5a52a2a3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-retention-121-20261004/evidence/retention121-normal-two-failure-events.jsonl",
+      "bytes": 6098,
+      "sha256": "9ec432ec5fb4138890c64ab1feb47f0e5c7998dfedfaeadd38c25d6c5b9cebaf"
+    }
+  ],
+  "exact_changed_paths": [
+    "mainnet/economic_conservation_archive.go",
+    "mainnet/economic_conservation_archive_index_test.go",
+    "mainnet/economic_conservation_receipt_test.go"
+  ],
+  "scope": {
+    "roots_per_mode": 45,
+    "controls_per_mode": 7,
+    "vet": "./mainnet",
+    "original": "12133PASS2FAIL6UNRUN remains immutable; selected corrected successor is separate.",
+    "fixtures": "Exact1709/Coread6/source-bound964 exports unchanged."
+  },
+  "review": [
+    "Nil archive legacy receipt-only indexing remains valid and idempotent; no implicit fee retirement.",
+    "Nil view/original/compacted, closed custody, empty/invalid/duplicate segment catalogs and invalid retirement references refuse before retainFeeEvidence or other index mutations.",
+    "Retiring branch executes only after pre-admission returns true; no unconditional nil dereference or last-element indexing.",
+    "Three new deterministic roots test nil operands, malformed catalog cases and lost custody with unchanged index counters/source identity; existing known-receipt retry included.",
+    "Per-command observer3/archive-plan2 fixture correction exactly matches separately reviewed6820; production return codes unchanged."
+  ],
+  "retained_failure": "121 normal33PASS2FAIL6UNRUN, c04normal48PASS1FAIL, original663race17PASS15FAIL14UNRUN remain independently retained.",
+  "limits": [
+    "No new behavioral pass inferred from source review.",
+    "Helper admission is not a replacement for full policy/checkpoint/archive validation at public boundaries.",
+    "Whole provider economic witness and final composed release remain incomplete."
+  ]
+}

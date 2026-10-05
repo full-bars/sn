@@ -1,0 +1,75 @@
+{
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 2147483648,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 1080,
+    "TimeoutStopSec": 90
+  },
+  "forecast": {
+    "basis": "Retained cache and old stages; fresh exact Git blobs plus2x64MiB graph outputs,4MiB staging log and bounded new directory metadata fit existing1GiB growth limit. No global floors/cap/margin change.",
+    "entry_data_bytes": 10737418240,
+    "entry_memory_bytes": 113816633344,
+    "growth_stop_bytes": 1073741824,
+    "memory_max_bytes": 2147483648
+  },
+  "fresh_bytes": 4187267,
+  "fresh_files": 68,
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current-component-delta-metadata-job-v1.json",
+    "sha256": "7ba54bbfe24f27c150699bcf54e0a01ce38602772c9aa98ad82d21eb0caefcff"
+  },
+  "ordering": "Root must append actual intervening bounded-copy package and mainnet fixture process waits plus their closed USER readbacks. No overlap with their active owners. All already-bound actual470 nativefee normal/race passes are retained without repeat.",
+  "parent_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-nativefee470-026b-c198-compiler-source-closure-v1.json",
+    "sha256": "c8abf263adca779b8ad2bb7c86ffa0646f522d338a231517fb5505947e367dbe"
+  },
+  "phase_bounds": {
+    "each_graph": 300,
+    "graphs": 2,
+    "stage": 180,
+    "total": 780
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 1073741824,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "7ba54bbfe24f27c150699bcf54e0a01ce38602772c9aa98ad82d21eb0caefcff",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 2147483648,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "network_dependency_count": 0,
+    "runner_sha256": "ffbbe769d8999b01b2172b6b8ee6675a585f7433b6c99c8ffedc682c92867b1d",
+    "short_count": 0,
+    "status": "ADOPTED_CURRENT_COMPONENT_DELTA_CACHED_METADATA"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/current-component-delta-metadata-adoption-v1.json",
+  "reused_files": 35633,
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-current-component-delta-metadata-v1.py",
+    "sha256": "ffbbe769d8999b01b2172b6b8ee6675a585f7433b6c99c8ffedc682c92867b1d"
+  },
+  "source_delta_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/default-f0b-983-component-source-proof-v1.json",
+    "sha256": "3548173879a320fee41767efe37afee2d29eb6b15b50174e6114e69fcc3fa708"
+  },
+  "source_manifest": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-f0b-983-source-manifest-v1.json",
+    "sha256": "9f87a66d24baf532fe7a7c9c0a154d20f08f944e2be54ad608f6c01e3da5e136"
+  },
+  "stage_helper": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/stage-current-component-delta-v1.py",
+    "sha256": "6ce9d4a38724d53ea439a30b1597fcf97d4599b30a223b06bddace2c67d29f84"
+  },
+  "status": "READY_FOR_ROOT_ADOPTION_AFTER_ACTUAL_CURRENT_OWNERS_JOIN",
+  "validation": "AST, finite Git metadata/blob deltas and original pins only. No stage, Go, compiler, body, service, cache or network action by author.",
+  "whole_owner_horizon_seconds": 1170
+}

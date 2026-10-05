@@ -1,0 +1,12 @@
+{
+  "schema": "provider-optional-domain-nonregular-source-finding-v1",
+  "source": "ec67629afc35dacddb354a7a882562d97e3e5940",
+  "path": "miner/close_report_domain.go",
+  "git_blob": "2b47279e31f61d35968ac764ab5006404f3b4d1e",
+  "bytes": 1167,
+  "sha256": "1ab1e74ba053d3108422b4ec575b99f3dc4df640225c3a75bf2f6992c01e84ad",
+  "finding": "Optional domain file reader opens path with blocking os.Open before regular descriptor admission. A FIFO with no writer can block provider startup although invalid or missing optional evidence should leave it running unsigned. Byte limit does not bound open latency.",
+  "required_fix": "Open/admit nonblocking no-follow regular descriptor, finite read and immutable digest. Nonregular, missing, oversized or invalid optional input returns zero domain and diagnostic; ordinary provider admission remains independent. Avoid imposing private-key permission policy on this public domain.",
+  "deterministic_coverage": "FIFO with no writer, directory/device/symlink as supported, complete-document and finite byte boundary, actual provider fallback, swarm isolation.",
+  "status": "SOURCE_FINDING_FIX_AUTHORING_NO_EXECUTION"
+}

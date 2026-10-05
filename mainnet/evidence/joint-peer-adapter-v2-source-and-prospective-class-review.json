@@ -1,0 +1,89 @@
+{
+  "closed_model_proof_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+      "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+      "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected1ea-native-model30-closed-terminal-proof-v1.json",
+      "sha256": "819d8191629441e62f6e450e24a1d01cf0c5a649d4020d679fe0a0602efb9c92"
+    }
+  ],
+  "created_at": "2026-10-05T06:24:41.870839+00:00",
+  "current_completed_compiler": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-main-sn-core9-normal-v1.receipt.json",
+    "sha256": "1150f93836263e5035a4f1fc8809e3d989d79c773a9a9ed85c5e6a52a1b490cb"
+  },
+  "executed": {
+    "body": false,
+    "compiler": false,
+    "docker": false,
+    "systemd": false,
+    "tests": false
+  },
+  "final_pair_requirements": [
+    "Separate immutable current Server compiler and nativefee11 body variants; exact job/runner/image/source/adoption pins and two USER full-cgroup identities.",
+    "One immutable shared initial sample/floor and first-generation claims; neither member nor later phase resets the growth allowance.",
+    "Canonical successor341abb must cover each entire owner+stop; no other compiler/body/DB may join.",
+    "Actual adapter30 PASS, fresh healthy admission and Root explicit exact pair adoption are required.",
+    "A future DB phase requires a separate class; model reserve release here does not authorize DB overlap."
+  ],
+  "module": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/v2/joint_peer_admission.py",
+    "sha256": "c69f80c39229396e19affa3747040cf7329cffac3c4dcba3618dde456db6ba32"
+  },
+  "prospective_joint_class": {
+    "accounting_floor_bytes": 0,
+    "body_memory_max_bytes": 2147483648,
+    "closed_former_model_reservation_released_only_for_this_new_pair": true,
+    "common_floor": "max(6307319808, first_cohort_available_bytes - 10737418240)",
+    "compiler_forecast_bytes": 4294967296,
+    "compiler_memory_max_bytes": 8589934592,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_entry_bytes": 10737418240,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_entry_bytes": 300128382976,
+    "healthy_memory_floor_bytes": 103079215104,
+    "light_body_forecast_bytes": 1073741824,
+    "margin": 2,
+    "memory_entry_bytes": 113816633344,
+    "memory_swap_max_bytes": 0,
+    "one_common_growth_bytes": 10737418240,
+    "reason": "All prior model cohorts have actual joined terminal/cleanup0 proofs; zero new DB is allowed in this pair. Numeric baseline, cap, healthy floors and margin remain unchanged."
+  },
+  "pure_test_proposal": {
+    "data_entry_bytes": 10737418240,
+    "hard_memory_bytes": 268435456,
+    "memory_entry_bytes": 113816633344,
+    "phase_seconds": 60,
+    "requires": "actual exclusive Main9 USER closure and exact30 actual PASS before joint adoption",
+    "swap_bytes": 0,
+    "whole_data_growth_bytes": 67108864,
+    "whole_owner_seconds": 180
+  },
+  "schema": "joint-peer-source-and-prospective-class-review-v2",
+  "source_checks": {
+    "added_gc_roots": 6,
+    "ast_parse": true,
+    "deactivating_peer_does_not_cancel_running_healthy_owner": true,
+    "first_gc_requires_original_claim_terminal_and_all_waits": true,
+    "old24_test_roots_ast_identical": true,
+    "post_departure_gc_retains_original_records": true,
+    "replacement_invocation_revival_and_missing_terminal_refused": true,
+    "total_test_roots": 30
+  },
+  "source_handoff": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/v2/HANDOFF-v2.json",
+    "sha256": "7c38478184e71433e8bc2746abda44b2af0fd9ac01d03d382af6c9b16d565d4d"
+  },
+  "status": "SOURCE_ACK_ACTUAL30_TEST_AND_FINAL_PAIR_PENDING",
+  "tests": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/joint-peer-admission/v2/test_joint_peer_admission.py",
+    "sha256": "77e9b7f9303513701b99491dd0baca89d6782b2f0541ef964798bf15971c4dca"
+  }
+}

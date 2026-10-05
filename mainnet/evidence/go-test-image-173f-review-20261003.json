@@ -1,0 +1,68 @@
+{
+  "schema": "go-test-image-173f-qualification-review-v1",
+  "source": {
+    "head": "173f3dc35b4e5fb62093579db9e2eb8bf30ec531",
+    "parent": "6a8d337cb681556610fd590187cac3d3783e18b6",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn",
+    "tree": "7cef70c7ac0dd2238d94f8e27817707d0f98ac2a"
+  },
+  "receipt": "/mnt/data/sn-testnet/sol-go-test-image-173f-independent-20261003/evidence/go-test-image-guard6-receipt.json",
+  "receipt_sha256": "017b69045050bf64409ad6f7345cbf3697752ff0d83a18fcd2c91dcac362d3cc",
+  "verified_bindings": {
+    "/mnt/data/sn-testnet/sol-go-test-image-173f-independent-20261003/evidence/guard6.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-go-test-image-173f-independent-20261003/evidence/guard6.stderr": {
+      "bytes": 104,
+      "sha256": "91e7b4890ab4a0498335c8aec919273178aae69a01085aca3337f4c4994afd12"
+    },
+    "/mnt/data/sn-testnet/sol-go-test-image-173f-independent-20261003/evidence/guard6.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-go-test-image-173f-independent-20261003/source/scripts/qualification/GO-TEST-IMAGES.md": {
+      "bytes": 2477,
+      "sha256": "92f034b9574c6331632a28b93c9e55b2ff3727008bb629f0758a0a4b84dd5b57"
+    },
+    "/mnt/data/sn-testnet/sol-go-test-image-173f-independent-20261003/source/scripts/qualification/cargo_control.py": {
+      "bytes": 19934,
+      "sha256": "b720d63c788c167c5afadc7c2d82e5c765c4f627fdc7032ec80be818c91820ce"
+    },
+    "/mnt/data/sn-testnet/sol-go-test-image-173f-independent-20261003/source/scripts/qualification/go_test_image.py": {
+      "bytes": 10122,
+      "sha256": "63444702ee731ef3a1b22d6073fb7b4e436691c7cf6a41b475e237f25286bb11"
+    },
+    "/mnt/data/sn-testnet/sol-go-test-image-173f-independent-20261003/source/scripts/qualification/go_test_image_test.py": {
+      "bytes": 3694,
+      "sha256": "0be2e99a0b4ec1253a1156e11eaa2dfa32db008eafc944bed19472aae4679f73"
+    }
+  },
+  "changed_files": [
+    {
+      "bytes": 2477,
+      "git_blob": "8ed7f6136ac3d4c4ae8dc4c61abc10dace3503e8",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/GO-TEST-IMAGES.md",
+      "relative": "scripts/qualification/GO-TEST-IMAGES.md",
+      "sha256": "92f034b9574c6331632a28b93c9e55b2ff3727008bb629f0758a0a4b84dd5b57"
+    },
+    {
+      "bytes": 10122,
+      "git_blob": "c03636e7cf1f94f61aec7e203f8e1b058464f4c0",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/go_test_image.py",
+      "relative": "scripts/qualification/go_test_image.py",
+      "sha256": "63444702ee731ef3a1b22d6073fb7b4e436691c7cf6a41b475e237f25286bb11"
+    },
+    {
+      "bytes": 3694,
+      "git_blob": "fd924287a08fd1d41c63675801d7cb764257f5e5",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/go_test_image_test.py",
+      "relative": "scripts/qualification/go_test_image_test.py",
+      "sha256": "0be2e99a0b4ec1253a1156e11eaa2dfa32db008eafc944bed19472aae4679f73"
+    }
+  ],
+  "shared_process_guard_matches_current_main": true,
+  "scope": "Six actual-file stdlib controls only; application source/build/test behavior not inherited. Exact original executable predicate remains unobserved.",
+  "main_integration": "6f6169c636753de25e7b44ef37f72b97704a1377",
+  "only_three_workflow_files_changed": true
+}

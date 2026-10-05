@@ -1,0 +1,36 @@
+{
+  "schema": "native-readonly-restore-mode-source-finding-v1",
+  "status": "CONFIRMED_SOURCE_INTEGRATION_GAP_FIX_IN_PROGRESS",
+  "core_head": "ad6fc3a191a3d777b9a18aae63a03c4554c95dd6",
+  "server_head": "4a5bbdaeb6945d1b0f3c8a6a297da639580a83d5",
+  "finding": "Native finality publisher seals files0400. Core physical inventory currently admits files only0600, and restore copy creates0600 without sealing back to declared original mode. Actual native artifact complete restore cannot preserve original immutable evidence through this composition.",
+  "required_fix": [
+    "Admit reviewed private0400 and0600 regular-file modes without admitting group/world permissions.",
+    "Preserve exact declared original mode on restore staging before sync/publication/readback; retain partial failure outcomes.",
+    "Deterministic public inventory/restore/reconciliation controls for0400/0600 and rejected0640/0644, including interrupted mode-sealing.",
+    "Qualify narrow Core successor and actual native cohort continuation without weakening native finality custody."
+  ],
+  "verified_bindings": [
+    {
+      "path": "/home/by/urnetwork/connect/durablevolume/inventory_physical_linux.go",
+      "bytes": 4568,
+      "sha256": "c11a12aad4ef8b748c8ecab83385ef0156e017075ee11400dd7904a38848090a"
+    },
+    {
+      "path": "/home/by/urnetwork/connect/durablevolume/preparation_restore_linux.go",
+      "bytes": 23677,
+      "sha256": "129ef6f0a9db91685f6887f9a5fb506167f171db2d0801efbc887d47cf917d03"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/census_files_linux.go",
+      "bytes": 10267,
+      "sha256": "7632367061b1ce9df359dc381004c68773198439741e9da6996c29251da1d515"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_finality_capture.go",
+      "bytes": 17840,
+      "sha256": "e6e6950d681040a29392e6a7cf07a0ffeb0aa175989ffe135aee75cb39d2565d"
+    }
+  ],
+  "requirement_closure": false
+}

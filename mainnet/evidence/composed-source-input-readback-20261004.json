@@ -1,0 +1,30 @@
+{
+  "status": "SOURCE_BINDINGS_VERIFIED_NOT_QUALIFIED",
+  "sn": "f578e9debc3987c6d5d990dbde38598a85c1e1a7",
+  "server": "f47f05f0efbf3e1e2541a4d1fdc9d0b111fdde8a",
+  "checks": [
+    "both physical clean HEAD/tree exact",
+    "both changed-path sets exact against declared bases",
+    "75 changed/module physical size/SHA and Gitblob matches",
+    "47 nested artifact bindings match"
+  ],
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/candidate/evidence/source-candidate-intake-v2.json",
+      "bytes": 38371,
+      "sha256": "d0c853560511b530074d9c3b21236a6ded4a6a85a0a91517301542c955e60065"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/candidate/evidence/finite-scope-control-map-v1.json",
+      "bytes": 97563,
+      "sha256": "a2d780133cb9ab9c756193c1d379f931ade00299fcb57bfad466128a9cac01de"
+    }
+  ],
+  "scope_limits": [
+    "Combined source and changed module graph have no execution result",
+    "Four Claim controls require narrow author rebase",
+    "Existing PH18/21/26 neighbors do not establish broader composed requirements",
+    "Core ac65 read-cause successor remains a separate pending scope",
+    "No deployment, runtime approval or activation established"
+  ]
+}

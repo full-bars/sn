@@ -1,0 +1,44 @@
+{
+  "schema": "parallel-critical-path-readback-v1",
+  "observed_utc": "2026-10-04T02:58:02.258369+00:00",
+  "core": {
+    "terminal": {
+      "path": "/mnt/data/sn-testnet/sol-core-ac65-concurrent-20261004/evidence/terminal.json",
+      "bytes": 34321,
+      "sha256": "32852ef396dd270b838dfbc100c1158b6388f9987820a164b6ad8985930a17c0"
+    },
+    "normal": 16,
+    "race": 16,
+    "vet_exit": 0,
+    "operative_controls": 4,
+    "status": "SCOPED_PASS_NOT_FULL_LAUNCH"
+  },
+  "server_model": {
+    "census": {
+      "path": "/mnt/data/sn-testnet/sol-model-c2b-affected-plan-20261004/evidence/c2b-targeted-independent-census-v1.json",
+      "bytes": 10007,
+      "sha256": "39303acdd244efe99d231a09785f7fdb350397e70f5cbc953fa52ce465a7bf13"
+    },
+    "normal": "43PASS/2FAIL/0SKIP",
+    "race": "43PASS/2FAIL/0SKIP",
+    "worker_each_mode": "1PASS",
+    "vets": "2PASS",
+    "operative_controls": 6,
+    "cleanup_exit": 0,
+    "status": "FAILED_ORIGINAL_RETAINED_SUCCESSOR405_QUEUED"
+  },
+  "verified_external_bindings": 56,
+  "source_intakes": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-receipt-lineage/evidence/intake.json",
+      "bytes": 9630,
+      "sha256": "a3d3de55d295720f7c77e687f51f2afa42eb9cc3cfd2b56beede8257dc103575"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/model-companion-debit-fixture/evidence/intake.json",
+      "bytes": 9926,
+      "sha256": "3e990fca19c83dffb5774ba471f22fd9bbfb09d9c83b0d68f78ffecb1e781b29"
+    }
+  ],
+  "remaining": "Native40e live; receipt c16 and model405 behavioral qualification pending; actual economic witness implementation and composed release qualification remain. No mainnet activation."
+}

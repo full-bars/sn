@@ -1,0 +1,291 @@
+{
+  "deployment_authorized": false,
+  "effective_connect": "0a5cda0ebe78f6200c4cff6fd3d1aa172a2b172c",
+  "files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/before-acceptance-normal.command.json": {
+      "bytes": 575,
+      "sha256": "89e49496759ce9bd19222dc3e8d922da90a8c72b78cd96a1dd1fb19df7258a0e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/before-acceptance-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/before-acceptance-normal.jsonl": {
+      "bytes": 8557,
+      "sha256": "0ddb43b9af4b5472fb0bd55468097c717b46571692f51ef3bf82792c0d184ce4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/before-acceptance-normal.result.json": {
+      "bytes": 613,
+      "sha256": "b22d32b27bbe51037832a9c589c1bb494d87999126e4e6106855596f9bf52920"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/before-acceptance-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/before-full-buffer-overlay.json": {
+      "bytes": 239,
+      "sha256": "93df30f4c0bac6325f5bbd09d8bff8ed20cbd35f71cb854a0d461dbe485b70a7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/before-full-buffer.go": {
+      "bytes": 9958,
+      "sha256": "6495675580cdc96fee83486ac5dd4db26250953f0aeb3b7133bc7aa9387c1e2e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-normal.command.json": {
+      "bytes": 554,
+      "sha256": "3f06141f2b57fe11b1d66cf9b658cc7b1c9a24584c7dbb397eb13dd6bc40dc41"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-normal.jsonl": {
+      "bytes": 12953,
+      "sha256": "a233c6c5476a38715eb368ce226213f47164cd483d8fca98ceb69893dd84d7ad"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-normal.result.json": {
+      "bytes": 997,
+      "sha256": "1eb4815d90d7ad33a791af807dffbc300a1d0c77df836f3ed8382f150f6f554a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-race.command.json": {
+      "bytes": 567,
+      "sha256": "6d3a211465aaa7fc9839ea2a746ac8f6026d16443424986a9657e3b8cc3a3fce"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-race.jsonl": {
+      "bytes": 12994,
+      "sha256": "fdef1ea8319d3c44be9d43c33bdd8d5063d213345a8d1dda94477f69b7b647e0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-race.result.json": {
+      "bytes": 997,
+      "sha256": "949e9dd8824c542f482ec0e6044d158611822e50d5a4e1e11e1c5c049b52106f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-vet.command.json": {
+      "bytes": 417,
+      "sha256": "9e00d1463609131bed14eeb623b3d66c328200b4b0583ee936f06877badf31db"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-vet.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-vet.result.json": {
+      "bytes": 152,
+      "sha256": "0fe9d217d500896874b1ee8dcd5eab83b7362be4160122239a7de2dd6906930b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/fixed-acceptance-vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/old-acceptance-race.command.json": {
+      "bytes": 725,
+      "sha256": "477607508f31dc51edc83d743133427ad40c2771aa847a876e8f2bc1562c8daf"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/old-acceptance-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/old-acceptance-race.jsonl": {
+      "bytes": 8568,
+      "sha256": "31d8f5170bf1bc57f7b1bd0ace5a504fdf432b3e06a54d41569cc612f7fbc943"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/old-acceptance-race.result.json": {
+      "bytes": 612,
+      "sha256": "c3f889a9a132c18e92f4a4245562b58ff850b97e453fb12439cc53eb62c0ccb4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/old-acceptance-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/sn.mod": {
+      "bytes": 11706,
+      "sha256": "f8cadb8c14d8c373a31a51aad557a6861d69525924c03efa80c379218110a247"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/evidence/sn.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/run-scope.go": {
+      "bytes": 3976,
+      "sha256": "32b3a5c9a5991f0adacee97bafc23c7c9d46c11d41f0e023b41d71e0f9196d6f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/seal.go": {
+      "bytes": 6203,
+      "sha256": "c292f40bc2555ba58c48a7b411df28efea49229d82d57596672277f24970e60f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/sn/go.mod": {
+      "bytes": 11211,
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/sn/go.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/sn/validator/attempt_cut_v2_seal_scratch.go": {
+      "bytes": 10107,
+      "sha256": "920b31c90ba6a64c9c53dc0ca61e6c8a7581c29bdc02a14d979dc496a598a459"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/sn/validator/attempt_cut_v2_seal_scratch_test.go": {
+      "bytes": 12098,
+      "sha256": "ba2e78902700ce359f3da4710b9332ac4c78d3e1d85dac58e13ac976cf6da735"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/sn/validator/attempt_reader_acceptance_test.go": {
+      "bytes": 5816,
+      "sha256": "7e3ba889f7164eedbdc20c1743e39af7c0ddb7bb2b3ac21cf0240ce7b5743342"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/sn/validator/attempt_reader_contract_test.go": {
+      "bytes": 4800,
+      "sha256": "791f4156ae1eb292473fc5eaa479fb2650048e3c093db552be777c1fec1c0f65"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/sn/validator/attempt_stream_v2_write.go": {
+      "bytes": 15634,
+      "sha256": "11e99e536d48901dc25a2581fe58a777bade84f94ebcaa639b5423e12a4c7572"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof/evidence/physical-freeze.json": {
+      "bytes": 840,
+      "sha256": "d2f0075dfb6ff8259a81bcd9431c00e54c929f694675f36ad22c7832b6b061c7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof/evidence/receipt.json": {
+      "bytes": 13159,
+      "sha256": "339eb856804d36ad33e9889e7fb3e49c2164d7fdb9d5ad1a4ec53933d16e0890"
+    }
+  },
+  "limitations": [
+    "The261 seven-root receipt remains immutable and explicitly scoped with this then-open gap. It proves the older naked-EOF problem separately; the new actual-consumer controls reproduce four complete-buffer acceptance failures on its exact body.",
+    "io.ReadFull and JSON decoding now receive zero admitted bytes when the actual post-read guard refuses. The actual fd position advances, retained source bytes remain unchanged, and EOF plus cancellation or named-inode loss is preserved. Partial prior successful reads remain a partial prefix, never a successful full buffer.",
+    "The actual production attemptStreamV2Writer.readDescriptor already rejects the returned error before interpretation; both before and after this change its cancellation/replacement controls pass. No existing production descriptor-acceptance exploit or full sealer gate is claimed.",
+    "Fifteen selected validator roots and validator vet only. Current module/server composition, independent qualification, release and live deployment remain separate."
+  ],
+  "normal_roots": 15,
+  "old_full_buffer_failures_each_mode": 4,
+  "old_partial_eof_and_production_consumer_passes_each_mode": 4,
+  "phases": {
+    "before-acceptance-normal": {
+      "causes": {
+        "TestAttemptSpoolJsonRejectsCanceledCompleteValue": true,
+        "TestAttemptSpoolJsonRejectsReplacedCompleteValue": true,
+        "TestAttemptSpoolReadFullRejectsCanceledCompleteBuffer": true,
+        "TestAttemptSpoolReadFullRejectsReplacedCompleteBuffer": true
+      },
+      "exit": 1,
+      "fail": [
+        "TestAttemptSpoolReadFullRejectsCanceledCompleteBuffer",
+        "TestAttemptSpoolReadFullRejectsReplacedCompleteBuffer",
+        "TestAttemptSpoolJsonRejectsCanceledCompleteValue",
+        "TestAttemptSpoolJsonRejectsReplacedCompleteValue"
+      ],
+      "pass": [
+        "TestAttemptSpoolPartialEofRetainsCancellation",
+        "TestAttemptSpoolPartialEofRetainsReplacement",
+        "TestAttemptSpoolDescriptorReaderRejectsCancellation",
+        "TestAttemptSpoolDescriptorReaderRejectsReplacement"
+      ],
+      "skip": []
+    },
+    "fixed-acceptance-normal": {
+      "causes": {},
+      "exit": 0,
+      "fail": [],
+      "pass": [
+        "TestAttemptCutV2SealSpoolEnforcesExactByteBound",
+        "TestAttemptSpoolReadFullRejectsCanceledCompleteBuffer",
+        "TestAttemptSpoolReadFullRejectsReplacedCompleteBuffer",
+        "TestAttemptSpoolJsonRejectsCanceledCompleteValue",
+        "TestAttemptSpoolJsonRejectsReplacedCompleteValue",
+        "TestAttemptSpoolPartialEofRetainsCancellation",
+        "TestAttemptSpoolPartialEofRetainsReplacement",
+        "TestAttemptSpoolDescriptorReaderRejectsCancellation",
+        "TestAttemptSpoolDescriptorReaderRejectsReplacement",
+        "TestAttemptSpoolReadAllCompletesOriginalBytes",
+        "TestAttemptSpoolCopyCompletesOriginalBytes",
+        "TestAttemptSpoolReadPreservesExactEof",
+        "TestAttemptSpoolJsonDecoderPreservesTerminalEof",
+        "TestAttemptSpoolPostReadCancellationPreservesBothCauses",
+        "TestAttemptSpoolPostReadReplacementPreservesOriginalBytes"
+      ],
+      "skip": []
+    },
+    "fixed-acceptance-race": {
+      "causes": {},
+      "exit": 0,
+      "fail": [],
+      "pass": [
+        "TestAttemptCutV2SealSpoolEnforcesExactByteBound",
+        "TestAttemptSpoolReadFullRejectsCanceledCompleteBuffer",
+        "TestAttemptSpoolReadFullRejectsReplacedCompleteBuffer",
+        "TestAttemptSpoolJsonRejectsCanceledCompleteValue",
+        "TestAttemptSpoolJsonRejectsReplacedCompleteValue",
+        "TestAttemptSpoolPartialEofRetainsCancellation",
+        "TestAttemptSpoolPartialEofRetainsReplacement",
+        "TestAttemptSpoolDescriptorReaderRejectsCancellation",
+        "TestAttemptSpoolDescriptorReaderRejectsReplacement",
+        "TestAttemptSpoolReadAllCompletesOriginalBytes",
+        "TestAttemptSpoolCopyCompletesOriginalBytes",
+        "TestAttemptSpoolReadPreservesExactEof",
+        "TestAttemptSpoolJsonDecoderPreservesTerminalEof",
+        "TestAttemptSpoolPostReadCancellationPreservesBothCauses",
+        "TestAttemptSpoolPostReadReplacementPreservesOriginalBytes"
+      ],
+      "skip": []
+    },
+    "fixed-acceptance-vet": {
+      "causes": {},
+      "exit": 0,
+      "fail": [],
+      "pass": [],
+      "skip": []
+    },
+    "old-acceptance-race": {
+      "causes": {
+        "TestAttemptSpoolJsonRejectsCanceledCompleteValue": true,
+        "TestAttemptSpoolJsonRejectsReplacedCompleteValue": true,
+        "TestAttemptSpoolReadFullRejectsCanceledCompleteBuffer": true,
+        "TestAttemptSpoolReadFullRejectsReplacedCompleteBuffer": true
+      },
+      "exit": 1,
+      "fail": [
+        "TestAttemptSpoolReadFullRejectsCanceledCompleteBuffer",
+        "TestAttemptSpoolReadFullRejectsReplacedCompleteBuffer",
+        "TestAttemptSpoolJsonRejectsCanceledCompleteValue",
+        "TestAttemptSpoolJsonRejectsReplacedCompleteValue"
+      ],
+      "pass": [
+        "TestAttemptSpoolPartialEofRetainsCancellation",
+        "TestAttemptSpoolPartialEofRetainsReplacement",
+        "TestAttemptSpoolDescriptorReaderRejectsCancellation",
+        "TestAttemptSpoolDescriptorReaderRejectsReplacement"
+      ],
+      "skip": []
+    }
+  },
+  "prior_bindings_reverified": 39,
+  "prior_receipt_sha256": "339eb856804d36ad33e9889e7fb3e49c2164d7fdb9d5ad1a4ec53933d16e0890",
+  "race_roots": 15,
+  "schema": "urnetwork-spool-post-read-acceptance-v1",
+  "server_commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "source": "68a7be85502ed7a0fd139afcd2f212178cdec019",
+  "source_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/spool-eof-successor/sn",
+  "test_only_baseline": "17901660c211460ac17b536e1b3054737e86bb35",
+  "tools": {
+    "/usr/local/go/bin/go": {
+      "bytes": 15434687,
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  },
+  "tree": "f256883a830bd062f0a6ef19a2a4fd25bddf9850",
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0
+}

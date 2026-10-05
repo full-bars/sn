@@ -1,0 +1,21 @@
+{
+  "schema": "canonical-successor-actual-root-readback-v1",
+  "checked_at": "2026-10-05T05:29:02.261797+00:00",
+  "status": "HELD_ACTUAL_GENERATION_CHECKED",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-canonical-lease-successor-108-20261005/holder-receipt-v1.json",
+    "sha256": "341abbba247d67733fa026b3cde1086790a00d09f108a3d1775c2fb091644b54"
+  },
+  "actual_properties": {
+    "MainPID": "3404159",
+    "ExecMainStartTimestampMonotonic": "1050376633119",
+    "ActiveState": "active",
+    "InvocationID": "b71e5474e5274fc3bc60009f2ddbb418"
+  },
+  "actual_starttime": "105037648",
+  "kernel_locks": [
+    "49: FLOCK  ADVISORY  WRITE 3404159 08:21:16941991 0 EOF"
+  ],
+  "expiry_monotonic_us": 1079176633119,
+  "scope": "Idle canonical lease handoff only; no compiler/body result or baseline reset."
+}

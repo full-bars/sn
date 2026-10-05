@@ -1,0 +1,257 @@
+{
+  "behavior": [
+    "A reviewed physical-metadata owner may nominate exactly one optional companion; both original metadata inodes and digests are retained outside the target before either derived image is published.",
+    "Local/global member restoration proves the exact before/after-exchange head images and derives only unsigned member/stage inode fields. Signed members, original pending payload and capacities remain unchanged.",
+    "Actual target owner performs its existing bounded outer-head reconciliation after the prior owner has joined; unknown or partial images remain refused. Both staged-image moves retain no-replace and exact-inode continuation."
+  ],
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-fixture-join-intake.json": {
+      "bytes": 6090,
+      "sha256": "d6147435e5fc6a4e13c21c7caed4372df3b031051a3f0eec6d6610650a7d8d9c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-11e-compile-jobs.json": {
+      "bytes": 2133,
+      "sha256": "05c60caf403adf173c7250115f9188e991dea7c192f06344af1b60ee1cd5892a"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-11e-compile.json": {
+      "bytes": 1072,
+      "sha256": "dd5193c87c67500598944cc8a7882dc017f54caa1125245e8826cc3bbb02915c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-11e-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-11e-preflight.json": {
+      "bytes": 949,
+      "sha256": "e21cbb0b8121583bc49aeae68a57f5b67c794d6db764317a263518ba82c80472"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-11e-preflight.jsonl": {
+      "bytes": 3645649,
+      "sha256": "f2efb82cdb2c81bd9b618519f1aae7d5dde98a38ef88461f81d0e0d150fef086"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-5c48-compile.json": {
+      "bytes": 981,
+      "sha256": "1aed4630e547de43959c396c296c74940eed68d405bf4084269da6a8c730b122"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-5c48-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-5c48-preflight.json": {
+      "bytes": 860,
+      "sha256": "3a78d171799b03c3e1369272df5acbff9aef55ac9fe01209bd5b43d9184cff4c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-5c48-preflight.jsonl": {
+      "bytes": 252759,
+      "sha256": "6556425f4ba64e91de671f5393bfe5f8a7cfef0dc5c5c503636d44aae9fb0293"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-outer-11e-intake.go": {
+      "bytes": 7436,
+      "sha256": "2e50d7e1c669c42de3d5a9da7e797e1ce0fdbb99f3fbe415e42d8d81f0c150f4"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-148-9fb-intake.json": {
+      "bytes": 12862,
+      "sha256": "aaabab504c90226015d7981a51205350dd6daf363e656be65c4789557389b658"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/connect/durablevolume/preparation.go": {
+      "bytes": 12632,
+      "sha256": "27606fa232491bed91d32f5823d2d2e05cba1b8749a1923941371e1bfa9dc761"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/connect/durablevolume/preparation_derivation_linux.go": {
+      "bytes": 13932,
+      "sha256": "15386a59fa25b91954c831bbbcd51ea3432d0d886fa1e75d263f413c4d3ec0d6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/connect/durablevolume/preparation_paired_metadata_test.go": {
+      "bytes": 10194,
+      "sha256": "f30eb04f1992ef5d523f540a6c4a16d073b613b1f1bc160479d32d693501aa24"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/connect/go.mod": {
+      "bytes": 3847,
+      "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/connect/go.sum": {
+      "bytes": 21922,
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/sn/go.mod": {
+      "bytes": 11252,
+      "sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/sn/go.sum": {
+      "bytes": 65954,
+      "sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/sn/mainnet/evidence/member-outer-checkpoint-restore-20261003.md": {
+      "bytes": 2799,
+      "sha256": "a609448b94bd5dc3725bf61323852234b47959913f19ef38dc63465bbbe5214f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/sn/mainnet/storage_prepare_member_outer_test.go": {
+      "bytes": 8726,
+      "sha256": "653541b51d4e69b46b6c812df91e69bc01f6fa6351d8b726cc80290b02519fdc"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/sn/mainnet/storage_prepare_members_coverage_linux.go": {
+      "bytes": 2057,
+      "sha256": "b7cd9c5deb9423c27aa3289bba192b321b324daf489146c776353ca415886fe6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/sn/mainnet/storage_prepare_members_restore_linux.go": {
+      "bytes": 24461,
+      "sha256": "48738685506437119440192753f56f6dbe0f58489f4d2480975bd4b0e073b2e0"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/qualify-scoped.go": {
+      "bytes": 3425,
+      "sha256": "1a7b115440ecd7ce543810e9a08a751f4e2c1bb213ee2439b8a9e55455753e26"
+    }
+  },
+  "causal": [
+    {
+      "base": "08d4840087a7e4cb60a747eabc81785361a01562",
+      "boundary": "Old single-metadata preparation treats the companion as an ordinary target; the exact paired adapter refuses that extra target. Record actual failure, not only exit status.",
+      "overlay": [
+        "durablevolume/preparation_paired_metadata_test.go"
+      ],
+      "roots": [
+        "TestPreparationPairedMetadataRetainsExactOriginals",
+        "TestPreparationPairedMetadataRejectsChangedLineage",
+        "TestPreparationPairedMetadataReconcilesInterruptedMove"
+      ],
+      "source": "connect"
+    },
+    {
+      "base": "bdf63dea4177a7b7fd5d07442039b517bbc261be",
+      "boundary": "The first three public restore controls must distinguish old unfinished-outer-head refusal. Partial-image refusal is an adjacent negative, never presumed a causal failure.",
+      "connect": "5c48c3e5f53b7f4654570193448b4da73b75aaff",
+      "overlay": [
+        "mainnet/storage_prepare_member_outer_test.go"
+      ],
+      "roots": [
+        "TestStoragePreparationRestoresPendingMemberHeadBeforeExchange",
+        "TestStoragePreparationRestoresPendingMemberHeadAfterExchange",
+        "TestStoragePreparationRestoresPendingMemberHeadAfterDirectorySync",
+        "TestStoragePreparationOuterMemberHeadRefusesPartialImage"
+      ],
+      "source": "sn"
+    }
+  ],
+  "dependencies": {
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/glog",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/goidenticons",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/proxy",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/server",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/userwireguard",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/warp",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "remaining": [
+    "The full local-rebind bdf controls currently fail at complete-union coverage before preview; that independent finding is preserved and excluded from this bounded fresh-member scope.",
+    "Higher-level registry/local approval consumers still require the separate paired-lineage and passive-pending adoption path; this source is not complete execution restore.",
+    "In-place retained/capacity revision, chained restoration, latest published modules/gvisor/current Server and composed release qualification remain separate.",
+    "No live signing, broadcast, deployment, service start or remote PostgreSQL/MinIO physical-recovery claim."
+  ],
+  "schema": "urnetwork-author-source-handoff-v1",
+  "scope": [
+    {
+      "adjacentRoots": [
+        "TestPreparationPhysicalMetadataRetainsBothCensuses",
+        "TestPreparationPhysicalMovesReconcileEachSyncedBoundary",
+        "TestPreparationPhysicalMovesRefuseAmbiguousAndLostMembers",
+        "TestPreparationPhysicalMetadataRefusesChangedLineage"
+      ],
+      "expectedPass": 7,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "newRoots": [
+        "TestPreparationPairedMetadataRetainsExactOriginals",
+        "TestPreparationPairedMetadataRejectsChangedLineage",
+        "TestPreparationPairedMetadataReconcilesInterruptedMove"
+      ],
+      "package": "./durablevolume",
+      "source": "connect",
+      "vet": true
+    },
+    {
+      "adjacentRoots": [
+        "TestStoragePreparationRestoreMemberCensusOpensOriginalHistory",
+        "TestStoragePreparationRestoreMemberPendingKeepsOriginalPayload",
+        "TestStoragePreparationRestoreMemberMoveResumesExactInode",
+        "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners"
+      ],
+      "expectedPass": 8,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "newRoots": [
+        "TestStoragePreparationRestoresPendingMemberHeadBeforeExchange",
+        "TestStoragePreparationRestoresPendingMemberHeadAfterExchange",
+        "TestStoragePreparationRestoresPendingMemberHeadAfterDirectorySync",
+        "TestStoragePreparationOuterMemberHeadRefusesPartialImage"
+      ],
+      "package": "./mainnet",
+      "source": "sn",
+      "vet": true
+    }
+  ],
+  "sources": {
+    "connect": {
+      "changedPaths": [
+        "durablevolume/preparation.go",
+        "durablevolume/preparation_derivation_linux.go",
+        "durablevolume/preparation_paired_metadata_test.go"
+      ],
+      "commit": "5c48c3e5f53b7f4654570193448b4da73b75aaff",
+      "parent": "08d4840087a7e4cb60a747eabc81785361a01562",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/connect",
+      "tree": "06a164cca3c72b776f69ec7ffd94b3c338ef622a"
+    },
+    "sn": {
+      "changedPaths": [
+        "mainnet/evidence/member-outer-checkpoint-restore-20261003.md",
+        "mainnet/storage_prepare_member_outer_test.go",
+        "mainnet/storage_prepare_members_coverage_linux.go",
+        "mainnet/storage_prepare_members_restore_linux.go"
+      ],
+      "commit": "11e282dc307ccfa0d32e54991f26bb24ab2f710a",
+      "parent": "bdf63dea4177a7b7fd5d07442039b517bbc261be",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/sn",
+      "tree": "21fa8312facf6a4c3fb16cea5a6e9b67b3888d52"
+    }
+  },
+  "status": "COMPILE_ONLY_NO_BEHAVIORAL_EXECUTION",
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/go.work"
+}

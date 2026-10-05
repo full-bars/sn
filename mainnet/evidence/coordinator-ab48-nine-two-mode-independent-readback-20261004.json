@@ -1,0 +1,177 @@
+{
+  "schema": "coordinator-ab48-nine-two-mode-root-readback-v1",
+  "status": "NINE_NORMAL_AND_RACE_PASS_FIXTURE_CONTROL_AND_VET_PENDING",
+  "head": "ab48c41d0f1d196a8311905f81d635c868f13dfe",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-entitlement-nine-v1.terminal.json",
+      "bytes": 2874,
+      "sha256": "fac6524c0706bfee83615fc89ed7970203e23b653b110bc9f115dbabec3fed25"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-entitlement-nine-normal-entitlement-nine.receipt.json",
+      "bytes": 7803,
+      "sha256": "ea20ae87f303710a9edf8fc45f463262730178342dfda58407b6ff6e9ce37d99"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-entitlement-nine-normal-entitlement-nine.stdout",
+      "bytes": 6882,
+      "sha256": "8c88a7b32ed938dd76320e36df19d6350c2c7946e0983e8da69ff9cd66414465"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-entitlement-nine-normal-entitlement-nine.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-entitlement-nine-normal-entitlement-nine.resources.csv",
+      "bytes": 7375,
+      "sha256": "1fa94e0a5327e326d75151a18e9a3121b4dfa1984012a186c5ae2e125165c2b1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/images/ab48-go-mainnet-normal-compile.test",
+      "bytes": 81323920,
+      "sha256": "cf0c98852129559059f866750047e9c7948133e3db5e43a954d622ff2058336b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-entitlement-nine-race-entitlement-nine.receipt.json",
+      "bytes": 7790,
+      "sha256": "dfc995913495df18ffcb7da737609c43e507df89558fad7957348a128f143089"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-entitlement-nine-race-entitlement-nine.stdout",
+      "bytes": 6898,
+      "sha256": "e2af9ba6347e328d8c55affa1d720f58d8066044fe94a2357aa44e0905412b57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-entitlement-nine-race-entitlement-nine.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-entitlement-nine-race-entitlement-nine.resources.csv",
+      "bytes": 40562,
+      "sha256": "cedfba341855efd714241ead0a464ef75c60005e4d9b67b7614c16501ee2995c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/images/ab48-go-mainnet-race-compile.test",
+      "bytes": 110001360,
+      "sha256": "479de2d5baf68918fff7d5803218946716020cc1c2e1ffeb8e849844b4f87fdc"
+    }
+  ],
+  "results": {
+    "normal": {
+      "TestEconomicEntitlementPublicArchiveKeepsOriginalCensusAndColdClaims": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicArchiveCannotDropOriginalReceipt": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicOriginalCommitterAndCompleteLeafCensus": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicMissingArtifactPreservesCreditAndRecovers": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicWrongCommitterOrRootIsHeld": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicCancellationJoinsActualArtifactRead": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicHeldHttpKeepsNativeVaultAndClaimProgress": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementCoordinatorFixtureEncodesCompleteAbiTuples": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicConservationPublicNativeCapturePendingKeepsEntitlementProgress": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      }
+    },
+    "race": {
+      "TestEconomicEntitlementPublicArchiveKeepsOriginalCensusAndColdClaims": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicArchiveCannotDropOriginalReceipt": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicOriginalCommitterAndCompleteLeafCensus": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicMissingArtifactPreservesCreditAndRecovers": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicWrongCommitterOrRootIsHeld": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicCancellationJoinsActualArtifactRead": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementPublicHeldHttpKeepsNativeVaultAndClaimProgress": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicEntitlementCoordinatorFixtureEncodesCompleteAbiTuples": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "TestEconomicConservationPublicNativeCapturePendingKeepsEntitlementProgress": {
+        "run": 1,
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      }
+    }
+  },
+  "limits": "Exact selectednine positives bothmodes only; fixturecontrol/vet, full funding41 and currentrelease integration remain pending. Original four failures retained separately."
+}

@@ -62,7 +62,7 @@ func commitmentContextTestStorage(t *testing.T, hash [32]byte, block uint32) (st
 func TestFleetCommitmentAtContextUsesExactBlockForEveryRPC(t *testing.T) {
 	type callerContextKey struct{}
 	const callerContextValue = "fleet-commitment"
-	blockHash := types.Hash{9}
+	header, blockHash := receiptTestHeader(t, types.Hash{9}, 42, nil, 1)
 	hotkey := [32]byte{7}
 	commitmentHash := [32]byte{5}
 	registration, last := commitmentContextTestStorage(t, commitmentHash, 42)
@@ -88,8 +88,12 @@ func TestFleetCommitmentAtContextUsesExactBlockForEveryRPC(t *testing.T) {
 			if len(args) != 1 || args[0] != blockHash.Hex() {
 				return fmt.Errorf("fleet header args=%v, want exact block %s", args, blockHash.Hex())
 			}
-			*(result.(*types.Header)) = types.Header{Number: types.BlockNumber(42)}
-			return nil
+			return setRuntimeIdentityTestResult(result, receiptTestHeaderWire(header))
+		case "chain_getBlockHash":
+			if len(args) != 1 || args[0] != uint64(42) {
+				return errors.New("commitment canonical height changed")
+			}
+			return setRuntimeIdentityTestResult(result, blockHash.Hex())
 		default:
 			return fmt.Errorf("unexpected fleet commitment RPC %s", method)
 		}

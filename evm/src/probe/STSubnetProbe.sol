@@ -24,7 +24,7 @@ import {Blake2b} from "../lib/Blake2b.sol";
 ///      bytecode. Forge's local simulation has no implementation for them, so
 ///      a `forge script` that calls them reverts in simulation and never
 ///      reaches the node. The faithful path is to DEPLOY this probe once, then
-///      call its views with `cast call <probe> ... --rpc-url testnet` (a raw
+///      call its views with `cast call <probe> ... --rpc-url <owned-testnet-rpc-url>` (a raw
 ///      eth_call executed ON the node, hitting the real precompiles) and its
 ///      state fns with `cast send`. The custody assumption — "a contract's
 ///      coldkey is mirror(contract)" — can only be tested from a contract, so
@@ -111,7 +111,7 @@ contract STSubnetProbe {
 
     // ------------------------------------------------------------------
     // Read battery — free (gas only). Call ON THE NODE:
-    //   cast call <probe> "readBattery(bytes32,bytes32)((...))" <liveHotkey> <absentHotkey> --rpc-url testnet
+    //   cast call <probe> "readBattery(bytes32,bytes32)((...))" <liveHotkey> <absentHotkey> --rpc-url <owned-testnet-rpc-url>
     // Every precompile touch is individually try/caught, so one missing
     // precompile does not mask the others — the struct shows exactly which
     // assumptions hold on the live runtime.
@@ -248,11 +248,13 @@ contract STSubnetProbe {
     /// @notice Convert dust TAO -> α stake under the probe's own coldkey via
     ///         addStake, so the move/transfer checks have α to work with (the
     ///         self-contained path — no pre-existing α position needed). The
-    ///         amount arg is documented as rao; forwarding msg.value covers the
-    ///         payable ambiguity. Emits the observed post-stake balance so the
-    ///         RAO-vs-18-dec unit scale is read off directly.
+    ///         amount arg is in rao; msg.value funds the probe at the EVM's
+    ///         18-decimal scale. The runtime debits the probe's mapped account,
+    ///         just as registerLimit debits the settlement vault. Forwarding
+    ///         that value to the precompile would remove it before the debit.
+    ///         Emits the observed post-stake balance to verify live units.
     function seedFromTao(bytes32 hotkey, uint256 raoAmount) external payable onlyOwner {
-        IStaking(ISTAKING_ADDRESS).addStake{value: msg.value}(hotkey, raoAmount, uint256(netuid));
+        IStaking(ISTAKING_ADDRESS).addStake(hotkey, raoAmount, uint256(netuid));
         uint256 after_ =
             IStaking(ISTAKING_ADDRESS).getStake(hotkey, Blake2b.mirror(address(this)), uint256(netuid));
         emit Seeded(hotkey, raoAmount, msg.value, after_);

@@ -1,0 +1,1477 @@
+{
+  "archive": {
+    "schema": "urnetwork-operator-recovery-archive-v1",
+    "selection": {
+      "schema": "urnetwork-operator-recovery-config-v1",
+      "chain_id": 31337,
+      "genesis_hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "roles": [
+        {
+          "id": "operator-a",
+          "address": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+          "first_nonce": 7,
+          "next_nonce": 9
+        },
+        {
+          "id": "operator-b",
+          "address": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+          "first_nonce": 11,
+          "next_nonce": 13
+        }
+      ],
+      "databases": [
+        {
+          "id": "database-a",
+          "connection": {
+            "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/tmp/TestExportHistoricalFeeContextSyntheticInputs2021344354/001/database-a.url",
+            "sha256": "sha256:3b0a7ca3a01569f4af07368009f9b6480354618beb93b7241df7c3dcf22619f5"
+          },
+          "roles": [
+            "operator-a"
+          ]
+        },
+        {
+          "id": "database-b",
+          "connection": {
+            "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/tmp/TestExportHistoricalFeeContextSyntheticInputs2021344354/001/database-b.url",
+            "sha256": "sha256:11ae3038c1fe627502b6596d5598808bb5339e26b1bfed1924adec0458cc1b26"
+          },
+          "roles": [
+            "operator-b"
+          ]
+        }
+      ],
+      "stores": [
+        {
+          "id": "evidence",
+          "directory": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/tmp/TestExportHistoricalFeeContextSyntheticInputs2021344354/001/store",
+          "roles": [
+            "operator-a",
+            "operator-b"
+          ]
+        }
+      ],
+      "limits": {
+        "maximum_intents": 32,
+        "maximum_attempts": 64,
+        "maximum_transaction_bytes": 4096,
+        "maximum_total_bytes": 65536
+      }
+    },
+    "databases": [
+      {
+        "source": "database-a",
+        "snapshot": {
+          "intents": [
+            {
+              "id": "00000000-0000-0000-0000-000000000001",
+              "intent_key": "synthetic-1:0",
+              "logical_key": "synthetic-1",
+              "generation": 0,
+              "profile": "synthetic",
+              "deployment_id": "synthetic-deployment",
+              "deployment_key": "31337:0xcccccccccccccccccccccccccccccccccccccccc",
+              "chain_id": 31337,
+              "genesis_hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "from": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+              "calldata_hash": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239",
+              "calldata": "AQID",
+              "nonce": 7,
+              "status": "reverted",
+              "current_hash": "0x44261540a75368818a8c3d57e5087352878c6f6ab45f4c166314bff6efada2ea",
+              "attempt_count": 3,
+              "error": null,
+              "create_time": "2023-11-14T22:13:20Z",
+              "update_time": "2023-11-14T22:13:21Z"
+            },
+            {
+              "id": "00000000-0000-0000-0000-000000000002",
+              "intent_key": "synthetic-1:1",
+              "logical_key": "synthetic-1",
+              "generation": 1,
+              "profile": "synthetic",
+              "deployment_id": "synthetic-deployment",
+              "deployment_key": "31337:0xcccccccccccccccccccccccccccccccccccccccc",
+              "chain_id": 31337,
+              "genesis_hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "from": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+              "calldata_hash": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239",
+              "calldata": "AQID",
+              "nonce": 8,
+              "status": "finalized",
+              "current_hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+              "attempt_count": 1,
+              "error": null,
+              "create_time": "2023-11-14T22:13:20Z",
+              "update_time": "2023-11-14T22:13:21Z"
+            }
+          ],
+          "attempts": [
+            {
+              "intent_id": "00000000-0000-0000-0000-000000000001",
+              "number": 1,
+              "kind": "execution",
+              "hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+              "raw": "+GQHZIJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDgvT2oPxONPggjnETKYMRSomPPvAdKJfeZM5QWndtct6ZejHvoCqjlI7DY0h+UyWgQN/0nTvOVMbqY6AAt+y6FIwMES2s",
+              "gas_limit": 30000,
+              "gas_price": "100",
+              "gas_tip_cap": null,
+              "gas_fee_cap": null,
+              "status": "replaced",
+              "inclusion_block": null,
+              "inclusion_hash": null,
+              "finalized_block": null,
+              "finalized_hash": null,
+              "error": null,
+              "create_time": "2023-11-14T22:13:20Z",
+              "update_time": "2023-11-14T22:13:21Z"
+            },
+            {
+              "intent_id": "00000000-0000-0000-0000-000000000001",
+              "number": 2,
+              "kind": "execution",
+              "hash": "0xaa3bb0647080958e9956370aff8d32a163155dbebbe34d8bb82ebd1f45965a28",
+              "raw": "AvhognppBwqByIJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDwICgu3+7sCqGcrzE3Cv3hdplnsaQAx+60un6MrRR9ggaY1ygKKNH2jvcakIE16BhonGdrxQyMdn56/4w740eGO7H3BY=",
+              "gas_limit": 30000,
+              "gas_price": null,
+              "gas_tip_cap": "10",
+              "gas_fee_cap": "200",
+              "status": "replaced",
+              "inclusion_block": null,
+              "inclusion_hash": null,
+              "finalized_block": null,
+              "finalized_hash": null,
+              "error": null,
+              "create_time": "2023-11-14T22:13:20Z",
+              "update_time": "2023-11-14T22:13:21Z"
+            },
+            {
+              "intent_id": "00000000-0000-0000-0000-000000000001",
+              "number": 3,
+              "kind": "cancellation",
+              "hash": "0x44261540a75368818a8c3d57e5087352878c6f6ab45f4c166314bff6efada2ea",
+              "raw": "+GIHgZaCUgiUfl9FUgkaaRJdXfy3uMJlkCk5W9+AgIL09qDWDugq4XWddc74uwrRlcp0mOoaP1Yoq40zPcrjRZc6FqA6dJLflvYc6ODF81yl4TbIkaxFSjHkL3unLT+hzevSxQ==",
+              "gas_limit": 21000,
+              "gas_price": "150",
+              "gas_tip_cap": null,
+              "gas_fee_cap": null,
+              "status": "replaced",
+              "inclusion_block": null,
+              "inclusion_hash": null,
+              "finalized_block": null,
+              "finalized_hash": null,
+              "error": null,
+              "create_time": "2023-11-14T22:13:20Z",
+              "update_time": "2023-11-14T22:13:21Z"
+            },
+            {
+              "intent_id": "00000000-0000-0000-0000-000000000002",
+              "number": 1,
+              "kind": "execution",
+              "hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+              "raw": "+GQIboJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDgvT2oM9M0kTMMVUXBm0iXHOKt/IfrN8Tkk5P/q5S1hSpq1t5oGcLRWLY/b4WiPowLwSJZZQwdmzCnmhe/RrDZeNzeXHz",
+              "gas_limit": 30000,
+              "gas_price": "110",
+              "gas_tip_cap": null,
+              "gas_fee_cap": null,
+              "status": "replaced",
+              "inclusion_block": null,
+              "inclusion_hash": null,
+              "finalized_block": null,
+              "finalized_hash": null,
+              "error": null,
+              "create_time": "2023-11-14T22:13:20Z",
+              "update_time": "2023-11-14T22:13:21Z"
+            }
+          ]
+        }
+      },
+      {
+        "source": "database-b",
+        "snapshot": {
+          "intents": [
+            {
+              "id": "00000000-0000-0000-0000-000000000003",
+              "intent_key": "synthetic-3:0",
+              "logical_key": "synthetic-3",
+              "generation": 0,
+              "profile": "synthetic",
+              "deployment_id": "synthetic-deployment",
+              "deployment_key": "31337:0xcccccccccccccccccccccccccccccccccccccccc",
+              "chain_id": 31337,
+              "genesis_hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "from": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+              "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+              "calldata_hash": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239",
+              "calldata": "AQID",
+              "nonce": 11,
+              "status": "superseded",
+              "current_hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+              "attempt_count": 1,
+              "error": null,
+              "create_time": "2023-11-14T22:13:20Z",
+              "update_time": "2023-11-14T22:13:21Z"
+            },
+            {
+              "id": "00000000-0000-0000-0000-000000000004",
+              "intent_key": "synthetic-4:0",
+              "logical_key": "synthetic-4",
+              "generation": 0,
+              "profile": "synthetic",
+              "deployment_id": "synthetic-deployment",
+              "deployment_key": "31337:0xcccccccccccccccccccccccccccccccccccccccc",
+              "chain_id": 31337,
+              "genesis_hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "from": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+              "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+              "calldata_hash": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239",
+              "calldata": "AQID",
+              "nonce": 13,
+              "status": "prepared",
+              "current_hash": null,
+              "attempt_count": 0,
+              "error": null,
+              "create_time": "2023-11-14T22:13:20Z",
+              "update_time": "2023-11-14T22:13:21Z"
+            }
+          ],
+          "attempts": [
+            {
+              "intent_id": "00000000-0000-0000-0000-000000000003",
+              "number": 1,
+              "kind": "execution",
+              "hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+              "raw": "+GQLZIJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDgvT1oGCcimobtlXKQX1sMBxI0Lt/EpjY8pQz2xXhiHCo+7TboBcqSUwOveeedZ3FBs3egdc3bgsz6sEUzd89l/xDdaMj",
+              "gas_limit": 30000,
+              "gas_price": "100",
+              "gas_tip_cap": null,
+              "gas_fee_cap": null,
+              "status": "replaced",
+              "inclusion_block": null,
+              "inclusion_hash": null,
+              "finalized_block": null,
+              "finalized_hash": null,
+              "error": null,
+              "create_time": "2023-11-14T22:13:20Z",
+              "update_time": "2023-11-14T22:13:21Z"
+            }
+          ]
+        }
+      }
+    ],
+    "stores": [
+      {
+        "source": "evidence",
+        "files": [
+          {
+            "name": "50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a.rlp",
+            "raw": "+GQHZIJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDgvT2oPxONPggjnETKYMRSomPPvAdKJfeZM5QWndtct6ZejHvoCqjlI7DY0h+UyWgQN/0nTvOVMbqY6AAt+y6FIwMES2s"
+          },
+          {
+            "name": "b88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c.rlp",
+            "raw": "+GQMZIJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDgvT2oPtSEiO8sdGzuYGrGJaQ6wKZUVmuK+B9HP13dJ4f2Y8xoFlwPAOPABp9uqNzzDJnXJeAMOCaKYJLHYEcCIpVvX1t"
+          },
+          {
+            "name": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.scale",
+            "raw": "c3ludGhldGljIG9wYXF1ZSBuYXRpdmUgYnl0ZXM="
+          }
+        ]
+      }
+    ],
+    "transactions": [
+      {
+        "hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+        "raw": "+GQIboJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDgvT2oM9M0kTMMVUXBm0iXHOKt/IfrN8Tkk5P/q5S1hSpq1t5oGcLRWLY/b4WiPowLwSJZZQwdmzCnmhe/RrDZeNzeXHz",
+        "role": "operator-a",
+        "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "nonce": 8,
+        "type": 0,
+        "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+        "value": "0",
+        "calldata_hash": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239",
+        "gas_limit": 30000,
+        "maximum_gas_price": "110",
+        "maximum_fee": "3300000",
+        "origins": [
+          {
+            "source": "database-a",
+            "intent_id": "00000000-0000-0000-0000-000000000002",
+            "attempt": 1,
+            "kind": "execution",
+            "intent_status": "finalized",
+            "attempt_status": "replaced"
+          }
+        ],
+        "missing_from_stores": [
+          "evidence"
+        ]
+      },
+      {
+        "hash": "0x44261540a75368818a8c3d57e5087352878c6f6ab45f4c166314bff6efada2ea",
+        "raw": "+GIHgZaCUgiUfl9FUgkaaRJdXfy3uMJlkCk5W9+AgIL09qDWDugq4XWddc74uwrRlcp0mOoaP1Yoq40zPcrjRZc6FqA6dJLflvYc6ODF81yl4TbIkaxFSjHkL3unLT+hzevSxQ==",
+        "role": "operator-a",
+        "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "nonce": 7,
+        "type": 0,
+        "to": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "value": "0",
+        "calldata_hash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "gas_limit": 21000,
+        "maximum_gas_price": "150",
+        "maximum_fee": "3150000",
+        "origins": [
+          {
+            "source": "database-a",
+            "intent_id": "00000000-0000-0000-0000-000000000001",
+            "attempt": 3,
+            "kind": "cancellation",
+            "intent_status": "reverted",
+            "attempt_status": "replaced"
+          }
+        ],
+        "missing_from_stores": [
+          "evidence"
+        ]
+      },
+      {
+        "hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+        "raw": "+GQHZIJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDgvT2oPxONPggjnETKYMRSomPPvAdKJfeZM5QWndtct6ZejHvoCqjlI7DY0h+UyWgQN/0nTvOVMbqY6AAt+y6FIwMES2s",
+        "role": "operator-a",
+        "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "nonce": 7,
+        "type": 0,
+        "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+        "value": "0",
+        "calldata_hash": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239",
+        "gas_limit": 30000,
+        "maximum_gas_price": "100",
+        "maximum_fee": "3000000",
+        "origins": [
+          {
+            "source": "evidence",
+            "filename": "50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a.rlp"
+          },
+          {
+            "source": "database-a",
+            "intent_id": "00000000-0000-0000-0000-000000000001",
+            "attempt": 1,
+            "kind": "execution",
+            "intent_status": "reverted",
+            "attempt_status": "replaced"
+          }
+        ],
+        "missing_from_stores": []
+      },
+      {
+        "hash": "0xaa3bb0647080958e9956370aff8d32a163155dbebbe34d8bb82ebd1f45965a28",
+        "raw": "AvhognppBwqByIJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDwICgu3+7sCqGcrzE3Cv3hdplnsaQAx+60un6MrRR9ggaY1ygKKNH2jvcakIE16BhonGdrxQyMdn56/4w740eGO7H3BY=",
+        "role": "operator-a",
+        "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "nonce": 7,
+        "type": 2,
+        "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+        "value": "0",
+        "calldata_hash": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239",
+        "gas_limit": 30000,
+        "maximum_gas_price": "200",
+        "maximum_fee": "6000000",
+        "origins": [
+          {
+            "source": "database-a",
+            "intent_id": "00000000-0000-0000-0000-000000000001",
+            "attempt": 2,
+            "kind": "execution",
+            "intent_status": "reverted",
+            "attempt_status": "replaced"
+          }
+        ],
+        "missing_from_stores": [
+          "evidence"
+        ]
+      },
+      {
+        "hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+        "raw": "+GQMZIJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDgvT2oPtSEiO8sdGzuYGrGJaQ6wKZUVmuK+B9HP13dJ4f2Y8xoFlwPAOPABp9uqNzzDJnXJeAMOCaKYJLHYEcCIpVvX1t",
+        "role": "operator-b",
+        "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+        "nonce": 12,
+        "type": 0,
+        "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+        "value": "0",
+        "calldata_hash": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239",
+        "gas_limit": 30000,
+        "maximum_gas_price": "100",
+        "maximum_fee": "3000000",
+        "origins": [
+          {
+            "source": "evidence",
+            "filename": "b88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c.rlp"
+          }
+        ],
+        "missing_from_stores": []
+      },
+      {
+        "hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+        "raw": "+GQLZIJ1MJTMzMzMzMzMzMzMzMzMzMzMzMzMzICDAQIDgvT1oGCcimobtlXKQX1sMBxI0Lt/EpjY8pQz2xXhiHCo+7TboBcqSUwOveeedZ3FBs3egdc3bgsz6sEUzd89l/xDdaMj",
+        "role": "operator-b",
+        "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+        "nonce": 11,
+        "type": 0,
+        "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+        "value": "0",
+        "calldata_hash": "0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239",
+        "gas_limit": 30000,
+        "maximum_gas_price": "100",
+        "maximum_fee": "3000000",
+        "origins": [
+          {
+            "source": "database-b",
+            "intent_id": "00000000-0000-0000-0000-000000000003",
+            "attempt": 1,
+            "kind": "execution",
+            "intent_status": "superseded",
+            "attempt_status": "replaced"
+          }
+        ],
+        "missing_from_stores": [
+          "evidence"
+        ]
+      }
+    ],
+    "unsigned": [
+      {
+        "source": "database-b",
+        "intent_id": "00000000-0000-0000-0000-000000000004",
+        "role": "operator-b",
+        "nonce": 13,
+        "status": "prepared"
+      }
+    ],
+    "excluded": [],
+    "fee_envelopes": [
+      {
+        "role": "operator-a",
+        "signed_transactions": 4,
+        "distinct_nonces": 2,
+        "all_signatures_maximum_fee": "15450000",
+        "distinct_nonces_maximum_fee": "9300000"
+      },
+      {
+        "role": "operator-b",
+        "signed_transactions": 2,
+        "distinct_nonces": 2,
+        "all_signatures_maximum_fee": "6000000",
+        "distinct_nonces_maximum_fee": "6000000"
+      }
+    ],
+    "opaque_native_files": 1,
+    "census_hash": "sha256:754c7612c47face890d7860f8c4f9af8a2625c9543232bd5ba9345605b5ec851"
+  },
+  "collection": {
+    "schema": "urnetwork-operator-receipt-collection-v1",
+    "admission": "unapproved_observation",
+    "observations": {
+      "schema": "urnetwork-operator-receipt-observations-v1",
+      "census_hash": "sha256:754c7612c47face890d7860f8c4f9af8a2625c9543232bd5ba9345605b5ec851",
+      "chain_id": 31337,
+      "genesis_hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source": "synthetic-observer",
+      "native_finalized": {
+        "number": 703,
+        "hash": "0x7cc1eb2cf1a3e4397a818c09e881bf647a07820b89e0615d40fa07da5686eea3"
+      },
+      "evm_finalized": {
+        "number": 100,
+        "hash": "0x31fe949d13ed308c7010525e8abc07d08849ae6ddd88e113e34d51aea9b2ba13"
+      },
+      "mapping_evidence_hash": "sha256:23d347a94b34799001437e3ab11771cc6c28adb5389a2a42c878ae4d6e88c462",
+      "blocks": [
+        {
+          "number": 90,
+          "hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+          "gas_used": 123000,
+          "gas_limit": 30000000,
+          "base_fee_per_gas": "90"
+        },
+        {
+          "number": 100,
+          "hash": "0x31fe949d13ed308c7010525e8abc07d08849ae6ddd88e113e34d51aea9b2ba13",
+          "gas_used": 0,
+          "gas_limit": 30000000,
+          "base_fee_per_gas": "90"
+        }
+      ],
+      "accounts": [
+        {
+          "role": "operator-a",
+          "address": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+          "block_hash": "0x31fe949d13ed308c7010525e8abc07d08849ae6ddd88e113e34d51aea9b2ba13",
+          "outcome": "available",
+          "nonce": 9
+        },
+        {
+          "role": "operator-b",
+          "address": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+          "block_hash": "0x31fe949d13ed308c7010525e8abc07d08849ae6ddd88e113e34d51aea9b2ba13",
+          "outcome": "available",
+          "nonce": 13
+        }
+      ],
+      "receipts": [
+        {
+          "hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+          "outcome": "found",
+          "receipt": {
+            "transaction_hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+            "type": 0,
+            "status": 1,
+            "block_number": 90,
+            "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+            "transaction_index": 0,
+            "gas_used": 25000,
+            "cumulative_gas_used": 25000,
+            "effective_gas_price": "110"
+          }
+        },
+        {
+          "hash": "0x44261540a75368818a8c3d57e5087352878c6f6ab45f4c166314bff6efada2ea",
+          "outcome": "not-found",
+          "receipt": null
+        },
+        {
+          "hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+          "outcome": "found",
+          "receipt": {
+            "transaction_hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+            "type": 0,
+            "status": 1,
+            "block_number": 90,
+            "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+            "transaction_index": 2,
+            "gas_used": 25000,
+            "cumulative_gas_used": 73000,
+            "effective_gas_price": "100"
+          }
+        },
+        {
+          "hash": "0xaa3bb0647080958e9956370aff8d32a163155dbebbe34d8bb82ebd1f45965a28",
+          "outcome": "not-found",
+          "receipt": null
+        },
+        {
+          "hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+          "outcome": "found",
+          "receipt": {
+            "transaction_hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+            "type": 0,
+            "status": 1,
+            "block_number": 90,
+            "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+            "transaction_index": 3,
+            "gas_used": 25000,
+            "cumulative_gas_used": 98000,
+            "effective_gas_price": "100"
+          }
+        },
+        {
+          "hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+          "outcome": "found",
+          "receipt": {
+            "transaction_hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+            "type": 0,
+            "status": 1,
+            "block_number": 90,
+            "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+            "transaction_index": 4,
+            "gas_used": 25000,
+            "cumulative_gas_used": 123000,
+            "effective_gas_price": "100"
+          }
+        }
+      ]
+    },
+    "commitments": {
+      "schema": "urnetwork-operator-receipt-commitments-v1",
+      "census_hash": "sha256:754c7612c47face890d7860f8c4f9af8a2625c9543232bd5ba9345605b5ec851",
+      "observation_hash": "sha256:1898d760b9d478152dd349b7584cd86abfcb1dec9e8758f9f64c2ffc2b2487ea",
+      "headers": [
+        "0xf901faa01111111111111111111111111111111111111111111111111111111111111111a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a06655c120205110ccf5f2c7425038963688ce91ab375d749369e8183a68e137a3a0790fc8cc53203a382c239eca611e15526915ed453bad2c505fd2f93d785111a7b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000805a8401c9c3808301e07886018bcff5e33b80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a0152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8fa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000805b8401c9c3808086018bcff6121b80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a0169ee714ac7b495b13cf3a5b158bc63fe90f71cef2e06174f37a30be0d6b95fca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000805c8401c9c3808086018bcff640fb80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a0717171f3df4ff846b97cb715134a0362518dc00df0cfa0925900796cfc0336c8a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000805d8401c9c3808086018bcff66fdb80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a0199f2f5bcb7b23f3b63c490ffca162ecff1629cf810f8b7cd0314ce2f414dc75a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000805e8401c9c3808086018bcff69ebb80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a09d0768823b9f829954505a7b079a24d6ecca256a28373c6c8dcc11b10614146ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000805f8401c9c3808086018bcff6cd9b80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a0f82e1e2951f4d0ccd736f7b6a428ce9c03f3694dd63bd6184754c54b535d2621a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b901000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080608401c9c3808086018bcff6fc7b80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a05a363a3b982232ea2f778002be892156cfdeaa453f5c26d651e37538d29fbdf3a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b901000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080618401c9c3808086018bcff72b5b80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a0cb618bb5a0bfcc6313c1934c52f6542d972b468c027e0c0e62d7170029fc4d5ba01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b901000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080628401c9c3808086018bcff75a3b80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a0faa2ac7f5317e184787a3900db0b99a64ae0267f187412237cc7bc64f4d57f0ea01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b901000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080638401c9c3808086018bcff7891b80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000",
+        "0xf901f7a0a04c6c764fa7919e6257c4bf1939f15cf788c642d6d485184fceb1c7c2a8398aa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02222222222222222222222222222222222222222222222222222222222222222a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b901000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080648401c9c3808086018bcff7b7fb80a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
+      ],
+      "receipts": [
+        {
+          "hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+          "transaction_nodes": [
+            "0xf86930b866f864086e82753094cccccccccccccccccccccccccccccccccccccccc808301020382f4f6a0cf4cd244cc315517066d225c738ab7f21facdf13924e4ffeae52d614a9ab5b79a0670b4562d8fdbe1688fa302f0489659430766cc29e685efd1ac365e3737971f3",
+            "0xf851a0430fe2ee020a026894a40fa6c26ae741a74ce222979b740bb1eea283ca51f47080808080808080a057099c9ac7ad32f11b3a89da95b538ef8129843be6e59be568a3f3261ffa73d58080808080808080"
+          ],
+          "receipt_nodes": [
+            "0xf851a0ab40f1f4d92e15fc09de8c17429ed019e1bf69fd4383a0452a75a51dffe19e7180808080808080a0f85c4b8392d0025933a7211aa0840cbc1d86617619c59873084ef015a815f49d8080808080808080",
+            "0xf9010f30b9010bf90108018261a8b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+          ],
+          "previous_receipt_nodes": null
+        },
+        {
+          "hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+          "transaction_nodes": [
+            "0xf89180a0be171e3f190971d3becce2dd0a574cd135f7d02ad1810989476a905936fe29eba0bc097d8a11a3d8a0c630d3df80677c2857ae6a367142219be15adc04b9e134e4a01a8e43e9aa8bdfcd51af4576f74a695dad7949d69af2f84fcc6399c8735a5fb7a03047db07a3bdd6ae5adbf52286f524328c05822eac8d246f25238f36f5bf84fc808080808080808080808080",
+            "0xf851a0430fe2ee020a026894a40fa6c26ae741a74ce222979b740bb1eea283ca51f47080808080808080a057099c9ac7ad32f11b3a89da95b538ef8129843be6e59be568a3f3261ffa73d58080808080808080",
+            "0xf86920b866f864076482753094cccccccccccccccccccccccccccccccccccccccc808301020382f4f6a0fc4e34f8208e71132983114a898f3ef01d2897de64ce505a776d72de997a31efa02aa3948ec363487e5325a040dff49d3bce54c6ea63a000b7ecba148c0c112dac"
+          ],
+          "receipt_nodes": [
+            "0xf851a0ab40f1f4d92e15fc09de8c17429ed019e1bf69fd4383a0452a75a51dffe19e7180808080808080a0f85c4b8392d0025933a7211aa0840cbc1d86617619c59873084ef015a815f49d8080808080808080",
+            "0xf89180a016c9907821daa828e41f689110f140512c874bfab6b70c48177460092b9d9d00a0c3394fdd822b4f16c5fff8948c5e6795afadb67c9feb0f657576042b199ff285a0504d18a5fd884129ef732036fd05defd3377dee59cba3ad0ee132328662ec4e7a04194f01927dc63a77b5c386fc09790d5e140b2230502b69e806a67e50cb7437e808080808080808080808080",
+            "0xf9011020b9010cf901090183011d28b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+          ],
+          "previous_receipt_nodes": [
+            "0xf9010f20b9010bf901080182bb80b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0",
+            "0xf851a0ab40f1f4d92e15fc09de8c17429ed019e1bf69fd4383a0452a75a51dffe19e7180808080808080a0f85c4b8392d0025933a7211aa0840cbc1d86617619c59873084ef015a815f49d8080808080808080",
+            "0xf89180a016c9907821daa828e41f689110f140512c874bfab6b70c48177460092b9d9d00a0c3394fdd822b4f16c5fff8948c5e6795afadb67c9feb0f657576042b199ff285a0504d18a5fd884129ef732036fd05defd3377dee59cba3ad0ee132328662ec4e7a04194f01927dc63a77b5c386fc09790d5e140b2230502b69e806a67e50cb7437e808080808080808080808080"
+          ]
+        },
+        {
+          "hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+          "transaction_nodes": [
+            "0xf86920b866f8640c6482753094cccccccccccccccccccccccccccccccccccccccc808301020382f4f6a0fb521223bcb1d1b3b981ab189690eb02995159ae2be07d1cfd77749e1fd98f31a059703c038f001a7dbaa373cc32675c978030e09a29824b1d811c088a55bd7d6d",
+            "0xf89180a0be171e3f190971d3becce2dd0a574cd135f7d02ad1810989476a905936fe29eba0bc097d8a11a3d8a0c630d3df80677c2857ae6a367142219be15adc04b9e134e4a01a8e43e9aa8bdfcd51af4576f74a695dad7949d69af2f84fcc6399c8735a5fb7a03047db07a3bdd6ae5adbf52286f524328c05822eac8d246f25238f36f5bf84fc808080808080808080808080",
+            "0xf851a0430fe2ee020a026894a40fa6c26ae741a74ce222979b740bb1eea283ca51f47080808080808080a057099c9ac7ad32f11b3a89da95b538ef8129843be6e59be568a3f3261ffa73d58080808080808080"
+          ],
+          "receipt_nodes": [
+            "0xf9011020b9010cf901090183017ed0b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0",
+            "0xf851a0ab40f1f4d92e15fc09de8c17429ed019e1bf69fd4383a0452a75a51dffe19e7180808080808080a0f85c4b8392d0025933a7211aa0840cbc1d86617619c59873084ef015a815f49d8080808080808080",
+            "0xf89180a016c9907821daa828e41f689110f140512c874bfab6b70c48177460092b9d9d00a0c3394fdd822b4f16c5fff8948c5e6795afadb67c9feb0f657576042b199ff285a0504d18a5fd884129ef732036fd05defd3377dee59cba3ad0ee132328662ec4e7a04194f01927dc63a77b5c386fc09790d5e140b2230502b69e806a67e50cb7437e808080808080808080808080"
+          ],
+          "previous_receipt_nodes": [
+            "0xf851a0ab40f1f4d92e15fc09de8c17429ed019e1bf69fd4383a0452a75a51dffe19e7180808080808080a0f85c4b8392d0025933a7211aa0840cbc1d86617619c59873084ef015a815f49d8080808080808080",
+            "0xf89180a016c9907821daa828e41f689110f140512c874bfab6b70c48177460092b9d9d00a0c3394fdd822b4f16c5fff8948c5e6795afadb67c9feb0f657576042b199ff285a0504d18a5fd884129ef732036fd05defd3377dee59cba3ad0ee132328662ec4e7a04194f01927dc63a77b5c386fc09790d5e140b2230502b69e806a67e50cb7437e808080808080808080808080",
+            "0xf9011020b9010cf901090183011d28b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0"
+          ]
+        },
+        {
+          "hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+          "transaction_nodes": [
+            "0xf86920b866f8640b6482753094cccccccccccccccccccccccccccccccccccccccc808301020382f4f5a0609c8a6a1bb655ca417d6c301c48d0bb7f1298d8f29433db15e18870a8fbb4dba0172a494c0ebde79e759dc506cdde81d7376e0b33eac114cddf3d97fc4375a323",
+            "0xf89180a0be171e3f190971d3becce2dd0a574cd135f7d02ad1810989476a905936fe29eba0bc097d8a11a3d8a0c630d3df80677c2857ae6a367142219be15adc04b9e134e4a01a8e43e9aa8bdfcd51af4576f74a695dad7949d69af2f84fcc6399c8735a5fb7a03047db07a3bdd6ae5adbf52286f524328c05822eac8d246f25238f36f5bf84fc808080808080808080808080",
+            "0xf851a0430fe2ee020a026894a40fa6c26ae741a74ce222979b740bb1eea283ca51f47080808080808080a057099c9ac7ad32f11b3a89da95b538ef8129843be6e59be568a3f3261ffa73d58080808080808080"
+          ],
+          "receipt_nodes": [
+            "0xf9011020b9010cf90109018301e078b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0",
+            "0xf851a0ab40f1f4d92e15fc09de8c17429ed019e1bf69fd4383a0452a75a51dffe19e7180808080808080a0f85c4b8392d0025933a7211aa0840cbc1d86617619c59873084ef015a815f49d8080808080808080",
+            "0xf89180a016c9907821daa828e41f689110f140512c874bfab6b70c48177460092b9d9d00a0c3394fdd822b4f16c5fff8948c5e6795afadb67c9feb0f657576042b199ff285a0504d18a5fd884129ef732036fd05defd3377dee59cba3ad0ee132328662ec4e7a04194f01927dc63a77b5c386fc09790d5e140b2230502b69e806a67e50cb7437e808080808080808080808080"
+          ],
+          "previous_receipt_nodes": [
+            "0xf9011020b9010cf901090183017ed0b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0",
+            "0xf851a0ab40f1f4d92e15fc09de8c17429ed019e1bf69fd4383a0452a75a51dffe19e7180808080808080a0f85c4b8392d0025933a7211aa0840cbc1d86617619c59873084ef015a815f49d8080808080808080",
+            "0xf89180a016c9907821daa828e41f689110f140512c874bfab6b70c48177460092b9d9d00a0c3394fdd822b4f16c5fff8948c5e6795afadb67c9feb0f657576042b199ff285a0504d18a5fd884129ef732036fd05defd3377dee59cba3ad0ee132328662ec4e7a04194f01927dc63a77b5c386fc09790d5e140b2230502b69e806a67e50cb7437e808080808080808080808080"
+          ]
+        }
+      ]
+    },
+    "content_hash": "sha256:a9f4c5822b81823ed03b62768555e30bc0c67f7552357bf215db91b092bb1da1"
+  },
+  "checkpoint": {
+    "schema": "urnetwork-native-finality-checkpoint-v1",
+    "codec_profile": "subtensor-u32-blake2-grandpa-ed25519-scheduled-v1",
+    "genesis": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "header_scale": "0x9999999999999999999999999999999999999999999999999999999999999999f10a7070707070707070707070707070707070707070707070707070707070707070737373737373737373737373737373737373737373737373737373737373737300",
+    "set_id": 9,
+    "authorities": [
+      {
+        "public_key": "0x43046bfe4092b3e94994eada15dcc20d8aaa07b658fd3954eb8e0efb8bdca5de",
+        "weight": 4
+      },
+      {
+        "public_key": "0x4ed32f63bf35f0eeefcb25f28a2e1fbdc873ae2835671b0c9460f5f12e4556a8",
+        "weight": 3
+      },
+      {
+        "public_key": "0x884b8857f4eaa1613c61504db34d4beaf346517a0e31de3cddd4d9b4201d9d0b",
+        "weight": 2
+      },
+      {
+        "public_key": "0xa09aa5f47a6759802ff955f8dc2d2a14a5c99d23be97f864127ff9383455a4f0",
+        "weight": 1
+      }
+    ],
+    "live_state": "live",
+    "pending_change": null
+  },
+  "proof": {
+    "schema": "urnetwork-operator-receipt-finality-proof-v1",
+    "collection_hash": "sha256:a9f4c5822b81823ed03b62768555e30bc0c67f7552357bf215db91b092bb1da1",
+    "checkpoint_hash": "sha256:3512040709edd5a39b8198e50e0772621205c7b8b1edab82cd747471b2e5ca07",
+    "segments": [
+      {
+        "headers": [
+          "0x86e4056d1b0b8da32c60e34fb5698351b390e8dcce52717199bc9e46c89959b1f50a71717171717171717171717171717171717171717171717171717171717171717373737373737373737373737373737373737373737373737373737373737373040466726f6e8403152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+          "0xa4e35ee0123ab67a59e6bdd7ff034634cdffaf1133115e6456bec75454f5f0d8f90a72727272727272727272727272727272727272727272727272727272727272727373737373737373737373737373737373737373737373737373737373737373040466726f6e8403f82e1e2951f4d0ccd736f7b6a428ce9c03f3694dd63bd6184754c54b535d2621",
+          "0x509e7c9e06b61d2f7bf8f2827bf74331509afb3d46ed28c34a29a61ec39f4090fd0a73737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373737373040466726f6e840331fe949d13ed308c7010525e8abc07d08849ae6ddd88e113e34d51aea9b2ba13"
+        ],
+        "justification_scale": "0x11000000000000007cc1eb2cf1a3e4397a818c09e881bf647a07820b89e0615d40fa07da5686eea3bf020000087cc1eb2cf1a3e4397a818c09e881bf647a07820b89e0615d40fa07da5686eea3bf0200004c9833bf6d5bdc578ab2f4267c85ade750ab4e9bdf7d031ca9b6e3d96c8597fd70ed6fcc110ab05a126738bf39d09f9bdbec3fca48e075ed1ed5d088fb982b0f43046bfe4092b3e94994eada15dcc20d8aaa07b658fd3954eb8e0efb8bdca5de7cc1eb2cf1a3e4397a818c09e881bf647a07820b89e0615d40fa07da5686eea3bf0200004217f7d5cca96e69ce61ba496e43d0837319a2044e06579e636b32162f078a34caee156d89c622e0f51752465b1349dff8b90c58112c2b2c8180917b4c42830f4ed32f63bf35f0eeefcb25f28a2e1fbdc873ae2835671b0c9460f5f12e4556a800"
+      }
+    ]
+  },
+  "expected": {
+    "schema": "urnetwork-operator-receipt-fee-contexts-v1",
+    "admission": "unapproved_fee_context_proof",
+    "profile": "subtensor-fron-parent-context-hashed-h160-v1",
+    "profile_runtime_source": "67dcf7f791dc495064c293f080a0702cb433e51e",
+    "collection_hash": "sha256:a9f4c5822b81823ed03b62768555e30bc0c67f7552357bf215db91b092bb1da1",
+    "checkpoint_hash": "sha256:3512040709edd5a39b8198e50e0772621205c7b8b1edab82cd747471b2e5ca07",
+    "finality_proof_hash": "sha256:c6cb4038830d1959c52d044e4ad2a7dad3679e22199121643dea9242179bb627",
+    "blocks": [
+      {
+        "evm_block": {
+          "number": 90,
+          "hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f"
+        },
+        "evm_state_root": "0x2222222222222222222222222222222222222222222222222222222222222222",
+        "state": "native_context_complete",
+        "native_contexts": [
+          {
+            "native_block": {
+              "number": 701,
+              "hash": "0xa4e35ee0123ab67a59e6bdd7ff034634cdffaf1133115e6456bec75454f5f0d8"
+            },
+            "native_state_root": "0x7171717171717171717171717171717171717171717171717171717171717171",
+            "native_parent_hash": "0x86e4056d1b0b8da32c60e34fb5698351b390e8dcce52717199bc9e46c89959b1",
+            "native_parent": {
+              "number": 700,
+              "hash": "0x86e4056d1b0b8da32c60e34fb5698351b390e8dcce52717199bc9e46c89959b1"
+            },
+            "native_parent_state_root": "0x7070707070707070707070707070707070707070707070707070707070707070",
+            "frontier_post_log_variant": 3
+          }
+        ]
+      }
+    ],
+    "transactions": [
+      {
+        "hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+        "role": "operator-a",
+        "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "nonce": 8,
+        "origins": [
+          {
+            "source": "database-a",
+            "intent_id": "00000000-0000-0000-0000-000000000002",
+            "attempt": 1,
+            "kind": "execution",
+            "intent_status": "finalized",
+            "attempt_status": "replaced"
+          }
+        ],
+        "observation_state": "observed-finalized",
+        "receipt": {
+          "hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+          "role": "operator-a",
+          "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+          "nonce": 8,
+          "block_number": 90,
+          "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+          "transaction_index": 0,
+          "type": 0,
+          "status": 1,
+          "cumulative_gas_used": 25000,
+          "previous_cumulative_gas_used": 0,
+          "gas_used": 25000,
+          "receipt_bytes_hash": "sha256:330d9624cc19e6b0562f5965fc6af14d7630914a3e368862919ee22f4af4b2af",
+          "actual_gas_fee": null
+        },
+        "native_context_state": "native_context_complete",
+        "profile_mapped_account": "0x34210409bcc1d60612de14aad7c1c0ab0198fe31d7c74d5318fc0f7efeabecf0",
+        "native_extrinsic_index": null,
+        "actual_withdrawal_rao": null,
+        "actual_refund_rao": null,
+        "actual_gas_debit_rao": null,
+        "missing_evidence": [
+          "authenticated native storage reads for the exact parent execution runtime and child event/state roots",
+          "execution-runtime Wasm/metadata and source-to-deployed-code admission, keeping parent execution and child post-state separate",
+          "authenticated native transaction placement/phase and runtime-specific payer binding; EVM transaction index is not a native extrinsic index",
+          "transaction-scoped actual native fee withdrawal/refund attribution through admitted execution replay or an admitted fee-specific runtime record",
+          "independent genesis/checkpoint approval, account nonce evidence, recovery ownership and spending authority"
+        ]
+      },
+      {
+        "hash": "0x44261540a75368818a8c3d57e5087352878c6f6ab45f4c166314bff6efada2ea",
+        "role": "operator-a",
+        "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "nonce": 7,
+        "origins": [
+          {
+            "source": "database-a",
+            "intent_id": "00000000-0000-0000-0000-000000000001",
+            "attempt": 3,
+            "kind": "cancellation",
+            "intent_status": "reverted",
+            "attempt_status": "replaced"
+          }
+        ],
+        "observation_state": "not-found",
+        "receipt": null,
+        "native_context_state": "receipt_unavailable",
+        "profile_mapped_account": "0x34210409bcc1d60612de14aad7c1c0ab0198fe31d7c74d5318fc0f7efeabecf0",
+        "native_extrinsic_index": null,
+        "actual_withdrawal_rao": null,
+        "actual_refund_rao": null,
+        "actual_gas_debit_rao": null,
+        "missing_evidence": [
+          "authenticated native storage reads for the exact parent execution runtime and child event/state roots",
+          "execution-runtime Wasm/metadata and source-to-deployed-code admission, keeping parent execution and child post-state separate",
+          "authenticated native transaction placement/phase and runtime-specific payer binding; EVM transaction index is not a native extrinsic index",
+          "transaction-scoped actual native fee withdrawal/refund attribution through admitted execution replay or an admitted fee-specific runtime record",
+          "independent genesis/checkpoint approval, account nonce evidence, recovery ownership and spending authority",
+          "receipt commitment for this exact archived signature"
+        ]
+      },
+      {
+        "hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+        "role": "operator-a",
+        "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "nonce": 7,
+        "origins": [
+          {
+            "source": "evidence",
+            "filename": "50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a.rlp"
+          },
+          {
+            "source": "database-a",
+            "intent_id": "00000000-0000-0000-0000-000000000001",
+            "attempt": 1,
+            "kind": "execution",
+            "intent_status": "reverted",
+            "attempt_status": "replaced"
+          }
+        ],
+        "observation_state": "observed-finalized",
+        "receipt": {
+          "hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+          "role": "operator-a",
+          "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+          "nonce": 7,
+          "block_number": 90,
+          "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+          "transaction_index": 2,
+          "type": 0,
+          "status": 1,
+          "cumulative_gas_used": 73000,
+          "previous_cumulative_gas_used": 48000,
+          "gas_used": 25000,
+          "receipt_bytes_hash": "sha256:0f9f7470cddc89a9a8a06d157b49ce595d2ad0b235fecd711bd81914da121dbb",
+          "actual_gas_fee": null
+        },
+        "native_context_state": "native_context_complete",
+        "profile_mapped_account": "0x34210409bcc1d60612de14aad7c1c0ab0198fe31d7c74d5318fc0f7efeabecf0",
+        "native_extrinsic_index": null,
+        "actual_withdrawal_rao": null,
+        "actual_refund_rao": null,
+        "actual_gas_debit_rao": null,
+        "missing_evidence": [
+          "authenticated native storage reads for the exact parent execution runtime and child event/state roots",
+          "execution-runtime Wasm/metadata and source-to-deployed-code admission, keeping parent execution and child post-state separate",
+          "authenticated native transaction placement/phase and runtime-specific payer binding; EVM transaction index is not a native extrinsic index",
+          "transaction-scoped actual native fee withdrawal/refund attribution through admitted execution replay or an admitted fee-specific runtime record",
+          "independent genesis/checkpoint approval, account nonce evidence, recovery ownership and spending authority"
+        ]
+      },
+      {
+        "hash": "0xaa3bb0647080958e9956370aff8d32a163155dbebbe34d8bb82ebd1f45965a28",
+        "role": "operator-a",
+        "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+        "nonce": 7,
+        "origins": [
+          {
+            "source": "database-a",
+            "intent_id": "00000000-0000-0000-0000-000000000001",
+            "attempt": 2,
+            "kind": "execution",
+            "intent_status": "reverted",
+            "attempt_status": "replaced"
+          }
+        ],
+        "observation_state": "not-found",
+        "receipt": null,
+        "native_context_state": "receipt_unavailable",
+        "profile_mapped_account": "0x34210409bcc1d60612de14aad7c1c0ab0198fe31d7c74d5318fc0f7efeabecf0",
+        "native_extrinsic_index": null,
+        "actual_withdrawal_rao": null,
+        "actual_refund_rao": null,
+        "actual_gas_debit_rao": null,
+        "missing_evidence": [
+          "authenticated native storage reads for the exact parent execution runtime and child event/state roots",
+          "execution-runtime Wasm/metadata and source-to-deployed-code admission, keeping parent execution and child post-state separate",
+          "authenticated native transaction placement/phase and runtime-specific payer binding; EVM transaction index is not a native extrinsic index",
+          "transaction-scoped actual native fee withdrawal/refund attribution through admitted execution replay or an admitted fee-specific runtime record",
+          "independent genesis/checkpoint approval, account nonce evidence, recovery ownership and spending authority",
+          "receipt commitment for this exact archived signature"
+        ]
+      },
+      {
+        "hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+        "role": "operator-b",
+        "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+        "nonce": 12,
+        "origins": [
+          {
+            "source": "evidence",
+            "filename": "b88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c.rlp"
+          }
+        ],
+        "observation_state": "observed-finalized",
+        "receipt": {
+          "hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+          "role": "operator-b",
+          "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+          "nonce": 12,
+          "block_number": 90,
+          "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+          "transaction_index": 3,
+          "type": 0,
+          "status": 1,
+          "cumulative_gas_used": 98000,
+          "previous_cumulative_gas_used": 73000,
+          "gas_used": 25000,
+          "receipt_bytes_hash": "sha256:1a82af6f19628a00b8ff367c8375f1e10b9756928774412edcf090aa683017da",
+          "actual_gas_fee": null
+        },
+        "native_context_state": "native_context_complete",
+        "profile_mapped_account": "0xd98e43728e89f85aaf3767efc41c691bf3f9d2738f960426cab4f114b540f382",
+        "native_extrinsic_index": null,
+        "actual_withdrawal_rao": null,
+        "actual_refund_rao": null,
+        "actual_gas_debit_rao": null,
+        "missing_evidence": [
+          "authenticated native storage reads for the exact parent execution runtime and child event/state roots",
+          "execution-runtime Wasm/metadata and source-to-deployed-code admission, keeping parent execution and child post-state separate",
+          "authenticated native transaction placement/phase and runtime-specific payer binding; EVM transaction index is not a native extrinsic index",
+          "transaction-scoped actual native fee withdrawal/refund attribution through admitted execution replay or an admitted fee-specific runtime record",
+          "independent genesis/checkpoint approval, account nonce evidence, recovery ownership and spending authority"
+        ]
+      },
+      {
+        "hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+        "role": "operator-b",
+        "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+        "nonce": 11,
+        "origins": [
+          {
+            "source": "database-b",
+            "intent_id": "00000000-0000-0000-0000-000000000003",
+            "attempt": 1,
+            "kind": "execution",
+            "intent_status": "superseded",
+            "attempt_status": "replaced"
+          }
+        ],
+        "observation_state": "observed-finalized",
+        "receipt": {
+          "hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+          "role": "operator-b",
+          "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+          "nonce": 11,
+          "block_number": 90,
+          "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+          "transaction_index": 4,
+          "type": 0,
+          "status": 1,
+          "cumulative_gas_used": 123000,
+          "previous_cumulative_gas_used": 98000,
+          "gas_used": 25000,
+          "receipt_bytes_hash": "sha256:5e9f99845cd0a110710c19ed2b0202d8b807971e7c50f5edf6397871c8ae0be8",
+          "actual_gas_fee": null
+        },
+        "native_context_state": "native_context_complete",
+        "profile_mapped_account": "0xd98e43728e89f85aaf3767efc41c691bf3f9d2738f960426cab4f114b540f382",
+        "native_extrinsic_index": null,
+        "actual_withdrawal_rao": null,
+        "actual_refund_rao": null,
+        "actual_gas_debit_rao": null,
+        "missing_evidence": [
+          "authenticated native storage reads for the exact parent execution runtime and child event/state roots",
+          "execution-runtime Wasm/metadata and source-to-deployed-code admission, keeping parent execution and child post-state separate",
+          "authenticated native transaction placement/phase and runtime-specific payer binding; EVM transaction index is not a native extrinsic index",
+          "transaction-scoped actual native fee withdrawal/refund attribution through admitted execution replay or an admitted fee-specific runtime record",
+          "independent genesis/checkpoint approval, account nonce evidence, recovery ownership and spending authority"
+        ]
+      }
+    ],
+    "found_receipt_contexts_complete": true,
+    "authority_checkpoint_authenticated": false,
+    "genesis_authenticated": false,
+    "runtime_source_authenticated": false,
+    "payer_binding_authenticated": false,
+    "native_extrinsic_locations_authenticated": false,
+    "native_state_reads_authenticated": false,
+    "fee_attribution_authenticated": false,
+    "finality_authenticated": false,
+    "canonical_receipts_reconciled": false,
+    "actual_fees_reconciled": false,
+    "spending_authorized": false,
+    "missing_evidence": [
+      "authenticated native storage reads for the exact parent execution runtime and child event/state roots",
+      "execution-runtime Wasm/metadata and source-to-deployed-code admission, keeping parent execution and child post-state separate",
+      "authenticated native transaction placement/phase and runtime-specific payer binding; EVM transaction index is not a native extrinsic index",
+      "transaction-scoped actual native fee withdrawal/refund attribution through admitted execution replay or an admitted fee-specific runtime record",
+      "independent genesis/checkpoint approval, account nonce evidence, recovery ownership and spending authority"
+    ],
+    "finality": {
+      "schema": "urnetwork-operator-receipt-finality-reconciliation-v1",
+      "admission": "unapproved_checkpoint_proof",
+      "codec_profile": "subtensor-u32-blake2-grandpa-ed25519-scheduled-v1",
+      "codec_runtime_source": "67dcf7f791dc495064c293f080a0702cb433e51e",
+      "codec_sdk_source": "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a",
+      "checkpoint_hash": "sha256:3512040709edd5a39b8198e50e0772621205c7b8b1edab82cd747471b2e5ca07",
+      "proof_hash": "sha256:c6cb4038830d1959c52d044e4ad2a7dad3679e22199121643dea9242179bb627",
+      "collection_hash": "sha256:a9f4c5822b81823ed03b62768555e30bc0c67f7552357bf215db91b092bb1da1",
+      "native_checkpoint": {
+        "number": 700,
+        "hash": "0x86e4056d1b0b8da32c60e34fb5698351b390e8dcce52717199bc9e46c89959b1"
+      },
+      "native_finalized": {
+        "number": 703,
+        "hash": "0x7cc1eb2cf1a3e4397a818c09e881bf647a07820b89e0615d40fa07da5686eea3"
+      },
+      "native_state_root": "0x7373737373737373737373737373737373737373737373737373737373737373",
+      "evm_finalized": {
+        "number": 100,
+        "hash": "0x31fe949d13ed308c7010525e8abc07d08849ae6ddd88e113e34d51aea9b2ba13"
+      },
+      "frontier_post_log_variant": 3,
+      "certificates": [
+        {
+          "target": {
+            "number": 703,
+            "hash": "0x7cc1eb2cf1a3e4397a818c09e881bf647a07820b89e0615d40fa07da5686eea3"
+          },
+          "set_id": 9,
+          "round": 17,
+          "signer_count": 2,
+          "signed_weight": 7,
+          "total_weight": 10,
+          "required_weight": 7
+        }
+      ],
+      "authority_transitions": 0,
+      "next_set_id": 9,
+      "next_authorities": [
+        {
+          "public_key": "0x43046bfe4092b3e94994eada15dcc20d8aaa07b658fd3954eb8e0efb8bdca5de",
+          "weight": 4
+        },
+        {
+          "public_key": "0x4ed32f63bf35f0eeefcb25f28a2e1fbdc873ae2835671b0c9460f5f12e4556a8",
+          "weight": 3
+        },
+        {
+          "public_key": "0x884b8857f4eaa1613c61504db34d4beaf346517a0e31de3cddd4d9b4201d9d0b",
+          "weight": 2
+        },
+        {
+          "public_key": "0xa09aa5f47a6759802ff955f8dc2d2a14a5c99d23be97f864127ff9383455a4f0",
+          "weight": 1
+        }
+      ],
+      "pending_change": null,
+      "grandpa_certificates_verified": true,
+      "native_header_ancestry_verified": true,
+      "native_evm_commitment_verified": true,
+      "authority_checkpoint_authenticated": false,
+      "genesis_authenticated": false,
+      "runtime_source_authenticated": false,
+      "finality_authenticated": false,
+      "canonical_receipts_reconciled": false,
+      "actual_fees_reconciled": false,
+      "spending_authorized": false,
+      "missing_authorities": [
+        "independent genesis and initial checkpoint approval, including active set ID, weighted keys, live voter state and any pending transition",
+        "deployed runtime/code and Frontier digest semantics admission for the verified interval",
+        "authenticated native runtime transaction debit/refund evidence; actual fees remain null",
+        "account nonce state proofs, service adoption and live custody/restart qualification; no recovery spend is authorized"
+      ],
+      "receipt_commitments": {
+        "schema": "urnetwork-operator-receipt-commitment-reconciliation-v1",
+        "census_hash": "sha256:754c7612c47face890d7860f8c4f9af8a2625c9543232bd5ba9345605b5ec851",
+        "observation_hash": "sha256:1898d760b9d478152dd349b7584cd86abfcb1dec9e8758f9f64c2ffc2b2487ea",
+        "commitment_hash": "sha256:b9740f302f11e817926b777871809299150f8274ea7ec8bbb292dce88c06c8fe",
+        "header_profile": "frontier-legacy-rlp15",
+        "header_count": 11,
+        "evm_header_ancestry_verified": true,
+        "found_receipt_commitments_verified": true,
+        "receipts": [
+          {
+            "hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+            "role": "operator-a",
+            "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+            "nonce": 8,
+            "block_number": 90,
+            "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+            "transaction_index": 0,
+            "type": 0,
+            "status": 1,
+            "cumulative_gas_used": 25000,
+            "previous_cumulative_gas_used": 0,
+            "gas_used": 25000,
+            "receipt_bytes_hash": "sha256:330d9624cc19e6b0562f5965fc6af14d7630914a3e368862919ee22f4af4b2af",
+            "actual_gas_fee": null
+          },
+          {
+            "hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+            "role": "operator-a",
+            "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+            "nonce": 7,
+            "block_number": 90,
+            "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+            "transaction_index": 2,
+            "type": 0,
+            "status": 1,
+            "cumulative_gas_used": 73000,
+            "previous_cumulative_gas_used": 48000,
+            "gas_used": 25000,
+            "receipt_bytes_hash": "sha256:0f9f7470cddc89a9a8a06d157b49ce595d2ad0b235fecd711bd81914da121dbb",
+            "actual_gas_fee": null
+          },
+          {
+            "hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+            "role": "operator-b",
+            "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+            "nonce": 12,
+            "block_number": 90,
+            "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+            "transaction_index": 3,
+            "type": 0,
+            "status": 1,
+            "cumulative_gas_used": 98000,
+            "previous_cumulative_gas_used": 73000,
+            "gas_used": 25000,
+            "receipt_bytes_hash": "sha256:1a82af6f19628a00b8ff367c8375f1e10b9756928774412edcf090aa683017da",
+            "actual_gas_fee": null
+          },
+          {
+            "hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+            "role": "operator-b",
+            "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+            "nonce": 11,
+            "block_number": 90,
+            "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+            "transaction_index": 4,
+            "type": 0,
+            "status": 1,
+            "cumulative_gas_used": 123000,
+            "previous_cumulative_gas_used": 98000,
+            "gas_used": 25000,
+            "receipt_bytes_hash": "sha256:5e9f99845cd0a110710c19ed2b0202d8b807971e7c50f5edf6397871c8ae0be8",
+            "actual_gas_fee": null
+          }
+        ],
+        "conditional_observations": {
+          "schema": "urnetwork-operator-receipt-reconciliation-v1",
+          "census_hash": "sha256:754c7612c47face890d7860f8c4f9af8a2625c9543232bd5ba9345605b5ec851",
+          "observation_hash": "sha256:1898d760b9d478152dd349b7584cd86abfcb1dec9e8758f9f64c2ffc2b2487ea",
+          "source": "synthetic-observer",
+          "native_finalized": {
+            "number": 703,
+            "hash": "0x7cc1eb2cf1a3e4397a818c09e881bf647a07820b89e0615d40fa07da5686eea3"
+          },
+          "evm_finalized": {
+            "number": 100,
+            "hash": "0x31fe949d13ed308c7010525e8abc07d08849ae6ddd88e113e34d51aea9b2ba13"
+          },
+          "mapping_evidence_hash": "sha256:23d347a94b34799001437e3ab11771cc6c28adb5389a2a42c878ae4d6e88c462",
+          "trust_requirement": "external source approval and authenticated native-to-EVM finality mapping remain required",
+          "transactions": [
+            {
+              "hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+              "role": "operator-a",
+              "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "nonce": 8,
+              "origins": [
+                {
+                  "source": "database-a",
+                  "intent_id": "00000000-0000-0000-0000-000000000002",
+                  "attempt": 1,
+                  "kind": "execution",
+                  "intent_status": "finalized",
+                  "attempt_status": "replaced"
+                }
+              ],
+              "observation_state": "observed-finalized",
+              "reason": "inclusion matches source claims at or below its supplied finality boundary",
+              "receipt": {
+                "transaction_hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+                "type": 0,
+                "status": 1,
+                "block_number": 90,
+                "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+                "transaction_index": 0,
+                "gas_used": 25000,
+                "cumulative_gas_used": 25000,
+                "effective_gas_price": "110"
+              },
+              "execution_outcome": "succeeded",
+              "observed_gas_fee": "2750000",
+              "nonce_state": "observed-finalized",
+              "conditionally_accounted_gas_fee": "2750000",
+              "observed_winner_hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131"
+            },
+            {
+              "hash": "0x44261540a75368818a8c3d57e5087352878c6f6ab45f4c166314bff6efada2ea",
+              "role": "operator-a",
+              "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "nonce": 7,
+              "origins": [
+                {
+                  "source": "database-a",
+                  "intent_id": "00000000-0000-0000-0000-000000000001",
+                  "attempt": 3,
+                  "kind": "cancellation",
+                  "intent_status": "reverted",
+                  "attempt_status": "replaced"
+                }
+              ],
+              "observation_state": "not-found",
+              "reason": "no receipt observed; nonce consumption remains separate",
+              "receipt": null,
+              "execution_outcome": "",
+              "observed_gas_fee": null,
+              "nonce_state": "observed-finalized",
+              "conditionally_accounted_gas_fee": "0",
+              "observed_winner_hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a"
+            },
+            {
+              "hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+              "role": "operator-a",
+              "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "nonce": 7,
+              "origins": [
+                {
+                  "source": "evidence",
+                  "filename": "50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a.rlp"
+                },
+                {
+                  "source": "database-a",
+                  "intent_id": "00000000-0000-0000-0000-000000000001",
+                  "attempt": 1,
+                  "kind": "execution",
+                  "intent_status": "reverted",
+                  "attempt_status": "replaced"
+                }
+              ],
+              "observation_state": "observed-finalized",
+              "reason": "inclusion matches source claims at or below its supplied finality boundary",
+              "receipt": {
+                "transaction_hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+                "type": 0,
+                "status": 1,
+                "block_number": 90,
+                "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+                "transaction_index": 2,
+                "gas_used": 25000,
+                "cumulative_gas_used": 73000,
+                "effective_gas_price": "100"
+              },
+              "execution_outcome": "succeeded",
+              "observed_gas_fee": "2500000",
+              "nonce_state": "observed-finalized",
+              "conditionally_accounted_gas_fee": "2500000",
+              "observed_winner_hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a"
+            },
+            {
+              "hash": "0xaa3bb0647080958e9956370aff8d32a163155dbebbe34d8bb82ebd1f45965a28",
+              "role": "operator-a",
+              "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "nonce": 7,
+              "origins": [
+                {
+                  "source": "database-a",
+                  "intent_id": "00000000-0000-0000-0000-000000000001",
+                  "attempt": 2,
+                  "kind": "execution",
+                  "intent_status": "reverted",
+                  "attempt_status": "replaced"
+                }
+              ],
+              "observation_state": "not-found",
+              "reason": "no receipt observed; nonce consumption remains separate",
+              "receipt": null,
+              "execution_outcome": "",
+              "observed_gas_fee": null,
+              "nonce_state": "observed-finalized",
+              "conditionally_accounted_gas_fee": "0",
+              "observed_winner_hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a"
+            },
+            {
+              "hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+              "role": "operator-b",
+              "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+              "nonce": 12,
+              "origins": [
+                {
+                  "source": "evidence",
+                  "filename": "b88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c.rlp"
+                }
+              ],
+              "observation_state": "observed-finalized",
+              "reason": "inclusion matches source claims at or below its supplied finality boundary",
+              "receipt": {
+                "transaction_hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+                "type": 0,
+                "status": 1,
+                "block_number": 90,
+                "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+                "transaction_index": 3,
+                "gas_used": 25000,
+                "cumulative_gas_used": 98000,
+                "effective_gas_price": "100"
+              },
+              "execution_outcome": "succeeded",
+              "observed_gas_fee": "2500000",
+              "nonce_state": "observed-finalized",
+              "conditionally_accounted_gas_fee": "2500000",
+              "observed_winner_hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c"
+            },
+            {
+              "hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+              "role": "operator-b",
+              "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+              "nonce": 11,
+              "origins": [
+                {
+                  "source": "database-b",
+                  "intent_id": "00000000-0000-0000-0000-000000000003",
+                  "attempt": 1,
+                  "kind": "execution",
+                  "intent_status": "superseded",
+                  "attempt_status": "replaced"
+                }
+              ],
+              "observation_state": "observed-finalized",
+              "reason": "inclusion matches source claims at or below its supplied finality boundary",
+              "receipt": {
+                "transaction_hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+                "type": 0,
+                "status": 1,
+                "block_number": 90,
+                "block_hash": "0x152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f",
+                "transaction_index": 4,
+                "gas_used": 25000,
+                "cumulative_gas_used": 123000,
+                "effective_gas_price": "100"
+              },
+              "execution_outcome": "succeeded",
+              "observed_gas_fee": "2500000",
+              "nonce_state": "observed-finalized",
+              "conditionally_accounted_gas_fee": "2500000",
+              "observed_winner_hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3"
+            }
+          ],
+          "nonces": [
+            {
+              "role": "operator-a",
+              "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "nonce": 7,
+              "transaction_hashes": [
+                "0x44261540a75368818a8c3d57e5087352878c6f6ab45f4c166314bff6efada2ea",
+                "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+                "0xaa3bb0647080958e9956370aff8d32a163155dbebbe34d8bb82ebd1f45965a28"
+              ],
+              "state": "observed-finalized",
+              "reason": "one observed finalized winner resolves all archived alternatives conditionally",
+              "observed_winner_hash": "0x50cd0d3e89145eb577078680b2f79c08081dc483a41b7e42729095b15159529a",
+              "conditionally_accounted_gas_fee": "2500000"
+            },
+            {
+              "role": "operator-a",
+              "sender": "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+              "nonce": 8,
+              "transaction_hashes": [
+                "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131"
+              ],
+              "state": "observed-finalized",
+              "reason": "one observed finalized winner resolves all archived alternatives conditionally",
+              "observed_winner_hash": "0x05a05405561234102b31c178f6ae1234c6be56ca7516a5832ee6a00f7aacb131",
+              "conditionally_accounted_gas_fee": "2750000"
+            },
+            {
+              "role": "operator-b",
+              "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+              "nonce": 11,
+              "transaction_hashes": [
+                "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3"
+              ],
+              "state": "observed-finalized",
+              "reason": "one observed finalized winner resolves all archived alternatives conditionally",
+              "observed_winner_hash": "0xbe31f77c1630dcf7e66a87a8a31ee54779540df9332c36804f2a356daf7716c3",
+              "conditionally_accounted_gas_fee": "2500000"
+            },
+            {
+              "role": "operator-b",
+              "sender": "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+              "nonce": 12,
+              "transaction_hashes": [
+                "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c"
+              ],
+              "state": "observed-finalized",
+              "reason": "one observed finalized winner resolves all archived alternatives conditionally",
+              "observed_winner_hash": "0xb88200bb853c7a09bd75d0971ecfa59f89248c03c04ef9ffee0a12c715ee1b5c",
+              "conditionally_accounted_gas_fee": "2500000"
+            }
+          ],
+          "fees": [
+            {
+              "role": "operator-a",
+              "resolved_nonces": 2,
+              "unresolved_nonces": 0,
+              "successful_transactions": 2,
+              "reverted_transactions": 0,
+              "observed_finalized_gas_fee": "5250000"
+            },
+            {
+              "role": "operator-b",
+              "resolved_nonces": 2,
+              "unresolved_nonces": 0,
+              "successful_transactions": 2,
+              "reverted_transactions": 0,
+              "observed_finalized_gas_fee": "5000000"
+            }
+          ],
+          "unsigned": [
+            {
+              "source": "database-b",
+              "intent_id": "00000000-0000-0000-0000-000000000004",
+              "role": "operator-b",
+              "nonce": 13,
+              "status": "prepared"
+            }
+          ],
+          "opaque_native_files": 1,
+          "excluded_records": 0,
+          "observation_accounting_complete": true,
+          "finality_authenticated": false,
+          "canonical_receipts_reconciled": false,
+          "actual_fees_reconciled": false,
+          "spending_authorized": false
+        },
+        "trust_requirement": "native consensus finality, runtime-qualified native-to-EVM mapping and boundary account nonces require independent authentication",
+        "fee_requirement": "Frontier RLP15 headers do not commit base fee; exact runtime fee debit and native conversion remain unproven",
+        "account_nonces_authenticated": false,
+        "finality_authenticated": false,
+        "canonical_receipts_reconciled": false,
+        "actual_fees_reconciled": false,
+        "spending_authorized": false
+      }
+    }
+  },
+  "parent_header": "0x9999999999999999999999999999999999999999999999999999999999999999f10a7070707070707070707070707070707070707070707070707070707070707070737373737373737373737373737373737373737373737373737373737373737300",
+  "child_header": "0x86e4056d1b0b8da32c60e34fb5698351b390e8dcce52717199bc9e46c89959b1f50a71717171717171717171717171717171717171717171717171717171717171717373737373737373737373737373737373737373737373737373737373737373040466726f6e8403152e63a94d86104ffec3c96d23b14be69f6de862440910a1206100e569721f8f"
+}

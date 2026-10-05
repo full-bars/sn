@@ -1,0 +1,50 @@
+{
+  "schema": "original-key-fee-revision-source-root-review-v1",
+  "observed_utc": "2026-10-04T05:34:39.893793+00:00",
+  "status": "SOURCE_REVIEWED_COMPILE_BEHAVIOR_PENDING",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision/sn",
+    "head": "bb716e6b440318ed00de91a42c14c82e3cbe9155",
+    "tree": "e6f2531af109ab5249fba574cdf08353a49ca1ee",
+    "parent": "121e7eeb49c7bbffd43cd640c72a14f2bec7028d",
+    "clean": true,
+    "sparse": true
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision/evidence/intake.json",
+    "bytes": 10429,
+    "sha256": "7bd2c60f74b93054b31c53c23c3fe0f853c3b6e90183310e035f7caab5c7065b"
+  },
+  "qualification_addendum": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision/evidence/selector-addendum-v2.json",
+    "bytes": 1695,
+    "sha256": "bd063e4f10b23e257775f2a97269e3b4ba9788dadf92fb0d355e741a8523f658"
+  },
+  "selected_recipe": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision/evidence/selectors-v2.json",
+    "bytes": 15444,
+    "sha256": "a32f8cd77115ecd152df02131abfd510749bdcf5736e1466a3e09ee2da5243c0"
+  },
+  "physical_git_bindings_verified": 17,
+  "ancestor_recipe_bindings_verified": 4,
+  "qualification": {
+    "roots_per_mode": 51,
+    "new_roots": 9,
+    "operative_controls_per_mode": 7,
+    "vet": "./mainnet"
+  },
+  "reviewed_mechanisms": [
+    "Original independent key/network and conservation policy identity retained.",
+    "Signed revision binds exact prior checkpoint, ordinal, predecessor policy/hash and fresh review; complete certificate retained in original archive before new head.",
+    "Historical admitted policies remain available for exact per-context approved backlog; already verified hot/retired requests do not repeat deleted jobs.",
+    "Only matching typed unadmitted-policy hold releases after corresponding signed revision; integrity holds survive.",
+    "Decoded archive summary cannot dispatch without held original archive admission.",
+    "Capacity forecasts include revision/head; nil fields preserve legacy grammar."
+  ],
+  "required_neighbor": "Original earnings/carry/aggregate-payment public root added to source-bound51 recipe because compaction/state/summary changed. Original50 recipe remains history.",
+  "remaining_scope": [
+    "Opening-principal parent runtime producer/parser authored but unfrozen; independent layout/API admission and conservation consumer still being implemented.",
+    "Execution-principal effects, full native miner denominator/quantization, complete provider entitlement/root/funding witness remain substantive mechanisms.",
+    "No selected fee sum establishes whole-provider10/90 conformance."
+  ]
+}

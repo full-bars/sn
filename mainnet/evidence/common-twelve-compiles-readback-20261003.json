@@ -1,0 +1,209 @@
+{
+  "scope": "All twelve frozen b6/Core2ea ordinary/race package compilations; behavioral qualification remains incomplete",
+  "status": "TWELVE_COMPILES_PASS",
+  "independent_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/direct-owned-compiles-independent-verification.json",
+    "sha256": "390e7687865afbb659551879a500ca29fd3e94abb69939be39622a14f3d36c02"
+  },
+  "retained_verification": {
+    "batch_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/direct-owned-compile-batch-receipt.json",
+    "batch_sha256": "9eac498999d9afec57922d9c732ceded290f974960d52b61c474039a95bf3782",
+    "data_available_bytes": 110947745792,
+    "images_dir_mode": "0o700",
+    "phases": [
+      {
+        "image_bytes": 76946960,
+        "image_sha256": "a595d43f2dd8bdb67d2c454bfe86f2bc10e530c129f540d990972a6d2570027e",
+        "inode": 121042211,
+        "phase": "05-compile-mainnet-normal",
+        "receipt_sha256": "1d72e6eb425c29bc475d586ebd9ce1ea3007fcfb4abb6eacfc8577dc72bffe4e",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 6987462,
+        "image_sha256": "86a386b59e1cd8748ea744b77fd6b32e97c519cf11d94241448f1e57e94d8e3e",
+        "inode": 121042208,
+        "phase": "06-compile-durablevolume-normal",
+        "receipt_sha256": "bc1ed8d494a0298dcb90f8831e7ea75c5627853080410857a6ae95a8be884082",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 81935360,
+        "image_sha256": "041eb99eaa73a75fed78503d4cced05dd605847e5e92b2906919893fa0e98680",
+        "inode": 121042212,
+        "phase": "07-compile-validator-normal",
+        "receipt_sha256": "a45b23847221a3f7525b4bf38c57ae1a7009518d002c127c63a1ab46bdae91ff",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 101177976,
+        "image_sha256": "6d2cb8d7a502abbb30b0b06a3a83bd1ea2074188f141c72f127621d4e490646e",
+        "inode": 121042210,
+        "phase": "08-compile-miner-normal",
+        "receipt_sha256": "c26ebe3bdcef27ffdf4330df26bfc39ec72f0de92e01fcb3709e8cf59bfcf968",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 13025366,
+        "image_sha256": "bcd1dc311b9e4a8f52bda1af26eefb975da6d00f25c5ceb0e71dfc02b5ad97bb",
+        "inode": 121042205,
+        "phase": "09-compile-chain-normal",
+        "receipt_sha256": "36bdb9f2abcc61aeea3ba3d2413905a87c26ad01b600f34263469922c7229988",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 9403201,
+        "image_sha256": "94b8771e119dd11d713cb0f5065ddb054145fabab50e14f6fbaafc86ef00df2f",
+        "inode": 121042206,
+        "phase": "10-compile-protocol-normal",
+        "receipt_sha256": "a09c0f607c852f470b43535ec4e5815b48dc8f7617193ba828481584bde34718",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 103421864,
+        "image_sha256": "4bfbdb74f187aa65d85322fd06a72e0cdac25c0a3649f931358b030b2b198ca1",
+        "inode": 121173281,
+        "phase": "11-compile-mainnet-race",
+        "receipt_sha256": "d5396def0d3a8670f7f831df563ea2644fa2c7f8e68c2382de8c71a62d561d2b",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 8999053,
+        "image_sha256": "c3c698699e1185f9099c619bdb96025d167351fd797778c86ccfcb640ebf48f2",
+        "inode": 121042207,
+        "phase": "12-compile-durablevolume-race",
+        "receipt_sha256": "829dd1fd70d8b474244a53a288a04c99816a7e59b97d250f3a8b86a8df5f9f8e",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 108826000,
+        "image_sha256": "2f05062a9a321518041b5d713420f30d43d724956f7fb86192fd60bbba9675c9",
+        "inode": 15791394,
+        "phase": "13-compile-validator-race",
+        "receipt_sha256": "b89c68ec9978e002406ad03f706869172853c942ee6ed5bb7378cdbf863cd8b0",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 131768472,
+        "image_sha256": "615560a2bd27fbb01718bd7ca77027f4d38673e4a1e6608e67ed53600b405837",
+        "inode": 1111330,
+        "phase": "14-compile-miner-race",
+        "receipt_sha256": "5ccaaff331b6dac60c724f79e2985409d4418f71fb3cd859b8b736559235c45d",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 16484472,
+        "image_sha256": "2b0b9f7c37c61f5c805e8613bddc46931c2b945cd6a8c3105938666b298c6c54",
+        "inode": 455970,
+        "phase": "15-compile-chain-race",
+        "receipt_sha256": "e2fdb75715ffd37b1a37fa2192e83b3b7c3c75037de30ddd3e6df407c0d7ef64",
+        "status": "PASS"
+      },
+      {
+        "image_bytes": 11890536,
+        "image_sha256": "433ac1ed6719975cdbb078d9c1fbceeeaeca0572ab8d2cf3ee0970a89bd90c3b",
+        "inode": 121173282,
+        "phase": "16-compile-protocol-race",
+        "receipt_sha256": "d918e77c295beb4d6f853fd7f3e2f744bc2dd566a12485ab0dc0ba3ff36382b2",
+        "status": "PASS"
+      }
+    ],
+    "schema": "independent-b6-core2ea-12-direct-owned-compiles-v1",
+    "status": "PASS",
+    "verified_unix_ns": 1791065853868896398
+  },
+  "batch_receipt": {
+    "adoption_sha256": "c4d1c8c822b8bc50f11947a1acf02c31e3c397c35c305ffaea5b721aff215286",
+    "baseline_sha256": "6daddb91b697c57c7cb12f7eaacbb175ade967cfa6883045493f517c2a34b02f",
+    "finished_unix_ns": 1791065828931243135,
+    "job_sha256": "1dace6c25a0396f893cbd3f3f53e0befaeafee8ccf7b03c9972ab92302adc636",
+    "phases": [
+      {
+        "phase_id": "05-compile-mainnet-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-05-compile-mainnet-normal-receipt.json",
+        "receipt_sha256": "1d72e6eb425c29bc475d586ebd9ce1ea3007fcfb4abb6eacfc8577dc72bffe4e",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "06-compile-durablevolume-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-06-compile-durablevolume-normal-receipt.json",
+        "receipt_sha256": "bc1ed8d494a0298dcb90f8831e7ea75c5627853080410857a6ae95a8be884082",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "07-compile-validator-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-07-compile-validator-normal-receipt.json",
+        "receipt_sha256": "a45b23847221a3f7525b4bf38c57ae1a7009518d002c127c63a1ab46bdae91ff",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "08-compile-miner-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-08-compile-miner-normal-receipt.json",
+        "receipt_sha256": "c26ebe3bdcef27ffdf4330df26bfc39ec72f0de92e01fcb3709e8cf59bfcf968",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "09-compile-chain-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-09-compile-chain-normal-receipt.json",
+        "receipt_sha256": "36bdb9f2abcc61aeea3ba3d2413905a87c26ad01b600f34263469922c7229988",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "10-compile-protocol-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-10-compile-protocol-normal-receipt.json",
+        "receipt_sha256": "a09c0f607c852f470b43535ec4e5815b48dc8f7617193ba828481584bde34718",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "11-compile-mainnet-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-11-compile-mainnet-race-receipt.json",
+        "receipt_sha256": "d5396def0d3a8670f7f831df563ea2644fa2c7f8e68c2382de8c71a62d561d2b",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "12-compile-durablevolume-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-12-compile-durablevolume-race-receipt.json",
+        "receipt_sha256": "829dd1fd70d8b474244a53a288a04c99816a7e59b97d250f3a8b86a8df5f9f8e",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "13-compile-validator-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-13-compile-validator-race-receipt.json",
+        "receipt_sha256": "b89c68ec9978e002406ad03f706869172853c942ee6ed5bb7378cdbf863cd8b0",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "14-compile-miner-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-14-compile-miner-race-receipt.json",
+        "receipt_sha256": "5ccaaff331b6dac60c724f79e2985409d4418f71fb3cd859b8b736559235c45d",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "15-compile-chain-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-15-compile-chain-race-receipt.json",
+        "receipt_sha256": "e2fdb75715ffd37b1a37fa2192e83b3b7c3c75037de30ddd3e6df407c0d7ef64",
+        "status": "PASS"
+      },
+      {
+        "phase_id": "16-compile-protocol-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-16-compile-protocol-race-receipt.json",
+        "receipt_sha256": "d918e77c295beb4d6f853fd7f3e2f744bc2dd566a12485ab0dc0ba3ff36382b2",
+        "status": "PASS"
+      }
+    ],
+    "runner_sha256": "60c982c9938587ccef4a984282bab94e92fdd53a3784c99b42b4a1d4775a7149",
+    "schema": "direct-owned-b6-core2ea-compiles-v1",
+    "started_unix_ns": 1791065033867343762,
+    "status": "PASS"
+  },
+  "root_review": "All12 per-phase compiler receipts, raw logs and unique0500 ELF identities/hashes independently verified; unchanged source module hashes and zero compiler exits. The normal203-root runtime batch is active separately; neither compilation nor its admission proves behavioral success.",
+  "continuity": "Completed sources, packaging, graphs and compiles remain retained; same canonical lease, fixed baseline and32GiB cap.",
+  "remaining": [
+    "Normal/race behavioral execution",
+    "Full512 measured replay",
+    "Rust cross-engine export and execution",
+    "Operative omission controls",
+    "New native producer implementation/qualification",
+    "Final source/config release and actual launch authority"
+  ]
+}

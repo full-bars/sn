@@ -1,0 +1,1450 @@
+{
+  "schema": "urnetwork-root-mixed-qualification-terminal-v1",
+  "captured_utc": "2026-10-03T18:23:34.268893+00:00",
+  "status": "ALL35_FINITE_PHASES_TERMINAL",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/mixed63-final-receipt.json",
+      "bytes": 4434,
+      "sha256": "69d3629c727d40506973898ff4b0362dbf2bb3cc004d7c5392089b6d763c7d01"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/final-ledger-snapshot.json",
+      "bytes": 146533,
+      "sha256": "9a75bb92ffd2b8527209408d675e12767b52e2ec503990cc59afc24c1961e092"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/evm42-selected-import-graph/selected-effective-graph.json",
+      "bytes": 323607,
+      "sha256": "1bd7da7893e3e2260db8553c0e20a6cc5f87e269584de93e0d9ba55ece207dbd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/graph_evm.json",
+      "bytes": 2170,
+      "sha256": "5508254294360f3b5daddb6691f1d7a2c6f4c18819ab51c2d7069f96465f25dc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/evm42_compile.json",
+      "bytes": 2228,
+      "sha256": "85bcf119707a085527eee5836fb949f7c66f7814e16e09790fe31a83d4620611"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_evm.stdout",
+      "bytes": 364,
+      "sha256": "4f90ed0d52b6366ffd1303316baa5fd9f473ad17aef79c8e038a12f9f084df6b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_evm.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_evm.resource.csv",
+      "bytes": 1075,
+      "sha256": "cacac10cf03b0de7c8a4b5256fdb0308fa9f40ca6383e6a09012615b0ae318a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/evm42_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/evm42_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/evm42_compile.resource.csv",
+      "bytes": 58793,
+      "sha256": "842c7b4ef64fabe177e9b0b0ac4d37bac341e17072d7f4753cb7abcced7b8fa5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/cohort63-scoped-receipt.json",
+      "bytes": 32270,
+      "sha256": "baededc2c354e41f59685e9fc69ff7ebad6e6945689f30dc4b50f425d136250c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/evm42-selected-import-graph/sn-deps.jsonl",
+      "bytes": 3656662,
+      "sha256": "40978dcaf4096b276640d334c34d41323514bd41a6b88d382f489d82ec7aa51b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/evm42-selected-import-graph/sn-deps.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/evm42-selected-import-graph/source-controls-before.json",
+      "bytes": 1557,
+      "sha256": "46cb051bb39825ecb10828651af8e83fb6e9477e3150bb1acb30e27d55028dbb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_exporter.stdout",
+      "bytes": 55830,
+      "sha256": "dd70396fdc19d4a6eae82a71402992d87c7c5dc1451dbe8b84b924a73259fc6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_exporter.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_exporter.resource.csv",
+      "bytes": 540,
+      "sha256": "ede463c5529dddb426ddb1eea3a92c5a3f8eac6768e81166445e6dc16c0ba9be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/graph_exporter.json",
+      "bytes": 1596,
+      "sha256": "dc6c417bcfe30de1ff98f0034d7edd028f2b56509960dd6b76c405f4e6386615"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_compile.resource.csv",
+      "bytes": 5441,
+      "sha256": "aa3f6c6f54d937f36b0b1dc54f5d65707dc8b1d3437d5eb46e9043e88bbcb8e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/exporter_compile.json",
+      "bytes": 1928,
+      "sha256": "2c7be9efb84c0190d8d81b3a96ba051e13b0d56696061c9bcbd1bf393504cc81"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_test.stdout",
+      "bytes": 1609,
+      "sha256": "18364cf12b2aad8293e02804a1f53568335365737d1c6e04b1e1e09318945721"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_test.resource.csv",
+      "bytes": 391,
+      "sha256": "655beae3e2f65e88d9ee157b8ba819748631e1e6e970e07bf397c60f7ab0e817"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/exporter_test.json",
+      "bytes": 2214,
+      "sha256": "5f4ef28c8d6841b37ad5b766f8587e280a7449aae8663292c9e50b02d3f5eebe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/archive_collector.stdout",
+      "bytes": 594,
+      "sha256": "36d3d4103ef34926934c043c6781a12c248e6e36c97e2f63ca46991d3e9ad322"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/archive_collector.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/archive_collector.resource.csv",
+      "bytes": 2695,
+      "sha256": "7fb632b76cc5adce676ebe09b5483da19b129e42183aa58a3c0439ddd9df0357"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/archive_collector.json",
+      "bytes": 845,
+      "sha256": "afb99af7e5844320ea3e736560a80a72ce5b188013ff405c995f0223fa05d6c2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_collector.stdout",
+      "bytes": 55356,
+      "sha256": "88a1e7d3b3d23f25ddb923572ab05798bac949e69317d7df8c7cead4df5b807a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_collector.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_collector.resource.csv",
+      "bytes": 704,
+      "sha256": "005ea4978cd372417105f026026bbe748459e11cc2eca0f7719c4fc140a92f78"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/graph_collector.json",
+      "bytes": 1516,
+      "sha256": "947a3a14f52391eda7078dfdb3ff0b385e0298e4f5e03b6bab2f50a8843bf652"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_compile.resource.csv",
+      "bytes": 55283,
+      "sha256": "c21497afe6e411009cf7d6914b14525b1e7fd650cbc7f20d934e7960e2e42529"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_normal_compile.json",
+      "bytes": 1711,
+      "sha256": "ecfb265a94d8d19c17fc90b6e75e3dccbcaa755ca33756e28316239547130dbc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_test.stdout",
+      "bytes": 6093,
+      "sha256": "b232af9a2ebe8541f0d8bc4ca260d08cb3860ae83ddf797dd89b5d9e9f3b0c49"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_test.resource.csv",
+      "bytes": 10096,
+      "sha256": "56cce9f68928538ae55957d3626b5011d647d63bf6e802c07ead934691b744e7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_normal_test.json",
+      "bytes": 2461,
+      "sha256": "8817f4fd1211afea1291ba947328ebc38f9f2b2c9637e9f7aef6901ea768635f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_compile.resource.csv",
+      "bytes": 97403,
+      "sha256": "e15c39cba18a4711fbc8c1059687f154c55ab2bd3b067e86f309b57d0c430b27"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_race_compile.json",
+      "bytes": 1718,
+      "sha256": "a80191ede686130048541c0cd4f0d0c8392b92b0a3774a18adf367929903616d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_test.stdout",
+      "bytes": 6111,
+      "sha256": "a2e2d5985dda75fe865c2ea643b34e6fa4664f383e7fbcaebd7a454e4d215414"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_test.resource.csv",
+      "bytes": 51485,
+      "sha256": "9c4024aecdc506e89e92541fcc5c78c9d4501c6b3d85317f89fdbaaa9016613e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_race_test.json",
+      "bytes": 2453,
+      "sha256": "764e5bbabcbc0c5fb7fb7feae04218f1bb333b72b5d25c0601dfed247429963e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_vet.resource.csv",
+      "bytes": 6299,
+      "sha256": "650b980de88a267ffc816ad332bea9f1e72e7880c2246f8c92b7dff7e567e130"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_vet.json",
+      "bytes": 1461,
+      "sha256": "4374e74e314b8149621d3518c2aad1a5b1624cddf573d4c83097ca953cbf22ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/archive63.stdout",
+      "bytes": 1412,
+      "sha256": "7d849b2070affdedad2fe947e811236f33d09ca4c8623bd207f26d878023d852"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/archive63.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/archive63.resource.csv",
+      "bytes": 3313,
+      "sha256": "d005d84c598ec05a8191344602d734eda1d0413355a35299d6b4e0180b3ec99d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/archive63.json",
+      "bytes": 1050,
+      "sha256": "1040eec00f052dd5d330e9e0bd6cfb8f79d4c656611b7b3d343f7bad9d964b4b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_63.stdout",
+      "bytes": 135,
+      "sha256": "4451f3639feba1b5edaf30bf6bb2efb1a22391e3889b9c89dc9d325d67c8df4d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_63.stderr",
+      "bytes": 447,
+      "sha256": "70e70997517f3272526ad720f3267dad52396d26486087d48c72215a99377d6f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_63.resource.csv",
+      "bytes": 297,
+      "sha256": "a9fb1417347d61b1585e32213521ca2d876b9b3f843db042cf21d8324a8a4b01"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/graph_63.json",
+      "bytes": 1994,
+      "sha256": "d38c5d9c334329f31f3cf07cd8e3da6bb6b013d861c4593eb93cd774420b96df"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_63_retry.stdout",
+      "bytes": 485,
+      "sha256": "42ef0510e89be7450174a12562572bd462e799c0541eca950c53c0171a8afd72"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_63_retry.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_63_retry.resource.csv",
+      "bytes": 1331,
+      "sha256": "18f41668caa1dc16ac4b6d3867063deb78168ec6981cf7640d37caa7741599cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/graph_63_retry_astra.json",
+      "bytes": 2026,
+      "sha256": "29150cb189b41035a6981610153b9e55d5556bbf4133155d09a66aabb4c0138d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_normal_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_normal_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_normal_compile.resource.csv",
+      "bytes": 2555,
+      "sha256": "87f42dd394b3c5ff526e2472ef692e5f9a0edc00b2a4a4a22fffc7f3b3709225"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_core_normal_compile.json",
+      "bytes": 1752,
+      "sha256": "e2786bb0bfeed6f9337a328a78ce6f75f8efd46859ebf8ff257b3468df6b38ad"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_normal_test.stdout",
+      "bytes": 5818,
+      "sha256": "cc8de49d728842032ca104aeb2da6160c29a279fb7f057c3697a5788dc232a0f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_normal_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_normal_test.resource.csv",
+      "bytes": 1024,
+      "sha256": "01e82ccfc53483eaf24206fbff9d235187079d0cab32376f7615723d20c28ee7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_core_normal_test.json",
+      "bytes": 2185,
+      "sha256": "f583462a2b90454f3ba721c2b663751aa451b6e8a1f40a100a7f6fd507492ae4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_race_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_race_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_race_compile.resource.csv",
+      "bytes": 3803,
+      "sha256": "300f5e93adcdf28213f390a42b26f4ad805b385ad723616ee8a1a664b1f96bd2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_core_race_compile.json",
+      "bytes": 1759,
+      "sha256": "84601e708d156a174cbb86ba132e38c79c6eaa798bb720edff935464a0c2c768"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_race_test.stdout",
+      "bytes": 5820,
+      "sha256": "30ca0639f8c57d9c488c2f77a8f88f3a42f5db7cdbf275ece34b34001dcd8fe8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_race_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_core_race_test.resource.csv",
+      "bytes": 1833,
+      "sha256": "970559c44ef8653750712840fb0133643924f4974ba1187787a69d7de059c38a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_core_race_test.json",
+      "bytes": 2177,
+      "sha256": "f95a33bff27c4c4a2e99660bd58f4d4aa52d7abadca52c31df05f9635675e8f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_normal_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_normal_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_normal_compile.resource.csv",
+      "bytes": 58403,
+      "sha256": "2843f91a95d8f219338f4fbdec6e1c98ed50345404b3abdcc6dc8ade81ef0f09"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_mainnet_normal_compile.json",
+      "bytes": 1806,
+      "sha256": "76c5ec4ff447019b4f758e16838417b65662dc9aa7ae0449ffc481db14a15816"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_normal_test.stdout",
+      "bytes": 3157,
+      "sha256": "a6bcef4c7032bb24e194ef95dcbc17825a33809ff5ab930e19f5c096a7f6cb6e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_normal_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_normal_test.resource.csv",
+      "bytes": 5724,
+      "sha256": "cc2f97aa60fd1089175cefa87d901891eca0ce8fcc740e5d0a1f8a5792b671ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_mainnet_normal_test.json",
+      "bytes": 2215,
+      "sha256": "73c2de363788fc35b16da4544ed8462f67d46b3fbf60124c84addd9e51e340a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_normal_full512.stdout",
+      "bytes": 1222,
+      "sha256": "025fa5494bfafebe6f6807bf94aa9c0a6b8843199dad8cb046251e85b9abb0f3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_normal_full512.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_normal_full512.resource.csv",
+      "bytes": 180706,
+      "sha256": "c01920a2b0cf82a6ea2dd3be392d3b0e5343b180c6daa0739731587db6c93c58"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_mainnet_normal_full512.json",
+      "bytes": 2386,
+      "sha256": "e5178857233b65ab0012631c1a7011eecacbf252d2a6c6936e365e80ec282b8c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_race_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_race_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_race_compile.resource.csv",
+      "bytes": 88745,
+      "sha256": "50196e2a57b60175086e2101ac1467a34cb9713f2039e55b1e8ac4ffcbccda1d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_mainnet_race_compile.json",
+      "bytes": 1813,
+      "sha256": "a087584a6a268fe13f6daae82b350e5bbe4fa4e972be4b1e08395f82bbc76c35"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_race_test.stdout",
+      "bytes": 3168,
+      "sha256": "7450cecb244eb25c342762792a76c1f0a37c77295e899d5c06a95b3d15e01b87"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_race_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_race_test.resource.csv",
+      "bytes": 26390,
+      "sha256": "0dffeee52e9f0b705a5f380937cf8e5d35779bc06a37fee1b620c4709f231689"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_mainnet_race_test.json",
+      "bytes": 2207,
+      "sha256": "cf4a5ba1e5f079dd55543c2c15485eff870947f0c74d7c2e33901deb8bd6fd8a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_race_full512.stdout",
+      "bytes": 1220,
+      "sha256": "db9d16ac11104e183cd96f2c73c24f5a3957e66dfd54959e22c2a306884f4aa4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_race_full512.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_new_mainnet_race_full512.resource.csv",
+      "bytes": 402381,
+      "sha256": "9053c4ae7eec1ac7822b5ba17dbe28b1c6c5359fd051ae4ba06600333974e3a9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_new_mainnet_race_full512.json",
+      "bytes": 2378,
+      "sha256": "7c3a9619b85508948c625fb82ea702fd2d0f0d2858f0060ce1b2fb63f8cb9bd0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_normal_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_normal_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_normal_compile.resource.csv",
+      "bytes": 2477,
+      "sha256": "265318a9d6d603dd10a51d5ab0ee8fcfe6059914a5c632c24c57e1890e5d80d6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_old1610_core_normal_compile.json",
+      "bytes": 4002,
+      "sha256": "61b9cf4fb8d9a14e4f964f347a11fc394c1cb56eb90ed805ec0ed146c33457ea"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_normal_test.stdout",
+      "bytes": 5541,
+      "sha256": "caffd1cbc57997049ace89a750dc2615f5c012e7fab12676947b65811458870e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_normal_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_normal_test.resource.csv",
+      "bytes": 538,
+      "sha256": "3826626e0480354a11a9c933a7398e4ee95b2ac592542d072e01bc8066c92d9d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_old1610_core_normal_test.json",
+      "bytes": 1789,
+      "sha256": "33d242f68edaa22822be5a23432361e762848c063223dee82a48e80d919f1986"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_race_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_race_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_race_compile.resource.csv",
+      "bytes": 3569,
+      "sha256": "86d50b3bf1b9a918be7640c624741df01aab4beec9b379e1ab11e3a6097414de"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_old1610_core_race_compile.json",
+      "bytes": 4009,
+      "sha256": "4ab9bd4c2dfcca784527f2bfd3b97e036c95248e631b389365e574c4bd571dbf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_race_test.stdout",
+      "bytes": 5547,
+      "sha256": "d6aa3c9303ca09e91f405b2ac7d4a4846613d411eca4b51f91ea9e8d330e68e2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_race_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_core_race_test.resource.csv",
+      "bytes": 700,
+      "sha256": "99e110120d42a864929bec963b9762bd2aafa1f6728eb262c9d4f5232a33ad23"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_old1610_core_race_test.json",
+      "bytes": 1781,
+      "sha256": "f6cc1160da035f2d8ac427382a128b288b44b29798bc232799ada79953baf2e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_normal_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_normal_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_normal_compile.resource.csv",
+      "bytes": 35705,
+      "sha256": "1fe1a227159c6bce7196f13dbfb716c464f6a9f3c8599b1d04555173b358318f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_old1610_mainnet_normal_compile.json",
+      "bytes": 4206,
+      "sha256": "0b311984142746cb06137afb28c0836309052eefbe27039102e55620b722e167"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_normal_test.stdout",
+      "bytes": 2288,
+      "sha256": "bdaf0a7f7532229dc608116dea9b76a04eb12016c4e7d31fd92ac11a83a05234"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_normal_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_normal_test.resource.csv",
+      "bytes": 1791,
+      "sha256": "8bdd55d081a4f068001a46103a532c5ee7153cc6db50e8a13b99ca0967d5abbd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_old1610_mainnet_normal_test.json",
+      "bytes": 1866,
+      "sha256": "a6a48fade7527d8d300a514c34d5899fcb2d82bac30cea43d55ce96a5db31382"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_race_compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_race_compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_race_compile.resource.csv",
+      "bytes": 53645,
+      "sha256": "18f008a2eddcd6b246390ee78867ca1cdfc815d5e18d48a5fba043dd716134c2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_old1610_mainnet_race_compile.json",
+      "bytes": 4213,
+      "sha256": "16eae7e99ba0061caa9e8aa8aaa2702941942f60daa199a15cd4427d995b0b9b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_race_test.stdout",
+      "bytes": 2287,
+      "sha256": "e555c3e19803a85ac57b3b7f7d2e33ef88bc30a656c73d8b74d95f3fbaa2d841"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_race_test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_old1610_mainnet_race_test.resource.csv",
+      "bytes": 7377,
+      "sha256": "a2ee35da29a8f5ad9a0f06e30e99f2c36669be42516593f4688241e298207718"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_old1610_mainnet_race_test.json",
+      "bytes": 1858,
+      "sha256": "4159f7e86e19ea1b639d7a74d12efbb50370c13f6e815512b1eea49bd68f584c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_core_vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_core_vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_core_vet.resource.csv",
+      "bytes": 527,
+      "sha256": "ca111dbd1904d2430066264f9f8e1d9925e4bcd5a57c5b8c0b916f62d564e0dd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_core_vet.json",
+      "bytes": 1344,
+      "sha256": "5f10bc2ea52790f9f0fd53e6bf52f71fa3255a4439a72a7d16fb7592bebb9a1f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_mainnet_vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_mainnet_vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/63_mainnet_vet.resource.csv",
+      "bytes": 5753,
+      "sha256": "366f406e31fe025e78f01b17f3dfd4cd4074becc95334683f79822d87af17b4d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/63_mainnet_vet.json",
+      "bytes": 1542,
+      "sha256": "8dc8907b8e464bee5a646b874a2af60acb98cc85ab326dd1ee786a2a0819a980"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/connect/go.mod",
+      "bytes": 3887,
+      "sha256": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/connect/go.sum",
+      "bytes": 21922,
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/evidence/intake.json",
+      "bytes": 16291,
+      "sha256": "27b2bab0b53310f8041eb76ff8d1a379584830058065761cbe1395c5e41f1cbc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/go.work",
+      "bytes": 1013,
+      "sha256": "d209432c2d87b829bb0e38729848a14fa2d8fea51e1d73547450e44308a3fd97"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/sn/go.sum",
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/graph42-selected.py",
+      "bytes": 7737,
+      "sha256": "f4999419f26e6de3b9e7ba75a9496b2f070182f6916e2c91322312db6458de55"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/!chain!safe/go-schnorrkel/@v/v1.1.0.mod",
+      "bytes": 549,
+      "sha256": "66c018a95d3c6184c27c27e04d49f2e261431d54aef283e36226d27dde9b8e83"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/!victoria!metrics/fastcache/@v/v1.13.0.mod",
+      "bytes": 338,
+      "sha256": "01a8dcbc337ecda467d50b0e3cb9060b9831d5fc211386843e23430574fb987c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/benbjohnson/clock/@v/v1.3.5.mod",
+      "bytes": 45,
+      "sha256": "1b5a789b0951b85f75af6cc99b24b8e2933509a4e3f93f05483181920588be31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/beorn7/perks/@v/v1.0.1.mod",
+      "bytes": 40,
+      "sha256": "c870b3fe50b6944fab095b06208d9c8898763e9173cb1eed3258c3d58309ba66"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/bits-and-blooms/bitset/@v/v1.24.4.mod",
+      "bytes": 50,
+      "sha256": "e1d76f51cb52ad77a366c14e391f29ff1adba192135a9a4cbeca5e87ad7e41fd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/cespare/xxhash/v2/@v/v2.3.0.mod",
+      "bytes": 45,
+      "sha256": "a090f8eaaf59cc2adf163299ebefe797e1dca3f6add2c8e88a6a3b90ba538b02"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/consensys/gnark-crypto/@v/v0.20.1.mod",
+      "bytes": 966,
+      "sha256": "91b710e5fdf2ff7fb36ec78c0aa3abe513fd67647d15392f38c984496ab4156b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/cosmos/go-bip39/@v/v1.0.0.mod",
+      "bytes": 148,
+      "sha256": "63fbc157807f6e2ad12e1bc271fd24001281c1cc75549527e1a87038a910563b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/crate-crypto/go-eth-kzg/@v/v1.4.0.mod",
+      "bytes": 685,
+      "sha256": "65e323a224d99153b278158d01cfb29adabc3907447c1a62f274128b54e2b961"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/davecgh/go-spew/@v/v1.1.2-0.20180830191138-d8f796af33cc.mod",
+      "bytes": 34,
+      "sha256": "bcb29393251237b79a17b6c19bf29134f43e8f438c3198988fcd461a1cdf05cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/davidlazar/go-crypto/@v/v0.0.0-20200604182044-b73af7476f6c.mod",
+      "bytes": 182,
+      "sha256": "24edfdcf547582cf9b07794e7c400e2f7c807e8cdcf1582e8e6912c7702efc40"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/deckarep/golang-set/v2/@v/v2.6.0.mod",
+      "bytes": 50,
+      "sha256": "88857ee21be07f90074e798413e3f1aad8e20b9f87f9711341cc1fb149717c80"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/deckarep/golang-set/@v/v1.8.0.mod",
+      "bytes": 47,
+      "sha256": "4d51c3e4d5aabdf4d9e6390f0e9275f956704582c57e37f54af597fb984c0d2d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/decred/base58/@v/v1.0.4.mod",
+      "bytes": 96,
+      "sha256": "27c59380f06c6f7226ab92527fef03f7ea0ea498c5c072a40a0cd2dd6e9484dc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/decred/dcrd/crypto/blake256/@v/v1.1.0.mod",
+      "bytes": 55,
+      "sha256": "ab88bb5afb45e536a0bfaac356756d7ebc0ce50f45e32f7240c1b3340e3f0b48"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/decred/dcrd/dcrec/secp256k1/v4/@v/v4.4.1.mod",
+      "bytes": 113,
+      "sha256": "2b9c7ed2ce57cd2adb4c10902e10d17554dcccc9929ee3a6533c6d83ebd9f3d1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/docopt/docopt-go/@v/v0.0.0-20180111231733-ee0de3bc6815.mod",
+      "bytes": 35,
+      "sha256": "823910dbd11e54957ae687f7abbcdc3343471d63accbb3fb691d743779466e49"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/emicklei/dot/@v/v1.6.2.mod",
+      "bytes": 40,
+      "sha256": "508eb678f9c8fb77969c7d31b2387b2e853ab1d839a3540defb31da3fd8210d6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/ethereum/go-bigmodexpfix/@v/v0.0.0-20250911101455-f9e208c548ab.mod",
+      "bytes": 88,
+      "sha256": "b5d5fad6f69f8af825c5f91f3e9dcea87ee8db612ce13f8128b9d0345398d688"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/ethereum/go-ethereum/@v/v1.17.0.mod",
+      "bytes": 7921,
+      "sha256": "1d337340cb8c2374bbb6f264473b3c911e8574afacfd89e550ba788acf26e433"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/ferranbt/fastssz/@v/v0.1.4.mod",
+      "bytes": 508,
+      "sha256": "a6794f91c1627f77b8884fb0de115d83da4ffe4f0731abfb35436c6c51818ecb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/filecoin-project/go-clock/@v/v0.1.0.mod",
+      "bytes": 53,
+      "sha256": "320efecb99ae255da2a7038a46926876ddb41b00eb561c71c7df4305b85c2b1d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/flynn/noise/@v/v1.1.0.mod",
+      "bytes": 162,
+      "sha256": "c7aeaadf7e45b2f1648e09dc3c7819e0bcb910d9687933e6e85e09231e765799"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/fsnotify/fsnotify/@v/v1.9.0.mod",
+      "bytes": 279,
+      "sha256": "da3713c5c57d252d25520de0e6b397b033858b3aff5dddf21164abe3297c9ff9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/go-logr/logr/@v/v1.4.3.mod",
+      "bytes": 40,
+      "sha256": "c496f30d700f02b49a1b50bc2486a27c2f74df3dce75d9db6d2d43975b381727"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/go-logr/stdr/@v/v1.2.2.mod",
+      "bytes": 80,
+      "sha256": "0812160f77474d8dbf692b7caaee7fd5508448c705d9b54b5a3496ac44468c2c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/gofrs/flock/@v/v0.13.0.mod",
+      "bytes": 371,
+      "sha256": "401e19149e554efaff3c749f134756bdfef89998d09cf5f0efabdc44974c5df1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/golang-jwt/jwt/v5/@v/v5.3.1.mod",
+      "bytes": 45,
+      "sha256": "ce98fa479154259db056ded8254a6ae9c66f2b42e613e76ba0f026699b5e542f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/golang/snappy/@v/v1.0.0.mod",
+      "bytes": 32,
+      "sha256": "f56debc9765b8492979fefa31209b67c9627d90e2469c6159c940daf6d249905"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/google/btree/@v/v1.1.3.mod",
+      "bytes": 629,
+      "sha256": "671a2227c5628cbb94ce027ab4232858c4f0dd0cbb98aaa83d7a265d7ec194d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/google/uuid/@v/v1.6.0.mod",
+      "bytes": 30,
+      "sha256": "73da47b6338b00a082fd451aa35a3273d3adc09b8e9bba98dab01091e402af6e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/gorilla/websocket/@v/v1.5.3.mod",
+      "bytes": 45,
+      "sha256": "09dc8a9227a54c1069ea065d610a5f2ca195f1f5fba6e7dbb2d7eb0fd6e01df6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/gtank/merlin/@v/v0.1.1.mod",
+      "bytes": 110,
+      "sha256": "886f3ff65e957b18d3a8b6052757a578aaad5ba72af70a760cb1174bafdfb6ad"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/gtank/ristretto255/@v/v0.1.2.mod",
+      "bytes": 46,
+      "sha256": "774576272ce1033fb396ce42a7858c0928ed67ea6627c1f0cbdc35f1917aa973"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/hashicorp/golang-lru/v2/@v/v2.0.7.mod",
+      "bytes": 51,
+      "sha256": "c6b886c0242ffeac92b6b6aecf1123bc63c86faee81b16fff3a13273e50f6824"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/holiman/bloomfilter/v2/@v/v2.0.3.mod",
+      "bytes": 50,
+      "sha256": "52ffcb9061c749c8c6d035838038fbdb6bf637a0137c80a2badc1d8dfa4ecdf6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/holiman/uint256/@v/v1.3.2.mod",
+      "bytes": 43,
+      "sha256": "623a0fa79315d8b7947c0af71b1e3843e6e029e433151e201988e872d8fde5eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/huin/goupnp/@v/v1.3.0.mod",
+      "bytes": 101,
+      "sha256": "4ba36b6a3e1561c56b53048f085eb4e85dba0de340e2bacdc86a5fadb3956b16"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/ipfs/go-cid/@v/v0.6.2.mod",
+      "bytes": 624,
+      "sha256": "7d6de858d9866f6d92cd1542d86470527ebdd8071f7f4b037ecee5197c3e4e29"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/jackc/pgpassfile/@v/v1.0.0.mod",
+      "bytes": 88,
+      "sha256": "8ea95fa2499f4c600f7fd1f0afe745ecc0ae25121a3c823408f4a2961a05ee48"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/jackc/pgservicefile/@v/v0.0.0-20240606120523-5a60cdf6a761.mod",
+      "bytes": 91,
+      "sha256": "5f70111b892c17eecec6f97e0cd961cc3922b5daece59c099c855e1062ed0277"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/jackc/pgx/v5/@v/v5.10.0.mod",
+      "bytes": 538,
+      "sha256": "5bb85082d4aef07908c0ea914a1603ab40454968a95bf569cd89eb0c4df03d74"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/jackpal/go-nat-pmp/@v/v1.0.2.mod",
+      "bytes": 37,
+      "sha256": "9a2903ce03ead9667568e7ac2d428dbe145e27fc83bb765f670de79923716a14"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/jbenet/go-temp-err-catcher/@v/v0.1.0.mod",
+      "bytes": 54,
+      "sha256": "605b1fdd1c171062aa4be34006a8fe0c41cf5a34e4a0c39d47c091067ce4124c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/klauspost/cpuid/v2/@v/v2.4.0.mod",
+      "bytes": 82,
+      "sha256": "4bd71f7c099dbf6aa86987c62ab49004366200ace82b8cf557694ccb3ddbed2d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/koron/go-ssdp/@v/v0.9.1.mod",
+      "bytes": 123,
+      "sha256": "7751112ac37e1e799018b8505f82f977b4cd36f36d45945f76635e9e57c2f9e3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/libp2p/go-buffer-pool/@v/v0.1.0.mod",
+      "bytes": 49,
+      "sha256": "405973881f1262fa914358d63e9c5f8bf4868c31c1db32dcfd395cca5356c453"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/libp2p/go-flow-metrics/@v/v0.3.0.mod",
+      "bytes": 103,
+      "sha256": "89e6526f70cdd670ddf6217bad9c962f96c96dc4cf3918c1455aa1027ec0d388"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/libp2p/go-libp2p-asn-util/@v/v0.4.1.mod",
+      "bytes": 302,
+      "sha256": "0bb28539c8a48da564d3a5a617c3ca9dded61afc88b70d1521adbff8643edaf0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/libp2p/go-libp2p-pubsub/@v/v0.17.0.mod",
+      "bytes": 4538,
+      "sha256": "84005061bb6188b57de470cc256c03946c6f39d9d88c1c311254fdf26b26c0bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/libp2p/go-libp2p/@v/v0.49.0.mod",
+      "bytes": 4354,
+      "sha256": "c623ee37a801cf4632d9daa5f0ebb3b7b87ae0c1638c9f084d3099dc5cf29fef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/libp2p/go-msgio/@v/v0.3.0.mod",
+      "bytes": 208,
+      "sha256": "a98296487c60f8b262d9a6b6b42c44ecc7e19e26936126e5cf4119549e1fc390"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/libp2p/go-netroute/@v/v0.4.0.mod",
+      "bytes": 295,
+      "sha256": "d6e720a69ea8282db407f98d8b202b79a763641322cd7d5eed44d57fc08a98d9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/libp2p/go-reuseport/@v/v0.4.0.mod",
+      "bytes": 324,
+      "sha256": "7bf8baa878e9f5f9834d27a37a4e46748af86480c47570e71a735c23aebd6879"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/libp2p/go-yamux/v5/@v/v5.1.0.mod",
+      "bytes": 311,
+      "sha256": "62b01d1464d201aeb6e7d57774bfa5acf08ef63850cbbd33784ec17520c1a509"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/mimoo/!strobe!go/@v/v0.0.0-20220103164710-9a04d6ca976b.mod",
+      "bytes": 42,
+      "sha256": "e3e93a37024aeb97b1f01101443aa9a9f2581505725caf9739a58a9c64f23520"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/minio/sha256-simd/@v/v1.0.1.mod",
+      "bytes": 164,
+      "sha256": "7bb7339d5a04437070f7a1212b9baf904b4654b65eb0e30e0945236a0e21e574"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/mitchellh/mapstructure/@v/v1.5.0.mod",
+      "bytes": 50,
+      "sha256": "d12bdf0950c494088fd93604ade1596974054ba165729d6ba133633c27daffe3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/mr-tron/base58/@v/v1.3.0.mod",
+      "bytes": 42,
+      "sha256": "84cce1d7017e4eed2192629151dad58cdfa8244473ee066f8ec0ce0e1226d33a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-base32/@v/v0.1.0.mod",
+      "bytes": 50,
+      "sha256": "4a9de6d805ffc42cedbad61e64186ec702fd95a5a52b3eee0a36a5460b68136d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-base36/@v/v0.2.0.mod",
+      "bytes": 50,
+      "sha256": "f6a701e44286240b23daea58d90de84b5d93fe992fd59f6d0f577667fc2591a3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-multiaddr-dns/@v/v0.6.0.mod",
+      "bytes": 825,
+      "sha256": "cf4f86c09ef109ccc6f70b0de7780b514982828400254e806c86acb2b891cd8a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-multiaddr-fmt/@v/v0.1.0.mod",
+      "bytes": 110,
+      "sha256": "6c66087bca58727ef1352fb1eb377b0b761b12320e3d77c9ce416e29c65c77a5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-multiaddr/@v/v0.16.1.mod",
+      "bytes": 890,
+      "sha256": "3e4457b05958c4acebe011c22c698bcd47823d3031a9d9fd46f1a5ce79b3d094"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-multibase/@v/v0.3.0.mod",
+      "bytes": 184,
+      "sha256": "193de126e88050c2ef5b571f603fae0f09a533f1bad17287f04de4d43e4672c6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-multicodec/@v/v0.10.0.mod",
+      "bytes": 54,
+      "sha256": "3b8eaa7d841e082f33a09d17f45cd35ed17936db6264a6d5cca20b046ee839e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-multihash/@v/v0.2.3.mod",
+      "bytes": 404,
+      "sha256": "247aa0191dc555fa9cb4e0fd23205b140fcc12c3a33a0ca6fe2a6aeb5bad93d6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-multistream/@v/v0.6.1.mod",
+      "bytes": 105,
+      "sha256": "32b8b8ad7826fb495f3c1026e45a0a1bdc4359886cfc196d0f6285e65a4cabfc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/multiformats/go-varint/@v/v0.1.0.mod",
+      "bytes": 50,
+      "sha256": "5c8b58ef483d897cf9973f8d4403e82dd006854cd6d7447920f01c10a8ae4b7f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/munnerz/goautoneg/@v/v0.0.0-20191010083416-a7dc8b61c822.mod",
+      "bytes": 36,
+      "sha256": "90d8fdca000e05d751cfafb1546f4a1440a5696ab06c8c91c365cf9bbbc8bcef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pierrec/xx!hash/@v/v0.1.5.mod",
+      "bytes": 33,
+      "sha256": "53607e30ff69e7bbf580d29627893c0baa00f2f044a260ed9bd8168d69381ddb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/datachannel/@v/v1.6.2.mod",
+      "bytes": 426,
+      "sha256": "cb9f75a35a89fe0f62bda9a078b02f3fd0f53ec7b213ec18db127f0f085c2f5d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/dtls/v3/@v/v3.1.5.mod",
+      "bytes": 561,
+      "sha256": "b1b2047d3189625f2a0ce2dc0d665a5ed2884ba63d12520ce1735345290c906b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/ice/v4/@v/v4.4.1.mod",
+      "bytes": 794,
+      "sha256": "ba7c66b25d59747f529acf80c6c66d303bb96af7f3c89e223cd0b21e929f0367"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/interceptor/@v/v0.1.47.mod",
+      "bytes": 443,
+      "sha256": "aea251648575dc56ff055783e4f67872aa03215b573c0433c206a06c9915627f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/logging/@v/v0.2.4.mod",
+      "bytes": 232,
+      "sha256": "bfbce8d81a9eaf0b1ba6d3c4d0a58f7e7d6d1be06bec518db96f62f7feeb3d6f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/mdns/v2/@v/v2.1.0.mod",
+      "bytes": 370,
+      "sha256": "db929a17960a3f3e3c71b9b71a726150db2cdbad8a224cf976c59b0376f0fa22"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/randutil/@v/v0.1.0.mod",
+      "bytes": 41,
+      "sha256": "2a2b0f630a629b3c9f4bfd02db3263a9b474bb8d48d19a52daeb98f5056dc321"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/rtcp/@v/v1.2.17.mod",
+      "bytes": 231,
+      "sha256": "6b0ec3f6824310ae68482336e5ee4e73bcaa224c639ba38b129023e687f1f80b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/rtp/@v/v1.10.5.mod",
+      "bytes": 268,
+      "sha256": "7f132f63de5e5ce3faee1a8dee62894d985e1ba81595b824f3a0140e48079fef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/sdp/v3/@v/v3.0.19.mod",
+      "bytes": 271,
+      "sha256": "60b7cc1d097ad87d9431c4e58c5264e9e50938eb7f0d18af6acd766cf179b919"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/srtp/v3/@v/v3.0.13.mod",
+      "bytes": 450,
+      "sha256": "71765e07464e0749654e7a869ee9535bdf266bbd35478186bb42e1367da8b938"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/stun/v3/@v/v3.1.6.mod",
+      "bytes": 462,
+      "sha256": "80524764e19eec76482f062b040c31b7e38fbf2c30f0e651f019e452190406a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/transport/v4/@v/v4.1.0.mod",
+      "bytes": 386,
+      "sha256": "a3cbbcdfef23c4b414bc2584260dc4e1935f7dc7d4daf726e477707b357d086a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/turn/v5/@v/v5.0.12.mod",
+      "bytes": 554,
+      "sha256": "cefb40fc2863641ddb262966329b26f62b913f01af3830d8d687ba069812991a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pion/webrtc/v4/@v/v4.2.18.mod",
+      "bytes": 1108,
+      "sha256": "55f60cdc8dd81194147075477d33df46b41e44e5b6b934b5d754e7c4a181cdf4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/pmezard/go-difflib/@v/v1.0.0.mod",
+      "bytes": 37,
+      "sha256": "74b2e766eb215377864d587badf57e95521f692d2a7860b3c7759093f9c9bec2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/prometheus/client_golang/@v/v1.24.1.mod",
+      "bytes": 1142,
+      "sha256": "7182f5b80fd56a1b0632595002cd9cb82b9ea2a8c27cdafbdabcc420fb2ee81d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/prometheus/client_model/@v/v0.6.2.mod",
+      "bytes": 97,
+      "sha256": "8a9728c4147247a572808ef22e997265fe9a7c5464a60d4eda48dc35f9dc2626"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/prometheus/common/@v/v0.70.1.mod",
+      "bytes": 1781,
+      "sha256": "ef9be0ac3982f25cf61f67085f50c14b580e629f866bc146c8256bca2b2f986f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/prometheus/procfs/@v/v0.21.1.mod",
+      "bytes": 146,
+      "sha256": "129232c45b86548cedb3cd2ae1aa6cc1fb46826847ce0ab24be7a3cee2191d23"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/quic-go/qpack/@v/v0.6.0.mod",
+      "bytes": 263,
+      "sha256": "7cdce4a0772f217deb859f405b7d58c84d909fcdab5e547e3e3d3aeb1148e641"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/quic-go/quic-go/@v/v0.61.0.mod",
+      "bytes": 891,
+      "sha256": "779ebda461e0e91bdfbbcea34df76bc2727771433155540734da0827d438e187"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/rivo/uniseg/@v/v0.4.7.mod",
+      "bytes": 39,
+      "sha256": "a1e174890fc9f252450211fadeb53756f9cf5ab7b19697765f9fb255f81ea898"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/rs/cors/@v/v1.8.2.mod",
+      "bytes": 35,
+      "sha256": "9c6e5531b6328ae4a4d86ca6a9258aa44c64878934f0d080d68224d90d4ac8fd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/shirou/gopsutil/@v/v3.21.4-0.20210419000835-c7a38de76ee5+incompatible.mod",
+      "bytes": 34,
+      "sha256": "2bb7d1e998eeb28fa43f6bafa6ee1e6a3b0cc6bad18cf2584abffc85652ac4ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/spaolacci/murmur3/@v/v1.1.0.mod",
+      "bytes": 36,
+      "sha256": "55565ffdc59d315a952774815afa98668ab9011e8cc11e35be5243e63a23260d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/stretchr/objx/@v/v0.5.2.mod",
+      "bytes": 276,
+      "sha256": "58eca54d26728427806f40908828e8762d352cc3b0a0b0b60dc60ce61767fff6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/stretchr/testify/@v/v1.11.1.mod",
+      "bytes": 498,
+      "sha256": "5846af204043f29df285026109bf32db6519c3d7e1d5c3a65fefb174f9d81d33"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/syndtr/goleveldb/@v/v1.0.1-0.20210819022825-2ae1ddf74ef7.mod",
+      "bytes": 391,
+      "sha256": "90dd527494166972fe0748ab6c9ddd7d851791aa7c56f103052c41f782e5a9c3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/tklauser/go-sysconf/@v/v0.3.12.mod",
+      "bytes": 122,
+      "sha256": "89e35c5f115cb8bde69b012808b43afebf5bb8d24151f9feff6e36de03149d18"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/tklauser/numcpus/@v/v0.6.1.mod",
+      "bytes": 77,
+      "sha256": "39afb6f866792b08a170c0e7c1c3c83977427ce7db4b3d0eb377d54012be27c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/urnetwork/connect/sctp/@v/v0.0.0-20261002163341-6443417d70dc.mod",
+      "bytes": 589,
+      "sha256": "f22ac2cbc409db0ed7d94cad378a40e28105e6c540f6b00755edf97d50f587a9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/urnetwork/sdk/@v/v0.0.0-20261003032453-9ae95704a230.mod",
+      "bytes": 4376,
+      "sha256": "78a9d98753427b7e398649cd07e0666c3101f85f642b3b499bc2616ba0f6de98"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/vedhavyas/go-subkey/v2/@v/v2.0.0.mod",
+      "bytes": 863,
+      "sha256": "dbb2c5bb6a8452e0b0ecd90cfa6a68ea5f5d18dbda60ad6100ee6ad8859fb1d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/wlynxg/anet/@v/v0.0.5.mod",
+      "bytes": 39,
+      "sha256": "369638e1ee3561f2601ea5552b1df7267cfe3bc68d41955f0d8176eac045ce8b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/go.opentelemetry.io/auto/sdk/@v/v1.2.1.mod",
+      "bytes": 478,
+      "sha256": "6c4d2df014d59fd6555897fd4e5bbc0316e8df4c737fbfdde5cd119fdefeeea9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/go.opentelemetry.io/otel/metric/@v/v1.43.0.mod",
+      "bytes": 612,
+      "sha256": "d18e909369700a606926eb98566ff1bc6550cff697b32cb455e53ae779532291"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/go.opentelemetry.io/otel/trace/@v/v1.43.0.mod",
+      "bytes": 457,
+      "sha256": "e0b407a91f01ffd29f355b516c7900ba4fd842de1f2733a04c47e82496c649b9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/go.opentelemetry.io/otel/@v/v1.43.0.mod",
+      "bytes": 635,
+      "sha256": "84c9cb2ac7f3983f465b4335ac4a9a037b2d9b4f2253cbb74ac4548d405a01ed"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/golang.org/x/crypto/@v/v0.54.0.mod",
+      "bytes": 192,
+      "sha256": "d852b93b93f9cd911708ffd45409439956d4e9c8497c5b87f348fc83d0adc577"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/golang.org/x/exp/@v/v0.0.0-20260727155853-b88d891fe743.mod",
+      "bytes": 310,
+      "sha256": "aa249634479cb57c7db04232795b60c78d5c80abe385491aa42e84d74b97e4bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/golang.org/x/image/@v/v0.44.0.mod",
+      "bytes": 72,
+      "sha256": "b334478aae60e3a5434b796c3f130494b83c9dfaea448a77b690687dfd3193ed"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/golang.org/x/net/@v/v0.57.0.mod",
+      "bytes": 157,
+      "sha256": "bfc4c34b9fa5d70e4837542577560e92f743e24f584a39877850650c19a444a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/golang.org/x/sync/@v/v0.22.0.mod",
+      "bytes": 36,
+      "sha256": "a3e29e76060bd561060454b1fa2bdcd66674f60c9ca93833b8106355e34c603c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/golang.org/x/sys/@v/v0.47.0.mod",
+      "bytes": 35,
+      "sha256": "57f4393ea18d5446a12363b35c23a616d843fa1669c7121a70a2bc3a9677d665"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/golang.org/x/term/@v/v0.45.0.mod",
+      "bytes": 70,
+      "sha256": "62c3f9d1a5ae12264ab48e2c8acc08c9f201bda9619de171544eb5714b74aec5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/golang.org/x/text/@v/v0.40.0.mod",
+      "bytes": 190,
+      "sha256": "e69fb09b14637cab6245a1253c22d80121b79d9fe3ddd19b558629e15baadaf3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/golang.org/x/time/@v/v0.15.0.mod",
+      "bytes": 36,
+      "sha256": "6149b2491c92f67545fc5da0083a791e369b3f99670d30f52bde0604c48c9e69"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/google.golang.org/protobuf/@v/v1.36.11.mod",
+      "bytes": 124,
+      "sha256": "a75c105a852fbd8da8d8cfac09c2eab9a206cfd27ed37c973737e23f632ca96e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/gopkg.in/yaml.v2/@v/v2.4.0.mod",
+      "bytes": 95,
+      "sha256": "c3b11ba9a0775ff9bc6f11dbb58a1e48cc1e68bac378a8cdc620becc661d4c33"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/gopkg.in/yaml.v3/@v/v3.0.1.mod",
+      "bytes": 95,
+      "sha256": "21579860a20306fcf43b1bd234d1fba319499c77611b71c05f9bf3ba90dab939"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/lukechampine.com/blake3/@v/v1.4.1.mod",
+      "bytes": 152,
+      "sha256": "7b41d59c762222bd8c5f250c8507175ce8c0eafc7082bfbcaf568c8d1b604bd3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/gomodcache/cache/download/src.agwa.name/tlshacks/@v/v0.0.4.mod",
+      "bytes": 207,
+      "sha256": "51eb1b2b4a7d437a76fb79c4beb796e1187f30b878aab69d14b4962bdbe24c24"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor/go.mod",
+      "bytes": 6213,
+      "sha256": "760a8007bca84c7465d3a82a5ba1aec47df23692f7a4484e9d94926c5817afc4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog/go.mod",
+      "bytes": 109,
+      "sha256": "5022a0fd461de289e6e84a4f0930a362613b5bcaaffe090a201e68b6714cb40b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons/go.mod",
+      "bytes": 157,
+      "sha256": "67dd6efd0fafd9d54e4bbf953eb07c9526ba55ee0dd4eb3e752ef201f619f28c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/sn/third_party/go-substrate-rpc-client/go.mod",
+      "bytes": 1505,
+      "sha256": "2915174f97f9aeccd01002b6c61c86366eabcaa2e6f84a21e4ea880e8d45f8d9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server/go.mod",
+      "bytes": 10651,
+      "sha256": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8"
+    }
+  ],
+  "phase_count": 35,
+  "nonzero_phases": {
+    "63_old1610_core_normal_test": 1,
+    "63_old1610_core_race_test": 1,
+    "63_old1610_mainnet_normal_test": 1,
+    "63_old1610_mainnet_race_test": 1,
+    "graph_63": 1
+  },
+  "sampled_minimum_available_bytes": 114463612928,
+  "sampled_cumulative_consumption_bytes": 3692138496,
+  "cap_bytes": 25769803776,
+  "host_lease_released_at_review": true,
+  "evm42": {
+    "compile_only": "PASS, go test -c -o /dev/null ./mainnet; no behavior execution",
+    "compile_phase": "evm42_compile",
+    "graph_phase": "graph_evm",
+    "intake_sha256": "27b2bab0b53310f8041eb76ff8d1a379584830058065761cbe1395c5e41f1cbc",
+    "selected_graph": "PASS, readonly physical imported-package graph",
+    "source_commit": "42f7655182511d07c0680bc9ee8553fe04fe0fb1",
+    "source_tree": "4ac5a9b6ab28a7ea916535fb26438f8c2aef6a22"
+  },
+  "selected_package_count": 848,
+  "limits": [
+    "Original graph setup refusal and four intended causal test exits remain retained; full mainnet qualification is not claimed.",
+    "EVM42 graph/compile success is not EVM behavior/race/vet or current combined release qualification.",
+    "Sampled net filesystem consumption is not an instantaneous upper bound or production sizing measurement.",
+    "This finite grant is exhausted; no automatic recharge, cleanup credit or unlisted next phase is authorized by this receipt."
+  ]
+}

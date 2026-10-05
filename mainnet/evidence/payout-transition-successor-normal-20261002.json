@@ -1,0 +1,93 @@
+{
+  "fail": 1,
+  "fixture": "owned PG18/Redis8 tmpfs network, cleanup0",
+  "limits": [
+    "One model fixture fails before actual SN usage reader assertion; no pass on free/paid invariant.",
+    "Canceled legacy subsidy/reliability carry is a known unimplemented successor; no full model suite or launch claim."
+  ],
+  "pass": 24,
+  "root_count": 25,
+  "schema": "sol-provider-cutover-ffcc-normal-v1",
+  "scopes": [
+    {
+      "exit": 0,
+      "expected": 4,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "c5fcf7dc664e87b7d0526e08cb7e5ade951830d1a799b1086db860bc34cb1dff",
+      "package_terminal": "pass",
+      "pass": 4,
+      "scope": "root",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 1,
+      "expected": 10,
+      "fail": 1,
+      "failed_roots": [
+        "TestProviderTransitionFreeAndPaidUsageHaveEqualSubnetWeight"
+      ],
+      "jsonl_sha256": "51dffa110f340d4de0eeb600909ea15e3e14adf2dd77e2652d79d8c9d6c66404",
+      "package_terminal": "fail",
+      "pass": 9,
+      "scope": "model",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "expected": 9,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "8878fb4fea9273b8cff0aba90dc2d537d7109f19ca76f8e39570cc36aa30e5b1",
+      "package_terminal": "pass",
+      "pass": 9,
+      "scope": "controller",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "expected": 1,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "dd0a05902e818e7428fd72485f843a38cf6efce6689a60b7b788b168b3703c1f",
+      "package_terminal": "pass",
+      "pass": 1,
+      "scope": "taskworker",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "expected": 1,
+      "fail": 0,
+      "failed_roots": [],
+      "jsonl_sha256": "33b8d5f14d9723b4536d2cd5b41fcd7426859828b5476c8309c6dc83d1742595",
+      "package_terminal": "pass",
+      "pass": 1,
+      "scope": "bringyourctl",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "setup1": {
+    "cause": "private archive initdb directory and script mode0700 prevented owned PG18 startup",
+    "correction": "chmod own archive initdb directory/script to0755; no source bytes changed",
+    "runner_exit": "1",
+    "services_cleanup_exit": "0",
+    "services_start_sha256": "84c605e4cc7bc94aacd3411b33f8bedce387248ff1640c60adbbe2d4999aa061",
+    "status": "FAILED_BEFORE_TEST"
+  },
+  "skip": 0,
+  "source": {
+    "actual_module_graph_sha256": "32e33cc7c2e8dd53f8bcbefc2df6428aa3675921eec1aeec0c984fddbc53e115",
+    "config_commit": "93dc65fd84da9a0f5423b5cab9bfc650692fded8",
+    "server_commit": "ffcc77b86bc33822d64b9edd4238bc94697fedcb",
+    "server_tree": "d602d5e47b4c4c7d1f706664b73663c03f480449",
+    "source_fence_sha256": "f2a99cc7ab4936c258a5ab5af829b15efb378d7137e9959f428c3a3bf1cef778",
+    "test_dependencies_sha256": "6b512a21ce8320edf649e2870ae48f67a2125f04c026e07be15e6f2d5e213dfe"
+  },
+  "status": "FAIL_SCOPED"
+}

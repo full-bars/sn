@@ -1,0 +1,82 @@
+{
+  "schema": "fd922-rebased-controls-root-source-review-v1",
+  "status": "FIVE_EXACT_OPERATIVE_MUTATIONS_REVIEWED_UNEXECUTED",
+  "head": "fd9229f26db7788b84584f2287d194760ada4eb2",
+  "intake_sha256": "b2533715cfffaa1919b44ccd12c535c01232655ba393fd5e7202f26d66f36b7f",
+  "controls": [
+    {
+      "name": "conservation-profile-restore-native-vault-capture-sequence-erase-second-original-apply-index",
+      "source_file": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "original_sha256": "0399169dfb045ee7c784c8526e34ce041679da63a0879f3cd7cea71736b61d18",
+      "mutation": {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-codec-fixture/evidence/controls/conservation-profile-restore-native-vault-capture-sequence-erase-second-original-apply-index/historical_native_execution_tests.rs",
+        "bytes": 46050,
+        "sha256": "b8a208f55e1c329627e831304a060654a3f693bfb0640442bef48fbda4760100"
+      },
+      "roots": [
+        "historical::tests::native_execution_tests::capture_join_tests::historical_native_vault_capture_exports_original_capture_sequences"
+      ],
+      "expected_assertion": "original capture Apply index"
+    },
+    {
+      "name": "conservation-profile-restore-native-vault-capture-sequence-omit-original-yuma-input-observation",
+      "source_file": "tools/runtime-metadata-probe/src/historical_observer.rs",
+      "original_sha256": "c3a796582065f62f0afa9fb700373ad642ee986cd4612d9b107abd691d9f00f7",
+      "mutation": {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-yuma-input-observation/historical_observer.rs",
+        "bytes": 32813,
+        "sha256": "17ad07b97c4ac0ada50b55a6387417604183091a1b974958d0f4480d4e14ebed"
+      },
+      "roots": [
+        "historical::tests::native_execution_tests::yuma_tests::historical_native_yuma_exports_original_complete_branches"
+      ],
+      "expected_assertion": "original complete Yuma input records were omitted"
+    },
+    {
+      "name": "conservation-profile-restore-native-vault-capture-sequence-omit-original-body-transaction-memory",
+      "source_file": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "original_sha256": "0399169dfb045ee7c784c8526e34ce041679da63a0879f3cd7cea71736b61d18",
+      "mutation": {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-codec-fixture/evidence/controls/conservation-profile-restore-native-vault-capture-sequence-omit-original-body-transaction-memory/historical_native_execution_tests.rs",
+        "bytes": 46045,
+        "sha256": "e2490470ffcfb95bb31cca7d8fbf5b9e78c4cd307fe784793f6d7d3c4d61d655"
+      },
+      "roots": [
+        "historical::tests::native_execution_tests::capture_join_tests::historical_native_vault_capture_exports_original_transaction_causes"
+      ],
+      "expected_assertion": "transaction came from original body"
+    },
+    {
+      "name": "conservation-profile-restore-native-vault-capture-sequence-restore-original-yuma-pending-parent",
+      "source_file": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "original_sha256": "0399169dfb045ee7c784c8526e34ce041679da63a0879f3cd7cea71736b61d18",
+      "mutation": {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-codec-fixture/evidence/controls/conservation-profile-restore-native-vault-capture-sequence-restore-original-yuma-pending-parent/historical_native_execution_tests.rs",
+        "bytes": 46032,
+        "sha256": "6d76d4f70c145dac7e5505bae3ab835b92c3a028f603b3367671b5bdf05862b7"
+      },
+      "roots": [
+        "historical::tests::native_execution_tests::yuma_tests::historical_native_yuma_exports_original_complete_branches"
+      ],
+      "expected_assertion": "original Yuma activation parent is not actually drained"
+    },
+    {
+      "name": "native-yuma-populated-workload-truncate-populated-original-matrix-rows",
+      "source_file": "tools/runtime-metadata-probe/src/historical_native_yuma_populated_tests.rs",
+      "original_sha256": "2b7916646c669a894010db06e46f89e65e509d4576bf1c07e132ac8095540180",
+      "mutation": {
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/truncate-populated-original-matrix-rows/historical_native_yuma_populated_tests.rs",
+        "bytes": 21803,
+        "sha256": "2e78f661d7067be17434b72a282d33d91566b0e8bf46f54e155e1d88ba00b2e6"
+      },
+      "roots": [
+        "historical::tests::native_execution_tests::yuma_populated_tests::historical_native_yuma_exports_populated_64_by_1024_and_2048"
+      ],
+      "expected_assertion": "populated original matrix edge census"
+    }
+  ],
+  "limits": [
+    "Source-only comparison; fresh corrected libtest and each intended control execution remain.",
+    "Same4 roots14outputs and full41-root funding scope retained; no narrowing."
+  ]
+}

@@ -19,6 +19,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -32,6 +33,12 @@ import (
 // SubmitOptions tune SubmitWeightsCRv4. The zero value is a working default
 // for a plain (single-mechanism) subnet on a 12s-block chain.
 type SubmitOptions struct {
+	// Nonempty is selected from independently signed production authority.
+	// It changes only fresh preparation, never a retained signed transaction.
+	EpochScheduleProfile string
+	// Production callers require the purpose proof even if a generic runtime
+	// bind revoked it or signed schedule selection could not be loaded.
+	RequireProductionRuntime bool
 	// SourceHash selects the atomic validator source-commitment path. The
 	// hash commits to pre-Prepared measurement bytes, never an envelope that
 	// already contains this transaction's own hash. Zero preserves legacy CRv4.
@@ -86,26 +93,27 @@ const PreparedSubmissionSchema = "urnetwork-crv4-prepared-submission-v1"
 // callers must persist this object with mode 0600 and must not publish it
 // before the reveal round.
 type PreparedSubmission struct {
-	Schema              string                    `json:"schema"`
-	Netuid              uint16                    `json:"netuid"`
-	Mecid               *uint8                    `json:"mecid,omitempty"`
-	HotkeyHex           string                    `json:"hotkey_hex"`
-	VersionKey          uint64                    `json:"version_key"`
-	CommitRevealVersion uint16                    `json:"commit_reveal_version"`
-	AccountNonce        uint32                    `json:"account_nonce"`
-	PreparedAtBlock     uint64                    `json:"prepared_at_block"`
-	PreparedAtBlockHash string                    `json:"prepared_at_block_hash"`
-	SubnetEpoch         uint64                    `json:"subnet_epoch"`
-	RevealRound         uint64                    `json:"reveal_round"`
-	RevealBlock         uint64                    `json:"reveal_block"`
-	UIDs                []uint16                  `json:"uids"`
-	Values              []uint16                  `json:"values"`
-	PayloadHex          string                    `json:"payload_hex"`
-	CiphertextHex       string                    `json:"ciphertext_hex"`
-	CiphertextSHA256    string                    `json:"ciphertext_sha256"`
-	ExtrinsicHex        string                    `json:"extrinsic_hex"`
-	ExtrinsicHash       string                    `json:"extrinsic_hash"`
-	SourceCommitment    *PreparedSourceCommitment `json:"source_commitment,omitempty"`
+	Schema               string                    `json:"schema"`
+	EpochScheduleProfile string                    `json:"epoch_schedule_profile,omitempty"`
+	Netuid               uint16                    `json:"netuid"`
+	Mecid                *uint8                    `json:"mecid,omitempty"`
+	HotkeyHex            string                    `json:"hotkey_hex"`
+	VersionKey           uint64                    `json:"version_key"`
+	CommitRevealVersion  uint16                    `json:"commit_reveal_version"`
+	AccountNonce         uint32                    `json:"account_nonce"`
+	PreparedAtBlock      uint64                    `json:"prepared_at_block"`
+	PreparedAtBlockHash  string                    `json:"prepared_at_block_hash"`
+	SubnetEpoch          uint64                    `json:"subnet_epoch"`
+	RevealRound          uint64                    `json:"reveal_round"`
+	RevealBlock          uint64                    `json:"reveal_block"`
+	UIDs                 []uint16                  `json:"uids"`
+	Values               []uint16                  `json:"values"`
+	PayloadHex           string                    `json:"payload_hex"`
+	CiphertextHex        string                    `json:"ciphertext_hex"`
+	CiphertextSHA256     string                    `json:"ciphertext_sha256"`
+	ExtrinsicHex         string                    `json:"extrinsic_hex"`
+	ExtrinsicHash        string                    `json:"extrinsic_hash"`
+	SourceCommitment     *PreparedSourceCommitment `json:"source_commitment,omitempty"`
 }
 
 // Validate validates every durable field which can be independently
@@ -116,6 +124,9 @@ func (p *PreparedSubmission) Validate() ([]byte, error) {
 	}
 	if (p.Schema == PreparedSourceSubmissionSchema) != (p.SourceCommitment != nil) {
 		return nil, fmt.Errorf("crv4: source commitment schema and fields disagree")
+	}
+	if err := ValidateEpochScheduleProfile(p.EpochScheduleProfile); err != nil {
+		return nil, err
 	}
 	if len(p.UIDs) == 0 || len(p.UIDs) != len(p.Values) {
 		return nil, fmt.Errorf("crv4: malformed prepared weights")
@@ -270,6 +281,11 @@ func PrepareWeightsCRv4ExactAtContext(ctx context.Context, chain *Chain, kp *Key
 	if preparedHash == (types.Hash{}) {
 		return nil, fmt.Errorf("crv4: preparation block hash is zero")
 	}
+	if opts.SourceHash != ([32]byte{}) {
+		if err := chain.validateSourceRuntimeCapabilityAt(preparedHash, opts.Mecid); err != nil {
+			return nil, err
+		}
+	}
 	state, err := chain.EpochScheduleStateAtContext(ctx, netuid, preparedHash)
 	if err != nil {
 		return nil, err
@@ -348,6 +364,26 @@ func prepareWeightsU16(ctx context.Context, chain *Chain, kp *Keypair, netuid ui
 	if state == nil || preparedHash == (types.Hash{}) {
 		return nil, fmt.Errorf("crv4: preparation schedule is incomplete")
 	}
+	if err := ValidateEpochScheduleProfile(opts.EpochScheduleProfile); err != nil {
+		return nil, err
+	}
+	if opts.RequireProductionRuntime || chain.validatorProducerProof != nil || opts.EpochScheduleProfile != "" {
+		if opts.EpochScheduleProfile != TempoDriftEpochScheduleProfile || chain.validatorProducerProof == nil {
+			return nil, errors.New("crv4: fresh production preparation requires an explicitly approved tempo-drift profile and exact producer capability")
+		}
+		if err := chain.ValidateValidatorProducerRuntime(chain.validatorProducerProof.identity); err != nil {
+			return nil, err
+		}
+	}
+	// Scheduler storage is shared read evidence; profile selection owns a copy.
+	selectedSchedule := *state
+	selectedSchedule.EpochScheduleProfile = opts.EpochScheduleProfile
+	state = &selectedSchedule
+	if opts.SourceHash != ([32]byte{}) {
+		if err := chain.validateSourceRuntimeCapabilityAt(preparedHash, opts.Mecid); err != nil {
+			return nil, err
+		}
+	}
 	now := time.Now
 	if opts.Now != nil {
 		now = opts.Now
@@ -418,7 +454,8 @@ func prepareWeightsU16(ctx context.Context, chain *Chain, kp *Keypair, netuid ui
 	hotkey := kp.PublicKey()
 	prepared := &PreparedSubmission{
 		Schema: PreparedSubmissionSchema, Netuid: netuid, Mecid: opts.Mecid,
-		HotkeyHex: "0x" + hex.EncodeToString(hotkey[:]), VersionKey: opts.VersionKey,
+		EpochScheduleProfile: opts.EpochScheduleProfile,
+		HotkeyHex:            "0x" + hex.EncodeToString(hotkey[:]), VersionKey: opts.VersionKey,
 		CommitRevealVersion: version, AccountNonce: nonce,
 		PreparedAtBlock: state.CurrentBlock, PreparedAtBlockHash: preparedHash.Hex(), SubnetEpoch: state.SubnetEpochIndex,
 		RevealRound: round, RevealBlock: revealBlock,
@@ -430,6 +467,7 @@ func prepareWeightsU16(ctx context.Context, chain *Chain, kp *Keypair, netuid ui
 	if opts.SourceHash != ([32]byte{}) {
 		prepared.Schema = PreparedSourceSubmissionSchema
 		prepared.SourceCommitment = &PreparedSourceCommitment{Hash: codec.HexEncodeToString(opts.SourceHash[:]), GenesisHash: chain.GenesisHash.Hex(), RuntimeSpec: uint32(chain.Runtime.SpecVersion), TransactionVersion: uint32(chain.Runtime.TransactionVersion)}
+		prepared.SourceCommitment.CompatibilityProfile = chain.CurrentRuntimeCompatibilityProfile()
 		if err := chain.ValidatePreparedSource(prepared); err != nil {
 			return nil, err
 		}

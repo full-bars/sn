@@ -1,0 +1,545 @@
+{
+  "all_38_outcomes_open": true,
+  "claim129": {
+    "component_disposition": {
+      "bytes": 20694,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-claim12-component-disposition-v1.json",
+      "sha256": "356bd988c3477f5d9d4337b2d2631fbad78457ed09badec2c72d8843c909aa59"
+    },
+    "component_receipts": [
+      {
+        "bytes": 2990,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-normal-claim-corrected3.receipt.json",
+        "sha256": "a8aaf529d92c8102e987bdf75d6033f042be1781a3a081a1462a2532d6945658"
+      },
+      {
+        "bytes": 3933,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b466-mainnet-normal-claim-batch1.receipt.json",
+        "sha256": "ccef6e9496a85cb6c16a633aedd4a9c35bdb2bceb134c769e314b0e4feddec8a"
+      },
+      {
+        "bytes": 3753,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b466-mainnet-normal-claim-batch2.receipt.json",
+        "sha256": "6672a5bf688f78685c9d15b01dc0d287f44a3374a3d385f422f12bd78583446c"
+      },
+      {
+        "bytes": 2637,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-normal-fee-env-one.receipt.json",
+        "sha256": "101925e4929c140b9851adc53caa9c0911ec6f5be59de2b4c54d3027bb63e22f"
+      },
+      {
+        "bytes": 2986,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-race-claim-corrected3.receipt.json",
+        "sha256": "d40207747c2a2a2da7afd3f25c780ffdb0817f409ac7e0ddcb16f426888b0d64"
+      },
+      {
+        "bytes": 3928,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b466-mainnet-race-claim-batch1.receipt.json",
+        "sha256": "dbc7cc0a08a2bb6ad6ecdd8349b9141157376fe76e96cfa20b404f50710a3e34"
+      },
+      {
+        "bytes": 3748,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b466-mainnet-race-claim-batch2.receipt.json",
+        "sha256": "1a4ce9d72eaffd325477e52dfc4c591256760045309086509324a0ac05162456"
+      },
+      {
+        "bytes": 2634,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-mainnet-race-fee-env-one.receipt.json",
+        "sha256": "13a20139d15c7bd374528aa09cc29225d7c1a42e2ec47ad1d8416078a82ee916"
+      }
+    ],
+    "corrected_1eb_normal": "LIVE: Root reports actual start 2026-10-04 22:07:50 UTC, image PID 2156114; no terminal acceptance supplied",
+    "corrected_1eb_race": "LIVE: image PID 1970944; no terminal acceptance supplied",
+    "limits": "Neither the completed Restore129 root nor finite positives/controls replace the original complete Claim129 work gate.",
+    "live_status_basis": "Latest Root task steering; independent read-only process presence retained below. This is not a terminal body outcome.",
+    "live_status_checkpoint_utc": "2026-10-04T22:23:57.910768+00:00",
+    "original_normal": "FAIL 2184 > 2048 retained at prior source",
+    "process_presence_readback": [
+      {
+        "executable": "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-normal-v3-20261004/images/claim-1eb-normal.test",
+        "pid": 2156114,
+        "present": true,
+        "starttime_ticks": "102393445",
+        "state": "S"
+      },
+      {
+        "executable": "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-20261004/images/claim-1eb-race.test",
+        "pid": 1970944,
+        "present": true,
+        "starttime_ticks": "101917367",
+        "state": "R"
+      }
+    ],
+    "separate_finite_positive_scope": "12 roots per mode passed through exact fresh or retained source closure",
+    "vet": "not established by this followup"
+  },
+  "claim_finite_causal_controls": [
+    {
+      "actual_assertion_found": true,
+      "actual_exit": 1,
+      "counts": {
+        "fail": 1,
+        "pass": 0,
+        "run": 1,
+        "skip": 0
+      },
+      "expected_assertion": "mid-sample fault published a dependent Claim checkpoint",
+      "group": "omit-final-publication-archive-fence",
+      "image_after_sha256": "fbc355b93056a6f61eeb84529a7e3ea4102dd1adc1991c747ac3e8ad6b5d0570",
+      "image_sha256": "fbc355b93056a6f61eeb84529a7e3ea4102dd1adc1991c747ac3e8ad6b5d0570",
+      "mode": "normal",
+      "raw": {
+        "bytes": 2283,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-omit-final-publication-archive-fence-normal-body.jsonl",
+        "sha256": "0d20a5b46e3c8d349b02cd57305805ddcbe686d33c07192fed84e28ae6e6cc8c"
+      },
+      "receipt": {
+        "bytes": 2751,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-omit-final-publication-archive-fence-normal-body.receipt.json",
+        "sha256": "f2440c9d6268172bc96134404f17cc11ee50afc4674492c62a7cd684d853445d"
+      },
+      "root": "TestEconomicConservationClaimPublicationKeepsOriginalAfterMidSampleFault",
+      "source": "1eb679a4fdc8097735af0a07137baa6cc7ba0f16 plus exact named isolated mutation",
+      "tree_joined": true
+    },
+    {
+      "actual_assertion_found": true,
+      "actual_exit": 1,
+      "counts": {
+        "fail": 1,
+        "pass": 0,
+        "run": 1,
+        "skip": 0
+      },
+      "expected_assertion": "mid-sample fault published a dependent Claim checkpoint",
+      "group": "omit-final-publication-archive-fence",
+      "image_after_sha256": "f28ce8c2e98707617c9c287edc553280cd23c5b3683fb37673b4b4904a7fae04",
+      "image_sha256": "f28ce8c2e98707617c9c287edc553280cd23c5b3683fb37673b4b4904a7fae04",
+      "mode": "race",
+      "raw": {
+        "bytes": 2287,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-omit-final-publication-archive-fence-race-body.jsonl",
+        "sha256": "ab71bd2998a7257394dee3722a9cfef49d4add6f14242ca813c7abb21be34ea5"
+      },
+      "receipt": {
+        "bytes": 2748,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-omit-final-publication-archive-fence-race-body.receipt.json",
+        "sha256": "21843c6e44dcd28fa87ad2e6c2debd25abb9460adc138846b9145b33aec8288b"
+      },
+      "root": "TestEconomicConservationClaimPublicationKeepsOriginalAfterMidSampleFault",
+      "source": "1eb679a4fdc8097735af0a07137baa6cc7ba0f16 plus exact named isolated mutation",
+      "tree_joined": true
+    },
+    {
+      "actual_assertion_found": true,
+      "actual_exit": 1,
+      "counts": {
+        "fail": 1,
+        "pass": 0,
+        "run": 1,
+        "skip": 0
+      },
+      "expected_assertion": "lost original custody reached another dependent sample",
+      "group": "omit-fresh-sample-archive-fence",
+      "image_after_sha256": "797a9774c8609ce3e65de2f54bdd243fd623317ab66727d55e610a32d0facbbd",
+      "image_sha256": "797a9774c8609ce3e65de2f54bdd243fd623317ab66727d55e610a32d0facbbd",
+      "mode": "normal",
+      "raw": {
+        "bytes": 2213,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-omit-fresh-sample-archive-fence-normal-body.jsonl",
+        "sha256": "9b868295c877b9d7a48b51899e8cb1854cc67f6d33d46472d82030c2aacbf7a5"
+      },
+      "receipt": {
+        "bytes": 2727,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-omit-fresh-sample-archive-fence-normal-body.receipt.json",
+        "sha256": "37cf1cd6f12fe7d8302e19d58b0833b55fe8840d52f1e255291b63ac8bfcc86a"
+      },
+      "root": "TestEconomicConservationClaimNextSampleChecksFreshOriginalCustody",
+      "source": "1eb679a4fdc8097735af0a07137baa6cc7ba0f16 plus exact named isolated mutation",
+      "tree_joined": true
+    },
+    {
+      "actual_assertion_found": true,
+      "actual_exit": 1,
+      "counts": {
+        "fail": 1,
+        "pass": 0,
+        "run": 1,
+        "skip": 0
+      },
+      "expected_assertion": "lost original custody reached another dependent sample",
+      "group": "omit-fresh-sample-archive-fence",
+      "image_after_sha256": "138a3c100817da2ee055b55255076968fb7a8163f8eb2d50397fb9457232a6cc",
+      "image_sha256": "138a3c100817da2ee055b55255076968fb7a8163f8eb2d50397fb9457232a6cc",
+      "mode": "race",
+      "raw": {
+        "bytes": 2215,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-omit-fresh-sample-archive-fence-race-body.jsonl",
+        "sha256": "33791ab811b0ff3c558b65de113115fe87cc7ade570df984aec73660387e4929"
+      },
+      "receipt": {
+        "bytes": 2724,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-omit-fresh-sample-archive-fence-race-body.receipt.json",
+        "sha256": "ccdca8a25919590818846e6ac981e5c7006f6974c615a3d6512a433ad3e751c7"
+      },
+      "root": "TestEconomicConservationClaimNextSampleChecksFreshOriginalCustody",
+      "source": "1eb679a4fdc8097735af0a07137baa6cc7ba0f16 plus exact named isolated mutation",
+      "tree_joined": true
+    },
+    {
+      "actual_assertion_found": true,
+      "actual_exit": 1,
+      "counts": {
+        "fail": 1,
+        "pass": 0,
+        "run": 1,
+        "skip": 0
+      },
+      "expected_assertion": "Claim follow changed complete custody fences or bounded hot work",
+      "group": "repeat-original-live-archive-fences",
+      "image_after_sha256": "23a7cfda2f51d86a48c31059c6a5333104e43287ac9bdfdd2aacc633ed266ff2",
+      "image_sha256": "23a7cfda2f51d86a48c31059c6a5333104e43287ac9bdfdd2aacc633ed266ff2",
+      "mode": "normal",
+      "raw": {
+        "bytes": 2133,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-repeat-original-live-archive-fences-normal-body.jsonl",
+        "sha256": "57519db9ad1abbb894b4d031f3fc76f0d1f2829ec952fe725498bb3b01e44e04"
+      },
+      "receipt": {
+        "bytes": 2765,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-repeat-original-live-archive-fences-normal-body.receipt.json",
+        "sha256": "ae5524e063fadfd2d64451290ba9b0115aaa0c7ab060534bd2c6b588bb92619c"
+      },
+      "root": "TestEconomicConservationClaimFollowSeparatesPhysicalCustodyFromHotEpochWork",
+      "source": "1eb679a4fdc8097735af0a07137baa6cc7ba0f16 plus exact named isolated mutation",
+      "tree_joined": true
+    },
+    {
+      "actual_assertion_found": true,
+      "actual_exit": 1,
+      "counts": {
+        "fail": 1,
+        "pass": 0,
+        "run": 1,
+        "skip": 0
+      },
+      "expected_assertion": "Claim follow changed complete custody fences or bounded hot work",
+      "group": "repeat-original-live-archive-fences",
+      "image_after_sha256": "01b962c42846e95b984087fa516c18ea123b3d821b9ea7aac01a1961039c0364",
+      "image_sha256": "01b962c42846e95b984087fa516c18ea123b3d821b9ea7aac01a1961039c0364",
+      "mode": "race",
+      "raw": {
+        "bytes": 2136,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-repeat-original-live-archive-fences-race-body.jsonl",
+        "sha256": "694ccc414c8a88f9e11128ed063d0f1c7804f99a45a83b1cb329f3a7210607c7"
+      },
+      "receipt": {
+        "bytes": 2761,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-1eb-control-repeat-original-live-archive-fences-race-body.receipt.json",
+        "sha256": "1987fe9995928a2e82e98b254c82f044c3ac65af01b6fa639f9aaaf285b18456"
+      },
+      "root": "TestEconomicConservationClaimFollowSeparatesPhysicalCustodyFromHotEpochWork",
+      "source": "1eb679a4fdc8097735af0a07137baa6cc7ba0f16 plus exact named isolated mutation",
+      "tree_joined": true
+    }
+  ],
+  "documentation_base": "2a23c4b3c1b72c8f41e7e8725e36bf418a00c1b4",
+  "live_authority_or_deployment": false,
+  "method": "Read-only receipt, raw event, SHA256 and named outcome verification; no new application execution",
+  "observed_utc": "2026-10-04T22:23:57.910768+00:00",
+  "operator_gas_native_fee_boundary": {
+    "limits": "Conservative signed EVM wei ceilings reserve nonce liability; no gas receipt, expiry, success or policy renewal grants free credit. Actual native verification, denomination authority and idempotent liability release remain an explicit separate release gate.",
+    "new_liability_release_implemented": false,
+    "operator_policy777": "in progress, source-only per Root steering",
+    "source": {
+      "bytes": 7329,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/astra-whole-fee-review/sn/mainnet/evidence/operator-gas-native-fee-release-boundary-20261004.json",
+      "sha256": "490bb90dafc2af3c784610eeecedd11e53ea3537da16bbaa2c9f8c1c061c332f"
+    },
+    "source_commit": "beb511c3",
+    "status": "OPEN_RELEASE_GATE_SOURCE_REVIEW_ONLY"
+  },
+  "original_documentation_snapshot": {
+    "bytes": 14586,
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/docs-reconciliation/evidence-snapshot.json",
+    "sha256": "5da150849b7f051ca6882e291c4641dcd0e5e53f210a4c2cc120e39994c98e3e"
+  },
+  "restore129": [
+    {
+      "actual_exit": 0,
+      "body_elapsed_seconds": 1973.82,
+      "counts": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "mode": "normal",
+      "raw": {
+        "bytes": 1003,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/evidence/full129-normal-1.stdout",
+        "sha256": "a9ecb8434a22d573de78ba67a3b32ea4b61efa66c20e6eccbb39770b9a59e723"
+      },
+      "receipt": {
+        "bytes": 5313,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/evidence/full129-normal-1.receipt.json",
+        "sha256": "542042330c45baabe323db26ee3dd79f233e942f6ed9b21743289d123b5e975d"
+      },
+      "root": "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues",
+      "source": "6a63d05ff26009a55a454630b5ee97898e34d705 with declared component peers",
+      "tree_joined": true
+    },
+    {
+      "actual_exit": 0,
+      "body_elapsed_seconds": 8341.08,
+      "counts": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "mode": "race",
+      "raw": {
+        "bytes": 1004,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/evidence/full129-race-1.stdout",
+        "sha256": "c40d48c8b3834e9b7ab9572db1b22bb93d9222622127cc4ef7fbe2f5506f8e40"
+      },
+      "receipt": {
+        "bytes": 5302,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-6a63-v3-20261004/evidence/full129-race-1.receipt.json",
+        "sha256": "0eddff6f73eccaee345d7787faab31dcedfebf00c46e6ee84ab000b808c261df"
+      },
+      "root": "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues",
+      "source": "6a63d05ff26009a55a454630b5ee97898e34d705 with declared component peers",
+      "tree_joined": true
+    }
+  ],
+  "root_startup_clock": [
+    {
+      "actual_exit": 0,
+      "counts": {
+        "TestRootMonitorStartupPublicDefaultBudgetIsSharedAcrossReads": {
+          "fail": 0,
+          "pass": 1,
+          "run": 1,
+          "skip": 0
+        }
+      },
+      "mode": "normal",
+      "raw": {
+        "bytes": 1508,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b870-mainnet-normal-rootstartup-clock-one.jsonl",
+        "sha256": "f72bd1027e97cd68336340d139c37b2bd6899242112c2e9174c4eeaf962be103"
+      },
+      "receipt": {
+        "bytes": 2695,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b870-mainnet-normal-rootstartup-clock-one.receipt.json",
+        "sha256": "c3364a1a8d386cb373f42f82ffc41deed181fedc3e6e9544db5faa1bf276efeb"
+      },
+      "roots": [
+        "TestRootMonitorStartupPublicDefaultBudgetIsSharedAcrossReads"
+      ],
+      "source": "b870f2f3174f15dcd61bf97e0f0838262f1744fe",
+      "tree_joined": true
+    },
+    {
+      "actual_exit": 0,
+      "counts": {
+        "TestRootMonitorStartupPublicDefaultBudgetIsSharedAcrossReads": {
+          "fail": 0,
+          "pass": 1,
+          "run": 1,
+          "skip": 0
+        }
+      },
+      "mode": "race",
+      "raw": {
+        "bytes": 1510,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b870-mainnet-race-rootstartup-clock-one.jsonl",
+        "sha256": "36cc7c03aaad8d9535ef6244ebe40cbf2d1a7ea6cde97d49e05d3fce6bbe0291"
+      },
+      "receipt": {
+        "bytes": 2691,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-b870-mainnet-race-rootstartup-clock-one.receipt.json",
+        "sha256": "75444cf1907fb5f04c0343b31e1b0591dffa5fe3ea8700416149bf4f7272fd44"
+      },
+      "roots": [
+        "TestRootMonitorStartupPublicDefaultBudgetIsSharedAcrossReads"
+      ],
+      "source": "b870f2f3174f15dcd61bf97e0f0838262f1744fe",
+      "tree_joined": true
+    }
+  ],
+  "schema": "urnetwork-docs-evidence-followup-v1",
+  "server_model": {
+    "actual_compile_exit": 0,
+    "actual_compile_tree_joined": true,
+    "binary_declared_roots": 1703,
+    "binary_list_exit": 0,
+    "binary_list_raw": {
+      "bytes": 80163,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-root-list.stdout",
+      "sha256": "a5d14ec22785ba29d1b3b9b198cabbcfebfc803cc16e03272affc7e73fe86480"
+    },
+    "binary_list_tree_joined": true,
+    "binary_root_manifest": {
+      "bytes": 88500,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-model-roots.json",
+      "sha256": "af683e3ab6c679cc77059864ab81fec2c902bb74e18a4fae66e26a72185dabcd"
+    },
+    "body_outcome": "No body launched in the first DB attempt; same image retry remains pending at this checkpoint, with no body acceptance inferred.",
+    "compile_receipt": {
+      "bytes": 6481,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-normal-compile.receipt.json",
+      "sha256": "5375b8b6da30ad0070aca9f65d40730601ed84545f31b74ac3f9016ab77fca48"
+    },
+    "first_prebody_attempt": {
+      "cause_attribution": "Root steering; original terminal independently confirms resource observation failure and no body",
+      "cleanup": "Exact owned PostgreSQL/Redis/network cleanup joined; Root reports zero remaining fixtures",
+      "cleanup_observed": {
+        "actions": [
+          {
+            "exit": 0,
+            "id": "185a960b0d7477dd92b7be50e076cd4703173f4ba2049388766105c35752a762",
+            "service": "postgres",
+            "stderr": "",
+            "stdout": "185a960b0d7477dd92b7be50e076cd4703173f4ba2049388766105c35752a762\n"
+          },
+          {
+            "id": "5c3817cabf6544fe4656cccfd586d970deda8cf302e094c5907bdd08de583379",
+            "service": "redis",
+            "status": "ALREADY_ABSENT"
+          },
+          {
+            "exit": 0,
+            "network": "8c1733a1d112108627f8a44fd375cbae98a3712fdebe1e15a8af29b56f949324"
+          }
+        ],
+        "body_executions": 0,
+        "prior_terminal_unchanged": true,
+        "status": "EXACT_OWNED_FIXTURE_CLEANUP_JOINED"
+      },
+      "exact_owned_fixture_cleanup": {
+        "bytes": 642,
+        "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-prebody-owned-fixture-recovery.json",
+        "sha256": "b7a5aca4aa0550bf371a8683b2bd30d1de7e0068ac003cbe8ffb5f68a04dfd39"
+      },
+      "observed_body_executions": 0,
+      "reported_causes": "Bash dynamic root-variable shadow, Docker lifecycle transitions, stale cleanup ID; exclusive harness correction/review and same1703 image retry remain pending",
+      "status": "FAILED_OR_INCOMPLETE before model body; original terminal retained",
+      "terminal": {
+        "bytes": 837,
+        "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db.terminal.json",
+        "sha256": "606509fe111951c02d7ea7ec96e5bdd3486fac499711cee321b61878c57f2194"
+      },
+      "terminal_observed": {
+        "body": null,
+        "cleanup_exit": null,
+        "owned_containers": {
+          "postgres": {
+            "id": "185a960b0d7477dd92b7be50e076cd4703173f4ba2049388766105c35752a762",
+            "remaining": "185a960b0d7477dd92b7be50e076cd4703173f4ba2049388766105c35752a762"
+          },
+          "redis": {
+            "id": "5c3817cabf6544fe4656cccfd586d970deda8cf302e094c5907bdd08de583379",
+            "remaining": ""
+          }
+        },
+        "resource_errors": [
+          {
+            "detail": "owned container lifecycle observation is inconsistent",
+            "time_ns": 1791152032818009606,
+            "type": "ValueError"
+          }
+        ],
+        "resource_qualified": false,
+        "result": null,
+        "runner_error": {
+          "detail": "owned resource observation failed",
+          "type": "Refused"
+        },
+        "sample_count": 11,
+        "scope": "full normal model only; no selected race/control claims",
+        "status": "FAIL_OR_INCOMPLETE"
+      }
+    },
+    "later_sources": "Session producer migration776, participant helper and creation-namespace changes remain separate source/qualification work.",
+    "normal_compile": "PASS as independently read back by Root",
+    "readback": {
+      "bytes": 1879,
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/final-c60-model-v4-source-image-independent-readback-20261004.json",
+      "sha256": "a182e03feb95db938d9bf001f9e9e5b7d21a20e16a0be17151f1dcd6c00c4a9b"
+    },
+    "retained_image_sha256": "9c68f35a6fe3a0f5bc2883c2d813aa83f6a8c32ae0b675055b1dbecc88c1e33b",
+    "root_list_receipt": {
+      "bytes": 1417,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-root-list.receipt.json",
+      "sha256": "205e5126a075ff5884f5936927cc67e548fc53cd43f54dfa691f790d2e6aef1c"
+    },
+    "source_tuple": {
+      "connect": "7de1d3e8d1d3012742da653ec80be899143f620e",
+      "server": "c60b2bc173758fd1507c8385311a772ddee37730",
+      "sn": "0fbb0ccfe6285dbc160c3496bfccf8c3e1c9b281"
+    }
+  },
+  "source_only_runtime_finality": {
+    "blobs": [
+      {
+        "bytes": 6731,
+        "git_blob": "91a889d62d81d8804cb62ba1586093b7580d9772",
+        "path": "validator/mainnet_runtime_observation.go",
+        "sha256": "3ab4ae6c9a39dcad057f8210c72e88013107cb3501e3dafec13e2824fa89111f"
+      },
+      {
+        "bytes": 9362,
+        "git_blob": "57cb8f21239fa35c0011edfc6fa817d15e684548",
+        "path": "validator/mainnet_runtime_observation_test.go",
+        "sha256": "e4943935ef640ce2b433839ffbb4136f77d0646bc858265e06ddda4091ff19ae"
+      },
+      {
+        "bytes": 5823,
+        "git_blob": "62fe5e8490158458dcd19e2d3c33158440ad434d",
+        "path": "validator/production_runtime.go",
+        "sha256": "77aca0a709f7c27573ac102261e1704b2b78956e5c99505a37442f1b615bcdda"
+      },
+      {
+        "bytes": 16419,
+        "git_blob": "a2f6ae908a84d3a0ed2b56ea9018907a73b14650",
+        "path": "validator/production_runtime_test.go",
+        "sha256": "e4577e4e43aaf80c2eb9a6d3811613b2d41573059828a5292d65d4c1504cdfec"
+      },
+      {
+        "bytes": 4358,
+        "git_blob": "1da413cffef01941fc4d5a8e3557e334f2cc34b8",
+        "path": "validator/runtime_finality_witness.go",
+        "sha256": "f40098d6279bbd0ed1c636a309de33f05241edebd7f3f0dd421757c0e1ccd272"
+      },
+      {
+        "bytes": 11756,
+        "git_blob": "061a870bbf128a41029b749244e51efbe450a21f",
+        "path": "validator/runtime_finality_witness_test.go",
+        "sha256": "8a890b25b0c1027ff512b47ce216a31dcd424aeadd08a20cd9756ed7b69b1f7d"
+      }
+    ],
+    "body_executed": false,
+    "causal_execution": "pending",
+    "commit": "59a4c05d8848a789565f3c94218a781c07097e33",
+    "compile_executed": false,
+    "control": "Existing late-purpose canonical-control fixture updated; execution pending.",
+    "correction": "Retain first/highest native finality witnesses through bounded retry; validate closing head and canonical hashes without changing original block or deadline. Lag or missing evidence stays pending; actual canonical contradictions are hard.",
+    "declared_test_roots": [
+      "TestMainnetRuntimeFinalityClosesPublicObservation",
+      "TestMainnetRuntimeFinalityClosingReadCauses",
+      "TestMainnetRuntimeFinalityReconnectRetainsOriginalWitness",
+      "TestProductionRuntimeFinalityPreservesOriginalView",
+      "TestProductionRuntimeFinalityRetryKeepsOriginalBlockAndDeadline",
+      "TestProductionRuntimeFinalityContradictionDoesNotRetry"
+    ],
+    "parent": "9e2b6a13eae65400bba0ae24305ae4d29697666e",
+    "qualification": "source-only; older runtime results do not qualify this successor",
+    "repository": "/mnt/data/sn-testnet/mainnet-parallel-20261004/runtime-finality-review/sn",
+    "scripted_case_count_basis": "frozen author handoff, not executed case inventory",
+    "scripted_cases": 30,
+    "tree": "f98eba1c0c3e1762521428363f3d48bcad3dbad0"
+  }
+}

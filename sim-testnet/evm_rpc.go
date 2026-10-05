@@ -235,6 +235,9 @@ func (transport *rateLimitedRetryTransport) RoundTrip(request *http.Request) (*h
 		return nil, err
 	}
 	readOnly := publicEVMRPCRequestIsReadOnly(request)
+	// A caller may own the retry budget, but each physical public request must
+	// still acquire this gate and publish the provider's shared cooldown.
+	managed, _ := request.Context().Value(ownedEvmRpcRetryBudgetKey{}).(bool)
 	base := transport.base
 	if base == nil {
 		base = http.DefaultTransport
@@ -267,7 +270,7 @@ func (transport *rateLimitedRetryTransport) RoundTrip(request *http.Request) (*h
 			if ctxErr := request.Context().Err(); ctxErr != nil {
 				return nil, ctxErr
 			}
-			if !readOnly || attempt >= transport.maximumRetries {
+			if !readOnly || !managed && attempt >= transport.maximumRetries {
 				return nil, err
 			}
 			delay, delayErr := rpcRetryAfter(nil, nil, now(), transport.defaultRetryAfter, transport.maximumRetryAfter)
@@ -275,6 +278,9 @@ func (transport *rateLimitedRetryTransport) RoundTrip(request *http.Request) (*h
 				return nil, errors.Join(err, delayErr)
 			}
 			transport.gate.cooldown(now().Add(delay))
+			if managed {
+				return nil, err
+			}
 			continue
 		}
 		retry, body, err := publicEVMResponseNeedsRetry(response, readOnly)
@@ -282,7 +288,7 @@ func (transport *rateLimitedRetryTransport) RoundTrip(request *http.Request) (*h
 			if ctxErr := request.Context().Err(); ctxErr != nil {
 				return nil, ctxErr
 			}
-			if !readOnly || attempt >= transport.maximumRetries || !publicEVMResponseBodyReadIsTransient(err) {
+			if !readOnly || !managed && attempt >= transport.maximumRetries || !publicEVMResponseBodyReadIsTransient(err) {
 				return nil, err
 			}
 			delay, delayErr := rpcRetryAfter(response.Header, nil, now(), transport.defaultRetryAfter, transport.maximumRetryAfter)
@@ -290,12 +296,15 @@ func (transport *rateLimitedRetryTransport) RoundTrip(request *http.Request) (*h
 				return nil, errors.Join(err, delayErr)
 			}
 			transport.gate.cooldown(now().Add(delay))
+			if managed {
+				return nil, err
+			}
 			continue
 		}
 		if !retry {
 			return response, nil
 		}
-		if attempt >= transport.maximumRetries {
+		if !managed && attempt >= transport.maximumRetries {
 			return response, nil
 		}
 		delay, err := rpcRetryAfter(response.Header, body, now(), transport.defaultRetryAfter, transport.maximumRetryAfter)
@@ -303,8 +312,11 @@ func (transport *rateLimitedRetryTransport) RoundTrip(request *http.Request) (*h
 			response.Body.Close()
 			return nil, err
 		}
-		response.Body.Close()
 		transport.gate.cooldown(now().Add(delay))
+		if managed {
+			return response, nil
+		}
+		response.Body.Close()
 	}
 }
 
@@ -472,6 +484,13 @@ var publicEVMRequestGates = struct {
 	values map[string]*rpcRequestGate
 }{values: map[string]*rpcRequestGate{}}
 
+// A local owned node has no request pacing. Individual calls remain bounded by
+// the retry transport's per-attempt deadline and every caller's operation
+// deadline. Do not install an http.Client-wide deadline here: it spans all
+// retry attempts and can cancel a recoverable read before the transport has
+// exhausted its bounded retry budget.
+const ownedEVMHTTPTimeout = 45 * time.Second
+
 func sharedPublicEVMRequestGate(endpoint string, requestsPerMinute int) (*rpcRequestGate, error) {
 	key := fmt.Sprintf("%s\x00%d", endpoint, requestsPerMinute)
 	publicEVMRequestGates.Lock()
@@ -489,6 +508,17 @@ func sharedPublicEVMRequestGate(endpoint string, requestsPerMinute int) (*rpcReq
 
 func dialEVMClient(ctx context.Context, endpoint string, requestsPerMinute int) (*ethclient.Client, error) {
 	if requestsPerMinute == 0 {
+		parsed, err := url.Parse(endpoint)
+		if err != nil {
+			return nil, err
+		}
+		if parsed.Scheme == "http" || parsed.Scheme == "https" {
+			client, err := gethRPC.DialOptions(ctx, endpoint, gethRPC.WithHTTPClient(&http.Client{Transport: newOwnedEvmRetryTransport(http.DefaultTransport)}))
+			if err != nil {
+				return nil, err
+			}
+			return ethclient.NewClient(client), nil
+		}
 		return ethclient.DialContext(ctx, endpoint)
 	}
 	parsed, err := url.Parse(endpoint)

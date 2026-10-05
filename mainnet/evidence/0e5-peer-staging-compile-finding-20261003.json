@@ -1,0 +1,60 @@
+{
+  "schema": "0e5-peer-staging-compile-finding-v1",
+  "status": "HARNESS_REPAIR_PENDING_NOT_PRODUCT_COMPILE_FAILURE",
+  "batch_receipt_sha256": "e80186f2f3f88d9408e507de9b3ff45f9ebb314e704ddb27f1ec2ec1266b5b93",
+  "retained_phase_outcomes": [
+    {
+      "phase_id": "03-compile-mainnet-normal",
+      "status": "COMPILE_FAILED",
+      "execution_exit": 1,
+      "receipt_sha256": "b6c1d5b376852ffb2e343a8d89d7b53702e5e4feddb6f2b5ad7fa464e1e759b9"
+    },
+    {
+      "phase_id": "04-compile-validator-normal",
+      "status": "COMPILE_FAILED",
+      "execution_exit": 1,
+      "receipt_sha256": "20b539837efe375051a1f36339f6106d994668990246749d8177865658ed2b13"
+    },
+    {
+      "phase_id": "05-compile-internal-durablehead-normal",
+      "status": "PASS",
+      "execution_exit": 0,
+      "receipt_sha256": "918dba9f3f83143e6416f96bb602b801fabbd509f496bd2f152ac27ca789e296"
+    },
+    {
+      "phase_id": "06-compile-mainnet-race",
+      "status": "COMPILE_FAILED",
+      "execution_exit": 1,
+      "receipt_sha256": "280715b14758b14314828c94175b274bd7ab1eec338416b04df9986b8a6bec9c"
+    },
+    {
+      "phase_id": "07-compile-validator-race",
+      "status": "COMPILE_FAILED",
+      "execution_exit": 1,
+      "receipt_sha256": "af4dd04ce5970881cdd981e1f0eadaac273dec83a33a9d935ad900765d7d3711"
+    },
+    {
+      "phase_id": "08-compile-internal-durablehead-race",
+      "status": "PASS",
+      "execution_exit": 0,
+      "receipt_sha256": "b58f7891b27adfe99c544ea5d5faf1f995d133c19d32e351e9dccc07c99cd453"
+    }
+  ],
+  "missing_local_replacement_directories_at_review": [
+    "server",
+    "glog",
+    "gvisor",
+    "goidenticons",
+    "proxy",
+    "userwireguard",
+    "warp"
+  ],
+  "cause": "Correction source staging omitted inherited seven local replacement peers. New durablehead graph did not cover mainnet/validator peer dependencies.",
+  "required_repair": "Add exact already-qualified peer links and independently check resolved authority; retry only four failed package/mode compiles.",
+  "adjacent_preflight": "Validate every local go.mod replacement path and its retained physical authority before compilation, rather than treating one successful selected graph as proof of complete workspace layout.",
+  "limits": [
+    "No tracked source or module changes.",
+    "Durablehead normal/race successful compiles retained.",
+    "No behavioral pass or broad launch readiness inferred."
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "claim-full128-independent-recovery-readback-v1",
+  "status": "NORMAL_SELECTED_ROOT_PASS_RACE_AND_WHOLE_UNION_PENDING",
+  "source_head": "ade5a21403746a620bc37ace3415f83dd4402e61",
+  "root": "TestEconomicConservationClaimWindowPublicFull128RetainsUnknownCreditAndResumes",
+  "census": {
+    "run": 1,
+    "pass": 1,
+    "fail": 0,
+    "skip": 0
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-ade-full128.receipt.json",
+      "bytes": 4117,
+      "sha256": "f9209f5a478c3734ab89257b5a33bbef614c6f81eaaf6521dd5a6cd57bb6f574"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-ade-full128.stdout",
+      "bytes": 1024,
+      "sha256": "2c20e356f4c4423cc5689e3dc1407166a60204cb91dfc1890dc6aac6f3d8665d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-ade-full128.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-ade-full128.resources.csv",
+      "bytes": 812,
+      "sha256": "f1fd5f3b3dd87ca63720358e2b347868446f2678233a1cb4fd0a5c962cc0363f"
+    }
+  ],
+  "image": {
+    "bytes": 79732376,
+    "ctime_ns": 1791108225460876618,
+    "device": 2081,
+    "gid": 1000,
+    "inode": 18793799,
+    "links": 1,
+    "mode": 320,
+    "mtime_ns": 1791108225460876618,
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/images/ade5-go-normal-compile.test",
+    "sha256": "d4695527364452db84c1addb9fbf95d5f41d6ce76d5dd21122a85578e9579d76",
+    "type": 32768,
+    "uid": 1000
+  },
+  "limits": [
+    "Normal selected-root pass only; no race or whole recovery result inferred.",
+    "No qualification of later39c/ab0 or physical-profile/entitlement sources.",
+    "0.5second resource samples are observed maxima, not upper bounds."
+  ]
+}

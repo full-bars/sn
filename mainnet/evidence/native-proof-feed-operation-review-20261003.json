@@ -1,0 +1,45 @@
+{
+  "scope": "Pinned SDK operation surface review and required proof-feed controls; proposed design, no implementation or execution claim",
+  "sdk_commit": "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a",
+  "source_bindings": [
+    {
+      "path": "/home/by/.cargo/git/checkouts/polkadot-sdk-778d4d407c7beeae/cacb431/substrate/primitives/state-machine/src/backend.rs",
+      "bytes": 12796,
+      "sha256": "b1d8b9701ea2d41de6cfcaba5a403829d7181ad59121cc7514b136b8baffc5c8"
+    },
+    {
+      "path": "/home/by/.cargo/git/checkouts/polkadot-sdk-778d4d407c7beeae/cacb431/substrate/primitives/state-machine/src/lib.rs",
+      "bytes": 59710,
+      "sha256": "b66f234603b8e713835c31d4f76e7a342aef207aa9886430dec03920a561c2fc"
+    },
+    {
+      "path": "/home/by/.cargo/git/checkouts/polkadot-sdk-778d4d407c7beeae/cacb431/substrate/primitives/state-machine/src/trie_backend_essence.rs",
+      "bytes": 26939,
+      "sha256": "2f5c4f66981d1ccfdaa8b5a75db40ee8e32fcc2eb8db14de71b8a3af9a8fa536"
+    }
+  ],
+  "observed_surface": [
+    "Point storage/hash/closest-merkle reads",
+    "Child storage/hash/closest-merkle reads",
+    "Next top-level and child key",
+    "Raw iterators used by pairs/keys",
+    "Top-level and child storage-root computation over deltas"
+  ],
+  "required_controls": [
+    "Missing point-read node is fetched at the certified parent and verified by owned SDK/runtime before use.",
+    "Wrong parent hash, proof root or node content refuses without enrolling an accounting cursor.",
+    "Iterator pagination and end-of-range must be authenticated; discovery RPC keys alone do not establish absence or completeness.",
+    "Child trie proof must bind its child identifier and parent child-root proof.",
+    "Root-write operations must have the required sibling/path nodes; unavailable proof preserves unknown output rather than inventing a state root.",
+    "Timeout, interrupted feed, lost acknowledgement and restart preserve exact request/debit identity and prior completed cursor.",
+    "Cumulative proof nodes/bytes and retries retain an end-to-end bounded native profile; receipt bounds remain separate.",
+    "Latch proof-feed and storage errors outside the SDK root tuple/hash lookup API; refuse enrollment even when SDK returns a plausible unchanged/default root. Preserve transient cause and retry eligibility."
+  ],
+  "implementation_owner": "Astra max native producer lane; independent SDK design review underway",
+  "qualification": "Sol medium actual original-runtime producer-to-Rust-to-Go test, not just mocked proof values or manually supplied complete directory",
+  "observed_error_fallbacks": [
+    "storage_root returns the original root after logging a delta-trie calculation error.",
+    "child_storage_root substitutes a default root on child-root read error and retains the prior child root on delta-write error.",
+    "Ephemeral hash lookup converts underlying storage error into None after logging."
+  ]
+}

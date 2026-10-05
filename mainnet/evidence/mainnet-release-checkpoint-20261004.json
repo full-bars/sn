@@ -1,0 +1,521 @@
+{
+  "candidate_source_pins": [
+    {
+      "commit": "1fa43d01f1fa06f26a193d2196155fce7cf291b7",
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-original-custody-final/sn",
+      "tree": "3fb4cb118f98509aea587559026f07954c004f7c"
+    },
+    {
+      "commit": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+      "repository": "/mnt/data/sn-testnet/mainnet-sdk-creation-custody-20261004/connect",
+      "tree": "dbba7a7fff5e598f6deb44d4a26061c6276da3d5"
+    },
+    {
+      "commit": "6c25ca536583b0cf78268ae5416b144c3a0e37cb",
+      "repository": "/mnt/data/sn-testnet/mainnet-parallel-20261004/server-final-777-union/server",
+      "tree": "bee6ae190844e68966a896fc9b50675271aa627a"
+    },
+    {
+      "commit": "86f5eedf782e6732371145cfc4644332ef6e9d5e",
+      "repository": "/mnt/data/urnetwork/astra-domain-dashboard-20261004/xops-provider-custody",
+      "tree": "b37c10a0815d49e82fbe9a550410a4c6d4e70831"
+    }
+  ],
+  "claim129": [
+    {
+      "body_elapsed_seconds": 1694.27,
+      "counts": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "exit": 0,
+      "image_sha256": "617d1bf273d11037145a02f2b04c290b9b3f65bfcb893d404a907060d560aa84",
+      "intent": {
+        "bytes": 14804,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-normal-v3-20261004/evidence/corrected-claim-full129-normal.intent.json",
+        "sha256": "d9b86dbecf419d3125ae12fc60568f0e775fecde68813f3864e521de6c5b2c42"
+      },
+      "mode": "normal",
+      "passed_utc": "2026-10-04T22:36:05.731348533Z",
+      "raw": {
+        "bytes": 1632,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-normal-v3-20261004/evidence/corrected-claim-full129-normal.stdout",
+        "sha256": "e741ddf9cbc7509a0946f912670aef7a4a5a22e487bf626350dbd067ed2289a0"
+      },
+      "receipt": {
+        "bytes": 4583,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-normal-v3-20261004/evidence/corrected-claim-full129-normal.receipt.json",
+        "sha256": "b9f20d24ef4b6e02f8e2f0da2b4929655f915d3649ae55019d111c009e5ceab6"
+      },
+      "resource_qualified": true,
+      "root": "TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage",
+      "source_tuple": {
+        "core": "e77caf3047c2ef26e87fd611fe5c7295f7818160",
+        "server": "f67c7ff76a8ae23e180f83b78f98e4f4dea1f744",
+        "sn": "1eb679a4fdc8097735af0a07137baa6cc7ba0f16"
+      },
+      "tree_joined": true
+    },
+    {
+      "body_elapsed_seconds": 8152.19,
+      "counts": {
+        "fail": 0,
+        "pass": 1,
+        "run": 1,
+        "skip": 0
+      },
+      "exit": 0,
+      "image_sha256": "d19e1f2735f2d95cf7cbaa195610a990503c3e6afe559d32358ba838bebeeeac",
+      "intent": {
+        "bytes": 14500,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-v2-20261004/evidence/corrected-claim-full129-race.intent.json",
+        "sha256": "565ac601a1ee57ecbf788f7c217eb2b28833629fb998966aef8a1ff07ac00738"
+      },
+      "mode": "race",
+      "passed_utc": "2026-10-04T23:04:23.006605128Z",
+      "raw": {
+        "bytes": 1632,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-v2-20261004/evidence/corrected-claim-full129-race.stdout",
+        "sha256": "00ce05f18ebeb64684d16a98afbce3423a60e5c7b24e28c7b66ff50515019c2d"
+      },
+      "receipt": {
+        "bytes": 4539,
+        "path": "/mnt/data/sn-testnet/sol-claim-full129-protected-1eb-v2-20261004/evidence/corrected-claim-full129-race.receipt.json",
+        "sha256": "1f120937612dc1f1be512ef2037edae7a46fae05f00d0929aa78f16da563a1c4"
+      },
+      "resource_qualified": true,
+      "root": "TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage",
+      "source_tuple": {
+        "core": "e77caf3047c2ef26e87fd611fe5c7295f7818160",
+        "server": "f67c7ff76a8ae23e180f83b78f98e4f4dea1f744",
+        "sn": "1eb679a4fdc8097735af0a07137baa6cc7ba0f16"
+      },
+      "tree_joined": true
+    }
+  ],
+  "claim129_limits": "Pass applies to the standalone1eb/Coree77/Serverf67 tuple. Original2184>2048 failure remains historical; complete latest graph/namespace/live authority is not inherited.",
+  "claim129_original_gate_source": {
+    "assertions": "129 public reviews and unchanged 16*128 (2048) hot-work bound remain in the exact executed source; observed work count is not printed by the passing body.",
+    "commit": "1eb679a4fdc8097735af0a07137baa6cc7ba0f16",
+    "path": "mainnet/economic_conservation_claim_window_test.go",
+    "sha256": "f90b6beac163381549e320933ce46f80d0a25f95f9225a4f28dd6b08efa63822"
+  },
+  "deadline_remaining_seconds_at_snapshot": 3820,
+  "deadline_utc": "2026-10-05T01:00:00+00:00",
+  "documentation_base": "3b75fd9a2153964d71968dd8bad62fc20e0514f1",
+  "external_original_authority_supplied_by_this_record": false,
+  "method": "Read-only existing receipt/raw-event/source-intake/SHA256 verification. No compiler, application test body, DB, signing, deployment or chain action executed by documentation owner.",
+  "observed_utc": "2026-10-04T23:56:19.987887+00:00",
+  "public_deployment": false,
+  "requirement_ids_open": [
+    "PH-01",
+    "PH-02",
+    "PH-03",
+    "PH-04",
+    "PH-05",
+    "PH-06",
+    "PH-07",
+    "PH-08",
+    "PH-09",
+    "PH-10",
+    "PH-11",
+    "PH-12",
+    "PH-13",
+    "PH-14",
+    "PH-15",
+    "PH-16",
+    "PH-17",
+    "PH-18",
+    "PH-19",
+    "PH-20",
+    "PH-21",
+    "PH-22",
+    "PH-23",
+    "PH-24",
+    "PH-25",
+    "PH-26",
+    "PH-27",
+    "PH-28",
+    "MG-01",
+    "MG-02",
+    "MG-03",
+    "MG-04",
+    "MG-05",
+    "MG-06",
+    "MG-07",
+    "MG-08",
+    "MG-09",
+    "MG-10"
+  ],
+  "retained_previous_scope": {
+    "bytes": 25028,
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/mainnet-docs-evidence-followup-20261004.json",
+    "sha256": "b24f4b9a17de4bf8761dd7757e210ca9f1da495414a563bcee9c92430d430ab3"
+  },
+  "schema": "urnetwork-mainnet-release-checkpoint-v1",
+  "scope_limits": {
+    "candidate_status": "Frozen candidate sources are not an accepted or deployed final dependency tuple. SN1fa43d01/Core25a/Server6c25 consolidated Current intake is sealed. Its custody union declares157 roots per mode and43 control recipes; all unexecuted. SNbb75 component inventories remain separately pinned. Exact xops86f5 has a separate terminal 309-pass/2-fail body result.",
+    "counts": "Component inventories overlap and are not additive final unique-root totals.",
+    "gas": "30 declared roots per mode and19 controls unexecuted. Full maximum approved nonce ceilings remain charged; no receipt/terminal-state credit. Actual native-fee proof, denomination authority and settlement remain a separate open release gate.",
+    "original_custody": "Core25a declares six new roots; original SN adapters ten roots plus three capacity roots, with ten plus four respective control recipes. All author execution is absent. Capacity joins complete inventory bounds (1TiB history,32767 files plus root), exact birth profile, crash temps and original windows without automatic migration.",
+    "public_path": "Source availability and narrow helpers do not establish complete authenticated nonempty ingress-to-payout/provider-work/Claim behavior; require actual public path and controls on final graph.",
+    "separate_compile_admission": "One normal -c -vet=off mainnet compile on exact SN5aaf88/Core25a/Server80 passed, exit0/tree joined/resource_errors empty; retained image127324112 bytes. No test body, vet or causal control is asserted; this phase cannot qualify latestSN1fa or Server6c25.",
+    "separate_whole_work_v11": "Later owner intake864f3680 adds immutable signed Open observations and public raw clocks;164 roots per mode,70 controls and3 vets are authored, unexecuted. Reported Currentb037/Serverd014 composition is later source work outside the sealed1fa/6c25 graph and not independently qualified by this documentation snapshot. Canceled historical work remains unknown.",
+    "server6c25": "Frozen intake joins gas a1c9ca00, test fixture ed2a77ab and prior-creation cd453/a17. Static source census1738 model/1013 controller/531 raw root (530 Linux);88/88 control patch applicability checks pass, not causal bodies. No compilation or body result. Wallet/roster/gas cleanup fixture successors and actual timed still-open producer778 remain separate.",
+    "server_migrations": "Final777 composition preserves prefix through775 and exact776; appends777. Source-only independent source/control handoff is separate from runningc60 image.",
+    "xops": "Exact311 combined offline roots executed:309 PASS/2 FAIL/0 SKIP,47.962s,exit1/tree joined with no recorded resource errors. Source55f1 corrects the producer-census parser and interpreter-dependent JSON depth guard; its actual corrected combined bodies and independent causal variants remain pending. Reliability/provider-window gauges remain unpublished unknown."
+  },
+  "separate_mainnet_compile": {
+    "exit": 0,
+    "logs": {
+      "stderr": {
+        "bytes": 0,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compile-v2.stderr",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "bytes": 0,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compile-v2.stdout",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "process_result": {
+      "bytes": 2896,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compile-v2.process-result.json",
+      "sha256": "d7dc33493ce22e31d1218575dadc48e94510504eef1134ba6065e82d45356beb"
+    },
+    "receipt": {
+      "bytes": 8728,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compile-v2.receipt.json",
+      "sha256": "074bfdc3e0d30047a3bce22f887d2127848fdbbaf32c607099b20cb32379a405"
+    },
+    "resource_errors": [],
+    "retained_image_as_bound_by_receipt": {
+      "bytes": 127324112,
+      "ctime_ns": 1791157036827233736,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 120126520,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791157036827233736,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/images/current5aaf-mainnet-normal-compile-v2.test",
+      "sha256": "23dee2aa04bf6ef47566eca49c09db3d9fb924c8cf4ea3802d58241fe2348ae7",
+      "type": 32768,
+      "uid": 1000
+    },
+    "scope": "Compilation only; no test body, vet, causal control or latest source-graph qualification.",
+    "source_tuple": {
+      "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+      "server": "80bcc28578b177626e0080fda2d1af26932b3b6f",
+      "sn": "5aaf88a6cbcee131164dd99f670a111df4313b5d"
+    },
+    "status": "COMPILE_PASS_BODY_PENDING",
+    "tree_joined": true
+  },
+  "separate_still_open_producer": {
+    "cause_and_change": "Undated unresolved rows supplied no authenticated exact-boundary state. The new producer retains first original open observations under the actual settlement row lock and database clock, with separate signing source; closed/missing/unauthorized/future-boundary inputs remain unavailable.",
+    "declared_roots": [
+      "TestProviderWorkOpenObservationActualOwnerRetainsFirstBoundary",
+      "TestProviderWorkOpenObservationNeverBackdatesAClosedContract",
+      "TestProviderWorkOpenObservationMissingOriginalRequestStaysUnknown",
+      "TestProviderWorkOpenObservationUnavailableAuthorityAndFutureBoundaryStayUnknown",
+      "TestProviderWorkOpenObservationWaitsForActualTerminalOwner",
+      "TestProviderWorkOpenObservationAndOutcomeUseDatabaseClock"
+    ],
+    "integration_limit": "Not included in frozen6c25, latestSN1fa or the runningc60 image; complete public ingress-to-payout/measurement integration and causal qualification remain open. Canceled historical work is not made complete by this new open observation.",
+    "migration": 778,
+    "required_protocol": "separately authored SN453 still-open schema",
+    "source": {
+      "commit": "f0f44f75d89207413cea4958e6440bf072a7fd95",
+      "repository": "/mnt/data/sn-testnet/mainnet-parallel-20261004/server-open-original/server",
+      "tree": "929336a9474f45247e28946d38030d38061f79f9"
+    },
+    "status": "author source-only; no compiler/body/DB result"
+  },
+  "server_c60_model": {
+    "declared_binary_roots": 1703,
+    "ed2_correction": "Cached pg_stat_activity transaction snapshot missed the new reader. Test-only ed2 uses actual pg_locks/advisory identity, deterministic ordering and bounded worker cleanup; nine roots plus one causal variant authored, unexecuted.",
+    "failed_roots": [
+      "TestContractCloseOriginalCanceledHistoryReadRollsBackThenRecovers"
+    ],
+    "failure_excerpt": {
+      "bytes": 38260,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-failure-contract-close-original-cancel.jsonl",
+      "sha256": "6b6881180d437d25aa2d1858b8ad1f84a6e04e6d9b2081fa69db4ba4dab976aa"
+    },
+    "image_sha256": "9c68f35a6fe3a0f5bc2883c2d813aa83f6a8c32ae0b675055b1dbecc88c1e33b",
+    "last_complete_event_utc": "2026-10-04T23:55:10.67773786Z",
+    "launch": {
+      "bytes": 1199,
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-retry3-actual-body-launch.receipt.json",
+      "sha256": "9399f07eee5c9687e83e53b1059d0a6022c73cf7017d7548ddb8cb011313a758"
+    },
+    "package_terminals": [],
+    "partial_top_level_counts": {
+      "fail": 1,
+      "pass": 1110,
+      "run": 1121,
+      "skip": 9
+    },
+    "prior_skip_audit": {
+      "observed_allowed_skips": 9,
+      "receipt": {
+        "bytes": 19998,
+        "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-live-skip-audit-v1.json",
+        "sha256": "55f8a1ffa6a375a85db73678f0c91815f1d1c05b9938046eacd71310dd719e8c"
+      },
+      "scope": "Nine observed skips were in the frozen allowlist. Missing operator-proxy, GeoLite2 places, pro.yml, onboarding configuration and optional benchmark remain explicit coverage gaps, not passes. This audit is not a terminal suite result.",
+      "unknown_skips": []
+    },
+    "process_presence": {
+      "executable": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/images/final-c60-model-normal-compile.test",
+      "pid": 2278433,
+      "present": true,
+      "starttime_ticks": "102548058",
+      "state": "S"
+    },
+    "raw_prefix": {
+      "bytes": 24646548,
+      "method": "Complete newline-terminated prefix captured once; running file may append. Prefix hash is not a terminal receipt.",
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.stdout",
+      "sha256": "bbd567d5d975d4c9505678abb55e0dedf66f6fbf7e7ebe5485d9105f22b302e5"
+    },
+    "skipped_roots": [
+      "TestGeolocationSourceHostsMatchProberSourcesWhenCheckedOutAlongside",
+      "TestGeoLite2CitiesAsLegacyRowsResolveToThemselves",
+      "TestClientScoreReaderSourceCosts",
+      "TestNetworkReferralCode",
+      "TestNetworkReferral",
+      "TestAddReferralBonusesGrantsBothSides",
+      "TestOnboardingRegistryFile",
+      "TestReferralBonusCount",
+      "TestProConfig"
+    ],
+    "source_tuple": {
+      "core": "7de1d3e8d1d3012742da653ec80be899143f620e",
+      "server": "c60b2bc173758fd1507c8385311a772ddee37730",
+      "sn": "0fbb0ccfe6285dbc160c3496bfccf8c3e1c9b281"
+    },
+    "status": "RUNNING_WITH_OBSERVED_FAILURE; no suite PASS or terminal resource/cleanup qualification"
+  },
+  "source_inputs": {
+    "compiler_actual_spawn": {
+      "bytes": 481,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-compiler-sol-actual-go-spawn-v2.json",
+      "sha256": "53efe9c982ed806b0695cd72089f5be1624b770a2f74b0a5274d029a319c78f7"
+    },
+    "earning_selection": {
+      "bytes": 5389,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/oct6-original-epoch-selection/HANDOFF.json",
+      "sha256": "3fce78bfd50f55f1ec078489d601e51fe0b13f000ce1052c52d09ac89d15d2fd"
+    },
+    "fee_source_review": {
+      "bytes": 10880,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/astra-whole-fee-review/sn/mainnet/evidence/operator-gas-independent-source-review-20261004.json",
+      "sha256": "1f783a19f1508dc76bba5f5b6b16027764a62e3c7ed8c963ff1264de256cbdb9"
+    },
+    "gas_payment_isolation": {
+      "bytes": 2627,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/oct6-gas-payment-isolation/HANDOFF.json",
+      "sha256": "e5ed42ef1d29040c5ab876263dbf00c52c2a9ba8bfd1486cd7dc62838f6f5911"
+    },
+    "gas_policy": {
+      "bytes": 27911,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/operator-gas-policy/INTAKE.json",
+      "sha256": "0c6624155cc5600dfdee8ea59cc57fde6ca81a36a2d733c16059b3e11fced81b"
+    },
+    "http3d": {
+      "bytes": 40302,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/remaining-get-owners/HANDOFF.json",
+      "sha256": "1467ebe122b0e3be22edf586688e173be1e71789b70eda5b86a004f4e4c31e99"
+    },
+    "native_readiness": {
+      "bytes": 20595,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/native-witness-review/sn/mainnet/evidence/native-qualification-readiness-20261004/readiness.json",
+      "sha256": "7f889087518fb3a0c918c7162463ff6113205acb157e341c184629138172e214"
+    },
+    "operator_repair": {
+      "bytes": 25790,
+      "path": "/mnt/data/urnetwork/operator-recovery-handoff-20261004/v3/manifest.json",
+      "sha256": "d3011887acc4d1aeb86c1aa76e74ba6a1e04f291901de70d1ddf1e416b40e0b3"
+    },
+    "original_creation_publication_custody": {
+      "bytes": 17537,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/original-creation-publication-custody/handoff.json",
+      "sha256": "508170363753b1930f087bc92e852d12c3c7fbb3aadf122805ee944c0a5c133a"
+    },
+    "owner_workflow_fc55": {
+      "bytes": 13564,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/owner-recycle-workflow-source-handoff-20261004.json",
+      "sha256": "64080e10ebdde8edf2ba38b971e960ffc7a5b0c5fe1b6959025cb37a07de07e4"
+    },
+    "publication_capacity": {
+      "bytes": 4128,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/publication-capacity-admission/handoff.json",
+      "sha256": "f4e8f76c9fe936376f3962b2e7dbbe5af617ffe65e519139648d61c721a65d93"
+    },
+    "runtime_finality74": {
+      "bytes": 6300,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/runtime-finality-review/FINALITY-OWNER-HANDOFF.txt",
+      "sha256": "0a6bb9c9e7895b967a5fac08b89b997c27c705d97bf65a59e5d3b8478924f521"
+    },
+    "separate_compile_only_admission": {
+      "bytes": 1815,
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-go-compiler-adoption-20261004.json",
+      "sha256": "cabda1f7ba5446bae38c0a1ea687190633e7bd9b06ac769ead62554734c2ff64"
+    },
+    "separate_whole_work_v11": {
+      "bytes": 21236,
+      "path": "/mnt/data/sn-testnet/mainnet-whole-work-inventory-20261004/evidence/sn-v11/intake.json",
+      "sha256": "407a73168e5d0d726c59df266c7ee9fd8241f04ad7ec8c9381c8dadbbb9117dc"
+    },
+    "server6c25": {
+      "bytes": 895383,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/server-final-777-union/source-handoff-6c25ca53.json",
+      "sha256": "c846eb551a8e5c6e8e2e8ef7044b84112734580b525bc3c871cc849791eec27e"
+    },
+    "server6c25_control_applicability": {
+      "bytes": 60758,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/server-final-777-union/control-applicability-6c25ca53.json",
+      "sha256": "db8c41cbbc4780f687210a5183555cfa12f3718e09a4ba89e5d6e917a2a88e87"
+    },
+    "server91_predecessor": {
+      "bytes": 869110,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/server-incremental-successor/source-handoff-91bb2968.json",
+      "sha256": "9a6dcf1e3b4970d01516792d60f515c263ddec49f6be2219df36732457024e33"
+    },
+    "server_ed2_fixture": {
+      "bytes": 4794,
+      "path": "/mnt/data/urnetwork/close-original-db-barrier-handoff-20261004/intake.json",
+      "sha256": "21535a6eaab14f2c4708e937a553c008861040387f5fda4c411912f38495ad21"
+    },
+    "server_prior_creations": {
+      "bytes": 11916,
+      "path": "/mnt/data/urnetwork/server-prior-creations-handoff-20261004/HANDOFF.json",
+      "sha256": "6c3285d1f2787e0ab695f733f5e1a47ea712468456891c8ccbe64c6ef042113f"
+    },
+    "sn_candidate": {
+      "bytes": 19863,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-provider-finality-union/evidence/intake.json",
+      "sha256": "ea145e30ac7c4538527f276105369cf23b322d8414c769509d6dd38c618243cb"
+    },
+    "sn_final1fa": {
+      "bytes": 11460,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-original-custody-final/evidence/intake.json",
+      "sha256": "e8903459afe418339b79cf88e01c105e7ac176c925ac7f03c5538f7551147d29"
+    },
+    "sn_final1fa_controls": {
+      "bytes": 90368,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-original-custody-final/evidence/operative-controls.json",
+      "sha256": "623921e3792ccb24fdbbc5b882f4388dc061c88755164b4946e31aed1c9ad9f3"
+    },
+    "sn_final1fa_qualification": {
+      "bytes": 121214,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-original-custody-final/evidence/qualification.json",
+      "sha256": "c86d50885cbca37c6591cf43278e3ddf953f0a797e108f1aa3b0c310eee29786"
+    },
+    "sn_finality_partition": {
+      "bytes": 16949,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/mainnet-provider-finality-union/evidence/finality-qualification.json",
+      "sha256": "48b3caba0924815a58258b6bc8160da8697fa8b86f1d2059f8de5a7add1c4875"
+    },
+    "whole_work": {
+      "bytes": 19947,
+      "path": "/mnt/data/sn-testnet/mainnet-whole-work-inventory-20261004/evidence/sn-v10/intake.json",
+      "sha256": "1e221d24b55bceaafa73191c2f64d3d415f61894ea74b15310feea4b1fc2da8e"
+    },
+    "xops": {
+      "bytes": 47605,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/domain-dashboard-86f5eedf-intake.json",
+      "sha256": "e41f0f0c4ec5849ca7d8183d693d8ae7baee27b429318903d9a62dda166e18ef"
+    },
+    "xops55_correction": {
+      "bytes": 55895,
+      "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/domain-dashboard-55f1acf0-intake.json",
+      "sha256": "1b7c15947566b8751b764fd421aa2ee979c48cfa653f82ba293f0f446854d672"
+    }
+  },
+  "xops311_terminal": {
+    "candidate": "86f5eedf782e6732371145cfc4644332ef6e9d5e",
+    "cause_and_pending_correction": "All four actual SN09 counters exist; the old raw-source regex missed names after escaped newline letters. The old JSON guard depended on interpreter recursion behavior and accepted2000 containers before schema refusal. Source55f1 now decodes emitted format strings and enforces64 containers; source/adjacent/control recipes are bound below, with corrected execution pending.",
+    "controller_metric_source": {
+      "commit": "09f8f989f88660dda442730a18ed99d505ba1988",
+      "finding": "All four names exist in the exact original Go format string, separated by escaped newlines.",
+      "path": "mainnet/repair_controller.go",
+      "sha256": "64004aef0e3645ad88369cf49ba01c018726db374303d4aaa7002701fc4971b9"
+    },
+    "counts_from_raw_terminal_output": {
+      "fail": 2,
+      "pass": 309,
+      "run": 311,
+      "skip": 0
+    },
+    "elapsed_seconds": 47.962,
+    "exit": 1,
+    "failed_roots": [
+      "test_sn_mainnet_dashboard.MainnetDashboardSourceTests.test_every_queried_metric_has_an_original_public_producer",
+      "test_sn_mainnet_monitor_manifest.MainnetOperationsManifestTests.test_deep_json_is_a_permanent_admission_refusal"
+    ],
+    "logs": {
+      "stderr": {
+        "bytes": 63035,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final86f5-xops311-v1.stderr",
+        "sha256": "69f4224be9ec3e63d78abcf92d555c00b753689552f2172428d1f9dfff7ab9f2"
+      },
+      "stdout": {
+        "bytes": 0,
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final86f5-xops311-v1.stdout",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "process_result": {
+      "bytes": 2186,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final86f5-xops311-v1.process-result.json",
+      "sha256": "a4e8e8f91143aa40439e54a5a3f2b878995b70cae4c20d8456eed75fee32fdfe"
+    },
+    "receipt": {
+      "bytes": 4784,
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final86f5-xops311-v1.receipt.json",
+      "sha256": "9f7d1f0f8f6a8495b1246a5281dde042bc3e4f79c97eef14dd6342e8ae014387"
+    },
+    "resource_errors": [],
+    "scope": "Exact311 offline Python + actual pinned Promtool/loopback Prometheus. No deployment, live activation, or extra independent mutation control.",
+    "sn_source_pin": "09f8f989f88660dda442730a18ed99d505ba1988",
+    "status": "FAIL",
+    "subsequent_source_correction": {
+      "causes_changes_adjacent_roots": [
+        {
+          "cause": "Raw-source word-boundary regex missed four real controller metric names immediately after escaped backslash-n in one Go fmt.Sprintf string. Exact pinned09 already contains all four names.",
+          "component": "d61938a61cb7481d803f0982cb0dbd707cfa26e5",
+          "correction": "Decode actual quoted fmt.Sprintf format strings before emitted-line census. Preserve queried-minus-available assertion; exclude comment/raw-string/rune/name lookalikes. Existing root includes original-parser omission and four exact producer-removal controls.",
+          "reviewer": "/root/sol_mainnet_launch_test_scope",
+          "root": "test_sn_mainnet_dashboard.MainnetDashboardSourceTests.test_every_queried_metric_has_an_original_public_producer",
+          "status": "Independent static clearance; corrected body execution pending."
+        },
+        {
+          "cause": "JSON depth refusal relied on interpreter RecursionError; actual runtime parsed2000 nested arrays and subsequently raised a different permanent schema diagnostic.",
+          "component": "a098dcab868934287f2140fdb490329f698e2ca5",
+          "correction": "Explicit lexical64-container limit before decoding, with strings/escapes and UTF8/16/32 handling retained. Existing root covers64 acceptance,65/2000 refusal, encoded variants and actual depth-guard removal.",
+          "reviewer": "/root/astra_domain_dashboard",
+          "root": "test_sn_mainnet_monitor_manifest.MainnetOperationsManifestTests.test_deep_json_is_a_permanent_admission_refusal",
+          "status": "Static clearance; corrected body execution pending."
+        }
+      ],
+      "intake": {
+        "bytes": 55895,
+        "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/domain-dashboard-55f1acf0-intake.json",
+        "sha256": "1b7c15947566b8751b764fd421aa2ee979c48cfa653f82ba293f0f446854d672"
+      },
+      "source": {
+        "commit": "55f1acf00cc80cfe0eb85b916ba57d1c1508e736",
+        "repository": "/mnt/data/urnetwork/astra-domain-dashboard-20261004/xops-census-depth-retry",
+        "tree": "c505720eeea9af30060b6a83765cbf24f383f53d"
+      },
+      "status": "Source and static review only; all311 corrected bodies and independent causal variants remain pending. The86f5 failure is retained."
+    },
+    "tree_joined": true
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 4294967296,
+  "data_minimum_available_bytes": 12884901888,
+  "history_count": 0,
+  "job_sha256": "8f123e5ff0d47bf1f06fe0b80de4f078c15ec85879d06dc6ca4819d6923ee965",
+  "margin": 2,
+  "memory_minimum_available_bytes": 115964116992,
+  "metadata_count": 1,
+  "metadata_memory_max_bytes": 4294967296,
+  "metadata_memory_swap_max_bytes": 0,
+  "model_count": 1,
+  "runner_sha256": "06f3cb64b062fbff82df993d015399062a6c7fa7c8fadfb71dad2331cba01cc5",
+  "short_count": 0,
+  "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_METADATA_STAGE",
+  "schema": "root-immutable-metadata-overlay-adoption-v1",
+  "adopted_at_ns": 1791159968044830051,
+  "review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest178-overlay-metadata-review-20261005.json",
+    "sha256": "2cc19feea8bdf0ba21a4fc603c7daffa2359e4df859928fbf50fa4f29a1743ae"
+  },
+  "conditions": "Exact SN178/Core25a/Serverba526 five-file immutable Go overlay metadata only. Base sources unchanged; no compiler/body, retain model; fresh guard/pin admission required."
+}

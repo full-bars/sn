@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "adopted_at": "2026-10-05T00:58:48.313457+00:00",
+  "compiler_count": 1,
+  "compiler_memory_max_bytes": 8589934592,
+  "compiler_memory_swap_max_bytes": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 8589934592,
+  "data_minimum_available_bytes": 17179869184,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "521c32d9135609cc1da486d5b12df10e6755ac102b3442291473073a58cbe097",
+  "margin": 2,
+  "memory_minimum_available_bytes": 120259084288,
+  "model_count": 1,
+  "review_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-latest127-server2f8-compiler-review-20261005.json",
+  "review_sha256": "b1c3ad383feb19dc6f81a7cfc079267de5d9234ba6d21df994a80ee384dd6619",
+  "runner_sha256": "ed581ec4f86f63b762d24ae39a70d6aeec386d19f270899e8c580b0340182be0",
+  "scope": "Exact127/Core25/2f8 Server model normal compiler only after metadata and Xops/66 all actually joined. Source8e owner corrections excluded. No other compile/short/history.",
+  "status": "ADOPTED_MODEL_PLUS_ONE_BOUNDED_GO_COMPILER"
+}

@@ -1,0 +1,46 @@
+{
+  "artifact_sha256": {
+    "affected9-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "affected9-normal.jsonl": "1735fa849c8bda8f04a9d202a9f8ca6dbfbd4eb232f428f4259beef40175315e",
+    "affected9-normal.phase": "b922ef4f204acf21c3dcdcf17d44d70d76f89064eed8694dfdc2f668ffeca600",
+    "affected9-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "86c9b24678586035287d9eee763247bf255f951619b2590b6fa14871db813a5b",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-affected9.sh": "88f3be73c35aa1946ed7d24daadeed0308be47032aab90cbf795616412f877bc",
+    "selector-affected9.txt": "6eba8a70f9fecc3d2a0e29a036e2c68ef0fc359be6175ba2b2d11abc13bbbafa",
+    "sn.mod": "6c05c06e0a2878238e33c18fe70e50575380306c279b75c7648276e2ba35ff63",
+    "sn.sum": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5",
+    "source-readback.json": "de389243a1ed7600356e9760c77597fefdfcb8d7ed7cce08d53112ba6712c245"
+  },
+  "classification": "PASS_SCOPED",
+  "intake_sha256": "53c5fb706be7fc0bba96806cdc205c01109e918564615c91dab923e97d4d14c1",
+  "limits": [
+    "These are nine affected EVM receipt/read-profile/native neighbors, not the seventeen new roots.",
+    "The separate new17 normal gate failed two assertions, so this receipt does not qualify the candidate overall."
+  ],
+  "mode": "normal",
+  "passed_roots": [
+    "TestEvmEscrowRegisterRequiresExactReceiptAndEvent",
+    "TestEvmReadProfileAbsenceIsReceiptOnly",
+    "TestEvmReadProfileBoundsEveryReply",
+    "TestEvmReadProfileKeepsMethodsScoped",
+    "TestEvmReserveLinkRequiresExactReceiptAndEvent",
+    "TestEvmVaultLinkRequiresExactReceiptAndEvent",
+    "TestFinalizedMappingAuthenticatesUnequalHeightsAndExactRlp",
+    "TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole",
+    "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees"
+  ],
+  "physical_git_blobs_verified": 20222,
+  "root_verification": {
+    "artifact_bindings_rehashed": 12,
+    "raw_fail_skip_count": 0,
+    "raw_passed": 9,
+    "receipt_path": "/mnt/data/sn-testnet/sol-economic-evm-monitor-a9e-independent-20261003/evidence/evm-a9e-affected9-normal-receipt.json",
+    "receipt_sha256": "568c9d7f0c8405af8c1a6b7fb0321767bed28f398b0d99f2f2a8142f659aea65",
+    "scope": "Nine affected roots normal only; original seventeen-root failures remain unqualified."
+  },
+  "schema": "sol-economic-evm-a9e-affected9-normal-v1",
+  "source_commit": "a9eff81353807067866a36034547d73d6298ab16",
+  "source_tree": "2dc584435f366778b6ec726acb40d93800b89774"
+}

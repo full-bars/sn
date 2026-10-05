@@ -1,0 +1,63 @@
+{
+  "limits": [
+    "Normal seven selected public snapshot/owner restore roots only; race, vet, causal and broader restore coverage remain open.",
+    "Workspace graph is distinct from current published production graph.",
+    "No live restore, restart, mount, signing or deployment."
+  ],
+  "mode": "normal",
+  "schema": "sol-snapshot198-normal-seven-v1",
+  "selection": [
+    {
+      "exit": 0,
+      "fail": 0,
+      "jsonl_sha256": "67e32b2da19ea994a34011eb8579591f7efc0b83947b194953e49e1196fa4be6",
+      "package": {
+        "action": "pass",
+        "elapsed": 2.005
+      },
+      "pass": 5,
+      "selected_roots": [
+        "TestStoragePreparationRestoreMonitorKeepsActualContinuation",
+        "TestStoragePreparationRestoreOwnerReservationKeepsOriginalBinding",
+        "TestStoragePreparationRestorePendingSnapshotKeepsExactReconciliation",
+        "TestStoragePreparationRestoreSnapshotRefusesMissingHeadAndWrongScope",
+        "TestStoragePreparationRestoreSnapshotRefusesPartialPendingPayload"
+      ],
+      "selector_sha256": "242f0276711a4346d8edad33bb5008689121e2d8b1b162650a94c0b3960afa52",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "fail": 0,
+      "jsonl_sha256": "54707bd60f0707469af7bee2442b2df816807c4f306463f395616b9b7978152c",
+      "package": {
+        "action": "pass",
+        "elapsed": 1.218
+      },
+      "pass": 2,
+      "selected_roots": [
+        "TestMinerStorageRestoreClaimRetainsOriginalPendingTransaction",
+        "TestMinerStorageRestoreFleetKeepsOriginalSignedInventory"
+      ],
+      "selector_sha256": "ccc32cc728a2d1ea177c57137553b90ad86d2765453251cc4c3a4c9312cc3b97",
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source": {
+    "author_intake_sha256": "70eebf669e92e566cd30d2adfe56956187d617a2146aa003ff5ed7ab5ca64b5c",
+    "connect_commit": "53bc92fabb28a79e26f5e3c5c78a6718751e5e79",
+    "module_graph_sha256": "69ff501219689aee0942ecc5b8f98d866746497934050da8183ca1f3edf76717",
+    "server_commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+    "sn_commit": "1982267c0bd317fffa9d931bc7267d04195a5a0c",
+    "sn_tree": "b0bfc229fbd31affc4e01e1846b506fdb90bf696",
+    "source_fence_sha256": "db3c18101e5ddc8620ecca595041e0967b7e7bac4e61ea90826b3ff5ef8297c4",
+    "test_dependencies_sha256": "04c9789a0d3607a8bfe7be5166dbf3ce2e89b5f6027ef726992b531364ea2576",
+    "warp_commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+  },
+  "status": "PASS_SCOPED",
+  "total_fail": 0,
+  "total_pass": 7,
+  "total_skip": 0
+}

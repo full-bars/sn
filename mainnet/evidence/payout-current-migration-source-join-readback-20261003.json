@@ -1,0 +1,14 @@
+{
+  "deliberate_composition_paths": [
+    "db_migrations.go",
+    "db_provider_current_migration_test.go",
+    "model/provider_payout_current_migration_test.go"
+  ],
+  "joined_files": 134,
+  "published_prefix_count": 755,
+  "published_prefix_sha256": "8befd2c6303ee0cfb8ed74f53e2477341ae6d1b84446090ca2d9de5608381933",
+  "schema": "sol-current-migration-199-source-join-readback-v1",
+  "source_commit": "1995218329ba712f82f53751653e3048aee79b02",
+  "source_join_sha256": "12bafb19c55da86d98952032a52c28e4844ab1677cffde3131e44677e0c5d7e7",
+  "status": "PASS_OWN_PHYSICAL_BYTE_AND_GIT_BLOB_JOIN"
+}

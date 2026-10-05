@@ -1,0 +1,766 @@
+{
+  "schema": "conservation-follow-historyffe-scoped-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_COMPOSITION_VERIFIED_EXECUTION_PENDING",
+  "head": "ffe74b36b5fb5aa453bc62d8734462fcd4993706",
+  "tree": "118223b5916722f0bbce39679c6d9954db51895f",
+  "base": "3a13c6977d8880891b3683db8ef82d1fa3b34526",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/intake.json",
+      "bytes": 2188,
+      "sha256": "5bad8380f30736cb7b6f403be91473a0576ff681934183dcc8ec146798773037"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-observation-fixture/evidence/intake.json",
+      "bytes": 1250,
+      "sha256": "28194f3df61e7889be8002565afd3dd05bf371109e2be9822b95731c1e0bac70"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/intake.json",
+      "bytes": 9917,
+      "sha256": "2ec917a84195502fda583fcc35dbf0b691818f3b982340ab6376ca781c1cca20"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/evidence/source-review.json",
+      "bytes": 7840,
+      "sha256": "3418463a24b96de220e2ce42bf914b54373c4e1c60e832eb0a2baa49ebce3508"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/evidence/selectors.json",
+      "bytes": 22981,
+      "sha256": "a3bfff4bb2e21c787487c00f5443932ca46884b073463a2e588a7cb92816063f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/evidence/operative-controls.json",
+      "bytes": 1214,
+      "sha256": "afb48dbb823a7d3634e894d7d0eda0575f63912133f7194cc9219fa5097f8900"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/evidence/qualification-recipe.json",
+      "bytes": 3960,
+      "sha256": "91c593174369d576701157ab92e52d3e4077e98ffb0ed8af8bae5c6443a1dd2a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation.go",
+      "bytes": 40354,
+      "sha256": "cc1a5fde85fa1c65981173fefa87e6417c8a8a7c587a79d59b3dec16b7deca05"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 32960,
+      "sha256": "21e3f10f989ccb7e3da0c48afdac029159e704de807387f96d33b77eeb87f184"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation_archive_admission.go",
+      "bytes": 1564,
+      "sha256": "8aefeeeaba658aac04bf636478702ed3e898a706da356f32896f34cdd8b1dc30"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation_archive_admission_test.go",
+      "bytes": 12080,
+      "sha256": "605c89e0d952daaa580e0a2a31789d1d0cc93a60948dd6f77c417d0023174c2e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation_command.go",
+      "bytes": 29648,
+      "sha256": "a17a1308a07de30b55ab40e7c9ad7244441254dd0bc0f686aa326529a94769d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation_entitlement.go",
+      "bytes": 33245,
+      "sha256": "db33a5fea2140bf0ceb04e25dc9f52f8e9e3d785c1d5462c31a416c768ece49b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation_native_renewal.go",
+      "bytes": 9398,
+      "sha256": "38d59e5d95022e38ef47db29a01e0f559e5394a45fddfc139565a445bb5497c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation_native_worker.go",
+      "bytes": 3804,
+      "sha256": "13c155391f2afc2e75dd55ded0e92ae6647f7db8a8181aa8e3196691d9105568"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation_native_worker_test.go",
+      "bytes": 19768,
+      "sha256": "940186b1e32de10abf304797fe3b591b284b6deb865ad6d2c5c46c015c7667e3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 20958,
+      "sha256": "ba075d3af87d834372314a0d3da60a8f181f581a44600c9b181738deed759f75"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/economic_native_producer_restore_test.go",
+      "bytes": 33482,
+      "sha256": "aebd4814483a06fcaa81914dbbdc792fa04fe05858707f10bfd99a15df4a4098"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/mainnet/monitor_services.go",
+      "bytes": 13769,
+      "sha256": "4169f4727c8369fed23bb66deb3bcf645b53bcc4b8b5b4848c2fa97ebed14b3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/intake.json",
+      "bytes": 2648,
+      "sha256": "dc7eb1a00bad398ca5085cce9e7134786e7729a6067ea6a77b3f2de6875228cd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/source-review.json",
+      "bytes": 7280,
+      "sha256": "92ad0e3ffb4d44a538bd67fb6bff03f594ddcdf328846de49cada826c2f5f912"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/selectors.json",
+      "bytes": 6541,
+      "sha256": "84fff1aa838d4175df66cc9714168768c05e0f9c43d3dc951207e4848ce2f099"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/operative-controls.json",
+      "bytes": 3643,
+      "sha256": "10223a1810965325c83790f4842ca1c5e26d511cf8ba89f92976d20c93f2a34a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/qualification-recipe.json",
+      "bytes": 5491,
+      "sha256": "4795d6fde97c28f0bb92767c66fd20de11dce97de6dc4e1f01cb1cf1cb8cd02f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/seal_source.py",
+      "bytes": 8048,
+      "sha256": "43373caf57ffe380d21e316c60501aabee195007a22e59c4e8240c5dc1e9302f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation.go",
+      "bytes": 40354,
+      "sha256": "cc1a5fde85fa1c65981173fefa87e6417c8a8a7c587a79d59b3dec16b7deca05"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_command.go",
+      "bytes": 29648,
+      "sha256": "a17a1308a07de30b55ab40e7c9ad7244441254dd0bc0f686aa326529a94769d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_native_worker.go",
+      "bytes": 3804,
+      "sha256": "13c155391f2afc2e75dd55ded0e92ae6647f7db8a8181aa8e3196691d9105568"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_native_worker_test.go",
+      "bytes": 19768,
+      "sha256": "940186b1e32de10abf304797fe3b591b284b6deb865ad6d2c5c46c015c7667e3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 20958,
+      "sha256": "ba075d3af87d834372314a0d3da60a8f181f581a44600c9b181738deed759f75"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/monitor_services.go",
+      "bytes": 13769,
+      "sha256": "4169f4727c8369fed23bb66deb3bcf645b53bcc4b8b5b4848c2fa97ebed14b3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_entitlement_test.go",
+      "bytes": 17142,
+      "sha256": "28abe33a990a66d223170703cd6751b42d375f4f8427647c9b44f91e473c477c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_fee_worker_test.go",
+      "bytes": 14585,
+      "sha256": "e384280163706ecfec8df9d5d6b51b990af4b83d1b2cfccede4ecec1a9b78f50"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_test.go",
+      "bytes": 27285,
+      "sha256": "a8053264fa890a531aca2c7011c100b54368cba94a85cb4a8f5566b5cfc3c807"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/publication.json",
+      "bytes": 4387,
+      "sha256": "33a55bd749db05833e0fe84997a09cd9996fad5dcb4871b7e4ab155873f70fcc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-adoption-qualified-inputs/evidence/qualification-recipe-v2.json",
+      "bytes": 17944,
+      "sha256": "18b9ae86e8e11acb64103f24de3782a990a4b5bc2f47feb950a24871b0d48bdd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/qualification-recipe.json",
+      "bytes": 22931,
+      "sha256": "cf6c0c3f5200a88a3df5b70b2c895abd90b003c8b78c4e1091b967479e75d31c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-observation-fixture/evidence/source-review.json",
+      "bytes": 1515,
+      "sha256": "5b1511ba9548b7ee2667902867e4d0e59a3d371877139200969334649f7e414d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-observation-fixture/evidence/selectors.json",
+      "bytes": 5665,
+      "sha256": "1bbe971c0efa8eca8dc9bee1e617dc3fc2ff3d49bf734852f8379eda678ded15"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-observation-fixture/evidence/qualification-recipe.json",
+      "bytes": 1485,
+      "sha256": "97768a6a8debf5527c5699a39e5ad4e8c9c7bf08210a89aa915c3081112f250e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-observation-fixture/sn/mainnet/economic_native_producer_restore_test.go",
+      "bytes": 33482,
+      "sha256": "aebd4814483a06fcaa81914dbbdc792fa04fe05858707f10bfd99a15df4a4098"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission/evidence/intake.json",
+      "bytes": 9252,
+      "sha256": "01c8ca73449b6a9efd5a966e51a3429ded7f8283f5995f7910bd8399170c416c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 32960,
+      "sha256": "21e3f10f989ccb7e3da0c48afdac029159e704de807387f96d33b77eeb87f184"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_archive_admission.go",
+      "bytes": 1564,
+      "sha256": "8aefeeeaba658aac04bf636478702ed3e898a706da356f32896f34cdd8b1dc30"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_archive_admission_test.go",
+      "bytes": 12080,
+      "sha256": "605c89e0d952daaa580e0a2a31789d1d0cc93a60948dd6f77c417d0023174c2e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_archive_index_test.go",
+      "bytes": 4031,
+      "sha256": "4cfbcfc8c776663368f627eb0019db8fd1d2833562cfe06d58f3521155047e7b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_archive_test.go",
+      "bytes": 21589,
+      "sha256": "3d4c0147791a6ce4f1cbc344d0728463317386d1b652dde2aef466a0ef0ad125"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_entitlement.go",
+      "bytes": 33245,
+      "sha256": "db33a5fea2140bf0ceb04e25dc9f52f8e9e3d785c1d5462c31a416c768ece49b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_entitlement_archive_test.go",
+      "bytes": 8660,
+      "sha256": "4eed258a709b3d3664d5f2c11203cf088d2c8805f50545cb145d5891f1b1b9f1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_native_renewal.go",
+      "bytes": 9398,
+      "sha256": "38d59e5d95022e38ef47db29a01e0f559e5394a45fddfc139565a445bb5497c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_native_renewal_test.go",
+      "bytes": 26586,
+      "sha256": "9e5c20dfd9632bfd731dc6d59e74f1c1ffc24a3e7fb8f85a2be044a2aa8c7480"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_receipt_test.go",
+      "bytes": 8027,
+      "sha256": "d9ce5ac212ea843d03401c67a721aabb91e483401622c26bc44d836e9e98643f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_restore_test.go",
+      "bytes": 23055,
+      "sha256": "9d32ef4a0791a082666f575146607b4e6cd053ab3794e61b6d1f554a495af8bc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/monitor_claim_history_work_test.go",
+      "bytes": 5305,
+      "sha256": "fed3b7e5ac87609fecc8d69853a6ff68c09a48a9d29d3497b9a3a139c38da6f2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/selectors.json",
+      "bytes": 12771,
+      "sha256": "3b9a4e5631f599b8be37013ed845bea22c0281c305a765d3d209e579cabf08f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/operative-controls.json",
+      "bytes": 10169,
+      "sha256": "6c0826b1171cc9a4932bc42af9a306e17effd2a99c4b6e4e929a795a450f6c5d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/source-review.json",
+      "bytes": 10750,
+      "sha256": "4345e9941619e805a18b47bf4bfa1d1cadafc1c5fa572890e37e534617bf5c15"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/pending-validator-lineage.json",
+      "bytes": 12721,
+      "sha256": "66195d9957bb9c60bfccf1ab1af6c166e5303a804abf88940cca30432998f35a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/qualification-recipe.json",
+      "bytes": 3099,
+      "sha256": "d5483dba8fc883e7f1ab361910ed3e1f48212127f1ad588bc5d957498be1a7bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/seal.py",
+      "bytes": 20261,
+      "sha256": "e774aba31737d09e8de9e3080dc0f63ee4b92ab2e5fcbf50fb65f6325427e9af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/original-process-read-only-observation.json",
+      "bytes": 2246,
+      "sha256": "4f88964beb4180a76a170a81578e948ac872bfbb370a9c95a54f68612a54ef74"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_restore_test.go",
+      "bytes": 22962,
+      "sha256": "4a09de3a8208e7a3aaf5edeba103bcafd5cbe605d205a89051a107f8750bb746"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 28332,
+      "sha256": "00b71984befe09b858ee8c64d98b031da9305d872bf6d6ac3a1e202659a17d4e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_archive_command.go",
+      "bytes": 19376,
+      "sha256": "7a162c680d29278ca78f4f2b56fa6bd596c3e46991d1377b0427b999e4e60dad"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/monitor_economic_native_archive.go",
+      "bytes": 8652,
+      "sha256": "db32328e8d5aa145ee827a01b06599a2b391b570494ed7fc2d50b8b1da43f93e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/monitor_economic_evm_archive.go",
+      "bytes": 10807,
+      "sha256": "a72dd287769afcc22d374a5c1696613bb3c52beb7ca8cdd5a0fe52890f7b2dfb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/monitor_claim_archive.go",
+      "bytes": 23107,
+      "sha256": "77a498064bfd2deb5f13ddf947fe3050b7e90f57dffc8d63e81f211784b66891"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_archive_command.go",
+      "bytes": 19732,
+      "sha256": "7ae499b97d4fb0ea793e85bbf173709f29ef8b1183acfd992213429a4d1ab7ea"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_claim_window.go",
+      "bytes": 20825,
+      "sha256": "24b7f96222383c3a83c9b952d50c819500d52af3316b377112acc3f419860461"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_claim_window_command.go",
+      "bytes": 5719,
+      "sha256": "5a1569fce0589c301935c8a941cb28bcc68f3cb325562705307c4dc03786a9ef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/economic_conservation_fee_revision.go",
+      "bytes": 8032,
+      "sha256": "04c0f1e876e13a6cb8d4dc27d44d9798dd65477e1cc472e206f6881f002ada16"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/mainnet/monitor_history_archive.go",
+      "bytes": 6065,
+      "sha256": "905827259135233477efecfb524dd43925cdce9ac423462fdf42363f5209602e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/internal/durablehead/head_linux.go",
+      "bytes": 29462,
+      "sha256": "d7b8a43a468368ff18f79c3340c4dd9e5fa5c4105df652b5035482e2ac7194a8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/restore-growing-prefix-physical-check/economic_conservation_archive_admission.go",
+      "bytes": 1591,
+      "sha256": "4e6e788af0ce990073ca6cc6ea25b78daa0a06fd6ef91c54df2bd8bbbe9492ca"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/restore-growing-prefix-physical-check/overlay.json",
+      "bytes": 385,
+      "sha256": "f71d54fd442dc849302e009bc4b04bd865ddd181e838b168c119d0c3b8eaf093"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/restore-growing-prefix-physical-check/control.diff",
+      "bytes": 302,
+      "sha256": "7a944103fd8171a3d1d419d60bd9d26f9be8532ce511b0c93e1f5ce62e3a8620"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/omit-final-complete-custody-fence/economic_conservation_archive_admission.go",
+      "bytes": 1527,
+      "sha256": "1ec5aa468d9490f5984300068fed9dd2e5e35944b8d1f386d0170a62a0f4e410"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/omit-final-complete-custody-fence/overlay.json",
+      "bytes": 381,
+      "sha256": "bd20825ad00aff0e13896911d3f3ac5bf277f709e9c96aa56368f202704200e0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/omit-final-complete-custody-fence/control.diff",
+      "bytes": 458,
+      "sha256": "a555e0502037eff2aa2236e37999fafbc0de36e4cdb2e162925c8a210032f097"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/retain-private-admission-after-publication/economic_conservation_archive_admission.go",
+      "bytes": 1562,
+      "sha256": "edbfd8b78af1bee920d69b52781bf14fb4907f8c2669244dee6796b1775609d1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/retain-private-admission-after-publication/overlay.json",
+      "bytes": 390,
+      "sha256": "9a842231933bb017dc93d6a18693b5214e05e95b93295038e745825a12073a32"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/retain-private-admission-after-publication/control.diff",
+      "bytes": 280,
+      "sha256": "1e717f7786c7656f5e014d7d947f338d9417a80348d557aa7bcb6145658c3c16"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/omit-completion-owner-cancellation/economic_conservation_archive_admission.go",
+      "bytes": 1519,
+      "sha256": "c7de2c75a8210b0428d8cd6ab06aaedcae992601ab5510ec871c9056c19e51c2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/omit-completion-owner-cancellation/overlay.json",
+      "bytes": 382,
+      "sha256": "025d68cd0285840af45fa6bde2010039d37307cd8bd09a87f8d0c732dd7a450a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/omit-completion-owner-cancellation/control.diff",
+      "bytes": 450,
+      "sha256": "b1e9a53f2100b290cf1f524884e8d447fae29e92eb8f732c4baaaca3c56cb4be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/omit-closed-index-invalidation/economic_conservation_archive.go",
+      "bytes": 32941,
+      "sha256": "8ecb77c23542da76d5493cb81a3346ace85968a1cf0f6c7abc51f8dfa489451a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/omit-closed-index-invalidation/overlay.json",
+      "bytes": 358,
+      "sha256": "cdfafe083561eb25a4c7563205836bb2c64aa759c51f634eed22159aea13940e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/evidence/controls/omit-closed-index-invalidation/control.diff",
+      "bytes": 331,
+      "sha256": "a8a8a6273c83e8fcc858833ac30c8d3b14b6418dcca71a1f7ba6e76b50d64660"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/intake.json",
+      "bytes": 12299,
+      "sha256": "826e671f8706cdfa781709825fe3c57f6aafa628ac3602eb92f2d2b46f086f92"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/first-predecessor-check-omitted/release_archive_history_v2.go",
+      "bytes": 15421,
+      "sha256": "b2068276caca8c0981cbb0121876a32356122d000f263b42b5e20bea7da6f110"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/first-predecessor-check-omitted/original-release_archive_history_v2.go",
+      "bytes": 15412,
+      "sha256": "7e2c1366277f1e56c5a3b719041b4cefc6b5ed63b6fec8ee49a23eb2d67064a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/first-predecessor-check-omitted/overlay.json",
+      "bytes": 313,
+      "sha256": "cd1ac8ea1109622f8793dd75e06411d1803a702d17fa6a4ddc18e05eaa6e3da9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/validator/release_archive_history_v2.go",
+      "bytes": 15412,
+      "sha256": "7e2c1366277f1e56c5a3b719041b4cefc6b5ed63b6fec8ee49a23eb2d67064a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-rereads-original/release_archive_decision_v2.go",
+      "bytes": 18861,
+      "sha256": "aeb56b9fa4ab4feef3260512a00c3b5397e7f7012db2f3a3c7917de2ae03373e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-rereads-original/original-release_archive_decision_v2.go",
+      "bytes": 18631,
+      "sha256": "35e07ae346055aba6b247c3e49dc5a9c04d79badf8beaf79e9d8d09c5ae496e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-rereads-original/overlay.json",
+      "bytes": 314,
+      "sha256": "3d12027909b0d078683161d6d9d2daad3f5e0269cef3ae24a582a2368ce43692"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/validator/release_archive_decision_v2.go",
+      "bytes": 18631,
+      "sha256": "35e07ae346055aba6b247c3e49dc5a9c04d79badf8beaf79e9d8d09c5ae496e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-custody-omitted/release_archive_decision_v2.go",
+      "bytes": 18602,
+      "sha256": "a36f9197c6384d2ff46461e1b13bde0fdc73c1de41f731f5648b67d1c914231a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-custody-omitted/original-release_archive_decision_v2.go",
+      "bytes": 18631,
+      "sha256": "35e07ae346055aba6b247c3e49dc5a9c04d79badf8beaf79e9d8d09c5ae496e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-custody-omitted/overlay.json",
+      "bytes": 313,
+      "sha256": "e7296452dbb258d3ffc62a29978df9d3e6047d415f9b46128f3ce6fb18af9c62"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/decision-census-atomic-publication-omitted/release_archive_decision_v2.go",
+      "bytes": 18672,
+      "sha256": "13745ec3503f1f512d505cd7544f3bff7fa95738211bf0415b1cd9c7ae6f0858"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/decision-census-atomic-publication-omitted/original-release_archive_decision_v2.go",
+      "bytes": 18631,
+      "sha256": "35e07ae346055aba6b247c3e49dc5a9c04d79badf8beaf79e9d8d09c5ae496e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/decision-census-atomic-publication-omitted/overlay.json",
+      "bytes": 326,
+      "sha256": "6685cad6dd22a67094c4764d965af2ba788ae5622ed2a09c5d807db399bd8eaf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/nonempty-head-lineage-omitted/release_archive_history_v2.go",
+      "bytes": 15421,
+      "sha256": "56823bc72e194874defd3be45ddca956e09c585257af48c14836d3740c0a0ddf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/nonempty-head-lineage-omitted/original-release_archive_history_v2.go",
+      "bytes": 15412,
+      "sha256": "7e2c1366277f1e56c5a3b719041b4cefc6b5ed63b6fec8ee49a23eb2d67064a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/nonempty-head-lineage-omitted/overlay.json",
+      "bytes": 311,
+      "sha256": "e164c470e5d8bf4343e77f27ac77f92bdb2293ca151f54deaa57f6059df24166"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-history-admission-style/sn/validator/release_archive_lineage_work_test.go",
+      "bytes": 32934,
+      "sha256": "29554af6cd0d9bd61980d5b78fc77c8173b1497726dec556f188252a5e85f60d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/controls/native-owner-isolation-omitted.go",
+      "bytes": 29657,
+      "sha256": "5a551134dc1b82b112ebe3929a84c12ef8b99410cc67157ae11a6178f5d7b6b1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/controls/native-original-handoff-omitted.go",
+      "bytes": 29659,
+      "sha256": "cacbb113f53e2649e14368c62a8da59c2de2eb91aaa262bae0cbbfaee1163cae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/controls/native-pending-issue-retention-omitted.go",
+      "bytes": 29630,
+      "sha256": "7413e5138b810a7c136f9ab83bb3fdc134540c2020db16d35bec1ef2ed0a21cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/evidence/intake.json",
+      "bytes": 2429,
+      "sha256": "08d248908006ed3dbc10b81012d78e07baebb447d1d22aa563fa9f29325aec12"
+    }
+  ],
+  "git_sources": [
+    {
+      "git_path": "mainnet/economic_conservation.go",
+      "git_blob": "17dc69db3a6085bd5550ad6dcd19dc29e61f0d91",
+      "bytes": 40354,
+      "sha256": "cc1a5fde85fa1c65981173fefa87e6417c8a8a7c587a79d59b3dec16b7deca05",
+      "exact_component_heads": [
+        "ce78b81cd74d85cb581185e5063e48f395f5cbf2",
+        "80fa4cfb0cc63d79f1ed536d8a436fcb5454b3dd"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_conservation_archive.go",
+      "git_blob": "24b21e4dac4a2b31bb5f7ecfe7242651ebf3cf9a",
+      "bytes": 32960,
+      "sha256": "21e3f10f989ccb7e3da0c48afdac029159e704de807387f96d33b77eeb87f184",
+      "exact_component_heads": [
+        "cf738fb9f8822cbccbe88096a5bcde66457f1b21"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_conservation_archive_admission.go",
+      "git_blob": "cdf9bbcab8229f21e1d612626c54781946ce9627",
+      "bytes": 1564,
+      "sha256": "8aefeeeaba658aac04bf636478702ed3e898a706da356f32896f34cdd8b1dc30",
+      "exact_component_heads": [
+        "cf738fb9f8822cbccbe88096a5bcde66457f1b21"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_conservation_archive_admission_test.go",
+      "git_blob": "5360fdfe4d15a1e30918b9046d539c65263aff2c",
+      "bytes": 12080,
+      "sha256": "605c89e0d952daaa580e0a2a31789d1d0cc93a60948dd6f77c417d0023174c2e",
+      "exact_component_heads": [
+        "cf738fb9f8822cbccbe88096a5bcde66457f1b21"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_conservation_command.go",
+      "git_blob": "b2f5d4221e603dcdbd1e7a45c459ad71794025f4",
+      "bytes": 29648,
+      "sha256": "a17a1308a07de30b55ab40e7c9ad7244441254dd0bc0f686aa326529a94769d7",
+      "exact_component_heads": [
+        "ce78b81cd74d85cb581185e5063e48f395f5cbf2",
+        "80fa4cfb0cc63d79f1ed536d8a436fcb5454b3dd"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement.go",
+      "git_blob": "943024afba961f33a295cec7dcec6cf06b73ea8e",
+      "bytes": 33245,
+      "sha256": "db33a5fea2140bf0ceb04e25dc9f52f8e9e3d785c1d5462c31a416c768ece49b",
+      "exact_component_heads": [
+        "cf738fb9f8822cbccbe88096a5bcde66457f1b21"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_conservation_native_renewal.go",
+      "git_blob": "a48ec15a082a076ae217ee7543e4784ef5ddc20f",
+      "bytes": 9398,
+      "sha256": "38d59e5d95022e38ef47db29a01e0f559e5394a45fddfc139565a445bb5497c5",
+      "exact_component_heads": [
+        "cf738fb9f8822cbccbe88096a5bcde66457f1b21"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_conservation_native_worker.go",
+      "git_blob": "892b75e859347a9770e14d5fcf360dd038e3ba5f",
+      "bytes": 3804,
+      "sha256": "13c155391f2afc2e75dd55ded0e92ae6647f7db8a8181aa8e3196691d9105568",
+      "exact_component_heads": [
+        "ce78b81cd74d85cb581185e5063e48f395f5cbf2",
+        "80fa4cfb0cc63d79f1ed536d8a436fcb5454b3dd"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_conservation_native_worker_test.go",
+      "git_blob": "acda28e068f34692347195bbf92e9d1da952306e",
+      "bytes": 19768,
+      "sha256": "940186b1e32de10abf304797fe3b591b284b6deb865ad6d2c5c46c015c7667e3",
+      "exact_component_heads": [
+        "ce78b81cd74d85cb581185e5063e48f395f5cbf2",
+        "80fa4cfb0cc63d79f1ed536d8a436fcb5454b3dd"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_conservation_principal_test.go",
+      "git_blob": "126d53053c49793851f1fad417d284f970b04d63",
+      "bytes": 20958,
+      "sha256": "ba075d3af87d834372314a0d3da60a8f181f581a44600c9b181738deed759f75",
+      "exact_component_heads": [
+        "ce78b81cd74d85cb581185e5063e48f395f5cbf2",
+        "80fa4cfb0cc63d79f1ed536d8a436fcb5454b3dd"
+      ]
+    },
+    {
+      "git_path": "mainnet/economic_native_producer_restore_test.go",
+      "git_blob": "64ed828a00108ea62cad3f5af48b426b1ed70678",
+      "bytes": 33482,
+      "sha256": "aebd4814483a06fcaa81914dbbdc792fa04fe05858707f10bfd99a15df4a4098",
+      "exact_component_heads": [
+        "80fa4cfb0cc63d79f1ed536d8a436fcb5454b3dd"
+      ]
+    },
+    {
+      "git_path": "mainnet/monitor_services.go",
+      "git_blob": "f3d6c7acc7ac061bd334a56172df24cd81ed2655",
+      "bytes": 13769,
+      "sha256": "4169f4727c8369fed23bb66deb3bcf645b53bcc4b8b5b4848c2fa97ebed14b3d",
+      "exact_component_heads": [
+        "ce78b81cd74d85cb581185e5063e48f395f5cbf2",
+        "80fa4cfb0cc63d79f1ed536d8a436fcb5454b3dd"
+      ]
+    },
+    {
+      "git_path": "go.mod",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31",
+      "exact_component_heads": [
+        "ce78b81cd74d85cb581185e5063e48f395f5cbf2",
+        "80fa4cfb0cc63d79f1ed536d8a436fcb5454b3dd",
+        "cf738fb9f8822cbccbe88096a5bcde66457f1b21"
+      ]
+    },
+    {
+      "git_path": "go.sum",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981",
+      "exact_component_heads": [
+        "ce78b81cd74d85cb581185e5063e48f395f5cbf2",
+        "80fa4cfb0cc63d79f1ed536d8a436fcb5454b3dd",
+        "cf738fb9f8822cbccbe88096a5bcde66457f1b21"
+      ]
+    }
+  ],
+  "scope": {
+    "mainnet_roots": 48,
+    "validator_roots": 11,
+    "go_roots_per_mode": 59,
+    "control_groups": 13
+  },
+  "review_findings": [
+    "Complete0380 archive-production delta,42-line private-admission helper and295-line new deterministic test file read previously; completecf738 sole flattened-table change read now. Each original snapshot still reads/decodes/semantically authenticates, but unexposed cold indexing does not recheck the growing physical prefix at each append.",
+    "One final complete physical custody and cancellation fence precedes every returned index, including empty admission. Published/hot indexes retain complete owner checks; closed indexes cannot admit new facts. No global/hash-only/age-based cache grants custody.",
+    "Exact work counters cover2/4/8 actual full128-epoch pages, fresh reopen, hot rechecks, healthy sibling cancellation, late equal-byte inode replacement and public no-source/no-checkpoint refusal. Five causal omissions remain to execute.",
+    "Complete80fa sole restore fixture delta and baseline loop read. It obtains real runtime companions from observeMonitorEconomicNative rather than feeding finite CLI output into monitor append. Expected restore state is the checked original durable readback, with original bytes, namespaces and content hash still checked. No production admission or runtime requirement is relaxed.",
+    "All12 changed union paths match exact reviewed component bytes; clean composition has no manual resolutions. Corec618 remains the required effective graph. Native-follow source review is separately retained."
+  ],
+  "retention": [
+    "Existing9 successful normal dual roots remain separate; corrected affected restore roots require new execution.",
+    "Original long129 history continues on its unchanged image; new long union partition must not run concurrently.",
+    "Unchanged e65 eleven-root cache lineage remains pending, with newly discovered terminal-custody follow-up outside this union."
+  ],
+  "limits": [
+    "59 declarations and component identities do not establish behavioral success or complete host sizing.",
+    "Thirteen control groups are bound declarations; no compile/body/causal success inferred.",
+    "No improvement percentage or measured production throughput claimed before actual execution.",
+    "Full funding/native10/90 conformance, deployed release and mainnet readiness remain open."
+  ]
+}

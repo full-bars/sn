@@ -29,6 +29,7 @@ type ScenarioAnomaly struct {
 	Disposition     string `json:"disposition,omitempty"`
 	Regression      string `json:"regression,omitempty"`
 	ResolvedByRun   string `json:"resolved_by_run,omitempty"`
+	DerivedFrom     string `json:"derived_from,omitempty"`
 }
 
 type ScenarioAnomalyLedger struct {
@@ -78,7 +79,14 @@ func processStates(observation *ScenarioObservation) map[string]ProcessState {
 	return states
 }
 
+// Legacy callers without a signed acceptance window retain lifetime scope.
 func buildScenarioAnomalyLedger(runID string, generatedAt time.Time, start, current *ScenarioObservation, assertions []AssertionRecord, faults []ScenarioFaultRecord, adversaries *AdversaryCampaignEvidence, history ...*ScenarioObservation) *ScenarioAnomalyLedger {
+	return buildScenarioAnomalyLedgerForWindow(runID, generatedAt, start, current, assertions, faults, adversaries, nil, history...)
+}
+
+// A signed window scopes claim observations only. Actual in-window uncertainty
+// remains open until independently authenticated reconciliation is available.
+func buildScenarioAnomalyLedgerForWindow(runID string, generatedAt time.Time, start, current *ScenarioObservation, assertions []AssertionRecord, faults []ScenarioFaultRecord, adversaries *AdversaryCampaignEvidence, window *ScenarioAcceptanceWindow, history ...*ScenarioObservation) *ScenarioAnomalyLedger {
 	when := generatedAt.UTC().Format(time.RFC3339Nano)
 	observations := make([]*ScenarioObservation, 0, len(history)+2)
 	for _, observation := range history {
@@ -209,8 +217,8 @@ func buildScenarioAnomalyLedger(runID string, generatedAt time.Time, start, curr
 			if !expected {
 				collector.add("claim-error", "critical", source, claim.Error, observation.ObservedAt)
 			}
-			if (claim.Uncertain != 0 || claim.Failed != 0) && !expected {
-				collector.add("claim-terminal-state", "critical", source, fmt.Sprintf("uncertain=%d failed=%d", claim.Uncertain, claim.Failed), observation.ObservedAt)
+			if !expected {
+				collector.addClaimWindowIncidents(claim, window, observation)
 			}
 		}
 		collector.add("native-custody-error", "critical", "native-custody", observation.NativeCustodyError, observation.ObservedAt)
@@ -291,7 +299,8 @@ func attachScenarioAnomalyGate(result *ScenarioResult, generatedAt time.Time, st
 		}
 	}
 	result.Assertions = assertions
-	result.Anomalies = buildScenarioAnomalyLedger(result.RunID, generatedAt, start, current, result.Assertions, result.Faults, result.Adversaries, history...)
+	result.Anomalies = buildScenarioAnomalyLedgerForWindow(result.RunID, generatedAt, start, current, result.Assertions, result.Faults, result.Adversaries, result.AcceptanceWindow, history...)
+	annotateInterruptedScenarioAnomalies(result)
 	observationHash := ""
 	if current != nil {
 		observationHash = current.ObservationHash
@@ -303,7 +312,13 @@ func attachScenarioAnomalyGate(result *ScenarioResult, generatedAt time.Time, st
 	}
 	message := "no unexpected anomalies"
 	if len(result.Anomalies.Entries) != 0 {
-		message = fmt.Sprintf("%d open anomalies; see anomalies.json", len(result.Anomalies.Entries))
+		derived := 0
+		for _, entry := range result.Anomalies.Entries {
+			if entry.DerivedFrom != "" {
+				derived++
+			}
+		}
+		message = fmt.Sprintf("%d open anomalies; %d unexercised consequences of interruption; see anomalies.json", len(result.Anomalies.Entries)-derived, derived)
 	}
 	result.Assertions = append(result.Assertions, AssertionRecord{
 		ID: anomalyGateAssertionID, Passed: len(result.Anomalies.Entries) == 0, Message: message,
@@ -322,4 +337,5 @@ func attachScenarioAnomalyGate(result *ScenarioResult, generatedAt time.Time, st
 	if result.FailedAssertionCount != 0 {
 		result.Result = "fail"
 	}
+	refreshProvisionalEpochOutcome(result)
 }

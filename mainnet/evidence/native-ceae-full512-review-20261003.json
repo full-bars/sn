@@ -1,0 +1,122 @@
+{
+  "schema": "native-ceae-full512-root-review-v1",
+  "receipt": "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/native-ceae-final-receipt.json",
+  "receipt_sha256": "0cb197f7e977e6754265bdfdf9166739db6a722cc029e36ef739c5d330089a55",
+  "source": {
+    "commit": "ceae8d5fce0f3e5638f656d278dbefc5a866fb67",
+    "connected_to": "sol-native-restore-259-fixture-independent-20261003/connect",
+    "git_blobs_exact": true,
+    "go_work_sha256": "af23ff51200fae27ac506851136f76c3abd90e1b3192bcb88060e6f3ae585d62",
+    "schema": "sol.native-ceae.stage-readback.v1",
+    "tracked_bytes": 221598321,
+    "tracked_count": 20391,
+    "tree": "34d949b52289d3752bee6acb0d7bf504fb2a225a"
+  },
+  "verified_bindings": {
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/adjacent3-normal.jsonl": {
+      "bytes": 3219,
+      "sha256": "6928c332a62331aef0b2adfa7518120b76eb53e9a37bb1671cb168d9541144ec"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/adjacent3-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/adjacent3-normal.command.json": {
+      "bytes": 660,
+      "sha256": "97d7bb12a1121acbaaa2d94dbb2acb31f434bf8f492d3dac243021705e2290b1"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/adjacent3-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/adjacent3-race.jsonl": {
+      "bytes": 3225,
+      "sha256": "fcb7d5e7a51f35698a6d756b5da43d2a8de8e987a575dc047aa93f44dd6c6c5b"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/adjacent3-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/adjacent3-race.command.json": {
+      "bytes": 714,
+      "sha256": "a6a56fe92c3d39ebf70b57f1fdc9409fc9bd18991d347174bbcf5f635ab69bec"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/adjacent3-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/full512-normal.jsonl": {
+      "bytes": 1727,
+      "sha256": "c4cc0c110365989e03b3cd41408fcd1b170f998364a130b831c9ec6b9eda49ee"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/full512-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/full512-normal.command.json": {
+      "bytes": 453,
+      "sha256": "7c20829c72e46600832e59dcdf74661ffff333f64a9dbfe0295b482139edb936"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/full512-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/full512-race.jsonl": {
+      "bytes": 1728,
+      "sha256": "d544e3a3ea0954f973feade268aeb50a918317b723e04c29e269d046b4526817"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/full512-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/full512-race.command.json": {
+      "bytes": 466,
+      "sha256": "1d7fb6d2558fb5a3ef82aadb1fe2a2cbd2ba45219944e1473b445359c133e7be"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/full512-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/source-readback.json": {
+      "bytes": 414,
+      "sha256": "285f6a51e10fdd2c2d3972077db934fb7f84d36994c62992411c6aba060551ab"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/graph-preflight.json": {
+      "bytes": 1168,
+      "sha256": "60c41f04e6d440df168ed343ad1929577f910970885d65b0fb795754b7622664"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/deps-mainnet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/mainnet-vet.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-native-ceae-independent-20261003/evidence/mainnet-vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "root_census": {
+    "adjacent3-normal": [
+      "TestMonitorNativeArchiveMissingRetainedSegmentStopsOnlyAffectedRole",
+      "TestMonitorNativeArchiveUnchangedChecksDoNotRereadPayload",
+      "TestMonitorNativeArchivePublicRefusesOmittedAndForgedPrefix"
+    ],
+    "adjacent3-race": [
+      "TestMonitorNativeArchiveMissingRetainedSegmentStopsOnlyAffectedRole",
+      "TestMonitorNativeArchiveUnchangedChecksDoNotRereadPayload",
+      "TestMonitorNativeArchivePublicRefusesOmittedAndForgedPrefix"
+    ],
+    "full512-normal": [
+      "TestMonitorNativeRestoreFull512HistoryAndBothActiveHeads"
+    ],
+    "full512-race": [
+      "TestMonitorNativeRestoreFull512HistoryAndBothActiveHeads"
+    ]
+  },
+  "original_failure_preserved": "native-restore-original-and-fixture259-review-20261003.json",
+  "scope": "One full512 root plus three adjacent negative roots per mode from separate runs. Same-root restored continuation only; cross-root cohort public/causal, current joined release and actual host restore remain. Original d3d race timeout is not relabeled; ceae adds bounded positive-read observation before unchanged sample assertion.",
+  "vet_exit": 0
+}

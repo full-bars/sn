@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -19,7 +20,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	gethrpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/gorilla/websocket"
 	"github.com/urnetwork/connect"
+	"github.com/urnetwork/connect/durablevolume"
 	"github.com/urnetwork/sdk"
 
 	"github.com/urfoundation/sn/clientauth"
@@ -57,13 +60,14 @@ type releaseSnapshotLoader func(context.Context) (*ReleaseSnapshot, error)
 type releaseSnapshotRetryWait func(context.Context, time.Duration) error
 
 type releaseOperatorRuntime struct {
-	measurement   *ReleaseMeasurementContext
-	stats         *StatsEngine
-	engine        releaseTrailRunner
-	close         func() error
-	attemptUpload *releaseAttemptUploadV2
-	attemptSource *releaseAttemptUploadSourceV2
-	attemptLedger *AttemptLedger
+	measurement    *ReleaseMeasurementContext
+	stats          *StatsEngine
+	engine         releaseTrailRunner
+	close          func() error
+	attemptUpload  *releaseAttemptUploadV2
+	attemptSource  *releaseAttemptUploadSourceV2
+	attemptLedger  *AttemptLedger
+	authentication *productionOperatorAuthentication
 }
 
 type releaseTrailRunner interface {
@@ -100,46 +104,189 @@ func transientReleaseSnapshotError(err error) bool {
 	return retryable && transient
 }
 
+// Evidence consumers may retry only structured transport failures. Replica
+// sibling cancellation keeps its narrow owner; diagnostic text grants nothing.
+func RetryableEvidenceTransportError(err error) bool {
+	retryable, transient := classifyReleaseSnapshotRetryMode(err, false, false, false)
+	return retryable && transient
+}
+
 // A joined timeout must not hide an integrity failure, and the replica owner's
 // sibling cancellation must not hide the timeout that caused it. Every branch
 // is checked; cancellation alone never authorizes a retry.
 func classifyReleaseSnapshotRetry(err error, siblingCancellation bool) (bool, bool) {
-	if err == nil {
-		return true, false
-	}
-	if _, fatal := err.(*TrailFatalError); fatal {
+	return classifyReleaseSnapshotRetryMode(err, siblingCancellation, true, false)
+}
+
+// Legacy release callers retain their prior diagnostic compatibility. New
+// evidence retry owners require typed transport origin for eof and no text match.
+func classifyReleaseSnapshotRetryMode(err error, siblingCancellation, legacyText, transportOrigin bool) (bool, bool) {
+	remaining := 512
+	return classifyReleaseSnapshotRetryBounded(err, siblingCancellation, legacyText, transportOrigin, 0, &remaining)
+}
+
+// Nil, cyclic and excessive cause trees are hard refusals. No custom Is/As
+// method can turn an opaque error into observed transport authority.
+func classifyReleaseSnapshotRetryBounded(err error, siblingCancellation, legacyText, transportOrigin bool, depth int, remaining *int) (bool, bool) {
+	return classifyReleaseRetryBounded(err, siblingCancellation, legacyText, transportOrigin, false, depth, remaining)
+}
+
+// Preparation may admit exact cut leaves alongside transport, but it must
+// inspect each original edge once. A failed transport pass cannot ask a mutable
+// wrapper for a replacement cause in a second cut pass.
+func classifyReleaseRetryBounded(err error, siblingCancellation, legacyText, transportOrigin, preparation bool, depth int, remaining *int) (bool, bool) {
+	err = releaseObservedValue(err)
+	if err == nil || depth > 32 || *remaining <= 0 {
 		return false, false
+	}
+	*remaining--
+	value := reflect.ValueOf(err)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		if value.IsNil() {
+			return false, false
+		}
+	}
+	switch err.(type) {
+	case *os.PathError, *os.LinkError, *TrailFatalError, *releaseObservedHard, *releaseObservedRefusal:
+		return false, false
+	}
+	switch cause := err.(type) {
+	case *releaseObservedNativeRead:
+		return cause.retryable, cause.retryable
+	case *releaseObservedNetworkRead:
+		return cause.retryable, cause.retryable
+	}
+	if crv4.IsSubstrateReadTransportCause(err) {
+		retryable := crv4.RetryableSubstrateReadTransportError(err)
+		return retryable, retryable
+	}
+	if preparation {
+		switch err {
+		case errAttemptCutPending, errAttemptCutSnapshotStale, errAttemptSettlementSnapshotStale:
+			return true, false
+		}
 	}
 	if err == context.Canceled {
 		return siblingCancellation, false
 	}
-	if err == context.DeadlineExceeded || err == io.EOF || err == io.ErrUnexpectedEOF {
+	if err == context.DeadlineExceeded {
 		return true, true
 	}
+	if err == net.ErrClosed || err == syscall.ECONNRESET || err == syscall.ECONNREFUSED || err == syscall.EPIPE || err == syscall.ETIMEDOUT {
+		return true, true
+	}
+	if err == io.EOF || err == io.ErrUnexpectedEOF {
+		// A replica sibling canceled after another transport refusal may stop
+		// at a decoder eof. It is neutral, never a reason to retry by itself.
+		actualTransient := legacyText || transportOrigin
+		return actualTransient || siblingCancellation, actualTransient
+	}
+	if err == gethrpc.ErrMissingBatchResponse {
+		return transportOrigin, transportOrigin
+	}
+	switch cause := err.(type) {
+	case *websocket.CloseError:
+		switch cause.Code {
+		case websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseAbnormalClosure,
+			websocket.CloseInternalServerErr, websocket.CloseServiceRestart, websocket.CloseTryAgainLater:
+			return true, true
+		default:
+			return false, false
+		}
+	case *url.Error:
+		return classifyReleaseRetryBounded(cause.Err, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
+	case *net.OpError:
+		return classifyReleaseRetryBounded(cause.Err, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
+	case *net.DNSError:
+		if cause.IsNotFound {
+			return false, false
+		}
+		if cause.UnwrapErr != nil {
+			return classifyReleaseRetryBounded(cause.UnwrapErr, siblingCancellation, legacyText, true, false, depth+1, remaining)
+		}
+		// The standard resolver can report a timeout without an underlying
+		// error. Only this concrete nil-child result grants transport retry.
+		retryable := cause.IsTimeout || cause.IsTemporary
+		return retryable, retryable
+	case *attemptStreamHttpReadError:
+		return classifyReleaseRetryBounded(cause.cause, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
+	case *chainRpcMissingResponseError:
+		return classifyReleaseRetryBounded(cause.cause, siblingCancellation, legacyText, true, preparation, depth+1, remaining)
+	case *artifactUnavailable:
+		// Its pending projection is not transport authority. Preserve only
+		// the complete cause retained by this package's original reader.
+		return classifyReleaseRetryBounded(cause.cause, siblingCancellation, legacyText, transportOrigin, preparation, depth+1, remaining)
+	case syscall.Errno:
+		// Standard timeout/temporary errno values retain their taxonomy;
+		// their Is method is not foreign matching authority.
+		retryable := cause.Timeout() || cause.Temporary()
+		return retryable, retryable
+	case interface{ Is(error) bool }, interface{ As(any) bool }:
+		return false, false
+	}
+	if _, observationStatus := err.(*clientKeyObservationHttpStatusError); observationStatus {
+		retryable := retryableClientKeyObservationHttpError(err)
+		return retryable, retryable
+	}
+	if status, ok := err.(*attemptStreamHttpStatusError); ok {
+		retryable := status.status == http.StatusRequestTimeout || status.status == http.StatusTooEarly || status.status == http.StatusTooManyRequests || status.status >= 500 && status.status <= 599
+		return retryable, retryable
+	}
+	if status, ok := err.(*releaseHttpGetStatusError); ok {
+		retryable := status.status == http.StatusRequestTimeout || status.status == http.StatusTooEarly || status.status == http.StatusTooManyRequests || status.status >= 500 && status.status <= 599
+		return retryable, retryable
+	}
 	if publication, ok := err.(*attemptReplicaPublicationError); ok {
-		return classifyReleaseSnapshotRetryCauses(publication.causes, true)
+		// This owner's sibling cancellation is scoped to actual publication
+		// transport. A preparation cut cannot borrow it as a neutral child.
+		retryable, transient := classifyReleaseRetryCauses(publication.causes, true, legacyText, transportOrigin, false, depth+1, remaining)
+		if preparation {
+			return retryable && transient, transient
+		}
+		return retryable, transient
+	}
+	if incomplete, ok := err.(*attemptStreamHTTPIncompleteError); ok {
+		if incomplete.cause != nil {
+			return classifyReleaseRetryBounded(incomplete.cause, siblingCancellation, legacyText, true, false, depth+1, remaining)
+		}
+		// Closing an owned sibling after another sibling times out can reach
+		// this exact typed marker before the body observes cancellation. It is
+		// neutral inside that owner; it cannot authorize a retry by itself.
+		return siblingCancellation, false
 	}
 	if joined, ok := err.(interface{ Unwrap() []error }); ok {
-		return classifyReleaseSnapshotRetryCauses(joined.Unwrap(), siblingCancellation)
+		return classifyReleaseRetryCauses(joined.Unwrap(), siblingCancellation, legacyText, transportOrigin, preparation, depth+1, remaining)
 	}
 	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
 		cause := wrapped.Unwrap()
 		if cause == nil {
 			return false, false
 		}
-		return classifyReleaseSnapshotRetry(cause, siblingCancellation)
+		return classifyReleaseRetryBounded(cause, siblingCancellation, legacyText, transportOrigin, preparation, depth+1, remaining)
 	}
-	var netErr net.Error
-	if errors.As(err, &netErr) && (netErr.Timeout() || netErr.Temporary()) {
+	if netErr, ok := err.(net.Error); ok && (netErr.Timeout() || netErr.Temporary()) {
 		return true, true
 	}
-	var httpErr gethrpc.HTTPError
-	if errors.As(err, &httpErr) {
-		switch httpErr.StatusCode {
-		case http.StatusRequestTimeout, http.StatusTooEarly, http.StatusTooManyRequests,
-			http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+	statusCode := 0
+	switch httpErr := err.(type) {
+	case gethrpc.HTTPError:
+		statusCode = httpErr.StatusCode
+	case *gethrpc.HTTPError:
+		statusCode = httpErr.StatusCode
+	}
+	if statusCode != 0 {
+		if statusCode >= http.StatusInternalServerError && statusCode <= 599 {
 			return true, true
 		}
+		switch statusCode {
+		case http.StatusRequestTimeout, http.StatusTooEarly, http.StatusTooManyRequests:
+			return true, true
+		}
+		return false, false
+	}
+	if !legacyText {
+		return false, false
 	}
 	message := strings.ToLower(err.Error())
 	// Immutable publication uses a deliberately narrow error type at the
@@ -164,13 +311,15 @@ func classifyReleaseSnapshotRetry(err error, siblingCancellation bool) (bool, bo
 	return false, false
 }
 
-func classifyReleaseSnapshotRetryCauses(causes []error, siblingCancellation bool) (bool, bool) {
-	if len(causes) == 0 {
+// Every joined original spends the same allowance and must support the exact
+// mode; a neutral sibling alone never establishes an actual transport failure.
+func classifyReleaseRetryCauses(causes []error, siblingCancellation, legacyText, transportOrigin, preparation bool, depth int, remaining *int) (bool, bool) {
+	if len(causes) == 0 || len(causes) > 128 || len(causes) > *remaining || depth > 32 {
 		return false, false
 	}
 	transient := false
 	for _, cause := range causes {
-		retryable, actualTransient := classifyReleaseSnapshotRetry(cause, siblingCancellation)
+		retryable, actualTransient := classifyReleaseRetryBounded(cause, siblingCancellation, legacyText, transportOrigin, preparation, depth+1, remaining)
 		if !retryable {
 			return false, false
 		}
@@ -208,7 +357,7 @@ func advanceInitialReleaseWithRetry(ctx context.Context, initial *ReleaseSnapsho
 		if attempt == releaseSnapshotStartupAttempts {
 			break
 		}
-		if err := wait(ctx, releaseSnapshotStartupRetryDelay); err != nil {
+		if err := wait(ctx, releaseSnapshotRetryDelayForError(lastErr)); err != nil {
 			return err
 		}
 		fresh, err := load(ctx)
@@ -257,12 +406,41 @@ func loadInitialReleaseSnapshot(ctx context.Context, load releaseSnapshotLoader,
 			return nil, err
 		}
 		if attempt < releaseSnapshotStartupAttempts {
-			if err := wait(ctx, releaseSnapshotStartupRetryDelay); err != nil {
+			if err := wait(ctx, releaseSnapshotRetryDelayForError(lastErr)); err != nil {
 				return nil, err
 			}
 		}
 	}
 	return nil, fmt.Errorf("initial release snapshot failed after %d transient attempts: %w", releaseSnapshotStartupAttempts, lastErr)
+}
+
+// Replays the same immutable retained lineage after a transport timeout. Each
+// attempt rechecks complete bytes, hashes, signatures and disk ownership;
+// policy, identity and full-content integrity failures remain immediate.
+func loadReleaseSteererV2WithRetry(ctx context.Context, load func() (*ReleaseSteerer, error), wait releaseSnapshotRetryWait) (*ReleaseSteerer, error) {
+	if ctx == nil || load == nil || wait == nil {
+		return nil, errors.New("release V2 startup replay dependencies are incomplete")
+	}
+	var lastErr error
+	for attempt := 1; attempt <= releaseSnapshotStartupAttempts; attempt++ {
+		steerer, err := load()
+		if err == nil {
+			return steerer, nil
+		}
+		lastErr = err
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return nil, ctxErr
+		}
+		if !transientReleaseSnapshotError(err) {
+			return nil, err
+		}
+		if attempt < releaseSnapshotStartupAttempts {
+			if err := wait(ctx, releaseSnapshotRetryDelayForError(lastErr)); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return nil, fmt.Errorf("release V2 startup replay failed after %d transient attempts: %w", releaseSnapshotStartupAttempts, lastErr)
 }
 
 // releaseSeedAttemptInterval leaves 25% headroom below the server's locked
@@ -348,8 +526,11 @@ func releasePriorSettlementBoundary(ctx context.Context, chain *ChainClient, sna
 		return AttemptBoundary{}, errors.New("cannot resolve the prior settlement boundary")
 	}
 	startBlock, err := chain.ReleaseEpochStartBlockAtHashContext(ctx, snapshot.BlockNumber, snapshot.BlockHash, snapshot.Epoch)
-	if err != nil || startBlock == 0 {
+	if err != nil {
 		return AttemptBoundary{}, fmt.Errorf("current settlement start block: %w", err)
+	}
+	if startBlock == 0 {
+		return AttemptBoundary{}, errors.New("current settlement start block is zero")
 	}
 	block := startBlock - 1
 	hash, err := chain.BlockHashContext(ctx, block)
@@ -357,7 +538,10 @@ func releasePriorSettlementBoundary(ctx context.Context, chain *ChainClient, sna
 		return AttemptBoundary{}, fmt.Errorf("prior settlement terminal block: %w", err)
 	}
 	epoch, err := chainViewAtHashContext(ctx, chain, block, hash, chain.coordinator.PackCurrentEpoch(), chain.coordinator.UnpackCurrentEpoch)
-	if err != nil || epoch == nil || !epoch.IsUint64() || epoch.Uint64()+1 != snapshot.Epoch.Uint64() {
+	if err != nil {
+		return AttemptBoundary{}, fmt.Errorf("prior settlement terminal epoch: %w", err)
+	}
+	if epoch == nil || !epoch.IsUint64() || epoch.Uint64() != snapshot.Epoch.Uint64()-1 {
 		return AttemptBoundary{}, errors.New("prior settlement terminal block has the wrong epoch")
 	}
 	return AttemptBoundary{SettlementEpoch: epoch.Uint64(), EVMBlock: block, EVMBlockHash: attemptHex32(hash)}, nil
@@ -428,6 +612,9 @@ func startReleaseOperatorWithAdmission(ctx context.Context, cfg *ReleaseConfig, 
 	}
 	strategy := connect.NewClientStrategy(ctx, strategySettings)
 	api := sdk.NewApi(ctx, strategy, op.APIURL)
+	if isOwnerRecycleProductionConfig(cfg) {
+		return newProductionReleaseOperator(ctx, cfg, op, epochFn, attemptResolver, attemptState, seed, privateKey, artifactReader, seedAttemptInterval, strategy, api)
+	}
 	byClientJWT, clientID, err := clientauth.LoadOrCreateClientJwt(ctx, api, op.NetworkJWTFile, op.ClientJWTFile, fmt.Sprintf("validator-%d no-%d release-1.0", cfg.ValidatorID, op.NoID))
 	if err != nil {
 		closeErr := api.CloseAndWait(context.Background())
@@ -453,7 +640,7 @@ func startReleaseOperatorWithAdmission(ctx context.Context, cfg *ReleaseConfig, 
 	transport := NewTunnelTransport(ctx, strategy, TunnelTransportConfig{ApiUrl: op.APIURL, ConnectUrl: op.ConnectURL, ByClientJwt: api.GetByJwt, SourceClientId: clientID})
 	refreshSub := api.AddJwtRefreshListener(clientauth.JwtRefreshListenerFunc(func(jwt string) {
 		if err := clientauth.WriteToken(op.ClientJWTFile, jwt); err != nil {
-			fmt.Printf("validator no_id %d JWT save failed: %v\n", op.NoID, err)
+			releaseDiagnostic(ctx, "operator", "jwt_save_failed", 0, false, 0, releaseDiagnosticFacts{operatorId: op.NoID, operatorKnown: true, cause: releaseDiagnosticHardError})
 			cancelled.Store(true)
 			upload.close()
 			transport.Close()
@@ -485,11 +672,17 @@ func startReleaseOperatorWithAdmission(ctx context.Context, cfg *ReleaseConfig, 
 		return closeErr
 	}
 
+	requests, err := openReleaseProviderAttemptRequests(ctx, cfg, op, ledger, clientID, privateKey)
+	if err != nil {
+		return nil, errors.Join(err, closeResources())
+	}
+	closeConnection := closeResources
+	closeResources = func() error { return errors.Join(closeConnection(), requests.Close()) }
 	engine := NewTrailEngine(clientID, privateKey, transport, NewApiServerKeyRing(api), NewFindProvidersSeedPicker(api, clientID), stats, store, epochFn, TrailEngineConfig{
 		M:                   cfg.Policy.Verify.TrailDepth,
 		StepTimeout:         time.Duration(cfg.Policy.Verify.StepTimeoutSeconds) * time.Second,
 		SeedAttemptInterval: seedAttemptInterval,
-		AttemptLedger:       ledger, AttemptBoundaryResolver: attemptResolver,
+		AttemptLedger:       ledger, AttemptBoundaryResolver: attemptResolver, RequestJournal: requests,
 	})
 	keyHistoryReader, err := NewHTTPClientKeyHistoryReader(op.APIURL, func() string {
 		if cancelled.Load() || ctx.Err() != nil {
@@ -561,6 +754,12 @@ func dialPinnedNative(ctx context.Context, cfg *ReleaseConfig) (*crv4.Chain, err
 			errs = append(errs, fmt.Errorf("%s: genesis does not match release pin", endpoint))
 			continue
 		}
+		if err := enableReleaseProvisionalRuntimeCompatibility(chain, cfg); err != nil {
+			cancel()
+			chain.API.Client.Close()
+			errs = append(errs, fmt.Errorf("%s: provisional runtime authority: %w", endpoint, err))
+			continue
+		}
 		if _, err := authenticatePinnedNativeRuntimeContext(endpointCtx, chain, cfg); err != nil {
 			cancel()
 			chain.API.Client.Close()
@@ -581,11 +780,23 @@ func RunRelease(ctx context.Context, configPath string) (returnErr error) {
 	return runReleaseWithActivationSetup(ctx, configPath, nil)
 }
 
+// Optional operational output cannot grant authority or change the configured
+// protocol owner. A publisher failure never cancels validation or reconciliation.
+func RunReleaseWithProgress(ctx context.Context, configPath, progressPath string) error {
+	return runReleaseWithStartupAndProgressV2(ctx, configPath, nil, nil, progressPath)
+}
+
 func runReleaseWithActivationSetup(ctx context.Context, configPath string, retainedSetup *ProvisionalActivationSetupV2) (returnErr error) {
 	return runReleaseWithStartupV2(ctx, configPath, retainedSetup, nil)
 }
 
 func runReleaseWithStartupV2(ctx context.Context, configPath string, retainedSetup *ProvisionalActivationSetupV2, adoption *ReleaseHistoryAdoptionV2) (returnErr error) {
+	return runReleaseWithStartupAndProgressV2(ctx, configPath, retainedSetup, adoption, "")
+}
+
+// One optional publisher shares only the parent lifecycle, never its signer,
+// stores or retry decisions. Its deferred close always joins the owned worker.
+func runReleaseWithStartupAndProgressV2(ctx context.Context, configPath string, retainedSetup *ProvisionalActivationSetupV2, adoption *ReleaseHistoryAdoptionV2, progressPath string) (returnErr error) {
 	if ctx == nil {
 		return errors.New("release production lifecycle context is unavailable")
 	}
@@ -593,7 +804,20 @@ func runReleaseWithStartupV2(ctx context.Context, configPath string, retainedSet
 		return err
 	}
 	cfg, err := LoadReleaseConfig(configPath)
+	if errors.Is(err, ErrReleaseEvidenceV2ActivationPending) && retainedSetup == nil && adoption == nil {
+		// The inputs are missing. The lifecycle allows run to finish an
+		// activation that was prepared and published earlier once its epoch
+		// has begun; it never signs, publishes or invents one.
+		fmt.Fprintf(os.Stderr, "validator: evidence_v2 inputs are not rendered; completing the pending activation\n")
+		if completeErr := CompletePendingReleaseActivation(ctx, configPath, os.Stderr); completeErr != nil {
+			return errors.Join(err, completeErr)
+		}
+		cfg, err = LoadReleaseConfig(configPath)
+	}
 	if err != nil {
+		return err
+	}
+	if err := requireReleaseDurableReference(ctx, cfg); err != nil {
 		return err
 	}
 	if adoption != nil {
@@ -610,9 +834,49 @@ func runReleaseWithStartupV2(ctx context.Context, configPath string, retainedSet
 		}
 		fmt.Fprintf(os.Stderr, "validator: provisional retained activation setup; final_acceptance=false; source_plan=%s handoff=%s\n", retainedSetup.SourcePlanHash, retainedSetup.contentHash)
 	}
+	closeStorage, err := retainReleaseDurableDirectories(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	defer func() { returnErr = errors.Join(returnErr, closeStorage()) }()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	ctx, diagnosticOwner, diagnosticErr := newReleaseDiagnostics(ctx, os.Stderr, time.Now)
+	if diagnosticErr != nil {
+		return diagnosticErr
+	}
+	defer func() {
+		// Diagnostic cleanup cannot stop reconciliation or replace its result.
+		// The owner retains close faults as unavailable and joins before return.
+		err := diagnosticOwner.close()
+		if hooks, ok := ctx.Value(releaseDiagnosticHooksKey{}).(releaseDiagnosticHooks); ok && hooks.afterClose != nil {
+			hooks.afterClose(diagnosticOwner, err)
+		}
+	}()
+	ctx = withProductionReceiptCacheDiagnostic(ctx, func(value productionReceiptCacheObservation) {
+		var stage uint8
+		switch value.stage {
+		case productionReceiptCacheRead:
+			stage = 1
+		case productionReceiptCacheWrite:
+			stage = 2
+		}
+		releaseDiagnostic(ctx, "steering", "receipt_cache_disabled", value.nativeEpoch, true, 0, releaseDiagnosticFacts{phase: productionReadReceipt, cacheStage: stage})
+	})
+	if hooks, ok := ctx.Value(releaseDiagnosticHooksKey{}).(releaseDiagnosticHooks); ok && hooks.afterCreate != nil {
+		hooks.afterCreate(ctx, diagnosticOwner)
+	}
+	progress, progressErr := newReleaseProgress(ctx, cfg, progressPath)
+	if progressErr != nil {
+		releaseDiagnostic(ctx, "progress", "publisher_disabled_configuration", 0, false, 0)
+	}
+	defer progress.close()
 
+	if isOwnerRecycleProductionConfig(cfg) {
+		if _, err := RetainOwnerRecycleApproval(ctx, cfg); err != nil {
+			return err
+		}
+	}
 	hotkeySeed, err := crv4.LoadSeedFile(cfg.HotkeySeedFile)
 	if err != nil {
 		return fmt.Errorf("production hotkey seed: %w", err)
@@ -621,47 +885,100 @@ func runReleaseWithStartupV2(ctx context.Context, configPath string, retainedSet
 	if err != nil {
 		return err
 	}
-	chain, err := DialReleaseChainContext(ctx, cfg.RPC, common.HexToAddress(cfg.Coordinator))
-	if err != nil {
+	if isOwnerRecycleProductionConfig(cfg) {
+		approval, err := ownerRecycleProductionApproval(cfg)
+		if err != nil || hotkey.PublicKey() != approval.Approval.ValidatorHotkey {
+			return errors.Join(errors.New("owner-recycle production hotkey differs from independent approval"), err)
+		}
+	}
+	production := isOwnerRecycleProductionConfig(cfg)
+	startupStage := func(stage string, operation func(context.Context) error) error {
+		if production {
+			return awaitProductionStartupStage(ctx, cfg, progress, stage, operation)
+		}
+		return operation(ctx)
+	}
+	var chain *ChainClient
+	defer func() {
+		if chain != nil {
+			chain.Close()
+		}
+	}()
+	if err := startupStage("EVM identity", func(attempt context.Context) error {
+		if chain != nil {
+			chain.Close()
+		}
+		var err error
+		chain, err = DialReleaseChainContext(attempt, cfg.RPC, common.HexToAddress(cfg.Coordinator))
+		return err
+	}); err != nil {
 		return err
 	}
-	defer chain.Close()
-	native, err := dialPinnedNative(ctx, cfg)
-	if err != nil {
+	var native *crv4.Chain
+	defer func() {
+		if native != nil {
+			native.API.Client.Close()
+		}
+	}()
+	if err := startupStage("native identity", func(attempt context.Context) error {
+		if native != nil {
+			native.API.Client.Close()
+		}
+		var err error
+		if production {
+			native, err = dialProductionNativeHistory(attempt, cfg)
+		} else {
+			native, err = dialPinnedNative(attempt, cfg)
+		}
+		return err
+	}); err != nil {
 		return err
 	}
-	defer native.API.Client.Close()
 
 	var settlementEpoch atomic.Uint64
-	snapshot, err := loadInitialReleaseSnapshot(ctx, chain.ReleaseSnapshotContext, waitReleaseSnapshotRetry)
-	if err != nil {
-		return err
-	}
-	settlementEpoch.Store(snapshot.Epoch.Uint64())
+	var snapshot *ReleaseSnapshot
 	var activationInputs []releaseEvidenceV2ActivationInput
-	if retainedSetup != nil {
-		activationInputs, err = loadReleaseEvidenceV2ActivationInputsWithRetainedSetup(ctx, cfg, chain, native, hotkey.PublicKey(), retainedSetup)
+	if production {
+		// Historical signatures and pinned chain observations can reopen old
+		// liability without asking current preparation for permission first.
+		err = startupStage("activation history", func(attempt context.Context) error {
+			var err error
+			activationInputs, err = loadReleaseEvidenceV2ActivationInputsWithRetainedSetup(attempt, cfg, chain, native, hotkey.PublicKey(), nil)
+			return err
+		})
 		if err != nil {
 			return fmt.Errorf("reserved upload activation startup: %w", err)
 		}
-	}
-	var validatorUID uint16
-	var found bool
-	if retainedSetup != nil {
-		validatorUID, found, err = findProvisionalValidatorUIDAtHashContext(ctx, chain, snapshot, cfg.Netuid, hotkey.PublicKey(), activationInputs)
 	} else {
-		validatorUID, found, err = chain.FindUidByHotkeyAtHashContext(ctx, snapshot.BlockNumber, snapshot.BlockHash, cfg.Netuid, hotkey.PublicKey())
-	}
-	if err != nil || !found {
-		return fmt.Errorf("release validator hotkey has no UID at finalized EVM block %d: %w", snapshot.BlockNumber, err)
-	}
-	if _, err := authenticateReleaseValidatorStakeContext(ctx, native, cfg, hotkey.PublicKey(), validatorUID); err != nil {
-		return err
-	}
-	if retainedSetup == nil {
-		activationInputs, err = loadReleaseEvidenceV2ActivationInputsWithRetainedSetup(ctx, cfg, chain, native, hotkey.PublicKey(), nil)
+		snapshot, err = loadInitialReleaseSnapshot(ctx, chain.ReleaseSnapshotContext, waitReleaseSnapshotRetry)
 		if err != nil {
-			return fmt.Errorf("reserved upload activation startup: %w", err)
+			return err
+		}
+		settlementEpoch.Store(snapshot.Epoch.Uint64())
+		if retainedSetup != nil {
+			activationInputs, err = loadReleaseEvidenceV2ActivationInputsWithRetainedSetup(ctx, cfg, chain, native, hotkey.PublicKey(), retainedSetup)
+			if err != nil {
+				return fmt.Errorf("reserved upload activation startup: %w", err)
+			}
+		}
+		var validatorUID uint16
+		var found bool
+		if retainedSetup != nil {
+			validatorUID, found, err = findProvisionalValidatorUIDAtHashContext(ctx, chain, snapshot, cfg.Netuid, hotkey.PublicKey(), activationInputs)
+		} else {
+			validatorUID, found, err = chain.FindUidByHotkeyAtHashContext(ctx, snapshot.BlockNumber, snapshot.BlockHash, cfg.Netuid, hotkey.PublicKey())
+		}
+		if err != nil || !found {
+			return fmt.Errorf("release validator hotkey has no UID at finalized EVM block %d: %w", snapshot.BlockNumber, err)
+		}
+		if _, err := authenticateReleaseValidatorStakeContext(ctx, native, cfg, hotkey.PublicKey(), validatorUID); err != nil {
+			return err
+		}
+		if retainedSetup == nil {
+			activationInputs, err = loadReleaseEvidenceV2ActivationInputsWithRetainedSetup(ctx, cfg, chain, native, hotkey.PublicKey(), nil)
+			if err != nil {
+				return fmt.Errorf("reserved upload activation startup: %w", err)
+			}
 		}
 	}
 	if len(cfg.Operators) < 2 {
@@ -671,29 +988,57 @@ func runReleaseWithStartupV2(ctx context.Context, configPath string, retainedSet
 	if _, err := newReleaseEvidenceV2StartupReaders(origins, cfg.EvidenceV2.Bounds.Cut); err != nil {
 		return err
 	}
-	serverKeys, err := readReleaseServerKeysV2(ctx, cfg)
-	if err != nil {
+	var serverKeys map[uint64]map[byte]ed25519.PublicKey
+	if err := startupStage("server-key history", func(attempt context.Context) error {
+		var err error
+		serverKeys, err = readReleaseServerKeysV2(attempt, cfg)
+		return err
+	}); err != nil {
 		return fmt.Errorf("release V2 server-key startup: %w", err)
 	}
-	disk, err := openReleaseEvidenceV2DiskState(ctx, cfg, activationInputs, serverKeys)
-	if err != nil {
-		return fmt.Errorf("release V2 disk startup: %w", err)
-	}
+	var disk *releaseEvidenceV2DiskState
 	defer func() {
 		cancel()
-		returnErr = errors.Join(returnErr, disk.close())
+		if disk != nil {
+			returnErr = errors.Join(returnErr, disk.close())
+		}
 	}()
-	runtimeV2, err := newReleaseRuntimeV2(ctx, cfg, chain, native, hotkey, activationInputs, serverKeys, origins, disk)
-	if err != nil {
+	var runtimeV2 *releaseRuntimeV2
+	if err := startupStage("disk and intent history", func(attempt context.Context) error {
+		// A failed semantic attempt closes the old disk census before a new
+		// dormant image is acquired. Its durable journals remain untouched.
+		if disk != nil {
+			if err := disk.close(); err != nil {
+				return err
+			}
+			disk = nil
+		}
+		var err error
+		disk, err = openReleaseEvidenceV2DiskState(attempt, cfg, activationInputs, serverKeys)
+		if err != nil {
+			return fmt.Errorf("release V2 disk startup: %w", err)
+		}
+		runtimeV2, err = newReleaseRuntimeV2(attempt, cfg, chain, native, hotkey, activationInputs, serverKeys, origins, disk)
+		if err != nil {
+			return errors.Join(err, disk.close())
+		}
+		return nil
+	}); err != nil {
 		return fmt.Errorf("release V2 semantic startup: %w", err)
 	}
-	boundaryCtx := ctx
-	if retainedSetup != nil {
-		// Scope longer reads to shared preparation; trail callers keep their
-		// original deadline and never inherit this private owner context.
-		boundaryCtx = context.WithValue(ctx, provisionalBoundaryReadBudgetKey{}, true)
+	// Bounded startup has closed all temporary replay/reference owners. The
+	// completed runtime now belongs to the enclosing service, not that attempt.
+	runtimeV2.ctx = ctx
+	runtimeV2.progress = progress
+	if production {
+		epoch, err := runtimeV2.authenticatedStartupEpoch()
+		if err != nil {
+			return err
+		}
+		settlementEpoch.Store(epoch)
 	}
-	attemptBoundaryResolver := newReleaseAttemptBoundaryResolver(boundaryCtx, chain, cfg)
+	progress.observeSettlement(progress.nextSequence(), runtimeV2.progressSettlement(settlementEpoch.Load()), nil)
+	attemptBoundaryResolver := newReleaseAttemptBoundaryResolver(ctx, chain, cfg)
 	defer attemptBoundaryResolver.close()
 	runtimeV2.publishEpoch = func(epoch uint64) {
 		attemptBoundaryResolver.invalidateLatest()
@@ -724,31 +1069,57 @@ func runReleaseWithStartupV2(ctx context.Context, configPath string, retainedSet
 	for index, runtime := range runtimes {
 		measurements[index] = runtime.measurement
 	}
-	steerer, err := newReleaseSteererV2(cfg, chain, native, hotkey, measurements, runtimeV2)
+	var steerer *ReleaseSteerer
+	if production {
+		err = startupStage("native retained owner", func(attempt context.Context) error {
+			var err error
+			steerer, err = newReleaseSteererV2Context(attempt, cfg, chain, native, hotkey, measurements, runtimeV2)
+			return err
+		})
+	} else {
+		steerer, err = loadReleaseSteererV2WithRetry(ctx, func() (*ReleaseSteerer, error) {
+			return newReleaseSteererV2(cfg, chain, native, hotkey, measurements, runtimeV2)
+		}, waitReleaseSnapshotRetry)
+	}
 	if err != nil {
 		return fmt.Errorf("release V2 native startup: %w", err)
 	}
-	if err := advanceInitialReleaseWithRetry(ctx, snapshot, chain.ReleaseSnapshotContext, runtimeV2.advance, waitReleaseSnapshotRetry); err != nil {
-		return fmt.Errorf("release V2 initial terminal publication: %w", err)
+	if !production {
+		if err := advanceInitialReleaseWithRetry(ctx, snapshot, chain.ReleaseSnapshotContext, runtimeV2.advance, waitReleaseSnapshotRetry); err != nil {
+			return fmt.Errorf("release V2 initial terminal publication: %w", err)
+		}
 	}
 	workersOwnResources = true
+	var trailReady <-chan struct{}
+	if production {
+		trailReady = runtimeV2.preparation.ready
+	}
 	return runReleaseOperatorWorkers(ctx, cancel, cfg, runtimes, releaseRuntimeOperations{
+		providerRequests: runtimeV2.runProviderRequestPublications,
 		refresh: func(ctx context.Context) error {
+			if production {
+				return steerer.runProductionPreparationAndRefresh(ctx)
+			}
 			return runReleaseSettlementRefresh(ctx, time.Duration(cfg.PollSeconds)*time.Second, chain.ReleaseSnapshotContext, runtimeV2.advance, func(*ReleaseSnapshot) {}, waitReleaseSnapshotRetry)
 		},
 		newSteerer: func([]*ReleaseMeasurementContext) (releaseSteererRunner, error) {
 			return steerer, nil
 		},
 		running: func() {
-			fmt.Printf("validator release 1.0 running: validator=%d netuid=%d hotkey=%s operators=%d\n", cfg.ValidatorID, cfg.Netuid, hotkey.Address(), len(runtimes))
+			releaseDiagnostic(ctx, "runtime", "runtime_active", 0, false, 0)
 		},
+		trailReady: trailReady,
 	})
 }
 
-func runReleaseConfig(configPath string) {
-	event := connect.NewEventWithContext(context.Background())
+func runReleaseConfig(configPath, progressPath string, reference durablevolume.Reference) {
+	ctx := context.Background()
+	if reference.Path != "" || reference.Sha256 != "" {
+		ctx = durablevolume.WithReference(ctx, reference)
+	}
+	event := connect.NewEventWithContext(ctx)
 	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-	if err := RunRelease(event.Ctx(), configPath); err != nil {
+	if err := RunReleaseWithProgress(event.Ctx(), configPath, progressPath); err != nil {
 		panic(err)
 	}
 }

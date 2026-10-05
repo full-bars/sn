@@ -1,0 +1,159 @@
+{
+  "schema": "urnetwork-root-release-lineage-head-source-review-v1",
+  "captured_utc": "2026-10-03T18:08:05.947074+00:00",
+  "status": "SOURCE_ONLY_UNCOMPILED_TEST_PROBE",
+  "source": {
+    "base": "9576811da22c83687af31f38a0d3f25dab031db5",
+    "commit": "e65bd674c5587998c1d9162dbe187c1aa7f7863b",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/sn",
+    "tree": "5a227b039af70425c56c5054dba50a853aeb6411"
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/first-predecessor-check-omitted/release_archive_history_v2.go",
+      "bytes": 15421,
+      "sha256": "b2068276caca8c0981cbb0121876a32356122d000f263b42b5e20bea7da6f110"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/first-predecessor-check-omitted/original-release_archive_history_v2.go",
+      "bytes": 15412,
+      "sha256": "7e2c1366277f1e56c5a3b719041b4cefc6b5ed63b6fec8ee49a23eb2d67064a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/first-predecessor-check-omitted/overlay.json",
+      "bytes": 313,
+      "sha256": "cd1ac8ea1109622f8793dd75e06411d1803a702d17fa6a4ddc18e05eaa6e3da9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-rereads-original/release_archive_decision_v2.go",
+      "bytes": 18861,
+      "sha256": "aeb56b9fa4ab4feef3260512a00c3b5397e7f7012db2f3a3c7917de2ae03373e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-rereads-original/original-release_archive_decision_v2.go",
+      "bytes": 18631,
+      "sha256": "35e07ae346055aba6b247c3e49dc5a9c04d79badf8beaf79e9d8d09c5ae496e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-rereads-original/overlay.json",
+      "bytes": 314,
+      "sha256": "3d12027909b0d078683161d6d9d2daad3f5e0269cef3ae24a582a2368ce43692"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-custody-omitted/release_archive_decision_v2.go",
+      "bytes": 18602,
+      "sha256": "a36f9197c6384d2ff46461e1b13bde0fdc73c1de41f731f5648b67d1c914231a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-custody-omitted/original-release_archive_decision_v2.go",
+      "bytes": 18631,
+      "sha256": "35e07ae346055aba6b247c3e49dc5a9c04d79badf8beaf79e9d8d09c5ae496e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/cached-lookup-custody-omitted/overlay.json",
+      "bytes": 313,
+      "sha256": "e7296452dbb258d3ffc62a29978df9d3e6047d415f9b46128f3ce6fb18af9c62"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/decision-census-atomic-publication-omitted/release_archive_decision_v2.go",
+      "bytes": 18672,
+      "sha256": "13745ec3503f1f512d505cd7544f3bff7fa95738211bf0415b1cd9c7ae6f0858"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/decision-census-atomic-publication-omitted/original-release_archive_decision_v2.go",
+      "bytes": 18631,
+      "sha256": "35e07ae346055aba6b247c3e49dc5a9c04d79badf8beaf79e9d8d09c5ae496e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/decision-census-atomic-publication-omitted/overlay.json",
+      "bytes": 326,
+      "sha256": "6685cad6dd22a67094c4764d965af2ba788ae5622ed2a09c5d807db399bd8eaf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/nonempty-head-lineage-omitted/release_archive_history_v2.go",
+      "bytes": 15421,
+      "sha256": "56823bc72e194874defd3be45ddca956e09c585257af48c14836d3740c0a0ddf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/nonempty-head-lineage-omitted/original-release_archive_history_v2.go",
+      "bytes": 15412,
+      "sha256": "7e2c1366277f1e56c5a3b719041b4cefc6b5ed63b6fec8ee49a23eb2d67064a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/controls/nonempty-head-lineage-omitted/overlay.json",
+      "bytes": 311,
+      "sha256": "e164c470e5d8bf4343e77f27ac77f92bdb2293ca151f54deaa57f6059df24166"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-peer-graph.json",
+      "bytes": 2987,
+      "sha256": "67a567368a074ac5003d4986563a4ceffd7c96515a4b582f83715d990d1829a0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/seal_intake.py",
+      "bytes": 9464,
+      "sha256": "97c63ae9d7a263e637de4d6cd5cc0bfdfcb8e7bcc6435caa2a324aab60e7345c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/source-fence.json",
+      "bytes": 1645,
+      "sha256": "410a5f9796be66a8be669fe4db18e333df3e000e32c120a389ea900d96ccd270"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-work/evidence/intake.json",
+      "bytes": 10148,
+      "sha256": "b512707b6003034d71eb5cf7dd16c05490c46d5c6817668b4a3765486339cb75"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/evidence/intake.json",
+      "bytes": 12299,
+      "sha256": "826e671f8706cdfa781709825fe3c57f6aafa628ac3602eb92f2d2b46f086f92"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/sn/validator/release_archive_lineage_work_test.go",
+      "bytes": 32934,
+      "sha256": "29554af6cd0d9bd61980d5b78fc77c8173b1497726dec556f188252a5e85f60d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/release-lineage-head-work/sn/go.sum",
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    }
+  ],
+  "verified_changed_paths": [
+    "validator/release_archive_lineage_work_test.go"
+  ],
+  "new_roots": [
+    "TestReleaseArchiveFullLineageOwnedReadsDoNotReplayHistory",
+    "TestReleaseArchiveFullLineageRejectsRemovedPredecessor",
+    "TestReleaseArchiveFullLineageCountsNonemptyHeadAndRefusesDoubleFold",
+    "TestReleaseArchiveFullLineageRejectsLateEnvelopeWithoutPartialOwner",
+    "TestReleaseArchiveFullLineageLateObservationPublishesNoCache",
+    "TestReleaseArchiveFullLineageCancellationRetainsFreshReplay",
+    "TestReleaseArchiveFullLineageBlockedReplayAllowsOwnedForegroundRead"
+  ],
+  "neighbor_roots": [
+    "TestReleaseArchiveV2RejectsArchiveByteBudgetBeforeReads",
+    "TestReleaseArchiveV2RejectsSelfDeclaredEMAAndChangedSourceBytes",
+    "TestReleaseMeasurementV2SettlementLineageAcceptsRealPrefixAndNativeRetry",
+    "TestReleaseMeasurementV2SettlementNativeRetryRejectsDoubleFoldedHead"
+  ],
+  "source_review": [
+    "Nonempty HeadEMA is reconstructed from original signed ledger prefix through existing legacy scoring oracle; no caller-provided verified result substitutes for public archive admission.",
+    "Real source callback tracks identity counts and byte reads. Repeated owned Measurement and TerminalClosure calls must preserve counts and return isolated copies.",
+    "Signed standalone-valid double-fold artifact and genuine envelope are resealed before complete archive lineage rejects changed prior HeadEMA; exact original measurement/envelope reads are asserted.",
+    "Cancellation, original scratch replacement and blocked independent replay use actual source/custody paths; channel barriers establish overlap."
+  ],
+  "limits": [
+    "Source and controls were reviewed, not compiled or executed. No positive/causal assertion result is claimed.",
+    "Fixture covers two same-epoch failed/retried intents and two settlement terminals, not measured production-sized history or upload contention.",
+    "Fresh archive reopening deliberately reconstructs full history; no durable cross-process cache or scheduler is implemented by this test-only slice.",
+    "Synthetic observations and structural prepared-wire fixture are not actual mainnet inclusion/finality/runtime authority.",
+    "Outside active mixed resource grant; one future eleven-root union gate replaces earlier uncompiled66f slice."
+  ]
+}

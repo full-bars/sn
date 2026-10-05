@@ -1,0 +1,113 @@
+{
+  "schema": "native-capture-incremental-refill-source-review-v1",
+  "status": "SIX_RUST_ROOTS_AUTHORED_UNCOMPILED_UNEXECUTED_NO_NEW_PRODUCTION_FIX",
+  "parent": "6b3bd512e49665b2092875053250052b3f6a603b",
+  "sdk_revision": "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a",
+  "unchanged_production": [
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture.rs",
+      "bytes": 25752,
+      "sha256": "4d8f22a2730ae47cc5939df7ae2d4028fde63a3ca7c29946b28075b59b5a084e",
+      "git_blob": "a52b50ae56395d03ae54625e9381680df70871a2"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture_scope.rs",
+      "bytes": 10123,
+      "sha256": "0deac7d787dcad7e7036dfcddb8134e54adc8894a24d7bc25e6973c47a44c0c5",
+      "git_blob": "79656439c514cb6ac065289093cc74a6ccd627e2"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture_feed.rs",
+      "bytes": 5382,
+      "sha256": "8eeca1214faa52d939235e50f1a2ea8a0e0976da5a3d0c96dea7a30dca71b138",
+      "git_blob": "09531eae32f2a9eb1c83f67a840fdb9e1092fa77"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical.rs",
+      "bytes": 20332,
+      "sha256": "2cc540ced332c8fa583f9c9961bd984291a01fd9109146b52a48ac855de9eb6f",
+      "git_blob": "addbd4e1658e4d570b250d12f003204f2fe44623"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_backend.rs",
+      "bytes": 7301,
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137",
+      "git_blob": "21c5b74012cd45efef650d351b798d23e9cfe10f"
+    }
+  ],
+  "authored_test_sources": [
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture_refill_tests.rs",
+      "bytes": 17848,
+      "sha256": "7ecabc3dcc42c2276bc76b28a80fc7ae70057662b324f30a748373eb9b7d7d3f",
+      "git_blob": "7a6f6a132fa7dc2a13c371a62f735af7a0e20bbc"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "bytes": 25596,
+      "sha256": "644b6b83a55130fa6046de8680d174b683f0b74c202e0c8391100f6ef33f4b4c",
+      "git_blob": "e679c74ebe9b163606b76d68bbee37f4f215b4bd"
+    }
+  ],
+  "sdk_sources": [
+    {
+      "path": "substrate/primitives/state-machine/src/lib.rs",
+      "bytes": 59710,
+      "sha256": "b66f234603b8e713835c31d4f76e7a342aef207aa9886430dec03920a561c2fc",
+      "git_blob": "d31348c330ac3b4f67d2976d7fedf7b1cacc1a63"
+    },
+    {
+      "path": "substrate/primitives/state-machine/src/ext.rs",
+      "bytes": 30497,
+      "sha256": "59ff52d3d19cd65219fd51fd11c0f91e5d79351774dab32ffcb82dde8843c0ca",
+      "git_blob": "afd0eeb1a55cde0f51d4a97e6cf7e3b69362e684"
+    },
+    {
+      "path": "substrate/primitives/state-machine/src/trie_backend_essence.rs",
+      "bytes": 26939,
+      "sha256": "2f5c4f66981d1ccfdaa8b5a75db40ee8e32fcc2eb8db14de71b8a3af9a8fa536",
+      "git_blob": "057c742649db11298e8210c6b1192ee85db7c325"
+    }
+  ],
+  "qualification_gap": {
+    "existing_test": "TestNativeProducerActualCaptureRefillAndRetainedReplay",
+    "source": "mainnet/historical_native_feed_test.go at b4662ed8e8571d011abda4d5454a97aa184a8b5a",
+    "cause": "Existing actual-engine reader answers every state_getReadProof request with original.ProofNodesHex and refuses other methods. It therefore does not demonstrate incremental child namespace, range end, odd nibble, or unread write-sibling proof production."
+  },
+  "new_exact_test_roots": [
+    "historical::tests::capture_tests::refill_tests::historical_capture_incremental_refill_proves_top_and_child_reads_and_writes",
+    "historical::tests::capture_tests::refill_tests::historical_capture_incremental_refill_deletion_proves_unread_top_and_child_siblings",
+    "historical::tests::capture_tests::refill_tests::historical_capture_incremental_refill_completes_top_and_child_ranges_with_odd_prefixes",
+    "historical::tests::capture_tests::refill_tests::historical_capture_incremental_refill_missing_range_node_is_not_iterator_end",
+    "historical::tests::capture_tests::refill_tests::historical_capture_incremental_refill_root_error_cannot_reuse_parent_root",
+    "historical::tests::capture_tests::refill_tests::historical_capture_incremental_refill_foreign_ack_refuses_then_exact_restart_reuses_nodes"
+  ],
+  "fixture_contract": [
+    "Public capture_historical_directory_feed_json starts with an empty owned directory and native observation profile.",
+    "Broker decodes and binds every frame schema, sequence, request digest, parent hash and root; reconstructs each high-nibble-padded probe.",
+    "Top requests use pinned prove_read_on_trie_backend; child requests must name the exact full child namespace and use prove_child_read_on_trie_backend.",
+    "Only the exact requested Blake2-256 node is published from that SDK-generated proof before each acknowledgement; the complete snapshot is never an answer fallback.",
+    "Parent and child roots come from independent complete-map builders. Successful exported jobs replay again through strict proof consumption.",
+    "Deletion must fetch an unread sibling not present in the deleted-key read proof, for both top and child tries.",
+    "Top and child complete range deletion asserts exact SDK removal counts and at least one actual odd-nibble request.",
+    "Faults acknowledge but omit an actual iterator/root node while the declared child root is forged back to the parent root; sticky accessor cause must prevent a report.",
+    "Foreign request acknowledgement refuses; exact restart over retained content-addressed bytes completes the original request."
+  ],
+  "author_validation": {
+    "format": "rustfmt --edition 2021 --config skip_children=true --check on two authored test files",
+    "patch": "git diff --check",
+    "cargo_or_compiler_invocations": 0,
+    "test_bodies_executed": 0
+  },
+  "execution_handoff": [
+    "Compile exact child source through existing admitted Sol qualification ownership; retain frozen heap6b3 separately.",
+    "Execute the six named Rust roots with no skip and retain actual request/stack failures if prefix, namespace or SDK proof membership differs.",
+    "Keep existing public Go broker/actual-engine/cancellation/restart roots; in-process Rust streams do not qualify FIFO inheritance, supervisor deadlines or durable cursor publication.",
+    "Apply additional production changes only to confirmed failures after Current/Claim/Release coordination; no adapter bypass or full-proof fallback."
+  ],
+  "limits": [
+    "Source and format checks are not compilation or behavioral qualification.",
+    "The sparse child commit leaves production capture/feed/scope/replay/backend bytes unchanged from heap6b3.",
+    "These synthetic maps do not establish actual-runtime admission, finality, economic authority or mainnet launch."
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "schema": "xops-monitor-current-publication-root-readback-v1",
+  "head": "84a443954043878e8929cf814ca770fc0650f150",
+  "tree": "055759e54996cea897984738657d2c06da4dd685",
+  "upstream_base": "76e14a810f894802a79caa757e89c53a0f684b4a",
+  "remote_main": "84a443954043878e8929cf814ca770fc0650f150",
+  "source_paths": 10,
+  "actual_unittest_roots": 68,
+  "bindings": [
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/evidence/xops-rebased-receipt.json",
+      "bytes": 4894,
+      "sha256": "7e82187ec3fd0740fbc738b9aaddf106986a1c77671cc6cd9d0dbfb4755babcf"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/SN-MAINNET-MONITOR.md",
+      "bytes": 13898,
+      "sha256": "9487b6ab45e403dfdf2d746235e96bfa262afacffce3025113fe9a7fffa44ce8"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/examples/sn-mainnet-monitor/plan.json",
+      "bytes": 2530,
+      "sha256": "47ef954f37c3fa140c1ac13a7a3a30a85850bfa822a1d2053412d9b2fb1f19be"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/files/sn-mainnet-monitor/deployment.py",
+      "bytes": 51040,
+      "sha256": "dba7caa390eb3df9daeb68e3720e72546d52f328db6f1d10113e7068e460671a"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/filter_plugins/sn_mainnet_monitor.py",
+      "bytes": 4110,
+      "sha256": "3547fd1f5ad7ad5457e2a9c7cb433e5618376e74e171757add2b636bd109e08e"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/tasks/sn-mainnet-monitor/stage.yml",
+      "bytes": 6086,
+      "sha256": "3a8c3837a4400562d72639e8c08b2a990380c48b5e2c42560d7a6d63b3e284e0"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/templates/sn-mainnet-monitor/metrics.service.j2",
+      "bytes": 922,
+      "sha256": "a935cdb453ae3e999e6611df8e4e23199565469cdd73330cae994c9767bf4d7d"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/templates/sn-mainnet-monitor/monitor.service.j2",
+      "bytes": 1112,
+      "sha256": "a4707abfcc219235d7d182870e6d354185ecd5a17728fe5c619c55d47f04b89a"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/templates/sn-mainnet-monitor/observer.service.j2",
+      "bytes": 934,
+      "sha256": "345ceba51cc3038b017e0c703b622e409af8990b87afe23fd28b08bfe56bb7ef"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/tests/test_sn_mainnet_monitor.py",
+      "bytes": 21291,
+      "sha256": "49ea2cbfb285224cf829b543f41feb1aca8aea7881093bd1c0f891a5b165d466"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/xops/main/ansible/tests/test_sn_mainnet_monitor_operations.py",
+      "bytes": 24626,
+      "sha256": "9da09ca0391790c8f49b8bf866240342f44b645ee08afbee218a1cdb8a2036e7"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/sn/mainnet/monitor-alerts.example.yml",
+      "bytes": 2163,
+      "sha256": "2cfd28cf8e9cca139e08e9cc514e3c250f717e39f8fdb60b6ae71c1cf4dfec3a"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/sn/mainnet/service-alerts.example.yml",
+      "bytes": 5485,
+      "sha256": "11003dcb7ace7b0cd44abb7ba9627d2c8f528dc6251909d0e8e92fc2369b24dc"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/sn/mainnet/operator-monitor-alerts.example.yml",
+      "bytes": 1812,
+      "sha256": "c727fce9c4dd46c8e44d63f7da513a7aba05f72e07a1dde3a9f343cf852a785e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+      "bytes": 150746286,
+      "sha256": "e59210d5474e2c811a4460fb1593d708b94d58107ae62e9d44e88029bb7e5805"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/prometheus",
+      "bytes": 159425376,
+      "sha256": "4ee49f574d80682b6571f017c8f42f2532aa3603b725b51ecb0cb864f06c2282"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/evidence/xops-rebased.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/urnetwork/astra-monitoring-operations-20261004/evidence/xops-rebased.stderr",
+      "bytes": 14637,
+      "sha256": "c41cc977dd735ca92890a2dca3ae29e0bdfd48bf4eb5d3576bd65d8f334d3fa3"
+    }
+  ],
+  "status": "COMPONENT_QUALIFIED_AND_PUBLISHED",
+  "review": "Full stage/filter/systemd deltas and transitive companion resolution reviewed. Actual raw68 multiline unittest outcomes independently counted; exact ten published Git blobs, rules and maintained promtool/Prometheus binaries rehashed. Durable declarations preserve original custody, six independent role rosters and retry-aware alerts are admitted without startup side effects.",
+  "limitations": "No production host activation, live alert/on-call delivery, full SN release or economic acceptance inferred."
+}

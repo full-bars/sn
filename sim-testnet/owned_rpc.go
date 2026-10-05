@@ -1,6 +1,6 @@
 package main
 
-// A strict continuation may move its operational transport to an explicitly
+// A continuation may move its operational transport to an explicitly
 // approved owned node without rewriting the configuration which authenticated
 // existing activation consents. The plan binds the selected route separately;
 // new observations use only that node and do not assert backend independence.
@@ -26,11 +26,16 @@ func validateOwnedRPCOptions(command string, options cliOptions) error {
 	if options.OwnedRPCAuthority == "" {
 		return nil
 	}
-	if options.ProvisionalResume || options.ProvisionalRPCAuthority != "" || options.Manifest != "" {
-		return errors.New("--owned-rpc-authority requires strict configured operation, without provisional or public-manifest overrides")
+	if options.ProvisionalRPCAuthority != "" || options.Manifest != "" {
+		return errors.New("--owned-rpc-authority cannot combine another route or public-manifest override")
+	}
+	if options.ProvisionalResume {
+		if err := validateProvisionalResumeOptions(command, options); err != nil {
+			return err
+		}
 	}
 	switch command {
-	case "doctor", "plan", "setup", "launch", "resume", "fleet-renew", "history-adoption", "relay-continuation", "scenario", "status", "inspect", "analyze":
+	case "audit", "doctor", "plan", "setup", "launch", "resume", "coordinator-repair", "probe-recovery", "fleet-renew", "history-adoption", "relay-continuation", "policy-rollover", "terminal-diagnostics", "scenario", "status", "inspect", "analyze":
 	default:
 		return fmt.Errorf("--owned-rpc-authority is not supported by %s", command)
 	}
@@ -50,8 +55,8 @@ func prepareOwnedRPCConfiguration(cfg *ResolvedConfig, authority string) (*Resol
 	if authority == "" {
 		return cfg, nil
 	}
-	if cfg == nil || cfg.Config == nil || cfg.Public == nil || cfg.ChainID != testnetChainID || !strings.EqualFold(cfg.Public.Chain.GenesisHash, testnetGenesis) || provisionalResumeEnabled(cfg) || cfg.provisionalRPCAuthority != "" {
-		return nil, errors.New("owned RPC routing requires a strict authenticated testnet configuration")
+	if cfg == nil || cfg.Config == nil || cfg.Public == nil || cfg.ChainID != testnetChainID || !strings.EqualFold(cfg.Public.Chain.GenesisHash, testnetGenesis) || cfg.provisionalRPCAuthority != "" {
+		return nil, errors.New("owned RPC routing requires an authenticated testnet configuration")
 	}
 	if err := validateOwnedRPCAuthority(authority); err != nil {
 		return nil, err
@@ -74,8 +79,8 @@ func prepareOwnedRPCConfiguration(cfg *ResolvedConfig, authority string) (*Resol
 }
 
 func validateOwnedRPCRouting(cfg *ResolvedConfig) error {
-	if cfg == nil || cfg.Config == nil || cfg.Public == nil || provisionalResumeEnabled(cfg) || cfg.provisionalRPCAuthority != "" || cfg.ChainID != testnetChainID || !strings.EqualFold(cfg.Public.Chain.GenesisHash, testnetGenesis) {
-		return errors.New("owned RPC routing lost its strict testnet authority")
+	if cfg == nil || cfg.Config == nil || cfg.Public == nil || cfg.provisionalRPCAuthority != "" || cfg.ChainID != testnetChainID || !strings.EqualFold(cfg.Public.Chain.GenesisHash, testnetGenesis) {
+		return errors.New("owned RPC routing lost its authenticated testnet authority")
 	}
 	if err := validateOwnedRPCAuthority(cfg.ownedRPCAuthority); err != nil {
 		return err

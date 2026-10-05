@@ -1,0 +1,41 @@
+{
+  "schema": "close-report-retry-source-finding-v1",
+  "status": "SOURCE_CONFIRMED_FIX_AND_DETERMINISTIC_EXECUTION_PENDING",
+  "bindings": [
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "controller/connect_controller.go",
+      "bytes": 48863,
+      "sha256": "32310978de15dc60453ca40411287d2ce890d6d056d46fa5fb12ddb0f23e35fe",
+      "blob": "c6c9d2b78b73b5530e55a639672638dc383bc968"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/subscription_model.go",
+      "bytes": 210867,
+      "sha256": "5219516d01dcc83ce1baae938ee2df69ce877dfc18b476d0918067fb30c5b09f",
+      "blob": "c27ec3d6c5bd9967aaf2995f3f14c7396e58342d"
+    },
+    {
+      "repository": "/home/by/urnetwork/connect",
+      "head": "c6186b79caaaae7f7a35beee42e815c0c0ca7170",
+      "relative": "transfer_contract_manager.go",
+      "bytes": 72418,
+      "sha256": "c534627c5e01b1d0cf98862da44bd6f9e6fcdb4735f991a9279aeede01888611",
+      "blob": "d9ff64c477281ba74035a982742df247f1a4353c"
+    }
+  ],
+  "finding": [
+    "Core constructs one ReportId per logical incremental close and keeps the same serialized frame for retransmission.",
+    "Server controller.CloseContract validates and forwards acknowledged bytes/checkpoint to legacy model.CloseContract, without forwarding ReportId.",
+    "Model checkpoint ON CONFLICT adds the incoming byte count while the retained close remains a checkpoint. Repeated delivery can therefore increment twice."
+  ],
+  "required_fix": [
+    "Retain report identity and exact semantic content in the same transaction as the accounting mutation. Identical retry is idempotent; conflicting reuse refuses the affected report.",
+    "Preserve empty-ID legacy compatibility; verify all hosted/native routes and rollout ordering before enabling stable report IDs across clients.",
+    "Test identical retries, concurrent delivery, changed-content reuse, independent equal-byte reports, terminal retries and rollback/restart continuity."
+  ],
+  "limits": "Source-confirmed accounting path, not measured production loss. No corrected test result claimed. Full signed-close provenance and provider authentication remain incomplete."
+}

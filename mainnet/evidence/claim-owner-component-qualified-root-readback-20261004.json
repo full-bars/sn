@@ -1,0 +1,422 @@
+{
+  "schema": "claim-owner-component-root-readback-v1",
+  "observed_utc": "2026-10-04T17:56:58.941011+00:00",
+  "terminal": {
+    "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/terminal.json",
+    "sha256": "ae325fb62415b3c5f0e692ae2a3e2a19ea1ee9d216956209df5952fb1f759930",
+    "bytes": 3916
+  },
+  "source": "6a63d05ff26009a55a454630b5ee97898e34d705 with declared Corec618/e51 component peers",
+  "phases": [
+    {
+      "phase": "claim-normal-new-six",
+      "status": "PASS",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/claim-normal-new-six.receipt.json",
+        "sha256": "e1a28d7d2e0f08e4650f3ad92840f433f4b62e3e46f298e886a5fa5816c01ba9",
+        "bytes": 7181
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimOwnerCopyRefusesLiveReads": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesWindowProposal": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesArchivePlan": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerRestoreRetainsArchivedPath": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerMixedSignedPathsRefuseAdmission": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesNativeProposal": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 0
+    },
+    {
+      "phase": "claim-race-new-six",
+      "status": "PASS",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/claim-race-new-six.receipt.json",
+        "sha256": "9bac18f777294e9c33a5b9b22aa62a103407a7653ac65d017c12d69a164cc567",
+        "bytes": 6980
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimOwnerCopyRefusesLiveReads": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesWindowProposal": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesArchivePlan": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerRestoreRetainsArchivedPath": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerMixedSignedPathsRefuseAdmission": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesNativeProposal": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 0
+    },
+    {
+      "phase": "claim-normal-neighbors-six",
+      "status": "PASS",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/claim-normal-neighbors-six.receipt.json",
+        "sha256": "a317e9291b5c5f3f128d08271725f1a3133da3575b0f5bdb7cb12d0eb240024f",
+        "bytes": 7408
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimWindowPublicFull128RetainsUnknownCreditAndResumes": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimWindowPublicLostAckAndShortOutputReconcile": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationRestorePublicSingleRootKeepsFullClaimWindow": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchivePublicLostAcknowledgmentsReconcileExactHeads": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionChecksCompletePrefixOnce": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeRenewalPublicPreservesOriginalPolicyAndArchive": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 0
+    },
+    {
+      "phase": "claim-race-neighbors-six",
+      "status": "PASS",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/claim-race-neighbors-six.receipt.json",
+        "sha256": "0d201556e47571bdf06eaddb5f35e9dfc026a44c987fd56e7383f637e20f94b2",
+        "bytes": 7394
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimWindowPublicFull128RetainsUnknownCreditAndResumes": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimWindowPublicLostAckAndShortOutputReconcile": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationRestorePublicSingleRootKeepsFullClaimWindow": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchivePublicLostAcknowledgmentsReconcileExactHeads": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionChecksCompletePrefixOnce": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeRenewalPublicPreservesOriginalPolicyAndArchive": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 0
+    },
+    {
+      "phase": "control-omit-public-original-path-fence-normal-body",
+      "status": "CAUSAL_RED",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/control-omit-public-original-path-fence-normal-body.receipt.json",
+        "sha256": "88f183204553e6f7125fae7f870fbdc11d6a9e9cfd50f7d71a034db5fb222b25",
+        "bytes": 6771
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimOwnerCopyRefusesLiveReads": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesWindowProposal": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesArchivePlan": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerRestoreRetainsArchivedPath": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesNativeProposal": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 1
+    },
+    {
+      "phase": "control-omit-public-original-path-fence-race-body",
+      "status": "CAUSAL_RED",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/control-omit-public-original-path-fence-race-body.receipt.json",
+        "sha256": "34c6d44da5149b628f3b7c584ec65ec492c19d0c8060b3b12994b7b5f0e03c6f",
+        "bytes": 6758
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimOwnerCopyRefusesLiveReads": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesWindowProposal": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesArchivePlan": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerRestoreRetainsArchivedPath": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesNativeProposal": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 1
+    },
+    {
+      "phase": "control-forget-archived-original-path-normal-body",
+      "status": "CAUSAL_RED",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/control-forget-archived-original-path-normal-body.receipt.json",
+        "sha256": "b6e9588f21dd10038f894e3bf308ff149bc30fa04f3964e9c3d278e468d66c69",
+        "bytes": 6755
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimOwnerCopyRefusesLiveReads": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesWindowProposal": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesArchivePlan": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerRestoreRetainsArchivedPath": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesNativeProposal": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 1
+    },
+    {
+      "phase": "control-forget-archived-original-path-race-body",
+      "status": "CAUSAL_RED",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/control-forget-archived-original-path-race-body.receipt.json",
+        "sha256": "107db8b8d629109c2d52dcaec359e4f785a3e33c367f30525a7a999445b94bba",
+        "bytes": 6742
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimOwnerCopyRefusesLiveReads": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesWindowProposal": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesArchivePlan": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerRestoreRetainsArchivedPath": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationClaimOwnerCopyRefusesNativeProposal": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 1
+    },
+    {
+      "phase": "control-allow-mixed-signed-owner-paths-normal-body",
+      "status": "CAUSAL_RED",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/control-allow-mixed-signed-owner-paths-normal-body.receipt.json",
+        "sha256": "a9ee996876b14d1fc3871ead270780618d75986d2b834d3f06bb76167dfcdcec",
+        "bytes": 5271
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimOwnerMixedSignedPathsRefuseAdmission": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 1
+    },
+    {
+      "phase": "control-allow-mixed-signed-owner-paths-race-body",
+      "status": "CAUSAL_RED",
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-claim-owner-protected-6a63-20261004/evidence/control-allow-mixed-signed-owner-paths-race-body.receipt.json",
+        "sha256": "651af27428e6d6d7e6793c8099518ed09d88ee4afe9e2a2ad677955eb83ab6bd",
+        "bytes": 5258
+      },
+      "raw_counts": {
+        "TestEconomicConservationClaimOwnerMixedSignedPathsRefuseAdmission": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        }
+      },
+      "joined": true,
+      "exit": 1
+    }
+  ],
+  "positive_executions": 24,
+  "vet_exit": 0,
+  "scope_limit": "Targeted Claim owner/path component only. Does not qualify whole129 history, later namespace/fee-approval changes or final release graph. Initial group-writable ancestor failures retained; same binaries replayed under protected parent.",
+  "status": "TARGETED_COMPONENT_PASS"
+}

@@ -1,0 +1,27 @@
+{
+  "candidate": "cb796a302df8029d0fe3be455ef7715d64f45a48",
+  "documentation_only_differences": [
+    "mainnet/MAINNET.md",
+    "mainnet/PRELAUNCH-FIXES.md",
+    "mainnet/evidence/cache-reclaim-28-20261003.json",
+    "mainnet/evidence/current-caller-cb796-source-join-review-20261003.json",
+    "mainnet/evidence/current-readiness-checkpoint-20261003.json",
+    "mainnet/evidence/current-readiness-checkpoint-20261003.md",
+    "mainnet/evidence/evm-history8d-source-compile-review-20261003.json",
+    "mainnet/evidence/fee-caller-deadline4c96-qualification-20261003.json",
+    "mainnet/evidence/native-restore-original-and-fixture259-review-20261003.json"
+  ],
+  "limits": [
+    "Preview creates Git tree objects only, no worktree merge/commit or deployment.",
+    "Normal gate passed11/expected1skip plus separate rootfixture; race gates pending.",
+    "Final merge must reproduce this tree relative to exact mainhead or repeat reconciliation after updates."
+  ],
+  "main_head": "f53caa4736f4b4553d1f5880afe62d36016437d2",
+  "non_documentation_tree_entries_exact_to_candidate": 19842,
+  "physical_source_proof": {
+    "path": "mainnet/evidence/current-caller-cb796-source-join-review-20261003.json",
+    "sha256": "82be32e99ff388fffb2340630e7bcd1d6442841e4cdc11a133f3ee32106075ef"
+  },
+  "preview_tree": "41423a718dc8f536f061907c3e1ebafa7edbe885",
+  "status": "CLEAN_PREVIEW_ONLY_BEHAVIORAL_GATE_PENDING"
+}

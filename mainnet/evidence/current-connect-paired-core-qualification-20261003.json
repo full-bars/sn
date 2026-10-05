@@ -1,0 +1,82 @@
+{
+  "artifact_sha256": {
+    "deps-test.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "deps-test.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "deps-test.stdout": "b1edf3742b15904665a54710059645a38139ef669c534d3042f17f053d3955be",
+    "run-seven.sh": "6ef9c0282f6225c29a0231810f3b77a657e14aabcbc60ca388b64c7ae9f93053",
+    "selector-seven.txt": "451f2111748cac83fca3877f54db0adccbf869b41c956e70a7b281697057bb34",
+    "seven-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "seven-normal.jsonl": "b9ab0f3ee0dc4550587e16b903aebd3177810fffb3e8bfeece5db89f7c726446",
+    "seven-normal.phase": "b2acdd96021ab7c3a38647cf5aa4143118d7895dbfe42aa512017b8c178ddce6",
+    "seven-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "seven-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "seven-race.jsonl": "091c8ab1de5f33b975dbdcefe4230c46c9798d0f1eb4dc1d04db906cb9008c75",
+    "seven-race.phase": "f6486e3f06f124996156055b979776711c6ee9401b9f33666d067d11ea205c5b",
+    "seven-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source-readback.json": "af820930276b57c800a030bcf3ae0a6cf65ccc9395f0d0485357edfb1d00eb13",
+    "vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "author_join_sha256": "25c9013c4363e7b7952ed3bbd3d5479629138ce8c9baf640ddf3403546579817",
+  "author_source_bindings_sha256": "fd1e92064bc53c2ac8ef29722be6f578e2d60e55dd68289d0e26a591f1381708",
+  "classification": "PASS_SCOPED",
+  "core_subtree_identical_to": "5c48c3e5f53b7f4654570193448b4da73b75aaff",
+  "deps_test_exit": 0,
+  "join_comparisons": "git diff --quiet on respective subtree both exit0",
+  "limits": [
+    "Seven selected durablevolume roots only; no full Connect suite, consumer, device, signing, or deployment qualification.",
+    "The package uses stdlib-only imports on declared published a53 module files; this receipt does not assert a broad current release."
+  ],
+  "normal_passed_roots": [
+    "TestPreparationPairedMetadataReconcilesInterruptedMove",
+    "TestPreparationPairedMetadataRejectsChangedLineage",
+    "TestPreparationPairedMetadataRetainsExactOriginals",
+    "TestPreparationPhysicalMetadataRefusesChangedLineage",
+    "TestPreparationPhysicalMetadataRetainsBothCensuses",
+    "TestPreparationPhysicalMovesReconcileEachSyncedBoundary",
+    "TestPreparationPhysicalMovesRefuseAmbiguousAndLostMembers"
+  ],
+  "outside_subtree_identical_to": "a53ed36a6e5d0c3d1c2b8c6951ce853fcfd83e06",
+  "package": "./durablevolume",
+  "physical_git_blobs_verified": 3730,
+  "race_passed_roots": [
+    "TestPreparationPairedMetadataReconcilesInterruptedMove",
+    "TestPreparationPairedMetadataRejectsChangedLineage",
+    "TestPreparationPairedMetadataRetainsExactOriginals",
+    "TestPreparationPhysicalMetadataRefusesChangedLineage",
+    "TestPreparationPhysicalMetadataRetainsBothCensuses",
+    "TestPreparationPhysicalMovesReconcileEachSyncedBoundary",
+    "TestPreparationPhysicalMovesRefuseAmbiguousAndLostMembers"
+  ],
+  "root_verification": {
+    "artifact_bindings_rehashed": 17,
+    "raw_terminal_roots_verified": {
+      "normal": {
+        "TestPreparationPairedMetadataReconcilesInterruptedMove": "pass",
+        "TestPreparationPairedMetadataRejectsChangedLineage": "pass",
+        "TestPreparationPairedMetadataRetainsExactOriginals": "pass",
+        "TestPreparationPhysicalMetadataRefusesChangedLineage": "pass",
+        "TestPreparationPhysicalMetadataRetainsBothCensuses": "pass",
+        "TestPreparationPhysicalMovesReconcileEachSyncedBoundary": "pass",
+        "TestPreparationPhysicalMovesRefuseAmbiguousAndLostMembers": "pass"
+      },
+      "race": {
+        "TestPreparationPairedMetadataReconcilesInterruptedMove": "pass",
+        "TestPreparationPairedMetadataRejectsChangedLineage": "pass",
+        "TestPreparationPairedMetadataRetainsExactOriginals": "pass",
+        "TestPreparationPhysicalMetadataRefusesChangedLineage": "pass",
+        "TestPreparationPhysicalMetadataRetainsBothCensuses": "pass",
+        "TestPreparationPhysicalMovesReconcileEachSyncedBoundary": "pass",
+        "TestPreparationPhysicalMovesRefuseAmbiguousAndLostMembers": "pass"
+      }
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-current-outer-core-1b-independent-20261003/evidence/current-connect-1b-core7-receipt.json",
+    "receipt_sha256": "8acf31532e666822e46760e6f98bcfe72ee82915b957d47eba04579b9886ea1f",
+    "vet_exit_verified": 0
+  },
+  "schema": "sol-current-connect-1b-core7-v1",
+  "source_commit": "1b1624f0aa09c0173f8a0457207d9d1329319beb",
+  "source_tree": "6c83bae54a47c0ca85ae566c2ef744c951ad8a34",
+  "vet_exit": 0
+}

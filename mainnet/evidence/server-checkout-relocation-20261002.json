@@ -1,0 +1,67 @@
+{
+  "status": "COMPLETE",
+  "head": "ac86855df7f63a1d85a1c57a70298f9c7f9ced4d",
+  "pushed_main": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+  "source": "/home/by/urnetwork/server-astra-main-integration-20261001",
+  "temp_alias": "/home/by/urnetwork/temp/server-astra-main-integration-20261001",
+  "target": "/mnt/data/urnetwork/temp/server-astra-main-integration-20261001",
+  "entries": 6784,
+  "bytes": 598529879,
+  "content_mode_uid_gid_verified": true,
+  "git_worktree_repaired": true,
+  "original_duplicate_removed": true,
+  "compatibility_symlinks_retained": true,
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/root-server-checkout-relocation-20261002/check.py",
+      "bytes": 5168,
+      "sha256": "5b67943e3602b7c73ef6eeca8ac3121e89cbe6bf1ed707f82a6813e02d05edd6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-server-checkout-relocation-20261002/plan.json",
+      "bytes": 362,
+      "sha256": "4fa8f7284de596776cb2b195d998992bbbe40a2bcffcb53749aaad6773e2a498"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-server-checkout-relocation-20261002/inventory.json",
+      "bytes": 1922255,
+      "sha256": "ddc05a15a4d9ff12b3d432f30b6a94c67b1106f69d0622cef118228fa649f0be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-server-checkout-relocation-20261002/verified-copy.json",
+      "bytes": 60,
+      "sha256": "d10cd42d790eb9c8d4505f67813560377840bec55c81e33ba462154865165569"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-server-checkout-relocation-20261002/process-plan.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-server-checkout-relocation-20261002/process-before-move.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-server-checkout-relocation-20261002/process-final.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-server-checkout-relocation-20261002/process-backup.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-server-checkout-relocation-20261002/receipt.json",
+      "bytes": 572,
+      "sha256": "02b5748dbd7b93fb55c1e09b6423c74245052eda63f67dd30f92920f33656994"
+    }
+  ],
+  "remaining_unmerged_checkouts": [
+    "server-mg03-operator-recovery-20260927",
+    "server-mg03-operator-recovery-baseline-20260927",
+    "server-r48-client-key-policy-runtime-20260926",
+    "server-r48-legacy-usage-quarantine-20260926"
+  ]
+}

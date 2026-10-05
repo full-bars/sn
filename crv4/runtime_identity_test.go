@@ -91,6 +91,32 @@ func setRuntimeIdentityTestResult(result any, value any) error {
 	}
 }
 
+// Both RPC names describe the same state layout; a proxy or runtime reply
+// cannot choose a different layout by supplying contradictory aliases.
+func TestRuntimeVersionRejectsContradictoryStateAliases(t *testing.T) {
+	base := `{"specName":"node-subtensor","specVersion":471,"transactionVersion":1,"stateVersion":1,`
+	for _, test := range []struct {
+		name      string
+		raw       string
+		wantError bool
+	}{
+		{name: "matching", raw: base + `"systemVersion":1}`},
+		{name: "contradictory", raw: base + `"systemVersion":0}`, wantError: true},
+		{name: "invalid", raw: base + `"systemVersion":"1"}`, wantError: true},
+		{name: "duplicate", raw: base + `"systemVersion":1,"systemVersion":0}`, wantError: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			version, err := DecodeRuntimeVersionIdentity(json.RawMessage(test.raw))
+			if (err != nil) != test.wantError {
+				t.Fatalf("decode aliases: version=%+v err=%v", version, err)
+			}
+			if err == nil && version.StateVersion != 1 {
+				t.Fatalf("matching aliases changed state layout: %+v", version)
+			}
+		})
+	}
+}
+
 // Shares one metadata download across concurrent blocks carrying the same
 // complete runtime artifact while retaining per-block version and code reads.
 func TestRuntimeArtifactMetadataIsSingleflightedAcrossExactBlocks(t *testing.T) {
@@ -385,12 +411,9 @@ func TestRuntimeArtifactMetadataCacheIsHardBounded(t *testing.T) {
 	}
 }
 
-// Repeated one-item allowlists cannot evade the per-provider cache bound after
-// catalog-bounded independently authenticated artifacts have been admitted.
-func TestRuntimeArtifactMetadataCacheRejectsBeyondReviewedSequentialCapacity(t *testing.T) {
-	if maximumRuntimeMetadataArtifactsPerChain != len(ReviewedRuntimeArtifacts()) {
-		t.Fatal("reviewed history requires one bounded entry per exact catalog artifact")
-	}
+// A long-lived provider keeps admitting exact upgrades while evicting its
+// least recently used metadata. Historical reads reauthenticate after eviction.
+func TestRuntimeArtifactMetadataCacheEvictsWithoutBlockingUpgrades(t *testing.T) {
 	metadataHex, metadataHash := runtimeIdentityTestMetadata(t)
 	var metadataCalls atomic.Int64
 	client := &runtimeIdentityTestClient{callContext: func(_ context.Context, result any, method string, args ...any) error {
@@ -416,29 +439,80 @@ func TestRuntimeArtifactMetadataCacheRejectsBeyondReviewedSequentialCapacity(t *
 		}
 	}}
 	chain := &Chain{API: &gsrpc.SubstrateAPI{Client: client}}
-	for offset := 1; offset <= maximumRuntimeMetadataArtifactsPerChain+1; offset++ {
+	read := func(offset int) {
+		t.Helper()
 		spec := uint32(450) + uint32(offset)
 		identity := RuntimeArtifactIdentity{
 			Version:  RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: spec, TransactionVersion: 1, StateVersion: 1},
 			CodeHash: "0x" + fmt.Sprintf("%064x", spec), MetadataHash: metadataHash,
 		}
 		_, err := AuthenticateRuntimeArtifactAtContext(context.Background(), chain, types.Hash{byte(offset)}, identity)
-		if offset <= maximumRuntimeMetadataArtifactsPerChain && err != nil {
-			t.Fatalf("artifact %d was rejected before the cache bound: %v", offset, err)
-		}
-		if offset > maximumRuntimeMetadataArtifactsPerChain && err == nil {
-			t.Fatal("excess sequential runtime artifact bypassed the cache bound")
+		if err != nil {
+			t.Fatalf("artifact %d failed authentication: %v", offset, err)
 		}
 	}
-	// Hot reads of all admitted entries still succeed at the hard bound.
-	for offset := 1; offset <= maximumRuntimeMetadataArtifactsPerChain; offset++ {
-		spec := uint32(450) + uint32(offset)
-		identity := RuntimeArtifactIdentity{Version: RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: spec, TransactionVersion: 1, StateVersion: 1}, CodeHash: "0x" + fmt.Sprintf("%064x", spec), MetadataHash: metadataHash}
-		if _, err := AuthenticateRuntimeArtifactAtContext(context.Background(), chain, types.Hash{byte(offset)}, identity); err != nil {
-			t.Fatalf("hot artifact %d was lost at the finite cache bound: %v", offset, err)
-		}
+	for offset := 1; offset <= maximumRuntimeMetadataCacheEntries; offset++ {
+		read(offset)
 	}
-	if metadataCalls.Load() != int64(maximumRuntimeMetadataArtifactsPerChain) {
-		t.Fatalf("metadata calls=%d, want %d admitted artifacts", metadataCalls.Load(), maximumRuntimeMetadataArtifactsPerChain)
+	read(1) // Keep the oldest version hot before admitting a successor.
+	read(maximumRuntimeMetadataCacheEntries + 1)
+	read(1)
+	if metadataCalls.Load() != int64(maximumRuntimeMetadataCacheEntries+1) {
+		t.Fatalf("hot artifact was evicted: metadata calls=%d", metadataCalls.Load())
+	}
+	read(2) // The least recently used historical artifact must be fetched again.
+	if metadataCalls.Load() != int64(maximumRuntimeMetadataCacheEntries+2) {
+		t.Fatalf("evicted artifact was not reauthenticated: metadata calls=%d", metadataCalls.Load())
+	}
+	if got := len(chain.runtimeMetadataArtifactCache().identityEntries); got != maximumRuntimeMetadataCacheEntries {
+		t.Fatalf("resident metadata entries=%d, want %d", got, maximumRuntimeMetadataCacheEntries)
+	}
+}
+
+// An all-in-flight cache must not reject a new finalized runtime or evict an
+// unfinished load. An uncached read still checks its exact metadata digest.
+func TestRuntimeArtifactMetadataCacheAllowsUncachedReadWhenAllSlotsLoad(t *testing.T) {
+	cache := newRuntimeMetadataArtifactCache()
+	encoded, metadataHash := runtimeIdentityTestMetadata(t)
+	metadata, _, err := DecodeRuntimeMetadata(encoded)
+	if err != nil {
+		t.Fatal(err)
+	}
+	started := make(chan struct{}, maximumRuntimeMetadataCacheEntries)
+	release := make(chan struct{})
+	done := make(chan error, maximumRuntimeMetadataCacheEntries)
+	for index := 0; index < maximumRuntimeMetadataCacheEntries; index++ {
+		identity := RuntimeArtifactIdentity{Version: RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: uint32(index + 1)}, MetadataHash: metadataHash}
+		go func() {
+			_, _, err := cache.load(context.Background(), identity, func(context.Context) (*types.Metadata, string, error) {
+				started <- struct{}{}
+				<-release
+				return metadata, metadataHash, nil
+			})
+			done <- err
+		}()
+	}
+	for index := 0; index < maximumRuntimeMetadataCacheEntries; index++ {
+		<-started
+	}
+	identity := RuntimeArtifactIdentity{Version: RuntimeVersionIdentity{SpecName: "node-subtensor", SpecVersion: 999}, MetadataHash: metadataHash}
+	if _, _, err := cache.load(context.Background(), identity, func(context.Context) (*types.Metadata, string, error) {
+		return metadata, "0x" + fmt.Sprintf("%064x", 2), nil
+	}); err == nil {
+		t.Fatal("uncached admission accepted changed metadata")
+	}
+	if _, _, err := cache.load(context.Background(), identity, func(context.Context) (*types.Metadata, string, error) {
+		return metadata, metadataHash, nil
+	}); err != nil {
+		t.Fatalf("uncached exact artifact was rejected: %v", err)
+	}
+	if got := len(cache.identityEntries); got != maximumRuntimeMetadataCacheEntries {
+		t.Fatalf("in-flight cache entries=%d, want %d", got, maximumRuntimeMetadataCacheEntries)
+	}
+	close(release)
+	for index := 0; index < maximumRuntimeMetadataCacheEntries; index++ {
+		if err := <-done; err != nil {
+			t.Fatal(err)
+		}
 	}
 }

@@ -1,0 +1,76 @@
+{
+  "available_bytes_after_verification": 124197117952,
+  "deleted_files": 222,
+  "files": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/candidate-paths.txt": {
+      "bytes": 21978,
+      "sha256": "2ae8bf0cc8a9b0dd534d98aa48f9568a6d66bb0d9f55e63222e298cf84769b67"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/plan.json": {
+      "bytes": 67648,
+      "sha256": "6f127b1c2de06ce8835b64cfd007ecad0b9143339fdb0f6b61323527f47d1811"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "abd6537a2f384b884d4fb35d2a57b4b9bbb01f68dff660f0fd2649810553e4ec"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "614a8dbf053b0cb833281feaff21dc9fd8059aa6feacbddae23c9800d97334f7"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/receipt.json": {
+      "bytes": 67929,
+      "sha256": "c94bd5db3d81cce76e991c22fef41920ed7ca74d1e815141d0563a98014f3001"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reclaim": {
+      "bytes": 3849124,
+      "sha256": "831f36be367d4f8ecbd06248e736d89cfe5456c43e52ba10fdb26e8ecbdb2285"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reclaim.go": {
+      "bytes": 7049,
+      "sha256": "a49c13db37e0c2817ceabfab1f8aeff0d8cab9ba91d9628a1d3b22a353fdb0d8"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reference-command-v2.json": {
+      "bytes": 1016,
+      "sha256": "dec2a4165c86386e6b32abdcfe73895564dd6b29f6e6068d6a061a3a13f64dcd"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reference-command.json": {
+      "bytes": 992,
+      "sha256": "29a27b6281a5afd286e86f886be34d3d3e94c4e460a1d5cbdf8e037cafa54310"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reference-scan-initial-transient-directory.exit": {
+      "bytes": 2,
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reference-scan-initial-transient-directory.stderr": {
+      "bytes": 132,
+      "sha256": "f97ea0d51f31172f404a70a5f7507b3c52a30852ebd7d4e5fdaff4f49750c730"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reference-scan-initial-transient-directory.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reference-scan.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-13-20261003/reference-scope.json": {
+      "bytes": 815,
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    }
+  },
+  "guards": "Audited reclaim12 helper with taskRoot-only delta; privileged process references checked at plan/apply; metadata reference scan exit1 with empty stdout/stderr; physical identity repeated before/during unlink; all222 absent. Initial scan failed on disappearing ephemeral go-link directory and is retained; corrected scope excludes compiler TMPDIR trees. Active caches, source, evidence, modules and executables preserved.",
+  "minimum_age_hours": 48,
+  "minimum_bytes": 8388608,
+  "reclaimed_bytes": 3240759296,
+  "schema": "mainnet-cache-headroom-proof-v1",
+  "status": "VERIFIED_COMPLETE"
+}

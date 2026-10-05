@@ -1,0 +1,89 @@
+{
+  "archive_bytes": 1279181842,
+  "archive_files": 35659,
+  "author_validation": "Git ls-tree/blob module pins, hashes/JSON/AST only; no source archives, Go/list/compiler/body/network/Docker/systemd by author.",
+  "default_layout": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/canonical-sibling-alignment/DEFAULT-LAYOUT-9c7-resource-v1.json",
+    "sha256": "7df6afc20cedb01f3c5bcd4fac73b0f17d7b4bb24c944870e458c85c42860526"
+  },
+  "entry_data_bytes": 15032385536,
+  "entry_memory_bytes": 115964116992,
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 4294967296,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 2700,
+    "TimeoutStopSec": 90
+  },
+  "forecast": {
+    "basis": "Exact archive bytes plus4x64MiB graph logs,10x4MiB archive logs and bounded receipts under prospective3GiB disk;2GiB prospective memory enforced by4GiB hard maximum. No measured peak or future PASS inferred.",
+    "disk_bytes": 3221225472,
+    "held_closed_model_reserve_bytes": 4294967296,
+    "memory_bytes": 2147483648
+  },
+  "healthy_data_floor_bytes": 6307319808,
+  "healthy_memory_floor_bytes": 103079215104,
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-local-metadata-job-v1.json",
+    "sha256": "ac532b4c2e9173b8be3a05720c6ba1f9a8df342785b9d4ead72d1467631348b2"
+  },
+  "one_cumulative_growth_bytes": 4294967296,
+  "ordering": "Root may bind additional actual joined waits and exact closed USER readbacks in adoption. Any corrected Rust workload executed first must be included there; no absent or fictional future wait. All existing ordinary failures preserved.",
+  "phase_bounds": {
+    "archive": 120,
+    "graph": 300,
+    "phase_count": 14,
+    "sum_seconds": 2400
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 15032385536,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "ac532b4c2e9173b8be3a05720c6ba1f9a8df342785b9d4ead72d1467631348b2",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "network_dependency_count": 0,
+    "runner_sha256": "8d01c0e29f65446988a8c1e18205120256b49397a6795f85ff24e00ac8cff495",
+    "short_count": 0,
+    "status": "ADOPTED_DEFAULT_MODULE_TEN_SIBLING_METADATA"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/published-default-local-metadata-adoption-v1.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-default-module-metadata-v1.py",
+    "sha256": "8d01c0e29f65446988a8c1e18205120256b49397a6795f85ff24e00ac8cff495"
+  },
+  "schema": "published-default-module-metadata-concrete-review-v1",
+  "scope": "Ten exact published default-layout sibling Git archives, four offline readonly GOWORK=off Go dependency graphs. All four ordinary graph failures collected independently; no compiler/body/DB/network or module/workspace edits.",
+  "siblings": {
+    "connect": "026b850248352b72255be7a966e391e0a15e74c1",
+    "glog": "80a11b434ae90ae2221deb932daa21913919875a",
+    "goidenticons": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+    "gvisor": "c0783dba2eeff7b79692a7f122ffee5f8bd837c1",
+    "proxy": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+    "sdk": "1ca8b35a43cfc00f5c4b8135470ab3347bd5c34e",
+    "server": "89b1d5b153dcae55566c75b0b9753d0a1c4c8697",
+    "sn": "9c7a2842d2df41bc7f2757234f378d78a6b6dc9b",
+    "userwireguard": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+    "warp": "7498864c7cd3605aad3c43eabfab9008ed7f7228"
+  },
+  "source_manifest": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/published-default-local-source-manifest-v1.json",
+    "sha256": "093587b9e087e34a61f88f5afb9dda4f8a185f8615d791c3a5e8f105a5688953"
+  },
+  "source_tuple": {
+    "core": "026b850248352b72255be7a966e391e0a15e74c1",
+    "server": "89b1d5b153dcae55566c75b0b9753d0a1c4c8697",
+    "sn": "9c7a2842d2df41bc7f2757234f378d78a6b6dc9b"
+  },
+  "status": "READY_FOR_ROOT_ADOPTION_NO_EXECUTION",
+  "whole_owner_horizon_seconds": 2790
+}

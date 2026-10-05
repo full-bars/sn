@@ -1,0 +1,201 @@
+{
+  "schema": "economic-finality-f7-production-tests-controls-root-review-v1",
+  "status": "FROZEN_PRODUCTION_AND_13_NEW_ROOTS_7_CONTROLS_REVIEWED_UNCOMPILED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/sn",
+    "head": "f7bb5d29674b1d0302f9b89fc1fbf23c76afad86",
+    "tree": "498737852113ce130f33d0d4d60c19d643c945ad",
+    "parent": "c8e7a3f7d3d642f84a9f27c3241708981509cda8",
+    "sparse": true,
+    "clean": true
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/source-census.json",
+      "bytes": 5143,
+      "sha256": "0b613b80f1d56cda0d3911003b027d8454b73dec621abc9b024ecd4a05db0a91"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/qualification-recipe.json",
+      "bytes": 4896,
+      "sha256": "3067ceb6fbc0c903dcdf80c4b1fb0affb3fdae2358e969feb907f721d8ebd8ca"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/selectors.json",
+      "bytes": 7333,
+      "sha256": "330aabdf4ceacbb13233f1208485d18968b9aa128553782e8a0ed7d226b19252"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/operative-controls.json",
+      "bytes": 9903,
+      "sha256": "c24f4f84bd8d671e1679cbfe5dc14f9a2b61092de4a3428df9bcbab3295a0096"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/remaining-authority.json",
+      "bytes": 1326,
+      "sha256": "faa99deaf4cfe25d6bc0116af7471d6eeccd30bf2d30b2a99ef123a7ee08e7f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/controls/original-signed-anchor-comparison-omitted/economic_conservation_finality.go",
+      "bytes": 15441,
+      "sha256": "809e71d10d7ea5b31e1164618d485234944abcd6ec95aa911396a36f804333a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/controls/quiet-original-requirements-omitted/economic_conservation_finality_state.go",
+      "bytes": 13583,
+      "sha256": "10616010498b0817399973c38c351779b3c6061bbda9aa261b0065d262398f11"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/controls/repeated-evm-coverage-deduplication-omitted/economic_conservation_finality.go",
+      "bytes": 15403,
+      "sha256": "b05e7d8bce1cf6611afdd2865b04da876db7dca272c279d0a613c0928cda3f2c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/controls/covered-membership-capacity-omitted/economic_conservation_finality_state.go",
+      "bytes": 13585,
+      "sha256": "67bef806fab0e87a2d6821a5d842af48f00318fde6e5d8a6f947748018ea9d1c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/controls/completed-original-certificate-companion-omitted/economic_native_producer.go",
+      "bytes": 21110,
+      "sha256": "e2eb0a7a54af68d6e6a46221653efe084915092b2dd39558311bc9f4b4566c5d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/controls/original-certificate-retirement-omitted/economic_conservation_archive.go",
+      "bytes": 34194,
+      "sha256": "8a8b9351a9daf8a3f981bef4dafcc6078bba74b6ec13d79c8e1e953701971cdd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/evidence/controls/verified-original-window-reuse-omitted/economic_conservation_finality.go",
+      "bytes": 15451,
+      "sha256": "b2b4d590363f8897b52f3eb3ec2772c68df08d0dc52b5a9d7db50d77449352a4"
+    }
+  ],
+  "source_files": [
+    {
+      "path": "mainnet/economic_conservation.go",
+      "git_blob": "4c8fd2394165e99a5d121ddf34160d3b5532a86f",
+      "sha256": "06894aa6ed6868e06c2c345afff4a9c0ee46ca42168d5e35052264f5df9b50b6",
+      "bytes": 41415
+    },
+    {
+      "path": "mainnet/economic_conservation_archive.go",
+      "git_blob": "90bc0bde3a5ce50aead230399fdf3fe95fd83da0",
+      "sha256": "12ee3bd5903dc1a6cb9becaa88315e6d7dc21b232e88d4680e82452e9ea97a72",
+      "bytes": 34179
+    },
+    {
+      "path": "mainnet/economic_conservation_command.go",
+      "git_blob": "f7b6a7ef8521922383bd5ba36442c00b8add0fc3",
+      "sha256": "d04ca5e91bde34d6a336694f6d802869aa0cd314b674efeaa1f5fc5c901c40f7",
+      "bytes": 30491
+    },
+    {
+      "path": "mainnet/economic_conservation_finality.go",
+      "git_blob": "e66e2b63f1505b331de2c8d550725b65b5f37c89",
+      "sha256": "010c54a30494ccd30117cb0c469c110a6e566b996544bc324087b896214f58f9",
+      "bytes": 15430
+    },
+    {
+      "path": "mainnet/economic_conservation_finality_public_test.go",
+      "git_blob": "81a26dc4bd40e36d8ee1b357a069dec05eba1b0d",
+      "sha256": "2cb63a6b50939300331ea9fd708418f616f563c29bd676b0af8630685c377d95",
+      "bytes": 8656
+    },
+    {
+      "path": "mainnet/economic_conservation_finality_state.go",
+      "git_blob": "d339437865e2bd3011e783960c90749db42b5769",
+      "sha256": "440e51cfd74b3d4c293a6edb1b213826c8ee128ba0180a8cd2a03437903f78e0",
+      "bytes": 13570
+    },
+    {
+      "path": "mainnet/economic_conservation_finality_test.go",
+      "git_blob": "67049929d7fa3d263c24a95e2dc19b905f6d0de3",
+      "sha256": "b454f91804af5e6fd6a85edf174f80654bed85fb3d9ad71b6e5851a6e73cd0fd",
+      "bytes": 14343
+    },
+    {
+      "path": "mainnet/economic_conservation_principal.go",
+      "git_blob": "040356d12b36f897f1f152d39c60ea859db17c7a",
+      "sha256": "9799aa901f4e66cbd8488498cbbe8a2cfabbadef3a58ddc36ba71db77cbb1dee",
+      "bytes": 8973
+    },
+    {
+      "path": "mainnet/economic_conservation_principal_effects.go",
+      "git_blob": "5da233056d156d648ba3358464e0fa062d88c6b5",
+      "sha256": "9ae8a016bc1274769b9a9337f29b442a419ed4f99ced5e2d37b05192b64cddc6",
+      "bytes": 11645
+    },
+    {
+      "path": "mainnet/economic_conservation_yuma.go",
+      "git_blob": "03ca7109b4d33198af250928252f6214c2a989b2",
+      "sha256": "6c3ed55c307e8a884d32855b39b33592f1b0dedbcc4064c75e35f4aa2261d33c",
+      "bytes": 11484
+    },
+    {
+      "path": "mainnet/economic_native_execution.go",
+      "git_blob": "8b4da0ccff87604b8c1841979fbf2456969ec1aa",
+      "sha256": "4e6b938727850f404bec302a4fb78ed5f0427974b4e07126ebeae0bc46022bd3",
+      "bytes": 30764
+    },
+    {
+      "path": "mainnet/economic_native_finality.go",
+      "git_blob": "11ad8f4424236d0bb61d4480bd3f8369d62ff7e3",
+      "sha256": "875cd45772a8909395dfce8dd4e8ee6d011fe0835098d22f90ec1c730d0e54b5",
+      "bytes": 3664
+    },
+    {
+      "path": "mainnet/economic_native_producer.go",
+      "git_blob": "1c6c8673192938a1402d8a415b448adccca385f6",
+      "sha256": "945cf257d3eb338ea8a6fe80954bb8b7cd428cded46c5c3e1f1bf5b7b087c7ff",
+      "bytes": 21079
+    },
+    {
+      "path": "mainnet/monitor_services.go",
+      "git_blob": "277a8bf15a6f712ca409725cf9dc78f3dcc93a12",
+      "sha256": "ec6875deb55b21b84ebf8be61f8b3a3c79155c36d6fa25a6530fdeb50556838f",
+      "bytes": 13871
+    },
+    {
+      "path": "mainnet/economic_conservation_archive_admission_test.go",
+      "git_blob": "07a622175fa21b59078361f274b1b13a0242acec",
+      "sha256": "a91e0dbfa96e7e3383a1aba1520f905b9b67221bd2dc86ce7bed052774518cf8",
+      "bytes": 12093
+    },
+    {
+      "path": "mainnet/economic_conservation_funding_public_test.go",
+      "git_blob": "063bd1cebec371214d933c7e6cdd588c70125e19",
+      "sha256": "1595e4d4483d18ea205895a43116d2f55d1e13f33a55ff768801f54f7b99c3cf",
+      "bytes": 21738
+    },
+    {
+      "path": "mainnet/economic_native_producer_test.go",
+      "git_blob": "84f627477461945d74b35fce9c0a33d1e0511c52",
+      "sha256": "00d806968b02845d52c01050adc711ce9a45e471bd6c18ec5799dd5800b5bf26",
+      "bytes": 32611
+    }
+  ],
+  "scope": {
+    "changed_go_paths": 14,
+    "new_roots": 13,
+    "selected_neighbors": 4,
+    "positive_roots_per_mode": 17,
+    "controls_per_mode": 7,
+    "rust_rebuild_required": false
+  },
+  "review": [
+    "Native producer retains original signed approval and original GRANDPA window as companion, preserving completion/amount digest grammar.",
+    "Initial signed checkpoint and exact rolling certified ancestry prevent caller-chosen authority; all quiet/capture/carry/root/claim/payment boundaries are required independently of economic cursor.",
+    "Finality promotes only its own conformance prerequisite; complete provider provenance, runtime economics, whole original fees and activation remain independent.",
+    "Held cold snapshots reconstruct certificate lineage and flat bounded index; hot exact-proof reuse retains context/custody fences before and after verification/serialization/charge.",
+    "Transactional2x capacity includes window/header/EVM/required/covered maps; canceled/refused candidate cannot publish partial index/checkpoint.",
+    "All13 new tests reviewed: synthetic original signatures, missing quiet certificates, repeated mapping, changed authority, forged proof, late custody/cancellation, all-map capacity, cold restart, lost acknowledgment and healthy siblings.",
+    "Seven exact operative production mutations reviewed with formatting-only differences. Four existing neighbors remain selected in17-root normal/race scope.",
+    "Actual public roots require corrected8ad successful capture manifests and exact production Rust/Cargo/SDK closure; retain7Yuma and2framing successes."
+  ],
+  "limits": [
+    "No compile/test/control execution claimed;17 roots per mode, vet and7 groups per mode remain.",
+    "EffectiveCorec618 mandatory in recipe; currentmain Core2ea integration not established.",
+    "Whole fee census and complete provider work/reliability/eligibility/window provenance remain work."
+  ]
+}

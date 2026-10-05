@@ -36,6 +36,7 @@ func newReleaseDecisionV2NativeTestFixture(t *testing.T, decision *releaseDecisi
 	t.Helper()
 	fixture := newReleaseNativeValidatorUIDTestFixture(t, 2, chainBatchHotkey(2))
 	fixture.blockNumber = decision.query.boundary.EVMBlock
+	fixture.header, fixture.block = releaseReceiptTestHeader(t, fixture.block, fixture.blockNumber)
 	original := fixture.chain.API.Client
 	var encoded json.RawMessage
 	if err := original.CallContext(fixture.ctx, &encoded, "state_getMetadata", fixture.block.Hex()); err != nil {
@@ -91,6 +92,7 @@ func TestReleaseEvidenceV2DecisionJoinsActualNativeStakeAndPinnedEVM(t *testing.
 	t.Parallel()
 	fixture := newReleaseDecisionV2TestFixture(t)
 	native := newReleaseDecisionV2NativeTestFixture(t, fixture)
+	requireReleaseStartupNativeHeader(t, native, native.blockNumber, native.block)
 	metadata, runtime := native.chain.Meta, native.chain.Runtime
 	observed, schedule, err := readReleaseDecisionV2Context(t.Context(), fixture.chain, native.chain, fixture.query, releaseDecisionV2TestSchedule(native), native.expected)
 	if err != nil || observed == nil || schedule.SubnetEpochIndex != 1 || schedule.Stake.Identity.UID != 2 || schedule.Stake.TotalStakeRao != native.total || len(observed.hotkeyUIDs) != 3 {
@@ -98,6 +100,23 @@ func TestReleaseEvidenceV2DecisionJoinsActualNativeStakeAndPinnedEVM(t *testing.
 	}
 	if native.chain.Meta != metadata || native.chain.Runtime != runtime || schedule.Stake.Identity.BlockHash == types.Hash(common.HexToHash(observed.boundary.EVMBlockHash)) {
 		t.Fatal("decision join rewrote signing metadata or substituted the EVM hash")
+	}
+}
+
+// A decision reader derives predecessor authority from its current reviewed
+// owner, matching delayed audit publication after a runtime upgrade.
+func TestReleaseEvidenceV2DecisionReadsReviewedHistoricalRuntimeFromCurrentOwner(t *testing.T) {
+	t.Parallel()
+	fixture := newReleaseDecisionV2TestFixture(t)
+	native := newReleaseDecisionV2NativeTestFixture(t, fixture)
+	installReleaseHistoricalTestNative(t, native)
+	metadata, runtime := native.chain.Meta, native.chain.Runtime
+	observed, schedule, err := readReleaseDecisionV2Context(t.Context(), fixture.chain, native.chain, fixture.query, releaseDecisionV2TestSchedule(native), releaseHistoricalTestCurrentArtifact())
+	if err != nil || observed == nil || schedule.SubnetEpochIndex != 1 || schedule.Stake.Identity.UID != 2 {
+		t.Fatalf("reviewed historical decision read differs: %v", err)
+	}
+	if native.chain.Meta != metadata || native.chain.Runtime != runtime {
+		t.Fatal("historical decision read rebound current signing metadata")
 	}
 }
 
@@ -248,6 +267,12 @@ func TestReleaseEvidenceV2DecisionHistoricalDeploymentScopeIsIndependent(t *test
 		change.mutate(candidate)
 		before := decision.count("currentEpoch")
 		err := history.authenticateIntentChainReference(t.Context(), decision.chain, native.chain, native.expected, fixture.intent, candidate)
+		if change.name == "policy" {
+			if err == nil || !strings.Contains(err.Error(), "release policy is not configured") || decision.count("currentEpoch") != before {
+				t.Fatalf("foreign policy selected a historical RPC domain: %v", err)
+			}
+			continue
+		}
 		if err == nil || !strings.Contains(err.Error(), "client-key capture differs from the admitted validator deployment") || decision.count("currentEpoch") <= before {
 			t.Fatalf("%s candidate replaced independent historical scope or skipped real reads: %v", change.name, err)
 		}
@@ -329,7 +354,7 @@ func TestReleaseEvidenceV2DecisionHistoricalCommittedAuditReconstructsExactDepos
 	if err != nil {
 		t.Fatal(err)
 	}
-	required, _, err := protocol.RequiredDepositRao(artifact.TotalUsageBytes, fixture.bigConviction, cfg.Policy.Deposit)
+	required, _, err := protocol.RequiredDepositRao(artifact.TotalUsageBytes, artifact.TotalUsers, fixture.bigConviction, cfg.Policy.Deposit)
 	if err != nil || required.Sign() <= 0 {
 		t.Fatalf("genuine artifact requires no positive deposit: %v", err)
 	}

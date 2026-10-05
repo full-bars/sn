@@ -1,0 +1,77 @@
+rule_files:
+  - monitor-alerts.example.yml
+evaluation_interval: 30s
+tests:
+  - name: a healthy host cannot conceal a missing second host
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_monitor_expected{env="fixture",host="first.example"}'
+        values: '1+0x10'
+      - series: 'sn_mainnet_monitor_expected{env="fixture",host="second.example"}'
+        values: '1+0x10'
+      - series: 'sn_mainnet_monitor_sample_timestamp_seconds{env="fixture",host="first.example",job="node"}'
+        values: '1+30x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetMonitorMissing
+        exp_alerts:
+          - exp_labels: {env: fixture, host: second.example, severity: critical}
+            exp_annotations: {summary: "Mainnet monitor telemetry is absent on second.example"}
+      - eval_time: 3m
+        alertname: SnMainnetMonitorStale
+        exp_alerts: []
+  - name: a retained healthy gauge cannot conceal a stopped sampling loop
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_monitor_sample_timestamp_seconds{env="fixture",host="first.example",job="node"}'
+        values: '60+0x10'
+      - series: 'sn_mainnet_monitor_healthy{env="fixture",host="first.example",job="node"}'
+        values: '1+0x10'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetMonitorStale
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, severity: critical}
+            exp_annotations: {summary: "Mainnet monitor samples stopped on first.example"}
+      - eval_time: 2m30s
+        alertname: SnMainnetMonitorStaleWarning
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, severity: warning}
+            exp_annotations: {summary: "Mainnet monitor samples are delayed on first.example"}
+  - name: initial observation and host-clock faults remain visible
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_monitor_sample_timestamp_seconds{env="fixture",host="first.example",job="node"}'
+        values: '0+0x10'
+      - series: 'sn_mainnet_monitor_sample_timestamp_seconds{env="fixture",host="second.example",job="node"}'
+        values: '3600+0x10'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: SnMainnetMonitorNotSampled
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, severity: critical}
+            exp_annotations: {summary: "Mainnet monitor has not completed its first sample on first.example"}
+      - eval_time: 2m
+        alertname: SnMainnetMonitorClockAhead
+        exp_alerts:
+          - exp_labels: {env: fixture, host: second.example, job: node, severity: critical}
+            exp_annotations: {summary: "Mainnet monitor clock is ahead on second.example"}
+  - name: critical failure resolves only on a later explicit severity change
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_monitor_severity{env="fixture",host="first.example",job="node"}'
+        values: '0 1 2 2 2 0 0'
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: SnMainnetMonitorWarning
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, severity: warning}
+            exp_annotations: {summary: "Mainnet monitor reports a warning on first.example"}
+      - eval_time: 2m
+        alertname: SnMainnetMonitorCritical
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, severity: critical}
+            exp_annotations: {summary: "Mainnet monitor reports a critical condition on first.example"}
+      - eval_time: 3m
+        alertname: SnMainnetMonitorCritical
+        exp_alerts: []

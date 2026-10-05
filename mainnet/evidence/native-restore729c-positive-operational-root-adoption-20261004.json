@@ -1,0 +1,28 @@
+{
+  "status": "ADOPTED_A499_TESTTYPES729_POSITIVES",
+  "runner_sha256": "e32ebc51d67a56e1fc7ac091ab0f25a1ebcc3232cc75c16934a09d5519956ea3",
+  "proposal_sha256": "61cca90d792676a6cba4e677b0c95487de90013d20af50d56cf049f0c92239ed",
+  "graph_sha256": "00314954e1d13379c3af252a9c30d7467c66b567ac69beb2916fee15a443fe91",
+  "rust_terminal_sha256": "c3c038897d634714db5fc2fd08007858a8c8619b7cf629782b56e9d03ae501e5",
+  "stage_sha256": "fac97ea9ef5538758c8cd9c31e2485f71b248f2515c9334c31e91a4c8bc00e82",
+  "normal_compile_sha256": "156fc42b61979aa2d2ec3063a9a983ea89edd5fec34cbda17f8b8b730624b6c3",
+  "scope": "25 exact roots per normal/race mode and vet. Reuse protected normal image; race compile once; preserve original failed attempts. No mainnet deployment authority.",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/actual-helper-preflight-v1.json",
+      "bytes": 4184,
+      "sha256": "44c772e99d1fbde23b5669220bdf0d4c6fc7bc5ecb2ca817eab43663f0a55c5d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/finite-resource-proposal-v1.json",
+      "bytes": 5868,
+      "sha256": "61cca90d792676a6cba4e677b0c95487de90013d20af50d56cf049f0c92239ed"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/run-positives-v1.py",
+      "bytes": 17922,
+      "sha256": "e32ebc51d67a56e1fc7ac091ab0f25a1ebcc3232cc75c16934a09d5519956ea3"
+    }
+  ],
+  "review": "Complete runner and proposal read; independently rehashed proposal inputs, preflight helpers, raw compile outputs and protected normal image identity. Original cumulative cap and two-times reserve retained; partitions continue after ordinary assertions; one compiler or body; no Rust rebuild."
+}

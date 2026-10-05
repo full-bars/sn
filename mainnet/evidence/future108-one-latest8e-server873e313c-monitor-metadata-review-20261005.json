@@ -1,0 +1,138 @@
+{
+  "author_validation": "Exact clean Git HEAD/tree/one-file delta/import block and blob read. Prior metadata exit0 and compiler exit1 waits actually replayed as joined. Python AST only; no author staging/compiler/body.",
+  "closed_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "owned_containers": [
+      {
+        "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "postgres"
+      },
+      {
+        "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "redis"
+      }
+    ],
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  },
+  "closed_model37_actual_readback": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-independent-readback-v1.json",
+    "sha256": "2492394fc0c1152c61b6040985b2e10e9c5e3b9c34de2ae4c231efd59624955b"
+  },
+  "closed_model37_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+    "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+  },
+  "effective_overlay_files": 33,
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 4294967296,
+    "MemorySwapMax": 0,
+    "unit": "sn-latest8e-server873e313c-monitor-metadata-v1-20261005.service"
+  },
+  "expected_elapsed_seconds": [
+    40,
+    120
+  ],
+  "forecast": {
+    "actual_model_count": 0,
+    "basis": "One bounded1MiB Git show, one64MiB offline ./monitor metadata log, and 15290 bytes of new physical source; parent overlay/archives verified and reused. Same2GiB forecast at2x plus held4GiB model reserve;12GiB data108GiB memory unchanged.",
+    "held_former_model_disk_bytes": 4294967296,
+    "held_former_model_memory_bytes": 4294967296,
+    "margin": 2,
+    "metadata_disk_bytes": 2147483648,
+    "metadata_memory_bytes": 2147483648
+  },
+  "healthy_guards": {
+    "data_active_formula": "max(6307319808, immediate_available-4294967296)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "rebased_or_retargeted": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server873e313c-monitor-metadata-job-v1.json",
+    "sha256": "9a76331319767a4dd3ab5b2b722bd372d23bca1f4724f99700512f0344ea27c6"
+  },
+  "overlay_bytes": 15290,
+  "overlay_files": 1,
+  "parent_actual_metadata": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server7885-monitor-metadata-v1.receipt.json",
+    "sha256": "cc0e1516084e84f2f27f4fa62e471b8320facb7670b8655d5bd1bebcb28d13d6"
+  },
+  "prior_failed_compiler": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest8e-server7885-monitor-normal-compile-v1.receipt.json",
+    "sha256": "094379f175a77e4d0abae6791e833ca2d0fb5e9fd5ec75cd7e6b14eba9e11dd6"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 4294967296,
+    "data_minimum_available_bytes": 12884901888,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "9a76331319767a4dd3ab5b2b722bd372d23bca1f4724f99700512f0344ea27c6",
+    "margin": 2,
+    "memory_minimum_available_bytes": 115964116992,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "runner_sha256": "3685c0ee77e524bb5edd5d5b1a27837c850ed359714a3a71567b9f933b2ae249",
+    "short_count": 0,
+    "status": "ADOPTED_ONE_BOUNDED_METADATA_STAGE_POST_MODEL"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest8e-server873e313c-monitor-metadata-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-latest8e-server873e313c-monitor-delta-metadata-v1.py",
+    "sha256": "3685c0ee77e524bb5edd5d5b1a27837c850ed359714a3a71567b9f933b2ae249"
+  },
+  "schema": "latest8e-server873e313c-monitor-delta-metadata-review-v1",
+  "scope": "One exact monitor test correction plus one offline ./monitor Go-list graph; immutable7885 source and failed compiler retained. No compiler/body/DB overlap or native780/newSN/newCore inheritance.",
+  "source_changes": "One existing monitor test file corrects actual type errors; imports, production, modules, root/model, SN8e and Core25a unchanged.",
+  "source_deltas": [
+    {
+      "all_changed_paths": [
+        "M\tmonitor/signal_migrations_sn_mainnet_test.go"
+      ],
+      "base": "7885a3ec517262680f98cd652b074923d1e6c3f1",
+      "go_mod_sum_unchanged": true,
+      "head": "873e313ce5557fc4bec2c370e74ae08ac8894048",
+      "import_block_unchanged": true,
+      "module": "server",
+      "parent_overlay_reused": {
+        "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/latest8e-server7885-monitor-overlay-v1/overlay.json",
+        "sha256": "06612cdb1f53224d2fdaca261ee8fd7883514703bb248a7f675442a42101c111"
+      },
+      "tree": "be39553c0a2d5402032e491427ea33da4a2ee8ae"
+    }
+  ],
+  "source_tuple": {
+    "core": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "server": "873e313ce5557fc4bec2c370e74ae08ac8894048",
+    "sn": "8e0104964cfb13e81c8510aab0b2917713669654"
+  },
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION"
+}

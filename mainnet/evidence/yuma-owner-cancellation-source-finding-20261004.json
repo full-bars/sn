@@ -1,0 +1,38 @@
+{
+  "schema": "yuma-owner-cancellation-source-finding-v1",
+  "status": "UNFROZEN_CANDIDATE_SOURCE_FINDING_FIX_REQUESTED",
+  "finding": "Native Yuma projection validation discards actual owner context by recalculating with context.Background. Active and archived reopen/summary consumers can repeat a high finite arithmetic budget without honoring canceled lifecycle. Source work is not yet frozen or qualified.",
+  "required_fix": [
+    "Retain actual lifecycle cancellation through public derivation, admission, reopen and summary.",
+    "Abort remaining expensive arithmetic after a budget/cancellation refusal; any validation reuse must bind exact immutable original evidence and authority.",
+    "Deterministic canceled-owner and exhausted-budget public-path controls; preserve unknown quantities and healthy sibling progress."
+  ],
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-witness/sn/mainnet/economic_native_yuma.go",
+      "bytes": 10062,
+      "sha256": "f25e8826cfc4a36a1126421f7c0797a395cf2fd3c9f57f7a4998762af40eb8b9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-witness/sn/mainnet/economic_native_yuma_capture.go",
+      "bytes": 10058,
+      "sha256": "af89bcf7a6255c6d7de923730312cc19125128efdd91ab60302f4260afda6afc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-witness/sn/mainnet/economic_native_yuma_model.go",
+      "bytes": 15245,
+      "sha256": "d2e2e9b8f98e2aa89959e6e392b0c7b442f01d87f69870a6c83c0f4f8f8064d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-witness/sn/mainnet/economic_native_yuma_math.go",
+      "bytes": 7442,
+      "sha256": "ce1d9ced8b0c314d42ceed57aacaedd39d48f87685b3d6e4dc8e3edb7ef68454"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-witness/sn/mainnet/economic_conservation_yuma.go",
+      "bytes": 8967,
+      "sha256": "aa4f4a82c382c22185f3870717be6ad8c6da7ad885978ff5ad0fd52927692c82"
+    }
+  ],
+  "requirement_closure": false
+}

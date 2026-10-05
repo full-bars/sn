@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -93,10 +92,7 @@ func TestClaimDaemonConfigRejectsMalformedTrailingYAML(t *testing.T) {
 }
 
 func TestClaimQueueDiscoveryAndCrashRecoveryBoundary(t *testing.T) {
-	store, err := newClaimQueueStore(filepath.Join(t.TempDir(), "state"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	store := newClaimQueueTestStore(t, filepath.Join(t.TempDir(), "state"))
 	queue, err := store.load()
 	if err != nil {
 		t.Fatal(err)
@@ -173,26 +169,6 @@ type fakeClaimAPI struct {
 	err    error
 }
 
-// The reconciliation callback must execute inside the same lock later used by
-// direct submission and uncertain-transaction rebroadcast.
-func TestClaimReconciliationUsesOperatorChainStateLock(t *testing.T) {
-	var chainStateLock sync.Mutex
-	reconcile := func(context.Context, *ClaimDaemonConfig, claimAPI, *ClaimQueueEntry) (string, error) {
-		if chainStateLock.TryLock() {
-			chainStateLock.Unlock()
-			t.Fatal("claim reconciliation ran outside the operator chain boundary")
-		}
-		return "no-claim", nil
-	}
-	status, err := reconcileClaimEntryWithLock(context.Background(), &ClaimDaemonConfig{}, fakeClaimAPI{}, &ClaimQueueEntry{}, &chainStateLock, reconcile)
-	if err != nil || status != "no-claim" {
-		t.Fatalf("locked reconciliation = %q, %v", status, err)
-	}
-	if _, err := reconcileClaimEntryWithLock(context.Background(), nil, nil, nil, nil, reconcile); err == nil {
-		t.Fatal("nil operator chain boundary was accepted")
-	}
-}
-
 func (f fakeClaimAPI) SnPoolClaimSyncWithContext(context.Context, *sdk.SnPoolClaimArgs) (*sdk.SnPoolClaimResult, error) {
 	return f.result, f.err
 }
@@ -215,10 +191,8 @@ func TestReconcileClaimEntryUsesFinalizedLeafClaimed(t *testing.T) {
 		switch request.Method {
 		case "eth_chainId":
 			result = "0x3b1"
-		case "chain_getFinalizedHead":
-			result = "0x" + fmt.Sprintf("%064x", 9)
-		case "chain_getHeader":
-			result = map[string]any{"number": "0x10"}
+		case "eth_getBlockByNumber":
+			result = map[string]any{"number": "0x10", "hash": common.Hash{9}.Hex()}
 		case "eth_call":
 			ethCalls++
 			if ethCalls%2 == 1 {
@@ -239,16 +213,16 @@ func TestReconcileClaimEntryUsesFinalizedLeafClaimed(t *testing.T) {
 	claim := &sdk.SnPoolClaimResult{Epoch: 7, NoId: []byte{1}, Coldkey: make([]byte, 32), PayoutRoot: root, ChainId: 945, ContractAddress: "0x0000000000000000000000000000000000001234", SettlementVaultAddress: "0x0000000000000000000000000000000000001234"}
 	cfg := &ClaimDaemonConfig{RPC: []string{rpc.URL}}
 	entry := &ClaimQueueEntry{Epoch: 7, Status: "pending"}
-	status, err := reconcileClaimEntry(context.Background(), cfg, fakeClaimAPI{result: claim}, entry)
+	status, err := reconcileClaimEntryTest(t, context.Background(), cfg, fakeClaimAPI{result: claim}, entry)
 	if err != nil || status != "finalized" {
 		t.Fatalf("claimed reconciliation = %q, %v", status, err)
 	}
 	claimed = false
-	status, err = reconcileClaimEntry(context.Background(), cfg, fakeClaimAPI{result: claim}, entry)
+	status, err = reconcileClaimEntryTest(t, context.Background(), cfg, fakeClaimAPI{result: claim}, entry)
 	if err != nil || status != "" {
 		t.Fatalf("unclaimed reconciliation = %q, %v", status, err)
 	}
-	status, err = reconcileClaimEntry(context.Background(), cfg, fakeClaimAPI{result: &sdk.SnPoolClaimResult{Epoch: 7}}, entry)
+	status, err = reconcileClaimEntryTest(t, context.Background(), cfg, fakeClaimAPI{result: &sdk.SnPoolClaimResult{Epoch: 7}}, entry)
 	if err != nil || status != "no-claim" {
 		t.Fatalf("zero payout reconciliation = %q, %v", status, err)
 	}

@@ -1,0 +1,36 @@
+{
+  "allocated_bytes_removed": 2545262592,
+  "artifact_sha256": {
+    "apply.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "apply.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate-union-paths.txt": "fb0ddc5a4388970c5796e7688c09acb621edfb38c5df09b45fd44ba4056a3ab7",
+    "plan.json": "ab2f79bfb409101228d0fb7774a8cc9b26d42ad9e3a7e03a24318ef24d756b4c",
+    "process-census-apply.json": "085139bea6bd3cd6843a5b6acd4ad7a2009784970deaeb6dda27f44b1caf3764",
+    "process-census-plan.json": "ac9266a65dd2787b953c4e2668c872b8691842eaa0ee76320698f615ebd43397",
+    "receipt.json": "56097f9cb3ce842ea7ffa5468df1ec12ce2bdba773ca3970105c52ab172a2729",
+    "reclaim.go": "ed6b86539329eef977b5fa2a4695d9b961fed70cac8f2cca43cd9dbeb56223ec",
+    "reference-command.json": "cbdb19ea7559ad18902208d7da9b26d615993477e89568e603abac744ec011ba",
+    "reference-scan.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "reference-scan.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reference-scan.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reference-scope.json": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+  },
+  "deleted_archives": 450,
+  "limits": [
+    "Only inactive old global compiler archives; active Sol cache, modules, source, evidence and executable files preserved.",
+    "110GiB is admission floor, not permission to stop active work."
+  ],
+  "root_verification": {
+    "all_selected_paths_absent": true,
+    "allocated_sum_matches_receipt": true,
+    "available_bytes_after": 123119108096,
+    "available_bytes_before": 120573997056,
+    "helper_change": "Only taskRoot20\u219221; complete reverse replacement compared exact20 SHA500c6dbd.",
+    "plan_exactly_matches_deleted_files": true,
+    "receipt_plan_sha256_verified": true,
+    "reference_scan_exit": 1,
+    "reference_stdout_stderr_empty": true
+  },
+  "schema": "urnetwork-inactive-cache-reclaim-v1",
+  "task_root": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-21-20261003"
+}

@@ -287,20 +287,41 @@ func fleetRenewalVerifiedTransaction(entries []JournalEntry, transaction Journal
 }
 
 func validateFleetRenewalNonceCoverage(roles *RoleSecrets, exposure fleetRenewalExposure, checkpoints []FleetRenewalNonce) error {
+	addresses := make([]common.Address, 0, len(roles.EVM))
+	for _, role := range roles.EVM {
+		addresses = append(addresses, common.HexToAddress(role.Address))
+	}
+	return validateFleetRenewalSignerNonceCoverage(roles, exposure, checkpoints, addresses)
+}
+
+// Renewal only creates new EVM transactions from its oracle and keeper. Other
+// retained roles are still checked for identity and for unknown signed bytes,
+// but an unrelated historical nonce is not made a prerequisite for refreshing
+// an expired fleet binding.
+func validateFleetRenewalSignerNonceCoverage(roles *RoleSecrets, exposure fleetRenewalExposure, checkpoints []FleetRenewalNonce, required []common.Address) error {
 	if len(checkpoints) != len(roles.EVM) {
 		return errors.New("renewal gas accounting omits an existing EVM role")
+	}
+	requiredAddresses := map[common.Address]bool{}
+	for _, address := range required {
+		if address == (common.Address{}) || requiredAddresses[address] {
+			return errors.New("renewal signer coverage is ambiguous")
+		}
+		requiredAddresses[address] = true
 	}
 	seen := map[string]bool{}
 	addresses := map[common.Address]bool{}
 	for _, point := range checkpoints {
 		role, ok := roles.EVM[point.Role]
-		if !ok || seen[point.Role] || point.Address != common.HexToAddress(role.Address) || addresses[point.Address] || point.Finalized > point.Latest || point.Latest > point.Pending || point.Pending > 20000 {
+		if !ok || seen[point.Role] || point.Address != common.HexToAddress(role.Address) || addresses[point.Address] || point.Finalized > point.Latest || point.Latest > point.Pending || point.Pending > maximumFleetRenewalObservedNonce {
 			return errors.New("renewal EVM nonce checkpoint changes custody or exceeds its bound")
 		}
 		seen[point.Role], addresses[point.Address] = true, true
-		for nonce := uint64(0); nonce < point.Pending; nonce++ {
-			if !exposure.Nonces[point.Address][nonce] {
-				return fmt.Errorf("renewal gas accounting is incomplete: role %s nonce %d has no retained signed transaction", point.Role, nonce)
+		if requiredAddresses[point.Address] {
+			for nonce := uint64(0); nonce < point.Pending; nonce++ {
+				if !exposure.Nonces[point.Address][nonce] {
+					return fmt.Errorf("renewal gas accounting is incomplete: role %s nonce %d has no retained signed transaction", point.Role, nonce)
+				}
 			}
 		}
 	}
@@ -387,5 +408,5 @@ func (e *Executor) verifyFleetRenewalLiveBudget(ctx context.Context, renewal Fle
 	if err != nil {
 		return err
 	}
-	return validateFleetRenewalNonceCoverage(e.roles, exposure, points)
+	return validateFleetRenewalSignerNonceCoverage(e.roles, exposure, points, []common.Address{renewal.Oracle, renewal.Keeper})
 }

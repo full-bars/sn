@@ -1,0 +1,21 @@
+{
+  "bytes": 590,
+  "fetched_remote_main": "ba97927f0acd6ce9d0d55d0c660f2e8cf8bf1f24",
+  "git_blob": "05b5603657f01dec2c5e88dd931a069adbc98f89",
+  "limits": [
+    "Remote tracked configuration inspected only, no deployment or worker adoption verified.",
+    "Fetched config repository remains on its unrelated preexisting branch without switching or modifying working files.",
+    "A configured genesis/chain is not independent live identity approval."
+  ],
+  "observed_policy": {
+    "activation": "blocked",
+    "cutoff": "2026-10-06T00:00:00Z",
+    "legacy_usdc": "finish_pre_cutoff_obligations",
+    "mainnet_chain_id": 964,
+    "netuid": 25,
+    "readiness_fields": "deployment_id/coordinator/settlement_vault/policy_hash/readiness_sha256 empty"
+  },
+  "path": "main/sn.yml",
+  "schema": "urnetwork-current-main-cutoff-readiness-v1",
+  "sha256": "b77872f2ce61dc66621ae1455b440a34766ffcaca198f4a20b36bdecb522c134"
+}

@@ -1,0 +1,64 @@
+{
+  "schema": "coordinator-mainnet-cache-source-census-v1",
+  "source_commit": "c3cc8e658a8be8be98fe624ac233ee1bb67f2e5c",
+  "files": [
+    {
+      "path": "validator/production_receipt_checkpoint.go",
+      "git_blob": "35e9b6ccaec3a53fbff3acbdee2e41f547375f72",
+      "sha256": "fbf7f14e6d5b5835c9fc8e062e7c0467fa80a2d9cc884dc497d427f06f194ac1",
+      "bytes": 11141
+    },
+    {
+      "path": "validator/production_receipt_continuation_test.go",
+      "git_blob": "21a12cf41a17c2dc8a5c6efc6fe6b58c4b0b71a9",
+      "sha256": "0951c08bb10d97a77910477db7ddf819af9774e7ff00c6dff09cc5138863ba6b",
+      "bytes": 7387
+    },
+    {
+      "path": "validator/production_receipt_checkpoint_test.go",
+      "git_blob": "f1d716981afde17a0fc906ad7e7f93a0dfc6c460",
+      "sha256": "6f584046983d4eb1529bd717b1db10ee822aff0f8bd4fb106f98ecd1229ebb2a",
+      "bytes": 6315
+    },
+    {
+      "path": "validator/release_client_key_authority_v2.go",
+      "git_blob": "93a92687415d712fc7397478464f03f338c66fec",
+      "sha256": "144ce2324bacd66ae9089c65e0656d5f0651652c0d31df3b362e12e03be24d75",
+      "bytes": 18528
+    },
+    {
+      "path": "validator/release_client_key_history_authority_v2_test.go",
+      "git_blob": "8be37d77a684484dd158e95814ee7c3f98a7d531",
+      "sha256": "d98197802cf844e33d6ba50a10352b2b3151d88136eaf6a27b7ff7e8d60e6ee8",
+      "bytes": 35028
+    },
+    {
+      "path": "validator/attempt_verification.go",
+      "git_blob": "839368ad15015bbdd74c55871635a6c656f90420",
+      "sha256": "5dc5d910c123f6fc96b52fbc4bc960ab2877db60fc249839ed55684a2d82c23e",
+      "bytes": 3739
+    },
+    {
+      "path": "validator/attempt_verification_cache_test.go",
+      "git_blob": "a4e3d34ccb5e87619a7ef387f5808b3df3cf7693",
+      "sha256": "3360457d2024382410e828a757e3a39c3871cf22f0a917942e6bac400afb5fe6",
+      "bytes": 10203
+    },
+    {
+      "path": "validator/attempt_ledger.go",
+      "git_blob": "91cea7cf1256cbdec909e2baf6937bad81f9d1ec",
+      "sha256": "95d69ea83fdd60dc3ba795983177fc840e69088882a80801fb463add9ee708f8",
+      "bytes": 56042
+    }
+  ],
+  "existing_behaviors": {
+    "native_receipts": "Authenticated original-intent scope excludes executable and current mutable configuration; durable absence prefix survives restart, cache eviction only rescans.",
+    "client_key_authority": "Decision-local successful reads keyed by runtime/domain/operator/canonical boundary; actual HTTP work-count controls preserve independent client signatures and final canonical witness.",
+    "assignment_verification": "Cut-local64-entry cache stores exact key/message/signature tuple, successful checks only; eviction reauthenticates and public calls do not inherit cached verdicts."
+  },
+  "limits": [
+    "Source census; no new tests or current-release qualification.",
+    "Use existing actual work-count and invalidation controls in the final graph. Add new reuse only for a demonstrated uncovered redundant-work path.",
+    "No production capacity/latency or complete lineage gate closure."
+  ]
+}

@@ -51,6 +51,7 @@ type attemptLedgerDiskBackend interface {
 	Pending(context.Context, func(AttemptRecord) error) error
 	Close() error
 	encodeRecord(AttemptRecord) ([]byte, error)
+	admitAppend(context.Context) error
 }
 
 // A constructor installs lifecycle state before publishing the ledger.
@@ -188,7 +189,11 @@ func (self *AttemptLedger) AppendContext(ctx context.Context, record AttemptReco
 	if self.disk != nil {
 		return self.appendDiskWithLock(ctx, record)
 	}
-	directory, err := openAttemptLedgerDirectory(filepath.Dir(self.path), self.legacyDirectoryStep)
+	storageCtx := self.storageCtx
+	if storageCtx == nil {
+		storageCtx = ctx
+	}
+	directory, err := openAttemptLedgerDirectory(filepath.Dir(self.path), self.legacyDirectoryStep, storageCtx)
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +226,9 @@ func (self *AttemptLedger) AppendContext(ctx context.Context, record AttemptReco
 // The append gate pins the checked head until the canonical signed batch is
 // durable. The backend validates the exact lifecycle itself.
 func (self *AttemptLedger) appendDiskWithLock(ctx context.Context, record AttemptRecord) (*AttemptRecord, error) {
+	if err := self.disk.admitAppend(ctx); err != nil {
+		return nil, err
+	}
 	head, err := self.disk.Head()
 	if err != nil {
 		return nil, err

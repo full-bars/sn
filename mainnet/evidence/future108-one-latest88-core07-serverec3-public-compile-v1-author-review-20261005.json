@@ -1,0 +1,70 @@
+{
+  "author_validation": "Source and AST only; sealer imports no qualification helper or repository code.",
+  "continuation": "Joined positive compiler exit continues only after context/source/resource verification. Signal, custody, resource, context, or image failure stops; cumulative floor never resets.",
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 8589934592,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 2100,
+    "TimeoutStopSec": 10,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-latest88-core07-serverec3-public-compile-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-latest88-core07-serverec3-public-compile-v1-20261005.service"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compile-v1-job-v1.json",
+    "sha256": "0a386963fd9c759760864d3c0ee317a701db9665ddf9462e27659d74a7486356"
+  },
+  "lease_horizon": "Actual canonical USER invocation/runtime must contain RuntimeMaxSec + TimeoutStopSec before admission; rechecked per phase.",
+  "metadata_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-metadata-v1.receipt.json",
+    "sha256": "69f12c2aee0aa789800a5432b78d84a3eedc78e2824097b0e9e04932a9376902"
+  },
+  "qualification": "NOT RUN; independent Resource review and exact Root adoption required before Sol execution.",
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 1,
+    "compiler_memory_max_bytes": 8589934592,
+    "compiler_memory_swap_max_bytes": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 8589934592,
+    "data_minimum_available_bytes": 17179869184,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "0a386963fd9c759760864d3c0ee317a701db9665ddf9462e27659d74a7486356",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "model_count": 0,
+    "phase_count": 4,
+    "runner_sha256": "10e3002edd2f9bb495ac0203bcb42f53506e9812ca2936da69c28dba03f8ed94",
+    "runtime_max_seconds": 2100,
+    "status": "ADOPTED_ONE_SERIAL_PUBLIC_COMPILER_BATCH",
+    "whole_owner_horizon_seconds": 2110
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-latest88-core07-serverec3-public-compile-v1-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-public-consumer-compiler-batch-v1.py",
+    "sha256": "10e3002edd2f9bb495ac0203bcb42f53506e9812ca2936da69c28dba03f8ed94"
+  },
+  "schema": "urnetwork-public-consumer-compiler-author-review-v1",
+  "scope": "Exactly four serial normal compile-only targets: SN ./nativefee; Server ., ./controller, ./cli/stnativefees. Retain all ordinary compiler failures and successful images on this exact final tuple. No body/list/vet/DB/Rust/image publication or inherited qualification of another source.",
+  "sealer": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/seal-public-consumer-compiler-batch-v1.py",
+    "sha256": "a48307dfd73a36ee4fa3c477c3db23e0a8e5efd9070e2720540dedc11f0ea660"
+  },
+  "selection": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-public-compiler-selection-v1.json",
+    "sha256": "55518ffecfd57b3b68bf3486bb6b5994d47e91670b5e021a225d2507a7eaf08a"
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/latest88-core07-serverec3-compiler-source-closure-v1.json",
+    "sha256": "80a9cb82e43bdb759d89b4eaca7b10956db9c339f4febc9aac2cac4ee1a1a7ad"
+  },
+  "source_tuple": {
+    "core": "07fe87bd6891cade2574abe9e39a7e78d48a3612",
+    "server": "ec3feae1cb35d8718dbbf33f5d11d6ab42206e3a",
+    "sn": "88bd7956d401fe6de1f764242e75e6ddf1a3653f"
+  },
+  "status": "AUTHOR_SEALED_AWAITING_RESOURCE_REVIEW_AND_ROOT_ADOPTION"
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "mainnet-large-scale-supplement-v1",
+  "status": "PREPARED_NOT_EXECUTED",
+  "handoff": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261005/mainnet-long5-current-default/HANDOFF.json",
+    "sha256": "4187085b66193dc9e7f0496ec9c90c6c820a88bf3ce3da43e391b63dc9e222a9"
+  },
+  "go_roots_per_mode": 2508,
+  "sn_roots_per_mode": 381,
+  "sn_core_vless_roots_per_mode": 613,
+  "preserved_prior_roots": 2503,
+  "preserved_controls": 227,
+  "additional_required_roots": [
+    "TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage",
+    "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues",
+    "TestEconomicConservationPublic2048UidPhysicalHeadArchiveAndRestore",
+    "TestEconomicConservationPublicLargeProfileRestoresCompleteProducerAndActiveWitness",
+    "TestEconomicConservationPublicLargeProfileRestoresCompleteProducerAndColdWitness"
+  ],
+  "limits": "Historical scale passes retained; changed compilation inputs prevent automatic current-source transfer. No new bodies or compiler success inferred."
+}

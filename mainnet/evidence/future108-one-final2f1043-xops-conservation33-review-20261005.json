@@ -1,0 +1,196 @@
+{
+  "author_validation": "Source257 Git blobs+SHA and old dependency pins, AST33 declaration census; qualified unittest classifier narrowed to33 exact IDs, zero skips. Closed943 waits and cleanup replayed read-only before job sealing. No author test body or service/compiler execution.",
+  "candidate": "2f1043a3fbd185299a87fca8aefd6dd2241051a1",
+  "causal_control": "test_sn_mainnet_monitor_conservation.MainnetConservationPromtoolTests.test_removing_clock_ahead_rule_reproduces_silent_future_sample first expects real alert, removes exactly one actual rendered ClockAhead rule, requires nonzero Promtool result naming that alert with got: [], and confirms Missing/NotSampled/Stale remain silent for the future timestamp.",
+  "closed_full_model": {
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.receipt.json",
+      "sha256": "18bb31f72a11abc85bf353e8b7f30c95ddaf263af8ce743954b8183ed5d1bcbf"
+    },
+    "body_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-retry3.process-result.json",
+      "sha256": "18b5750670369e7fcef3172c64cdb6e47e0595dc232fd043fe2e64fd4b2b5c51"
+    },
+    "owned_containers": [
+      {
+        "id": "f39481383745c579f74c84e63ecbaf15e21dffa24ae786ad553ae8f7c70ac523",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "postgres"
+      },
+      {
+        "id": "068937ede676a86106873b33cf1ab06563226608e1f8c3e220a512c6fb46599b",
+        "owner": "05b21182db47492e8ae75c6a59e5a6b2",
+        "service": "redis"
+      }
+    ],
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.terminal.json",
+      "sha256": "a3bed14cc6949539c5b7a80bece3863326696450d82d44ff35893c34348df8c0"
+    },
+    "owner_wait": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-model-owned-db-retry3.process-result.json",
+      "sha256": "c9168d9d8c6582b47d057b85099b6d9d4a35ad5747b9931814f911a2f5f95ede"
+    },
+    "readback": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/final-c60-full-normal-model-terminal-sol-readback-v1.json",
+      "sha256": "c647720cbdc056a57eb6fecf894348beff78ea2840d722031ebf3ef7a37537ac"
+    }
+  },
+  "closed_model37": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected4b-model37-closed-terminal-proof-v2.json",
+    "sha256": "44ddd130bffad2b76addc664b9a281fed2a20bac38c62c67cf8449a9f876d63e"
+  },
+  "closed_monitor17": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected943-monitor17-closed-terminal-proof-v1.json",
+    "sha256": "839e0e110b076175564a4d7d4df0e353e1a215107bfc04600ea0b32a5f70d2ee"
+  },
+  "closed_monitor17_actual_readback": {
+    "actual_waits": [
+      {
+        "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-owned-db-v1.process-result.json",
+        "sha256": "058b349e5c39bfb5f1b7eb167e680139e346ba74d4aa37477ad68e500def81a7"
+      },
+      {
+        "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-normal-v1.process-result.json",
+        "sha256": "d7a7c207da3caade7376fe4473c4ff62d3d0e6f313780fe1714492ac190d16b4"
+      }
+    ],
+    "body_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-normal-v1.receipt.json",
+      "sha256": "c74f448d4ad16e77a45e62105c372664345e4c569998a12350903f8b6414237c"
+    },
+    "body_status": "FAIL_OR_INCOMPLETE",
+    "cleanup_exit": "0",
+    "fallback_cleanup": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-owned-db-v1.fallback-cleanup.json",
+      "sha256": "402b009acc8e7725360d8067bd236ed82d3245ed4032e64d9aedfa871113d7c5"
+    },
+    "owned_containers_absent": {
+      "postgres": {
+        "id": "d7b35c0abfb9ee9fb145523f6d8902bba4a4fd06999d597c2839fcedcab57266",
+        "remaining": ""
+      },
+      "redis": {
+        "id": "0677c19802a3d00e53a8dd4f04b73549815087b207ddb573c8542dfc7d25e2ba",
+        "remaining": ""
+      }
+    },
+    "owned_network_absent": {
+      "id": "798442300bef2e3caf79c9b826d3f86ae640b320da9af3ecda4861ab309bd86a",
+      "owner": "2d3473f10a0e379ed82a2d24ef543f19"
+    },
+    "owner_terminal": {
+      "path": "/mnt/data/sn-testnet/sol-server-final-f67-20261004/evidence/selected-server9430262c-monitor17-owned-db-v1.terminal.json",
+      "sha256": "04b2366c40ef6260f444730c07ea4c391b65c5dcc3cdde1c695584021309c500"
+    },
+    "resource_qualified": true,
+    "scope": "Exact943 monitor17 actually joined/resource-qualified/owned DB and network absent; actual body outcome preserved."
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 2147483648,
+    "MemorySwapMax": 0,
+    "log_limit_each_bytes": 33554432,
+    "manager": "user",
+    "timeout_seconds": 900,
+    "uid": 1000,
+    "unit": "sn-final2f1043-xops-conservation33-v1-20261005.service"
+  },
+  "forecast": {
+    "basis": "Existing admitted short forecasts/limits retained for a smaller exact33 scope; not a measured future peak bound. Actual model_count0 retains4GiB former model reserve at2x.",
+    "held_former_model_disk_bytes": 4294967296,
+    "held_former_model_memory_bytes": 4294967296,
+    "margin": 2,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "healthy_guards": {
+    "data_active_formula": "max(6307319808, immediate_available-2147483648)",
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "rebased_or_retargeted": false
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/domain-dashboard-2f1043a3-clock-ahead-intake.json",
+    "sha256": "134717a8858cb3800cc963d09c6134de00737cfaed56adcc84d8ae88725555c5"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final2f1043-xops-conservation33-job-v1.json",
+    "sha256": "9eca8a199e53f18e114fa90516f32c94014fd84f0563773cfca5c2d8facc1021"
+  },
+  "mandatory_environment": {
+    "GOMAXPROCS": "2",
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PATH": "/home/by/urnetwork/.virtualenv/brien/bin:/usr/local/bin:/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONHASHSEED": "0",
+    "SN_MAINNET_PROMETHEUS": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/prometheus",
+    "SN_MAINNET_PROMTOOL": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+    "SN_MAINNET_SOURCE": "/mnt/data/urnetwork/astra-domain-dashboard-20261004/sn-source-09f8f989"
+  },
+  "prior_exact311_actual": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-xops311-retry3-v1.receipt.json",
+    "sha256": "0f93185439a8c5297eb8668528e48b645df5fe4163a8190ec7249fca6cbaeb3c"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "9eca8a199e53f18e114fa90516f32c94014fd84f0563773cfca5c2d8facc1021",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 0,
+    "runner_sha256": "3bf89ee253a18f37c0813db4dbac69203632ab19d01c2246ef786d97cb9d23b7",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_ONE_XOPS_CONSERVATION33_AFTER_MONITOR_DB_JOIN"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-final2f1043-xops-conservation33-adoption-20261005.json",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final2f1043-xops-conservation33-post-model-v1.py",
+    "sha256": "3bf89ee253a18f37c0813db4dbac69203632ab19d01c2246ef786d97cb9d23b7"
+  },
+  "schema": "final2f1043-xops-conservation33-concrete-review-v1",
+  "scope": "Exact33 conservation tests:18 offline and15 actual pinned Promtool, including ClockAhead rule-omission causal control; source09 unchanged. Prior311 result remains historical. No318/fullsuite, deployment, external sends, compiler or DB overlap.",
+  "selected_counts": {
+    "MainnetConservationDeploymentTests": 18,
+    "MainnetConservationPromtoolTests": 15
+  },
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final2f1043-xops-conservation33-source-closure-v1.json",
+    "sha256": "490270f9f84b68c20526eebadaaad101bb553571542b694aae8fffe0321fc707"
+  },
+  "source_commit": "09f8f989f88660dda442730a18ed99d505ba1988",
+  "status": "REVIEWED_READY_FOR_ROOT_ADOPTION",
+  "tools": [
+    {
+      "path": "/home/by/.pyenv/versions/3.14.7/bin/python3.14",
+      "sha256": "5f4016bc51761a8b135d601ed5714a58ce3e74831aea2838d0d72f1be5bd6e6c"
+    },
+    {
+      "path": "/usr/bin/bash",
+      "sha256": "bc5945feb8bd26203ebfafea5ce1878bb2e32cb8fb50ab7ae395cfb1e1aaaef1"
+    },
+    {
+      "path": "/usr/bin/git",
+      "sha256": "2a8c18fbf43da9f692d75474c72bea9dfd796c260b0f3dfe456376abc3bbd668"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+      "sha256": "e59210d5474e2c811a4460fb1593d708b94d58107ae62e9d44e88029bb7e5805"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/prometheus",
+      "sha256": "4ee49f574d80682b6571f017c8f42f2532aa3603b725b51ecb0cb864f06c2282"
+    }
+  ]
+}

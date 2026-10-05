@@ -1,0 +1,70 @@
+{
+  "closed_model30_proof": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected1ea-native-model30-closed-terminal-proof-v1.json",
+    "sha256": "819d8191629441e62f6e450e24a1d01cf0c5a649d4020d679fe0a0602efb9c92"
+  },
+  "execution_properties": {
+    "KillMode": "control-group",
+    "MemoryMax": 4294967296,
+    "MemorySwapMax": 0,
+    "RuntimeMaxSec": 600,
+    "TimeoutStopSec": 90,
+    "cgroup": "user.slice/user-1000.slice/user@1000.service/app.slice/sn-selected338-rust-metadata-v1-20261005.service",
+    "manager": "user",
+    "unit": "sn-selected338-rust-metadata-v1-20261005.service"
+  },
+  "expected_elapsed_seconds": [
+    5,
+    60
+  ],
+  "forecast": "Stage and32MiB metadata log are within the retained6GiB build forecast; reserve2x(6GiB build+1GiB later export)=14GiB data in advance. Conservative112GiB memory remains unchanged; model reservation released only after explicit closed30 proof. Hard4GiB metadata/Swap0/growth2GiB.",
+  "healthy_guards": {
+    "data_floor_bytes": 6307319808,
+    "docker_active_floor_bytes": 295833415680,
+    "docker_launch_floor_bytes": 300128382976,
+    "memory_floor_bytes": 103079215104,
+    "retargeted_or_rebased": false
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-metadata-job-v1.json",
+    "sha256": "8bbf619eeded66e2c90c0222c8a6ac71857510da3a6cc63f5e20bd582e91c43b"
+  },
+  "lease_scope": "Canonical USER service exact invocation/PID/start/runtime checked and monotonic expiry must exceed600s wholeowner+90s stop; existing target lease dev2081/inode15109155 acquired exclusively without cleaning.",
+  "pending": "New current Rust images and principal export require separate exact compiler/body adoption after this actual metadata result. No author Cargo, compilation, body or cleanup.",
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 15032385536,
+    "execution_owner": "SolParallel only, user systemd manager",
+    "history_count": 0,
+    "job_sha256": "8bbf619eeded66e2c90c0222c8a6ac71857510da3a6cc63f5e20bd582e91c43b",
+    "margin": 2,
+    "memory_minimum_available_bytes": 120259084288,
+    "metadata_count": 1,
+    "metadata_memory_max_bytes": 4294967296,
+    "metadata_memory_swap_max_bytes": 0,
+    "model_count": 0,
+    "runner_sha256": "b4117f311f4ba0aff33501677e9e4ef80bd5afc35f6df2a4ebfab99220c31587",
+    "status": "ADOPTED_ONE_SELECTED338_RUST_METADATA_AFTER_MODEL30"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-one-selected338-rust-metadata-adoption-20261005.json",
+  "resource_class_review": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/future108-exclusive-selected338-rust-assets-prospective-class-review-v2-20261005.json",
+    "sha256": "dbff2939b105eef3bc3bef39274d17b7f308776063bd8308ded6d76b7795b94b"
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-selected338-rust-metadata-v1.py",
+    "sha256": "b4117f311f4ba0aff33501677e9e4ef80bd5afc35f6df2a4ebfab99220c31587"
+  },
+  "schema": "selected338-rust-metadata-review-v1",
+  "scope": "One exact selected33837-file Rust crate reused in place and one locked/offline Cargo dependency metadata command, no build/clean/test/export. Exact current capture/historical-proof/libtest target metadata only; old8ad5 images remain historical.",
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/selected338-rust-crate-source-closure-v1.json",
+    "sha256": "53daa0f98cb18ccdb70c60dc85455a939cfa46c1bc61cf348c1be7c698a07799"
+  },
+  "source_reuse": "37 existing exact338 Git blobs/586919bytes already in the immutable Go archive and bound by the retained41k compiler closure; no source copies or old source mutation.",
+  "status": "AUTHOR_SEALED_READY_FOR_ROOT_ADOPTION"
+}

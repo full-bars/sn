@@ -1,0 +1,328 @@
+{
+  "files": {
+    "evidence/make-empty-geolite.go": "42ba7065e6a8c7bd07a4a2524072ae1c2bd24afa58ab93c851d908781463d711",
+    "evidence/readback.py": "326c9709631d3a27d1efcb972964bfcf7d53461804052897aeb0e3fac844013c",
+    "evidence/release-gate-services-private-network-current.sh": "5a8c3344d797de81fa48848fc4ce5159e7a857bd489241e53ef054d1dde6dd4a",
+    "evidence/run-server.sh": "fd3055e660d6ed4262bcfe144d3cd656948a63e6c413923bd55b3e7ef9f87eb5",
+    "evidence/run-sn.sh": "5317f288c62b53b2c3280ec17670c128667ebb8c994fbcc8b7c419c7125b9fc9",
+    "evidence/server-modules.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-modules.jsonl": "b515e2b3b5670d9b628c643983e8b6c06b6a991eb9d565c72d543d8bac76c127",
+    "evidence/server-modules.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-normal-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "evidence/server-normal-job1.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-normal-job1.jsonl": "887ffd1ccc192e9058a5bcff548a0442192897fe26a8ef4390e69d734b30e149",
+    "evidence/server-normal-job1.phase": "4e9f58000f53546886b820ca6d57b4104aac0d224a839c4d64c22ed42263416a",
+    "evidence/server-normal-job1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-normal-job2.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-normal-job2.jsonl": "80130f5ef245061136e14ea423dd0fa2d4b55739e8b131a6f69465b5c738631f",
+    "evidence/server-normal-job2.phase": "593d8840a0fd4a8c4ad2c9ecadf5d37413ae98f5a0386548c35c9052f9afde01",
+    "evidence/server-normal-job2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-normal-job3.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-normal-job3.jsonl": "8252632bbe702b1feb210aa4e4f9bdff0eb50aa68240426b6d60961941400177",
+    "evidence/server-normal-job3.phase": "7ce0ba243b4301181cda9745f7f61d7de04693bf74f28fffb44d8069827de54c",
+    "evidence/server-normal-job3.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-normal-job4.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-normal-job4.jsonl": "14ce2f313e4a82eb811278102c2bfd39b02e535fbd7687eb929a55f82d765202",
+    "evidence/server-normal-job4.phase": "ba81747d644f6225e1057b431cb31c70c633c0439940d2a21e94c946840a1a94",
+    "evidence/server-normal-job4.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-normal-job5.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-normal-job5.jsonl": "f4e1af0363a75f470270b63bb7f2931f3863ae6cef2e40c53375dd5a3adf51ee",
+    "evidence/server-normal-job5.phase": "a7723e3c578aee8d037e2c952a9f5b579ace490b12eb726a68a738dec5dca1b1",
+    "evidence/server-normal-job5.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-normal-job6.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-normal-job6.jsonl": "c4491fb7ef8bbd764575fd0a00898066d097ea3a3cdb5d7d4e34f462a5bd4a1f",
+    "evidence/server-normal-job6.phase": "a71c4b018663047e5bd9ebe41e2a3659552c2f3411e77384eba561b9cd5f1374",
+    "evidence/server-normal-job6.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-normal-jobs.tsv": "e2c84febe8d0d0f85706675ac45c99b29e8a50092069f6f36fd67b7fb3ff802d",
+    "evidence/server-normal-network-cleanup.log": "e7ffa75a02057152db9e5655dd8f4c071c5a9747b38b7ed8479ff0d37587e6bf",
+    "evidence/server-normal-network.id": "e7ffa75a02057152db9e5655dd8f4c071c5a9747b38b7ed8479ff0d37587e6bf",
+    "evidence/server-normal-network.owner": "47146e05f6c39d61c558574007a9a7779ebab40df9fbc0e569cc572a5cd4ae7e",
+    "evidence/server-normal-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-normal-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-normal-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-normal-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-normal-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-race-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "evidence/server-race-job1.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-race-job1.jsonl": "91102e268002d2aa65c9a3c92ae02a77a47c7b0ed4726a67b323f6e519d3471d",
+    "evidence/server-race-job1.phase": "9523ad11336dba06316f366d4d6b4d0ea7a772d1f11a3f57ad4da0ca19a6b045",
+    "evidence/server-race-job1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-race-job2.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-race-job2.jsonl": "61bcbfe149e975e8b10397bd1fb0fc7e1450d485e4a390b7036a55590ed06281",
+    "evidence/server-race-job2.phase": "3ce83d8b44d749cf8ff2b0dd8b941381c2f315493e58e57fecb1fd491d340d96",
+    "evidence/server-race-job2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-race-job3.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-race-job3.jsonl": "89b5723ad0758aead54647550f57ea5c172d8d575baf4a4abeffa8ab0ac72611",
+    "evidence/server-race-job3.phase": "eea4cf9357e60410eed55c514456d3673d17916dfd0e111de3d1d87e7b724c76",
+    "evidence/server-race-job3.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-race-job4.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-race-job4.jsonl": "57fc06fad750a32feefba43108fc351d18b14881027d54843c7b0c4d295041c1",
+    "evidence/server-race-job4.phase": "c4755730f89153e2c22c793254e4c56c85814e7320768b4b1c05e4864b6ff5aa",
+    "evidence/server-race-job4.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-race-job5.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-race-job5.jsonl": "261b985b24ffa507751e9b20ddd47d940f877b715896dae49839f41eb9f91eb7",
+    "evidence/server-race-job5.phase": "48f5f8e002db1b2da2ea6e5e6bcac7ea4909363bc1cfe7473c4a65ff52d8a135",
+    "evidence/server-race-job5.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-race-job6.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-race-job6.jsonl": "b405e0cd787305ce26b7b7ea0e824cb20929cf167f552a945a1b0decb1e6c30d",
+    "evidence/server-race-job6.phase": "31bb29d592202425a1686d7fef40091fa3933cced638a860963d655dd9df20e6",
+    "evidence/server-race-job6.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-race-jobs.tsv": "e2c84febe8d0d0f85706675ac45c99b29e8a50092069f6f36fd67b7fb3ff802d",
+    "evidence/server-race-network-cleanup.log": "50269f435b7c24126b99e4a476c2066e9ca6d716ada3acb55e1dac96fd305cee",
+    "evidence/server-race-network.id": "50269f435b7c24126b99e4a476c2066e9ca6d716ada3acb55e1dac96fd305cee",
+    "evidence/server-race-network.owner": "68c294b9ea3ca2c5921f21c67ea8483cbd97f3feb7b721860139d735c3c2e3d7",
+    "evidence/server-race-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-race-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-race-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-race-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-race-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-race-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-vet-corrected.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/server-vet-corrected.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-vet-corrected.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/server-vet.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/server-vet.stderr": "88a71a7444fc33753ec60f3b5e5eed9a00062f8614ec85c558510f7f8554ffef",
+    "evidence/server-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/sn-modules.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-modules.jsonl": "4031961aa27bf620f2709e710a71e0d0a1c7792bfc7bbab454c0f7fdf927bc9f",
+    "evidence/sn-modules.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/sn-normal-job1.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-normal-job1.jsonl": "587c744a8b15be8b7fb2dd2eb7e31724f2f484ce48609b86c79071ad786d428a",
+    "evidence/sn-normal-job1.phase": "857d413a2465c0c0628263aeddb9710db6f404eaf57d56868eeee0974c4017de",
+    "evidence/sn-normal-job1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/sn-normal-job2.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-normal-job2.jsonl": "80c45130b22d21bb5538b7a8a1fe3ea7aafbabaa197ba974440448ef68038255",
+    "evidence/sn-normal-job2.phase": "4382a4dd943e3a16b7ffd422fd5c1edaf1708d6f69adde4751708d8a8f6cf862",
+    "evidence/sn-normal-job2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/sn-normal-job3.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-normal-job3.jsonl": "abd739930c36b2fc9d8b77b3912c58b22a8b344aa20b99c62433a3ef63165117",
+    "evidence/sn-normal-job3.phase": "06e81e9c5b7cb0e53b4f11d88ce9a0ffd7b0fba241acded6d5b15d1050427cd3",
+    "evidence/sn-normal-job3.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/sn-normal-jobs.tsv": "f6f45c3b3b7d4c8b755a25df590e4a0242455845d6c91a8beeb33cd011aef53a",
+    "evidence/sn-normal-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-qualification-receipt.json": "8bdddd91bd7c37e8b1dde6e0e5c317f73fd26f40dbce856351daafd802fd09cd",
+    "evidence/sn-race-job1.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-race-job1.jsonl": "6f1df512c0ecd868c2aa9fb2315cb2ac441fe6164133232474f39ef52d1fd637",
+    "evidence/sn-race-job1.phase": "a1d0f40e0e55817be5eb537b5fcfddaebf73ebced06265c62fd48db781e0b61f",
+    "evidence/sn-race-job1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/sn-race-job2.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-race-job2.jsonl": "fd7329aacc02a4455e0c1ccf69485eebdca5efc7a7fb4d40f58ed6b1060bd0ff",
+    "evidence/sn-race-job2.phase": "edfd43f9929360aa67e4d441c3e964c1904880d529a55e8156eeb45d5b2eac7f",
+    "evidence/sn-race-job2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/sn-race-job3.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-race-job3.jsonl": "2b4dde4967aa36f90960a3ac346b5b2661e5c2b77f4d67250ac3ca10030730d9",
+    "evidence/sn-race-job3.phase": "17012c746f34678589fc481d7a80a6f3cc78b50e3034b9efbf3582138ef2e141",
+    "evidence/sn-race-job3.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/sn-race-jobs.tsv": "f6f45c3b3b7d4c8b755a25df590e4a0242455845d6c91a8beeb33cd011aef53a",
+    "evidence/sn-race-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/sn-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/sn-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/source-fence.json": "da2a63ce5452ebe3fb273d3871b7b5b8dfb2375c247efc4d2cb32c436ecbe53f",
+    "evidence/source-readback.json": "470a7a259ca89795f69a4ac833f71a3a876b482462a185a50a587fa7bd77893e",
+    "fixture/postgres-initdb/01-init-app-db.sh": "424c6fa9f136cb7323b887b00e013cf26f0529a6ceeecd2444e7eb5de20afe18"
+  },
+  "fixture": {
+    "normal_owned_cleanup": 0,
+    "race_owned_cleanup": 0
+  },
+  "initial_harness_setup_failure": "First vet invocation specified absent ./cmd/bringyourctl and exited before package vet. Exact corrected intake six-package server vet and four-package SN vet both passed; original stderr/exit retained.",
+  "intake_sha256": "9f3046d76504a2865d901380acca92e166a06233e78950f47cc08af9bf1f25ba",
+  "limits": [
+    "Exact published Connect5def/SDK95/SCTP644 and local frozen peers, GOWORK=off.",
+    "Selected 25 roots per mode plus affected vets only; financial199 full suite and current release not requalified by this result.",
+    "No signing, live payout, device, or deployment."
+  ],
+  "schema": "sol-current-5def-published-module-independent-v1",
+  "server": {
+    "normal": [
+      {
+        "exit": 0,
+        "package": "./localclient",
+        "roots": [
+          "TestAuthorityDerivedScopeSurvivesReconstruction",
+          "TestAuthorityCredentialRotationAndCancellation",
+          "TestAuthorityRealContractAccountingAndPublicKeyReads"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": "./proxy",
+        "roots": [
+          "TestProxyCriticalControlUsesLocalAuthorityWithoutHttp",
+          "TestProxyLocalHooksHaveIndependentHttpRedControls"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": "./qualityprobe/providertunnel",
+        "roots": [
+          "TestProviderTunnelActualLocalAuthorityWithoutApi"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": ".",
+        "roots": [
+          "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+          "TestConfiguredLocalBlobRequiresExactDeclaration",
+          "TestProviderCurrentMigrationPreservesPublishedHistory",
+          "TestProviderCurrentMigrationUpgradesPublishedSchemaWithoutReplay"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": "./model",
+        "roots": [
+          "TestProviderTransitionBonusAuthorityAndSafeReplan",
+          "TestProviderCurrentMigrationRedisPaidFreeUsageRemainsSubnetOnly",
+          "TestProviderCurrentMigrationRedisLegacySettlementKeepsAsset"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": "./controller",
+        "roots": [
+          "TestProviderCompositionRetainedAttemptReadRecoversDuringBoundaryHold",
+          "TestProviderTransitionQueuedLegacyAmbiguousRetryKeepsKey"
+        ]
+      }
+    ],
+    "race": [
+      {
+        "exit": 0,
+        "package": "./localclient",
+        "roots": [
+          "TestAuthorityDerivedScopeSurvivesReconstruction",
+          "TestAuthorityCredentialRotationAndCancellation",
+          "TestAuthorityRealContractAccountingAndPublicKeyReads"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": "./proxy",
+        "roots": [
+          "TestProxyCriticalControlUsesLocalAuthorityWithoutHttp",
+          "TestProxyLocalHooksHaveIndependentHttpRedControls"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": "./qualityprobe/providertunnel",
+        "roots": [
+          "TestProviderTunnelActualLocalAuthorityWithoutApi"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": ".",
+        "roots": [
+          "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+          "TestConfiguredLocalBlobRequiresExactDeclaration",
+          "TestProviderCurrentMigrationPreservesPublishedHistory",
+          "TestProviderCurrentMigrationUpgradesPublishedSchemaWithoutReplay"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": "./model",
+        "roots": [
+          "TestProviderTransitionBonusAuthorityAndSafeReplan",
+          "TestProviderCurrentMigrationRedisPaidFreeUsageRemainsSubnetOnly",
+          "TestProviderCurrentMigrationRedisLegacySettlementKeepsAsset"
+        ]
+      },
+      {
+        "exit": 0,
+        "package": "./controller",
+        "roots": [
+          "TestProviderCompositionRetainedAttemptReadRecoversDuringBoundaryHold",
+          "TestProviderTransitionQueuedLegacyAmbiguousRetryKeepsKey"
+        ]
+      }
+    ]
+  },
+  "sn": {
+    "normal_roots": 10,
+    "race_roots": 10,
+    "receipt_sha256": "8bdddd91bd7c37e8b1dde6e0e5c317f73fd26f40dbce856351daafd802fd09cd"
+  },
+  "sn_receipt_sha256": "8bdddd91bd7c37e8b1dde6e0e5c317f73fd26f40dbce856351daafd802fd09cd",
+  "source_fence": {
+    "local": {
+      "glog": {
+        "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+        "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+      },
+      "goidenticons": {
+        "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+        "tree": "553487079352d9544edb62850328305e97668790"
+      },
+      "proxy": {
+        "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+        "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+      },
+      "userwireguard": {
+        "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+        "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+      },
+      "warp": {
+        "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+        "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+      }
+    },
+    "module_graph": {
+      "server": {
+        "count": 647,
+        "sha256": "b515e2b3b5670d9b628c643983e8b6c06b6a991eb9d565c72d543d8bac76c127",
+        "versions": {
+          "github.com/pion/sctp": "v0.0.0-20261002163341-6443417d70dc",
+          "github.com/urnetwork/connect": "v0.0.0-20261003021534-5def2fa4391b",
+          "github.com/urnetwork/sdk": "v0.0.0-20261003021240-95ccd57da971"
+        }
+      },
+      "sn": {
+        "count": 636,
+        "sha256": "4031961aa27bf620f2709e710a71e0d0a1c7792bfc7bbab454c0f7fdf927bc9f",
+        "versions": {
+          "github.com/pion/sctp": "v0.0.0-20261002163341-6443417d70dc",
+          "github.com/urnetwork/connect": "v0.0.0-20261003021534-5def2fa4391b",
+          "github.com/urnetwork/sdk": "v0.0.0-20261003021240-95ccd57da971"
+        }
+      }
+    },
+    "schema": "sol-current-5def-source-fence-v1",
+    "server": {
+      "commit": "0e04f0381f813acff45b9c9af3d1a5b93e7d7ccf",
+      "git_blobs": 5369,
+      "tree": "ab30a9299bd9cf7b51ae4012b936ea6660555fa4"
+    },
+    "sn": {
+      "commit": "8cb08c95ad0892dbe81e1886d5685adf408907b0",
+      "git_blobs": 20233,
+      "tree": "3860122267f0338f0b72b75341183f50d8845647"
+    },
+    "source_deltas_from_parents": {
+      "server": [
+        "go.mod",
+        "go.sum"
+      ],
+      "sn": [
+        "go.mod",
+        "go.sum"
+      ]
+    }
+  },
+  "source_fence_sha256": "da2a63ce5452ebe3fb273d3871b7b5b8dfb2375c247efc4d2cb32c436ecbe53f",
+  "status": "PASS_SCOPED",
+  "vet": {
+    "server_six_packages": 0,
+    "sn_four_packages": 0
+  }
+}

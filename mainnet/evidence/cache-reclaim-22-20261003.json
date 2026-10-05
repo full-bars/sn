@@ -1,0 +1,38 @@
+{
+  "allocated_bytes_removed": 15431634944,
+  "artifact_sha256": {
+    "apply.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "apply.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "candidate-union-paths.txt": "1072b7b4aa8c14af4cdfe286222d1d03e2d86ffc49a85c96b25b34cb78a21621",
+    "helper-changes.json": "6ed55970662aed4fd3315fbc08c1091f8b4615598422483add149256e74a7811",
+    "plan.json": "6a1de2e8f7b1e5b9a6938339b151630cfead772df0913dc849ad43d0c36c567a",
+    "process-census-apply.json": "84708264ba1534ed4c23bd06b8d8c206498e85ed3c27f5390ad0bd10bf8b5833",
+    "process-census-plan.json": "3699b8b4d04f998d56078c74921ac38d8ea0190c7ce2c382033fb62c57c6554b",
+    "receipt.json": "512686ad188c20f17eb2328037098b0d3c8d0322e9e8838d1cd1a5410d4bbed0",
+    "reclaim.go": "17aced38a68061df7efd8a49157821ccf19568b202c9256981da6bdf78a8f7bc",
+    "reference-command.json": "4225e4d7bdbe7b7c7d18f322f2a57e16940c1df7817ff7f2aaf8a4adc1c5c38f",
+    "reference-scan.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "reference-scan.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reference-scan.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reference-scope.json": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+  },
+  "deleted_archives": 4500,
+  "limits": [
+    "Only inactive singlelink regular Go compiler archives in unused global cache; active/warm shared Sol cache, modules, sources, evidence and executables preserved.",
+    "First broad source replacement attempt retained and corrected before any deletion; final four context replacements independently reversible and exact16GiB ceiling retained.",
+    "Reclaim22 cap4500 instead450 and minimum1MiB instead4; all process/identity/archive/reference guards unchanged."
+  ],
+  "root_verification": {
+    "all_selected_paths_absent": true,
+    "allocated_sum_verified": true,
+    "available_bytes_after": 134278008832,
+    "available_bytes_before": 118847758336,
+    "exact_plan_receipt_files_and_hash_verified": true,
+    "minimum_age_hours": 48,
+    "minimum_bytes": 1048576,
+    "reference_exit": 1,
+    "reference_stdout_stderr_empty": true
+  },
+  "schema": "urnetwork-inactive-cache-reclaim-v1",
+  "task_root": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-22-20261003"
+}

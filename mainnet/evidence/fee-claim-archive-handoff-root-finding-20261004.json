@@ -1,0 +1,96 @@
+{
+  "schema": "fee-claim-archive-handoff-root-source-finding-v1",
+  "status": "PROTECTED_ENVIRONMENT_FAILURE_AND_SOURCE_CAUSE_CONFIRMED_FIX_PENDING",
+  "source_head": "ade5a21403746a620bc37ace3415f83dd4402e61",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-ade-ordinary.receipt.json",
+      "bytes": 10225,
+      "sha256": "b0132b4c1a655ba1a4ef26942e6a021036ca32f0a9c5456413e0d41a392f78aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-ade-ordinary.stdout",
+      "bytes": 17527,
+      "sha256": "97adccf079e1b4270894ae8001c9dcc60a68e888d9cef6773f56a69f9386e6a0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_archive_command.go",
+      "bytes": 19376,
+      "sha256": "7a162c680d29278ca78f4f2b56fa6bd596c3e46991d1377b0427b999e4e60dad"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 28332,
+      "sha256": "00b71984befe09b858ee8c64d98b031da9305d872bf6d6ac3a1e202659a17d4e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_fee_retention.go",
+      "bytes": 9583,
+      "sha256": "dd6465a308b1081ca82ef7f3eac63879d632fbf20daf43198b75bd418b744c08"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_command.go",
+      "bytes": 24816,
+      "sha256": "2481d23678bce1f412eb02ece25efa7ac22a5e6a90f430f0b84f01753a9ea218"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_claim_window.go",
+      "bytes": 20599,
+      "sha256": "80effbeeef4d4637fb46b5e9379043a933e7c10c7e3d22aeac7593431a8e84d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/source/sn/mainnet/economic_conservation_fee_revision_test.go",
+      "bytes": 19128,
+      "sha256": "a0a9a926f8a37a5a8e8dca24180259fa4667694f19742adf57b4e55ad5e33c5e"
+    }
+  ],
+  "git_sources": [
+    {
+      "git_path": "mainnet/economic_conservation_archive_command.go",
+      "git_blob": "2b7b544ffad26d4cf689d3edab79b91c519bc495",
+      "sha256": "7a162c680d29278ca78f4f2b56fa6bd596c3e46991d1377b0427b999e4e60dad"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_archive.go",
+      "git_blob": "dbc0211c9310b6bb4b5b4dfbe21c699c80b74d9c",
+      "sha256": "00b71984befe09b858ee8c64d98b031da9305d872bf6d6ac3a1e202659a17d4e"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_fee_retention.go",
+      "git_blob": "03cb5af77417600d0e02a825fe8cbd019186831e",
+      "sha256": "dd6465a308b1081ca82ef7f3eac63879d632fbf20daf43198b75bd418b744c08"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_command.go",
+      "git_blob": "7da333d7527692c4ff261b6831056304d3be4d43",
+      "sha256": "2481d23678bce1f412eb02ece25efa7ac22a5e6a90f430f0b84f01753a9ea218"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_claim_window.go",
+      "git_blob": "47d6947dd8b362c3a855b4ee93ec57d7131d2868",
+      "sha256": "80effbeeef4d4637fb46b5e9379043a933e7c10c7e3d22aeac7593431a8e84d7"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_fee_revision_test.go",
+      "git_blob": "620bde7f0e24d08a709422cbf973bad6fb45a2f4",
+      "sha256": "a0a9a926f8a37a5a8e8dca24180259fa4667694f19742adf57b4e55ad5e33c5e"
+    }
+  ],
+  "selected_root": "TestEconomicConservationPublicFeeRevisionRetainsOriginalKeyReviewAndArchivedPolicies",
+  "observed": "Actual public archive plan returns2 at Claim checkpoint admission after fee revision fixture reaches its original positive baseline.",
+  "cause": [
+    "Original state holds the admitted archive view; cloning initially retains that pointer.",
+    "Fee retirement copies the outer archive view into a private candidate and assigns candidate.archiveView to that copy.",
+    "Planner later admits snapshot and sets the Claim basis on the authoritative original view.",
+    "Claim adoption reads the candidate copied view, whose claimBasis remains absent; even an empty Claim adoption rejects the otherwise valid plan."
+  ],
+  "correction_requirements": [
+    "After successful authoritative admission, reconnect candidate to the exact updated admitted view before Claim/native adoption.",
+    "Preserve candidate-private fee calculations, exact archive authority and refusal/no-publication behavior.",
+    "Add deterministic public combined fee-retirement plus Claim/native-adoption regression and adjacent failed-admission control."
+  ],
+  "limits": [
+    "Normal affected raw failure and exact source chain are independently reviewed; corrected test behavior and final composition remain unproved.",
+    "Do not weaken Claim admission or restart unrelated successful qualification."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "accounting_floor_bytes": 0,
+  "adopted_at_utc": "2026-10-05T04:29:08.790635+00:00",
+  "compiler_count": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 2147483648,
+  "data_minimum_available_bytes": 10737418240,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "274ce6f92f7cc5a88a21864fecb6350de2770dd03e47c3889fac019e17252c2e",
+  "margin": 2,
+  "memory_minimum_available_bytes": 113816633344,
+  "model_count": 0,
+  "review_sha256": "31694cb2a7e4ecb3ed252becb1efa10c4bd0b679d5c5b9424441cee79b0f2abb",
+  "runner_sha256": "1df362bc63e539abd49cc5b7d229a33603e3fa035730d684d40b14b31e397e1a",
+  "scope": "Three exact selected338 native carry tests with current authenticated assets; no compiler, DB, latest88 or production deployment qualification.",
+  "short_count": 1,
+  "short_memory_max_bytes": 2147483648,
+  "short_memory_swap_max_bytes": 0,
+  "status": "ADOPTED_ONE_SELECTED338_NATIVE_CARRY3_SHORT_POST_MODEL"
+}

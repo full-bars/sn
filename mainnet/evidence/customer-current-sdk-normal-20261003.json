@@ -1,0 +1,20 @@
+{
+  "api_connect_commit": "a53ed36a6e5d",
+  "failed_roots": [],
+  "passed_roots": [
+    "TestWalletTransferOldCallerRefusesBeforeHttp",
+    "TestWalletTransferRequestIdSurvivesRetriesAndSerialization"
+  ],
+  "schema": "sol-customer-current-sdk-normal-v1",
+  "scope": "SDK Go selected two roots on current published API; JS/C++ from prior byte-identical scope separately bound, race/vet pending",
+  "sdk_commit": "9ae95704a2303f94963e9d2fad81fa5705a4698c",
+  "sha256": {
+    "sdk-modules.sha256": "7efb26b03100aadee8b9ae5593e8b8a11ae1e5fbbd7ea19a980ae7863ad5c97f",
+    "sdk-normal-go-sum-after.sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84",
+    "sdk-normal-go-sum-before.sha256": "16237a63951926ee14c865f0ef640768cd26da9f6a3a44ab1e92eac6c82dde84",
+    "sdk-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sdk-normal.jsonl": "3f6c5b8a7d0d368f11585d287443d33f97f60796b57f3091a7457b239aab9cd1",
+    "sdk-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source-preflight.json": "785b8ff911c6fe0adb4bee3edbb52d2a5c46d28fc9557a3d400a7b8c1f0a4b8a"
+  }
+}

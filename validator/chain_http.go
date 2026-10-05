@@ -51,6 +51,9 @@ func (self *chainHTTPTransport) RoundTrip(request *http.Request) (*http.Response
 	refuse := func(err error) (*http.Response, error) {
 		return nil, errors.Join(err, response.Body.Close(), request.Context().Err())
 	}
+	if response.StatusCode >= http.StatusMultipleChoices && response.StatusCode < http.StatusBadRequest {
+		return refuse(errors.New("EVM HTTP redirect cannot replace the configured endpoint"))
+	}
 	if response.ContentLength > self.maxResponseBytes {
 		return refuse(fmt.Errorf("%w: content length %d, limit %d", errChainHTTPResponseTooLarge, response.ContentLength, self.maxResponseBytes))
 	}
@@ -83,6 +86,11 @@ func (self *chainHTTPTransport) RoundTrip(request *http.Request) (*http.Response
 	}
 	if err := errors.Join(readErr, closeErr, request.Context().Err()); err != nil {
 		return nil, err
+	}
+	if response.StatusCode >= http.StatusOK && response.StatusCode < http.StatusMultipleChoices {
+		if err := validateChainHttpEnvelope(request, body); err != nil {
+			return nil, err
+		}
 	}
 	if compressed != nil {
 		response.Header.Del("Content-Encoding")

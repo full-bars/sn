@@ -1,0 +1,97 @@
+{
+  "controls": [
+    {
+      "assertions": [
+        "test_util.go:952: public controller hid cancellation or canceled the obligation &{false false false } [01a0ff92-8eff-ea43-4d18-a08b0669d40c]Payment transaction error = context canceled"
+      ],
+      "intended_failed_roots": [
+        "TestProviderCompositionCanceledReadRetainsAttemptAndCause"
+      ],
+      "kind": "exact-prior-formatted-error-at-operative-public-read-boundary",
+      "name": "read-error-cause",
+      "race_reports": 0
+    },
+    {
+      "assertions": [
+        "test_util.go:952: canceled public continuation did not refuse scheduling <nil>"
+      ],
+      "intended_failed_roots": [
+        "TestProviderCompositionCanceledReadRetainsAttemptAndCause"
+      ],
+      "kind": "explicit-canceled-continuation-false-success",
+      "name": "post-cancel-ack",
+      "race_reports": 0
+    },
+    {
+      "assertions": [
+        "test_util.go:952: retained controller did not recover using actual GET &{false false false } [01a0ff94-724f-e33b-e646-aae90866e323]Payment transaction error: Bad status: 503 Service Unavailable temporary processor read outage 0 1 1"
+      ],
+      "intended_failed_roots": [
+        "TestProviderCompositionRetainedAttemptReadRecoversDuringBoundaryHold"
+      ],
+      "kind": "explicit-operative-retry-omission-through-actual-public-AdvancePayment",
+      "name": "retained-read-retry",
+      "race_reports": 0
+    },
+    {
+      "assertions": [
+        "test_util.go:952: loaded status hid drift or claimed deployment &{<nil> false provider earning boundary differs from its retained deployment authority 2026-10-03 02:26:14.108895 +0000 UTC 0xc00058fe00 <nil>  sn_earning_legacy_settlement false false false false st: not configured (st.yml missing or disabled) false false true } <nil>"
+      ],
+      "intended_failed_roots": [
+        "TestProviderBoundaryAcceptedAttemptReconcilesDuringDrift"
+      ],
+      "kind": "explicit-new-send-hold-conflated-with-existing-attempt-permission",
+      "name": "reconcile-status",
+      "race_reports": 0
+    }
+  ],
+  "files": {
+    "evidence/composition-controls-race-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "evidence/composition-controls-race-jobs.tsv": "23e8d11cc47bf0b9908e49578b52938c4af6a4bcf4e50135017d3413904d9b84",
+    "evidence/composition-controls-race-network-cleanup.log": "dd40c8421de435d9c11b7edb0d5e6e1d5b7b0f887fdaf81b51f3c960f26ec56d",
+    "evidence/composition-controls-race-post-cancel-ack.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/composition-controls-race-post-cancel-ack.jsonl": "e0da29862b2b1a25c1fe1edc298593d346221a1a87fa6166ed50d24412f41e9a",
+    "evidence/composition-controls-race-post-cancel-ack.phase": "475ea3ef71e850ddcae988e14fc326d7c8b470b70368e9cfd1623a591c8f7a90",
+    "evidence/composition-controls-race-post-cancel-ack.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/composition-controls-race-read-error-cause.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/composition-controls-race-read-error-cause.jsonl": "1a8a41cd68c755861753dd5f217241853c6911cb35e96aa084b49dda1cbacc39",
+    "evidence/composition-controls-race-read-error-cause.phase": "4720988ac8da91832cf8628ca1c66f48c57a9d32544128f5bccf4d5e6bf99286",
+    "evidence/composition-controls-race-read-error-cause.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/composition-controls-race-reconcile-status.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/composition-controls-race-reconcile-status.jsonl": "9d83422c5bfae087179f31a1fffa322b866f8dbb9ec21b868ba5b9a50935340c",
+    "evidence/composition-controls-race-reconcile-status.phase": "dc8df777fd782816e6dd82b359370124b75e7ce3e448958d778110555d5a99b3",
+    "evidence/composition-controls-race-reconcile-status.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/composition-controls-race-retained-read-retry.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/composition-controls-race-retained-read-retry.jsonl": "66ed46e281427edb7fad0c02b9b6144fb9007b39da1fcf447ddec2bd345e9472",
+    "evidence/composition-controls-race-retained-read-retry.phase": "b8c767e3a0d8203257e3913a641184226fcc65f911c90176ed09c2613ebe70fb",
+    "evidence/composition-controls-race-retained-read-retry.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/composition-controls-race-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/composition-controls-race-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/composition-controls-race-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/composition-controls-race-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/composition-controls-race-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/composition-controls-race-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls/manifest.json": "c7a1bfcad5a0a13ebcc9b6bf5081f3845a4b412c1454568f4f1b1fa4c993f2de",
+    "evidence/controls/post-cancel-ack/overlay.json": "c95b62e7aa717ee9979381b0944b889585baf3d78bdaba7833d8a735f2cf28af",
+    "evidence/controls/post-cancel-ack/post-cancel-ack.go": "1cb036911fc5cfd932004f001c18a09856aaf77f4f32bfd35a49cb2551281a4a",
+    "evidence/controls/read-error-cause/overlay.json": "a0bff3b042f923eb732c44a1c8acc7ed6af0b6f6cfb8af08df0cf204912d3b77",
+    "evidence/controls/read-error-cause/read-error-cause.go": "ed2f6a0e11a0036baa256c56ca4488857c0571d4fd60a81726367f6d10c5da4a",
+    "evidence/controls/reconcile-status/overlay.json": "4aac76e18f5879903c4bc0c49b2f913c68d35122b2612af1ba4e1dedf4158b81",
+    "evidence/controls/reconcile-status/reconcile-status.go": "620da42837bd69c4a7b6a6220eec3dcaec082c174e4f5f8211b2b9f42f30362b",
+    "evidence/controls/retained-read-retry/overlay.json": "7a4e2fcc04401d82617858083740b14ecfb3671e7e74a3105788b3c7309b5331",
+    "evidence/controls/retained-read-retry/retained-read-retry.go": "90ffd429df7e52eead14a374352a6e32500496e45efcc20e33f97eabd04b664c",
+    "evidence/module-graph.jsonl": "beb7640316273d1bc1483f6e3862e4a50b4d11c727ac235748d7fc53626defc0",
+    "evidence/run-composition-controls.sh": "fca8a5cb49d8493109f475f2e787e8265e2514c221eae8ac813615de80a2abf6",
+    "evidence/source-fence.json": "0e9e24faf1e073e6ff34b87a64bbdd09584e21e0e1b25882bfb5e48b75ca6dd5"
+  },
+  "intended_failed_roots": 4,
+  "limits": [
+    "One exact prior formatted-error body; three explicit operative omissions.",
+    "No live Circle API call or payout."
+  ],
+  "owned_fixture_cleanup_exit": 0,
+  "schema": "sol-financial-get-2a-causal-race-v1",
+  "source_commit": "2a453df9bd7967776889b5f15cd8724d6f9255cb",
+  "source_tree": "9a9307d81a3d431501fc40518214873ae4e4f92a",
+  "status": "PASS_SCOPED_CAUSAL_NEGATIVES"
+}

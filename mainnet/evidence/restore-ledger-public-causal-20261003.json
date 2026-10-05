@@ -1,0 +1,78 @@
+{
+  "files": {
+    "d3/evidence/old-dispatcher/normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "d3/evidence/old-dispatcher/normal.jsonl": "d8b503e60275eafd6e74015062a33ac54b399cfabdb64c12d5b29c9061dbc01d",
+    "d3/evidence/old-dispatcher/normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "d3/evidence/old-dispatcher/overlay.json": "7d308d8aef4a72f3fd9ae4376545ab4ad700488a488bebebd2ec99a1363f9595",
+    "d3/evidence/old-dispatcher/race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "d3/evidence/old-dispatcher/race.jsonl": "ce241008f82173d065ccf163534c4f65f2e6820dc72ffccd3f1de7f3ef69ebe5",
+    "d3/evidence/old-dispatcher/race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "d3/evidence/old-dispatcher/storage_prepare_ledger_restore_test.go": "fce8c754042418db697792690123e384a7750746013415904c5e5a178f66fa76",
+    "d3/evidence/old-dispatcher/storage_prepare_snapshot_restore_test.go": "9e07b50f528bacbac98b1368ad33d06331490f8d79e9317b17a85fa69bc17ab5",
+    "d3/source/sn/go.mod": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "d3/source/sn/go.sum": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61",
+    "run-d3-public-causal.sh": "cb07abc85d0da5918895abbd83ca82275f12f1949b629902bf2eb6a266d6be3d"
+  },
+  "limits": [
+    "Only old public dispatcher failure; no 912 fixed product claim from this control."
+  ],
+  "private_tmp_ancestry": [
+    {
+      "mode": "0o755",
+      "owner_uid": 0,
+      "path": "/"
+    },
+    {
+      "mode": "0o755",
+      "owner_uid": 0,
+      "path": "/mnt"
+    },
+    {
+      "mode": "0o755",
+      "owner_uid": 0,
+      "path": "/mnt/data"
+    },
+    {
+      "mode": "0o755",
+      "owner_uid": 1000,
+      "path": "/mnt/data/sn-testnet"
+    },
+    {
+      "mode": "0o700",
+      "owner_uid": 1000,
+      "path": "/mnt/data/sn-testnet/sol-restore-private-tmp-20261003"
+    },
+    {
+      "mode": "0o700",
+      "owner_uid": 1000,
+      "path": "/mnt/data/sn-testnet/sol-restore-private-tmp-20261003/d3"
+    }
+  ],
+  "schema": "sol-restore-ledger-d3-public-dispatch-causal-v1",
+  "scopes": [
+    {
+      "assertion": "restore requires its separate original ledger or member-census semantic adapter",
+      "exit": 1,
+      "jsonl_sha256": "d8b503e60275eafd6e74015062a33ac54b399cfabdb64c12d5b29c9061dbc01d",
+      "mode": "normal",
+      "outcome": "intended_fail_old_public_dispatcher",
+      "root": "TestStoragePreparationRestoreValidatorLedgerKeepsActualOwner",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "assertion": "restore requires its separate original ledger or member-census semantic adapter",
+      "exit": 1,
+      "jsonl_sha256": "ce241008f82173d065ccf163534c4f65f2e6820dc72ffccd3f1de7f3ef69ebe5",
+      "mode": "race",
+      "outcome": "intended_fail_old_public_dispatcher",
+      "root": "TestStoragePreparationRestoreValidatorLedgerKeepsActualOwner",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source": {
+    "commit": "d3c84fe31934133f319a4adde8bdc4ad2d4a5807",
+    "overlay_sha256": "7d308d8aef4a72f3fd9ae4376545ab4ad700488a488bebebd2ec99a1363f9595",
+    "test_overlay_from": "912315cf99edb0ec0d0969239065ed7000bb6d9a"
+  },
+  "status": "PASS_CAUSAL_SCOPED"
+}

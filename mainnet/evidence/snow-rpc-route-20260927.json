@@ -1,0 +1,30 @@
+{
+  "endpoints": {
+    "lan_testnet": {
+      "methods": {
+        "chain_getBlockHash": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+        "chain_getFinalizedHead": "0x3e9119c77dcb7b12557035023f9ad3dbadc60f24443d01c0f32a6c14d81f35d7",
+        "eth_blockNumber": "0x7b8534",
+        "eth_chainId": "0x3b1",
+        "system_chain": "Bittensor",
+        "system_version": "4.0.0-dev-e18ca67f1a0"
+      },
+      "url": "http://192.168.1.162:9944"
+    },
+    "snow_vpn": {
+      "methods": {
+        "chain_getBlockHash": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+        "chain_getFinalizedHead": "0x3e9119c77dcb7b12557035023f9ad3dbadc60f24443d01c0f32a6c14d81f35d7",
+        "eth_blockNumber": "0x7b8534",
+        "eth_chainId": "0x3b1",
+        "system_chain": "Bittensor",
+        "system_version": "4.0.0-dev-e18ca67f1a0"
+      },
+      "url": "http://172.28.208.185:9944"
+    }
+  },
+  "observed_at": "2026-09-27T04:16:25.379549+00:00",
+  "read_only": true,
+  "same_identity_and_head": true,
+  "schema": "urnetwork-rpc-route-observation-v1"
+}

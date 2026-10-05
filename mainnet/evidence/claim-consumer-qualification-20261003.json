@@ -1,0 +1,39 @@
+{
+  "bindings": {
+    "causal-normal-receipt": "8c0d21ef9578a2a40455544caaf2eb350f66b916dd3bd7c106a55c3dca296a9c",
+    "causal-race-receipt": "18478a53387c4d1391a649a09336d11db99542be02e78a276cfa894381c03583",
+    "normal-receipt": "dfae40f6632770cb98a03e92bc368ff3248d8546e9086acc517e9d38595d7d58",
+    "race-receipt": "7ca86462694f55b190e8ef4743e859881a18428d8fcd015b2c178cbe006e27a4",
+    "source-fence": "15bad86d0eb62cd8dced95d6fb76963a08db37e559842c464584577cc7bfae2f",
+    "source-graph-receipt": "92a8ad3b8ca68d965425b5e86c18c611c120d6a1791ef309d0498f188236c44f"
+  },
+  "failures": 0,
+  "files": {
+    "controls/manifest.json": "32157ee04af772e4b81c770ba9d33d373a588a47718505ae1eb74d226f6118ed",
+    "run-controls.sh": "6b45d74164124bd1fe2cc7671b4c6b916a3dedfc9bd6384a7373efddce8f342e",
+    "run-selected.sh": "6e0b2ab64631c402407f47e0f20600f086ba2604969d26f8a505e73c17eae146",
+    "seal-controls.py": "3aefc17e272d92f177c80607a1968e9d3127cccd5b5e94f1f53abfa3297e7aab",
+    "vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": [
+    "One exact old public-policy body and five explicit invariant omissions; intended causal failures do not assert a live failure.",
+    "Frozen Server10a/Connect0a5 graph only; no current Server, Connect9e, or composed release qualification.",
+    "No live claim submission or signer."
+  ],
+  "operative_causal_intended_failures_each_mode": 8,
+  "race_reports": 0,
+  "schema": "sol-claim-consumer-800-terminal-v1",
+  "selected_roots_normal": 23,
+  "selected_roots_race": 23,
+  "skips": 0,
+  "source_commit": "80030acb1024f8a74967ae9948ceea6ed9e5faee",
+  "source_tree": "4249ab40291e6e5c6d48cba44ae0fb3a5eb185f6",
+  "status": "PASS_SCOPED",
+  "vet_exit": 0,
+  "vet_packages": [
+    "./mainnet",
+    "./miner"
+  ]
+}

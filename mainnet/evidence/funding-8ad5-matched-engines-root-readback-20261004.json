@@ -1,0 +1,139 @@
+{
+  "schema": "8ad5-distinct-matched-engines-root-build-readback-v1",
+  "source": "8ad5ac7e93ef4faa91b0dc688a9c7c703ea22d20",
+  "source_files_rehashed": 33,
+  "bins_verified_from_cargo": [
+    "runtime-transition-replay",
+    "runtime-historical-capture"
+  ],
+  "owned_images": [
+    {
+      "bytes": 53746128,
+      "ctime_ns": 1791127177752108993,
+      "device": 2081,
+      "inode": 19721278,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791127177573116009,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/images/8ad5-capture-engine",
+      "sha256": "2c70f0e951599e87757bace38aa600e35683d119015f66c54b1c8c7bd5366a6e",
+      "uid": 1000
+    },
+    {
+      "bytes": 42155856,
+      "ctime_ns": 1791127179096056323,
+      "device": 2081,
+      "inode": 19721279,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791127178951062005,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/images/8ad5-replay-engine",
+      "sha256": "19e8687106cb455a984f74c01bbb406bd19b41f2f72bf1ebff32a69aad6e0917",
+      "uid": 1000
+    }
+  ],
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-owned-engines-v3.terminal.json",
+      "bytes": 1572,
+      "sha256": "92320b91f0c0753938669419d2622aa5d26c5951ff87f2e9871acec94ef2828c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/owned-engines-job-v3.json",
+      "bytes": 3196,
+      "sha256": "7c797c6d45ab65ab4ea69292f9354d1ce2cd9ef767c5e40add3c8306bea10e1b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-capture-positives-v1.terminal.json",
+      "bytes": 3398,
+      "sha256": "548debe390124678b04918b36a3541e7abe55e12cd99a51ef70f19ea2974cd6e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/crate-stage-v1.json",
+      "bytes": 5876,
+      "sha256": "2fb3079aacf0c82a5a8973ebaac2665b420662d1ef66be73b28c8e150853fb45"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/run-owned-engines-v3.py",
+      "bytes": 6069,
+      "sha256": "47d4d50b31fb6cf1cad336d3792613ad3848c7c24fa6a42d0801f19312c4e2e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/run-capture-positives-v1.py",
+      "bytes": 12229,
+      "sha256": "9693c2dab63dd97a38f30c9ac95888bdaf1c1e3573aa5d103dd4028269963d09"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/crate-stage-v1.json",
+      "bytes": 5876,
+      "sha256": "2fb3079aacf0c82a5a8973ebaac2665b420662d1ef66be73b28c8e150853fb45"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-capture-positives-v1.terminal.json",
+      "bytes": 3398,
+      "sha256": "548debe390124678b04918b36a3541e7abe55e12cd99a51ef70f19ea2974cd6e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-capture-effects-fixture/evidence/intake.json",
+      "bytes": 1696,
+      "sha256": "2ffeed7974f1bdb080d47424d23bcfb91189b66fcee5fed1b316e9b71031d2b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-capture-effects-fixture/evidence/crate-source-census.json",
+      "bytes": 9576,
+      "sha256": "9d865bed3b6983811fd7c077d150b3f2973c16ed0c95d4182464d118d37d3680"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-rust-only-v3.py",
+      "bytes": 20536,
+      "sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "bytes": 23340,
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-native-incremental-v1.py",
+      "bytes": 58569,
+      "sha256": "49c60a927dc2938ae8ad064daaea1b558b0c3791adbb47a522167d4b1994397c"
+    },
+    {
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/cargo",
+      "bytes": 39124328,
+      "sha256": "5b32bd53b8a08d8e206daed51f3fce40cdc0729038ff96bd0ca845596a2c1019"
+    },
+    {
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/rustc",
+      "bytes": 654128,
+      "sha256": "c6ac0142c05a60b0f6c15e1a118bd5ac3bd04924cd6dc0c328f501c5f86e4142"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-owned-engines-clean.receipt.json",
+      "bytes": 3018,
+      "sha256": "b235e1b047ecd32396f66b5b82b36d0b0ac6c3935a32b80344bc88c9eeec5f5a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-owned-engines-compile.receipt.json",
+      "bytes": 3457,
+      "sha256": "af9600a12d9bf1cc007a976a5af0e5095cce2cfcf48a696563cd731d17a47301"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-owned-engines-build.stdout",
+      "bytes": 496991,
+      "sha256": "49033f2d61899576f5e7c21584632c76897b82e16e433820f7e9a2e2fa80a0d3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-owned-engines-build.stderr",
+      "bytes": 186,
+      "sha256": "dd9aad36f0098e315b60705b95894252063f6bcb37636eaa24eaa6d0259c8ac8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8ad5/evidence/8ad5-owned-engines-build.resources.csv",
+      "bytes": 2867,
+      "sha256": "258e4eb50f9d424e6abfea45045e76f067fbeb362b28679ff41c8dae9467150e"
+    }
+  ],
+  "status": "COMPILER_PASS_TWO_OWNED_ENGINES",
+  "scope": "Actual Cargo JSON build-finished success, both exact executable artifacts, retained33-file crate hashes and distinct protected ELF custody verified. No engine behavior or full funding acceptance claimed. Existing original capture/Yuma exports retained; affected dual-nine continuation uses these engines."
+}

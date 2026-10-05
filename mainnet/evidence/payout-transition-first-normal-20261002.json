@@ -1,0 +1,90 @@
+{
+  "bringyourctl_build_exit": 0,
+  "config_commit": "93dc65fd84da9a0f5423b5cab9bfc650692fded8",
+  "failure_classification": "Model FreeAndPaid root failed in fixture before economic assertion: duplicate empty purchase_event_id in second CreateBalanceCode; original log preserved.",
+  "fixture_cleanup_exit": 0,
+  "package_results": [
+    {
+      "exit": 0,
+      "expected_roots": 3,
+      "log_sha256": "c29a60982be1347421a06feefe320e2496b3ba7f606b4218888d4a1cc34559ce",
+      "packages": [
+        {
+          "action": "pass",
+          "elapsed": 1.072
+        }
+      ],
+      "roots": {
+        "TestProviderPayoutTransitionCanceledAndInvalidDeclaredResource": "pass",
+        "TestProviderPayoutTransitionStrictReadinessAndSchema": "pass",
+        "TestProviderPayoutTransitionUtcBoundary": "pass"
+      },
+      "scope": "root"
+    },
+    {
+      "exit": 1,
+      "expected_roots": 7,
+      "log_sha256": "d7b95d12f552d13658f9c08efb43499e1a3a45c5bfd29e1ad92e3f79f9dc5e25",
+      "packages": [
+        {
+          "action": "fail",
+          "elapsed": 37.96
+        }
+      ],
+      "roots": {
+        "TestProviderTransitionFreeAndPaidUsageHaveEqualSubnetWeight": "fail",
+        "TestProviderTransitionLegacyAdmissionRejectsUnboundAndMixed": "pass",
+        "TestProviderTransitionPlannerPartitionAndDelayedSweep": "pass",
+        "TestProviderTransitionPublicPayoutStatsRetainLegacyAsset": "pass",
+        "TestProviderTransitionQuarantinesAmbiguousWithoutBlockingPeer": "pass",
+        "TestProviderTransitionReliabilityBucketCrossingIsRetained": "pass",
+        "TestProviderTransitionSubsidyOnlyFinalShortTail": "pass"
+      },
+      "scope": "model"
+    },
+    {
+      "exit": 0,
+      "expected_roots": 5,
+      "log_sha256": "9750b96eec41320aeb66d9b85b1feb969693421da6329424189cd4de6e66fc0d",
+      "packages": [
+        {
+          "action": "pass",
+          "elapsed": 26.928
+        }
+      ],
+      "roots": {
+        "TestProviderTransitionFinalCircleAdmissionAndCustomerIsolation": "pass",
+        "TestProviderTransitionInflightReconcilesDespiteChangedPolicy": "pass",
+        "TestProviderTransitionPublicStWritersBlockedButReadMirrorContinues": "pass",
+        "TestProviderTransitionQueuedLegacyAmbiguousRetryKeepsKey": "pass",
+        "TestProviderTransitionQueuedPostCutoffRefusesBeforeSend": "pass"
+      },
+      "scope": "controller"
+    },
+    {
+      "exit": 0,
+      "expected_roots": 1,
+      "log_sha256": "a42a655be582edb409ad71ad7e37aa4cb6f3b27c38197b5374790dc790057c38",
+      "packages": [
+        {
+          "action": "pass",
+          "elapsed": 5.949
+        }
+      ],
+      "roots": {
+        "TestProviderTransitionPayoutRetryAndStartupPreservePending": "pass"
+      },
+      "scope": "taskworker"
+    }
+  ],
+  "schema": "sol-provider-cutover-first-normal-v1",
+  "scope": "first frozen candidate; normal only",
+  "server_commit": "b19f1ebad63a2be9010c7c9f4b8d8afc4097769b",
+  "source_fence_sha256": "7b2c3773cf7ac402915b523941e19a4876d84b75c74f96835094f9c7cfed0f32",
+  "vet_exits": {
+    "controller": 0,
+    "model": 0,
+    "root": 0,
+    "taskworker": 0
+  }
+}

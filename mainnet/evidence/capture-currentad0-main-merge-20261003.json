@@ -1,0 +1,47 @@
+{
+  "all_non_plan_evidence_git_entries_match_qualified_candidate": true,
+  "captured_utc": "2026-10-03T17:27:46.686114+00:00",
+  "exact_qualified_paths": [
+    "mainnet/historical_capture.go",
+    "mainnet/historical_capture_command.go",
+    "mainnet/historical_capture_request.go",
+    "mainnet/historical_capture_request_command.go",
+    "mainnet/historical_capture_request_test.go",
+    "mainnet/historical_capture_test.go",
+    "mainnet/historical_replay.go",
+    "mainnet/historical_replay_supervisor.go",
+    "mainnet/historical_replay_test.go",
+    "mainnet/main.go",
+    "tools/runtime-metadata-probe/Cargo.lock",
+    "tools/runtime-metadata-probe/Cargo.toml",
+    "tools/runtime-metadata-probe/HISTORICAL-CAPTURE.md",
+    "tools/runtime-metadata-probe/src/bin/runtime-historical-capture.rs",
+    "tools/runtime-metadata-probe/src/historical.rs",
+    "tools/runtime-metadata-probe/src/historical_capture.rs",
+    "tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+    "tools/runtime-metadata-probe/src/historical_tests.rs"
+  ],
+  "limits": [
+    "Current eight-root normal/race/vet composition gate and retained exact component scopes only.",
+    "No deployment, actual archive-parent witness, runtime472/source/callsite/finality admission or native fee authority."
+  ],
+  "main_merge_commit": "9576811da22c83687af31f38a0d3f25dab031db5",
+  "newer_plan_and_evidence_differences_preserved": [
+    "mainnet/MAINNET.md",
+    "mainnet/PRELAUNCH-FIXES.md",
+    "mainnet/evidence/capture-currentad0-source-review-20261003.json",
+    "mainnet/evidence/capture-request971-final-review-20261003.json",
+    "mainnet/evidence/capture-request971-positive-review-20261003.json",
+    "mainnet/evidence/claim-archivee594-source-review-20261003.json",
+    "mainnet/evidence/current-readiness-checkpoint-20261003.json",
+    "mainnet/evidence/mixed-qualification-resource-adoption-20261003.json",
+    "mainnet/evidence/synthetic-fee-exporter-review-20261003.json"
+  ],
+  "qualification": {
+    "path": "mainnet/evidence/capture-currentad0-qualification-20261003.json",
+    "sha256": "612478dafb348da0311e8fc4c8b63aeb2a276936fda24fa7b428b61f12b94b4f"
+  },
+  "qualified_candidate": "ad0d3125aa5b76ed4148f37c51f28bb866bd482a",
+  "schema": "urnetwork-root-current-collector-main-merge-v1",
+  "status": "QUALIFIED_INCREMENT_MERGED_INTO_MAIN"
+}

@@ -1,0 +1,79 @@
+{
+  "artifact_sha256": {
+    "nine-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "nine-race.jsonl": "41e7353d02db718c3ba87d5cf8e5152ac44ef5c4adb89727b7cddc34137a8774",
+    "nine-race.phase": "874fc98bb2d09a3de3656dee8ddb1ccba70ff965582bf7073b9fded55b8a223f",
+    "nine-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-nine-race.sh": "0ee6684c178dc025fe631bf070f6dc347a2d0f2b841dcd23ef06a5ba42051f76",
+    "safe-922-affected-one-receipt.json": "c6a26062028ec79073e99d1ce4be63223a8d7f80865653390f6a99b195a2f386",
+    "selector-nine-race.txt": "623bb8004f01c948de2bbe03b330c4e9cb7e0c18e690b0478da7f68bfc12d54e",
+    "source-readback.json": "e43df94401687c6d01bfdfe5b0dfad2a6c3587f69480d72781915f8d4a963e10"
+  },
+  "classification": "PASS_SCOPED_WITH_HISTORICAL_FAILURE",
+  "corrected_one_normal_race_vet_receipt_sha256": "c6a26062028ec79073e99d1ce4be63223a8d7f80865653390f6a99b195a2f386",
+  "limits": [
+    "Ten selected roots across normal/race are proven by disjoint original and corrected source scopes; the original296 one-root failure remains historical, not relabeled.",
+    "No current published module composition, device, signing, or deployment claim."
+  ],
+  "normal_corrected_one_passed_root": "TestSafeStateReadReturnedConflictsRemainIntegrity",
+  "normal_nine_historical_passed_roots": [
+    "TestBootstrapSuccessorCanonicalSafeAuthority",
+    "TestEvmReadProfileAbsenceIsReceiptOnly",
+    "TestEvmReadProfileBoundsEveryReply",
+    "TestEvmRequiredStateAbsencePreservesRetainedReceipt",
+    "TestSafeCurrentPendingRecheckCannotClaimCompleteAuthority",
+    "TestSafeCurrentPendingSeparatesUnavailableFromChanged",
+    "TestSafeCurrentPublicReadFailurePreservesOriginalAttempt",
+    "TestSafeStateReadRetainsOriginalRetryBudget",
+    "TestSafeStateReadUnavailableDoesNotClaimChangedAuthority"
+  ],
+  "original_296_normal_failure_receipt_sha256": "3340954d1d0e6d35a0c1f79773fdbde58d18a29bcfaa05a39efa632553283fc9",
+  "physical_git_blobs_verified": 20175,
+  "race_corrected_one_passed_root": "TestSafeStateReadReturnedConflictsRemainIntegrity",
+  "race_nine_newly_passed_roots": [
+    "TestBootstrapSuccessorCanonicalSafeAuthority",
+    "TestEvmReadProfileAbsenceIsReceiptOnly",
+    "TestEvmReadProfileBoundsEveryReply",
+    "TestEvmRequiredStateAbsencePreservesRetainedReceipt",
+    "TestSafeCurrentPendingRecheckCannotClaimCompleteAuthority",
+    "TestSafeCurrentPendingSeparatesUnavailableFromChanged",
+    "TestSafeCurrentPublicReadFailurePreservesOriginalAttempt",
+    "TestSafeStateReadRetainsOriginalRetryBudget",
+    "TestSafeStateReadUnavailableDoesNotClaimChangedAuthority"
+  ],
+  "root_verification": {
+    "affected_one_scope": "Previously verified17 bindings, one normal/race positive and vet in safe-state-read-fixture-affected-qualification-20261003.json",
+    "artifact_bindings_rehashed": 8,
+    "limits": "Historical source scopes stay distinct; original failure remains failed.",
+    "new_disjoint_nine_race_raw_roots_verified": {
+      "TestBootstrapSuccessorCanonicalSafeAuthority": "pass",
+      "TestEvmReadProfileAbsenceIsReceiptOnly": "pass",
+      "TestEvmReadProfileBoundsEveryReply": "pass",
+      "TestEvmRequiredStateAbsencePreservesRetainedReceipt": "pass",
+      "TestSafeCurrentPendingRecheckCannotClaimCompleteAuthority": "pass",
+      "TestSafeCurrentPendingSeparatesUnavailableFromChanged": "pass",
+      "TestSafeCurrentPublicReadFailurePreservesOriginalAttempt": "pass",
+      "TestSafeStateReadRetainsOriginalRetryBudget": "pass",
+      "TestSafeStateReadUnavailableDoesNotClaimChangedAuthority": "pass"
+    },
+    "original_normal_raw_roots_verified": {
+      "TestBootstrapSuccessorCanonicalSafeAuthority": "pass",
+      "TestEvmReadProfileAbsenceIsReceiptOnly": "pass",
+      "TestEvmReadProfileBoundsEveryReply": "pass",
+      "TestEvmRequiredStateAbsencePreservesRetainedReceipt": "pass",
+      "TestSafeCurrentPendingRecheckCannotClaimCompleteAuthority": "pass",
+      "TestSafeCurrentPendingSeparatesUnavailableFromChanged": "pass",
+      "TestSafeCurrentPublicReadFailurePreservesOriginalAttempt": "pass",
+      "TestSafeStateReadRetainsOriginalRetryBudget": "pass",
+      "TestSafeStateReadReturnedConflictsRemainIntegrity": "fail",
+      "TestSafeStateReadUnavailableDoesNotClaimChangedAuthority": "pass"
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-safe-state-922-independent-20261003/evidence/safe-922-joined-ten-receipt.json",
+    "receipt_sha256": "b7bb029c6f17cd5ca91e291553b20b5f4ef54ffa9754c9ef6f5188cd4fc2ba9f"
+  },
+  "schema": "sol-safe-922-joined-ten-normal-race-v1",
+  "source_commit": "9223d8d37d788117525c1434ea710ab0a4deacd5",
+  "source_join": "296->922 test helper/account selection and one assertion only; production/module bytes unchanged",
+  "source_tree": "dc03f3c16eaf09124457bbc490e2217bfb15f3da",
+  "vet_exit": 0
+}

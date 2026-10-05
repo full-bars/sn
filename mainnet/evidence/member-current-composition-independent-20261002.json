@@ -1,0 +1,56 @@
+{
+  "limits": [
+    "One legacy public execution test asserts byte equality for the newly mutable member-census head; separate d878 test-only correction has its own source scope.",
+    "No live signing, submission, deployment, or broader 78-root suite claim."
+  ],
+  "manifest_sha256": "1ab5ddcc843ebf4f33140e20b00686fefbe70b048c2232e739f921d490300e7a",
+  "normal": {
+    "fail": 1,
+    "failed_roots": [
+      "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody"
+    ],
+    "failure_outputs": [
+      "bootstrap_successor_execution_command_test.go:164: public execution rewrote original custody .successor-local-members.json <nil>"
+    ],
+    "package": {
+      "action": "fail",
+      "elapsed_seconds": 260.101
+    },
+    "pass": 9,
+    "skip": 0,
+    "started": 10,
+    "terminal": 10,
+    "unresolved": []
+  },
+  "race": {
+    "fail": 1,
+    "failed_roots": [
+      "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody"
+    ],
+    "failure_outputs": [
+      "bootstrap_successor_execution_command_test.go:164: public execution rewrote original custody .successor-local-members.json <nil>"
+    ],
+    "package": {
+      "action": "fail",
+      "elapsed_seconds": 1171.059
+    },
+    "pass": 9,
+    "skip": 0,
+    "started": 10,
+    "terminal": 10,
+    "unresolved": []
+  },
+  "schema": "sol-composed5f-independent-v1",
+  "server_commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "sn_commit": "5f1fe123474e6464e8cb30c17577de577517367b",
+  "sn_tree": "94653e1a62813d51cc3173d3e8f8b4828cddab6a",
+  "source_readback": {
+    "initial_tracked_blobs": 20040,
+    "mismatches": 0,
+    "terminal_tracked_blobs": 20040
+  },
+  "source_scope": "Physical SN archive, exact server10a and local sibling pins, GOWORK=off, tracked Connect0a5; not server22e/e0d or release qualification.",
+  "test_selector": "^(TestDurableCompositionPassiveBootstrapStartsRetainedMonitor|TestDurableCompositionPassivePreparationRequiresRetainedHead|TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc|TestBootstrapSuccessorPublicExclusiveClaimRetainsWriteAdmission|TestBootstrapSuccessorPublicClaimRequiresBothMemberHeads|TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCountedTailCensus|TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering|TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody|TestBootstrapSuccessorPreparationClaimsOnceAndResumesSameRoot)$",
+  "verdict": "NO_GO_SCOPED_TEST_FAILURE",
+  "vet_exit": 0
+}

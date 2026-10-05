@@ -22,7 +22,6 @@ import (
 	gsrpcstate "github.com/centrifuge/go-substrate-rpc-client/v4/rpc/state"
 	gsrpcsystem "github.com/centrifuge/go-substrate-rpc-client/v4/rpc/system"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types/block"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/extrinsic"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/extrinsic/extensions"
@@ -83,6 +82,17 @@ type Chain struct {
 	// Shared by read-only copies. Every lookup still checks the requested block's
 	// complete version and :code hash before consulting authenticated bytes.
 	runtimeArtifacts *runtimeMetadataArtifactCache
+	// Set before sharing the connection, and shared by block-local read views.
+	provisionalRuntime *provisionalRuntimeCompatibility
+	// A bound view owns its authenticated capability independently of cache
+	// residency. It is replaced only while the caller exclusively owns the view.
+	runtimeCompatibilityProof *runtimeCompatibilityProof
+	// Exact block authentication remains attached to a private bound view,
+	// independently of metadata-cache residency and provisional admission.
+	runtimeArtifactProof   *runtimeArtifactProof
+	validatorProducerProof *runtimeArtifactProof
+	// Shared by nested read-only observations; never used around submission.
+	runtimeObservationRead runtimeObservationReadHooks
 }
 
 // contextSubstrateClient adapts GSRPC's context-aware transport to the
@@ -91,6 +101,8 @@ type contextSubstrateClient struct {
 	*gsrpcgeth.Client
 	url           string
 	readLifecycle substrateRPCReadLifecycle
+	readRetry     substrateRpcReadRetryHooks
+	closeReadHttp func()
 }
 
 // URL identifies the endpoint without exposing transport internals.
@@ -148,40 +160,64 @@ func extrinsicIndex(encoded []string, hash types.Hash) (uint32, bool, error) {
 // finalizes dispatch failures. Event storage uses metadata bound to the exact
 // reviewed runtime artifact present at this block.
 func (self *Chain) VerifyFinalizedExtrinsicContext(ctx context.Context, blockHash, extrinsicHash types.Hash) error {
+	_, err := self.verifyFinalizedExtrinsicContext(ctx, blockHash, extrinsicHash)
+	return err
+}
+
+// Reuses one admitted body and event decode for callers that must authenticate
+// additional operation events at the same exact extrinsic index.
+type verifiedNativeReceipt struct {
+	number uint64
+	index  uint32
+	events []*parser.Event
+}
+
+// Private receipt evidence is returned only after complete body authentication
+// and dispatch success. Missing storage remains unknown, never a failed call.
+func (self *Chain) verifyFinalizedExtrinsicContext(ctx context.Context, blockHash, extrinsicHash types.Hash) (*verifiedNativeReceipt, error) {
 	if ctx == nil || self == nil || self.API == nil || self.API.Client == nil || self.Meta == nil {
-		return errors.New("crv4: finalized extrinsic metadata context is unavailable")
+		return nil, errors.New("crv4: finalized extrinsic metadata context is unavailable")
 	}
-	var signedBlock block.SignedBlock
-	if err := self.API.Client.CallContext(ctx, &signedBlock, "chain_getBlock", blockHash.Hex()); err != nil {
-		return fmt.Errorf("crv4: finalized block %s: %w", blockHash.Hex(), err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	index, found, err := extrinsicIndex(signedBlock.Block.Extrinsics, extrinsicHash)
+	signedBlock, err := self.receiptBlockAt(ctx, blockHash)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("crv4: finalized block %s: %w", blockHash.Hex(), err)
+	}
+	index, found, err := extrinsicIndex(signedBlock.extrinsics, extrinsicHash)
+	if err != nil {
+		return nil, err
 	}
 	if !found {
-		return fmt.Errorf("crv4: extrinsic %s absent from finalized block %s", extrinsicHash.Hex(), blockHash.Hex())
+		return nil, fmt.Errorf("crv4: extrinsic %s absent from finalized block %s", extrinsicHash.Hex(), blockHash.Hex())
 	}
 	eventsKey, err := types.CreateStorageKey(self.Meta, "System", "Events")
 	if err != nil {
-		return fmt.Errorf("crv4: construct finalized events key: %w", err)
+		return nil, fmt.Errorf("crv4: construct finalized events key: %w", err)
 	}
-	var encodedEvents string
+	var encodedEvents *string
 	if err := self.API.Client.CallContext(ctx, &encodedEvents, "state_getStorage", eventsKey.Hex(), blockHash.Hex()); err != nil {
-		return fmt.Errorf("crv4: read finalized events at %s: %w", blockHash.Hex(), err)
+		return nil, fmt.Errorf("crv4: read finalized events at %s: %w", blockHash.Hex(), err)
 	}
-	eventsBytes, err := codec.HexDecodeString(encodedEvents)
+	if encodedEvents == nil || *encodedEvents == "" || *encodedEvents == "0x" {
+		return nil, &ReceiptEvidenceUnavailableError{BlockHash: blockHash, Field: "System.Events"}
+	}
+	if len(*encodedEvents) > 2+2*finalizedExtrinsicEventsBytes {
+		return nil, errors.New("crv4: finalized events storage exceeds the finite block bound")
+	}
+	eventsBytes, err := codec.HexDecodeString(*encodedEvents)
 	if err != nil {
-		return fmt.Errorf("crv4: decode finalized events storage at %s: %w", blockHash.Hex(), err)
+		return nil, fmt.Errorf("crv4: decode finalized events storage at %s: %w", blockHash.Hex(), err)
 	}
 	eventsRaw := types.NewStorageDataRaw(eventsBytes)
 	eventRegistry, err := registry.NewFactory().CreateEventRegistry(self.Meta)
 	if err != nil {
-		return fmt.Errorf("crv4: construct finalized event registry: %w", err)
+		return nil, fmt.Errorf("crv4: construct finalized event registry: %w", err)
 	}
 	records, err := parser.NewEventParser().ParseEvents(eventRegistry, &eventsRaw)
 	if err != nil {
-		return fmt.Errorf("crv4: decode finalized events at %s with bound metadata: %w", blockHash.Hex(), err)
+		return nil, fmt.Errorf("crv4: decode finalized events at %s with bound metadata: %w", blockHash.Hex(), err)
 	}
 	success := false
 	for _, event := range records {
@@ -190,15 +226,18 @@ func (self *Chain) VerifyFinalizedExtrinsicContext(ctx context.Context, blockHas
 		}
 		switch event.Name {
 		case "System.ExtrinsicFailed", "ExtrinsicFailed":
-			return &FinalizedDispatchError{ExtrinsicHash: extrinsicHash, BlockHash: blockHash, Detail: formatDecodedEventFields(self.Meta, event.Fields)}
+			return nil, &FinalizedDispatchError{ExtrinsicHash: extrinsicHash, BlockHash: blockHash, Detail: formatDecodedEventFields(self.Meta, event.Fields)}
 		case "System.ExtrinsicSuccess", "ExtrinsicSuccess":
 			success = true
 		}
 	}
 	if !success {
-		return fmt.Errorf("crv4: extrinsic %s has no System.ExtrinsicSuccess event", extrinsicHash.Hex())
+		return nil, fmt.Errorf("crv4: extrinsic %s has no System.ExtrinsicSuccess event", extrinsicHash.Hex())
 	}
-	return nil
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return &verifiedNativeReceipt{number: signedBlock.number, index: index, events: records}, nil
 }
 
 // Preserves the contextless API for callers outside cancellable release
@@ -351,56 +390,144 @@ func decodedErrorIndex(value any) ([4]types.U8, bool) {
 // use the returned block to authenticate and bind its exact metadata before
 // proving dispatch success or failure.
 func (c *Chain) LocateFinalizedExtrinsic(ctx context.Context, extrinsicHash types.Hash, fromBlock uint64) (*FinalizedExtrinsic, bool, error) {
-	if ctx == nil || c == nil || c.API == nil || c.API.Client == nil {
-		return nil, false, errors.New("crv4: finalized extrinsic search context is unavailable")
-	}
-	if err := ctx.Err(); err != nil {
-		return nil, false, err
-	}
-	var finalizedHashHex string
-	if err := c.API.Client.CallContext(ctx, &finalizedHashHex, "chain_getFinalizedHead"); err != nil {
-		return nil, false, err
-	}
-	finalizedHash, err := types.NewHashFromHexString(finalizedHashHex)
+	scan, err := c.ScanFinalizedExtrinsic(ctx, extrinsicHash, fromBlock)
 	if err != nil {
 		return nil, false, err
 	}
-	var header types.Header
-	if err := c.API.Client.CallContext(ctx, &header, "chain_getHeader", finalizedHash.Hex()); err != nil {
-		return nil, false, err
+	receipt := scan.Receipt()
+	return receipt, receipt != nil, nil
+}
+
+// The absence boundary is returned alongside a found receipt so nonce, epoch
+// and mortality reads cannot silently move beyond the fully searched prefix.
+func (self *Chain) ScanFinalizedExtrinsic(ctx context.Context, extrinsicHash types.Hash, fromBlock uint64) (*FinalizedExtrinsicScan, error) {
+	return self.scanFinalizedExtrinsicRange(ctx, extrinsicHash, FinalizedExtrinsicScanRange{First: fromBlock})
+}
+
+// Scans at most one bounded chunk of complete canonical bodies. A caller may
+// persist the returned absence boundary only with its original signed attempt;
+// the supplied start does not establish coverage of any preceding block.
+func (self *Chain) ScanFinalizedExtrinsicRange(ctx context.Context, extrinsicHash types.Hash, requested FinalizedExtrinsicScanRange) (*FinalizedExtrinsicScan, error) {
+	if requested.MaximumBlocks == 0 || requested.MaximumBlocks > ReceiptScanChunkBlockLimit || requested.First == 0 && requested.PreviousHash != (types.Hash{}) {
+		return nil, errors.New("crv4: receipt scan chunk bounds are invalid")
 	}
-	finalizedNumber := uint64(header.Number)
+	return self.scanFinalizedExtrinsicRange(ctx, extrinsicHash, requested)
+}
+
+// Bounded recovery retains only the completed body prefix on interruption.
+// The accompanying error still governs outcome; unbounded compatibility calls
+// preserve their original all-or-nothing error result.
+func (self *Chain) scanFinalizedExtrinsicRange(ctx context.Context, extrinsicHash types.Hash, requested FinalizedExtrinsicScanRange) (result *FinalizedExtrinsicScan, resultErr error) {
+	if ctx == nil || self == nil || self.API == nil || self.API.Client == nil {
+		return nil, errors.New("crv4: finalized extrinsic search context is unavailable")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	var finalizedHashHex string
+	if err := self.API.Client.CallContext(ctx, &finalizedHashHex, "chain_getFinalizedHead"); err != nil {
+		return nil, err
+	}
+	if finalizedHashHex == "" {
+		return nil, &ReceiptEvidenceUnavailableError{Field: "finalized head"}
+	}
+	finalizedHash, err := receiptHash(finalizedHashHex)
+	if err != nil {
+		return nil, err
+	}
+	_, finalizedNumber, err := self.receiptHeaderAt(ctx, finalizedHash)
+	if err != nil {
+		return nil, err
+	}
+	var canonicalFinalizedHex string
+	if err := self.API.Client.CallContext(ctx, &canonicalFinalizedHex, "chain_getBlockHash", finalizedNumber); err != nil {
+		return nil, err
+	}
+	if canonicalFinalizedHex == "" {
+		return nil, &ReceiptEvidenceUnavailableError{BlockHash: finalizedHash, Field: "canonical finalized hash"}
+	}
+	canonicalFinalized, err := receiptHash(canonicalFinalizedHex)
+	if err != nil || canonicalFinalized != finalizedHash {
+		return nil, errors.New("crv4: finalized receipt head is not canonical at its authenticated height")
+	}
+	fromBlock := requested.First
+	scan := &FinalizedExtrinsicScan{from: fromBlock, previousHash: requested.PreviousHash, extrinsicHash: extrinsicHash, finalizedHash: finalizedHash, finalizedAt: finalizedNumber}
+	defer func() {
+		if requested.MaximumBlocks != 0 && receiptScanUnavailable(resultErr) && scan.absent {
+			result = scan
+		}
+	}()
 	if fromBlock > finalizedNumber {
-		return nil, false, nil
+		return scan, nil
+	}
+	previousHash := requested.PreviousHash
+	if previousHash != (types.Hash{}) {
+		_, previousNumber, err := self.receiptHeaderAt(ctx, previousHash)
+		if err != nil {
+			return nil, fmt.Errorf("crv4: receipt scan previous header: %w", err)
+		}
+		if previousNumber+1 != fromBlock {
+			return nil, errors.New("crv4: receipt scan previous header has another height")
+		}
+		var previousCanonical string
+		if err := self.API.Client.CallContext(ctx, &previousCanonical, "chain_getBlockHash", previousNumber); err != nil {
+			return nil, fmt.Errorf("crv4: receipt scan previous canonical hash: %w", err)
+		}
+		if previousCanonical == "" {
+			return nil, &ReceiptEvidenceUnavailableError{BlockHash: previousHash, Field: "previous canonical receipt hash"}
+		}
+		canonical, err := receiptHash(previousCanonical)
+		if err != nil || canonical != previousHash {
+			return nil, errors.New("crv4: receipt scan previous header is no longer canonical")
+		}
+	}
+	through := finalizedNumber
+	if requested.MaximumBlocks != 0 && through-fromBlock+1 > requested.MaximumBlocks {
+		through = fromBlock + requested.MaximumBlocks - 1
 	}
 	for number := fromBlock; ; number++ {
 		if err := ctx.Err(); err != nil {
-			return nil, false, err
+			return nil, err
 		}
 		var blockHashHex string
-		if err := c.API.Client.CallContext(ctx, &blockHashHex, "chain_getBlockHash", number); err != nil {
-			return nil, false, fmt.Errorf("crv4: block hash %d: %w", number, err)
+		if err := self.API.Client.CallContext(ctx, &blockHashHex, "chain_getBlockHash", number); err != nil {
+			return nil, fmt.Errorf("crv4: block hash %d: %w", number, err)
 		}
-		blockHash, err := types.NewHashFromHexString(blockHashHex)
+		if blockHashHex == "" {
+			return nil, &ReceiptEvidenceUnavailableError{Field: fmt.Sprintf("canonical block hash at %d", number)}
+		}
+		blockHash, err := receiptHash(blockHashHex)
 		if err != nil {
-			return nil, false, fmt.Errorf("crv4: decode block hash %d: %w", number, err)
+			return nil, fmt.Errorf("crv4: decode block hash %d: %w", number, err)
 		}
-		var signedBlock block.SignedBlock
-		if err := c.API.Client.CallContext(ctx, &signedBlock, "chain_getBlock", blockHash.Hex()); err != nil {
-			return nil, false, fmt.Errorf("crv4: block %d: %w", number, err)
+		if number == finalizedNumber && blockHash != finalizedHash {
+			return nil, errors.New("crv4: receipt scan finalized hash changed")
 		}
-		_, found, err := extrinsicIndex(signedBlock.Block.Extrinsics, extrinsicHash)
+		signedBlock, err := self.receiptBlockAt(ctx, blockHash)
 		if err != nil {
-			return nil, false, err
+			return nil, fmt.Errorf("crv4: block %d: %w", number, err)
+		}
+		parent, _ := receiptHash(signedBlock.header.ParentHash)
+		if signedBlock.number != number || previousHash != (types.Hash{}) && parent != previousHash {
+			return nil, fmt.Errorf("crv4: receipt block %d height or parent differs from the canonical scan", number)
+		}
+		_, found, err := extrinsicIndex(signedBlock.extrinsics, extrinsicHash)
+		if err != nil {
+			return nil, err
 		}
 		if found {
-			return &FinalizedExtrinsic{ExtrinsicHash: extrinsicHash, BlockHash: blockHash, BlockNumber: number}, true, nil
+			scan.absent = false
+			scan.receipt = &FinalizedExtrinsic{ExtrinsicHash: extrinsicHash, BlockHash: blockHash, BlockNumber: number}
+			return scan, nil
 		}
-		if number == finalizedNumber {
+		scan.through, scan.throughHash, scan.absent = number, blockHash, true
+		if number == through {
 			break
 		}
+		previousHash = blockHash
 	}
-	return nil, false, nil
+	scan.absent = true
+	return scan, ctx.Err()
 }
 
 // FindFinalizedExtrinsic is the crash-recovery primitive for a previously
@@ -428,17 +555,32 @@ func DialChain(wsURL string) (*Chain, error) {
 // convenience constructor performs contextless initialization RPCs, so this
 // builds the equivalent API surface after the exact context-aware reads.
 func DialChainContext(ctx context.Context, wsURL string) (*Chain, error) {
+	return dialChainAtContext(ctx, wsURL, nil)
+}
+
+// DialChainAtContext initializes observation at one caller-selected historical
+// hash. It grants no artifact or signing authority: the caller must authenticate
+// that exact block and purpose before consuming its metadata or preparing a call.
+func DialChainAtContext(ctx context.Context, endpoint string, block types.Hash) (*Chain, error) {
+	if block == (types.Hash{}) {
+		return nil, errors.New("crv4: historical dial block is absent")
+	}
+	return dialChainAtContext(ctx, endpoint, &block)
+}
+
+// Initialization shares one transport owner; a historical caller never probes
+// the unrelated current metadata/version merely to reopen approved old work.
+func dialChainAtContext(ctx context.Context, wsURL string, block *types.Hash) (*Chain, error) {
 	if ctx == nil || wsURL == "" {
 		return nil, errors.New("crv4: dial context or endpoint is unavailable")
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	transport, err := gsrpcgeth.DialContext(ctx, wsURL)
+	client, err := dialContextSubstrateClient(ctx, wsURL)
 	if err != nil {
 		return nil, fmt.Errorf("crv4: dial %s: %w", wsURL, err)
 	}
-	client := &contextSubstrateClient{Client: transport, url: wsURL}
 	closeClient := true
 	defer func() {
 		if closeClient {
@@ -446,8 +588,12 @@ func DialChainContext(ctx context.Context, wsURL string) (*Chain, error) {
 		}
 	}()
 
+	var at []any
+	if block != nil {
+		at = []any{block.Hex()}
+	}
 	var encodedMetadata string
-	if err := client.CallContext(ctx, &encodedMetadata, "state_getMetadata"); err != nil {
+	if err := client.CallContext(ctx, &encodedMetadata, "state_getMetadata", at...); err != nil {
 		return nil, fmt.Errorf("crv4: metadata: %w", err)
 	}
 	metadata, _, err := DecodeRuntimeMetadata(encodedMetadata)
@@ -466,7 +612,7 @@ func DialChainContext(ctx context.Context, wsURL string) (*Chain, error) {
 	}
 
 	var runtime types.RuntimeVersion
-	if err := client.CallContext(ctx, &runtime, "state_getRuntimeVersion"); err != nil {
+	if err := client.CallContext(ctx, &runtime, "state_getRuntimeVersion", at...); err != nil {
 		return nil, fmt.Errorf("crv4: runtime version: %w", err)
 	}
 	api := &gsrpc.SubstrateAPI{
@@ -503,7 +649,9 @@ func FinalizedHeadContext(ctx context.Context, chain *Chain) (types.Hash, error)
 }
 
 // HeaderAtContext reads one caller-selected header without allowing a GSRPC
-// convenience method to replace the release operation's context.
+// convenience method to replace the release operation's context. This SDK
+// projection does not authenticate commitment bytes; authority/evidence readers
+// use ReceiptHeaderAtContext or CanonicalHeaderAtContext instead.
 func (self *Chain) HeaderAtContext(ctx context.Context, blockHash types.Hash) (*types.Header, error) {
 	if ctx == nil || self == nil || self.API == nil || self.API.Client == nil || blockHash == (types.Hash{}) {
 		return nil, errors.New("crv4: header context is unavailable")
@@ -789,7 +937,7 @@ func (c *Chain) WeightsAtFinalizedContext(ctx context.Context, netuid, validator
 	if err != nil {
 		return nil, 0, types.Hash{}, fmt.Errorf("crv4: finalized head: %w", err)
 	}
-	header, err := c.HeaderAtContext(ctx, hash)
+	number, _, err := c.CanonicalHeaderAtContext(ctx, hash)
 	if err != nil {
 		return nil, 0, types.Hash{}, fmt.Errorf("crv4: finalized header: %w", err)
 	}
@@ -797,7 +945,10 @@ func (c *Chain) WeightsAtFinalizedContext(ctx context.Context, netuid, validator
 	if err != nil {
 		return nil, 0, types.Hash{}, err
 	}
-	return row, uint64(header.Number), hash, nil
+	if err := c.CheckCanonicalBlockAtContext(ctx, hash, number); err != nil {
+		return nil, 0, types.Hash{}, err
+	}
+	return row, number, hash, nil
 }
 
 // WeightsVersionKey reads SubtensorModule.WeightsVersionKey(netuid); the
@@ -849,7 +1000,7 @@ func (c *Chain) EpochScheduleStateAt(netuid uint16, blockHash types.Hash) (*Epoc
 // EpochScheduleStateAtContext reads every schedule input at one exact block
 // while retaining the release operation's cancellation boundary.
 func (c *Chain) EpochScheduleStateAtContext(ctx context.Context, netuid uint16, blockHash types.Hash) (*EpochScheduleState, error) {
-	header, err := c.HeaderAtContext(ctx, blockHash)
+	number, _, err := c.CanonicalHeaderAtContext(ctx, blockHash)
 	if err != nil {
 		return nil, fmt.Errorf("crv4: header: %w", err)
 	}
@@ -875,13 +1026,16 @@ func (c *Chain) EpochScheduleStateAtContext(ctx context.Context, netuid uint16, 
 		return nil, err
 	}
 
+	if err := c.CheckCanonicalBlockAtContext(ctx, blockHash, number); err != nil {
+		return nil, err
+	}
 	return &EpochScheduleState{
 		LastEpochBlock:      uint64(lastEpochBlock),
 		PendingEpochAt:      uint64(pendingEpochAt),
 		SubnetEpochIndex:    uint64(subnetEpochIndex),
 		Tempo:               uint16(tempo),
 		BlocksSinceLastStep: uint64(blocksSince),
-		CurrentBlock:        uint64(header.Number),
+		CurrentBlock:        number,
 	}, nil
 }
 
@@ -920,12 +1074,18 @@ func (c *Chain) FinalizedAccountNonceContext(ctx context.Context, publicKey [32]
 	if err != nil {
 		return 0, types.Hash{}, 0, err
 	}
-	header, err := c.HeaderAtContext(ctx, finalized)
+	number, _, err := c.CanonicalHeaderAtContext(ctx, finalized)
 	if err != nil {
 		return 0, types.Hash{}, 0, err
 	}
 	nonce, err := c.AccountNonceAtContext(ctx, publicKey, finalized)
-	return nonce, finalized, uint64(header.Number), err
+	if err == nil {
+		err = c.CheckCanonicalBlockAtContext(ctx, finalized, number)
+	}
+	if err != nil {
+		return 0, types.Hash{}, 0, err
+	}
+	return nonce, finalized, number, nil
 }
 
 // AccountNonceAt reads the canonical account nonce from a caller-selected
@@ -933,23 +1093,6 @@ func (c *Chain) FinalizedAccountNonceContext(ctx context.Context, publicKey [32]
 // the System.Account key, unlike the transaction-pool-aware AccountNonce RPC.
 func (c *Chain) AccountNonceAt(publicKey [32]byte, blockHash types.Hash) (uint32, error) {
 	return c.AccountNonceAtContext(context.Background(), publicKey, blockHash)
-}
-
-// AccountNonceAtContext reads the canonical account nonce from an exact block
-// without allowing the recovery loop to wait past its caller cancellation.
-func (c *Chain) AccountNonceAtContext(ctx context.Context, publicKey [32]byte, blockHash types.Hash) (uint32, error) {
-	if blockHash == (types.Hash{}) {
-		return 0, errors.New("crv4: account nonce block hash is zero")
-	}
-	var account types.AccountInfo
-	present, err := c.storageGetForPalletContext(ctx, &account, blockHash, "System", "Account", publicKey[:])
-	if err != nil {
-		return 0, err
-	}
-	if !present {
-		return 0, nil
-	}
-	return uint32(account.Nonce), nil
 }
 
 // NewSignedExtrinsic signs an arbitrary runtime call with the reviewed
@@ -1029,6 +1172,12 @@ func (c *Chain) SubmitAndWatchFinalized(ctx context.Context, ext *extrinsic.Extr
 // generically decoded back into gsrpc's Extrinsic type, so durable callers
 // replay the exact persisted SCALE hex through the RPC subscription.
 func (c *Chain) SubmitRawAndWatchFinalized(ctx context.Context, encoded string) (*FinalizedExtrinsic, error) {
+	return c.SubmitRawAndWatchFinalizedRuntime(ctx, encoded, nil)
+}
+
+// A caller-owned artifact selector admits the authenticated execution parent
+// before any event decoding. Nil retains the historical single-view API.
+func (c *Chain) SubmitRawAndWatchFinalizedRuntime(ctx context.Context, encoded string, executionRuntime func(context.Context, types.Hash) (AuthenticatedRuntimeArtifact, error)) (*FinalizedExtrinsic, error) {
 	raw, err := codec.HexDecodeString(encoded)
 	if err != nil || len(raw) == 0 {
 		return nil, fmt.Errorf("crv4: malformed raw extrinsic")
@@ -1050,23 +1199,47 @@ func (c *Chain) SubmitRawAndWatchFinalized(ctx context.Context, encoded string) 
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		case err, ok := <-sub.Err():
-			if ok && err != nil {
-				return nil, fmt.Errorf("crv4: watch %s: %w", txHash.Hex(), err)
+			if !ok || err == nil {
+				// Local shutdown ends observation without proving a chain outcome.
+				return nil, fmt.Errorf("crv4: watch %s closed before finality", txHash.Hex())
 			}
+			return nil, fmt.Errorf("crv4: watch %s: %w", txHash.Hex(), err)
 		case status, ok := <-statuses:
 			if !ok {
 				return nil, fmt.Errorf("crv4: watch %s closed before finality", txHash.Hex())
 			}
 			switch {
 			case status.IsFinalized:
-				var header types.Header
-				if err := c.API.Client.CallContext(ctx, &header, "chain_getHeader", status.AsFinalized.Hex()); err != nil {
-					return nil, fmt.Errorf("crv4: finalized header %s: %w", status.AsFinalized.Hex(), err)
+				execution := c
+				if executionRuntime != nil {
+					_, parent, err := c.ReceiptHeaderAtContext(ctx, status.AsFinalized)
+					if err != nil {
+						return nil, err
+					}
+					artifact, err := executionRuntime(ctx, parent)
+					if err != nil {
+						return nil, err
+					}
+					if artifact.BlockHash != parent {
+						return nil, errors.New("receipt runtime does not bind the execution parent")
+					}
+					if err := ValidateRuntimeArtifactOwnerContext(ctx, c, artifact); err != nil {
+						return nil, err
+					}
+					view := *c
+					if err := view.BindRuntimeArtifact(artifact); err != nil {
+						return nil, err
+					}
+					execution = &view
 				}
-				if err := c.VerifyFinalizedExtrinsicContext(ctx, status.AsFinalized, txHash); err != nil {
+				receipt, err := execution.verifyFinalizedExtrinsicContext(ctx, status.AsFinalized, txHash)
+				if err != nil {
 					return nil, err
 				}
-				return &FinalizedExtrinsic{ExtrinsicHash: txHash, BlockHash: status.AsFinalized, BlockNumber: uint64(header.Number)}, nil
+				if err := c.CheckCanonicalBlockAtContext(ctx, status.AsFinalized, receipt.number); err != nil {
+					return nil, err
+				}
+				return &FinalizedExtrinsic{ExtrinsicHash: txHash, BlockHash: status.AsFinalized, BlockNumber: receipt.number}, nil
 			case status.IsDropped, status.IsInvalid, status.IsUsurped, status.IsFinalityTimeout, status.IsRetracted:
 				return nil, fmt.Errorf("crv4: extrinsic %s failed before finality: %+v", txHash.Hex(), status)
 			}

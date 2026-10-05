@@ -1,0 +1,249 @@
+{
+  "schema": "mainnet-independent-source-review-v1",
+  "status": "SOURCE_REVIEWED_NOT_BEHAVIORALLY_QUALIFIED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server",
+    "head": "4a5bbdaeb6945d1b0f3c8a6a297da639580a83d5",
+    "tree": "7064d9cb812c0c0df0cccb908c771384f1ee2934",
+    "base": "1709ffe03ffa59ae31441374f3e673793d099764",
+    "clean": true,
+    "sparse": true
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/evidence/intake.json",
+    "sha256": "16fedbb7866fb99a690523defb6f5b5cbb8156f6aa1206327518072e1bfdb63f"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/native_execution_capture.go",
+      "bytes": 8103,
+      "sha256": "9720fbe4721f65aa2a06a136dcf99b3286a167f42f92d1d35b4db6f1ee4e7f9e",
+      "relative": "strecovery/native_execution_capture.go",
+      "git_blob": "936a4ba8d73f7e7eb4a03fcaf91514e39c9d8292"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/native_execution_finality.go",
+      "bytes": 11078,
+      "sha256": "8ad916ce91dc3c339ed890d4c68e098f3a8a17f9baa739d6b4949dc6e578c426",
+      "relative": "strecovery/native_execution_finality.go",
+      "git_blob": "960cf583887b64160e3b6b6960aadb9181eb9223"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/native_execution_read_causes_test.go",
+      "bytes": 14459,
+      "sha256": "3afa8efe18dd811ac71f2d3b32f985c505be35ab6e60e51d315cbb04b1c88ffb",
+      "relative": "strecovery/native_execution_read_causes_test.go",
+      "git_blob": "fc3185d56a04a9b7128f1fafe859310fc38138c9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_retry.go",
+      "bytes": 2293,
+      "sha256": "42547b7de2bb47323173ae2f9fc5c851c1cb16d6935dd2849b629020e38da80a",
+      "relative": "strecovery/receipt_collect_retry.go",
+      "git_blob": "496caccc34e58f7ed26750e050ec5497c278a781"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_typed_causes_test.go",
+      "bytes": 12045,
+      "sha256": "b00aed67628714b292e979e9b0c035f9820d929e4c289ac97fad7304c951cfcb",
+      "relative": "strecovery/receipt_collect_typed_causes_test.go",
+      "git_blob": "76a80f75fa25121b6f187b272d65f0696cab071f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/evidence/qualification-recipe.json",
+      "bytes": 11573,
+      "sha256": "273124099f9d1f76d1177991fa3268becb69302b2a62458658f6912ca385529f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/evidence/operative-controls.json",
+      "bytes": 4180,
+      "sha256": "d945ba65b5dee010691f437a8acfba6680d2f70d505dc34e9a8c5d400f67bc46"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/evidence/source-audit.json",
+      "bytes": 2054,
+      "sha256": "5a1ba4d1730e6f83194273415c60f01eae838c5f39c1fff0b90ed6c51f85b9e0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_typed_causes_test.go",
+      "bytes": 12045,
+      "sha256": "b00aed67628714b292e979e9b0c035f9820d929e4c289ac97fad7304c951cfcb",
+      "git_blob": "76a80f75fa25121b6f187b272d65f0696cab071f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_typed_causes_test.go",
+      "bytes": 12045,
+      "sha256": "b00aed67628714b292e979e9b0c035f9820d929e4c289ac97fad7304c951cfcb",
+      "git_blob": "76a80f75fa25121b6f187b272d65f0696cab071f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_typed_causes_test.go",
+      "bytes": 12045,
+      "sha256": "b00aed67628714b292e979e9b0c035f9820d929e4c289ac97fad7304c951cfcb",
+      "git_blob": "76a80f75fa25121b6f187b272d65f0696cab071f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_typed_causes_test.go",
+      "bytes": 12045,
+      "sha256": "b00aed67628714b292e979e9b0c035f9820d929e4c289ac97fad7304c951cfcb",
+      "git_blob": "76a80f75fa25121b6f187b272d65f0696cab071f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_typed_causes_test.go",
+      "bytes": 12045,
+      "sha256": "b00aed67628714b292e979e9b0c035f9820d929e4c289ac97fad7304c951cfcb",
+      "git_blob": "76a80f75fa25121b6f187b272d65f0696cab071f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_typed_causes_test.go",
+      "bytes": 12045,
+      "sha256": "b00aed67628714b292e979e9b0c035f9820d929e4c289ac97fad7304c951cfcb",
+      "git_blob": "76a80f75fa25121b6f187b272d65f0696cab071f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_typed_causes_test.go",
+      "bytes": 12045,
+      "sha256": "b00aed67628714b292e979e9b0c035f9820d929e4c289ac97fad7304c951cfcb",
+      "git_blob": "76a80f75fa25121b6f187b272d65f0696cab071f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_typed_causes_test.go",
+      "bytes": 12045,
+      "sha256": "b00aed67628714b292e979e9b0c035f9820d929e4c289ac97fad7304c951cfcb",
+      "git_blob": "76a80f75fa25121b6f187b272d65f0696cab071f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_retry_bounds_test.go",
+      "bytes": 7534,
+      "sha256": "ec0545dfe4d16c69a4d3a8e060d5ba1146c035a4285635656481757922c07440",
+      "git_blob": "53fd631741ca65b92dbbf0dc363c8fd34b84c82b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_retry_bounds_test.go",
+      "bytes": 7534,
+      "sha256": "ec0545dfe4d16c69a4d3a8e060d5ba1146c035a4285635656481757922c07440",
+      "git_blob": "53fd631741ca65b92dbbf0dc363c8fd34b84c82b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_retry_bounds_test.go",
+      "bytes": 7534,
+      "sha256": "ec0545dfe4d16c69a4d3a8e060d5ba1146c035a4285635656481757922c07440",
+      "git_blob": "53fd631741ca65b92dbbf0dc363c8fd34b84c82b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_retry_bounds_test.go",
+      "bytes": 7534,
+      "sha256": "ec0545dfe4d16c69a4d3a8e060d5ba1146c035a4285635656481757922c07440",
+      "git_blob": "53fd631741ca65b92dbbf0dc363c8fd34b84c82b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_retry_bounds_test.go",
+      "bytes": 7534,
+      "sha256": "ec0545dfe4d16c69a4d3a8e060d5ba1146c035a4285635656481757922c07440",
+      "git_blob": "53fd631741ca65b92dbbf0dc363c8fd34b84c82b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_retry_bounds_test.go",
+      "bytes": 7534,
+      "sha256": "ec0545dfe4d16c69a4d3a8e060d5ba1146c035a4285635656481757922c07440",
+      "git_blob": "53fd631741ca65b92dbbf0dc363c8fd34b84c82b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/native_execution_read_causes_test.go",
+      "bytes": 14459,
+      "sha256": "3afa8efe18dd811ac71f2d3b32f985c505be35ab6e60e51d315cbb04b1c88ffb",
+      "git_blob": "fc3185d56a04a9b7128f1fafe859310fc38138c9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/native_execution_capture_test.go",
+      "bytes": 6402,
+      "sha256": "e5ea2df05252bbd083ad0a1eebac0f0404c2c8602381556699c0936c2a14e0ae",
+      "git_blob": "d4746039487ccb0cc1dacbc4e24a9362c10329db"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/native_execution_capture_test.go",
+      "bytes": 6402,
+      "sha256": "e5ea2df05252bbd083ad0a1eebac0f0404c2c8602381556699c0936c2a14e0ae",
+      "git_blob": "d4746039487ccb0cc1dacbc4e24a9362c10329db"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/native_execution_capture_test.go",
+      "bytes": 6402,
+      "sha256": "e5ea2df05252bbd083ad0a1eebac0f0404c2c8602381556699c0936c2a14e0ae",
+      "git_blob": "d4746039487ccb0cc1dacbc4e24a9362c10329db"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/native_execution_read_causes_test.go",
+      "bytes": 14459,
+      "sha256": "3afa8efe18dd811ac71f2d3b32f985c505be35ab6e60e51d315cbb04b1c88ffb",
+      "git_blob": "fc3185d56a04a9b7128f1fafe859310fc38138c9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/native_execution_read_causes_test.go",
+      "bytes": 14459,
+      "sha256": "3afa8efe18dd811ac71f2d3b32f985c505be35ab6e60e51d315cbb04b1c88ffb",
+      "git_blob": "fc3185d56a04a9b7128f1fafe859310fc38138c9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_rpc_test.go",
+      "bytes": 7031,
+      "sha256": "c5a0f228b1b5783c1769e47125e14c4da203177ba5db9547b0e3f81ffd5050d1",
+      "git_blob": "78d1ab9751757fdeeaf5571a934271cd97e5309a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/strecovery/receipt_collect_rpc_test.go",
+      "bytes": 7031,
+      "sha256": "c5a0f228b1b5783c1769e47125e14c4da203177ba5db9547b0e3f81ffd5050d1",
+      "git_blob": "78d1ab9751757fdeeaf5571a934271cd97e5309a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/error_causes_test.go",
+      "bytes": 3845,
+      "sha256": "4cc88e2881c6e769670661c19ca3f1424ca5d9fa5677e8348088ff6b045af254",
+      "git_blob": "2482336df59ec4312bd7da2c28c1af1596444b5f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/server/error_causes_test.go",
+      "bytes": 3845,
+      "sha256": "4cc88e2881c6e769670661c19ca3f1424ca5d9fa5677e8348088ff6b045af254",
+      "git_blob": "2482336df59ec4312bd7da2c28c1af1596444b5f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/evidence/controls/original1709-retry-body.go",
+      "bytes": 2638,
+      "sha256": "97cecd9d4b03dd51f7d32754aaeaef0e6279abd3037e0e0436fbed97b50d0780"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/evidence/controls/unknown-finality-marked-conflict.go",
+      "bytes": 11148,
+      "sha256": "f84fd78bb88982097751ecccf557092d2d670c6085d4952727e095b93f951123"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/evidence/controls/missing-certificate-unbounded-match.go",
+      "bytes": 8174,
+      "sha256": "1ec232281f94985a28fce77ca23b3a7f13faab65b83d01d05fe17995b6959c1c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/server-receipt-typed-causes/evidence/controls/rpc-observation-gate-omitted.go",
+      "bytes": 9657,
+      "sha256": "8b1c08829857091502458eb5d49caf8f48d90788eb545aa3eb0390d4c159589f"
+    }
+  ],
+  "review": [
+    "Read all three production diffs, changed incomplete-graph oracle, eight new causal tests and all four operative control diffs.",
+    "Uses unchanged qualified bounded inspector before custom unwrap/network dispatch; missing receivers cannot grant retry, cancellation or unavailable-certificate authority.",
+    "Incomplete cause graphs with no observed refusal remain unknown; genuine observed verifier refusal retains conflict precedence.",
+    "Actual HTTP transport/body/close failures retain charged request/read journals and forbid proof publication; same authority resumes on healthy reads. Present network receivers retain original deadline recovery.",
+    "Original1709 retry-body control is byte-identical to frozen parent; expected assertion distinguishes source regression from setup/panic/timeout."
+  ],
+  "qualification": {
+    "roots_per_mode": 24,
+    "strecovery": 22,
+    "shared_inspector": 2,
+    "vets": 2,
+    "causal_groups_per_mode": 4
+  },
+  "resource": "Fresh finite compile/body/control admission required; source approval alone does not grant resource execution. No full model rerun is required.",
+  "executed": false,
+  "requirement_closure": false
+}

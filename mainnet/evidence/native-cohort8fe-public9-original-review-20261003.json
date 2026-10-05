@@ -1,0 +1,38 @@
+{
+  "schema": "cohort8fe-original-public9-partial-review-v1",
+  "source_commit": "8fe0172272d32e4db76ac7fef436b604d182b105",
+  "connect_commit": "1610f7a55e5efe4809a87b695fdebc4161709e49",
+  "passed_roots": [
+    "TestMonitorNativeAdmissionRefusesLostAndUnknownWatchEvents",
+    "TestMonitorNativeAdmissionCleanupJoinsAndRetainsCloseFailure",
+    "TestMonitorNativeAdmissionCancellationCannotBecomeReadiness",
+    "TestMonitorNativeAdmissionEarlyExitCannotBecomeReadiness",
+    "TestMonitorNativeCohortRestoreKeepsOriginalPendingOutcome",
+    "TestMonitorNativeCohortRestoreResumesPartialRootsWithHealthyPeer",
+    "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome",
+    "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory"
+  ],
+  "failed_roots": [
+    "TestMonitorNativeCohortRestoreRefusesLateRootBeforeEffects"
+  ],
+  "bindings": {
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-normal.jsonl": {
+      "bytes": 8829,
+      "sha256": "5e21b1ea991af77dec88a883b74bb8a7952db52141ffb72795225fac7a1f53d4"
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-normal.command.json": {
+      "bytes": 1486,
+      "sha256": "0e19a9b03cd7219df36bd52341981fafe8569523d0598f08802d2bb47d2e365e"
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "finding": "A copied inventoried source-archive lock is removed after valid planning; public cohort-apply returns success. Astra traced apply to staged inventory admission without reopening RestoreSource.Directory. Distinct source-custody successor required.",
+  "limits": "Original9-root normal scope has8PASS1FAIL. Core16 result remains separate. Full512/race/causal and corrected successor not established; failed test exits before its subsequent no-mutation assertions."
+}

@@ -1,0 +1,217 @@
+{
+  "author_receipt_sha256": "c2753adc14c964bbd895b7c1b14b898895c4804b7c1fe85813fe665dcce74715",
+  "effective_connect": "v0.0.0-20261002163946-e0d75562aa23",
+  "effective_module_count": 647,
+  "effective_sctp": "v0.0.0-20261002163341-6443417d70dc",
+  "fixed_reader_normal": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      1.6320000000000001
+    ],
+    "pass": 17,
+    "passed_roots": [
+      "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+      "TestDurableLocalBlobStoreStagedSyncFailureKeepsPriorBytes",
+      "TestDurableLocalBlobReaderReplacementRemainsRefusedAfterRestore",
+      "TestBlobReaderDurableReadFullRejectsCancellation",
+      "TestBlobReaderDurableReadFullRejectsReplacement",
+      "TestBlobReaderDurableJsonRejectsCancellation",
+      "TestBlobReaderDurableJsonRejectsReplacement",
+      "TestBlobReaderDurablePartialEofRetainsCancellation",
+      "TestBlobReaderDurablePartialEofRetainsReplacement",
+      "TestBlobReaderDurablePreservesOrdinaryEof",
+      "TestBlobReaderDurableCopyAlreadyRefusesPostReadLoss",
+      "TestBlobReaderCapacityReadFullRejectsCancellation",
+      "TestBlobReaderCapacityJsonRejectsCancellation",
+      "TestBlobReaderCapacityPartialEofRetainsBothCauses",
+      "TestBlobReaderCapacityPreservesOrdinaryEof",
+      "TestBlobReaderCapacityCopyAlreadyRefusesCancellation",
+      "TestLocalBlobStoreCapacityCanceledOwnerReleasesStagedBytes"
+    ],
+    "skip": 0,
+    "started": 17,
+    "terminal": 17,
+    "unresolved": []
+  },
+  "fixed_reader_race": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      3.349
+    ],
+    "pass": 17,
+    "passed_roots": [
+      "TestDurableLocalBlobStoreReserveRecoversWithoutReset",
+      "TestDurableLocalBlobStoreStagedSyncFailureKeepsPriorBytes",
+      "TestDurableLocalBlobReaderReplacementRemainsRefusedAfterRestore",
+      "TestBlobReaderDurableReadFullRejectsCancellation",
+      "TestBlobReaderDurableReadFullRejectsReplacement",
+      "TestBlobReaderDurableJsonRejectsCancellation",
+      "TestBlobReaderDurableJsonRejectsReplacement",
+      "TestBlobReaderDurablePartialEofRetainsCancellation",
+      "TestBlobReaderDurablePartialEofRetainsReplacement",
+      "TestBlobReaderDurablePreservesOrdinaryEof",
+      "TestBlobReaderDurableCopyAlreadyRefusesPostReadLoss",
+      "TestBlobReaderCapacityReadFullRejectsCancellation",
+      "TestBlobReaderCapacityJsonRejectsCancellation",
+      "TestBlobReaderCapacityPartialEofRetainsBothCauses",
+      "TestBlobReaderCapacityPreservesOrdinaryEof",
+      "TestBlobReaderCapacityCopyAlreadyRefusesCancellation",
+      "TestLocalBlobStoreCapacityCanceledOwnerReleasesStagedBytes"
+    ],
+    "skip": 0,
+    "started": 17,
+    "terminal": 17,
+    "unresolved": []
+  },
+  "limits": [
+    "Old overlay replaces exact prior durable and capacity reader bodies on current test source; it is not a full old-source build.",
+    "No broad server package/full-model suite, clean compiler release reproduction, live signing, submission, or deployment claim."
+  ],
+  "manifest_sha256": "e232c7a1e605b047747b65cbe128238aa9dae3ac1fa39cecd9616439de89c928",
+  "old_body_normal": {
+    "causal_outputs": [
+      "blob_reader_contract_test.go:118: public Get ReadFull accepted bytes after actual post-read refusal: n=21 err=<nil>",
+      "blob_reader_contract_test.go:121: public Get ReadFull accepted bytes after actual post-read refusal: n=21 err=<nil>",
+      "blob_reader_contract_test.go:124: public Get JSON accepted bytes after actual post-read refusal: value=map[object:original] err=<nil>",
+      "blob_reader_contract_test.go:127: public Get JSON accepted bytes after actual post-read refusal: value=map[object:original] err=<nil>",
+      "blob_reader_contract_test.go:212: capacity ReadFull accepted canceled complete buffer 1 21 <nil>",
+      "blob_reader_contract_test.go:221: capacity JSON accepted canceled complete value 1 map[object:original] <nil>",
+      "blob_reader_contract_test.go:230: capacity partial EOF lost original completion cause 2 21 context canceled"
+    ],
+    "fail": 7,
+    "failed_roots": [
+      "TestBlobReaderDurableReadFullRejectsCancellation",
+      "TestBlobReaderDurableReadFullRejectsReplacement",
+      "TestBlobReaderDurableJsonRejectsCancellation",
+      "TestBlobReaderDurableJsonRejectsReplacement",
+      "TestBlobReaderCapacityReadFullRejectsCancellation",
+      "TestBlobReaderCapacityJsonRejectsCancellation",
+      "TestBlobReaderCapacityPartialEofRetainsBothCauses"
+    ],
+    "package": [
+      "fail",
+      1.174
+    ],
+    "pass": 6,
+    "passed_roots": [
+      "TestBlobReaderDurablePartialEofRetainsCancellation",
+      "TestBlobReaderDurablePartialEofRetainsReplacement",
+      "TestBlobReaderDurablePreservesOrdinaryEof",
+      "TestBlobReaderDurableCopyAlreadyRefusesPostReadLoss",
+      "TestBlobReaderCapacityPreservesOrdinaryEof",
+      "TestBlobReaderCapacityCopyAlreadyRefusesCancellation"
+    ],
+    "skip": 0,
+    "started": 13,
+    "terminal": 13,
+    "unresolved": []
+  },
+  "old_body_race": {
+    "causal_outputs": [
+      "blob_reader_contract_test.go:118: public Get ReadFull accepted bytes after actual post-read refusal: n=21 err=<nil>",
+      "blob_reader_contract_test.go:121: public Get ReadFull accepted bytes after actual post-read refusal: n=21 err=<nil>",
+      "blob_reader_contract_test.go:124: public Get JSON accepted bytes after actual post-read refusal: value=map[object:original] err=<nil>",
+      "blob_reader_contract_test.go:127: public Get JSON accepted bytes after actual post-read refusal: value=map[object:original] err=<nil>",
+      "blob_reader_contract_test.go:212: capacity ReadFull accepted canceled complete buffer 1 21 <nil>",
+      "blob_reader_contract_test.go:221: capacity JSON accepted canceled complete value 1 map[object:original] <nil>",
+      "blob_reader_contract_test.go:230: capacity partial EOF lost original completion cause 2 21 context canceled"
+    ],
+    "fail": 7,
+    "failed_roots": [
+      "TestBlobReaderDurableReadFullRejectsCancellation",
+      "TestBlobReaderDurableReadFullRejectsReplacement",
+      "TestBlobReaderDurableJsonRejectsCancellation",
+      "TestBlobReaderDurableJsonRejectsReplacement",
+      "TestBlobReaderCapacityReadFullRejectsCancellation",
+      "TestBlobReaderCapacityJsonRejectsCancellation",
+      "TestBlobReaderCapacityPartialEofRetainsBothCauses"
+    ],
+    "package": [
+      "fail",
+      1.971
+    ],
+    "pass": 6,
+    "passed_roots": [
+      "TestBlobReaderDurablePartialEofRetainsCancellation",
+      "TestBlobReaderDurablePartialEofRetainsReplacement",
+      "TestBlobReaderDurablePreservesOrdinaryEof",
+      "TestBlobReaderDurableCopyAlreadyRefusesPostReadLoss",
+      "TestBlobReaderCapacityPreservesOrdinaryEof",
+      "TestBlobReaderCapacityCopyAlreadyRefusesCancellation"
+    ],
+    "skip": 0,
+    "started": 13,
+    "terminal": 13,
+    "unresolved": []
+  },
+  "prior_server22_receipt_sha256": "121dcefd3b72d92466c4db3f4028a73adf826eed987723679645e04b6ce37ff2",
+  "public_nine_normal": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      1.211
+    ],
+    "pass": 9,
+    "passed_roots": [
+      "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations",
+      "TestDurableLocalBlobStoreCanceledAdmissionHasNoEffects",
+      "TestDurableLocalBlobStoreLostSyncRequiresOriginalReopen",
+      "TestDurableLocalBlobStoreRefusesMissingRootAndMixedPolicy",
+      "TestDurableLocalBlobReopenRequiresApprovedRootGeneration",
+      "TestDurableLocalBlobBatchRefusesRemountUntilReopen",
+      "TestConfiguredLocalBlobRequiresExactDeclaration",
+      "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate",
+      "TestDurableLocalBlobReaperUncertainSyncReopensOriginalRoot"
+    ],
+    "skip": 0,
+    "started": 9,
+    "terminal": 9,
+    "unresolved": []
+  },
+  "public_nine_race": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      2.961
+    ],
+    "pass": 9,
+    "passed_roots": [
+      "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations",
+      "TestDurableLocalBlobStoreCanceledAdmissionHasNoEffects",
+      "TestDurableLocalBlobStoreLostSyncRequiresOriginalReopen",
+      "TestDurableLocalBlobStoreRefusesMissingRootAndMixedPolicy",
+      "TestDurableLocalBlobReopenRequiresApprovedRootGeneration",
+      "TestDurableLocalBlobBatchRefusesRemountUntilReopen",
+      "TestConfiguredLocalBlobRequiresExactDeclaration",
+      "TestDurableLocalBlobReaperRefusesReplacedExpiryCandidate",
+      "TestDurableLocalBlobReaperUncertainSyncReopensOriginalRoot"
+    ],
+    "skip": 0,
+    "started": 9,
+    "terminal": 9,
+    "unresolved": []
+  },
+  "schema": "sol-server2c4-independent-v1",
+  "server_commit": "2c4e5dca72fff0ba505119ff59dfa2a0ac88c04e",
+  "server_tree": "749eaf1778d6eb28c231cb89b16862540ef4edf9",
+  "sn_local_commit": "69f4bbdd68f3ba933fc0e6b8994708664689acbc",
+  "sn_source_receipt_sha256": "fc6bd88f6313411ab602f4e568d2393160b0281a143c4cf7e52abc6741d1f4af",
+  "source_readback": {
+    "initial_tracked_blobs": 5265,
+    "mismatches": 0,
+    "terminal_tracked_blobs": 5265
+  },
+  "unique_fixed_roots_each_mode": 26,
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0
+}

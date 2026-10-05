@@ -1,0 +1,14 @@
+{
+  "captured_utc": "2026-10-03T19:24:33.822809+00:00",
+  "finding": "Validator/operator/provider/Claim role owner admission errors return3 before workers start. Native/EVM economic admission instead records error and continues. A role-local startup observation failure can block healthy monitoring domains despite runtime isolation.",
+  "limits": "Source review only; no fixed implementation or behavior proof.",
+  "qualification": "Actual public multi-role startup with unavailable/read-error/busy/corrupt affected owner; healthy peer events continue; cancellation joins retries/owners; no duplicate writer or lost retained progress. Include closed/EBADF classification review.",
+  "required_behavior": "Separate invalid shared policy/network/declaration admission from per-role custody/observation failures. Start healthy domains, retain failed role status and retry only recoverable local admission; quarantine confirmed local integrity failures. Never bypass owner locks, adopt contradictory checkpoints or grant new economic authority.",
+  "schema": "urnetwork-root-monitor-startup-isolation-source-finding-v1",
+  "source": {
+    "path": "/home/by/urnetwork/sn/mainnet/monitor_services.go",
+    "reviewed_main_commit": "a3ea0ca8028179e40d24b9c569d315e831c2246f",
+    "sha256": "bae71c54d423124977523efbe10edd58435085861c2973d5294ee7539ac3652e"
+  },
+  "status": "SOURCE_CONFIRMED_IMPLEMENTATION_PENDING"
+}

@@ -1,0 +1,94 @@
+{
+  "schema": "mainnet-nativefee-normal-result-v1",
+  "status": "FAIL_OR_INCOMPLETE",
+  "counts": {
+    "fail": 1,
+    "pass": 10,
+    "run": 11,
+    "skip": 0
+  },
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-nativefee11-direct-v1.receipt.json",
+    "sha256": "509003ed2df3d0ceffcc488d77591afddbae331e07e10827b37c8af50dd4da90"
+  },
+  "raw_outcomes": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-nativefee11-direct-v1.stdout",
+    "sha256": "2e3f951313ab35765331653da18d91de1235bd864d38010260608db278975b7d"
+  },
+  "actual_wait": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/sol-nativefee11-direct-v1.process-result.json",
+    "sha256": "767b6bf767fcbde1dd48c4377885214d6bc96110ded5d6c3708681ec8536e8bd"
+  },
+  "root_outcomes": {
+    "TestInvokeNativeFeeCancellationAfterOutputCannotSettle": {
+      "fail": 1,
+      "pass": 0,
+      "run": 1,
+      "skip": 0
+    },
+    "TestInvokeNativeFeeFailureCannotPublishPlausibleOutput": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestInvokeNativeFeeOutputOverflowCancelsAndJoins": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestInvokeNativeFeeOwnsImmutableResult": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestInvokeNativeFeeRejectsTrailingOutput": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestInvokeNativeFeeRejectsUnreapedSeparateGroupDescendant": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestInvokeNativeFeeSealedExecutableCannotChangeAfterHash": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestNativeFeeOriginalCustodyRejectsChangedInput": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestNativeFeeOriginalCustodyRejectsPartialSinkAndMissingFile": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestNativeFeeOriginalCustodyStreamsCompleteOrderedProofs": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    },
+    "TestNativeFeeStatementRejectsUnknownAndOverwidthAmounts": {
+      "fail": 0,
+      "pass": 1,
+      "run": 1,
+      "skip": 0
+    }
+  },
+  "current_component_applicability": {
+    "path": "mainnet/evidence/nativefee-retained-normal-applicability-20261005.json"
+  },
+  "failure": "Cancellation after output returned success: TestInvokeNativeFeeCancellationAfterOutputCannotSettle. Root cause repair and affected verification pending; no blanket pass."
+}

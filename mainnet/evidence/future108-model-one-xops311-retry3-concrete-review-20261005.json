@@ -1,0 +1,144 @@
+{
+  "actual_declared_test_roots": 311,
+  "author_validation": {
+    "compilers": 0,
+    "independent_review": "PENDING",
+    "model_mutations": 0,
+    "numeric_class_fields_changed": false,
+    "runner_change": "Only fixed job schema and candidate literals differ from qualified retry2 runner.",
+    "same_311_test_ids": true,
+    "source_git_blob_ids_verified": 261,
+    "test_bodies": 0,
+    "test_imports": 0
+  },
+  "candidate": "a1fdda0d047716e59bd4d3c465cd0f842c7d5f2c",
+  "classification": "Actual exit0 and joined tree, exact311 individual expected IDs each ok, one Ran311 summary and finalOK, zero skip/fail/error/expectedfail/unexpectedsuccess; unchanged source/tool/adoption pins; no OOM or resource errors. Built-in declared controls are included, extra independent mutation control is not.",
+  "execution_mechanism": {
+    "data_active_formula": "max(6307319808, immediate_admission_data_available-2147483648)",
+    "log_limit_bytes": 33554432,
+    "payload_argv": [
+      "/home/by/urnetwork/.virtualenv/brien/bin/python3",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final-xops311-retry3-v1.py",
+      "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/finala1fd-xops311-retry3-job-v1.json"
+    ],
+    "predecessor_compiler_wait": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/current5aaf-mainnet-normal-compile-v2.process-result.json",
+    "required_properties": {
+      "KillMode": "control-group",
+      "MemoryMax": 2147483648,
+      "MemorySwapMax": 0
+    },
+    "timeout_seconds": 900,
+    "unit": "sn-final-xops311-retry3-v1-20261005.service",
+    "wait_mechanism": "Unchanged qualified ChildContext/run_process with durable actual wait before context/source/classification; sampled original96GiB memory and Docker active floors; only its own descendants joined."
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-parallel-20261004/domain-dashboard-a1fdda0d-intake.json",
+    "sha256": "f27230e6e21d722ed5b437938714f6d493c44a8a2ce34955671603b6666bbbd7"
+  },
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/finala1fd-xops311-retry3-job-v1.json",
+    "sha256": "e9bb8935a802ceeaadc19aec6ab3acd0fd2a9db0f86265be5e8aa7ae2893ba7b"
+  },
+  "mandatory_tools": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/promtool",
+      "sha256": "e59210d5474e2c811a4460fb1593d708b94d58107ae62e9d44e88029bb7e5805"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-monitor-deployment-20261002/tools/prometheus",
+      "sha256": "4ee49f574d80682b6571f017c8f42f2532aa3603b725b51ecb0cb864f06c2282"
+    }
+  ],
+  "model_forecast_evidence": {
+    "path": "/home/by/urnetwork/sn/mainnet/evidence/model-body4g-memory-prospective-basis-20261004.json",
+    "sha256": "6394c57b6e551be5cd39bb667f5d3bdd3f6a10e42ac2f063864cb5c29eaa3bab"
+  },
+  "required_adoption_fields": {
+    "accounting_floor_bytes": 0,
+    "compiler_count": 0,
+    "data_baseline_bytes": 113681502208,
+    "data_cap_bytes": 115964116992,
+    "data_growth_stop_bytes": 2147483648,
+    "data_minimum_available_bytes": 10737418240,
+    "history_count": 0,
+    "job_sha256": "e9bb8935a802ceeaadc19aec6ab3acd0fd2a9db0f86265be5e8aa7ae2893ba7b",
+    "margin": 2,
+    "memory_minimum_available_bytes": 113816633344,
+    "model_count": 1,
+    "runner_sha256": "ed19a83b098c017cc7a94e1bd35c2320343248138affe691547ddac9bb4952b1",
+    "short_count": 1,
+    "short_memory_max_bytes": 2147483648,
+    "short_memory_swap_max_bytes": 0,
+    "status": "ADOPTED_MODEL_PLUS_ONE_XOPS311_AFTER_COMPILER_JOIN"
+  },
+  "required_adoption_path": "/home/by/urnetwork/sn/mainnet/evidence/future108-model-one-xops311-retry3-adoption-20261005.json",
+  "resource_forecasts": {
+    "basis": "Unchanged qualified retry2 numeric class and forecasts: sequential Python/Promtool plus one temporary loopback Prometheus; 2471156 exact materialized source bytes, fixed synthetic fixtures,32MiB captured log bound,900s child timeout,2GiB enforced memory and whole-data-growth limit. Prior retry2 actual joined failure recorded309PASS/2FAIL/0SKIP; measured peak and net data change do not replace prospective bounds. Exact corrected a1 candidate is unexecuted; resource-limit breach is failure.",
+    "margin": 2,
+    "model_disk_bytes": 4294967296,
+    "model_memory_bytes": 4294967296,
+    "short_disk_bytes": 1073741824,
+    "short_memory_bytes": 1073741824
+  },
+  "retry_delta": {
+    "actual_original_fail": 2,
+    "actual_original_pass": 309,
+    "actual_original_skip": 0,
+    "changes": "Only two Prometheus fixture files changed to specify loaded-group evaluation order and carry reversed-order causal timing controls within the existing roots. Production rules, metric producers, all dashboard files, SN09 pin, JSON-depth correction and producer census correction remain unchanged.",
+    "earlier_failed_run_preserved": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final86f5-xops311-v1.receipt.json",
+      "sha256": "9f7d1f0f8f6a8495b1246a5281dde042bc3e4f79c97eef14dd6342e8ae014387"
+    },
+    "known_original_cgroup_peak_bytes": 137478144,
+    "known_original_data_free_drop_bytes": 5619712,
+    "measurement_limit": "Original observed peak and net whole-data change are evidence for same bounded class, not a proved retry peak upper bound.",
+    "original_actual_wait_joined": true,
+    "original_failed_individual_readback": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final55f1-xops311-sol-individual-terminal-readback-v1.json",
+      "sha256": "d2d5c10b66d6a2b3762b3814339eeaa747d51a24b5e5db32f12cf37530da91c3"
+    },
+    "original_failed_process_wait": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-xops311-retry2-v1.process-result.json",
+      "sha256": "82f4c1dd7202a930010277612578e8f55dc063d9000ddfc001a187b81d9b4b38"
+    },
+    "original_failed_run_preserved": {
+      "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/final-xops311-retry2-v1.receipt.json",
+      "sha256": "0261216c78f0bee4e20756afa31d2f1a40a5c43df6d7f4664e166916c84806b3"
+    },
+    "same_311_test_ids": true
+  },
+  "runner": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/run-final-xops311-retry3-v1.py",
+    "sha256": "ed19a83b098c017cc7a94e1bd35c2320343248138affe691547ddac9bb4952b1"
+  },
+  "schema": "future108-model-one-xops311-retry3-concrete-review-v1",
+  "scope_exclusions": [
+    "No concurrent compiler/history/second short",
+    "No live host activation, routing, deployment or notification",
+    "No additional mutation control outside311",
+    "No qualification claim before actual independent execution",
+    "No slot acquired by this author seal. Wait for Root to release the current overlay/mainnet compiler or short slot, independent ResourceReview and exact new Root adoption; keep the running model untouched."
+  ],
+  "source_closure": {
+    "path": "/mnt/data/sn-testnet/sol-runtime-fd-qualification-20261004/evidence/finala1fd-xops311-retry3-source-closure-v1.json",
+    "sha256": "f07670787464cd0b37fc9986057406031402788023259633defcbb232623a3bf"
+  },
+  "source_commit": "09f8f989f88660dda442730a18ed99d505ba1988",
+  "source_verification": {
+    "AST_census": 311,
+    "bodies_executed": 0,
+    "materialized_bytes": 2471156,
+    "materialized_files": 261,
+    "pinned_python_dependency_files": 739
+  },
+  "status": "AUTHOR_SEALED_PENDING_INDEPENDENT_RESOURCE_REVIEW_AND_ROOT_ADOPTION",
+  "time_ns": 1791160290274344674,
+  "unchanged_active_floors": {
+    "data_available_bytes": 6307319808,
+    "docker_available_bytes": 295833415680,
+    "docker_launch_available_bytes": 300128382976,
+    "healthy_guards_changed": false,
+    "memory_available_bytes": 103079215104,
+    "original_data_baseline_rebased": false
+  }
+}

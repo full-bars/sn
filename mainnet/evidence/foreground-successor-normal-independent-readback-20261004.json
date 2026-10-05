@@ -1,0 +1,40 @@
+{
+  "schema": "foreground-successor-normal-independent-readback-v1",
+  "status": "20_NORMAL_PASS_AND_VET_PASS",
+  "source_commit": "2477a2cac00115a8936230a731e76c0635341302",
+  "normal_phase": {
+    "path": "/mnt/data/sn-testnet/sol-2477-foreground-qualification-20261004/evidence/2477-validator-normal-runtime-receipt.json",
+    "sha256": "264435e54cae08592e301db0de8cc9f938d9aa859f97fea1bc670562a8aae39b"
+  },
+  "vet_phase": {
+    "path": "/mnt/data/sn-testnet/sol-2477-foreground-qualification-20261004/evidence/2477-vet-validator-vet-receipt.json",
+    "sha256": "bcdd70dd4ecdc7a028a78ec2b630af68a4a1046290fb8be31280970a64a18f13"
+  },
+  "raw_roots": [
+    "TestAttemptCutV2SealBoundaryControls",
+    "TestAttemptCutV2SealCallbackReleasesForegroundProjectionIterator",
+    "TestAttemptCutV2SealCancellationAtOwnedBoundaries",
+    "TestAttemptCutV2SealCheckedEmptyPrefix",
+    "TestAttemptCutV2SealClosesScratchBeforeReturningHeader",
+    "TestAttemptCutV2SealExactNoninitialPrefix",
+    "TestAttemptCutV2SealHeadSnapshotExcludesLaterAppends",
+    "TestAttemptCutV2SealObjectCallbackCanAppend",
+    "TestAttemptCutV2SealReaderCloseFailurePreventsSignature",
+    "TestAttemptCutV2SealRejectsExpectedContextContradictions",
+    "TestAttemptCutV2SealRejectsUnavailableOrLegacyLedger",
+    "TestDiskAttemptProofProjectionIncrementalWorkUsesOnlyNewRecords",
+    "TestDiskAttemptProofProjectionQueuedCallerCancelsWithoutJoiningOwner",
+    "TestReleaseForegroundCancellationJoinsBlockedUploadWithoutLosingAppend",
+    "TestReleaseForegroundCapacityRefusesBeforeBackgroundEffects",
+    "TestReleaseForegroundHeaderAllowanceMatchesActualPublicMetadata",
+    "TestReleaseForegroundLedgerCloseCancelsAndJoinsHeldUpload",
+    "TestReleaseForegroundOriginalRecordCeilingStillRefusesAdditionalTrail",
+    "TestReleaseForegroundProgressDuringBlockedHttpAndReplay",
+    "TestReleaseForegroundProgressDuringContinuousActualReplay"
+  ],
+  "limits": [
+    "Race and two operative causal controls remain pending.",
+    "Exact focused validator scope only, not production deployment or full native accounting acceptance.",
+    "Original0e5 normal/race6PASS3FAIL remain retained."
+  ]
+}

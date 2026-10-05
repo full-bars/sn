@@ -1,0 +1,16 @@
+{
+  "schema": "old-compiler-intermediate-cleanup-root-readback-v1",
+  "observed_utc": "2026-10-04T19:14:57.210948+00:00",
+  "receipt_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/qualification-child-context/evidence/old-intermediate-cleanup-receipt.json",
+  "receipt_sha256": "42026848a5e3ae1063778b4cf9b354c50c4a3d88adc061325ea60b9aac413b92",
+  "manifest_sha256": "6fc8f7c775a70a7f7f69a47cb085d89c45b80139a588953cb9966451da9da42a",
+  "removed_archives": 153,
+  "logical_bytes_removed": 728561584,
+  "available_before": 24932749312,
+  "available_after": 25661665280,
+  "all_listed_paths_now_absent": true,
+  "privileged_live_reference_count": 0,
+  "inaccessible_process_count": 0,
+  "scope": "Only exact old single-link ar archives; all test images, sources, receipt/state files and cache directories retained.",
+  "remaining_constraint": "This narrow cleanup does not supply final 108-image capacity; temporary root storage exception is still pending."
+}

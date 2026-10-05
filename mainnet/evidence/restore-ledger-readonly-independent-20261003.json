@@ -1,0 +1,64 @@
+{
+  "dependency_pins": {
+    "connect": "53bc92fabb28",
+    "server": "c2563f9a7ae7",
+    "workspace_local_replacements": "symlinked to pinned author physical worktrees; independent SN physical Git archive"
+  },
+  "files": {
+    "d3/evidence/normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "d3/evidence/normal.jsonl": "b5ae71fbafbe2f7b4ad2a4a1abf8d3e56b3df42dd33c6c43d116e84d184375cc",
+    "d3/evidence/normal.phase": "cdebee1581a7f417c7e7ecfd141c277be9014682eb59f427ead60e232e109141",
+    "d3/evidence/normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "d3/evidence/race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "d3/evidence/race.jsonl": "ee19617bcd59a30c18bc993a9603be06a52e7cc6e1e316332dda877d6d8be330",
+    "d3/evidence/race.phase": "45959445fcd0baba49339431c41d6f7e186a9a24207602fc897fbea580c0b66c",
+    "d3/evidence/race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "d3/evidence/vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "d3/evidence/vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "d3/evidence/vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "d3/source/go.work": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778",
+    "d3/source/sn/go.mod": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "d3/source/sn/go.sum": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61",
+    "d3/source/sn/validator/attempt_ledger_preparation_retained_test.go": "631fcde4d4ef8537446bf35296c5ba8ad54c2ebda074927409c7a70a1bf53cd1",
+    "d3/source/sn/validator/attempt_record_store.go": "3fbeddcd77c9376485b96ebb52dd50ff3988e16e73be6fb1dd25008ad2ed811f",
+    "run-d3.sh": "ba57c7391dbd02659fa5dc3cf05c7305647119e90612b5e9b86ed3d97f4be274"
+  },
+  "limits": [
+    "Two validator roots only; old198 causal and 912 public adapter are separate queued scopes.",
+    "No live device or restore operation."
+  ],
+  "schema": "sol-restore-ledger-d3-independent-v1",
+  "scopes": [
+    {
+      "exit": 0,
+      "jsonl_sha256": "b5ae71fbafbe2f7b4ad2a4a1abf8d3e56b3df42dd33c6c43d116e84d184375cc",
+      "mode": "normal",
+      "roots": {
+        "TestAttemptPreparationInspectsRetainedSignedPrefixWithoutWriter": "pass",
+        "TestAttemptPreparationReadOnlyDecodeRetainsSignatureAndByteBounds": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "ee19617bcd59a30c18bc993a9603be06a52e7cc6e1e316332dda877d6d8be330",
+      "mode": "race",
+      "roots": {
+        "TestAttemptPreparationInspectsRetainedSignedPrefixWithoutWriter": "pass",
+        "TestAttemptPreparationReadOnlyDecodeRetainsSignatureAndByteBounds": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source": {
+    "commit": "d3c84fe31934133f319a4adde8bdc4ad2d4a5807",
+    "go_mod_sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "go_sum_sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61",
+    "production_sha256": "3fbeddcd77c9376485b96ebb52dd50ff3988e16e73be6fb1dd25008ad2ed811f",
+    "test_sha256": "631fcde4d4ef8537446bf35296c5ba8ad54c2ebda074927409c7a70a1bf53cd1",
+    "tree": "9a3fa36d11b92fbb2b86ba8b3c38975ecc5e0f0b",
+    "workspace_sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+  },
+  "status": "PASS_SCOPED",
+  "vet_exit": 0
+}

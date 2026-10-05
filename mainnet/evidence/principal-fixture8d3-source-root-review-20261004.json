@@ -1,0 +1,104 @@
+{
+  "schema": "principal-fixture8d3-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_UNCOMPILED_UNEXECUTED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/sn",
+    "head": "8d33892ccad78ff69692b7fdcc3112ce12f1cfcb",
+    "tree": "a50391d039a2820c156730428cae30fb599d06fb",
+    "parent": "dc1aeb156f48434e36242e189901caa4f1bc8279",
+    "clean": true
+  },
+  "review": [
+    "Read both changed test files, exact complete diff, intake, selector scope, recipe and causal omission. Production/module/Rust files are unchanged from dc1.",
+    "Independently parsed all original normal raw top-level events: exact38 roots,19 pass/19 fail,zero skip; all failures include the same physical root custody refusal. Twenty-root successor selects exact19 masked roots plus one new deterministic test.",
+    "Provision only freshly created test-owned selected root to0700. New proof starts explicitly0770, checks unchanged object and unrelated ancestor, advances actual public sources, then refuses later0770 tampering without repair or an additional Claim read. Runtime custody checks remain unchanged.",
+    "Reuse Rust assets only with fresh exact source/ELF/export custody joins. Preserve original successes and failures; changed Go images and causal bodies remain to execute."
+  ],
+  "qualification": {
+    "go_roots_per_mode": 20,
+    "controls_per_mode": 1,
+    "vets": [
+      "./mainnet"
+    ],
+    "rust_rebuild_required": false
+  },
+  "normal_counts": {
+    "run": 38,
+    "pass": 19,
+    "fail": 19,
+    "skip": 0
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/sn/mainnet/economic_conservation_fixture_protection_test.go",
+      "bytes": 1931,
+      "sha256": "644bafa7b394613c9b75ade45161cebb935376b880d7c005bfd23a1142057e0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/sn/mainnet/economic_conservation_fixture_test.go",
+      "bytes": 12948,
+      "sha256": "617cb5aaf0a1a7f2797306e29739157369e8facd685cd657babe9bb4a03c3e9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/intake.json",
+      "bytes": 15425,
+      "sha256": "125a2efa90ae21c5e18be5351d6d8e717ea12b4c2fdeb65d2f00ef8f5105b83e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-normal-body.stdout",
+      "bytes": 44807,
+      "sha256": "ebf73805af785e9886493d39edb688cd2aac3ec8ea04a72f17d72d68c0fe069d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/evidence/selectors.json",
+      "bytes": 8975,
+      "sha256": "3d1307cdf32b01059c0b5c017333a84c4c88d0853b9acd647e307b95423e161c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/evidence/operative-controls.json",
+      "bytes": 1586,
+      "sha256": "8bf2e419fe4b9e5c662f2dff1577c70bf8867fc1eaff99047a469a54384bf2fb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/evidence/recipe.json",
+      "bytes": 1597,
+      "sha256": "558260400982b7e6f8b881100bcf4f58494fad02f77f61195171b2ef3b84fe4e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/evidence/controls/omit-explicit-fresh-root-mode/economic_conservation_fixture_test.go",
+      "bytes": 12938,
+      "sha256": "8df65c3fa11e1f511342e2d24406df7c507b96e89ca8a30879482a07a55a0fb2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-protection/evidence/controls/omit-explicit-fresh-root-mode/overlay.json",
+      "bytes": 351,
+      "sha256": "5cfaa5f76638202e59b8e3caea411a158f179f76a1297b640fd06b54896545d1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-normal.receipt.json",
+      "bytes": 22872,
+      "sha256": "8004f6146715eb7bdf661cd9eb0225451477e3eebb68cc59d302a943c76169f0"
+    }
+  ],
+  "requirement_closure": false
+}

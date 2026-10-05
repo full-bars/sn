@@ -1,0 +1,183 @@
+{
+  "baseline": [
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=25m",
+        "-run",
+        "^TestOpenContractStatsKeepsExactSmallPopulation$",
+        "./model"
+      ],
+      "exit": 1,
+      "failed": [
+        "TestOpenContractStatsKeepsExactSmallPopulation"
+      ],
+      "name": "fixture-baseline-normal",
+      "passed": [],
+      "run": [
+        "TestOpenContractStatsKeepsExactSmallPopulation"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=25m",
+        "-race",
+        "-run",
+        "^TestOpenContractStatsKeepsExactSmallPopulation$",
+        "./model"
+      ],
+      "exit": 1,
+      "failed": [
+        "TestOpenContractStatsKeepsExactSmallPopulation"
+      ],
+      "name": "fixture-baseline-race",
+      "passed": [],
+      "run": [
+        "TestOpenContractStatsKeepsExactSmallPopulation"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server"
+    }
+  ],
+  "causal_failure": "Old fixture terminal contract lacks immutable provider_usage; SQLSTATE P0001 in both normal and race.",
+  "created_utc": "2026-10-02T07:54:41.524290+00:00",
+  "files_sha256": {
+    "fixture-baseline-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "fixture-baseline-normal.jsonl": "f6ea7ca9e84faa96d33b584dadac7ce55b39badbbf828b9b506d1e13c5d9c602",
+    "fixture-baseline-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "fixture-baseline-race.jsonl": "3a9fdf30e4f996ad4c54f8fa440505b2c10ff9b304b881138505eac746050524",
+    "fixture-fixed-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "fixture-fixed-normal.jsonl": "08df1d9f031e5fa658e7fa638eae19aa4733aa2c9c36aa676b9c216b26538a1f",
+    "fixture-fixed-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "fixture-fixed-race.jsonl": "0b34146e91512c10f73418c82d4d2ce3e47eb33a0724c3a97d650f305b7cef2b",
+    "fixture-fixed-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "fixture-fixed-vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fixture-network-cleanup.log": "93d2225c216e925789afe1404168b855bb919e918a9feb2aa78f24cab51099b7",
+    "fixture-network.id": "93d2225c216e925789afe1404168b855bb919e918a9feb2aa78f24cab51099b7",
+    "fixture-results.json": "71411b8849d7a89ba78287b25b56e278509b32bc525335b2495fb4ce62f6e42a",
+    "fixture-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "fixture-runner.log": "d5c1a1d9b4056ecf0f3de8ff7a536e39a4d65886fd5ea00a0ceaa622c39b2986",
+    "fixture-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "fixture-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fixture-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "full-model-receipt.json": "4e580a88539860f503f8ac0f0d77a3978634c731a9ce5a3dd18565c7a6e92373",
+    "run_fixture.py": "75925d37e18bb772f275ff1eec0bccbccb628c02f0100443d8894a31e97b0633",
+    "run_private_stage.sh": "ba31333e0655e65d72d1daf4e72e5623012019c71c3dd352bbcb1de10b7eac91"
+  },
+  "fixed": [
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=25m",
+        "-run",
+        "^(TestContractStatsFixtureRetainsExplicitZeroSettlement|TestCountOpenContracts|TestContractHourWindowCountsAndCache|TestContractHourBucketSettles|TestContractHourBucketsAreSharedAcrossWindows|TestOpenContractStatsCapsLargePopulation|TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership|TestOpenContractStatsKeepsExactSmallPopulation)$",
+        "./model"
+      ],
+      "exit": 0,
+      "failed": [],
+      "name": "fixture-fixed-normal",
+      "passed": [
+        "TestContractHourBucketSettles",
+        "TestContractHourBucketsAreSharedAcrossWindows",
+        "TestContractHourWindowCountsAndCache",
+        "TestContractStatsFixtureRetainsExplicitZeroSettlement",
+        "TestCountOpenContracts",
+        "TestOpenContractStatsCapsLargePopulation",
+        "TestOpenContractStatsKeepsExactSmallPopulation",
+        "TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership"
+      ],
+      "run": [
+        "TestContractHourBucketSettles",
+        "TestContractHourBucketsAreSharedAcrossWindows",
+        "TestContractHourWindowCountsAndCache",
+        "TestContractStatsFixtureRetainsExplicitZeroSettlement",
+        "TestCountOpenContracts",
+        "TestOpenContractStatsCapsLargePopulation",
+        "TestOpenContractStatsKeepsExactSmallPopulation",
+        "TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server-fixture"
+    },
+    {
+      "census_pass": true,
+      "command": [
+        "go",
+        "test",
+        "-json",
+        "-count=1",
+        "-parallel=2",
+        "-timeout=25m",
+        "-race",
+        "-run",
+        "^(TestContractStatsFixtureRetainsExplicitZeroSettlement|TestCountOpenContracts|TestContractHourWindowCountsAndCache|TestContractHourBucketSettles|TestContractHourBucketsAreSharedAcrossWindows|TestOpenContractStatsCapsLargePopulation|TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership|TestOpenContractStatsKeepsExactSmallPopulation)$",
+        "./model"
+      ],
+      "exit": 0,
+      "failed": [],
+      "name": "fixture-fixed-race",
+      "passed": [
+        "TestContractHourBucketSettles",
+        "TestContractHourBucketsAreSharedAcrossWindows",
+        "TestContractHourWindowCountsAndCache",
+        "TestContractStatsFixtureRetainsExplicitZeroSettlement",
+        "TestCountOpenContracts",
+        "TestOpenContractStatsCapsLargePopulation",
+        "TestOpenContractStatsKeepsExactSmallPopulation",
+        "TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership"
+      ],
+      "run": [
+        "TestContractHourBucketSettles",
+        "TestContractHourBucketsAreSharedAcrossWindows",
+        "TestContractHourWindowCountsAndCache",
+        "TestContractStatsFixtureRetainsExplicitZeroSettlement",
+        "TestCountOpenContracts",
+        "TestOpenContractStatsCapsLargePopulation",
+        "TestOpenContractStatsKeepsExactSmallPopulation",
+        "TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership"
+      ],
+      "skipped": [],
+      "source": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/source/server-fixture"
+    }
+  ],
+  "fixed_vet_exit": 0,
+  "fixture_cleanup_exit": 0,
+  "limits": [
+    "Original full-model source025 remains failed; this is a separate frozen test-only successor",
+    "Eight affected/helper roots normal/race and model package vet; no new full model suite",
+    "Private synthetic PG18/Redis8 only, no production DB/network writes"
+  ],
+  "owned_network_removed": true,
+  "schema": "sol-server-stats-fixture-independent-v1",
+  "semantic_witness": "New fixed test asserts zero completed bytes/providers despite 1024 allocated bytes, terminal close_time and no terminal receipt on open/disputed rows.",
+  "source": {
+    "baseline_commit": "025802a50e2dc56dc56c3cb749db7375aa9f72be",
+    "changed_files": [
+      "model/contract_stats_model_test.go"
+    ],
+    "clean_physical_no_alternates": true,
+    "fixed_commit": "a3fc427066f037447971c90a51a80c527ee83162",
+    "fixed_tree": "0408736564f2eabded81037067d6d2547c1acd50",
+    "original_full_model_receipt_sha256": "4e580a88539860f503f8ac0f0d77a3978634c731a9ce5a3dd18565c7a6e92373",
+    "production_and_module_bytes_unchanged": true
+  },
+  "verdict": "PASS_SCOPED_TEST_ONLY_FIX"
+}

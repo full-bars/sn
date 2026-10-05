@@ -1,0 +1,92 @@
+{
+  "scope": "Independent source review only; no compilation, test or launch qualification",
+  "commit": "b6b7880ea4059af1a77f232a1ed597fe11cc8999",
+  "tree": "b01047e569d7398f2efb242dd7d139fa7ab9399b",
+  "parent": "febe870ea598febc78e2f15b87860d421c0c5436",
+  "intake_sha256": "1436e96dc1cef2a6ea8d0663646f1601b0d7ea98bdee839e30a8dd64e83018b4",
+  "verified_physical_bindings": 34,
+  "verified_changed_paths": [
+    "mainnet/main.go",
+    "mainnet/monitor_cancellation.go",
+    "mainnet/monitor_claim_archive.go",
+    "mainnet/monitor_claim_worker.go",
+    "mainnet/monitor_economic_evm_archive.go",
+    "mainnet/monitor_economic_evm_worker.go",
+    "mainnet/monitor_economic_native_archive.go",
+    "mainnet/monitor_economic_native_worker.go",
+    "mainnet/monitor_history_archive.go",
+    "mainnet/monitor_operator.go",
+    "mainnet/monitor_provider_worker.go",
+    "mainnet/monitor_services.go",
+    "mainnet/monitor_startup_archive_cleanup_test.go",
+    "mainnet/monitor_storage_recovery.go"
+  ],
+  "new_roots": [
+    "TestMonitorStartupNativeNestedCleanupCannotRetry",
+    "TestMonitorStartupEvmNestedCleanupCannotRetry",
+    "TestMonitorStartupClaimNestedCleanupCannotRetry",
+    "TestMonitorStartupArchiveReadWithoutCleanupFailureCanResume",
+    "TestMonitorClaimRecoveryNestedCleanupCannotReacquire",
+    "TestMonitorStorageRecoveryCancellationRetainsCloseFailure",
+    "TestMonitorStorageRecoveryCleanupMarkerDominatesCancellation"
+  ],
+  "selected_fixed_roots_each_mode": [
+    "TestMonitorStartupNativeNestedCleanupCannotRetry",
+    "TestMonitorStartupEvmNestedCleanupCannotRetry",
+    "TestMonitorStartupClaimNestedCleanupCannotRetry",
+    "TestMonitorStartupArchiveReadWithoutCleanupFailureCanResume",
+    "TestMonitorClaimRecoveryNestedCleanupCannotReacquire",
+    "TestMonitorStorageRecoveryCancellationRetainsCloseFailure",
+    "TestMonitorStorageRecoveryCleanupMarkerDominatesCancellation",
+    "TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer",
+    "TestMonitorClaimPublicLostAckReopensExactCheckpoint",
+    "TestMonitorStorageCheckpointRecoveryBudgetIsPerRole",
+    "TestMonitorCheckpointCancellationRetainsHardCausePrecedence",
+    "TestMonitorStartupPublicCleanupFailureStopsReacquisition",
+    "TestMonitorStartupPublicReadFailureRetriesSameCustody",
+    "TestMonitorStartupPublicIdentityLossQuarantinesOnlyRole",
+    "TestMonitorStartupConstructorErrorClosesReturnedOwner",
+    "TestMonitorStartupCancellationJoinsPendingAdmission"
+  ],
+  "operative_control": {
+    "expected_fail_roots": [
+      "TestMonitorStartupNativeNestedCleanupCannotRetry",
+      "TestMonitorStartupEvmNestedCleanupCannotRetry",
+      "TestMonitorStartupClaimNestedCleanupCannotRetry",
+      "TestMonitorClaimRecoveryNestedCleanupCannotReacquire",
+      "TestMonitorStorageRecoveryCancellationRetainsCloseFailure",
+      "TestMonitorStorageRecoveryCleanupMarkerDominatesCancellation"
+    ],
+    "expected_pass_roots": [
+      "TestMonitorStartupArchiveReadWithoutCleanupFailureCanResume"
+    ],
+    "kind": "exact-parent-production-except-private-post-read-failure-seam-retained",
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "overlay": {
+      "bytes": 4293,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-startup-nested-cleanup/evidence/old-cleanup-overlay.json",
+      "sha256": "4e51df377d19273aad318bdf2730c6216b6ad7d6062922ecc5c833e3fab8199b"
+    },
+    "roots": [
+      "TestMonitorStartupNativeNestedCleanupCannotRetry",
+      "TestMonitorStartupEvmNestedCleanupCannotRetry",
+      "TestMonitorStartupClaimNestedCleanupCannotRetry",
+      "TestMonitorStartupArchiveReadWithoutCleanupFailureCanResume",
+      "TestMonitorClaimRecoveryNestedCleanupCannotReacquire",
+      "TestMonitorStorageRecoveryCancellationRetainsCloseFailure",
+      "TestMonitorStorageRecoveryCleanupMarkerDominatesCancellation"
+    ],
+    "status": "predicted; not executed; require actual assertion cause census"
+  },
+  "review_findings": [
+    "Failure-only nested owner close now preserves typed cleanup marker through native, EVM and Claim archive loaders and all seven role reopen callbacks",
+    "Pure cancellation classifier excludes cleanup markers and retains joined independent causes",
+    "Tests close the actual borrowed descriptor after an actual archive read; barrier cannot supply successful bytes or admission authority",
+    "Ordinary read failure control proves exact original archive can be reopened; actual lost-ack Claim and healthy peer continuity are covered",
+    "Inherited Core2ea go.mod/go.sum bytes unchanged"
+  ],
+  "qualification": "Pending normal/race/vet and actual old-body assertion census"
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "urnetwork-mainnet-original-source-launch-source-record-v1",
+  "date_utc": "2026-10-04",
+  "status": "source-only-uncompiled-unexecuted",
+  "source_commit": "24359023411cf2fb97ef667d221da945ff714d2a",
+  "source_path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/miner-original-contract-launch/sn",
+  "base_commit": "4c92ffeb648157fde6bc9871a2970f4d2d3bc652",
+  "implementation_commits": [
+    "12a89d9d6dc41417914e5d73882348c8542942b8",
+    "dd84835d0eb6b54d0c63562daf05c497ac880fd6",
+    "fefb9872248f0f023006c1432a068be9b66bff1a",
+    "886eba571150991d048ff6a4ecaeacf9483c7171",
+    "24359023411cf2fb97ef667d221da945ff714d2a"
+  ],
+  "dependencies": {
+    "core_creation_custody_commit": "25a4ce7fac3eb0a347b63c2e0b0038cb235f0f0c",
+    "core_creation_custody_parent": "0b4e95ce742fd799835211d73edd517f2e242d8d",
+    "integration_publication_source_path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-attempt-publication/sn",
+    "integration_publication_freeze": "separate owner handoff required; no qualification inferred from working source",
+    "recovery_adapters": "separate creation and validator publication preparation/export/restore owner handoffs"
+  },
+  "provider_launch": {
+    "profile_schema": "urnetwork-provider-original-contract-capture-v1",
+    "profile_type": "miner.ProviderContractCaptureProfile",
+    "portable_decoder": "miner.DecodeProviderContractCaptureProfile",
+    "independent_authority": "Exact externally approved sha256 profile selects full role roster, operator origin, original domain, client, provider public key, private Directory and persistent SourceGeneration. Retained leaves and current SQL never select authority.",
+    "arguments": [
+      "--original-contract-capture=<absolute-profile-path>",
+      "--original-contract-capture-sha256=sha256:<independently-approved-lowercase-digest>",
+      "--require-original-contract-capture"
+    ],
+    "actual_callsite": "Standalone provide/auth-provide and swarm enter newProviderDeviceLocal. It verifies the retained seed/client against the selected profile and calls connect.ValidateOriginalContractStore before sdk.NewDeviceLocal.",
+    "settings": "OriginalContractCaptureSettings.Directory, PublicKey and SourceGeneration are copied from the selected approved owner. SDK request Generation remains the actual fresh manager lifecycle.",
+    "mandatory_preparation": "Before launch, storage-prepare must explicitly prepare sdk-original-contract-store under the accepted stopped-writer and zero-history fence, using the approved urnetwork-original-contract-preparation-v1 wrapper with capture_profile and slot. Runtime never creates a replacement source birth or restores absent custody.",
+    "original_whole_work_profile": "unchanged schema and independent request signing authority; whole-work and original contract profiles must agree on original client/key/domain and use disjoint private directories",
+    "bootstrap_export": "bootstrap-chain provider-role-config accepts original_contract_capture_profile references and require_original_contract_capture; exported argument vectors preserve exact profile path/hash and mandatory flag",
+    "legacy": "Omitting optional capture configuration preserves providing with unknown original-source coverage. It does not establish empty or complete evidence. Required capture refuses absent profile or unprepared source.",
+    "source_generation": "Persistent custody namespace only; never a configured substitute for actual SDK lifecycle Generation. Restart retains original files and approved custody scope while producing a fresh SDK generation."
+  },
+  "validator_launch": {
+    "command": "bootstrap-chain validator-source-role-config --config <original-chain-config> --sources <approved-source-selections> --sources-sha256 sha256:<independently-approved-digest>",
+    "request_schema": "urnetwork-mainnet-validator-original-request-role-v1",
+    "selection": "Complete original validator/operator census and each hash-and-byte-pinned RequestPreparation; explicit server_profile is exactly testnet or mainnet and is never inferred from policy or environment.",
+    "scope": "RequestReceiptScope matches independently admitted original GenesisHash, DeploymentId, PolicyHash, Netuid and NoId; DeploymentKey is decimal nonzero ChainId + colon + lowercase nonzero original Coordinator address, matching Server original st_config construction.",
+    "runtime_type": "Actual validator.OperatorConfig copied with paired RequestPreparation and RequestReceiptScope, retaining every unrelated original operator setting",
+    "publication_profile": "Complete canonical validator.ProviderAttemptPublicationPreparation and its sha256 digest come from the same runtime profile computation, including original request births and existing finite evidence bounds.",
+    "publication_preparation": "Extract the exact canonical PublicationPreparation object and independently approve its digest. The validator-provider-attempt-publications adapter consumes urnetwork-provider-attempt-publication-preparation-v1 with preparation_profile and requires the fixed StateDir/provider-attempt-publications namespace. No runtime auto-birth.",
+    "approval_boundary": "Output is an unsigned deterministic review/adoption patch, marked requires_owner_signing_and_adoption and requires_stopped_writer_preparation. Original signed ReleaseConfig and approval files are read-only, never modified, re-signed or represented as approving the new fields. Owners must approve and sign/adopt the successor config before production use."
+  },
+  "new_test_roots": {
+    "miner": [
+      "TestProviderOriginalContractProfilePreservesApprovedSourceWithoutLiveDirectory",
+      "TestProviderOriginalContractProfileRefusesAuthorityAndNamespaceChanges",
+      "TestProviderOriginalContractLaunchActualArgumentsAndRequiredRefusal",
+      "TestProviderOriginalContractLaunchBindsActualSettingsAndRefusesKeyOrScopeChanges",
+      "TestProviderOriginalContractActualConstructorRefusesUnpreparedSource",
+      "TestProviderOriginalContractRequiredCliRefusesBeforeAuthProvide",
+      "TestProviderOriginalContractActualDeviceRetainsBeforeHTTPAndRestartsSource"
+    ],
+    "mainnet": [
+      "TestBootstrapProviderOriginalContractExportReachesRequiredMinerArguments",
+      "TestBootstrapProviderOriginalContractExportRefusesMissingAuthorityBeforePublication",
+      "TestBootstrapValidatorOriginalRoleExportBindsActualOperatorAndOriginalHashes",
+      "TestBootstrapValidatorOriginalRoleRefusesMissingProfileOrIncompleteRoster",
+      "TestBootstrapValidatorOriginalRoleRefusesForeignPreparedScope",
+      "TestBootstrapValidatorOriginalRoleRetainsExactInputsAcrossOutputFailureAndCancellation"
+    ]
+  },
+  "inherited_lifecycle_fixture_controls": [
+    "TestProviderWholeWorkActualDeviceCaptureAndRestartPreserveOriginal",
+    "TestProviderWholeWorkActualDeviceCancellationJoinsHttpAndOutbox"
+  ],
+  "qualification_limits": [
+    "Thirteen distinct new top-level roots are authored, not executed. Prior miner17/mode and earlier whole-work roots retain their separately recorded scopes.",
+    "New real SDK test uses the production constructor, explicit prepared namespace, public DeviceLocal.SendSubprotocolBytes and real local HTTPS /connect/control. It checks that the signed request is already retained before HTTP, both lifecycle joins, fixed original custody and generation-attributed restart observations.",
+    "The new SDK test does not claim successful operator admission or an end-to-end successful miner Run. Core creation owner tests and Recovery public preparation/export/restore tests are separate required qualification inputs.",
+    "Only source inspection, gofmt and git diff --check were performed by this author. No author compilation, test execution, full copy, live service launch, network submission or authority signing occurred."
+  ]
+}

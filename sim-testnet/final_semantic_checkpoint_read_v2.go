@@ -18,6 +18,15 @@ import (
 // hint. Only exact first insertion of the independently canonical Ethereum
 // hash proves the mapping; a coincident number never satisfies the reader.
 func readFinalNativeCheckpointV2(ctx context.Context, native *crv4.Chain, evm ChainHead, netuid, uid uint16, hotkey [32]byte, runtime crv4.RuntimeArtifactIdentity) (result FinalNativeCheckpointV2, resultErr error) {
+	var selected gsrpctypes.Hash
+	return crv4.ReadRuntimeObservationContext(ctx, native, func(ctx context.Context) (FinalNativeCheckpointV2, error) {
+		return readFinalNativeCheckpointAttemptV2(ctx, native, evm, netuid, uid, hotkey, runtime, &selected)
+	})
+}
+
+// Mapping, identity, schedule and row are one read-only observation. Socket
+// replacement repeats their original native block before publishing any part.
+func readFinalNativeCheckpointAttemptV2(ctx context.Context, native *crv4.Chain, evm ChainHead, netuid, uid uint16, hotkey [32]byte, runtime crv4.RuntimeArtifactIdentity, selected *gsrpctypes.Hash) (result FinalNativeCheckpointV2, resultErr error) {
 	if ctx == nil || native == nil || native.API == nil || native.API.Client == nil || evm.Number == 0 || evm.Number > math.MaxUint32 {
 		return result, errors.New("native coverage checkpoint owner is incomplete")
 	}
@@ -31,10 +40,12 @@ func readFinalNativeCheckpointV2(ctx context.Context, native *crv4.Chain, evm Ch
 	if err != nil {
 		return result, err
 	}
-	var nativeHash gsrpctypes.Hash
-	if err := native.API.Client.CallContext(ctx, &nativeHash, "chain_getBlockHash", evm.Number); err != nil {
-		return result, err
+	if *selected == (gsrpctypes.Hash{}) {
+		if err := native.API.Client.CallContext(ctx, selected, "chain_getBlockHash", evm.Number); err != nil {
+			return result, err
+		}
 	}
+	nativeHash := *selected
 	result.Mapping, err = crv4.ReadEVMCheckpointAtContext(ctx, native, crv4.EVMCheckpointQuery{GenesisHash: native.GenesisHash, NativeHash: nativeHash, NativeNumber: evm.Number, EVMHash: evmHash, EVMNumber: evm.Number}, runtime)
 	if err != nil {
 		return result, err
@@ -46,12 +57,14 @@ func readFinalNativeCheckpointV2(ctx context.Context, native *crv4.Chain, evm Ch
 	if result.Identity.Stake.Identity.UID != uid {
 		return result, errors.New("native coverage checkpoint UID differs from original validator")
 	}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, native, nativeHash, runtime)
+	artifact, err := crv4.ReadRuntimeArtifactAtContext(ctx, native, nativeHash, runtime)
 	if err != nil {
 		return result, err
 	}
 	own := *native
-	own.Meta = artifact.Metadata
+	if err := own.BindRuntimeArtifact(artifact); err != nil {
+		return result, err
+	}
 	state, err := own.EpochScheduleStateAtContext(ctx, netuid, nativeHash)
 	if err != nil {
 		return result, err

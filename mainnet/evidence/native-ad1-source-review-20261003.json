@@ -1,0 +1,35 @@
+{
+  "schema": "mainnet-native-ad1-source-review-v1",
+  "status": "SOURCE_ONLY_UNCOMPILED_UNQUALIFIED",
+  "intake_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-execution-witness/evidence/intake.json",
+  "intake_sha256": "1d39e189fdb1c5d599df5131a339c131c68a3e487d4aad12bcce8b695ca05804",
+  "commit": "ad1e5b192eb5e02c482b78927ea4a4e08b62e251",
+  "tree": "94169c1d38e61c0efdec1bd1adf2883a0b06f964",
+  "bindings_verified": 24,
+  "exact_changed_files": [
+    "mainnet/economic_emission.go",
+    "mainnet/economic_emission_observe.go",
+    "mainnet/economic_native_accounting.go",
+    "mainnet/economic_native_execution.go",
+    "mainnet/economic_native_execution_test.go",
+    "mainnet/historical_native_observation.go",
+    "mainnet/historical_replay.go",
+    "mainnet/historical_replay_observation.go",
+    "mainnet/historical_replay_test.go",
+    "mainnet/monitor_economic_native.go",
+    "mainnet/monitor_economic_native_archive.go",
+    "mainnet/monitor_economic_native_worker.go",
+    "tools/runtime-metadata-probe/src/historical_hosts.rs",
+    "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+    "tools/runtime-metadata-probe/src/historical_observer.rs",
+    "tools/runtime-metadata-probe/src/historical_tests.rs"
+  ],
+  "cross_engine_pass_without_skip_required": true,
+  "remaining": [
+    "continuous independent finality and provider producer",
+    "full normalization and quantization authority",
+    "cross-domain conservation",
+    "actual runtime and genesis approval",
+    "normal race vet Rust and actual cross-engine qualification"
+  ]
+}

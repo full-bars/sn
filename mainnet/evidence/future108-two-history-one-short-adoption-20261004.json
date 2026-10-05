@@ -1,0 +1,22 @@
+{
+  "status": "ADOPTED_FUTURE_TWO_HISTORY_ONE_SHORT_BODY_ONLY",
+  "utc": "2026-10-04T21:39:33.646257+00:00",
+  "original_data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "physical_floor_bytes": 0,
+  "margin": 2,
+  "history_count_max": 2,
+  "history_disk_bytes_each": 4294967296,
+  "history_memory_bytes_each": 4294967296,
+  "short_count_max": 1,
+  "short_disk_bytes": 1073741824,
+  "short_memory_bytes": 1073741824,
+  "compiler_count": 0,
+  "DB_count": 0,
+  "data_launch_minimum_bytes": 19327352832,
+  "memory_launch_minimum_bytes": 122406567936,
+  "actual_data_available_bytes": 28842573824,
+  "actual_memory_available_bytes": 129729863680,
+  "scope": "ONE prebuilt finite selected Go body (rootstartup clock or Claim2/4/8 causal roots) OR ONE xops242 Python/promtool/loopback conformance body. No package fullhistory asshort, DB, compiler, Rust, dependencydownload or sourcecopies. Exact currentsource/image/census/context pinned, original lease+fresh guard required. Short must end and treejoin before next compiler class. Healthy history guards unchanged.",
+  "authorization": "Standing user parallel qualification and automatic budget increases. No live deployment/chain writes."
+}

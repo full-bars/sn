@@ -1,0 +1,21 @@
+{
+  "accounting_floor_bytes": 0,
+  "compiler_count": 1,
+  "compiler_memory_max_bytes": 8589934592,
+  "compiler_memory_swap_max_bytes": 0,
+  "data_baseline_bytes": 113681502208,
+  "data_cap_bytes": 115964116992,
+  "data_growth_stop_bytes": 8589934592,
+  "data_minimum_available_bytes": 17179869184,
+  "execution_owner": "SolParallel only, user systemd manager",
+  "history_count": 0,
+  "job_sha256": "cf01e5f7e6cfa0ffb055c5162bda58d10739b87396b65a6b9154a5a51918c793",
+  "margin": 2,
+  "memory_minimum_available_bytes": 120259084288,
+  "model_count": 0,
+  "runner_sha256": "a2e1b98a4396f831ae4664c36e9c43a79a85f7d8aad36e1ee82e1ed599aff042",
+  "status": "ADOPTED_ONE_BOUNDED_GO_COMPILER_POST_MODEL",
+  "adopted_at": "2026-10-05T02:28:07.907048+00:00",
+  "review_sha256": "7f3024d44008ed4d932d99a8d654c16fb9fd741af5928186a41427f4a3c2551d",
+  "scope": "Only ./monitor normal compile. Later selected body needs separate retained-image/list/DB fixture ownership and resource admission. Current8e earlier priority13 actual PASS and oldmodel1673PASS19FAIL11SKIP preserved; actual selected4b model37 PASS retained as separate scope; no943 monitor PASS inherited."
+}

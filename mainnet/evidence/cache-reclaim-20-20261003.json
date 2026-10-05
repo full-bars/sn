@@ -1,0 +1,75 @@
+{
+  "bindings": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/candidate-paths.txt": {
+      "bytes": 44550,
+      "sha256": "4b35b69ff54b199dc147cc192698a4f4c8d83a06462810f70be30ea58840a228"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/candidate-union-paths.txt": {
+      "bytes": 44550,
+      "sha256": "4b35b69ff54b199dc147cc192698a4f4c8d83a06462810f70be30ea58840a228"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/plan.json": {
+      "bytes": 137048,
+      "sha256": "bdc97498caae88770393a6d96500a8ae5903fc946dea6066c26136286276500d"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "16d6a380e523178f803006f1a444f222b4ac5f5333f1201d84d2d38c305097d4"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "bfd2a6e5d011baa1581b2f2ac552babc1e49a730162b1aa95aba2a24779c2652"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/receipt.json": {
+      "bytes": 137329,
+      "sha256": "13ed3069dedaaf93c36662955c635046a457d7425053f189537dd9b1eb50bdbd"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/reclaim.go": {
+      "bytes": 7049,
+      "sha256": "500c6dbd15ec4f7006730f5d665cd116c2dfd688df145560dd894b366b6825d3"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/reference-command.json": {
+      "bytes": 1004,
+      "sha256": "c5d673be1d96142d853831f5adcbf2181c001a011789d7f4b689dc3c5a66e120"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/reference-scan.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-20-20261003/reference-scope.json": {
+      "bytes": 815,
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    }
+  },
+  "cache": "/mnt/data/sn-testnet/gocache",
+  "current_available_bytes": 125332279296,
+  "deleted_archives": 450,
+  "helper_changes": "Only taskRoot and archive minimum size (8MiB to4MiB, including receipt); exact reverse comparison verified.",
+  "helper_sha256": "500c6dbd15ec4f7006730f5d665cd116c2dfd688df145560dd894b366b6825d3",
+  "limits": [
+    "Qualification-host cleanup only; no production capacity acceptance.",
+    "The110GiB threshold governs admission of new heavy phases; crossing it never restarts an existing qualified process by itself."
+  ],
+  "maximum_candidates": 450,
+  "minimum_age_hours": 48,
+  "minimum_archive_bytes": 4194304,
+  "preserves": "Active Sol cache, sources, modules, evidence and ELF executables.",
+  "reclaimed_bytes": 5964853248,
+  "reclaimed_gib": 5.555202484130859,
+  "schema": "urnetwork-guarded-inactive-cache-reclaim-v1",
+  "source_helper_sha256": "a49c13db37e0c2817ceabfab1f8aeff0d8cab9ba91d9628a1d3b22a353fdb0d8",
+  "status": "COMPLETE",
+  "verification": [
+    "All-process references absent before planning and applying.",
+    "Bounded declared metadata reference scan returned exit1 without stdout/stderr.",
+    "Archive magic, single link, unchanged device/inode/size/timestamps repeated; all selected paths absent."
+  ]
+}

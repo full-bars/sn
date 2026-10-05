@@ -1,0 +1,239 @@
+{
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/member-f4e-332-intake.json": {
+      "bytes": 10065,
+      "sha256": "567e77e25e6d8a526c0df3cf0dfca048bbba2bbdc7b2ea85855f321f56f40c00"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/registry-94e-intake.json": {
+      "bytes": 8371,
+      "sha256": "d831257af8e79316843540336956c8146ed13dbedea2192b0879b575bf413dbb"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-union-148.go": {
+      "bytes": 6532,
+      "sha256": "1b8bc68322bee8ececfae8a0b5285c26f1c97e898df5fec69376517197c5c118"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-148-9fb-compile-jobs.json": {
+      "bytes": 2527,
+      "sha256": "b4b52a94c2976456ec8b15327957ccb22e22bc85b058c7798f3ac7cc90928306"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-core-9fb-compile.json": {
+      "bytes": 984,
+      "sha256": "1480ca3dde3379f8a0e07ecb3ca798b372e77afade465d869534b83fb0b6870e"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-core-9fb-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-core-9fb-preflight.json": {
+      "bytes": 863,
+      "sha256": "be1f48e3b2a5401ad28f668dd68e654d1bfb5a206f5ff72c59a271bb9e14acd1"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-core-9fb-preflight.jsonl": {
+      "bytes": 252558,
+      "sha256": "2c84d8ada8df4e4b9d9270906795ec4b62a987a1ba75c3c17031464728d49325"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-sn-148-compile.json": {
+      "bytes": 1065,
+      "sha256": "b091d78a375c3aa3d9b37ad06f2a2c507144afc10e1dfd1486d2472dc06b811e"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-sn-148-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-sn-148-preflight.json": {
+      "bytes": 946,
+      "sha256": "e83919f5da6ec3f9e24f513c11a6c2f3122e505404fbda3e6fbe17b8e3f99f55"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/union-sn-148-preflight.jsonl": {
+      "bytes": 3643496,
+      "sha256": "56c5bc4595f0da5c8c810d2fb13b3ed4283302546c9a3d81d46c52147eb2ec9b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/qualify-scoped.go": {
+      "bytes": 3425,
+      "sha256": "1a7b115440ecd7ce543810e9a08a751f4e2c1bb213ee2439b8a9e55455753e26"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect/durablevolume/preparation.go": {
+      "bytes": 12492,
+      "sha256": "1f73cced6507cab0fdc4be20ea3d5a084fbf56a2bd1f98e9aceb86504edac53c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect/durablevolume/preparation_apply_linux.go": {
+      "bytes": 38418,
+      "sha256": "d85889300386a9799d48c759edf645ba5887c1878e4a174e85a0ef49dc006b19"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect/durablevolume/preparation_derivation_linux.go": {
+      "bytes": 11420,
+      "sha256": "8a98268605997f19abf59a578e940575235c196b1f9e4640b005bc31ccd0689f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect/durablevolume/preparation_plan_linux.go": {
+      "bytes": 31470,
+      "sha256": "023d22a64103e307b80b5b604dc3c48cda4accade3d9f24bf4c7d945fc5d2201"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect/durablevolume/preparation_restore_linux.go": {
+      "bytes": 22274,
+      "sha256": "602aaf9702fce47ef3a8563da42c2bb66d6f5d41991962b714b0168e2583fd4d"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect/durablevolume/preparation_union_test.go": {
+      "bytes": 9543,
+      "sha256": "38daff2ca47506550c2873fa44f4d0312c4e15df89a7440105bab07772ac760b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/sn/internal/durablehead/restore_coverage_linux.go": {
+      "bytes": 2958,
+      "sha256": "0cc714f2a1a80d21ae1bf7a82b5d2ab2c33c3c793848caca30ba93e1c8a34a23"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/sn/internal/durablehead/restore_linux.go": {
+      "bytes": 13208,
+      "sha256": "9071a42aaa286bdfaec5f90b7d4963d73d4a179f3ea0a1bab04f1901ad7a5856"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/sn/mainnet/evidence/complete-owner-union-restore-profile-20261003.md": {
+      "bytes": 2620,
+      "sha256": "a3e99f04f12b7a73f47fbb1a7a2ed4b9a7661c2afc5f1840c7d3c5f292fbe088"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/sn/mainnet/storage_prepare_members_coverage_linux.go": {
+      "bytes": 1865,
+      "sha256": "015565390e4ff3be4c0c4982d53c496dd6029a229e3bd02d2144ec77f9062a33"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/sn/mainnet/storage_prepare_members_restore_linux.go": {
+      "bytes": 20405,
+      "sha256": "4e21d5ba6fe4a1ba230768188971717f6baae6908de4a10983733d7cc72e55f6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/sn/mainnet/storage_prepare_restore_linux.go": {
+      "bytes": 3492,
+      "sha256": "16d83bb939837611141cf0930f38a0f5854dd4a3b4bedd03d80feda5ab19f3cc"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/sn/mainnet/storage_prepare_union_restore_test.go": {
+      "bytes": 12407,
+      "sha256": "11457df4fbcfea387c6bd74a5e0f92d81cfae5d160f86ce60d1ec61c0bbca6d5"
+    }
+  },
+  "causal": [
+    {
+      "base": "332b1f438a62edddb4747119fbcc1fed8047ecbc",
+      "roots": [
+        "TestPreparationRestoreCompleteUnionKeepsEveryHead"
+      ],
+      "source": "connect",
+      "testOverlay": [
+        "durablevolume/preparation_union_test.go"
+      ]
+    },
+    {
+      "base": "94e087da4448a32c600e4d98837c0db13400916f",
+      "connect": "332b1f438a62edddb4747119fbcc1fed8047ecbc",
+      "roots": [
+        "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners",
+        "TestStoragePreparationRestoreUnionResumesOriginalPartialHeadSet"
+      ],
+      "source": "sn",
+      "testOnlyCommit": "7746e73261fdac3aa7d0d32915191d5f8e16cced",
+      "testOverlay": [
+        "mainnet/storage_prepare_union_restore_test.go"
+      ]
+    }
+  ],
+  "causalBoundary": "Old strict decoder lacks explicit restore_coverage; actual public complete-union plan cannot proceed. Capture actual outcomes; no behavioral result inferred.",
+  "controls": [
+    "Pure complete/disjoint original file and head union before payload staging, repeated during apply.",
+    "Actual six-owner public restore with five role snapshot heads and local member census; original runtime readers and reviewed transferred member inodes.",
+    "Omitted/duplicate owners, unknown original file, legacy shared profile refuse without target effects or historical byte changes.",
+    "Explicit cancellation after first real target head; joined exact-plan apply preserves that head and completes remaining owners.",
+    "Legacy omitted-field behavior remains selected in adjacent restore controls."
+  ],
+  "dependencies": {
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "graphScope": "Exact inherited Serverc256 and workspace Connect9fb; not current published-module composition.",
+  "limitations": [
+    "Original signed authority bytes and capacities unchanged; restart_authorized remains false.",
+    "Only file-lock snapshots and local successor history share this profile; nonce/native/ledger/fleet/claim remain exclusive.",
+    "Local-root execution rebind, unfinished outer member head, retained/in-place preparation, capacity revisions and current published composition remain mandatory work.",
+    "Inherited f4e root-gate fixture assertion is deliberately untouched; separate test-only6b23 correction awaits its own gate and is not selected here."
+  ],
+  "modes": [
+    "normal",
+    "race"
+  ],
+  "schema": "urnetwork-author-source-handoff-v1",
+  "scopes": [
+    {
+      "expectedPass": 6,
+      "package": "./durablevolume",
+      "roots": [
+        "TestPreparationRestoreCompleteUnionKeepsEveryHead",
+        "TestPreparationRestoreUnionRefusesMissingOverlapAndChangedClaims",
+        "TestPreparationRestoreCopiedArchiveKeepsOriginalIntent",
+        "TestPreparationRestoreLostAcknowledgementsKeepOriginalTarget",
+        "TestPreparationPhysicalMetadataRetainsBothCensuses",
+        "TestPreparationPhysicalMovesReconcileEachSyncedBoundary"
+      ]
+    },
+    {
+      "expectedPass": 8,
+      "package": "./mainnet",
+      "roots": [
+        "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners",
+        "TestStoragePreparationRestoreUnionRefusesIncompleteAndOverlappingCoverage",
+        "TestStoragePreparationRestoreUnionResumesOriginalPartialHeadSet",
+        "TestStoragePreparationRestoreMonitorKeepsActualContinuation",
+        "TestStoragePreparationRestorePendingSnapshotKeepsExactReconciliation",
+        "TestStoragePreparationRestoreMemberCensusOpensOriginalHistory",
+        "TestStoragePreparationRestoreMemberPendingKeepsOriginalPayload",
+        "TestStoragePreparationRestoreOwnerReservationKeepsOriginalBinding"
+      ]
+    }
+  ],
+  "sources": {
+    "connect": {
+      "commit": "9fb897f8d880ab813dd61dc02fa187e3d85f13a5",
+      "parent": "332b1f438a62edddb4747119fbcc1fed8047ecbc",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect",
+      "tree": "a3500ca8e57b70c78951fe91871d6bdc7a93f7c7"
+    },
+    "sn": {
+      "commit": "148ab9b4123ab6f1be58b57d1c516abc8d361431",
+      "parent": "94e087da4448a32c600e4d98837c0db13400916f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/sn",
+      "tree": "6ccb84e4a744201be1019e93b382f97081de1f91"
+    }
+  },
+  "status": "COMPILE_ONLY_NO_BEHAVIORAL_EXECUTION",
+  "vets": [
+    "./durablevolume",
+    "./internal/durablehead",
+    "./mainnet"
+  ],
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/go.work"
+}

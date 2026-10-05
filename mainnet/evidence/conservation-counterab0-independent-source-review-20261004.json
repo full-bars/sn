@@ -1,0 +1,44 @@
+{
+  "schema": "conservation-admission-counter-independent-source-review-v1",
+  "status": "SOURCE_VERIFIED_BEFORE_COMPILE_NOT_BEHAVIOR_QUALIFIED",
+  "head": "ab0b1a6fc58f4d0be4bfe84d26d4bb892ddd6a64",
+  "tree": "645a7d4d78583a39aa35f9967ee16ce8bcb4e73e",
+  "base": "39c05b49599b0d36d499a8a39e097c309a4c9727",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/evidence/intake.json",
+      "bytes": 2317,
+      "sha256": "1b3733851927cc3066433790d72830ee162328622d363fc2cd4bb72fce17980f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-corrections/evidence/intake.json",
+      "bytes": 1882,
+      "sha256": "ffa5e7ca077ff28ac43f6fc426830653ca4fc84e000752c94c605e9a34a70ab6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/evidence/qualification-recipe.json",
+      "bytes": 22921,
+      "sha256": "361dfa33df2b28ef63d7173e2fbdae454a4d0b9f0005533980d47b74be96a554"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-corrections/evidence/operative-controls.json",
+      "bytes": 2034,
+      "sha256": "c6f3bdb38f6ee9e0e55077ee4084db368a8658c867cb50440128c0627cd1c4b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/sn/mainnet/economic_conservation_joined_admission_test.go",
+      "bytes": 7543,
+      "sha256": "09fccf27d931db6ff0f160941405e5a72f469260cbf8308c85933aefd1f31343"
+    }
+  ],
+  "finding": "Original39c assertion compared atomic.Uint64 subtraction to int64. Exact additive child changes only that cast to uint64; no executed compiler failure claimed.",
+  "review": [
+    "Independently read complete one-line child delta and actual counter declaration.",
+    "Production and module files unchanged from39c. Original protected-ancestry recovery continues unchanged.",
+    "Retain39c staged-source history; compile corrected child once under existing per-phase resource admission."
+  ],
+  "limits": [
+    "41-root normal/race scope, vet, Rust fixture exports and causal controls remain required.",
+    "Does not qualify production archive handoff or complete economic witness."
+  ]
+}

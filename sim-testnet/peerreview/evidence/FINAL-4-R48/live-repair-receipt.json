@@ -1,0 +1,66 @@
+{
+  "schema": "urnetwork-r48-legacy-usage-live-receipt-v1",
+  "verified_at": "2026-09-26T22:39:49.879631+00:00",
+  "server_source_commit": "74893863e9df0af3abaaa19f1db26742cf61092c",
+  "binary_sha256": "3e032e95695972af1dfae2306f5d8e4ab0a89cc4b4a0cb42daa97da8e5623154",
+  "owner_pid": 2116907,
+  "owner_alive": true,
+  "supervisor_pid": 1919178,
+  "supervisor_start_time_ticks": 32282272,
+  "taskworkers": {
+    "operator-1-taskworker": {
+      "pid": 2192060,
+      "start_time_ticks": 33423149,
+      "healthy": true,
+      "restarts": 2
+    },
+    "operator-2-taskworker": {
+      "pid": 2192047,
+      "start_time_ticks": 33423146,
+      "healthy": true,
+      "restarts": 2
+    }
+  },
+  "operators": [
+    {
+      "no_id": 1,
+      "receipt": {
+        "epoch": 658,
+        "schema": "urnetwork-st-legacy-usage-repair-receipt-v1",
+        "contracts": 3151,
+        "applied_at": "2026-09-26T22:33:22.484703+00:00",
+        "credited_bytes": 0,
+        "transaction_id": 29636107,
+        "final_acceptance": false,
+        "repair_manifest_sha256": "sha256:5611def95cb1dfdfffaebd76a48e674088e8c585de74933b1d1f68f814784ad3",
+        "retained_report_minimum": 2371940
+      },
+      "readback": [
+        "3151|2371940|0|t|2371940",
+        "0"
+      ],
+      "apply_sha256": "7011781a9f3fa65a5e2cc48104523ebb38d095fe8712c6d12863d21876989b6e",
+      "readback_sha256": "648b9db9ceccdc3592e117da0d291a360c747ecdfcc4a76ad30237b921ae1991"
+    },
+    {
+      "no_id": 2,
+      "receipt": {
+        "epoch": 658,
+        "schema": "urnetwork-st-legacy-usage-repair-receipt-v1",
+        "contracts": 1032,
+        "applied_at": "2026-09-26T22:33:29.012244+00:00",
+        "credited_bytes": 0,
+        "transaction_id": 29189599,
+        "final_acceptance": false,
+        "repair_manifest_sha256": "sha256:a3decb652ab6914ab9e8d64920868ee7585f851c605cb9a425f8a408394c1e6a",
+        "retained_report_minimum": 710788
+      },
+      "readback": [
+        "1032|710788|0|t|710788",
+        "0"
+      ],
+      "apply_sha256": "1a8934262ad43d4c6bb324691483e4f055e20d8395ca0a44bc380981e8cde2e0",
+      "readback_sha256": "d40eff0878e3ac505f9302a8881301a5f11242b488798c006e6bc2e3e95ede11"
+    }
+  ]
+}

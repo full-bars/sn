@@ -1,0 +1,94 @@
+{
+  "schema": "native-restore-a499-controls-operational-root-adoption-v2",
+  "status": "ADMITTED_AFTER_POSITIVE_COUNTERPART_JOIN",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "bytes": 23340,
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/controls-sampler-fixture-v2/actual-control-sampler-smoke-v2.resources.csv",
+      "bytes": 220,
+      "sha256": "98b7da3f57337f1e62ca67a18e2cdd60f02da5dba9115faf3d00a2bcd1f76ef7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/controls-sampler-fixture-v2/actual-control-sampler-smoke-v2.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/controls-sampler-fixture-v2/actual-control-sampler-smoke-v2.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/run-a499-controls-v2.py",
+      "bytes": 12982,
+      "sha256": "8ed8d3bc85b14e035e61f1a955103bb511512e28faa2e7d0f2a3b9211caf3676"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/run-a499-controls-v2.py",
+      "bytes": 12982,
+      "sha256": "8ed8d3bc85b14e035e61f1a955103bb511512e28faa2e7d0f2a3b9211caf3676"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/run-a499-positives-v1.py",
+      "bytes": 12362,
+      "sha256": "161ca17c520600c0839084fda908d59130896a7090bc07f58f24cf61ba735109"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/finite-resource-proposal-v1.json",
+      "bytes": 6710,
+      "sha256": "19919428b15331b09e2d15ae6e056d323a9f8554c5927e6fe6e304e9beebeb69"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/controls-sampler-fixture-v2/receipt.json",
+      "bytes": 2342,
+      "sha256": "80d37612ef554d1ba15453961d69649b1f001212ae7074964bdff0daf94266fa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/operative-controls-v2.json",
+      "bytes": 7897,
+      "sha256": "04dbfd71665d73241bd9bd4dc4a0e263ec6962ddbbe64bc07febc5c3303a2c3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/checkpoint-binding-omitted.go",
+      "bytes": 17732,
+      "sha256": "b6fe3334fb4505bce8c8a5b15e5270329ba8dc90271b4941039741e43bbb75d4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/node-address-omitted.go",
+      "bytes": 17679,
+      "sha256": "8a9d0708ad3c54da7f82649a46388cc4b3f404aa59deb53a67feda95f6461d5a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/capture-input-binding-omitted-v2.go",
+      "bytes": 17759,
+      "sha256": "b03dd4ae8193cef46df9022b88659bd80a43815eb38c2987a59ade3c0e8846e4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/original-summary-replay-omitted.go",
+      "bytes": 27395,
+      "sha256": "2cef270097dfe4a4ee93ed66e91a6a82a02f2cd55122c8cd0856678195b1bb00"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/copied-returned-bytes-pin-omitted.go",
+      "bytes": 9556,
+      "sha256": "baab437bfee54ee222ed06acdc86b7c7a92954ef9bc3ed46c7b7c03247839c44"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/read-cause-invents-difference.go",
+      "bytes": 9636,
+      "sha256": "a760221b9de4e9f4933ac2f6a81e9562b0bdc570e71470070d3c7f14f97e640c"
+    }
+  ],
+  "review": "Read fulloriginalcontrolrunner andv2diff. Sixgroups/mode, distinctmode-specificO_EXCL overlay/image/output paths, rehashed sealedpositive andpartition receipts before counterpartcounts, actual immutableRustELFs before/after, exactone-fileproductionomission and namedassertion, actualjoined samplerfixture.",
+  "conditions": [
+    "Only run each control whose exactsame-mode positive counterpart passed once withoutskip. Retain NOT_RUN for missing/failed counterpart.",
+    "Afterpositive runner andallchildren join; freshcanonicallease/originalbaseline16GiB reserve andno competingcompiler/Rust/longbody.",
+    "Distinctrawbody/compile/resource outcomes stayretained; telemetryfailure doesnoterase successful productbody.",
+    "Collect allsixgroups/mode; no wholemainnet claim."
+  ],
+  "whole_mainnet_complete": false
+}

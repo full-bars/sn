@@ -3,6 +3,7 @@ package main
 // A provisional controller may adopt a live generation it did not create.
 // It never rebuilds its images, rewrites runtime inputs, or owns its teardown.
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -43,6 +45,24 @@ type provisionalLiveTopology struct {
 	manifest                            SupervisorFile
 }
 
+// A deliberately stopped, previously authenticated supervisor is a recovery
+// boundary, not a fresh deployment. Resume, release scenarios and a zero-dispatch
+// setup approval require the exact owned service to be inactive/dead. Launch still
+// creates a new supervisor generation and performs its normal readiness gate.
+// This prevents a release-hotfix handoff from replaying the broad pre-launch
+// doctor after the retained-plan receipt audit has already authenticated every
+// completed action.
+type provisionalStoppedTopology struct {
+	Schema                   string `json:"schema"`
+	PlanHash                 string `json:"plan_hash"`
+	ManifestHash             string `json:"supervisor_manifest_hash"`
+	ManifestBytesSHA256      string `json:"supervisor_manifest_bytes_sha256"`
+	SupervisorBinarySHA256   string `json:"supervisor_binary_sha256"`
+	SupervisorPID            int    `json:"stopped_supervisor_pid"`
+	SupervisorStartTimeTicks uint64 `json:"stopped_supervisor_start_time_ticks"`
+	StoppedAt                string `json:"observed_at"`
+}
+
 // The full plan retains campaign/retirement reserves after setup is done.
 // This guard instead covers every action live adoption can execute. The
 // caller has authenticated all verified receipts before consulting it.
@@ -73,7 +93,7 @@ func provisionalLiveResumeNeedsDoctor(executor *Executor) (bool, error) {
 }
 
 func prepareProvisionalLiveTopology(cfg *ResolvedConfig, stateDir, command string) (*provisionalLiveTopology, error) {
-	if (command != "resume" && command != "scenario") || !provisionalResumeEnabled(cfg) {
+	if (command != "setup" && command != "resume" && command != "scenario") || !provisionalResumeEnabled(cfg) {
 		return nil, nil
 	}
 	live, err := liveRecordedSupervisor(stateDir)
@@ -105,7 +125,11 @@ func prepareProvisionalLiveTopology(cfg *ResolvedConfig, stateDir, command strin
 	if err := validateSupervisorGeneration(*live); err != nil {
 		return nil, err
 	}
-	baseline, err := releaseTopologyProofCounts(cfg, stateDir)
+	// Provisional admission records this as an explicitly unverified baseline.
+	// Do not decode every historical proof here: strict acceptance owns that
+	// semantic validation, while this live controller must reach traffic using
+	// the retained topology without replaying hundreds of megabytes of old work.
+	baseline, err := releaseTopologyObservedProofCounts(cfg, stateDir)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +144,7 @@ func prepareProvisionalLiveTopology(cfg *ResolvedConfig, stateDir, command strin
 		ManifestHash: hash, ManifestBytesSHA256: bytesSHA256(raw), SupervisorBinarySHA256: binaryHash,
 		SupervisorPID: live.SupervisorPID, SupervisorStartTimeTicks: live.SupervisorStartTimeTicks,
 		Driver: cfg.provisionalResume.Driver, ProvenancePath: cfg.provisionalResume.RecordPath,
-		ProcessLogGatePath: filepath.Join(filepath.Dir(cfg.provisionalResume.RecordPath), "process-log-gate.json"),
+		ProcessLogGatePath: provisionalProcessLogGatePath(cfg.provisionalResume.RecordPath, hash, live.SupervisorPID, live.SupervisorStartTimeTicks),
 		ProofBaseline:      baseline, FreshProofStartupWaived: true,
 		ObservedProofCounts: baseline, ObservedProofCountsAt: time.Now().UTC().Format(time.RFC3339Nano),
 		PriorRestarts: priorRestarts, manifest: manifest,
@@ -131,12 +155,146 @@ func prepareProvisionalLiveTopology(cfg *ResolvedConfig, stateDir, command strin
 	return adoption, nil
 }
 
+func provisionalStoppedTopologyEligible(cfg *ResolvedConfig, command string, manifest SupervisorFile, manifestHash string, state SupervisorState, service supervisorServiceStatus) error {
+	if cfg == nil || !provisionalResumeEnabled(cfg) || (command != "resume" && command != "setup" && command != "scenario") {
+		return errors.New("stopped topology recovery is not provisionally admitted")
+	}
+	if command == "scenario" && (cfg.provisionalResume.Record.Command != command || !provisionalRetainedStartupAllowed(cfg.provisionalResume.Record)) {
+		return errors.New("stopped scenario topology requires explicit provisional release authority")
+	}
+	if command == "setup" {
+		record := cfg.provisionalResume.Record
+		if record.Command != "setup" || !record.Provisional || record.FinalAcceptance || record.PlanHash == "" {
+			return errors.New("stopped setup requires explicit non-accepting approval")
+		}
+	}
+	if manifest.Schema != "urnetwork-sim-supervisor-v1" || manifest.DeploymentID != cfg.Config.Deployment.DeploymentID || manifestHash == "" || state.Schema != "urnetwork-sim-supervisor-state-v1" || state.ManifestHash != manifestHash || state.SupervisorPID <= 1 || state.SupervisorStartTimeTicks == 0 {
+		return errors.New("stopped topology identity is incomplete")
+	}
+	if service.ActiveState != "inactive" || service.SubState != "dead" {
+		return fmt.Errorf("owned supervisor service is %s/%s, not inactive/dead", service.ActiveState, service.SubState)
+	}
+	if err := validateInstalledSupervisorInventory(state, manifestHash, manifest.Specs); err != nil {
+		return fmt.Errorf("stopped topology inventory: %w", err)
+	}
+	return nil
+}
+
+// prepareStoppedProvisionalTopology authenticates only a controlled stop of
+// the retained supervisor.  It neither starts a process nor makes a chain
+// read; ordinary launch paths and every ambiguous service state still use the
+// full doctor.
+func prepareStoppedProvisionalTopology(ctx context.Context, cfg *ResolvedConfig, stateDir, command string) (*provisionalStoppedTopology, error) {
+	if cfg == nil || !provisionalResumeEnabled(cfg) || (command != "resume" && command != "setup" && command != "scenario") {
+		return nil, nil
+	}
+	if command == "scenario" && (cfg.provisionalResume.Record.Command != command || !provisionalRetainedStartupAllowed(cfg.provisionalResume.Record)) {
+		return nil, errors.New("stopped scenario topology requires explicit provisional release authority")
+	}
+	live, err := liveRecordedSupervisor(stateDir)
+	if err != nil || live != nil {
+		return nil, err
+	}
+	held, err := supervisorLockHeld(stateDir)
+	if err != nil {
+		return nil, err
+	}
+	if held {
+		return nil, errors.New("stopped topology retains a live supervisor lock")
+	}
+	if command == "setup" {
+		if err := strictHistorySupervisorStopped(stateDir); err != nil {
+			return nil, err
+		}
+		for id := 1; id <= cfg.Config.Topology.Validators; id++ {
+			if err := requireValidatorStateStopped(stateDir, id); err != nil {
+				return nil, err
+			}
+		}
+	}
+	raw, err := os.ReadFile(filepath.Join(stateDir, "supervisor.json"))
+	if err != nil {
+		return nil, err
+	}
+	var manifest SupervisorFile
+	if err := json.Unmarshal(raw, &manifest); err != nil {
+		return nil, err
+	}
+	manifestHash, err := canonicalHashHex(manifest)
+	if err != nil {
+		return nil, err
+	}
+	var state SupervisorState
+	if err := readJSONFile(filepath.Join(stateDir, "supervisor.state.json"), &state); err != nil {
+		return nil, err
+	}
+	name, err := persistentSupervisorServiceName(manifest.DeploymentID)
+	if err != nil {
+		return nil, err
+	}
+	service, err := readSupervisorServiceStatus(ctx, SupervisorService{Schema: "urnetwork-sim-supervisor-service-v1", Name: name})
+	if err != nil {
+		return nil, err
+	}
+	if err := provisionalStoppedTopologyEligible(cfg, command, manifest, manifestHash, state, service); err != nil {
+		return nil, err
+	}
+	stopped := &provisionalStoppedTopology{Schema: "urnetwork-sim-provisional-stopped-topology-v1", PlanHash: cfg.provisionalResume.Record.PlanHash, ManifestHash: manifestHash, ManifestBytesSHA256: bytesSHA256(raw), SupervisorBinarySHA256: manifest.BinaryHash, SupervisorPID: state.SupervisorPID, SupervisorStartTimeTicks: state.SupervisorStartTimeTicks, StoppedAt: time.Now().UTC().Format(time.RFC3339Nano)}
+	encoded, err := json.MarshalIndent(stopped, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	if err := atomicWrite(filepath.Join(filepath.Dir(cfg.provisionalResume.RecordPath), "stopped-topology.json"), append(encoded, '\n'), 0o600); err != nil {
+		return nil, err
+	}
+	return stopped, nil
+}
+
+// Recheck the stopped generation immediately before changing a plan pointer.
+// A later observation timestamp is harmless; all process/input identity is exact.
+func provisionalStoppedAdoptionGeneration(previous, current *provisionalStoppedTopology) error {
+	if previous == nil || current == nil {
+		return errors.New("stopped setup lost its authenticated topology boundary")
+	}
+	a, b := *previous, *current
+	a.StoppedAt, b.StoppedAt = "", ""
+	if a != b {
+		return errors.New("stopped setup topology generation changed before activation")
+	}
+	return nil
+}
+
+func provisionalProcessLogGatePath(recordPath, manifestHash string, supervisorPID int, supervisorStartTimeTicks uint64) string {
+	identity := strings.TrimPrefix(strings.ToLower(manifestHash), "0x")
+	return filepath.Join(filepath.Dir(recordPath), fmt.Sprintf("process-log-gate-%s-%d-%d.json", identity, supervisorPID, supervisorStartTimeTicks))
+}
+
 func writeProvisionalLiveTopologyRecord(adoption *provisionalLiveTopology) error {
 	raw, err := json.MarshalIndent(adoption, "", "  ")
 	if err != nil {
 		return err
 	}
 	return atomicWrite(filepath.Join(filepath.Dir(adoption.ProvenancePath), "live-topology.json"), append(raw, '\n'), 0600)
+}
+
+// A new detached provisional generation uses the same authenticated handoff
+// as a retained one. Its launch owner still cleans up any actual failure.
+func adoptStartedProvisionalTopology(ctx context.Context, cfg *ResolvedConfig, stateDir string, plan *SetupPlan, roles *RoleSecrets, executor *Executor, started SupervisorState, baseline map[string]int) (bool, error) {
+	if !provisionalResumeEnabled(cfg) {
+		return false, nil
+	}
+	adoption, err := prepareProvisionalLiveTopology(cfg, stateDir, "resume")
+	if err != nil {
+		return true, err
+	}
+	if adoption == nil {
+		return true, errors.New("new provisional supervisor is no longer live")
+	}
+	if err := provisionalAdoptionGeneration(adoption, started); err != nil {
+		return true, err
+	}
+	adoption.ProofBaseline = baseline
+	return true, adoptProvisionalLiveTopology(ctx, cfg, stateDir, plan, roles, executor, adoption, false)
 }
 
 func loadExistingProvisionalRoles(cfg *ResolvedConfig, stateDir string) (*RoleSecrets, error) {
@@ -163,6 +321,32 @@ func provisionalAdoptionGeneration(adoption *provisionalLiveTopology, state Supe
 		return errors.New("provisional adopted supervisor generation changed")
 	}
 	return validateSupervisorGeneration(state)
+}
+
+// A completed pointer for the same plan decides whether a scenario can reuse
+// its process-log fence or must authenticate and publish the current live
+// generation first. Malformed legacy placeholders remain replaceable, as they
+// never represented a completed adoption.
+func provisionalLiveTopologyAdoptionCurrent(cfg *ResolvedConfig, stateDir string, current *provisionalLiveTopology) (bool, error) {
+	if cfg == nil || cfg.provisionalResume == nil || cfg.provisionalResume.Record == nil || current == nil {
+		return false, errors.New("provisional scenario topology context is incomplete")
+	}
+	prior, present := optionalCompletedProvisionalLiveTopology(cfg, stateDir)
+	if !present {
+		return false, nil
+	}
+	return prior.ManifestHash == current.ManifestHash && prior.SupervisorPID == current.SupervisorPID && prior.SupervisorStartTimeTicks == current.SupervisorStartTimeTicks, nil
+}
+
+func optionalCompletedProvisionalLiveTopology(cfg *ResolvedConfig, stateDir string) (*provisionalLiveTopology, bool) {
+	var adoption provisionalLiveTopology
+	if err := readJSONFile(filepath.Join(stateDir, "provisional-resumes", "live-topology.json"), &adoption); err != nil {
+		return nil, false
+	}
+	if cfg == nil || cfg.provisionalResume == nil || cfg.provisionalResume.Record == nil || adoption.Schema != "urnetwork-sim-provisional-live-topology-v1" || !adoption.Provisional || adoption.FinalAcceptance || adoption.PlanHash != cfg.provisionalResume.Record.PlanHash || adoption.CompletedAt == "" {
+		return nil, false
+	}
+	return &adoption, true
 }
 
 // Provisional launch admits live provider swarms while their members catch up.
@@ -217,8 +401,52 @@ func provisionalProofsAdvanced(baseline, current map[string]int) bool {
 	return true
 }
 
+// Provisional startup exposes fresh proof counts as observations, explicitly
+// without asserting semantic proof validity. Count only newline-terminated
+// records so an interrupted final append is not presented as a completed
+// observation. Strict readiness continues to use releaseTopologyProofCounts,
+// which decodes and validates every proof record.
+func releaseTopologyObservedProofCounts(cfg *ResolvedConfig, stateDir string) (map[string]int, error) {
+	counts := map[string]int{}
+	for identity, path := range releaseTopologyProofPaths(cfg, stateDir) {
+		count, err := observedReleaseProofLineCount(path)
+		if err != nil {
+			return nil, fmt.Errorf("read %s observed release proofs: %w", identity, err)
+		}
+		counts[identity] = count
+	}
+	return counts, nil
+}
+
+func observedReleaseProofLineCount(path string) (int, error) {
+	file, err := os.Open(path)
+	if errors.Is(err, os.ErrNotExist) || errors.Is(err, syscall.ESRCH) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+	buffer := make([]byte, 1<<20)
+	count := 0
+	for {
+		n, readErr := file.Read(buffer)
+		count += bytes.Count(buffer[:n], []byte{'\n'})
+		if errors.Is(readErr, io.EOF) {
+			return count, nil
+		}
+		if readErr != nil {
+			return 0, readErr
+		}
+	}
+}
+
 func newProvisionalProcessLogGate(stateDir string, adoption *provisionalLiveTopology) (*processLogGate, error) {
-	cursors, err := processLogCursors(stateDir, adoption.manifest)
+	return newProvisionalProcessLogGateAtBoundary(stateDir, adoption, nil)
+}
+
+func newProvisionalProcessLogGateAtBoundary(stateDir string, adoption *provisionalLiveTopology, boundary []processLogCursor) (*processLogGate, error) {
+	cursors, err := processLogCursorsAtBoundary(stateDir, adoption.manifest, boundary)
 	if err != nil {
 		return nil, err
 	}
@@ -232,6 +460,41 @@ func newProvisionalProcessLogGate(stateDir string, adoption *provisionalLiveTopo
 		return nil, err
 	}
 	return gate, nil
+}
+
+// The previous generation's immutable gate supplies the exact next byte for
+// every append-only process log. Its findings stay in the prior invocation;
+// the new gate scans the shutdown/startup tail so a rollover cannot erase it.
+func provisionalProcessLogBoundary(cfg *ResolvedConfig, stateDir string, current *provisionalLiveTopology) ([]processLogCursor, error) {
+	prior, present := optionalCompletedProvisionalLiveTopology(cfg, stateDir)
+	if !present || prior.ManifestHash == current.ManifestHash && prior.SupervisorPID == current.SupervisorPID && prior.SupervisorStartTimeTicks == current.SupervisorStartTimeTicks {
+		return nil, nil
+	}
+	relative, err := filepath.Rel(filepath.Join(stateDir, "provisional-resumes"), prior.ProcessLogGatePath)
+	if err != nil || relative == "." || strings.HasPrefix(relative, "..") || filepath.IsAbs(relative) {
+		return nil, errors.New("prior provisional process log gate is outside retained provenance")
+	}
+	var state processLogGateState
+	if err := readJSONFile(prior.ProcessLogGatePath, &state); err != nil {
+		return nil, fmt.Errorf("read prior provisional process log gate: %w", err)
+	}
+	if state.Schema != processLogGateSchema || state.DeploymentID != current.manifest.DeploymentID || state.ManifestHash != prior.ManifestHash {
+		return nil, errors.New("prior provisional process log gate identity differs")
+	}
+	if state.SupervisorPID != 0 && (state.SupervisorPID != prior.SupervisorPID || state.SupervisorStartTimeTicks != prior.SupervisorStartTimeTicks) {
+		return nil, errors.New("prior provisional process log gate generation differs")
+	}
+	if err := validatePersistedProcessLogGate(state); err != nil {
+		return nil, err
+	}
+	expected, err := processLogCursorsWithoutOffsets(stateDir, current.manifest)
+	if err != nil {
+		return nil, err
+	}
+	if !sameProcessLogCursorInventory(state.Cursors, expected) {
+		return nil, errors.New("prior provisional process log inventory differs from the current topology")
+	}
+	return append([]processLogCursor(nil), state.Cursors...), nil
 }
 
 func provisionalVerifiedProofCounts(ctx context.Context, cfg *ResolvedConfig, stateDir string, manifest SupervisorFile) (map[string]int, error) {
@@ -278,26 +541,179 @@ func provisionalVerifiedProofCounts(ctx context.Context, cfg *ResolvedConfig, st
 	return counts, nil
 }
 
-func adoptProvisionalLiveTopology(ctx context.Context, cfg *ResolvedConfig, stateDir string, plan *SetupPlan, roles *RoleSecrets, executor *Executor, adoption *provisionalLiveTopology) error {
+// Authenticate a fresh read-only setup prefix before topology or tournament
+// execution. Its journal index and immutable source cache end at this boundary.
+func (self *Executor) authenticateProvisionalSetupPrefix(ctx context.Context, plan *SetupPlan, readEntries func() []JournalEntry, readSource func(string, string) (*SetupPlan, error)) (*Action, error) {
+	topology, _, err := self.provisionalSetupPrefix(ctx, plan, readEntries, readSource, false)
+	return topology, err
+}
+
+// A live topology can coexist with an approved funding repair. Authenticate
+// all retained receipts before executing any pending repair on its original
+// action/intent recovery key; never render, deploy or restart the topology.
+func (self *Executor) reconcileProvisionalSetupPrefix(ctx context.Context, plan *SetupPlan, execute func(context.Context, Action) error) (*Action, error) {
+	if self == nil || self.journal == nil || execute == nil {
+		return nil, errors.New("provisional setup repair executor is unavailable")
+	}
+	topology, pending, err := self.provisionalSetupPrefix(ctx, plan, self.journal.Entries, readValidatorEvidenceHistoricalPlan, true)
+	if err != nil {
+		return nil, err
+	}
+	for _, action := range pending {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		if err := self.verifyActionDependencies(action); err != nil {
+			return nil, fmt.Errorf("provisional setup repair %s dependencies: %w", action.ID, err)
+		}
+		if action.ID == "config.render" {
+			if err := self.deferProvisionalConfigRender(action); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		fmt.Fprintf(os.Stderr, "sim-testnet: reconciling approved setup action %s while retaining live topology; final_acceptance=false\n", action.ID)
+		if err := execute(ctx, action); err != nil {
+			return nil, fmt.Errorf("provisional setup repair %s: %w", action.ID, err)
+		}
+		entry, verified := self.verifiedActionEntry(action)
+		if !verified {
+			return nil, fmt.Errorf("provisional setup repair %s has no verified postcondition", action.ID)
+		}
+		if err := self.authenticateProvisionalReceipt(action, entry); err != nil {
+			return nil, err
+		}
+	}
+	return topology, ctx.Err()
+}
+
+// Pending repairs may replenish the already-derived EVM roles or restore a
+// bounded native reserve. They cannot replace contracts, identities, or
+// runtime inputs: those remain a fresh deployment boundary. Doctor and
+// ordinary execution retain their budget, dependency, transaction-recovery,
+// and fresh postcondition checks.
+func provisionalLiveSetupRepair(action Action) bool {
+	if action.ID == "validator.reserve-majority" {
+		return action.Kind == "substrate-read" && spendIsZero(action.Spend)
+	}
+	if action.ID == "config.render" {
+		return action.Kind == "local" && spendIsZero(action.Spend)
+	}
+	// A successor plan can increase a pre-existing role's bounded gas
+	// allowance after the original funding receipt has been finalized. The
+	// role addresses are derived before plan approval, and Execute still binds
+	// the exact approved target, amount, budget, and postcondition. Treating
+	// this as a repair avoids rejecting a live topology solely because an old
+	// funding intent had a smaller allowance.
+	if strings.HasPrefix(action.ID, "evm.fund-") {
+		return action.Kind == "substrate-extrinsic" && action.Spend.TAORao > 0 && action.Spend.AlphaRao == 0 && action.Spend.EVMGasWei.IsZero() && action.Spend.Registrations == 0 && action.Spend.SubnetCreations == 0
+	}
+	// This is an accounting reservation only; it has no chain side effect and
+	// its approved EVM ceiling is checked again before every transaction.
+	if action.ID == "campaign.evm-gas-reserve" {
+		return action.Kind == "budget-reserve" && action.Spend.TAORao == 0 && action.Spend.AlphaRao == 0 && !action.Spend.EVMGasWei.IsZero() && action.Spend.Registrations == 0 && action.Spend.SubnetCreations == 0
+	}
+	if _, _, err := alphaTransferTargetFromActionID(action.ID); err != nil {
+		return false
+	}
+	return action.Kind == "substrate-extrinsic" && strings.HasPrefix(action.ID, "alpha.repair.") ||
+		action.Kind == "substrate-reconciliation" && strings.HasPrefix(action.ID, "alpha.transfer.")
+}
+
+func (self *Executor) provisionalSetupPrefix(ctx context.Context, plan *SetupPlan, readEntries func() []JournalEntry, readSource func(string, string) (*SetupPlan, error), allowRepairs bool) (*Action, []Action, error) {
+	if ctx == nil || self == nil || self.plan == nil || self.journal == nil || plan == nil || readEntries == nil || readSource == nil {
+		return nil, nil, errors.New("provisional setup prefix context is unavailable")
+	}
+	if !provisionalResumeEnabled(self.cfg) || plan != self.plan || self.cfg.provisionalResume.Record.PlanHash != plan.PlanHash {
+		return nil, nil, errors.New("provisional setup prefix differs from the approved plan")
+	}
+	entries := readEntries()
+	verified := newCarriedPreparationIndex(self.plan, entries)
+	readPostcondition := self.carriedPreparationPostconditionReader(ctx, readSource)
 	var topology *Action
+	var pending []Action
 	for i := range plan.Actions {
 		action := plan.Actions[i]
 		if action.ID == "topology.launch" {
 			topology = &plan.Actions[i]
 			break
 		}
-		prior, ok := executor.verifiedActionEntry(action)
-		if !ok {
-			return fmt.Errorf("live adoption requires already verified setup action %s", action.ID)
+		if err := ctx.Err(); err != nil {
+			return nil, nil, err
 		}
-		if err := executor.authenticateProvisionalReceipt(action, prior); err != nil {
-			return err
+		prior, ok := verified.find(action, false)
+		if !ok {
+			if !allowRepairs || (!provisionalLiveSetupRepair(action) && !policyRateAmendmentSetupRepair(plan, action)) {
+				return nil, nil, fmt.Errorf("live adoption requires already verified setup action %s", action.ID)
+			}
+			hash, err := actionIntentHash(action)
+			if err != nil || hash != action.IntentHash {
+				return nil, nil, stateMismatchError(err, "provisional setup repair %s intent differs from its approval", action.ID)
+			}
+			if action.ID == "config.render" {
+				if _, err := self.provisionalConfigRenderDeferral(action, entries); err != nil {
+					return nil, nil, err
+				}
+			}
+			pending = append(pending, action)
+			continue
+		}
+		if err := self.authenticateProvisionalReceiptWithReader(action, prior, readPostcondition); err != nil {
+			return nil, nil, err
 		}
 	}
 	if topology == nil {
-		return errors.New("approved plan has no topology.launch action")
+		return nil, nil, errors.New("approved plan has no topology.launch action")
 	}
-	gate, err := newProvisionalProcessLogGate(stateDir, adoption)
+	if !slices.Equal(entries, readEntries()) {
+		return nil, nil, errors.New("provisional setup prefix journal changed during reconciliation")
+	}
+	return topology, pending, ctx.Err()
+}
+
+// A retained scenario never executes setup actions. It only needs the exact
+// topology receipt that anchors the live supervisor it is about to observe;
+// requiring every superseded predecessor setup receipt again would turn a
+// read-only traffic continuation into a deployment replay.
+func (self *Executor) authenticateProvisionalTopology(ctx context.Context, plan *SetupPlan, readEntries func() []JournalEntry, readSource func(string, string) (*SetupPlan, error)) (*Action, error) {
+	if ctx == nil || self == nil || self.plan != plan || self.journal == nil || plan == nil || readEntries == nil || readSource == nil || !provisionalResumeEnabled(self.cfg) || self.cfg.provisionalResume.Record.PlanHash != plan.PlanHash {
+		return nil, errors.New("provisional topology authentication context is unavailable")
+	}
+	entries := readEntries()
+	verified := newCarriedPreparationIndex(plan, entries)
+	topology, err := self.planAction("topology.launch")
+	if err != nil {
+		return nil, err
+	}
+	entry, ok := verified.find(topology, true)
+	if !ok {
+		return nil, errors.New("retained scenario has no verified topology receipt")
+	}
+	if err := self.authenticateProvisionalReceiptWithReader(topology, entry, self.carriedPreparationPostconditionReader(ctx, readSource)); err != nil {
+		return nil, err
+	}
+	if !slices.Equal(entries, readEntries()) {
+		return nil, errors.New("provisional topology journal changed during authentication")
+	}
+	return &topology, ctx.Err()
+}
+
+func adoptProvisionalLiveTopology(ctx context.Context, cfg *ResolvedConfig, stateDir string, plan *SetupPlan, roles *RoleSecrets, executor *Executor, adoption *provisionalLiveTopology, scenarioOnly bool) error {
+	var topology *Action
+	var err error
+	if scenarioOnly {
+		topology, err = executor.authenticateProvisionalTopology(ctx, plan, executor.journal.Entries, readValidatorEvidenceHistoricalPlan)
+	} else {
+		topology, err = executor.reconcileProvisionalSetupPrefix(ctx, plan, executor.Execute)
+	}
+	if err != nil {
+		return err
+	}
+	boundary, err := provisionalProcessLogBoundary(cfg, stateDir, adoption)
+	if err != nil {
+		return err
+	}
+	gate, err := newProvisionalProcessLogGateAtBoundary(stateDir, adoption, boundary)
 	if err != nil {
 		return err
 	}
@@ -325,7 +741,7 @@ func adoptProvisionalLiveTopology(ctx context.Context, cfg *ResolvedConfig, stat
 		if bytesSHA256(raw) != adoption.ManifestBytesSHA256 {
 			return errors.New("adopted supervisor manifest bytes changed")
 		}
-		current, err := releaseTopologyProofCounts(cfg, stateDir)
+		current, err := releaseTopologyObservedProofCounts(cfg, stateDir)
 		if err != nil {
 			return err
 		}
@@ -374,13 +790,20 @@ func adoptProvisionalLiveTopology(ctx context.Context, cfg *ResolvedConfig, stat
 	if err := gate.RequireClean(false); err != nil {
 		return err
 	}
-	if err := executor.Execute(ctx, *topology); err != nil {
-		return err
-	}
-	// Keep the approved tournament writes, while omitting its strict second
-	// proof-generation wait under the explicit provisional testnet waiver.
-	if err := executePostTopologyTournament(ctx, plan, executor); err != nil {
-		return err
+	if !scenarioOnly {
+		if err := executor.Execute(ctx, *topology); err != nil {
+			return err
+		}
+		// Keep the approved tournament writes, while omitting its strict second
+		// proof-generation wait under the explicit provisional testnet waiver.
+		if err := executePostTopologyTournament(ctx, plan, executor); err != nil {
+			return err
+		}
+	} else {
+		// The scenario has authenticated this retained topology above. Replaying
+		// its local action would walk historical setup dependencies and can emit
+		// new transactions, neither of which belongs to traffic observation.
+		fmt.Fprintln(os.Stderr, "sim-testnet: provisional scenario retained topology observed without setup or tournament replay; final_acceptance=false")
 	}
 	// Public deployment publication revalidates superseded historical evidence.
 	// The provisional run-first waiver preserves those files and prior errors
@@ -445,10 +868,14 @@ func loadProvisionalOrStrictProcessLogGateState(cfg *ResolvedConfig, stateDir st
 	if err := readJSONFile(adoption.ProcessLogGatePath, &state); err != nil {
 		return nil, err
 	}
-	if state.Schema != processLogGateSchema || state.Classifier != processLogClassifierVersion || state.DeploymentID != manifest.DeploymentID || state.ManifestHash != hash {
+	if state.Schema != processLogGateSchema || state.DeploymentID != manifest.DeploymentID || state.ManifestHash != hash {
 		return nil, errors.New("provisional process log gate identity differs")
 	}
 	if err := validatePersistedProcessLogGate(state); err != nil {
+		return nil, err
+	}
+	migrated, err := migrateProcessLogClassifier(&state)
+	if err != nil {
 		return nil, err
 	}
 	expected, err := processLogCursorsWithoutOffsets(stateDir, manifest)
@@ -461,6 +888,11 @@ func loadProvisionalOrStrictProcessLogGateState(cfg *ResolvedConfig, stateDir st
 	gate := &processLogGate{stateDir: stateDir, path: adoption.ProcessLogGatePath, state: state}
 	if err := gate.bindWithLock(live); err != nil {
 		return nil, err
+	}
+	if migrated {
+		if err := gate.persistWithLock(); err != nil {
+			return nil, err
+		}
 	}
 	return gate, nil
 }
