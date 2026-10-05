@@ -615,7 +615,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 	defer func() { returnErr = errors.Join(returnErr, keyOwner.Close()) }()
 
 	// Bandwidth registry tracks per-proxy byte counters for billing.
-	// Both TCP (H1) and UDP (H3/QUIC) paths feed the same counters.
+	// The wrapped dial counts TCP egress; UDP/QUIC egress in this lane is
+	// not wrapped (see bandwidth.WrapDialContextSettings).
 	bwRegistry := bandwidth.NewRegistry()
 
 	provideWithProxy := func(index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
@@ -635,8 +636,16 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 
 		clientStrategySettings := connect.DefaultClientStrategySettings()
 		clientStrategySettings.ProxySettings = proxySettings
-		clientStrategySettings.DialContextSettings = self.testEgressDialer
-		// Wrap with bandwidth tracking for billing (H1+H3).
+		// The test-egress seam binds a source address. Install it only while
+		// no proxy is configured: a non-nil DialContextSettings bypasses
+		// ProxySettings in connect's dial path (net.go), which would leak
+		// dials around the proxy.
+		if proxySettings == nil {
+			clientStrategySettings.DialContextSettings = self.testEgressDialer
+		}
+		// Count through the proxy, not around it: wrap the ConnectSettings
+		// copy that carries ProxySettings with the proxy-preserving wrapper
+		// (see bandwidth.WrapConnectSettings).
 		bw := bwRegistry.Register(0) // direct connection by default
 		proxyAddr := ""
 		if proxySettings != nil {
@@ -644,8 +653,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 			// Use address hash as proxy index for bandwidth tracking.
 			bw = bwRegistry.Register(int(addressHash(proxyAddr)))
 		}
-		clientStrategySettings.DialContextSettings = bandwidth.WrapDialContextSettings(
-			clientStrategySettings.DialContextSettings, bw, proxyAddr,
+		clientStrategySettings.ConnectSettings = bandwidth.WrapConnectSettings(
+			clientStrategySettings.ConnectSettings, bw, proxyAddr,
 		)
 		networkSpace := sdk.NewNetworkSpaceWithUrls(proxyCtx, self.apiUrl, self.connectUrl, clientStrategySettings)
 		defer networkSpace.Close()
@@ -702,8 +711,8 @@ func (self providerRunSettings) run(parent context.Context, writer io.Writer) (r
 		settings.KeyMaterial.SetExtenderKeySeed(extenderKeySeed)
 		applyProviderMemoryTarget(settings, self.memoryPlan.DeviceMemoryTargetByteCount)
 		// Wrap ProviderDialContextSettings with bandwidth tracking too.
-		// The SDK copies this into both TcpBufferSettings and UdpBufferSettings
-		// dial paths, so both TCP and QUIC egress get byte-counted.
+		// The SDK copies this into its buffer dial paths; only the TCP
+		// DialContext is wrapped, so this counts TCP egress.
 		settings.ProviderDialContextSettings = bandwidth.WrapDialContextSettings(
 			self.testEgressDialer, bw, proxyAddr,
 		)
