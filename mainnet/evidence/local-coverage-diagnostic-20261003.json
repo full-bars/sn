@@ -1,0 +1,40 @@
+{
+  "changed_test_git_blob": "6b23bebe47a6e29eb34b9a27f6f3291f114f6d31",
+  "changed_test_sha256": "25d4fee6fc4a32405df47fc87cbb628da3eec4c87c5bb4763f64d74d901992c3",
+  "classification": "Expected diagnostic failure after all fixed-owner planners; eight signed fixture files have no nominated preparation owner. This does not qualify bdf public continuation. First attempt was setup-only missing local replacements.",
+  "dependency_link_targets": {
+    "connect": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect",
+    "glog": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+    "goidenticons": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+    "proxy": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+    "server": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+    "userwireguard": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+    "warp": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp"
+  },
+  "schema": "sol-local-e266-coverage-diagnostic-v1",
+  "selected_root": "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority",
+  "sha256": {
+    "diagnostic-corrected.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "diagnostic-corrected.jsonl": "f0cb37bd5c296890805dc648f7ae39528e9865f08b02a4312596e898985a32ee",
+    "diagnostic-corrected.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "diagnostic.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "diagnostic.jsonl": "fdec4da1f27a935ddb63cf56583150c4af06afe600f653aa7d66d68c6d3254b7",
+    "diagnostic.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "5bc999060dbad60b5eaab77d96f385df5ec27775ba03dd2d5a8d8dc9cfe9e166",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "source_commit": "e266603ed1a5223b16755423be49380818bd597e",
+  "source_parent": "bdf63dea4177a7b7fd5d07442039b517bbc261be",
+  "source_tree": "09176682adb108242c4c37441eeb256b75d3ebf1",
+  "unassigned_files": [
+    "file:coordinator-create.signed.bin",
+    "file:escrow-register.signed.bin",
+    "file:evidence-create.signed.bin",
+    "file:proxy-create.signed.bin",
+    "file:reserve-create.signed.bin",
+    "file:reserve-link.signed.bin",
+    "file:vault-create.signed.bin",
+    "file:vault-link.signed.bin"
+  ]
+}

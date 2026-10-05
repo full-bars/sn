@@ -1,0 +1,206 @@
+{
+  "schema": "native-adoptionade5-rust-controls-terminal-root-review-v1",
+  "status": "TWO_EXACT_CAUSAL_RUST_CONTROLS_VERIFIED",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/rust-controls-adoption-v2.json",
+      "bytes": 1916,
+      "sha256": "4a9cc3d8b85ec664778180539a62e1b3f9a9a49d735a73fb195f8172a4fb99f7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/rust-controls/stage-receipt-v1.json",
+      "bytes": 2273,
+      "sha256": "c77fd772a5f5b06b3999bbb4528957ab6501a1de4076d618f05179d5a90e7c9d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/operative-controls.json",
+      "bytes": 6877,
+      "sha256": "8dacf5386f5ae242a609e3fef3f3853dfa2bc911bdb9f1c9737d9a596cfdd7d9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-positives-v1.terminal.json",
+      "bytes": 4118,
+      "sha256": "64882d13458d9ffbeea6d8d77e4ea81f207fd71d4dc9e50d83bfdbc3bf09cb03"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-clean.receipt.json",
+      "bytes": 2998,
+      "sha256": "f9f0c8196e9e30492d64f4765fe58e2e390de57cfef353ca56d9081800e92a23"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-compile.receipt.json",
+      "bytes": 3244,
+      "sha256": "06449ed07a1527b4ceb3741c7519745a26fe90961070ac5b5cd6b4e5b90db897"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent.receipt.json",
+      "bytes": 3345,
+      "sha256": "358e5ae681f643b9696a4263e50279b2f73ecb0e2cb69b130a06b800e2a4d700"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-clean.receipt.json",
+      "bytes": 2934,
+      "sha256": "5d366242e9e5b6072affd4cf2605278ad0323721fc4aadc3c0d6dee9ac2bed50"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-compile.receipt.json",
+      "bytes": 3172,
+      "sha256": "8df3b7683a6e4ca061bbccaf6f256ad12aed7e3e51ea8ce93272dcb592e64f50"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual.receipt.json",
+      "bytes": 3266,
+      "sha256": "0076b67cf8eebf1bc187ec7ee72b80e955e68e3b5b8696db2ad59dd7d27a8898"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-clean.resources.csv",
+      "bytes": 286,
+      "sha256": "ebb8009d032fe2245c6131d65cf2325a8e378065265284fcdbe13a6dda759851"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-clean.stderr",
+      "bytes": 170,
+      "sha256": "a85b213ab87eb55adfa00204c1fbad68c60565dd6b0cd83cc1122b27f528717e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-clean.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/images/restore-undrained-original-proof-parent-libtest",
+      "bytes": 63769184,
+      "sha256": "8519adbab05f7e9aab50bbc376b8c49a1b4634b25f23782bf0cb9da28a241a9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-compile.resources.csv",
+      "bytes": 3787,
+      "sha256": "388b6e8773cd361036f4e411914dba9f7a4a2cb4e4bc9e67f264b6e197fb6816"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-compile.stderr",
+      "bytes": 236,
+      "sha256": "da6a15cbb1ab074d6ae4952097c9ca87acf8a9884c5bcf924f044773bbdfd4b9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-compile.stdout",
+      "bytes": 504981,
+      "sha256": "0bc2c59120e7c9d272f610cc696f803b0ebad74475d9d21eb25f20caf649160b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-body.resources.csv",
+      "bytes": 155,
+      "sha256": "ce74db67bdfa4466503e2ffb3878946663b9527a2017444e2558204c601547b6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-body.stderr",
+      "bytes": 436,
+      "sha256": "b6aff47d08ef5b8b483776a4228221f6080e860f7857d5100ace229fb4e6fecd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-restore-undrained-original-proof-parent-body.stdout",
+      "bytes": 405,
+      "sha256": "ecc58f77a2ac0f9425559c64f1c2cd17e68bd20262f7193bf10a819f4ef19ba8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-clean.resources.csv",
+      "bytes": 344,
+      "sha256": "0d86851df97dfd38fc0d1b1da60ce733a2ff4a390ddf4346e8cd13cf867a42f1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-clean.stderr",
+      "bytes": 168,
+      "sha256": "471aa5f14611669395b1b8e89cef5da66db30bf49cbffc0aecacfe988e4d2528"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-clean.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/images/omit-original-per-block-accrual-libtest",
+      "bytes": 63767648,
+      "sha256": "9702f85aa5831d8c7cc0a912f1bd1626d3b0c981e37ca6b49b1fe77ea9eebedc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-compile.resources.csv",
+      "bytes": 3797,
+      "sha256": "319893f6aef2f911a244d2669218089d57516e3983b2d7c7dcfb211ef0678fd9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-compile.stderr",
+      "bytes": 228,
+      "sha256": "6de5ac946f92e5830c1e2a8b6841e7e08a3faa93c4bb981cbf580b18f9a4d180"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-compile.stdout",
+      "bytes": 504405,
+      "sha256": "02532aed64953fc02148e7cabd535ee708223bc419927549fdb07230fd3fe8ca"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-body.resources.csv",
+      "bytes": 155,
+      "sha256": "ea7a7a718d07385dddba15be1b0d9150b3438ea6cf626d536b943adcf418da56"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-body.stderr",
+      "bytes": 367,
+      "sha256": "a4b785628cf74c68f2fb5932cb97e0585eafa4fcd1b367911f6cf2f247599fa5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-control-omit-original-per-block-accrual-body.stdout",
+      "bytes": 405,
+      "sha256": "02662d7b51382151e733f3ceabd461d9b50d1b0e8b4a239985a118d870c87fe3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-controls-v1.terminal.json",
+      "bytes": 3616,
+      "sha256": "5c76d84954542e8cca653555cb4c93d6b5a517414d846422c19e934de715e129"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/run-rust-controls-v4.py",
+      "bytes": 11245,
+      "sha256": "c04662059690c58f61a86c88be50894d778c3276b7dd31a432db5b0c4b7db0c3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-controls-v3-precompiler-refusal.json",
+      "bytes": 540,
+      "sha256": "9551100414f2733c090d228e1ec931d433fb27fe46e7d94fbc48805402f52fc3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-controls-v4-preflight.receipt.json",
+      "bytes": 288,
+      "sha256": "11581a8db21bb13ffd3955ab989df2fc136c1d2c730b0701593bd8a569920600"
+    }
+  ],
+  "actual_census": [
+    {
+      "phase": "ade5-rust-control-restore-undrained-original-proof-parent",
+      "root": "historical::tests::native_execution_tests::historical_native_principal_activation_is_proof_drained_before_original_accrual",
+      "assertion": "original activation parent is not actually drained",
+      "exit": 101,
+      "passed": 0,
+      "failed": 1,
+      "ignored": 0
+    },
+    {
+      "phase": "ade5-rust-control-omit-original-per-block-accrual",
+      "root": "historical::tests::native_execution_tests::historical_native_principal_activation_is_proof_drained_before_original_accrual",
+      "assertion": "original accrued activation capture",
+      "exit": 101,
+      "passed": 0,
+      "failed": 1,
+      "ignored": 0
+    }
+  ],
+  "review": [
+    "Full v3-to-v4 runner delta read: explicit importlib.util fixes precompiler AttributeError; actual same main preflight exits before compile/body. Earlier refusal preserved.",
+    "Six clean/compile/body phases pass their intended checks; both distinct libtests compile then reach named intended behavioral failure with exit101, zero passes, one failure, no ignored roots and joined children.",
+    "Original four positive roots and twelve exports remain unchanged. Extra contiguous producer export is separately admitted from the retained exact libtest; Go union remains pending."
+  ],
+  "limits": [
+    "Fixture omission controls are not production economics/authority approval.",
+    "Do not count two Rust controls as normal/race Go results.",
+    "Source-only capture/Yuma/capacity scopes remain unqualified."
+  ]
+}

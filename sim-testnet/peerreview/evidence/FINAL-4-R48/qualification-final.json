@@ -1,0 +1,120 @@
+{
+  "schema": "urnetwork-r48-legacy-usage-qualification-v1",
+  "recorded_at": "2026-09-26T22:33:03.327467+00:00",
+  "server_source_commit": "74893863e9df0af3abaaa19f1db26742cf61092c",
+  "server_source_branch": "fix/r48-legacy-usage-quarantine-20260926",
+  "pushed": true,
+  "go_source_unchanged_since": "aa6aa4084426cde96fd944f2c2c0226a07454b55",
+  "qualification_pass": true,
+  "deterministic_red_expected": true,
+  "red_note": "Baseline decoder/reader overlay has a delegating new-name compatibility wrapper only; old decoder refuses explicit legacy debt.",
+  "runner": {
+    "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/run-final-tests-root2.sh",
+    "sha256": "c4f8ab7ca79ad8a980680d6b8e0d7b5b75deb4eb4c95bc3f1d96dd4a1393f981",
+    "bytes": 1971
+  },
+  "results": {
+    "root2-red": {
+      "exit": 1,
+      "log": {
+        "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/root2-red.log",
+        "sha256": "8c3acae54059fb720918bb7b3dabeb01bc2523b7258b9125d46a9e7357b2b66b",
+        "bytes": 20094
+      }
+    },
+    "root2-focused-root2-normal": {
+      "exit": 0,
+      "log": {
+        "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/root2-focused-root2-normal.log",
+        "sha256": "ec1269642280e861920067896e12e6c10e11914bf7e7dd5b37be3b76d5040573",
+        "bytes": 47
+      }
+    },
+    "root2-race": {
+      "exit": 0,
+      "log": {
+        "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/root2-race.log",
+        "sha256": "eb01b696563c8f6f6fafbe8a7d1955ca8443b215976f331abd1efb5674b1e951",
+        "bytes": 47
+      }
+    },
+    "root2-normal": {
+      "exit": 0,
+      "log": {
+        "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/root2-normal.log",
+        "sha256": "c437032acc88cac0b6ab9cb343ebe5b9507438d6bc717e55f53a89a0c5c763a4",
+        "bytes": 47
+      }
+    },
+    "root2-tests": {
+      "exit": 0
+    }
+  },
+  "binary": {
+    "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/sim-testnet-server-legacy-fixed-stamped-v2",
+    "sha256": "3e032e95695972af1dfae2306f5d8e4ab0a89cc4b4a0cb42daa97da8e5623154",
+    "bytes": 147200920,
+    "vcs": [
+      "build\tvcs.revision=7e85373c816bd67f2f73992c03c006a0ad1a344f",
+      "build\tvcs.time=2026-09-26T20:17:10Z",
+      "build\tvcs.modified=false"
+    ]
+  },
+  "repair_review": {
+    "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/repair-review.json",
+    "sha256": "ea404e5f3d58ae310aa74bce8b31387afc07eeccde4ae11e3309cfe085979cb6",
+    "bytes": 1701
+  },
+  "handoff": {
+    "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/HANDOFF.md",
+    "sha256": "97d20e6e6c467e07b184c60696908e2a07a011d9ff009b7749d9acc531042ca1",
+    "bytes": 5392
+  },
+  "operator_manifests": [
+    {
+      "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-1-manifest.json",
+      "sha256": "5611def95cb1dfdfffaebd76a48e674088e8c585de74933b1d1f68f814784ad3",
+      "bytes": 3097442
+    },
+    {
+      "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-2-manifest.json",
+      "sha256": "a3decb652ab6914ab9e8d64920868ee7585f851c605cb9a425f8a408394c1e6a",
+      "bytes": 1014912
+    }
+  ],
+  "guarded_transactions": [
+    {
+      "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-1-apply.sql",
+      "sha256": "7011781a9f3fa65a5e2cc48104523ebb38d095fe8712c6d12863d21876989b6e",
+      "bytes": 3105647
+    },
+    {
+      "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-2-apply.sql",
+      "sha256": "1a8934262ad43d4c6bb324691483e4f055e20d8395ca0a44bc380981e8cde2e0",
+      "bytes": 1023117
+    }
+  ],
+  "readbacks": [
+    {
+      "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-1-readback.sql",
+      "sha256": "d200620fe5289d385edd8ed5f8b38bbf91bcbe017f7dadfb0d83b7967c25ffbb",
+      "bytes": 1367
+    },
+    {
+      "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/operator-2-readback.sql",
+      "sha256": "111b3b81cf25a997588303a6650faeec0a9d7d2a4017ae77ac36fbbb44dccb49",
+      "bytes": 1367
+    }
+  ],
+  "null_census": {
+    "path": "/mnt/data/sn-testnet/qualification/r48-legacy-usage-quarantine-20260926/null-census-before-apply.json",
+    "sha256": "fc9b8a067924b04561c433c084f9fd84c4f510baea6fbf42982d34a7e9532043",
+    "bytes": 1899
+  },
+  "contract_count": 4183,
+  "retained_report_minimum": 3082728,
+  "credited_bytes": 0,
+  "final_acceptance": false,
+  "live_rollout_owner": "parent agent",
+  "preparation_agent_performed_live_writes": false
+}

@@ -6,7 +6,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
+	"net"
 	"strings"
 	"time"
 
@@ -16,6 +18,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+
+	"github.com/urfoundation/sn/evmrpc"
 )
 
 const (
@@ -44,7 +48,7 @@ func dialFirst(ctx context.Context, urls []string) (*ethclient.Client, *big.Int,
 func dialOne(ctx context.Context, url string) (*ethclient.Client, *big.Int, error) {
 	dctx, cancel := context.WithTimeout(ctx, dialTimeout)
 	defer cancel()
-	client, err := ethclient.DialContext(dctx, url)
+	client, err := evmrpc.DialContext(dctx, url)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -69,7 +73,7 @@ func ethCall(ctx context.Context, client *ethclient.Client, contract common.Addr
 
 // revertError augments an eth_call/eth_estimateGas error with the decoded
 // revert payload when the endpoint returned one: Error(string) require
-// reasons, Panic(uint256), or a custom error known to the STSubnet ABI.
+// reasons, Panic(uint256), or a custom error known to the settlement-vault ABI.
 func revertError(err error) error {
 	var de rpc.DataError
 	if !errors.As(err, &de) {
@@ -117,17 +121,20 @@ func estimateGas(ctx context.Context, client interface {
 
 // txRequest is a prepared contract call for runTx.
 type txRequest struct {
-	contract  common.Address
-	from      common.Address
-	key       *ecdsa.PrivateKey
-	calldata  []byte
-	gasLimit  uint64 // 0 = estimate + 20% headroom
-	dryRun    bool
-	prepared  func(common.Hash, []byte) error
-	broadcast func(common.Hash) error
+	contract        common.Address
+	from            common.Address
+	key             *ecdsa.PrivateKey
+	calldata        []byte
+	nonceFloor      uint64
+	gasLimit        uint64 // 0 = estimate + 20% headroom
+	dryRun          bool
+	prepared        func(common.Hash, []byte) error
+	beforeBroadcast func(common.Hash) error
+	broadcast       func(common.Hash) error
+	admitRuntime    func(context.Context, *ethclient.Client, *big.Int) error
 }
 
-// runTx runs the submit lifecycle shared by submit/bind-head/unbind-head: an
+// runTx runs the submit lifecycle shared by every relayed transaction: an
 // eth_call preflight (surfacing revert reasons before spending gas), a gas
 // estimate, the caller's intent block via printIntent, a stop on --dry-run,
 // and otherwise sign + send + wait-mined. It returns the mined receipt (nil on
@@ -170,9 +177,17 @@ func runTx(
 	if err != nil {
 		return nil, fmt.Errorf("pending nonce: %w", err)
 	}
+	// Another endpoint may not yet see our previous durable signed intent.
+	// Never reuse that nonce merely because its send acknowledgment timed out.
+	nonce = max(nonce, req.nonceFloor)
 	gasPrice, err := client.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("gas price: %w", err)
+	}
+	if req.admitRuntime != nil {
+		if err := req.admitRuntime(ctx, client, nil); err != nil {
+			return nil, fmt.Errorf("runtime admission before EVM signing: %w", err)
+		}
 	}
 	tx := types.NewTx(&types.LegacyTx{
 		Nonce:    nonce,
@@ -196,6 +211,16 @@ func runTx(
 		}
 	} else if _, err := fmt.Printf("prepared: tx %s raw 0x%x\n", signed.Hash(), raw); err != nil {
 		return nil, fmt.Errorf("print prepared transaction: %w", err)
+	}
+	if req.admitRuntime != nil {
+		if err := req.admitRuntime(ctx, client, nil); err != nil {
+			return nil, fmt.Errorf("runtime admission before EVM broadcast: %w", err)
+		}
+	}
+	if req.beforeBroadcast != nil {
+		if err := req.beforeBroadcast(signed.Hash()); err != nil {
+			return nil, fmt.Errorf("persist uncertain transaction: %w", err)
+		}
 	}
 	if err := client.SendTransaction(ctx, signed); err != nil {
 		return nil, fmt.Errorf("send: %w", revertError(err))
@@ -245,28 +270,88 @@ func waitMined(ctx context.Context, client *ethclient.Client, txHash common.Hash
 	}
 }
 
-// waitFinalized waits for the standard finalized tag to cover the receipt and
-// then re-reads the inclusion height to prove the receipt's block is canonical.
+// waitFinalized closes both the canonical receipt and the actual finalized
+// frontier. Transient reads retry within the original deadline; only a decoded
+// mismatched identity is evidence that the original block changed.
 // A timeout is deliberately ambiguous and callers must not blindly retry the
 // same intent/nonce.
 func waitFinalized(ctx context.Context, client *ethclient.Client, receipt *types.Receipt) error {
 	if receipt == nil || receipt.BlockNumber == nil || !receipt.BlockNumber.IsUint64() || receipt.BlockNumber.Sign() <= 0 || receipt.BlockHash == (common.Hash{}) {
 		return errors.New("cannot finalize an incomplete receipt")
 	}
-	if client == nil {
+	if ctx == nil || client == nil {
 		return errors.New("EVM finality reader is unavailable")
 	}
 	for {
-		head, err := ReadEVMBlockIdentity(ctx, client, big.NewInt(int64(rpc.FinalizedBlockNumber)))
-		if err == nil && head.Number >= receipt.BlockNumber.Uint64() {
+		ready, err := func() (bool, error) {
+			head, err := ReadEVMBlockIdentity(ctx, client, big.NewInt(int64(rpc.FinalizedBlockNumber)))
+			if err != nil {
+				return false, fmt.Errorf("read finalized EVM head: %w", err)
+			}
+			if head.Number < receipt.BlockNumber.Uint64() {
+				return false, nil
+			}
 			canonical, canonicalErr := ReadEVMBlockIdentity(ctx, client, receipt.BlockNumber)
 			if canonicalErr != nil {
-				return fmt.Errorf("read canonical inclusion block %s: %w", receipt.BlockNumber, canonicalErr)
+				return false, fmt.Errorf("read canonical inclusion block %s: %w", receipt.BlockNumber, canonicalErr)
 			}
 			if canonical.Hash != receipt.BlockHash {
-				return fmt.Errorf("tx inclusion block %s was reorged: receipt %s canonical %s", receipt.BlockNumber, receipt.BlockHash, canonical.Hash)
+				return false, fmt.Errorf("tx inclusion block %s was reorged: receipt %s canonical %s", receipt.BlockNumber, receipt.BlockHash, canonical.Hash)
 			}
+			closing, err := ReadEVMBlockIdentity(ctx, client, big.NewInt(int64(rpc.FinalizedBlockNumber)))
+			if err != nil {
+				return false, fmt.Errorf("read closing finalized EVM head: %w", err)
+			}
+			if closing.Number < head.Number {
+				// A stale frontier supplies no finality, but is not a proven
+				// canonical replacement. Keep the original receipt pending.
+				return false, nil
+			}
+			// Advancing finality may have a different hash. Both its canonical
+			// identity and the original witness must still agree with the Rpc.
+			witnesses := []EVMBlockIdentity{closing}
+			if closing != head {
+				witnesses = append(witnesses, head)
+			}
+			for _, witness := range witnesses {
+				observed, err := ReadEVMBlockIdentity(ctx, client, new(big.Int).SetUint64(witness.Number))
+				if err != nil {
+					return false, fmt.Errorf("read canonical finalized witness %d: %w", witness.Number, err)
+				}
+				if observed != witness {
+					return false, fmt.Errorf("finalized EVM witness %d is not canonical at its original hash", witness.Number)
+				}
+			}
+			canonical, err = ReadEVMBlockIdentity(ctx, client, receipt.BlockNumber)
+			if err != nil {
+				return false, fmt.Errorf("read closing canonical inclusion block %s: %w", receipt.BlockNumber, err)
+			}
+			if canonical.Hash != receipt.BlockHash {
+				return false, fmt.Errorf("tx inclusion block %s was reorged during finality observation", receipt.BlockNumber)
+			}
+			return true, nil
+		}()
+		if ctx.Err() != nil {
+			return fmt.Errorf("tx %s mined but finality was not observed: %w (do not retry without checking its nonce and chain state)", receipt.TxHash, ctx.Err())
+		}
+		if ready {
 			return nil
+		}
+		if err != nil {
+			var transport net.Error
+			var remote rpc.Error
+			var httpError rpc.HTTPError
+			retry := errors.As(err, &transport) || errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, ethereum.NotFound)
+			if errors.As(err, &remote) {
+				code := remote.ErrorCode()
+				retry = code == -32603 || code >= -32099 && code <= -32000
+			}
+			if errors.As(err, &httpError) {
+				retry = httpError.StatusCode == 429 || httpError.StatusCode >= 500
+			}
+			if !retry {
+				return err
+			}
 		}
 		select {
 		case <-ctx.Done():

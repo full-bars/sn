@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -53,15 +51,8 @@ func newNativeHistoryCacheFixture(t *testing.T) *nativeHistoryCacheFixture {
 		f.historyCalls.Add(1)
 		return errors.New("state already discarded")
 	}
-	stateDir, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Chmod(stateDir, 0o700); err != nil {
-		t.Fatal(err)
-	}
 	f.executor = &Executor{
-		cfg: cfg, auditAuthorizedConfig: cfg, stateDir: stateDir,
+		cfg: cfg, auditAuthorizedConfig: cfg, stateDir: historicalAuditCacheTestStateDir(t),
 		plan: &SetupPlan{
 			PlanHash: "0x" + strings.Repeat("78", 32), ReleaseLockHash: "0x" + strings.Repeat("90", 32),
 			DeploymentID: cfg.Config.Deployment.DeploymentID, ChainID: cfg.ChainID,
@@ -76,11 +67,11 @@ func newNativeHistoryCacheFixture(t *testing.T) *nativeHistoryCacheFixture {
 // cache API, then exercise the production caller with a freshly built executor.
 func (f *nativeHistoryCacheFixture) retain(t *testing.T) {
 	t.Helper()
-	hit, err := f.executor.withHistoricalAuditCache(context.Background(), "finalized-native-extrinsic", struct {
-		Recorded    ChainHead `json:"recorded"`
-		Transaction string    `json:"transaction"`
-		Observer    string    `json:"observer"`
-	}{f.recorded, f.transaction, f.client.URL()}, func(context.Context) error { return nil })
+	input, err := nativeHistoryCacheInput(f.executor.cfg, f.recorded, f.transaction, f.client.URL())
+	if err != nil {
+		t.Fatal(err)
+	}
+	hit, err := f.executor.withHistoricalAuditCache(context.Background(), historicalNativeExtrinsicCacheKind, input, func(context.Context) error { return nil })
 	if err != nil || hit {
 		t.Fatalf("cold successful proof: hit=%t err=%v", hit, err)
 	}

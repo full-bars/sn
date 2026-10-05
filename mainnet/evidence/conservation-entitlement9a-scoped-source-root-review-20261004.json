@@ -1,0 +1,191 @@
+{
+  "schema": "entitlement9a-scoped-source-root-review-v1",
+  "status": "SOURCE_REVIEW_ONLY_UNCOMPILED_UNEXECUTED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/sn",
+    "head": "9a9e02f0dc6c4f809d34abfca604069548ce5c64",
+    "tree": "5495e1b8603d84b84c6cf7a982e52d3e3f1c8dd8",
+    "base": "ade5a21403746a620bc37ace3415f83dd4402e61",
+    "clean": true,
+    "sparse": true
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/intake.json",
+      "bytes": 2299,
+      "sha256": "3d8862be8b60e4c07dea237f6f7eb30736eec49b9b6ed6ea07cfe5309a40b599"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/source-review.json",
+      "bytes": 8753,
+      "sha256": "06f4f5c4ad5bd4c0dc064a4401a8ce720405ad4d751209f0845fd432e5e9a9a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/qualification-recipe.json",
+      "bytes": 17738,
+      "sha256": "6c90e911e0a620009e485d388a3857a56cfbe885485119b74c07fe1c9350e14a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/operative-controls.json",
+      "bytes": 8684,
+      "sha256": "506834c3bf34017e518ac125519593772259629a9e7307a0fd38b1c71c2efcf6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/authority-and-integration.json",
+      "bytes": 2857,
+      "sha256": "59fcc90dc528ad3f9fc437f38be75d176ee98b3512a3dab766eae112b81d3d2e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-adoption-qualified-inputs/evidence/intake-v2.json",
+      "bytes": 2835,
+      "sha256": "39268069282e11a00cf0304d768c0a7687fd1ea0aa280118c5793af7c891c4ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/sn/../evidence/seal_source.py",
+      "bytes": 16087,
+      "sha256": "34f231546a2249f96890a2acbc7f4af380c385a2de177560deb0406383b0dc93"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/controls/original-committer-omitted.go",
+      "bytes": 11366,
+      "sha256": "0a14feeee69dd09eb2a776882f887b5e83fcce9dc760e1d198a0e03c6abfae08"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/controls/original-recipient-leaf-omitted.go",
+      "bytes": 33232,
+      "sha256": "daf5d431823f9f21e1bf4e221fd55045aeb418b457322ae5a0cc2380d4984cc7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/controls/archived-original-receipt-omitted.go",
+      "bytes": 32269,
+      "sha256": "1091e1bad472946064c2831e13f19c69690d56195d426c1c1c61eee26d08ce23"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/controls/carry-pool-identity-omitted.go",
+      "bytes": 33230,
+      "sha256": "3435cf0619c6b6b9ce0f19cef066c3fbbb0a9f5056c75c416c2788575ab58271"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/controls/complete-census-retirement-omitted.go",
+      "bytes": 31133,
+      "sha256": "f12749ccb752aaa231b9c4613960b5dd2de7c47ace8266a2c392448b8c71b578"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/controls/unchanged-capacity-retry-guard-omitted.go",
+      "bytes": 7943,
+      "sha256": "6d1b03e09be04ab25d8462288a43441f109a0825f920da83b45cb0f73c1ae73c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-entitlement-census/evidence/controls/resident-provider-census-bound-omitted.go",
+      "bytes": 12270,
+      "sha256": "45b5f14379f12cb7be8db6717b8cc8e661a509a138bafcbe8d66515e7dae4845"
+    }
+  ],
+  "changed_git_sources": [
+    {
+      "git_path": "mainnet/economic_conservation.go",
+      "git_blob": "fb3ef4eeff9378cddd574c42ec7942517cfb0df0",
+      "bytes": 38894,
+      "sha256": "2718ca3c2d6736bc4e74d8803494ffe6dcf438fe605b6e70a042e1b9c5e01a4e"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_archive.go",
+      "git_blob": "ab0503cfed7074b8319d95af9c2e415f65b7b32c",
+      "bytes": 31113,
+      "sha256": "8611e56a4034c279ff491240f2d1803476e27199c59fcad95c668aed67c9415f"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_command.go",
+      "git_blob": "fdebf8e7d8f0f43bab9795e43329e460b6bfb001",
+      "bytes": 26165,
+      "sha256": "21a00f033af3ce0f6fb73ae20bc50ae1f29b59176aa6051083e1354922cbef0e"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement.go",
+      "git_blob": "1440b46741112354a15db5b45987b3c202b07916",
+      "bytes": 33221,
+      "sha256": "86ee074078ff33706daa216b47736ac91a4cd91866e9681452ad4b04ef99cfc0"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement_archive_test.go",
+      "git_blob": "528020097ae71e9ab766222513dd43dff809a39f",
+      "bytes": 8660,
+      "sha256": "4eed258a709b3d3664d5f2c11203cf088d2c8805f50545cb145d5891f1b1b9f1"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement_fixture_test.go",
+      "git_blob": "b9204320da5ee529aec16ce4bab2df6aa4a0e713",
+      "bytes": 10622,
+      "sha256": "4e015c2ffd476e265604f95baec5f346dea1401555a29de69a11421422f39c66"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement_read.go",
+      "git_blob": "03310e127f3d713c342052db8e71fef58b5d277c",
+      "bytes": 11357,
+      "sha256": "1d75f4c9ffcec45bcc58e1a813ae623dfeb436d6aaa43489c8f0d7f94c2c01ef"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement_test.go",
+      "git_blob": "41737dbeba8bfdc9e82f16aba5081f1182c18001",
+      "bytes": 17142,
+      "sha256": "28abe33a990a66d223170703cd6751b42d375f4f8427647c9b44f91e473c477c"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement_worker.go",
+      "git_blob": "0e473195529cfd98e95a52a1fb357093f4892e26",
+      "bytes": 7935,
+      "sha256": "65abb301e4832e0b570ec13ad847a57c4c8190bea78a3b45004ebd3ff721b1d8"
+    },
+    {
+      "git_path": "mainnet/monitor_economic_evm_read.go",
+      "git_blob": "d616c875a8cd86befdcb8472ab3a52a3620a30f6",
+      "bytes": 19431,
+      "sha256": "7beb43077bf41feedbcf4cdc088d1b3782729f98c49c3d1a16a3ce76fc6bace7"
+    },
+    {
+      "git_path": "mainnet/monitor_services.go",
+      "git_blob": "929d4d32fc7ad73af9b9160376a5a99bb234cbb3",
+      "bytes": 13535,
+      "sha256": "6f8620b05f3f9e3cb879ba688ec987035bf7f2dcf67ef520584b165e0914920a"
+    },
+    {
+      "git_path": "validator/artifact.go",
+      "git_blob": "8b7edcaed8d75f4a9543ade6d460bf6507202174",
+      "bytes": 12259,
+      "sha256": "5f1f1ddf6b6815eaced6181e0594c456ea7bbd5d15f536ed6a82b4d4a1740263"
+    },
+    {
+      "git_path": "validator/artifact_census_test.go",
+      "git_blob": "c01cb06788e53d3b4aa3e341b5c2cd7c0c50599d",
+      "bytes": 6851,
+      "sha256": "0029b6d81b1542a2df0021682feae24b3160ef14857cf3e2f7b650fad9eb7495"
+    },
+    {
+      "git_path": "validator/artifact_observation.go",
+      "git_blob": "53a7361a5531c82bd68bd22005e6024f302abfce",
+      "bytes": 2065,
+      "sha256": "03f5e569359aeba1e938c57be9ad59b92a7b054de63a34f7b9c5169c56e5bf3b"
+    }
+  ],
+  "review_scope": [
+    "Complete new entitlement census, funding reconciliation, worker and receipt/artifact acquisition files.",
+    "Complete public entitlement tests, archive tests and fixture setup; validator census tests and observation classifier from exact Git objects.",
+    "Changed integration hunks in state, archive, command, services and EVM receipt observer; artifact reader delta.",
+    "Seven control mutation identities compared with exact original Git blobs; control diffs require separate behavioral qualification."
+  ],
+  "findings": [
+    "Original commitment receipt and epoch rootSigner authorize the artifact; recovered artifact signer alone does not.",
+    "Complete leaves preserve exact recipient allocation and floor residues; RootMissed/expiry funding edges retain earlier epoch and pool identity without duplicate consumption.",
+    "Per-pool asynchronous reads preserve healthy observers; unchanged capacity refusal suppresses repeated acquisition until an admitted resource/archive change.",
+    "Fully paid Finalized roots retain lifecycle until actual expiry receipt.",
+    "Captured stock, deposits and refunds remain distinct from new native earnings; income composition and 10/90 result remain explicitly unknown in this slice.",
+    "Adjacent fixture activation and archive admission baselines need composed correction/qualification following protected-environment failures."
+  ],
+  "scope_remaining": [
+    "32 selected Go roots per normal/race mode, two vets, seven control groups/eight exact negative assertions.",
+    "Physical profile and complete owner restore join, authenticated capture income composition, unattended acquisition and actual runtime/host adoption."
+  ],
+  "limits": [
+    "Source review does not prove runtime behavior, independent finality, measured provider usage, deployment or any complete readiness requirement."
+  ]
+}

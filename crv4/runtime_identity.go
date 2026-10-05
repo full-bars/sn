@@ -41,11 +41,28 @@ type RuntimeArtifactIdentity struct {
 // allowed version and :code hash. Each connection fetches and hashes the large
 // bytes once per exact artifact.
 type AuthenticatedRuntimeArtifact struct {
-	BlockHash    types.Hash
-	Version      RuntimeVersionIdentity
-	CodeHash     string
-	MetadataHash string
-	Metadata     *types.Metadata
+	BlockHash            types.Hash
+	Version              RuntimeVersionIdentity
+	CodeHash             string
+	MetadataHash         string
+	Metadata             *types.Metadata
+	CompatibilityProfile string
+	GenesisHash          types.Hash
+	// Issued only after successful profile validation and durable observation.
+	// Copies retain authority even after the connection evicts cached metadata.
+	compatibilityProof *runtimeCompatibilityProof
+	// A strict result retains its caller-approved exact-block authentication.
+	// An exported identity or metadata pointer alone cannot synthesize this proof.
+	authenticationProof *runtimeArtifactProof
+}
+
+// A block-view callback cannot manufacture or transfer caller-approved
+// authentication by filling exported artifact fields or swapping metadata.
+func ValidateRuntimeArtifactOwnerContext(ctx context.Context, chain *Chain, artifact AuthenticatedRuntimeArtifact) error {
+	if ctx == nil || chain == nil || chain.API == nil || chain.API.Client == nil || chain.ProvisionalRuntimeCompatibilityEnabled() || artifact.BlockHash == (types.Hash{}) || artifact.CompatibilityProfile != "" || !artifact.authenticationProof.matches(chain, artifact) {
+		return errors.New("runtime view needs this owner's exact authenticated block artifact")
+	}
+	return ctx.Err()
 }
 
 // Coordinates one in-flight or successfully published immutable metadata load.
@@ -53,6 +70,7 @@ type runtimeMetadataArtifactCacheEntry struct {
 	loadDone chan struct{}
 	metadata *types.Metadata
 	err      error
+	lastUse  uint64
 }
 
 // Coalesces loads per independently dialed provider. Methods are safe for
@@ -60,11 +78,16 @@ type runtimeMetadataArtifactCacheEntry struct {
 type runtimeMetadataArtifactCache struct {
 	stateLock       sync.Mutex
 	identityEntries map[RuntimeArtifactIdentity]*runtimeMetadataArtifactCacheEntry
+	nextUse         uint64
 }
 
-// The exact reviewed catalog bounds retained metadata without a separate
-// version-count constant that can omit a newly admitted predecessor.
+// This limits one caller's authority list; it does not limit the number of
+// runtime upgrades a long-lived connection can observe over its lifetime.
 const maximumRuntimeMetadataArtifactsPerChain = len(reviewedRuntimeArtifacts)
+
+// Decoded metadata is large. Eviction bounds resident entries independently
+// of the reviewed history and cannot make the next authenticated upgrade fail.
+const maximumRuntimeMetadataCacheEntries = 24
 
 // Creates an empty, hard-bounded per-provider artifact store.
 func newRuntimeMetadataArtifactCache() *runtimeMetadataArtifactCache {
@@ -130,24 +153,44 @@ func (self *runtimeMetadataArtifactCache) load(ctx context.Context, identity Run
 	}
 	var entry *runtimeMetadataArtifactCacheEntry
 	var existing bool
-	var capacityErr error
+	var uncached bool
 	func() {
 		self.stateLock.Lock()
 		defer self.stateLock.Unlock()
 		entry = self.identityEntries[identity]
 		if entry != nil {
 			existing = true
+			self.nextUse++
+			entry.lastUse = self.nextUse
 			return
 		}
-		if len(self.identityEntries) >= maximumRuntimeMetadataArtifactsPerChain {
-			capacityErr = fmt.Errorf("runtime metadata artifact cache already contains its maximum %d identities", maximumRuntimeMetadataArtifactsPerChain)
-			return
+		if len(self.identityEntries) >= maximumRuntimeMetadataCacheEntries {
+			var oldest RuntimeArtifactIdentity
+			var oldestUse uint64
+			found := false
+			for key, candidate := range self.identityEntries {
+				select {
+				case <-candidate.loadDone:
+					if !found || candidate.lastUse < oldestUse {
+						oldest, oldestUse, found = key, candidate.lastUse, true
+					}
+				default:
+				}
+			}
+			if !found {
+				// Every slot is loading. Authenticate this artifact without
+				// retaining another large metadata object in the cache.
+				uncached = true
+				return
+			}
+			delete(self.identityEntries, oldest)
 		}
-		entry = &runtimeMetadataArtifactCacheEntry{loadDone: make(chan struct{})}
+		self.nextUse++
+		entry = &runtimeMetadataArtifactCacheEntry{loadDone: make(chan struct{}), lastUse: self.nextUse}
 		self.identityEntries[identity] = entry
 	}()
-	if capacityErr != nil {
-		return nil, "", capacityErr
+	if uncached {
+		return loadRuntimeMetadataArtifact(ctx, identity, fetch)
 	}
 	if existing {
 		select {
@@ -158,16 +201,7 @@ func (self *runtimeMetadataArtifactCache) load(ctx context.Context, identity Run
 		}
 	}
 
-	metadata, metadataHash, err := fetch(ctx)
-	if err == nil && metadata == nil {
-		err = errors.New("runtime metadata artifact is nil")
-	}
-	if err == nil {
-		metadataHash, err = canonicalRuntimeArtifactHash("observed runtime metadata hash", metadataHash)
-	}
-	if err == nil && metadataHash != identity.MetadataHash {
-		err = fmt.Errorf("observed runtime metadata hash %s, want %s", metadataHash, identity.MetadataHash)
-	}
+	metadata, metadataHash, err := loadRuntimeMetadataArtifact(ctx, identity, fetch)
 
 	func() {
 		self.stateLock.Lock()
@@ -180,6 +214,22 @@ func (self *runtimeMetadataArtifactCache) load(ctx context.Context, identity Run
 		}
 		close(entry.loadDone)
 	}()
+	return metadata, metadataHash, err
+}
+
+// An evicted or temporarily uncached artifact receives the same exact-byte
+// validation as a retained entry. Cache admission never grants authority.
+func loadRuntimeMetadataArtifact(ctx context.Context, identity RuntimeArtifactIdentity, fetch func(context.Context) (*types.Metadata, string, error)) (*types.Metadata, string, error) {
+	metadata, metadataHash, err := fetch(ctx)
+	if err == nil && metadata == nil {
+		err = errors.New("runtime metadata artifact is nil")
+	}
+	if err == nil {
+		metadataHash, err = canonicalRuntimeArtifactHash("observed runtime metadata hash", metadataHash)
+	}
+	if err == nil && metadataHash != identity.MetadataHash {
+		err = fmt.Errorf("observed runtime metadata hash %s, want %s", metadataHash, identity.MetadataHash)
+	}
 	return metadata, metadataHash, err
 }
 
@@ -230,7 +280,7 @@ func DecodeRuntimeVersionIdentity(raw json.RawMessage) (RuntimeVersionIdentity, 
 			return RuntimeVersionIdentity{}, fmt.Errorf("decode runtime version field %s: %w", key, err)
 		}
 		switch key {
-		case "specName", "specVersion", "transactionVersion", "stateVersion":
+		case "specName", "specVersion", "transactionVersion", "stateVersion", "systemVersion":
 			if _, exists := fields[key]; exists {
 				return RuntimeVersionIdentity{}, fmt.Errorf("runtime version field %s is duplicated", key)
 			}
@@ -271,6 +321,15 @@ func DecodeRuntimeVersionIdentity(raw json.RawMessage) (RuntimeVersionIdentity, 
 	stateVersion, err := decodeRuntimeVersionUint("stateVersion", fields["stateVersion"], 8)
 	if err != nil {
 		return RuntimeVersionIdentity{}, err
+	}
+	if systemVersionRaw, exists := fields["systemVersion"]; exists {
+		systemVersion, err := decodeRuntimeVersionUint("systemVersion", systemVersionRaw, 8)
+		if err != nil {
+			return RuntimeVersionIdentity{}, err
+		}
+		if systemVersion != stateVersion {
+			return RuntimeVersionIdentity{}, errors.New("runtime version stateVersion/systemVersion aliases contradict")
+		}
 	}
 	version.SpecVersion = uint32(specVersion)
 	version.TransactionVersion = uint32(transactionVersion)
@@ -319,10 +378,18 @@ func RuntimeCodeHashAt(chain *Chain, blockHash types.Hash) (string, error) {
 	return RuntimeCodeHashAtContext(context.Background(), chain, blockHash)
 }
 
-// DecodeRuntimeMetadata returns decoded metadata plus BLAKE2b-256 of the exact
-// SCALE bytes in one authoritative state_getMetadata result. It never hashes a
-// re-encoding.
+const maximumRuntimeMetadataBytes = 8 * 1024 * 1024
+
+// Input admission failed before allocating a decoded byte buffer.
+var ErrRuntimeMetadataInputLimit = errors.New("runtime metadata input exceeds byte limit")
+
+// DecodeRuntimeMetadata bounds untrusted input, allocations and recursive work
+// before publishing metadata plus BLAKE2b-256 of the exact bytes. A self-consistent
+// hash grants no runtime authority. It never hashes a re-encoding.
 func DecodeRuntimeMetadata(encoded string) (*types.Metadata, string, error) {
+	if len(encoded) > 2+2*maximumRuntimeMetadataBytes {
+		return nil, "", ErrRuntimeMetadataInputLimit
+	}
 	if len(encoded) <= 2 || !strings.HasPrefix(encoded, "0x") || len(encoded)%2 != 0 {
 		return nil, "", errors.New("runtime metadata is not canonical even-length 0x hex")
 	}
@@ -332,7 +399,16 @@ func DecodeRuntimeMetadata(encoded string) (*types.Metadata, string, error) {
 	}
 	metadata := new(types.Metadata)
 	reader := bytes.NewReader(raw)
-	if err := scale.NewDecoder(reader).Decode(metadata); err != nil {
+	// Every metadata collection member consumes at least one wire byte. Bind
+	// its count to this input as well as independent total storage/work limits.
+	decoder, err := scale.NewDecoderWithLimits(reader, scale.DecoderLimits{
+		MaxCollectionElements: uint64(len(raw)), MaxAllocationBytes: 64 * 1024 * 1024,
+		MaxDecodedValues: 2 * 1024 * 1024, MaxDepth: 64,
+	})
+	if err != nil {
+		return nil, "", err
+	}
+	if err := decoder.Decode(metadata); err != nil {
 		return nil, "", fmt.Errorf("decode runtime metadata SCALE: %w", err)
 	}
 	if reader.Len() != 0 {
@@ -399,7 +475,10 @@ func AuthenticateRuntimeArtifactAtContext(ctx context.Context, chain *Chain, blo
 			break
 		}
 	}
-	if selectedIdentity == nil {
+	if selectedIdentity == nil || (version.SpecVersion > ReviewedRuntimeSpecVersion && chain.ProvisionalRuntimeCompatibilityEnabled()) {
+		if chain.ProvisionalRuntimeCompatibilityEnabled() {
+			return authenticateProvisionalRuntimeArtifact(ctx, chain, blockHash, version, canonicalRuntimeArtifactIdentities)
+		}
 		return result, fmt.Errorf("runtime at %s has unreviewed identity %s/%d/%d/%d", blockHash.Hex(), version.SpecName, version.SpecVersion, version.TransactionVersion, version.StateVersion)
 	}
 	codeHash, err := RuntimeCodeHashAtContext(ctx, chain, blockHash)
@@ -423,5 +502,12 @@ func AuthenticateRuntimeArtifactAtContext(ctx context.Context, chain *Chain, blo
 	result.CodeHash = codeHash
 	result.MetadataHash = metadataHash
 	result.Metadata = metadata
+	if err := ctx.Err(); err != nil {
+		return result, err
+	}
+	result.authenticationProof = &runtimeArtifactProof{
+		owner: chain.runtimeMetadataArtifactCache(), api: chain.API, blockHash: blockHash, genesisHash: chain.GenesisHash,
+		identity: *selectedIdentity, metadata: metadata,
+	}
 	return result, nil
 }

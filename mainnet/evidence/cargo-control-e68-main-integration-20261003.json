@@ -1,0 +1,39 @@
+{
+  "actual_three_physical_workflow_blobs_verified": [
+    {
+      "git_blob": "a247f93de3d665ea53a7cd59922532db235eab72",
+      "mode": "100644",
+      "path": "scripts/qualification/CARGO-CONTROLS.md",
+      "sha256": "18da7028806caddb73973d6c504e8296459065708298c335e09491ba3e41d48e"
+    },
+    {
+      "git_blob": "54b1deff561e5e0b88c7497cef2629e71d64b173",
+      "mode": "100644",
+      "path": "scripts/qualification/cargo_control.py",
+      "sha256": "b720d63c788c167c5afadc7c2d82e5c765c4f627fdc7032ec80be818c91820ce"
+    },
+    {
+      "git_blob": "216c2c2d0a53ad5f517497734cd53a4c0cfb0fba",
+      "mode": "100644",
+      "path": "scripts/qualification/cargo_control_test.py",
+      "sha256": "713d8c55e7ce4c184f4064660efb26f3bf3a814cbd4677d631117e75c1af81c6"
+    }
+  ],
+  "all_other_tracked_tree_entries_unchanged": true,
+  "baseline": "d53a53471a0eff8ba034040a5b56a8915d19ca7a",
+  "candidate": "e68d26ebc1c837bda0ad6a934e8b498290256003",
+  "cherry_pick_commits": [
+    "8238ca444596730057a64c1de104220e09899dfd",
+    "62aaf5989a66d43b42da1ccd73c4e485dc7a089e"
+  ],
+  "limits": [
+    "Isolated workflow delta only; no host9cf production inherited from source parent.",
+    "Eleven harness tests plus one real omission, not complete product qualification or deployment."
+  ],
+  "main_commit": "62aaf5989a66d43b42da1ccd73c4e485dc7a089e",
+  "qualification": {
+    "path": "mainnet/evidence/cargo-control-e68-qualification-20261003.json",
+    "sha256": "3266f3e3827328f6ecb7b5d0c476b48d384265b73d97ec9eb163afa9f61290aa"
+  },
+  "status": "QUALIFIED_GUARD_WORKFLOW_INTEGRATED_NO_PARENT_PRODUCTION"
+}

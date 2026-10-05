@@ -1,0 +1,16 @@
+{
+  "limits": [
+    "Publication does not deploy, sign or activate mainnet",
+    "Separately qualified archive/replay/fee successors are not in this published code"
+  ],
+  "origin_main": "ac8a09aec09ce4da35410e5d1f6b58d3ff3999e8",
+  "pre_review_worktree_clean": true,
+  "published_head": "ac8a09aec09ce4da35410e5d1f6b58d3ff3999e8",
+  "pull_exit": 0,
+  "push_exit": 0,
+  "qualified_candidate": "556e14767fddbaf4db469fb5f1019bcbdd2bc9ce",
+  "qualified_merge": "e34c683eee7729f598fb4c33a3bc305ba4f1e275",
+  "remote_main_readback": "ac8a09aec09ce4da35410e5d1f6b58d3ff3999e8\trefs/heads/main",
+  "source_equality_evidence": "qualified-composition-main-merge-20261003.json",
+  "status": "ROOT_VERIFIED_PUBLISHED"
+}

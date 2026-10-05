@@ -1,0 +1,21 @@
+{
+  "bytes": 15652,
+  "finding": "Archive admission locates Original.Path and ArchivePath independently under any unique configured state root. Complete restore therefore must cover a cohort when retained heads occupy distinct roots.",
+  "git_blob": "cad230dd3c326efb5898b933b24695c34a6a190b",
+  "limits": [
+    "Source scope proves cross-root restore is required, not implemented or qualified",
+    "One-root514-head qualification must remain distinct",
+    "No signed custody or host restore acceptance"
+  ],
+  "required_behavior": [
+    "Authenticate all retained signed path/digest refs before effects",
+    "Preserve original logical roots rather than rewrite signed references",
+    "Require complete co-owner and capacity review for each root",
+    "Resume a partially restored cohort without restarting completed roots",
+    "Qualify missing/changed cohort member refusals before effects and recovery after lost acknowledgments"
+  ],
+  "sha256": "ec27cdb9e6b81144633e86f393f46c0fba209328e9decfa5e219a5de03d604bb",
+  "source_commit": "1b512df652d2d1ee0ab81ec38368559da95aa4f6",
+  "source_path": "mainnet/monitor_economic_native_archive_command.go",
+  "status": "ROOT_VERIFIED_SOURCE_SCOPE_ONLY"
+}

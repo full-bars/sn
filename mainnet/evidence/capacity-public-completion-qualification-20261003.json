@@ -1,0 +1,218 @@
+{
+  "schema": "root-capacity-public-completion-qualification-v1",
+  "source": "214a6b3d50b5f4ecd63e3841d65bc7818bb55a7a",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/capacity214-final-direct-three-root-normal-race-vet-receipt.json",
+      "bytes": 4270,
+      "sha256": "68f1b3aa2bbe0add1c46bbd3dd4ee8c0761940d3df8abc71ef17ffba87d13fe5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/ancestry-preflight.txt",
+      "bytes": 161,
+      "sha256": "d9cbe53694b7ee23f5d802c11e3e925c427b0fa82b81de332c5c16425b06cc22"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/capacity214-joined-three-root-normal-race-vet-receipt.json",
+      "bytes": 4070,
+      "sha256": "292f9ab0dd2fcdf5aa95f2650cfdeb7e21d29ce4f7b15bfe37e55d844147a94f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/overlay.json",
+      "bytes": 1653,
+      "sha256": "23a0192f83b6f06f27028a1e9ba1f3b25243063acaabe7ba576905f552214b2e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/root-preflight.json",
+      "bytes": 385,
+      "sha256": "5b57dd1d921e05729ad3f8c120135c2a91e5a4de7c4b5844e8e04d1d955efd54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/run-affected.sh",
+      "bytes": 1935,
+      "sha256": "64111fb6f49ca18f8862d8615946c3318f60e64522f5d8bfb989c540dd22d9bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/run-census.sh",
+      "bytes": 1915,
+      "sha256": "73c20d2726e64e0bcce09b87f204785e95773953db20426188eaf1fe3ee5e1f6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/source-join.json",
+      "bytes": 719,
+      "sha256": "0639585151646cff26c0741d74b86d97398960266d522aa4b342d9618d61fbf8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-vet.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/evidence/source-join.json",
+      "bytes": 1780,
+      "sha256": "873c70a3706786cc492ce7b095542f6ca2c66986529dce2b27ec89b431cfc983"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/evidence/validator-normal.jsonl",
+      "bytes": 1373,
+      "sha256": "f8b6241f5f3bb171239bd77da6adb2f83fd401c142a33168ccbdf9c68564df29"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/evidence/validator-race.jsonl",
+      "bytes": 1377,
+      "sha256": "dbc8088c1f635958734e394885e0a353734054758ce060f9b91a7d96d91d6bd6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/evidence/vet.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-normal.jsonl",
+      "bytes": 1478,
+      "sha256": "eb7006ca3d611edc288a616021ca5e7ee6cd551d34307ccd245ef7576b4e5318"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-normal.phase",
+      "bytes": 84,
+      "sha256": "55057b674b96e7e91e672c699ff720f2d142ec7a39266986f477c85fab7a75d9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-race.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-race.jsonl",
+      "bytes": 2331,
+      "sha256": "9cb21866f54cc321f339ea497fa7d807d40ecd32d0222410dc3605e235265236"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-race.phase",
+      "bytes": 82,
+      "sha256": "d536e7e0c1a2330d6138fede44707d5b8fa0582ad6105332fed8b4178f054900"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/affected-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/census-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/census-normal.jsonl",
+      "bytes": 1373,
+      "sha256": "81982c1cf26f403eff88037dd270c0d5b51c7b3a97314adcda24c04e55cd1d4d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/census-normal.phase",
+      "bytes": 84,
+      "sha256": "0cad75a56e8473606091c0ccd747634e840cb54017d4229a95a8006680786a89"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/evidence/census-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/changed/mainnet/main.go",
+      "bytes": 23335,
+      "sha256": "79bcc07772c9692a2d11f6488387b5a346bf2c42a10cf61e5991a39a54c02844"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/changed/mainnet/validator_capacity_linux.go",
+      "bytes": 4152,
+      "sha256": "dbdc211b1e25d313ded623c9841639d81e42a1a6910ce68a4cd1289668f1e975"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/changed/mainnet/validator_capacity_other.go",
+      "bytes": 559,
+      "sha256": "76643bc0f4bed842069a5c120912883861d157dfe2e2c412d6da38bc76ad6561"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-214-independent-20261003/changed/mainnet/validator_capacity_test.go",
+      "bytes": 20362,
+      "sha256": "a49b61416b7ad9bea943065b3310f454d85e96d1c3cae6b79f2ebc8364241264"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/changed/validator/identity_test.go",
+      "bytes": 3681,
+      "sha256": "c2d679c3630c6b08ea4342deb4e450852098adfa674ccc2891fb4d54229d5db7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/changed/validator/production_capacity_preview_linux.go",
+      "bytes": 15628,
+      "sha256": "1d67d0645f70cd8c677b801691ce8e70434f9a10a39b328cbfaba5b3487b1af0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-42ef-independent-20261003/changed/validator/production_capacity_test.go",
+      "bytes": 17948,
+      "sha256": "d28d2a172c788d9cebff75ab967d111a163cbd3635f6df4c49fddf2c3a39aefc"
+    }
+  ],
+  "verified_results": [
+    {
+      "phase": "affected-normal",
+      "roots": {
+        "TestValidatorCapacityConfigRefusesAuthorityDriftAndRetainsOutputCustody": "pass"
+      }
+    },
+    {
+      "phase": "affected-race",
+      "roots": {
+        "TestValidatorCapacityPreviewBindsJoinedRetainedCensus": "pass",
+        "TestValidatorCapacityConfigRefusesAuthorityDriftAndRetainsOutputCustody": "pass"
+      }
+    },
+    {
+      "phase": "census-normal",
+      "roots": {
+        "TestValidatorCapacityPreviewBindsJoinedRetainedCensus": "pass"
+      }
+    },
+    {
+      "phase": "unchanged-validator-normal",
+      "roots": {
+        "TestProductionCapacityRetainsOriginalSignedSidecar": "pass"
+      }
+    },
+    {
+      "phase": "unchanged-validator-race",
+      "roots": {
+        "TestProductionCapacityRetainsOriginalSignedSidecar": "pass"
+      }
+    }
+  ],
+  "source_join": "SevenexactGitoverlays overseparatelyauthenticatedb1source;onlycapacitytestfilechangesfrom42ef;unchangedvalidatorresultsretained",
+  "outcome": "Threeunique publiccapacityroots passnormal/race;mainnet/validatorvet0",
+  "review": "Actualpreview/signingmessage/canonicalapproval/completion/strictconfigloaderbaseline exercised;faultspecificexit2/zerooutput/custodyguards andshortwriter tested",
+  "preserved_failures": "42ef initial private-root setup,42ef canonical-envelope fixture,cd9 strict-YAML diagnostic mismatch all remain distinct",
+  "limits": [
+    "Selectedpubliccapacityprofile,notalllaunchrequirements",
+    "Currentcomposedsourcegraphqualification andactualhostadoption remain",
+    "Readonlycompletion grantsnosigning,restart ordeploymentauthority"
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "schema": "root-evm-review-reuse-causal-qualification-v1",
+  "source": "8a2693c2c1cc48c69bd5e146ea3ab18d8abac6dc",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/evm8a-old81de-control-normal-race-receipt.json",
+      "sha256": "43378ecc6c0bc2724e677c82b281a04d0ccb88cbb48b3d3b4a681f31704b111f",
+      "bytes": 3330
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/old-81de-resource-history.go",
+      "sha256": "cccea20838f4916552d989166cb9295893ddb1dd10ba3a0b12dde1ea04274566",
+      "bytes": 9993
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/overlay.json",
+      "sha256": "7f7a251be2efa2347822425b04bb42ca294dc7ab7dedba5a8501a8f460e0dd38",
+      "bytes": 547
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/selector.txt",
+      "sha256": "e3cca9cc392b4139e9aac0ed2cf13f51c3d808a8ea2f4c0e9524f63d069989e2",
+      "bytes": 131
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de/normal.jsonl",
+      "sha256": "95b11c1b9938a1cde4db4e642597d60b12c4e09f76e456fbea4f8f33f5f56ab3",
+      "bytes": 6447
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de/race.jsonl",
+      "sha256": "65449e0c78d5d80822b69e5a130774c9b4a9471887e231b12d49864c394e43ff",
+      "bytes": 6447
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/evm8a-selected6-normal-race-vet-receipt.json",
+      "sha256": "7f752398b142164bf7e64038b964291a4e2b4c4cc2af7e0b8fa1cac9407ada44",
+      "bytes": 4726
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/run-control-corrected.sh",
+      "sha256": "415f35a794aa7339331f4d8bd8ac8cf08ceb0369283ce8b6f320945233611f53",
+      "bytes": 1711
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/source-join.json",
+      "sha256": "1a4352147544b71bcc368bbc6f632c55741af6810d6b93171ff0ce73c153ffa1",
+      "bytes": 1022
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/normal.jsonl",
+      "sha256": "d40a0d2bba68444fc2caa09e9757c9a494469c8511d33e45f3138965f488ffee",
+      "bytes": 2967
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/normal.phase",
+      "sha256": "25fb1b5b4d9a3b88cc96cec76d53cc3e8ed3cbd0794e6b7a02b7bf06fc0521dc",
+      "bytes": 84
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/race.jsonl",
+      "sha256": "067189afa5adb79649d145273ecdc2836cfbeda625a7718d84d6dd08abb55a5e",
+      "bytes": 2969
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/race.phase",
+      "sha256": "d0dbe1502d448267d105ae26fab4c45959b7e9cb5ddbc1300b5f988fd0f79551",
+      "bytes": 82
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/control-old81de-corrected/race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "verified_results": [
+    {
+      "mode": "normal",
+      "roots": {
+        "TestMonitorEconomicEvmRetainedCheckpointRefusesNonAdjacentReviewReuse": "fail",
+        "TestMonitorEconomicEvmChecksEveryRetainedReviewReference": "fail"
+      },
+      "assertions": {
+        "TestMonitorEconomicEvmChecksEveryRetainedReviewReference": "internally hashed A-B-A review chain admitted",
+        "TestMonitorEconomicEvmRetainedCheckpointRefusesNonAdjacentReviewReuse": "non-adjacent review reuse replaced retained resources"
+      }
+    },
+    {
+      "mode": "race",
+      "roots": {
+        "TestMonitorEconomicEvmRetainedCheckpointRefusesNonAdjacentReviewReuse": "fail",
+        "TestMonitorEconomicEvmChecksEveryRetainedReviewReference": "fail"
+      },
+      "assertions": {
+        "TestMonitorEconomicEvmChecksEveryRetainedReviewReference": "internally hashed A-B-A review chain admitted",
+        "TestMonitorEconomicEvmRetainedCheckpointRefusesNonAdjacentReviewReuse": "non-adjacent review reuse replaced retained resources"
+      }
+    }
+  ],
+  "scope": "Exactold81de productionfile replacesonlyresources.go;new8atestretained;allotherbaseoverlaybindingsunchanged",
+  "outcome": "Twointendedbehavioralreds eachmode;no setupcompilefailure countsascausality",
+  "initial_harness_failure": "first overlay key used old-body basename and added duplicate Go file; raw build-fail normal/race logs retained, zero causal claim",
+  "limits": [
+    "Exactpriorfile causality,notwholeoldrelease",
+    "Historical5def/SDK95/Server0e graph remainsdistinctfromfinalrelease",
+    "Finalpublication/currentgraph/adoptionnotestablished"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "artifact_sha256": {
+    "b35-normal-partial-failed-receipt.json": "cb23012392f5f8a0d90535194ffc139231b7b3a9264cffdc884d8dcb5ac5b187",
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "330b4548dfec8f411ff4e437c451f6eabcf099cf4c3d39dd547a1bcf35c62d62",
+    "positive4-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "positive4-race.jsonl": "66985ec72199720572e6017d50752db43fedde90c172dcc08d7d146e761de13b",
+    "positive4-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "positive4-selector.txt": "05037a0240f577cc4158fb44012f4f71f6778db03064e8e629045150b2e70b53"
+  },
+  "classification": "PASS_SCOPED",
+  "failed_roots": [],
+  "limits": [
+    "Only four roots that passed the original b35 normal scope are qualified here. The two pending b35 normal failures remain failed and are not relabeled.",
+    "Production/module bytes equal bdf; abb2 pending fixture correction is a separate source."
+  ],
+  "mode": "race",
+  "module_hashes": {
+    "go.mod": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "go.sum": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+  },
+  "package": "./mainnet",
+  "passed_roots": [
+    "TestBootstrapSuccessorLocalRebindLostAcknowledgementResumesOriginalReceipt",
+    "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority",
+    "TestEvmActionFixtureKeepsSignedInputOutsideComposedRuntime",
+    "TestEvmCoordinatorCreateRejectsVaultSignatureAndCustodyAlias"
+  ],
+  "prior_normal_receipt_sha256": "cb23012392f5f8a0d90535194ffc139231b7b3a9264cffdc884d8dcb5ac5b187",
+  "production_module_parent": "bdf63dea4177a7b7fd5d07442039b517bbc261be",
+  "root_verification": {
+    "artifact_bindings_rehashed": 7,
+    "exact_passed_names_matched": true,
+    "module_files_rehashed": 2,
+    "raw_top_level_failed": 0,
+    "raw_top_level_passed": 4,
+    "raw_top_level_skipped": 0,
+    "receipt_path": "/mnt/data/sn-testnet/sol-local-coverage-b35-independent-20261003/evidence/b35-four-positive-race-receipt.json",
+    "receipt_sha256": "9c255b2701ca37e13db6204bc7a21a2846c8672d6cb87656ef50f9ce28edd86e"
+  },
+  "schema": "sol-local-b35-four-positive-race-v1",
+  "skips": 0,
+  "source_commit": "b35ca9c9c18dfca1c80a98a406a2677cfa535bd1",
+  "source_tree": "5340a146497d0865e725e6d0bf078f767d6d65e0"
+}

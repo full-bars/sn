@@ -1,3 +1,5 @@
+// Explicit production profiles select reviewed epoch timing while retained
+// approvals keep the original prediction and signed transaction interpretation.
 package crv4
 
 import (
@@ -11,6 +13,10 @@ import (
 // quicknet chain info
 // (https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971/info).
 const (
+	// Explicit production approval selects the v470 tempo-drift semantics.
+	// Empty preserves the original drand-v2 scheduler for retained callers.
+	TempoDriftEpochScheduleProfile = "urnetwork-subtensor-tempo-drift-v1"
+
 	// MaxTempo is subtensor's MAX_TEMPO (upper bound for owner-set tempo).
 	MaxTempo uint64 = 50_400
 
@@ -35,12 +41,13 @@ const (
 // SubtensorModule: LastEpochBlock, PendingEpochAt, SubnetEpochIndex, Tempo,
 // BlocksSinceLastStep; CurrentBlock is the block number of the snapshot).
 type EpochScheduleState struct {
-	LastEpochBlock      uint64
-	PendingEpochAt      uint64
-	SubnetEpochIndex    uint64
-	Tempo               uint16
-	BlocksSinceLastStep uint64
-	CurrentBlock        uint64
+	EpochScheduleProfile string `json:"epoch_schedule_profile,omitempty"`
+	LastEpochBlock       uint64
+	PendingEpochAt       uint64
+	SubnetEpochIndex     uint64
+	Tempo                uint16
+	BlocksSinceLastStep  uint64
+	CurrentBlock         uint64
 }
 
 var (
@@ -51,19 +58,28 @@ var (
 	ErrBoundExceeded = errors.New("crv4: reveal block simulation exceeded budget")
 )
 
+// A runtime number or matching metadata does not select scheduling semantics.
+// The exact production approval chooses the reviewed profile independently.
+func ValidateEpochScheduleProfile(profile string) error {
+	if profile != "" && profile != TempoDriftEpochScheduleProfile {
+		return errors.New("crv4: epoch schedule profile is unsupported")
+	}
+	return nil
+}
+
 // maxSimulationBlocks bounds the reveal-block search, port of
 // constants.rs::max_simulation_blocks.
 func maxSimulationBlocks(revealPeriodEpochs uint64) uint64 {
 	return satAdd(satMul(revealPeriodEpochs, MaxTempo), MaxTempo)
 }
 
-// shouldRunEpoch ports subtensor run_coinbase.rs::should_run_epoch (identical
-// on v3.4.9-424 and main@14bc6f9) / bittensor-drand
-// epoch_schedule.rs::should_run_epoch:
+// The legacy empty profile preserves drand-v2/v424 interpretation. Explicit
+// tempo-drift follows Subtensor 923fd1fa run_coinbase.rs:1208: the fallback uses
+// this subnet's tempo, not MAX_TEMPO. Approval remains outside this pure model.
 //
 //	tempo == 0                        -> never
 //	pending > 0 && block >= pending   -> fire (owner-triggered)
-//	blocks_since_last_step > MAX_TEMPO-> fire (safety net)
+//	blocks_since_last_step > selected limit -> fire (safety net)
 //	block - last_epoch_block >= tempo -> fire (normal cadence)
 func shouldRunEpoch(s *EpochScheduleState, block uint64) bool {
 	if s.Tempo == 0 {
@@ -72,7 +88,11 @@ func shouldRunEpoch(s *EpochScheduleState, block uint64) bool {
 	if s.PendingEpochAt > 0 && block >= s.PendingEpochAt {
 		return true
 	}
-	if s.BlocksSinceLastStep > MaxTempo {
+	limit := MaxTempo
+	if s.EpochScheduleProfile == TempoDriftEpochScheduleProfile {
+		limit = uint64(s.Tempo)
+	}
+	if s.BlocksSinceLastStep > limit {
 		return true
 	}
 	return satSub(block, s.LastEpochBlock) >= uint64(s.Tempo)
@@ -98,6 +118,9 @@ func currentEpochPreRunCoinbase(s *EpochScheduleState, block uint64) uint64 {
 func simulateRunCoinbase(s *EpochScheduleState, block uint64) EpochScheduleState {
 	next := *s
 	next.BlocksSinceLastStep = satAdd(next.BlocksSinceLastStep, 1)
+	if s.EpochScheduleProfile == TempoDriftEpochScheduleProfile {
+		next.BlocksSinceLastStep = min(next.BlocksSinceLastStep, uint64(s.Tempo)+1)
+	}
 	next.CurrentBlock = block
 	if shouldRunEpoch(&next, block) {
 		next.LastEpochBlock = block
@@ -125,12 +148,26 @@ func advanceBlocks(from *EpochScheduleState, start, end uint64) EpochScheduleSta
 // v2.0.0 epoch_schedule.rs::predict_first_reveal_block:
 //
 //  1. The extrinsic is included at head+1 (CommitInclusionBlockOffset).
-//  2. The commit's epoch = currentEpochPreRunCoinbase at the extrinsic block
-//     (the chain keys TimelockedWeightCommits by current_epoch_with_lookahead).
+//  2. The chain keys TimelockedWeightCommits by current_epoch_with_lookahead.
+//     The tempo-drift profile evaluates it after initialization, when extrinsics
+//     execute; an empty profile retains the original drand-v2 pre-step model.
 //  3. The reveal fires at the first block whose pre-run_coinbase epoch equals
 //     commit_epoch + revealPeriodEpochs (exact equality; reveal_crv3_commits
 //     takes entries for epoch cur_epoch - reveal_period).
 func PredictFirstRevealBlock(s *EpochScheduleState, revealPeriodEpochs uint64) (uint64, error) {
+	if s == nil {
+		return 0, errors.New("crv4: epoch schedule is absent")
+	}
+	if err := ValidateEpochScheduleProfile(s.EpochScheduleProfile); err != nil {
+		return 0, err
+	}
+	// Source 923fd1fa bounds reveal periods to 1..100 and native heights to u32.
+	// Apply those limits only to the explicitly reviewed production model.
+	if s.EpochScheduleProfile == TempoDriftEpochScheduleProfile && (revealPeriodEpochs == 0 || revealPeriodEpochs > 100 ||
+		s.CurrentBlock >= math.MaxUint32 || s.LastEpochBlock > s.CurrentBlock || s.PendingEpochAt > math.MaxUint32 ||
+		s.BlocksSinceLastStep > s.CurrentBlock || s.SubnetEpochIndex > math.MaxUint64-revealPeriodEpochs-1) {
+		return 0, errors.New("crv4: tempo-drift schedule exceeds reviewed block, epoch or reveal-period bounds")
+	}
 	if s.Tempo == 0 {
 		return 0, ErrTempoZero
 	}
@@ -144,9 +181,21 @@ func PredictFirstRevealBlock(s *EpochScheduleState, revealPeriodEpochs uint64) (
 	}
 
 	commitEpoch := currentEpochPreRunCoinbase(&postBeforeExtrinsic, extrinsicBlock)
+	if s.EpochScheduleProfile == TempoDriftEpochScheduleProfile {
+		// Reveals run before coinbase; the extrinsic runs after initialization.
+		// At B==tempo the increment alone consumes an epoch before the commit.
+		postInitialization := simulateRunCoinbase(&postBeforeExtrinsic, extrinsicBlock)
+		commitEpoch = currentEpochPreRunCoinbase(&postInitialization, extrinsicBlock)
+	}
 	targetEpoch := commitEpoch + revealPeriodEpochs
 
 	maxSim := maxSimulationBlocks(revealPeriodEpochs)
+	if s.EpochScheduleProfile == TempoDriftEpochScheduleProfile {
+		// Root may select any u16 tempo. MAX_TEMPO bounds owner choices only.
+		limit := max(MaxTempo, uint64(s.Tempo))
+		maxSim = satAdd(satMul(revealPeriodEpochs, limit), limit)
+		maxSim = min(maxSim, math.MaxUint32-extrinsicBlock)
+	}
 
 	postPrev := postBeforeExtrinsic
 	for r := extrinsicBlock; r <= satAdd(extrinsicBlock, maxSim); r++ {

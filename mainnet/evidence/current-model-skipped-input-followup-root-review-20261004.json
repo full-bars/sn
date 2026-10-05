@@ -1,0 +1,50 @@
+{
+  "schema": "current-model-skipped-input-followup-root-review-v1",
+  "observed_utc": "2026-10-04T05:23:04.494545+00:00",
+  "status": "PUBLIC_CONFIG_INPUTS_STAGED_TARGETED_QUALIFICATION_PENDING",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-skipped-model-inputs-20261004/intake.json",
+    "sha256": "d803282ab18567bcce803a07e72b945c526f4d0320aed73413f48a536f402f6d"
+  },
+  "config_revision": "e6691ac0898aa14c36494f1624f5f16e4aac805a",
+  "source_inputs": [
+    {
+      "relative": "all/pro.yml",
+      "path": "/mnt/data/sn-testnet/mainnet-skipped-model-inputs-20261004/config/all/pro.yml",
+      "git_blob": "9a74f3210f6dfdd277d258d066dfdd737cffed50",
+      "bytes": 9446,
+      "sha256": "6b24948880f9dc19dc9bbb795ca8bb9a4677e77bae7f8d982915e86779d1a3f5"
+    },
+    {
+      "relative": "main/onboarding.yml",
+      "path": "/mnt/data/sn-testnet/mainnet-skipped-model-inputs-20261004/config/main/onboarding.yml",
+      "git_blob": "f2ae10b18a0f8e6bf971fd6c71670969468d3ddd",
+      "bytes": 12183,
+      "sha256": "ef2315d6966d3e5b5f47ed618890992884b055ba8ff70837564494f19cb829e4"
+    },
+    {
+      "relative": "all/mmdb/2026.10.1+1060587890/places.yml",
+      "path": "/mnt/data/sn-testnet/mainnet-skipped-model-inputs-20261004/config/all/mmdb/2026.10.1+1060587890/places.yml",
+      "git_blob": "0f709e983dcf70ca27da440ccdca2e1e519b38e5",
+      "bytes": 11175179,
+      "sha256": "b30fec51eaa9062a5f5cb61efab24ce01a3309ca9eff41a59c49c32378e4dd3e"
+    }
+  ],
+  "targeted_roots": [
+    "TestNetworkReferralCode",
+    "TestNetworkReferral",
+    "TestAddReferralBonusesGrantsBothSides",
+    "TestReferralBonusCount",
+    "TestProConfig",
+    "TestGeoLite2CitiesAsLegacyRowsResolveToThemselves",
+    "TestOnboardingRegistryFile",
+    "TestClientScoreReaderSourceCosts"
+  ],
+  "required_fixture": "Separate owned configured-input Server1709/SN663/Coread6 workspace, actual pro config and place rows, FP2_READER_BENCHMARK=1, fresh original cumulative resource admission after active full-suite cleanup. No mutation or restart of current full model.",
+  "separate_missing_source_contract": "TestGeolocationSourceHostsMatchProberSourcesWhenCheckedOutAlongside expects geolocate/sources.go. Actual operator-proxy origin/main4c77 has no such table and consumes server /my-ip-info instead. Preserve skip; do not fabricate old source file to green an obsolete cross-repo contract. Current consumer authority requires separate review.",
+  "limits": [
+    "No skipped root has passed from input staging.",
+    "No change to production config, secrets or activation.",
+    "Original skipped source/env remains retained."
+  ]
+}

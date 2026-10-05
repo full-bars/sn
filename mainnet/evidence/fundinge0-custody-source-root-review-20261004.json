@@ -1,0 +1,81 @@
+{
+  "schema": "fundinge0-custody-source-root-review-v1",
+  "status": "EXACT_CUSTODY_CHILD_SOURCE_REVIEWED_EXECUTION_PENDING",
+  "head": "e0f1011d467712f32b9d3d75293a4b57a20040e2",
+  "base": "72c166c5c23231dc79043792c1840975c6459b3c",
+  "tree": "5392d31a0956f2a14e04deb9a4af3f70fae9ee98",
+  "bindings": [
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/sn",
+      "head": "e0f1011d467712f32b9d3d75293a4b57a20040e2",
+      "relative": "mainnet/economic_conservation_archive.go",
+      "blob": "645b3f637c5b279dbaee064580ca4e34d980cb2d",
+      "bytes": 33237,
+      "sha256": "ee273902e73dca768324a58ed7610c09e71c79ada446baf2ec399ad96f26fa43"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/sn",
+      "head": "e0f1011d467712f32b9d3d75293a4b57a20040e2",
+      "relative": "mainnet/economic_conservation_funding.go",
+      "blob": "f8218f19066e5610941be5741056acd9b62d8533",
+      "bytes": 19602,
+      "sha256": "6e49c0dddabd328034afd5c31736e22b3897fd674c5dd01dd46f6abc089ca243"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/sn",
+      "head": "e0f1011d467712f32b9d3d75293a4b57a20040e2",
+      "relative": "mainnet/economic_conservation_funding_custody_test.go",
+      "blob": "43254d8707c299ed25dd61fcc87a552a01bb394b",
+      "bytes": 11321,
+      "sha256": "8674f33379978974ac5c08427884d9f51a282b269a587163d4c45eec3c145148"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/sn",
+      "head": "e0f1011d467712f32b9d3d75293a4b57a20040e2",
+      "relative": "mainnet/monitor_services.go",
+      "blob": "00f0230324ee32933261a990895f0a25ed180eba",
+      "bytes": 13820,
+      "sha256": "87ff49b55ff9e5c25c9aff27f0bb6f8bfceee039f7744c8e0c03ed2b677bad25"
+    }
+  ],
+  "new_declarations": [
+    {
+      "name": "TestEconomicFundingClosedOriginalCannotPublishRetainedAmounts",
+      "line": 64,
+      "relative": "mainnet/economic_conservation_funding_custody_test.go"
+    },
+    {
+      "name": "TestEconomicFundingCanceledProjectionKeepsOriginalFactsPrivate",
+      "line": 93,
+      "relative": "mainnet/economic_conservation_funding_custody_test.go"
+    },
+    {
+      "name": "TestEconomicFundingCustodyWorkIsTwoCompleteFencesPerProjection",
+      "line": 126,
+      "relative": "mainnet/economic_conservation_funding_custody_test.go"
+    },
+    {
+      "name": "TestEconomicFundingPublicEqualByteCustodyLossPublishesNoSummary",
+      "line": 147,
+      "relative": "mainnet/economic_conservation_funding_custody_test.go"
+    },
+    {
+      "name": "TestEconomicFundingPublicCancellationPublishesNoSummary",
+      "line": 177,
+      "relative": "mainnet/economic_conservation_funding_custody_test.go"
+    },
+    {
+      "name": "TestEconomicFundingRefusedFeeCandidateCannotMutateOriginalIndex",
+      "line": 196,
+      "relative": "mainnet/economic_conservation_funding_custody_test.go"
+    }
+  ],
+  "review": [
+    "Complete original four-path delta and249-line new custody tests read.",
+    "Public fundingSummary checks context/original owner on entry and after arithmetic, returning nil on either refusal. checkAdmission performs full hot custody checks and retains private cold admission context plus final finish fence.",
+    "Fault-injection hooks are nil in production; no per-map owner scan or historical payload reread introduced.",
+    "Tests cover early/late close, early/late cancellation, one/three-page exact two complete fences, public same-byte inode replacement/noJSON, public cancellation/noJSON+healthy reopen, and refused fee/Claim candidate plus identical retries with a separately held original."
+  ],
+  "candidate_isolation": "Source trace indicates public requests open distinct private archive views, build once and close them. Fee-retirement clone only mutates detached fee maps before reattachment. No established mutation of an already-published owner; exact public isolation test is authored and awaits execution.",
+  "limits": "Six-root source declarations are not passing tests. Frozen intake/control census and full funding producer qualification remain pending. No goal, requirement or production activation closed."
+}

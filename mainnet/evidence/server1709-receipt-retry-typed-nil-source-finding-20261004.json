@@ -1,0 +1,41 @@
+{
+  "schema": "mainnet-independent-adjacent-source-finding-v1",
+  "status": "SOURCE_CAUSE_CONFIRMED_DETERMINISTIC_SUCCESSOR_REQUIRED",
+  "source_commit": "1709ffe03ffa59ae31441374f3e673793d099764",
+  "verified_source": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/strecovery/receipt_collect_retry.go",
+      "relative": "strecovery/receipt_collect_retry.go",
+      "sha256": "97cecd9d4b03dd51f7d32754aaeaef0e6279abd3037e0e0436fbed97b50d0780",
+      "git_blob": "a2d2285ed78f7aeef19e0319703765b14f0dff1a",
+      "bytes": 2638
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/source/server/strecovery/receipt_collect_retry_bounds_test.go",
+      "relative": "strecovery/receipt_collect_retry_bounds_test.go",
+      "sha256": "ec0545dfe4d16c69a4d3a8e060d5ba1146c035a4285635656481757922c07440",
+      "git_blob": "53fd631741ca65b92dbbf0dc363c8fd34b84c82b",
+      "bytes": 7534
+    }
+  ],
+  "publication_inventory": {
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-vs5f-publication-inventory-v1.json",
+    "sha256": "9b7ddfede837e11abbdee1138b23f930217aab8ecd11eb9486faa5c0e7a56d10",
+    "physical_git_delta_verified": 55
+  },
+  "cause": [
+    "receiptCollectorRetryable rejects only literal nil before asserting and calling custom Unwrap/network methods. An error interface holding a nil concrete pointer passes that guard.",
+    "The included *receiptRetryTestSingle.Unwrap reads self.calls, so a typed-nil receiver reaches a nil pointer dereference. Typed-nil custom net.Error can similarly panic or invent transient permission.",
+    "Existing tests instantiate nonnil empty wrappers and literal nils; they do not cover typed-nil receivers."
+  ],
+  "required_fix": [
+    "Reject typed nils before any unwrap or network-method dispatch. Preserve bounded depth/node work and observed transient/hard/cancellation policies.",
+    "Add deterministic typed-nil leaf/single/many and joined nil controls; actual failed transport close must not wait or publish. Keep healthy transient recovery and original logical deadline.",
+    "Review adjacent strecovery classifiers and qualify a distinct frozen successor; keep original6b source/intake, avoid unneeded original15-root execution."
+  ],
+  "qualification_disposition": "Completed Server31-normal/31-race/six-vet/twelve-control scope remains valid. No complete Server increment publication inferred until the separate corrected receipt retry scope qualifies.",
+  "limits": [
+    "Source-derived deterministic cause, not a claimed live mainnet failure or an executed Go reproduction.",
+    "No healthy test process was stopped or restarted."
+  ]
+}

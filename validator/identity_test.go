@@ -12,11 +12,15 @@ import (
 	"github.com/urfoundation/sn/ss58"
 )
 
-// Identity custody requires a non-shared immediate parent. Do not depend on
-// TempDir's umask-dependent child mode or chmod its existing ancestry.
+// Identity custody owns this numbered TempDir and its private child. Protect
+// both explicitly; do not change any ancestor owned by the test runner.
 func identityTestStateDir(t *testing.T) string {
 	t.Helper()
-	dir := filepath.Join(t.TempDir(), "private")
+	parent := t.TempDir()
+	if err := os.Chmod(parent, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Join(parent, "private")
 	if err := os.Mkdir(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}

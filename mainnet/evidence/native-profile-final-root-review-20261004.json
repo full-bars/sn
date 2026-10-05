@@ -1,0 +1,28 @@
+{
+  "schema": "native-profile-final-independent-root-review-v1",
+  "observed_utc": "2026-10-04T03:11:47.879216+00:00",
+  "terminal": {
+    "path": "/mnt/data/sn-testnet/sol-native-profile-continuation-20261004/evidence/native-profile-continuation-terminal-v2.json",
+    "bytes": 24388,
+    "sha256": "8c106a71d2e0bbedf9d8e6a5d4f229b966fdcf932fadeec8dbbc773a3c7c357f"
+  },
+  "independent_qualifier": {
+    "path": "/mnt/data/sn-testnet/sol-native-profile-continuation-20261004/evidence/native-profile-continuation-independent-readback-v1.json",
+    "bytes": 9539,
+    "sha256": "79249b13a981515ebc374cae3319b5f76b6cd7e4bb7b2abf22d8bd75a6977d44"
+  },
+  "verified_receipt_and_raw_log_bindings": 104,
+  "phase_counts": {
+    "pass": 26,
+    "fail": 0,
+    "not_run": 0
+  },
+  "public_roots": {
+    "normal": 17,
+    "race": 17,
+    "skips": 0
+  },
+  "qualified_scope": "original b32 Go plus qualified825 production engines and40e test fixtures; exact retained prefix4d9 positives",
+  "preserved_history": "Original66 and incremental48 failures unchanged; completed Server/capacity/prefix bodies reused under original exact scopes.",
+  "remaining": "Final Coread6/SN/Server source composition, economic witness producers and conservation consumption, Claim continuity, unattended operator feed/runtime adoption, and real launch inputs remain. This component success is not final mainnet readiness."
+}

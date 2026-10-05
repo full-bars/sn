@@ -1,0 +1,46 @@
+{
+  "correction": "The v1 binding key named fixed-source-preflight.json, but the actual hashed file is source-preflight.json; no test/source bytes changed.",
+  "corrects_receipt_sha256": "be4372726e97bde87f8e4492b3871fe1ece412d271592fc5950044a282cbf005",
+  "fixed_commit": "08f32b7f584b6dd982eb5024a65af82624699f4b",
+  "phases": {
+    "normal": {
+      "assertions": [
+        "bootstrap_successor_registry_checkpoint_test.go:67: public retained rebind cannot reopen after lost acknowledgement 1 successor execution custody unresolved; retain original and nonce registry files: successor execution acquired an unexpected custody file during ownership",
+        "bootstrap_successor_registry_rebind_test.go:255: public exact restored-registry resume failed 0 1 successor execution custody unresolved; retain original and nonce registry files: successor execution acquired an unexpected custody file during ownership"
+      ],
+      "failed_roots": [
+        "TestBootstrapSuccessorRegistryRebindLostAcknowledgementKeepsPublicResume",
+        "TestBootstrapSuccessorRegistryRebindPublicResumeKeepsOriginalAuthority"
+      ],
+      "positive_roots": [
+        "TestBootstrapSuccessorUnapprovedRebindReceiptCannotAcquireAuthority"
+      ]
+    },
+    "race": {
+      "assertions": [
+        "bootstrap_successor_registry_checkpoint_test.go:67: public retained rebind cannot reopen after lost acknowledgement 1 successor execution custody unresolved; retain original and nonce registry files: successor execution acquired an unexpected custody file during ownership",
+        "bootstrap_successor_registry_rebind_test.go:255: public exact restored-registry resume failed 0 1 successor execution custody unresolved; retain original and nonce registry files: successor execution acquired an unexpected custody file during ownership"
+      ],
+      "failed_roots": [
+        "TestBootstrapSuccessorRegistryRebindLostAcknowledgementKeepsPublicResume",
+        "TestBootstrapSuccessorRegistryRebindPublicResumeKeepsOriginalAuthority"
+      ],
+      "positive_roots": [
+        "TestBootstrapSuccessorUnapprovedRebindReceiptCannotAcquireAuthority"
+      ]
+    }
+  },
+  "schema": "sol-registry08f-old7a-test-overlay-causal-v2",
+  "scope": "Only new registry test file over exact old7a production. Two behavioral failures plus unapproved receipt positive per mode; no broader old-source claim.",
+  "sha256": {
+    "old7a-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "old7a-normal.jsonl": "a2c5c05a9552b3eab8dabccc144d65f5faa174d8feab8a2c94805c59c7004e2d",
+    "old7a-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "old7a-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "old7a-race.jsonl": "4afac5b6426b95e1d56973fade92a53befd91d83830cec3a54ea2900ff7c9fff",
+    "old7a-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "old7a-source-fence.json": "965b67dbca0db377c78fa1d1cde00061a271516246d216cd9d2d96aee7ba750d",
+    "old7a-test-overlay.json": "8d53a308b9b446bc1a91b9764140bd7182344f0e7d90e415985620a8b796324f",
+    "source-preflight.json": "6e25e31b1ea3ca1c2c60d8bdcfe28db5c0602cccb1bec414875eb5c15afe6226"
+  }
+}

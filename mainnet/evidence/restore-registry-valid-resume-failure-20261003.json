@@ -1,0 +1,37 @@
+{
+  "connect_commit": "332b1f438a62edddb4747119fbcc1fed8047ecbc",
+  "files": {
+    "evidence/normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/normal.jsonl": "34209d4b285fe920207759ce9d9969d1e27f441534102bca27e4e909744c1399",
+    "evidence/normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/source-fence.json": "965b67dbca0db377c78fa1d1cde00061a271516246d216cd9d2d96aee7ba750d",
+    "evidence/vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "inference": "The retained registry-rebind receipt name has the execution prefix. Store census allows that name, but the subsequent checkpoint census does not add it to its allowed-name map before rejecting unexpected execution-prefix files. This explains the observed valid-resume refusal; an independently frozen production successor is required.",
+  "limits": [
+    "No passing registry rebind resume or broad restore claim.",
+    "No race run on this known failing test-only pin; normal failure and vet retained.",
+    "Earlier94e and68d assertion failures remain separate and unchanged."
+  ],
+  "normal": {
+    "assertion": "bootstrap_successor_registry_rebind_test.go:255: public exact restored-registry resume failed 0 1 successor execution custody unresolved; retain original and nonce registry files: successor execution acquired an unexpected custody file during ownership",
+    "exit": 1,
+    "failed_root": "TestBootstrapSuccessorRegistryRebindPublicResumeKeepsOriginalAuthority"
+  },
+  "only_changed_file": "mainnet/bootstrap_successor_registry_rebind_test.go",
+  "original_receipts": {
+    "/mnt/data/sn-testnet/sol-registry-rebind-68d-independent-20261003/evidence/failed-receipt.json": "daa7069e6e4993c111cc945a420a7b650be0db01e2d6d90d1ca52754bca5e766",
+    "/mnt/data/sn-testnet/sol-registry-rebind-94e-independent-20261003/evidence/original-failed-receipt.json": "34b996625b85c9bb64b82b116c02793b9bc307ecec5c3ee7466762b092567f94"
+  },
+  "parent": "68d76b5b1e54852f7db4e5ee88ef35df159764a4",
+  "production_modules_unchanged": true,
+  "schema": "sol-registry-7a-valid-resume-product-failure-v1",
+  "server_commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+  "sn_commit": "7a4123fe3a4352869c45f1f73634f94e487d09a8",
+  "sn_tree": "572fd27f93bd73bcf4a8ffa0bbb376880fadef75",
+  "source_git_blobs_verified": 20156,
+  "status": "PRODUCT_FAILURE_RETAINED",
+  "vet_exit": 0
+}

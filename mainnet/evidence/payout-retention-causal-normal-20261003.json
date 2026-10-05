@@ -1,0 +1,159 @@
+{
+  "author_control_map_sha256": "eb5d948fb28fb376da0557e73f1a41a9b86842110a6fad3b06a413a0d8d4607a",
+  "files": {
+    "module-graph.jsonl": "05b2949a956b5a76d00efd3b2833bcee79c3d0ba8481f844113a1ed0befc88b7",
+    "retention-control-normal-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "retention-control-normal-gross-summary-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "retention-control-normal-gross-summary-omission.jsonl": "bc988979f0e23726d48789d48b01e852a247a9a6f297cd1176f57a1529cee499",
+    "retention-control-normal-gross-summary-omission.phase": "40ba18de784fcd1929ddb0229db98a6840e522a558d7caab5258cfee1044035a",
+    "retention-control-normal-gross-summary-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retention-control-normal-journal-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "retention-control-normal-journal-omission.jsonl": "3306a25faa14f4bbf2ed7189198f051900216afd1d3f2f6fe76f503376b0c89d",
+    "retention-control-normal-journal-omission.phase": "768628e98a3bebdfbb5e347bb01ad2cb1c4b63529d2c058186ab19de764c60a4",
+    "retention-control-normal-journal-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retention-control-normal-journal-separate-tx.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "retention-control-normal-journal-separate-tx.jsonl": "9fd4fdc6038e78ab55ff0b978e6c3a702da5354c74390bd39ccbf238ab7d3328",
+    "retention-control-normal-journal-separate-tx.phase": "b969c919ff3c6dc4146eba201b5d2bf4358cbb844844f9a36c46ad4cfa5cdeab",
+    "retention-control-normal-journal-separate-tx.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retention-control-normal-network-cleanup.log": "43d0ad42591f017ba12576e19183a0831331ca0d90eb7e434a476036db80d74e",
+    "retention-control-normal-old-ffcc-advance.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "retention-control-normal-old-ffcc-advance.jsonl": "2039dec334ad81e2ba2a537deff2284da688a35d4b955d5be5e7b4dc803ecb3e",
+    "retention-control-normal-old-ffcc-advance.phase": "490b30db45d9f9d530f1bbb90033eedccde3696d105aa0804ba1fd9bcc30d235",
+    "retention-control-normal-old-ffcc-advance.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retention-control-normal-old-ffcc-cancel.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "retention-control-normal-old-ffcc-cancel.jsonl": "3b7f65287598b7c3be094931c488dac5abd86d64274bf111b58552dd4a9d96ee",
+    "retention-control-normal-old-ffcc-cancel.phase": "bbca8341e9f9b2b97c8403a86379c16dafc487c50c8dcaf17b574e7aef64fd3c",
+    "retention-control-normal-old-ffcc-cancel.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retention-control-normal-recover-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "retention-control-normal-recover-omission.jsonl": "276b63104767e90a2c8afea0813fd13d637e8c55c5193718aeae1698a9475d37",
+    "retention-control-normal-recover-omission.phase": "ede4dc25e43525937dc2fa907480464902582052ed14d1fb4a1497d7e070affc",
+    "retention-control-normal-recover-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retention-control-normal-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "retention-control-normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "retention-control-normal-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "retention-control-normal-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retention-controls/gross-summary-omission/overlay.json": "20828602262c180ed6f1d01bf5f88faf33eac208b23e2ea8e260eab171cabfba",
+    "retention-controls/journal-omission/overlay.json": "0aae4e604c895ce09819484ee0fa6831095c06ac44110ad64a6ed76099934a18",
+    "retention-controls/journal-separate-tx/overlay.json": "eba875d9afe2d6f82e5db126db400e44afe0610594b0b04a90a0cee98aad5927",
+    "retention-controls/manifest.json": "4dcf183a29c7a946e40ae5d52daf043fcc39a4ea473981d9aed1a32e40ae5b9c",
+    "retention-controls/old-ffcc-advance/overlay.json": "4dc0875adf4cc6988c3425dfd6a711f33b1d4a8fc04212b7f823f831ebc8f1b1",
+    "retention-controls/old-ffcc-cancel/overlay.json": "f4a56a51c733f2001dd2142449ca92054c311e9737fa2eefa23ed6661ec35cb4",
+    "retention-controls/recover-omission/overlay.json": "e740fecd172e4a202e4bbf36f5f9c36ddd0f09543859f9899be574c6d0afcbe2",
+    "run-retention-controls.sh": "2db35740743272fb39ab7187f6810e425a2cacb01f32f2d213a2502d7b520c0f",
+    "source-fence.json": "d727a1b901d06b7e97ed0f6f47510c5b3bc6b6cbc9b51f650cc1c4b709f2e3c3"
+  },
+  "groups": [
+    {
+      "assertions": {
+        "TestProviderTransitionHistoricalInflightExcessRemainsVisible": "test_util.go:952: unexplained gross was credited or original earning evidence queued for deletion 11000000000 true"
+      },
+      "exit": 1,
+      "expected_behavioral_failures": 1,
+      "jsonl_sha256": "bc988979f0e23726d48789d48b01e852a247a9a6f297cd1176f57a1529cee499",
+      "name": "gross-summary-omission",
+      "overlay_sha256": "20828602262c180ed6f1d01bf5f88faf33eac208b23e2ea8e260eab171cabfba",
+      "roots": {
+        "TestProviderTransitionHistoricalInflightExcessRemainsVisible": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "assertions": {
+        "TestProviderTransitionAttemptJournalFailureRollsBackReset": "test_util.go:952: failed attempt journal acknowledged reset"
+      },
+      "exit": 1,
+      "expected_behavioral_failures": 1,
+      "jsonl_sha256": "3306a25faa14f4bbf2ed7189198f051900216afd1d3f2f6fe76f503376b0c89d",
+      "name": "journal-omission",
+      "overlay_sha256": "0aae4e604c895ce09819484ee0fa6831095c06ac44110ad64a6ed76099934a18",
+      "roots": {
+        "TestProviderTransitionAttemptJournalFailureRollsBackReset": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "assertions": {
+        "TestProviderTransitionResetFailureRollsBackAttemptJournal": "test_util.go:952: failed reset committed its journal in a separate transaction"
+      },
+      "exit": 1,
+      "expected_behavioral_failures": 1,
+      "jsonl_sha256": "9fd4fdc6038e78ab55ff0b978e6c3a702da5354c74390bd39ccbf238ab7d3328",
+      "name": "journal-separate-tx",
+      "overlay_sha256": "eba875d9afe2d6f82e5db126db400e44afe0610594b0b04a90a0cee98aad5927",
+      "roots": {
+        "TestProviderTransitionResetFailureRollsBackAttemptJournal": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "assertions": {
+        "TestProviderTransitionInvalidDestinationCannotClearAcceptedAttempt": "test_util.go:952: late invalid-destination erased accepted peer &{01a0ff10-1f3b-67f3-8c3b-69fb00f08d42 01a0ff10-1f3c-296f-ca98-42e5d659d085 01a0ff10-1f16-7c6e-0a3b-fda6f9b0b75e 01a0ff10-1f04-7733-16e8-0c9b5de4f13a 100 10000000000 0 0 0 false 2020-01-07 00:59:59.999999 +0000 UTC 2026-10-03 00:00:41.787975 +0000 UTC <nil> <nil> 0x369065e08bc0 0x369065dc2c90 2026-10-03 00:00:41.853004 +0000 UTC <nil> 0x369065e08bd0 0x369065e08be0 <nil> false <nil> false <nil>} <nil>",
+        "TestProviderTransitionLateAcceptancePreservesNewAttemptAndFlagsConflict": "test_util.go:952: late contradictory acceptance silently replaced attempt &{false false} <nil>",
+        "TestProviderTransitionMissingAndInactiveWalletRemainPending": "test_util.go:957: held wallet state reported canceled: &{Complete:false Canceled:true} <nil>",
+        "TestProviderTransitionRepeatedCancellationRetainsSameComponentsAndHistory": "test_util.go:957: component obligation reported finished: &{Complete:false Canceled:true} <nil>",
+        "TestProviderTransitionStaleProcessorResponsesCannotMutateNewAttempt": "test_util.go:957: stale DENIED response changed lifecycle: &{Complete:false Canceled:false} [01a0ff0f-f5c8-3119-e7d9-df2bf46f065d]error = DENIED",
+        "TestProviderTransitionSubFeeOriginalIsHeldNotCanceled": "test_util.go:957: sub-fee held state hidden: &{Complete:false Canceled:true} <nil>"
+      },
+      "exit": 1,
+      "expected_behavioral_failures": 6,
+      "jsonl_sha256": "2039dec334ad81e2ba2a537deff2284da688a35d4b955d5be5e7b4dc803ecb3e",
+      "name": "old-ffcc-advance",
+      "overlay_sha256": "4dc0875adf4cc6988c3425dfd6a711f33b1d4a8fc04212b7f823f831ebc8f1b1",
+      "roots": {
+        "TestProviderTransitionInvalidDestinationCannotClearAcceptedAttempt": "fail",
+        "TestProviderTransitionLateAcceptancePreservesNewAttemptAndFlagsConflict": "fail",
+        "TestProviderTransitionMissingAndInactiveWalletRemainPending": "fail",
+        "TestProviderTransitionRepeatedCancellationRetainsSameComponentsAndHistory": "fail",
+        "TestProviderTransitionStaleProcessorResponsesCannotMutateNewAttempt": "fail",
+        "TestProviderTransitionSubFeeOriginalIsHeldNotCanceled": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "assertions": {
+        "TestProviderTransitionLegacyComponentsRetainOriginalAllocation": "test_util.go:952: allocated subsidy was discarded for raw replan"
+      },
+      "exit": 1,
+      "expected_behavioral_failures": 1,
+      "jsonl_sha256": "3b7f65287598b7c3be094931c488dac5abd86d64274bf111b58552dd4a9d96ee",
+      "name": "old-ffcc-cancel",
+      "overlay_sha256": "f4a56a51c733f2001dd2142449ca92054c311e9737fa2eefa23ed6661ec35cb4",
+      "roots": {
+        "TestProviderTransitionLegacyComponentsRetainOriginalAllocation": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "assertions": {
+        "TestProviderTransitionLegacyRecoveryBoundedCensusDoesNotStarve": "test_util.go:957: first bounded recovery invented completeness: &{PaymentPlanId:01a0ff12-5a8d-e223-96fd-6197ee295c98 NetworkPayments:map[] SubsidyPayment:<nil> WithheldNetworkIds:[] QuarantinedSweepCount:0 QuarantinedNanoCents:0 UnresolvedCensusComplete:false RestoredLegacyPaymentCount:0 UnresolvedLegacyPaymentCount:0 LegacyRecoveryScanLimit:1024} <nil>",
+        "TestProviderTransitionLegacyRecoveryRefusesPartialOriginalCensus": "test_util.go:957: partial original was reconstructed: &{PaymentPlanId:01a0ff12-70a7-6c9e-8511-9168959781bc NetworkPayments:map[] SubsidyPayment:<nil> WithheldNetworkIds:[] QuarantinedSweepCount:0 QuarantinedNanoCents:0 UnresolvedCensusComplete:false RestoredLegacyPaymentCount:0 UnresolvedLegacyPaymentCount:0 LegacyRecoveryScanLimit:1024} <nil>"
+      },
+      "exit": 1,
+      "expected_behavioral_failures": 2,
+      "jsonl_sha256": "276b63104767e90a2c8afea0813fd13d637e8c55c5193718aeae1698a9475d37",
+      "name": "recover-omission",
+      "overlay_sha256": "e740fecd172e4a202e4bbf36f5f9c36ddd0f09543859f9899be574c6d0afcbe2",
+      "roots": {
+        "TestProviderTransitionLegacyRecoveryBoundedCensusDoesNotStarve": "fail",
+        "TestProviderTransitionLegacyRecoveryRefusesPartialOriginalCensus": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "limits": [
+    "These are controlled old-body/omission failures; no broad model suite or live payout claim.",
+    "Normal mode only; race causal controls remain queued."
+  ],
+  "owned_services_cleanup_exit": 0,
+  "remapped_manifest_sha256": "4dcf183a29c7a946e40ae5d52daf043fcc39a4ea473981d9aed1a32e40ae5b9c",
+  "runner_exit": 0,
+  "schema": "sol-provider-cutover-630-retention-causal-normal-v1",
+  "source": {
+    "module_graph_sha256": "05b2949a956b5a76d00efd3b2833bcee79c3d0ba8481f844113a1ed0befc88b7",
+    "server_commit": "630271301fdc18614cae6af76fed7d8c0c2c8ac4",
+    "server_tree": "efe622382434f641f93161eb64727db89d71b33c",
+    "source_fence_sha256": "d727a1b901d06b7e97ed0f6f47510c5b3bc6b6cbc9b51f650cc1c4b709f2e3c3"
+  },
+  "status": "PASS_CAUSAL_SCOPED",
+  "total_intended_failed_roots": 12
+}

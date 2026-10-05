@@ -1,0 +1,105 @@
+{
+  "schema": "native-restore-a499-finite-resource-root-review-v1",
+  "status": "RESOURCE_SCOPE_ADMITTED_RUNNER_REVIEW_PENDING",
+  "bindings": [
+    {
+      "bytes": 556,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/source-stage-receipt.json",
+      "sha256": "f05858835ebb29c2466cbf0d5f1731f3ebf0b0273c719e14c312f10559a737b0"
+    },
+    {
+      "bytes": 3981,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/peer-workspace-stage-receipt.json",
+      "sha256": "5b1b526d14b2e406f6920fc9d9b391260fdd06d4c3b16137e185b393614518b7"
+    },
+    {
+      "bytes": 592,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/workspace-stage-v3-receipt.json",
+      "sha256": "6de74a4b81bcb8c9dd3019af75723b9dc130d63bfee78e5c6728a4b4bddf6bc9"
+    },
+    {
+      "bytes": 13323,
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/evidence/selected-graph-v3.receipt.json",
+      "sha256": "00314954e1d13379c3af252a9c30d7467c66b567ac69beb2916fee15a443fe91"
+    },
+    {
+      "bytes": 7430,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/intake-v2.json",
+      "sha256": "95a00477ad058b2cae5aaf153bcf69857adbfee4f3c40c427a18c2d428643541"
+    },
+    {
+      "bytes": 14303,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/qualification-recipe.json",
+      "sha256": "1e52481dab22758c3567cae1138b96ff64a7e7a3e1daf95bad93cef591a2c0f4"
+    },
+    {
+      "bytes": 7897,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/operative-controls-v2.json",
+      "sha256": "04dbfd71665d73241bd9bd4dc4a0e263ec6962ddbbe64bc07febc5c3303a2c3d"
+    },
+    {
+      "bytes": 3429,
+      "path": "/mnt/data/sn-testnet/sol-core-c618-concurrent-20261004/evidence/core-c618-selected.terminal.json",
+      "sha256": "af4ed5aae830953902ba22b371a994c462acd9faba11e1ee211f164fb4c1208a"
+    },
+    {
+      "bytes": 4387,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/publication.json",
+      "sha256": "33a55bd749db05833e0fe84997a09cd9996fad5dcb4871b7e4ab155873f70fcc"
+    }
+  ],
+  "source_verified": {
+    "head": "a4990a2f1d76640eb8ed82f41e59946c08aa0a40",
+    "entries": 20773,
+    "bytes": 226103559
+  },
+  "partitions_per_mode": {
+    "actual_dual_engine_12": [
+      "TestNativeProducerPublicOriginalCaptureAndUnacknowledgedRestart",
+      "TestNativeProducerPublicRestartConsumesCertifiedDescendantsBeforeHandoff",
+      "TestNativeProducerRenewalPublicKeepsOldCompletionsAndDescendantWindow",
+      "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody",
+      "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects",
+      "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob",
+      "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted",
+      "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput",
+      "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot",
+      "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval",
+      "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint",
+      "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress"
+    ],
+    "long_129_review_1": [
+      "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues"
+    ],
+    "ordinary_11": [
+      "TestEconomicConservationFixtureProtectsFreshRootWithoutWeakeningCustody",
+      "TestEconomicConservationRestorePublicReconstructsOriginalClaimHead",
+      "TestEconomicConservationRestorePublicRejectsChangedAuthorityAndReserve",
+      "TestEconomicConservationRestorePublicRequiresEverySourceAndCoowner",
+      "TestEconomicConservationRestorePublicSingleRootKeepsFullClaimWindow",
+      "TestEconomicConservationRestoreReadFailureCannotInventHistoryMismatch",
+      "TestNativeProducerRenewalAuthenticatesOriginalAndMonotonicCapacity",
+      "TestNativeProducerRestoreCopiedReadKeepsIoUnknownAndExactMismatchDistinct",
+      "TestNativeProducerRestoreGrammarKeepsPartialEvidenceAndRejectsForeignMembers",
+      "TestNativeProducerRestoreHeightBoundaryNeverWrapsPendingInterval",
+      "TestNativeProducerRestoreOriginalSignedApprovalAndCursorStayIndependent"
+    ]
+  },
+  "resources": {
+    "baseline_available_bytes": 113681502208,
+    "body_forecast_bytes": 4294967296,
+    "compiler_forecast_bytes": 4294967296,
+    "cumulative_cap_bytes": 60129542144,
+    "explanation": "Additional source/archive already retained; eight-GiB conservative envelope covers up to 512MiB source, two protected Go images and cache, bounded evidence, and 3.5GiB four-copy long-root workset. Admit each phase against original cumulative baseline, not a reset.",
+    "forecast_not_measured_peak": true,
+    "fresh_available_threshold_bytes": 70731829248,
+    "host_memory_base_bytes": 103079215104,
+    "host_memory_threshold_compile_or_long_bytes": 111669149696,
+    "new_forecast_bytes": 8589934592,
+    "new_two_times_reserve_bytes": 17179869184,
+    "one_long_body_no_compiler_overlap": true
+  },
+  "scope": "Exact24roots/mode split11ordinary,12actualdual-engine,one129-review root; sixcontrols/mode andvet. One compiler OR long body, no overlap. Exact qualifiedc618 workspace required. Original stage/graph refusal history retained.",
+  "next": "Actual runner/helper/retained engines preflight and fresh physical resource/lease checks before execution. No tests inferred from source/resource admission.",
+  "whole_mainnet_complete": false
+}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -13,6 +14,8 @@ import (
 )
 
 type JournalStage string
+
+const maximumJournalRecordBytes = 4 * 1024 * 1024
 
 const (
 	StageIntent    JournalStage = "intent"
@@ -97,6 +100,29 @@ func OpenJournal(stateDir string) (*Journal, error) {
 	}
 	return j, nil
 }
+
+// OpenJournalSnapshot authenticates the current journal without acquiring the
+// deployment writer lock. It is for a caller that is mechanically incapable
+// of dispatching an action: Append fails because the snapshot has no writable
+// file. This lets an observation-only provisional epoch keep recording live
+// traffic while an independently authenticated setup repair owns the writer.
+func OpenJournalSnapshot(stateDir string) (*Journal, error) {
+	path := filepath.Join(stateDir, "journal.jsonl")
+	f, err := os.Open(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return &Journal{path: path}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	j := &Journal{path: path}
+	if err := j.loadReader(f); err != nil {
+		return nil, err
+	}
+	return j, nil
+}
+
 func (j *Journal) Close() error {
 	j.mu.Lock()
 	defer j.mu.Unlock()
@@ -123,13 +149,13 @@ func (j *Journal) load() error {
 	return err
 }
 
-func (j *Journal) loadReader(file *os.File) error {
+func (j *Journal) loadReader(file io.Reader) error {
 	if len(j.entries) == 0 {
 		j.validationKVs = map[journalActionKey][]JournalEntry{}
 		j.validationCount = 0
 	}
 	scan := bufio.NewScanner(file)
-	scan.Buffer(make([]byte, 64*1024), 4*1024*1024)
+	scan.Buffer(make([]byte, 64*1024), maximumJournalRecordBytes)
 	for scan.Scan() {
 		var e JournalEntry
 		if err := json.Unmarshal(scan.Bytes(), &e); err != nil {
@@ -255,6 +281,13 @@ func (self *Journal) rememberValidationEntry(entry JournalEntry) {
 		self.validationKVs = nil
 		return
 	}
+	self.rememberValidationWitness(entry)
+	self.validationCount++
+}
+
+// Streaming history readers retain the same action witnesses without keeping
+// a second copy of every accepted record. The ordinary journal owns its entries.
+func (self *Journal) rememberValidationWitness(entry JournalEntry) {
 	key := journalActionKey{planHash: entry.PlanHash, actionId: entry.ActionID}
 	priors := self.validationKVs[key]
 	hasTransaction, hasBroadcast := false, false
@@ -265,12 +298,14 @@ func (self *Journal) rememberValidationEntry(entry JournalEntry) {
 	if len(priors) == 0 || entry.Stage == StageVerified || (!hasTransaction && entry.TransactionHash != "") || (!hasBroadcast && entry.Stage == StageBroadcast) {
 		self.validationKVs[key] = append(priors, entry)
 	}
-	self.validationCount++
 }
 
 func (j *Journal) Append(e JournalEntry) error {
 	j.mu.Lock()
 	defer j.mu.Unlock()
+	if j.file == nil {
+		return errors.New("journal is read-only or closed")
+	}
 	if err := j.validateEntry(e); err != nil {
 		return err
 	}

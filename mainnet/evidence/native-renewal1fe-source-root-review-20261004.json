@@ -1,0 +1,143 @@
+{
+  "schema": "native-renewal1fe-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_REQUIRES_CORRECTED_COMPOSITION",
+  "source_head": "1fe78d5a5d9b5c46a3d2d84e568eb99793dd8c15",
+  "source_tree": "f048397cfd70227b9f3987ffeb2424de2009e262",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/intake.json",
+      "bytes": 7123,
+      "sha256": "f6f7810f0e44af80de0193ef4d43ffb7ac3064d59bcae19b4c7cc4d971f14b74"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation.go",
+      "bytes": 37192,
+      "sha256": "c30445cc242ab74cd4de489ab44e96604182a418987d8b843a924f775e2cdbe2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 28332,
+      "sha256": "00b71984befe09b858ee8c64d98b031da9305d872bf6d6ac3a1e202659a17d4e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_archive_command.go",
+      "bytes": 19376,
+      "sha256": "7a162c680d29278ca78f4f2b56fa6bd596c3e46991d1377b0427b999e4e60dad"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_command.go",
+      "bytes": 24816,
+      "sha256": "2481d23678bce1f412eb02ece25efa7ac22a5e6a90f430f0b84f01753a9ea218"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_native_renewal.go",
+      "bytes": 9208,
+      "sha256": "c6a00a63332a52da4fa569af0be0d6ef9f200655b788d966127470187c6df0d1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_native_renewal_command.go",
+      "bytes": 6068,
+      "sha256": "a55ed686b54f6a862813673f58d03d8687f3efca6c7a28fb2a15e2376c0d7228"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_native_renewal_test.go",
+      "bytes": 25712,
+      "sha256": "086f509ac0c856c84bf2eb7cae4072c50bc4ab92021b98cfac0a76ca68776cc7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_principal_custody_test.go",
+      "bytes": 3008,
+      "sha256": "859dc2d5b15fb7b9a1eee9a502f9690241117b93be946209cfe602929d2788d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 16995,
+      "sha256": "fa56d9f110a8a56e3cd5cb2c237918c6f86773ff40f1241c2e1d657a4969e887"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_resources.go",
+      "bytes": 7814,
+      "sha256": "fe7c59f156c7b0e95d150484df56d3b829a6310e7d2c542c2cf338d2cc9fdf6b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_conservation_restore_linux.go",
+      "bytes": 9822,
+      "sha256": "3a4aa8855ea0ac8df51495eb6a1e75a2d1ef74f49ded271a3ee74d5d9c51d8cd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/mainnet/economic_native_producer_restore_test.go",
+      "bytes": 30672,
+      "sha256": "2f27cf64d67bab5cab4b2fc995ee72b9e926bfffcc1f1956de4b9af777f72bc3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/qualification-recipe.json",
+      "bytes": 11596,
+      "sha256": "17b95eb313e9932e84cc98b35ea38ca6ee5ac077f211333833d99bc1d2e9f625"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/operative-controls.json",
+      "bytes": 6399,
+      "sha256": "46db99a1310aa8dd7cbb6d343afdc4ae62823e69825fb400323bb627866fdea7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/source-audit.json",
+      "bytes": 6349,
+      "sha256": "ad31170b6b5bbbef8ffd263731500cb5518c1d9ee58c8d149b2cc1a7c5311b72"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/publication.json",
+      "bytes": 4387,
+      "sha256": "33a55bd749db05833e0fe84997a09cd9996fad5dcb4871b7e4ab155873f70fcc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-original-policy-normalization-omitted.go",
+      "bytes": 7832,
+      "sha256": "9ca7bad6357f620fcb60b008016d4d02e1649218911e956e2f01612deeb989cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-original-signature-omitted.go",
+      "bytes": 9217,
+      "sha256": "a223b9b4deab0de4a95b41535b30663baacf373ca357e7f6c5d732e566536607"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-inner-approval-refusal-omitted.go",
+      "bytes": 9217,
+      "sha256": "16aba8559b44b2ed885f30547f625ffc0c5bcf77c4ac162f48c920264fb32c7c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-original-predecessor-omitted.go",
+      "bytes": 9217,
+      "sha256": "120d33c3212ee23c1fac150606676423a8b15740242fcd5baee0f9269186e195"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-archived-review-reuse-refusal-omitted.go",
+      "bytes": 6079,
+      "sha256": "eb3cf68113f4de61ea73a436487a0b449d8031658adca9854c0ea8e19702a5d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-restore-adopted-authority-selection-omitted.go",
+      "bytes": 9885,
+      "sha256": "5739161311740d9b0898a418373081fdb9137511f15e046d3ada239f0b9e2c1d"
+    }
+  ],
+  "review": "Complete new renewal production/command files, six existing production diffs, full new tests and fixture callbacks, six control diffs and full recipe reviewed. Preserve original combined policy identity and independently signed inner native reviews; append-only original-key adoption binds exact checkpoint, predecessor and review index. Archive original checkpoint before head publication, reconcile lost acknowledgment, retain pending/completed job original authority and restore exact archived native head. Policy.validate rejects missing Execution before proposer dereference; no nil-Execution defect established.",
+  "qualification_scope": "19 roots per mode, six production omission groups per mode and vet, including actual original dual-engine pending-job restore; unexecuted. Mandatory qualified Corec618 join.",
+  "remaining": [
+    "Join exact729 test-type corrections and ec242 activation/diagnostic correction without mutating frozen1fe.",
+    "Resolve fresh ancestor and prior-owner fixture preparation findings with deterministic public tests.",
+    "Recipe archive entry cap16384 is below previous actual20773 census; admit truthful additive finite bound.",
+    "Full128 neighbor requires isolated long history timeout; ordinary2400 seconds does not cover prior measured race duration.",
+    "Larger actual production capacity and unattended role pipeline remain separate full-scope requirements."
+  ],
+  "whole_mainnet_complete": false
+}

@@ -1,0 +1,15 @@
+{
+  "schema": "qualification-future-scratch80-admission-v1",
+  "observed_utc": "2026-10-04T16:57:23.344972+00:00",
+  "authorization": "User: All budget increases are automatically approved. Future qualification scratch allowance only; no transaction or production authority.",
+  "baseline_available_bytes": 113681502208,
+  "previous_cap_bytes": 77309411328,
+  "future_cap_bytes": 85899345920,
+  "preserved_forecast_bytes": 6442450944,
+  "resource_margin": 2,
+  "minimum_free_bytes": 40667058176,
+  "observed_available_bytes": 47513194496,
+  "observed_memory_available_bytes": 131093819392,
+  "disk_check_pass": true,
+  "instructions": "New runner must acquire exclusive existing lease with live PID/start/kernel proof, retain original baseline and actual workload census and check disk, memory, inode and process guards before every phase. Existing running caps are unchanged. No test outcome or activation is inferred."
+}

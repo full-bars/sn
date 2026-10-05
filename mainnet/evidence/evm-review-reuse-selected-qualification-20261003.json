@@ -1,0 +1,207 @@
+{
+  "schema": "root-evm-review-reuse-selected-qualification-v1",
+  "source": "8a2693c2c1cc48c69bd5e146ea3ab18d8abac6dc",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/evm8a-selected6-normal-race-vet-receipt.json",
+      "bytes": 4726,
+      "sha256": "7f752398b142164bf7e64038b964291a4e2b4c4cc2af7e0b8fa1cac9407ada44"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/effective-modules.jsonl",
+      "bytes": 174595,
+      "sha256": "db20bdaac74f51d2afd0685cb1753d63d60da7645d4ec3affc25681d501951b1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/overlay.json",
+      "bytes": 542,
+      "sha256": "feda82b70311058da4f8f8883bbacd8e9c408ede9aa4e2623f65942a7f7c54c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/root-preflight.json",
+      "bytes": 385,
+      "sha256": "06c3e9bf98b8c8a6260827cbea963681d55a02fed4a996341f7b3bf7ca4237fa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/run-scope.sh",
+      "bytes": 1790,
+      "sha256": "816502c30734174df9f80333f2f3901d40c2f727ae2761abe7c0804d12f8c907"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/sn.mod",
+      "bytes": 11871,
+      "sha256": "0c58ace6cb326782fe9d4f049f675e391ccdec30e71c120a20729a747fdd0d5f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/sn.sum",
+      "bytes": 66880,
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/source-join.json",
+      "bytes": 1022,
+      "sha256": "1a4352147544b71bcc368bbc6f632c55741af6810d6b93171ff0ce73c153ffa1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/neighbors-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/neighbors-normal.jsonl",
+      "bytes": 4238,
+      "sha256": "2e42fca617093622c88a14f3e0a0d75ab374202bdf19bb88edb4dee9ca21bff9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/neighbors-normal.phase",
+      "bytes": 94,
+      "sha256": "11daeba3e74237bc5f36052d50f81f49d8b0e026eb4184f2c507f6159e819916"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/neighbors-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/neighbors-race.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/neighbors-race.jsonl",
+      "bytes": 4238,
+      "sha256": "0795e26a94ed699d78211589a1da54cdb982566ab3d265e792cbf0ffb944f863"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/neighbors-race.phase",
+      "bytes": 92,
+      "sha256": "54a07f2a90ba82697db74ff66ece0d76d442c9f136a551079d5e7788034c2eb6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/neighbors-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/new_roots-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/new_roots-normal.jsonl",
+      "bytes": 2334,
+      "sha256": "70aab212f3c74c57dff910c26cbb5625cd59337377dbaa695ba5e1141117d108"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/new_roots-normal.phase",
+      "bytes": 94,
+      "sha256": "d9841604caaf1b0796323fc6d2f00924849e053631b008f2e18405bedafe40f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/new_roots-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/new_roots-race.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/new_roots-race.jsonl",
+      "bytes": 2339,
+      "sha256": "4ac76891d117ebcbe9c243e42a4a89a7061da8cde142fff60171714811999389"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/new_roots-race.phase",
+      "bytes": 92,
+      "sha256": "fbbf58c8fe4aee32daa5d5e9a28ded6f120747fafd67e6f1d551381b01f49eff"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/new_roots-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/vet.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/evidence/vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-reuse/evidence/intake.json",
+      "bytes": 4050,
+      "sha256": "e3dc0baf346f3964874eb0f29ea5c1da59f46716ef2580bb0e3da9ec6169b101"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/changed/mainnet/monitor_economic_evm_resources.go",
+      "bytes": 10250,
+      "sha256": "b985fda5808afac5de7bfe7152ed0ae11c48f1efea9400a5f8c1c3c421ff78f2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-evm-review-8a-independent-20261003/changed/mainnet/monitor_economic_evm_review_reuse_test.go",
+      "bytes": 4183,
+      "sha256": "ad0c8107171df7fc42eea554e96e994f56102fac6a874de7c389e7c880960348"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-reuse/sn/mainnet/monitor_economic_evm_resources.go",
+      "bytes": 10250,
+      "sha256": "b985fda5808afac5de7bfe7152ed0ae11c48f1efea9400a5f8c1c3c421ff78f2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-reuse/sn/mainnet/monitor_economic_evm_review_reuse_test.go",
+      "bytes": 4183,
+      "sha256": "ad0c8107171df7fc42eea554e96e994f56102fac6a874de7c389e7c880960348"
+    }
+  ],
+  "verified_results": [
+    {
+      "phase": "neighbors-normal",
+      "roots": {
+        "TestMonitorEconomicEvmPublicResourceReviewsRemainAppendOnly": "pass",
+        "TestMonitorEconomicEvmLegacyCheckpointKeepsOriginalReviewProvenance": "pass",
+        "TestMonitorEconomicEvmReviewCapacityGrowthRetainsEveryAcknowledgment": "pass",
+        "TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication": "pass"
+      }
+    },
+    {
+      "phase": "neighbors-race",
+      "roots": {
+        "TestMonitorEconomicEvmPublicResourceReviewsRemainAppendOnly": "pass",
+        "TestMonitorEconomicEvmLegacyCheckpointKeepsOriginalReviewProvenance": "pass",
+        "TestMonitorEconomicEvmReviewCapacityGrowthRetainsEveryAcknowledgment": "pass",
+        "TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication": "pass"
+      }
+    },
+    {
+      "phase": "new_roots-normal",
+      "roots": {
+        "TestMonitorEconomicEvmRetainedCheckpointRefusesNonAdjacentReviewReuse": "pass",
+        "TestMonitorEconomicEvmChecksEveryRetainedReviewReference": "pass"
+      }
+    },
+    {
+      "phase": "new_roots-race",
+      "roots": {
+        "TestMonitorEconomicEvmRetainedCheckpointRefusesNonAdjacentReviewReuse": "pass",
+        "TestMonitorEconomicEvmChecksEveryRetainedReviewReference": "pass"
+      }
+    }
+  ],
+  "vet_exit": 0,
+  "review": "Every nonempty retained review reference must be unique across full retained history;adjacent comparison alone missedA-B-A reuse;all previous resource/predecessor/hash/appendonlyguards retained",
+  "limits": [
+    "Sixselectedroots normal/race on exactold5def/SDK95/Server0e graph",
+    "Old81de causalcontrol remains separatelypending",
+    "Notfinalcurrentreleasecomposition,cryptographicreviewauthority orliveactivation"
+  ]
+}

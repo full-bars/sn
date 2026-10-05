@@ -1,0 +1,72 @@
+{
+  "observed_utc": "2026-10-04T18:03:33.537561+00:00",
+  "terminal": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturef31/evidence/f31-funding-bodies-v1.terminal.json",
+    "sha256": "bdeae9c3a56c1da8de1912bff33b5cd6f9f5bf740ab1e365dfbaad1f6a226169"
+  },
+  "source": "f31b871dba98495ba3d5d3c5eddeaf15463f7406",
+  "phases": [
+    {
+      "mode": "normal",
+      "receipt": {
+        "bytes": 5355,
+        "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturef31/evidence/f31-funding-normal-affected3.receipt.json",
+        "sha256": "2adce490431acb09655e6df86e1846bf17a888cc0a5d3d54c37b3581bfee8d06"
+      },
+      "raw_counts": {
+        "TestEconomicConservationPublicDelayedFirstReceiptJoinsBothArchivedIntervals": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNextCaptureContinuesArchivedOriginalCursor": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicFundingPublicNextBlockKeepsOriginalIncomeAcrossRetirement": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "exit": 0,
+      "joined": true
+    },
+    {
+      "mode": "race",
+      "receipt": {
+        "bytes": 5342,
+        "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturef31/evidence/f31-funding-race-affected3.receipt.json",
+        "sha256": "f2d9f43280800f2d04b49dad0c31ddc23fbb92d44dd8e0bb84207709b5de6e78"
+      },
+      "raw_counts": {
+        "TestEconomicConservationPublicDelayedFirstReceiptJoinsBothArchivedIntervals": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNextCaptureContinuesArchivedOriginalCursor": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicFundingPublicNextBlockKeepsOriginalIncomeAcrossRetirement": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "exit": 0,
+      "joined": true
+    }
+  ],
+  "status": "SIX_AFFECTED_POSITIVES_PASS_CONTROLS_PENDING",
+  "scope_limit": "Corrected next-block fixture and two adjacent original cursor/carry roots only. Uses retained matched8ad engines. Does not qualify final wholefee1821/0f917 producer or complete financial acceptance; original132 failure preserved."
+}

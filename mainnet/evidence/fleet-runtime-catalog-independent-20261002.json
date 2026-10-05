@@ -1,0 +1,291 @@
+{
+  "author_receipt_sha256": "76b3af304f18c56a6c86ba74f649da4c779fef7c0aa2b939cc9be725bff9ce95",
+  "controls": [
+    {
+      "description": "Exact prior fleet.go caller body restores context.Background at the five public operation timeouts.",
+      "name": "control-prior-caller",
+      "normal": {
+        "causal_outputs": [
+          "fleet_runtime_catalog_test.go:87: public fleet status discarded caller cancellation <nil>"
+        ],
+        "fail": 1,
+        "failed_roots": [
+          "TestFleetRuntimeCatalogPublicStatusHonorsCancellation"
+        ],
+        "package": [
+          "fail",
+          0.869
+        ],
+        "pass": 0,
+        "passed_roots": [],
+        "skip": 0,
+        "started": 1,
+        "terminal": 1,
+        "unresolved": []
+      },
+      "race": {
+        "causal_outputs": [
+          "fleet_runtime_catalog_test.go:87: public fleet status discarded caller cancellation <nil>"
+        ],
+        "fail": 1,
+        "failed_roots": [
+          "TestFleetRuntimeCatalogPublicStatusHonorsCancellation"
+        ],
+        "package": [
+          "fail",
+          7.381
+        ],
+        "pass": 0,
+        "passed_roots": [],
+        "skip": 0,
+        "started": 1,
+        "terminal": 1,
+        "unresolved": []
+      },
+      "replacement_sha256": "1546a4d574bfba59953a949f68bce6f59f0d30f877a7b3cf17c804c158da5ba0",
+      "target_sha256": "85e565f8fac60f150da9bc048a76e9763051165f5b2b1d8b8caf064e1b0b63cd"
+    },
+    {
+      "description": "Only the prior single-artifact selection expression is restored; the v2 parser remains so the selection boundary is exercised.",
+      "name": "control-single-selector",
+      "normal": {
+        "causal_outputs": [
+          "fleet_runtime_catalog_test.go:64: reviewed current selection failed [81 37 249 134 158 72 250 159 103 225 244 207 162 160 149 233 154 69 152 116 76 28 205 192 202 6 148 213 86 63 184 64] allowed runtime artifact 0: runtime artifact spec name is empty"
+        ],
+        "fail": 1,
+        "failed_roots": [
+          "TestFleetRuntimeCatalogCurrentAndHistoricalReads"
+        ],
+        "package": [
+          "fail",
+          0.412
+        ],
+        "pass": 0,
+        "passed_roots": [],
+        "skip": 0,
+        "started": 1,
+        "terminal": 1,
+        "unresolved": []
+      },
+      "race": {
+        "causal_outputs": [
+          "fleet_runtime_catalog_test.go:64: reviewed current selection failed [81 37 249 134 158 72 250 159 103 225 244 207 162 160 149 233 154 69 152 116 76 28 205 192 202 6 148 213 86 63 184 64] allowed runtime artifact 0: runtime artifact spec name is empty"
+        ],
+        "fail": 1,
+        "failed_roots": [
+          "TestFleetRuntimeCatalogCurrentAndHistoricalReads"
+        ],
+        "package": [
+          "fail",
+          3.063
+        ],
+        "pass": 0,
+        "passed_roots": [],
+        "skip": 0,
+        "started": 1,
+        "terminal": 1,
+        "unresolved": []
+      },
+      "replacement_sha256": "97fbc2f9c9fa6e0084755d0df4374ec62bbd8ad916c9d73bfffe963e6fdb85d3",
+      "target_sha256": "4950432c79799cf5dd1b56f140a2457f4a51139111d60fb64e635bc995ca37e1"
+    },
+    {
+      "description": "Adapts the former fresh-only native admission call into the new callback signature; it omits prepared/current artifact equality. This is a narrow causal ablation, not whole old source.",
+      "name": "control-current-only-admission",
+      "normal": {
+        "causal_outputs": [
+          "fleet_runtime_catalog_test.go:248: two approved artifacts relabeled one signature domain <nil>"
+        ],
+        "fail": 1,
+        "failed_roots": [
+          "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain"
+        ],
+        "package": [
+          "fail",
+          0.584
+        ],
+        "pass": 0,
+        "passed_roots": [],
+        "skip": 0,
+        "started": 1,
+        "terminal": 1,
+        "unresolved": []
+      },
+      "race": {
+        "causal_outputs": [
+          "fleet_runtime_catalog_test.go:248: two approved artifacts relabeled one signature domain <nil>"
+        ],
+        "fail": 1,
+        "failed_roots": [
+          "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain"
+        ],
+        "package": [
+          "fail",
+          4.455
+        ],
+        "pass": 0,
+        "passed_roots": [],
+        "skip": 0,
+        "started": 1,
+        "terminal": 1,
+        "unresolved": []
+      },
+      "replacement_sha256": "d47319a3a45af49a6e576e476b3a3a45c8b16c51ac94d39b98fe8a75c3fe844a",
+      "target_sha256": "1074d86560e084958516870e6d8d75c567beec30b20ad0bf95ca66e0402c4120"
+    },
+    {
+      "description": "Exact old SubmitRawAndWatchFinalized body in the new signature; the added execution callback is intentionally unused.",
+      "name": "control-prior-watch",
+      "normal": {
+        "causal_outputs": [
+          "fleet_runtime_catalog_test.go:414: watch skipped the execution admission callback <nil>",
+          "fleet_runtime_catalog_test.go:418: watch skipped the execution admission callback <nil>",
+          "fleet_runtime_catalog_test.go:422: watch skipped the execution admission callback <nil>"
+        ],
+        "fail": 3,
+        "failed_roots": [
+          "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState",
+          "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock",
+          "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation"
+        ],
+        "package": [
+          "fail",
+          1.975
+        ],
+        "pass": 0,
+        "passed_roots": [],
+        "skip": 0,
+        "started": 3,
+        "terminal": 3,
+        "unresolved": []
+      },
+      "race": {
+        "causal_outputs": [
+          "fleet_runtime_catalog_test.go:414: watch skipped the execution admission callback <nil>",
+          "fleet_runtime_catalog_test.go:418: watch skipped the execution admission callback <nil>",
+          "fleet_runtime_catalog_test.go:422: watch skipped the execution admission callback <nil>"
+        ],
+        "fail": 3,
+        "failed_roots": [
+          "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState",
+          "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock",
+          "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation"
+        ],
+        "package": [
+          "fail",
+          17.864
+        ],
+        "pass": 0,
+        "passed_roots": [],
+        "skip": 0,
+        "started": 3,
+        "terminal": 3,
+        "unresolved": []
+      },
+      "replacement_sha256": "7114b574253e92111c99f05064c180e126a0c1a36df378954a886df33c890524",
+      "target_sha256": "f5d94b1057f8d70af6dfed400816bb780339158438c3d650cb696a4aecdaed04"
+    }
+  ],
+  "effective_connect": "v0.0.0-20261002121440-0a5cda0ebe78",
+  "effective_module_count": 636,
+  "effective_sctp": "v0.0.0-20261001021459-e1b5d77b5029",
+  "fixed_normal": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      19.367
+    ],
+    "pass": 23,
+    "passed_roots": [
+      "TestFleetMainnetPublishCommandSignsAndVerifiesApprovedReceipt",
+      "TestFleetMainnetRegisterCommandAppliesAndChecksReceiptAuthority",
+      "TestFleetMainnetRegisterCommandRejectsUpgradeBeforeBroadcast",
+      "TestFleetMainnetAuthorityRejectsIncompleteAndForeignScope",
+      "TestFleetMainnetRuntimeUsesIndependentExactArtifact",
+      "TestFleetMainnetReceiptBindsExactWriteBlock",
+      "TestFleetRecoveryPublishPreparedRestartReplaysExactBytes",
+      "TestFleetRecoveryNativeHistoricalReceiptAfterCurrentUpgrade",
+      "TestFleetRecoveryUpgradeAtReceiptRetainsOriginalAuthority",
+      "TestFleetRuntimeCatalogCurrentAndHistoricalReads",
+      "TestFleetRuntimeCatalogPublicStatusHonorsCancellation",
+      "TestFleetRuntimeCatalogReadOnlyStatusSurvivesWriteRefusal",
+      "TestFleetRuntimeCatalogCurrentReadDoesNotRequireHistoricalArtifact",
+      "TestFleetRuntimeCatalogUnknownPurposeRefusesBeforeRpc",
+      "TestFleetRuntimeCatalogApprovalRefusesAmbiguousAndUnboundedEntries",
+      "TestFleetRuntimeCatalogRetainedAuthorityNeverReloadsNewApproval",
+      "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain",
+      "TestFleetRuntimeCatalogExecutionAndPostStateStaySeparate",
+      "TestFleetRuntimeCatalogConsumedReadIgnoresUnrelatedWriteShape",
+      "TestFleetRuntimeCatalogForgedBlockViewIsNotAuthentication",
+      "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState",
+      "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock",
+      "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation"
+    ],
+    "skip": 0,
+    "started": 23,
+    "terminal": 23,
+    "unresolved": []
+  },
+  "fixed_race": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      148.419
+    ],
+    "pass": 23,
+    "passed_roots": [
+      "TestFleetMainnetPublishCommandSignsAndVerifiesApprovedReceipt",
+      "TestFleetMainnetRegisterCommandAppliesAndChecksReceiptAuthority",
+      "TestFleetMainnetRegisterCommandRejectsUpgradeBeforeBroadcast",
+      "TestFleetMainnetAuthorityRejectsIncompleteAndForeignScope",
+      "TestFleetMainnetRuntimeUsesIndependentExactArtifact",
+      "TestFleetMainnetReceiptBindsExactWriteBlock",
+      "TestFleetRecoveryPublishPreparedRestartReplaysExactBytes",
+      "TestFleetRecoveryNativeHistoricalReceiptAfterCurrentUpgrade",
+      "TestFleetRecoveryUpgradeAtReceiptRetainsOriginalAuthority",
+      "TestFleetRuntimeCatalogCurrentAndHistoricalReads",
+      "TestFleetRuntimeCatalogPublicStatusHonorsCancellation",
+      "TestFleetRuntimeCatalogReadOnlyStatusSurvivesWriteRefusal",
+      "TestFleetRuntimeCatalogCurrentReadDoesNotRequireHistoricalArtifact",
+      "TestFleetRuntimeCatalogUnknownPurposeRefusesBeforeRpc",
+      "TestFleetRuntimeCatalogApprovalRefusesAmbiguousAndUnboundedEntries",
+      "TestFleetRuntimeCatalogRetainedAuthorityNeverReloadsNewApproval",
+      "TestFleetRuntimeCatalogApprovedUpgradeStillRefusesOldSignatureDomain",
+      "TestFleetRuntimeCatalogExecutionAndPostStateStaySeparate",
+      "TestFleetRuntimeCatalogConsumedReadIgnoresUnrelatedWriteShape",
+      "TestFleetRuntimeCatalogForgedBlockViewIsNotAuthentication",
+      "TestFleetRuntimeCatalogWatchBindsExecutionBeforePostState",
+      "TestFleetRuntimeCatalogWatchRejectsWrongExecutionBlock",
+      "TestFleetRuntimeCatalogWatchHonorsCallbackCancellation"
+    ],
+    "skip": 0,
+    "started": 23,
+    "terminal": 23,
+    "unresolved": []
+  },
+  "limits": [
+    "Four overlays each replace one narrow prior/adapted body, not a full old-source rebuild.",
+    "The exact v2 artifact catalog is an offline runtime qualification; it grants no runtime472 approval, signing, device, deployment, or release authority."
+  ],
+  "manifest_sha256": "ab65607dc867c3ff72c060921f85ec607d1425004a0900410fc146def4bbbc8d",
+  "schema": "sol-fleet119-independent-v1",
+  "server_commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "sn_commit": "119717d69ecc81858d1c92fa532db7f4488f14d5",
+  "sn_tree": "c040540908eaa0eebe5a7db795e4ff18b8706c25",
+  "source_readback": {
+    "initial_tracked_blobs": 20046,
+    "mismatches": 0,
+    "terminal_tracked_blobs": 20046
+  },
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0,
+  "vet_packages": [
+    "./miner",
+    "./chain",
+    "./crv4"
+  ]
+}

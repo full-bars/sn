@@ -1,0 +1,179 @@
+{
+  "control_manifest_sha256": "f9763e7b74dc496dc7c9841364165dbb5bde1589e92cf7cf1a06c5f73c484cbf",
+  "controls": [
+    {
+      "expected_fail_roots": 3,
+      "groups": [
+        {
+          "assertion_excerpts": [
+            "test_util.go:952: hot edit reinterpreted retained economic usage 2020-01-07 01:00:00 +0000 UTC <nil>",
+            "test_util.go:952: public planner enrolled missing authority <nil>"
+          ],
+          "failed_roots": [
+            "TestProviderBoundaryDriftCannotReassignPlannedOrUnplannedUsage",
+            "TestProviderBoundaryUnpreparedPlannerRetainsSource"
+          ],
+          "package": "./model"
+        },
+        {
+          "assertion_excerpts": [
+            "test_util.go:952: wait-time policy replacement admitted send or hid hard refusal &{false false false } <nil> 1 1"
+          ],
+          "failed_roots": [
+            "TestProviderBoundaryFinalCircleWaitCannotChangeEarningAsset"
+          ],
+          "package": "./controller"
+        }
+      ],
+      "kind": "explicit-consumer-loader-omission-retaining-new-fixture-preparation",
+      "name": "unbound-consumers",
+      "positive_selector": "^TestProviderBoundaryAcceptedAttemptReconcilesDuringDrift$"
+    },
+    {
+      "expected_fail_roots": 1,
+      "groups": [
+        {
+          "assertion_excerpts": [
+            "test_util.go:952: temporary observation ended or sent retained payment &{false false false } provider earning boundary observation is unavailable; retained work may retry"
+          ],
+          "failed_roots": [
+            "TestProviderBoundaryDatabaseObservationTimeoutSchedulesSamePayment"
+          ],
+          "package": "./controller"
+        }
+      ],
+      "kind": "exact-630-AdvancePayment-body-only",
+      "name": "old-advance",
+      "positive_selector": ""
+    },
+    {
+      "expected_fail_roots": 1,
+      "groups": [
+        {
+          "assertion_excerpts": [
+            "db_provider_payout_boundary_test.go:211: unavailable physical observation poisoned active owner provider earning boundary observation is unavailable; retained work may retry"
+          ],
+          "failed_roots": [
+            "TestProviderBoundaryObservationClassificationAndOwnerCancellation"
+          ],
+          "package": "."
+        }
+      ],
+      "kind": "explicit-blanket-attempt-deadline-refusal",
+      "name": "attempt-timeout",
+      "positive_selector": ""
+    },
+    {
+      "expected_fail_roots": 2,
+      "groups": [
+        {
+          "assertion_excerpts": [
+            "tryable outage ALTER TABLE provider_payout_boundary RENAME COLUMN earning_identity TO missing_identity provider earning boundary observation is unavailable; retained work may retry"
+          ],
+          "failed_roots": [
+            "TestProviderBoundaryObservationClassificationAndOwnerCancellation",
+            "TestProviderBoundaryRequiredSchemaAndImmutableRows"
+          ],
+          "package": "."
+        }
+      ],
+      "kind": "explicit-observed-SQL-schema-as-outage-mutation",
+      "name": "schema-outage",
+      "positive_selector": ""
+    },
+    {
+      "expected_fail_roots": 1,
+      "groups": [
+        {
+          "assertion_excerpts": [
+            "db_provider_payout_boundary_test.go:263: programming panic was mislabeled database outage <nil>"
+          ],
+          "failed_roots": [
+            "TestProviderBoundaryPanicAndCancellationPreserveCause"
+          ],
+          "package": "."
+        }
+      ],
+      "kind": "explicit-runtime-panic-as-observation-mutation",
+      "name": "programming-outage",
+      "positive_selector": ""
+    }
+  ],
+  "files": {
+    "evidence/controls-normal-attempt-timeout-root.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-attempt-timeout-root.jsonl": "9a8766de6e0e193943f6dedae060f9d68b14f608a3a17b1d768de46468d0c424",
+    "evidence/controls-normal-attempt-timeout-root.phase": "0f9a517d88cb4a1bfedc59611a20a8e88dfd80f3001561ae7c6ac320759fd61e",
+    "evidence/controls-normal-attempt-timeout-root.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "evidence/controls-normal-jobs.tsv": "71d10379ffc3a7fa85ac89f76c181f36abd3f810be1e70389b5911744d1094cd",
+    "evidence/controls-normal-network-cleanup.log": "c5d90a9d6d71387fd565e97655ff4a47dd437daed7c197bb2c65c57884e5a675",
+    "evidence/controls-normal-network.id": "c5d90a9d6d71387fd565e97655ff4a47dd437daed7c197bb2c65c57884e5a675",
+    "evidence/controls-normal-network.owner": "b12b32518f8f9a90de55efb037862a3ae1ee15a48d974bea3d8465b59c2fc12c",
+    "evidence/controls-normal-old-advance-controller.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-old-advance-controller.jsonl": "c20adc6c8116b3fef30654737baf15070418a6e02a3cb007893b0849223177f2",
+    "evidence/controls-normal-old-advance-controller.phase": "86e2c128fb66d53b3f09ccd7f24abe4eb01a7c0cc5cbdc7ecc80f6639570b693",
+    "evidence/controls-normal-old-advance-controller.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-programming-outage-root.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-programming-outage-root.jsonl": "8d9c7212a13752d937577a82d9e34630ebc2d65941c9787068e77b953d0789a6",
+    "evidence/controls-normal-programming-outage-root.phase": "18c98e181a0a47d4a44ba97928eabde741ad139612ea6b6ed0c63be93cd9d1f4",
+    "evidence/controls-normal-programming-outage-root.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/controls-normal-schema-outage-root.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-schema-outage-root.jsonl": "1752fdeca44e827d3e2e834d3e7c99aa84103a0cdd64b661d202b1551932e218",
+    "evidence/controls-normal-schema-outage-root.phase": "3894ccd7aed351ec01cd08ecb1b43825715ca5cd0992b411e49dbd365fff5265",
+    "evidence/controls-normal-schema-outage-root.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/controls-normal-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/controls-normal-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-unbound-consumers-controller.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-unbound-consumers-controller.jsonl": "613ba351e4f4679943b9a8bfa1da3a37a92dc69782e78e48cd00cf0db6a4adba",
+    "evidence/controls-normal-unbound-consumers-controller.phase": "c1453ea02e8634561f5ebc346d811eecc8965516fe9ab8a4c64ff56355820141",
+    "evidence/controls-normal-unbound-consumers-controller.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-unbound-consumers-model.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/controls-normal-unbound-consumers-model.jsonl": "4ce07b07b5d213f5ecb61b7a6ef4dbb6474cd8b239bf53001d7b22e6f686855c",
+    "evidence/controls-normal-unbound-consumers-model.phase": "7903f6d455790764d44c1a241939656afb6f7984caa9961caf0ca3fe24a2621e",
+    "evidence/controls-normal-unbound-consumers-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls-normal-unbound-consumers-positive-controller.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/controls-normal-unbound-consumers-positive-controller.jsonl": "72ef69bfe5c8e21f11816e7c9cbd37916a5516a4d8e0d582efc8c7561eed13ae",
+    "evidence/controls-normal-unbound-consumers-positive-controller.phase": "e31944589967308fbb0cc9408ce7a9d287bee92a38cd10eb1bb3631c09902bdc",
+    "evidence/controls-normal-unbound-consumers-positive-controller.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/controls/attempt-timeout/db_provider_payout_boundary.go": "b5100055bddd6ae294aac2a12742823f5e59eba686d9c1bd0d5691a42cd3aed2",
+    "evidence/controls/attempt-timeout/overlay.json": "88fabab038438903e99f2e929645195098f844675131406186d22eb5949035d6",
+    "evidence/controls/manifest.json": "f9763e7b74dc496dc7c9841364165dbb5bde1589e92cf7cf1a06c5f73c484cbf",
+    "evidence/controls/old-advance/controller/account_payment_controller.go": "e02955dc2443a1f5574fa42cad9410fa054812573cb747b0736b74465d4317b4",
+    "evidence/controls/old-advance/overlay.json": "954bc4b44645d646325ca0223c80670d8678524e2b34ea12013d068d25d349ab",
+    "evidence/controls/programming-outage/db_provider_payout_boundary.go": "78e77aab54ffe9baa2d25381d3bb3448fd7ed43b75018a807cbeba2efe96cc52",
+    "evidence/controls/programming-outage/overlay.json": "0b13e4abfa869f406682d125b24c58349f8959402b8800a386a65226e1cda6e1",
+    "evidence/controls/schema-outage/db_provider_payout_boundary.go": "250e92489a0de4a9fc0167fe2f28551fdcd335d5483ed0f39aad2c18dc3c6ef7",
+    "evidence/controls/schema-outage/overlay.json": "818e06d6adccfd96ad7f354053efd21dc7fdfc63e6e060a0fe495aec992de9f2",
+    "evidence/controls/unbound-consumers/controller/account_payment_controller.go": "1b7bfa3f1d09fe01370c0009e952f443577eab69668f304e5ec18c9cf9a56c91",
+    "evidence/controls/unbound-consumers/controller/st_controller.go": "a2f0f455712e3c76fdc1569dd936d36eb7e9c604e5d1634fd2a9e2d4fb9bcf76",
+    "evidence/controls/unbound-consumers/controller/st_payout_transition.go": "fb62c306a38f867035a46ba946d4b3ba8a5eb746dac0e423e964d7da9c8128d8",
+    "evidence/controls/unbound-consumers/model/account_payment_attempt.go": "6eb59fdb9ca2cbd4c53849be0587a6c21655a1e390379b549d96d75db7f8a936",
+    "evidence/controls/unbound-consumers/model/account_payment_bonus.go": "0039b1e084aa49575ac4c4955bc6cd6231244eb0023de928a7c5cd1b22ce4a89",
+    "evidence/controls/unbound-consumers/model/account_payment_model.go": "35e9450534f2311f994b880f2d7f0548d794bd1f6a61032d15c48c7f2cf63398",
+    "evidence/controls/unbound-consumers/model/account_payment_model_plan.go": "e0f9352a4df5c2c71ca66018668b0d930d1f4ed50932a885fb1738ea0f6fb389",
+    "evidence/controls/unbound-consumers/model/account_payment_transition.go": "1abacbc6c534848eac5f918f5bb9f7bbdbbd4634262abd1f8d82b31e15e3673e",
+    "evidence/controls/unbound-consumers/model/account_point_model.go": "dadf549c9953b54b14811fa83f2c49310cbb5f115c865a53f325adb22dd405a7",
+    "evidence/controls/unbound-consumers/model/provider_payout_model.go": "e56295361d0c032502a3751867511070f4b52fc02a83291b0ba721c6ef0ab8ca",
+    "evidence/controls/unbound-consumers/model/st_payout_transition.go": "85004e6aadd5097f732daf4dc1b0a624946acca4eed201ff67d4bd6e615f0ac3",
+    "evidence/controls/unbound-consumers/model/st_provider_usage.go": "11e0c39905b3d3dc000eddae9fadab8d6f8f3fcf3e2a7d0b8806d0b26c59f0db",
+    "evidence/controls/unbound-consumers/overlay.json": "e576f4abf5c7b71d5fd6a75343de083101b68d9ae52d11305ef8d0d9ab6ab33a",
+    "evidence/run-controls-corrected.sh": "45f44d4afd5d85c32207b4295ae6de81de0ca96a25af381de973e4183f49e479"
+  },
+  "limits": [
+    "Overlay regressions are explicit operative omissions/mutations or one exact old body, not a second old-source build.",
+    "No live network payout or deployment."
+  ],
+  "normal_receipt_sha256": "5b60472c2eb300ee09815c22e313ed0e9872f29df510b0fd4a712ed4a444a6ce",
+  "owned_fixture_cleanup_exit": 0,
+  "positive_pass_roots": 1,
+  "race_receipt_sha256": "70222b81f172af2dab9275d5fe228db842eb8c7ed2918fa356fecc3d4c8850e5",
+  "schema": "sol-provider-boundary-cdcb-causal-normal-v1",
+  "source_commit": "cdcb61fa3db72fb5c5844358224eeb0fb3cbd661",
+  "source_tree": "3a6b153001e7f36c9ec986ca06931a9a49b461f3",
+  "status": "PASS_SCOPED_CAUSAL_NEGATIVES",
+  "total_intended_failed_roots": 8
+}

@@ -1,0 +1,30 @@
+{
+  "bindings": [
+    {
+      "bytes": 9993,
+      "git_path": "mainnet/monitor_economic_evm_resources.go",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_economic_evm_resources.go",
+      "sha256": "cccea20838f4916552d989166cb9295893ddb1dd10ba3a0b12dde1ea04274566"
+    },
+    {
+      "bytes": 1418,
+      "git_path": "mainnet/monitor_cancellation.go",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_cancellation.go",
+      "sha256": "7138eb13369aa749381cc5b3463ab49fbeec5831cd0c218bb71cf680b8b84e66"
+    }
+  ],
+  "classification": "SOURCE_REVIEW_SUCCESSOR_REQUIRED",
+  "limits": "Source review only, no new runtime/test qualification; first25normal evidence retains its exact scope.",
+  "observations": [
+    "Resource review digest validates syntax and retains a local configuration reference, without verifying a signature or review authority. Summary labels this local-config-review-reference.",
+    "History compares review reuse only with the immediately preceding acknowledgment. Non-adjacent A/B/A reuse is not rejected by that comparison.",
+    "Checkpoint cancellation classifier traverses all joined causes, rejects non-cancellation siblings, retains identity/integrity/output ownership refusals, and limits recursive unwrapping to32."
+  ],
+  "required_followup": [
+    "A separate successor must reject reuse of any acknowledged nonempty review digest and test A/B/A deterministically without mutating frozen81de.",
+    "Final composed configuration ingestion must bind the reviewed policy to its actual authority; scoped monitor tests do not establish signing or launch authority."
+  ],
+  "schema": "urnetwork-monitor-resource-authority-adjacent-review-v1",
+  "source_commit": "81de314bbe55920c30bd73589ae48a9b351ad812",
+  "source_tree": "88d6c63c9faeb2bae992b27c20d82dc9e9b37110"
+}

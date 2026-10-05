@@ -1,0 +1,97 @@
+{
+  "author_receipt_sha256": "1feef2e3d7b5299f737538369de81760339b24e51a2b3a21e20d5b01ce15b814",
+  "effective_connect": "v0.0.0-20261002121440-0a5cda0ebe78",
+  "effective_sctp": "v0.0.0-20261001021459-e1b5d77b5029",
+  "fixed_normal": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      0.11
+    ],
+    "pass": 15,
+    "skip": 0,
+    "started": 15,
+    "terminal": 15,
+    "unresolved": []
+  },
+  "fixed_race": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      1.293
+    ],
+    "pass": 15,
+    "skip": 0,
+    "started": 15,
+    "terminal": 15,
+    "unresolved": []
+  },
+  "limits": [
+    "Old261 overlay swaps one exact production body; it is a causal comparison, not a full old-source rebuild.",
+    "No live signing, submission, deployment, or broad unrelated validator suite claim."
+  ],
+  "manifest_sha256": "54640147ff868393e800680c3860a6d954c76484fe99d58b511386317e829b9b",
+  "old_body_normal": {
+    "causal_outputs": [
+      "attempt_reader_acceptance_test.go:83: ReadFull accepted a complete buffer after actual post-read refusal: reads=1 n=33 err=<nil>",
+      "attempt_reader_acceptance_test.go:87: ReadFull accepted a complete buffer after actual post-read refusal: reads=1 n=33 err=<nil>",
+      "attempt_reader_acceptance_test.go:107: JSON decoder accepted a complete value after actual post-read refusal: reads=1 value=map[descriptor:original] err=<nil>",
+      "attempt_reader_acceptance_test.go:111: JSON decoder accepted a complete value after actual post-read refusal: reads=1 value=map[descriptor:original] err=<nil>"
+    ],
+    "fail": 4,
+    "failed_roots": [
+      "TestAttemptSpoolReadFullRejectsCanceledCompleteBuffer",
+      "TestAttemptSpoolReadFullRejectsReplacedCompleteBuffer",
+      "TestAttemptSpoolJsonRejectsCanceledCompleteValue",
+      "TestAttemptSpoolJsonRejectsReplacedCompleteValue"
+    ],
+    "package": [
+      "fail",
+      0.081
+    ],
+    "pass": 4,
+    "skip": 0,
+    "started": 8,
+    "terminal": 8,
+    "unresolved": []
+  },
+  "old_body_race": {
+    "causal_outputs": [
+      "attempt_reader_acceptance_test.go:83: ReadFull accepted a complete buffer after actual post-read refusal: reads=1 n=33 err=<nil>",
+      "attempt_reader_acceptance_test.go:87: ReadFull accepted a complete buffer after actual post-read refusal: reads=1 n=33 err=<nil>",
+      "attempt_reader_acceptance_test.go:107: JSON decoder accepted a complete value after actual post-read refusal: reads=1 value=map[descriptor:original] err=<nil>",
+      "attempt_reader_acceptance_test.go:111: JSON decoder accepted a complete value after actual post-read refusal: reads=1 value=map[descriptor:original] err=<nil>"
+    ],
+    "fail": 4,
+    "failed_roots": [
+      "TestAttemptSpoolReadFullRejectsCanceledCompleteBuffer",
+      "TestAttemptSpoolReadFullRejectsReplacedCompleteBuffer",
+      "TestAttemptSpoolJsonRejectsCanceledCompleteValue",
+      "TestAttemptSpoolJsonRejectsReplacedCompleteValue"
+    ],
+    "package": [
+      "fail",
+      0.297
+    ],
+    "pass": 4,
+    "skip": 0,
+    "started": 8,
+    "terminal": 8,
+    "unresolved": []
+  },
+  "schema": "sol-spool68-independent-v1",
+  "server_commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "sn_commit": "68a7be85502ed7a0fd139afcd2f212178cdec019",
+  "sn_tree": "f256883a830bd062f0a6ef19a2a4fd25bddf9850",
+  "source_readback": {
+    "initial_tracked_blobs": 20035,
+    "mismatches": 0,
+    "terminal_tracked_blobs": 20035
+  },
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0
+}

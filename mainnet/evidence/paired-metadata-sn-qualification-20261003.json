@@ -1,0 +1,76 @@
+{
+  "artifact_sha256": {
+    "sn-module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn-module-graph.jsonl": "cae2b56eef6f8d2a2fccce2d868c1b0a44035e5933ee914734bd9eba0ad09767",
+    "sn-module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sn-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn-normal.jsonl": "73e3026b5e46053224c8f1a02f06faadad048613714228c6f2a1d017226f428a",
+    "sn-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sn-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn-race.jsonl": "6d2f6ca5f4f3b4502adf42002de15f3b09e123c0075a8fbd51bcaa83c622f4d4",
+    "sn-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sn-selector.txt": "94de95cf0dd477bc246d1f2ef6150f1fab27e06400d284bde8fc922bcbf51aa2",
+    "sn-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "sn-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sn-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "changed_source_sha256": {
+    "mainnet/evidence/member-outer-checkpoint-restore-20261003.md": "a609448b94bd5dc3725bf61323852234b47959913f19ef38dc63465bbbe5214f",
+    "mainnet/storage_prepare_member_outer_test.go": "653541b51d4e69b46b6c812df91e69bc01f6fa6351d8b726cc80290b02519fdc",
+    "mainnet/storage_prepare_members_coverage_linux.go": "b7cd9c5deb9423c27aa3289bba192b321b324daf489146c776353ca415886fe6",
+    "mainnet/storage_prepare_members_restore_linux.go": "48738685506437119440192753f56f6dbe0f58489f4d2480975bd4b0e073b2e0"
+  },
+  "connect_receipt_sha256": "1659c18fb5f03001af018bafc7c8a18c5b2b312b2fc1ef1754063efbce9c9e63",
+  "intake_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-11e-5c48-intake.json",
+  "intake_sha256": "e72ecbe915ce7f24f4643516295beaae2333ab11b4517c8aadbffea6b80bbfc9",
+  "limits": "Scoped outer-head primitive and selected public restoration only; bdf local rebind and composed/current published graph remain separate. Test-only old-body causal controls pending.",
+  "module_sha256": {
+    "go.mod": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "go.sum": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+  },
+  "normal": {
+    "failed": 0,
+    "passed": 8,
+    "skipped": 0
+  },
+  "race": {
+    "failed": 0,
+    "passed": 8,
+    "skipped": 0
+  },
+  "root_verification": {
+    "author_commit_tree_and_selected_blobs_matched": true,
+    "raw_top_level_results": {
+      "sn-normal.jsonl": {
+        "fail": 0,
+        "pass": 8,
+        "skip": 0
+      },
+      "sn-race.jsonl": {
+        "fail": 0,
+        "pass": 8,
+        "skip": 0
+      }
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-outer-head-11e-5c48-independent-20261003/evidence/sn-qualification-receipt.json",
+    "receipt_sha256": "9f6c51f39c2ce79b6dada19269e3596fb78eab190fb7f31f7a3d535a95c9e133",
+    "rehashed_bindings": 19
+  },
+  "schema": "sol-outer-head-sn-8-v1",
+  "scope": "SN mainnet eight exact roots only",
+  "selected_roots": [
+    "TestStoragePreparationOuterMemberHeadRefusesPartialImage",
+    "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners",
+    "TestStoragePreparationRestoreMemberCensusOpensOriginalHistory",
+    "TestStoragePreparationRestoreMemberMoveResumesExactInode",
+    "TestStoragePreparationRestoreMemberPendingKeepsOriginalPayload",
+    "TestStoragePreparationRestoresPendingMemberHeadAfterDirectorySync",
+    "TestStoragePreparationRestoresPendingMemberHeadAfterExchange",
+    "TestStoragePreparationRestoresPendingMemberHeadBeforeExchange"
+  ],
+  "source_commit": "11e282dc307ccfa0d32e54991f26bb24ab2f710a",
+  "source_parent": "bdf63dea4177a7b7fd5d07442039b517bbc261be",
+  "source_physical": "/mnt/data/sn-testnet/sol-outer-head-11e-5c48-independent-20261003/source/sn",
+  "source_tree": "21fa8312facf6a4c3fb16cea5a6e9b67b3888d52",
+  "vet_exit": 0
+}

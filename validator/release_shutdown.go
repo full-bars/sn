@@ -24,6 +24,7 @@ type releaseRuntimeOperations struct {
 	refresh    func(context.Context) error
 	newSteerer func([]*ReleaseMeasurementContext) (releaseSteererRunner, error)
 	running    func()
+	trailReady <-chan struct{}
 }
 
 // Every non-nil cause must be an explicitly allowed lifecycle result. In
@@ -116,7 +117,7 @@ func closeReleaseAttemptStates(states map[uint64]*releaseAttemptState) error {
 // Every process-owned worker joins before the same operator teardown callbacks;
 // the public RunRelease returns this operation's result directly.
 func runReleaseOperatorWorkers(ctx context.Context, cancel context.CancelFunc, cfg *ReleaseConfig, runtimes []*releaseOperatorRuntime, operations releaseRuntimeOperations) (returnErr error) {
-	runtimeErrors := make(chan error, len(runtimes)+3)
+	runtimeErrors := make(chan error, 2*len(runtimes)+3)
 	var workers sync.WaitGroup
 	defer func() {
 		cancel()
@@ -139,7 +140,24 @@ func runReleaseOperatorWorkers(ctx context.Context, cancel context.CancelFunc, c
 	for index, runtime := range runtimes {
 		operatorID := cfg.Operators[index].NoID
 		concurrency := cfg.Operators[index].Concurrency
-		workers.Go(func() { reportReleaseTrailEngineError(ctx, runtime.engine, operatorID, concurrency, runtimeErrors) })
+		if runtime.authentication != nil {
+			workers.Go(func() {
+				if err := releaseRuntimeError(ctx, runtime.authentication.run(ctx)); err != nil {
+					runtimeErrors <- fmt.Errorf("validator no_id %d authentication: %w", operatorID, err)
+				}
+			})
+		}
+		workers.Go(func() {
+			if operations.trailReady != nil {
+				select {
+				case <-ctx.Done():
+					return
+				case <-operations.trailReady:
+				}
+			}
+			trailCtx := withTrailDiagnosticOperator(ctx, operatorID)
+			reportReleaseTrailEngineError(trailCtx, runtime.engine, operatorID, concurrency, runtimeErrors)
+		})
 	}
 	measurements := make([]*ReleaseMeasurementContext, len(runtimes))
 	for i, runtime := range runtimes {

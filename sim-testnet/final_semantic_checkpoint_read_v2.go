@@ -51,7 +51,9 @@ func readFinalNativeCheckpointV2(ctx context.Context, native *crv4.Chain, evm Ch
 		return result, err
 	}
 	own := *native
-	own.Meta = artifact.Metadata
+	if err := own.BindRuntimeArtifact(artifact); err != nil {
+		return result, err
+	}
 	state, err := own.EpochScheduleStateAtContext(ctx, netuid, nativeHash)
 	if err != nil {
 		return result, err

@@ -1,0 +1,50 @@
+{
+  "schema": "native-finite66-terminal-root-review-v1",
+  "terminal": {
+    "path": "/mnt/data/sn-testnet/sol-native-producer-20261004/evidence/native-finite66-terminal-v3.json",
+    "bytes": 32657,
+    "sha256": "f5b1e600d1f23ff5da09510df69e1884ee97d0bee5e9bfdb969d598624ce9879"
+  },
+  "root_review": {
+    "finite_inventory_matched": 66,
+    "terminal_phase_and_raw_log_bindings_matched": 148,
+    "statuses": {
+      "PASS": 20,
+      "FAILED": 4,
+      "NOT_RUN_DEPENDENCY": 42
+    },
+    "terminal_custody_errors": [],
+    "original_runner_pid_absent": 623118
+  },
+  "verified_positive_scopes": {
+    "server_roots_normal": 32,
+    "server_roots_race": 32,
+    "sn_vet": "PASS",
+    "server_vet": "PASS",
+    "server_operative_controls": 4,
+    "capacity_phases": 6
+  },
+  "failed_scopes": [
+    {
+      "phase": "05-compile-distinct-native-engines",
+      "kind": "source compiler error E0309"
+    },
+    {
+      "phase": "18-compile-sn-normal",
+      "kind": "custody checker refusal after successful Go compilation"
+    },
+    {
+      "phase": "22-compile-sn-race",
+      "kind": "custody checker refusal after successful Go compilation"
+    },
+    {
+      "phase": "46-stage-compile-prefix",
+      "kind": "source test-only compiler error E0277"
+    }
+  ],
+  "recovery": "Retain successful Server/capacity scopes and compiled SN normal/race images. Continue corrected Rust compile/test/export/real-engine SN consumers, prefix test-only successor and stable-field custody checker separately, with original cumulative capacity baseline.",
+  "limits": [
+    "Original66 remains failed;42 dependency-not-run phases are not passes.",
+    "Source fixes and corrected custody causal fixture qualification remain separate; no current combined release or production outcome follows."
+  ]
+}

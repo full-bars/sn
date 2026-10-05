@@ -1,0 +1,77 @@
+{
+  "scope": "Source-only producer integration findings; moving author source is not a frozen qualified candidate",
+  "review": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-independent-review/evidence/integration-review-v2.json",
+    "sha256": "d4ec6caf08820d2931b928c4a7662b23e8f638c173f7fa39ac4c21c576aed766"
+  },
+  "root_review": "Historical capture and replay program Git bytes independently verified: mutually exclusive fixed arguments. Current producer defect and renewal gap acknowledged by implementation owner; their fixes remain pending.",
+  "retained_review": {
+    "findings": [
+      {
+        "id": "NPR-ENGINE-1",
+        "observed": "Producer observe passed Execution.Engine to both runHistoricalCapture and retained-job runHistoricalReplay. Actual published Rust capture/proof programs reject the opposite fixed invocation. Synthetic Go peer supports both and can hide this integration error.",
+        "required_control": "Execute actual capture ELF to create retained job, restart and execute separately pinned actual replay ELF; reject each wrong-mode ELF and changed executable.",
+        "status": "Operator acknowledged; separate CaptureEngine and ReplayEngine implementation owned by Operator"
+      },
+      {
+        "id": "NPR-RENEWAL-1",
+        "observed": "MaximumJobs capped4096; maximum capacities/runtime/engine are signed into Authority. Retained producer state requires exact AuthorityHash. Changing a capacity or admitting a new runtime therefore cannot currently reopen old cursor.",
+        "required": "Monotonic independently reviewed authority/resource renewal must retain original completion, cursor, proof and previous approval lineage. Never solve by deleting checkpoint or rebasing From.",
+        "status": "Open explicit continuation requirement; Operator acknowledged"
+      },
+      {
+        "id": "NPR-WINDOW-REVIEW",
+        "observed": "Current finality() retains original anchor and certificate window until economic cursor reaches certified tip, and only then adopts NextCheckpoint. This addresses earlier selected702/certified704 skip hazard; real consecutive702/703/704 plus restart control remains required.",
+        "status": "Source improvement observed, behavior not executed"
+      }
+    ],
+    "limits": [
+      "No Operator source was edited.",
+      "All frozen Server17 and Claim control artifacts unchanged.",
+      "No compilers, tests, exports, RPC probes or heavy staging ran."
+    ],
+    "published_protocol_sources": [
+      {
+        "bytes": 1182,
+        "git_blob": "ff781544810d8ed9d7c3a02c90f041cd0f103bee",
+        "head": "ebc59b3a609bd38565267cae5bd6949cbf1cc5b4",
+        "relative_path": "tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+        "repository": "/home/by/urnetwork/sn",
+        "sha256": "06310aec3708943ce37b097c33d2fda13f240ddcac6fb99fe1f5ad69227a7f21"
+      },
+      {
+        "bytes": 1275,
+        "git_blob": "61315cd0d33258aacffe1b1391cd6535ba62b907",
+        "head": "ebc59b3a609bd38565267cae5bd6949cbf1cc5b4",
+        "relative_path": "tools/runtime-metadata-probe/src/bin/runtime-historical-capture.rs",
+        "repository": "/home/by/urnetwork/sn",
+        "sha256": "100f3e0993d2d34eb48b60d1f74b29c8e251a1e623f42ef25ab9563f44908f60"
+      }
+    ],
+    "related_artifacts": {
+      "capacity_intake": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-provider-capacity/evidence/intake.json",
+      "capacity_intake_sha256": "52e02cf0aaa548d4cabd7f7f8262d31aeaf73f7ede342fe298f16a77400a3f4a",
+      "feed_review": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-independent-review/evidence/backend-feed-review.json",
+      "feed_review_sha256": "dee6c56a9f7b3e5c3b8f96f0ba87930d54b75a7996de4d1a8aa3154a332dcd43"
+    },
+    "reviewed_sources": [
+      {
+        "bytes": 17966,
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-continuous-producer/sn/mainnet/economic_native_producer.go",
+        "sha256": "b2e34be5137af93900014c786c1ba0dfd1134059b8ef801d303ac2fa9eb83df8"
+      },
+      {
+        "bytes": 11056,
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-continuous-producer/sn/mainnet/economic_native_producer_authority.go",
+        "sha256": "52e7a58595a10b24c3cc5f3e545c22878ad3d4be5219ea4269d431d0ff9e17d4"
+      },
+      {
+        "bytes": 13173,
+        "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-continuous-producer/sn/mainnet/economic_native_producer_files_linux.go",
+        "sha256": "100372508131e7f7b62f54593947d6dac6f48575e0ed5ca5ab596cc20f5efbc5"
+      }
+    ],
+    "schema": "urnetwork-native-producer-independent-integration-review-v2",
+    "scope": "source-only; Operator moving source, no coherent frozen product or behavioral claim"
+  }
+}

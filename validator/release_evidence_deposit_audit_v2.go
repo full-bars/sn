@@ -113,7 +113,7 @@ func admitValidatorEvidenceDepositAuditV2(manifest *ValidatorEvidenceDepositAudi
 		if activation.Hotkey != options.Activations[0].Hotkey || manifest.Members[index].NoId != activation.NoID || index > 0 && activation.NoID <= options.Activations[index-1].NoID || manifest.Members[index].SignedArtifactBytes > min(limit, options.Bounds.Cut.MaxHeaderBytes) {
 			return 0, errors.New("deposit audit activation or member census differs")
 		}
-		if err := validateValidatorEvidenceDepositAuditV2Decision(manifest.Decision, domain, options.Window); err != nil {
+		if err := validateValidatorEvidenceDepositAuditV2DecisionWithPolicy(manifest.Decision, domain, options.Window, options.Policy, options.PreviousPolicy); err != nil {
 			return 0, err
 		}
 	}
@@ -195,6 +195,10 @@ func validateValidatorEvidenceDepositAuditV2Publication(ctx context.Context, pub
 // Both approved public origins must return every exact object. The result is
 // signed content ready for an independently bounded relay, not an audit verdict.
 func ReadValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *ValidatorEvidenceDepositAuditV2Manifest, supplied ValidatorEvidencePublicationV2ReadOptions) (publication *ValidatorEvidenceCensusV2Publication, resultErr error) {
+	return readValidatorEvidenceDepositAuditV2(ctx, suppliedManifest, supplied, nil)
+}
+
+func readValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *ValidatorEvidenceDepositAuditV2Manifest, supplied ValidatorEvidencePublicationV2ReadOptions, retained *[2]ValidatorEvidenceRetainedReplicaV2) (publication *ValidatorEvidenceCensusV2Publication, resultErr error) {
 	if ctx == nil {
 		return nil, errors.New("deposit audit public read context is absent")
 	}
@@ -208,13 +212,15 @@ func ReadValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *
 		return nil, err
 	}
 	options := supplied
+	options.Policy = cloneReleasePolicy(supplied.Policy)
+	options.PreviousPolicy = cloneReleasePolicy(supplied.PreviousPolicy)
 	options.Activations = slices.Clone(supplied.Activations)
 	if _, err := admitValidatorEvidenceDepositAuditV2(suppliedManifest, options); err != nil {
 		return nil, err
 	}
 	manifest := *suppliedManifest
 	manifest.Members = slices.Clone(suppliedManifest.Members)
-	readers, err := newReleaseEvidenceV2ReadersWithMetadataLimit(options.Origins, options.Bounds.Cut, max(attemptStreamV2MetadataBytes(options.Bounds.Cut), options.Bounds.MaxTransitionBytes))
+	readers, err := validatorEvidencePublicationV2Readers(options, max(attemptStreamV2MetadataBytes(options.Bounds.Cut), options.Bounds.MaxTransitionBytes), retained)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +244,7 @@ func ReadValidatorEvidenceDepositAuditV2(ctx context.Context, suppliedManifest *
 		}()
 	}
 	joined.Wait()
-	if err := errors.Join(failures[0], failures[1], ctx.Err()); err != nil {
+	if err := joinReplicaPublicationErrors(ctx.Err(), failures[:]); err != nil {
 		return nil, err
 	}
 	first, second := observed[0], observed[1]

@@ -11,6 +11,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.13.10
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/websocket v1.5.3
+	github.com/holiman/uint256 v1.3.2
 	github.com/quic-go/quic-go v0.61.0
 	github.com/spf13/cobra v1.10.2
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
@@ -32,6 +33,7 @@ require (
 	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20251001021608-1fe7b43fc4d6 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/TwiN/go-away v1.8.0 // indirect
+	github.com/VictoriaMetrics/fastcache v1.13.0 // indirect
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -50,8 +52,11 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.5 // indirect
+	github.com/ethereum/go-bigmodexpfix v0.0.0-20250911101455-f9e208c548ab // indirect
 	github.com/fatih/color v1.19.0 // indirect
+	github.com/ferranbt/fastssz v0.1.4 // indirect
 	github.com/filecoin-project/go-clock v0.1.0 // indirect
 	github.com/flynn/noise v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
@@ -64,13 +69,14 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
+	github.com/gofrs/flock v0.13.0 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gtank/merlin v0.1.1 // indirect
 	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/holiman/uint256 v1.3.2 // indirect
+	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
 	github.com/huin/goupnp v1.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/go-cid v0.6.2 // indirect
@@ -106,6 +112,7 @@ require (
 	github.com/minio/minio-go/v7 v7.2.1 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mostynb/zstdpool-freelist v0.0.0-20201229113212-927304c0c3b1 // indirect
 	github.com/mozillazg/go-unidecode v0.2.0 // indirect
 	github.com/mr-tron/base58 v1.3.0 // indirect
@@ -193,15 +200,20 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gvisor.dev/gvisor v0.0.0-20260909230408-9b1144b679cb // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 	src.agwa.name/tlshacks v0.0.4 // indirect
 )
 
+// Versioned replacements retain the client-authentication source floor and
+// durable-volume v2 admission, bounded v3 custody inventory and reviewed fresh
+// namespace preparation. They also cover sibling modules'
+// v0.0.0 placeholders without selecting an older local checkout implicitly.
 // validator (and miner) import connect; connect imports glog. Replaces in a
 // dependency's go.mod are ignored, so the main module declares both.
 
-replace github.com/urnetwork/server => github.com/urnetwork/server v0.0.0-20260930014749-998469229357
+replace github.com/urnetwork/server => github.com/urnetwork/server v0.0.0-20261005092907-b2541a0fef99
 
 // The server module also imports Warp; dependency replaces are not inherited.
 replace github.com/urnetwork/warp => github.com/urnetwork/warp v0.0.0-20260926170351-89a47cb6561d
@@ -212,15 +224,19 @@ replace github.com/urnetwork/proxy => github.com/urnetwork/proxy v0.0.0-20260923
 
 replace github.com/urnetwork/userwireguard => github.com/urnetwork/userwireguard v0.0.3-0.20260831102908-85fb1ca4086f
 
-replace github.com/urnetwork/sdk => github.com/urnetwork/sdk v0.0.0-20260929171820-c50e10db8dda
+replace github.com/urnetwork/sdk => github.com/urnetwork/sdk v0.0.0-20261005062140-1ca8b35a43cf
 
 replace github.com/urnetwork/glog => github.com/urnetwork/glog v1.2.10-0.20260921102920-80a11b434ae9
 
 replace github.com/urnetwork/goidenticons => github.com/urnetwork/goidenticons v0.0.0-20260925081816-06eb779a691e
+
+// Retain pending RPC replies when a disconnect precedes write completion.
+// The local source and its upstream provenance are tracked in this repository.
+replace github.com/centrifuge/go-substrate-rpc-client/v4 => ./third_party/go-substrate-rpc-client
 
 // The substrate RPC client still imports the archived npipe module, whose
 // generated Windows syscalls only support 386 and amd64. Keep its narrow API
 // behind an arm64-capable go-winio adapter until the upstream import is fixed.
 replace gopkg.in/natefinch/npipe.v2 => ./third_party/npipe
 
-replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261003105035-0d6c2cf8e310
+replace github.com/urnetwork/connect => github.com/full-bars/connect v0.0.0-20261005091549-caae16d47ad0

@@ -1,0 +1,56 @@
+{
+  "bringyourctl_build": {
+    "binary_sha256": "c8ea6dbee3e18b6881f4066b3f32f9060bab93a747b2df62d8e8f89538bf124a",
+    "exit": 0,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": [
+    "Full model still active; vets/build do not confer launch or financial authority."
+  ],
+  "schema": "sol-provider-cutover-630-vet-build-v1",
+  "source": {
+    "module_graph_sha256": "05b2949a956b5a76d00efd3b2833bcee79c3d0ba8481f844113a1ed0befc88b7",
+    "server_commit": "630271301fdc18614cae6af76fed7d8c0c2c8ac4",
+    "server_tree": "efe622382434f641f93161eb64727db89d71b33c",
+    "source_fence_sha256": "d727a1b901d06b7e97ed0f6f47510c5b3bc6b6cbc9b51f650cc1c4b709f2e3c3"
+  },
+  "status": "PASS_SCOPED",
+  "vets": [
+    {
+      "exit": 0,
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "scope": "root",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "scope": "model",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "scope": "controller",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "scope": "taskworker",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "scope": "bringyourctl",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

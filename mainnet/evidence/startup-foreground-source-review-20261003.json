@@ -1,0 +1,26 @@
+{
+  "schema": "mainnet-startup-foreground-source-review-v1",
+  "status": "SOURCE_ONLY_UNCOMPILED_UNQUALIFIED",
+  "review_commit": "febe870ea598febc78e2f15b87860d421c0c5436",
+  "review_tree": "2c2f80176caa7bbb6524a7b55b381abbc4cec2de",
+  "startup_commit": "5f79e1d797955254f581c04da21de3f666c5f567",
+  "startup_intake_sha256": "c9fc1780fb4441e06afed358f8d54b2c66c178d31e38d8f64226bdd2768836e7",
+  "startup_physical_bindings_verified": 24,
+  "startup_git_bindings_verified": 16,
+  "startup_combined_worker_files": [
+    "mainnet/monitor_claim_worker.go",
+    "mainnet/monitor_economic_native_worker.go"
+  ],
+  "foreground_commit": "b292f90ba1dcb84c9822e97eddbeb5ee7a68606b",
+  "foreground_intake_sha256": "01c5f598b1e1c50a12704c078882cf847fec3500606cf36962d6773fcf1d9b9c",
+  "foreground_physical_bindings_verified": 11,
+  "foreground_new_roots_verified": [
+    "TestReleaseForegroundProgressDuringBlockedHttpAndReplay",
+    "TestReleaseForegroundCancellationJoinsBlockedUploadWithoutLosingAppend",
+    "TestReleaseForegroundProgressDuringContinuousActualReplay",
+    "TestReleaseForegroundCapacityRefusesBeforeBackgroundEffects"
+  ],
+  "foreground_scope": "Fixture-only actual replay/upload/foreground work, allocation/CPU/wire/scratch observations; no production sizing proof.",
+  "nested_archive_cleanup_successor_pending": true,
+  "qualified": false
+}

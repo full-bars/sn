@@ -29,6 +29,13 @@ func scenarioCampaignSuccessorPath(stateDir string) string {
 }
 
 func (attempt *scenarioCampaignAttempt) path() string {
+	if attempt.payload.Recovery != nil {
+		generation, err := scenarioCampaignRecoveryGeneration(attempt.payload.Recovery)
+		if err == nil {
+			return scenarioCampaignRecoveryGenerationPath(attempt.stateDir, generation)
+		}
+		return scenarioCampaignRecoveryPath(attempt.stateDir)
+	}
 	if attempt.payload.Succession != nil {
 		return scenarioCampaignSuccessorPath(attempt.stateDir)
 	}
@@ -39,7 +46,7 @@ func readScenarioSuccessionPlan(stateDir, hash string) (*SetupPlan, []byte, erro
 	if !validCanonicalHashHex(hash) {
 		return nil, nil, errors.New("campaign succession plan hash is invalid")
 	}
-	raw, err := readValidatorEvidenceHistoricalFile(stateDir, "plans/"+stringsTrim0x(hash)+".json", maximumCampaignEvidenceRawFileBytes)
+	raw, err := readSetupPlanBytes(stateDir, "plans/"+stringsTrim0x(hash)+".json")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -100,6 +107,15 @@ func readScenarioSuccessionFailure(cfg *ResolvedConfig, stateDir string, prior *
 // marker is updated. Bounded raw plan reads check their hashes and exact
 // lineage; full current release/budget/custody admission is done before creation.
 func validateScenarioCampaignSuccession(attempt *scenarioCampaignAttempt) error {
+	if attempt == nil {
+		return errors.New("campaign successor has no exact signed source")
+	}
+	return validateScenarioCampaignSuccessionWithPlans(attempt, &scenarioCampaignPlanLookup{stateDir: attempt.stateDir})
+}
+
+// Root succession shares the traversal's exact archived approval proof.
+func validateScenarioCampaignSuccessionWithPlans(attempt *scenarioCampaignAttempt, plans *scenarioCampaignPlanLookup) (resultErr error) {
+	defer func() { resultErr = errors.Join(resultErr, plans.check()) }()
 	if attempt == nil || attempt.cfg == nil || attempt.payload.Succession == nil || attempt.payload.Phase != "release-1.0" {
 		return errors.New("campaign successor has no exact signed source")
 	}
@@ -107,15 +123,15 @@ func validateScenarioCampaignSuccession(attempt *scenarioCampaignAttempt) error 
 	if s.Schema != "urnetwork-sim-campaign-succession-v1" || s.PriorRunID == attempt.payload.RunID || !validCanonicalHashHex(s.PriorPlanHash) {
 		return errors.New("campaign succession identity is invalid")
 	}
-	current, currentRaw, err := readScenarioSuccessionPlan(attempt.stateDir, attempt.payload.PlanHash)
+	current, currentRawHash, err := plans.read(attempt.stateDir, attempt.payload.PlanHash)
 	if err != nil {
 		return err
 	}
-	priorPlan, priorRaw, err := readScenarioSuccessionPlan(attempt.stateDir, s.PriorPlanHash)
+	priorPlan, priorRawHash, err := plans.read(attempt.stateDir, s.PriorPlanHash)
 	if err != nil {
 		return err
 	}
-	if !scenarioSuccessionPlansMatch(current, priorPlan) || bytesSHA256(currentRaw) != s.ApprovedPlanSHA256 || bytesSHA256(priorRaw) != s.PriorPlanSHA256 || current.ConfigHash != attempt.cfg.ConfigHash || current.PolicyHash != attempt.cfg.PolicyHash || !strings.EqualFold(current.Roles.Owner, attempt.roles.EVM["testnet-owner"].Address) {
+	if !scenarioSuccessionPlansMatch(current, priorPlan) || currentRawHash != s.ApprovedPlanSHA256 || priorRawHash != s.PriorPlanSHA256 || current.ConfigHash != attempt.cfg.ConfigHash || current.PolicyHash != attempt.cfg.PolicyHash || !strings.EqualFold(current.Roles.Owner, attempt.roles.EVM["testnet-owner"].Address) {
 		return errors.New("campaign succession changed its approved lineage or custody")
 	}
 	prior, raw, err := readScenarioCampaignAttemptAt(attempt.cfg, attempt.stateDir, attempt.roles, s.PriorPlanHash, "release-1.0", scenarioCampaignAttemptPath(attempt.stateDir, "release-1.0"))
@@ -138,8 +154,11 @@ func validateScenarioCampaignSuccession(attempt *scenarioCampaignAttempt) error 
 }
 
 func createScenarioCampaignSuccessor(cfg *ResolvedConfig, stateDir string, roles *RoleSecrets, planHash string, now time.Time, journal *Journal) (*scenarioCampaignAttempt, error) {
-	if cfg == nil || cfg.Config == nil || cfg.Public == nil || provisionalResumeEnabled(cfg) || roles == nil || journal == nil {
-		return nil, errors.New("campaign succession requires the strict approved deployment owner")
+	if cfg == nil || cfg.Config == nil || cfg.Public == nil || roles == nil || journal == nil {
+		return nil, errors.New("campaign succession requires the approved deployment owner")
+	}
+	if cfg.provisionalResume != nil && (!provisionalResumeEnabled(cfg) || cfg.provisionalResume.Record.PlanHash != planHash || !cfg.provisionalResume.Record.Provisional || cfg.provisionalResume.Record.FinalAcceptance) {
+		return nil, errors.New("provisional campaign succession requires the exact non-accepting approval")
 	}
 	// OpenJournal's nonblocking exclusive lease is held by both real scenario
 	// entry points throughout execution. An active predecessor therefore blocks
@@ -157,7 +176,7 @@ func createScenarioCampaignSuccessor(cfg *ResolvedConfig, stateDir string, roles
 			return nil, err
 		}
 	}
-	current, err := loadPersistedPlan(cfg, stateDir)
+	current, err := loadRuntimePersistedPlan(cfg, stateDir)
 	if err != nil || current.PlanHash != planHash {
 		return nil, errors.Join(errors.New("campaign succession current approval is unavailable"), err)
 	}

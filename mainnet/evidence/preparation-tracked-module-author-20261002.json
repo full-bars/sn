@@ -1,0 +1,948 @@
+{
+  "schema": "urnetwork-preparation-tracked-module-author-v1",
+  "sealed_at": "2026-10-02T21:48:31.859742+00:00",
+  "verdict": "PASS_SCOPED",
+  "sources": [
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+      "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae"
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+      "Commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "Tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "Commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "Tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "Commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "Tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "Commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "Tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "Commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "Tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "Commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "Tree": "553487079352d9544edb62850328305e97668790"
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-checksums/sn",
+      "Commit": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+      "Tree": "7e5a1146e54f34b463d3310838f2c0eaaedb5ae5"
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/private-root/connect",
+      "Commit": "7600ea5c82272ab33a90bc1d0a55f11720e09257",
+      "Tree": "65b3f1887528df2e965c755dbbd1974fa1a570ce"
+    }
+  ],
+  "selected_totals": {
+    "normal": 75,
+    "race": 75
+  },
+  "results": {
+    "current-1d51-core-normal": {
+      "Job": {
+        "Name": "current-1d51-core-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-core-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "github.com/urnetwork/connect/durablevolume",
+          "-run",
+          "^(TestPreparationPrivateRoot.*|TestPreparationAttributeOnlyOwner.*|TestPreparationExclusiveHeadRefusesSharedNamespace|TestOwnerConstructorInvalidDescriptorRemainsCallerFailure|TestOwnerConstructorObservationRefusalRetainsRetryAndCustody|TestOwnerReadAdmissionPreservesIdentityWithoutWriteReserve|TestOwnerSameVolumeRecoveryPreservesCustody)$"
+        ],
+        "ExpectedPass": 14,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:09:49.687938257Z",
+      "Finished": "2026-10-02T21:09:54.60329032Z",
+      "AvailableBytesBefore": 129568481280,
+      "ExitCode": 0,
+      "Census": {
+        "TestOwnerConstructorInvalidDescriptorRemainsCallerFailure": "pass",
+        "TestOwnerConstructorObservationRefusalRetainsRetryAndCustody": "pass",
+        "TestOwnerReadAdmissionPreservesIdentityWithoutWriteReserve": "pass",
+        "TestOwnerSameVolumeRecoveryPreservesCustody": "pass",
+        "TestPreparationAttributeOnlyOwnerPublishesExactAbsentHead": "pass",
+        "TestPreparationAttributeOnlyOwnerRequiresExactAuthority": "pass",
+        "TestPreparationAttributeOnlyOwnerResumesExactPendingHead": "pass",
+        "TestPreparationExclusiveHeadRefusesSharedNamespace": "pass",
+        "TestPreparationPrivateRootChildCrashJoinsBeforeResume": "pass",
+        "TestPreparationPrivateRootCompletedLossNeverRecreates": "pass",
+        "TestPreparationPrivateRootParentSyncLossResumesOriginal": "pass",
+        "TestPreparationPrivateRootRefusesChangedCustody": "pass",
+        "TestPreparationPrivateRootStagesBeforeExactPublication": "pass",
+        "TestPreparationPrivateRootUnavailableAndCompetingTarget": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "f5a9e58c49d5958a81932fec4a1b9f7a8f4d0e6666fffabdc7e83a4fe8013ee0"
+    },
+    "current-1d51-public-normal": {
+      "Job": {
+        "Name": "current-1d51-public-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-public-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "./mainnet",
+          "-run",
+          "^(TestStoragePreparationCommandCreatesReviewedPrivateRoot|TestStoragePreparationOwnerCommandCreatesReviewedPrivateRoot|TestStoragePreparationDirectoryOwnersRejectWrongProfiles|TestStoragePreparationDirectoryOwnersRetainNamespaceBoundaries|TestStoragePreparationDirectoryOwnersResumeOriginalPendingHeads|TestStoragePreparationDirectoryOwnersRefuseLostCompletedHeads|TestStoragePreparationFixedOwnersRefuseUnreviewedInputs|TestStoragePreparationFixedOwnersResumePendingAttribute|TestStoragePreparationFixedOwnersRefuseLostCompletedMembers|TestStoragePreparationNativeStartupObservationRetainsOriginalCustody|TestStoragePreparationCommandInitializesSuccessorMemberHeads|TestStoragePreparationCommandInitializesClaimQueueHead|TestStoragePreparationOwnerCommandInitializesFleetHead|TestStoragePreparationCommandInitializesActualValidatorLedger|TestStoragePreparationCommandRequiresExactAcceptedPlan|TestStoragePreparationPrivateRootResumesOriginalMovedInode|TestStoragePreparationPrivateRootRejectsChangedParentsAndSources|TestStoragePreparationPrivateRootNeverRecreatesCompletedNamespace|TestStoragePreparationCommandInitializesNativeJournal|TestStoragePreparationOwnerCommandInitializesNativeJournal|TestStoragePreparationCommandInitializesFixedSnapshotHeads|TestStoragePreparationOwnerCommandInitializesSigningCustody|TestStoragePreparationCommandResumesOriginalPendingLedger|TestStoragePreparationCommandCannotRecreateCompletedLedger|TestStoragePreparationCommandRefusesPrivateKeysAndWrongScope|TestStoragePreparationCommandCannotEnrollDaemonLedgerAsOwnerLocal|TestStoragePreparationCommandRecoversLostCompletionReport|TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody|TestMonitorProviderPublicRolesRecoverWithoutResettingPeer|TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent|TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal)$"
+        ],
+        "ExpectedPass": 31,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:09:54.685416917Z",
+      "Finished": "2026-10-02T21:12:58.225068445Z",
+      "AvailableBytesBefore": 129564733440,
+      "ExitCode": 0,
+      "Census": {
+        "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody": "pass",
+        "TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal": "pass",
+        "TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent": "pass",
+        "TestMonitorProviderPublicRolesRecoverWithoutResettingPeer": "pass",
+        "TestStoragePreparationCommandCannotEnrollDaemonLedgerAsOwnerLocal": "pass",
+        "TestStoragePreparationCommandCannotRecreateCompletedLedger": "pass",
+        "TestStoragePreparationCommandCreatesReviewedPrivateRoot": "pass",
+        "TestStoragePreparationCommandInitializesActualValidatorLedger": "pass",
+        "TestStoragePreparationCommandInitializesClaimQueueHead": "pass",
+        "TestStoragePreparationCommandInitializesFixedSnapshotHeads": "pass",
+        "TestStoragePreparationCommandInitializesNativeJournal": "pass",
+        "TestStoragePreparationCommandInitializesSuccessorMemberHeads": "pass",
+        "TestStoragePreparationCommandRecoversLostCompletionReport": "pass",
+        "TestStoragePreparationCommandRefusesPrivateKeysAndWrongScope": "pass",
+        "TestStoragePreparationCommandRequiresExactAcceptedPlan": "pass",
+        "TestStoragePreparationCommandResumesOriginalPendingLedger": "pass",
+        "TestStoragePreparationDirectoryOwnersRefuseLostCompletedHeads": "pass",
+        "TestStoragePreparationDirectoryOwnersRejectWrongProfiles": "pass",
+        "TestStoragePreparationDirectoryOwnersResumeOriginalPendingHeads": "pass",
+        "TestStoragePreparationDirectoryOwnersRetainNamespaceBoundaries": "pass",
+        "TestStoragePreparationFixedOwnersRefuseLostCompletedMembers": "pass",
+        "TestStoragePreparationFixedOwnersRefuseUnreviewedInputs": "pass",
+        "TestStoragePreparationFixedOwnersResumePendingAttribute": "pass",
+        "TestStoragePreparationNativeStartupObservationRetainsOriginalCustody": "pass",
+        "TestStoragePreparationOwnerCommandCreatesReviewedPrivateRoot": "pass",
+        "TestStoragePreparationOwnerCommandInitializesFleetHead": "pass",
+        "TestStoragePreparationOwnerCommandInitializesNativeJournal": "pass",
+        "TestStoragePreparationOwnerCommandInitializesSigningCustody": "pass",
+        "TestStoragePreparationPrivateRootNeverRecreatesCompletedNamespace": "pass",
+        "TestStoragePreparationPrivateRootRejectsChangedParentsAndSources": "pass",
+        "TestStoragePreparationPrivateRootResumesOriginalMovedInode": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "4106894b6b62cbbaf0944c9c0bf37ee45a489ee9682cc410f5debaf84bfc7a9d"
+    },
+    "current-1d51-native-normal": {
+      "Job": {
+        "Name": "current-1d51-native-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-native-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "./chain",
+          "-run",
+          "^TestNativePreparation"
+        ],
+        "ExpectedPass": 2,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:12:58.319294188Z",
+      "Finished": "2026-10-02T21:13:01.310606118Z",
+      "AvailableBytesBefore": 128641478656,
+      "ExitCode": 0,
+      "Census": {
+        "TestNativePreparationCanceledReadAdmitsNoAuthority": "pass",
+        "TestNativePreparationCheckpointRefusesRetainedIntent": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "12c85be8c0b4ef780f35a5dc69cbfdb516cc33845b8d2163d4c0ad258fd1408e"
+    },
+    "current-1d51-ledger-normal": {
+      "Job": {
+        "Name": "current-1d51-ledger-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-ledger-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "./validator",
+          "-run",
+          "^(TestAttemptPreparationReadersRetainStandardEof|TestAttemptPreparationReadersKeepCancellationAlongsideEof|TestMainnetAttemptLedgerPublicConstructorsRequireCustody|TestDurableAttemptLedgerAdmissionPrecedesRecordSigning|TestDurableAttemptLedgerReserveKeepsOriginalPrefix|TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes|TestDurableAttemptLedgerReplacementBlocksCachedState|TestAttemptPreparationReadFullRejectsPostReadCancellation|TestAttemptPreparationJsonRejectsPostReadCancellation|TestAttemptPreparationReadAtRejectsPostReadCancellation|TestAttemptPreparationReadAtCancellationAdmitsNoPrefix)$"
+        ],
+        "ExpectedPass": 11,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:13:01.407578296Z",
+      "Finished": "2026-10-02T21:13:45.329492208Z",
+      "AvailableBytesBefore": 128537796608,
+      "ExitCode": 0,
+      "Census": {
+        "TestAttemptPreparationJsonRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadAtCancellationAdmitsNoPrefix": "pass",
+        "TestAttemptPreparationReadAtRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadFullRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadersKeepCancellationAlongsideEof": "pass",
+        "TestAttemptPreparationReadersRetainStandardEof": "pass",
+        "TestDurableAttemptLedgerAdmissionPrecedesRecordSigning": "pass",
+        "TestDurableAttemptLedgerReplacementBlocksCachedState": "pass",
+        "TestDurableAttemptLedgerReserveKeepsOriginalPrefix": "pass",
+        "TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes": "pass",
+        "TestMainnetAttemptLedgerPublicConstructorsRequireCustody": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "cdb354a7be0ef7808908093994664ebf3d668006c69385d720d6639641664902"
+    },
+    "current-1d51-miner-normal": {
+      "Job": {
+        "Name": "current-1d51-miner-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-miner-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "./miner",
+          "-run",
+          "^(TestMinerPreparationFleetActualConstructorKeepsFreshCustody|TestMinerPreparationClaimActualConstructorRetainsProgress|TestMinerPreparationFleetRefusesReplacedMarkerBeforeStartup|TestProviderSwarmRunRetainsHealthyMembersAfterTemporaryStartupFailure|TestProviderSwarmRunRetainsHealthyMembersAfterStartupDeadline|TestProviderProgressPublicSwarmWiresRealDeviceObservation|TestProviderProgressRetiredGenerationCannotPublishReadiness|TestFiniteClaimCommandRecoversMinuteOutagesInBothReads|TestFleetProvisionalRuntimeAuthenticatesCurrentStatusAndSigningBinding|TestFleetProvisionalRuntimeRefusesForgedBindingAndUndurableObservation)$"
+        ],
+        "ExpectedPass": 10,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:13:45.403741263Z",
+      "Finished": "2026-10-02T21:14:22.004245273Z",
+      "AvailableBytesBefore": 128440008704,
+      "ExitCode": 0,
+      "Census": {
+        "TestFiniteClaimCommandRecoversMinuteOutagesInBothReads": "pass",
+        "TestFleetProvisionalRuntimeAuthenticatesCurrentStatusAndSigningBinding": "pass",
+        "TestFleetProvisionalRuntimeRefusesForgedBindingAndUndurableObservation": "pass",
+        "TestMinerPreparationClaimActualConstructorRetainsProgress": "pass",
+        "TestMinerPreparationFleetActualConstructorKeepsFreshCustody": "pass",
+        "TestMinerPreparationFleetRefusesReplacedMarkerBeforeStartup": "pass",
+        "TestProviderProgressPublicSwarmWiresRealDeviceObservation": "pass",
+        "TestProviderProgressRetiredGenerationCannotPublishReadiness": "pass",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterStartupDeadline": "pass",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterTemporaryStartupFailure": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "3acdd7c2b80584c8d46cbae36a064101d16ba24206072d625c5a617b2962c1e3"
+    },
+    "current-1d51-core-race": {
+      "Job": {
+        "Name": "current-1d51-core-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-core-race",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "-race",
+          "github.com/urnetwork/connect/durablevolume",
+          "-run",
+          "^(TestPreparationPrivateRoot.*|TestPreparationAttributeOnlyOwner.*|TestPreparationExclusiveHeadRefusesSharedNamespace|TestOwnerConstructorInvalidDescriptorRemainsCallerFailure|TestOwnerConstructorObservationRefusalRetainsRetryAndCustody|TestOwnerReadAdmissionPreservesIdentityWithoutWriteReserve|TestOwnerSameVolumeRecoveryPreservesCustody)$"
+        ],
+        "ExpectedPass": 14,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:14:22.606733886Z",
+      "Finished": "2026-10-02T21:14:32.508182452Z",
+      "AvailableBytesBefore": 127947759616,
+      "ExitCode": 0,
+      "Census": {
+        "TestOwnerConstructorInvalidDescriptorRemainsCallerFailure": "pass",
+        "TestOwnerConstructorObservationRefusalRetainsRetryAndCustody": "pass",
+        "TestOwnerReadAdmissionPreservesIdentityWithoutWriteReserve": "pass",
+        "TestOwnerSameVolumeRecoveryPreservesCustody": "pass",
+        "TestPreparationAttributeOnlyOwnerPublishesExactAbsentHead": "pass",
+        "TestPreparationAttributeOnlyOwnerRequiresExactAuthority": "pass",
+        "TestPreparationAttributeOnlyOwnerResumesExactPendingHead": "pass",
+        "TestPreparationExclusiveHeadRefusesSharedNamespace": "pass",
+        "TestPreparationPrivateRootChildCrashJoinsBeforeResume": "pass",
+        "TestPreparationPrivateRootCompletedLossNeverRecreates": "pass",
+        "TestPreparationPrivateRootParentSyncLossResumesOriginal": "pass",
+        "TestPreparationPrivateRootRefusesChangedCustody": "pass",
+        "TestPreparationPrivateRootStagesBeforeExactPublication": "pass",
+        "TestPreparationPrivateRootUnavailableAndCompetingTarget": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "35102d1f7b798369a4ade6779da963fbbf0b2a534ec46a8f8ea364af64177e9f"
+    },
+    "current-1d51-public-race": {
+      "Job": {
+        "Name": "current-1d51-public-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-public-race",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "-race",
+          "./mainnet",
+          "-run",
+          "^(TestStoragePreparationCommandCreatesReviewedPrivateRoot|TestStoragePreparationOwnerCommandCreatesReviewedPrivateRoot|TestStoragePreparationDirectoryOwnersRejectWrongProfiles|TestStoragePreparationDirectoryOwnersRetainNamespaceBoundaries|TestStoragePreparationDirectoryOwnersResumeOriginalPendingHeads|TestStoragePreparationDirectoryOwnersRefuseLostCompletedHeads|TestStoragePreparationFixedOwnersRefuseUnreviewedInputs|TestStoragePreparationFixedOwnersResumePendingAttribute|TestStoragePreparationFixedOwnersRefuseLostCompletedMembers|TestStoragePreparationNativeStartupObservationRetainsOriginalCustody|TestStoragePreparationCommandInitializesSuccessorMemberHeads|TestStoragePreparationCommandInitializesClaimQueueHead|TestStoragePreparationOwnerCommandInitializesFleetHead|TestStoragePreparationCommandInitializesActualValidatorLedger|TestStoragePreparationCommandRequiresExactAcceptedPlan|TestStoragePreparationPrivateRootResumesOriginalMovedInode|TestStoragePreparationPrivateRootRejectsChangedParentsAndSources|TestStoragePreparationPrivateRootNeverRecreatesCompletedNamespace|TestStoragePreparationCommandInitializesNativeJournal|TestStoragePreparationOwnerCommandInitializesNativeJournal|TestStoragePreparationCommandInitializesFixedSnapshotHeads|TestStoragePreparationOwnerCommandInitializesSigningCustody|TestStoragePreparationCommandResumesOriginalPendingLedger|TestStoragePreparationCommandCannotRecreateCompletedLedger|TestStoragePreparationCommandRefusesPrivateKeysAndWrongScope|TestStoragePreparationCommandCannotEnrollDaemonLedgerAsOwnerLocal|TestStoragePreparationCommandRecoversLostCompletionReport|TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody|TestMonitorProviderPublicRolesRecoverWithoutResettingPeer|TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent|TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal)$"
+        ],
+        "ExpectedPass": 31,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:14:32.589395466Z",
+      "Finished": "2026-10-02T21:25:02.948046346Z",
+      "AvailableBytesBefore": 127890792448,
+      "ExitCode": 0,
+      "Census": {
+        "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody": "pass",
+        "TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal": "pass",
+        "TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent": "pass",
+        "TestMonitorProviderPublicRolesRecoverWithoutResettingPeer": "pass",
+        "TestStoragePreparationCommandCannotEnrollDaemonLedgerAsOwnerLocal": "pass",
+        "TestStoragePreparationCommandCannotRecreateCompletedLedger": "pass",
+        "TestStoragePreparationCommandCreatesReviewedPrivateRoot": "pass",
+        "TestStoragePreparationCommandInitializesActualValidatorLedger": "pass",
+        "TestStoragePreparationCommandInitializesClaimQueueHead": "pass",
+        "TestStoragePreparationCommandInitializesFixedSnapshotHeads": "pass",
+        "TestStoragePreparationCommandInitializesNativeJournal": "pass",
+        "TestStoragePreparationCommandInitializesSuccessorMemberHeads": "pass",
+        "TestStoragePreparationCommandRecoversLostCompletionReport": "pass",
+        "TestStoragePreparationCommandRefusesPrivateKeysAndWrongScope": "pass",
+        "TestStoragePreparationCommandRequiresExactAcceptedPlan": "pass",
+        "TestStoragePreparationCommandResumesOriginalPendingLedger": "pass",
+        "TestStoragePreparationDirectoryOwnersRefuseLostCompletedHeads": "pass",
+        "TestStoragePreparationDirectoryOwnersRejectWrongProfiles": "pass",
+        "TestStoragePreparationDirectoryOwnersResumeOriginalPendingHeads": "pass",
+        "TestStoragePreparationDirectoryOwnersRetainNamespaceBoundaries": "pass",
+        "TestStoragePreparationFixedOwnersRefuseLostCompletedMembers": "pass",
+        "TestStoragePreparationFixedOwnersRefuseUnreviewedInputs": "pass",
+        "TestStoragePreparationFixedOwnersResumePendingAttribute": "pass",
+        "TestStoragePreparationNativeStartupObservationRetainsOriginalCustody": "pass",
+        "TestStoragePreparationOwnerCommandCreatesReviewedPrivateRoot": "pass",
+        "TestStoragePreparationOwnerCommandInitializesFleetHead": "pass",
+        "TestStoragePreparationOwnerCommandInitializesNativeJournal": "pass",
+        "TestStoragePreparationOwnerCommandInitializesSigningCustody": "pass",
+        "TestStoragePreparationPrivateRootNeverRecreatesCompletedNamespace": "pass",
+        "TestStoragePreparationPrivateRootRejectsChangedParentsAndSources": "pass",
+        "TestStoragePreparationPrivateRootResumesOriginalMovedInode": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "6c7a73cc4acad4c394fa34f5041a5bec50d268a668bfe7c7e26699a3955e025f"
+    },
+    "current-1d51-native-race": {
+      "Job": {
+        "Name": "current-1d51-native-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-native-race",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "-race",
+          "./chain",
+          "-run",
+          "^TestNativePreparation"
+        ],
+        "ExpectedPass": 2,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:25:03.047503828Z",
+      "Finished": "2026-10-02T21:25:08.257383719Z",
+      "AvailableBytesBefore": 126639800320,
+      "ExitCode": 0,
+      "Census": {
+        "TestNativePreparationCanceledReadAdmitsNoAuthority": "pass",
+        "TestNativePreparationCheckpointRefusesRetainedIntent": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "019967d6a7f2f54e9ac739aca0a4e115f9a68972643333092e0307e7324bd88a"
+    },
+    "current-1d51-ledger-race": {
+      "Job": {
+        "Name": "current-1d51-ledger-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-ledger-race",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "-race",
+          "./validator",
+          "-run",
+          "^(TestAttemptPreparationReadersRetainStandardEof|TestAttemptPreparationReadersKeepCancellationAlongsideEof|TestMainnetAttemptLedgerPublicConstructorsRequireCustody|TestDurableAttemptLedgerAdmissionPrecedesRecordSigning|TestDurableAttemptLedgerReserveKeepsOriginalPrefix|TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes|TestDurableAttemptLedgerReplacementBlocksCachedState|TestAttemptPreparationReadFullRejectsPostReadCancellation|TestAttemptPreparationJsonRejectsPostReadCancellation|TestAttemptPreparationReadAtRejectsPostReadCancellation|TestAttemptPreparationReadAtCancellationAdmitsNoPrefix)$"
+        ],
+        "ExpectedPass": 11,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:25:08.346984019Z",
+      "Finished": "2026-10-02T21:27:09.007908611Z",
+      "AvailableBytesBefore": 126636728320,
+      "ExitCode": 0,
+      "Census": {
+        "TestAttemptPreparationJsonRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadAtCancellationAdmitsNoPrefix": "pass",
+        "TestAttemptPreparationReadAtRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadFullRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadersKeepCancellationAlongsideEof": "pass",
+        "TestAttemptPreparationReadersRetainStandardEof": "pass",
+        "TestDurableAttemptLedgerAdmissionPrecedesRecordSigning": "pass",
+        "TestDurableAttemptLedgerReplacementBlocksCachedState": "pass",
+        "TestDurableAttemptLedgerReserveKeepsOriginalPrefix": "pass",
+        "TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes": "pass",
+        "TestMainnetAttemptLedgerPublicConstructorsRequireCustody": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "7c9ae9e3eeae4ceeb5d272a41aaac6fc8f43bab029a9536f13c9948808edf72d"
+    },
+    "current-1d51-miner-race": {
+      "Job": {
+        "Name": "current-1d51-miner-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-miner-race",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "-race",
+          "./miner",
+          "-run",
+          "^(TestMinerPreparationFleetActualConstructorKeepsFreshCustody|TestMinerPreparationClaimActualConstructorRetainsProgress|TestMinerPreparationFleetRefusesReplacedMarkerBeforeStartup|TestProviderSwarmRunRetainsHealthyMembersAfterTemporaryStartupFailure|TestProviderSwarmRunRetainsHealthyMembersAfterStartupDeadline|TestProviderProgressPublicSwarmWiresRealDeviceObservation|TestProviderProgressRetiredGenerationCannotPublishReadiness|TestFiniteClaimCommandRecoversMinuteOutagesInBothReads|TestFleetProvisionalRuntimeAuthenticatesCurrentStatusAndSigningBinding|TestFleetProvisionalRuntimeRefusesForgedBindingAndUndurableObservation)$"
+        ],
+        "ExpectedPass": 10,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:27:09.085015976Z",
+      "Finished": "2026-10-02T21:28:32.832116998Z",
+      "AvailableBytesBefore": 126258192384,
+      "ExitCode": 0,
+      "Census": {
+        "TestFiniteClaimCommandRecoversMinuteOutagesInBothReads": "pass",
+        "TestFleetProvisionalRuntimeAuthenticatesCurrentStatusAndSigningBinding": "pass",
+        "TestFleetProvisionalRuntimeRefusesForgedBindingAndUndurableObservation": "pass",
+        "TestMinerPreparationClaimActualConstructorRetainsProgress": "pass",
+        "TestMinerPreparationFleetActualConstructorKeepsFreshCustody": "pass",
+        "TestMinerPreparationFleetRefusesReplacedMarkerBeforeStartup": "pass",
+        "TestProviderProgressPublicSwarmWiresRealDeviceObservation": "pass",
+        "TestProviderProgressRetiredGenerationCannotPublishReadiness": "pass",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterStartupDeadline": "pass",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterTemporaryStartupFailure": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "d3a6d366635396cf43180f9643f868b9d9c287c15b205279c4a57dcc9e0c8847"
+    },
+    "current-1d51-consumers-vet": {
+      "Job": {
+        "Name": "current-1d51-consumers-vet",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-consumers-vet",
+        "Args": [
+          "vet",
+          "-p=1",
+          "./mainnet",
+          "./miner",
+          "./chain",
+          "./validator",
+          "./internal/durablehead"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:28:33.469309073Z",
+      "Finished": "2026-10-02T21:28:57.649096353Z",
+      "AvailableBytesBefore": 126169108480,
+      "ExitCode": 0,
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "current-0384-blob-normal": {
+      "Job": {
+        "Name": "current-0384-blob-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-checksums/sn",
+        "Commit": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-blob-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "github.com/urnetwork/server",
+          "-run",
+          "^(TestConfiguredLocalBlobRequiresExactDeclaration|TestDurableLocalBlobStoreReserveRecoversWithoutReset|TestDurableLocalBlobStoreRejectsReplacementBetweenOperations|TestDurableLocalBlobReopenRequiresApprovedRootGeneration|TestBlobReaderDurableReadFullRejectsCancellation|TestBlobReaderDurableReadFullRejectsReplacement|TestBlobReaderDurablePreservesOrdinaryEof)$"
+        ],
+        "ExpectedPass": 7,
+        "ExpectedFail": 0
+      },
+      "Tree": "7e5a1146e54f34b463d3310838f2c0eaaedb5ae5",
+      "Started": "2026-10-02T21:29:49.229444375Z",
+      "Finished": "2026-10-02T21:31:46.82912972Z",
+      "AvailableBytesBefore": 126168371200,
+      "ExitCode": 0,
+      "Census": {
+        "TestBlobReaderDurablePreservesOrdinaryEof": "pass",
+        "TestBlobReaderDurableReadFullRejectsCancellation": "pass",
+        "TestBlobReaderDurableReadFullRejectsReplacement": "pass",
+        "TestConfiguredLocalBlobRequiresExactDeclaration": "pass",
+        "TestDurableLocalBlobReopenRequiresApprovedRootGeneration": "pass",
+        "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations": "pass",
+        "TestDurableLocalBlobStoreReserveRecoversWithoutReset": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "0bc09d7732cd2ae68132d597c068a47d2227f20224198ecfb3fc82ee24adcca9"
+    },
+    "current-0384-blob-race": {
+      "Job": {
+        "Name": "current-0384-blob-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-checksums/sn",
+        "Commit": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-blob-race",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "-race",
+          "github.com/urnetwork/server",
+          "-run",
+          "^(TestConfiguredLocalBlobRequiresExactDeclaration|TestDurableLocalBlobStoreReserveRecoversWithoutReset|TestDurableLocalBlobStoreRejectsReplacementBetweenOperations|TestDurableLocalBlobReopenRequiresApprovedRootGeneration|TestBlobReaderDurableReadFullRejectsCancellation|TestBlobReaderDurableReadFullRejectsReplacement|TestBlobReaderDurablePreservesOrdinaryEof)$"
+        ],
+        "ExpectedPass": 7,
+        "ExpectedFail": 0
+      },
+      "Tree": "7e5a1146e54f34b463d3310838f2c0eaaedb5ae5",
+      "Started": "2026-10-02T21:31:46.918304722Z",
+      "Finished": "2026-10-02T21:36:09.470397385Z",
+      "AvailableBytesBefore": 125865267200,
+      "ExitCode": 0,
+      "Census": {
+        "TestBlobReaderDurablePreservesOrdinaryEof": "pass",
+        "TestBlobReaderDurableReadFullRejectsCancellation": "pass",
+        "TestBlobReaderDurableReadFullRejectsReplacement": "pass",
+        "TestConfiguredLocalBlobRequiresExactDeclaration": "pass",
+        "TestDurableLocalBlobReopenRequiresApprovedRootGeneration": "pass",
+        "TestDurableLocalBlobStoreRejectsReplacementBetweenOperations": "pass",
+        "TestDurableLocalBlobStoreReserveRecoversWithoutReset": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "bae5565765a86f578f80735a87bc6d2163124ae75b89351e5bff4f11a400df92"
+    },
+    "current-0384-consumers-vet": {
+      "Job": {
+        "Name": "current-0384-consumers-vet",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-checksums/sn",
+        "Commit": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-consumers-vet",
+        "Args": [
+          "vet",
+          "-p=1",
+          "./mainnet",
+          "./miner",
+          "./chain",
+          "./validator",
+          "./internal/durablehead"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 0
+      },
+      "Tree": "7e5a1146e54f34b463d3310838f2c0eaaedb5ae5",
+      "Started": "2026-10-02T21:36:09.553051942Z",
+      "Finished": "2026-10-02T21:36:53.912593789Z",
+      "AvailableBytesBefore": 125400227840,
+      "ExitCode": 0,
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "current-0384-core-blob-vet": {
+      "Job": {
+        "Name": "current-0384-core-blob-vet",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-checksums/sn",
+        "Commit": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-core-blob-vet",
+        "Args": [
+          "vet",
+          "-p=1",
+          "github.com/urnetwork/connect/durablevolume",
+          "github.com/urnetwork/server"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 0
+      },
+      "Tree": "7e5a1146e54f34b463d3310838f2c0eaaedb5ae5",
+      "Started": "2026-10-02T21:36:53.994103167Z",
+      "Finished": "2026-10-02T21:37:03.377731475Z",
+      "AvailableBytesBefore": 125331812352,
+      "ExitCode": 0,
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "current-0384-build-mainnet": {
+      "Job": {
+        "Name": "current-0384-build-mainnet",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-checksums/sn",
+        "Commit": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-build-mainnet",
+        "Args": [
+          "build",
+          "-p=1",
+          "-trimpath",
+          "-o",
+          "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-bin-0384/sn-mainnet",
+          "./mainnet"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 0
+      },
+      "Tree": "7e5a1146e54f34b463d3310838f2c0eaaedb5ae5",
+      "Started": "2026-10-02T21:37:03.482588683Z",
+      "Finished": "2026-10-02T21:41:37.715362439Z",
+      "AvailableBytesBefore": 125331607552,
+      "ExitCode": 0,
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "current-0384-build-miner": {
+      "Job": {
+        "Name": "current-0384-build-miner",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-checksums/sn",
+        "Commit": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-build-miner",
+        "Args": [
+          "build",
+          "-p=1",
+          "-trimpath",
+          "-o",
+          "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-bin-0384/sn-miner",
+          "./cli/miner"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 0
+      },
+      "Tree": "7e5a1146e54f34b463d3310838f2c0eaaedb5ae5",
+      "Started": "2026-10-02T21:41:37.833680964Z",
+      "Finished": "2026-10-02T21:41:49.425398148Z",
+      "AvailableBytesBefore": 120315764736,
+      "ExitCode": 0,
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "current-0384-build-validator": {
+      "Job": {
+        "Name": "current-0384-build-validator",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-checksums/sn",
+        "Commit": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-build-validator",
+        "Args": [
+          "build",
+          "-p=1",
+          "-trimpath",
+          "-o",
+          "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-bin-0384/sn-validator",
+          "./cli/validator"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 0
+      },
+      "Tree": "7e5a1146e54f34b463d3310838f2c0eaaedb5ae5",
+      "Started": "2026-10-02T21:41:49.508646752Z",
+      "Finished": "2026-10-02T21:42:00.608996484Z",
+      "AvailableBytesBefore": 120246050816,
+      "ExitCode": 0,
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "retained_setup_failures": {
+    "current-1d51-blob-normal": {
+      "Job": {
+        "Name": "current-1d51-blob-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-blob-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "github.com/urnetwork/server",
+          "-run",
+          "^(TestConfiguredLocalBlobRequiresExactDeclaration|TestDurableLocalBlobStoreReserveRecoversWithoutReset|TestDurableLocalBlobStoreRejectsReplacementBetweenOperations|TestDurableLocalBlobReopenRequiresApprovedRootGeneration|TestBlobReaderDurableReadFullRejectsCancellation|TestBlobReaderDurableReadFullRejectsReplacement|TestBlobReaderDurablePreservesOrdinaryEof)$"
+        ],
+        "ExpectedPass": 7,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:14:22.078467106Z",
+      "Finished": "2026-10-02T21:14:22.514182272Z",
+      "AvailableBytesBefore": 127948177408,
+      "ExitCode": 1,
+      "Census": {},
+      "Matched": false,
+      "LogSha256": "670f407096c6e7d2d00605458ee3853886f125d07fe0f022424381e2d0da5b2a"
+    },
+    "current-1d51-blob-race": {
+      "Job": {
+        "Name": "current-1d51-blob-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-blob-race",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=40m",
+          "-race",
+          "github.com/urnetwork/server",
+          "-run",
+          "^(TestConfiguredLocalBlobRequiresExactDeclaration|TestDurableLocalBlobStoreReserveRecoversWithoutReset|TestDurableLocalBlobStoreRejectsReplacementBetweenOperations|TestDurableLocalBlobReopenRequiresApprovedRootGeneration|TestBlobReaderDurableReadFullRejectsCancellation|TestBlobReaderDurableReadFullRejectsReplacement|TestBlobReaderDurablePreservesOrdinaryEof)$"
+        ],
+        "ExpectedPass": 7,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:28:32.951492231Z",
+      "Finished": "2026-10-02T21:28:33.369850567Z",
+      "AvailableBytesBefore": 126169116672,
+      "ExitCode": 1,
+      "Census": {},
+      "Matched": false,
+      "LogSha256": "fdefe914a6befb5852d918503679278ace046905ed03c9009e542c429c9e1626"
+    },
+    "current-1d51-core-blob-vet": {
+      "Job": {
+        "Name": "current-1d51-core-blob-vet",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/sn",
+        "Commit": "1d51f8be81588991223b74d71164460ae5e3491c",
+        "Workspace": "off",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-1d51-core-blob-vet",
+        "Args": [
+          "vet",
+          "-p=1",
+          "github.com/urnetwork/connect/durablevolume",
+          "github.com/urnetwork/server"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 0
+      },
+      "Tree": "469bb4382fda3ace72e2c0d3d4a1d6fe9e201dae",
+      "Started": "2026-10-02T21:28:57.757799741Z",
+      "Finished": "2026-10-02T21:28:58.662796564Z",
+      "AvailableBytesBefore": 126168403968,
+      "ExitCode": 1,
+      "Census": {},
+      "Matched": false,
+      "LogSha256": "8edf8dceb3bb902e05d565ec11c55077b82f3ac7913d81249e53575fcf7276b7"
+    }
+  },
+  "binary_records": [
+    {
+      "binary": {
+        "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-bin-0384/sn-mainnet",
+        "Bytes": 53708160,
+        "Sha256": "ff583566d23abc58292a7ab2bb9cb7bad3dbad4b092f24000c9094e6fc85100d"
+      },
+      "buildinfo": {
+        "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-sn-mainnet-buildinfo.txt",
+        "Bytes": 12049,
+        "Sha256": "da1497b07a0db601a5e457d39c1a612040969e9130fff702d75826427d5c456a"
+      }
+    },
+    {
+      "binary": {
+        "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-bin-0384/sn-miner",
+        "Bytes": 69612232,
+        "Sha256": "2fdbccb129b44a02fab0bf5c59f91d39a72e61e219ea957995203c79c863f405"
+      },
+      "buildinfo": {
+        "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-sn-miner-buildinfo.txt",
+        "Bytes": 10973,
+        "Sha256": "c1dc4e6e9fac6daf6ef29b2740b5942666126aa320cd97be89b5107616d8ac09"
+      }
+    },
+    {
+      "binary": {
+        "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module-bin-0384/sn-validator",
+        "Bytes": 62916016,
+        "Sha256": "273f2dc404cfb0de6910523b039f7a38a61337e4a5a4db3ab2c38a21036ffc29"
+      },
+      "buildinfo": {
+        "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-sn-validator-buildinfo.txt",
+        "Bytes": 11184,
+        "Sha256": "325ef230353f4c9d4e500700f683e22e1290a3c934fb35621aacc47a5371742d"
+      }
+    }
+  ],
+  "source_bundles": [
+    {
+      "base": "a692bbbae43327b76af0161a2bc2e6a21ea29fe0",
+      "source": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+      "artifact": {
+        "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-sn.bundle",
+        "Bytes": 65409,
+        "Sha256": "c2d695c1459711188a222577792c24e2b5fce481728d50f7a7f9bd5ff1d6fa8f"
+      },
+      "changed_paths": [
+        "chain/journal_preparation_linux.go",
+        "chain/journal_preparation_test.go",
+        "go.mod",
+        "go.sum",
+        "internal/durablehead/preparation_linux.go",
+        "internal/durablepath/preparation.go",
+        "mainnet/main.go",
+        "mainnet/storage_prepare_command_test.go",
+        "mainnet/storage_prepare_continuation_test.go",
+        "mainnet/storage_prepare_current_graph_test.go",
+        "mainnet/storage_prepare_directory_continuation_test.go",
+        "mainnet/storage_prepare_directory_test.go",
+        "mainnet/storage_prepare_linux.go",
+        "mainnet/storage_prepare_members_linux.go",
+        "mainnet/storage_prepare_other.go",
+        "mainnet/storage_prepare_owner_continuation_test.go",
+        "mainnet/storage_prepare_owners_linux.go",
+        "mainnet/storage_prepare_owners_test.go",
+        "mainnet/storage_prepare_private_root_continuation_test.go",
+        "mainnet/storage_prepare_private_root_test.go",
+        "mainnet/storage_prepare_snapshots_linux.go",
+        "miner/storage_preparation_linux.go",
+        "miner/storage_preparation_test.go",
+        "validator/attempt_ledger_preparation.go",
+        "validator/attempt_ledger_preparation_admission_test.go",
+        "validator/attempt_ledger_preparation_linux.go",
+        "validator/attempt_ledger_preparation_test.go"
+      ]
+    },
+    {
+      "base": "e0d75562aa2344d13c7967ce402156f4222dc5d2",
+      "source": "7600ea5c82272ab33a90bc1d0a55f11720e09257",
+      "artifact": {
+        "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-connect.bundle",
+        "Bytes": 41436,
+        "Sha256": "bab8f4f4ff68e38c5677ebbf4fae59783681a044bef5c53c6fbd2f194ab43797"
+      },
+      "changed_paths": [
+        "durablevolume/inventory_attributes_linux.go",
+        "durablevolume/preparation.go",
+        "durablevolume/preparation_apply_linux.go",
+        "durablevolume/preparation_capacity_linux.go",
+        "durablevolume/preparation_empty_head_test.go",
+        "durablevolume/preparation_other.go",
+        "durablevolume/preparation_plan_linux.go",
+        "durablevolume/preparation_root_linux.go",
+        "durablevolume/preparation_root_test.go",
+        "durablevolume/preparation_test.go"
+      ]
+    }
+  ],
+  "artifact_count": 130,
+  "manifest": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-author-manifest.json",
+    "Bytes": 32617,
+    "Sha256": "b1af7f09bd96a3469dfde83f59cb28adf62a026e55591118ad41674a8d4bb9e9"
+  },
+  "archive": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-0384-author-raw.tar.gz",
+    "Bytes": 89455402,
+    "Sha256": "9112b0765edfdaae5d7ca01636e7282f2a16bb2fb7578cd24595b9c003c60308"
+  },
+  "scope": [
+    "GOWORK=off with tracked go.mod/go.sum and no alternate modfile. Connect760 was source-authenticated through a local file proxy, not publication or SumDB authority.",
+    "Exact1d51 core14/public31/native2/ledger11/miner10 passed normal/race. Exact0384 differs only by four go.sum lines; configured blob7 then passed normal/race. This is a 75-root source join, not a claim that all75 executed on0384.",
+    "All seven affected packages passed vet on0384. Mainnet/miner/validator verification binaries built; only missing-argument offline mainnet dispatch was executed, exiting2 without stdout.",
+    "Actual daemon/owner-local native startup EIO/EMFILE controls retain original root/log/raw inode, anchor, completed preparation control and bytes, then reopen the same original custody.",
+    "Fresh fixed ledger/native/file-lock snapshot/directory-head owners and explicit private leaf-root creation are exercised with public plan/apply, exact accepted hashes and constructor admission.",
+    "Inherited source-preserving provider/fleet/member/spool changes are included through a692; no original receipts or signed protocol bytes were retargeted."
+  ],
+  "limits": [
+    "Connect760 is not claimed published. Root must publish the exact qualified dependency before treating this tracked pin as ordinarily downloadable.",
+    "SN main e08e1b11/claim347 and later server payout work are not in this source fence; their final composition requires a distinct join.",
+    "Serverc256 selected local-blob paths are qualified, not its full model/controller/runtime or the whole four-role release.",
+    "Fresh purpose only. Retained/restore semantic rebind, joined capacity/retention revisions and production backup/recovery still remain.",
+    "Only the requested leaf root may be created. Its approved parent, staging and metadata roots remain precreated.",
+    "Linux amd64 scoped execution; no live keys, transaction, deployment, service start, release reproducibility or restart authorization."
+  ]
+}

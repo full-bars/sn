@@ -43,12 +43,19 @@ func newReleaseAttemptUploadSourceV2(cfg *ReleaseConfig, input releaseEvidenceV2
 // activation for either origin, including a different operator's JWT session.
 func releaseReservedAttemptUploadReplicasV2(cfg *ReleaseConfig, source *releaseAttemptUploadSourceV2, origins [2]string, runtimes []*releaseOperatorRuntime) ([2]AttemptCutV2Replica, error) {
 	var zero [2]AttemptCutV2Replica
-	if source == nil {
-		return zero, errors.New("reserved upload source is unavailable")
-	}
 	replicas, err := releaseAttemptUploadReplicasV2(cfg, origins, runtimes)
 	if err != nil {
 		return zero, err
+	}
+	return bindReleaseReservedAttemptUploadReplicasV2(source, origins, runtimes, replicas)
+}
+
+// Binding checks the exact original activation and private signer against the
+// already admitted configured destinations; it grants no session readiness.
+func bindReleaseReservedAttemptUploadReplicasV2(source *releaseAttemptUploadSourceV2, origins [2]string, runtimes []*releaseOperatorRuntime, replicas [2]AttemptCutV2Replica) ([2]AttemptCutV2Replica, error) {
+	var zero [2]AttemptCutV2Replica
+	if source == nil {
+		return zero, errors.New("reserved upload source is unavailable")
 	}
 	for index, origin := range origins {
 		var owner *releaseAttemptUploadV2
@@ -73,6 +80,26 @@ func releaseReservedAttemptUploadReplicasV2(cfg *ReleaseConfig, source *releaseA
 		replicas[index] = AttemptCutV2Replica{Origin: origin, WriteRecords: writer(AttemptStreamV2Records), WriteProofs: writer(AttemptStreamV2Proofs), WriteMetadata: writer("metadata")}
 	}
 	return replicas, nil
+}
+
+// Historical native observation requires the real immutable census and source
+// signer, independently of whether an API session can currently publish. No
+// callbacks escape this validator; retained proof never acquires write authority.
+func validateReleaseReservedAttemptCensusOwnershipV2(cfg *ReleaseConfig, origins [2]string, runtimes []*releaseOperatorRuntime) error {
+	replicas, err := releaseAttemptUploadConfiguredReplicasV2(cfg, origins, runtimes)
+	if err != nil {
+		return err
+	}
+	for _, runtime := range runtimes {
+		source := runtime.attemptSource
+		if source == nil || source.activation.NoID != runtime.measurement.NoID {
+			return errors.New("reserved census source differs from its original runtime")
+		}
+		if _, err := bindReleaseReservedAttemptUploadReplicasV2(source, origins, runtimes, replicas); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // A closed census uploads every member with its own original activation/VPK.

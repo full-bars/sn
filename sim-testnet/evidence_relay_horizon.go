@@ -26,6 +26,18 @@ type evidenceRelayWork struct {
 	nativeCadence         uint64
 }
 
+// Continuation approval funds the complete strict workload even when its
+// observer is provisional. Only the invocation-only warmup waiver is removed;
+// clocks, fault schedules, capacities and policy remain the exact inputs.
+func evidenceRelayApprovalWork(cfg *ResolvedConfig) (evidenceRelayWork, error) {
+	if cfg == nil {
+		return evidenceRelayConfiguredWork(nil)
+	}
+	approval := *cfg
+	approval.provisionalResume = nil
+	return evidenceRelayConfiguredWork(&approval)
+}
+
 // Use the actual scenario definitions/watchdogs, including fault schedules,
 // and existing preparation waits. Residual approved slots own all other I/O.
 func evidenceRelayConfiguredWork(cfg *ResolvedConfig) (evidenceRelayWork, error) {
@@ -314,14 +326,17 @@ type evidenceRelayHorizonSource struct {
 type evidenceRelayHorizon struct {
 	work              evidenceRelayWork
 	maximum           uint64
+	sourceHorizon     uint64
 	anchorBlock       uint64
 	anchorEpoch       uint64
 	anchorNativeEpoch uint64
 	minimumEnd        uint64
 	minimumNativeEnd  uint64
 	sourceKVs         map[evidenceRelayHorizonSource]protocol.ValidatorEvidenceActivation
+	successorKVs      map[evidenceRelayHorizonSource]protocol.ValidatorEvidenceActivation
 	headerKVs         map[[32]byte]protocol.ValidatorEvidenceHeader
 	continuation      *EvidenceRelayContinuation
+	forecastAdvisory  bool
 }
 
 // Ceilings count a partial boundary on both clocks. The one/native term is
@@ -384,7 +399,16 @@ func evidenceRelayConfiguredHorizon(cfg *ResolvedConfig) (uint64, uint64, uint64
 	if !ok {
 		return 0, 0, 0, errors.New("evidence relay configured source census overflows")
 	}
-	return evidenceRelayMaximumSpan(work, sources, cfg.Config.ValidatorEvidenceRelay.MaxSlots, 0)
+	span, closed, native, err := evidenceRelayMaximumSpan(work, sources, cfg.Config.ValidatorEvidenceRelay.MaxSlots, 0)
+	if err != nil || cfg.Config.ValidatorEvidenceRelay.SourceHorizonBlocks == 0 {
+		return span, closed, native, err
+	}
+	bounded := cfg.Config.ValidatorEvidenceRelay.SourceHorizonBlocks
+	if bounded > span {
+		return 0, 0, 0, errors.New("evidence relay source horizon exceeds its funded slot horizon")
+	}
+	_, closed, native, err = evidenceRelayForecast(work, sources, bounded)
+	return bounded, closed, native, err
 }
 
 // Binary search a checked monotone count, not the ordering of public headers.
@@ -446,9 +470,9 @@ func (self *evidenceRelayHorizon) extraSubjects(candidate *protocol.ValidatorEvi
 	return audits - uint64(len(seenKVs)), nil
 }
 
-// Original activation plus remaining approved slots determines the furthest
-// funded block, settlement epoch and native epoch. No restart supplies a new
-// origin, and extra audit subjects shrink headroom rather than new approval.
+// Original activation plus remaining approved slots determines strict clock
+// ceilings and the continuation's stored forecasts. No restart supplies a new
+// origin or subject allowance.
 func (self *evidenceRelayHorizon) ceilings(candidate *protocol.ValidatorEvidenceHeader) (uint64, uint64, uint64, error) {
 	if self == nil || self.maximum == 0 || self.anchorBlock == 0 {
 		return 0, 0, 0, errors.New("evidence relay horizon is absent")
@@ -467,6 +491,13 @@ func (self *evidenceRelayHorizon) ceilings(candidate *protocol.ValidatorEvidence
 	span, closed, native, err := evidenceRelayMaximumSpan(self.work, uint64(len(self.sourceKVs)), self.maximum, extra)
 	if err != nil {
 		return 0, 0, 0, err
+	}
+	if self.sourceHorizon != 0 && self.sourceHorizon < span {
+		span = self.sourceHorizon
+		_, closed, native, err = self.forecast(span)
+		if err != nil {
+			return 0, 0, 0, err
+		}
 	}
 	block, blockOk := checkedAdd(self.anchorBlock, span)
 	epoch, epochOk := checkedAdd(self.anchorEpoch, closed-1)
@@ -489,6 +520,9 @@ func (self *evidenceRelayHorizon) admit(header protocol.ValidatorEvidenceHeader,
 	if !found {
 		return errors.New("evidence relay horizon source differs from original activation")
 	}
+	if successor, exists := self.successorKVs[source]; exists && header.Epoch >= successor.Domain.Epoch {
+		activation = successor
+	}
 	domain, err := activation.EvidenceDomain()
 	if err != nil || header.Domain != domain || header.VPK != activation.VPK {
 		return errors.Join(errors.New("evidence relay horizon source domain changed"), err)
@@ -508,23 +542,27 @@ func (self *evidenceRelayHorizon) admit(header protocol.ValidatorEvidenceHeader,
 	if err != nil {
 		return err
 	}
-	if currentBlock < self.anchorBlock || currentBlock > block || self.minimumEnd > block || self.minimumNativeEnd > nativeEpoch || header.Epoch < self.anchorEpoch || header.Epoch > epoch || header.BoundaryBlock > currentBlock || header.BoundaryBlock > block ||
-		header.Kind == protocol.ValidatorEvidenceDepositAudit && (header.Subject.NativeEpoch < self.anchorNativeEpoch || header.Subject.NativeEpoch > nativeEpoch || header.Subject.ObservationEpoch > epoch) {
+	outsideForecast := currentBlock > block || self.minimumEnd > block || self.minimumNativeEnd > nativeEpoch || header.Epoch > epoch || header.BoundaryBlock > block ||
+		header.Kind == protocol.ValidatorEvidenceDepositAudit && (header.Subject.NativeEpoch > nativeEpoch || header.Subject.ObservationEpoch > epoch)
+	if currentBlock < self.anchorBlock || header.Epoch < self.anchorEpoch || header.BoundaryBlock > currentBlock ||
+		header.Kind == protocol.ValidatorEvidenceDepositAudit && header.Subject.NativeEpoch < self.anchorNativeEpoch || !self.forecastAdvisory && outsideForecast {
 		return fmt.Errorf("evidence relay insufficient remaining horizon before spend: observed_block=%d required_end=%d funded_end=%d", currentBlock, self.minimumEnd, block)
 	}
 	// Extra subjects cannot evict an already authenticated delayed/future
 	// header. Check the whole set, never journal or delivery ordering.
-	for _, retained := range self.headerKVs {
-		if retained.Epoch > epoch || retained.BoundaryBlock > block || retained.Kind == protocol.ValidatorEvidenceDepositAudit && (retained.Subject.NativeEpoch > nativeEpoch || retained.Subject.ObservationEpoch > epoch) {
-			return errors.New("evidence relay extra subject would underfund an original retained slot")
+	if !self.forecastAdvisory {
+		for _, retained := range self.headerKVs {
+			if retained.Epoch > epoch || retained.BoundaryBlock > block || retained.Kind == protocol.ValidatorEvidenceDepositAudit && (retained.Subject.NativeEpoch > nativeEpoch || retained.Subject.ObservationEpoch > epoch) {
+				return errors.New("evidence relay extra subject would underfund an original retained slot")
+			}
 		}
 	}
 	self.headerKVs[slot] = header
 	return nil
 }
 
-// A fresh phase/after-preparation snapshot must still leave every remaining
-// required block inside the same original allowance; no files or sends occur.
+// Strict preparation fits required work inside the original clock forecast.
+// Provisional continuation still checks arithmetic and anchored lower bounds.
 func (self *evidenceRelayHorizon) requireRemaining(currentBlock, nativeEpoch, remaining uint64) error {
 	end, ok := checkedAdd(currentBlock, remaining)
 	if !ok || remaining == 0 {
@@ -539,7 +577,8 @@ func (self *evidenceRelayHorizon) requireRemaining(currentBlock, nativeEpoch, re
 		nativeRemaining++
 	}
 	nativeEnd, nativeOk := checkedAdd(nativeEpoch, nativeRemaining)
-	if !nativeOk || currentBlock < self.anchorBlock || currentBlock > block || nativeEpoch < self.anchorNativeEpoch || nativeEpoch > maximumNativeEpoch || nativeEnd > maximumNativeEpoch || end > block {
+	outsideForecast := currentBlock > block || nativeEpoch > maximumNativeEpoch || nativeEnd > maximumNativeEpoch || end > block
+	if !nativeOk || currentBlock < self.anchorBlock || nativeEpoch < self.anchorNativeEpoch || !self.forecastAdvisory && outsideForecast {
 		return fmt.Errorf("evidence relay insufficient remaining horizon before preparation: observed_block=%d native_epoch=%d required_end=%d funded_end=%d", currentBlock, nativeEpoch, end, block)
 	}
 	self.minimumEnd = end

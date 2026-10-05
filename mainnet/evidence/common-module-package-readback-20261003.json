@@ -1,0 +1,63 @@
+{
+  "scope": "Official Core2ea packaging and independent output readback only; composed behavior and launch remain unqualified",
+  "status": "OFFICIAL_MODULE_PACKAGE_PASS",
+  "verification_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/core2ea-independent-package-verification.json",
+    "sha256": "6801d5946b3678287e1356f100df857763aa46ea0643e79c8c2f169fb1883df2"
+  },
+  "retained_result": {
+    "adoption_sha256": "0bdb27193d3dbc9106583c51c98045410245f74b6c41f90b4e6abe42607dac00",
+    "all_job_inputs_readback": true,
+    "data_available_bytes": 112988098560,
+    "files": [
+      {
+        "bytes": 36644091,
+        "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy/github.com/urnetwork/connect/@v/v0.0.0-20261003195725-2ea8d82ea5cb.zip",
+        "sha256": "a4962eea9d75966277b06a6a1e0982ddea6b1a9038428cb444234766cfeacbd4"
+      },
+      {
+        "bytes": 3887,
+        "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy/github.com/urnetwork/connect/@v/v0.0.0-20261003195725-2ea8d82ea5cb.mod",
+        "sha256": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d"
+      },
+      {
+        "bytes": 79,
+        "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy/github.com/urnetwork/connect/@v/v0.0.0-20261003195725-2ea8d82ea5cb.info",
+        "sha256": "8a37580ffb79f346f843a2fd56902c602306f45afb8777d6c8a7a052fc5aa07d"
+      },
+      {
+        "bytes": 35,
+        "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy/github.com/urnetwork/connect/@v/list",
+        "sha256": "623375c8edf5f996a59194e82d474cd65fef4c4e0bfafe7fb1fa57d96c6017da"
+      }
+    ],
+    "floor_object_present": true,
+    "helper_receipt": {
+      "bytes": 1850,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/core2ea-official-package-receipt.json",
+      "sha256": "889f9f87b87da5ba1ff91a6946425660647fb060d0f8e2879757da4675159ffc"
+    },
+    "independently_recomputed_mod_h1": "h1:4fQ88a6LeWCbTb/1XCLy5oca56yANXCz+CU5JYeyT5Y=",
+    "independently_recomputed_zip_h1": "h1:Ihrc8pJrVL6CnJt8jQLiAgRPnNEZsG+0h3lBLpYN5yE=",
+    "job_sha256": "71f638218b112838cb69fda2f400437cd644b4643d117a949c69d154331baf2f",
+    "schema": "independent-core2ea-official-package-verification-v1",
+    "source_head_tree_clean": true,
+    "status": "PASS",
+    "stderr": {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/core2ea-package.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout": {
+      "bytes": 110,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/core2ea-package.stdout",
+      "sha256": "3b5fa3626eaad644cf6731262360227cd36f89984d11d52f78d6b3222f58c056"
+    },
+    "verified_unix_ns": 1791064157046789268,
+    "zip_bytes": 36644091,
+    "zip_entries": 3642,
+    "zip_sha256": "a4962eea9d75966277b06a6a1e0982ddea6b1a9038428cb444234766cfeacbd4"
+  },
+  "root_review": "Rehashed four private proxy outputs, helper receipt and stdout/stderr. Exact h1 values match the frozen SN source. No publication, public SumDB or deployed-release claim.",
+  "continuity": "Source stage and packaging are retained under the same canonical lease, fixed baseline and 32GiB cap; later phases must not repeat completed preparation."
+}

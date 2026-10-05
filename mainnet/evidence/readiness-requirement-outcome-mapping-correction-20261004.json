@@ -1,0 +1,65 @@
+{
+  "schema": "readiness-original-outcome-mapping-correction-v1",
+  "status": "TRACKING_CORRECTED_NO_REQUIREMENT_CLOSED",
+  "original_plan_git": {
+    "head": "ba2186ea038589965513986054aea8db8fba3560",
+    "path": "mainnet/PRELAUNCH-FIXES.md",
+    "blob": "9068413a8d023ccc3c33d7bc39b16b6bf5887ee5"
+  },
+  "required_outcomes": {
+    "MG-01": "Mainnet identity",
+    "MG-02": "Reproducible production release",
+    "MG-03": "Durable recovery and complete evidence",
+    "MG-04": "Runtime and native continuity",
+    "MG-05": "Policy and identity rollover",
+    "MG-06": "Economics, settlement and custody",
+    "MG-07": "Continuous monitoring and bounded repair",
+    "MG-08": "Mainnet bootstrap and both validator roles",
+    "MG-09": "Sustained resource and storage capacity",
+    "MG-10": "Qualification, rollout and actual acceptance",
+    "PH-01": "Operator, validators, bootstrap: durable recovery with independent audit and runtime owners",
+    "PH-02": "Native/EVM submitters: one logical action, reconciled signed attempts and exact custody",
+    "PH-03": "RPC, artifact and HTTP clients: bounded transient recovery without duplicate writes",
+    "PH-04": "Native-chain consumers: compatible upgrades and block-correct historical decoding",
+    "PH-05": "Historical verifiers: durable, dependency-bound successful proof reuse",
+    "PH-06": "Release/configuration tooling: explicit release identity and lossless plan migration",
+    "PH-07": "Service supervision: independent restart, single ownership and meaningful readiness",
+    "PH-08": "Replay and workload scheduling: bounded work, memory and foreground latency",
+    "PH-09": "State and artifact storage: explicit durable volume, atomic publication and recovery",
+    "PH-10": "Epoch, fleet and evidence scheduling: resumable partial renewals and correct windows",
+    "PH-11": "Treasury and bootstrap: conserved lifetime spend, reserve and funding semantics",
+    "PH-12": "Contracts, operator and claims: complete settlement conservation and authorization",
+    "PH-13": "Provider, operator and validator protocol: identity isolation and durable proof progress",
+    "PH-14": "Governance/bootstrap: actual capabilities, activated policy and both validator roles",
+    "PH-15": "Status/operations: actionable failure classes, progress and evidence-based ETA",
+    "PH-16": "Qualification and evidence: deterministic faults, composed coverage and independent replay",
+    "PH-17": "Plan-derived indexes: bind cached lookup structures to their immutable plan/generation owner",
+    "PH-18": "Strict readers: re-authorize connection/runtime provenance at every boundary after provisional work",
+    "PH-19": "Historical snapshots: use the reviewed historical runtime authority without weakening current writes",
+    "PH-20": "Relay capacity: distinguish funded slots, retained history, scan pages and resident bytes",
+    "PH-21": "Fault controller: bounded parallel, idempotent component control with durable partial recovery",
+    "PH-22": "Service clients: retryable transport incidents, connection recovery and final error budgets",
+    "PH-23": "Capacity revisions: bind funded slots, history horizon and every finite storage dimension",
+    "PH-24": "Recovery performance: authenticate each retained plan once per immutable lineage",
+    "PH-25": "Supervisor lifecycle: explicit deployment stop joins every owned workload child",
+    "PH-26": "Large evidence transport: typed, cancellable public replay with finite admission",
+    "PH-27": "Policy activation: coherent validator evidence and client-key domains across operators",
+    "PH-28": "Continuous operations: independent monitoring, bounded authorized repair and exercised on-call"
+  },
+  "prior_ph19_row": {
+    "closed": false,
+    "evidence": "conservation-entitlement9a-scoped-source-root-review-20261004.json",
+    "requirement": "PH-19",
+    "status": "Economic witness incomplete. Composed ade5 Rust four positive roots/twelve exports, additive five-job exporter and two causal controls retained. Entitlement9a source reviewed: original committer/complete leaves, earlier-pool carry and cold claims; 32Go roots/mode, vets and seven control groups remain. Capture/Yuma/profile joins, funding composition and unattended operation remain unqualified; source math does not establish10/90 conformance."
+  },
+  "finding": "Checkpoint PH-19 economic-witness label did not match original historical-runtime-authority outcome. Current Markdown table also lagged JSON row updates.",
+  "correction": [
+    "All38 original outcomes now explicit in each checkpoint row; no renumbering, removal or closure.",
+    "Historical authority remains PH-19; economic funding/conservation tracked under PH-11/PH-12 and MG-06.",
+    "MG-03 retains full durable recovery scope; MG-10 retains release rehearsal and full stated observed-acceptance intervals.",
+    "Regenerate current Markdown row table from authoritative JSON, preserving dated component evidence above it."
+  ],
+  "limits": [
+    "This tracking correction does not prove implementation, qualification, deployment or mainnet acceptance."
+  ]
+}

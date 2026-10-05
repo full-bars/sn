@@ -1,0 +1,11 @@
+{
+  "schema": "0e5-mainnet-race-independent-readback-v1",
+  "status": "37_PASS_ZERO_FAIL_ZERO_SKIP",
+  "phase": {
+    "path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-12-test-mainnet-race-peerfix-runtime-receipt.json",
+    "sha256": "e6068c43f20aad7d4202a9c15c45c8abc09a8370d29310a87060580de56c9bbd"
+  },
+  "limits": [
+    "Selected mainnet scope only; validator successor, remaining controls and native economic composition are not qualified by this pass."
+  ]
+}

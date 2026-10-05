@@ -69,7 +69,7 @@ func (self *releaseNativeCaptureClientV2) CallContext(ctx context.Context, resul
 		return err
 	}
 	switch method {
-	case "chain_getBlockHash", "chain_getHeader", "chain_getFinalizedHead", "chain_getBlock", "state_getRuntimeVersion", "state_getMetadata", "state_getStorage", "state_getStorageHash", "state_call":
+	case "system_chain", "eth_chainId", "chain_getBlockHash", "chain_getHeader", "chain_getFinalizedHead", "chain_getBlock", "state_getRuntimeVersion", "state_getMetadata", "state_getStorage", "state_getStorageHash", "state_call":
 	default:
 		return fmt.Errorf("native capture refuses non-read method %q", method)
 	}
@@ -130,6 +130,9 @@ func CaptureReleaseNativeSourceV2(ctx context.Context, native *crv4.Chain, cfg *
 	if cfg == nil || intent == nil || intent.Prepared == nil || ctx == nil {
 		return errors.New("native source capture intent is incomplete")
 	}
+	if _, err := releaseHistoricalRuntimeArtifactsAt(cfg, intent.Prepared.PreparedAtBlock); err != nil {
+		return err
+	}
 	artifact, err := decodeReleaseMeasurementV2Bytes(ctx, measurement, cfg.EvidenceV2.Bounds.MaxArtifactBytes, cfg.EvidenceV2.Bounds.MaxOperators)
 	if err != nil {
 		return err
@@ -141,7 +144,29 @@ func CaptureReleaseNativeSourceV2(ctx context.Context, native *crv4.Chain, cfg *
 	// Runtime caching may avoid another metadata response. Capture its exact
 	// pinned wire explicitly, then the normal verifier checks the reviewed hash.
 	seen := map[string]bool{}
-	for _, hash := range []string{artifact.NativeSnapshotHash, intent.Prepared.PreparedAtBlockHash, intent.FinalizedBlockHash} {
+	hashes := []string{artifact.NativeSnapshotHash, intent.Prepared.PreparedAtBlockHash, intent.FinalizedBlockHash}
+	if isOwnerRecycleProductionConfig(cfg) {
+		approval, err := ownerRecycleProductionApproval(cfg)
+		if err != nil {
+			return err
+		}
+		hashes = append(hashes, releaseHex32(approval.Approval.Production.ActivationNativeHash))
+		if intent.FinalizedBlock != 0 {
+			receiptHash, err := types.NewHashFromHexString(intent.FinalizedBlockHash)
+			if err != nil {
+				return err
+			}
+			number, parent, err := owned.ReceiptHeaderAtContext(ctx, receiptHash)
+			if err != nil {
+				return err
+			}
+			if number != intent.FinalizedBlock {
+				return errors.New("native capture receipt differs from its authenticated height")
+			}
+			hashes = append(hashes, parent.Hex())
+		}
+	}
+	for _, hash := range hashes {
 		if hash == "" || seen[hash] {
 			continue
 		}
@@ -150,7 +175,12 @@ func CaptureReleaseNativeSourceV2(ctx context.Context, native *crv4.Chain, cfg *
 			return err
 		}
 		seen[hash] = true
-		artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, owned, types.Hash(blockHash), HistoricalReleaseRuntimeArtifacts(releaseRuntimeIdentityV2(cfg))...)
+		var authenticated crv4.AuthenticatedRuntimeArtifact
+		if isOwnerRecycleProductionConfig(cfg) {
+			authenticated, _, err = authenticateOwnerRecycleProductionArtifactAtContext(ctx, owned, cfg, types.Hash(blockHash), true)
+		} else {
+			authenticated, err = crv4.AuthenticateRuntimeArtifactAtContext(ctx, owned, types.Hash(blockHash), HistoricalReleaseRuntimeArtifacts(releaseRuntimeIdentityV2(cfg))...)
+		}
 		if err != nil {
 			return err
 		}
@@ -159,7 +189,7 @@ func CaptureReleaseNativeSourceV2(ctx context.Context, native *crv4.Chain, cfg *
 			return err
 		}
 		_, metadataHash, err := crv4.DecodeRuntimeMetadata(raw)
-		if err != nil || !strings.EqualFold(metadataHash, artifact.MetadataHash) {
+		if err != nil || !strings.EqualFold(metadataHash, authenticated.MetadataHash) {
 			return errors.Join(errors.New("captured native metadata differs from the reviewed original bytes"), err)
 		}
 	}
@@ -171,9 +201,27 @@ func CaptureReleaseNativeSourceV2(ctx context.Context, native *crv4.Chain, cfg *
 	if err != nil {
 		return err
 	}
-	schedule, err := crv4.ReadValidatorScheduleAtContext(ctx, owned, crv4.ValidatorScheduleQuery{GenesisHash: owned.GenesisHash, BlockHash: hash, BlockNumber: artifact.NativeSnapshotBlock, Netuid: cfg.Netuid, Hotkey: hotkey, MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, HistoricalReleaseRuntimeArtifacts(releaseRuntimeIdentityV2(cfg))...)
-	if err != nil || !schedule.Stake.MeetsNonSelfStakeAndPermit() || schedule.SubnetEpochIndex != artifact.SubnetEpoch || schedule.Stake.Identity.UID != artifact.SelfUID {
-		return errors.Join(errors.New("compact captured decision lacks actual native schedule/eligibility"), err)
+	allowed, err := releaseHistoricalRuntimeArtifactsAt(cfg, artifact.NativeSnapshotBlock)
+	if err != nil {
+		return err
+	}
+	schedule, err := crv4.ReadValidatorScheduleAtContext(ctx, owned, crv4.ValidatorScheduleQuery{GenesisHash: owned.GenesisHash, BlockHash: hash, BlockNumber: artifact.NativeSnapshotBlock, Netuid: cfg.Netuid, Hotkey: hotkey, MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, allowed...)
+	matches := schedule.Stake.MeetsNonSelfStakeAndPermit() && schedule.SubnetEpochIndex == artifact.SubnetEpoch && schedule.Stake.Identity.UID == artifact.SelfUID
+	if err := releaseRpcObservationError(err, matches, errors.New("compact captured decision lacks actual native schedule/eligibility")); err != nil {
+		return err
+	}
+	if isOwnerRecycleProductionConfig(cfg) {
+		decisionCfg, err := productionConfigForIntent(cfg, intent)
+		if err != nil {
+			return err
+		}
+		authority, err := ObserveOwnerRecycleMeasurementAuthority(ctx, decisionCfg, owned, releaseMeasurementV2Decision(artifact))
+		if err != nil {
+			return err
+		}
+		if _, err := observeOwnerRecycleProductionEligibility(ctx, decisionCfg, owned, authority); err != nil {
+			return err
+		}
 	}
 	return authenticateReleaseNativeSourceReferenceV2(ctx, owned, cfg, intent, artifact)
 }

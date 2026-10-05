@@ -1,0 +1,53 @@
+{
+  "artifact_sha256": {
+    "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/run-seven.sh": "5c296744058c078e0246a58d18ad64869d8967bbf2bfc49e5ef8f68557e2cfca",
+    "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/selector-seven.txt": "5d73a43785882db5badd7b00b6710091f8d9cc251844c477899d40294138b912",
+    "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/seven-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/seven-normal.jsonl": "81d46ec2027e8c5fb88dc1c77ba77514754e91d3d5d76c75cede290b78e07661",
+    "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/seven-normal.phase": "1eba91b0c3646feb313ed9c35d4c1ed5b3788f346f6bb6b12e0482be600e818b",
+    "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/seven-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/source-readback.json": "81850d80b9b269dbb74b69537ec778d5d71de8be02734fdaa6a981fef1e099d1"
+  },
+  "classification": "FAILED_SELECTED_NORMAL_SCOPE",
+  "failed_root_output": {
+    "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome": [
+      "=== RUN   TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome\n",
+      "    bootstrap_successor_outer_rebind_test.go:276: public outer recovery invented an unrelated local member contract-successor-execution-002.intent\n",
+      "--- FAIL: TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome (107.93s)\n"
+    ],
+    "TestBootstrapSuccessorRestoredReaderReusesUnchangedMembers": [
+      "=== RUN   TestBootstrapSuccessorRestoredReaderReusesUnchangedMembers\n",
+      "    bootstrap_successor_restored_reader_test.go:108: one changed member did not receive exactly one full admission read durable volume identity is lost\n",
+      "        acknowledged successor member metadata changed 0 58\n",
+      "--- FAIL: TestBootstrapSuccessorRestoredReaderReusesUnchangedMembers (0.71s)\n"
+    ]
+  },
+  "limits": [
+    "Normal scope only. Race execution, causal controls and fixes remain separate.",
+    "The two assertion failures are retained; fixture versus production cause is not established by this receipt.",
+    "Five positive roots do not close public paired recovery or final release."
+  ],
+  "raw_top_level_roots": {
+    "fail": [
+      "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome",
+      "TestBootstrapSuccessorRestoredReaderReusesUnchangedMembers"
+    ],
+    "pass": [
+      "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority",
+      "TestBootstrapSuccessorOuterLocalPublicResume",
+      "TestBootstrapSuccessorOuterRegistryPublicResume",
+      "TestBootstrapSuccessorRebindRetainsFirstPendingStageGeneration",
+      "TestBootstrapSuccessorRestoredReaderRetainsMetadataLoss"
+    ],
+    "skip": []
+  },
+  "schema": "urnetwork-public-paired-restore-normal-failure-v1",
+  "sol_receipt_verification": {
+    "artifact_bindings_rehashed": 10,
+    "path": "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/outer-39e-normal-receipt.json",
+    "sha256": "5c50603d872f74d1bd71c3f75a9d0f7550f44ddf10778348b540eee40c42b67d"
+  },
+  "source_commit": "39e2744ae639711ab43c104d227cbfc2c213df33",
+  "source_intake_sha256": "b9b0d7393741ed258dee49aaac3adaef7150fd22fa8d1a9070ac38f6131f5136"
+}

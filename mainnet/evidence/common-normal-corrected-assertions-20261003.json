@@ -1,0 +1,82 @@
+{
+  "scope": "Corrected mainnet/validator working directories plus retained unaffected package results on unchanged b6/Core2ea; normal ordinary test assertions only",
+  "status": "NORMAL_SCOPE_FAILED_13_ASSERTIONS",
+  "effective_scope_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/b6-effective-normal-cwd-partition-v1.json",
+    "sha256": "3c4b5243348d18b9c02b71bcdc84a7032bd8f0cdd482d6943ebd9a7139913723"
+  },
+  "selected_count": 203,
+  "pass": 190,
+  "fail": 13,
+  "skip": 0,
+  "unfinished": 0,
+  "phase_bindings": [
+    {
+      "bytes": 36643,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/17-test-mainnet-ordinary-normal-cwd2-runtime-receipt.json",
+      "phase": "17-test-mainnet-ordinary-normal-cwd2",
+      "sha256": "4f24d3f69512cbb8eceb23d2e39c9c279f7ee24658e8fcad40229cc4f5bc687d",
+      "status": "TEST_OR_SAMPLER_FAILED"
+    },
+    {
+      "bytes": 6037,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/20-test-durablevolume-normal-runtime-receipt.json",
+      "phase": "20-test-durablevolume-normal",
+      "sha256": "4d558a1c12dc4cbb31eea1bf2c3aec2df29c9abb4dd0d7c27c4d03356164b90e",
+      "status": "PASS"
+    },
+    {
+      "bytes": 6981,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/21-test-validator-normal-cwd2-runtime-receipt.json",
+      "phase": "21-test-validator-normal-cwd2",
+      "sha256": "0fe2701ffe28bf75fd65b724eea32642697ac7c3496c28e4ecfe57570e2ba6f8",
+      "status": "TEST_OR_SAMPLER_FAILED"
+    },
+    {
+      "bytes": 2597,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/22-test-miner-normal-runtime-receipt.json",
+      "phase": "22-test-miner-normal",
+      "sha256": "322f7ab7e77fe0af825a8e351d5f907c782e202da8800be804f44d07de6cbc46",
+      "status": "PASS"
+    },
+    {
+      "bytes": 2371,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/23-test-chain-normal-runtime-receipt.json",
+      "phase": "23-test-chain-normal",
+      "sha256": "cb23d9514752067bda901db806465fc76ea4be925e1822c57f5d9e0fd44f1756",
+      "status": "PASS"
+    },
+    {
+      "bytes": 2389,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/24-test-protocol-normal-runtime-receipt.json",
+      "phase": "24-test-protocol-normal",
+      "sha256": "2f6d031051f3f20db9abb8b5a250fa2da151d848e877524e91a6b9951f308601",
+      "status": "PASS"
+    }
+  ],
+  "failing_roots": [
+    "TestEconomicNativeExecutionCanceledAdmissionKeepsAmountsUnknown",
+    "TestHistoricalFeeContextPublicStrictRequestAndInputPins",
+    "TestMonitorClaimArchiveActualHistoryReadOnceAndCustodyAfterAdmission",
+    "TestMonitorClaimArchiveRefusesOmittedForgedAndRegressedEvidence",
+    "TestMonitorClaimCatalogCannotEnrollLegacyOrReplaceOriginalKey",
+    "TestMonitorClaimRestorePublicCohortRetainsUnresolvedAndDeferred",
+    "TestMonitorClaimWindowPublicFull128RolloverCohortRestoreAndWork",
+    "TestMonitorClaimWindowPublicUnknownEpochAndReviewGuards",
+    "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory",
+    "TestReleaseForegroundCancellationJoinsBlockedUploadWithoutLosingAppend",
+    "TestReleaseForegroundCapacityRefusesBeforeBackgroundEffects",
+    "TestReleaseForegroundProgressDuringBlockedHttpAndReplay",
+    "TestReleaseForegroundProgressDuringContinuousActualReplay"
+  ],
+  "root_review": "Independently rehashed exact six phase receipts and test2json raw/stderr; all203 selected roots terminal once. Original cwd failures remain retained rather than relabeled.",
+  "triage": "Astra isolated corrective batch covers three production observation/cancellation cause defects plus Claim lifecycle/reserve and native/fee/foreground fixture assertions. Triage is not fixed-source qualification.",
+  "excluded": [
+    "New continuous native producer",
+    "Rust cross-engine execution",
+    "Full512 normal/race final result",
+    "Operative controls",
+    "Race corrected result",
+    "Mainnet launch authority"
+  ]
+}

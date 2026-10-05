@@ -1,0 +1,39 @@
+{
+  "scope": "Independent source declaration, selector and planning arithmetic review; not execution admission or test qualification",
+  "source_commit": "b6b7880ea4059af1a77f232a1ed597fe11cc8999",
+  "source_tree": "b01047e569d7398f2efb242dd7d139fa7ab9399b",
+  "core_commit": "2ea8d82ea5cbc8bdebdee05f5b90a9f21b64128f",
+  "inventory": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-intake-inventory-v4-20261003.json",
+    "sha256": "249d7db40f07d03c4104b2ae6a442c99197d31e0cd4166ad8cecc82b603768d5"
+  },
+  "proposal": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/proposal-v3.json",
+    "sha256": "4597bafdb590b6785a0ee7c5dc3dd3adde2764587c9d014cd653a86b32fd93f4"
+  },
+  "verified_package_declarations": {
+    "chain": 1,
+    "durablevolume": 18,
+    "mainnet": 161,
+    "miner": 2,
+    "protocol": 1,
+    "validator": 22
+  },
+  "verified_total_unique_go_roots": 205,
+  "selector_review": "Each selected name declares exactly once in the exact Git package; normal and race phase partitions each cover the same complete per-package set without overlap",
+  "phase_classes": 38,
+  "resource_forecast_bytes": 15032385536,
+  "margin_multiplier": 2,
+  "proposed_fixed_data_cap_bytes": 34359738368,
+  "execution_prerequisites": [
+    "Original Server5f model reaches terminal and owned fixture/network cleanup completes",
+    "Fresh live host lease and data/root/inode/RAM baseline; actual runner/job/source hashes reviewed",
+    "Official Core2ea module zip hash verified before cache install or graph checks",
+    "Nine Rust roots and owned exporter PASS/no SKIP before actual Go cross-engine consumption",
+    "Thirty-three operative control groups retain separate finite admission and actual assertion census"
+  ],
+  "completion_limits": [
+    "No source archive, compile, test or deployed launch result established by this review",
+    "Continuous independently verified native producer and actual chain/runtime/host authority gates remain open"
+  ]
+}

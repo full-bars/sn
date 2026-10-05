@@ -7,6 +7,7 @@ package miner
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
@@ -65,18 +66,23 @@ type providerSwarmStatus struct {
 // rejection is terminal for the whole swarm so supervision cannot mistake a
 // partially missing miner population for a healthy topology.
 type ProviderSwarm struct {
-	config         *ProviderSwarmConfig
-	stateLock      sync.Mutex
-	members        map[string]ProviderSwarmMember
-	running        map[string]bool
-	disabled       map[string]bool
-	starting       map[string]bool
-	failures       map[string]string
-	instances      map[string]*providerSwarmInstance
-	runCtx         context.Context
-	runCancel      context.CancelFunc
-	terminalErrors chan error
-	startMember    func(context.Context, ProviderSwarmMember, func(error)) (*providerSwarmInstance, error)
+	config             *ProviderSwarmConfig
+	progress           *providerProgressOwner
+	stateLock          sync.Mutex
+	members            map[string]ProviderSwarmMember
+	running            map[string]bool
+	disabled           map[string]bool
+	failures           map[string]string
+	instances          map[string]*providerSwarmInstance
+	memberOperations   map[string]*providerSwarmMemberOperation
+	memberGenerations  map[string]*providerSwarmMemberOperation
+	operationWaitGroup sync.WaitGroup
+	stopping           bool
+	startTimeout       time.Duration
+	runCtx             context.Context
+	runCancel          context.CancelFunc
+	terminalErrors     chan error
+	startMember        func(context.Context, ProviderSwarmMember, func(error)) (*providerSwarmInstance, error)
 }
 
 func LoadProviderSwarmConfig(path string) (*ProviderSwarmConfig, error) {
@@ -253,6 +259,8 @@ func swarmMemberWalletKey(member ProviderSwarmMember) (*crv4.Keypair, error) {
 	return key, nil
 }
 
+// Signs a fresh challenge and submits it once through the configured source
+// and TLS policy. The temporary client releases its connections before return.
 func setSwarmMemberWallet(ctx context.Context, member ProviderSwarmMember, settings *connect.ClientStrategySettings) error {
 	key, err := swarmMemberWalletKey(member)
 	if err != nil {
@@ -274,14 +282,46 @@ func setSwarmMemberWallet(ctx context.Context, member ProviderSwarmMember, setti
 	if err != nil {
 		return err
 	}
-	strategy := connect.NewClientStrategy(ctx, settings)
-	defer strategy.Close()
-	api := sdk.NewApi(ctx, strategy, member.APIURL)
-	defer func() {
-		_ = api.CloseAndWait(context.Background())
-	}()
-	api.SetByJwt(jwt)
-	challenge, err := connect.HttpPostWithStrategy(ctx, strategy, member.APIURL+"/auth/wallet-challenge",
+	// A signed wallet write consumes its challenge even when its reply is
+	// lost. Each operation gets one attempt, including at the transport layer.
+	transport := &http.Transport{
+		DialContext: settings.ConnectSettings.DialContext, TLSClientConfig: settings.TlsConfig,
+		TLSHandshakeTimeout: settings.TlsTimeout, ResponseHeaderTimeout: settings.ConnectTimeout,
+		IdleConnTimeout: settings.IdleConnTimeout, ForceAttemptHTTP2: true,
+	}
+	client := &http.Client{
+		Transport:     transport,
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}
+	defer client.CloseIdleConnections()
+	maxResponseBytes := settings.MaxHttpResponseBodyBytes
+	if maxResponseBytes <= 0 {
+		maxResponseBytes = connect.DefaultMaxHttpResponseBodyBytes
+	}
+	httpPost := func(ctx context.Context, requestUrl string, requestBytes []byte, byJwt string) ([]byte, error) {
+		requestCtx := ctx
+		if 0 < settings.RequestTimeout {
+			var cancel context.CancelFunc
+			requestCtx, cancel = context.WithTimeout(ctx, settings.RequestTimeout)
+			defer cancel()
+		}
+		request, err := http.NewRequestWithContext(requestCtx, http.MethodPost, requestUrl, bytes.NewReader(requestBytes))
+		if err != nil {
+			return nil, err
+		}
+		request.GetBody = nil
+		request.Header.Set("Content-Type", "application/json")
+		request.Header.Set("Authorization", "Bearer "+byJwt)
+		for name, values := range settings.ExtraHeaders {
+			request.Header[name] = append([]string(nil), values...)
+		}
+		response, err := client.Do(request)
+		if err != nil {
+			return nil, err
+		}
+		return readSwarmWalletResponse(ctx, requestCtx, response, maxResponseBytes)
+	}
+	challenge, err := connect.HttpPostWithRawFunction(ctx, httpPost, member.APIURL+"/auth/wallet-challenge",
 		&sdk.AuthWalletChallengeArgs{WalletAddress: member.Wallet, Blockchain: "TAO"}, jwt,
 		&sdk.AuthWalletChallengeResult{}, connect.NewNoopApiCallback[*sdk.AuthWalletChallengeResult]())
 	if err != nil {
@@ -302,10 +342,10 @@ func setSwarmMemberWallet(ctx context.Context, member ProviderSwarmMember, setti
 	if err != nil {
 		return err
 	}
-	result, err := api.SnSetWalletSyncWithContext(ctx, &sdk.SnSetWalletArgs{
+	result, err := connect.HttpPostWithRawFunction(ctx, httpPost, member.APIURL+"/sn/wallet", &sdk.SnSetWalletArgs{
 		ColdkeySs58: member.Wallet, ClientId: clientID,
 		Signature: "0x" + hex.EncodeToString(signature), Message: challenge.MessageTemplate,
-	})
+	}, jwt, &sdk.SnSetWalletResult{}, connect.NewNoopApiCallback[*sdk.SnSetWalletResult]())
 	if err != nil {
 		return err
 	}
@@ -319,12 +359,14 @@ func setSwarmMemberWallet(ctx context.Context, member ProviderSwarmMember, setti
 }
 
 type providerSwarmInstance struct {
-	networkSpace      *sdk.NetworkSpace
-	device            *sdk.DeviceLocal
-	refreshSub        sdk.Sub
-	logoutSub         sdk.Sub
-	cancel            context.CancelFunc
-	connectedOverride func() bool
+	progressGeneration uint64
+	progressDevice     providerProgressDevice
+	networkSpace       *sdk.NetworkSpace
+	device             *sdk.DeviceLocal
+	refreshSub         sdk.Sub
+	logoutSub          sdk.Sub
+	cancel             context.CancelFunc
+	connectedOverride  func() bool
 }
 
 // Reports live carrier plus processed current-key readiness. The supervisor
@@ -344,6 +386,9 @@ func (self *providerSwarmInstance) close() {
 	if self == nil {
 		return
 	}
+	if self.cancel != nil {
+		self.cancel()
+	}
 	if self.device != nil {
 		_ = self.device.CloseAndWait(context.Background())
 	}
@@ -356,9 +401,6 @@ func (self *providerSwarmInstance) close() {
 	if self.networkSpace != nil {
 		self.networkSpace.Close()
 	}
-	if self.cancel != nil {
-		self.cancel()
-	}
 }
 
 func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed func(error)) (*providerSwarmInstance, error) {
@@ -368,8 +410,7 @@ func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed fu
 	}
 	strategySettings := connect.DefaultClientStrategySettings()
 	// Testnet registration waits for a shared, rate-limited chain observation.
-	// The strategy divides this deadline among routes; its normal 15-second
-	// budget can cancel every attempt before that observation completes.
+	// Its one-shot wallet write needs more than the normal 15-second budget.
 	strategySettings.RequestTimeout = 120 * time.Second
 	// ConnectTimeout also bounds response headers for the processed reply.
 	strategySettings.ConnectTimeout = 45 * time.Second
@@ -393,13 +434,9 @@ func startSwarmMember(ctx context.Context, member ProviderSwarmMember, failed fu
 	networkSpace := sdk.NewNetworkSpaceWithUrls(memberCtx, member.APIURL, member.ConnectURL, strategySettings)
 	api := networkSpace.GetApi()
 	clientJWTPath := filepath.Join(member.StateDir, ".provider.jwt")
-	refreshSub := api.AddJwtRefreshListener(clientauth.JwtRefreshListenerFunc(func(jwt string) {
-		if err := clientauth.WriteToken(clientJWTPath, jwt); err != nil {
-			failed(fmt.Errorf("persist refreshed client JWT: %w", err))
-		}
-	}))
+	refreshSub := api.AddJwtRefreshListener(swarmMemberJwtRefreshListener(clientJWTPath, failed))
 	logoutSub := api.AddAuthLogoutListener(clientauth.AuthLogoutListenerFunc(func() {
-		failed(errors.New("provider authentication was rejected"))
+		failed(errSwarmAuthenticationRejected)
 	}))
 	deviceSettings := swarmMemberDeviceSettings(
 		member, sdk.NewDeviceLocalKeyMaterial(seed, certificatePEM, keyPEM), dialSettings)
@@ -452,12 +489,20 @@ func NewProviderSwarm(config *ProviderSwarmConfig) (*ProviderSwarm, error) {
 		return nil, err
 	}
 	members := make(map[string]ProviderSwarmMember, len(config.Members))
+	progressMembers := make([]providerProgressConfigMember, 0, len(config.Members))
 	for _, member := range config.Members {
 		members[member.ID] = member
+		progressMembers = append(progressMembers, providerProgressConfigMember{Slot: member.ID, ApiUrl: member.APIURL, ConnectUrl: member.ConnectURL, DnsPumpHost: member.DNSPumpHost, Wallet: member.Wallet, SourceIp: member.SourceIP})
+	}
+	progress, err := newProviderProgressOwner("swarm", progressMembers)
+	if err != nil {
+		return nil, err
 	}
 	return &ProviderSwarm{
-		config: config, members: members, running: map[string]bool{}, disabled: map[string]bool{}, starting: map[string]bool{},
+		config: config, progress: progress, members: members, running: map[string]bool{}, disabled: map[string]bool{},
 		failures: map[string]string{}, instances: map[string]*providerSwarmInstance{}, startMember: startSwarmMember,
+		memberOperations: map[string]*providerSwarmMemberOperation{}, memberGenerations: map[string]*providerSwarmMemberOperation{},
+		startTimeout: 3 * time.Minute,
 	}, nil
 }
 
@@ -496,187 +541,79 @@ func (self *ProviderSwarm) setFailure(id string, err error) {
 	self.failures[id] = err.Error()
 }
 
-func (self *ProviderSwarm) memberFailed(id string, err error) {
-	self.stateLock.Lock()
-	if self.disabled[id] {
-		self.stateLock.Unlock()
-		return
-	}
-	delete(self.running, id)
-	self.failures[id] = err.Error()
-	terminalErrors := self.terminalErrors
-	cancel := self.runCancel
-	self.stateLock.Unlock()
-	if terminalErrors != nil {
-		select {
-		case terminalErrors <- fmt.Errorf("member %s: %w", id, err):
-		default:
-		}
-	}
-	if cancel != nil {
-		cancel()
-	}
-}
-
-func (self *ProviderSwarm) disableMember(id string) error {
-	self.stateLock.Lock()
-	if _, ok := self.members[id]; !ok {
-		self.stateLock.Unlock()
-		return fmt.Errorf("unknown swarm member %q", id)
-	}
-	if self.disabled[id] {
-		self.stateLock.Unlock()
-		return nil
-	}
-	instance, running := self.instances[id]
-	if !running || !self.running[id] {
-		self.stateLock.Unlock()
-		return fmt.Errorf("swarm member %q is not running", id)
-	}
-	self.disabled[id] = true
-	delete(self.running, id)
-	delete(self.instances, id)
-	delete(self.failures, id)
-	self.stateLock.Unlock()
-	instance.close()
-	return nil
-}
-
-func (self *ProviderSwarm) enableMember(id string) error {
-	self.stateLock.Lock()
-	member, ok := self.members[id]
-	if !ok {
-		self.stateLock.Unlock()
-		return fmt.Errorf("unknown swarm member %q", id)
-	}
-	if self.running[id] && !self.disabled[id] {
-		self.stateLock.Unlock()
-		return nil
-	}
-	if !self.disabled[id] || self.starting[id] || self.runCtx == nil || self.runCtx.Err() != nil {
-		self.stateLock.Unlock()
-		return fmt.Errorf("swarm member %q cannot be enabled from its current state", id)
-	}
-	self.starting[id] = true
-	delete(self.disabled, id)
-	delete(self.failures, id)
-	runCtx := self.runCtx
-	startMember := self.startMember
-	self.stateLock.Unlock()
-
-	instance, err := startMember(runCtx, member, func(failure error) { self.memberFailed(id, failure) })
-	self.stateLock.Lock()
-	delete(self.starting, id)
-	if err != nil {
-		self.disabled[id] = true
-		self.failures[id] = err.Error()
-		self.stateLock.Unlock()
-		return fmt.Errorf("enable swarm member %s: %w", id, err)
-	}
-	if runCtx.Err() != nil {
-		self.disabled[id] = true
-		self.stateLock.Unlock()
-		instance.close()
-		return fmt.Errorf("enable swarm member %s: swarm is stopping", id)
-	}
-	self.instances[id] = instance
-	self.running[id] = true
-	self.stateLock.Unlock()
-	return nil
-}
-
-func (self *ProviderSwarm) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	if request.URL.Path == "/status" && request.Method == http.MethodGet {
-		status := self.status()
-		writer.Header().Set("Content-Type", "application/json")
-		if status.Running != status.Configured || len(status.Failures) != 0 {
-			writer.WriteHeader(http.StatusServiceUnavailable)
-		}
-		_ = json.NewEncoder(writer).Encode(status)
-		return
-	}
-	parts := strings.Split(strings.Trim(request.URL.Path, "/"), "/")
-	if request.Method != http.MethodPost || len(parts) != 3 || parts[0] != "control" {
-		http.NotFound(writer, request)
-		return
-	}
-	var err error
-	switch parts[2] {
-	case "disable":
-		err = self.disableMember(parts[1])
-	case "enable":
-		err = self.enableMember(parts[1])
-	default:
-		http.NotFound(writer, request)
-		return
-	}
-	if err != nil {
-		http.Error(writer, err.Error(), http.StatusConflict)
-		return
-	}
-	status := self.status()
-	writer.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(writer).Encode(status)
-}
-
+// Runs the server and owns every admitted control operation until its cleanup
+// has joined. Cancellation precedes both server shutdown and member teardown.
 func (self *ProviderSwarm) Run(ctx context.Context) error {
 	runCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	terminalErrors := make(chan error, 1)
 	self.stateLock.Lock()
+	if self.runCtx != nil || self.stopping {
+		self.stateLock.Unlock()
+		cancel()
+		return errors.New("provider swarm is already running or stopped")
+	}
 	self.runCtx = runCtx
 	self.runCancel = cancel
 	self.terminalErrors = terminalErrors
+	for id := range self.members {
+		self.disabled[id] = true
+	}
 	self.stateLock.Unlock()
+	server := &http.Server{Addr: self.config.ListenAddress, Handler: self, ReadHeaderTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second}
+	serverDone := make(chan struct{})
 	defer func() {
-		self.stateLock.Lock()
-		self.runCtx = nil
-		self.runCancel = nil
-		self.terminalErrors = nil
-		instances := make([]*providerSwarmInstance, 0, len(self.instances))
-		for _, instance := range self.instances {
-			instances = append(instances, instance)
+		self.stopMembers()
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer shutdownCancel()
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			_ = server.Close()
 		}
-		self.instances = map[string]*providerSwarmInstance{}
-		self.running = map[string]bool{}
-		self.stateLock.Unlock()
-		for _, instance := range instances {
-			instance.close()
-		}
+		<-serverDone
+		self.progress.close()
 	}()
-	server := &http.Server{Addr: self.config.ListenAddress, Handler: self}
 	serverErrors := make(chan error, 1)
 	go func() {
+		defer close(serverDone)
 		err := server.ListenAndServe()
 		if !errors.Is(err, http.ErrServerClosed) {
 			serverErrors <- err
+			cancel()
 		}
 	}()
-	defer func() {
-		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer shutdownCancel()
-		_ = server.Shutdown(shutdownCtx)
-	}()
-	members := append([]ProviderSwarmMember(nil), self.config.Members...)
+	members := make([]ProviderSwarmMember, 0, len(self.members))
+	for _, member := range self.members {
+		members = append(members, member)
+	}
 	sort.Slice(members, func(i, j int) bool { return members[i].ID < members[j].ID })
 	for _, member := range members {
-		instance, err := self.startMember(runCtx, member, func(failure error) { self.memberFailed(member.ID, failure) })
-		if err != nil {
-			self.setFailure(member.ID, err)
+		if err := self.controlMember(runCtx, member.ID, true); err != nil {
+			select {
+			case serverErr := <-serverErrors:
+				return serverErr
+			case terminalErr := <-terminalErrors:
+				return terminalErr
+			default:
+			}
+			if ctx.Err() != nil {
+				return nil
+			}
+			// The failed operation has already joined and retained its failure
+			// in member status. Continue admitting independent members; the
+			// existing member control owns any later explicit recovery. Do not
+			// retry startup here: it may have sent a signed wallet request.
+			if swarmControlErrorStatus(err) == http.StatusServiceUnavailable {
+				continue
+			}
 			return fmt.Errorf("start member %s: %w", member.ID, err)
 		}
-		self.stateLock.Lock()
-		self.instances[member.ID] = instance
-		self.running[member.ID] = true
-		self.stateLock.Unlock()
 	}
 	select {
-	case <-ctx.Done():
-		return nil
-	case err := <-serverErrors:
-		return err
 	case err := <-terminalErrors:
 		return err
+	case err := <-serverErrors:
+		return err
+	case <-ctx.Done():
+		return nil
 	}
 }
 

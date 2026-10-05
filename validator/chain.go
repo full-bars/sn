@@ -86,16 +86,17 @@ var metagraphAddress = common.HexToAddress("0x0000000000000000000000000000000000
 // the STSubnet binding attached. Its immutable block identity cache is safe
 // for concurrent reads; Close remains an owner-only lifecycle operation.
 type ChainClient struct {
-	stateLock    sync.Mutex
-	blockNumbers map[[32]byte]uint64
-	client       *ethclient.Client
-	rpcUrl       string
-	chainId      *big.Int
-	st           *stabi.STSubnet
-	coordinator  *stabi.STCoordinator
-	contract     *bind.BoundContract
-	contractAddr common.Address
-	release      bool
+	stateLock      sync.Mutex
+	blockNumbers   map[[32]byte]uint64
+	client         *ethclient.Client
+	rpcUrl         string
+	chainId        *big.Int
+	st             *stabi.STSubnet
+	coordinator    *stabi.STCoordinator
+	contract       *bind.BoundContract
+	contractAddr   common.Address
+	release        bool
+	readRetryHooks chainReadRetryHooks
 }
 
 // DialChain tries rpcUrls in order until one answers eth_chainId
@@ -204,10 +205,13 @@ func (self *ChainClient) FinalizedBlockContext(ctx context.Context) (uint64, [32
 	if self == nil || self.client == nil {
 		return 0, [32]byte{}, errors.New("finalized EVM head client is unavailable")
 	}
-	ctx, cancel := context.WithTimeout(ctx, chainReadCallTimeout(ctx))
+	ctx, cancel := self.chainReadOperationContext(ctx)
 	defer cancel()
 	var header *chainRPCBlock
-	err := self.client.Client().CallContext(ctx, &header, "eth_getBlockByNumber", "finalized", false)
+	err := self.retryChainRead(ctx, func(callCtx context.Context) error {
+		header = nil
+		return self.client.Client().CallContext(callCtx, &header, "eth_getBlockByNumber", "finalized", false)
+	})
 	if err != nil {
 		return 0, [32]byte{}, fmt.Errorf("finalized EVM head: %w", err)
 	}
@@ -286,11 +290,11 @@ func (self *ChainClient) validateBlockIdentityContext(ctx context.Context, block
 		}
 		return nil
 	}
-	callCtx, cancel := context.WithTimeout(ctx, chainReadCallTimeout(ctx))
 	var header *chainRPCBlock
-	err := self.client.Client().CallContext(callCtx, &header, "eth_getBlockByHash", common.Hash(blockHash), false)
-	err = errors.Join(err, callCtx.Err())
-	cancel()
+	err := self.retryChainRead(ctx, func(callCtx context.Context) error {
+		header = nil
+		return self.client.Client().CallContext(callCtx, &header, "eth_getBlockByHash", common.Hash(blockHash), false)
+	})
 	if err != nil {
 		return fmt.Errorf("EVM block %d hash 0x%x header: %w", block, blockHash, err)
 	}
@@ -345,6 +349,8 @@ func (self *ChainClient) ethCallAtHashContext(ctx context.Context, to common.Add
 	if ctx == nil || self == nil || self.client == nil || to == (common.Address{}) || len(calldata) == 0 {
 		return nil, errors.New("exact-block EVM call is unavailable")
 	}
+	ctx, cancel := self.chainReadOperationContext(ctx)
+	defer cancel()
 	if err := self.validateBlockIdentityContext(ctx, block, blockHash); err != nil {
 		return nil, err
 	}
@@ -353,13 +359,13 @@ func (self *ChainClient) ethCallAtHashContext(ctx context.Context, to common.Add
 		return nil, err
 	}
 	var output hexutil.Bytes
-	callCtx, cancel := context.WithTimeout(ctx, chainReadCallTimeout(ctx))
-	err = self.client.Client().CallContext(callCtx, &output, "eth_call", map[string]any{
-		"to":    to,
-		"input": hexutil.Bytes(calldata),
-	}, selector)
-	err = errors.Join(err, callCtx.Err())
-	cancel()
+	err = self.retryChainRead(ctx, func(callCtx context.Context) error {
+		output = nil
+		return self.client.Client().CallContext(callCtx, &output, "eth_call", map[string]any{
+			"to":    to,
+			"input": hexutil.Bytes(calldata),
+		}, selector)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("eth_call at canonical block %d (0x%x): %w", block, blockHash, err)
 	}
@@ -403,6 +409,13 @@ func (self *ChainClient) batchCallsAtHashContext(ctx context.Context, block uint
 	if ctx == nil || self == nil || self.client == nil {
 		return nil, errors.New("exact-block EVM batch is unavailable")
 	}
+	for index, call := range calls {
+		if call.address == (common.Address{}) || len(call.calldata) == 0 {
+			return nil, fmt.Errorf("exact-block EVM batch element %d is incomplete", index)
+		}
+	}
+	ctx, cancel := self.chainReadOperationContext(ctx)
+	defer cancel()
 	if err := self.validateBlockIdentityContext(ctx, block, blockHash); err != nil {
 		return nil, err
 	}
@@ -413,38 +426,12 @@ func (self *ChainClient) batchCallsAtHashContext(ctx context.Context, block uint
 	outputs := make([][]byte, len(calls))
 	for start := 0; start < len(calls); start += chainMaximumBatchCalls {
 		end := min(start+chainMaximumBatchCalls, len(calls))
-		raw := make([]hexutil.Bytes, end-start)
-		batch := make([]rpc.BatchElem, end-start)
+		indices := make([]int, end-start)
 		for index := start; index < end; index++ {
-			call := calls[index]
-			if call.address == (common.Address{}) || len(call.calldata) == 0 {
-				return nil, fmt.Errorf("exact-block EVM batch element %d is incomplete", index)
-			}
-			batch[index-start] = rpc.BatchElem{
-				Method: "eth_call",
-				Args: []any{
-					map[string]any{"to": call.address, "input": hexutil.Bytes(call.calldata)},
-					selector,
-				},
-				Result: &raw[index-start],
-			}
+			indices[index-start] = index
 		}
-		callCtx, cancel := context.WithTimeout(ctx, chainReadCallTimeout(ctx))
-		err := self.client.Client().BatchCallContext(callCtx, batch)
-		err = errors.Join(err, callCtx.Err())
-		cancel()
-		if err != nil {
+		if err := self.readChainBatch(ctx, selector, calls, indices, outputs, 1); err != nil {
 			return nil, fmt.Errorf("eth_call batch at canonical block %d (0x%x): %w", block, blockHash, err)
-		}
-		for index := range batch {
-			absolute := start + index
-			if batch[index].Error != nil {
-				return nil, fmt.Errorf("exact-block EVM batch element %d: %w", absolute, batch[index].Error)
-			}
-			if len(raw[index]) == 0 {
-				return nil, fmt.Errorf("exact-block EVM batch element %d is empty", absolute)
-			}
-			outputs[absolute] = append([]byte(nil), raw[index]...)
 		}
 	}
 	if err := ctx.Err(); err != nil {
@@ -473,6 +460,11 @@ type ReleaseSnapshot struct {
 // ReleaseSnapshotContext reads one complete release snapshot while honoring
 // caller cancellation across the finalized head and both contract views.
 func (self *ChainClient) ReleaseSnapshotContext(ctx context.Context) (*ReleaseSnapshot, error) {
+	if ctx == nil || self == nil {
+		return nil, errors.New("release snapshot reader is unavailable")
+	}
+	ctx, cancel := self.chainReadOperationContext(ctx)
+	defer cancel()
 	if err := self.requireRelease(); err != nil {
 		return nil, err
 	}
@@ -872,10 +864,13 @@ func (self *ChainClient) BlockHashContext(ctx context.Context, number uint64) ([
 	if self == nil || self.client == nil {
 		return [32]byte{}, errors.New("block hash client or number is unavailable")
 	}
-	ctx, cancel := context.WithTimeout(ctx, chainReadCallTimeout(ctx))
+	ctx, cancel := self.chainReadOperationContext(ctx)
 	defer cancel()
 	var header *chainRPCBlock
-	err := self.client.Client().CallContext(ctx, &header, "eth_getBlockByNumber", hexutil.EncodeUint64(number), false)
+	err := self.retryChainRead(ctx, func(callCtx context.Context) error {
+		header = nil
+		return self.client.Client().CallContext(callCtx, &header, "eth_getBlockByNumber", hexutil.EncodeUint64(number), false)
+	})
 	if err != nil {
 		return [32]byte{}, err
 	}
@@ -1017,8 +1012,11 @@ func (self *ChainClient) depositedSumsAtFinalizedContext(ctx context.Context, fr
 		return sums, nil
 	}
 	canonicalHash, err := self.BlockHashContext(ctx, finalizedBlock)
-	if err != nil || canonicalHash != finalizedHash {
-		return nil, fmt.Errorf("Deposited finalized checkpoint changed before scan: %v", err)
+	if err != nil {
+		return nil, err
+	}
+	if canonicalHash != finalizedHash {
+		return nil, errors.New("Deposited finalized checkpoint changed before scan")
 	}
 	topics := [][]common.Hash{{common.Hash(depositedTopic0)}}
 	if epochFilter != nil {
@@ -1087,13 +1085,19 @@ func (self *ChainClient) depositedSumsAtFinalizedContext(ctx context.Context, fr
 	sort.Slice(blockNumbers, func(i, j int) bool { return blockNumbers[i] < blockNumbers[j] })
 	for _, number := range blockNumbers {
 		canonicalHash, err := self.BlockHashContext(ctx, number)
-		if err != nil || canonicalHash != blockHashes[number] {
-			return nil, fmt.Errorf("Deposited log block %d differs from its canonical finalized identity: %v", number, err)
+		if err != nil {
+			return nil, err
+		}
+		if canonicalHash != blockHashes[number] {
+			return nil, fmt.Errorf("Deposited log block %d differs from its canonical finalized identity", number)
 		}
 	}
 	canonicalHash, err = self.BlockHashContext(ctx, finalizedBlock)
-	if err != nil || canonicalHash != finalizedHash {
-		return nil, fmt.Errorf("Deposited finalized checkpoint changed during scan: %v", err)
+	if err != nil {
+		return nil, err
+	}
+	if canonicalHash != finalizedHash {
+		return nil, errors.New("Deposited finalized checkpoint changed during scan")
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err

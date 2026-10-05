@@ -1,0 +1,118 @@
+{
+  "actual_graph_preflight_sha256": "1de112f8f7bec7ef0c1a5947e788748a020f3a696a6f4c3bf6ad5e0e8128d870",
+  "blob_file_joins": {
+    "blob.go": {
+      "22e_git_blob": "5add974e410a79fda66330263e0dd36eac78d652",
+      "physical_sha256": "6fc7da6ca6277a2751507ab701107130fda3881123845e9dd356a982f0f5808e",
+      "qualified_10a_git_blob": "5add974e410a79fda66330263e0dd36eac78d652"
+    },
+    "blob_batch.go": {
+      "22e_git_blob": "1dc3dfe92914a5cd019c287fff9317e3eed8d62e",
+      "physical_sha256": "d75ada72209ef9f62fd71ad8831a05db853c9af69779428fb2f9c6ffeb836f51",
+      "qualified_10a_git_blob": "1dc3dfe92914a5cd019c287fff9317e3eed8d62e"
+    },
+    "blob_capacity.go": {
+      "22e_git_blob": "de1e6c5af9e86960fc59b08bfccd83f8eee07d3c",
+      "physical_sha256": "e2b78bfcdd6a4d66b2fac740c6cf7b4e14b8d55205d8aeca1b6639be343713fe",
+      "qualified_10a_git_blob": "de1e6c5af9e86960fc59b08bfccd83f8eee07d3c"
+    },
+    "blob_durable.go": {
+      "22e_git_blob": "335b74271f411b9fddbfb3659084e996bd6af4ca",
+      "physical_sha256": "818ddf3d9cf6b55852fcd51a6600b250a6509e6ee3a7d3df786c6afba4dc685b",
+      "qualified_10a_git_blob": "335b74271f411b9fddbfb3659084e996bd6af4ca"
+    },
+    "blob_durable_test.go": {
+      "22e_git_blob": "11eed3f03ce41c73853500c49af51238cac63d3e",
+      "physical_sha256": "ed8536e90d3900ace0a68eb98d71d748501554b0e35e108e9af7f7347cd99e63",
+      "qualified_10a_git_blob": "11eed3f03ce41c73853500c49af51238cac63d3e"
+    },
+    "blob_test.go": {
+      "22e_git_blob": "ab4b6f96013250b20e923fb87945b85cb477e30a",
+      "physical_sha256": "34ac4d51f9b2ea5721d65486ec4dcafacfa0676234e2c5e82b21bcded3782b81",
+      "qualified_10a_git_blob": "ab4b6f96013250b20e923fb87945b85cb477e30a"
+    }
+  },
+  "connect": {
+    "sum": "h1:mnT7ynltqZelrr8Xy8ZL49JiwHG2wuBNx2Atkc4N9h8=",
+    "version": "v0.0.0-20261002163946-e0d75562aa23"
+  },
+  "effective_module_count": 647,
+  "effective_modules_sha256": "a3c6206a0d7f052002887ad2b914226afac6927879db3e47d1c498dbc5af9aee",
+  "limits": [
+    "Exact standalone server package12 roots, not broad server suite or composed SN release.",
+    "Published Connect e0d and SCTP644 selected by server go.mod; no SN workspace override.",
+    "SN69f local source is explicit and differs from later current-main composition.",
+    "Shared Sol build cache reused for compiler outputs; test bodies ran fresh with -count=1. No independent clean compiler/release provenance claim.",
+    "No live signing, deployment, or service launch."
+  ],
+  "local_dependency_pins": {
+    "glog": {
+      "clean": true,
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "clean": true,
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "clean": true,
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "sn": {
+      "commit": "69f4bbdd68f3ba933fc0e6b8994708664689acbc",
+      "prior_physical_receipt_sha256": "fc6bd88f6313411ab602f4e568d2393160b0281a143c4cf7e52abc6741d1f4af",
+      "tree": "4e49dc8fba437bb55939eaea09ef190fde89c8e4"
+    },
+    "userwireguard": {
+      "clean": true,
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    }
+  },
+  "manifest_entries": 26,
+  "manifest_sha256": "71d6736a78e6b8a41bdb7f474ead7793253cd26f908f67b0d99aa77bb992fddf",
+  "normal": {
+    "exit_code": 0,
+    "package_seconds": 1.589,
+    "raw_sha256": "79f8700aa5140f134d7bc877175f087f0e7775a070d97f3465fabe86dcd3e218",
+    "terminal_passes": 12
+  },
+  "parent_cebf": "cebf154f130846d5756614a28f429c98ad77ab9c",
+  "physical_source_readback": {
+    "initial_sha256": "e2b005dd759c001a732aea0245f08cc2af950099b4a525634a70b773460b3923",
+    "mismatches": 0,
+    "terminal_sha256": "e2b005dd759c001a732aea0245f08cc2af950099b4a525634a70b773460b3923",
+    "tracked_blobs": 5250
+  },
+  "preserved_original_cebf_failure_receipt_sha256": "96b169f52185b7aaa2217ff236d6bc5d940bd3ac1338430547c3d5e577c68a02",
+  "race": {
+    "exit_code": 0,
+    "package_seconds": 3.331,
+    "raw_sha256": "fe42f22309905b9186138ddc1801b0aba6810b4fc8e847ed3fa07c8509e12b6c",
+    "terminal_passes": 12
+  },
+  "schema": "sol-independent-server-module-22e-v1",
+  "sctp": {
+    "sum": "h1:w8WyMTyOkCNb/qEZtgZDr6m0zf3eM8kjh08DweW4/i8=",
+    "version": "v0.0.0-20261002163341-6443417d70dc"
+  },
+  "source_commit": "22e3c1ba438b7888dccfc04244bcafaae0bcad3d",
+  "source_delta_from_cebf": [
+    "go.mod",
+    "go.sum"
+  ],
+  "source_tree": "b6cb4a0dd35d22a909e17c599e6995fd873c3aa2",
+  "toolchain": {
+    "go_binary_sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45",
+    "go_version": "go version go1.26.6 linux/amd64"
+  },
+  "verdict": "PASS_SCOPED",
+  "vet": {
+    "exit_code": 0,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

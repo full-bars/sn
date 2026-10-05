@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/ethereum/go-ethereum/common"
 
+	snchain "github.com/urfoundation/sn/chain"
 	"github.com/urfoundation/sn/crv4"
 	"github.com/urfoundation/sn/miner/onchain"
 	"github.com/urfoundation/sn/protocol"
@@ -124,7 +126,7 @@ func dialFleetNativeWithContext(ctx context.Context, urls []string, endpointTime
 
 // dialFleetNativeWithEndpointContext owns endpoint cleanup on both dial and
 // identity failures. The default production path above supplies WithTimeout
-// and the exact-v454 authenticator; the injected parameters exist solely for
+// and the release authenticator; the injected parameters exist solely for
 // deterministic cancellation and failover tests.
 func dialFleetNativeWithEndpointContext(ctx context.Context, urls []string, endpointTimeout time.Duration, endpointContext fleetNativeEndpointContext, dial fleetNativeDialContext, authenticate fleetNativeRuntimeAuthenticator) (*crv4.Chain, string, error) {
 	if ctx == nil || endpointTimeout <= 0 || endpointContext == nil || dial == nil || authenticate == nil {
@@ -148,13 +150,13 @@ func dialFleetNativeWithEndpointContext(ctx context.Context, urls []string, endp
 		if err := authenticate(endpointCtx, chain); err != nil {
 			cancel()
 			closeFleetNative(chain)
-			errs = append(errs, fmt.Errorf("%s: runtime identity does not match the release pin: %w", endpoint, err))
+			errs = append(errs, fmt.Errorf("%s: runtime identity does not match the selected authority: %w", endpoint, err))
 			continue
 		}
 		cancel()
 		return chain, endpoint, nil
 	}
-	return nil, "", fmt.Errorf("no release Substrate endpoint answered: %w", errors.Join(errs...))
+	return nil, "", fmt.Errorf("no authorized fleet Substrate endpoint answered: %w", errors.Join(errs...))
 }
 
 // closeFleetNative is deliberately nil-safe because dial/auth failure paths
@@ -166,6 +168,7 @@ func closeFleetNative(chain *crv4.Chain) {
 }
 
 func fleetCommand(opts docopt.Opts) error {
+	ctx := minerStorageContext(context.Background(), opts)
 	manifest, err := loadFleetManifest(fleetOpt(opts, "--manifest"))
 	if err != nil {
 		return err
@@ -176,14 +179,16 @@ func fleetCommand(opts docopt.Opts) error {
 		hash, _ := manifest.CommitmentHash()
 		fmt.Printf("%s\ncommitment_sha256: 0x%x\nmembers: %d\n", canonical, hash, len(manifest.Members))
 		return nil
+	case mustBoolOpt(opts, "register"):
+		return fleetRegister(ctx, opts, manifest)
 	case mustBoolOpt(opts, "publish"):
-		return fleetPublish(opts, manifest)
+		return fleetPublish(ctx, opts, manifest)
 	case mustBoolOpt(opts, "bind"):
-		return fleetBind(opts, manifest)
+		return fleetBind(ctx, opts, manifest)
 	case mustBoolOpt(opts, "status"):
-		return fleetStatus(opts, manifest)
+		return fleetStatus(ctx, opts, manifest)
 	case mustBoolOpt(opts, "revoke"):
-		return fleetRevoke(opts, manifest)
+		return fleetRevoke(ctx, opts, manifest)
 	default:
 		return errors.New("unknown fleet command")
 	}
@@ -194,10 +199,98 @@ func mustBoolOpt(opts docopt.Opts, name string) bool {
 	return v
 }
 
-func fleetPublish(opts docopt.Opts, manifest *protocol.FleetManifest) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+// fleetUint64Opt parses an optional numeric option, keeping fallback when the
+// option is absent.
+func fleetUint64Opt(opts docopt.Opts, name string, fallback uint64) (uint64, error) {
+	value := fleetOpt(opts, name)
+	if value == "" {
+		return fallback, nil
+	}
+	parsed, err := strconv.ParseUint(value, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", name, err)
+	}
+	return parsed, nil
+}
+
+// The observed netuid-521 registration fee was 2,131,733 rao; the default
+// ceiling leaves headroom without letting a runtime multiplier drain a key.
+const fleetDefaultFeeLimitRao = uint64(10_000_000)
+
+// fleetRegister implements `provider fleet register`: the head-tier fleet's
+// own burned registration of the manifest hotkey on the manifest netuid
+// (WHITEPAPER §16.1: top-level miners self-register_limit their UIDs), signed
+// by the fleet coldkey through the shared sn/chain flow. It authenticates the
+// finalized runtime against the reviewed pin, reads and prints the live burn
+// economics, refuses a burn above the ceiling, and is a dry run unless
+// --apply is given. Every broadcast is journaled under the provider state.
+func fleetRegister(ctx context.Context, opts docopt.Opts, manifest *protocol.FleetManifest) error {
+	authority, err := loadFleetMainnetRuntimeAuthority(opts, manifest)
+	if err != nil {
+		return err
+	}
+	if authority != nil {
+		return fleetRecoverableNative(ctx, opts, manifest, authority, "register")
+	}
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
-	chain, endpoint, err := dialFleetNativeContext(ctx, fleetOpts(opts, "--substrate"))
+	hotkeySeed, err := crv4.LoadSeedFile(fleetOpt(opts, "--hotkey_seed_file"))
+	if err != nil {
+		return err
+	}
+	hotkey, err := crv4.KeypairFromSeed(hotkeySeed)
+	if err != nil {
+		return err
+	}
+	if hotkey.PublicKey() != manifest.Hotkey {
+		return errors.New("hotkey seed does not match manifest hotkey")
+	}
+	coldkey, err := snchain.LoadKeypairFile(fleetOpt(opts, "--coldkey_seed_file"))
+	if err != nil {
+		return fmt.Errorf("coldkey seed: %w", err)
+	}
+	burnLimit, err := fleetUint64Opt(opts, "--burn_limit_rao", 0)
+	if err != nil {
+		return err
+	}
+	feeLimit, err := fleetUint64Opt(opts, "--fee_limit_rao", fleetDefaultFeeLimitRao)
+	if err != nil {
+		return err
+	}
+	stateDir, err := providerStateDir()
+	if err != nil {
+		return err
+	}
+	journal, err := snchain.OpenJournal(filepath.Join(stateDir, "fleet-native"))
+	if err != nil {
+		return err
+	}
+	chain, endpoint, err := dialFleetNativeAuthorityContext(ctx, opts, manifest, authority)
+	if err != nil {
+		return err
+	}
+	defer chain.API.Client.Close()
+	fmt.Printf("fleet register: netuid %d hotkey 0x%x via %s\n", manifest.Netuid, manifest.Hotkey, endpoint)
+	_, err = snchain.RegisterHotkey(ctx, chain, snchain.RegisterRequest{
+		Command: "provider fleet register", Netuid: manifest.Netuid, Hotkey: manifest.Hotkey, Coldkey: coldkey,
+		BurnLimitRao: burnLimit, FeeLimitRao: feeLimit, Allowed: []crv4.RuntimeArtifactIdentity{authority.artifactIdentity()},
+		RuntimeAdmission: authority.nativeAdmission(chain),
+		Journal:          journal, Apply: mustBoolOpt(opts, "--apply"), Output: os.Stdout,
+	})
+	return err
+}
+
+func fleetPublish(ctx context.Context, opts docopt.Opts, manifest *protocol.FleetManifest) error {
+	authority, err := loadFleetMainnetRuntimeAuthority(opts, manifest)
+	if err != nil {
+		return err
+	}
+	if authority != nil {
+		return fleetRecoverableNative(ctx, opts, manifest, authority, "publish")
+	}
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
+	chain, endpoint, err := dialFleetNativeAuthorityContext(ctx, opts, manifest, authority)
 	if err != nil {
 		return err
 	}
@@ -214,6 +307,14 @@ func fleetPublish(opts docopt.Opts, manifest *protocol.FleetManifest) error {
 		return errors.New("hotkey seed does not match manifest hotkey")
 	}
 	hash, _ := manifest.CommitmentHash()
+	if authority != nil {
+		verified, err := authority.publish(ctx, chain, hotkey, manifest.Netuid, hash)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("fleet commitment finalized\n  endpoint: %s\n  netuid: %d\n  hotkey: 0x%x\n  commitment: 0x%x\n  extrinsic: %s\n  finalized_block: %d\n  finalized_hash: %s\n", endpoint, manifest.Netuid, manifest.Hotkey, hash, verified.ExtrinsicHash.Hex(), verified.FinalizedAt, verified.FinalizedHash.Hex())
+		return nil
+	}
 	if _, err := authenticateAndBindFleetRuntimeFinalizedContext(ctx, chain); err != nil {
 		return fmt.Errorf("authenticate fleet runtime before publish: %w", err)
 	}
@@ -271,7 +372,20 @@ func fleetBindingAndSign(opts docopt.Opts, manifest *protocol.FleetManifest) (pr
 	return binding, clientSignature, hotkeySignature, err
 }
 
-func fleetBind(opts docopt.Opts, manifest *protocol.FleetManifest) error {
+func fleetBind(ctx context.Context, opts docopt.Opts, manifest *protocol.FleetManifest) error {
+	authority, err := loadFleetMainnetRuntimeAuthority(opts, manifest)
+	if err != nil {
+		return err
+	}
+	if authority != nil {
+		return fleetRecoverableEvm(ctx, opts, manifest, authority, "bind")
+	}
+	ctx, cancel := context.WithTimeout(ctx, fleetStatusTimeout)
+	defer cancel()
+	rpcs, err := authority.prepareEvm(ctx, fleetOpts(opts, "--rpc"))
+	if err != nil {
+		return err
+	}
 	binding, clientSignature, hotkeySignature, err := fleetBindingAndSign(opts, manifest)
 	if err != nil {
 		return err
@@ -284,9 +398,10 @@ func fleetBind(opts docopt.Opts, manifest *protocol.FleetManifest) error {
 	if err != nil {
 		return err
 	}
-	receipt, err := onchain.Submit(context.Background(), onchain.SubmitParams{
-		Contract: common.Address(manifest.Coordinator), Rpcs: fleetOpts(opts, "--rpc"), Key: relayer,
+	receipt, err := onchain.Submit(ctx, onchain.SubmitParams{
+		Contract: common.Address(manifest.Coordinator), Rpcs: rpcs, Key: relayer,
 		Calldata: calldata, ChainID: new(big.Int).SetUint64(manifest.ChainID), DryRun: mustBoolOpt(opts, "--dry-run"),
+		RuntimeAdmission: authority.evmAdmission(),
 	})
 	if err != nil || receipt == nil {
 		return err
@@ -302,48 +417,41 @@ func fleetBind(opts docopt.Opts, manifest *protocol.FleetManifest) error {
 func finalizedCoordinatorCall(ctx context.Context, manifest *protocol.FleetManifest, rpcs []string, calldata []byte) ([]byte, string, error) {
 	var errs []error
 	for _, endpoint := range rpcs {
-		chainIDHex, err := ethRpcHexResult(ctx, endpoint, "eth_chainId", []any{})
+		decoded, err := ethRpcHexView(ctx, endpoint, manifest.ChainID, []any{map[string]any{"to": common.Address(manifest.Coordinator).Hex(), "data": "0x" + hex.EncodeToString(calldata)}, "finalized"})
 		if err != nil {
 			errs = append(errs, err)
+			if !retryableEthRpcError(err, false) || ctx.Err() != nil {
+				return nil, "", fmt.Errorf("finalized coordinator view refused: %w", errors.Join(errs...))
+			}
 			continue
 		}
-		chainID, err := parseEthHexQuantity(chainIDHex)
-		if err != nil || chainID != manifest.ChainID {
-			errs = append(errs, fmt.Errorf("%s chain id %d, manifest %d", endpoint, chainID, manifest.ChainID))
-			continue
-		}
-		result, err := ethRpcHexResult(ctx, endpoint, "eth_call", []any{map[string]any{"to": common.Address(manifest.Coordinator).Hex(), "data": "0x" + hex.EncodeToString(calldata)}, "finalized"})
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		decoded, err := parseEthHexBytes(result)
-		if err == nil {
-			return decoded, endpoint, nil
-		}
-		errs = append(errs, err)
+		return decoded, endpoint, nil
 	}
 	return nil, "", fmt.Errorf("no finalized coordinator view answered: %w", errors.Join(errs...))
 }
 
-func fleetStatus(opts docopt.Opts, manifest *protocol.FleetManifest) error {
-	ctx, cancel := context.WithTimeout(context.Background(), fleetStatusTimeout)
+func fleetStatus(ctx context.Context, opts docopt.Opts, manifest *protocol.FleetManifest) error {
+	authority, err := loadFleetMainnetRuntimeAuthority(opts, manifest)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(ctx, fleetStatusTimeout)
 	defer cancel()
 	clientID, err := parseClientID16(fleetOpt(opts, "--client_id"))
 	if err != nil {
 		return err
 	}
 	want, _ := manifest.CommitmentHash()
-	chain, endpoint, err := dialFleetNativeContext(ctx, fleetOpts(opts, "--substrate"))
+	chain, endpoint, err := dialFleetNativeAuthorityContext(ctx, opts, manifest, authority)
 	if err != nil {
 		return err
 	}
-	native, nativeErr := pinnedFleetCommitmentFinalizedContext(ctx, chain, manifest.Netuid, manifest.Hotkey)
+	native, nativeErr := authority.commitmentFinalized(ctx, chain, manifest.Netuid, manifest.Hotkey)
 	chain.API.Client.Close()
 	if nativeErr != nil {
 		return nativeErr
 	}
-	ret, rpc, err := finalizedCoordinatorCall(ctx, manifest, fleetOpts(opts, "--rpc"), stCoordinator.PackGetFleetBinding(clientID))
+	ret, rpc, err := authority.coordinatorCall(ctx, manifest, fleetOpts(opts, "--rpc"), stCoordinator.PackGetFleetBinding(clientID))
 	if err != nil {
 		return err
 	}
@@ -358,7 +466,16 @@ func fleetStatus(opts docopt.Opts, manifest *protocol.FleetManifest) error {
 	return nil
 }
 
-func fleetRevoke(opts docopt.Opts, manifest *protocol.FleetManifest) error {
+func fleetRevoke(ctx context.Context, opts docopt.Opts, manifest *protocol.FleetManifest) error {
+	authority, err := loadFleetMainnetRuntimeAuthority(opts, manifest)
+	if err != nil {
+		return err
+	}
+	if authority != nil {
+		return fleetRecoverableEvm(ctx, opts, manifest, authority, "revoke")
+	}
+	ctx, cancel := context.WithTimeout(ctx, fleetStatusTimeout)
+	defer cancel()
 	clientID, err := parseClientID16(fleetOpt(opts, "--client_id"))
 	if err != nil {
 		return err
@@ -371,13 +488,17 @@ func fleetRevoke(opts docopt.Opts, manifest *protocol.FleetManifest) error {
 	if err != nil {
 		return err
 	}
-	ret, _, err := finalizedCoordinatorCall(context.Background(), manifest, fleetOpts(opts, "--rpc"), stCoordinator.PackFleetRevokeDigest(clientID, manifest.Generation, effective))
+	ret, endpoint, err := authority.coordinatorCall(ctx, manifest, fleetOpts(opts, "--rpc"), stCoordinator.PackFleetRevokeDigest(clientID, manifest.Generation, effective))
 	if err != nil {
 		return err
 	}
 	digest, err := stCoordinator.UnpackFleetRevokeDigest(ret)
 	if err != nil {
 		return err
+	}
+	wantDigest, err := (protocol.FleetRevoke{ChainID: manifest.ChainID, Netuid: manifest.Netuid, Coordinator: manifest.Coordinator, ClientID: clientID, Generation: manifest.Generation, EffectiveEpoch: effective}).Digest()
+	if err != nil || digest != wantDigest {
+		return errors.Join(errors.New("fleet revoke digest differs from the local signing domain"), err)
 	}
 	private, err := loadEd25519Seed(fleetOpt(opts, "--client_seed_file"))
 	if err != nil {
@@ -395,9 +516,14 @@ func fleetRevoke(opts docopt.Opts, manifest *protocol.FleetManifest) error {
 	if err != nil {
 		return err
 	}
-	_, err = onchain.Submit(context.Background(), onchain.SubmitParams{
-		Contract: common.Address(manifest.Coordinator), Rpcs: fleetOpts(opts, "--rpc"), Key: relayer,
+	rpcs := fleetOpts(opts, "--rpc")
+	if authority != nil {
+		rpcs = []string{endpoint}
+	}
+	_, err = onchain.Submit(ctx, onchain.SubmitParams{
+		Contract: common.Address(manifest.Coordinator), Rpcs: rpcs, Key: relayer,
 		Calldata: calldata, ChainID: new(big.Int).SetUint64(manifest.ChainID), DryRun: mustBoolOpt(opts, "--dry-run"),
+		RuntimeAdmission: authority.evmAdmission(),
 	})
 	return err
 }

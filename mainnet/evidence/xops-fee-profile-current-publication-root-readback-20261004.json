@@ -1,0 +1,15 @@
+{
+  "schema": "monitor-fee-profile-publication-root-readback-v1",
+  "observed_utc": "2026-10-04T18:00:31.710044+00:00",
+  "independent_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/evidence/xops-fee85-independent.receipt.json",
+    "sha256": "f4bf613388b4cb07c1c57917a78cf4bae2741f454b8b345aeb418ca9f09fcea1"
+  },
+  "published_main": "ba2f53238e2c09747fd7e09122b9b131287fc4dc",
+  "tree": "393e2bcb693822cd7f48ecd8570be74648df199f",
+  "raw_unique_passes": 85,
+  "source_and_tool_hashes_verified": true,
+  "scope": "offline Python + actual promtool/loopback Prometheus; no live activation/fullSNpolicy validation",
+  "live_activation": false,
+  "status": "PUBLISHED_COMPONENT_PASS"
+}

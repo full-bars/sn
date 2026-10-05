@@ -12,6 +12,10 @@ var validatorLibraryStreamsIndependent bool
 // All library initialization has completed here. A package variable's own
 // initializer would run too early to observe side effects of validator init.
 func TestMain(m *testing.M) {
+	if len(os.Args) == 2 && os.Args[1] == productionRuntimeReplayArgument {
+		productionRuntimeReplayTestProcess()
+		return
+	}
 	validatorLibraryStreamsIndependent = independentLibraryStreams(os.Stdout, os.Stderr)
 	os.Exit(m.Run())
 }

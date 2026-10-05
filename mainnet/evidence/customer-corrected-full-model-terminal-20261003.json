@@ -1,0 +1,106 @@
+{
+  "artifact_sha256": {
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "271f74e2f7b19bf61462f6463a819732a8380b9f38e44cefaeea54fef0319355",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "release-gate-services-private-network-current.sh": "fc57687ff22d07af9fba1ad25ef9e24f1278291e3d639f40d9b73a6e15c117a4",
+    "reservation-oracle-1d3c-full-model-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "reservation-oracle-1d3c-full-model-job1.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "reservation-oracle-1d3c-full-model-job1.jsonl": "a244835ac16b10cd51472611cc86b797ad53a67f9a757c1cf684760ea3e9d58c",
+    "reservation-oracle-1d3c-full-model-job1.phase": "5ca2db92e96c0a0815be4c48bda856714e3d2aab7d9a925265803383facc9c05",
+    "reservation-oracle-1d3c-full-model-job1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reservation-oracle-1d3c-full-model-jobs.tsv": "f38231350a809cd172d96e3e4a040620e880bf3f4e46c8def2576fb2df05c58b",
+    "reservation-oracle-1d3c-full-model-network-cleanup.log": "f772151cdb436c5057521165ebd46c8569df71d3701a0a940c29c040161ec994",
+    "reservation-oracle-1d3c-full-model-network.id": "f772151cdb436c5057521165ebd46c8569df71d3701a0a940c29c040161ec994",
+    "reservation-oracle-1d3c-full-model-network.owner": "46f9f650c9608034c4fa4be998326584832b4561bfbb036832c6ca135e2863c0",
+    "reservation-oracle-1d3c-full-model-root-census.json": "697d21ae2c4ffcab8207ea8551a6a514b22d42f125a7d14e7999826c03c897d1",
+    "reservation-oracle-1d3c-full-model-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "reservation-oracle-1d3c-full-model-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "reservation-oracle-1d3c-full-model-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reservation-oracle-1d3c-full-model-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "reservation-oracle-1d3c-full-model-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reservation-oracle-1d3c-full-model-skip-reasons.json": "ab680283389559ee24ccf66cfe1f91809dbb0f7c83d2f74352ae77caa866885a",
+    "reservation-oracle-1d3c-full-model-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-full-model.sh": "ed8cf358c9529880cfaaf6774fc561bb847763b93d2b8ad0776182a1c984001e",
+    "source-readback.json": "ee41423f8266c41adec4db81a96c707c782b6caef9e1e3d41607720d62216bce"
+  },
+  "classification": "TERMINAL_PASS_SCOPED",
+  "command": "go test -json -count=1 -parallel=2 -timeout=165m -run . ./model",
+  "counts": {
+    "fail": 0,
+    "pass": 1473,
+    "skip": 11
+  },
+  "fixture_network_removed": true,
+  "fixture_services_cleanup_exit": 0,
+  "historical_3f32_full_model_failure_receipt_sha256": "0f1575e1ae8859df49d42a60fa34ab446c34eafa44ee8d20bed4092e1687f0aa",
+  "limits": [
+    "Eleven optional or input-dependent roots remain skipped in this exact full suite; they are listed individually and are not counted as passes.",
+    "This full-model result is exact corrected 1d3c source and its private service graph. Later current-module, EVM, capacity, or deployment scopes are separate.",
+    "Nested subtests are excluded from top-level root census."
+  ],
+  "module_selection_count": 647,
+  "package": "./model",
+  "package_terminal": {
+    "action": "pass",
+    "elapsed_seconds": 6572.307
+  },
+  "physical_git_blobs_verified": 5387,
+  "root_verification": {
+    "all11skip_reasons_verified": true,
+    "all1484starts_have_terminal_outcomes": true,
+    "all_fixture_runner_service_exit_records_verified": 0,
+    "artifact_bindings_rehashed": 23,
+    "limits": "Exact1d3c graph only; no f024 integration/current module/deployment qualification.",
+    "network_cleanup_log_matches_exact_owned_network_id": true,
+    "raw_package_terminal_verified": {
+      "action": "pass",
+      "elapsed_seconds": 6572.307
+    },
+    "raw_top_level_counts": {
+      "pass": 1473,
+      "skip": 11
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-customer-reservation-oracles-1d3c-independent-20261003/evidence/reservation-oracle-1d3c-full-model-terminal-receipt.json",
+    "receipt_sha256": "98210622b08dcfc29a951309aad165f1d1cc3ae213a279d62ef4c7cdd94afa0a"
+  },
+  "schema": "sol-reservation-oracle-1d3c-full-model-terminal-v1",
+  "skip_reasons": {
+    "TestAddReferralBonusesGrantsBothSides": [
+      "pro_absent_test.go:119: pro.yml is not present in this environment; see TestProAbsent"
+    ],
+    "TestClientScoreReaderSourceCosts": [
+      "network_client_score_reader_cost_test.go:74: optional local source-load benchmark"
+    ],
+    "TestGeoLite2CitiesAsLegacyRowsResolveToThemselves": [
+      "location_match_test.go:425: no GeoLite2 place list: set PLACES_YML or check out config beside server"
+    ],
+    "TestGeolocationSourceHostsMatchProberSourcesWhenCheckedOutAlongside": [
+      "geolocation_source_pin_model_test.go:128: operator-proxy checkout not found beside this one; set URNETWORK_OPERATOR_PROXY to enable this check"
+    ],
+    "TestNetEscrowRevisionTriggerUsesContractKeyAfterUpgrade": [
+      "test_util.go:962: actual nested plan test requires auto_explain and permission to load it"
+    ],
+    "TestNetworkReferral": [
+      "pro_absent_test.go:119: pro.yml is not present in this environment; see TestProAbsent"
+    ],
+    "TestNetworkReferralCode": [
+      "test_util.go:962: pro.yml is not present in this environment; see TestProAbsent"
+    ],
+    "TestOnboardingRegistryFile": [
+      "onboarding_config_test.go:232: config repo not next to the server checkout: open ../../config/main/onboarding.yml: no such file or directory"
+    ],
+    "TestProConfig": [
+      "pro_test.go:22: pro.yml is not present in this environment; see TestProAbsent"
+    ],
+    "TestReferralBonusCount": [
+      "pro_absent_test.go:119: pro.yml is not present in this environment; see TestProAbsent"
+    ],
+    "TestSubscriberGuardQueryPlan": [
+      "provider_subscriber_eligibility_benchmark_test.go:18: set ARIN_SUBSCRIBER_BENCHMARK=1 for the disposable workload"
+    ]
+  },
+  "source_commit": "1d3c275b698d58c528ff87ac24903e9da1b433ea",
+  "source_tree": "dd7e7c876d678a96c913ecdfd37e122fac17250e",
+  "top_level_root_count": 1484
+}

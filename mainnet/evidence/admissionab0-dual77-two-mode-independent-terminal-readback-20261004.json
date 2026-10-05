@@ -1,0 +1,188 @@
+{
+  "schema": "admissionab0-dual77-two-mode-independent-terminal-readback-v1",
+  "status": "ORIGINAL_FAILURES_REPRODUCED_AND_RETAINED",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-v1.terminal.json",
+      "bytes": 2855,
+      "sha256": "34f44911f51018712e8024e13d556d42d5f8027f811405c7e05aa26d66174356"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-01.receipt.json",
+      "bytes": 4364,
+      "sha256": "373e3666a46d2b27d4f832e68cbf2b4c2c925b8e975fad191103607eec5f7594"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-images-v1.terminal.json",
+      "bytes": 950,
+      "sha256": "6403babcf024318cbc97cc39545713f933232c60645706a4e6b330eccbf10a6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/go-dual77-job-v1.json",
+      "bytes": 8197,
+      "sha256": "2ed77f6f1c9f630b0fef410452b083a51e6395f8c1d18a00803e5706913cebce"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-postbuild-source-closure.receipt.json",
+      "bytes": 33094,
+      "sha256": "2fbd0398402acb13b9c69fa076ccb546fc963786a78013088db51f64432bb73c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-producer-five.receipt.json",
+      "bytes": 5770,
+      "sha256": "9feb9de7dd28686bfc39a358677381562c6acc9fdba7e80c7e74b1968509df7d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-normal-actual-dual-engine.receipt.json",
+      "bytes": 12412,
+      "sha256": "920ef4a28f22ad7b6a316bc267171e2689e013175b4fe180121c4c7a0272410e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-race-actual-dual-engine.receipt.json",
+      "bytes": 12401,
+      "sha256": "f21283b3070ffd4ffbbf540011f030b190ac98b6a6f83d70946f4968859e7b17"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-positives-v1.terminal.json",
+      "bytes": 4118,
+      "sha256": "64882d13458d9ffbeea6d8d77e4ea81f207fd71d4dc9e50d83bfdbc3bf09cb03"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-six-v1.terminal.json",
+      "bytes": 4767,
+      "sha256": "e9b6d6f73fb7582454b7988c6f8ebffd9c2ccccf73f182a11c01baf640c0235f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-controls-v1.terminal.json",
+      "bytes": 3616,
+      "sha256": "5c76d84954542e8cca653555cb4c93d6b5a517414d846422c19e934de715e129"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/images/ab0-go-normal-compile.test",
+      "bytes": 79772936,
+      "sha256": "c35d4da691c03870acd5435f429543ad521e8b5e0203f3c76944cd46edfa7fbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-normal-actual-dual-engine.resources.csv",
+      "bytes": 14886,
+      "sha256": "3c60fd0d3e5065071a2b9fab0148fad366dd4849d53fa1025b096a5ddb32636f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-normal-actual-dual-engine.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-normal-actual-dual-engine.stdout",
+      "bytes": 17420,
+      "sha256": "25730ec20db86e901ca2d00f6366fa9100bb5bb6d6738149094e6352d94ba1b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/images/ade5-capture",
+      "bytes": 53745800,
+      "sha256": "7dbf990f65501c21b4bc3ac3f9f5f719599a9abfba0155cb39fac7fc2537a71c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/images/ade5-replay",
+      "bytes": 51561432,
+      "sha256": "437baed67cb327e4cd0ced3b243c9f4998254eb8da828398f4318705a62ace75"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/images/ab0-go-race-compile.test",
+      "bytes": 107679504,
+      "sha256": "d8d70cac3daf179b20db333630717368dd7391406d5d458d1f4fb63177986c6d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-race-actual-dual-engine.resources.csv",
+      "bytes": 72942,
+      "sha256": "e2ad014f82253c2f72e4af86562b37b0eee88e3e87bc5a619082a9362833b066"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-race-actual-dual-engine.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-race-actual-dual-engine.stdout",
+      "bytes": 17450,
+      "sha256": "e82d5987c580f8f610e74367ab18adb91dca9e8905fde9a9e84073bcf7104d85"
+    }
+  ],
+  "results": [
+    {
+      "mode": "normal",
+      "census": {
+        "run": 19,
+        "pass": 9,
+        "fail": 10,
+        "skip": 0
+      },
+      "failed_roots": [
+        "TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart",
+        "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody",
+        "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects",
+        "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob",
+        "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted",
+        "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput",
+        "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot",
+        "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval",
+        "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint",
+        "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress"
+      ],
+      "diagnostic_excerpt": [
+        "=== RUN   TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart",
+        "economic_conservation_native_renewal_test.go:423: native economic completed block lacks runtime read context",
+        "--- FAIL: TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart (6.47s)",
+        "economic_native_producer_restore_test.go:302: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:329: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:367: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:411: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:449: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:471: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:503: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:524: native economic completed block lacks runtime read context"
+      ],
+      "package_terminal": "fail",
+      "exit": 1,
+      "tree_joined": true
+    },
+    {
+      "mode": "race",
+      "census": {
+        "run": 19,
+        "pass": 9,
+        "fail": 10,
+        "skip": 0
+      },
+      "failed_roots": [
+        "TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart",
+        "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody",
+        "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects",
+        "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob",
+        "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted",
+        "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput",
+        "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot",
+        "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval",
+        "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint",
+        "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress"
+      ],
+      "diagnostic_excerpt": [
+        "=== RUN   TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart",
+        "economic_conservation_native_renewal_test.go:423: native economic completed block lacks runtime read context",
+        "--- FAIL: TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart (31.58s)",
+        "economic_native_producer_restore_test.go:302: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:329: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:367: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:411: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:449: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:471: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:503: native economic completed block lacks runtime read context",
+        "economic_native_producer_restore_test.go:524: native economic completed block lacks runtime read context"
+      ],
+      "package_terminal": "fail",
+      "exit": 1,
+      "tree_joined": true
+    }
+  ],
+  "limits": "Actual original bodies: both modes execute all nineteen roots. Nine retained native restore fixture failures and one durable-state comparison motivate the separately reviewed corrected source; no corrected behavioral success or complete release claim is inferred."
+}

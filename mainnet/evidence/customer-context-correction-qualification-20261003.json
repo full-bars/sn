@@ -1,0 +1,180 @@
+{
+  "author_intake_sha256": "89a65a0f5a6be14456425e8f2e3de52a3d7fc4a32df09af58cc9b23b264c2a68",
+  "bindings": {
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/changed-test.sha256": {
+      "bytes": 190,
+      "sha256": "90ed31bc127f0dd55b4f813451332ba6dd5529a3899c672fbdecae786355648b"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-geolite.log": {
+      "bytes": 49,
+      "sha256": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-job1.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-job1.jsonl": {
+      "bytes": 40196,
+      "sha256": "faef29768ea0eaa8a42e4ee860a1945016434f8912dd3ab163702936d9296965"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-job1.phase": {
+      "bytes": 123,
+      "sha256": "81fc2e97050f10d661e94d3bd8e909e590354ee63d55d00e4a95d76af7ac44eb"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-job1.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-jobs.tsv": {
+      "bytes": 90,
+      "sha256": "01eb5cc7679f0f71408fd7627b5219a2e7817a7813f163dca0d792a896661f4c"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-network-cleanup.log": {
+      "bytes": 65,
+      "sha256": "fd6a1c3453ecac356ba802df331ed515fb5a92d8fb9d1378745601f7ba1ecee8"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-network.id": {
+      "bytes": 65,
+      "sha256": "fd6a1c3453ecac356ba802df331ed515fb5a92d8fb9d1378745601f7ba1ecee8"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-network.owner": {
+      "bytes": 33,
+      "sha256": "8b1664d38a8863175a75bbd825923146649d32824377315fa8a2abccc00d40d9"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-runner.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-services-cleanup.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-services-cleanup.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-services-start.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-services-start.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-normal-test-env.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-geolite.log": {
+      "bytes": 49,
+      "sha256": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-job1.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-job1.jsonl": {
+      "bytes": 40023,
+      "sha256": "5af596e83c04acdb2ed56470b8f9229f251f2eed0ab24a0292499666bf664f47"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-job1.phase": {
+      "bytes": 119,
+      "sha256": "83d16ce087bfe2fdcfab27e6d56d5f4942bb000ae94698813934b537c5a7c70f"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-job1.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-jobs.tsv": {
+      "bytes": 90,
+      "sha256": "01eb5cc7679f0f71408fd7627b5219a2e7817a7813f163dca0d792a896661f4c"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-network-cleanup.log": {
+      "bytes": 65,
+      "sha256": "0dde32a9d0ea38c2af623b50243382956819940af0a8fb374d43ad774663239a"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-network.id": {
+      "bytes": 65,
+      "sha256": "0dde32a9d0ea38c2af623b50243382956819940af0a8fb374d43ad774663239a"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-network.owner": {
+      "bytes": 33,
+      "sha256": "8827f60ea3fbd14435354d5755482ee741397eda84c837d0ef05dd1f2c198852"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-runner.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-services-cleanup.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-services-cleanup.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-services-start.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-services-start.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/context-a85-race-test-env.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/make-empty-geolite.go": {
+      "bytes": 1729,
+      "sha256": "42ba7065e6a8c7bd07a4a2524072ae1c2bd24afa58ab93c851d908781463d711"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/release-gate-services-private-network-current.sh": {
+      "bytes": 13206,
+      "sha256": "fc57687ff22d07af9fba1ad25ef9e24f1278291e3d639f40d9b73a6e15c117a4"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/run-affected.sh": {
+      "bytes": 3293,
+      "sha256": "b7785af8b1ac280e24f78bb0b273bcb2eeb3aafa3bee677204a84abc0691ca08"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/source-join.json": {
+      "bytes": 525,
+      "sha256": "b1120e7f8e0800c1388bcbe233e205ee7f20763772dcad27a3f3d784cf26ed4a"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/vet.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "fixture_cleanup": {
+    "normal": 0,
+    "race": 0
+  },
+  "limits": [
+    "One-line test-only correction; production and module bytes identical Server530.",
+    "Only affected one root and controller vet rerun; Server530 original selected14 normal/race remain separate.",
+    "Original Server530 vet failure preserved."
+  ],
+  "parent_server530_receipt_sha256": "dcdb755ff9542326ae8c8fb6db472307faac1aabe3f7655032b272aa3b1d6e86",
+  "schema": "sol-independent-customer-context-a85-v1",
+  "source_commit": "a85c3e3f88be183e895f735b459d3757ff75341e",
+  "source_join_sha256": "b1120e7f8e0800c1388bcbe233e205ee7f20763772dcad27a3f3d784cf26ed4a",
+  "source_tree": "f9bc99d0a6c4354ecd6e74ec503137af1e2592de",
+  "tests": {
+    "normal": {
+      "TestCustomerChallengeCancellationAfterRealResponseRetainsOriginalRequest": "pass"
+    },
+    "race": {
+      "TestCustomerChallengeCancellationAfterRealResponseRetainsOriginalRequest": "pass"
+    }
+  },
+  "vet_exit": 0
+}

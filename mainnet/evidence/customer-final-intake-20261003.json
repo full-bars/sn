@@ -1,0 +1,17 @@
+{
+  "schema": "coordinator-customer-final-intake-v1",
+  "head": "3f32d7301c9e381eac4de368c62357c14dfc36a7",
+  "tree": "34e5c3c129673fb0d51db8e1af2dda9c5adcb503",
+  "intake_path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-published/evidence/intake-v2.json",
+  "intake_sha256": "3cc5e995411dd006ec7f564bc236fced8fa5ed022017d208ee6833929bf1aeef",
+  "verified_intake_bindings": 26,
+  "verified_server_source_files": 5381,
+  "verified_public_zip_files": {
+    "github.com/urnetwork/connect": 3581,
+    "github.com/urnetwork/sdk": 523
+  },
+  "status": "SOURCE_AND_PUBLIC_DEPENDENCIES_VERIFIED_TESTS_RUNNING",
+  "limits": [
+    "Twenty-root normal/race scope and one full-model run remain pending. No deployment or complete launch acceptance."
+  ]
+}

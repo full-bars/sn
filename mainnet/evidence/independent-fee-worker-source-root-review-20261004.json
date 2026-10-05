@@ -1,0 +1,44 @@
+{
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-continuation/evidence/intake.json",
+    "sha256": "74346b8cc1fb1b58bd4bd80cdbeb658368870b83024a3ed55b90728378bebca2"
+  },
+  "inventory_bindings_verified": 2,
+  "observed_utc": "2026-10-04T04:09:27.244538+00:00",
+  "physical_git_file_bindings_verified": 26,
+  "qualification_required": {
+    "compile_failures": "Retain real compiler diagnostics; no claim compiled or passed from source inspection.",
+    "controls_per_mode": 8,
+    "fixture_rules": "New public fee roots require real synthetic Server964 signed tx/receipt/native proof exports. Existing31337 component roots retain their own original fixture domain. Go peer remains synthetic; actual original-Wasm qualification is a separate unchanged scope.",
+    "go_roots_per_mode": 46,
+    "server_fixture_roots_per_mode": 10,
+    "source_gate": "One corrected union run. Do not run superseded a407/fa13 source separately.",
+    "vets": [
+      "SN ./mainnet",
+      "Server ./strecovery"
+    ]
+  },
+  "remaining_production_requirements": [
+    "Complete fee proof reports still stay hot: authenticated retirement into archive plus retained exact dedup and unknown/known semantics required.",
+    "Fee runtime/profile/engine/checkpoint changes require retained signed revision under the original approval key.",
+    "Opening/execution principal, full Yuma denominator/quantization and complete provider entitlement/funding census remain separate source mechanisms."
+  ],
+  "reviewed_behavior": [
+    "Follow samples do not join the independent fee worker.",
+    "Completed results append fee evidence onto current state; old worker snapshots cannot replace domain cursors.",
+    "Transient failures preserve prior evidence and are retryable; confirmed contradictions quarantine only pinned request.",
+    "Child owns one bounded result slot and is canceled and joined during owner cleanup."
+  ],
+  "schema": "independent-fee-worker-source-root-review-v1",
+  "selected_server_peer": "1709ffe03ffa59ae31441374f3e673793d099764; separate actual compile required",
+  "source": {
+    "clean": true,
+    "head": "663a0ea299e21411a92b9eb064443d7cc9b0b851",
+    "materialization": "Exact Git archive/owned complete checkout, never sparse filesystem copy.",
+    "parent": "fa130b5a83e203cfa901481748581fdd6e8abf05",
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-continuation/sn",
+    "sparse": true,
+    "tree": "6d40cb999fa3ae3a652a5d6b317ab440b6f62c81"
+  },
+  "status": "SOURCE_REVIEWED_NOT_COMPILED_OR_TESTED"
+}

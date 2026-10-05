@@ -1,0 +1,36 @@
+{
+  "author_artifacts_rehashed": 40,
+  "author_receipt_sha256": "0d1ab3ab39601d5ee3537423836f9d55dfbf6599a196a3d424d7143749060d75",
+  "baseline": {
+    "normal": {
+      "fail": 1,
+      "pass": 1
+    },
+    "race": {
+      "fail": 1,
+      "pass": 1
+    }
+  },
+  "baseline_delta": [
+    "durablevolume/constructor_observation_test.go"
+  ],
+  "baseline_failure_cause": "Initial filesystem EIO and EMFILE from both daemon and owner-local constructors lose ErrUnavailable retry classification; invalid EBADF remains caller error.",
+  "baseline_parent_production": "0a5cda0ebe78f6200c4cff6fd3d1aa172a2b172c",
+  "baseline_test_only_commit": "53ad4f995a03c338f04f6a607776355f0a4589e7",
+  "data_floor_bytes": 118111600640,
+  "fixed_commit": "71df099caf3c3a5b2d2512a761b5ad51abd213e6",
+  "fixed_tree": "74be27378b81f209d030b5035238c3af8de03603",
+  "limits": [
+    "59 roots include the earlier inventory-v3 57; counts are not disjoint.",
+    "Exact durablevolume package only, deterministic injected host facts.",
+    "No live mounts, consumer controller, preparation/apply, module publication or deployment authority."
+  ],
+  "manifest_entries": 53,
+  "manifest_sha256": "b92d21816aa364b3fad6545a959e5129d3ad9921f23eb60520b3e5e704f9dd27",
+  "normal_roots_passed": 59,
+  "race_roots_passed": 59,
+  "schema": "sol-constructor-observation-independent-v1",
+  "source_readback_sha256": "1df59081c7ccb35a38d8ab70db85185b3053baaf69621956eb216af95f7d79cb",
+  "status": "PASS_SCOPED",
+  "vet_exit": 0
+}

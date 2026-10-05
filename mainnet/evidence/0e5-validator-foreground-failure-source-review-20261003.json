@@ -1,0 +1,44 @@
+{
+  "schema": "0e5-validator-foreground-failure-source-review-v1",
+  "status": "SIX_PASS_THREE_FAIL_ROOT_CAUSE_FIX_PENDING",
+  "phase_receipt_sha256": "29285d012eade14d4973578f27cc4d963c2c50da9baa4810ddb218d6de357370",
+  "raw": {
+    "bytes": 13669,
+    "path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-10-test-validator-normal-peerfix.jsonl",
+    "sha256": "4e7f71b3dfd1e5a242ddb0bb963cea41f8f3ff6893df50757740f24fbe773835"
+  },
+  "failed_roots": [
+    "TestReleaseForegroundCancellationJoinsBlockedUploadWithoutLosingAppend",
+    "TestReleaseForegroundProgressDuringBlockedHttpAndReplay",
+    "TestReleaseForegroundProgressDuringContinuousActualReplay"
+  ],
+  "source_commit": "0e5ace17d6cdd419331a3dbca13fb3ec96c67808",
+  "source_blobs": {
+    "validator/attempt_cut_v2_seal.go": "5d52fff4b6d79422c6ab46fc1fa2647bcc4eef1b",
+    "validator/attempt_record_store.go": "a637a414b3dda9fe3542f0475a9dc0f28aa7c6c6",
+    "validator/attempt_ledger.go": "91cea7cf1256cbdec909e2baf6937bad81f9d1ec",
+    "validator/release_foreground_work_test.go": "3fc038d2ba7ec34cae96d774d21fa049ca431168",
+    "validator/attempt_record_store_test.go": "d7613c32635756bb2ae447ce4bc9b17d6a696df4"
+  },
+  "findings": [
+    "Sealer invokes remote record writes inside ledger Walk while the store retains its sole walkGate. A completed RunTrail projects disk proofs through projectDiskAttemptProofs and another ledger Walk, so mid-stream upload blocks foreground completion. Stats catchup is another reader sharing the gate. Signature-checked point reads over a fixed hash-bound prefix must release read ownership before remote callbacks; successor implementation and causal controls remain unqualified.",
+    "Continuous replay fixture starts with16 M8 trails, filling its128 record test capacity before asking for another8 records. Explicit fixture capacity must cover intended work; real over-capacity refusal must remain tested."
+  ],
+  "required_work": [
+    "Prove blocked mid-stream upload permits a complete foreground trail and original prefix isolation without unbounded memory/snapshots.",
+    "Force cancellation at the owned blocked operation and join it without publishing a partial cut.",
+    "Correct intended136-plus fixture resource envelope and retain deterministic limit refusal."
+  ],
+  "limits": [
+    "Source call-chain and matching normal/race failures establish the repair target; the successor still requires deterministic causal qualification.",
+    "Mainnet37 and durablehead passes retained independently.",
+    "Original normal/race failures remain retained."
+  ],
+  "race_phase": {
+    "path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-13-test-validator-race-peerfix-runtime-receipt.json",
+    "sha256": "0a1b9f7e5372bd5237d7233267b046eb1cb1f69ea719cf01b70580c1988e374e",
+    "pass": 6,
+    "fail": 3,
+    "skip": 0
+  }
+}

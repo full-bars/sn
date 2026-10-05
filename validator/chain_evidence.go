@@ -44,6 +44,8 @@ func (self *ChainClient) validatorEvidenceViewsAtHashContext(ctx context.Context
 	if ctx == nil || self == nil || self.client == nil || self.chainId == nil || len(recordCalls) == 0 || len(recordCalls) > 2 {
 		return nil, errors.New("validator evidence reader is unavailable")
 	}
+	ctx, cancel := self.chainReadOperationContext(ctx)
+	defer cancel()
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -65,10 +67,10 @@ func (self *ChainClient) validatorEvidenceViewsAtHashContext(ctx context.Context
 		return nil, err
 	}
 	var code hexutil.Bytes
-	callCtx, cancel := context.WithTimeout(ctx, chainCallTimeout)
-	err = self.client.Client().CallContext(callCtx, &code, "eth_getCode", journal, selector)
-	err = errors.Join(err, callCtx.Err())
-	cancel()
+	err = self.retryChainRead(ctx, func(callCtx context.Context) error {
+		code = nil
+		return self.client.Client().CallContext(callCtx, &code, "eth_getCode", journal, selector)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("validator evidence runtime at canonical block: %w", err)
 	}
@@ -111,6 +113,37 @@ func (self *ChainClient) validatorEvidenceViewsAtHashContext(ctx context.Context
 		return nil, err
 	}
 	return outputs[len(expected):], nil
+}
+
+// ValidatorEvidenceRuntimeHashAtHashContext observes the evidence journal's
+// deployed runtime bytecode hash at one canonical block, the value a fresh
+// activation pins so every later loader re-checks the same executable. It is
+// an observation, not approval of the deployment.
+func (self *ChainClient) ValidatorEvidenceRuntimeHashAtHashContext(ctx context.Context, journal common.Address, block uint64, blockHash [32]byte) ([32]byte, error) {
+	if ctx == nil || self == nil || self.client == nil || journal == (common.Address{}) {
+		return [32]byte{}, errors.New("validator evidence runtime reader is unavailable")
+	}
+	ctx, cancel := self.chainReadOperationContext(ctx)
+	defer cancel()
+	if err := self.validateBlockIdentityContext(ctx, block, blockHash); err != nil {
+		return [32]byte{}, err
+	}
+	selector, err := chainBlockHashSelector(block, blockHash)
+	if err != nil {
+		return [32]byte{}, err
+	}
+	var code hexutil.Bytes
+	err = self.retryChainRead(ctx, func(callCtx context.Context) error {
+		code = nil
+		return self.client.Client().CallContext(callCtx, &code, "eth_getCode", journal, selector)
+	})
+	if err != nil {
+		return [32]byte{}, fmt.Errorf("validator evidence runtime at canonical block: %w", err)
+	}
+	if len(code) == 0 || len(code) > 24*1024 {
+		return [32]byte{}, errors.New("validator evidence journal has no bounded deployed bytecode")
+	}
+	return [32]byte(crypto.Keccak256Hash(code)), nil
 }
 
 // Read back the entire independently expected activation. The two snapshot

@@ -1,0 +1,345 @@
+{
+  "author_intake_sha256": "99b4a9c09ed2b3ccfaae9a1202f8bdf584182e7f47bfeff5614e689a3e703b05",
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/intake.json": {
+      "bytes": 25659,
+      "sha256": "99b4a9c09ed2b3ccfaae9a1202f8bdf584182e7f47bfeff5614e689a3e703b05"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/sn.mod": {
+      "bytes": 11930,
+      "sha256": "972d10d6aeba804de7128ea16cfdc2a7d7a86eece9646a8939b05f51fed0608a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/sn.sum": {
+      "bytes": 66880,
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-graph-corrected.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-graph-corrected.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-graph-corrected.stderr": {
+      "bytes": 280,
+      "sha256": "9b055a9d9abd42a522945162ed6e9a9106e4befc25c75e024e11837c15ad8a78"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-graph-corrected2.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-graph-corrected2.jsonl": {
+      "bytes": 174460,
+      "sha256": "d55a84b7034fedee9cf8589501f606c4de770d1172f00f97a840fada3c23f842"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-graph-corrected2.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-graph.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-graph.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-graph.stderr": {
+      "bytes": 419,
+      "sha256": "3240c0dfe85e7e920d48d6e53cb86d8c60b4ecdd6558529304c7e40f71693df5"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/module-hashes.txt": {
+      "bytes": 300,
+      "sha256": "d09288c46ec13dfe81a2dc7cc43b6fa7af39d085746e002ca965c729dd85ddd7"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-jobs.tsv": {
+      "bytes": 3060,
+      "sha256": "491d84b141b0346afcac10f55a450334b285024bfcdd20964ad385f974267012"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-new-native-economic.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-new-native-economic.jsonl": {
+      "bytes": 14739,
+      "sha256": "06f078e08acab552dfc6cc724af521b01513a6848a1782556f9f133f4dbf3cfb"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-new-native-economic.phase": {
+      "bytes": 99,
+      "sha256": "3fe257759305f1bfd3446475a300560b1f8743d578662a1c693e90c2437525d5"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-new-native-economic.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-runner.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-shared-decoder-neighbors.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-shared-decoder-neighbors.jsonl": {
+      "bytes": 35521,
+      "sha256": "a0f06e5f36e1de469104af79f1eeee027751dde7531765b3b4f0d1ab56afe87e"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-shared-decoder-neighbors.phase": {
+      "bytes": 109,
+      "sha256": "6a7381f490862fc1442b585d05b9da78a620b5470abc045799ce8be9d019249f"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/normal-shared-decoder-neighbors.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-jobs.tsv": {
+      "bytes": 3060,
+      "sha256": "491d84b141b0346afcac10f55a450334b285024bfcdd20964ad385f974267012"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-new-native-economic.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-new-native-economic.jsonl": {
+      "bytes": 14745,
+      "sha256": "b00547d6a9622846b4a01bb4fa231a82d15a2dedb9afb7175b6b9f6617c51754"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-new-native-economic.phase": {
+      "bytes": 99,
+      "sha256": "ee0aa26591468da60193be69074ed734e6f9cf9c2608f92c00adb6dfd73eaef9"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-new-native-economic.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-runner.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-shared-decoder-neighbors.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-shared-decoder-neighbors.jsonl": {
+      "bytes": 35534,
+      "sha256": "4b64cbd8915eb4b0e6efacca5bb5a04b72a43d4bde62f57a2ce471acabe0fbaa"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-shared-decoder-neighbors.phase": {
+      "bytes": 109,
+      "sha256": "180b724a9b778a69b6cf715f3e6db87f77d0a3352370f5c6a901cbd9013c5018"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/race-shared-decoder-neighbors.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/run-economic.sh": {
+      "bytes": 1532,
+      "sha256": "aee1aa83aa81789a6a8a379c320c20454db43efe157bd2741322d774dcfc535b"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/sn-corrected.mod": {
+      "bytes": 11834,
+      "sha256": "a4f1f94053874ef26477861acb050f205d2c1cff2444173fae236b144f1c46b7"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/sn-corrected.sum": {
+      "bytes": 66880,
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/sn-corrected2.mod": {
+      "bytes": 11839,
+      "sha256": "8be7e9a76fa3de2f10558bcebd413aa3943d88d403d878b0d63d51acd7d54b83"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/sn-corrected2.sum": {
+      "bytes": 66880,
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/sn.mod": {
+      "bytes": 11832,
+      "sha256": "22c349635d2be8966977c586f448ef9bdc7403ca53d7a97f687d7211f782f67f"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/sn.sum": {
+      "bytes": 66880,
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/source-preflight.json": {
+      "bytes": 2112,
+      "sha256": "476ed1c2247aacf7588d51ec0592eb57da89c5ce1661b09c48ccd5a888fe0ebb"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-economic-monitor-00d-independent-20261003/evidence/vet.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "counts": {
+    "fail": 0,
+    "normal": 50,
+    "race": 50,
+    "skip": 0
+  },
+  "created_utc": "2026-10-03T04:36:31.665117+00:00",
+  "limits": [
+    "Selected50 roots and mainnet vet only. Eight operative causal control groups per mode are pending separate qualification.",
+    "No current published08d graph, complete launch, live chain or final economics approval claim."
+  ],
+  "modes": {
+    "normal": [
+      {
+        "exit": 0,
+        "name": "new-native-economic",
+        "package": "./mainnet",
+        "roots": {
+          "TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard": "pass",
+          "TestEconomicNativeFeesRefuseBorrowedPhaseAndDuplicatedOutcome": "pass",
+          "TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage": "pass",
+          "TestMonitorEconomicNativePublicHistoricalCanonicalChangeRefusesReset": "pass",
+          "TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit": "pass",
+          "TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping": "pass",
+          "TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage": "pass",
+          "TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole": "pass",
+          "TestMonitorEconomicNativePublicPartialOutageKeepsCursorUntilRecovery": "pass",
+          "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees": "pass"
+        }
+      },
+      {
+        "exit": 0,
+        "name": "shared-decoder-neighbors",
+        "package": "./mainnet",
+        "roots": {
+          "TestEconomicEmissionAuthenticatesCompatibleEventReindex": "pass",
+          "TestEconomicEmissionCollectsContiguousEvidenceWithoutClaimingTarget": "pass",
+          "TestEconomicEmissionCommandKeepsSuccessAndPartialOutcomeGatesUnresolved": "pass",
+          "TestEconomicEmissionContextAuthenticatesMetadataSemantics": "pass",
+          "TestEconomicEmissionContextRejectsMalformedEnvelope": "pass",
+          "TestEconomicEmissionDistinguishesNullEventsFromMissingResult": "pass",
+          "TestEconomicEmissionObservesBurnWithoutPassingRecycleGate": "pass",
+          "TestEconomicEmissionObservesOwnerTakeoverUidAppend": "pass",
+          "TestEconomicEmissionObservesTempoResetWithoutConsumedEpoch": "pass",
+          "TestEconomicEmissionRejectsAnchorAndClosingCanonicalConflicts": "pass",
+          "TestEconomicEmissionRejectsBodyCommitmentAndEpochCorrespondenceConflicts": "pass",
+          "TestEconomicEmissionRejectsChangedMetadataSemantics": "pass",
+          "TestEconomicEmissionRejectsDeferredEpochAnchorReset": "pass",
+          "TestEconomicEmissionRejectsDuplicateTruncatedAndOverboundEvents": "pass",
+          "TestEconomicEmissionRejectsGenerationChangeAndUnapprovedMechanism": "pass",
+          "TestEconomicEmissionRejectsMissingTerminalEventForConsumedEpoch": "pass",
+          "TestEconomicEmissionRejectsUnboundedPolicyAndPreservesCancellation": "pass",
+          "TestEconomicEmissionRejectsWrongPhaseAndAdditionalMechanism": "pass",
+          "TestEconomicEmissionRetainsSkippedAndDeferredEpochs": "pass",
+          "TestEconomicEmissionTakeoverRejectsUnexplainedUidVector": "pass",
+          "TestEconomicEmissionTakeoverWithoutAppendRetainsRecipientUncertainty": "pass",
+          "TestEconomicEmissionTempoContextPreservesUncheckedAndScheduledUpdates": "pass",
+          "TestEconomicEmissionTempoContextRetainsOrderedWrites": "pass",
+          "TestEconomicEmissionTempoResetRejectsUnexplainedState": "pass",
+          "TestEconomicEmissionTraversesUnrelatedEventsBeforeReturningTarget": "pass",
+          "TestEconomicEmissionUsesExactAlphaBeyondUint64AndLeavesRoundingUnknown": "pass",
+          "TestEconomicEmissionUsesParentRuntimeAndRetainsEventsAtUnknownUpgrade": "pass",
+          "TestEconomicEmissionZeroIncentiveDoesNotEraseMinerTranche": "pass",
+          "TestMonitorClaimPublicExpectedPoolObservesAcceptedNotPaid": "pass",
+          "TestMonitorClaimPublicLostAckReopensExactCheckpoint": "pass",
+          "TestOwnerTrimReceiptCanonicalFinancialOutcomeSurvivesCensusGap": "pass",
+          "TestOwnerTrimReceiptEventAssociationPreservesRootRequirements": "pass",
+          "TestOwnerTrimReceiptRejectsBodyEventAndCanonicalConflicts": "pass",
+          "TestRootReceiptCancellationPreservesUnresolvedAction": "pass",
+          "TestRootReceiptCanonicalInclusion": "pass",
+          "TestRootReceiptDispatchFailure": "pass",
+          "TestRootReceiptRejectsAdjacentAccountAndFeeWidthDrift": "pass",
+          "TestRootReceiptRejectsAmbiguousEvents": "pass",
+          "TestRootReceiptRejectsCorruptChainEvidence": "pass",
+          "TestRootReceiptUpgradeUsesParentAndRetainsUnapprovedHead": "pass"
+        }
+      }
+    ],
+    "race": [
+      {
+        "exit": 0,
+        "name": "new-native-economic",
+        "package": "./mainnet",
+        "roots": {
+          "TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard": "pass",
+          "TestEconomicNativeFeesRefuseBorrowedPhaseAndDuplicatedOutcome": "pass",
+          "TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage": "pass",
+          "TestMonitorEconomicNativePublicHistoricalCanonicalChangeRefusesReset": "pass",
+          "TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit": "pass",
+          "TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping": "pass",
+          "TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage": "pass",
+          "TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole": "pass",
+          "TestMonitorEconomicNativePublicPartialOutageKeepsCursorUntilRecovery": "pass",
+          "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees": "pass"
+        }
+      },
+      {
+        "exit": 0,
+        "name": "shared-decoder-neighbors",
+        "package": "./mainnet",
+        "roots": {
+          "TestEconomicEmissionAuthenticatesCompatibleEventReindex": "pass",
+          "TestEconomicEmissionCollectsContiguousEvidenceWithoutClaimingTarget": "pass",
+          "TestEconomicEmissionCommandKeepsSuccessAndPartialOutcomeGatesUnresolved": "pass",
+          "TestEconomicEmissionContextAuthenticatesMetadataSemantics": "pass",
+          "TestEconomicEmissionContextRejectsMalformedEnvelope": "pass",
+          "TestEconomicEmissionDistinguishesNullEventsFromMissingResult": "pass",
+          "TestEconomicEmissionObservesBurnWithoutPassingRecycleGate": "pass",
+          "TestEconomicEmissionObservesOwnerTakeoverUidAppend": "pass",
+          "TestEconomicEmissionObservesTempoResetWithoutConsumedEpoch": "pass",
+          "TestEconomicEmissionRejectsAnchorAndClosingCanonicalConflicts": "pass",
+          "TestEconomicEmissionRejectsBodyCommitmentAndEpochCorrespondenceConflicts": "pass",
+          "TestEconomicEmissionRejectsChangedMetadataSemantics": "pass",
+          "TestEconomicEmissionRejectsDeferredEpochAnchorReset": "pass",
+          "TestEconomicEmissionRejectsDuplicateTruncatedAndOverboundEvents": "pass",
+          "TestEconomicEmissionRejectsGenerationChangeAndUnapprovedMechanism": "pass",
+          "TestEconomicEmissionRejectsMissingTerminalEventForConsumedEpoch": "pass",
+          "TestEconomicEmissionRejectsUnboundedPolicyAndPreservesCancellation": "pass",
+          "TestEconomicEmissionRejectsWrongPhaseAndAdditionalMechanism": "pass",
+          "TestEconomicEmissionRetainsSkippedAndDeferredEpochs": "pass",
+          "TestEconomicEmissionTakeoverRejectsUnexplainedUidVector": "pass",
+          "TestEconomicEmissionTakeoverWithoutAppendRetainsRecipientUncertainty": "pass",
+          "TestEconomicEmissionTempoContextPreservesUncheckedAndScheduledUpdates": "pass",
+          "TestEconomicEmissionTempoContextRetainsOrderedWrites": "pass",
+          "TestEconomicEmissionTempoResetRejectsUnexplainedState": "pass",
+          "TestEconomicEmissionTraversesUnrelatedEventsBeforeReturningTarget": "pass",
+          "TestEconomicEmissionUsesExactAlphaBeyondUint64AndLeavesRoundingUnknown": "pass",
+          "TestEconomicEmissionUsesParentRuntimeAndRetainsEventsAtUnknownUpgrade": "pass",
+          "TestEconomicEmissionZeroIncentiveDoesNotEraseMinerTranche": "pass",
+          "TestMonitorClaimPublicExpectedPoolObservesAcceptedNotPaid": "pass",
+          "TestMonitorClaimPublicLostAckReopensExactCheckpoint": "pass",
+          "TestOwnerTrimReceiptCanonicalFinancialOutcomeSurvivesCensusGap": "pass",
+          "TestOwnerTrimReceiptEventAssociationPreservesRootRequirements": "pass",
+          "TestOwnerTrimReceiptRejectsBodyEventAndCanonicalConflicts": "pass",
+          "TestRootReceiptCancellationPreservesUnresolvedAction": "pass",
+          "TestRootReceiptCanonicalInclusion": "pass",
+          "TestRootReceiptDispatchFailure": "pass",
+          "TestRootReceiptRejectsAdjacentAccountAndFeeWidthDrift": "pass",
+          "TestRootReceiptRejectsAmbiguousEvents": "pass",
+          "TestRootReceiptRejectsCorruptChainEvidence": "pass",
+          "TestRootReceiptUpgradeUsesParentAndRetainsUnapprovedHead": "pass"
+        }
+      }
+    ]
+  },
+  "modfile_preflight_correction": [
+    "Two own-path remap errors failed before tests and are retained as separate raw files.",
+    "Corrected2 remap retains exact published versions and byte-equal local source identities."
+  ],
+  "schema": "sol-independent-economic00d-product-v1",
+  "selected_graph": {
+    "connect": "v0.0.0-20261003021534-5def2fa4391b",
+    "modules": 636,
+    "sctp": "v0.0.0-20261002163341-6443417d70dc",
+    "sdk": "v0.0.0-20261003021240-95ccd57da971",
+    "server": "0e04f0381f813acff45b9c9af3d1a5b93e7d7ccf"
+  },
+  "source_commit": "00d7efcd18c3a4d08c2883de9c50bb6376cba716",
+  "source_preflight_sha256": "476ed1c2247aacf7588d51ec0592eb57da89c5ce1661b09c48ccd5a888fe0ebb",
+  "source_tree": "c7033a67db36e05bda50ae505922caaad80e044b",
+  "vet": {
+    "exit": 0,
+    "package": "./mainnet"
+  }
+}

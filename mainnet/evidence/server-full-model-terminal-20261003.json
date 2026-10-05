@@ -1,0 +1,136 @@
+{
+  "scope": "Independent terminal readback of original Server5f model run; failed suite, not readiness approval",
+  "server_commit": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+  "top_level_counts": {
+    "run": 1535,
+    "pass": 1507,
+    "fail": 17,
+    "skip": 11
+  },
+  "unfinished_roots": [],
+  "package_terminal": {
+    "Time": "2026-10-03T21:23:36.372049148Z",
+    "Action": "fail",
+    "Package": "github.com/urnetwork/server/model",
+    "Elapsed": 8315.162
+  },
+  "failures": [
+    "TestPaymentPlanSubsidy",
+    "TestContractLifecycleEscrowBranchClockGuardRejectsMissingOrLateLocks",
+    "TestContractLifecycleWritesUsePrimaryDatabaseClockAfterLocks",
+    "TestContractPayoutParticipantMatrix",
+    "TestCompanionContractPayoutParticipantsJoinByStreamId",
+    "TestContractParticipantPayoutDisputeOutcomes",
+    "TestContractExtenderPayoutParticipantMatrix",
+    "TestCompanionContractExtenderPayoutPaysTheReversedParties",
+    "TestContractPayoutPreservesSharedNetworkProviderUsage",
+    "TestStatsProviderPayoutsPreserveSharedNetworkSettlement",
+    "TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy",
+    "TestForceCloseCheckpointDisputeConvergesInOneSweep",
+    "TestForceCloseHealthyFinalizationSkipsDisputeSettlement",
+    "TestEscrow",
+    "TestCompanionEscrowAndCheckpoint",
+    "TestPublicRedisLongLivedGrantRetainsOriginalRequestLease",
+    "TestRemoveCompletedContractsCascades"
+  ],
+  "skips": [
+    "TestGeolocationSourceHostsMatchProberSourcesWhenCheckedOutAlongside",
+    "TestGeoLite2CitiesAsLegacyRowsResolveToThemselves",
+    "TestClientScoreReaderSourceCosts",
+    "TestNetworkReferralCode",
+    "TestNetworkReferral",
+    "TestAddReferralBonusesGrantsBothSides",
+    "TestOnboardingRegistryFile",
+    "TestReferralBonusCount",
+    "TestProConfig",
+    "TestSubscriberGuardQueryPlan",
+    "TestNetEscrowRevisionTriggerUsesContractKeyAfterUpgrade"
+  ],
+  "process_observation": "Original runner183807, go184935 and model190558 absent after terminal",
+  "cleanup_observation": "Exit0; original owned PostgreSQL/Redis container IDs and Docker network ID absent in independent Docker lists",
+  "resource_observation": {
+    "container_available_samples": {
+      "postgres": 7804,
+      "redis": 7799
+    },
+    "container_coverage_complete": true,
+    "csv_bytes": 1397662,
+    "csv_complete": true,
+    "csv_sha256": "7794b2fb63d7516db6ae01a02a0fabe100260e20f0af463a0da6df2eb2d54853",
+    "errors": [],
+    "final": {
+      "data_available_bytes": 113682518016,
+      "data_available_inodes": 94249701,
+      "data_status": "available",
+      "docker_root_available_bytes": 304432336896,
+      "docker_root_available_inodes": 50991154,
+      "docker_root_status": "available",
+      "kind": "final",
+      "memory_available_bytes": 122106437632,
+      "memory_status": "available",
+      "postgres_cgroup_memory_bytes": null,
+      "postgres_error_type": "",
+      "postgres_status": "absent",
+      "redis_cgroup_memory_bytes": null,
+      "redis_error_type": "",
+      "redis_status": "absent",
+      "sequence": 7806,
+      "utc": "2026-10-03T21:23:38.366779+00:00"
+    },
+    "final_sample": true,
+    "minimum": {
+      "data": 113357418496,
+      "docker_root": 304431104000,
+      "memory": 120206880768
+    },
+    "observation_failures": 0,
+    "qualified": true,
+    "rows": 7806,
+    "status": "COMPLETE"
+  },
+  "bound_evidence": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-full-model-job1.jsonl",
+      "bytes": 53466031,
+      "sha256": "aff5cf83bae0a65f233e8f3a354a260841172d5ff7ec8b166c2003a0d60d8927"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/execution-ledger.json",
+      "bytes": 15060,
+      "sha256": "1cfcafda798978ead36edf69dac9c11ceddcd7582d254d88eb6206f4d99e8302"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-full-model-job1.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-full-model-runner.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-full-model-services-cleanup.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-full-model-network-cleanup.log",
+      "bytes": 65,
+      "sha256": "0a8022465989cbd01dd9f2a47b165db2c78cec8c984d1b31c4bca5a5aef6d796"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/phase-fixture_full_model_joined_cleanup.resource.csv",
+      "bytes": 1397662,
+      "sha256": "7794b2fb63d7516db6ae01a02a0fabe100260e20f0af463a0da6df2eb2d54853"
+    }
+  ],
+  "source_forecast_census": "Reconciled:1539 forecast declarations minus four non-test Testing_ helpers equals1535 actual roots; no missing or unfinished tests.",
+  "next_action": "Retain completed outcomes; qualify expanded17-failure correction and exact input-dependent skipped roots after fresh resource admission. No broad model restart or timeout continuation.",
+  "non_test_forecast_helpers": [
+    "Testing_CreateLegacyGuestNetwork",
+    "Testing_CreateProviderAtLocation",
+    "Testing_CreateSettledCompanionContract",
+    "Testing_CreateSettledContract"
+  ]
+}

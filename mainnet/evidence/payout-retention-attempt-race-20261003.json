@@ -1,0 +1,75 @@
+{
+  "files": {
+    "attempt-race-controller.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "attempt-race-controller.jsonl": "88d36db615c3c00fd5c8626d9150be4c4131b47050b00d1859012e9ce3cacd7f",
+    "attempt-race-controller.phase": "daaf9d8f77ee58c1af9863018f5dafa10aa35cfb9e35315880ebe195d245a101",
+    "attempt-race-controller.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attempt-race-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "attempt-race-model.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "attempt-race-model.jsonl": "b8a1ef29192ca8104ab2365461e963e1ebd4d241a27887ab5cd30dfe4158f3d9",
+    "attempt-race-model.phase": "32f8465d22d0a4fc00b2f1aafa6f519aeb514587f4031df807970448a391f50f",
+    "attempt-race-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attempt-race-network-cleanup.log": "634b1eb9536cc815dd1658713cf9bfbf1bdc79eedd2023ce51f3fe35d3ca9f65",
+    "attempt-race-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "attempt-race-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "attempt-race-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "attempt-race-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "module-graph.jsonl": "05b2949a956b5a76d00efd3b2833bcee79c3d0ba8481f844113a1ed0befc88b7",
+    "run-attempt-race-630.sh": "71c9b9c1e1ffe6ddad4424bc207114cda896b2782dc4cc43c8fc8e21fedec371",
+    "source-fence.json": "d727a1b901d06b7e97ed0f6f47510c5b3bc6b6cbc9b51f650cc1c4b709f2e3c3"
+  },
+  "limits": [
+    "Fourteen disjoint affected financial roots; three changed-fixture roots have a separate race receipt.",
+    "Full model suite is running separately."
+  ],
+  "owned_services_cleanup_exit": 0,
+  "race_reports": 0,
+  "schema": "sol-provider-cutover-630-financial-attempt-race-v1",
+  "scopes": [
+    {
+      "exit": 0,
+      "expected": 2,
+      "jsonl_sha256": "b8a1ef29192ca8104ab2365461e963e1ebd4d241a27887ab5cd30dfe4158f3d9",
+      "package": "./model",
+      "race_reports": 0,
+      "roots": {
+        "TestProviderTransitionLegacyRecoveryBoundedCensusDoesNotStarve": "pass",
+        "TestProviderTransitionLegacyRecoveryRefusesPartialOriginalCensus": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "expected": 12,
+      "jsonl_sha256": "88d36db615c3c00fd5c8626d9150be4c4131b47050b00d1859012e9ce3cacd7f",
+      "package": "./controller",
+      "race_reports": 0,
+      "roots": {
+        "TestProviderTransitionAmountChangedAfterPublicReadRetriesWithoutSend": "pass",
+        "TestProviderTransitionAttemptJournalFailureRollsBackReset": "pass",
+        "TestProviderTransitionFinalCircleBindsActualArguments": "pass",
+        "TestProviderTransitionHistoricalInflightExcessRemainsVisible": "pass",
+        "TestProviderTransitionInvalidDestinationCannotClearAcceptedAttempt": "pass",
+        "TestProviderTransitionLateAcceptancePreservesNewAttemptAndFlagsConflict": "pass",
+        "TestProviderTransitionMissingAndInactiveWalletRemainPending": "pass",
+        "TestProviderTransitionRepeatedCancellationRetainsSameComponentsAndHistory": "pass",
+        "TestProviderTransitionResetFailureRollsBackAttemptJournal": "pass",
+        "TestProviderTransitionStaleProcessorResponsesCannotMutateNewAttempt": "pass",
+        "TestProviderTransitionSubFeeOriginalIsHeldNotCanceled": "pass",
+        "TestProviderTransitionWalletChangedAfterPublicReadRetriesWithoutSend": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source": {
+    "module_graph_sha256": "05b2949a956b5a76d00efd3b2833bcee79c3d0ba8481f844113a1ed0befc88b7",
+    "server_commit": "630271301fdc18614cae6af76fed7d8c0c2c8ac4",
+    "server_tree": "efe622382434f641f93161eb64727db89d71b33c",
+    "source_fence_sha256": "d727a1b901d06b7e97ed0f6f47510c5b3bc6b6cbc9b51f650cc1c4b709f2e3c3"
+  },
+  "status": "PASS_SCOPED",
+  "total_fail": 0,
+  "total_pass": 14,
+  "total_skip": 0,
+  "total_unique_roots": 14
+}

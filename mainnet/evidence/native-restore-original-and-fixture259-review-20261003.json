@@ -1,0 +1,456 @@
+{
+  "actual_test_only_delta": {
+    "git_blob": "e64ea03e47e7bb88b1839a23b917d0bbc1a7022a",
+    "path": "mainnet/monitor_economic_native_restore_test.go",
+    "sha256": "84536c13af8f80117ab9e89c77d41a299c25bd6310a3fb6fa0594ece605472a1"
+  },
+  "artifact_bindings_verified": 83,
+  "limits": [
+    "Original full512 normal PASS/race sample timeout retained; not corrected by affected3 scope.",
+    "Four core roots pass normal/race;3 affected SN roots now pass normal/race; these do not qualify complete cross-root cohort.",
+    "Raw source inventory receipts bound; no independent entirephysicalsource census asserted here.",
+    "No mainnet deployment or actual physical backup/restore rehearsal."
+  ],
+  "receipts": [
+    {
+      "bindings": [
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/ancestry-preflight-core-normal.txt",
+          "sha256": "9eb6d529bc9683bc0fd5529f3ffba81344b860406da0d5b5ed01715fd264c655"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/ancestry-preflight-core-race.txt",
+          "sha256": "9eb6d529bc9683bc0fd5529f3ffba81344b860406da0d5b5ed01715fd264c655"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/ancestry-preflight-sn-cheap-normal.txt",
+          "sha256": "9eb6d529bc9683bc0fd5529f3ffba81344b860406da0d5b5ed01715fd264c655"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/ancestry-preflight-sn-cheap-race.txt",
+          "sha256": "9eb6d529bc9683bc0fd5529f3ffba81344b860406da0d5b5ed01715fd264c655"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/ancestry-preflight-sn-rest-normal.txt",
+          "sha256": "9eb6d529bc9683bc0fd5529f3ffba81344b860406da0d5b5ed01715fd264c655"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/ancestry-preflight-sn-rest-race.txt",
+          "sha256": "9eb6d529bc9683bc0fd5529f3ffba81344b860406da0d5b5ed01715fd264c655"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/ancestry-preflight-vet-core-normal.txt",
+          "sha256": "9eb6d529bc9683bc0fd5529f3ffba81344b860406da0d5b5ed01715fd264c655"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/ancestry-preflight-vet-sn-normal.txt",
+          "sha256": "9eb6d529bc9683bc0fd5529f3ffba81344b860406da0d5b5ed01715fd264c655"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/ancestry-preflight.txt",
+          "sha256": "9eb6d529bc9683bc0fd5529f3ffba81344b860406da0d5b5ed01715fd264c655"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/connect-deps.txt",
+          "sha256": "b1edf3742b15904665a54710059645a38139ef669c534d3042f17f053d3955be"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/connect-modules.jsonl",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/fixture-preflight.json",
+          "sha256": "3eec54d565d732eb393a4ff5a519c24a2dfeb39ea6ee7bfba9b29af3c752be77"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/live-full512-native-history-request.json",
+          "sha256": "4d62463a6ac1a2e1ec769ca34410771d1d2f8684205ef8ba18350164aef82958"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/live-full512-request.json",
+          "sha256": "e01239534fdea246a06b635111bd1f7f88967480c670760112e761a5c0c27d64"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/native-d3d-original-partial-receipt.json",
+          "sha256": "5b664f4352e71e5715fc5f1576ee1dfe864a8f32feea3416888f05b24ef07356"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/nofile-soft-raised.txt",
+          "sha256": "131e490ede5d344e5a8539d4a5335ccc70db7eacb397b876cffc72578b1331bf"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/nofile-soft.txt",
+          "sha256": "4f71bb761ace37c88826cd8cc1c948e1cf5b5d0cd153dc651a6efdb3dfb9f2b1"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-core-normal.exit",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-core-normal.jsonl",
+          "sha256": "f68b90f2c5a44b5621894fdb5e92ec06844cdbe4e4b9dc95128e49b09b8800ff"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-core-normal.phase",
+          "sha256": "1c5ac09e9e2976eef8ca0b4495e930f841097458a10cbefe841168766c28e743"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-core-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-core-race.exit",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-core-race.jsonl",
+          "sha256": "708560387a2d6ee24bec49ad9072a542e7804b06ce00ae67db63a7c907712712"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-core-race.phase",
+          "sha256": "a4acf7b867bfef58c908b214023f27386d868b906a60ab500d57d364e2d48a61"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-core-race.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-cheap-normal.exit",
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-cheap-normal.jsonl",
+          "sha256": "b8605c47f2bdadab84cdea0b7e53500eedcfd1d3f4ec2525197027fd229d49c2"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-cheap-normal.phase",
+          "sha256": "d8e9354fd3649243dd59af502e699e6a22c8ddbb469bc776823277b7f492fb4b"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-cheap-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-cheap-race.exit",
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-cheap-race.jsonl",
+          "sha256": "0a4042abd478ec892592eaa7057692d0ba872552c02d88686d2312ec886aec2f"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-cheap-race.phase",
+          "sha256": "b8b021382a82b6c94fb75b72538b43b9f648c0fb1c91fc05e9736636d84cf2c4"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-cheap-race.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-rest-normal.exit",
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-rest-normal.jsonl",
+          "sha256": "20b9a212b10a529cdf13250ff0a649dfd267c2ac8b75d8e0e0376d7537489a7d"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-rest-normal.phase",
+          "sha256": "41b102afbce3caed8120d0f6fd41d738e079513fb745a7b927964d2d81b48f5e"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-rest-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-rest-race.exit",
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-rest-race.jsonl",
+          "sha256": "6e4f0c809343879639470771d9d097a9890a9ee222d25d95cd75a83aec346fd3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-rest-race.phase",
+          "sha256": "95a62ea1178ccdb766e34235e3ebbca791a436b0f79579198c41ac17d92483e5"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-sn-rest-race.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-vet-core-normal.exit",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-vet-core-normal.phase",
+          "sha256": "3c7859c0c7c3ca3473dd2f801c2376ad2a96e6bef0ee13b3ba3a107da64bf9d3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-vet-core-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-vet-core-normal.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-vet-sn-normal.exit",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-vet-sn-normal.phase",
+          "sha256": "9b0a584064b02e929cc0cfe36e9c93b834076230510ca2cabda72114cab274f8"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-vet-sn-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/restore-vet-sn-normal.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/root-preflight-core-normal.json",
+          "sha256": "ab99723e7d7504023e0d122d57e82fd50a00362ade44725106db67bb1c3662c3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/root-preflight-core-race.json",
+          "sha256": "ab99723e7d7504023e0d122d57e82fd50a00362ade44725106db67bb1c3662c3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/root-preflight-sn-cheap-normal.json",
+          "sha256": "ab99723e7d7504023e0d122d57e82fd50a00362ade44725106db67bb1c3662c3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/root-preflight-sn-cheap-race.json",
+          "sha256": "ab99723e7d7504023e0d122d57e82fd50a00362ade44725106db67bb1c3662c3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/root-preflight-sn-rest-normal.json",
+          "sha256": "ab99723e7d7504023e0d122d57e82fd50a00362ade44725106db67bb1c3662c3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/root-preflight-sn-rest-race.json",
+          "sha256": "ab99723e7d7504023e0d122d57e82fd50a00362ade44725106db67bb1c3662c3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/root-preflight-vet-core-normal.json",
+          "sha256": "ab99723e7d7504023e0d122d57e82fd50a00362ade44725106db67bb1c3662c3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/root-preflight-vet-sn-normal.json",
+          "sha256": "ab99723e7d7504023e0d122d57e82fd50a00362ade44725106db67bb1c3662c3"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/run-restore.sh",
+          "sha256": "9534ea7e4a4be68e9471844f3f352d80df5fe32183b061004c25d9f4849cfb2a"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/sn-deps.txt",
+          "sha256": "e266f9ad22939ce278a02aa106209a10e797864947fdea286c907bbfa28fb932"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/source-readback.json",
+          "sha256": "b74a895156adaf3f1cb4f3c729d6c624c44cd867870949bc7fc72c9ae997415d"
+        }
+      ],
+      "limits": "Original frozen d3d/5d4 graph only; test-only259 correction and future full512 race triage are separate source scopes.",
+      "raw_root_census": {
+        "restore-core-normal.jsonl": {
+          "TestPreparationManyOwnersPublishesCompleteArchiveSizedCensus": "pass",
+          "TestPreparationManyOwnersReconcilesOriginalPartialHeadUnion": "pass",
+          "TestPreparationManyOwnersRefusesUnreviewedAndUnboundedProfiles": "pass",
+          "TestPreparationRestoreCompleteUnionKeepsEveryHead": "pass"
+        },
+        "restore-core-race.jsonl": {
+          "TestPreparationManyOwnersPublishesCompleteArchiveSizedCensus": "pass",
+          "TestPreparationManyOwnersReconcilesOriginalPartialHeadUnion": "pass",
+          "TestPreparationManyOwnersRefusesUnreviewedAndUnboundedProfiles": "pass",
+          "TestPreparationRestoreCompleteUnionKeepsEveryHead": "pass"
+        },
+        "restore-sn-cheap-normal.jsonl": {
+          "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome": "fail"
+        },
+        "restore-sn-cheap-race.jsonl": {
+          "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome": "fail"
+        },
+        "restore-sn-rest-normal.jsonl": {
+          "TestMonitorNativeRestoreActualPlanRefusesLostCopiedArchiveHead": "fail",
+          "TestMonitorNativeRestoreFull512HistoryAndBothActiveHeads": "pass",
+          "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory": "fail",
+          "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners": "pass"
+        },
+        "restore-sn-rest-race.jsonl": {
+          "TestMonitorNativeRestoreActualPlanRefusesLostCopiedArchiveHead": "fail",
+          "TestMonitorNativeRestoreFull512HistoryAndBothActiveHeads": "fail",
+          "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory": "fail",
+          "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners": "pass"
+        }
+      },
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-native-restore-d3d-independent-20261003/evidence/native-d3d-original-final-receipt.json",
+        "sha256": "42ec3fc91590b50b845c8c3b9d1cbf657957845c1eb0ade9ed5ca6b9413f5995"
+      },
+      "result": "FAILED_SCOPED",
+      "source": {
+        "connect": {
+          "commit": "5d4a63b9a8e9b04c2e939c8af1b5585b6a3070fc",
+          "tracked_count": 3780,
+          "tracked_entries_sha256": "3d6501d8858f84c46b0b830de042ce1919e2eea285741dcac0e4496623e745a5",
+          "tree": "23d50f4e2a059cec1f9c77e530825522569dff95"
+        },
+        "peer_symlinks": {
+          "glog": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+          "goidenticons": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+          "gvisor": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+          "proxy": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+          "server": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server",
+          "userwireguard": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+          "warp": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp"
+        },
+        "sn": {
+          "commit": "d3dfd70c61694f6a1c35b077b48d3f6dc67ca8d2",
+          "tracked_count": 20390,
+          "tracked_entries_sha256": "00cf9206dfdb03629be6b71827a8775a4b86dc44f45af1a0f90e2b2e96d5d5d3",
+          "tree": "b68771e116320ff665d90e05bdf2f6ac2f635684"
+        },
+        "workspace_sha256": "af23ff51200fae27ac506851136f76c3abd90e1b3192bcb88060e6f3ae585d62"
+      }
+    },
+    {
+      "bindings": [
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/ancestry-preflight-affected-normal.txt",
+          "sha256": "09449d615c4ebb022e32b9898b8f4c789b60b471496035d2f780e458e2dde733"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/ancestry-preflight-affected-race.txt",
+          "sha256": "09449d615c4ebb022e32b9898b8f4c789b60b471496035d2f780e458e2dde733"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/ancestry-preflight-vet-normal.txt",
+          "sha256": "09449d615c4ebb022e32b9898b8f4c789b60b471496035d2f780e458e2dde733"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/ancestry-preflight.txt",
+          "sha256": "09449d615c4ebb022e32b9898b8f4c789b60b471496035d2f780e458e2dde733"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/connect-module.json",
+          "sha256": "0a42918b6cd725a3b0f43ffeaa9a1a986257cab20c0b59fe20f79697c61e2e91"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-affected-normal.exit",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-affected-normal.jsonl",
+          "sha256": "a0e13a39f8ef4f02571c64fca1f8721e1088a5b2ba233096194e68899dc05a00"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-affected-normal.phase",
+          "sha256": "fd683e0c02b22ce1087c731e1dc8f0c40a6acc9c87678019e3c5c0baaac47864"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-affected-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-affected-race.exit",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-affected-race.jsonl",
+          "sha256": "b9bb1fc380d6a75200ca08c19ed78f2e8ddf52277bbb7a1334bd435a16b36420"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-affected-race.phase",
+          "sha256": "61de4c94d9912bdb55e2edfe6950a0f14938e78548f106fbab5c61755193e97d"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-affected-race.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-vet-normal.exit",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-vet-normal.phase",
+          "sha256": "37446703a0f612626a2090a938d1c94fa26727114c6c3cbce178222631892123"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-vet-normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-vet-normal.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/root-preflight-affected-normal.json",
+          "sha256": "a79a1ad6a934eb79c2d8649dd34ee4587472f284608d5cc4bf75539327f6d232"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/root-preflight-affected-race.json",
+          "sha256": "a79a1ad6a934eb79c2d8649dd34ee4587472f284608d5cc4bf75539327f6d232"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/root-preflight-vet-normal.json",
+          "sha256": "a79a1ad6a934eb79c2d8649dd34ee4587472f284608d5cc4bf75539327f6d232"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/run-259.sh",
+          "sha256": "985e89d867434882494a448a25ee319cba77b95642014afbdea37e482d2a5279"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/sn-deps.txt",
+          "sha256": "e266f9ad22939ce278a02aa106209a10e797864947fdea286c907bbfa28fb932"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/source-readback.json",
+          "sha256": "8b0d9b025b2072349ee919cc9a546b05754d4af12a0f639d8a2975888f02dc64"
+        }
+      ],
+      "limits": "Only three previously fixture-blocked one-segment public roots were run on259; original d3d full512 normal PASS/race FAIL and complete-union neighbor remain separate. Successor full512 direct check and causal controls are pending.",
+      "raw_root_census": {
+        "native259-affected-normal.jsonl": {
+          "TestMonitorNativeRestoreActualPlanRefusesLostCopiedArchiveHead": "pass",
+          "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory": "pass",
+          "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome": "pass"
+        },
+        "native259-affected-race.jsonl": {
+          "TestMonitorNativeRestoreActualPlanRefusesLostCopiedArchiveHead": "pass",
+          "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory": "pass",
+          "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome": "pass"
+        }
+      },
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-native-restore-259-fixture-independent-20261003/evidence/native259-affected3-receipt.json",
+        "sha256": "7857a0e783b2e7ebfbd8ec6f8713193a8c2768a0e738e0c869fe9ffc705ddb76"
+      },
+      "result": "PASS_SCOPED",
+      "source": {
+        "changed_from_d3d": [
+          "mainnet/monitor_economic_native_restore_test.go"
+        ],
+        "commit": "259abc3c27fcf870b097c1cd7183c3e76538d319",
+        "peers": {
+          "glog": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+          "goidenticons": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+          "gvisor": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+          "proxy": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+          "server": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server",
+          "userwireguard": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+          "warp": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp"
+        },
+        "tracked_count": 20390,
+        "tracked_entries_sha256": "f651ebae4458476ef10e7388c696882dd782dda707ed415fff035ac71465eb30",
+        "tree": "c36eaa06e0c3de65813583f9f38506ef84f01a14",
+        "workspace_sha256": "af23ff51200fae27ac506851136f76c3abd90e1b3192bcb88060e6f3ae585d62"
+      }
+    }
+  ],
+  "status": "ROOT_VERIFIED_ORIGINAL_FAILURES_AND_SCOPED_FIXTURE_CORRECTION"
+}

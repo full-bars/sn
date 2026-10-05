@@ -1,0 +1,104 @@
+{
+  "cause": {
+    "correction": "separate 0700 TMPDIR with all parent modes/owners preflight; unchanged source and product checks",
+    "private_tmp": "/mnt/data/sn-testnet/sol-restore-ledger-independent-20261003/912/tmp",
+    "unsafe_ancestors": [
+      "/mnt/data/sn-testnet/sol-restore-ledger-independent-20261003 mode 775",
+      "/mnt/data/sn-testnet/sol-restore-ledger-independent-20261003/912 mode 775"
+    ]
+  },
+  "files": {
+    "912/evidence/normal-mainnet.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "912/evidence/normal-mainnet.jsonl": "618b26dd5f093576477c271abbb78525cd7bd124b15be1c4f05e613095f83d18",
+    "912/evidence/normal-mainnet.phase": "cd092096dc1e57e6b2fd81adfb7d3bf21206044841bf7ee70294ccc0de4d93b8",
+    "912/evidence/normal-mainnet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/normal-validator.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "912/evidence/normal-validator.jsonl": "9304fa01453f950e318fad7c3d6a823ae93b93c65d33f6394015b1a3b50b615c",
+    "912/evidence/normal-validator.phase": "36afec417425d777d89d6dc1a69f2d9f01d1bf78f21fea66decc8558f766b6ce",
+    "912/evidence/normal-validator.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/race-mainnet.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "912/evidence/race-mainnet.jsonl": "4df109407573c7bc16c9b5a43cceb4145e02c0068f88f121ba4c9ff03bf52f06",
+    "912/evidence/race-mainnet.phase": "a2fdca688436b37309e317d0e9cf4f63b8bf0b3589f20ebb6bac6554dd74add6",
+    "912/evidence/race-mainnet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/race-validator.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "912/evidence/race-validator.jsonl": "56327de820ffd907bbaf2fcd0b391c88e9543c13b59802b39f9633af022d35a1",
+    "912/evidence/race-validator.phase": "cfe6bd1f900d1af8e8ed85458202e9fa678b018230ed79d8ce93445ad2a0ba98",
+    "912/evidence/race-validator.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/vet-mainnet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "912/evidence/vet-mainnet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/vet-mainnet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/vet-validator.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "912/evidence/vet-validator.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/vet-validator.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/source/go.work": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778",
+    "912/source/sn/go.mod": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "912/source/sn/go.sum": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61",
+    "run-912.sh": "d81ccea7d9d060c07dfebe27213e70ac77054c461877254d1518fadd55f2953e"
+  },
+  "limits": [
+    "All six roots in each mode failed before product assertions; cannot claim 912 behavior.",
+    "Original outputs retained; corrected rerun has distinct output names."
+  ],
+  "schema": "sol-restore-ledger-912-initial-setup-v1",
+  "scopes": [
+    {
+      "classification": "harness private-TMPDIR ancestor mode 775; product assertions not reached",
+      "exit": 1,
+      "jsonl_sha256": "618b26dd5f093576477c271abbb78525cd7bd124b15be1c4f05e613095f83d18",
+      "mode": "normal",
+      "package": "./mainnet",
+      "roots": {
+        "TestStoragePreparationRestoreValidatorLedgerKeepsActualOwner": "fail",
+        "TestStoragePreparationRestoreValidatorRefusesLostOriginalHead": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "classification": "harness private-TMPDIR ancestor mode 775; product assertions not reached",
+      "exit": 1,
+      "jsonl_sha256": "9304fa01453f950e318fad7c3d6a823ae93b93c65d33f6394015b1a3b50b615c",
+      "mode": "normal",
+      "package": "./validator",
+      "roots": {
+        "TestAttemptLedgerRestoreKeepsOriginalSignedLegacyPrefix": "fail",
+        "TestAttemptLedgerRestoreRefusesMissingOrPartialPendingIntent": "fail",
+        "TestAttemptLedgerRestoreRejectsWrongHeadAndUnknownMembers": "fail",
+        "TestAttemptLedgerRestoreRetainsPendingAndCleanupPhases": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "classification": "harness private-TMPDIR ancestor mode 775; product assertions not reached",
+      "exit": 1,
+      "jsonl_sha256": "4df109407573c7bc16c9b5a43cceb4145e02c0068f88f121ba4c9ff03bf52f06",
+      "mode": "race",
+      "package": "./mainnet",
+      "roots": {
+        "TestStoragePreparationRestoreValidatorLedgerKeepsActualOwner": "fail",
+        "TestStoragePreparationRestoreValidatorRefusesLostOriginalHead": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "classification": "harness private-TMPDIR ancestor mode 775; product assertions not reached",
+      "exit": 1,
+      "jsonl_sha256": "56327de820ffd907bbaf2fcd0b391c88e9543c13b59802b39f9633af022d35a1",
+      "mode": "race",
+      "package": "./validator",
+      "roots": {
+        "TestAttemptLedgerRestoreKeepsOriginalSignedLegacyPrefix": "fail",
+        "TestAttemptLedgerRestoreRefusesMissingOrPartialPendingIntent": "fail",
+        "TestAttemptLedgerRestoreRejectsWrongHeadAndUnknownMembers": "fail",
+        "TestAttemptLedgerRestoreRetainsPendingAndCleanupPhases": "fail"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source": {
+    "commit": "912315cf99edb0ec0d0969239065ed7000bb6d9a",
+    "tree": "5432daab3fb0e61517474c038af096945c065a4c"
+  },
+  "status": "SETUP_FAILURE_NOT_PRODUCT",
+  "vet_mainnet_exit": 0,
+  "vet_validator_exit": 0
+}

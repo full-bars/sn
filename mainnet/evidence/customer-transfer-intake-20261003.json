@@ -1,0 +1,506 @@
+{
+  "schema": "customer-transfer-durable-intent-intake-v1",
+  "status": "FROZEN_SOURCE_EXECUTION_PENDING_SOL",
+  "sources": {
+    "server": {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current",
+      "commit": "530726fcd8067d2551ec45356096eab9e09f930c",
+      "tree": "417bbe2a68b8c88f6c59a13a5c6318017b4ffece",
+      "base": "1995218329ba712f82f53751653e3048aee79b02"
+    },
+    "sdk": {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request",
+      "commit": "9ae95704a2303f94963e9d2fad81fa5705a4698c",
+      "tree": "914fbb76cea7ca0e64d4f1ad59b674afedc18b46",
+      "base": "de904f9bb253f7cfd3b8d1618e5424c91faef42e"
+    },
+    "connect": {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/connect-customer-api-current",
+      "commit": "5654569957ac813cd4599dc54a917eee6d2420d7",
+      "tree": "8cc7e4e46fa3e8e2c07a9edd89f36895a19a44a1",
+      "base": "5def2fa4391ba7a1028af048c99c91cc1c7254fc"
+    },
+    "glog": {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/glog",
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/goidenticons",
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    }
+  },
+  "source_join": {
+    "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/source-join.json",
+    "bytes": 12349,
+    "sha256": "53f23ff5db5968c41379820864f143a3d9ba2ac7a9c86e007811edb3f4a2afe2"
+  },
+  "jobs": [
+    {
+      "source": "server",
+      "package": "./model",
+      "roots": [
+        "TestCustomerTransferExactDecimalAmount",
+        "TestCustomerTransferConcurrentIntentRetainsOneKey",
+        "TestCustomerTransferRetainedTermsCannotChange",
+        "TestCustomerTransferObservationCommitFailureRetainsUnknownRequest",
+        "TestCustomerTransferContradictionAndHistoryRemainRetained",
+        "TestCustomerTransferDisabledCustodyGuardCannotSubmit"
+      ],
+      "selector": "^(TestCustomerTransferExactDecimalAmount|TestCustomerTransferConcurrentIntentRetainsOneKey|TestCustomerTransferRetainedTermsCannotChange|TestCustomerTransferObservationCommitFailureRetainsUnknownRequest|TestCustomerTransferContradictionAndHistoryRemainRetained|TestCustomerTransferDisabledCustodyGuardCannotSubmit)$",
+      "expected_roots": 6
+    },
+    {
+      "source": "server",
+      "package": "./controller",
+      "roots": [
+        "TestCustomerChallengeMissingIdAndInexactAmountRefuseBeforeEffects",
+        "TestCustomerChallengeLostResponseReusesExactDurableKeyAndBody",
+        "TestCustomerChallengeConcurrentRetriesCannotMintDistinctChallenges",
+        "TestCustomerChallengeCancellationAfterRealResponseRetainsOriginalRequest",
+        "TestCustomerChallengeKnownObservationFailureNeverFallsBackToPost",
+        "TestCustomerChallengeMalformedAcceptedResponseRemainsUnknown",
+        "TestCustomerChallengeRepeatedObservationPreservesTerminalCapacity",
+        "TestCustomerChallengeKnownReadCannotMutateWithoutCustodyGuards"
+      ],
+      "selector": "^(TestCustomerChallengeMissingIdAndInexactAmountRefuseBeforeEffects|TestCustomerChallengeLostResponseReusesExactDurableKeyAndBody|TestCustomerChallengeConcurrentRetriesCannotMintDistinctChallenges|TestCustomerChallengeCancellationAfterRealResponseRetainsOriginalRequest|TestCustomerChallengeKnownObservationFailureNeverFallsBackToPost|TestCustomerChallengeMalformedAcceptedResponseRemainsUnknown|TestCustomerChallengeRepeatedObservationPreservesTerminalCapacity|TestCustomerChallengeKnownReadCannotMutateWithoutCustodyGuards)$",
+      "expected_roots": 8
+    },
+    {
+      "source": "sdk",
+      "package": ".",
+      "roots": [
+        "TestWalletTransferRequestIdSurvivesRetriesAndSerialization",
+        "TestWalletTransferOldCallerRefusesBeforeHttp"
+      ],
+      "selector": "^(TestWalletTransferRequestIdSurvivesRetriesAndSerialization|TestWalletTransferOldCallerRefusesBeforeHttp)$",
+      "expected_roots": 2
+    }
+  ],
+  "modes": [
+    "normal",
+    "race"
+  ],
+  "causal": [
+    {
+      "name": "fresh-provider-key",
+      "source": "server",
+      "kind": "operative omission/reintroduction in frozen current body; not a byte-identical historical whole-source gate",
+      "package": "./controller",
+      "selector": "^(TestCustomerChallengeLostResponseReusesExactDurableKeyAndBody|TestCustomerChallengeConcurrentRetriesCannotMintDistinctChallenges)$",
+      "expected_fail_roots": 2,
+      "expected_causes": [
+        "retry changed logical transfer",
+        "simultaneous calls escaped one provider idempotency basis"
+      ],
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/fresh-provider-key.overlay.json"
+    },
+    {
+      "name": "known-challenge-resubmit",
+      "source": "server",
+      "kind": "operative omission/reintroduction in frozen current body; not a byte-identical historical whole-source gate",
+      "package": "./controller",
+      "selector": "^(TestCustomerChallengeKnownObservationFailureNeverFallsBackToPost)$",
+      "expected_fail_roots": 1,
+      "expected_causes": [
+        "missing known challenge was accepted"
+      ],
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/known-challenge-resubmit.overlay.json"
+    },
+    {
+      "name": "lost-cancellation-cause",
+      "source": "server",
+      "kind": "operative omission/reintroduction in frozen current body; not a byte-identical historical whole-source gate",
+      "package": "./controller",
+      "selector": "^(TestCustomerChallengeCancellationAfterRealResponseRetainsOriginalRequest)$",
+      "expected_fail_roots": 1,
+      "expected_causes": [
+        "canceled response was acknowledged without typed cause"
+      ],
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/lost-cancellation-cause.overlay.json"
+    },
+    {
+      "name": "raw-digest-history-slots",
+      "source": "server",
+      "kind": "operative omission/reintroduction in frozen current body; not a byte-identical historical whole-source gate",
+      "package": "./controller",
+      "selector": "^(TestCustomerChallengeRepeatedObservationPreservesTerminalCapacity)$",
+      "expected_fail_roots": 1,
+      "expected_causes": [
+        "healthy repeated observation exhausted terminal custody capacity"
+      ],
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/raw-digest-history-slots.overlay.json"
+    },
+    {
+      "name": "observe-guard-omitted",
+      "source": "server",
+      "kind": "operative omission/reintroduction in frozen current body; not a byte-identical historical whole-source gate",
+      "package": "./controller",
+      "selector": "^(TestCustomerChallengeKnownReadCannotMutateWithoutCustodyGuards)$",
+      "expected_fail_roots": 1,
+      "expected_causes": [
+        "known read wrote new evidence with a disabled custody guard"
+      ],
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/observe-guard-omitted.overlay.json"
+    },
+    {
+      "name": "retained-terms-check-omitted",
+      "source": "server",
+      "kind": "operative omission/reintroduction in frozen current body; not a byte-identical historical whole-source gate",
+      "package": "./model",
+      "selector": "^(TestCustomerTransferRetainedTermsCannotChange)$",
+      "expected_fail_roots": 1,
+      "expected_causes": [
+        "same request accepted different intent"
+      ],
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/retained-terms-check-omitted.overlay.json"
+    },
+    {
+      "name": "sdk-missing-intent-check-omitted",
+      "source": "sdk",
+      "kind": "operative omission/reintroduction in frozen current body; not a byte-identical historical whole-source gate",
+      "package": ".",
+      "selector": "^(TestWalletTransferOldCallerRefusesBeforeHttp)$",
+      "expected_fail_roots": 1,
+      "expected_causes": [
+        "missing intent id did not refuse"
+      ],
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/sdk-missing-intent-check-omitted.overlay.json"
+    }
+  ],
+  "files": [
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/controller/circle_transfer_request.go",
+      "bytes": 9193,
+      "sha256": "cdbb5e46f3858a65e30679bf7f5863c405aad814b4e86d74da2dd9c7d4eeaf81"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/controller/circle_transfer_request_test.go",
+      "bytes": 14498,
+      "sha256": "2234c355dd22cabeb1cb68220854526c77a0857280993c2444bd619dd3c9a89b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/controller/circle_wallet_controller.go",
+      "bytes": 21245,
+      "sha256": "70c4b3b4439654f7a9187ebc6a8ead15abd439eb3ec9e09af01707ad7c21bf89"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/db_circle_transfer_request.go",
+      "bytes": 5130,
+      "sha256": "cd75562d22c779369ba580c79aec1fa90d310edfacb43a6cbc2604b070c70478"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/db_migrations.go",
+      "bytes": 384377,
+      "sha256": "2348b506cf1c0bafdce7434baebdc663f06300e8a01e37f968512d15d7b97f50"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/go.mod",
+      "bytes": 10468,
+      "sha256": "ad4b307433de35ab9f40df50d0c6906ec2eef1a4bfdec1adad700c3b3c842147"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/go.sum",
+      "bytes": 67934,
+      "sha256": "a805fb68cf119986df0d3fb630081d7b0fcac1e7b0470181934bc6b763616555"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/model/circle_transfer_request.go",
+      "bytes": 11785,
+      "sha256": "d3fb77e7c161695808b78ba97a9dcb8e3880e4131702abff99e1275f7817d4eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/model/circle_transfer_request_test.go",
+      "bytes": 8831,
+      "sha256": "4edb4d3afb7fee1f804a23479679394f733ae970c8650d57e69124c12bcf8652"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/CUSTOMER-TRANSFER.md",
+      "bytes": 2050,
+      "sha256": "6d63d24aed672ed06d35f4728ca0a778ae3c62ff432f01619c0453a156e0544e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/api.go",
+      "bytes": 121955,
+      "sha256": "faf3b0672b518e763a6d4600de8ad8b315c288486b030cdeb57feac064a5d2b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/api_wallet_transfer_test.go",
+      "bytes": 2558,
+      "sha256": "60f3fd61bc9b78e2371ad7519469de371b0f3fb0f3a1eb204465b532f09adc1b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/Makefile",
+      "bytes": 7629,
+      "sha256": "408ff192acaa824a435bd27de304a48d50acbbb249b5f5b41e0f66f548df07f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/coverage_report.txt",
+      "bytes": 160151,
+      "sha256": "778f1468d4ecdff2b7a797b85551a792b14f905bb3c5520384d58401ba3310b9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/exports_gen.go",
+      "bytes": 610858,
+      "sha256": "aa161353acdd1aaa5d598aab0c702430ed626adf9cbd792d9a968daa51c11b02"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/go.mod",
+      "bytes": 4430,
+      "sha256": "5efcf3cfe5c4faa6f742632f4af7852570ea2e46d58f60ed11922c5cad64191d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/go.sum",
+      "bytes": 22131,
+      "sha256": "6110f0813f9121bd20144067e4dd0a90662b573ffe4a0b1587100e001b7c0b73"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/include/urnetwork_sdk.def",
+      "bytes": 45399,
+      "sha256": "d195b8fcb9fdfbde1c3a6c945d5577346d4f6709efd2a571452c7c0fdc1a58c3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/include/urnetwork_sdk.h",
+      "bytes": 203885,
+      "sha256": "d9031a80d6c53807e78dbe6804953823bfb4af601e1a1e930d71467e7cbfb855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/include/urnetwork_sdk.hpp",
+      "bytes": 1046081,
+      "sha256": "7bafd630876ec37401eae1c6355dce39d05008c333ad4e19621f9d9b475c4401"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/smoke/customer_transfer_json.cpp",
+      "bytes": 1510,
+      "sha256": "ad795434665df0f2971c09bcd746fa9e749ec998e51c0175f097fe8ad7e6a8ae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/go.mod",
+      "bytes": 4376,
+      "sha256": "78a9d98753427b7e398649cd07e0666c3101f85f642b3b499bc2616ba0f6de98"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/go.sum",
+      "bytes": 23530,
+      "sha256": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/go.mod",
+      "bytes": 4438,
+      "sha256": "bfcc1ce3b6f2695113d350ec5f4742c0541df708937bc65d41c4e550cb3f4412"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/go.sum",
+      "bytes": 22382,
+      "sha256": "270c69d14d00d9ca06850dca2b1ebb653bb8aa7f6db654e60b5f9127683afb62"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/src/api_client.ts",
+      "bytes": 18095,
+      "sha256": "9441fbd57417089e0c28248cbc1ba5ab9e30f1c9267f7c9abb4630768366f742"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/src/generated/client.ts",
+      "bytes": 168190,
+      "sha256": "724b6bf1c8471c8952206e811e2a6a278e7bd953dc9b9338f03848374333fdc0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/src/generated/openapi.ts",
+      "bytes": 178376,
+      "sha256": "0378fce441a6d402d8256acbb4277f35a19e7f3c0abbabd23ba672e857ce49ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/test/customer_transfer.test.ts",
+      "bytes": 2887,
+      "sha256": "2a54640cd048454f82e078232e5cfd14ddfc9a03b7238435305dcf5a0dbda253"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/connect-customer-api-current/api/bringyour.yml",
+      "bytes": 458350,
+      "sha256": "743618affeeff89ca92f056b45f8ef5f9b859ba4557f32f1f79d5aaf28ecb435"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/connect-customer-api-current/go.mod",
+      "bytes": 3847,
+      "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/connect-customer-api-current/go.sum",
+      "bytes": 21922,
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/source-join.json",
+      "bytes": 12349,
+      "sha256": "53f23ff5db5968c41379820864f143a3d9ba2ac7a9c86e007811edb3f4a2afe2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/fresh-provider-key.go",
+      "bytes": 9457,
+      "sha256": "7a87afbfcdf3a4cb27fc327ab9b106d7660f14fdb1e76e27e904d3e6977966cb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/fresh-provider-key.overlay.json",
+      "bytes": 253,
+      "sha256": "c4838beb6985b60feca307f0ab6db8105ab0af34e2f67c332eb652c62b4acd9f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/known-challenge-resubmit.go",
+      "bytes": 9195,
+      "sha256": "d20763738a4980338976972e658418a267019fa2a49212d42362895495bc838f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/known-challenge-resubmit.overlay.json",
+      "bytes": 259,
+      "sha256": "4bdfca2f690d46d605e7edc0cca9e13ca8ef3c0ac0ea2faf062f76997258ccb6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/lost-cancellation-cause.go",
+      "bytes": 9121,
+      "sha256": "ec75e7efe4bc39134c17775627c615b634084088c29fb46a065afd05b585bdfb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/lost-cancellation-cause.overlay.json",
+      "bytes": 258,
+      "sha256": "293e337135b6086698d6990526f14da40bb95ab1168dd414ebf51fda07e25fd9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/raw-digest-history-slots.go",
+      "bytes": 11798,
+      "sha256": "ed618270117a89b608453463c11a1b5963f0747c086a15dc4bc07eba90babd77"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/raw-digest-history-slots.overlay.json",
+      "bytes": 254,
+      "sha256": "568813ecfaf625ca7675d8e520311e874ace905ff605f8a50d22b2cd1e7917e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/observe-guard-omitted.go",
+      "bytes": 11699,
+      "sha256": "972b50d852b04dbfb6bf504f3471353279308ba0c31516e2885e7ec23db0ecf0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/observe-guard-omitted.overlay.json",
+      "bytes": 251,
+      "sha256": "5ff693fe936868dc80c9b71223cfbe026f275369f45b6c5d447b92e3266d1dfb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/retained-terms-check-omitted.go",
+      "bytes": 11770,
+      "sha256": "9b81f643e83c59690e7a1157b460a2b24d8daaacf3fd5673652b09b882213b53"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/retained-terms-check-omitted.overlay.json",
+      "bytes": 258,
+      "sha256": "ca316ccd4942cd0cf348f76840b68fe1f79a7257d12a6536e690005b1c262492"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/sdk-missing-intent-check-omitted.go",
+      "bytes": 121907,
+      "sha256": "3bbe1643d245e860eb7700a3743b66df6d8afacbe051c90f48407073b77c372e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/sdk-missing-intent-check-omitted.overlay.json",
+      "bytes": 233,
+      "sha256": "82c20e59f80aff828e87f29ff6a4c3add616ae4ff1203a70e0d59e84ca770a95"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/old-199-circle-wallet-controller.go",
+      "bytes": 22611,
+      "sha256": "293c33300e6b444562c43f1abce45e6206dcd44cc0a99ddc7327d5eb7b240c9b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/circle-contract-review/user-controlled-wallets-write-review.yaml",
+      "bytes": 122686,
+      "sha256": "e595e0e46f42f8c1e72dc3998c2716576b7d7df4d5ac62ecfc3ea83424b6d85d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-generation/cgo-current.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-generation/cgo-current.log",
+      "bytes": 124,
+      "sha256": "672b049f1723d9b85b7a58e8e60fb80f514bc82244b3b8a08db26f65781ddf9b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-generation/cgo.log",
+      "bytes": 423,
+      "sha256": "b1197e086122bb60d545e46878a505954a432953cea9f1ff623b873bcafe2519"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-generation/js-current.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-generation/js-current.log",
+      "bytes": 468,
+      "sha256": "7bc2a3cc0dd971ac24572a85f425b9b976b0e554bd72f5d5dd69eaf1aa456b4d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-generation/js.log",
+      "bytes": 158,
+      "sha256": "9fc5349b64bbf422ac58ae96350a76029be8a78bec766eb448812266dfffd168"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/seal-customer-530.py",
+      "bytes": 10855,
+      "sha256": "ba2b6202d9f363372e37c46bf119089e1467bc78accce5bd8685bc62fcb47058"
+    }
+  ],
+  "server_expected_roots": 14,
+  "sdk_expected_roots": 2,
+  "sdk_javascript": {
+    "cwd": "sdk/js",
+    "command": [
+      "node",
+      "--test",
+      "test/customer_transfer.test.ts",
+      "test/openapi_drift.test.ts"
+    ],
+    "new_roots": 3,
+    "existing_generation_roots": 3
+  },
+  "sdk_cpp": {
+    "cwd": "sdk/cgo",
+    "command": "make smoke_customer_transfer_json NLOHMANN_INCLUDE=<actual installed public headers>",
+    "expected_roots": 1
+  },
+  "vet": {
+    "server": [
+      ".",
+      "./model",
+      "./controller"
+    ],
+    "sdk": [
+      "."
+    ]
+  },
+  "generation": {
+    "cgo": "go run ./gen (terminal0, generated real C ABI)",
+    "js": "make generate_types OPENAPI_SPEC=<exact565 API path> (terminal0)",
+    "initial_failure": "Original C generator attempt against API3e34/Connect9e fails package load on SDKde904 discovery APIs; retained without claiming product failure. New graph exact5def supplies the required existing APIs."
+  },
+  "graphs": {
+    "server": "GOWORK=off; unchanged199 tracked go.mod/go.sum, reproduce independently qualified199/647 dependency graph with owned path remapping only",
+    "sdk": "GOWORK=off; exactde904 modulefiles unchanged; local Connect565 API-only over published5def, its tracked sctp module, glog892ade4a6be396b32ea82a550f243190b5992180 and goidenticons325750b38314313dc5f44c880ab6f12f6c1ecb3c. Every local replacement must be remapped to independent physical archives."
+  },
+  "official_protocol": {
+    "url": "https://developers.circle.com/openapi/user-controlled-wallets.yaml",
+    "sha256": "e595e0e46f42f8c1e72dc3998c2716576b7d7df4d5ac62ecfc3ea83424b6d85d",
+    "scope": "UUIDv4 provider idempotency key repeats original request/response;200/201 transfer challenge; known challenge GET id/type/status. COMPLETE refers to challenge, not payment settlement."
+  },
+  "scope_limits": [
+    "Source only until Sol normal/race/causal checks; no deployment, real transfer, user-confirmation or payment-success claim.",
+    "No silent older-client ID generation. Real external web/mobile app persistence changes are not available in this workspace and are not claimed.",
+    "One POST per public call; unknown outcomes can retry only retained exact key/body under Circle contract. Known challenges use GET only. No automatic POST loop.",
+    "Normalized observations retain the first raw-response digest per semantic state, not every HTTP response;64 genuinely different semantic states hold original request for review.",
+    "Customer challenge schema separate from provider payout transition and legacy obligations; no provider financial source edits.",
+    "Current Server199 origin/ec6 composition and published modules remain separate qualification; no inherited customer or release claim.",
+    "JavaScript rejects unsafe integers before HTTP; full positive six-decimal int64 range is available to Go/C++ consumers only.",
+    "New migration758 appends to exact199 prefix; future publication join must preserve deployed upstream migration order."
+  ]
+}

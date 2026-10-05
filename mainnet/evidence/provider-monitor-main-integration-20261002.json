@@ -1,0 +1,86 @@
+{
+  "schema": "urnetwork-provider-main-integration-v1",
+  "base": "fa74b5802a0316b9c0e24e2d8c2844ce000e441e",
+  "source": "e4fca9e0f95323d716e4ca711e8f37b12b8bfb54",
+  "staged_tree": "74b0160080dd091706e36f312d5029961167fdbd",
+  "files": [
+    {
+      "path": "mainnet/monitor_output_fixture_test.go",
+      "bytes": 4844,
+      "sha256": "a88969c33d95c103bbbbd39640ef82eba7cf24f3655ffd9ff988f0b8882c43fd"
+    },
+    {
+      "path": "mainnet/monitor_provider.go",
+      "bytes": 8454,
+      "sha256": "8fcbbf32ff984dadf908f0bbca5a49c362fab64d6dba3d053de2c6a0c117237a"
+    },
+    {
+      "path": "mainnet/monitor_provider_test.go",
+      "bytes": 22689,
+      "sha256": "2764c95d553c3dc4fca38a6d3ae4293a297e99552385e09301047ec8f64e22ca"
+    },
+    {
+      "path": "mainnet/monitor_provider_worker.go",
+      "bytes": 11918,
+      "sha256": "36369b434cc949a272a1c2f924f58e6cd734c96492e9eca55a5e3709dd1d42c6"
+    },
+    {
+      "path": "mainnet/monitor_services.go",
+      "bytes": 13203,
+      "sha256": "0bf84b06f704aad7afea03cf3bbed5b02c00c70219a20841083ca14849a8da0f"
+    },
+    {
+      "path": "mainnet/monitor_services_policy.go",
+      "bytes": 8220,
+      "sha256": "284609aca49b3b70425e225dd131809a17b049dc494b00132766aca830726421"
+    },
+    {
+      "path": "miner/provider_lifecycle.go",
+      "bytes": 4560,
+      "sha256": "e89e4ebe228e7d703c2fba2064d708a6a3ae7bb8a90c889dcf4e6667edc0b90d"
+    },
+    {
+      "path": "miner/provider_progress.go",
+      "bytes": 8667,
+      "sha256": "59da904f121f2b31268c114f98d1f7b6b1bbfa66608adb990316a6fb5a0e56ec"
+    },
+    {
+      "path": "miner/provider_progress_test.go",
+      "bytes": 8906,
+      "sha256": "b7d30fd0bb1516cd265170f186d5757d10d9b855343c40e4128cf11f51ba7d51"
+    },
+    {
+      "path": "miner/run.go",
+      "bytes": 41860,
+      "sha256": "1ea213574cf2141d0e8b443a564826ff087023def83912372cd6395107884d30"
+    },
+    {
+      "path": "miner/swarm.go",
+      "bytes": 22881,
+      "sha256": "c96190152198ec5dc512d09c5d735842c9cac2e1806b657324265a13d7ac51b7"
+    },
+    {
+      "path": "miner/swarm_control.go",
+      "bytes": 12824,
+      "sha256": "eca4d5e3ad078048b98c962f7fe87951c651022155b78e6beaea0a00e765d715"
+    },
+    {
+      "path": "protocol/provider_progress.go",
+      "bytes": 6776,
+      "sha256": "16d38511fcafedd069a1d091aa8dca0925cfb369519aa29b6515eee3afff3f6c"
+    },
+    {
+      "path": "protocol/provider_progress_test.go",
+      "bytes": 2896,
+      "sha256": "53c6f1f92561ff49c558106bdc5a2fca6df6206088b16f8724344c0d38220de1"
+    }
+  ],
+  "preserved": "all12 newer fleet Go changes and unchanged go.mod/go.sum",
+  "limits": [
+    "Exact14 provider files integrated; all12 newer fleet Go files and original module bytes retained.",
+    "Independent20 selected roots per mode and3packagevets qualify exact e4 graph; author42 remains separate.",
+    "No final cross-component release, deployment, proof or settlement qualification."
+  ],
+  "merge_commit": "83d92f75",
+  "independent_receipt_sha256": "bc7275dfdaff791394e94d447860929715e1ec4f252834b5455b136187792c48"
+}

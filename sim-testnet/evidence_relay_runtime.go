@@ -27,35 +27,47 @@ type evidenceRelaySource struct {
 	bounds      validatorcomponent.ReleaseEvidenceV2Bounds
 	activations []protocol.ValidatorEvidenceActivation
 	nextEpoch   uint64
+	successor   *evidenceRelaySource
 }
 
 // The worker alone mutates sources and admits actions. The small state lock
 // protects only progress/error notification, never HTTP, files or chain calls.
 type evidenceRelayRuntime struct {
-	executor             *Executor
-	chain                *validatorcomponent.ChainClient
-	origins              [2]string
-	sources              []evidenceRelaySource
-	ctx                  context.Context
-	cancel               context.CancelFunc
-	done                 chan struct{}
-	fail                 func(error)
-	poll                 time.Duration
-	phase                string
-	prepared             bool
-	work                 evidenceRelayWork
-	horizon              *evidenceRelayHorizon
-	nativeWarmupBudget   *ScenarioNativeWarmupBudgetV2
-	nativeWarmupComplete bool
-	ready                chan struct{}
-	remainingRequests    chan evidenceRelayRemainingRequest
-	stateLock            sync.Mutex
-	changed              chan struct{}
-	through              map[uint64]uint64
-	completed            map[uint64]bool
-	startedAuditPasses   uint64
-	completedAuditPasses uint64
-	resultErr            error
+	executor               *Executor
+	chain                  *validatorcomponent.ChainClient
+	origins                [2]string
+	sources                []evidenceRelaySource
+	ctx                    context.Context
+	cancel                 context.CancelFunc
+	done                   chan struct{}
+	fail                   func(error)
+	poll                   time.Duration
+	phase                  string
+	prepared               bool
+	work                   evidenceRelayWork
+	horizon                *evidenceRelayHorizon
+	nativeWarmupBudget     *ScenarioNativeWarmupBudgetV2
+	nativeWarmupComplete   bool
+	startupCache           *evidenceRelayStartupSession
+	pendingPublicCensus    *evidenceRelayPublicCensus
+	publicAudit            *evidenceRelayPublicAudit
+	retainedPublications   *evidenceRelayRetainedPublications
+	startupProgress        bool
+	ready                  chan struct{}
+	remainingRequests      chan evidenceRelayRemainingRequest
+	stateLock              sync.Mutex
+	changed                chan struct{}
+	through                map[uint64]uint64
+	completed              map[uint64]bool
+	workerStarted          bool
+	policyGapCutoffs       map[uint64][]evidenceRelayPolicyGapActivation
+	policyGapFirstEpoch    map[uint64]uint64
+	policyRolloverPlanHash string
+	policyGaps             map[[32]byte]evidenceRelayPolicyGapProgress
+	policyGapAudits        map[evidenceRelayAuditKey][32]byte
+	startedAuditPasses     uint64
+	completedAuditPasses   uint64
+	resultErr              error
 }
 
 // Construction authenticates fixed inputs and opens an owned chain client
@@ -149,6 +161,10 @@ func openEvidenceRelayRuntime(ctx context.Context, approved *ResolvedConfig, exe
 	if err != nil {
 		return nil, err
 	}
+	if err := self.installAuthenticatedPolicyRolloverHandoffV2(ctx, approved); err != nil {
+		self.chain.Close()
+		return nil, err
+	}
 	self.ctx, self.cancel = context.WithCancel(ctx)
 	return self, nil
 }
@@ -174,12 +190,17 @@ func evidenceRelayNonCancellationError(err error) error {
 
 // Every worker exit joins its owned chain resources before publishing done.
 func (self *evidenceRelayRuntime) run() {
+	self.stateLock.Lock()
+	self.workerStarted = true
+	self.stateLock.Unlock()
 	var outcome error
 	completedAudits := map[evidenceRelayAuditKey][32]byte{}
 	defer func() {
 		if self.ctx.Err() != nil {
 			outcome = evidenceRelayNonCancellationError(outcome)
 		}
+		self.cancel()
+		outcome = errors.Join(outcome, self.publicAudit.Close())
 		self.chain.Close()
 		func() {
 			self.stateLock.Lock()
@@ -197,13 +218,28 @@ func (self *evidenceRelayRuntime) run() {
 		outcome = fmt.Errorf("validator evidence funded phase admission: %w", err)
 		return
 	}
+	if self.startupCache != nil {
+		self.startupCache.seedCompletedAudits(completedAudits)
+	}
+	if self.pendingPublicCensus != nil {
+		self.publicAudit = newEvidenceRelayPublicAudit(self.ctx, self.pendingPublicCensus)
+	}
 	close(self.ready)
+	if err := self.awaitInitialReleasePreparation(); err != nil {
+		outcome = err
+		return
+	}
 	for {
 		if err := self.ctx.Err(); err != nil {
 			outcome = err
 			return
 		}
-		if err := self.advance(); err != nil {
+		if err := self.serviceRemainingRequests(); err != nil {
+			outcome = err
+			return
+		}
+		self.startupProgress = false
+		if err := self.retryStep(self.ctx, "closed-publications", self.advance); err != nil {
 			outcome = fmt.Errorf("validator evidence relay: %w", err)
 			return
 		}
@@ -220,9 +256,12 @@ func (self *evidenceRelayRuntime) run() {
 			outcome = err
 			return
 		}
-		if err := self.advanceDepositAudits(completedAudits); err != nil {
+		if err := self.retryStep(self.ctx, "deposit-audits", func() error { return self.advanceDepositAudits(completedAudits) }); err != nil {
 			outcome = fmt.Errorf("validator evidence audit relay: %w", err)
 			return
+		}
+		if self.startupCache != nil {
+			self.startupCache.checkpoint(self.ctx, self, completedAudits)
 		}
 		func() {
 			self.stateLock.Lock()
@@ -231,19 +270,119 @@ func (self *evidenceRelayRuntime) run() {
 			close(self.changed)
 			self.changed = make(chan struct{})
 		}()
-		select {
-		case <-self.ctx.Done():
-			outcome = self.ctx.Err()
+		if err := self.awaitNextPass(); err != nil {
+			outcome = err
 			return
-		case request := <-self.remainingRequests:
-			outcome = self.checkRemaining(request)
-			request.result <- outcome
-			if outcome != nil {
-				return
-			}
-		case <-time.After(self.poll):
 		}
 	}
+}
+
+// A complete replay pass is a safe admission boundary. Catch-up may skip its
+// polling delay, but must service a queued phase request before replaying more
+// history. It never skips, advances or marks any source publication complete.
+func (self *evidenceRelayRuntime) awaitNextPass() error {
+	if err := self.ctx.Err(); err != nil {
+		return err
+	}
+	select {
+	case request := <-self.remainingRequests:
+		return self.completeRemainingRequest(request)
+	default:
+	}
+	if self.startupProgress {
+		return nil
+	}
+	timer := time.NewTimer(self.poll)
+	defer timer.Stop()
+	select {
+	case <-self.ctx.Done():
+		return self.ctx.Err()
+	case request := <-self.remainingRequests:
+		return self.completeRemainingRequest(request)
+	case <-timer.C:
+		return nil
+	}
+}
+
+// Keep a consumed request under its finite retry owner until one final answer.
+func (self *evidenceRelayRuntime) completeRemainingRequest(request evidenceRelayRemainingRequest) error {
+	return self.completeRemainingRequestWithWait(request, waitFinalSemanticRPCRetry)
+}
+
+// The wait seam forces request abandonment and worker shutdown during retry.
+func (self *evidenceRelayRuntime) completeRemainingRequestWithWait(request evidenceRelayRemainingRequest, wait func(context.Context, time.Duration) error) error {
+	ctx, cancel := context.WithCancel(request.ctx)
+	defer cancel()
+	stop := context.AfterFunc(self.ctx, cancel)
+	defer stop()
+	if self.ctx.Err() != nil {
+		cancel()
+	}
+	owned := request
+	owned.ctx = ctx
+	err := self.retryStepWithWait(ctx, "phase-transition", func() error { return self.checkRemaining(owned) }, wait)
+	request.result <- err
+	if self.ctx.Err() == nil && errors.Is(err, request.ctx.Err()) && evidenceRelayAbandonedRequestError(err, request.ctx.Err()) {
+		return nil
+	}
+	return err
+}
+
+// An abandoned request can leave a logged transient read from its retry. No
+// integrity or local persistence error is discarded with that cancellation.
+func evidenceRelayAbandonedRequestError(err, requestErr error) bool {
+	if err == nil || requestErr == nil {
+		return false
+	}
+	if _, fileError := err.(*os.PathError); fileError {
+		return false
+	}
+	if err == requestErr || evidenceRelayTransientError(err) {
+		return true
+	}
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		children := joined.Unwrap()
+		if len(children) == 0 {
+			return false
+		}
+		for _, child := range children {
+			if !evidenceRelayAbandonedRequestError(child, requestErr) {
+				return false
+			}
+		}
+		return true
+	}
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return evidenceRelayAbandonedRequestError(wrapped.Unwrap(), requestErr)
+	}
+	return false
+}
+
+// An abandoned admission request does not own the worker's lifetime. Preserve
+// genuine validation or I/O failures even when joined with caller cancellation.
+func evidenceRelayOnlyRequestCancellation(err, requestErr error) bool {
+	if err == nil || requestErr == nil {
+		return false
+	}
+	if err == requestErr {
+		return true
+	}
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		children := joined.Unwrap()
+		if len(children) == 0 {
+			return false
+		}
+		for _, child := range children {
+			if !evidenceRelayOnlyRequestCancellation(child, requestErr) {
+				return false
+			}
+		}
+		return true
+	}
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return evidenceRelayOnlyRequestCancellation(wrapped.Unwrap(), requestErr)
+	}
+	return false
 }
 
 // A missing next manifest is ordinary unpublished state, never permission to
@@ -257,8 +396,11 @@ func (self *evidenceRelayRuntime) advance() error {
 		return err
 	}
 	for index := range self.sources {
+		if err := self.serviceRemainingRequests(); err != nil {
+			return err
+		}
 		source := &self.sources[index]
-		path, err := validatorcomponent.ValidatorEvidencePublicationV2ManifestPath(source.stateDir, source.nextEpoch)
+		path, err := validatorcomponent.ValidatorEvidencePublicationV2ManifestPath(source.forEpoch(source.nextEpoch).stateDir, source.nextEpoch)
 		if err != nil {
 			return err
 		}
@@ -273,24 +415,63 @@ func (self *evidenceRelayRuntime) advance() error {
 		if err != nil {
 			return err
 		}
-		for _, expected := range requests {
-			if err := self.horizon.admit(expected.Evidence.Header, block); err != nil {
-				return err
-			}
-			action, ownerPlanHash, err := self.executor.admitOwnedEvidenceRelayAction(self.ctx, expected)
-			if err != nil {
-				return err
-			}
-			result, err := self.executor.keeper.relayValidatorEvidenceTransaction(self.ctx, self.chain, ownerPlanHash, action, expected)
-			if err != nil {
-				return err
-			}
-			if result == nil || result.Winner == nil {
-				return errors.New("evidence relay returned no canonical winner")
-			}
-			if err := self.retainOwnedResult(ownerPlanHash, action, result); err != nil {
-				return err
-			}
+		if err := self.advanceClosedPublication(source, manifest, requests, block); err != nil {
+			return err
+		}
+	}
+	return self.ctx.Err()
+}
+
+// The common public reader has authenticated every configured member. A gap
+// advances discovery only; it cannot update completed progress or its cache.
+func (self *evidenceRelayRuntime) advanceClosedPublication(source *evidenceRelaySource, manifest *validatorcomponent.ValidatorEvidencePublicationV2Manifest, requests []validatorcomponent.ValidatorEvidenceTransactionV2Expected, block uint64) error {
+	if manifest == nil || manifest.Epoch != source.nextEpoch || len(requests) == 0 || len(requests) != len(source.activations) || source.nextEpoch == ^uint64(0) {
+		return errors.New("evidence relay closed progress has no exact bounded source census")
+	}
+	manifestHash, _, err := evidenceRelayStartupManifestIdentity(manifest)
+	if err != nil {
+		return err
+	}
+	containsGap := false
+	for index, expected := range requests {
+		if expected.Activation != source.forEpoch(manifest.Epoch).activations[index] || expected.Evidence.Header.Epoch != manifest.Epoch {
+			return errors.New("evidence relay closed progress changes its authenticated source census")
+		}
+		if err := self.serviceRemainingRequests(); err != nil {
+			return err
+		}
+		if err := self.horizon.admit(expected.Evidence.Header, block); err != nil {
+			return err
+		}
+		gap, err := self.retainHistoricalPolicyGap(self.ctx, source, manifestHash, expected)
+		if err != nil {
+			return err
+		}
+		if gap {
+			containsGap = true
+			continue
+		}
+		action, ownerPlanHash, err := self.executor.admitOwnedEvidenceRelayAction(self.ctx, expected)
+		if err != nil {
+			return err
+		}
+		result, err := self.executor.keeper.relayValidatorEvidenceTransaction(self.ctx, self.chain, ownerPlanHash, action, expected)
+		if err != nil {
+			return err
+		}
+		if result == nil || result.Winner == nil {
+			return errors.New("evidence relay returned no canonical winner")
+		}
+		if err := self.retainOwnedResult(ownerPlanHash, action, result); err != nil {
+			return err
+		}
+		if err := self.startupCache.rememberAction(ownerPlanHash, action, expected.Evidence.Header); err != nil {
+			return err
+		}
+	}
+	if !containsGap {
+		if err := self.startupCache.completeClosed(self, source, manifest); err != nil {
+			return err
 		}
 		func() {
 			self.stateLock.Lock()
@@ -299,11 +480,9 @@ func (self *evidenceRelayRuntime) advance() error {
 			close(self.changed)
 			self.changed = make(chan struct{})
 		}()
-		if source.nextEpoch == ^uint64(0) {
-			return errors.New("evidence relay reached the terminal uint64 epoch")
-		}
-		source.nextEpoch++
 	}
+	source.nextEpoch++
+	self.startupProgress = true
 	return self.ctx.Err()
 }
 
@@ -337,19 +516,28 @@ func (self *evidenceRelayRuntime) retainOwnedResult(ownerPlanHash string, action
 // Subscribe and read progress in one locked operation so no completion edge
 // can fall between them. The caller supplies the original campaign deadline.
 func (self *evidenceRelayRuntime) WaitThrough(ctx context.Context, epoch uint64) error {
+	return self.WaitRange(ctx, 0, epoch)
+}
+
+// Acceptance supplies both ends. Historical gaps before this exact range do
+// not count as evidence, and an intersecting gap always prevents completion.
+func (self *evidenceRelayRuntime) WaitRange(ctx context.Context, first, epoch uint64) error {
 	if ctx == nil {
 		return errors.New("evidence relay completion context is absent")
+	}
+	if first > epoch {
+		return errors.New("evidence relay completion range is reversed")
 	}
 	for {
 		ready, changed, outcome := func() (bool, <-chan struct{}, error) {
 			self.stateLock.Lock()
 			defer self.stateLock.Unlock()
 			changed := self.changed
-			ready := len(self.sources) > 0
+			ready := len(self.sources) > 0 && len(self.completed) == len(self.sources)
 			for validatorId, completed := range self.completed {
 				ready = ready && completed && self.through[validatorId] >= epoch
 			}
-			return ready, changed, self.resultErr
+			return ready, changed, errors.Join(self.resultErr, self.policyGapRangeError(first, epoch))
 		}()
 		if outcome != nil {
 			return outcome

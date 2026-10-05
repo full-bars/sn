@@ -1,0 +1,249 @@
+{
+  "schema": "funding-export-codec-successor-root-source-review-v1",
+  "status": "ONE_IMPORT_SOURCE_CORRECTION_REVIEWED_COMPILATION_PENDING",
+  "head": "fd9229f26db7788b84584f2287d194760ada4eb2",
+  "parent": "ab48c41d0f1d196a8311905f81d635c868f13dfe",
+  "tree": "c42ac7c557f2ff483b273011c620a898de186d99",
+  "crate_entries": [
+    {
+      "path": "tools/runtime-metadata-probe/Cargo.lock",
+      "mode": "100644",
+      "blob": "185310d18fcb00bcffd17ddacd80db8d34707651",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/Cargo.toml",
+      "mode": "100644",
+      "blob": "a698109860741b88d661c29d95be93d81c62a160",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/HISTORICAL-CAPTURE.md",
+      "mode": "100644",
+      "blob": "b4ac1a2e2a168f22a506cb4a9dd58ec69c1cf921",
+      "bytes": 3257,
+      "sha256": "3fd15393729c0e6b3f783dbf1b63f50cce02c57367f24e1d8c04d98dfe5f79b2"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "mode": "100644",
+      "blob": "138c372e7a3f5e6644bddc3e1efe948e5c8da472",
+      "bytes": 7426,
+      "sha256": "72d2297ae534dccd2da0a1fadb216fdf358f8cad5b7d41cd507f0979ffa66d45"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/examples/retained-wasm-node-profile.rs",
+      "mode": "100644",
+      "blob": "7c79bd6a5de34881f7fdf48a5adf45330ec8bed9",
+      "bytes": 5055,
+      "sha256": "f766922b363a856b0b075afc2767f5fe49fee68fecf2495300e6d28095b8b376"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/rust-toolchain.toml",
+      "mode": "100644",
+      "blob": "7c8c246e55d9ca56c631d7143464f526acc3a486",
+      "bytes": 104,
+      "sha256": "fb3f87a4bf579a0dc02e69de34f9cda59f20b1224d3511464ee64c90885ddb49"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/bin/runtime-historical-capture.rs",
+      "mode": "100644",
+      "blob": "094e553ef3c785afc126bb6e04c7e95589e1bf4a",
+      "bytes": 2368,
+      "sha256": "3d743a086e9f30e872a05ebd269c064e1ac14df99005e0a01a5101a646f0324f"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+      "mode": "100644",
+      "blob": "cfa8df655ba7aa11630d7bfa068b6efa7fb4ad28",
+      "bytes": 1174,
+      "sha256": "6043e5f07344b549fd5f86247151cfc19ee84ef61aa6ac197508f990ed7ea0d8"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/bin/runtime-transition-replay.rs",
+      "mode": "100644",
+      "blob": "d068be3a9c592be7b98ee422abef9a33fc8c3441",
+      "bytes": 1062,
+      "sha256": "27932de27ef19775c9c01781c275617991e1d857ef657d26de7d92531ead7e77"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical.rs",
+      "mode": "100644",
+      "blob": "addbd4e1658e4d570b250d12f003204f2fe44623",
+      "bytes": 20332,
+      "sha256": "2cc540ced332c8fa583f9c9961bd984291a01fd9109146b52a48ac855de9eb6f"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_backend.rs",
+      "mode": "100644",
+      "blob": "21c5b74012cd45efef650d351b798d23e9cfe10f",
+      "bytes": 7301,
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture.rs",
+      "mode": "100644",
+      "blob": "1ab31ba8aaf86c56c781a338e57c8a5b015f4442",
+      "bytes": 25597,
+      "sha256": "791bfabaa0a8268de27f7ea5b64b6be82afb152baeb11c0dee72251bfd919759"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture_feed.rs",
+      "mode": "100644",
+      "blob": "09531eae32f2a9eb1c83f67a840fdb9e1092fa77",
+      "bytes": 5382,
+      "sha256": "8eeca1214faa52d939235e50f1a2ea8a0e0976da5a3d0c96dea7a30dca71b138"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture_scope.rs",
+      "mode": "100644",
+      "blob": "79656439c514cb6ac065289093cc74a6ccd627e2",
+      "bytes": 10123,
+      "sha256": "0deac7d787dcad7e7036dfcddb8134e54adc8894a24d7bc25e6973c47a44c0c5"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture_scope_tests.rs",
+      "mode": "100644",
+      "blob": "a8a6b8f112098c2fed9f422da76219994d86cec3",
+      "bytes": 4170,
+      "sha256": "6ce5d2282749e40200341454502d673d4ca4e245e79f2d1a20b7a549118623ae"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "mode": "100644",
+      "blob": "fa9eeaf7a3e54be719299a4e01d8f98f421e7597",
+      "bytes": 25440,
+      "sha256": "78b8cd2a92711611132ece01655b9c9a90a0855821ecdc4d7fb0592be396ff1a"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_fee_events.rs",
+      "mode": "100644",
+      "blob": "15185dd9ce4c9849d833f5be321938e4ec0987df",
+      "bytes": 20107,
+      "sha256": "beb7d149d7b2e3c1adfdb5b11c15c1003ec96e14ca20e96bba7ebbc1a14e395b"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "mode": "100644",
+      "blob": "2035374bfb5a95b5c8da66daa0ff0db6d3140cd2",
+      "bytes": 14924,
+      "sha256": "ec3580ada4e2866da1468727aa7ea25b807cc6818d8791972b15f7dc0f8bb110"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "mode": "100644",
+      "blob": "4cd5f14e7e82c6d3944363c1b6fd6441fc3a0c02",
+      "bytes": 8563,
+      "sha256": "dd3a0ace7c633121d3f124b178d1af869b1ce41abb4e74825307a73819e44494"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "mode": "100644",
+      "blob": "b84d1596948884a882df7c9091e47c1a57ef2780",
+      "bytes": 46050,
+      "sha256": "0399169dfb045ee7c784c8526e34ce041679da63a0879f3cd7cea71736b61d18"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_native_yuma_capacity_tests.rs",
+      "mode": "100644",
+      "blob": "f6158db671259857178102d6a5a486445e15ce0c",
+      "bytes": 8693,
+      "sha256": "827c914b889114a2aba74eae6c7074505d89d019abf730f05aa2fb1b5c61ed7f"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_native_yuma_populated_tests.rs",
+      "mode": "100644",
+      "blob": "f4fc6d23bc8a148bb09e48a9e9f3e30aa2aface4",
+      "bytes": 21804,
+      "sha256": "2b7916646c669a894010db06e46f89e65e509d4576bf1c07e132ac8095540180"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_native_yuma_tests.rs",
+      "mode": "100644",
+      "blob": "9f72d1aaa3bdb536167ee08de5d89b537e074db5",
+      "bytes": 13503,
+      "sha256": "fe78b4f2e542a69ac54dd0eed394878acf7cdc353c2b69b97aaaef62bb3af90e"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_node_profile_tests.rs",
+      "mode": "100644",
+      "blob": "1e17e61cda5ffd7ba060ad88134f9db9ad2a1c84",
+      "bytes": 3314,
+      "sha256": "7b270abebe54d3f270298d3a12142ae6cbe7fa6319029f8301e35183d07d9686"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_observer.rs",
+      "mode": "100644",
+      "blob": "3cefe282f16c05f5942f1d24a7baa04e6db82b66",
+      "bytes": 32717,
+      "sha256": "c3a796582065f62f0afa9fb700373ad642ee986cd4612d9b107abd691d9f00f7"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_principal.rs",
+      "mode": "100644",
+      "blob": "19778720d093aee72226586db56eba2f39992bf2",
+      "bytes": 7886,
+      "sha256": "863803f9fe16ea45eb155287068de15485e35dd59eb12c212511ba95a9ecee95"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_principal_tests.rs",
+      "mode": "100644",
+      "blob": "f7becd36d0e85575f257e58ed8cd63f0ea09fc91",
+      "bytes": 8831,
+      "sha256": "743cba18c8c7e29ca5974344d445e2aeb1b37aef4dc89ba26d550a3c25a3b2ba"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_pure_hosts.rs",
+      "mode": "100644",
+      "blob": "928e63e002a4b8461ef019d3dfc4828cc6eddbc5",
+      "bytes": 5064,
+      "sha256": "f6187f0e022076c3a47e6c6de007a8618f84b5915480233733189d0bee7b3084"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_tests.rs",
+      "mode": "100644",
+      "blob": "549e93b3e26cd0a91f9f67afe7bf95987f5c9076",
+      "bytes": 57370,
+      "sha256": "cf4a12e5bc7cf96e3ff0093daecdc5f8c47dab771c6bdc1d337ca40884b3feb9"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/lib.rs",
+      "mode": "100644",
+      "blob": "c5a94fee89cdeffe163d58dac63424153e36cbee",
+      "bytes": 17694,
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/main.rs",
+      "mode": "100644",
+      "blob": "ebbb3e96e22dd0a931885c9eaf8fbb64a835a630",
+      "bytes": 3292,
+      "sha256": "83f55935f40f8803c4552038a5be26983747a51176dc7f94b3cc535c3f1108c9"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/replay.rs",
+      "mode": "100644",
+      "blob": "46d4e0c1792caf24ebaa4de7a48fbf920e8c4beb",
+      "bytes": 16621,
+      "sha256": "36030a50a42eb083aa8725b5abef025c9cf5fd6d0793ea8cc53c3a0cede2da54"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/replay_tests.rs",
+      "mode": "100644",
+      "blob": "10967c726187ee532ce1c3c30db656277b105452",
+      "bytes": 11565,
+      "sha256": "8dc046e4abc8de0de10a9c8dba4966433711f0ddd60f13050b6fc6c68bccbe3c"
+    }
+  ],
+  "review": [
+    "Only one shared test-module SCALE codec alias is added. Both child Yuma modules import super::*; all five observed references resolve through that alias at source level.",
+    "Production Rust, Cargo manifest/lock, Go tests and modules are byte-identical to original ab48; existing protected Go images need no source-content rebuild.",
+    "Complete corrected crate remains33 entries; original four exporter and five causal-control scopes and economic assertions must remain."
+  ],
+  "limits": [
+    "No successful corrected compile or test execution claimed.",
+    "Retain original five E0433 errors as actual failed-build history; no exporters ran in that build."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "two-warm-compilers-resource-admission-v1",
+  "observed_utc": "2026-10-04T17:03:49.894662+00:00",
+  "authorization": "Standing automatic budget approval; future qualification only.",
+  "baseline_available_bytes": 113681502208,
+  "future_cap_bytes": 94489280512,
+  "disk_forecasts_bytes": [
+    6442450944,
+    6442450944
+  ],
+  "resource_margin": 2,
+  "minimum_available_bytes": 44962025472,
+  "observed_available_bytes": 46284472320,
+  "memory_baseline_bytes": 103079215104,
+  "compiler_memory_forecasts_bytes": [
+    4294967296,
+    4294967296
+  ],
+  "minimum_memory_available_bytes": 120259084288,
+  "observed_memory_available_bytes": 130189828096,
+  "cpu_count": 24,
+  "observed_load": [
+    1.99169921875,
+    1.70458984375,
+    1.49169921875
+  ],
+  "scope": "At most two independently bounded warm Go compilers, with admitted short bodies. Excludes Rust compiler, DB fixture, any long history body or a third compiler. Retain original workload/lease census and cumulative baseline; recheck actual resource guards before each phase. Do not reset allowances or stop healthy work to enable this overlap.",
+  "basis": "Sol reports warm compile scratch peaks below0.8GB; conservative6GiB per compiler and4GiB resident forecasts retained. Original long workload and collector are stopped; current Claim normal build completed and its race compiler runs under renewed canonical lease.",
+  "status": "FUTURE_TWO_COMPILER_ADMISSION_REQUIRES_FRESH_RUNNER_GUARDS"
+}

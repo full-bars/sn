@@ -1,0 +1,57 @@
+{
+  "schema": "principal-fixture4af-effective-stage-root-review-v1",
+  "status": "EXACT_EFFECTIVE_SOURCE_STAGED",
+  "head": "4af72a82410ee4d229900dbb95560a5887e4c4ae",
+  "tree": "05148e71c31d8d92a7c0d1b8fa344bdccc4e26bf",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/overlay-sources/economic_conservation_fixture_protection_test.go",
+      "bytes": 1931,
+      "sha256": "644bafa7b394613c9b75ade45161cebb935376b880d7c005bfd23a1142057e0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/overlay-sources/economic_conservation_fixture_test.go",
+      "bytes": 12948,
+      "sha256": "617cb5aaf0a1a7f2797306e29739157369e8facd685cd657babe9bb4a03c3e9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/overlay-sources/economic_conservation_principal_custody_test.go",
+      "bytes": 3008,
+      "sha256": "859dc2d5b15fb7b9a1eee9a502f9690241117b93be946209cfe602929d2788d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/overlay-sources/economic_conservation_principal_test.go",
+      "bytes": 16876,
+      "sha256": "64ad9d77b3ea84c594a6464f56820a39c9693ec07b9bc0d6cff307466c6263ba"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/effective-source-stage-receipt-v2.json",
+      "bytes": 3614,
+      "sha256": "bbb66ed7d0363cfb8ee545c2105977451a1d6f737f09b18687536dc1060094ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/go-overlay-effective-v2.json",
+      "bytes": 1048,
+      "sha256": "a91bd68e950431f1554b24edb9fc6c40fecf98cbf41b65ed742d89b7cc9bf4c0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-fixture-custody/evidence/intake-v2.json",
+      "bytes": 7617,
+      "sha256": "52122a82106488abbfa8dd6865de193e993a26207ee67f82814500cd05b57fb6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture4af/evidence/selected-effective-graph-receipt-v1.json",
+      "bytes": 3050,
+      "sha256": "912f7e8f0dddb92857ec3fdf243982fe555692a67580b4ad270f2c10c7706947"
+    }
+  ],
+  "verified_paths": [
+    "mainnet/economic_conservation_fixture_protection_test.go",
+    "mainnet/economic_conservation_fixture_test.go",
+    "mainnet/economic_conservation_principal_custody_test.go",
+    "mainnet/economic_conservation_principal_test.go"
+  ],
+  "review": "Four physical/virtual overlay paths equal every tracked delta from the actual dc1 physical base to4af; original base bytes unchanged. Both inherited8d3 helpers retained, corrected intake/recipe and selected graph pinned.",
+  "scope": "Stage only. Actual runner/preflight/resources and twelve roots per mode/two controls/vet remain. No Rust rebuild or repeated successful bodies.",
+  "whole_mainnet_complete": false
+}

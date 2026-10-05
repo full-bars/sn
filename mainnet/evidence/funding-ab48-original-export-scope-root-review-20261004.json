@@ -1,0 +1,113 @@
+{
+  "schema": "funding-ab48-original-export-scope-root-review-v1",
+  "status": "EXACT_ORIGINAL_PRODUCER_SCOPE_REVIEWED_EXECUTION_PENDING",
+  "head": "ab48c41d0f1d196a8311905f81d635c868f13dfe",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-erase-second-original-apply-index/historical_native_execution_tests.rs",
+      "bytes": 46017,
+      "sha256": "1d01af0c9041cfda236cebd5e54a87a7ee8139fa125d6a499317e207de78304c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-yuma-input-observation/historical_observer.rs",
+      "bytes": 32813,
+      "sha256": "17ad07b97c4ac0ada50b55a6387417604183091a1b974958d0f4480d4e14ebed"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-body-transaction-memory/historical_native_execution_tests.rs",
+      "bytes": 46012,
+      "sha256": "182491228057ee6b04926f52b9d90f32f659e53ceddee166192f5310d844f47f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-restore-original-yuma-pending-parent/historical_native_execution_tests.rs",
+      "bytes": 45999,
+      "sha256": "614f78b1b8dc6ae0087db5036b03de9eaec399d867e1789a071ba68918f91d91"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/truncate-populated-original-matrix-rows/historical_native_yuma_populated_tests.rs",
+      "bytes": 21803,
+      "sha256": "2e78f661d7067be17434b72a282d33d91566b0e8bf46f54e155e1d88ba00b2e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/entitlement-coordinator-tuple-fixture/evidence/required-rust-exports-v1.json",
+      "bytes": 7573,
+      "sha256": "6b0c896d338e98e222faebb4bf07552b294f1a665121a3686b6f0ca9e3e10a7b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/entitlement-coordinator-tuple-fixture/evidence/required-rust-exports-source-v1.json",
+      "bytes": 9478,
+      "sha256": "86fc508f9e45fd32bc80e8c990e6005a933b24853db887f89b27faaed4515762"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/entitlement-coordinator-tuple-fixture/evidence/required-rust-exports-controls-v1.json",
+      "bytes": 12531,
+      "sha256": "f7120fb696d87c11423736747669cb0e3a5a2f5f6c6ee681441a1dc8595a9407"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/entitlement-coordinator-tuple-fixture/evidence/union41-qualification-recipe-v1.json",
+      "bytes": 5895,
+      "sha256": "7071ae74c7e2ac8ea97dc205a5233708fb5f77d78117dd96efe3e18402daeeaa"
+    }
+  ],
+  "crate_entries": 33,
+  "same_crate_as": "3a13c6977d8880891b3683db8ef82d1fa3b34526",
+  "export_roots": [
+    {
+      "root": "historical::tests::native_execution_tests::capture_join_tests::historical_native_vault_capture_exports_original_transaction_causes",
+      "source": "tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "environment": "URNETWORK_NATIVE_VAULT_CAPTURE_FIXTURE_OUT",
+      "go_environment": "URNETWORK_NATIVE_VAULT_CAPTURE_FIXTURE_DIR",
+      "members": [
+        "principal-capture.json",
+        "principal-capture-causes.json",
+        "principal-capture-unclassified.json",
+        "principal-capture-rollback.json"
+      ],
+      "timeout_seconds": 7200
+    },
+    {
+      "root": "historical::tests::native_execution_tests::capture_join_tests::historical_native_vault_capture_exports_original_capture_sequences",
+      "source": "tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "environment": "URNETWORK_NATIVE_VAULT_CAPTURE_SEQUENCE_FIXTURE_OUT",
+      "go_environment": "URNETWORK_NATIVE_VAULT_CAPTURE_SEQUENCE_FIXTURE_DIR",
+      "members": [
+        "principal-capture-same-block.json",
+        "principal-capture-next-block.json",
+        "principal-capture-next-block-102.json"
+      ],
+      "timeout_seconds": 7200
+    },
+    {
+      "root": "historical::tests::native_execution_tests::yuma_tests::historical_native_yuma_exports_original_complete_branches",
+      "source": "tools/runtime-metadata-probe/src/historical_native_yuma_tests.rs",
+      "environment": "URNETWORK_NATIVE_YUMA_FIXTURE_OUT",
+      "go_environment": "URNETWORK_NATIVE_YUMA_FIXTURE_DIR",
+      "members": [
+        "yuma-legacy.json",
+        "yuma-yuma3.json",
+        "yuma-liquid.json"
+      ],
+      "timeout_seconds": 7200
+    },
+    {
+      "root": "historical::tests::native_execution_tests::yuma_populated_tests::historical_native_yuma_exports_populated_64_by_1024_and_2048",
+      "source": "tools/runtime-metadata-probe/src/historical_native_yuma_populated_tests.rs",
+      "environment": "URNETWORK_NATIVE_YUMA_POPULATED_FIXTURE_OUT",
+      "go_environment": "URNETWORK_NATIVE_YUMA_POPULATED_FIXTURE_DIR",
+      "members": [
+        "yuma-populated-1024.json",
+        "yuma-populated-1024-original-events.json",
+        "yuma-populated-2048.json",
+        "yuma-populated-2048-original-events.json"
+      ],
+      "timeout_seconds": 43200
+    }
+  ],
+  "operative_control_groups": 5,
+  "review": [
+    "Verified all33 complete crate blob/hash entries equal pinned3a source; actual four root declarations exist. Four selected producers bind14 exact output files and full41 Go continuation.",
+    "Read five exact operative mutations and verified replacement against originalsource and declared single-site changes, allowing formatting.",
+    "Required outputs include original transaction-memory/capture sequences, full Yuma branches and populated64-by1024/2048 observations. Earlier recipe filenames with -101 are superseded only by additive correction; actual consumer names bind exporter."
+  ],
+  "limits": "No Rust exporter PASS, output resource measurement or full41 execution claimed. Source-only prior3a recipe does not supply qualified runtime data."
+}

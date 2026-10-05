@@ -1,0 +1,62 @@
+{
+  "scope": "Exact512 retained-segment public EVM cohort restore, ordinary mode only, synthetic fixture on frozen b6/Core2ea",
+  "status": "BODY_AND_MEASUREMENT_PASS_WITH_RETAINED_SUMMARY_COLLISION",
+  "supplemental_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/full512-normal-fsfix-supplemental-terminal-v1.json",
+    "sha256": "98264ff0f6d5ad89f8559b8d36153e0a024dd316dcbf6424fa06b67983657862"
+  },
+  "retained_verification": {
+    "actual_root": "TestMonitorEvmRestoreCohortAdmitsAll512OriginalSegments",
+    "adoption": {
+      "bytes": 2274,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/runtime-full512_normal-adoption-v8.json",
+      "sha256": "1937c56a9c2e746f0e6ff8bb2c33fb11b6fed8bfe8b64f83d96656d2117ead73"
+    },
+    "child_path_churn_missing_total": 13,
+    "fixture_after_entries": 0,
+    "image_custody_same": true,
+    "job": {
+      "bytes": 12688,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/runtime-full512-job-v8.json",
+      "sha256": "e5105b6945dc92d09d51745eceb812e9a5f5ce87dcdc47cf42b42a1ea7f02f92"
+    },
+    "measurement": "COMPLETE",
+    "peak_allocated_bytes": 132313088,
+    "peak_entries": 5738,
+    "phase": {
+      "bytes": 3551,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/18-test-mainnet-full512-normal-fsfix-runtime-receipt.json",
+      "sha256": "a6128332759ed757195afaf6766b92c501579854386b132dd425e4dcd39a9f3a"
+    },
+    "prior_batch_collision": {
+      "bytes": 814,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/direct-owned-runtime-full512_normal-batch-receipt.json",
+      "sha256": "36f7ccaa23c53a59ee90062679c14c2aca40e48c48ff636ac2bee5d56eb7ed58"
+    },
+    "runner": {
+      "bytes": 17916,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/run-direct-owned-tests-v4.py",
+      "sha256": "329899537f936b6fbeedcb058c8c928a1679eb9fe022a53d4ccee7ae885f4637"
+    },
+    "runner_error": "FileExistsError on historical direct-owned-runtime-full512_normal-batch-receipt.json after valid exact phase receipt was sealed; original batch remains immutable",
+    "runner_exit_code": 1,
+    "sampler": {
+      "bytes": 19741,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/18-test-mainnet-full512-normal-fsfix.samples.csv",
+      "sha256": "4096e146780d3c00914785158819e23ae4d0ce22470affd5662a03af5274081b"
+    },
+    "sampler_rows": 331,
+    "schema": "b6-full512-normal-fsfix-supplemental-terminal-v1",
+    "status": "PHASE_PASS_BATCH_SEAL_COLLISION",
+    "test_body": "PASS"
+  },
+  "root_review": "Independently rehashed phase, raw/stderr,331 CSV rows, exact job/runner/adoption and original failure batch; one actual root run/pass, zero skips, same image custody, fixture empty. Peak and churn recalculated.",
+  "capacity_limit": "132313088 bytes is a one-second sampled allocated peak for this synthetic fixture, not a proven true maximum, process RSS, populated native proof bound or production-host sizing. Original3.5GiB forecast and2x admission margin remain separate.",
+  "continuity": "Prior preparation failure and post-body summary collision stay visible. Additive checker receipt preserves successful body without rerunning it; race follows actual normal measurement/cleanup guard.",
+  "remaining": [
+    "Full512 race final result",
+    "Corrective production/fixture batch qualification",
+    "Complete economic/role integration",
+    "Actual host and mainnet authority"
+  ]
+}

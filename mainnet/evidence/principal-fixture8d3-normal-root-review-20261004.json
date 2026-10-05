@@ -1,0 +1,40 @@
+{
+  "schema": "principal-fixture8d3-normal-root-review-v1",
+  "status": "NORMAL_TERMINAL_NEXT_FIXTURE_PROVISIONING_GAP",
+  "counts": {
+    "run": 20,
+    "pass": 10,
+    "fail": 10,
+    "skip": 0
+  },
+  "failed_roots": [
+    "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed",
+    "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings",
+    "TestEconomicConservationPublicMissingPrincipalProofKeepsSiblings",
+    "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome",
+    "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive",
+    "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative",
+    "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative",
+    "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown",
+    "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping",
+    "TestEconomicConservationPublicPrincipalReviewCannotReplaceOriginalSignature"
+  ],
+  "review": [
+    "Exact20-root normal raw events independently reproduce10pass10fail0skip. All ten failures are missing checkpoint-lock setup; original root-mode refusal cleared.",
+    "New deterministic fresh-root protection and later public tampering refusal root passes. Preserve these ten successful bodies; next principal fixture provisioning correction requires separate causal qualification.",
+    "Original38-root normal/race and original Rust qualified assets retained. Current8d3race body and controls remain independent outcomes; no whole principal or financial closure inferred."
+  ],
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/fixture8d3-normal.receipt.json",
+      "bytes": 15977,
+      "sha256": "a976b5532b36c90c68bd64b8a9059bfc4b238e98a00f1bba8ccd0f9711faaa51"
+    },
+    {
+      "bytes": 19925,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-normal-body.stdout",
+      "sha256": "0504c49578ba08e7fbd414b7cf9bfac711cf73c79db462586e573b56ab38b700"
+    }
+  ],
+  "requirement_closure": false
+}

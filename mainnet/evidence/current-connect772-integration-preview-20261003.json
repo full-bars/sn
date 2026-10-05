@@ -1,0 +1,80 @@
+{
+  "captured_utc": "2026-10-03T19:34:38.132691+00:00",
+  "changed_git_blobs": [
+    {
+      "blob": "725ce65457fa26b9402d79727421cefd0f612288",
+      "path": "durablevolume/preparation.go"
+    },
+    {
+      "blob": "647976535fad11308b50bcf40717ad3cad82c320",
+      "path": "durablevolume/preparation_apply_linux.go"
+    },
+    {
+      "blob": "16b3678e8f1fddf6727b3e9e1b73fcf6b045a31c",
+      "path": "durablevolume/preparation_capacity_linux.go"
+    },
+    {
+      "blob": "fcf3d89e211e7043c29d3e0d68d01b73cafb2b0a",
+      "path": "durablevolume/preparation_cohort.go"
+    },
+    {
+      "blob": "a6fad36526119e183b87d5de0958adcdb16846e7",
+      "path": "durablevolume/preparation_cohort_admission_linux.go"
+    },
+    {
+      "blob": "af1a23268eaef91bbd5dab0039b85a89dcbf4551",
+      "path": "durablevolume/preparation_cohort_declaration_linux.go"
+    },
+    {
+      "blob": "2e6d7db91ff9f3b89d2d5e689e240b70d7683ae2",
+      "path": "durablevolume/preparation_cohort_declaration_test.go"
+    },
+    {
+      "blob": "17eee57d352713002ca299683135bee6ccc95962",
+      "path": "durablevolume/preparation_cohort_linux.go"
+    },
+    {
+      "blob": "3bc2d5064b3d9d5eb2a49ba6fc57ab521abc0a41",
+      "path": "durablevolume/preparation_cohort_test.go"
+    },
+    {
+      "blob": "142b92d745a908615c02e41c7438d53b27397550",
+      "path": "durablevolume/preparation_many_owners_test.go"
+    },
+    {
+      "blob": "7e074759f3dc56f12756300a7e6b0a0e03c15abf",
+      "path": "durablevolume/preparation_other.go"
+    },
+    {
+      "blob": "ff81dae80a62ab78f9b5b14dbc033f23bc09943b",
+      "path": "durablevolume/preparation_plan_artifact_linux.go"
+    },
+    {
+      "blob": "a6dd066fab747581df20e6222f0e99c3b39503c9",
+      "path": "durablevolume/preparation_plan_linux.go"
+    },
+    {
+      "blob": "18ad62c506ca0225554beb116ac4f3931223941e",
+      "path": "durablevolume/preparation_restore_admission_test.go"
+    },
+    {
+      "blob": "63fb91434dee183b14c519659927bf7d7dbd0c5b",
+      "path": "durablevolume/preparation_restore_linux.go"
+    }
+  ],
+  "commit": "fd25b314526e4ffc3268944233855bc3d7556af3",
+  "completion": "No new behavioral pass or requirement closure.",
+  "next": "Final core composition must also retain pending namespace e7, then qualify final selected core/public source and actual protocol compatibility root under separate admission. Pin final published dependency in SN once qualified.",
+  "parents": [
+    "8ec41070e250c1f77dc74dc46977b849cc59565a",
+    "77235bb4cad46b59e12e0898349b4b2ba16f4389"
+  ],
+  "qualified_source": "native-cohort63-scoped-qualification-20261003.json",
+  "repository": "/home/by/urnetwork/connect",
+  "review_branch": "review/mainnet-restore-core-772",
+  "schema": "urnetwork-root-current-connect772-integration-preview-v1",
+  "status": "SOURCE_PREVIEW_NOT_MAIN_MERGE_OR_COMPOSED_QUALIFICATION",
+  "tree": "323f18f6f298ed4918dba0482ec6908ff5267824",
+  "verified": "All15 durablevolume entries match qualified772; all other entries match newer main8ec; go.mod unchanged. New optional protocol field/test retained. Main stays8ec.",
+  "wire_limit": "Optional report_id is not production report-emission or backend durable deduplication authority."
+}

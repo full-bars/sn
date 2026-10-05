@@ -1,0 +1,27 @@
+{
+  "assertions": [
+    "bootstrap_successor_local_rebind_command_test.go:173: fixed owner public planning failed 2 storage preparation: storage preparation capacities are absent or exceed the finite profile",
+    "bootstrap_successor_local_rebind_test.go:22: fixed owner public planning failed 2 storage preparation: storage preparation capacities are absent or exceed the finite profile"
+  ],
+  "classification": "Two fixture public-planning failures before rebind preview: test request sets MaxPlanBytes=16MiB, while Connect9fb maximumPreparationPlanBytes=8MiB. Product path not qualified by these roots; two negative roots pass.",
+  "commit": "2689fced35b5438bb00d957971813bbdd7eea44e",
+  "failed_roots": [
+    "TestBootstrapSuccessorLocalRebindLostAcknowledgementResumesOriginalReceipt",
+    "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority"
+  ],
+  "passed_roots": [
+    "TestBootstrapSuccessorLocalInspectionCannotBorrowWriterAuthority",
+    "TestBootstrapSuccessorUnapprovedLocalReceiptCannotAcquireAuthority"
+  ],
+  "schema": "sol-local2689-original-normal-failed-v1",
+  "sha256": {
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "303b19f7adda3efe4f1f5b978590c8016bed5a802236cc61dcafa9d69860c597",
+    "normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "normal.jsonl": "b3fd6eae341b32bd50c56f18a9476ea59c034fc8252512a94349e9d812c1a699",
+    "normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source-graph-preflight.json": "53f467e94056a8ca655ce702f7a2c60404dfadd72a4f5055a53959506dd61a53",
+    "source-readback.json": "ebd49645bc4b2d390e195c4a2237e78fa0fe11b399baffdf6124a679cf433e04"
+  },
+  "tree": "5a2cf1a72cea874926c972da59ed6efd2659a384"
+}

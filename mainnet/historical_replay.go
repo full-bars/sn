@@ -1,0 +1,341 @@
+// Historical execution runs in one bounded child process over exact public
+// bytes. Reproduction relative to those bytes is separate from runtime/finality
+// admission and from transaction-specific native fee withdrawal/refund.
+package main
+
+import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"syscall"
+	"time"
+
+	"golang.org/x/sys/unix"
+)
+
+const historicalReplaySchema = "urnetwork-historical-proof-replay-v1"
+const historicalReplaySdk = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a"
+const historicalReplayJobLimit = 96 * 1024 * 1024
+const historicalReplayReportLimit = 1024 * 1024
+const historicalReplayEngineLimit = 512 * 1024 * 1024
+
+// Rust serializes fixed digests as byte arrays. The standard Go array decoder
+// accepts short/long arrays; explicit count/range checks preserve the wire pin.
+type historicalReplayDigest [32]byte
+
+func (self *historicalReplayDigest) UnmarshalJSON(raw []byte) error {
+	var values []uint16
+	if err := json.Unmarshal(raw, &values); err != nil || len(values) != len(self) {
+		return errors.Join(errors.New("historical digest must contain exactly32 bytes"), err)
+	}
+	for index, value := range values {
+		if value > 255 {
+			return errors.New("historical digest contains a non-byte value")
+		}
+		self[index] = byte(value)
+	}
+	return nil
+}
+
+// The executable rechecks complete SCALE bodies/proofs and derives roots. The
+// caller also binds every report to the exact job and independent file pins.
+type historicalReplayJob struct {
+	Schema                string                              `json:"schema"`
+	ParentHeaderHex       string                              `json:"parent_header_hex"`
+	ParentHash            historicalReplayDigest              `json:"parent_hash"`
+	ChildHeaderHex        string                              `json:"child_header_hex"`
+	ChildHash             historicalReplayDigest              `json:"child_hash"`
+	ExtrinsicsHex         []string                            `json:"extrinsics_hex"`
+	RuntimeCodeHex        string                              `json:"runtime_code_hex"`
+	RuntimeCodeSha256     historicalReplayDigest              `json:"runtime_code_sha256"`
+	RuntimeCodeBlake2b256 historicalReplayDigest              `json:"runtime_code_blake2b_256"`
+	ExecutionStateVersion uint8                               `json:"execution_state_version"`
+	ProofNodesHex         []string                            `json:"proof_nodes_hex"`
+	ObservationProfile    *historicalReplayObservationProfile `json:"observation_profile,omitempty"`
+}
+
+type historicalReplayReport struct {
+	Schema                    string                        `json:"schema"`
+	JobSha256                 historicalReplayDigest        `json:"job_sha256"`
+	SdkRevision               string                        `json:"sdk_revision"`
+	HostProfile               string                        `json:"host_profile"`
+	ParentHash                historicalReplayDigest        `json:"parent_hash"`
+	ChildHash                 historicalReplayDigest        `json:"child_hash"`
+	ParentStateRoot           historicalReplayDigest        `json:"parent_state_root"`
+	ChildStateRoot            historicalReplayDigest        `json:"child_state_root"`
+	RuntimeCodeSha256         historicalReplayDigest        `json:"runtime_code_sha256"`
+	ProofSha256               historicalReplayDigest        `json:"proof_sha256"`
+	Extrinsics                uint64                        `json:"extrinsics"`
+	ProofNodes                uint64                        `json:"proof_nodes"`
+	ProofBytes                uint64                        `json:"proof_bytes"`
+	StorageCalls              uint64                        `json:"storage_calls"`
+	StorageIoBytes            uint64                        `json:"storage_io_bytes"`
+	PostStateReproduced       bool                          `json:"post_state_reproduced"`
+	AnchorAuthority           string                        `json:"anchor_authority"`
+	RuntimeAdmitted           bool                          `json:"runtime_admitted"`
+	NativeFeeDebit            *string                       `json:"native_fee_debit"`
+	NativeFeeWithdrawalRefund bool                          `json:"native_fee_withdrawal_refund_observed"`
+	ProductionSelection       bool                          `json:"production_selection"`
+	HookObservations          *historicalReplayObservations `json:"hook_observations,omitempty"`
+}
+
+type historicalReplayRequest struct {
+	Engine planFileReference
+	Job    planFileReference
+	Budget time.Duration
+}
+
+// Hooks belong to a single caller and only expose real process/pipe boundaries
+// for deterministic tests. The command constructs an empty hook set.
+type historicalReplayHooks struct {
+	beforeStart func(context.Context, *os.File)
+	afterStart  func(context.Context, int)
+	afterOutput func()
+}
+
+// Output refusal actively cancels the owned child; simply returning a writer
+// error could otherwise leave a child with no reader waiting until deadline.
+type historicalReplayOutput struct {
+	buffer  bytes.Buffer
+	maximum int
+	cancel  context.CancelFunc
+	read    func()
+	err     error
+}
+
+func (self *historicalReplayOutput) Write(raw []byte) (int, error) {
+	if len(raw) > self.maximum-self.buffer.Len() {
+		self.err = errors.New("historical replay child output exceeds bound")
+		self.cancel()
+		return 0, self.err
+	}
+	n, err := self.buffer.Write(raw)
+	if self.read != nil {
+		self.read()
+	}
+	return n, err
+}
+
+// Copy the independently hashed ELF into an immutable memfd before execution.
+// Neither path replacement nor a write between hash and exec can select new
+// code. No source file is mutated, and the descriptor closes after child join.
+func historicalReplayEngine(ctx context.Context, reference planFileReference) (result *os.File, resultErr error) {
+	if !bootstrapRootAbsolutePath(reference.Path) || !planSha256(reference.Sha256) {
+		return nil, errors.New("historical replay engine requires exact absolute file pin")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	fd, err := unix.Open(reference.Path, unix.O_RDONLY|unix.O_NOFOLLOW|unix.O_CLOEXEC|unix.O_NONBLOCK, 0)
+	if err != nil {
+		return nil, err
+	}
+	source := os.NewFile(uintptr(fd), reference.Path)
+	var copyFile *os.File
+	defer func() {
+		resultErr = errors.Join(resultErr, source.Close())
+		if resultErr != nil {
+			if copyFile != nil {
+				resultErr = errors.Join(resultErr, copyFile.Close())
+			}
+			result = nil
+		}
+	}()
+	before, err := source.Stat()
+	if err != nil {
+		return nil, err
+	}
+	stat, ok := before.Sys().(*syscall.Stat_t)
+	if !ok || !before.Mode().IsRegular() || before.Mode().Perm()&0111 == 0 || before.Mode().Perm()&0022 != 0 || before.Mode()&(os.ModeSetuid|os.ModeSetgid) != 0 || before.Size() < 4 || before.Size() > historicalReplayEngineLimit || stat.Nlink != 1 {
+		return nil, errors.New("historical replay engine is not a bounded protected executable")
+	}
+	fd, err = unix.MemfdCreate("urnetwork-historical-replay", unix.MFD_CLOEXEC|unix.MFD_ALLOW_SEALING)
+	if err != nil {
+		return nil, err
+	}
+	copyFile = os.NewFile(uintptr(fd), "historical-replay-engine")
+	digest := sha256.New()
+	buffer := make([]byte, 64*1024)
+	var total int64
+	for {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		n, err := source.Read(buffer)
+		if total == 0 && (n < 4 || !bytes.Equal(buffer[:4], []byte{0x7f, 'E', 'L', 'F'})) {
+			return nil, errors.New("historical replay engine is not ELF")
+		}
+		total += int64(n)
+		if total > before.Size() || total > historicalReplayEngineLimit {
+			return nil, errors.New("historical replay engine grew during pinning")
+		}
+		if _, writeErr := io.MultiWriter(copyFile, digest).Write(buffer[:n]); writeErr != nil {
+			return nil, writeErr
+		}
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	after, err := source.Stat()
+	if err != nil {
+		return nil, err
+	}
+	final, ok := after.Sys().(*syscall.Stat_t)
+	if !ok || stat.Dev != final.Dev || stat.Ino != final.Ino || stat.Mode != final.Mode || stat.Nlink != final.Nlink || stat.Mtim != final.Mtim || stat.Ctim != final.Ctim || total != before.Size() || after.Size() != total || "sha256:"+hex.EncodeToString(digest.Sum(nil)) != reference.Sha256 {
+		return nil, errors.New("historical replay engine differs from its exact pin")
+	}
+	if err := copyFile.Chmod(0500); err != nil {
+		return nil, err
+	}
+	if _, err := unix.FcntlInt(copyFile.Fd(), unix.F_ADD_SEALS, unix.F_SEAL_WRITE|unix.F_SEAL_GROW|unix.F_SEAL_SHRINK|unix.F_SEAL_SEAL); err != nil {
+		return nil, err
+	}
+	return copyFile, ctx.Err()
+}
+
+// Execute once. Ambiguous, canceled, malformed or partial output never becomes
+// a proof fact. A future fee observer can consume this same verified boundary.
+func runHistoricalReplay(ctx context.Context, request historicalReplayRequest, hooks historicalReplayHooks) (result *historicalReplayReport, resultErr error) {
+	if request.Budget < time.Minute || request.Budget > 15*time.Minute || !planSha256(request.Job.Sha256) {
+		return nil, errors.New("historical replay requires a60–900second owned budget and exact input pin")
+	}
+	owner, cancel := context.WithTimeout(ctx, request.Budget)
+	defer cancel()
+	raw, digest, err := readBootstrapRootFile(owner, request.Job.Path, historicalReplayJobLimit)
+	if err != nil {
+		return nil, fmt.Errorf("read historical replay job: %w", err)
+	}
+	if digest != request.Job.Sha256 {
+		return nil, errors.New("historical replay job differs from exact input pin")
+	}
+	var job historicalReplayJob
+	if err := decodePlanJson(raw, &job); err != nil {
+		return nil, err
+	}
+	if job.Schema != historicalReplaySchema || len(job.ProofNodesHex) == 0 || len(job.ProofNodesHex) > 8192 || len(job.ExtrinsicsHex) > 16384 || job.ExecutionStateVersion > 1 {
+		return nil, errors.New("historical replay job exceeds declared protocol bounds")
+	}
+	if err := job.ObservationProfile.validate(job); err != nil {
+		return nil, err
+	}
+	maximumReportBytes := historicalReplayReportLimit
+	if job.ObservationProfile != nil {
+		maximumReportBytes = historicalReplayObservedReportLimit
+		if job.ObservationProfile.Schema == historicalNativeProfileSchema {
+			maximumReportBytes = historicalNativeReportLimit
+		}
+	}
+	output, err := runHistoricalProofWorker(owner, cancel, historicalProofWorkerRequest{Engine: request.Engine, Input: raw, Directory: filepath.Dir(request.Job.Path), MaximumReport: maximumReportBytes}, hooks)
+	if err != nil {
+		return nil, err
+	}
+	var report historicalReplayReport
+	if err := decodePlanJson(output, &report); err != nil {
+		return nil, err
+	}
+	if err := validateHistoricalReplayReport(job, raw, report); err != nil {
+		return nil, err
+	}
+	return &report, owner.Err()
+}
+
+func validateHistoricalReplayReport(job historicalReplayJob, raw []byte, report historicalReplayReport) error {
+	if report.Schema != historicalReplaySchema || report.JobSha256 != historicalReplayDigest(sha256.Sum256(raw)) || report.SdkRevision != historicalReplaySdk || (report.HostProfile != "substrate-proof-bounded-storage-v1" && report.HostProfile != "substrate-proof-bounded-hosts-v2") || report.ParentHash != job.ParentHash || report.ChildHash != job.ChildHash || report.RuntimeCodeSha256 != job.RuntimeCodeSha256 || report.Extrinsics != uint64(len(job.ExtrinsicsHex)) || report.ProofNodes != uint64(len(job.ProofNodesHex)) || report.ProofBytes > 24*1024*1024 || report.StorageCalls > 65536 || report.StorageIoBytes > 64*1024*1024 || !report.PostStateReproduced {
+		return errors.New("historical replay report differs from exact input or execution profile")
+	}
+	if report.AnchorAuthority != "caller-supplied-unapproved" || report.RuntimeAdmitted || report.NativeFeeDebit != nil || report.NativeFeeWithdrawalRefund || report.ProductionSelection {
+		return errors.New("historical replay report claims unestablished runtime, fee or finality authority")
+	}
+	return validateHistoricalReplayObservations(job, report.HookObservations)
+}
+
+// Both fixed workers share exact executable custody and joined bounded pipes.
+// The optional node descriptor selects capture; it never selects another argv,
+// executable path, signer or network target inside the supervisor.
+type historicalProofWorkerRequest struct {
+	Engine        planFileReference
+	Input         []byte
+	Directory     string
+	MaximumReport int
+	Nodes         *os.File
+}
+
+func runHistoricalProofWorker(owner context.Context, cancel context.CancelFunc, request historicalProofWorkerRequest, hooks historicalReplayHooks) (result []byte, resultErr error) {
+	if request.MaximumReport <= 0 || request.MaximumReport > historicalCaptureReportLimit || len(request.Input) > historicalReplayJobLimit {
+		return nil, errors.New("historical proof worker exceeds its fixed profile")
+	}
+	engine, err := historicalReplayEngine(owner, request.Engine)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		resultErr = errors.Join(resultErr, engine.Close())
+		if resultErr != nil {
+			result = nil
+		}
+	}()
+	// The currently running image, not a re-resolved binary name, contains
+	// the matching supervisor. Its process has no unrelated child owners.
+	supervisor, err := os.Open("/proc/self/exe")
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		resultErr = errors.Join(resultErr, supervisor.Close())
+		if resultErr != nil {
+			result = nil
+		}
+	}()
+	argument := "--retained-engine-fd3"
+	if request.Nodes != nil {
+		argument = "--retained-capture-engine-fd3-nodes-fd5"
+	}
+	command := exec.CommandContext(owner, "/proc/self/fd/4", argument)
+	command.Args[0] = "urnetwork-historical-replay-supervisor"
+	command.ExtraFiles = []*os.File{engine, supervisor}
+	if request.Nodes != nil {
+		command.ExtraFiles = append(command.ExtraFiles, request.Nodes)
+	}
+	command.Env = []string{"LANG=C", "LC_ALL=C", "RUST_BACKTRACE=0"}
+	command.Dir = request.Directory
+	command.Stdin = bytes.NewReader(request.Input)
+	command.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	command.Cancel = func() error {
+		// The supervisor kills/reaps its entire engine group before exiting.
+		err := command.Process.Signal(syscall.SIGTERM)
+		if errors.Is(err, syscall.ESRCH) {
+			return os.ErrProcessDone
+		}
+		return err
+	}
+	command.WaitDelay = 5 * time.Second
+	stdout := historicalReplayOutput{maximum: request.MaximumReport, cancel: cancel, read: hooks.afterOutput}
+	stderr := historicalReplayOutput{maximum: 64 * 1024, cancel: cancel}
+	command.Stdout, command.Stderr = &stdout, &stderr
+	if hooks.beforeStart != nil {
+		hooks.beforeStart(owner, engine)
+	}
+	if err := command.Start(); err != nil {
+		return nil, errors.Join(err, owner.Err())
+	}
+	if hooks.afterStart != nil {
+		hooks.afterStart(owner, command.Process.Pid)
+	}
+	err = command.Wait()
+	// Join before examining any buffer written by os/exec's pipe goroutines.
+	if err := errors.Join(err, stdout.err, stderr.err, owner.Err()); err != nil {
+		return nil, fmt.Errorf("historical replay child refused: %w", err)
+	}
+	return stdout.buffer.Bytes(), owner.Err()
+}

@@ -22,6 +22,31 @@ func (err *provisionalNativeWeightRejection) Error() string {
 
 func (err *provisionalNativeWeightRejection) Unwrap() error { return err.cause }
 
+// A fresh provisional generation may have no eligible weights before its
+// first native intent. It can retry this typed pre-intent rejection without
+// manufacturing a submission or admitting gaps after an intent exists.
+// An infeasible cap applies to the observed vector only: new authenticated
+// funding/eligibility may add a positive recipient within the same epoch, so
+// this disposition must not freeze or skip all later observations in it.
+func provisionalNativeWeightRejectionEnabled(cfg *ReleaseConfig, history *releaseEvidenceV2StartupHistory, current *SteeringIntent) bool {
+	if history == nil {
+		return false
+	}
+	if history.retainedStartup && provisionalClosedNativeInputEnabled(cfg) {
+		return true
+	}
+	return provisionalFreshNativePreparationEnabled(cfg, history, current)
+}
+
+// No published native intent may be deferred by the pre-intent owner. Retained
+// operator cuts or settlement history do not create a native intent; restarting
+// after collecting them must preserve the same bounded preparation retries.
+func provisionalFreshNativePreparationEnabled(cfg *ReleaseConfig, history *releaseEvidenceV2StartupHistory, current *SteeringIntent) bool {
+	return history != nil && history.historyAdoption == nil && current == nil && cfg != nil &&
+		cfg.ProvisionalRuntimeCompatibility == crv4.ProvisionalRuntimeCompatibilityProfile &&
+		validateReleaseProvisionalRuntimeCompatibility(cfg) == nil
+}
+
 func classifyProvisionalNativeWeights(ctx context.Context, enabled bool, nativeEpoch, settlementEpoch uint64, err error) error {
 	if !enabled || err == nil || ctx == nil || ctx.Err() != nil {
 		return err

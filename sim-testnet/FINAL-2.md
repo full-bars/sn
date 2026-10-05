@@ -1,7 +1,230 @@
 # Sim-testnet finalization report 2
 
-**Current status: in progress; `final_acceptance=false`.** The soak remains
-stopped. The approved **6,000-alpha reserve repair has finalized** and reached
+**Fourth independent diagnostic completed 2026-09-25 11:08 UTC.** The
+clean Git-stamped `da7689f8` collector exited 0 after a read-only capture.
+Its [report](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/fourth-terminal-da7689f8/report.json)
+has SHA-256 `affad93c70b533e1a55f6e439dcec89f5243f5957d6ad76dfbd7ed984678d736`:
+38 checks, **18 pass, three fail, one named exception, one finding and 15
+unavailable**, with `final_acceptance=false`. Validator 2's signed source
+capture and native application coverage now pass; its relay publication
+readback remains unavailable because the exact historical request owner is
+absent. Validator 1's compact input journal remains unavailable. Companion
+capture and ordinary signed payout artifacts pass. Terminal assertions,
+the original process-log report and fault timing fail independently. The
+diagnostic evaluated those assertions at its 10:19 UTC read cut, before the
+companion's later hard restore; it has not reclassified that failure. The
+R44 owner has not sealed `result.json`, so result-dependent checks and strict
+acceptance remain unavailable.
+
+**Companion hard restore observed 2026-09-25 after finalized block 8,082,634.**
+The owner fault record now shows `fleet-lifecycle-companion-prune` restored
+at its scheduled hard deadline, with no `RestoreConditionMet` proof. The
+read-only [hard-restore observation](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/COMPANION-HARD-RESTORE.json)
+has SHA-256 `c7a330fe494e0d8e8037b45f2fb060c7964bb2f98bf5b64aac5a7f7051f641f5`
+and preserves the source file hash and LAN finalized head. This is the named
+R44-LC-1 exception, not a successful lifecycle assertion. The owner remains
+active without `result.json` or signed completion. The fourth independent
+read-only diagnostic continues collecting the remaining terminal evidence;
+other failed and unavailable checks remain separate.
+
+**Third read-only terminal diagnostic, completed 2026-09-25 10:00 UTC:**
+The clean Git-stamped successor authenticated the same signed R44 start,
+checkpoint, all 44 recovery generations, observation prefix and completed
+five-epoch terminal without changing the live owner. Its separate
+[report](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/third-terminal-d56709aa-stamped/report.json)
+has SHA-256 `38d7b721aaebc291918053635dd6ba9f014dc42c20c7b7654e457984c6185838`
+and 38 checks: **16 pass, four fail, one named exception, one finding and 16
+unavailable**. Both operators' current signed artifacts and both validators'
+path/config checks pass. The [companion evidence bundle](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/third-terminal-d56709aa-stamped/final-inputs/bundles/validator-evidence-companion.json)
+is retained with content SHA-256
+`0faed897bd8de3d7dcb90f7fac827d52e3c48447580072af9949ad47b48ea3f4`;
+the companion capture and ordinary signed payout-artifact checks both pass.
+This improves the first diagnostic's reader-limited outcomes, but it does not
+qualify the bypassed lifecycle mutation or erase the companion filter's failed
+restoration timing. The lifecycle payout index remains unavailable.
+
+The four failed groups are the terminal scenario assertions, validator-2
+signed-source capture, the original process-log report and acceptance fault
+timing. Validator-2's capture authenticated native/path/config inputs but
+exhausted its 15-minute budget while reading retained stream data; it reported
+an incomplete HTTP body and deadline errors, so native application and relay
+readback remain unavailable. Validator 1's compact input journal is absent in
+its retained generation, leaving its capture and dependent checks unavailable.
+The owner has not sealed `result.json` or signed completion; strict acceptance,
+result-dependent semantic checks and full finalization remain unavailable.
+These outcomes are distinct from exception R44-LC-1 below. The diagnostic is
+`read_only=true` and `final_acceptance=false`.
+
+**Second read-only diagnostic, 2026-09-25 09:13 UTC:** A composed successor
+replayed the same retained R44 terminal checkpoint without changing the owner.
+Its [separate report](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/second-terminal-5c2ee88c/report.json)
+(SHA-256 `5449a651f5ffb841e55e7a08303ea74afde63d3a641c1891ac50db13ca3b3d23`)
+passed the signed start but failed the latest-checkpoint reader on the retained
+`start_time_ticks` field. Its 30 dependent checks are unavailable, so this
+second result adds a diagnostic reader defect and does not supersede the first
+37-check report below. The reader is being repaired and will be rerun against
+the original signed bytes. R44 remains live and has no owner-sealed result.
+
+**Provisional R44 terminal evidence, updated 2026-09-25 08:27 UTC — not a final
+result.** The signed recovery-44 release attempt completed its five 300-block
+epochs at block 8,081,674 and its owner recorded the required terminal
+observation at block 8,081,824. The original owner remains active; no owner
+result or invalidation has been sealed. The
+signed attempt is
+[`release-1.0.recovery.44.evidence.json`](runs/ur-subnet-testnet-v1-attempt-4/campaign-attempts/release-1.0.recovery.44.evidence.json).
+
+The independent [terminal diagnostic progress](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/first-terminal-206d8958/progress.json)
+has passed the signed start, latest checkpoint, complete 44-generation
+lineage, signed observation prefix and complete-epoch terminal checks. Its
+terminal assertions fail, and the owner result and signed completion are
+unavailable. The separate [terminal supplement](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/first-terminal-supplement/manifest.json)
+is an unsigned external copy, SHA-256
+`7a5f9209d9a4e42cc0d28c05bc90f7866f4459b57f40c54a232b24f27e0ebce4`.
+It retained 1,073 source files, including all 1,000 decodable claim queues,
+the authenticated observation prefix, the full process report and 144,427,524
+accepted process-log bytes. Its two copy findings are the absent original
+`result.json` and `complete.json`; it did not synthesize either file. The
+completed read-only [terminal diagnostic report](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/first-terminal-206d8958/report.json)
+has SHA-256
+`c207225f44bb5962f231345770b9a8aa71c293917c596c7bda26c6efe8e7e384`
+and 37 checks: 14 pass, six fail, one finding, one named exception and 15
+unavailable. The six failed groups are terminal scenario assertions,
+validator-2 signed-source capture, the original process-log report, acceptance
+fault timing, companion evidence capture and signed payout artifacts. The
+validator-1 local-intents check is a finding. Result-dependent checks remain
+unavailable because the original owner has not sealed its result. R44-LC-1
+does not convert any of those outcomes into a pass.
+The terminal assertion group lists 23 failed assertions, including invalid
+fleet binding evidence despite 808/808 bindings, no fresh applied native
+weight decision or vector for validator 1, an eligible/selected/rejected
+count of 0/0/0 where 202/200/2 was required, 423 `uncertain_or_failed`
+claim outcomes, and a duplicate or invalid operator-1 terminal status for
+epoch 620. The lifecycle-tail assertion is only one member of this group.
+These are the diagnostic's reported conditions, pending comparison with the
+owner's eventual sealed result.
+
+**Exception R44-LC-1 — bypassed lifecycle mutation and companion filter.**
+The external [exception record](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/KNOWN-EXCEPTION.json)
+uses identifier `R44-COMPANION-LIFECYCLE-FILTER` for this same exception;
+its SHA-256 is
+`b28e5bbef7d9faa4399ceb7e0a794e08e73548b35f4bb84142fd66d9daa7dcde`.
+The approved provisional lifecycle bypass leaves no terminal-effective
+mutation epoch. The companion validator-view filter's early restoration
+condition therefore cannot be proved. Keep that filter and the lifecycle
+assertion failed in strict acceptance; do not infer a mutation from a
+`release-handoff` stage. At owner observation 77, finalized block 8,081,388,
+the old binary incorrectly restored the *target* filter with
+`RestoreConditionMet=true` solely because it counted the bypass stage as
+provider-paid. That flag is preserved as a finding, not lifecycle conformance.
+The separate read-only diagnostic authenticated the signed terminal window;
+its report remains diagnostic until the owner seals a result. The qualified
+successor cleanup can restore the two
+local filters after a complete signed terminal observation while retaining
+`RestoreConditionMet=false`, the failed strict assertions, and
+`final_acceptance=false`; it has not been installed in R44.
+An [independent terminal capture review](/mnt/data/sn-testnet/qualification/r44-terminal-exception-review-20260925/REVIEW.md)
+documents the exact read-only commands and evidence limits.
+
+This exception does not cover other failures. At the terminal supplement cut,
+all 1,000 miners had `last_discovered=617`; no queue entry exists for accepted
+epochs 618–620. Epoch 616 still has 359 `submitting` entries and epoch 617
+has 47. The retained process report contains 15 blocking acceptance-scoped
+rows: 10 `exit-gap-timeout` rows (14 events), two validator
+steering-attempt rows (24 events), two steering-continuity rows (three
+events), and one TLS handshake timeout. The later final diagnostic process
+scan records 26 steering-attempt events across the same two rows; this is a
+later read cut, not a rewrite of the supplement. The earlier read-only
+[interim inventory](/mnt/data/sn-testnet/qualification/r44-live-triage-20260925/inventory.json)
+at 07:17:59 UTC records SHA-256
+`017fb1603eea127593b2a6e1f0f6115d86d1a9554640d9fd2a452cb219aafb9c`
+and hashes the signed start, all 1,000 claim queues, observations, faults,
+process logs, and watcher progress. Its
+[read-only assessment](/mnt/data/sn-testnet/qualification/r44-live-triage-20260925/ASSESSMENT.md)
+distinguishes the known Connect/transport repairs from historical gaps they
+cannot prove repaired, and identifies expired bindings, absent positive native
+weights, below-threshold rate readiness, and missing current-window claims.
+Preserve both raw cuts and compare them with the eventual owner result. No skipped check is
+reported as passed; the full campaign, production interval, accounting replay
+and go/no-go decision remain open. See [the active execution record](../FINALIZE-ACTIVE.md).
+
+**Latest update, 2026-09-24 21:17 UTC:** Two R43 startup retries also stopped
+before a signed interval. The first failed executable Git attestation because
+its binary was built before the fix was committed. The second used committed
+revision `ce5f45a8`, passed the corrected operator resource preflight, and
+found a retained runtime-manifest reader that used the selected source-role
+config path to infer the original validator-2 seed path. The sealed original
+manifest is intact; the fleet is stopped, no recovery-43 attempt exists, and
+the reader fix is being qualified. See [FINALIZE-ACTIVE.md](../FINALIZE-ACTIVE.md).
+
+**Current status, 2026-09-24 21:04 UTC: R43 recovery startup failed before
+signing an interval.**
+After R42's signed early failure, the fleet was stopped with on-chain state
+preserved and an owner-signed native source-role overlay selected for validator
+2. Both native slots were checked at finalized runtime 471 using the approved
+consumed-interface profile. The supervised R43 runner authenticated 9,859
+retained receipts with zero failures, then stopped at a stale operator overlay
+resource check before topology startup. It has not signed a new acceptance
+boundary or completed a release interval. The overlay expects `geolite2.mmdb`;
+the pinned server requests `ip-ipinfo.mmdb`, which exists in the live config
+repository.
+The retained R42 active-fault record must be restored by the recovery driver.
+The exact service, binary hash and selection receipt are in
+[FINALIZE-ACTIVE.md](../FINALIZE-ACTIVE.md).
+
+**Current status, 2026-09-24: R42 started its real release interval but failed
+before terminal; `final_acceptance=false`.** The signed attempt
+`campaign-attempts/release-1.0.recovery.42.evidence.json` began at finalized
+block 8,077,774 (epoch 608) and covers five 300-block epochs through block
+8,079,274, with terminal block 8,079,424. Independent read-only terminal
+diagnostic watchers use the LAN RPC at
+`192.168.1.162:9944`. The inherited UID-churn exercise was explicitly
+bypassed because the chain would prune UID 1 rather than the planned UID 7;
+no churn transaction was sent. R42's owner exited at 20:42 UTC after observing
+through epoch 609, before terminal block 8,079,424. Its signed result failed
+with nine blocking process-log classes, 914 open anomalies, and an interrupted
+`miner-swarm-8` restart fault. The missing provisional deferral for validator
+steering continuity caused the heartbeat to reject the full class set early.
+Read-only watchers still collect terminal diagnostics, while recovery fixes
+and a future-boundary R43 are prepared. This exception cannot be
+reported as a passing strict acceptance check. The exact current state and
+watcher artifact path are in [FINALIZE-ACTIVE.md](../FINALIZE-ACTIVE.md).
+An independent finalized read at block **8,078,129** (hash
+`0xea7d377b2479e183f1900b1df979b900916837be9dce86a2fb142dd1627793e7`)
+found `policyCount()=3` on coordinator
+`0x8e7d2f9a77fec95c7e4875b0bd858d5de2b6def8`. The three stored policy
+hashes are `0x2cbb4cdd991d9463f321f0de7f7bd77d028da611c2b5eb656626eac31ab5a356`,
+`0x1526b242cf4908cc31f7e58006664bce6064003c69fd8452eab2d49122fef277`,
+and `0x41f0c7efe7e1b23b2fd22dac9352ca18be48d2e4d1fb5b41ce89660bc899b0dd`.
+The production scheduler's current two-policy admission is therefore a known
+next-stage blocker in the live executable. A narrow authenticated-history
+correction is on main as `402e6b1b` and has focused normal/race evidence;
+the combined policy-history, provisional handoff, release-gate and
+postcondition selectors also passed on current main normally and under race
+detection. Production adoption still requires R42's signed terminal result
+and restored fault inventory.
+R42 validator 2 later restarted after its current source could not authenticate
+an occupied native commitment slot. At finalized block **8,078,196**, both
+`CommitmentOf` and `LastCommitment` matched the old source generation's applied
+intent (finalized block **7,987,774**), while the active generation-1 intent
+file was absent. The exact read-only RPC keys/results and source hashes are in
+the [native-slot evidence bundle](peerreview/evidence/FINAL-2-r42-native-slot-20260924/README.md).
+The validator's refusal and restart remain R42 findings; a predecessor-proof
+repair is pending for later continuation.
+
+The following September 16 checkpoint is retained as historical evidence; it
+does not describe R42's current state. The corrected
+provisional topology admission passed at **19:57:09 UTC on September 16**. A
+qualified incremental release retry subsequently reopened the signed durable
+successor and reauthenticated all 4,674 retained receipts. It reached the real
+LAN execution reader, then stopped before preparation or any scenario action
+because testnet upgraded directly from runtime 461/1/1 at block **8,020,753**
+to 463/1/1 at block **8,020,754**. No transaction or spend was pending; the
+plan, journal, configuration, roles and signed successor are unchanged. Both
+validators later exhausted their five restart attempts against the old 461 pin;
+the other 31 processes did not restart. A compatibility fix and retained-state
+topology resume are in progress against `192.168.1.162:9944`. The actual release
+campaign has not yet opened a measured phase. The approved **6,000-alpha reserve repair has finalized**
+and reached
 **65.5997247163%** at the retained preparation snapshot. The latest complete
 LAN census, at block **8,015,417** on September 16, shows **64.9994918065%**:
 above the 60% operating floor and below the 65% repair target. The
@@ -10,7 +233,142 @@ renewal; the 37,250-alpha lifetime limit and 6,000-alpha per-repair limit remain
 unchanged. Earlier checkpoints below retain their historical approvals and
 failures; they do not describe the current repair or allowance status.
 
-**Latest recovery checkpoint, September 16, 13:23 UTC:** runtime 461 is qualified
+**Latest recovery checkpoint, September 16, 19:40 UTC:** driver SHA-256
+`b85ab8529118c9bc9f2848865882dfa1291651a1c08de8ad28bffcb72857707d`
+contains the combined campaign-succession, retained-context rendering and local
+intent corrections. Its 19 selected test roots pass normally and under race
+detection, while seven causal controls reproduce exactly their intended
+failures. This qualification does not establish campaign or on-chain acceptance.
+
+The first corrected live resume authenticated all 4,674 receipts, started 33
+processes and exited zero, but its outer wrapper rejected a single transiently
+unhealthy miner snapshot and rolled back. The second corrected resume ran from
+**19:07:14 through 19:25:32 UTC**. Its product body again passed with all 4,674
+receipts and a 33-process, zero-restart generation. Across 24 five-second
+samples, both validators and every non-miner service were healthy in all 24;
+each miner was healthy in at least 22, and nine samples were fully 33/33 healthy.
+Both operator replicas emitted the corrected startup-authority marker and the
+refusal scan was empty. The wrapper timed out only because no caller invoked the
+internal path that emits the separate `local-readiness` marker. Its rollback
+passed, and retained contexts, executable and release-lock bytes were unchanged.
+
+The third wrapper records local readiness without blocking on it and permits
+only miner-swarm health flicker. It still requires stable live process identities
+and OS start ticks, zero restarts, continuously healthy validators and other
+critical services, every process observed healthy, at least three full-health
+samples, both startup-authority markers and no refusal. Terra medium passed
+**26/26** deterministic producer cases, including replay of both real 16-sample
+windows, and **52/52** campaign-consumer cases. The separately qualified 43-case
+fail-closed finalizer and the full campaign workload are byte-identical. Retry
+three completed under request SHA-256
+`0c3b723efdb34dcfb609b8be2352867886fd10069e10352a87ec3fce9458fb9f`.
+Its 16 samples covered 82 seconds, with seven 33/33 samples, every process
+observed healthy, continuously healthy validators and critical services, stable
+PIDs and OS start ticks, zero restarts and no refusal. The result SHA-256 is
+`4f2740bd3b9cb542636c75f42608a232c7c90643176d6bbe85497a2cedebeae6`.
+
+The release-candidate owner ran from **19:58:56 through 20:00:05 UTC**. It
+authenticated all **4,674** retained receipts with zero failures and wrote the
+signed successor attempt for run
+`20260916T195955.196642218Z-release-1.0`, SHA-256
+`9aa94b86effb8aafc37bee904ff1e909a14edc6630a67f0a5588728ad7900417`.
+That record is immutable and is selected first on the next invocation, so this
+failure does not restart setup or create another attempt. Before preparation,
+the campaign rejected protected publication capacity. The source-capacity test
+had exercised the public route's 60-second poll, while the LAN-only runtime
+correctly renders a 15-second validator poll. Objects and bytes remain within
+their configured ceilings, but the worst-case retry forecast increases from
+2,555,000 to **6,012,260 requests/hour**, above the protected **4,194,304**
+ceiling. No transaction or spend was pending. A narrow provisional-only
+advisory is being qualified; strict admission and hard runtime quotas remain.
+No measured campaign result is claimed yet.
+
+**Runtime-463 retry checkpoint, September 16, 20:43 UTC:** the capacity change
+passed **21/21 normal** and **21/21 race** roots, with one exact pre-fix causal
+failure. The incremental retry wrapper passed **81/81** deterministic cases.
+Request SHA-256
+`ac01e73b1833f2232ac8a0da2474b543749dda4556bb85f77d474a51b7064204`
+ran from **20:43:00 through 20:45:18 UTC**. It authenticated all retained
+receipts and recorded that the resumed successor had no pending transaction or
+spend. The execution reader then rejected exact runtime identity 463/1/1;
+body and outer exits are one, and result SHA-256 is
+`e688eaffe3153b45d0a3b55cd06f0f25d745baa34d8da97d10a5a94c2c35a002`.
+
+The LAN archive proves the transition boundary: block 8,020,753 is the reviewed
+461 artifact and block 8,020,754 is 463. Runtime 463 retains transaction and
+state versions 1/1 but has different exact code and metadata. Its code is
+2,536,695 bytes with BLAKE2b-256
+`0x9745e3f66053c3c7cb30ea45b88c66438b5076da78154f477e8660b0ded43869`;
+its 338,396-byte metadata hashes to
+`0xe9af0fcab804e08c0f6cc2c13715b1e366a916eda6a61aec6fb2601bc2a66b4c`.
+The same capture rechecked the known 461 hashes, so the hash procedure is
+anchored to the existing catalog. The failed retry changed only live supervisor
+state among the wrapper's watched state files. It did not replace the signed
+successor or begin release/production measurements.
+
+Validator-2's original process first ended on a transient post-checkpoint RPC
+timeout at block 8,020,753. Validator-1 later exhausted its steering retries
+after an operator timeout and 463 identity refusals. Their replacement processes
+all rejected the old 461 pin, leaving each validator at five recorded restarts;
+the other 31 services stayed on their original zero-restart processes. The
+supervisor has no supported per-child retry reset, so the recovery must perform
+a controlled stop and retained-plan provisional resume after the compatible
+binary is qualified. Durable validator ledgers, proofs, statistics, setup
+receipts, plan/journal and campaign successor remain inputs to that recovery.
+
+**Previous recovery checkpoint, September 16, 17:02 UTC:** the provisional resume
+authenticated all **4,674 retained local receipts**, completed the setup prefix,
+launched 33 processes and adopted the live topology. The release-candidate
+command used `192.168.1.162:9944`, then closed with body and outer exit one on
+`open durable release-1.0 attempt: campaign succession requires the strict
+approved deployment owner`. The executable and release lock are unchanged;
+only the watched supervisor-state digest changed. This exposed an unconditional
+provisional-mode exclusion before the existing exact-plan, custody, journal,
+signed-predecessor and failed-result succession checks.
+
+Validator-1 restarted twice and validator-2 once before command closure. Their
+initial terminal publications received HTTP 403 because regenerated operator
+staging configurations omitted the explicit provisional retained-context
+authority and kept an ordinary 16,384-block discovery window that had already
+expired. A replacement PID being present is not proof of terminal publication.
+Both exact failures are retained while narrow succession and render corrections
+and deterministic adjacent tests are prepared. The 33-process topology was not
+discarded or relaunched after the failed command.
+
+The receipt-authentication optimization is qualified and integrated locally.
+Its affected scope passes **14/14 normal roots by composition** and **14/14 race
+roots**; all three causal controls reproduce their intended failures. It caches
+only immutable source-plan decoding and one journal index within a read-only
+invocation, then checks a final journal-equality fence. The separately built
+candidate containing this optimization was not used by the active command.
+
+**Previous recovery checkpoint, September 16, 16:38 UTC:** the previous strict
+startup ended at **15:41:52 UTC** after the 30-minute fresh-proof readiness
+window expired. Both validators were replaying retained history; no fresh
+complete validator/operator trails were observed. Native cleanup stopped its
+33 processes. Eight operator transactions nevertheless finalized successfully;
+their actual fees total **0.016528555545105692 EVM TAO**. The
+[recovery evidence](peerreview/evidence/FINAL-2-provisional-recovery-20260916/README.md)
+includes all eight receipts and their transaction hashes, plus the local
+signature-restoration result. Recovery restored the original signed bytes
+without signing or submitting new transactions.
+
+The user's instruction to finish the actual run now permits explicit
+provisional continuation with deferred historical replay and acceptance checks.
+The patched driver retains the approved plan, spending limits, signed history,
+transaction reconciliation and owned LAN routing. It can adopt a healthy fresh
+topology without claiming missing proof trails passed. Its 17 affected/adjacent
+test roots pass normally and under race by composition; five causal controls
+reproduce the original failures. A separate runtime-render fix passes 18 roots
+in both modes. The original fixture failures remain recorded. Neither source
+publication nor another full preparation pass gates the provisional run.
+At approximately **16:31 UTC**, the active resume finished authenticating
+**4,674 retained local receipts**. Services and the release-candidate handoff
+subsequently completed as described above. Actual campaign observations and
+production cadence remain required; provisional execution does not establish
+final acceptance.
+
+**Previous recovery checkpoint, September 16, 13:23 UTC:** runtime 461 is qualified
 at `8edb3167a6261bfd82ecbc5f3c0ac2c787beec7c` and integrated locally. All
 **103 affected tests pass normally and under race detection**. Four causal
 restorations reproduce **nine expected failures and nine passing controls**.

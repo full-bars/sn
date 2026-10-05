@@ -1,0 +1,32 @@
+{
+  "schema": "native-finite-resource-admission-v1",
+  "status": "ADMITTED_FINITE_66_PHASE_RESOURCE_SCOPE",
+  "proposal": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/native-producer-prefix-capacity-resource-proposal-v2.json",
+    "sha256": "a803c4b4a6ed8246674edc7b2d0fe803da579d2704621ea3fde2665525bd7ead"
+  },
+  "resource": {
+    "canonical_holder_pid": 510787,
+    "fresh_available_bytes": 105258766336,
+    "fixed_baseline_available_bytes": 113681502208,
+    "cumulative_consumed_bytes": 8422735872,
+    "native_two_times_increment_bytes": 38654705664,
+    "combined_admission_bytes": 47077441536,
+    "retained_cap_bytes": 51539607552,
+    "baseline_reset": false
+  },
+  "checks": [
+    "All nine input byte counts and digests matched.",
+    "Exact canonical lease PID/starttime and lock inode/kernel exclusion observed live.",
+    "Conservative cumulative plus2x native increment remains within retained48GiB cap."
+  ],
+  "execution_authority": [
+    "Complete finite native producer/prefix/capacity scope; reused reviewed Go/source/graph runners do not need per-phase approval.",
+    "New Rust orchestration mechanism still requires source review; its resource allowance is already admitted.",
+    "Recheck actual free space and owned source/images at phase boundaries; preserve active work and results if later admission must wait."
+  ],
+  "limits": [
+    "Forecast is not actual production sizing.",
+    "No live network/signing/deployment authority or qualification pass follows from resource admission."
+  ]
+}

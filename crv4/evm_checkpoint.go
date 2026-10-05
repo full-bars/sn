@@ -68,24 +68,24 @@ func ReadEVMCheckpointAtContext(ctx context.Context, chain *Chain, query EVMChec
 	if err != nil || canonical != query.NativeHash {
 		return empty, errors.Join(errors.New("EVM/native checkpoint is not canonical"), err)
 	}
-	header, err := chain.HeaderAtContext(ctx, query.NativeHash)
-	if err != nil || uint64(header.Number) != query.NativeNumber || header.ParentHash == (types.Hash{}) {
+	number, headerParent, err := chain.ReceiptHeaderAtContext(ctx, query.NativeHash)
+	if err != nil || number != query.NativeNumber || headerParent == (types.Hash{}) {
 		return empty, errors.Join(errors.New("EVM/native checkpoint header differs"), err)
 	}
 	parent, err := validatorIdentityBlockHashAtContext(ctx, chain, query.NativeNumber-1)
-	if err != nil || parent != header.ParentHash {
+	if err != nil || parent != headerParent {
 		return empty, errors.Join(errors.New("EVM/native checkpoint parent differs"), err)
 	}
-	parentHeader, err := chain.HeaderAtContext(ctx, parent)
-	if err != nil || uint64(parentHeader.Number) != query.NativeNumber-1 {
+	parentNumber, _, err := chain.ReceiptHeaderAtContext(ctx, parent)
+	if err != nil || parentNumber != query.NativeNumber-1 {
 		return empty, errors.Join(errors.New("EVM/native checkpoint parent height differs"), err)
 	}
 	finalized, err := FinalizedHeadContext(ctx, chain)
 	if err != nil {
 		return empty, err
 	}
-	finalizedHeader, err := chain.HeaderAtContext(ctx, finalized)
-	if err != nil || uint64(finalizedHeader.Number) < query.NativeNumber {
+	finalizedNumber, _, err := chain.CanonicalHeaderAtContext(ctx, finalized)
+	if err != nil || finalizedNumber < query.NativeNumber {
 		return empty, errors.Join(errors.New("EVM/native checkpoint is not finalized"), err)
 	}
 	read := func(head types.Hash, absent bool) (RuntimeArtifactIdentity, error) {
@@ -125,6 +125,14 @@ func ReadEVMCheckpointAtContext(ctx context.Context, chain *Chain, query EVMChec
 	parentRuntime, err := read(parent, true)
 	if err != nil {
 		return empty, fmt.Errorf("EVM/native checkpoint parent: %w", err)
+	}
+	for _, boundary := range []struct {
+		hash   types.Hash
+		number uint64
+	}{{hash: query.NativeHash, number: number}, {hash: parent, number: parentNumber}, {hash: finalized, number: finalizedNumber}} {
+		if err := chain.CheckCanonicalBlockAtContext(ctx, boundary.hash, boundary.number); err != nil {
+			return empty, err
+		}
 	}
 	return EVMCheckpointObservation{Query: query, NativeParentHash: parent, Runtime: currentRuntime, ParentRuntime: parentRuntime}, ctx.Err()
 }

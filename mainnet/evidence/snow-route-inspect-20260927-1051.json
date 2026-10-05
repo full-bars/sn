@@ -1,0 +1,11 @@
+{
+  "schema": "urnetwork-mainnet-route-inspection-v1",
+  "rpc_url": "http://172.28.208.185:9944",
+  "rpc_methods": ["eth_chainId", "chain_getBlockHash(0)"],
+  "observed_at_utc": "2026-09-27T10:51:27Z",
+  "observed_evm_chain_id_hex": "0x3b1",
+  "observed_native_genesis": "0x8f9cf856bf558a14440e75569c9e58594757048d7b3a84b5d25f6bd978263105",
+  "expected_mainnet_evm_chain_id_decimal": 964,
+  "independent_mainnet_genesis_approved": false,
+  "admission": "rejected_testnet_identity"
+}

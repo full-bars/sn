@@ -21,12 +21,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"syscall"
-	"time"
 
 	"golang.org/x/term"
 
@@ -35,9 +34,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/urnetwork/connect"
+	"github.com/urnetwork/connect/durablevolume"
 	"github.com/urnetwork/sdk"
 
 	"github.com/urfoundation/sn/clientauth"
+	"github.com/urfoundation/sn/internal/durableinspect"
 )
 
 const DefaultApiUrl = "https://api.bringyour.com"
@@ -78,15 +79,30 @@ The default URLs are:
     connect_url: %s
 
 Usage:
+    validator storage-inspect --durable-volumes=<path> --durable-volumes-sha256=<hash> --directory=<path>...
     validator auth ([<auth_code>] | --user_auth=<user_auth> [--password=<password>]) [-f]
         [--api_url=<api_url>]
         [-v...]
-    validator run --config=<path>
+    validator init (--config=<path> | --state_dir=<path> [--hotkey_seed_file=<path>] [--no_id=<id>]...)
+        [-v...]
+    validator register --config=<path> --coldkey_seed_file=<path>
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
+        [--burn_limit_rao=<n>] [--fee_limit_rao=<n>] [--apply | --dry-run]
+        [-v...]
+    validator stake add --amount_rao=<n> --config=<path> --coldkey_seed_file=<path>
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
+        [--limit_price_rao=<n>] [--allow_partial] [--fee_limit_rao=<n>] [--apply | --dry-run]
+        [-v...]
+    validator activate --config=<path> [--relayer_key_file=<path>] [--apply | --dry-run]
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
+        [-v...]
+    validator run --config=<path> [--progress-file=<path>]
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
     validator run [--api_url=<api_url>] [--connect_url=<connect_url>]
         [--concurrency=<n>] [--m=<depth>]
         [--rpc=<rpc_url>]... [--contract=<addr>] [--state_dir=<path>]
-        [-v...]
+        [--adopt-legacy-measurement-key] [-v...]
     validator status [--config=<path>] [--api_url=<api_url>]
         [--rpc=<rpc_url>]... [--contract=<addr>] [--netuid=<id>]
         [--evm_key_file=<path>] [--hotkey_seed_file=<path>] [--state_dir=<path>]
@@ -99,9 +115,36 @@ Options:
     -f                           Force overwrite the JWT token store file, if exists.
     --api_url=<api_url>          Custom API URL.
 	--config=<path>                Strict release-1.0 production configuration; the only weight-writing mode.
+                                 init/register/stake/activate/status accept it before its evidence_v2
+                                 inputs are rendered; run does not.
+	--progress-file=<path>         Optional bounded operational JSON outside protocol state.
+    --durable-volumes=<path>      Exact external durable-volume declaration; required for mainnet state.
+    --durable-volumes-sha256=<hash>  SHA-256 of the complete declaration bytes; does not change signed config.
+    --directory=<path>           Existing service directory for read-only physical inspection; repeatable.
+    --coldkey_seed_file=<path>   sr25519 coldkey seed (64 hex chars or 32 raw bytes) that signs
+                                 register_limit / add_stake. The release config carries no coldkey and
+                                 the EVM key's mirror account cannot sign a native extrinsic, so the
+                                 seed file is required; keep it off the validator host afterwards.
+    --burn_limit_rao=<n>         Maximum registration burn in rao passed to register_limit; the runtime
+                                 rejects a higher live burn. Omitted: the burn observed at the read.
+    --fee_limit_rao=<n>          Maximum native transaction fee in rao (payment_queryInfo is checked
+                                 before broadcast) [default: 10000000].
+    --amount_rao=<n>             TAO to stake, in rao (1 TAO = 1e9 rao); the pool converts it to alpha.
+    --limit_price_rao=<n>        Use add_stake_limit with this maximum pool price in TAO rao per alpha
+                                 instead of add_stake at the pool price.
+    --allow_partial              With --limit_price_rao, allow a partial fill instead of fill-or-kill.
+    --relayer_key_file=<path>    Hex secp256k1 EVM key that pays gas to publish the activations through
+                                 the evidence journal; it receives no authority.
+    --apply                      Sign, journal and broadcast. Without it every mutating command is a
+                                 dry run that reads the live economics and reports what it would do.
+    --dry-run                    Explicit dry run (the default).
+    --no_id=<id>                 With init --state_dir, create <state_dir>/no-<id>/client.key for each
+                                 operator; without any, create the flag-mode <state_dir>/.validator.key.
     --connect_url=<connect_url>  Custom connect (platform transport) URL.
     --user_auth=<user_auth>      Login with a username.
     --password=<password>        Login with a password (prompted when omitted).
+    --adopt-legacy-measurement-key  Assert the existing measurement seed is original when first adopting
+                                 a legacy client JWT; never creates a key or a client.
     --concurrency=<n>            Concurrent trail walkers [default: 4].
     --m=<depth>                  Requested trail depth M (server clamps to [4,16]) [default: 8].
     --rpc=<rpc_url>              EVM json-rpc endpoint (repeatable; ordered failover).
@@ -122,6 +165,15 @@ Options:
 // Run is the validator CLI entry point (the executable lives at cli/validator).
 // It takes the argument slice (os.Args[1:]) so it can be driven from tests.
 func Run(args []string) {
+	if len(args) != 0 && args[0] == "storage-inspect" {
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
+		if code := durableinspect.Run(ctx, args[1:], os.Stdout, os.Stderr); code != 0 {
+			stop()
+			os.Exit(code)
+		}
+		return
+	}
 	opts, err := docopt.ParseArgs(mainUsage(), args, RequireVersion())
 	if err != nil {
 		panic(err)
@@ -129,6 +181,14 @@ func Run(args []string) {
 
 	if authCmd, _ := opts.Bool("auth"); authCmd {
 		auth(opts)
+	} else if initCmd, _ := opts.Bool("init"); initCmd {
+		initCommand(opts)
+	} else if registerCmd, _ := opts.Bool("register"); registerCmd {
+		registerCommand(opts)
+	} else if stakeCmd, _ := opts.Bool("stake"); stakeCmd {
+		stakeAddCommand(opts)
+	} else if activateCmd, _ := opts.Bool("activate"); activateCmd {
+		activateCommand(opts)
 	} else if runCmd, _ := opts.Bool("run"); runCmd {
 		run(opts)
 	} else if statusCmd, _ := opts.Bool("status"); statusCmd {
@@ -318,193 +378,24 @@ func auth(opts docopt.Opts) {
 
 func run(opts docopt.Opts) {
 	if configPath := optString(opts, "--config", ""); configPath != "" {
-		runReleaseConfig(configPath)
+		progressPath, _ := opts.String("--progress-file")
+		runReleaseConfig(configPath, progressPath, durablevolume.Reference{
+			Path: optString(opts, "--durable-volumes", ""), Sha256: optString(opts, "--durable-volumes-sha256", ""),
+		})
 		return
 	}
 	if err := rejectLegacySteeringOptions(opts); err != nil {
 		panic(err)
 	}
-	apiUrl := optString(opts, "--api_url", DefaultApiUrl)
-	connectUrl := optString(opts, "--connect_url", DefaultConnectUrl)
-	concurrency := optInt(opts, "--concurrency", 4)
-	m := optInt(opts, "--m", connect.VerifyMDefault)
-
-	identityOpts := identityOptionsFromOpts(opts)
-	identity, err := LoadIdentity(identityOpts)
+	settings, err := measurementSettingsFromOpts(opts)
 	if err != nil {
 		panic(err)
 	}
-
-	event := connect.NewEventWithContext(context.Background())
-	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-	ctx, cancel := context.WithCancel(event.Ctx())
-	defer cancel()
-
-	clientStrategy := connect.NewClientStrategyWithDefaults(ctx)
-	defer clientStrategy.Close()
-	api := sdk.NewApi(ctx, clientStrategy, apiUrl)
-	defer func() {
-		_ = api.CloseAndWait(context.Background())
-	}()
-
-	networkTokenPath, err := networkJwtPath()
-	if err != nil {
+	ctx, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+	defer stopSignals()
+	if err := settings.run(ctx, os.Stdout); err != nil {
 		panic(err)
 	}
-	clientTokenPath := filepath.Join(identity.StateDir, ".validator.jwt")
-	byClientJwt, clientId, err := clientauth.LoadOrCreateClientJwt(
-		ctx,
-		api,
-		networkTokenPath,
-		clientTokenPath,
-		fmt.Sprintf("validator %s", RequireVersion()),
-	)
-	if err != nil {
-		panic(err)
-	}
-	refreshPersistSub := api.AddJwtRefreshListener(clientauth.JwtRefreshListenerFunc(func(jwt string) {
-		if err := clientauth.WriteToken(clientTokenPath, jwt); err != nil {
-			fmt.Printf("validator client JWT save failed: %s\n", err)
-			cancel()
-		}
-	}))
-	defer refreshPersistSub.Close()
-	logoutSub := api.AddAuthLogoutListener(clientauth.AuthLogoutListenerFunc(func() {
-		if err := clientauth.MarkRejected(clientTokenPath, networkTokenPath); err != nil {
-			fmt.Printf("validator client JWT rejection save failed: %s\n", err)
-		}
-		fmt.Printf("validator authentication was rejected; run `validator auth` if the bootstrap credential is no longer valid\n")
-		cancel()
-	}))
-	defer logoutSub.Close()
-
-	// Client identity: authenticate a client id under the network, then
-	// run a connect client whose ClientKeySeed is the persisted vpk seed —
-	// the ClientKeyManager publishes the vpk to the platform
-	// (ckey_<clientId>), which is what the /verify server checks SEED
-	// bodies against (VALIDATOR.md §2).
-	fmt.Printf("client_id: %s\n", clientId)
-	fmt.Printf("vpk: %s\n", hex.EncodeToString(identity.Vpk))
-
-	clientSettings := connect.DefaultClientSettings()
-	clientSettings.ClientKeySeed = identity.VpkSeed
-	clientOob := connect.NewApiOutOfBandControl(ctx, clientStrategy, byClientJwt, apiUrl)
-	identityClient := connect.NewClient(ctx, clientId, clientOob, clientSettings)
-	defer identityClient.Close()
-	instanceId := connect.NewId()
-	platformTransport := connect.NewPlatformTransportWithDefaults(ctx, clientStrategy, identityClient.RouteManager(), connectUrl, &connect.ClientAuth{
-		ByJwt:      byClientJwt,
-		InstanceId: instanceId,
-		AppVersion: RequireVersion(),
-	})
-	refreshTransportSub := api.AddJwtRefreshListener(clientauth.JwtRefreshListenerFunc(func(jwt string) {
-		clientOob.SetByJwt(jwt)
-		platformTransport.SetAuth(&connect.ClientAuth{
-			ByJwt:      jwt,
-			InstanceId: instanceId,
-			AppVersion: RequireVersion(),
-		})
-	}))
-	defer refreshTransportSub.Close()
-	api.StartJwtRefresh()
-
-	// Optional chain access: epoch stamping for proofs + steering reads.
-	var chain *ChainClient
-	if len(optStringList(opts, "--rpc")) > 0 && optString(opts, "--contract", "") != "" {
-		chain, err = dialChainFromOpts(opts)
-		if err != nil {
-			panic(err)
-		}
-		defer chain.Close()
-		fmt.Printf("chain: %s (chain id %s)\n", chain.RpcUrl(), chain.ChainId())
-	} else {
-		fmt.Printf("chain: not configured (proofs will carry epoch 0; steering disabled)\n")
-	}
-
-	// Cached epoch for proof stamping.
-	var cachedEpoch atomic.Uint64
-	epochFn := func() uint64 { return cachedEpoch.Load() }
-	if chain != nil {
-		refreshEpoch := func() {
-			if epoch, err := chain.Epoch(); err == nil {
-				cachedEpoch.Store(epoch.Uint64())
-			}
-		}
-		refreshEpoch()
-		go func() {
-			ticker := time.NewTicker(30 * time.Second)
-			defer ticker.Stop()
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-ticker.C:
-					refreshEpoch()
-				}
-			}
-		}()
-	}
-
-	stats := NewStatsEngine(StatsConfig{})
-	if err := stats.Load(identity.StateDir); err != nil {
-		fmt.Printf("stats load: %v (starting fresh)\n", err)
-	}
-	store, err := NewProofStore(identity.StateDir)
-	if err != nil {
-		panic(err)
-	}
-
-	transport := NewTunnelTransport(ctx, clientStrategy, TunnelTransportConfig{
-		ApiUrl:         apiUrl,
-		ConnectUrl:     connectUrl,
-		ByClientJwt:    api.GetByJwt,
-		SourceClientId: clientId,
-	})
-	keyRing := NewApiServerKeyRing(api)
-	seedPicker := NewFindProvidersSeedPicker(api, clientId)
-
-	engine := NewTrailEngine(
-		clientId, identity.Vsk, transport, keyRing, seedPicker, stats, store, epochFn,
-		TrailEngineConfig{M: m},
-	)
-
-	go func() {
-		if err := engine.Run(ctx, concurrency); err != nil && ctx.Err() == nil {
-			panic(fmt.Errorf("validator trail engine: %w", err))
-		}
-	}()
-
-	// The flag-mode runner is measurement-only. Release weight writes require
-	// the strict multi-NO config path, which uses per-NO quality and exact CRv4
-	// intents. There is no CLI route to the legacy global-quality aggregator.
-	fmt.Printf("steering: disabled in legacy flag mode; use --config for release-1.0 steering\n")
-
-	// Periodic stats snapshots + final save on shutdown.
-	go func() {
-		ticker := time.NewTicker(60 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				if err := stats.Save(identity.StateDir); err != nil {
-					fmt.Printf("stats save: %v\n", err)
-				}
-			}
-		}
-	}()
-
-	fmt.Printf("validator %s running (concurrency %d, M %d)\n", RequireVersion(), concurrency, m)
-	<-ctx.Done()
-	if err := transport.CloseAndWait(context.Background()); err != nil {
-		fmt.Printf("tunnel transport shutdown: %v\n", err)
-		os.Exit(1)
-	}
-	if err := stats.Save(identity.StateDir); err != nil {
-		fmt.Printf("stats save: %v\n", err)
-	}
-	os.Exit(0)
 }
 
 func rejectLegacySteeringOptions(opts docopt.Opts) error {
@@ -514,20 +405,16 @@ func rejectLegacySteeringOptions(opts docopt.Opts) error {
 	return nil
 }
 
-// The register / submit-trails / claim commands (the effort-bounty flow) are
-// deferred to the bounty phase (WHITEPAPER §9.3, D23); implementation parked
-// at docs/parked/.
+// The submit-trails / claim commands (the effort-bounty flow) are deferred to
+// the bounty phase (WHITEPAPER §9.3, D23); implementation parked at
+// docs/parked/. Registration, staking and activation live in
+// native_commands.go.
 
 // --- status ---
 
 func status(opts docopt.Opts) {
 	if configPath := optString(opts, "--config", ""); configPath != "" {
-		cfg, err := LoadReleaseConfig(configPath)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("release: %s production=%t validator=%d netuid=%d operators=%d\n", cfg.Release, cfg.Production, cfg.ValidatorID, cfg.Netuid, len(cfg.Operators))
-		fmt.Printf("coordinator: %s\npolicy: %s\nstate_dir: %s\n", cfg.Coordinator, cfg.PolicyHash, cfg.StateDir)
+		statusRelease(configPath)
 		return
 	}
 	identityOpts := identityOptionsFromOpts(opts)

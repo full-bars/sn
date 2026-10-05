@@ -65,7 +65,7 @@ DATA=[
    "No oracle; off-chain published tier-rate schedule, read by validators"),
   ("Multi-mechanism subnets","",
    "≤2 mechanisms / subnet, each own Yuma + bonds (Sept 2025)",
-   "Pool 0 (core) / Pool 1 (VPN factory) via sub-mechanisms"),
+   "Single mechanism by design: a 2nd would split the UID space below a ~200 head"),
   ("Scaling past the 256-UID cap","",
    "1 UID fronts many off-chain workers (ComputeHorde, TPN, Vanta)",
    "Pool UIDs (tail) + top ~200 direct UIDs (head) in one 256-UID metagraph"),

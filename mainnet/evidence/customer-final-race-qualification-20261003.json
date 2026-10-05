@@ -1,0 +1,97 @@
+{
+  "groups": [
+    {
+      "failed": [],
+      "group": 1,
+      "passed": [
+        "TestCustomerChallengeCancellationAfterRealResponseRetainsOriginalRequest",
+        "TestCustomerChallengeConcurrentRetriesCannotMintDistinctChallenges",
+        "TestCustomerChallengeKnownObservationFailureNeverFallsBackToPost",
+        "TestCustomerChallengeKnownReadCannotMutateWithoutCustodyGuards",
+        "TestCustomerChallengeLostResponseReusesExactDurableKeyAndBody",
+        "TestCustomerChallengeMalformedAcceptedResponseRemainsUnknown",
+        "TestCustomerChallengeMissingIdAndInexactAmountRefuseBeforeEffects",
+        "TestCustomerChallengeRepeatedObservationPreservesTerminalCapacity",
+        "TestProviderCompositionRetainedAttemptReadRecoversDuringBoundaryHold"
+      ],
+      "skipped": []
+    },
+    {
+      "failed": [],
+      "group": 2,
+      "passed": [
+        "TestCustomerTransferConcurrentIntentRetainsOneKey",
+        "TestCustomerTransferContradictionAndHistoryRemainRetained",
+        "TestCustomerTransferDisabledCustodyGuardCannotSubmit",
+        "TestCustomerTransferExactDecimalAmount",
+        "TestCustomerTransferObservationCommitFailureRetainsUnknownRequest",
+        "TestCustomerTransferRetainedTermsCannotChange",
+        "TestProviderCurrentMigrationRedisLegacySettlementKeepsAsset",
+        "TestProviderCurrentMigrationRedisPaidFreeUsageRemainsSubnetOnly"
+      ],
+      "skipped": []
+    },
+    {
+      "failed": [],
+      "group": 3,
+      "passed": [
+        "TestCustomerCurrentMigrationRetainsPublishedFinancialAuthority"
+      ],
+      "skipped": []
+    },
+    {
+      "failed": [],
+      "group": 4,
+      "passed": [
+        "TestAuthorityRealContractAccountingAndPublicKeyReads"
+      ],
+      "skipped": []
+    },
+    {
+      "failed": [],
+      "group": 5,
+      "passed": [
+        "TestUrlProbeRejectedLocalWriterIsNotMeasured"
+      ],
+      "skipped": []
+    }
+  ],
+  "private_fixture_cleanup_exit": 0,
+  "roots_failed": 0,
+  "roots_passed": 20,
+  "roots_skipped": 0,
+  "schema": "sol-customer-current-targeted-race-v1",
+  "scope": "20 selected roots on published a53/9ae graph; whole model is separate",
+  "server_commit": "3f32d7301c9e381eac4de368c62357c14dfc36a7",
+  "server_tree": "34e5c3c129673fb0d51db8e1af2dda9c5adcb503",
+  "sha256": {
+    "customer-current-race-job1.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "customer-current-race-job1.jsonl": "c8f604956700354f04b2cba21a19714fccd27868052cd13983e4e2c6d14ff576",
+    "customer-current-race-job1.phase": "626852b976815a8f2ae9600feca156b7c46fbd9ac083bb90dda8f6a5f08e9356",
+    "customer-current-race-job1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "customer-current-race-job2.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "customer-current-race-job2.jsonl": "9cf60a62123a82404fd6e65e219b3b218d05790cb82d8af2fc342437121fec84",
+    "customer-current-race-job2.phase": "46f246aeb6dde9b3dd58ac950d30a4a417be18174eb57c22877ea247cba0c2d3",
+    "customer-current-race-job2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "customer-current-race-job3.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "customer-current-race-job3.jsonl": "d2696fba7063099b12ce72c3a62122a9cbf11c592138133ff5f2aa42ba3b8fa4",
+    "customer-current-race-job3.phase": "f83cc291e42a1381e2b64bc0cbe7af5b543e208b8af25971e7e9203aa1683a5c",
+    "customer-current-race-job3.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "customer-current-race-job4.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "customer-current-race-job4.jsonl": "5ae8c221c138d0b2fbfc94b9bc9289873d49329cd7878d8974323a82a1e09367",
+    "customer-current-race-job4.phase": "9ed97e782b28ead69e43d18e6f073920fe241fb3a7e07737a6dcb42ee5545025",
+    "customer-current-race-job4.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "customer-current-race-job5.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "customer-current-race-job5.jsonl": "60afbaafa359da00197f178174b1e8d81fe9d8840031d9d6d250297a3e44cee2",
+    "customer-current-race-job5.phase": "5ff26e95a3f2e4c5c3008bf662b5f292d106ad0fdc521cd52dd23f7c03196acb",
+    "customer-current-race-job5.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "customer-current-race-jobs.tsv": "30f276800608af28298b10952244f86d50ba2f3e15d83d027ce7337de596ab47",
+    "customer-current-race-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "customer-current-race-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "full-source-readback.json": "83d041e8f8572a47abe5a18f0291db69ed15a465f0dd9484089269c43113c6e4",
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "919ecbe544793bd8b40209eeb863524eab83073500574e76ab4fcf17b97683c8",
+    "run-targeted.sh": "461c00018dbc444a6cbbb11123d1bfb112f8eed1f8d94b0718576a5634b08f59",
+    "source-preflight.json": "785b8ff911c6fe0adb4bee3edbb52d2a5c46d28fc9557a3d400a7b8c1f0a4b8a"
+  }
+}

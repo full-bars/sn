@@ -50,8 +50,8 @@ func sameHeadEMAStoreV2RenamedFile(left, right attemptPrivateFileState) bool {
 }
 
 // Only the originally admitted physical directory may be opened for work.
-func openHeadEMAStoreV2Directory(path string, namespace headEMAStoreV2Namespace) (*attemptPrivateDirectory, error) {
-	directory, err := openAttemptPrivateDirectory(filepath.Dir(path))
+func openHeadEMAStoreV2Directory(path string, namespace headEMAStoreV2Namespace, storageContexts ...context.Context) (*attemptPrivateDirectory, error) {
+	directory, err := openAttemptPrivateDirectory(filepath.Dir(path), storageContexts...)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func witnessHeadEMAStoreV2Runtime(ctx context.Context, path string, namespace he
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	directory, err := openHeadEMAStoreV2Directory(path, namespace)
+	directory, err := openHeadEMAStoreV2Directory(path, namespace, ctx)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func witnessHeadEMAStoreV2Runtime(ctx context.Context, path string, namespace he
 		if hooks.afterClose != nil {
 			resultErr = errors.Join(resultErr, hooks.afterClose(owned))
 		}
-		witness, err := openHeadEMAStoreV2Directory(path, namespace)
+		witness, err := openHeadEMAStoreV2Directory(path, namespace, ctx)
 		if err == nil {
 			err = errors.Join(checkHeadEMAStoreV2Leaf(witness, namespace), requireHeadEMAStoreV2NoMarker(witness), witness.close())
 		}
@@ -205,8 +205,8 @@ func unlinkHeadEMAStoreV2Owned(directory *attemptPrivateDirectory, name string, 
 // After marker removal, a late cleanup failure recreates evidence exclusively
 // when possible. Failure to restore is joined and never licenses this owner to
 // continue; operators must retain both the original cause and restoration cause.
-func restoreHeadEMAStoreV2Marker(path string, namespace headEMAStoreV2Namespace) (resultErr error) {
-	directory, err := openHeadEMAStoreV2Directory(path, namespace)
+func restoreHeadEMAStoreV2Marker(path string, namespace headEMAStoreV2Namespace, storageContexts ...context.Context) (resultErr error) {
+	directory, err := openHeadEMAStoreV2Directory(path, namespace, storageContexts...)
 	if err != nil {
 		return err
 	}
@@ -224,8 +224,8 @@ func restoreHeadEMAStoreV2Marker(path string, namespace headEMAStoreV2Namespace)
 // The successful cleanup phase is deliberately unhooked: all externally
 // observed real Close boundaries completed while the durable marker remained.
 // A final native witness still checks committed head identity and marker absence.
-func finishHeadEMAStoreV2Write(path string, namespace headEMAStoreV2Namespace, marker attemptPrivateFileState, displaced *attemptPrivateFileState) (resultErr error) {
-	directory, err := openHeadEMAStoreV2Directory(path, namespace)
+func finishHeadEMAStoreV2Write(path string, namespace headEMAStoreV2Namespace, marker attemptPrivateFileState, displaced *attemptPrivateFileState, storageContexts ...context.Context) (resultErr error) {
+	directory, err := openHeadEMAStoreV2Directory(path, namespace, storageContexts...)
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func finishHeadEMAStoreV2Write(path string, namespace headEMAStoreV2Namespace, m
 	defer func() {
 		resultErr = errors.Join(resultErr, directory.close())
 		if resultErr != nil && markerRemoved {
-			resultErr = errors.Join(resultErr, restoreHeadEMAStoreV2Marker(path, namespace))
+			resultErr = errors.Join(resultErr, restoreHeadEMAStoreV2Marker(path, namespace, storageContexts...))
 		}
 	}()
 	if err := checkHeadEMAStoreV2Leaf(directory, namespace); err != nil {
@@ -257,7 +257,7 @@ func finishHeadEMAStoreV2Write(path string, namespace headEMAStoreV2Namespace, m
 	if err := directory.close(); err != nil {
 		return err
 	}
-	witness, err := openHeadEMAStoreV2Directory(path, namespace)
+	witness, err := openHeadEMAStoreV2Directory(path, namespace, storageContexts...)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func writeHeadEMAStoreV2(ctx context.Context, path string, encoded []byte, prior
 	if uint64(len(encoded)) > limits.MaxFileBytes {
 		return next, false, errors.New("bounded head EMA encoded output exceeds its file allowance")
 	}
-	directory, err := openHeadEMAStoreV2Directory(path, prior)
+	directory, err := openHeadEMAStoreV2Directory(path, prior, ctx)
 	if err != nil {
 		return next, true, err
 	}
@@ -458,7 +458,7 @@ func writeHeadEMAStoreV2(ctx context.Context, path string, encoded []byte, prior
 	}
 	// Cleanup reopens only the original physical authority and verifies the
 	// exact post-publication head after all observer-controlled Close events.
-	if err := finishHeadEMAStoreV2Write(path, next, marker, displaced); err != nil {
+	if err := finishHeadEMAStoreV2Write(path, next, marker, displaced, ctx); err != nil {
 		return next, true, err
 	}
 	return next, false, nil

@@ -1,0 +1,31 @@
+{
+  "schema": "fee-retirement-logical-successor-root-source-review-v1",
+  "observed_utc": "2026-10-04T05:23:04.415432+00:00",
+  "status": "SOURCE_REVIEWED_BEHAVIOR_PENDING",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-retention-logical/sn",
+    "head": "121e7eeb49c7bbffd43cd640c72a14f2bec7028d",
+    "tree": "ebc0ed3dd9a6885e90f0f05170b470aae0157eb7",
+    "parent": "eca431e71ab97e21f7ca9a31112b89c7df0f8963",
+    "clean": true,
+    "sparse": true
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-retention-logical/evidence/intake.json",
+    "sha256": "7c1e2dcf859f8e8fba612afb3c15fc1aa4a04b546d3429ad5fc487e11030aa49"
+  },
+  "physical_git_bindings_verified": 19,
+  "recipe_ancestor_bindings_verified": 4,
+  "review": "Full one-file diff reviewed: both forged logical states use real owned snapshot publication, then assert precise logical unknown-obligation or archive-prefix census refusal; physical tamper scope unchanged. All production bytes and modules remain exact ancestors.",
+  "qualification": {
+    "roots_per_mode": 41,
+    "controls_per_mode": 5,
+    "vet": "./mainnet",
+    "rule": "Qualify this sole test-fixture successor instead of unexecuted eca/659. Preserve both precursors and663 failures. Additional control has two exact production overlay files, with all four byte bindings explicit."
+  },
+  "limits": [
+    "Original masked659/eca source history retained; no misleading precursor body qualification.",
+    "41 roots/mode and five operative controls/vet remain pending.",
+    "Synthetic fee consumer tests do not establish original-Wasm whole economic conservation."
+  ]
+}

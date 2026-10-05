@@ -1,0 +1,36 @@
+{
+  "scope": "Current-source review of next producer and qualification prerequisites; no new implementation or behavioral qualification",
+  "reviewed_files": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/strecovery/receipt_finality.go",
+      "bytes": 17024,
+      "sha256": "09d5b09a95ec2a441f01985280332e742ad6126600fa65c575cb69b5e92a9826"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/strecovery/receipt_native_state.go",
+      "bytes": 7223,
+      "sha256": "5166ba79d7e9adcfee97443a24a4873cfbb726010f3224e2dae238d5e9be8613"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/strecovery/receipt_finality_test.go",
+      "bytes": 27217,
+      "sha256": "37b101d5316bb02a7a86460271041bd858e0a955e53a3e7fbc10906aa1bc8a2a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-restore-current/module-package-2ea/main.go",
+      "bytes": 4824,
+      "sha256": "e9cc4b61fa16c4ded12cc57244862ade19e2c3b9a17291ac124c0af876630b35"
+    }
+  ],
+  "native_finality_review": {
+    "observed": "Existing receipt finality returns selected NativeFinalized/state root separately from descendant NativeCertified; NextSetId, NextAuthorities and PendingChange advance through the certificate tip",
+    "producer_requirement": "Persist the advanced authority state with the actual certified header; keep selected parent/child storage headers separate. Reuse verified ancestry and weighted certificates without self-signed per-block authority. Keep receipt Frontier checks in the receipt adapter.",
+    "required_regression": "Delayed authority handoff plus descendant certification followed by interrupted/restarted rolling continuation, along with unchanged receipt verification results",
+    "status": "Astra implementation pending; independently approved initial checkpoint and actual runtime remain external launch prerequisites"
+  },
+  "core_packaging_review": {
+    "observed": "Exact module helper requires clean owned Git directory at Core2ea and a historical diff against631bcb282d39, then official zip.CreateFromVCS/HashZip",
+    "source_requirement": "Stage complete current physical tree and both required Git commits without mutable alternates/hardlinks or unrelated history, count actual Git object bytes within the resource forecast",
+    "status": "Sol concrete runner preparation pending; no archive or packaging phase executed"
+  }
+}

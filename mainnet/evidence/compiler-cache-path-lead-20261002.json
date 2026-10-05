@@ -1,0 +1,18 @@
+{
+  "schema": "go-local-compiler-cache-source-lead-v1",
+  "sn_source_commit": "b4ff4f25f818009642cafb8981a82943d2254fed",
+  "toolchain_source": {
+    "path": "/usr/local/go/src/cmd/go/internal/work/exec.go",
+    "bytes": 113594,
+    "sha256": "e1be568f9b0faa30bc065cddfe433628a21fc55c52b17938038b153ee7e118c2"
+  },
+  "finding": "Go build action identity includes absolute local package directory unless trimpath/rewrite conditions apply. Private source checkouts can therefore differ in compiler cache keys despite matching source bytes.",
+  "scope": "Read-only source review; no cache benchmark or causal attribution of current compile duration.",
+  "bounded_caller_census": "No direct runtime.Caller/Callers references found under SN mainnet/miner/chain/crv4/protocol. Other packages/transitive dependencies not cleared.",
+  "next_qualification": "Consider stable trimpath for future qualification only after a bounded cache/behavior control and full affected caller audit. Preserve flags/source bindings and count=1; never change or restart a live gate.",
+  "limits": [
+    "Published module cache and GOROOT have distinct origin rewriting rules.",
+    "Compiler-cache reuse does not reuse test outcomes or grant runtime/source/proof authority.",
+    "No current build flag or production source changed."
+  ]
+}

@@ -11,10 +11,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	gojwt "github.com/golang-jwt/jwt/v5"
 
@@ -32,6 +34,12 @@ type AuthLogoutListenerFunc func()
 
 func (self AuthLogoutListenerFunc) AuthLogout() {
 	self()
+}
+
+type ClientRefreshIntegrityListenerFunc func(*sdk.ClientRefreshIntegrityNotice)
+
+func (self ClientRefreshIntegrityListenerFunc) ClientRefreshInvalid(notice *sdk.ClientRefreshIntegrityNotice) {
+	self(notice)
 }
 
 func ReadToken(path string) (string, error) {
@@ -82,7 +90,11 @@ func WriteToken(path string, token string) (returnErr error) {
 	if err := os.Rename(tmpPath, path); err != nil {
 		return err
 	}
-	return nil
+	parent, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	return errors.Join(parent.Sync(), parent.Close())
 }
 
 func RemoveToken(path string) error {
@@ -156,44 +168,7 @@ func LoadOrCreateClientJwt(
 	description string,
 ) (string, connect.Id, error) {
 	if byClientJwt, err := ReadToken(clientJwtPath); err == nil {
-		clientId, parseErr := ClientIdFromJwt(byClientJwt)
-		if parseErr != nil {
-			return "", connect.Id{}, fmt.Errorf("invalid stored client JWT %s: %w", clientJwtPath, parseErr)
-		}
-		api.SetByJwt(byClientJwt)
-		if err := clearRejection(clientJwtPath); err != nil {
-			return "", connect.Id{}, err
-		}
-
-		// Validate and rotate at restart before any connect transport is
-		// created. A confirmed rejection falls through to the one-time network
-		// JWT bootstrap; a transient outage retains the still-usable client JWT
-		// and lets Api's background worker retry.
-		refreshResult, refreshErr := api.RefreshJwtSync()
-		if refreshErr == nil && refreshResult != nil && refreshResult.Error == nil && refreshResult.ByJwt != "" {
-			refreshedClientId, parseErr := ClientIdFromJwt(refreshResult.ByJwt)
-			if parseErr != nil {
-				return "", connect.Id{}, fmt.Errorf("refresh returned an invalid client JWT: %w", parseErr)
-			}
-			if err := WriteToken(clientJwtPath, refreshResult.ByJwt); err != nil {
-				return "", connect.Id{}, err
-			}
-			api.SetByJwt(refreshResult.ByJwt)
-			return refreshResult.ByJwt, refreshedClientId, nil
-		}
-
-		confirmedRejected := refreshErr == nil && refreshResult != nil && refreshResult.Error != nil
-		var statusErr *connect.HttpStatusError
-		if errors.As(refreshErr, &statusErr) && statusErr.StatusCode == http.StatusUnauthorized {
-			confirmedRejected = true
-		}
-		if !confirmedRejected {
-			return byClientJwt, clientId, nil
-		}
-		if err := MarkRejected(clientJwtPath, networkJwtPath); err != nil {
-			return "", connect.Id{}, err
-		}
-		return "", connect.Id{}, fmt.Errorf("stored client JWT was rejected; run the auth command before restarting")
+		return refreshStoredClientJwt(ctx, api, networkJwtPath, clientJwtPath, byClientJwt, func(token string) error { return WriteToken(clientJwtPath, token) })
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return "", connect.Id{}, err
 	}
@@ -223,6 +198,9 @@ func LoadOrCreateClientJwt(
 	if err != nil {
 		return "", connect.Id{}, err
 	}
+	if result == nil {
+		return "", connect.Id{}, errors.New("auth network client returned a null result")
+	}
 	if result.Error != nil {
 		return "", connect.Id{}, fmt.Errorf("%s", result.Error.Message)
 	}
@@ -241,4 +219,112 @@ func LoadOrCreateClientJwt(
 	}
 	api.SetByJwt(result.ByClientJwt)
 	return result.ByClientJwt, clientId, nil
+}
+
+// Existing client ownership never falls through to another creation. A
+// successful refresh must preserve the full local client/device identity;
+// only an unavailable request retains the already owned credential.
+func refreshStoredClientJwt(ctx context.Context, api *sdk.Api, networkPath, clientPath, token string, persist func(string) error) (string, connect.Id, error) {
+	return refreshStoredClientJwtWithReadiness(ctx, api, networkPath, clientPath, token, persist, true)
+}
+
+// Production observation does not need speculative API readiness. Its caller
+// requires successful refresh, including after an unpersisted old revocation.
+func refreshStoredClientJwtWithReadiness(ctx context.Context, api *sdk.Api, networkPath, clientPath, token string, persist func(string) error, allowUnavailable bool) (string, connect.Id, error) {
+	return refreshStoredClientJwtWithCustody(ctx, api, token, persist, func() error { return clearRejection(clientPath) }, func() error { return MarkRejected(clientPath, networkPath) }, allowUnavailable)
+}
+
+// Credential owners supply their real persistence and rejection effects. The
+// provider uses descriptor-relative custody; older consumers keep their paths.
+func refreshStoredClientJwtWithCustody(ctx context.Context, api *sdk.Api, token string, persist func(string) error, clearRejected, markRejected func() error, allowUnavailable bool) (string, connect.Id, error) {
+	clientId, err := ClientIdFromJwt(token)
+	if err != nil {
+		return "", connect.Id{}, fmt.Errorf("invalid stored client JWT: %w", err)
+	}
+	api.SetByJwt(token)
+	result, refreshErr := api.RefreshJwtSyncWithContext(ctx)
+	if refreshErr == nil && result == nil {
+		return "", connect.Id{}, errors.New("refresh returned a null client result")
+	}
+	if refreshErr == nil && result.Error == nil {
+		if result.ByJwt == "" {
+			return "", connect.Id{}, errors.New("refresh returned an empty client JWT")
+		}
+		if err := ValidateRefreshedClientJwt(token, result.ByJwt); err != nil {
+			return "", connect.Id{}, &RegistrationResponseIdentityError{}
+		}
+		if err := persist(result.ByJwt); err != nil {
+			return "", connect.Id{}, err
+		}
+		if err := clearRejected(); err != nil {
+			return "", connect.Id{}, err
+		}
+		api.SetByJwt(result.ByJwt)
+		return result.ByJwt, clientId, nil
+	}
+	confirmedRejected := refreshErr == nil && result != nil && result.Error != nil
+	if sdk.ConfirmedClientRefreshRejection(refreshErr) {
+		confirmedRejected = true
+	}
+	if confirmedRejected {
+		if err := markRejected(); err != nil {
+			return "", connect.Id{}, err
+		}
+		if !allowUnavailable {
+			return "", connect.Id{}, &RegistrationRefusedError{Code: "client_revoked"}
+		}
+		return "", connect.Id{}, errors.New("stored client JWT was rejected; explicit authentication is required")
+	}
+	if !retryableClientRefreshError(refreshErr) {
+		return "", connect.Id{}, refreshErr
+	}
+	if err := ctx.Err(); err == context.Canceled {
+		return "", connect.Id{}, errors.Join(refreshErr, err)
+	}
+	if !allowUnavailable {
+		return "", connect.Id{}, &RegistrationRefreshUnavailableError{cause: refreshErr}
+	}
+	if err := ctx.Err(); err != nil {
+		return "", connect.Id{}, err
+	}
+	return token, clientId, nil
+}
+
+// Every leaf must be a typed unavailable read. Complete decoder/protocol
+// failures and a hard cause joined with a timeout retain their error verdict.
+func retryableClientRefreshError(err error) bool {
+	if err == nil || err == context.Canceled {
+		return false
+	}
+	if err == context.DeadlineExceeded {
+		return true
+	}
+	if status, ok := err.(*connect.HttpStatusError); ok {
+		return status.StatusCode == http.StatusRequestTimeout || status.StatusCode == http.StatusTooEarly || status.StatusCode == http.StatusTooManyRequests || status.StatusCode >= 500 && status.StatusCode <= 599
+	}
+	if _, bad := err.(*sdk.ClientControlResponseError); bad {
+		return false
+	}
+	if _, unavailable := err.(*sdk.ClientControlUnavailableError); unavailable {
+		return true
+	}
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		causes := joined.Unwrap()
+		if len(causes) == 0 {
+			return false
+		}
+		for _, cause := range causes {
+			if !retryableClientRefreshError(cause) {
+				return false
+			}
+		}
+		return true
+	}
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return retryableClientRefreshError(wrapped.Unwrap())
+	}
+	if network, ok := err.(net.Error); ok && network.Timeout() {
+		return true
+	}
+	return err == syscall.ECONNRESET || err == syscall.ECONNREFUSED || err == syscall.EPIPE || err == syscall.ETIMEDOUT
 }

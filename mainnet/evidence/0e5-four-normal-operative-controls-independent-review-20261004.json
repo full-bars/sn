@@ -1,0 +1,44 @@
+{
+  "schema": "0e5-operative-controls-partial-independent-review-v1",
+  "status": "FOUR_NORMAL_CONTROLS_CAUSAL_NOT_FULL_BATCH",
+  "job_sha256": "a427ac71d383394181dddc1e1b072c0244ba3b79f15b4e0fae5d85c60ac4b9bb",
+  "controls": [
+    {
+      "phase": "0e5-18-control-old-acknowledgment-read-body-normal",
+      "root": "TestSnapshotHeadAcknowledgmentReadFailureRetainsOriginalWrite",
+      "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-18-control-old-acknowledgment-read-body-normal-control-receipt.json",
+      "receipt_sha256": "0515ea97524998838d3762075543bbf8c3bc42937366db29fbf662ba25a98700",
+      "verified_assertion": "failed acknowledgment invented changed custody or lost pending cause",
+      "mutation_scope": "one production source file, no test mutation"
+    },
+    {
+      "phase": "0e5-19-control-old-named-observation-body-normal",
+      "root": "TestMonitorCheckpointNamedObservationPreservesCancellationCauses",
+      "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-19-control-old-named-observation-body-normal-control-receipt.json",
+      "receipt_sha256": "bade0451930b17b7de4a9d51d861daf2ae031eff078243b137920d6495b700a4",
+      "verified_assertion": "pure named-read cancellation acquired an invented custody cause",
+      "mutation_scope": "one production source file, no test mutation"
+    },
+    {
+      "phase": "0e5-20-control-old-plan-input-body-normal",
+      "root": "TestPlanInputObservationPreservesCancellationAndReadCauses",
+      "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-20-control-old-plan-input-body-normal-control-receipt.json",
+      "receipt_sha256": "59875bd0931fe115e1c8288a09e2680bc873277204028d820f33248bf8f69599",
+      "verified_assertion": "canceled owner observed a file or lost its cause",
+      "mutation_scope": "one production source file, no test mutation"
+    },
+    {
+      "phase": "0e5-21-control-claim-compaction-omitted-normal",
+      "root": "TestMonitorClaimArchivePublicRestartRetainsUnresolvedAndOriginalPayment",
+      "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-21-control-claim-compaction-omitted-normal-control-receipt.json",
+      "receipt_sha256": "728072898757fab5c52cc38ba42d0eff0bd488b398601f98d54dffea8a286b8c",
+      "verified_assertion": "claim compaction lost original progress, policy or unresolved evidence commitments",
+      "mutation_scope": "one production source file, no test mutation"
+    }
+  ],
+  "limits": [
+    "Only first four normal-mode controls reviewed; twelve remaining phases and their assertion causes remain separate.",
+    "Old plan body control proves early cancellation cause retention, not every changed close/read path.",
+    "These controls do not qualify the foreground successor or native producer."
+  ]
+}

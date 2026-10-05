@@ -12,6 +12,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"github.com/urnetwork/connect/durablevolume"
 	"io"
 	"os"
 	"path/filepath"
@@ -23,6 +24,21 @@ import (
 // missing suffix through retained descriptors. Existing directories are never
 // chmod-ed; a symlink/FIFO/unknown error cannot become permission to create.
 func openReleaseMeasurementInputV2Parents(ctx context.Context, path string) (*attemptPrivateDirectory, error) {
+	if _, present := durablevolume.ReferenceFromContext(ctx); present {
+		guard, err := openValidatorDurableDirectory(ctx, path, durablevolume.ReadWrite, true)
+		if err != nil {
+			return nil, err
+		}
+		owner, err := openAttemptPrivateDirectory(path, ctx)
+		closeErr := guard.Close()
+		if err != nil || closeErr != nil {
+			if owner != nil {
+				closeErr = errors.Join(closeErr, owner.close())
+			}
+			return nil, errors.Join(err, closeErr)
+		}
+		return owner, nil
+	}
 	candidate := path
 	var missing []string
 	var parent *attemptPrivateDirectory
@@ -65,7 +81,7 @@ func openReleaseMeasurementInputV2Parents(ctx context.Context, path string) (*at
 		if err != nil || state.dev != before.dev || state.ino != before.ino || state.mode != before.mode || state.uid != before.uid {
 			return nil, errors.Join(errors.New("compact input directory changed during creation"), err, file.Close(), parent.close())
 		}
-		child := &attemptPrivateDirectory{file: file, path: filepath.Join(parent.path, name), anchor: state}
+		child := &attemptPrivateDirectory{file: file, path: filepath.Join(parent.path, name), anchor: state, storageCtx: parent.storageCtx}
 		var syncErr error
 		if createErr == nil {
 			syncErr = parent.file.Sync()

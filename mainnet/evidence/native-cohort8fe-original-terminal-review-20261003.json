@@ -1,0 +1,258 @@
+{
+  "schema": "root-native-cohort8fe-original-terminal-review-v1",
+  "source": {
+    "connect": "1610f7a55e5efe4809a87b695fdebc4161709e49",
+    "intake": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/native-8fe-intake.json",
+    "intake_sha256": "08bee48ad5d14601fb1843a4818ec02aa57437d79676d17442d612fdd91baf4c",
+    "physical_root": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003",
+    "sn": "8fe0172272d32e4db76ac7fef436b604d182b105"
+  },
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/cohort8fe-original-public-terminal-receipt.json",
+    "sha256": "fe7a1ddbeefa7e25e71bdf1545fb2b2a2f8eb80873ac2cfcd1ac0aec4aefc56a"
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/cohort8fe-core16-receipt.json",
+      "bytes": 4256,
+      "sha256": "567ddbfa7617832ff9e0aba523ad216c1dc74ae2df5b0c85674b77278e423ed7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/modules.jsonl",
+      "bytes": 220146,
+      "sha256": "ba08e8b7930fa45990405dd9a144190874679c01831e30c91e55b20637ac2166"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/preflight.exits",
+      "bytes": 6,
+      "sha256": "a17138988e1387532b5cb0bd7a23f18a11d537123873e67154dada3c6359e53e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-deps.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-deps.stdout",
+      "bytes": 28557,
+      "sha256": "e266f9ad22939ce278a02aa106209a10e797864947fdea286c907bbfa28fb932"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-normal.command.json",
+      "bytes": 447,
+      "sha256": "f905a0c776e132f09b88a9e3e6bef86bcbf9091a8f88318b9a91217e4b8dad51"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-normal.jsonl",
+      "bytes": 1769,
+      "sha256": "1ee7a450800d893fa3a9befd2cccbdf002e7d26189840b16b37cbcfd9569c80e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-race-exact.command.json",
+      "bytes": 511,
+      "sha256": "67cfb4fd5a698dd1fd97befccc4efd9b66e8acc6cc8e95af30d3090e2b964657"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-race-exact.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-race-exact.jsonl",
+      "bytes": 1769,
+      "sha256": "3017b87cbc514b2e1c429bd6b44621976e49d7c4958815a2362aecc2638c8723"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-race-exact.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-race.command.json",
+      "bytes": 473,
+      "sha256": "d2e868d60b2a8616833de979f0c3bbedf219fb8c3867303e463f949a731d422b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-race.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-race.jsonl",
+      "bytes": 693,
+      "sha256": "a68b0117735693d941bea343edc88c7690775f4ca78175e29b179a449a3fe0bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-full512-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public-vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-normal.command.json",
+      "bytes": 1486,
+      "sha256": "0e19a9b03cd7219df36bd52341981fafe8569523d0598f08802d2bb47d2e365e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-normal.jsonl",
+      "bytes": 8829,
+      "sha256": "5e21b1ea991af77dec88a883b74bb8a7952db52141ffb72795225fac7a1f53d4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-race.command.json",
+      "bytes": 1500,
+      "sha256": "904de515fbcb3a492f086641d6e47614b854b0b614eaf46ef804c979a58f9825"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-race.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-race.jsonl",
+      "bytes": 8829,
+      "sha256": "993b3887267df21c88f184d6b127274829e57bb95bc0e2308f4941880cd857da"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/public9-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/source-readback.json",
+      "bytes": 382,
+      "sha256": "6237118226f79b259de1f7dc609871f7dcf8ae3eb2f645d3c181a5164fe7fb88"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-8fe-independent-20261003/evidence/vets.exits",
+      "bytes": 4,
+      "sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101"
+    }
+  ],
+  "verified_census": {
+    "public-full512-normal": {
+      "exit": 0,
+      "fail": [],
+      "pass": [
+        "TestMonitorNativeCohortRestoreAdmitsAll512SegmentsAndBothHeads"
+      ],
+      "run": [
+        "TestMonitorNativeCohortRestoreAdmitsAll512SegmentsAndBothHeads"
+      ],
+      "skip": []
+    },
+    "public-full512-race": {
+      "exit": 0,
+      "fail": [],
+      "pass": [],
+      "run": [],
+      "skip": []
+    },
+    "public-full512-race-exact": {
+      "exit": 0,
+      "fail": [],
+      "pass": [
+        "TestMonitorNativeCohortRestoreAdmitsAll512SegmentsAndBothHeads"
+      ],
+      "run": [
+        "TestMonitorNativeCohortRestoreAdmitsAll512SegmentsAndBothHeads"
+      ],
+      "skip": []
+    },
+    "public9-normal": {
+      "exit": 1,
+      "fail": [
+        "TestMonitorNativeCohortRestoreRefusesLateRootBeforeEffects"
+      ],
+      "pass": [
+        "TestMonitorNativeAdmissionCancellationCannotBecomeReadiness",
+        "TestMonitorNativeAdmissionCleanupJoinsAndRetainsCloseFailure",
+        "TestMonitorNativeAdmissionEarlyExitCannotBecomeReadiness",
+        "TestMonitorNativeAdmissionRefusesLostAndUnknownWatchEvents",
+        "TestMonitorNativeCohortRestoreKeepsOriginalPendingOutcome",
+        "TestMonitorNativeCohortRestoreResumesPartialRootsWithHealthyPeer",
+        "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory",
+        "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome"
+      ],
+      "run": [
+        "TestMonitorNativeAdmissionCancellationCannotBecomeReadiness",
+        "TestMonitorNativeAdmissionCleanupJoinsAndRetainsCloseFailure",
+        "TestMonitorNativeAdmissionEarlyExitCannotBecomeReadiness",
+        "TestMonitorNativeAdmissionRefusesLostAndUnknownWatchEvents",
+        "TestMonitorNativeCohortRestoreKeepsOriginalPendingOutcome",
+        "TestMonitorNativeCohortRestoreRefusesLateRootBeforeEffects",
+        "TestMonitorNativeCohortRestoreResumesPartialRootsWithHealthyPeer",
+        "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory",
+        "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome"
+      ],
+      "skip": []
+    },
+    "public9-race": {
+      "exit": 1,
+      "fail": [
+        "TestMonitorNativeCohortRestoreRefusesLateRootBeforeEffects"
+      ],
+      "pass": [
+        "TestMonitorNativeAdmissionCancellationCannotBecomeReadiness",
+        "TestMonitorNativeAdmissionCleanupJoinsAndRetainsCloseFailure",
+        "TestMonitorNativeAdmissionEarlyExitCannotBecomeReadiness",
+        "TestMonitorNativeAdmissionRefusesLostAndUnknownWatchEvents",
+        "TestMonitorNativeCohortRestoreKeepsOriginalPendingOutcome",
+        "TestMonitorNativeCohortRestoreResumesPartialRootsWithHealthyPeer",
+        "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory",
+        "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome"
+      ],
+      "run": [
+        "TestMonitorNativeAdmissionCancellationCannotBecomeReadiness",
+        "TestMonitorNativeAdmissionCleanupJoinsAndRetainsCloseFailure",
+        "TestMonitorNativeAdmissionEarlyExitCannotBecomeReadiness",
+        "TestMonitorNativeAdmissionRefusesLostAndUnknownWatchEvents",
+        "TestMonitorNativeCohortRestoreKeepsOriginalPendingOutcome",
+        "TestMonitorNativeCohortRestoreRefusesLateRootBeforeEffects",
+        "TestMonitorNativeCohortRestoreResumesPartialRootsWithHealthyPeer",
+        "TestMonitorNativeRestoreRefusesOmittedChangedAndUnreviewedHistory",
+        "TestMonitorNativeRestoreRetainsSignedCapacityAndPendingOutcome"
+      ],
+      "skip": []
+    }
+  },
+  "classification": {
+    "full_history": "Exact 512-segment/two-head root passed normally and with race detection.",
+    "source_custody": "Public nine-root batch retains one genuine product failure in each mode; corrected successor63/772 remains unqualified.",
+    "invalid_initial_race_run": "Exit0 with no selected roots is retained as invalid; exact-selector race run proves the intended root instead."
+  },
+  "limits": [
+    "These are synthetic archive fixtures, not production host or complete economic qualification.",
+    "Original failing late-root test exits before subsequent no-mutation assertions; those assertions are not established by the failed run.",
+    "Separate core16 root review retains its original scope."
+  ]
+}

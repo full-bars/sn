@@ -20,7 +20,15 @@ func runScenarioWithEvidenceRelay(ctx context.Context, cfg *ResolvedConfig, stat
 	if ctx == nil {
 		return nil, errors.New("evidence relay campaign context is absent")
 	}
-	if err := validateRuntimeEvidenceSourceCapacity(cfg); err != nil {
+	sourceConfig := cfg
+	if executor != nil && executor.plan != nil {
+		var err error
+		sourceConfig, err = evidenceRelaySourceCapacityConfig(cfg, executor.plan)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if err := validateRuntimeEvidenceSourceCapacity(sourceConfig); err != nil {
 		return nil, err
 	}
 	phaseCtx, cancel := context.WithCancelCause(ctx)
@@ -31,6 +39,18 @@ func runScenarioWithEvidenceRelay(ctx context.Context, cfg *ResolvedConfig, stat
 		return nil, err
 	}
 	defer func() { resultErr = errors.Join(resultErr, relay.Close(), context.Cause(phaseCtx)) }()
+	if relay.policyRolloverPlanHash != "" {
+		if len(relay.policyGapFirstEpoch) != len(relay.sources) {
+			return nil, errors.New("release rollover lacks a complete first-full-epoch census")
+		}
+		for _, source := range relay.sources {
+			first := relay.policyGapFirstEpoch[source.validatorId]
+			if first == 0 || options.MinimumAcceptanceEpoch != 0 && options.MinimumAcceptanceEpoch != first {
+				return nil, errors.New("release rollover has conflicting first-full-epoch boundaries")
+			}
+			options.MinimumAcceptanceEpoch = first
+		}
+	}
 	if err := relay.WaitReady(phaseCtx); err != nil {
 		return nil, err
 	}
@@ -79,7 +99,10 @@ func runScenarioWithEvidenceRelay(ctx context.Context, cfg *ResolvedConfig, stat
 		}
 		bounded, cancel := context.WithDeadline(waitCtx, deadline)
 		defer cancel()
-		if err := relay.WaitThrough(bounded, end); err != nil {
+		if err := relay.WaitPublicAudit(bounded); err != nil {
+			return err
+		}
+		if err := relay.WaitRange(bounded, window.FirstEpoch, end); err != nil {
 			return err
 		}
 		if err := relay.WaitAuditPass(bounded); err != nil {
@@ -87,7 +110,7 @@ func runScenarioWithEvidenceRelay(ctx context.Context, cfg *ResolvedConfig, stat
 		}
 		// Finish the worker before evidence collection finalizes the happy path.
 		// Its already-complete source slots remain independently replayable.
-		return relay.Close()
+		return errors.Join(relay.Close(), relay.WaitRange(bounded, window.FirstEpoch, end))
 	}
 	return runScenarioWithProbe(phaseCtx, cfg, stateDir, definition, probe, options)
 }

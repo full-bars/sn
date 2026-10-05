@@ -1,0 +1,52 @@
+{
+  "artifact_sha256": {
+    "affected2-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "affected2-normal.jsonl": "6f65eb8e6885a0f2264c9727a9e0d5b1f68fb8c34feb23f24ce20a18fb29ad87",
+    "affected2-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "affected2-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "affected2-race.jsonl": "14f9943c9a50a4708fef91a38d126d94d7796c6727ffc48edb9b51aa734bda17",
+    "affected2-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "5fd91d765249ef7aff59c808990c2f8485ebfa3c9f069543646d59131dbb056d",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "changed_source_sha256": {
+    "mainnet/bootstrap_successor_local_pending_test.go": "1cd28e3b3b44d2d4b1254a22e1468a7a955526b34cf3406d0aaff22525fc93ef",
+    "mainnet/evidence/local-pending-rpc-fixture-20261003.md": "54b007ed8ebf03a971cd84a03e0fc60c3a4fa6ea2fedf6c550a8cf7d5298a482"
+  },
+  "classification": "PASS_SCOPED",
+  "effective_graph": "same frozen b35 Connect9fb/Serverc256 peer graph, GOWORK exact physical workspace",
+  "limits": [
+    "Only the two pending fixture roots are retested on abb2. The original b35 pending failures remain failed.",
+    "No production or module bytes differ from b35; this is not qualification of the later5a0 historical-read production successor."
+  ],
+  "normal_passed": 2,
+  "package": "./mainnet",
+  "parent": "b35ca9c9c18dfca1c80a98a406a2677cfa535bd1",
+  "parent_normal_failure_receipt_sha256": "cb23012392f5f8a0d90535194ffc139231b7b3a9264cffdc884d8dcb5ac5b187",
+  "parent_positive_race_receipt_sha256": "9c255b2701ca37e13db6204bc7a21a2846c8672d6cb87656ef50f9ce28edd86e",
+  "race_passed": 2,
+  "root_verification": {
+    "artifact_bindings_rehashed": 12,
+    "exact_two_changed_test_document_git_blobs_verified": true,
+    "prior_receipt_hashes_matched": true,
+    "raw_failed": 0,
+    "raw_normal_passed": 2,
+    "raw_race_passed": 2,
+    "raw_skipped": 0,
+    "receipt_path": "/mnt/data/sn-testnet/sol-local-pending-abb2-independent-20261003/evidence/abb2-pending-fixture-receipt.json",
+    "receipt_sha256": "079c7594714ae8fde5b09791d8fd92f3649eed1e6454d06878c74fbecfbd27da"
+  },
+  "schema": "sol-local-abb2-pending-fixture-two-roots-v1",
+  "selected_roots": [
+    "TestBootstrapSuccessorLocalRebindRetainsReservedOriginalOutcome",
+    "TestBootstrapSuccessorLocalRebindRetainsAcknowledgedOriginalOutcome"
+  ],
+  "source_commit": "abb2e808fa5c706fdc61012832b7c4f0cba94aae",
+  "source_module_equal_parent": true,
+  "source_tree": "6727bb76b403aca65dbc877e7f2680029c2cebbf",
+  "vet_exit": 0
+}

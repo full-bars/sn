@@ -1,0 +1,397 @@
+{
+  "schema": "mainnet-independent-source-review-v1",
+  "status": "SOURCE_REVIEWED_NOT_BEHAVIORALLY_QUALIFIED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn",
+    "head": "986078c321021f9ad767a9145f13e94405fb3d92",
+    "tree": "67222fe65ffc50ad13d3c035255e717be1867a51",
+    "parent": "dc1aeb156f48434e36242e189901caa4f1bc8279",
+    "clean": true
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/intake.json",
+    "sha256": "a4e22d5d9254b4a5d47b6a8de188ce1f642c54d35ab3d55dca56828aeea527dd"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_conservation.go",
+      "bytes": 36882,
+      "sha256": "be2f850c8a3ea317b85a42be11396c6884ed551317e39f01772925651a06cc08",
+      "relative": "mainnet/economic_conservation.go",
+      "git_blob": "65256b35c1affb287d7569f6855869c045da7f11"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 25189,
+      "sha256": "522aa8f7e9ba15c504f65a532c480664840512a335831b7e0d46614da433f3e1",
+      "relative": "mainnet/economic_conservation_archive.go",
+      "git_blob": "037b51d957a986e08284480b8ccac48e26c85bdf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_conservation_command.go",
+      "bytes": 23836,
+      "sha256": "351c48b1308f9f0a1f5dcf889ef6b4448b58b25c79a0bbceac600e870ca7a578",
+      "relative": "mainnet/economic_conservation_command.go",
+      "git_blob": "bec7dc433ceeda48333d9f27d0d8163fecb1f25f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_conservation_principal.go",
+      "bytes": 8936,
+      "sha256": "895e9863db6af8571dee3f13d2c2c0b204b4127480d29fd4be50649ef6aeeecd",
+      "relative": "mainnet/economic_conservation_principal.go",
+      "git_blob": "f863745d2c28fa04a664af4727b33dd75b00f82c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_conservation_principal_effects.go",
+      "bytes": 11311,
+      "sha256": "ab0e18648445b8fcc92840518120eb283e565deb38a548f90d356a53c0e77316",
+      "relative": "mainnet/economic_conservation_principal_effects.go",
+      "git_blob": "88305b8df47ff2ed3745efbc839f60f9c8b3001c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_conservation_principal_effects_test.go",
+      "bytes": 10561,
+      "sha256": "5bfff9bd7121aa3f8dbb297c3f50d1888cbfa94f4d5cd82790b33033caba0e90",
+      "relative": "mainnet/economic_conservation_principal_effects_test.go",
+      "git_blob": "56aef41f2610245df784d7f121fff64ef1570ab2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 16398,
+      "sha256": "e0c8a998fed464a1ba8c0931f0ad89408ddf0dd4003d31c1e2dfae978753c2bb",
+      "relative": "mainnet/economic_conservation_principal_test.go",
+      "git_blob": "ee925d7e585f47953c10d47488495387fe2ec78c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_execution.go",
+      "bytes": 30023,
+      "sha256": "41ba7652b2ba551a56dca0e4f3323b0975b6c4acb07e78b167b5cebc35168637",
+      "relative": "mainnet/economic_native_execution.go",
+      "git_blob": "1873244eeabb191bcdbe4f7da74faf9e4aca9158"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_principal.go",
+      "bytes": 7942,
+      "sha256": "b7dcdf1d6860737a193cc5e30da140453467cfa99555172c288d2b41f2d4561e",
+      "relative": "mainnet/economic_native_principal.go",
+      "git_blob": "3b0991451f92034288439f71e6ae9d2e10475124"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_principal_effects.go",
+      "bytes": 17238,
+      "sha256": "192cacaf3a8f888bfb58791557d9bbd2f90da73feb1c6ac391be3c33e783a429",
+      "relative": "mainnet/economic_native_principal_effects.go",
+      "git_blob": "52265e28a334b61a4edce1b60e0ecdb7e4df6dfa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_principal_reconciliation.go",
+      "bytes": 5579,
+      "sha256": "752c9a0655314c02ea72a815b886cfb83c0bc96a32b3657442975d05d96b7f54",
+      "relative": "mainnet/economic_native_principal_reconciliation.go",
+      "git_blob": "bbd6b8c27b5b6a23932fdb3558dee4ab386082fd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_producer.go",
+      "bytes": 20880,
+      "sha256": "79227d869a3948c64c43ad7a461db68bb0e656655873b0a4e65abb916d7d2215",
+      "relative": "mainnet/economic_native_producer.go",
+      "git_blob": "5597bf3207667ede5e9827054e753820276155ef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_producer_test.go",
+      "bytes": 29404,
+      "sha256": "df030c3a42bb858df9fc5f4c1361b877e6bc1e78ca4e6686aaafe5ef0a0772e8",
+      "relative": "mainnet/economic_native_producer_test.go",
+      "git_blob": "e94021a4d2d642d7036caa94eef293c1c494ae91"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/historical_capture.go",
+      "bytes": 8764,
+      "sha256": "893c495182dedcb688e32ae1c6013578a9f48c0d67dcf2e5db496f9238400c44",
+      "relative": "mainnet/historical_capture.go",
+      "git_blob": "755b13264ec2294839f638b14883986f4cf6e415"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/historical_native_observation.go",
+      "bytes": 6774,
+      "sha256": "1ed9b65becd5f1907cb5523d1fbbc2efe0fa4068a4fd6ff422d7f6892ff7bc31",
+      "relative": "mainnet/historical_native_observation.go",
+      "git_blob": "e6913af4067acf89728beea66ebcb3bb16be48d6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/historical_principal_effects.go",
+      "bytes": 4893,
+      "sha256": "9a47916b8e2f791475714585d9df17d08d81aaf2f50c20c1277796a2af197f6b",
+      "relative": "mainnet/historical_principal_effects.go",
+      "git_blob": "7cd8b10457dee2bdbf57ff461bffc1349042e450"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/historical_replay.go",
+      "bytes": 17912,
+      "sha256": "27353e83b23f86c34d019e508274181d071acf20e95bc82ea7621a45beb51e46",
+      "relative": "mainnet/historical_replay.go",
+      "git_blob": "f7730c12f1e63a781afe19cc95e029d5add54ad3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/historical_replay_observation.go",
+      "bytes": 19412,
+      "sha256": "a1b31fa0cfe6fdba74b07a95ca9040b4f58abbd2aabaee8f929ce25e04e6020e",
+      "relative": "mainnet/historical_replay_observation.go",
+      "git_blob": "f2765ec92d11219e1d128253b6d3b2e62ed92968"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical.rs",
+      "bytes": 20332,
+      "sha256": "2cc540ced332c8fa583f9c9961bd984291a01fd9109146b52a48ac855de9eb6f",
+      "relative": "tools/runtime-metadata-probe/src/historical.rs",
+      "git_blob": "addbd4e1658e4d570b250d12f003204f2fe44623"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_capture.rs",
+      "bytes": 25597,
+      "sha256": "791bfabaa0a8268de27f7ea5b64b6be82afb152baeb11c0dee72251bfd919759",
+      "relative": "tools/runtime-metadata-probe/src/historical_capture.rs",
+      "git_blob": "1ab31ba8aaf86c56c781a338e57c8a5b015f4442"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "bytes": 25440,
+      "sha256": "78b8cd2a92711611132ece01655b9c9a90a0855821ecdc4d7fb0592be396ff1a",
+      "relative": "tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "git_blob": "fa9eeaf7a3e54be719299a4e01d8f98f421e7597"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 28522,
+      "sha256": "7041b2fc6611c856f9770396fd10d155352ee9dc1de11ba2900e42c9bc327bd8",
+      "relative": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "git_blob": "6d5409faef0d0eb8e5ed3d6f77a48b94ae4cbe6f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_observer.rs",
+      "bytes": 32157,
+      "sha256": "0deee0ffe5e4865fb94e04fd8710e8926274562c4777b06211229203468baad8",
+      "relative": "tools/runtime-metadata-probe/src/historical_observer.rs",
+      "git_blob": "7f1e17b8f660b9f198bd26986d8b2994d0099974"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_principal.rs",
+      "bytes": 7886,
+      "sha256": "863803f9fe16ea45eb155287068de15485e35dd59eb12c212511ba95a9ecee95",
+      "relative": "tools/runtime-metadata-probe/src/historical_principal.rs",
+      "git_blob": "19778720d093aee72226586db56eba2f39992bf2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_principal_tests.rs",
+      "bytes": 8831,
+      "sha256": "743cba18c8c7e29ca5974344d445e2aeb1b37aef4dc89ba26d550a3c25a3b2ba",
+      "relative": "tools/runtime-metadata-probe/src/historical_principal_tests.rs",
+      "git_blob": "f7becd36d0e85575f257e58ed8cd63f0ea09fc91"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_tests.rs",
+      "bytes": 57256,
+      "sha256": "131d248072a2a88415b62b8ae8288c7b922610196b9353ce44e3a3698b6f432d",
+      "relative": "tools/runtime-metadata-probe/src/historical_tests.rs",
+      "git_blob": "24be2de75726107a3f8f4dac6e8efef6b88376cf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_producer_authority.go",
+      "bytes": 14927,
+      "sha256": "9764ed314b36eee3525e684f85e88bf1d1a6019e90929470adc4a64342f09d57",
+      "relative": "mainnet/economic_native_producer_authority.go",
+      "git_blob": "ef34aaec567560645aef751bb5f0bd9f0c259aeb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "bytes": 14924,
+      "sha256": "ec3580ada4e2866da1468727aa7ea25b807cc6818d8791972b15f7dc0f8bb110",
+      "relative": "tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "git_blob": "2035374bfb5a95b5c8da66daa0ff0db6d3140cd2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31",
+      "relative": "go.mod",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981",
+      "relative": "go.sum",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc",
+      "relative": "tools/runtime-metadata-probe/Cargo.toml",
+      "git_blob": "a698109860741b88d661c29d95be93d81c62a160"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067",
+      "relative": "tools/runtime-metadata-probe/Cargo.lock",
+      "git_blob": "185310d18fcb00bcffd17ddacd80db8d34707651"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/selectors.json",
+      "bytes": 27932,
+      "sha256": "99c4729f30ac1e08006ea9e4d86b958c1bc4b6215f90ad4e0f5db4688d92ff3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/operative-controls.json",
+      "bytes": 11790,
+      "sha256": "4976d3bf8040a8f2491140bd2d421b8be8416d043deceb3b8ef25182654500a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/recipe.json",
+      "bytes": 3555,
+      "sha256": "a4b18120edfdc4dbd18a85851f9b1ab9eab5fd625675dbd531ab8bb95650d7b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/intake.json",
+      "bytes": 15425,
+      "sha256": "125a2efa90ae21c5e18be5351d6d8e717ea12b4c2fdeb65d2f00ef8f5105b83e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/api-layout-source-review.json",
+      "bytes": 4118,
+      "sha256": "67ff7c61c4b6761d5690e50edee8ec2fc6215e1e9502f22e12bec7a8c3f42351"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_principal_reconciliation.go",
+      "bytes": 5579,
+      "sha256": "752c9a0655314c02ea72a815b886cfb83c0bc96a32b3657442975d05d96b7f54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-unclassified-committed-mutations/economic_native_principal_reconciliation.go",
+      "bytes": 5588,
+      "sha256": "8043366d028578cb52d074ed3c76c72d842eb3cf2d55b55a91d2e691e31d8902"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-unclassified-committed-mutations/overlay.json",
+      "bytes": 367,
+      "sha256": "df82635079f500287aa5948534651f6f6c2e58290d753a4f3237e9de14c00f98"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_principal_reconciliation.go",
+      "bytes": 5579,
+      "sha256": "752c9a0655314c02ea72a815b886cfb83c0bc96a32b3657442975d05d96b7f54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-native-liquid-independent-join/economic_native_principal_reconciliation.go",
+      "bytes": 5588,
+      "sha256": "2a8fc54a71a04dba294a09c593a7d8693b34c0ae5b9535ca93a3dab1bf51ddb1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-native-liquid-independent-join/overlay.json",
+      "bytes": 365,
+      "sha256": "8fcf1e208384ec6a3ad2ddadceaf0b1e70af5ab70ff74d9a5d03d4124da1ade3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 25189,
+      "sha256": "522aa8f7e9ba15c504f65a532c480664840512a335831b7e0d46614da433f3e1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-complete-principal-retirement/economic_conservation_archive.go",
+      "bytes": 25170,
+      "sha256": "7ed05ad4b79448547146006327be4a39444a8714fd690d3fc3dc7bc89c6676fa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-complete-principal-retirement/overlay.json",
+      "bytes": 342,
+      "sha256": "0031f2bc8acca69c558a0950569a1499681e9ff74a585743a55aca6ca5975242"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_native_producer_authority.go",
+      "bytes": 14927,
+      "sha256": "9764ed314b36eee3525e684f85e88bf1d1a6019e90929470adc4a64342f09d57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-original-causal-scope-signature/economic_native_producer_authority.go",
+      "bytes": 14938,
+      "sha256": "f7132ea63e81d3fb9835fbd5500885cbb6d3901203b49dea0ad01b8703e2f883"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-original-causal-scope-signature/overlay.json",
+      "bytes": 354,
+      "sha256": "ca970453f2fa7bb5ef3c4d0cee28249d500f4b817866a151903d67f085bf698b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 25189,
+      "sha256": "522aa8f7e9ba15c504f65a532c480664840512a335831b7e0d46614da433f3e1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-original-archive-summary-census/economic_conservation_archive.go",
+      "bytes": 25198,
+      "sha256": "b6266a32e8e228dd3035088db648aa1c9543de97de6c7593f997786de945d3cd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-original-archive-summary-census/overlay.json",
+      "bytes": 344,
+      "sha256": "426ddddc8f8959c3c6310a97e8e1a22a9c24443329f4a44dc67793343154ede0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_principal.rs",
+      "bytes": 7886,
+      "sha256": "863803f9fe16ea45eb155287068de15485e35dd59eb12c212511ba95a9ecee95"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/restore-parent-only-principal-query/historical_principal.rs",
+      "bytes": 7760,
+      "sha256": "825af88e62fad153f2407d4946b89b69f5d474bc9875b5d56fcb1a636ba70e52"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_observer.rs",
+      "bytes": 32157,
+      "sha256": "0deee0ffe5e4865fb94e04fd8710e8926274562c4777b06211229203468baad8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-unselected-mutation-census/historical_observer.rs",
+      "bytes": 32179,
+      "sha256": "6a6899da5e3926c1562c45df198a3c92005a22c56188587b5d0166ad238cf03d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/sn/tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "bytes": 14924,
+      "sha256": "ec3580ada4e2866da1468727aa7ea25b807cc6818d8791972b15f7dc0f8bb110"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-principal-effects/evidence/controls/omit-post-execution-read-only-guard/historical_hosts.rs",
+      "bytes": 14932,
+      "sha256": "ece17d0cce8c16bf93a2c0ebdce0d11d434d8ec14ed3bea9c2639636391bb342"
+    }
+  ],
+  "review": {
+    "production": "Reviewed original authority and canonical opening/closing results, independent committed storage mutations including unselected/net-zero writes, rollback, exact native earning joins, contiguous retirement and original archive re-admission. Profile/report presence is guarded before mutation validation.",
+    "fixtures": "Read ten new public Go bodies, Rust completed-overlay read-only and mandatory-query tests, and original-program exporter for seven causal/zero/absent/residual/rollback scenarios.",
+    "controls": "Read eight exact omission diffs: five Go groups per mode and three Rust groups; no execution inferred.",
+    "legacy": "Optional nil/false encoding and original execution outcome hash remain compatible. Principal evidence carries separate authenticated projections; selected balance equality cannot establish earnings or activation."
+  },
+  "qualification": {
+    "go_roots_per_mode": 48,
+    "new_go": 10,
+    "rust_roots": 27,
+    "new_rust": 3,
+    "go_controls_per_mode": 5,
+    "rust_controls": 3,
+    "vets": [
+      "./mainnet"
+    ]
+  },
+  "remaining_mechanisms": [
+    "Complete original Yuma branch/denominator and propagated quantization witness",
+    "Exact native causal effect-to-original vault contract receipt/capture join; no per-capture principal amount is populated by this increment",
+    "Complete entitlement/root/Claim/funding census in parallel Current lane",
+    "Independent live original runtime/profile/economic/finality authority remains external"
+  ],
+  "resource": "Recipe values are proposals only. Prior dc1 Rust resource grant does not admit changed effects bodies; require fresh finite forecast with original cumulative baseline, live process census and lease. Actual dual-ELF capture execution remains dependent public-Go scope, not inferred from the Rust exporter.",
+  "executed": false,
+  "requirement_closure": false
+}

@@ -76,12 +76,13 @@ func TestQualificationDescendantsAdmitExactControllerCensus(t *testing.T) {
 	}
 }
 
-// Every nested ancestor must be declared before descendants. Duplicate,
-// foreign, malformed or over-bound identities do not become selectors.
+// Every actual ancestor must be declared. Duplicate, foreign, malformed or
+// over-bound identities do not become selectors; literal slash parts may be
+// absent when they do not name a separately executed test.
 func TestQualificationDescendantsRejectInvalidDeclarations(t *testing.T) {
 	for _, rows := range []string{
 		"TestTree/child\tPASS\n",
-		"TestTree\tPASS\nTestTree/child/leaf\tPASS\n",
+		"TestOther\tPASS\nTestTree/child/leaf\tPASS\n",
 		"TestTree\tPASS\nTestTree/child\tPASS\nTestTree/child\tPASS\n",
 		"TestTree\tPASS\nTestOther/child\tPASS\n",
 		"TestTree\tPASS\nTestTree/\tPASS\n",

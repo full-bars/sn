@@ -1,0 +1,44 @@
+{
+  "schema": "urnetwork-root-model-sampler-source-finding-v1",
+  "captured_utc": "2026-10-03T18:44:04.991571+00:00",
+  "status": "PREEXECUTION_SOURCE_DEFECT_CONFIRMED_NO_TEST_ATTEMPT",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/run-admitted-phase.py",
+      "bytes": 7610,
+      "sha256": "cb3f3941c323a2bff3f6704133dab0c4848ddd86488fd46429b17c8ce720366b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/server5f-full-model-forecast-v2.json",
+      "bytes": 8896,
+      "sha256": "c64e114c71ffe6715fad9ef2491cf035ab7feb8c251433e73c78f94968589d50"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/docker-root-cap-addendum.json",
+      "bytes": 924,
+      "sha256": "5b39e60a5f6a9052d1a80e247bf1d0fd45f52dcf04585da5a1962d8233967639"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/lease-baseline.json",
+      "bytes": 538,
+      "sha256": "61b914c3524a3b48c21a533877088fb90dacd36cc7dacf97294acdc4b21db239"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/job-manifest.json",
+      "bytes": 1342,
+      "sha256": "abb9d070e482625566a3debabb7eee7f3542bb885f7d45de6f63cb3b67d8f093"
+    }
+  ],
+  "finding": "container_mem assigns to undefined CGROUP_CACHE after a container cgroup is readable. An uncaught sampling-thread exception would leave incomplete resource data; thread-not-alive does not prove successful sampling.",
+  "required_fix": [
+    "Retain original source and produce a distinct Astra-reviewed sampler successor.",
+    "Record typed resource/cgroup observation gaps and terminal sampler outcome separately from test result.",
+    "Keep admitted tests running after observation failure; preserve raw model outcomes rather than repeat the suite to repair sampler-only evidence.",
+    "Require exact sampler/job bindings and validate its failure paths before adopting this new three-operation batch."
+  ],
+  "limits": [
+    "Static source finding and independently verified zero admitted operations; no model failure or runtime reproduction is claimed.",
+    "Baseline lease owner175161 remains live; resource adoption and current full model execution have not started.",
+    "This finding concerns test evidence collection, not a newly established miner/validator production defect."
+  ]
+}

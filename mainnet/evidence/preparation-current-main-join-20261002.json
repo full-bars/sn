@@ -1,0 +1,369 @@
+{
+  "schema": "urnetwork-preparation-current-source-join-v1",
+  "recorded_at": "2026-10-02T21:52:33.693314+00:00",
+  "verdict": "PASS_SOURCE_JOIN_ONLY",
+  "source": "9d7d57fcd4303df5fa4e265de1aa6e467c4056ff",
+  "tree": "d0e5d5d467fbb8fdf2e458cb7453088483702f47",
+  "physical_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-main-join/sn",
+  "branch": "integrate/mainnet-preparation-current-20261002",
+  "baseline": "a692bbbae43327b76af0161a2bc2e6a21ea29fe0",
+  "preparation": "0384cbfc90ee7f7f8cc7b8764f119b71aa62783e",
+  "current_main": "e08e1b1101a87d37a981e21473e0223cc5cdfc23",
+  "exact_tree_entries": 20135,
+  "preparation_changed": [
+    "chain/journal_preparation_linux.go",
+    "chain/journal_preparation_test.go",
+    "go.mod",
+    "go.sum",
+    "internal/durablehead/preparation_linux.go",
+    "internal/durablepath/preparation.go",
+    "mainnet/main.go",
+    "mainnet/storage_prepare_command_test.go",
+    "mainnet/storage_prepare_continuation_test.go",
+    "mainnet/storage_prepare_current_graph_test.go",
+    "mainnet/storage_prepare_directory_continuation_test.go",
+    "mainnet/storage_prepare_directory_test.go",
+    "mainnet/storage_prepare_linux.go",
+    "mainnet/storage_prepare_members_linux.go",
+    "mainnet/storage_prepare_other.go",
+    "mainnet/storage_prepare_owner_continuation_test.go",
+    "mainnet/storage_prepare_owners_linux.go",
+    "mainnet/storage_prepare_owners_test.go",
+    "mainnet/storage_prepare_private_root_continuation_test.go",
+    "mainnet/storage_prepare_private_root_test.go",
+    "mainnet/storage_prepare_snapshots_linux.go",
+    "miner/storage_preparation_linux.go",
+    "miner/storage_preparation_test.go",
+    "validator/attempt_ledger_preparation.go",
+    "validator/attempt_ledger_preparation_admission_test.go",
+    "validator/attempt_ledger_preparation_linux.go",
+    "validator/attempt_ledger_preparation_test.go"
+  ],
+  "current_main_changed": [
+    "mainnet/MAINNET.md",
+    "mainnet/PRELAUNCH-FIXES.md",
+    "mainnet/evidence/cache-reclaim-6-20261002.json",
+    "mainnet/evidence/claim-projection-author-20261002.json",
+    "mainnet/evidence/claim-projection-independent-20261002.json",
+    "mainnet/evidence/claim-projection-main-integration-20261002.json",
+    "mainnet/evidence/claim-projection-physical-freeze-20261002.json",
+    "mainnet/evidence/claim-projection-progress-20261002.md",
+    "mainnet/evidence/private-root-preparation-author-20261002.json",
+    "mainnet/evidence/server-checkout-relocation-20261002.json",
+    "miner/claim_daemon.go",
+    "miner/claim_observation.go",
+    "miner/claim_observation_capacity.go",
+    "miner/claim_progress.go",
+    "miner/claim_progress_custody_test.go",
+    "miner/claim_progress_source_test.go",
+    "miner/claim_progress_test.go",
+    "miner/claim_signed_outcome.go",
+    "miner/claim_swarm.go",
+    "protocol/claim_progress.go",
+    "protocol/claim_progress_test.go"
+  ],
+  "identical_overlap": [],
+  "physical_delta": [
+    {
+      "path": "chain/journal_preparation_linux.go",
+      "git_entry": "100644 blob f8fa65cc1111294f00cfba1205947d7ee8b65451",
+      "bytes": 6578,
+      "sha256": "b0db6a018df554c053f3e8c4c039952116ef52435734205d3734fab93da14644"
+    },
+    {
+      "path": "chain/journal_preparation_test.go",
+      "git_entry": "100644 blob e102fe4819967b06c54e8bbe6d6fb282497e0c8d",
+      "bytes": 4158,
+      "sha256": "be2ef1214f42c45029f1ece416f0449dd8516f4e1464c212538b09c88cab753b"
+    },
+    {
+      "path": "go.mod",
+      "git_entry": "100644 blob 08557437f4c4ce689c121a06a24eb0f97fb41284",
+      "bytes": 11252,
+      "sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f"
+    },
+    {
+      "path": "go.sum",
+      "git_entry": "100644 blob 7788528deb337005ef0c430d95d0c6eb6e648fdf",
+      "bytes": 65954,
+      "sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+    },
+    {
+      "path": "internal/durablehead/preparation_linux.go",
+      "git_entry": "100644 blob 11ec493fae4f17968040da0e2a859dddfe850165",
+      "bytes": 7766,
+      "sha256": "b424cd319b70f3986916d3056a526f4787d7c0c9dfdaa18087c9998f941aafa8"
+    },
+    {
+      "path": "internal/durablepath/preparation.go",
+      "git_entry": "100644 blob f3353522504259829f5b2222182933b79cff8348",
+      "bytes": 2333,
+      "sha256": "32821ec7f07798afb8182c150e26e2c4af9cdacf25e1661cdcb2f48303ac5f2d"
+    },
+    {
+      "path": "mainnet/MAINNET.md",
+      "git_entry": "100644 blob 2fcd45dad6eefabad977821f989e48a9ba61b597",
+      "bytes": 275329,
+      "sha256": "18d866afe0387741cb09e905a0bb717ffe767364c4fbe27eaf7d22319f46b93e"
+    },
+    {
+      "path": "mainnet/PRELAUNCH-FIXES.md",
+      "git_entry": "100644 blob 29df482f0389c26f48312fc176351c9de0ec35c7",
+      "bytes": 431523,
+      "sha256": "717a5df60420a4fa2c608ed736fbf59aff50cb1b4eb8622357e50a6f439462dd"
+    },
+    {
+      "path": "mainnet/evidence/cache-reclaim-6-20261002.json",
+      "git_entry": "100644 blob 9bd32e8040a6a27aa53385b4017af6d320ed8c2d",
+      "bytes": 3049,
+      "sha256": "3278a500d910c6c3d2ae849ed25be8ca5fd611003fdf018b87abe4c5ca5de6ea"
+    },
+    {
+      "path": "mainnet/evidence/claim-projection-author-20261002.json",
+      "git_entry": "100644 blob e887224015fc2669b20116dadea484d44446175b",
+      "bytes": 43090,
+      "sha256": "5a857f31c7b2e3a43fe09062e9e0b9918888cf3d06f130b1603c7b5f8c9a111b"
+    },
+    {
+      "path": "mainnet/evidence/claim-projection-independent-20261002.json",
+      "git_entry": "100644 blob a3656d73ce3bec0a0c3001754c97aca795a24d9c",
+      "bytes": 16121,
+      "sha256": "1eda6ff63df36aa0b4260573f31076676badac83224fead862eda57ce4e86a9e"
+    },
+    {
+      "path": "mainnet/evidence/claim-projection-main-integration-20261002.json",
+      "git_entry": "100644 blob e140498d65b2915174e8465a87e672354b6f4d4a",
+      "bytes": 2340,
+      "sha256": "816d98391e070d9a5521084a04e264d86e3938aa5fa972a20dcd8a77292ad8c2"
+    },
+    {
+      "path": "mainnet/evidence/claim-projection-physical-freeze-20261002.json",
+      "git_entry": "100644 blob e516fb699d6aae400c2b6428975a6ef38321d137",
+      "bytes": 845,
+      "sha256": "f17244f84c5576ea789badbfd2ab44f1096b520e66cb1b74a83e32ab3af2fd05"
+    },
+    {
+      "path": "mainnet/evidence/claim-projection-progress-20261002.md",
+      "git_entry": "100644 blob b9071b6304d91f79ea04c890c310adbc2194db50",
+      "bytes": 4861,
+      "sha256": "29f2ce58b5ee07f26168842aa4bb9f2c31321b34a6c909f1eb2a72eb0eeb3240"
+    },
+    {
+      "path": "mainnet/evidence/private-root-preparation-author-20261002.json",
+      "git_entry": "100644 blob 4c35f2e012f5e18efc8851179f199c6a11276bd1",
+      "bytes": 38300,
+      "sha256": "693444206629643f2100b2e30c05700241769c1d325aa108fe07c41afaf512ac"
+    },
+    {
+      "path": "mainnet/evidence/server-checkout-relocation-20261002.json",
+      "git_entry": "100644 blob b267007468131af8417a4dcff4eff1c7d2cccf6b",
+      "bytes": 2736,
+      "sha256": "f6ec7680cf3773b2456b2df5604adc649d612bedc5aeedaab189832e0bc45fb7"
+    },
+    {
+      "path": "mainnet/main.go",
+      "git_entry": "100644 blob 8ff9980da54c55814e3bf8a12c2419f2b0c01029",
+      "bytes": 23067,
+      "sha256": "715efd443fe0ed4e5ae9b6041f9bbbd30bdbd367f75659b1931879ce1382767d"
+    },
+    {
+      "path": "mainnet/storage_prepare_command_test.go",
+      "git_entry": "100644 blob 5512940af9b42fdb0100249f6fe0435df4b846a8",
+      "bytes": 8478,
+      "sha256": "424ee50fb213dd86c8c5e54bfd8f24c9ee1f357caae98fd1f56caf36979e1d6b"
+    },
+    {
+      "path": "mainnet/storage_prepare_continuation_test.go",
+      "git_entry": "100644 blob b26b85c5843c8cca562f644557c5b40ec80ebaef",
+      "bytes": 9972,
+      "sha256": "427315b07febaa4856248ab2951be726865ad2a866f6ca0d22724c151dc5807e"
+    },
+    {
+      "path": "mainnet/storage_prepare_current_graph_test.go",
+      "git_entry": "100644 blob e1214c93c4cbd5dae7be8da2a388ee78acf074ad",
+      "bytes": 4678,
+      "sha256": "27cbf7fa143365b2cbeddea653ecad4104e26a49df320eaf9e18bb0103c64b8f"
+    },
+    {
+      "path": "mainnet/storage_prepare_directory_continuation_test.go",
+      "git_entry": "100644 blob 7a8f5272ab570ac8e9027a9137e6c83d23317eb3",
+      "bytes": 10483,
+      "sha256": "9a0d94b11b97af1e824ac9654b4d8cb9520b5e2d25f52efb8ab913f7b80b8ac6"
+    },
+    {
+      "path": "mainnet/storage_prepare_directory_test.go",
+      "git_entry": "100644 blob 9a2f3bf3cd7d5424511d5eb6a2be41363144407b",
+      "bytes": 5670,
+      "sha256": "c238d3a88bff2bc9c1ef7b365563e6fa507261b21cca9dd5642d3f978df334a2"
+    },
+    {
+      "path": "mainnet/storage_prepare_linux.go",
+      "git_entry": "100644 blob 3e0989db8be3e209ad06e89439ba6389456ab335",
+      "bytes": 6043,
+      "sha256": "f4c83cf7b663122c80812842088ea57c5ff805d408d025e9bd280707550aea36"
+    },
+    {
+      "path": "mainnet/storage_prepare_members_linux.go",
+      "git_entry": "100644 blob f08ae719675fa0f4a66aba89e89e9ada8099a8ca",
+      "bytes": 3241,
+      "sha256": "dbfa4be1ffa4ecfac9d42c103114513f3d1323ba9fa3b34e69396b14f7d5fc6f"
+    },
+    {
+      "path": "mainnet/storage_prepare_other.go",
+      "git_entry": "100644 blob ca26d88c823e9e9ee5f3402fa4318d4ef0ffd9df",
+      "bytes": 531,
+      "sha256": "ba0f9446327af202d5d7170120644b4ee98bf924e2514f26755ca5ee6ecc9d70"
+    },
+    {
+      "path": "mainnet/storage_prepare_owner_continuation_test.go",
+      "git_entry": "100644 blob e41f4fa8109b6242df7b1f700e04f4f6b1c40075",
+      "bytes": 10684,
+      "sha256": "5c6e523ea0af8ee1911615981f48e2dab373526bce39121119ebd967640cef75"
+    },
+    {
+      "path": "mainnet/storage_prepare_owners_linux.go",
+      "git_entry": "100644 blob 52f78a839ac70af063cfd33fb31a4becda2db8fa",
+      "bytes": 8449,
+      "sha256": "5048598f98a1cbfc6c5bfbcf5ceb01c5349881395f8dc763f0f2fc07b7e17e93"
+    },
+    {
+      "path": "mainnet/storage_prepare_owners_test.go",
+      "git_entry": "100644 blob 01518e6ccfc6ad49cd308ad99966e332a7305dd3",
+      "bytes": 8430,
+      "sha256": "b161d5372beb68af0d68757df041119d69560cb70de051a6f694408fb5cc8cef"
+    },
+    {
+      "path": "mainnet/storage_prepare_private_root_continuation_test.go",
+      "git_entry": "100644 blob c5a65094baa8c6baa93d4244b8322abc2f6dbd64",
+      "bytes": 6288,
+      "sha256": "e0d54a40f03e6e49a5a59d93e2251e162306a2898da8a7d6e1a9ef3b1587844e"
+    },
+    {
+      "path": "mainnet/storage_prepare_private_root_test.go",
+      "git_entry": "100644 blob 1eecedd5b65ddfd207bf3fb19d36260b9a6d2703",
+      "bytes": 5946,
+      "sha256": "4967e82ed147f69db72184c2d3a996b85ede103d5c5823ae1309b1b2fa72c669"
+    },
+    {
+      "path": "mainnet/storage_prepare_snapshots_linux.go",
+      "git_entry": "100644 blob db0235c881bc9014165b06f7db8d5b1a6c5f7e1c",
+      "bytes": 6090,
+      "sha256": "75ca9864a13b47a9883185a3937676f2e25f5c11e56dee3d74aac6521a508bd4"
+    },
+    {
+      "path": "miner/claim_daemon.go",
+      "git_entry": "100644 blob f7b53a5dbe1c4a9634b9b9ece33d1e89d413b596",
+      "bytes": 39776,
+      "sha256": "84e8e1d69b6bb6580caccd649359e93a8ca2b2ea418eab1d8fa06773a434e074"
+    },
+    {
+      "path": "miner/claim_observation.go",
+      "git_entry": "100644 blob d32c0f4dbd8985fc3126ef1135c45915ff1ff27a",
+      "bytes": 6322,
+      "sha256": "442f72420c71e3ae3dbfee239d5571b4c060c1857f9dfdade482200c4ceced15"
+    },
+    {
+      "path": "miner/claim_observation_capacity.go",
+      "git_entry": "100644 blob 054278ff2d3d2366e9851b917f5eaa0faf36156a",
+      "bytes": 2611,
+      "sha256": "16023a89985caa48ba909cd84ce22f363b41c49990d6a9435b05ef914bc86fb4"
+    },
+    {
+      "path": "miner/claim_progress.go",
+      "git_entry": "100644 blob 9ecffc8fe3ec7b782546826247a5595dc452d2c9",
+      "bytes": 8099,
+      "sha256": "1352b7f1aa308e4b8f2c3ab418cfe8ed493e19e593dda9e6bd229839d426aca8"
+    },
+    {
+      "path": "miner/claim_progress_custody_test.go",
+      "git_entry": "100644 blob 80dbbcd3856f592d6de606e6794dd786864c0e53",
+      "bytes": 12456,
+      "sha256": "3ea4da60aef943e1019aa52b143d53b2fa401e5ec1fb7a0e023e537d1f4e5e7b"
+    },
+    {
+      "path": "miner/claim_progress_source_test.go",
+      "git_entry": "100644 blob 94cc418ecf00982447e5731a98e4b797b07257bf",
+      "bytes": 10054,
+      "sha256": "f59228895301cbfa08012c7d910dfa3ff90e43f451983b55912db80151f6a2c1"
+    },
+    {
+      "path": "miner/claim_progress_test.go",
+      "git_entry": "100644 blob 5c0866ef8b237d55fccd5a68406edc47d265afdc",
+      "bytes": 5313,
+      "sha256": "9f455dd0292aefed4e59eb1b3b2aabc828406b0df0567c1d713b1c1ac902d6b4"
+    },
+    {
+      "path": "miner/claim_signed_outcome.go",
+      "git_entry": "100644 blob 02e535ec31ea987cc291f711a205f96269b89c11",
+      "bytes": 5934,
+      "sha256": "31bb9c16e587ba8def36399884d84766c3cf9a786147645c5789b63b48212ba8"
+    },
+    {
+      "path": "miner/claim_swarm.go",
+      "git_entry": "100644 blob 064aff8ba02cb154dd3d5e28887205f38c740779",
+      "bytes": 10361,
+      "sha256": "3aa62a7cbf307f4d2bdcd1c864e8d6624f386752126147cd6cc6f1773240a213"
+    },
+    {
+      "path": "miner/storage_preparation_linux.go",
+      "git_entry": "100644 blob 0c65b196c9883bb010ab1ccfed802aa407fb3311",
+      "bytes": 3683,
+      "sha256": "c88dc8ed50d7d615723297cd242aa6232abf1d91012f7693b50eff872c092309"
+    },
+    {
+      "path": "miner/storage_preparation_test.go",
+      "git_entry": "100644 blob ccaea93056c53d27050a69583ad54d97d96aa483",
+      "bytes": 9615,
+      "sha256": "70a5ba51be6789ab9d35652fc21f52d59871fb541384381a19fde213b8e2d10a"
+    },
+    {
+      "path": "protocol/claim_progress.go",
+      "git_entry": "100644 blob 0378dbb6275a56f815c08c23a5cf5af31eb0a7b6",
+      "bytes": 15382,
+      "sha256": "a8c1fb000e7a043e180d7cb1cce26e85685cf124b66c2f24e4b827239ad1af9c"
+    },
+    {
+      "path": "protocol/claim_progress_test.go",
+      "git_entry": "100644 blob 1d89ae0f70ab22cbe5e573816ab74ee3e60fcef1",
+      "bytes": 5935,
+      "sha256": "a7d33795388bb73b8a882f6addb3a10250bdd25dee1e6fbcbacce081b0afed22"
+    },
+    {
+      "path": "validator/attempt_ledger_preparation.go",
+      "git_entry": "100644 blob 5915099ee06b07e6630ce0618f1757c7b965133a",
+      "bytes": 13851,
+      "sha256": "2539f5c694c71fcbebc1e6932085bd6cc52888244ab271c20a3bed9f5c6d5117"
+    },
+    {
+      "path": "validator/attempt_ledger_preparation_admission_test.go",
+      "git_entry": "100644 blob 6aee7de6589190b51336bc8a1bdb9b09111a109b",
+      "bytes": 3276,
+      "sha256": "7c956f9f4ffdd84bff7348b598780a9220a6b6fa6ea32e4f835dd4547eed33c2"
+    },
+    {
+      "path": "validator/attempt_ledger_preparation_linux.go",
+      "git_entry": "100644 blob 570221b741cab06db6fe8235cf07ece6d98da715",
+      "bytes": 27698,
+      "sha256": "02512e053d54fe8ae8eff76b00215de579363b702aff325cfbb9e36e27ee044f"
+    },
+    {
+      "path": "validator/attempt_ledger_preparation_test.go",
+      "git_entry": "100644 blob 9eee5a269940f3bf39d8cd3a29a9c3bb9d11c720",
+      "bytes": 2707,
+      "sha256": "aa8e438028944e4d489c6af13f3cb056f8631fdf0928834b29e353cd1f95f317"
+    }
+  ],
+  "dependencies": {
+    "connect": "7600ea5c82272ab33a90bc1d0a55f11720e09257",
+    "version": "v0.0.0-20261002204525-7600ea5c8227",
+    "server": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+    "workspace": "off",
+    "alternate_modfile": null
+  },
+  "limitations": [
+    "The full tree is a byte-preserving join of the two source parents; no new test execution is claimed.",
+    "All eleven current claim producer paths and newer documents match e08e1b11 exactly.",
+    "Preparation and tracked dependency files match0384 exactly; its author receipt retains the prior 68-plus7 checksum-only execution scopes.",
+    "Connect760 publication and independent current composition remain required; no live preparation, service activation or release authority."
+  ]
+}

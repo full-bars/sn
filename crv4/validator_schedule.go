@@ -71,6 +71,9 @@ func ReadValidatorScheduleAtContext(ctx context.Context, chain *Chain, query Val
 	if err != nil {
 		return result, err
 	}
+	if err := validateValidatorReadRuntimeAtContext(ctx, chain, artifact, validatorScheduleRuntimePurpose); err != nil {
+		return result, err
+	}
 	read := func(name string, maximum int, args ...[]byte) ([]byte, error) {
 		if err := ctx.Err(); err != nil {
 			return nil, err
@@ -114,12 +117,18 @@ func ReadValidatorScheduleAtContext(ctx context.Context, chain *Chain, query Val
 	}
 	// A changed reverse mapping or canonical hash cannot publish a mixed view.
 	recheckedUID, err := read("Uids", 2, netuid, query.Hotkey[:])
-	if err != nil || binary.LittleEndian.Uint16(recheckedUID) != resolvedUID {
-		return result, errors.Join(errors.New("validator schedule registration changed during observation"), err)
+	if err != nil {
+		return result, err
+	}
+	if binary.LittleEndian.Uint16(recheckedUID) != resolvedUID {
+		return result, errors.New("validator schedule registration changed during observation")
 	}
 	canonical, err := validatorIdentityBlockHashAtContext(ctx, chain, query.BlockNumber)
-	if err != nil || canonical != query.BlockHash {
-		return result, errors.Join(errors.New("validator schedule canonical block changed during observation"), err)
+	if err != nil {
+		return result, err
+	}
+	if canonical != query.BlockHash {
+		return result, errors.New("validator schedule canonical block changed during observation")
 	}
 	return ValidatorScheduleObservation{Stake: stake, SubnetEpochIndex: binary.LittleEndian.Uint64(epoch)}, ctx.Err()
 }

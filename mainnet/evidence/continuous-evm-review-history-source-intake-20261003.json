@@ -1,0 +1,511 @@
+{
+  "causal": [
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "restart lost original carry, aggregate credit or exact transaction costs"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "original-cursor-reset",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/original-cursor-reset/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment)$"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "economic ledger accepted a payment/carry authority substitution"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "contract-ledger-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/contract-ledger-omitted/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment)$"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "receipt contradiction advanced affected EVM role"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "receipt-cumulative-gas-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/receipt-cumulative-gas-omitted/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole)$"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "bounded EVM byte page stalled or lost complete original prefix"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "page-byte-budget-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/page-byte-budget-omitted/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues)$"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "owned observations were promoted to independent economic authority"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "unproved-fee-authority",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/unproved-fee-authority/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment)$"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "unacknowledged resource renewal advertised a completed checkpoint"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "resource-ack-before-publication",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/resource-ack-before-publication/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication)$"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "resource growth discarded an acknowledged review"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "resource-history-latest-only",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/resource-history-latest-only/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicResourceReviewsRemainAppendOnly)$"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "canceled retained chain load became a terminal custody failure"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "chain-cancellation-refused",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/chain-cancellation-refused/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicCancellationDuringChainCheckpointLoad)$"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 2,
+      "intended_assertions": [
+        "canceled adjacent admission was fatal or left owners unjoined",
+        "native cancellation lost ordinary stop or genuine joined close failure"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "adjacent-cancellation-refused",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/adjacent-cancellation-refused/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicAdjacentAdmissionCancellationJoinsOwners|TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure)$"
+    },
+    {
+      "classification": "operative invariant omission on exact successor; not old whole-source or broad baseline",
+      "expected_failed_roots": 2,
+      "intended_assertions": [
+        "cancellation erased an independently observed hard cause",
+        "native cancellation lost ordinary stop or genuine joined close failure"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "cancel-masks-hard-close",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/cancel-masks-hard-close/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorCheckpointCancellationRetainsHardCausePrecedence|TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure)$"
+    }
+  ],
+  "environment": {
+    "cache": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+    "modulecache": "/mnt/data/sn-testnet/gomodcache",
+    "new_phase_free_floor_bytes": 118111600640,
+    "private_root_and_tmp": "0700",
+    "umask": "0077"
+  },
+  "files": [
+    {
+      "bytes": 12950,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-successor/evidence/intake.json",
+      "sha256": "53c5fb706be7fc0bba96806cdc205c01109e918564615c91dab923e97d4d14c1"
+    },
+    {
+      "bytes": 7248427,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/source-join.json",
+      "sha256": "3095d432f4c9049dd0fd2d3cd058f0c029a1a8f338208baa886940b29c0096c7"
+    },
+    {
+      "bytes": 5371,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/jobs.json",
+      "sha256": "5ca8225e2e4601870a175acda7273a5d13a343a79c429cb3cadf050e1b15dd1b"
+    },
+    {
+      "bytes": 11952,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/sn.mod",
+      "sha256": "db1596d8b2688e4f6d84ef2f81b4deec34de4fa20de1afd8786e47d6df066f40"
+    },
+    {
+      "bytes": 66880,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/sn.sum",
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    {
+      "bytes": 1719,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/scope.json",
+      "sha256": "b0329c1e1090da5693bdcaefc22fdd1cafa29e849007bfa68827b64ec947b407"
+    },
+    {
+      "bytes": 10190,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/seal-intake.py",
+      "sha256": "c212795bd8de73fbaf951d04da59d84c7c03a1d489e441a59e931798d0436264"
+    },
+    {
+      "bytes": 23036,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/main.go",
+      "sha256": "9b307bce2a7f48dd12e59b9daddd308aaf1e9ee268d8ea03c89978e7286af569"
+    },
+    {
+      "bytes": 1418,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_cancellation.go",
+      "sha256": "7138eb13369aa749381cc5b3463ab49fbeec5831cd0c218bb71cf680b8b84e66"
+    },
+    {
+      "bytes": 5967,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_cancellation_test.go",
+      "sha256": "952e2ea7efd4f5f88de705a6afd744f0ecf87b623aaf4165e24fb053267905a9"
+    },
+    {
+      "bytes": 10602,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_checkpoint.go",
+      "sha256": "6eeda82413f9931bcd83f49edc2618eff46da39410b719e7c43da0314bd77ed8"
+    },
+    {
+      "bytes": 11813,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_claim_worker.go",
+      "sha256": "547fadafdc5f24da1993117f206e12e2ef6be175f404c0397066b78115fff07d"
+    },
+    {
+      "bytes": 9993,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_economic_evm_resources.go",
+      "sha256": "cccea20838f4916552d989166cb9295893ddb1dd10ba3a0b12dde1ea04274566"
+    },
+    {
+      "bytes": 9985,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_economic_evm_review_test.go",
+      "sha256": "99e7b880239480f3fe69232fcb925028579e0d15d68204ecaae31c067ab93132"
+    },
+    {
+      "bytes": 27499,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_economic_evm_test.go",
+      "sha256": "46a0fe29b7d4df01ae963245f36ad935727b507742f6bf9332518bb63c90000c"
+    },
+    {
+      "bytes": 20348,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_economic_evm_worker.go",
+      "sha256": "f6d30eaf02f5b7ce26b27de4613ff055f8908548630b21f56b60c4505d009d34"
+    },
+    {
+      "bytes": 16061,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_economic_native_worker.go",
+      "sha256": "34c23e10279bfcf720fa9673f3d782fdde593aedfdcb09e3cf0c146e7f327469"
+    },
+    {
+      "bytes": 26934,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_operator.go",
+      "sha256": "e9e6a2d2577483be13fd6bdb154ec0c43ce0465a40fd8f06e4fe23d06eb2a673"
+    },
+    {
+      "bytes": 12018,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_provider_worker.go",
+      "sha256": "65bd26942f05314d960d7aedabc9cb2ff899a95bd92664f7f324a8951b92bacf"
+    },
+    {
+      "bytes": 17103,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/mainnet/monitor_services.go",
+      "sha256": "fd24133d2ad03e7cee50f51cfb45cb4927cb4006c9985c9f93f5a9fde344119d"
+    },
+    {
+      "bytes": 11211,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/go.mod",
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    {
+      "bytes": 65343,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn/go.sum",
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    {
+      "bytes": 16535,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/adjacent-cancellation-refused/monitor_services.go",
+      "sha256": "cfb47a0d031d1d0c76ce9327339b90acc20a5b3859bab35e80c66329e49153d2"
+    },
+    {
+      "bytes": 1524,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/cancel-masks-hard-close/monitor_cancellation.go",
+      "sha256": "22d227dadee4b6433bea458784d1c32f8c5948bd53e8141cfb932102d4f69cf1"
+    },
+    {
+      "bytes": 22970,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/chain-cancellation-refused/main.go",
+      "sha256": "0817050bb33abef62e6cbe6ea65d00d6ea61bc6fa0d2b7bcc23e6698a1f78057"
+    },
+    {
+      "bytes": 20273,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/contract-ledger-omitted/monitor_economic_evm_ledger.go",
+      "sha256": "5517a69c99b83266828f75fbf1894ded0042fbc51c45591d0f25a201d335f82c"
+    },
+    {
+      "bytes": 20362,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/original-cursor-reset/monitor_economic_evm_worker.go",
+      "sha256": "c1bf7166123b2b9124045104071895af63ea9ece7152abd71c97d1848a82224a"
+    },
+    {
+      "bytes": 19029,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/page-byte-budget-omitted/monitor_economic_evm_read.go",
+      "sha256": "88ad693b98f5818e3550f4ada199012421ab2a3e95bfe9bcdca5bdd52005c2a6"
+    },
+    {
+      "bytes": 18955,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/receipt-cumulative-gas-omitted/monitor_economic_evm_read.go",
+      "sha256": "69229ebb9ec8e2440bd797230863e04c82f975978e2c6cc93627c8d976843b72"
+    },
+    {
+      "bytes": 20420,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/resource-ack-before-publication/monitor_economic_evm_worker.go",
+      "sha256": "fc3134e3043cbad84b67afe69da27e6c112979326873a6145d779741ca58a2d8"
+    },
+    {
+      "bytes": 20361,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/resource-history-latest-only/monitor_economic_evm_worker.go",
+      "sha256": "0da3c5fffe2682701de1e176dc7feb9b52be8c0e89a5002f48091d0737fd1fa8"
+    },
+    {
+      "bytes": 20382,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/unproved-fee-authority/monitor_economic_evm_worker.go",
+      "sha256": "03766d0a5a4628fcc570c8e1aad51dea10315e9aa2a6cc4865f2d202dfa99165"
+    },
+    {
+      "bytes": 293,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/adjacent-cancellation-refused/overlay.json",
+      "sha256": "ca55943f341b223736dd3c1260946aa289214642c2d07a931ebb28db0dd1ae6d"
+    },
+    {
+      "bytes": 295,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/cancel-masks-hard-close/overlay.json",
+      "sha256": "7a1b0952443776c82235b8eb9fe0582c5a5596e06bb58be5624b659bd4fbc1d2"
+    },
+    {
+      "bytes": 266,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/chain-cancellation-refused/overlay.json",
+      "sha256": "75902e3591610527b0bd074715f037e6baa8ba2c02090e32c97f64b2b28a9329"
+    },
+    {
+      "bytes": 309,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/contract-ledger-omitted/overlay.json",
+      "sha256": "abcef95666964a0c2d86c42852ea0200cb24b803fd9a0e0243f7097cf21c8491"
+    },
+    {
+      "bytes": 307,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/original-cursor-reset/overlay.json",
+      "sha256": "ee0b42e3b2444853cae678a92fb80459c2149d8ed11f1f7fcfffcd92023ae416"
+    },
+    {
+      "bytes": 306,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/page-byte-budget-omitted/overlay.json",
+      "sha256": "3652265139125846fcc7b56c88e985aae36587efc62905d1a04d846f30ce5e12"
+    },
+    {
+      "bytes": 312,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/receipt-cumulative-gas-omitted/overlay.json",
+      "sha256": "a876ff614c2259cdf43eeb0737dcf4c721527f7036f91debbdabbc9ece0b869a"
+    },
+    {
+      "bytes": 317,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/resource-ack-before-publication/overlay.json",
+      "sha256": "e0c3bc5a33eb611f418707b1ebd9c03166e1db391980ca245aa2ac5d07586f39"
+    },
+    {
+      "bytes": 314,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/resource-history-latest-only/overlay.json",
+      "sha256": "3f993d96256bf9ea539b5f0de4eef35f9d6580998075161b83fc8eee4258dab6"
+    },
+    {
+      "bytes": 308,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/overlays/unproved-fee-authority/overlay.json",
+      "sha256": "407ec387d0a10808589a4aa55610f5570987d957104609edae4f5a7ee2603c99"
+    }
+  ],
+  "first_run": "Sol only: run25 affected normal first, collect batch. No duplicate Astra execution. Preserve0fb/a9 scopes.",
+  "jobs": [
+    {
+      "expected": 25,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./mainnet",
+      "roots": [
+        "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment",
+        "TestMonitorEconomicEvmPublicPartialReceiptOutageKeepsOriginalCursor",
+        "TestMonitorEconomicEvmPublicLostCheckpointAckDoesNotRepeatPayment",
+        "TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole",
+        "TestMonitorEconomicEvmPublicReserveReadsActualPrincipalAndBacking",
+        "TestMonitorEconomicEvmReaderRequiresCompleteReceiptAndTransactionTries",
+        "TestMonitorEconomicEvmReaderRefusesChangedCursorAndCode",
+        "TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment",
+        "TestMonitorEconomicEvmPublicCapacityKeepsOriginalPendingRange",
+        "TestMonitorEconomicEvmPublicCancellationJoinsInFlightRead",
+        "TestMonitorEconomicEvmPolicyDoesNotBorrowDiscoveredContractIdentity",
+        "TestMonitorEconomicEvmReceiptFeeIncludesFailedExecution",
+        "TestMonitorEconomicEvmPublicReviewedResourceGrowthKeepsOriginalHistory",
+        "TestMonitorEconomicEvmResourceShrinkAndContractReplacementRefuseRetainedCheckpoint",
+        "TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication",
+        "TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues",
+        "TestMonitorEconomicEvmPublicHistoricalBacklogDoesNotResetOrRequireFullAncestry",
+        "TestMonitorEconomicEvmPublicResourceReviewsRemainAppendOnly",
+        "TestMonitorEconomicEvmLegacyCheckpointKeepsOriginalReviewProvenance",
+        "TestMonitorEconomicEvmReviewCapacityGrowthRetainsEveryAcknowledgment",
+        "TestMonitorEconomicEvmReviewHistoryRejectsChangedPrefix",
+        "TestMonitorEconomicEvmPublicCancellationDuringChainCheckpointLoad",
+        "TestMonitorCheckpointCancellationRetainsHardCausePrecedence",
+        "TestMonitorEconomicEvmPublicAdjacentAdmissionCancellationJoinsOwners",
+        "TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure"
+      ],
+      "selector": "^(TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment|TestMonitorEconomicEvmPublicPartialReceiptOutageKeepsOriginalCursor|TestMonitorEconomicEvmPublicLostCheckpointAckDoesNotRepeatPayment|TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole|TestMonitorEconomicEvmPublicReserveReadsActualPrincipalAndBacking|TestMonitorEconomicEvmReaderRequiresCompleteReceiptAndTransactionTries|TestMonitorEconomicEvmReaderRefusesChangedCursorAndCode|TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment|TestMonitorEconomicEvmPublicCapacityKeepsOriginalPendingRange|TestMonitorEconomicEvmPublicCancellationJoinsInFlightRead|TestMonitorEconomicEvmPolicyDoesNotBorrowDiscoveredContractIdentity|TestMonitorEconomicEvmReceiptFeeIncludesFailedExecution|TestMonitorEconomicEvmPublicReviewedResourceGrowthKeepsOriginalHistory|TestMonitorEconomicEvmResourceShrinkAndContractReplacementRefuseRetainedCheckpoint|TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication|TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues|TestMonitorEconomicEvmPublicHistoricalBacklogDoesNotResetOrRequireFullAncestry|TestMonitorEconomicEvmPublicResourceReviewsRemainAppendOnly|TestMonitorEconomicEvmLegacyCheckpointKeepsOriginalReviewProvenance|TestMonitorEconomicEvmReviewCapacityGrowthRetainsEveryAcknowledgment|TestMonitorEconomicEvmReviewHistoryRejectsChangedPrefix|TestMonitorEconomicEvmPublicCancellationDuringChainCheckpointLoad|TestMonitorCheckpointCancellationRetainsHardCausePrecedence|TestMonitorEconomicEvmPublicAdjacentAdmissionCancellationJoinsOwners|TestMonitorNativePublicAdmissionCancellationKeepsCloseFailure)$"
+    },
+    {
+      "expected": 13,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./mainnet",
+      "roots": [
+        "TestEvmReadProfileKeepsMethodsScoped",
+        "TestEvmReadProfileAbsenceIsReceiptOnly",
+        "TestEvmReadProfileBoundsEveryReply",
+        "TestFinalizedMappingAuthenticatesUnequalHeightsAndExactRlp",
+        "TestEvmVaultLinkRequiresExactReceiptAndEvent",
+        "TestEvmEscrowRegisterRequiresExactReceiptAndEvent",
+        "TestEvmReserveLinkRequiresExactReceiptAndEvent",
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees",
+        "TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole",
+        "TestMonitorCancellationAtStorageAdmissionClosesQuietly",
+        "TestMonitorCanceledBeforeStorageAdmissionClosesQuietly",
+        "TestMonitorServicesCommandOwnershipFailurePreservesPeerAndJoinsCancellation",
+        "TestMonitorServicesFileCloseFailureAndCancellationWithholdBytes"
+      ],
+      "selector": "^(TestEvmReadProfileKeepsMethodsScoped|TestEvmReadProfileAbsenceIsReceiptOnly|TestEvmReadProfileBoundsEveryReply|TestFinalizedMappingAuthenticatesUnequalHeightsAndExactRlp|TestEvmVaultLinkRequiresExactReceiptAndEvent|TestEvmEscrowRegisterRequiresExactReceiptAndEvent|TestEvmReserveLinkRequiresExactReceiptAndEvent|TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees|TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole|TestMonitorCancellationAtStorageAdmissionClosesQuietly|TestMonitorCanceledBeforeStorageAdmissionClosesQuietly|TestMonitorServicesCommandOwnershipFailurePreservesPeerAndJoinsCancellation|TestMonitorServicesFileCloseFailureAndCancellationWithholdBytes)$"
+    }
+  ],
+  "modfile": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/sn.mod",
+  "qualification_graph": {
+    "local": {
+      "glog": {
+        "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+        "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+      },
+      "goidenticons": {
+        "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+        "tree": "553487079352d9544edb62850328305e97668790"
+      },
+      "proxy": {
+        "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+        "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+      },
+      "userwireguard": {
+        "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+        "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+      },
+      "warp": {
+        "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+        "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+      }
+    },
+    "origin": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/evidence/source-fence.json",
+    "published_versions": {
+      "github.com/pion/sctp": "v0.0.0-20261002163341-6443417d70dc",
+      "github.com/urnetwork/connect": "v0.0.0-20261003021534-5def2fa4391b",
+      "github.com/urnetwork/sdk": "v0.0.0-20261003021240-95ccd57da971"
+    },
+    "scope": "Existing published-floor modfile remapped to candidate SN and same exact Server/local modules; Sol must independently preflight current imported-package/module graph. No tracked module adoption or graph test inheritance.",
+    "server": {
+      "commit": "0e04f0381f813acff45b9c9af3d1a5b93e7d7ccf",
+      "git_blobs": 5369,
+      "tree": "ab30a9299bd9cf7b51ae4012b936ea6660555fa4"
+    }
+  },
+  "root_verification": {
+    "changed_git_blobs_verified": [
+      "mainnet/main.go",
+      "mainnet/monitor_cancellation.go",
+      "mainnet/monitor_cancellation_test.go",
+      "mainnet/monitor_checkpoint.go",
+      "mainnet/monitor_claim_worker.go",
+      "mainnet/monitor_economic_evm_resources.go",
+      "mainnet/monitor_economic_evm_review_test.go",
+      "mainnet/monitor_economic_evm_test.go",
+      "mainnet/monitor_economic_evm_worker.go",
+      "mainnet/monitor_economic_native_worker.go",
+      "mainnet/monitor_operator.go",
+      "mainnet/monitor_provider_worker.go",
+      "mainnet/monitor_services.go"
+    ],
+    "clean_head_tree_verified": true,
+    "intake_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/evidence/intake.json",
+    "intake_sha256": "cb0cd380720ac10c76565d7a948789e6e2cfe2f272acefaf4f19c222a4289703"
+  },
+  "schema": "urnetwork-continuous-evm-review-history-intake-v1",
+  "source": {
+    "base": "a9eff81353807067866a36034547d73d6298ab16",
+    "head": "81de314bbe55920c30bd73589ae48a9b351ad812",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-review-history/sn",
+    "tree": "88d6c63c9faeb2bae992b27c20d82dc9e9b37110"
+  },
+  "status": "FROZEN_SOURCE_NO_ASTRA_TEST_BUILD_OR_VET",
+  "vets": [
+    "./mainnet"
+  ]
+}

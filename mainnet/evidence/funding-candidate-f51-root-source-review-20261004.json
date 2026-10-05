@@ -1,0 +1,39 @@
+{
+  "schema": "funding-candidate-fixture-f51-root-source-review-v1",
+  "head": "f51a170dbd7ea73bc7586801beb76218df76b11c",
+  "tree": "f3b7de149f3156ffa4e727996f1cfbcb54763c38",
+  "parent": "ab48c41d0f1d196a8311905f81d635c868f13dfe",
+  "changed_paths": [
+    "mainnet/economic_conservation_funding_custody_test.go"
+  ],
+  "blob": "5ddd745fdd9369278ee74cdae3a4be5ef600d76b",
+  "source_sha256": "fd3b61db07d1902fa242496efc0a9c5c0584f526279ca88b5d39f8038b19ba6a",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-candidate-fixture/evidence/intake.json",
+      "bytes": 1935,
+      "sha256": "c304f4bf337ce59d281baeb2ed4b41984649b9770933a86c65af389593af1dbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-candidate-fixture/evidence/source-readback.json",
+      "bytes": 1069,
+      "sha256": "bede049fd03cdba7d5386caaa6c54e7b8508ecb37dfc439538db9ccdccd475fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-candidate-fixture/evidence/selectors.json",
+      "bytes": 437,
+      "sha256": "9ea0acf694d9a029dcc3df93b25a3e7327e74f1b7ffd34a13958eecc470dcbb2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/funding-candidate-fixture/evidence/qualification-recipe.json",
+      "bytes": 3014,
+      "sha256": "d18e25eaa0d2daa83760af8d2541c6ec7bbd861ca5c27d1217a571d035696fc7"
+    }
+  ],
+  "review": [
+    "Entire new fixture helper and complete isolation root reviewed. Fee and Claim authority enrolled before first live fixture publication. Native/vault original reader networks asserted unchanged. Original fee proof admitted through real verifier and history publisher, detached original remains fee-empty.",
+    "All original funding/cold archive/precondition/held-index/mutation counters and identical retry checks remain unchanged; only fixture selection differs. No production network identity guard or accounting source altered.",
+    "Exact one-root normal/race plus mainnet vet required. Existing union positives and original fixture failure remain retained; no passing body or whole release claim from source review."
+  ],
+  "status": "SOURCE_REVIEWED_UNCOMPILED_UNEXECUTED"
+}

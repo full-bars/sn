@@ -7,11 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"maps"
 	"math"
 	"math/big"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"sort"
 	"strconv"
@@ -114,12 +116,39 @@ func exactVerifiedPlanAction(prior *SetupPlan, entries []JournalEntry, actionID 
 	if planned == nil {
 		return false
 	}
+	allowedPlanHashes := prior.allowedPlanHashes()
 	for _, entry := range entries {
-		if prior.allowedPlanHashes()[entry.PlanHash] && entry.ActionID == actionID && actionAcceptsIntent(*planned, entry.IntentHash) && entry.Stage == StageVerified {
+		if allowedPlanHashes[entry.PlanHash] && entry.ActionID == actionID && actionAcceptsIntent(*planned, entry.IntentHash) && entry.Stage == StageVerified {
 			return true
 		}
 	}
 	return false
+}
+
+// Keep the single-action verifier's exact duplicate, lineage and intent rules
+// while authenticating a whole fleet in one pass through the plan and journal.
+func exactVerifiedPlanActionIndex(prior *SetupPlan, entries []JournalEntry) map[string]bool {
+	verifiedActionIds := map[string]bool{}
+	if prior == nil {
+		return verifiedActionIds
+	}
+	plannedActionKVs := make(map[string]*Action, len(prior.Actions))
+	for index := range prior.Actions {
+		action := &prior.Actions[index]
+		if _, duplicate := plannedActionKVs[action.ID]; duplicate {
+			plannedActionKVs[action.ID] = nil
+		} else {
+			plannedActionKVs[action.ID] = action
+		}
+	}
+	allowedPlanHashes := prior.allowedPlanHashes()
+	for _, entry := range entries {
+		planned := plannedActionKVs[entry.ActionID]
+		if planned != nil && entry.Stage == StageVerified && allowedPlanHashes[entry.PlanHash] && actionAcceptsIntent(*planned, entry.IntentHash) {
+			verifiedActionIds[entry.ActionID] = true
+		}
+	}
+	return verifiedActionIds
 }
 
 // Resolve the next safe deployer nonce after an active coordinator release.
@@ -878,10 +907,10 @@ func supersededVerifiedSpend(prior *SetupPlan, entries []JournalEntry) (Spend, e
 	return result, nil
 }
 
-// Charge superseded EVM reservations against the flexible live-campaign
-// reserve. Superseded pool-registration counts and verified operator alpha
-// from a pre-campaign migration remain explicit so every cumulative budget
-// dimension stays approval-bound.
+// Record superseded effects as historical budget. The subsequent cumulative
+// limit reconciliation trims the fungible live-campaign reserve exactly once;
+// subtracting here as well would charge prior spend twice and can reject a
+// valid retained campaign whose remaining reserve is smaller than history.
 func applySupersededSpend(plan *SetupPlan, spend Spend) error {
 	if plan == nil {
 		return errors.New("replacement plan is unavailable")
@@ -889,29 +918,13 @@ func applySupersededSpend(plan *SetupPlan, spend Spend) error {
 	if spend.TAORao != 0 || spend.SubnetCreations != 0 {
 		return fmt.Errorf("automatic plan recovery cannot supersede TAO or subnet creations: %+v", spend)
 	}
-	if spend.EVMGasWei.IsZero() {
-		plan.SupersededSpend = spend
-		return nil
-	}
-	for index := range plan.Actions {
-		action := &plan.Actions[index]
-		if action.ID != "campaign.evm-gas-reserve" {
-			continue
-		}
-		remaining, err := subtractDecimalUint(action.Spend.EVMGasWei, spend.EVMGasWei)
-		if err != nil || remaining.IsZero() {
-			return stateMismatchError(err, "superseded EVM spend %s exhausts campaign reserve %s", spend.EVMGasWei, action.Spend.EVMGasWei)
-		}
-		action.Spend.EVMGasWei = remaining
-		action.IntentHash, err = actionIntentHash(*action)
-		if err != nil {
-			return err
-		}
-		plan.SupersededSpend = spend
-		plan.MaximumSpend, err = maximumActionSpend(plan.Actions)
+	plan.SupersededSpend = spend
+	maximum, err := maximumActionSpend(plan.Actions)
+	if err != nil {
 		return err
 	}
-	return errors.New("replacement plan has no live-campaign EVM reserve")
+	plan.MaximumSpend = maximum
+	return trimLiveCampaignEVMReserveToLimit(plan)
 }
 
 // Shrink only the fungible live-campaign reserve when carried historical gas
@@ -963,6 +976,8 @@ func pendingPlanRevisionTransactions(prior *SetupPlan, entries []JournalEntry) (
 	type transactionState struct {
 		transaction planRevisionTransaction
 		verified    bool
+		finalized   bool
+		failed      bool
 	}
 	states := map[string]*transactionState{}
 	allowedPlans := prior.allowedPlanHashes()
@@ -978,6 +993,9 @@ func pendingPlanRevisionTransactions(prior *SetupPlan, entries []JournalEntry) (
 		}
 		if entry.Stage == StageVerified {
 			state.verified = true
+		}
+		if entry.Stage == StageFailed {
+			state.failed = true
 		}
 		if entry.TransactionHash == "" {
 			continue
@@ -1009,10 +1027,25 @@ func pendingPlanRevisionTransactions(prior *SetupPlan, entries []JournalEntry) (
 			state.transaction.BlockNumber = entry.BlockNumber
 			state.transaction.BlockHash = entry.BlockHash
 		}
+		if entry.Stage == StageFinalized && entry.TransactionHash != "" && entry.BlockNumber != 0 && entry.BlockHash != "" {
+			state.finalized = true
+		}
 	}
 	var pending []planRevisionTransaction
 	for _, state := range states {
-		if !state.verified && state.transaction.TransactionHash != "" {
+		// A hash-chained finalized journal coordinate is a durable carried
+		// completion for ordinary predecessor work.  Re-reading every such
+		// receipt on every plan revision made recovery proportional to the
+		// entire campaign history (and restarted that work after any harmless
+		// interruption).  Keep unresolved and explicitly failed transactions
+		// in the recovery gate; the final acceptance audit remains responsible
+		// for the full independent historical replay.  Coordinator repairs are
+		// deliberately excluded because their separate carry authenticator
+		// binds the implementation transition before it may be adopted.
+		carriedFinalization := state.finalized && !state.failed &&
+			state.transaction.ActionID != "repair.coordinator-rounding.deploy" &&
+			state.transaction.ActionID != "repair.coordinator-rounding.activate"
+		if !state.verified && state.transaction.TransactionHash != "" && !carriedFinalization {
 			pending = append(pending, state.transaction)
 		}
 	}
@@ -1095,7 +1128,7 @@ func recoverableFinalizedAlphaTransaction(prior *SetupPlan, entries []JournalEnt
 		return false
 	}
 	for _, entry := range entries {
-		if entry.PlanHash == transaction.PlanHash && entry.ActionID == transaction.ActionID && entry.IntentHash == transaction.IntentHash && entry.Stage == StageFinalized && strings.EqualFold(entry.TransactionHash, transaction.TransactionHash) && entry.BlockNumber == transaction.BlockNumber && strings.EqualFold(entry.BlockHash, transaction.BlockHash) {
+		if entry.PlanHash == transaction.PlanHash && entry.ActionID == transaction.ActionID && entry.IntentHash == transaction.IntentHash && (entry.Stage == StageIncluded || entry.Stage == StageFinalized) && strings.EqualFold(entry.TransactionHash, transaction.TransactionHash) && entry.BlockNumber == transaction.BlockNumber && strings.EqualFold(entry.BlockHash, transaction.BlockHash) {
 			return true
 		}
 	}
@@ -1257,6 +1290,66 @@ func validateFailedEVMRevisionTransactionFromReader(ctx context.Context, reader 
 	return nil
 }
 
+// Dynamic evidence relays deliberately retain their postcondition as the
+// immutable request/result pair, rather than creating a generic postcondition
+// file. Verify that pair against the canonical final receipt before allowing a
+// plan revision to carry the already-spent slot forward.
+func validateFinalizedEvidenceRelayRecovery(ctx context.Context, stateDir string, prior *SetupPlan, entries []JournalEntry, transaction planRevisionTransaction, signed *ethTypes.Transaction, receipt *ethTypes.Receipt) error {
+	if prior == nil || signed == nil || receipt == nil || !strings.HasPrefix(transaction.ActionID, evidenceRelayActionPrefix) {
+		return errors.New("evidence relay recovery context is incomplete")
+	}
+	owners := map[string]*SetupPlan{}
+	owner, request, _, err := readOwnedEvidenceRelayRequest(ctx, stateDir, prior, entries, transaction.ActionID, owners)
+	if err != nil {
+		return fmt.Errorf("read immutable relay request: %w", err)
+	}
+	if owner.PlanHash != transaction.PlanHash || request.Action.ID != transaction.ActionID || request.Action.IntentHash != transaction.IntentHash {
+		return errors.New("evidence relay request does not match the transaction lineage")
+	}
+	resultPath := filepath.Join(stateDir, "evidence-relay", transaction.ActionID+".receipt.json")
+	raw, err := os.ReadFile(resultPath)
+	if err != nil {
+		return fmt.Errorf("read retained relay result: %w", err)
+	}
+	var result evidenceRelayRetainedResult
+	if err := decodeStrictJSONBytes(raw, &result); err != nil {
+		return fmt.Errorf("decode retained relay result: %w", err)
+	}
+	if result.Schema != "urnetwork-sim-evidence-relay-result-v2" || result.PlanHash != owner.PlanHash || !reflect.DeepEqual(result.Action, request.Action) || result.Receipt == nil || result.OwnReceipt == nil || result.LostPublicationRace {
+		return errors.New("retained relay result has the wrong owner, action, or outcome")
+	}
+	if err := validateFinalRelayRetainedReceiptState(result.Receipt, result.OwnReceipt, result.LostPublicationRace); err != nil {
+		return err
+	}
+	retained, err := new(ethTypes.Transaction), error(nil)
+	if err = retained.UnmarshalBinary(result.SignedTransaction); err != nil {
+		return fmt.Errorf("decode retained relay transaction: %w", err)
+	}
+	canonical, err := signed.MarshalBinary()
+	if err != nil || !reflect.DeepEqual(canonical, result.SignedTransaction) || retained.Hash() != signed.Hash() || !strings.EqualFold(signed.Hash().Hex(), transaction.TransactionHash) {
+		return errors.Join(errors.New("retained relay transaction differs from the journaled transaction"), err)
+	}
+	if !finalJSONEqual(result.OwnReceipt, receipt) || result.OwnReceipt.TxHash != signed.Hash() || result.OwnReceipt.Status != ethTypes.ReceiptStatusSuccessful || result.OwnReceipt.BlockNumber == nil || result.Publication.PublishedBlock != result.OwnReceipt.BlockNumber.Uint64() {
+		return errors.New("retained relay receipt does not match the canonical finalized transaction")
+	}
+	for _, entry := range entries {
+		if entry.PlanHash != transaction.PlanHash || entry.ActionID != transaction.ActionID || entry.IntentHash != transaction.IntentHash || !strings.EqualFold(entry.TransactionHash, transaction.TransactionHash) {
+			continue
+		}
+		if (entry.Stage == StageIncluded || entry.Stage == StageFinalized) && entry.BlockNumber == result.OwnReceipt.BlockNumber.Uint64() && strings.EqualFold(entry.BlockHash, result.OwnReceipt.BlockHash.Hex()) {
+			return nil
+		}
+		// Older relay workers persisted the broadcast anchor, then retained the
+		// canonical receipt before they could append inclusion. The receipt's
+		// finality has already been proven above; retain the signed recovery
+		// anchor so an arbitrary receipt cannot close an unjournaled write.
+		if transaction.BlockNumber == 0 && entry.Stage == StageBroadcast && entry.RecoveryBlock != 0 && validCanonicalHashHex(entry.RecoveryBlockHash) {
+			return nil
+		}
+	}
+	return errors.New("evidence relay transaction has no exact durable journal checkpoint")
+}
+
 // Require a chain-proven revert for every unverified transaction in the plan
 // lineage. A missing artifact, pending transaction, successful mutation, or
 // observer error blocks revision rather than risking a duplicate side effect.
@@ -1342,12 +1435,20 @@ func planRevisionTransactionRecoveries(ctx context.Context, cfg *ResolvedConfig,
 			return planRevisionRecoveries{}, fmt.Errorf("prior EVM transaction artifact hash does not match %s", transaction.TransactionHash)
 		}
 		if evmClient == nil {
-			evmClient, err = ethclient.DialContext(ctx, cfg.OperationalEVM)
+			// Keep historical revision receipt reads on the configured transport.
+			// In particular, an owned LAN node has no pacing but does have the
+			// bounded HTTP response lifetime enforced by dialConfiguredEVMClient.
+			evmClient, err = dialConfiguredEVMClient(ctx, cfg, cfg.OperationalEVM)
 			if err != nil {
 				return planRevisionRecoveries{}, err
 			}
 		}
-		receipt, receiptErr := canonicalFinalizedEVMRevisionReceiptFromReader(ctx, ethEVMReceiptFinalityReader{client: evmClient}, transaction)
+		// A revision can inspect many historic receipts. Bound each complete
+		// receipt/head/canonicality observation even when a transport ignores
+		// its client-level deadline.
+		receiptCtx, cancelReceipt := context.WithTimeout(ctx, ownedEVMHTTPTimeout)
+		receipt, receiptErr := canonicalFinalizedEVMRevisionReceiptFromReader(receiptCtx, ethEVMReceiptFinalityReader{client: evmClient}, transaction)
+		cancelReceipt()
 		if receiptErr != nil {
 			return planRevisionRecoveries{}, fmt.Errorf("plan %s action %s: %w", transaction.PlanHash, transaction.ActionID, receiptErr)
 		}
@@ -1372,6 +1473,10 @@ func planRevisionTransactionRecoveries(ctx context.Context, cfg *ResolvedConfig,
 				return planRevisionRecoveries{}, fmt.Errorf("plan %s action %s: %w: %v", transaction.PlanHash, transaction.ActionID, errPriorEVMTransactionSucceeded, recoveryErr)
 			}
 			recoveries.VoluntaryConvictions = append(recoveries.VoluntaryConvictions, recovery)
+		case strings.HasPrefix(transaction.ActionID, evidenceRelayActionPrefix):
+			if err := validateFinalizedEvidenceRelayRecovery(ctx, stateDir, prior, entries, transaction, &signed, receipt); err != nil {
+				return planRevisionRecoveries{}, fmt.Errorf("plan %s action %s: %w: %v", transaction.PlanHash, transaction.ActionID, errPriorEVMTransactionSucceeded, err)
+			}
 		case strings.HasPrefix(transaction.ActionID, "fleet.mirror."):
 			if substrateChain == nil {
 				substrateChain, _, err = dialReleaseSubstrateChain(cfg, cfg.OperationalSubstrate)
@@ -2827,6 +2932,12 @@ func preserveVerifiedEVMGasReallocations(stateDir string, revised, prior *SetupP
 	}
 	for index := range revised.Actions {
 		current := revised.Actions[index]
+		// Only transactions and these legacy batch proofs can inherit gas.
+		// Loading native-action archives here repeats their renewal audits but
+		// cannot produce a carry; their own recovery paths verify those receipts.
+		if current.Kind != "evm-transaction" && (current.Kind != "evm-read" || current.Parameters["batch_installed"] != "true" || (!strings.HasPrefix(current.ID, "fleet.mirror.") && !strings.HasPrefix(current.ID, "fleet.bind."))) {
+			continue
+		}
 		candidates := verifiedEntries[current.ID]
 		for entryIndex := len(candidates) - 1; entryIndex >= 0; entryIndex-- {
 			entry := candidates[entryIndex]
@@ -2865,6 +2976,12 @@ func preserveVerifiedEVMGasReallocations(stateDir string, revised, prior *SetupP
 // action retains its own executable ceiling. This keeps cumulative approval
 // conservative across repeated upgrades and fleet-batcher replacements.
 func addRetiredVerifiedEVMGas(prior, revised *SetupPlan, entries []JournalEntry, spend Spend) (Spend, error) {
+	return retiredVerifiedEvmGasFromJournal(prior, revised, slices.Values(entries), spend)
+}
+
+// Consume the approved journal once before pricing retired transaction intents.
+// The iterator keeps the single-pass contract observable without timing tests.
+func retiredVerifiedEvmGasFromJournal(prior, revised *SetupPlan, entries iter.Seq[JournalEntry], spend Spend) (Spend, error) {
 	if prior == nil || revised == nil {
 		return Spend{}, errors.New("revised and prior plans are required to retain retired EVM gas")
 	}
@@ -2876,27 +2993,36 @@ func addRetiredVerifiedEVMGas(prior, revised *SetupPlan, entries []JournalEntry,
 		revisedActions[action.ID] = action
 	}
 	allowedPlans := prior.allowedPlanHashes()
+	verifiedActionIntents := map[string]map[string]bool{}
+	for entry := range entries {
+		if entry.Stage != StageVerified || !allowedPlans[entry.PlanHash] {
+			continue
+		}
+		intents := verifiedActionIntents[entry.ActionID]
+		if intents == nil {
+			intents = map[string]bool{}
+			verifiedActionIntents[entry.ActionID] = intents
+		}
+		intents[entry.IntentHash] = true
+	}
 	for _, action := range prior.Actions {
 		if action.Kind != "evm-transaction" || action.Spend.EVMGasWei.IsZero() {
 			continue
 		}
-		verifiedIntents := map[string]bool{}
-		for _, entry := range entries {
-			if allowedPlans[entry.PlanHash] && entry.Stage == StageVerified && entry.ActionID == action.ID && actionAcceptsIntent(action, entry.IntentHash) {
-				verifiedIntents[entry.IntentHash] = true
-			}
-		}
-		if len(verifiedIntents) == 0 {
-			continue
-		}
-		if replacement, found := revisedActions[action.ID]; found {
-			carried := false
-			for intent := range verifiedIntents {
-				carried = carried || actionAcceptsIntent(replacement, intent)
-			}
-			if carried {
+		replacement, found := revisedActions[action.ID]
+		verified, carried := false, false
+		for intent := range verifiedActionIntents[action.ID] {
+			if !actionAcceptsIntent(action, intent) {
 				continue
 			}
+			verified = true
+			if found && actionAcceptsIntent(replacement, intent) {
+				carried = true
+				break
+			}
+		}
+		if !verified || carried {
+			continue
 		}
 		var err error
 		spend.EVMGasWei, err = addDecimalUint(spend.EVMGasWei, action.Spend.EVMGasWei)
@@ -3101,6 +3227,10 @@ func validatePolicyRevisionOnChain(ctx context.Context, cfg *ResolvedConfig, sta
 	defer client.Close()
 	head, err := finalizedEVMHead(ctx, client)
 	if err != nil {
+		return err
+	}
+	if decision.Class == policyRevisionFutureRate {
+		_, _, _, _, err := readPolicyRateSchedule(ctx, cfg, client, deployment.CoordinatorProxy, head.Number, decision.PreviousPolicy)
 		return err
 	}
 	coordinator, err := abi.JSON(strings.NewReader(CoordinatorABI))
@@ -3568,10 +3698,9 @@ func priorReserveValidatorRepairChain(revised, prior *SetupPlan, entries []Journ
 	return repairs, nil
 }
 
-// Retire only an insufficient final reserve-share repair which never entered
-// execution. Execute fsyncs StageIntent before dispatch, including before the
-// native signer persists raw bytes. Any journal row for this action or intent
-// therefore prevents retirement, even a failed or foreign-lineage row. Apply
+// Retire an insufficient final reserve-share repair only before execution or
+// after its first attempt proved the exact reserve-share rejection before
+// signing. Any ambiguous history or transaction evidence blocks retirement. Apply
 // rebuilds this revision while holding the existing deployment journal lock.
 // The original action remains in the archived predecessor plan; only its
 // unspent reservation leaves the active set used by retirement accounting.
@@ -3611,10 +3740,8 @@ func retainExecutableReserveValidatorRepairChain(cfg *ResolvedConfig, prior *Set
 			if index != len(repairs)-1 {
 				return nil, fmt.Errorf("insufficient reserve-validator repair %s has a later repair; its chain cannot be replaced", action.ID)
 			}
-			for _, entry := range entries {
-				if entry.ActionID == action.ID || entry.IntentHash == action.IntentHash {
-					return nil, fmt.Errorf("insufficient reserve-validator repair %s has journal history; it cannot be replaced", action.ID)
-				}
+			if _, err := reserveRepairPreSignFailure(prior, action, entries); err != nil {
+				return nil, fmt.Errorf("insufficient reserve-validator repair %s cannot be replaced: %w", action.ID, err)
 			}
 			return append([]Action(nil), repairs[:index]...), nil
 		}
@@ -3750,6 +3877,29 @@ func applyReserveValidatorMajorityRepair(cfg *ResolvedConfig, revised, prior *Se
 		parameters[alphaRepairMaximumTrancheParameter] = strconv.FormatUint(cfg.Config.ValidatorBootstrap.MaximumReserveRepairAlphaRao, 10)
 		parameters["reserve_target_share_bps"] = strconv.FormatUint(uint64(cfg.Config.ValidatorBootstrap.ReserveTargetShareBPS), 10)
 		parameters["reserve_minimum_share_bps"] = strconv.FormatUint(uint64(cfg.Config.ValidatorBootstrap.ReserveMinimumShareBPS), 10)
+		for _, old := range prior.Actions {
+			if !strings.HasPrefix(old.ID, "alpha.repair.validator.1.") {
+				continue
+			}
+			retained := false
+			for _, carried := range repairs {
+				retained = retained || carried.ID == old.ID
+			}
+			if retained {
+				continue
+			}
+			failure, err := reserveRepairPreSignFailure(prior, old, entries)
+			if err != nil {
+				return err
+			}
+			if failure != nil {
+				parameters["retired_pre_sign_action_id"] = old.ID
+				parameters["retired_pre_sign_plan_hash"] = prior.PlanHash
+				parameters["retired_pre_sign_intent_hash"] = old.IntentHash
+				parameters["retired_pre_sign_failure_sequence"] = strconv.FormatUint(failure.Sequence, 10)
+				parameters["retired_pre_sign_failure_hash"] = failure.EntryHash
+			}
+		}
 		repair := Action{
 			ID: repairID, Kind: "substrate-extrinsic", Target: base.Target,
 			Description: "spend the remaining approved cumulative alpha tranche to restore the reserve-validator target after live-emission dilution",
@@ -4049,8 +4199,10 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 		return nil, err
 	}
 	policyChanged := !strings.EqualFold(prior.PolicyHash, cfg.PolicyHash)
+	policyRevision := policyRevisionDecision{Class: policyRevisionNone}
 	if policyChanged {
-		if _, err := classifyPolicyRevision(cfg, stateDir, prior, entries); err != nil {
+		policyRevision, err = classifyPolicyRevision(cfg, stateDir, prior, entries)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -4234,7 +4386,15 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 	if err != nil {
 		return nil, err
 	}
-	revised, err := buildPlanWithRegistrationGeneration(cfg, &normalized, roles, generatedAt, registrationGeneration)
+	allocation, err := planRevisionEVMFundingAllocation(cfg, prior)
+	if err != nil {
+		return nil, err
+	}
+	relayFundingConfig, err := evidenceRelayRevisionFundingConfig(cfg, prior)
+	if err != nil {
+		return nil, err
+	}
+	revised, err := buildPlanWithFundingAllocationAndRelayConfig(cfg, &normalized, roles, generatedAt, registrationGeneration, allocation, relayFundingConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -4244,6 +4404,17 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 		if !seen[hash] {
 			revised.PriorPlanHashes = append(revised.PriorPlanHashes, hash)
 			seen[hash] = true
+		}
+	}
+	if policyRevision.Class == policyRevisionFutureRate {
+		revised.PolicyRateAmendment = &PolicyRateAmendment{Schema: policyRateAmendmentSchema, PriorPlanHash: prior.PlanHash, Previous: *policyRevision.PreviousPolicy, Next: *cfg.Policy}
+	} else if !policyChanged && prior.PolicyRateAmendment != nil {
+		copy := *prior.PolicyRateAmendment
+		revised.PolicyRateAmendment = &copy
+	}
+	if revised.PolicyRateAmendment != nil {
+		if err := validatePolicyRateAmendmentPlan(revised); err != nil {
+			return nil, err
 		}
 	}
 	if prior.validatorEvidenceObserved != nil {
@@ -4281,6 +4452,11 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 			return nil, fmt.Errorf("retain native proof and replace failed probe: %w", err)
 		}
 	}
+	if revised.PolicyRateAmendment != nil {
+		if err := preservePolicyRateAmendmentSetup(revised, prior, entries); err != nil {
+			return nil, err
+		}
+	}
 	if err := carryFleetRenewalRevision(revised, prior); err != nil {
 		return nil, fmt.Errorf("retain approved fleet renewal: %w", err)
 	}
@@ -4311,7 +4487,7 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 	if err := validateRevisedFleetMirrorRecoveries(revised, recoveries.FleetMirrors); err != nil {
 		return nil, fmt.Errorf("reconcile finalized fleet mirror: %w", err)
 	}
-	if !policyChanged {
+	if !policyChanged || policyRevision.Class == policyRevisionFutureRate {
 		if err := preserveVerifiedOperatorAlphaTransfers(revised, prior, entries); err != nil {
 			return nil, fmt.Errorf("preserve verified operator alpha transfers: %w", err)
 		}
@@ -4336,6 +4512,9 @@ func buildPlanRevisionFromFactsWithAllRecoveries(cfg *ResolvedConfig, stateDir s
 		return nil, fmt.Errorf("retain retired alpha spend: %w", err)
 	}
 	if !deploymentSuperseded {
+		if err := preserveRetainedCampaignAllocations(revised, prior); err != nil {
+			return nil, fmt.Errorf("retain campaign allocation envelopes: %w", err)
+		}
 		supersededSpend, err = addRetiredVerifiedEVMGas(prior, revised, entries, supersededSpend)
 		if err != nil {
 			return nil, fmt.Errorf("retain retired EVM gas: %w", err)
@@ -4489,7 +4668,7 @@ func BuildPlanForState(ctx context.Context, cfg *ResolvedConfig, stateDir string
 	}
 	prior, err := readPersistedPlan(stateDir)
 	if err != nil {
-		raw, readErr := readValidatorEvidenceHistoricalFile(stateDir, "plan.json", maximumCampaignEvidenceRawFileBytes)
+		raw, readErr := readSetupPlanBytes(stateDir, "plan.json")
 		if readErr != nil {
 			return nil, readErr
 		}

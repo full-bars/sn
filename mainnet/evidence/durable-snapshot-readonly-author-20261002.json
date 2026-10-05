@@ -1,0 +1,374 @@
+{
+  "artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/qualify-snapshot-readonly.go",
+      "sha256": "e9767ca8889bcdcdd695bc7f30d98d48531b391672405c32df76693c3fec9803",
+      "size": 8158
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-checkpoint-v2.mod",
+      "sha256": "fdd87e58ba20a8671c2b80934f265f69d235f8c934c90e2b8a1f713b6eddd819",
+      "size": 11681
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-checkpoint-v2.sum",
+      "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3",
+      "size": 65112
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-head-capacity-receipt.json",
+      "sha256": "e9361c9ccf66bd3234a98dfc826d932ed095051c787fe926c40779440296af4b",
+      "size": 18531
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-baseline-alias-test.go",
+      "sha256": "4e722b69fb336a6f70da48b4daf59d57dba6bfb14a69261a51542a548d0f18ba",
+      "size": 489
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-baseline-overlay.json",
+      "sha256": "c24131f6acc214b1138ba8e1c8ec9e14f767f277d9e230d2e264d0c8417e71b0",
+      "size": 465
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-normal.command.json",
+      "sha256": "ce25eeeafa9f109d2ef8346ed7687228670af80bae960b8bf5f4c1e27d224df6",
+      "size": 1019
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "size": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-normal.jsonl",
+      "sha256": "ab68aca22856d6e3550cbc9e7244f05b4acd30818d6c3ab81d29d1c2a35c27bc",
+      "size": 2007
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-normal.result.json",
+      "sha256": "8af54eb7e7a49a65f94e0ea852f853dba761e03a411c3850b5f9e244d21cadd5",
+      "size": 242
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-race.command.json",
+      "sha256": "545e1195ec5223e82035148bd27b833b93047c4aaa4ab19fa09b7d62473936a0",
+      "size": 1032
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "size": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-race.jsonl",
+      "sha256": "45132352000e2e17a97ff09521a642370843df3610ab89eca3f59a01cce3e9e8",
+      "size": 2006
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-race.result.json",
+      "sha256": "bb79aa180d78fb7b87b512f4f994f3f31e7a528c54b7473f1ea1e9846c65f417",
+      "size": 240
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-causal-test.go",
+      "sha256": "8e263951a866bac7587cc49e8f11f48975d51459a19e0587523ee34bf950053e",
+      "size": 7342
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-checkpoint.mod",
+      "sha256": "8eedecc5cbd7d77ae8d2e3c490bdb705438b19a93edb1706fbd3bd6512af5ad6",
+      "size": 11693
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-checkpoint.sum",
+      "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3",
+      "size": 65112
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-normal.command.json",
+      "sha256": "e58967d9382fb6738848cb38e8ed0e9584694ee518100a03863f36ec8fa8b15e",
+      "size": 841
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "size": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-normal.jsonl",
+      "sha256": "0d248e913b2859fc805ec855610fcc6c909a6dd22cd2f0e27619047828819b33",
+      "size": 30738
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-normal.result.json",
+      "sha256": "ef4f7a06e3a8d488b1b9ca6f5ca16a6bc97432bab0ce87b0fe794047be7d3f1e",
+      "size": 2158
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-race.command.json",
+      "sha256": "7e51755c1939172654e0ccdd98678467219c07069645fcad82d536f921c6f1b0",
+      "size": 854
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "size": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-race.jsonl",
+      "sha256": "7cae1177595a62c2f645afc3377c40a60ba45c70b0e225b45074eef6604ae6ae",
+      "size": 30741
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-race.result.json",
+      "sha256": "3375c132ddfe94cfe4fb16ae9ceb6dc83dfe5cd1b677779f162e2452427c4464",
+      "size": 2157
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-vet.command.json",
+      "sha256": "e679daeb73d6b30563e3a953015f0937a5972ef7b05a9101190d6a99b0327cce",
+      "size": 836
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "size": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-vet.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-vet.result.json",
+      "sha256": "a0ed678f44d34db00bc1661c339095de4e83720af8173b26f3f8ada358013047",
+      "size": 174
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/go.mod",
+      "sha256": "44ae2f38cf56c4981e2b3dcf393bc611dc79a95d4e3115b6387da45d9678ffdd",
+      "size": 11191
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/go.sum",
+      "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3",
+      "size": 65112
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/internal/durablefixture/fixture_linux.go",
+      "sha256": "1b6ec23982cd2140f7f0ee2afd9c90b3f0b20307b1c4592a6bd34bc9b3b43ff1",
+      "size": 7064
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/internal/durablefixture/snapshot_linux.go",
+      "sha256": "39fa14256ff241830f1642aaa9eba1eb6c8c29d751698872afa2c192410b7245",
+      "size": 3107
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/internal/durablehead/head.go",
+      "sha256": "9f43ffb336995eb3e2a30db0335ad50f99c1ef7635567e9c498f9b8de3f11491",
+      "size": 2880
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/internal/durablehead/head_linux.go",
+      "sha256": "a16e16e66b042f0864b8693284f606fda1deea5d1aafed700e1efc1632128872",
+      "size": 29282
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/internal/durablehead/head_other.go",
+      "sha256": "17331b56442176c2e52d916dbb27967732c895739f3f81671778317632b00e20",
+      "size": 1462
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/internal/durablehead/head_readonly_test.go",
+      "sha256": "8e263951a866bac7587cc49e8f11f48975d51459a19e0587523ee34bf950053e",
+      "size": 7342
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/internal/durablehead/head_test.go",
+      "sha256": "26e4d51c7124e7c4c99fafd389a41cf2b5a5c85d3779e61ebf48aec07d083f95",
+      "size": 18580
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint/internal/durablepath/directory.go",
+      "sha256": "fd1a7da327cb3aa776db9aecaa22725ac7ae5e688e606186c14e3443cadd2835",
+      "size": 5825
+    },
+    {
+      "path": "/usr/local/go/bin/go",
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45",
+      "size": 15434687
+    }
+  ],
+  "causal_scope": "Exact ae6 production source plus test-only new API aliases; two pre-held real shared descriptions deterministically reject the original exclusive upgrade.",
+  "limits": [
+    "No downstream passive/writer adopter, full SN, deployment or restart-authority qualification.",
+    "Read-only users reject pending heads and cannot reconcile, publish or mutate auxiliary bytes.",
+    "Preprovisioning, reviewed restore rebind, custody xattr backup and capacity forecasting remain separate work.",
+    "No anti-rollback claim when all valid predecessor bytes and local authority are replayed.",
+    "No live signing, broadcasting, deployment or service start."
+  ],
+  "phases": [
+    {
+      "phase": "normal",
+      "exit": 0,
+      "root_tests": [
+        "TestSnapshotHeadReadOnlyViewsComposeWithoutUpgrade",
+        "TestSnapshotHeadReadOnlyOwnerNeverMutates",
+        "TestSnapshotHeadReadOnlyRefusesPendingWithoutReconciliation",
+        "TestSnapshotHeadReadOnlyRetainsObservedLeafLoss",
+        "TestSnapshotHeadManyOwnersShareDirectory",
+        "TestSnapshotHeadLegacyDeclarationRequiresExplicitRebind",
+        "TestSnapshotHeadRequiresProvisionedAuthorityAndRetainedMember",
+        "TestSnapshotHeadSameOwnerReadAndPressureRecovery",
+        "TestSnapshotHeadNamedObservationTaxonomy",
+        "TestSnapshotHeadExclusiveWriterAndCapacity",
+        "TestSnapshotHeadAuxiliaryAdmission",
+        "TestSnapshotHeadLostAcknowledgementRecovery",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes",
+        "TestSnapshotHeadConcurrentLeafLossIsScoped",
+        "TestSnapshotHeadCloseAndCancellation",
+        "TestSnapshotHeadCrashChild",
+        "TestSnapshotHeadJoinedCrashRecovery"
+      ],
+      "subtests": [
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-created",
+        "TestSnapshotHeadLostAcknowledgementRecovery/pending-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-written",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/snapshot-renamed",
+        "TestSnapshotHeadLostAcknowledgementRecovery/snapshot-directory-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/predecessor-removed",
+        "TestSnapshotHeadLostAcknowledgementRecovery/committed-synced",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/extra",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/collision",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/partial",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/hash",
+        "TestSnapshotHeadJoinedCrashRecovery/temporary-created",
+        "TestSnapshotHeadJoinedCrashRecovery/temporary-written",
+        "TestSnapshotHeadJoinedCrashRecovery/snapshot-renamed",
+        "TestSnapshotHeadJoinedCrashRecovery/snapshot-directory-synced",
+        "TestSnapshotHeadJoinedCrashRecovery/predecessor-removed"
+      ],
+      "failures": null,
+      "skips": null,
+      "elapsed_seconds": 5.153889783,
+      "expectation_met": true
+    },
+    {
+      "phase": "race",
+      "exit": 0,
+      "root_tests": [
+        "TestSnapshotHeadReadOnlyViewsComposeWithoutUpgrade",
+        "TestSnapshotHeadReadOnlyOwnerNeverMutates",
+        "TestSnapshotHeadReadOnlyRefusesPendingWithoutReconciliation",
+        "TestSnapshotHeadReadOnlyRetainsObservedLeafLoss",
+        "TestSnapshotHeadManyOwnersShareDirectory",
+        "TestSnapshotHeadLegacyDeclarationRequiresExplicitRebind",
+        "TestSnapshotHeadRequiresProvisionedAuthorityAndRetainedMember",
+        "TestSnapshotHeadSameOwnerReadAndPressureRecovery",
+        "TestSnapshotHeadNamedObservationTaxonomy",
+        "TestSnapshotHeadExclusiveWriterAndCapacity",
+        "TestSnapshotHeadAuxiliaryAdmission",
+        "TestSnapshotHeadLostAcknowledgementRecovery",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes",
+        "TestSnapshotHeadConcurrentLeafLossIsScoped",
+        "TestSnapshotHeadCloseAndCancellation",
+        "TestSnapshotHeadCrashChild",
+        "TestSnapshotHeadJoinedCrashRecovery"
+      ],
+      "subtests": [
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-created",
+        "TestSnapshotHeadLostAcknowledgementRecovery/pending-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-written",
+        "TestSnapshotHeadLostAcknowledgementRecovery/temporary-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/snapshot-renamed",
+        "TestSnapshotHeadLostAcknowledgementRecovery/snapshot-directory-synced",
+        "TestSnapshotHeadLostAcknowledgementRecovery/predecessor-removed",
+        "TestSnapshotHeadLostAcknowledgementRecovery/committed-synced",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/extra",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/collision",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/partial",
+        "TestSnapshotHeadRecoveryRejectsUnknownBytes/hash",
+        "TestSnapshotHeadJoinedCrashRecovery/temporary-created",
+        "TestSnapshotHeadJoinedCrashRecovery/temporary-written",
+        "TestSnapshotHeadJoinedCrashRecovery/snapshot-renamed",
+        "TestSnapshotHeadJoinedCrashRecovery/snapshot-directory-synced",
+        "TestSnapshotHeadJoinedCrashRecovery/predecessor-removed"
+      ],
+      "failures": null,
+      "skips": null,
+      "elapsed_seconds": 10.309634201,
+      "expectation_met": true
+    },
+    {
+      "phase": "vet",
+      "exit": 0,
+      "root_tests": null,
+      "subtests": null,
+      "failures": null,
+      "skips": null,
+      "elapsed_seconds": 0.432473942,
+      "expectation_met": true
+    },
+    {
+      "phase": "causal-normal",
+      "exit": 1,
+      "root_tests": null,
+      "subtests": null,
+      "failures": [
+        "TestSnapshotHeadReadOnlyViewsComposeWithoutUpgrade"
+      ],
+      "skips": null,
+      "elapsed_seconds": 1.239208001,
+      "expectation_met": true
+    },
+    {
+      "phase": "causal-race",
+      "exit": 1,
+      "root_tests": null,
+      "subtests": null,
+      "failures": [
+        "TestSnapshotHeadReadOnlyViewsComposeWithoutUpgrade"
+      ],
+      "skips": null,
+      "elapsed_seconds": 1.885739272,
+      "expectation_met": true
+    }
+  ],
+  "schema": "durable-snapshot-readonly-author-v1",
+  "source": {
+    "clean": true,
+    "head": "a5c765c4b0c9342350acf185d35042bbab894dac",
+    "parent": "ae6ca602755ab5e1981e21f14069a04cdcf1d863",
+    "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/snapshot-readonly-checkpoint",
+    "tree": "10db36162c8b256c11d805c8fc30b14b219e6b33"
+  },
+  "verdict": "PASS_SCOPED_PRIMITIVE_ONLY"
+}

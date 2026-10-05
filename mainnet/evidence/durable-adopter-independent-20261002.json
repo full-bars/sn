@@ -1,0 +1,96 @@
+{
+  "author_entries_rehashed": 189,
+  "author_manifest_sha256": "6269ca581e142cd1ed2f73af2f20b3a40016065c5ef84936d2bb62d4478c1592",
+  "author_receipt_sha256": "12b2978583b1efeafa8fc6f7ce67c49376887c5c5ab071b0abd70200caa03547",
+  "causal_assertions": {
+    "blob": "Pre-fix reaper removes a physically replaced expiry candidate.",
+    "ledger": "Missing or older acknowledged ledger resets when head custody omitted.",
+    "passive": "Missing monitor custody consumes claim or lost head becomes fresh custody when admission omitted."
+  },
+  "causal_intended_failures": {
+    "normal": 5,
+    "race": 5
+  },
+  "data_floor_bytes": 118111600640,
+  "dependency_fence": {
+    "connect": {
+      "clean": true,
+      "commit": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+      "tree": "010533a40c31403c14a810828fee3c47e324c143"
+    },
+    "glog": {
+      "clean": true,
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "clean": true,
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "clean": true,
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "userwireguard": {
+      "clean": true,
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "clean": true,
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "excluded_attempt": {
+    "file": "runner-attempt-1.json",
+    "reason": "First SN vet invocation had no captured exit because wrapper rejected null Expected; only corrected rerun is counted."
+  },
+  "limits": [
+    "Selected roots only; not full packages, full model, composed release or four-role bootstrap.",
+    "Real credential inspector author receipt rehashed but not independently executed.",
+    "Server005 module-only successor and later fixture migrations remain separate source scopes.",
+    "No production signing, broadcast, deployment, service start, PG or MinIO operation."
+  ],
+  "manifest_entries": 44,
+  "manifest_sha256": "3978ac74972075f40740a987bd71999521956bfd02ed7b7ee219168facc95835",
+  "normal_by_package": {
+    "durableinspect": 2,
+    "mainnet": 55,
+    "server_blob": 26,
+    "validator": 28
+  },
+  "normal_roots": 111,
+  "race_by_package": {
+    "durableinspect": 2,
+    "mainnet": 55,
+    "server_blob": 26,
+    "validator": 28
+  },
+  "race_roots": 111,
+  "schema": "sol-adopter-independent-v1",
+  "source": {
+    "server": {
+      "blobs_verified": 5229,
+      "commit": "1b7cc78b2dc43f5191cc7b0d3d22f0754fedc662",
+      "tree": "e8097e705ab2479e181bcfe37ec2d3926d3afab4"
+    },
+    "sn": {
+      "blobs_verified": 19942,
+      "commit": "eb0abe22b6cca75fd17bd349821cfaf8b22add18",
+      "tree": "527c650382d2efe6b465bdfdc44296c2ba02262b"
+    }
+  },
+  "status": "PASS_SCOPED",
+  "test_failures": 0,
+  "test_skips": 0,
+  "vet_exit": 0,
+  "vet_packages": [
+    "./mainnet",
+    "./validator",
+    "./internal/durableinspect",
+    "server/."
+  ]
+}

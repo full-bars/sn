@@ -1,0 +1,179 @@
+{
+  "schema": "urnetwork-owner-local-durable-volume-qualification-v1",
+  "status": "PASS_SCOPED",
+  "date": "2026-10-02",
+  "source": {
+    "connect": "c339095c5d41a0103cccc6a14925116a8e02d41d",
+    "tree": "851a58cca7933fa717346f12b3c9a43c9b9205fd",
+    "base": "8f459b14be4482e6fcd6e89e05c458f9357e42da",
+    "branch": "fix/durable-owner-local-20261002",
+    "clean": true
+  },
+  "toolchain": {
+    "go": "go1.26.6",
+    "platform": "linux/amd64",
+    "module_mode": "GOWORK=off",
+    "package": "./durablevolume",
+    "dependencies": "standard library only"
+  },
+  "api": [
+    "OwnerLocalSchema",
+    "LoadOwnerLocal",
+    "OpenOwnerLocal",
+    "OpenOwnerLocalWithHost"
+  ],
+  "policy": [
+    "Owner-local system filesystem requires a separate exact declaration schema and caller-selected API.",
+    "Daemon Load/Open reject owner-local declarations even on non-root mounts.",
+    "Owner-local '/' mount retains exact UUID, filesystem type, marker, precreated non-overlapping state roots, separate leases, protected ancestry and byte/inode reserves; StateRoot '/' is forbidden.",
+    "Original kernel unavailability and pressure remain retryable; proven identity loss stays sticky until explicit owner close/reopen."
+  ],
+  "normal": {
+    "exit_code": 0,
+    "pass": 35,
+    "fail": 0,
+    "skip": 0,
+    "tests": [
+      "TestInventoryAndRestoreRetainExactLocalCustody",
+      "TestInventoryRequiresExactFormerWriterFence",
+      "TestInventoryWorkAndByteBoundsAndCancellation",
+      "TestInventoryRestoredRootReportsChangedPhysicalIdentity",
+      "TestInventoryRejectsAliasesAndNestedMounts",
+      "TestOwnerCrashReleasesLeaseAndRetainsCompletedBytes",
+      "TestOwnerLocalAdmitsDeclaredSystemDevice",
+      "TestOwnerLocalPolicyCannotAuthorizeDaemon",
+      "TestOwnerLocalRootMountKeepsPathAndMountBounds",
+      "TestOwnerLocalPressureAndObservationCanRetrySameOwner",
+      "TestOwnerLocalReplacementRequiresOriginalCustodyReopen",
+      "TestOwnerLocalRemountKeepsStickyGeneration",
+      "TestOwnerLocalSnapshotPreservesPendingAndCompletedIntent",
+      "TestOwnerAdmitsDeclaredRootAndDescendant",
+      "TestOwnerRefusesAbsentMountBeforeCreatingState",
+      "TestOwnerRefusesMissingRootWithoutRecreation",
+      "TestOwnerRefusesWrongUuidAndRootFilesystem",
+      "TestOwnerRefusesReadOnlyAndExhaustedReserve",
+      "TestOwnerTransientKernelObservationRetainsGeneration",
+      "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+      "TestOwnerCallerErrorsDoNotPoisonIdentity",
+      "TestOwnerReadOnlyInspectionCannotMutate",
+      "TestOwnerRejectsReplacementRootAndMarker",
+      "TestOwnerSameVolumeRecoveryPreservesCustody",
+      "TestOwnerSnapshotLeaseConflictsWithoutWaiting",
+      "TestOwnerSnapshotOfStoppedRootCoexistsWithOtherRootWriter",
+      "TestOwnerRewalkRejectsAncestorSymlinkToRetainedInode",
+      "TestOwnerRewalkRejectsWritableAncestor",
+      "TestOwnerRejectsLeaseInsideStateRootAndLeaseReplacement",
+      "TestOwnerCloseJoinsCheckAndRejectsLateAdmission",
+      "TestOwnerConcurrentCheckAndClose",
+      "TestOwnerZeroAndNilStayClosed",
+      "TestOwnerRejectsSymlinkAndReplacedDescendant",
+      "TestLoadRejectsAmbiguousDeclaration",
+      "TestMountParserPreservesEscapedCoordinates"
+    ],
+    "log": "evidence/owner-local-normal-protected.jsonl"
+  },
+  "race": {
+    "exit_code": 0,
+    "pass": 35,
+    "fail": 0,
+    "skip": 0,
+    "tests": [
+      "TestInventoryAndRestoreRetainExactLocalCustody",
+      "TestInventoryRequiresExactFormerWriterFence",
+      "TestInventoryWorkAndByteBoundsAndCancellation",
+      "TestInventoryRestoredRootReportsChangedPhysicalIdentity",
+      "TestInventoryRejectsAliasesAndNestedMounts",
+      "TestOwnerCrashReleasesLeaseAndRetainsCompletedBytes",
+      "TestOwnerLocalAdmitsDeclaredSystemDevice",
+      "TestOwnerLocalPolicyCannotAuthorizeDaemon",
+      "TestOwnerLocalRootMountKeepsPathAndMountBounds",
+      "TestOwnerLocalPressureAndObservationCanRetrySameOwner",
+      "TestOwnerLocalReplacementRequiresOriginalCustodyReopen",
+      "TestOwnerLocalRemountKeepsStickyGeneration",
+      "TestOwnerLocalSnapshotPreservesPendingAndCompletedIntent",
+      "TestOwnerAdmitsDeclaredRootAndDescendant",
+      "TestOwnerRefusesAbsentMountBeforeCreatingState",
+      "TestOwnerRefusesMissingRootWithoutRecreation",
+      "TestOwnerRefusesWrongUuidAndRootFilesystem",
+      "TestOwnerRefusesReadOnlyAndExhaustedReserve",
+      "TestOwnerTransientKernelObservationRetainsGeneration",
+      "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+      "TestOwnerCallerErrorsDoNotPoisonIdentity",
+      "TestOwnerReadOnlyInspectionCannotMutate",
+      "TestOwnerRejectsReplacementRootAndMarker",
+      "TestOwnerSameVolumeRecoveryPreservesCustody",
+      "TestOwnerSnapshotLeaseConflictsWithoutWaiting",
+      "TestOwnerSnapshotOfStoppedRootCoexistsWithOtherRootWriter",
+      "TestOwnerRewalkRejectsAncestorSymlinkToRetainedInode",
+      "TestOwnerRewalkRejectsWritableAncestor",
+      "TestOwnerRejectsLeaseInsideStateRootAndLeaseReplacement",
+      "TestOwnerCloseJoinsCheckAndRejectsLateAdmission",
+      "TestOwnerConcurrentCheckAndClose",
+      "TestOwnerZeroAndNilStayClosed",
+      "TestOwnerRejectsSymlinkAndReplacedDescendant",
+      "TestLoadRejectsAmbiguousDeclaration",
+      "TestMountParserPreservesEscapedCoordinates"
+    ],
+    "log": "evidence/owner-local-race.jsonl"
+  },
+  "vet": {
+    "command": "go vet ./durablevolume",
+    "exit_code": 0,
+    "log": "evidence/owner-local-vet.log"
+  },
+  "causal": {
+    "base": "8f459b14be4482e6fcd6e89e05c458f9357e42da",
+    "source_changes": "none",
+    "overlay": "Only an unchanged test body and its two test helpers, plus test-only aliases routing new API/schema names to the baseline's sole existing daemon API/schema.",
+    "exit_code": 1,
+    "test": "TestOwnerLocalAdmitsDeclaredSystemDevice",
+    "failure": "approved durable mount is absent, ambiguous or on the root filesystem",
+    "log": "evidence/owner-local-baseline.jsonl",
+    "generator": "evidence/owner-local-baseline-overlay.go"
+  },
+  "retained_setup_failure": {
+    "log": "evidence/owner-local-normal.jsonl",
+    "cause": "Task workspace and TMPDIR ancestors had group-write permission; actual no-follow protection correctly refused them.",
+    "correction": "Task-owned workspace mode0755 and TMPDIR0700. No product source changed between failed setup and passing normal run."
+  },
+  "artifacts": [
+    {
+      "path": "evidence/owner-local-baseline.jsonl",
+      "sha256": "7f30000910babf23a3aba37ced27252545c8f6566c8eaaff2d83280c36063820"
+    },
+    {
+      "path": "evidence/owner-local-normal-protected.jsonl",
+      "sha256": "65735cbcfe2c4c316f405d2695dc90475eee062c71d92142d5ebcd0e932c8ccb"
+    },
+    {
+      "path": "evidence/owner-local-normal.jsonl",
+      "sha256": "24682e21016c118958d507d63901375b5178f59f9e79891100b841ca1294b08b"
+    },
+    {
+      "path": "evidence/owner-local-race.jsonl",
+      "sha256": "0cd19b732f5df4cdba2d54d454b53adda0948ff9562ec475ed7f51b5b1e133a1"
+    },
+    {
+      "path": "evidence/owner-local-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence/owner-local-source.patch",
+      "sha256": "df648539905068fbe68d188077d34bba547848ca18432406f9b4b85ddc38e417"
+    },
+    {
+      "path": "evidence/owner-local-baseline-overlay.go",
+      "sha256": "a4bbce0182b5cd1bd39b9f6af7973722848b7198eefc1d160aece2db680e12c2"
+    },
+    {
+      "path": "baseline-connect/durablevolume/owner_local_baseline_test.go",
+      "sha256": "9a8f57839eb6abde4b2402f5f4fd4a3729e695f5f3303c26356dd00f5cd38851"
+    }
+  ],
+  "limitations": [
+    "No real system-root writes or live mount operations. Real file/descriptor/lease tests use /mnt/data; fake Host supplies system-device topology. Literal '/' is tested at schema/kernel-census boundaries.",
+    "Linux core only; no owner device, firmware, SDK, macOS, or Windows qualification.",
+    "SN consumers, server local blob, deployment declarations and exact composed source remain unqualified WIP.",
+    "No signing, broadcast, deployment, live DB or service start. Inventory never grants restart/signing authority."
+  ]
+}

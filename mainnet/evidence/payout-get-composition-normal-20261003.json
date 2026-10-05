@@ -1,0 +1,41 @@
+{
+  "count": 10,
+  "failures": 0,
+  "files": {
+    "evidence/composition-normal-controller.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/composition-normal-controller.jsonl": "ca0330272cd760851dab56195d0f54c3a9838bb46d1a7ea3ad810197cdddfe90",
+    "evidence/composition-normal-controller.phase": "7de376532ae93dfeb551fb9e7040e96e9b8d0185a765ff1e2567811c6713f466",
+    "evidence/composition-normal-controller.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/composition-normal-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "evidence/composition-normal-network-cleanup.log": "e2d6f03b29da01420d7029197d23495b46fb7a392c6409363694cf6d8b34686c",
+    "evidence/composition-normal-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/composition-normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/module-graph.jsonl": "beb7640316273d1bc1483f6e3862e4a50b4d11c727ac235748d7fc53626defc0",
+    "evidence/run-composition-selected.sh": "b63ee0e8a792d44e5f5b2e8389738f98f8236dc87094eaf41bf3014e24bf8a7d",
+    "evidence/source-fence.json": "0e9e24faf1e073e6ff34b87a64bbdd09584e21e0e1b25882bfb5e48b75ca6dd5"
+  },
+  "intake_sha256": "4eea0e67e5cb57def7484d4ce0b965414c85f288eabb46991596bf0c1ada2931",
+  "limits": [
+    "Frozen2a selected composition only; newer Server18ec migration join remains unqualified.",
+    "No live Circle API call or payout."
+  ],
+  "owned_fixture_cleanup_exit": 0,
+  "package_elapsed_seconds": 38.939,
+  "schema": "sol-financial-get-2a-normal-v1",
+  "selected_roots": [
+    "TestCircleReadWalletAndBalancePaginationUsesResponseLinks",
+    "TestPaymentReadRetryAfterBoundsAndTransientInternalError",
+    "TestProviderBoundaryAcceptedAttemptReconcilesDuringDrift",
+    "TestProviderBoundaryDatabaseObservationTimeoutSchedulesSamePayment",
+    "TestProviderBoundaryFinalCircleWaitCannotChangeEarningAsset",
+    "TestProviderCompositionCanceledReadRetainsAttemptAndCause",
+    "TestProviderCompositionRetainedAttemptReadRecoversDuringBoundaryHold",
+    "TestProviderTransitionHeldPaymentPostSchedulesBoundedContinuation",
+    "TestProviderTransitionPublicStWritersBlockedButReadMirrorContinues",
+    "TestProviderTransitionResetFailureRollsBackAttemptJournal"
+  ],
+  "skips": 0,
+  "source_commit": "2a453df9bd7967776889b5f15cd8724d6f9255cb",
+  "source_tree": "9a9307d81a3d431501fc40518214873ae4e4f92a",
+  "status": "PASS_SCOPED"
+}

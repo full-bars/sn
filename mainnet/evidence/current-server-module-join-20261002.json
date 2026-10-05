@@ -1,0 +1,234 @@
+{
+  "deployment_authorized": false,
+  "files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/module71/evidence/before-go.mod": {
+      "bytes": 10468,
+      "sha256": "b427de834fcedad3a58275676575ccee06f50a54a3037dd8f7697ac59e7562ff"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/module71/evidence/before-go.sum": {
+      "bytes": 67703,
+      "sha256": "e7c5470586e4481cb6354c574651ba3403836a9668e6156ab888d93c9d20a173"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/module71/evidence/connect-e0d-download.json": {
+      "bytes": 1122,
+      "sha256": "a15a934f74d20ccec1f12ea211e012b85702ab9f9425a002e5c6bbeba0e02413"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/module71/join.go": {
+      "bytes": 7281,
+      "sha256": "762ae1674bbf123a53b6e61bf7a6ce2d96fe59e3408a5f9096c2217b68f70b0e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/module71/server/go.mod": {
+      "bytes": 10468,
+      "sha256": "ad4b307433de35ab9f40df50d0c6906ec2eef1a4bfdec1adad700c3b3c842147"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/module71/server/go.sum": {
+      "bytes": 67934,
+      "sha256": "a805fb68cf119986df0d3fb630081d7b0fcac1e7b0470181934bc6b763616555"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/cache/download/github.com/urnetwork/connect/@v/v0.0.0-20261002163946-e0d75562aa23.info": {
+      "bytes": 196,
+      "sha256": "9787af8173ee52579a7aff10f279ccf9ea8e554ec0c409aaa99a2b6144dfdbc2"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/cache/download/github.com/urnetwork/connect/@v/v0.0.0-20261002163946-e0d75562aa23.mod": {
+      "bytes": 3847,
+      "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/cache/download/github.com/urnetwork/connect/@v/v0.0.0-20261002163946-e0d75562aa23.zip": {
+      "bytes": 36972274,
+      "sha256": "55d13e11999a367e950d8bdec50fac2ccebc29fe7716a6364ad1cb9f0f282df0"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/config.go": {
+      "bytes": 9464,
+      "sha256": "68ac9ed2bbc8e0fded670b4a0e6ceb1c418136be19cc7682f7736e4d5cdb5e5c"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/constructor_observation_test.go": {
+      "bytes": 3417,
+      "sha256": "53238f0fea09fbd2a534991d9d4d4a7d70c487a9a7faec913085d67d95bf2f05"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/host_linux.go": {
+      "bytes": 25838,
+      "sha256": "428a719730f02f3309bb735b6d1d52d63234fbac6b0953062f4e96cbf610d050"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/host_other.go": {
+      "bytes": 1303,
+      "sha256": "7b903f7e9d161423f7f4bfc1eb3d549491599f6b2e94d3261df651e89b58ef1b"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory.go": {
+      "bytes": 12682,
+      "sha256": "07b986e2641e439faf8ef5156e659d0a3b2ebcc1e0cdb61cfed828b9e0e37fea"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_attributes_linux.go": {
+      "bytes": 6204,
+      "sha256": "5ba7a555bd7bdddf75f1b09bd0eb5e7b5b53f47f1d4711315b7a71457005f75e"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_attributes_test.go": {
+      "bytes": 6728,
+      "sha256": "52a1d49d057587f28155ee2d93945218e95d4a6f08c6090f31fd97f5371e912a"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_custody_test.go": {
+      "bytes": 4846,
+      "sha256": "02db9db8cf9b708b129f10d6a8cbbfebf0e3b06c9761a8adbf0662bc211aeff9"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_linux.go": {
+      "bytes": 6585,
+      "sha256": "be1686c44ba3e3291c157e81c15109019b8a1a5776cdf39c27ccd2708318f154"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_other.go": {
+      "bytes": 299,
+      "sha256": "7f170caeea9d988d1f860903c27291afb0bf19ba2b7894746fdaba84a099d5bf"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_test.go": {
+      "bytes": 13030,
+      "sha256": "46f933661028ebec9dacb4b8cf772b02b0d53c7d367d37dfff9f2b579b7d3ddf"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/observation_test.go": {
+      "bytes": 3209,
+      "sha256": "9cf139f1e912ccd4dad0c2da1a17afadc4253080470de3321ef0d1e28c1982a5"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/owner.go": {
+      "bytes": 9266,
+      "sha256": "1f38fc38c537ad4cfef3fa2c1526ff1816dce113349ca9a7fb513e26b4138cd9"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/owner_local_test.go": {
+      "bytes": 10443,
+      "sha256": "de0a4356abd0be07fb28ea2c85d3ffc3d28fbc6c624c28f3bd3889056f9ac169"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/owner_test.go": {
+      "bytes": 25194,
+      "sha256": "aefb0b5e1a7c577a3733d3871dd9e2e15f4ff29232ea81bf58a94d49a2bc6eb7"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/read_admission_test.go": {
+      "bytes": 3829,
+      "sha256": "cef81dbe80934fdcd7e9f2c64011fc25427f1bab56855304125840a8ca269cd5"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/root_generation_linux.go": {
+      "bytes": 2547,
+      "sha256": "e9b80675ec957ce9313f7dd856647b360f0bf35398527c171a8adefd8c908cda"
+    },
+    "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/root_generation_test.go": {
+      "bytes": 6657,
+      "sha256": "7b17b640358a450010d780724195f16c2a80b2b3ac3d51e34b24799eec11a633"
+    },
+    "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/constructor-observation/receipt.json": {
+      "bytes": 1488,
+      "sha256": "bcf6105e7d0a16b97139c95002dbcadd218da6ac0f3960ae5eeb2c41d8779aae"
+    },
+    "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/server-cebf/receipt.json": {
+      "bytes": 4126,
+      "sha256": "96b169f52185b7aaa2217ff236d6bc5d940bd3ac1338430547c3d5e577c68a02"
+    }
+  },
+  "limitations": [
+    "Published644 was a side-branch tree without durablevolume, so the originalcebf declared graph fails before product tests; that independent failed receipt remains unchanged.",
+    "Merged e0d preserves the current callback code and the exact qualified71df durablevolume peer/module bytes. This source join is not a rerun of the independent59 primitive roots or a full Connect qualification.",
+    "Only the server Connect replacement and its two checksums change. SCTP644 and every other incomingbf7 module floor are preserved.",
+    "The exact successor requires a separate independent local-blob normal/race/vet gate. No full server/model, composed SN, release artifact or live deployment qualification."
+  ],
+  "module_go_mod_sum": "h1:A88Ceqd8zbfpUB4+1pTsT1G3kiS9kgB22ZuljBZVw4k=",
+  "module_sum": "h1:mnT7ynltqZelrr8Xy8ZL49JiwHG2wuBNx2Atkc4N9h8=",
+  "module_version": "v0.0.0-20261002163946-e0d75562aa23",
+  "peer_files": [
+    {
+      "git_blob": "0b1bdf9c22a6f3512c03fbe1a34fa580b817d7b2",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/config.go",
+      "relative_path": "durablevolume/config.go"
+    },
+    {
+      "git_blob": "6fdc334c972b1ceec307bcd112297e8244e8d49c",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/constructor_observation_test.go",
+      "relative_path": "durablevolume/constructor_observation_test.go"
+    },
+    {
+      "git_blob": "2aba3ec23a7065c41d3e11edcedfafc915f84e0a",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/host_linux.go",
+      "relative_path": "durablevolume/host_linux.go"
+    },
+    {
+      "git_blob": "789267b8cf79c633017e8818c225cdd1032ab37c",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/host_other.go",
+      "relative_path": "durablevolume/host_other.go"
+    },
+    {
+      "git_blob": "748ff3d0459c215cf5f2b6f13ea70f6198cc5233",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory.go",
+      "relative_path": "durablevolume/inventory.go"
+    },
+    {
+      "git_blob": "f2f629827a9823aeb299e98659f07be8cb755885",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_attributes_linux.go",
+      "relative_path": "durablevolume/inventory_attributes_linux.go"
+    },
+    {
+      "git_blob": "cc0bbdc6573454457ea6fbcc6233fd3f5138e13c",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_attributes_test.go",
+      "relative_path": "durablevolume/inventory_attributes_test.go"
+    },
+    {
+      "git_blob": "4d236e9f43df96bedafe0df0c51def258ff1c690",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_custody_test.go",
+      "relative_path": "durablevolume/inventory_custody_test.go"
+    },
+    {
+      "git_blob": "26c3c7d6cd21b59c29bec4a67c75159bb583ebbf",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_linux.go",
+      "relative_path": "durablevolume/inventory_linux.go"
+    },
+    {
+      "git_blob": "ecee91f4f847dc7fafd0221050b006634034411c",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_other.go",
+      "relative_path": "durablevolume/inventory_other.go"
+    },
+    {
+      "git_blob": "b27b48ca2885d2c0b09d6cf3d672f7d2875360a1",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/inventory_test.go",
+      "relative_path": "durablevolume/inventory_test.go"
+    },
+    {
+      "git_blob": "32c007ad7c6086a146ee443304ef81360b6615f3",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/observation_test.go",
+      "relative_path": "durablevolume/observation_test.go"
+    },
+    {
+      "git_blob": "98bce875bf6656d7c3af31e87568e34bf9c51976",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/owner.go",
+      "relative_path": "durablevolume/owner.go"
+    },
+    {
+      "git_blob": "802dfcb41e097c3901f69541c4aaf1c826bd4df0",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/owner_local_test.go",
+      "relative_path": "durablevolume/owner_local_test.go"
+    },
+    {
+      "git_blob": "d98df2d1567c38a404979cd72fe6dadec2f900fa",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/owner_test.go",
+      "relative_path": "durablevolume/owner_test.go"
+    },
+    {
+      "git_blob": "a782e5e9fd2e9c06dd63d4818c038bd8e8dc2b2f",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/read_admission_test.go",
+      "relative_path": "durablevolume/read_admission_test.go"
+    },
+    {
+      "git_blob": "dbb795262fa20f787d5887f2b279f2dcae26bbfc",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/root_generation_linux.go",
+      "relative_path": "durablevolume/root_generation_linux.go"
+    },
+    {
+      "git_blob": "3a905949df8869f7259e43a64d88fdaaaca9c032",
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002163946-e0d75562aa23/durablevolume/root_generation_test.go",
+      "relative_path": "durablevolume/root_generation_test.go"
+    }
+  ],
+  "peer_source": "e0d75562aa2344d13c7967ce402156f4222dc5d2",
+  "peer_subtree": "8b0b8961b618bd5361da62dc1c2923ce6a474ea4",
+  "peer_tree": "442757f539cbf12157bebac7e95b9de0bf054e41",
+  "qualified_peer_source": "71df099caf3c3a5b2d2512a761b5ad51abd213e6",
+  "schema": "urnetwork-server-published-peer-module-join-v1",
+  "sctp_subtree_unchanged": true,
+  "sctp_version_unchanged": "v0.0.0-20261002163341-6443417d70dc",
+  "server_parent": "cebf154f130846d5756614a28f429c98ad77ab9c",
+  "server_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/module71/server",
+  "server_source": "22e3c1ba438b7888dccfc04244bcafaae0bcad3d",
+  "server_tree": "b6cb4a0dd35d22a909e17c599e6995fd873c3aa2",
+  "verdict": "PASS_SOURCE_JOIN_PRODUCT_GATE_PENDING"
+}

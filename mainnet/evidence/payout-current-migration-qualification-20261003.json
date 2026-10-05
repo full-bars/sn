@@ -1,0 +1,71 @@
+{
+  "bindings": {
+    "causal-receipt": "eb235a7b756eed939eceeaaafc3965bb4d0bdc26e6acf42c7bb89b8b0750d403",
+    "normal-receipt": "e7d7ccd7fd2357336e915535217031b575a8be45b87c5433db33f12f82ef040e",
+    "race-receipt": "f2ccf2dbe18ace244f727f1d810f098a56cf6d5a4b8226e0be46279f832b4ec8",
+    "source-fence": "29384bdbf98d5960acab6ca5bc1baf18e540e7234d9ada2a4c50cea78583e88b",
+    "source-graph-receipt": "6295116e749cd83b6f5b8690ba6676f8abebe064de443f2cd7fa42d0e5c59351",
+    "source-join-readback": "73e64490b4717a898e9fad1082cc53765633df2e2b2eadd268a3862d3053672d"
+  },
+  "failures": 0,
+  "files": {
+    "bringyourctl-199": {
+      "bytes": 79424776,
+      "sha256": "c5d440a0e0451cfc4b3056777f192c2d7635b8ea9949ef3a2fdd23aaf37e12a2"
+    },
+    "build.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "build.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "run-old-2a-control.sh": {
+      "bytes": 3238,
+      "sha256": "edc83cc15d4cef991068dbad193994d5b784a785d449711ffbfabf6a987e5fe2"
+    },
+    "run-selected.sh": {
+      "bytes": 3491,
+      "sha256": "261a91fa39c4ffbe3db887462600377222c0a409289fb767387f999749b4925a"
+    },
+    "vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "vet.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "five_package_vet_exit": 0,
+  "limits": [
+    "Exact199 current-Server migration composition only. Frozen2a financial+GET component gate and Server630 full-model suite remain distinct.",
+    "No production DB migration, live payout, or deployment."
+  ],
+  "offline_cli_build_exit": 0,
+  "old2a_body_intended_failures_each_mode": 3,
+  "owned_fixture_cleanup_exit": 0,
+  "payout_migration_versions": [
+    756,
+    757
+  ],
+  "published_prefix_count": 755,
+  "race_reports": 0,
+  "redis_migration_version": 755,
+  "schema": "sol-current-migration-199-terminal-v1",
+  "selected_roots_normal": 14,
+  "selected_roots_race": 14,
+  "skips": 0,
+  "source_commit": "1995218329ba712f82f53751653e3048aee79b02",
+  "source_tree": "38fd8199a442f0e0a8fa5d1aa32d6b4591da3373",
+  "status": "PASS_SCOPED"
+}

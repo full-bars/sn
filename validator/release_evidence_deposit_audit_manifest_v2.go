@@ -115,7 +115,7 @@ func discoverValidatorEvidenceDepositAuditV2Manifests(ctx context.Context, state
 	if err := validateReleaseMeasurementInputV2Limit(bounds.MaxClosureBytes); err != nil {
 		return nil, err
 	}
-	directory, err := openAttemptPrivateDirectory(filepath.Dir(probe))
+	directory, err := openAttemptPrivateDirectory(filepath.Dir(probe), ctx)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, ctx.Err()
 	}

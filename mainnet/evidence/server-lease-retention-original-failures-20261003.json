@@ -1,0 +1,50 @@
+{
+  "scope": "Two additional original full-model failures; no correction qualification",
+  "server_commit": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+  "failures": [
+    {
+      "test": "TestPublicRedisLongLivedGrantRetainsOriginalRequestLease",
+      "excerpt_path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestPublicRedisLongLivedGrantRetainsOriginalRequestLease-original-failure.jsonl",
+      "excerpt_sha256": "47999cca2283ab5ac25ad6b1ab7210d09e7f18bb4ba2fa9832b4729d4d71db20",
+      "records": 96,
+      "source_path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/subscription_reservation_domains_test.go",
+      "source_sha256": "984ca01c37be54cba7aca70c53f607b4d22a61122ca073b4a890fcb2b2c5a1bb",
+      "terminal_records": [
+        {
+          "Time": "2026-10-03T21:11:57.887495223Z",
+          "Action": "fail",
+          "Package": "github.com/urnetwork/server/model",
+          "Test": "TestPublicRedisLongLivedGrantRetainsOriginalRequestLease",
+          "Elapsed": 4.85
+        }
+      ]
+    },
+    {
+      "test": "TestRemoveCompletedContractsCascades",
+      "excerpt_path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestRemoveCompletedContractsCascades-original-failure.jsonl",
+      "excerpt_sha256": "251dd85845b5f9f214cbf99901882abb6a278a51bbcaf00b66388d8b246dfc6f",
+      "records": 102,
+      "source_path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/subscription_retention_model_test.go",
+      "source_sha256": "b8746d79345db2f2a92b667f6ac95fae7de09c1135f519bfac06a0a9c0d8a3ef",
+      "terminal_records": [
+        {
+          "Time": "2026-10-03T21:12:11.596395717Z",
+          "Action": "fail",
+          "Package": "github.com/urnetwork/server/model",
+          "Test": "TestRemoveCompletedContractsCascades",
+          "Elapsed": 13.71
+        }
+      ]
+    }
+  ],
+  "source_review": [
+    "Request-lease test retains original request expiry across reconciliation, then expects reservation hash and expiry entries removed immediately after terminal settlement posts; there is no public debit flush before this assertion",
+    "Retention cascade test settles the last live contract then expects expired balance deletion without a public debit flush"
+  ],
+  "required_causal_review": [
+    "Preserve original 24h request lease and 25h cache assertions",
+    "Distinguish terminal contract state, committed pending consumption, applied balance debit and exact idempotent token release",
+    "Retain debt and suppress deletion until unapplied consumption is discharged; investigate actual production invariants before classifying a fixture-only correction"
+  ],
+  "status": "Included in Astra expanded failure batch; original suite still running"
+}

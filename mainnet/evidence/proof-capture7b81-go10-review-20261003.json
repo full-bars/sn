@@ -1,0 +1,108 @@
+{
+  "schema": "capture7b81-initial-go10-review-v1",
+  "receipt": "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/capture7b81-initial-scoped-receipt.json",
+  "receipt_sha256": "9df47cbebda8fb2e65a88009cbf8c5449022e12f8fc83e7a179d03871b51f742",
+  "source": {
+    "bytes": 223063579,
+    "counts": {
+      "executable": 146,
+      "regular": 20375,
+      "symlink": 0
+    },
+    "errors": [],
+    "head": "7b81da23084f6817722e9ee4b803308364d1c522",
+    "tree": "56a18ec107417ff3da557fc86c50889a2cb2ab42"
+  },
+  "verified_bindings": {
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/go10-normal.command.json": {
+      "sha256": "29452e23aa69846ce8e15c6165ab0a0820623113c53fa3115b9578c99440daab",
+      "bytes": 1675
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/go10-normal.jsonl": {
+      "sha256": "e1d72139d0dad6290575bf2025b5f1dd8a19930d534d11e9da7f51fecf9a65db",
+      "bytes": 7280
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/go10-normal.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/go10-normal.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/bin/mainnet-owned.test": {
+      "sha256": "fe3146a71990d7fb85dec8233759a599349e582b42e4ac896668943c2e8e26f3",
+      "bytes": 74155224
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/go10-race.command.json": {
+      "sha256": "e6404704d9d8b8dfe92755c0c8081b155d7241d1fbd98e6fade25e5f81002b98",
+      "bytes": 1680
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/go10-race.jsonl": {
+      "sha256": "31d1189e79830468e5e7d2b4950f3ede8153e5697892c4cbd04410b212eddc17",
+      "bytes": 7305
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/go10-race.exit": {
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/go10-race.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/bin/mainnet-race-owned.test": {
+      "sha256": "0d0def3c43bdeb6acfc571d380facd03593e3d72107cd874a839aeedf0884138",
+      "bytes": 99313352
+    }
+  },
+  "root_census": {
+    "normal": [
+      "TestHistoricalCapturePublicCommandRetainsExactJobAndUnknownAuthority",
+      "TestHistoricalCapturePublicRefusesForeignRequestJobOrAuthority",
+      "TestHistoricalCaptureCancellationJoinsPartialProofOutput",
+      "TestHistoricalCaptureRetainsNodeDirectoryAcrossNamedReplacement",
+      "TestHistoricalCaptureInputAndNodeRefusalsDoNotStartWorker",
+      "TestHistoricalCaptureReportPreservesExactBodyProfileAndResourceCensus",
+      "TestHistoricalCaptureObservedZeroNeverSubstitutesForMissingRefund",
+      "TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority",
+      "TestHistoricalReplayCancellationJoinsPartialOutput",
+      "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins"
+    ],
+    "race": [
+      "TestHistoricalCapturePublicCommandRetainsExactJobAndUnknownAuthority",
+      "TestHistoricalCapturePublicRefusesForeignRequestJobOrAuthority",
+      "TestHistoricalCaptureCancellationJoinsPartialProofOutput",
+      "TestHistoricalCaptureRetainsNodeDirectoryAcrossNamedReplacement",
+      "TestHistoricalCaptureInputAndNodeRefusalsDoNotStartWorker",
+      "TestHistoricalCaptureReportPreservesExactBodyProfileAndResourceCensus",
+      "TestHistoricalCaptureObservedZeroNeverSubstitutesForMissingRefund",
+      "TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority",
+      "TestHistoricalReplayCancellationJoinsPartialOutput",
+      "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins"
+    ]
+  },
+  "owned_images": {
+    "normal": {
+      "path": "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/bin/mainnet-owned.test",
+      "bytes": 74155224,
+      "sha256": "fe3146a71990d7fb85dec8233759a599349e582b42e4ac896668943c2e8e26f3",
+      "links": 1,
+      "mode": "0500",
+      "uid": 1000
+    },
+    "race": {
+      "path": "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/bin/mainnet-race-owned.test",
+      "bytes": 99313352,
+      "sha256": "0d0def3c43bdeb6acfc571d380facd03593e3d72107cd874a839aeedf0884138",
+      "links": 1,
+      "mode": "0500",
+      "uid": 1000
+    }
+  },
+  "retained_rust_original": {
+    "path": "mainnet/evidence/proof-capture7b81-original-partial-review-20261003.json",
+    "sha256": "0d86622679a19f91edba5f0be5ec87cf6fe10c6d011b490da0d15478a0847a33",
+    "result": "7PASS1FAIL cancellation product gap"
+  },
+  "limits": "Go10 per mode only. Full collector not qualified; Rust failure, actual execution/exporter/controls, successor, actual runtime/profile/finality and native fee authority remain separate."
+}

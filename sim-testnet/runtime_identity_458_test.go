@@ -46,7 +46,7 @@ func runtime459ReviewedTestLock() *ReleaseLock {
 // Exact commit provenance cannot be expressed as a mutable branch, invented
 // release tag or copied mainnet multisig proposal/timepoint.
 func TestRuntime461CurrentLockSeparatesCommitFromMainnetProposal(t *testing.T) {
-	lock := runtime461ReviewedTestLock()
+	lock := runtime467ReviewedTestLock()
 	if err := validateReviewedRuntimeIdentity(lock); err != nil {
 		t.Fatal(err)
 	}
@@ -119,8 +119,8 @@ func TestRuntime461HistoricalPublicationsRemainEvidenceOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(artifacts) != len(crv4.ReviewedRuntimeArtifacts()) || artifacts[0].Version.SpecVersion != 461 {
-		t.Fatal("current461 plus complete451–455/458/459/460 history is absent")
+	if len(artifacts) != len(crv4.ReviewedRuntimeArtifacts()) || artifacts[0].Version.SpecVersion != 467 {
+		t.Fatal("current467 plus complete451–455/458/459/460 history is absent")
 	}
 	for _, artifact := range artifacts {
 		public := &PublicDeploymentManifest{RuntimeSpec: artifact.Version.SpecVersion, TransactionVersion: artifact.Version.TransactionVersion, StateVersion: artifact.Version.StateVersion, RuntimeCodeHash: artifact.CodeHash, RuntimeMetadataHash: artifact.MetadataHash}
@@ -128,7 +128,7 @@ func TestRuntime461HistoricalPublicationsRemainEvidenceOnly(t *testing.T) {
 			t.Fatalf("reviewed history%d refused: %v", artifact.Version.SpecVersion, err)
 		}
 		currentErr := validatePublishedRuntimeIdentity(public, cfg)
-		if artifact.Version.SpecVersion == 461 {
+		if artifact.Version.SpecVersion == 467 {
 			if currentErr != nil {
 				t.Fatal(currentErr)
 			}
@@ -230,5 +230,19 @@ func TestRuntime458HistoryAllowlistReachesArtifactReader(t *testing.T) {
 	_, err := readReleaseHistoryRuntimeMetadataAtContext(context.Background(), chain, cfg, block)
 	if calls != 1 || !errors.Is(err, want) {
 		t.Fatalf("complete release history did not reach its exact artifact reader: calls=%d error=%v", calls, err)
+	}
+}
+
+// Setup must not retain the deployment lock behind an unanswered native RPC.
+// The manager path uses this context-aware release dial before any journal or
+// transaction action, so cancellation remains an immediately recoverable
+// preparation failure.
+func TestReleaseSubstrateDialHonorsCanceledContext(t *testing.T) {
+	cfg := testResolvedConfig(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, _, err := dialReleaseSubstrateChainContext(ctx, cfg, "ws://127.0.0.1:1")
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("canceled release dial error=%v, want context cancellation", err)
 	}
 }

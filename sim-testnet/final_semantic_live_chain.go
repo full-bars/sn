@@ -531,7 +531,7 @@ func captureFinalHistoricalCoordinatorBaselines(ctx context.Context, cfg *Resolv
 		}
 		plans[plan.PlanHash] = plan
 	}
-	journalBytes, err := os.ReadFile(filepath.Join(stateRoot, "journal.jsonl"))
+	journalBytes, err := readFinalJournalSourceContext(ctx, stateRoot)
 	if err != nil {
 		return nil, err
 	}
@@ -656,7 +656,9 @@ func captureFinalNativeState(ctx context.Context, cfg *ResolvedConfig, stateRoot
 	if err != nil {
 		return nil, nil, fmt.Errorf("authenticate final native runtime at %s: %w", hash.Hex(), err)
 	}
-	bindAuthenticatedRuntime(chain, authenticated)
+	if err := bindAuthenticatedRuntime(chain, authenticated); err != nil {
+		return nil, nil, err
+	}
 	header, err := chain.API.RPC.Chain.GetHeader(hash)
 	if err != nil || header == nil || uint64(header.Number) != head.Number {
 		return nil, nil, errors.New("final native capture head number and hash differ")

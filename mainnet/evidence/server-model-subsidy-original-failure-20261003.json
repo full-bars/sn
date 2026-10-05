@@ -1,0 +1,31 @@
+{
+  "bindings": [
+    {
+      "bytes": 38595,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestPaymentPlanSubsidy-original-failure.jsonl",
+      "sha256": "7a0690b13adbf76041457ea9aaf6d332630548278ae561a17b14230ba33c663f"
+    },
+    {
+      "bytes": 63962,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/account_payment_model_test.go",
+      "sha256": "f34993b4270a177a8de72d9509be248bc39dde0d277b39d1dc194201fc6348fc"
+    },
+    {
+      "bytes": 209917,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/subscription_model.go",
+      "sha256": "4c702f4ad67452a78c7eab454bf7ff33923e3788733ff751f7a6e78db4a828d7"
+    },
+    {
+      "bytes": 19942,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/subscription_redis_admission.go",
+      "sha256": "2d84b50e1ec3faaa39c5b59a5bb469a6958d6f57b01d4a71130d8b7af9a20bef"
+    }
+  ],
+  "captured_utc": "2026-10-03T19:13:10.708379+00:00",
+  "limits": "No root-cause fix, post-fix test or mainnet readiness result is claimed.",
+  "next_action": "Astra inspect requested-versus-granted accounting and adjacent consumers under connect/CODESTYLE.md, add deterministic regressions, preserve original result. Sol continues unchanged whole model suite and collects failures as a batch.",
+  "schema": "urnetwork-root-server-model-original-failure-v1",
+  "source_triage": "Source-confirmed causal path: Redis admission returns granted TransferByteCount; the subsidy loop closes with requested bytes, ignores both close errors and increments requested bytes. Settlement returns errContractInsufficientEscrow before publication when actual escrow cannot cover reported usage. Shortened tail can remain unsettled while the fixture declares exhaustion. Post-fix behavioral proof remains pending.",
+  "status": "ORIGINAL_ASSERTION_FAILURE_RETAINED_SUITE_CONTINUES",
+  "verified": "115 original JSON records retain TestPaymentPlanSubsidy failure at account_payment_model_test.go:1245; expected empty active-balance list, observed one row."
+}

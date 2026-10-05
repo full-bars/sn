@@ -28,6 +28,7 @@ type releaseNativeValidatorTestFixture struct {
 	expected    crv4.RuntimeArtifactIdentity
 	genesis     types.Hash
 	block       types.Hash
+	header      types.Header
 	blockNumber uint64
 	uid         uint16
 	hotkey      [32]byte
@@ -68,6 +69,7 @@ func newReleaseNativeValidatorUIDTestFixture(t *testing.T, selectedUID uint16, h
 		blockNumber: 100, uid: selectedUID,
 		hotkey: [32]byte{11}, threshold: 100, total: 150, permit: true,
 	}
+	fixture.header, fixture.block = releaseReceiptTestHeader(t, types.Hash{2}, fixture.blockNumber)
 	if len(hotkeys) > 1 {
 		t.Fatal("native fixture permits at most one explicit signing hotkey")
 	}
@@ -164,12 +166,9 @@ func newReleaseNativeValidatorUIDTestFixture(t *testing.T, selectedUID uint16, h
 			if err := check(fixture.block.Hex()); err != nil {
 				return err
 			}
-			header, ok := result.(*types.Header)
-			if !ok {
-				return fmt.Errorf("unexpected header result %T", result)
-			}
-			*header = types.Header{Number: types.BlockNumber(fixture.blockNumber)}
-			return nil
+			header := fixture.header
+			header.Number = types.BlockNumber(fixture.blockNumber)
+			return setReleaseHistoricalTestResult(result, releaseReceiptTestHeaderWire(header))
 		case "chain_getBlockHash":
 			if reflect.DeepEqual(args, []any{uint64(0)}) {
 				return setValidatorRuntimeIdentityTestResult(result, fixture.genesis.Hex())

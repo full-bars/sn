@@ -1,0 +1,32 @@
+# Provisional operational rules for the existing independent Mimir evaluator.
+# Keep expected-source and stale-textfile rules; quiet logs alone are normal.
+groups:
+  - name: sn-mainnet-diagnostic-output
+    interval: 30s
+    rules:
+      - alert: SnMainnetMonitorDiagnosticUnavailable
+        expr: (sn_mainnet_monitor_output_status == 3) or (sn_mainnet_validator_output_status == 3)
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Monitor diagnostic destination is unavailable on {{ $labels.host }}"
+      - alert: SnMainnetMonitorDiagnosticDropped
+        expr: (increase(sn_mainnet_monitor_output_dropped_total[5m]) > 0) or (increase(sn_mainnet_validator_output_dropped_total[5m]) > 0)
+        labels:
+          severity: warning
+        annotations:
+          summary: "Monitor diagnostic records were dropped on {{ $labels.host }}"
+      - alert: SnMainnetProducerDiagnosticUnavailable
+        expr: (sn_mainnet_validator_producer_diagnostic_status >= 2) and (sn_mainnet_validator_producer_diagnostic_current == 1)
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validator {{ $labels.role }} diagnostic destination is unavailable on {{ $labels.host }}"
+      - alert: SnMainnetProducerDiagnosticDropped
+        expr: (increase(sn_mainnet_validator_producer_diagnostic_dropped_total[5m]) > 0) and (sn_mainnet_validator_producer_diagnostic_current == 1)
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validator {{ $labels.role }} diagnostic records were dropped on {{ $labels.host }}"

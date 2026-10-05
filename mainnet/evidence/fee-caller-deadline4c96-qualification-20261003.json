@@ -1,0 +1,92 @@
+{
+  "actual_physical_git_blobs_and_modes_verified": 20333,
+  "artifact_bindings_verified": 21,
+  "artifact_sha256": {
+    "ancestry-preflight-normal.txt": "e79d80b987de971c225c95bc91c8faa64ab340ea57ae0713dbec541bbdbc820c",
+    "ancestry-preflight-race.txt": "e79d80b987de971c225c95bc91c8faa64ab340ea57ae0713dbec541bbdbc820c",
+    "ancestry-preflight-vet.txt": "e79d80b987de971c225c95bc91c8faa64ab340ea57ae0713dbec541bbdbc820c",
+    "deadline4-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "deadline4-normal.jsonl": "797bd89d92a695bf0fb387fc24110a54df7b058e1063784a71b053a071a2ac4e",
+    "deadline4-normal.phase": "457b364529ea8bdf70e8363d2da74f68ad4e4f741b759f278da2b8aad40ca216",
+    "deadline4-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "deadline4-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "deadline4-race.jsonl": "fc3e9e201c8019a804a09c9bdae61fba5f3d4aacedcc5d83d9ddaad5a274eeb8",
+    "deadline4-race.phase": "8cd15e163b0b6a2daf08fd9416fb538a9a95853cbba75969f331a18eff2ba4cc",
+    "deadline4-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "deadline4-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "deadline4-vet.phase": "e2e451817c13415d5c90535117e270caebbf439ffb7513a6a228ce2a0ced8ac5",
+    "deadline4-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "deadline4-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "modules.jsonl": "75a57405cde534005d03eca32d648baf44e4792f0d73162e7bf71866fee00287",
+    "root-preflight-normal.json": "ce895d40754c402e8dd32b6bf33a551bda1262f2f20707435348e63340bdef93",
+    "root-preflight-race.json": "ce895d40754c402e8dd32b6bf33a551bda1262f2f20707435348e63340bdef93",
+    "root-preflight-vet.json": "ce895d40754c402e8dd32b6bf33a551bda1262f2f20707435348e63340bdef93",
+    "run-deadline.sh": "06ba8bfccd8958fb7c59dcfca51e14738fa2d7854a05c1fa30557234b4fb6dec",
+    "source-readback.json": "f85db8cd897bb9bdaa92f2f7a5bac89b3232efd706fc94602c6de5d91e9a8053"
+  },
+  "coverage": "Controlled deadline expires at actual partial-output boundary; exact caller deadline inherited, real child joined. Preexpired owner refuses before absent-engine open; cancellation remains independent.",
+  "git_delta": [
+    "mainnet/historical_replay_test.go"
+  ],
+  "limits": [
+    "Four corrected/adjacent roots; original16 race15PASS1FAIL not relabeled",
+    "Thirteen unchanged original passing roots plus four affected roots are disjoint joined scope, not single17-root invocation",
+    "No production timeout change or actual-chain runtime fee authority",
+    "Current-main integration remains pending"
+  ],
+  "mainnet_vet_exit": 0,
+  "original_gate": {
+    "path": "mainnet/evidence/current-fee-caller-e274-original-gate-review-20261003.json",
+    "sha256": "f796d7cdbab1b2f9df5e547cda1cd15e6a987da396f88c120a8a3eb82d973250"
+  },
+  "production_and_modules_unchanged_from_e274": true,
+  "raw_affected_roots": {
+    "normal": {
+      "TestHistoricalReplayCanceledOwnerDoesNotLaunch": "pass",
+      "TestHistoricalReplayCancellationJoinsPartialOutput": "pass",
+      "TestHistoricalReplayExpiredOwnerRefusesBeforeEngineAdmission": "pass",
+      "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins": "pass"
+    },
+    "race": {
+      "TestHistoricalReplayCanceledOwnerDoesNotLaunch": "pass",
+      "TestHistoricalReplayCancellationJoinsPartialOutput": "pass",
+      "TestHistoricalReplayExpiredOwnerRefusesBeforeEngineAdmission": "pass",
+      "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins": "pass"
+    }
+  },
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-historical-deadline-4c96-independent-20261003/evidence/deadline4-affected-final-receipt.json",
+    "sha256": "6e299a58511175740b9d16d30004deb9d54b90608b30f0ada7db6d2064703e25"
+  },
+  "retained_unchanged_original_race_roots": {
+    "TestHistoricalReplayAddressRefusesNoncanonicalArray": "pass",
+    "TestHistoricalReplayCancellationJoinsBlockedInput": "pass",
+    "TestHistoricalReplayDescendantPipesCannotOutliveResult": "pass",
+    "TestHistoricalReplayExecutesSealedImageAfterSourceReplacement": "pass",
+    "TestHistoricalReplayInputPinsAndCanonicalDigestsPrecedeLaunch": "pass",
+    "TestHistoricalReplayObservationBindsOriginalProfileTraceAndEvents": "pass",
+    "TestHistoricalReplayObservationDistinguishesMissingAndActualZeroRefund": "pass",
+    "TestHistoricalReplayObservationProfileRefusesBeforeProcessLaunch": "pass",
+    "TestHistoricalReplayObservedOutputBoundCancelsActualChild": "pass",
+    "TestHistoricalReplayOutputBoundsCancelRealChild": "pass",
+    "TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority": "pass",
+    "TestHistoricalReplayPublicObservationRetainsUnapprovedExactCandidate": "pass",
+    "TestHistoricalReplayReportBindsOriginalJobAndAuthority": "pass"
+  },
+  "source": {
+    "commit": "4c96e89c485033a5a1d1db6d907de6bac92da1dc",
+    "peer_symlinks": {
+      "glog": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "goidenticons": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "gvisor": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+      "proxy": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "server": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server",
+      "userwireguard": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "warp": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp"
+    },
+    "tracked_count": 20333,
+    "tracked_entries_sha256": "56138d01b493a57792c869142df1bd960a1e6667ef5c44d4ed0fad6418bc8ce2",
+    "tree": "fb63dfaebc11de97df23ecfbf961574d45938e78"
+  },
+  "status": "ROOT_VERIFIED_SCOPED_TEST_CORRECTION"
+}

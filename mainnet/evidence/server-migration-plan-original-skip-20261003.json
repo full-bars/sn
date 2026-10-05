@@ -1,0 +1,41 @@
+{
+  "scope": "Original current-Server5f migration-plan skip; not a qualification pass",
+  "server_commit": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+  "test": "TestNetEscrowRevisionTriggerUsesContractKeyAfterUpgrade",
+  "excerpt": {
+    "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestNetEscrowRevisionTriggerUsesContractKeyAfterUpgrade-original-skip.jsonl",
+    "sha256": "c639c6aadab4d16e0b48e6588166198b9e3bb996d951ac4dde172d03043886f4",
+    "records": 86
+  },
+  "source": {
+    "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/subscription_net_escrow_revision_plan_test.go",
+    "sha256": "a40a643f4bf2b938642fbf0f4d074e4c9e62bb5941e2bb30824f16e11c633783"
+  },
+  "observed_records": [
+    {
+      "Time": "2026-10-03T21:05:20.293439207Z",
+      "Action": "run",
+      "Package": "github.com/urnetwork/server/model",
+      "Test": "TestNetEscrowRevisionTriggerUsesContractKeyAfterUpgrade"
+    },
+    {
+      "Time": "2026-10-03T21:05:28.03470073Z",
+      "Action": "output",
+      "Package": "github.com/urnetwork/server/model",
+      "Test": "TestNetEscrowRevisionTriggerUsesContractKeyAfterUpgrade",
+      "Output": "    test_util.go:962: actual nested plan test requires auto_explain and permission to load it\n"
+    },
+    {
+      "Time": "2026-10-03T21:05:28.104300009Z",
+      "Action": "skip",
+      "Package": "github.com/urnetwork/server/model",
+      "Test": "TestNetEscrowRevisionTriggerUsesContractKeyAfterUpgrade",
+      "Elapsed": 7.81
+    }
+  ],
+  "source_conditions": [
+    "LOAD auto_explain missing library SQLSTATE 58P01 or insufficient privilege 42501 produces this shared skip reason; the observed skip does not distinguish them",
+    "Actual nested INSERT/UPDATE/DELETE statement plans under custom and generic modes are required, before and after appended migration on an existing connection"
+  ],
+  "next_action": "After original full suite termination and owned fixture cleanup, qualify this exact root with auto_explain present and LOAD authorized in a disposable owned PostgreSQL fixture; retain original skip and do not rerun the broad model."
+}

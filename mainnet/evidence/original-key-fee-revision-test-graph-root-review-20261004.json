@@ -1,0 +1,57 @@
+{
+  "schema": "mainnet-independent-test-graph-review-v1",
+  "status": "GRAPH_PASS_BODY_NOT_QUALIFIED",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-fee-revision-bb716-20261004/evidence/selected-test-graph-receipt.json",
+    "sha256": "8a4570b8ce0e38c48c23356b694d14b8bd1649788e8f7f8cceabfd6a4b19d91d"
+  },
+  "bindings": [
+    {
+      "bytes": 3658365,
+      "path": "/mnt/data/sn-testnet/sol-fee-revision-bb716-20261004/evidence/bb716-test-graph.stdout",
+      "sha256": "1cfba230f53c7ad0c01551e77c044dffd48453df590ef40255a159ec75ecf7da"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-fee-revision-bb716-20261004/evidence/bb716-test-graph.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1192,
+      "path": "/mnt/data/sn-testnet/sol-fee-revision-bb716-20261004/evidence/source-stage-receipt.json",
+      "sha256": "0ac46a8a0879a8137baef4eeeeb8938a70d7e77d39d97664a4835d778247b8f9"
+    },
+    {
+      "bytes": 3447,
+      "path": "/mnt/data/sn-testnet/sol-fee-revision-bb716-20261004/evidence/peer-links-receipt.json",
+      "sha256": "c5da39a1812c59f6d3d9cf89d315b1cd985de3593c04fc618d0d902fdd4b5d57"
+    }
+  ],
+  "raw_package_count": 849,
+  "raw_incomplete_or_error_count": 0,
+  "core_packages": [
+    "github.com/urnetwork/connect/durablevolume",
+    "github.com/urnetwork/connect/protocol",
+    "github.com/urnetwork/connect",
+    "github.com/urnetwork/connect/emoji",
+    "github.com/urnetwork/connect/extender",
+    "github.com/urnetwork/connect/gossip"
+  ],
+  "core_version": "v0.0.0-20261004025941-ad6fc3a191a3",
+  "admission": {
+    "cumulative_cap_bytes": 51539607552,
+    "data_free_before_bytes": 90542759936,
+    "graph_memory_forecast_bytes": 536870912,
+    "host_retained_min_bytes": 103079215104,
+    "inodes_free_before": 93964341,
+    "memory_available_before_bytes": 120203739136,
+    "memory_multiplier": 2,
+    "original_baseline_bytes": 113681502208,
+    "type": "metadata-only"
+  },
+  "limits": [
+    "Metadata graph only; no compilation or behavioral test result.",
+    "Original112GiB preflight refusal retained; scoped graph admission does not lower any active body guard.",
+    "Opening principal/full allocation/entitlement census still incomplete."
+  ]
+}

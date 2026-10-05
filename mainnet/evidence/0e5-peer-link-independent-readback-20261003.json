@@ -1,0 +1,20 @@
+{
+  "schema": "0e5-peer-link-independent-readback-v1",
+  "status": "PASS_LINK_REPAIR_ONLY",
+  "addendum_receipt_sha256": "93dd4c6efa0e6e429ef7f9e668b074e28779b7b68685b45b5d3705e058663251",
+  "verified_peers": [
+    "glog",
+    "goidenticons",
+    "gvisor",
+    "proxy",
+    "server",
+    "userwireguard",
+    "warp"
+  ],
+  "review": "All seven new symlinks resolve to recorded existing targets. Exact target HEAD/tree, clean tracked worktrees and module hashes independently checked. Prior full physical censuses remain separately retained.",
+  "limits": [
+    "No repeated full peer archive/census or broad source restaging.",
+    "Failed original compiles retained; four affected retries still need outcomes.",
+    "No behavioral pass or mainnet acceptance."
+  ]
+}

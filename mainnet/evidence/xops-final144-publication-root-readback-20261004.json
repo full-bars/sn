@@ -1,0 +1,14 @@
+{
+  "schema": "xops-final144-independent-root-readback-v1",
+  "observed_utc": "2026-10-04T19:34:59.788732+00:00",
+  "receipt_path": "/mnt/data/sn-testnet/sol-parallel-qualification-20261004/evidence/xops144-independent-v2.receipt.json",
+  "receipt_sha256": "692b66ba58c38758e911acc3a7869b7c4079cd196c1c5db4ff69d7869b529266",
+  "source_head": "9d76e61514798cd93d188bab7e5754d49ca16929",
+  "remote_main": "9d76e61514798cd93d188bab7e5754d49ca16929",
+  "raw_unique_test_names": 144,
+  "raw_success_markers": 144,
+  "actual_exit": 0,
+  "tree_joined": true,
+  "scope": "offlinePython +actualreviewedpromtool+loopbackPrometheus; noactualSNCLI orhostactivation",
+  "earlier_success": "Original144 successful bodies retained with uncaptured Unix exit after checker failure; one authorized rerun persisted actual wait result before checker. No host activation."
+}

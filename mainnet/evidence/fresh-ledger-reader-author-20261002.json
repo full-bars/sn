@@ -1,0 +1,307 @@
+{
+  "schema": "urnetwork-preparation-reader-admission-author-v1",
+  "sealed_at": "2026-10-02T19:19:22.657245+00:00",
+  "verdict": "PASS_SCOPED",
+  "source": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/sn",
+    "Commit": "f5c0707bed5374c976c31de54573c9c1501085a6",
+    "Tree": "073d31a965a05999a3d43851357503223e1a040e",
+    "Parent": "f4ad15db01ad3c8fbe743f165d899c3bbfbc7992"
+  },
+  "unchanged_core": {
+    "Commit": "ea827777e7a554defacf81638a681aa11ebf34a8",
+    "Tree": "5790162aa27e1eb11ef0c737f0cf8ef529af582e",
+    "PriorReceipt": {
+      "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/f4ad-author-receipt.json",
+      "Bytes": 25418,
+      "Sha256": "df5d2252d538dcc38c9122826cb173efc4737392f67669e9ae6ccc8b9d8d154b"
+    }
+  },
+  "results": {
+    "reader-f5c-ledger-normal": {
+      "Job": {
+        "Name": "reader-f5c-ledger-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/sn",
+        "Commit": "f5c0707bed5374c976c31de54573c9c1501085a6",
+        "Workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/go.work",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/reader-f5c-ledger-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=30m",
+          "./validator",
+          "-run",
+          "^(TestAttemptPreparationReadersRetainStandardEof|TestAttemptPreparationReadersKeepCancellationAlongsideEof|TestMainnetAttemptLedgerPublicConstructorsRequireCustody|TestDurableAttemptLedgerAdmissionPrecedesRecordSigning|TestDurableAttemptLedgerReserveKeepsOriginalPrefix|TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes|TestDurableAttemptLedgerReplacementBlocksCachedState|TestAttemptPreparationReadFullRejectsPostReadCancellation|TestAttemptPreparationJsonRejectsPostReadCancellation|TestAttemptPreparationReadAtRejectsPostReadCancellation|TestAttemptPreparationReadAtCancellationAdmitsNoPrefix)$"
+        ],
+        "ExpectedPass": 11,
+        "ExpectedFail": 0
+      },
+      "Tree": "073d31a965a05999a3d43851357503223e1a040e",
+      "Started": "2026-10-02T19:08:39.928602147Z",
+      "Finished": "2026-10-02T19:10:04.115359521Z",
+      "AvailableBytesBefore": 127258554368,
+      "ExitCode": 0,
+      "Census": {
+        "TestAttemptPreparationJsonRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadAtCancellationAdmitsNoPrefix": "pass",
+        "TestAttemptPreparationReadAtRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadFullRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadersKeepCancellationAlongsideEof": "pass",
+        "TestAttemptPreparationReadersRetainStandardEof": "pass",
+        "TestDurableAttemptLedgerAdmissionPrecedesRecordSigning": "pass",
+        "TestDurableAttemptLedgerReplacementBlocksCachedState": "pass",
+        "TestDurableAttemptLedgerReserveKeepsOriginalPrefix": "pass",
+        "TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes": "pass",
+        "TestMainnetAttemptLedgerPublicConstructorsRequireCustody": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "350a7beee46eb4d4b5fc904c81f94d3290aeb14a26c795d0638c4c38074b9851"
+    },
+    "reader-f5c-cli-normal": {
+      "Job": {
+        "Name": "reader-f5c-cli-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/sn",
+        "Commit": "f5c0707bed5374c976c31de54573c9c1501085a6",
+        "Workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/go.work",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/reader-f5c-cli-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=30m",
+          "./mainnet",
+          "-run",
+          "^TestStoragePreparationCommand"
+        ],
+        "ExpectedPass": 7,
+        "ExpectedFail": 0
+      },
+      "Tree": "073d31a965a05999a3d43851357503223e1a040e",
+      "Started": "2026-10-02T19:10:04.204304398Z",
+      "Finished": "2026-10-02T19:10:45.582423958Z",
+      "AvailableBytesBefore": 127092387840,
+      "ExitCode": 0,
+      "Census": {
+        "TestStoragePreparationCommandCannotEnrollDaemonLedgerAsOwnerLocal": "pass",
+        "TestStoragePreparationCommandCannotRecreateCompletedLedger": "pass",
+        "TestStoragePreparationCommandInitializesActualValidatorLedger": "pass",
+        "TestStoragePreparationCommandRecoversLostCompletionReport": "pass",
+        "TestStoragePreparationCommandRefusesPrivateKeysAndWrongScope": "pass",
+        "TestStoragePreparationCommandRequiresExactAcceptedPlan": "pass",
+        "TestStoragePreparationCommandResumesOriginalPendingLedger": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "e2d1c8ed14b0952ec1b32433cbe2244b4b20a20d6c26d81e5eb881a496e006fc"
+    },
+    "reader-f5c-ledger-race": {
+      "Job": {
+        "Name": "reader-f5c-ledger-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/sn",
+        "Commit": "f5c0707bed5374c976c31de54573c9c1501085a6",
+        "Workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/go.work",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/reader-f5c-ledger-race",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=30m",
+          "-race",
+          "./validator",
+          "-run",
+          "^(TestAttemptPreparationReadersRetainStandardEof|TestAttemptPreparationReadersKeepCancellationAlongsideEof|TestMainnetAttemptLedgerPublicConstructorsRequireCustody|TestDurableAttemptLedgerAdmissionPrecedesRecordSigning|TestDurableAttemptLedgerReserveKeepsOriginalPrefix|TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes|TestDurableAttemptLedgerReplacementBlocksCachedState|TestAttemptPreparationReadFullRejectsPostReadCancellation|TestAttemptPreparationJsonRejectsPostReadCancellation|TestAttemptPreparationReadAtRejectsPostReadCancellation|TestAttemptPreparationReadAtCancellationAdmitsNoPrefix)$"
+        ],
+        "ExpectedPass": 11,
+        "ExpectedFail": 0
+      },
+      "Tree": "073d31a965a05999a3d43851357503223e1a040e",
+      "Started": "2026-10-02T19:10:45.686749731Z",
+      "Finished": "2026-10-02T19:14:28.461929405Z",
+      "AvailableBytesBefore": 127376273408,
+      "ExitCode": 0,
+      "Census": {
+        "TestAttemptPreparationJsonRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadAtCancellationAdmitsNoPrefix": "pass",
+        "TestAttemptPreparationReadAtRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadFullRejectsPostReadCancellation": "pass",
+        "TestAttemptPreparationReadersKeepCancellationAlongsideEof": "pass",
+        "TestAttemptPreparationReadersRetainStandardEof": "pass",
+        "TestDurableAttemptLedgerAdmissionPrecedesRecordSigning": "pass",
+        "TestDurableAttemptLedgerReplacementBlocksCachedState": "pass",
+        "TestDurableAttemptLedgerReserveKeepsOriginalPrefix": "pass",
+        "TestDurableAttemptLedgerUncertainAppendReconcilesOriginalBytes": "pass",
+        "TestMainnetAttemptLedgerPublicConstructorsRequireCustody": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "39799530d08df53d2a7a715f9f0011126fa874c8de184f229c59e5b9237e6681"
+    },
+    "reader-f5c-cli-race": {
+      "Job": {
+        "Name": "reader-f5c-cli-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/sn",
+        "Commit": "f5c0707bed5374c976c31de54573c9c1501085a6",
+        "Workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/go.work",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/reader-f5c-cli-race",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=30m",
+          "-race",
+          "./mainnet",
+          "-run",
+          "^TestStoragePreparationCommand"
+        ],
+        "ExpectedPass": 7,
+        "ExpectedFail": 0
+      },
+      "Tree": "073d31a965a05999a3d43851357503223e1a040e",
+      "Started": "2026-10-02T19:14:28.539447178Z",
+      "Finished": "2026-10-02T19:16:01.007172754Z",
+      "AvailableBytesBefore": 126049226752,
+      "ExitCode": 0,
+      "Census": {
+        "TestStoragePreparationCommandCannotEnrollDaemonLedgerAsOwnerLocal": "pass",
+        "TestStoragePreparationCommandCannotRecreateCompletedLedger": "pass",
+        "TestStoragePreparationCommandInitializesActualValidatorLedger": "pass",
+        "TestStoragePreparationCommandRecoversLostCompletionReport": "pass",
+        "TestStoragePreparationCommandRefusesPrivateKeysAndWrongScope": "pass",
+        "TestStoragePreparationCommandRequiresExactAcceptedPlan": "pass",
+        "TestStoragePreparationCommandResumesOriginalPendingLedger": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "577a899a763a7f03df090a6e44a8147aa5215b292bfd75ebb85440ff060f5283"
+    },
+    "reader-f5c-consumer-vet": {
+      "Job": {
+        "Name": "reader-f5c-consumer-vet",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/sn",
+        "Commit": "f5c0707bed5374c976c31de54573c9c1501085a6",
+        "Workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/reader-successor/go.work",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/reader-f5c-consumer-vet",
+        "Args": [
+          "vet",
+          "-p=1",
+          "./mainnet",
+          "./validator",
+          "./internal/durablepath"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 0
+      },
+      "Tree": "073d31a965a05999a3d43851357503223e1a040e",
+      "Started": "2026-10-02T19:16:01.083628987Z",
+      "Finished": "2026-10-02T19:16:19.325210975Z",
+      "AvailableBytesBefore": 125941473280,
+      "ExitCode": 0,
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "read-admission-f4ad-causal-race": {
+      "Job": {
+        "Name": "read-admission-f4ad-causal-race",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/final/sn",
+        "Commit": "f4ad15db01ad3c8fbe743f165d899c3bbfbc7992",
+        "Workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/final/go.work",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/read-admission-f4ad-causal-race",
+        "Args": [
+          "test",
+          "-race",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=20m",
+          "-overlay",
+          "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/preparation-f4ad-read-admission-overlay.json",
+          "./validator",
+          "-run",
+          "^(TestAttemptPreparationReadFullRejectsPostReadCancellation|TestAttemptPreparationJsonRejectsPostReadCancellation|TestAttemptPreparationReadAtRejectsPostReadCancellation|TestAttemptPreparationReadAtCancellationAdmitsNoPrefix)$"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 4
+      },
+      "Tree": "18588e492a600621d2a14a4fa3de060232b1053a",
+      "Started": "2026-10-02T19:16:19.404090677Z",
+      "Finished": "2026-10-02T19:17:57.027148729Z",
+      "AvailableBytesBefore": 126164856832,
+      "ExitCode": 1,
+      "Census": {
+        "TestAttemptPreparationJsonRejectsPostReadCancellation": "fail",
+        "TestAttemptPreparationReadAtCancellationAdmitsNoPrefix": "fail",
+        "TestAttemptPreparationReadAtRejectsPostReadCancellation": "fail",
+        "TestAttemptPreparationReadFullRejectsPostReadCancellation": "fail"
+      },
+      "Matched": true,
+      "LogSha256": "ee81e48da2ba07f982efe8e14d26e2ae9bcc7201480f26aaa806d3ac62ed23a0"
+    },
+    "read-admission-f4ad-causal-normal": {
+      "Job": {
+        "Name": "read-admission-f4ad-causal-normal",
+        "Source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/final/sn",
+        "Commit": "f4ad15db01ad3c8fbe743f165d899c3bbfbc7992",
+        "Workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/final/go.work",
+        "Prefix": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/read-admission-f4ad-causal-normal",
+        "Args": [
+          "test",
+          "-p=1",
+          "-count=1",
+          "-json",
+          "-timeout=20m",
+          "-overlay",
+          "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/preparation-f4ad-read-admission-overlay.json",
+          "./validator",
+          "-run",
+          "^(TestAttemptPreparationReadFullRejectsPostReadCancellation|TestAttemptPreparationJsonRejectsPostReadCancellation|TestAttemptPreparationReadAtRejectsPostReadCancellation|TestAttemptPreparationReadAtCancellationAdmitsNoPrefix)$"
+        ],
+        "ExpectedPass": 0,
+        "ExpectedFail": 4
+      },
+      "Tree": "18588e492a600621d2a14a4fa3de060232b1053a",
+      "Started": "2026-10-02T19:00:21.234174194Z",
+      "Finished": "2026-10-02T19:00:57.595167608Z",
+      "AvailableBytesBefore": 127624577024,
+      "ExitCode": 1,
+      "Census": {
+        "TestAttemptPreparationJsonRejectsPostReadCancellation": "fail",
+        "TestAttemptPreparationReadAtCancellationAdmitsNoPrefix": "fail",
+        "TestAttemptPreparationReadAtRejectsPostReadCancellation": "fail",
+        "TestAttemptPreparationReadFullRejectsPostReadCancellation": "fail"
+      },
+      "Matched": true,
+      "LogSha256": "9de1f8da23398243c7dcee5dc2e91fa9635c082de3492cb4fc0a6fc6996c8239"
+    }
+  },
+  "artifact_count": 29,
+  "manifest": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/reader-f5c-author-manifest.json",
+    "Bytes": 7076,
+    "Sha256": "6c20b173d651a81183882f1ad6a1ec17c4c781854b41239be6977408f884d4ec"
+  },
+  "archive": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/reader-f5c-author-raw.tar.gz",
+    "Bytes": 80899,
+    "Sha256": "20e70e3b596b1faf4ded34f239d477872ab551249c141bcfd93bd22e5d0d96d6"
+  },
+  "source_bundle": {
+    "Path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/reader-f5c-source.bundle",
+    "Bytes": 2125,
+    "Sha256": "b67e3fb82585e69d0907846dda5542236d327e449c6bbeb7f2411e5a46f585c3"
+  },
+  "scope": [
+    "Six reader roots and five retained-ledger neighbors pass normal and race.",
+    "Seven actual public plan/apply and original-custody continuation roots pass normal and race.",
+    "mainnet, validator and internal/durablepath vet exit0.",
+    "Exact f4 production with only four frozen new tests fails all four in normal and race: ReadFull, JSON, complete ReadAt and chunk-prefix ReadAt.",
+    "Bare EOF and short reads retain their original sentinel; genuine canceled EOF preserves both causes. Failed post-read admission returns zero bytes without rewinding or changing retained files."
+  ],
+  "limits": [
+    "The unchanged core73 qualification is bound separately, not re-executed or relabeled.",
+    "Fresh precreated Linux daemon ledger preparation only; native/snapshot/owner-local adapters, root creation, retained/restore and current module/source composition are separate increments.",
+    "No live signing, broadcast, deployment, service start or real database. Restart authorization remains false."
+  ]
+}

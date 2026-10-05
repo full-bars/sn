@@ -1,0 +1,278 @@
+{
+  "schema": "validator-b6-selected-component-qualified-root-readback-v1",
+  "status": "SELECTED_COMPONENT_QUALIFIED_INTEGRATION_PENDING",
+  "head": "b6f05dc5df9ef84898b25d6aac47ebdb0a04e27a",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-controls-v1.terminal.json",
+      "bytes": 5869,
+      "sha256": "5f2614e104de95bd59d0a9ff0b82098a916aa19d13d9033944d9c143c5d43a2e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-normal.receipt.json",
+      "bytes": 10000,
+      "sha256": "e79f22185094176a4300ee25183c0666492c544e1e2e5a610655b5f8eec4d2f8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-normal-compile.resources.csv",
+      "bytes": 8063,
+      "sha256": "d499cb9b2596dccd4f53027dee4ea10bbaa5e23d3c24dc26d598a59f48d7ece2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-normal-body.stdout",
+      "bytes": 1237,
+      "sha256": "af08912f73670cfaac7c089fc2bcd8c370a918c132687e5948f54cf59a2b3088"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-normal-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-normal-body.resources.csv",
+      "bytes": 2460,
+      "sha256": "5c8dca5ca7ac436f3b75e00ff90edf7f56dec7123b807b39f92ca57ac3a99735"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.receipt.json",
+      "bytes": 8896,
+      "sha256": "adefcdfb2403c7de47a372b682ae03cb92de60341c022959592751bd92b84b9b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/nonempty-head-lineage-omitted/overlay.json",
+      "bytes": 295,
+      "sha256": "eeba41495918fcb107bcca6b2406d8ff8cd940c0e1c15a9180b06b9ad4efee71"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-nonempty-head-lineage-omitted-normal.test",
+      "bytes": 82034368,
+      "sha256": "1ddf4022b1d5503843e835e272b5510af36da7c78dab70c2ed3e03cf2340af8d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/source/sn/validator/release_archive_history_v2.go",
+      "bytes": 15412,
+      "sha256": "7e2c1366277f1e56c5a3b719041b4cefc6b5ed63b6fec8ee49a23eb2d67064a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/nonempty-head-lineage-omitted/release_archive_history_v2.go",
+      "bytes": 15421,
+      "sha256": "56823bc72e194874defd3be45ddca956e09c585257af48c14836d3740c0a0ddf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-race.receipt.json",
+      "bytes": 10004,
+      "sha256": "77b2d25c105e6fd4c003b3a46eb25f78e840b724ddbcbbdba7d5237533bd86c6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-race-compile.resources.csv",
+      "bytes": 11075,
+      "sha256": "1991ac6ef0c5bdd5ffb7680b35ce9efdc15b1982357f46718f245d3df421489b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-race-body.stdout",
+      "bytes": 1239,
+      "sha256": "6aed3e12ee8bb619d479b575978bde586c8a6b774a424356bd14fcb56538794b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-race-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-nonempty-head-lineage-omitted-race-body.resources.csv",
+      "bytes": 15540,
+      "sha256": "0c0af84b7080f9ea9dde0ea87ac2b6e588907bea6dfaf635c786ae12ca0498c3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-race-selected14.receipt.json",
+      "bytes": 8880,
+      "sha256": "65acb501cd63d6d6ee0c95b71742578a59a8e18df64b4ecf2fab1bd4f73bf2ec"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-nonempty-head-lineage-omitted-race.test",
+      "bytes": 108947352,
+      "sha256": "19989d95c480f5c5367a88238d00d30751589e4f95006fd39fa9cec1d8188abd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-normal.receipt.json",
+      "bytes": 9962,
+      "sha256": "36e0481d9d3f60cb22aed54ec1ccc776cf625c66d327339929fae1d00832dad3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-normal-compile.resources.csv",
+      "bytes": 7928,
+      "sha256": "a54a4698ec5c72209bc8a497e2e5f1b42b605a3eb3ad6dd6ff08764148ca772c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-normal-body.stdout",
+      "bytes": 1161,
+      "sha256": "ec3344221d5d96defc281f63fc611a46f72a31da2d038493b5a86c843a0fd6cf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-normal-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-normal-body.resources.csv",
+      "bytes": 2191,
+      "sha256": "f422fa4ae7ce7f381778624872ea5628e6065a326cb1395839aaf1200b4b6671"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/terminal-owner-custody-omitted/overlay.json",
+      "bytes": 298,
+      "sha256": "287bc8c3b7c16daeec3014ced772035ab2665f5126968cfae6f814de94bacc44"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-terminal-owner-custody-omitted-normal.test",
+      "bytes": 82034520,
+      "sha256": "030e8ed74561e2583f2e94efcf7d997b820e7141746b08f89b2b16a612c05be4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/source/sn/validator/release_archive_decision_v2.go",
+      "bytes": 18806,
+      "sha256": "78dc49519f12c9532cbb073de99c9063708ffe1aa53ea9e60f0e99cdf277e5f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/terminal-owner-custody-omitted/release_archive_decision_v2.go",
+      "bytes": 18748,
+      "sha256": "904600ac16fedbf5052a126af5f66eb05adb78dc708e36da8a13455757240c9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-race.receipt.json",
+      "bytes": 9966,
+      "sha256": "f4ebd2dea6433344393c5a89976914684eadda1ff2e59f45b48710457b9d2c52"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-race-compile.resources.csv",
+      "bytes": 10940,
+      "sha256": "f31d09ac744aa4a17d19071b58d34c9c77a50167b9f1e82ca59f805959f61b17"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-race-body.stdout",
+      "bytes": 1163,
+      "sha256": "75efae8d32789ed7f8f65236bc074af3ada2ecb4a64d371961a2bfae7284540c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-race-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-terminal-owner-custody-omitted-race-body.resources.csv",
+      "bytes": 13823,
+      "sha256": "ea38fc980e4ef31fb11e90a7dfa939b0c4f8a17cfdf6aa2235013a624e0c0e64"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-terminal-owner-custody-omitted-race.test",
+      "bytes": 108947264,
+      "sha256": "64cab0c490b84902bb067a8b8125dadfec29d2235fd664024116eb0ca641a2ba"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/validatorb6-four-controls-independent-readback-20261004.json",
+      "bytes": 26350,
+      "sha256": "3a23022665b552b95781a593dc1a04bee9260d52aa78fadb6f8a674369ee5746"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/validatorb6-normal-race14-vet-independent-readback-20261004.json",
+      "bytes": 10045,
+      "sha256": "e3355d4db83d939268fa3017af2ae6591420af27550c9d686488f9aa8c732a18"
+    }
+  ],
+  "remaining_control_results": [
+    {
+      "group": "nonempty-head-lineage-omitted",
+      "mode": "normal",
+      "root": "TestReleaseArchiveFullLineageCountsNonemptyHeadAndRefusesDoubleFold",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:539: signed double fold bypassed original complete archive lineage: <nil>"
+      ]
+    },
+    {
+      "group": "nonempty-head-lineage-omitted",
+      "mode": "race",
+      "root": "TestReleaseArchiveFullLineageCountsNonemptyHeadAndRefusesDoubleFold",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:539: signed double fold bypassed original complete archive lineage: <nil>"
+      ]
+    },
+    {
+      "group": "terminal-owner-custody-omitted",
+      "mode": "normal",
+      "root": "TestReleaseArchiveFullLineageTerminalRefusesLostOwner",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_terminal_custody_test.go:69: cached terminal ignored lost original scratch custody: epoch=7 terminal=true error=<nil>"
+      ]
+    },
+    {
+      "group": "terminal-owner-custody-omitted",
+      "mode": "race",
+      "root": "TestReleaseArchiveFullLineageTerminalRefusesLostOwner",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_terminal_custody_test.go:69: cached terminal ignored lost original scratch custody: epoch=8 terminal=true error=<nil>"
+      ]
+    }
+  ],
+  "conclusion": "Original14 normal/race positive roots and vet PASS; all six operative groups in both modes compile and fail at intended assertion. Prior eight independently verified control bodies retained, final four now verified. Exact selected component qualified.",
+  "limits": "Current release dependency/source join and broader-history/contention qualification still required. No whole PH-05, production or goal closure."
+}

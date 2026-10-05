@@ -1,0 +1,259 @@
+{
+  "sources": {
+    "server": {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current",
+      "commit": "530726fcd8067d2551ec45356096eab9e09f930c",
+      "tree": "417bbe2a68b8c88f6c59a13a5c6318017b4ffece",
+      "base": "1995218329ba712f82f53751653e3048aee79b02"
+    },
+    "sdk": {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request",
+      "commit": "9ae95704a2303f94963e9d2fad81fa5705a4698c",
+      "tree": "914fbb76cea7ca0e64d4f1ad59b674afedc18b46",
+      "base": "de904f9bb253f7cfd3b8d1618e5424c91faef42e"
+    },
+    "connect": {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/connect-customer-api-current",
+      "commit": "5654569957ac813cd4599dc54a917eee6d2420d7",
+      "tree": "8cc7e4e46fa3e8e2c07a9edd89f36895a19a44a1",
+      "base": "5def2fa4391ba7a1028af048c99c91cc1c7254fc"
+    }
+  },
+  "files": {
+    "server": [
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/controller/circle_transfer_request.go",
+        "bytes": 9193,
+        "sha256": "cdbb5e46f3858a65e30679bf7f5863c405aad814b4e86d74da2dd9c7d4eeaf81",
+        "git_blob": "0e28b310252a63ff5458e7e7ea3d5460b043e986",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/controller/circle_transfer_request_test.go",
+        "bytes": 14498,
+        "sha256": "2234c355dd22cabeb1cb68220854526c77a0857280993c2444bd619dd3c9a89b",
+        "git_blob": "ce65a51a64b37d4ea6bcb4cf05054c683e9e5002",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/controller/circle_wallet_controller.go",
+        "bytes": 21245,
+        "sha256": "70c4b3b4439654f7a9187ebc6a8ead15abd439eb3ec9e09af01707ad7c21bf89",
+        "git_blob": "e304b7971b165b513de74b8ed3374af97f2d2535",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/db_circle_transfer_request.go",
+        "bytes": 5130,
+        "sha256": "cd75562d22c779369ba580c79aec1fa90d310edfacb43a6cbc2604b070c70478",
+        "git_blob": "bc970dfd3c0b8273370af8d2382309d5a530383a",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/db_migrations.go",
+        "bytes": 384377,
+        "sha256": "2348b506cf1c0bafdce7434baebdc663f06300e8a01e37f968512d15d7b97f50",
+        "git_blob": "063de30ff8fb8dfc2d96558d4b920f419713a67e",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/go.mod",
+        "bytes": 10468,
+        "sha256": "ad4b307433de35ab9f40df50d0c6906ec2eef1a4bfdec1adad700c3b3c842147",
+        "git_blob": "d0059d62e34311ef3b8bac169b844af53cca8ef6",
+        "changed_from_base": false
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/go.sum",
+        "bytes": 67934,
+        "sha256": "a805fb68cf119986df0d3fb630081d7b0fcac1e7b0470181934bc6b763616555",
+        "git_blob": "11d1b2db4b76573c6f219c38e18f8dc5b3c78088",
+        "changed_from_base": false
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/model/circle_transfer_request.go",
+        "bytes": 11785,
+        "sha256": "d3fb77e7c161695808b78ba97a9dcb8e3880e4131702abff99e1275f7817d4eb",
+        "git_blob": "b2d7add91b279ae7100ce64b76d86e940a9f17e3",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-customer-current/model/circle_transfer_request_test.go",
+        "bytes": 8831,
+        "sha256": "4edb4d3afb7fee1f804a23479679394f733ae970c8650d57e69124c12bcf8652",
+        "git_blob": "16f72e95c8ef517d9edae79a99199ea3175338c9",
+        "changed_from_base": true
+      }
+    ],
+    "sdk": [
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/CUSTOMER-TRANSFER.md",
+        "bytes": 2050,
+        "sha256": "6d63d24aed672ed06d35f4728ca0a778ae3c62ff432f01619c0453a156e0544e",
+        "git_blob": "2d704d5454c7281e92625dc30dcafdad8aa22a68",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/api.go",
+        "bytes": 121955,
+        "sha256": "faf3b0672b518e763a6d4600de8ad8b315c288486b030cdeb57feac064a5d2b4",
+        "git_blob": "7fe70c8c863ce0be4d138702ce60e77cd77dcc4f",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/api_wallet_transfer_test.go",
+        "bytes": 2558,
+        "sha256": "60f3fd61bc9b78e2371ad7519469de371b0f3fb0f3a1eb204465b532f09adc1b",
+        "git_blob": "fc627179c034360ed39698143c1923b3ec236945",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/Makefile",
+        "bytes": 7629,
+        "sha256": "408ff192acaa824a435bd27de304a48d50acbbb249b5f5b41e0f66f548df07f5",
+        "git_blob": "091eda23bb401a108e379d82a5195d17f26cc6e2",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/coverage_report.txt",
+        "bytes": 160151,
+        "sha256": "778f1468d4ecdff2b7a797b85551a792b14f905bb3c5520384d58401ba3310b9",
+        "git_blob": "cb83a54f534d5b831a8bc89255954ea330cd0676",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/exports_gen.go",
+        "bytes": 610858,
+        "sha256": "aa161353acdd1aaa5d598aab0c702430ed626adf9cbd792d9a968daa51c11b02",
+        "git_blob": "43b4a37ba414b9d3e5d44e579fc97525ca307cd5",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/go.mod",
+        "bytes": 4430,
+        "sha256": "5efcf3cfe5c4faa6f742632f4af7852570ea2e46d58f60ed11922c5cad64191d",
+        "git_blob": "e28a3b7c5930655652a8437ff75c2f33ecaca959",
+        "changed_from_base": false
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/go.sum",
+        "bytes": 22131,
+        "sha256": "6110f0813f9121bd20144067e4dd0a90662b573ffe4a0b1587100e001b7c0b73",
+        "git_blob": "51a34d2454582bc5fe4d9bc63a2517d052729729",
+        "changed_from_base": false
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/include/urnetwork_sdk.def",
+        "bytes": 45399,
+        "sha256": "d195b8fcb9fdfbde1c3a6c945d5577346d4f6709efd2a571452c7c0fdc1a58c3",
+        "git_blob": "2533aa6da45ae6425db27ddc78e93365c88fa15b",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/include/urnetwork_sdk.h",
+        "bytes": 203885,
+        "sha256": "d9031a80d6c53807e78dbe6804953823bfb4af601e1a1e930d71467e7cbfb855",
+        "git_blob": "ad282c9e2f7823dcc5583644f3c54f733f2d0894",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/include/urnetwork_sdk.hpp",
+        "bytes": 1046081,
+        "sha256": "7bafd630876ec37401eae1c6355dce39d05008c333ad4e19621f9d9b475c4401",
+        "git_blob": "6ec5c6bb141f075896ce712c953578afb16439d7",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/cgo/smoke/customer_transfer_json.cpp",
+        "bytes": 1510,
+        "sha256": "ad795434665df0f2971c09bcd746fa9e749ec998e51c0175f097fe8ad7e6a8ae",
+        "git_blob": "90116035443feddf1748452899f6466483382b88",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/go.mod",
+        "bytes": 4376,
+        "sha256": "78a9d98753427b7e398649cd07e0666c3101f85f642b3b499bc2616ba0f6de98",
+        "git_blob": "aead1d9b51bd9196341f0334cd9c0ef334dde40c",
+        "changed_from_base": false
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/go.sum",
+        "bytes": 23530,
+        "sha256": "4f5ab98b1aa9019134094d693574f0370afa61413eaf93c75793fac927c463b3",
+        "git_blob": "df3a04db85e3bdc565d6668ed19040598b08b96c",
+        "changed_from_base": false
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/go.mod",
+        "bytes": 4438,
+        "sha256": "bfcc1ce3b6f2695113d350ec5f4742c0541df708937bc65d41c4e550cb3f4412",
+        "git_blob": "9f22ea055ea397dc5808f15a324ecf1e67342c67",
+        "changed_from_base": false
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/go.sum",
+        "bytes": 22382,
+        "sha256": "270c69d14d00d9ca06850dca2b1ebb653bb8aa7f6db654e60b5f9127683afb62",
+        "git_blob": "e67f63474f2046c12964518e7a11e8a984419dd6",
+        "changed_from_base": false
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/src/api_client.ts",
+        "bytes": 18095,
+        "sha256": "9441fbd57417089e0c28248cbc1ba5ab9e30f1c9267f7c9abb4630768366f742",
+        "git_blob": "67f974ed0a07ffde1187c1fc8556c1a29abde585",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/src/generated/client.ts",
+        "bytes": 168190,
+        "sha256": "724b6bf1c8471c8952206e811e2a6a278e7bd953dc9b9338f03848374333fdc0",
+        "git_blob": "00d565806ced8e975e5e101d8e74f67d6dd0defa",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/src/generated/openapi.ts",
+        "bytes": 178376,
+        "sha256": "0378fce441a6d402d8256acbb4277f35a19e7f3c0abbabd23ba672e857ce49ee",
+        "git_blob": "840798b6c965e54ef9a090cad9a27d8d693b4b8c",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/sdk-customer-request/js/test/customer_transfer.test.ts",
+        "bytes": 2887,
+        "sha256": "2a54640cd048454f82e078232e5cfd14ddfc9a03b7238435305dcf5a0dbda253",
+        "git_blob": "a9bfa503e9ea3f3fb692b51c08fc49ac68efc1e2",
+        "changed_from_base": true
+      }
+    ],
+    "connect": [
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/connect-customer-api-current/api/bringyour.yml",
+        "bytes": 458350,
+        "sha256": "743618affeeff89ca92f056b45f8ef5f9b859ba4557f32f1f79d5aaf28ecb435",
+        "git_blob": "8ab005aabc77fc58c31a4f7e9d2094112ed366ef",
+        "changed_from_base": true
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/connect-customer-api-current/go.mod",
+        "bytes": 3847,
+        "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7",
+        "git_blob": "da7de4a178b8f7cd5da18042d54c8950956e4aac",
+        "changed_from_base": false
+      },
+      {
+        "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/connect-customer-api-current/go.sum",
+        "bytes": 21922,
+        "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693",
+        "git_blob": "11555eee4473212e338379a8fc49e2af83b0490c",
+        "changed_from_base": false
+      }
+    ]
+  },
+  "limits": [
+    "Server graph stays exact199; new customer migration appends at758 after unchanged757 prefix.",
+    "SDK generated surfaces include unchanged de904 DeviceLocalSettings fields previously absent from its generated C++ header; no owned device behavior edits.",
+    "Connect only API schema changed over published5def. SDK and Server graphs remain separate."
+  ]
+}

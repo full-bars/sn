@@ -1,0 +1,53 @@
+{
+  "classification": "EXACT_SOURCE_MODULE_JOIN_NO_BEHAVIOR_CLAIM",
+  "limits": [
+    "Current-source graph preflight, public module source lookup/byte proof, composed role behavior and release qualification remain separate.",
+    "Server1d3c live model run remains on its original module graph; no retargeting or inherited new-graph full-suite acceptance.",
+    "This does not contain pending capacity and final monitor successors."
+  ],
+  "schema": "urnetwork-current-release-module-source-review-v1",
+  "selected_connect_commit": "631bcb282d392a24df6b509b89a0337c2fd4d7e7",
+  "selected_connect_version": "v0.0.0-20261003082047-631bcb282d39",
+  "sources": [
+    {
+      "changes": [
+        "go.mod",
+        "go.sum"
+      ],
+      "clean_head_tree_after_physical_readback_verified": true,
+      "commit": "b18e76dc53948d7fd6e7bf4dab0422db21062d87",
+      "exact_outside_module_mode_blob_identity_verified": true,
+      "module_sha256": {
+        "go.mod": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1",
+        "go.sum": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+      },
+      "physical_bytes_verified": 221456792,
+      "physical_git_blobs_verified": 20377,
+      "production_bytes_and_modes_unchanged": true,
+      "production_parent": "57285a1b496389924c0154edb1c74d0052d1ad14",
+      "role": "sn",
+      "source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/sn",
+      "tree": "d07834913092d6213fd52aefbcbc9b3ef3d08266"
+    },
+    {
+      "changes": [
+        "go.mod",
+        "go.sum"
+      ],
+      "clean_head_tree_after_physical_readback_verified": true,
+      "commit": "5089a9dde0ca5d60a8dda0493c861de53ed4e0c4",
+      "exact_outside_module_mode_blob_identity_verified": true,
+      "module_sha256": {
+        "go.mod": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8",
+        "go.sum": "faf759f6bd62a41e196e796268466aadb3dcc13ac3b65fb724bbdc870f53e5b6"
+      },
+      "physical_bytes_verified": 600217336,
+      "physical_git_blobs_verified": 5387,
+      "production_bytes_and_modes_unchanged": true,
+      "production_parent": "1d3c275b698d58c528ff87ac24903e9da1b433ea",
+      "role": "server",
+      "source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/server",
+      "tree": "bb861b9e88b268dfc7b092f66c3330f79f5f3a0c"
+    }
+  ]
+}

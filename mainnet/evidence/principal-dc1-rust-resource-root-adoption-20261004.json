@@ -1,0 +1,130 @@
+{
+  "schema": "mainnet-scoped-resource-adoption-v1",
+  "status": "CONDITIONALLY_ADOPTED_PREPHASE_GATES_REQUIRED",
+  "proposal": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/principal-dc1-rust-finite-resource-proposal-v1.json",
+    "sha256": "04dc72dade623482791970e09319090ee81cb818d0ed9c30a261e58137b4fcf6"
+  },
+  "verified_inputs": [
+    {
+      "bytes": 39124328,
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "5b32bd53b8a08d8e206daed51f3fce40cdc0729038ff96bd0ca845596a2c1019"
+    },
+    {
+      "bytes": 15425,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/intake.json",
+      "sha256": "125a2efa90ae21c5e18be5351d6d8e717ea12b4c2fdeb65d2f00ef8f5105b83e"
+    },
+    {
+      "bytes": 118692,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "bytes": 2260,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "bytes": 11522,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/operative-controls.json",
+      "sha256": "41d002bdbe23331f0f2dce90b59bc08e0328689c494fbb5c0cadb22244879287"
+    },
+    {
+      "bytes": 3385,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/peer-links-receipt.json",
+      "sha256": "2fcc64413b4df0d88a530564ca2891a6c42e514e6afe9b1ed74552f3d7cdf4dd"
+    },
+    {
+      "bytes": 7119,
+      "path": "/mnt/data/sn-testnet/sol-native-incremental-20261004/evidence/04-compile-distinct-native-engines-receipt.json",
+      "sha256": "88d86d59a24a5d7aaf080a6e7ebc555bdadc21edf4909726e4da7d27ed3a5b79"
+    },
+    {
+      "bytes": 5184,
+      "path": "/mnt/data/sn-testnet/sol-native-incremental-20261004/evidence/05-compile-native-rust-test-receipt.json",
+      "sha256": "445e9c9878b85f4186ff14a3ee3ca649fe469deeb4d85f8f6be575adcbd212ce"
+    },
+    {
+      "bytes": 2699,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/recipe.json",
+      "sha256": "a12114c9241699c842999bbf9dd83a38196bfd2f6b40f9eb770bb48d351c1cf9"
+    },
+    {
+      "bytes": 654128,
+      "path": "/home/by/.rustup/toolchains/1.89.0-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "c6ac0142c05a60b0f6c15e1a118bd5ac3bd04924cd6dc0c328f501c5f86e4142"
+    },
+    {
+      "bytes": 69128,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/principal-dc1-selected-mainnet-graph.receipt.json",
+      "sha256": "3b195bc796ad3828ed5b034f81e0477aed04b258a2b50dd9742cd387afd74dd4"
+    },
+    {
+      "bytes": 22779,
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-execution-witness/evidence/selectors.json",
+      "sha256": "7e6696950b30e6dbb96588ad0fa08df9ab0a331c8dcd4d4c0a4badb427a9e319"
+    },
+    {
+      "bytes": 1017,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/source-stage-receipt.json",
+      "sha256": "e65b865f88cabb059a1fc40940aaa6e929e786a5baed91f60ac17a5155c77fb3"
+    }
+  ],
+  "baseline": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/source-stage-baseline-v2.json",
+    "sha256": "6daddb91b697c57c7cb12f7eaacbb175ade967cfa6883045493f517c2a34b02f"
+  },
+  "lease": {
+    "pid": 620836,
+    "starttime": "94830154",
+    "device": 2081,
+    "inode": 16941991,
+    "fd": 3
+  },
+  "decision": {
+    "scope": {
+      "go_roots_excluded_from_this_grant": true,
+      "other_exporter_roots_included": 3,
+      "required_principal_jobs": [
+        "principal-present.json",
+        "principal-zero.json",
+        "principal-absent.json",
+        "principal-missing-api.json"
+      ],
+      "rust_exact_roots": 24,
+      "rust_operative_control_groups": 2,
+      "server_db_oci_network_excluded": true,
+      "two_distinct_owned_engines": [
+        "runtime-historical-capture",
+        "runtime-historical-proof"
+      ]
+    },
+    "cap_bytes": 60129542144,
+    "original_baseline_bytes": 113681502208,
+    "data_floor_bytes": 53551960064,
+    "two_times_remaining_full_forecast_bytes": 23622320128,
+    "required_available_data_bytes": 77174280192,
+    "memory_threshold_with_one_existing_c04_body_bytes": 122406567936,
+    "memory_threshold_without_existing_c04_body_bytes": 120259084288,
+    "only_one_compiler_at_a_time": true,
+    "shared_cargo_target_serial": true,
+    "no_live_runner_guard_mutation": true,
+    "fresh_phase_resource_check_required": true
+  },
+  "readback": {
+    "available_data_bytes": 84048502784,
+    "free_inodes": 93777251,
+    "available_memory_bytes": 120412147712,
+    "data_threshold_met_now": true,
+    "memory_threshold_met_now": false
+  },
+  "limits": [
+    "Approval permits the additive56GiB cumulative cap while preserving the original baseline; it does not permit failing a resource gate.",
+    "Do not overlap any Go compiler or second short Go body with Rust compilation; use fresh live process evidence to choose the concurrent-body threshold.",
+    "Do not stop healthy c04 to free memory. Collect Server controls and other already admitted work while waiting for sufficient resources.",
+    "Actual compile/resource samples and retained owned ELFs must be recorded; forecast is not measured peak.",
+    "No Go body, production deployment or live chain authority is granted."
+  ]
+}

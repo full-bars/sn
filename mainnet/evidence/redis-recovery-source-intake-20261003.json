@@ -1,0 +1,449 @@
+{
+  "schema": "urnetwork-redis-recovery-intake-v1",
+  "status": "FROZEN_SOURCE_NO_ASTRA_TEST_BUILD_OR_VET",
+  "source": {
+    "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/server",
+    "head": "f30583a5738654c5bf2d779645768785229b5aef",
+    "tree": "ab161d738d28f0208e1259fe51104f1de9c9f6a8",
+    "base": "3f32d7301c9e381eac4de368c62357c14dfc36a7",
+    "intermediate": "89b295d7d6b41a33fe39c4c795e3aced5993a095",
+    "production": "164e42a6c9900b55402a2469139f85bb5daf8f74",
+    "test_only_successor": "f30583a5738654c5bf2d779645768785229b5aef"
+  },
+  "jobs": [
+    {
+      "package": "./model",
+      "roots": [
+        "TestRedisAdmissionPublicRefusalPreservesOtherReservations",
+        "TestRedisAdmissionPartialReserveErrorCompensatesKnownTokens",
+        "TestRedisAdmissionPublicCanceledFenceCompensatesWithoutCaller",
+        "TestRedisAdmissionExpiredPostReserveClockCompensates",
+        "TestRedisAdmissionPrePublicationPanicCompensatesAndPropagates",
+        "TestRedisRecoveryPublicRequestResumesRetainedAbandonedMarker",
+        "TestRedisRecoveryExhaustedCleanupRetainsExactMarkerForNextCaller",
+        "TestRedisRecoveryLostReleaseAcknowledgementRetriesExactRequest",
+        "TestRedisRecoveryLostReserveAcknowledgementSurvivesCallerState",
+        "TestRedisRecoveryLivePublicationAndLostCommitStayReserved",
+        "TestRedisRecoveryMissingMarkerAndForeignTokenRemainUntouched",
+        "TestRedisRecoveryUnknownSqlAndMalformedMarkerDoNotBlockValidPeer",
+        "TestRedisRecoveryBoundedPageDoesNotStarveLaterAbandonedRequest",
+        "TestRedisRecoveryPublicInsufficientBalanceResumesSameRequest",
+        "TestRedisRecoveryCanceledSqlPageKeepsSuccessfulPrimaryAndMarkers",
+        "TestRedisRecoveryExpiredPagePerformsNoSqlOrRedisMutation",
+        "TestRedisRecoveryHardErrorDominatesTransientCleanup"
+      ],
+      "expected": 17,
+      "selector": "^(TestRedisAdmissionPublicRefusalPreservesOtherReservations|TestRedisAdmissionPartialReserveErrorCompensatesKnownTokens|TestRedisAdmissionPublicCanceledFenceCompensatesWithoutCaller|TestRedisAdmissionExpiredPostReserveClockCompensates|TestRedisAdmissionPrePublicationPanicCompensatesAndPropagates|TestRedisRecoveryPublicRequestResumesRetainedAbandonedMarker|TestRedisRecoveryExhaustedCleanupRetainsExactMarkerForNextCaller|TestRedisRecoveryLostReleaseAcknowledgementRetriesExactRequest|TestRedisRecoveryLostReserveAcknowledgementSurvivesCallerState|TestRedisRecoveryLivePublicationAndLostCommitStayReserved|TestRedisRecoveryMissingMarkerAndForeignTokenRemainUntouched|TestRedisRecoveryUnknownSqlAndMalformedMarkerDoNotBlockValidPeer|TestRedisRecoveryBoundedPageDoesNotStarveLaterAbandonedRequest|TestRedisRecoveryPublicInsufficientBalanceResumesSameRequest|TestRedisRecoveryCanceledSqlPageKeepsSuccessfulPrimaryAndMarkers|TestRedisRecoveryExpiredPagePerformsNoSqlOrRedisMutation|TestRedisRecoveryHardErrorDominatesTransientCleanup)$"
+    },
+    {
+      "package": "./model",
+      "roots": [
+        "TestCreateTransferEscrowSerializesWithDestinationDeactivation",
+        "TestOpenContractRuntimeQueriesUseStructuralPredicate",
+        "TestOpenContractPlansIgnoreFalseZeroGeneratedOpenStats",
+        "TestProberShardCompanionReplyPlansStayEndpointScoped",
+        "TestContractLifecycleWritesUsePrimaryDatabaseClockAfterLocks",
+        "TestContractLifecycleEscrowBranchClockGuardRejectsMissingOrLateLocks",
+        "TestRedisContractClockGuardRejectsBypassedLocksAndErrors",
+        "TestRedisAdmissionMixedSettlementReplay",
+        "TestRedisAdmissionAtomicSameBalanceBudget",
+        "TestRedisAdmissionRollbackExpiresWithoutDatabaseLocks",
+        "TestRedisAdmissionCompanionUsesSamePayerAndCredit",
+        "TestRedisAdmissionRecoveryAfterLossAndLateRelease",
+        "TestRedisAdmissionPartialEvictionCannotReleaseNeighbor",
+        "TestRedisAdmissionOlderRecoveryPreservesYoungerLease",
+        "TestProviderCurrentMigrationRedisPaidFreeUsageRemainsSubnetOnly",
+        "TestProviderCurrentMigrationRedisLegacySettlementKeepsAsset"
+      ],
+      "expected": 16,
+      "selector": "^(TestCreateTransferEscrowSerializesWithDestinationDeactivation|TestOpenContractRuntimeQueriesUseStructuralPredicate|TestOpenContractPlansIgnoreFalseZeroGeneratedOpenStats|TestProberShardCompanionReplyPlansStayEndpointScoped|TestContractLifecycleWritesUsePrimaryDatabaseClockAfterLocks|TestContractLifecycleEscrowBranchClockGuardRejectsMissingOrLateLocks|TestRedisContractClockGuardRejectsBypassedLocksAndErrors|TestRedisAdmissionMixedSettlementReplay|TestRedisAdmissionAtomicSameBalanceBudget|TestRedisAdmissionRollbackExpiresWithoutDatabaseLocks|TestRedisAdmissionCompanionUsesSamePayerAndCredit|TestRedisAdmissionRecoveryAfterLossAndLateRelease|TestRedisAdmissionPartialEvictionCannotReleaseNeighbor|TestRedisAdmissionOlderRecoveryPreservesYoungerLease|TestProviderCurrentMigrationRedisPaidFreeUsageRemainsSubnetOnly|TestProviderCurrentMigrationRedisLegacySettlementKeepsAsset)$"
+    }
+  ],
+  "vets": [
+    "./model"
+  ],
+  "causal": [
+    {
+      "name": "missing-compensation",
+      "kind": "operative omission, not historical full body",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-compensation/overlay.json",
+      "package": "./model",
+      "selector": "^(TestRedisAdmissionPublicCanceledFenceCompensatesWithoutCaller)$",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "canceled caller prevented exact-token compensation"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ]
+    },
+    {
+      "name": "missing-retained-recovery",
+      "kind": "operative omission, not historical full body",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-retained-recovery/overlay.json",
+      "package": "./model",
+      "selector": "^(TestRedisRecoveryPublicRequestResumesRetainedAbandonedMarker|TestRedisRecoveryExhaustedCleanupRetainsExactMarkerForNextCaller|TestRedisRecoveryLostReserveAcknowledgementSurvivesCallerState|TestRedisRecoveryPublicInsufficientBalanceResumesSameRequest)$",
+      "expected_failed_roots": 4,
+      "intended_assertions": [
+        "fresh public caller did not recover retained marker",
+        "next caller left exhausted cleanup to lease expiry",
+        "fresh caller needed lost in-memory reserve outcome",
+        "known insufficient balance did not resume the same public request"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ]
+    },
+    {
+      "name": "missing-writer-fence",
+      "kind": "operative omission, not historical full body",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-writer-fence/overlay.json",
+      "package": "./model",
+      "selector": "^(TestRedisRecoveryLivePublicationAndLostCommitStayReserved)$",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "concurrent recovery released an uncommitted writer"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ]
+    },
+    {
+      "name": "missing-page-rotation",
+      "kind": "operative omission, not historical full body",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-page-rotation/overlay.json",
+      "package": "./model",
+      "selector": "^(TestRedisRecoveryBoundedPageDoesNotStarveLaterAbandonedRequest)$",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "bounded page starved the later abandoned request"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ]
+    },
+    {
+      "name": "missing-cleanup-retry",
+      "kind": "operative omission, not historical full body",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-cleanup-retry/overlay.json",
+      "package": "./model",
+      "selector": "^(TestRedisRecoveryLostReleaseAcknowledgementRetriesExactRequest)$",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "lost release acknowledgement did not recover"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ]
+    },
+    {
+      "name": "disconnected-public-query",
+      "kind": "operative omission, not historical full body",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/disconnected-public-query/overlay.json",
+      "package": "./model",
+      "selector": "^(TestOpenContractRuntimeQueriesUseStructuralPredicate)$",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "public companion wrapper is disconnected from the guarded query owner"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ]
+    }
+  ],
+  "published": [
+    {
+      "module": "github.com/urnetwork/connect",
+      "version": "v0.0.0-20261003042459-a53ed36a6e5d",
+      "sum": "h1:NlxDU751IaXuCNLjEHS5nvZgrydm4iIw6rBLnGy5e0I=",
+      "go_mod_sum": "h1:A88Ceqd8zbfpUB4+1pTsT1G3kiS9kgB22ZuljBZVw4k=",
+      "commit": "a53ed36a6e5d0c3d1c2b8c6951ce853fcfd83e06",
+      "zip_files_verified": 3581,
+      "zip": {
+        "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/urnetwork/connect/@v/v0.0.0-20261003042459-a53ed36a6e5d.zip",
+        "bytes": 37048452,
+        "sha256": "3430d1b232846dceee88c6cf79de55be4dc2bfe854376172c3cb12ad516cd827"
+      },
+      "mod": {
+        "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/urnetwork/connect/@v/v0.0.0-20261003042459-a53ed36a6e5d.mod",
+        "bytes": 3847,
+        "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7"
+      },
+      "info": {
+        "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/urnetwork/connect/@v/v0.0.0-20261003042459-a53ed36a6e5d.info",
+        "bytes": 196,
+        "sha256": "b697567ca34dbbb89e1e0bfdf360d38db3fda4ce67c22246da6907ab1bdf1d83"
+      }
+    },
+    {
+      "module": "github.com/urnetwork/sdk",
+      "version": "v0.0.0-20261003032453-9ae95704a230",
+      "sum": "h1:73/fQJqKcJZE5YQddv7MDVsn2Mghqsc8vGGOxFFO1HI=",
+      "go_mod_sum": "h1:IuPYnLZ5j1SP+gm3O4a4SxbOT4U/CPKEqONI1iLO5yk=",
+      "commit": "9ae95704a2303f94963e9d2fad81fa5705a4698c",
+      "zip_files_verified": 523,
+      "zip": {
+        "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/urnetwork/sdk/@v/v0.0.0-20261003032453-9ae95704a230.zip",
+        "bytes": 27348131,
+        "sha256": "16f17139752838efb47c1ef9f3dbd75116d5934f7adbce82cfb174ec3a039ce3"
+      },
+      "mod": {
+        "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/urnetwork/sdk/@v/v0.0.0-20261003032453-9ae95704a230.mod",
+        "bytes": 4376,
+        "sha256": "78a9d98753427b7e398649cd07e0666c3101f85f642b3b499bc2616ba0f6de98"
+      },
+      "info": {
+        "path": "/mnt/data/sn-testnet/gomodcache/cache/download/github.com/urnetwork/sdk/@v/v0.0.0-20261003032453-9ae95704a230.info",
+        "bytes": 192,
+        "sha256": "47db6c5725120b616025f15ac656086633c21ae267558d21842936b53cc32dfc"
+      }
+    }
+  ],
+  "local": {
+    "sn": {
+      "path": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/source/sn",
+      "authority": {
+        "commit": "8cb08c95ad0892dbe81e1886d5685adf408907b0",
+        "git_blobs": 20233,
+        "tree": "3860122267f0338f0b72b75341183f50d8845647"
+      },
+      "modules": [
+        {
+          "path": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/source/sn/go.mod",
+          "bytes": 11263,
+          "sha256": "effdb95eba38a5faaff2bec91053cddc5328ad6573dc1ace561fb80e45e9595d"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/source/sn/go.sum",
+          "bytes": 66880,
+          "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+        }
+      ]
+    },
+    "proxy": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "authority": {
+        "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+        "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+      },
+      "modules": [
+        {
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy/go.mod",
+          "bytes": 1972,
+          "sha256": "bd538f2de13d314e5604022082b28bb692702e3b68aa869abf1df2dfeab3a4e1"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy/go.sum",
+          "bytes": 8881,
+          "sha256": "2b76cc33188e10bb564bbe78f82aa16e49d36700a7ad17ef44f94e716fe6e50d"
+        }
+      ]
+    },
+    "glog": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "authority": {
+        "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+        "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+      },
+      "modules": [
+        {
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog/go.mod",
+          "bytes": 109,
+          "sha256": "5022a0fd461de289e6e84a4f0930a362613b5bcaaffe090a201e68b6714cb40b"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog/go.sum",
+          "bytes": 167,
+          "sha256": "6ba1f1ec5cac9d186a7701f560308f919d1d8ddccb49cbf2aaf6281a48268c74"
+        }
+      ]
+    },
+    "goidenticons": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "authority": {
+        "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+        "tree": "553487079352d9544edb62850328305e97668790"
+      },
+      "modules": [
+        {
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons/go.mod",
+          "bytes": 157,
+          "sha256": "67dd6efd0fafd9d54e4bbf953eb07c9526ba55ee0dd4eb3e752ef201f619f28c"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons/go.sum",
+          "bytes": 386,
+          "sha256": "bd0d81bad9b37ba97715ebb3124e837dcaa4475b92f126f9be95ba7a690fafa0"
+        }
+      ]
+    },
+    "userwireguard": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "authority": {
+        "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+        "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+      },
+      "modules": [
+        {
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard/go.mod",
+          "bytes": 237,
+          "sha256": "470b20749c9d46b715bce19db1e50618892417a2a4d72b2697efb0e55070f965"
+        },
+        {
+          "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard/go.sum",
+          "bytes": 873,
+          "sha256": "a0f1fdc50b67dc08e03b7f0e7f6b83acc4722dfc47e29a9f77fe91e2b683ed0b"
+        }
+      ]
+    }
+  },
+  "environment": {
+    "GOWORK": "off",
+    "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+    "GOCACHE": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+    "GOFLAGS": "-mod=readonly",
+    "umask": "0077",
+    "tmp": "private owned root and TMPDIR; fixture container helpers retain explicit required modes",
+    "disk_floor_gib": 110
+  },
+  "prior_graph_intake": {
+    "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-published/evidence/intake-v2.json",
+    "bytes": 22163,
+    "sha256": "3cc5e995411dd006ec7f564bc236fced8fa5ed022017d208ee6833929bf1aeef"
+  },
+  "limits": [
+    "Original full model3f32 run remains live and unchanged; no second full-model invocation requested by this intake.",
+    "Original deactivation reservation leak and stale AST query-target failures retained; new source covers those boundaries only.",
+    "Two later dynamic-prober distribution/eligibility failures and public unbounded grant-query work remain open; this is not full-candidate acceptance.",
+    "Compensation has one300s owned budget; each physical attempt is bounded1s; optional post-foreground recovery has one1s work deadline plus existing transaction-join cleanup semantics.",
+    "Unknown/unmarked Redis tokens are retained, never enrolled. Compatible v2 marker recovery is eventual on the same balance; no global scan or SQL-unknown release.",
+    "No financial policy, deployed service, release or mainnet authority claim."
+  ],
+  "files": [
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/source-join.json",
+      "bytes": 1856842,
+      "sha256": "b4c9cb6cc28db05b24358687165562e2214b18b8b9aeb32827acff11629891ad"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/jobs.json",
+      "bytes": 4310,
+      "sha256": "1d181f44f0d3564d6b2c8a2c4b6778bb9b1c34ce4910b7159740b746b9bfa1bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/seal-intake.py",
+      "bytes": 9445,
+      "sha256": "ddd8bfee0fd9c1b351dc9e18dad12318ee0bd6676f0dc5d9fcd43d9cff7424c2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/server/model/open_contract_plan_test.go",
+      "bytes": 18989,
+      "sha256": "a01c570f9de422a86e450c94cf53bc5fa40b8d2d4c50e27edd29ffe2d60fa8d1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/server/model/subscription_model.go",
+      "bytes": 206268,
+      "sha256": "1e61c1f1010d4e5e0d0d556470515af5b60e671386f978fa7afdba4270f2e580"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/server/model/subscription_redis_admission.go",
+      "bytes": 16316,
+      "sha256": "8a3364281de0a3360d5824b9dc1ef3102e5f13cc8bd638dbf3de491d95398649"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/server/model/subscription_redis_recovery.go",
+      "bytes": 15292,
+      "sha256": "bb0e8fe5aef9101d9bdfe5c7c4f0c3fd18cc92346e43bfe54db52187186e15e3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/server/model/subscription_redis_recovery_test.go",
+      "bytes": 20695,
+      "sha256": "5dadb83ff6a15fb1b45f4c62a2c434076f1d95f15e4230882df8406bf31f355e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/server/model/subscription_redis_refusal_test.go",
+      "bytes": 10348,
+      "sha256": "edfe717183e87d7739bc50653fa7a847b538b44361033c0245246bff30de33c6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/server/go.mod",
+      "bytes": 10468,
+      "sha256": "15b67ff48706dab1f0080e6d19a812ad527663e0da984116a1b6b6ae45b1a018"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/server/go.sum",
+      "bytes": 69304,
+      "sha256": "8ca9a7f5aa611275635d794c251770f4d43e2d664ab6762c4d7742a1af98b6a0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/disconnected-public-query/subscription_model.go",
+      "bytes": 206174,
+      "sha256": "9000d67271d887524dd1f99cb960114f47f51ad3f68a6e742cb1099d83de8b9d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-cleanup-retry/subscription_redis_recovery.go",
+      "bytes": 15325,
+      "sha256": "b1667adb751738b5b075f307e931bb53799fb8b22f80aea289b71e98b514c566"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-compensation/subscription_redis_recovery.go",
+      "bytes": 15349,
+      "sha256": "8a70f5bbfe1e925a25855d9df046486e22096b9741055c4eb92df713639dca99"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-page-rotation/subscription_redis_recovery.go",
+      "bytes": 15279,
+      "sha256": "66643d5437e224a3c570317a62d78afbfcda7fb05026b05611f4ca1a64889497"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-retained-recovery/subscription_redis_recovery.go",
+      "bytes": 15325,
+      "sha256": "20affb8d06dbeafe2326dcec5cbfb338a4d762d9819f0bbe627c913ce033b944"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-writer-fence/subscription_redis_recovery.go",
+      "bytes": 15278,
+      "sha256": "835f072ac0c9fbf2f1549da3fb0eaa1790252a3b30b04cb91add9c50db4e3c3b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/disconnected-public-query/overlay.json",
+      "bytes": 291,
+      "sha256": "bb9c6f7da9d1838bc5aa1eaf3bbffdb803a608799a1c1ab09fa31288551298eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-cleanup-retry/overlay.json",
+      "bytes": 305,
+      "sha256": "064dfd11f3961bc6884a92a0244c7e9d1be7fce9231d06dbd6586c594bac2a83"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-compensation/overlay.json",
+      "bytes": 304,
+      "sha256": "9bfeaf50828f7497ba6f2e21f8fb81c4c3ad6e10e8c02880e7e7627e0436f678"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-page-rotation/overlay.json",
+      "bytes": 305,
+      "sha256": "b47d69de796d15231d7a783a7110509fcbdfad7e73218edcefba317df2ba5e6b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-retained-recovery/overlay.json",
+      "bytes": 309,
+      "sha256": "91b2babdd7e2dc6e3d5930db11ba501662bc263ced1c8ce9e8c9c2a3233a22f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-redis-recovery/evidence/overlays/missing-writer-fence/overlay.json",
+      "bytes": 304,
+      "sha256": "b7e3f5ddb1ec2348867d74c2211e2b5bcb5b6d385b816592f2c63ef18591d273"
+    }
+  ]
+}

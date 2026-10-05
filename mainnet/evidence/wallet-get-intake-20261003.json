@@ -1,0 +1,236 @@
+{
+  "causal": [
+    {
+      "expected_fail_roots": 5,
+      "kind": "explicit-operative-retry-omission-not-historical-body",
+      "name": "retry-omission",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/retry-omission.overlay.json",
+      "positive_selector": "^(TestCircleReadMalformedBalancesNeverBecomeZero|TestPaymentReadCircleJoinedHardCauseDominatesRetry)$",
+      "selector": "^(TestCircleReadEntityKeyRetriesAndRejectsMalformedKey|TestCircleReadNotificationBindsKeyAndSignature|TestCircleReadWalletIdentityAndRequiredFields|TestCircleReadWalletAndBalancePaginationUsesResponseLinks|TestPaymentReadRetryAfterBoundsAndTransientInternalError)$"
+    },
+    {
+      "expected_fail_roots": 1,
+      "kind": "explicit-operative-next-link-omission",
+      "name": "link-omission",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/link-omission.overlay.json",
+      "positive_selector": "^TestCircleReadWalletIdentityAppliesToEveryListMember$",
+      "selector": "^TestCircleReadWalletAndBalancePaginationUsesResponseLinks$"
+    },
+    {
+      "expected_fail_roots": 1,
+      "kind": "explicit-borrowed-owner-scope-omission",
+      "name": "nested-budget",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/nested-budget.overlay.json",
+      "positive_selector": "^TestCircleReadEarlierCallerDeadlineBoundsComposite$",
+      "selector": "^TestCircleReadCompositeOperationSharesOneBudget$"
+    },
+    {
+      "expected_fail_roots": 1,
+      "kind": "explicit-retry-after-pause-omission",
+      "name": "retry-after-omission",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/retry-after-omission.overlay.json",
+      "positive_selector": "^TestPaymentReadCirclePermanentResponsesDoNotRetry$",
+      "selector": "^TestPaymentReadRetryAfterBoundsAndTransientInternalError$"
+    },
+    {
+      "expected_fail_roots": 1,
+      "kind": "explicit-authenticated-redirect-policy-omission",
+      "name": "redirect-omission",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/redirect-omission.overlay.json",
+      "positive_selector": "",
+      "selector": "^TestPaymentReadRedirectCannotForwardCredentials$"
+    }
+  ],
+  "dependency_graph": {
+    "config": "93dc65fd84da9a0f5423b5cab9bfc650692fded8",
+    "connect": "v0.0.0-20261002163946-e0d75562aa23",
+    "gowork": "off",
+    "sctp": "v0.0.0-20261002163341-6443417d70dc",
+    "unchanged_from": "630271301fdc18614cae6af76fed7d8c0c2c8ac4"
+  },
+  "expected_roots": 26,
+  "files": [
+    {
+      "bytes": 15679,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage/controller/circle_read.go",
+      "sha256": "bd25a8cf85b5f64d9a50f312667ccc148fe33af3f3bbb1bd9128c3d020004cb3"
+    },
+    {
+      "bytes": 25642,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage/controller/circle_read_test.go",
+      "sha256": "b25eb551bf8730b0071cf5d80df6b8a4a9342fde52d800bebd588d8c42213c73"
+    },
+    {
+      "bytes": 22611,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage/controller/circle_wallet_controller.go",
+      "sha256": "293c33300e6b444562c43f1abce45e6206dcd44cc0a99ddc7327d5eb7b240c9b"
+    },
+    {
+      "bytes": 10401,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage/controller/payment_read_retry.go",
+      "sha256": "123487521230fb08af6375876bfb54507641ad80db0c21d00aafb3471d687ea3"
+    },
+    {
+      "bytes": 17128,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage/controller/payment_read_retry_test.go",
+      "sha256": "28879ddfc47a57247ad03180ca152d526446a5d32aaadbe383cd50673570721a"
+    },
+    {
+      "bytes": 10468,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage/go.mod",
+      "sha256": "ad4b307433de35ab9f40df50d0c6906ec2eef1a4bfdec1adad700c3b3c842147"
+    },
+    {
+      "bytes": 67934,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage/go.sum",
+      "sha256": "a805fb68cf119986df0d3fb630081d7b0fcac1e7b0470181934bc6b763616555"
+    },
+    {
+      "bytes": 17960,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage/controller/circle_client_controller.go",
+      "sha256": "86baa672a7d866cca821678a91eb29154d4dff6bea10bb3b05d2d974555bf4e1"
+    },
+    {
+      "bytes": 2531,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage/controller/coinbase_client_controller.go",
+      "sha256": "46027c4fb30ccc91b3b1cde652edd8d71525fd442d4c864dc676952eb53ffb0f"
+    },
+    {
+      "bytes": 2008,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/post-source-join.json",
+      "sha256": "f21cbf1fb82d81505ff295cc0946df48ed27c951476e37add0734afba88a47cf"
+    },
+    {
+      "bytes": 10409,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/retry-omission.go",
+      "sha256": "90ffd429df7e52eead14a374352a6e32500496e45efcc20e33f97eabd04b664c"
+    },
+    {
+      "bytes": 242,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/retry-omission.overlay.json",
+      "sha256": "a12519bc753bcd601f0167d2d0b51d012b2fbe4a96e0b7ea3295da325119d3c0"
+    },
+    {
+      "bytes": 15737,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/link-omission.go",
+      "sha256": "f580e38d3d3ffb083abf4e72353d3ec523ae76bfb5260eccf2b7f31ddbd8aab3"
+    },
+    {
+      "bytes": 234,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/link-omission.overlay.json",
+      "sha256": "3ecf841c717ee9616f263d915cff4e26378bf497fd2a04c39e74e15353125c08"
+    },
+    {
+      "bytes": 10410,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/nested-budget.go",
+      "sha256": "3f19a4bdf03b57ef16c534a1585e17a966a324cb77698f2491fc8c16e713eb50"
+    },
+    {
+      "bytes": 241,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/nested-budget.overlay.json",
+      "sha256": "4cfaae05a83c2bbb1c3209aea978fbdba4a03534aeaf5749d5ea79718c30f3d1"
+    },
+    {
+      "bytes": 10348,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/retry-after-omission.go",
+      "sha256": "c6a4bf811f0d000620507793a38232f331adea954d0c315e8ecfbeab27b16bb5"
+    },
+    {
+      "bytes": 248,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/retry-after-omission.overlay.json",
+      "sha256": "ed841f9860870c647cd511c3374435262244ccaa09074494cb366b7bed6327ae"
+    },
+    {
+      "bytes": 10327,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/redirect-omission.go",
+      "sha256": "291c62e1bf7a29812f889b3a8e77830a8cc45714a978d47e6a442e03cb38c434"
+    },
+    {
+      "bytes": 245,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/redirect-omission.overlay.json",
+      "sha256": "5679456c758f58faa2c1b58136b17b5951990fbeec33caf4206e6c5e54450b77"
+    },
+    {
+      "bytes": 17899,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/circle-contract-review/list-wallet-balance.md",
+      "sha256": "aaee9e8006d888edd8ee30d05468e1ccb39a9489f0094e9691b451f0e18ccbda"
+    },
+    {
+      "bytes": 19327,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/circle-contract-review/list-wallets.md",
+      "sha256": "1cf0df5fe1294ffcbf564ab6d8cdd949e3af2d38bd18cfc43f688307ae2bdffb"
+    },
+    {
+      "bytes": 7672,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/create-wallet-intake.go",
+      "sha256": "1a623077e28af0a8b2ceffad787577279eaabd85fcbb2c8be1d49f875463c88a"
+    }
+  ],
+  "neighbor_candidates": [
+    "TestFeeToUsd",
+    "TestCircleInvalidDestinationErrorClassification"
+  ],
+  "new_roots": 14,
+  "package": "./controller",
+  "post_source_join": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/wallet-get-25f617dc/post-source-join.json",
+  "prior_roots": 12,
+  "protocol_references": [
+    {
+      "bytes": 17899,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/circle-contract-review/list-wallet-balance.md",
+      "sha256": "aaee9e8006d888edd8ee30d05468e1ccb39a9489f0094e9691b451f0e18ccbda",
+      "source_url": "https://developers.circle.com/api-reference/wallets/user-controlled-wallets/list-wallet-balance.md"
+    },
+    {
+      "bytes": 19327,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/circle-contract-review/list-wallets.md",
+      "sha256": "1cf0df5fe1294ffcbf564ab6d8cdd949e3af2d38bd18cfc43f688307ae2bdffb",
+      "source_url": "https://developers.circle.com/api-reference/wallets/user-controlled-wallets/list-wallets.md"
+    }
+  ],
+  "roots": [
+    "TestCircleReadBalanceCancellationJoinsAndDiscardsPartialList",
+    "TestCircleReadCanceledAdmissionDoesNotLoadConfigOrCreateToken",
+    "TestCircleReadCensusCapacityIsBounded",
+    "TestCircleReadCompositeOperationSharesOneBudget",
+    "TestCircleReadEarlierCallerDeadlineBoundsComposite",
+    "TestCircleReadEntityKeyRetriesAndRejectsMalformedKey",
+    "TestCircleReadMalformedBalancesNeverBecomeZero",
+    "TestCircleReadNotificationBindsKeyAndSignature",
+    "TestCircleReadPaginationRefusesCredentialEscapeAndCycles",
+    "TestCircleReadWalletAndBalancePaginationUsesResponseLinks",
+    "TestCircleReadWalletIdentityAndRequiredFields",
+    "TestCircleReadWalletIdentityAppliesToEveryListMember",
+    "TestPaymentReadCallerPolicyAndCanceledAdmission",
+    "TestPaymentReadCircleCanceledCompleteBodyCannotBeAccepted",
+    "TestPaymentReadCircleCanceledPauseDoesNotSendAgain",
+    "TestPaymentReadCircleCanceledTransportJoins",
+    "TestPaymentReadCircleExhaustsOwnedBudget",
+    "TestPaymentReadCircleJoinedHardCauseDominatesRetry",
+    "TestPaymentReadCirclePermanentResponsesDoNotRetry",
+    "TestPaymentReadCircleResponseBoundAndClose",
+    "TestPaymentReadCircleRetriesTypedTransportTimeoutAndDisconnect",
+    "TestPaymentReadCircleSurvivesTransientOutageBeyondOneMinute",
+    "TestPaymentReadCoinbaseTransientRecoveryAndCurrencyIdentity",
+    "TestPaymentReadConcurrentOwnersRemainIndependent",
+    "TestPaymentReadRedirectCannotForwardCredentials",
+    "TestPaymentReadRetryAfterBoundsAndTransientInternalError"
+  ],
+  "schema": "circle-wallet-read-source-intake-v1",
+  "scope_limits": [
+    "GET observation only; prior financial and boundary candidates remain separate",
+    "No new POST retry; unchanged existing POST declarations joined exactly",
+    "Composite list is bounded and all-or-error; no partial wallet census reported as complete",
+    "Synthetic transport, real request/body/decoder/cancellation; retry clock accelerated, not a wall-clock 300-second claim",
+    "Official response Link next is used, fixed filters and exact HTTPS host/path retained; redirects refused",
+    "No deployment, live Circle, or mainnet activation claim"
+  ],
+  "selector": "^Test(CircleRead|PaymentRead)",
+  "source": {
+    "commit": "25f617dc30ec49b5162d51082498beaef583bf00",
+    "parent": "5c93b8121c04857b8ccf14cbbf81ccc52c28a9e2",
+    "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-get-coverage",
+    "tree": "74e91f4aab9c6eff3ed28f30c5888315e713e7cd"
+  },
+  "status": "SOURCE_FROZEN_TEST_EXECUTION_PENDING_SOL"
+}

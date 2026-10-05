@@ -1,0 +1,123 @@
+{
+  "bindings": [
+    {
+      "bytes": 6315,
+      "git_blob": "f1d716981afde17a0fc906ad7e7f93a0dfc6c460",
+      "path": "validator/production_receipt_checkpoint_test.go",
+      "sha256": "6f584046983d4eb1529bd717b1db10ee822aff0f8bd4fb106f98ecd1229ebb2a"
+    },
+    {
+      "bytes": 35028,
+      "git_blob": "8be37d77a684484dd158e95814ee7c3f98a7d531",
+      "path": "validator/release_client_key_history_authority_v2_test.go",
+      "sha256": "d98197802cf844e33d6ba50a10352b2b3151d88136eaf6a27b7ff7e8d60e6ee8"
+    },
+    {
+      "bytes": 18412,
+      "git_blob": "5e0ac8b72f621bb73a49b14a0a0218ae3b576aad",
+      "path": "validator/attempt_boundary_cache_test.go",
+      "sha256": "d4929f882b75c07cf847eb3d864c7fcee26efd66dae47937ba5d5855f7c913bc"
+    },
+    {
+      "bytes": 10203,
+      "git_blob": "a4e3d34ccb5e87619a7ef387f5808b3df3cf7693",
+      "path": "validator/attempt_verification_cache_test.go",
+      "sha256": "3360457d2024382410e828a757e3a39c3871cf22f0a917942e6bac400afb5fe6"
+    },
+    {
+      "bytes": 11600,
+      "git_blob": "02338337be1b1c02add896974af39dc0d61802e6",
+      "path": "validator/attempt_verification_test.go",
+      "sha256": "99eda16d4f60ea3b29fae528ec6efcc4ebadf9b005e4ad8153e36d2900b7b6ef"
+    },
+    {
+      "bytes": 11141,
+      "git_blob": "35e9b6ccaec3a53fbff3acbdee2e41f547375f72",
+      "path": "validator/production_receipt_checkpoint.go",
+      "sha256": "fbf7f14e6d5b5835c9fc8e062e7c0467fa80a2d9cc884dc497d427f06f194ac1"
+    },
+    {
+      "bytes": 16002,
+      "git_blob": "cb5d8ef32e92acb698517709c71ffcdbc2175335",
+      "path": "validator/attempt_boundary_cache.go",
+      "sha256": "95b960cc7fc5e7330cc399809a47f9c15c4bc430f58997ee7336a017bd316c7b"
+    },
+    {
+      "bytes": 3739,
+      "git_blob": "839368ad15015bbdd74c55871635a6c656f90420",
+      "path": "validator/attempt_verification.go",
+      "sha256": "5dc5d910c123f6fc96b52fbc4bc960ab2877db60fc249839ed55684a2d82c23e"
+    },
+    {
+      "bytes": 15412,
+      "git_blob": "7f5d2f0e0c6c7a758d035c40e44517909f225a0b",
+      "path": "validator/release_archive_history_v2.go",
+      "sha256": "7e2c1366277f1e56c5a3b719041b4cefc6b5ed63b6fec8ee49a23eb2d67064a4"
+    },
+    {
+      "bytes": 18631,
+      "git_blob": "5518c087edbd3694c84aaaef10785773f3da0482",
+      "path": "validator/release_archive_decision_v2.go",
+      "sha256": "35e07ae346055aba6b247c3e49dc5a9c04d79badf8beaf79e9d8d09c5ae496e9"
+    }
+  ],
+  "finding": "Existing boundary/client-authority/assignment tests include work counters and invalidation. Receipt checkpoint roots cover durable input authority, not complete historical archive/predecessor repeated-read work. Actual archive.readIntents and decision reconstruction need a separate joined work-count probe.",
+  "limits": [
+    "Source inventory only; no current selected41 behavior claim",
+    "Existing production cache qualification must retain current source/module graph",
+    "No closure of full PH-05/17/24 before joined work and invalidation evidence"
+  ],
+  "main_head": "9e89712b4b87e950dd17da01326d167796854da8",
+  "package": "./validator",
+  "qualified_code_candidate": "556e14767fddbaf4db469fb5f1019bcbdd2bc9ce",
+  "requirement_scope": [
+    "PH-05",
+    "PH-17",
+    "PH-24"
+  ],
+  "selected_roots": [
+    "TestProductionReceiptCheckpointMissesAreDisposable",
+    "TestProductionReceiptCheckpointRejectsForgedCoverageAndCustody",
+    "TestProductionReceiptCheckpointBindsScannerInputAndContinuity",
+    "TestReleaseClientKeyAuthorityV2SharesExactBoundaryWithIndependentSignatures",
+    "TestReleaseClientKeyAuthorityV2CacheHitDoesNotAuthenticateForgedClient",
+    "TestReleaseClientKeyAuthorityV2KeepsOperatorAndBoundaryDomainsSeparate",
+    "TestReleaseClientKeyAuthorityV2RejectsChangedDomainDecisionAndTransport",
+    "TestReleaseClientKeyAuthorityV2NewRuntimeAndUnownedCallsReadFreshSources",
+    "TestReleaseClientKeyAuthorityV2FailedReadCannotPoisonRetry",
+    "TestReleaseClientKeyAuthorityV2FinalWitnessRejectsChangedCanonicalBoundary",
+    "TestReleaseClientKeyAuthorityV2RejectsUnavailableNativeIdentityAtBothBoundaries",
+    "TestReleaseClientKeyAuthorityV2ConcurrentReadersShareOneActualRequestSet",
+    "TestReleaseClientKeyAuthorityV2CancelledWaiterDoesNotCancelLeader",
+    "TestReleaseClientKeyAuthorityV2OwnerCancellationJoinsRealTransport",
+    "TestReleaseClientKeyAuthorityV2UsesOneResponseAndEntryControlBudget",
+    "TestReleaseClientKeyAuthorityV2EntryBudgetRefusesNewBoundaryBeforeIo",
+    "TestReleaseClientKeyAuthorityV2CapturedIntentUsesScopedIndependentReads",
+    "TestReleaseClientKeyAuthorityV2RetainedRecoveryReusesOnlyExactCapturedBytes",
+    "TestReleaseClientKeyAuthorityV2ActualHeadDeduplicatesItsProviderCensus",
+    "TestAttemptBoundaryCacheWaiterDeadlinePreservesSharedPreparation",
+    "TestAttemptBoundaryCacheLifecycleShutdownCancelsAndJoinsPreparation",
+    "TestAttemptBoundaryCacheFailedOwnedPreparationRetries",
+    "TestAttemptBoundaryCacheInvalidationDuringOwnedCensus",
+    "TestAttemptBoundaryCacheScansUIDsAndBindingsOncePerBlock",
+    "TestAttemptBoundaryCacheRetainsStaleBindingWithoutHeadUID",
+    "TestAttemptBoundaryCacheCoalescesFirstHopSnapshotAndRefresh",
+    "TestAttemptBoundaryCacheDefaultDelayAvoidsPerBlockUIDScans",
+    "TestAttemptBoundaryCacheSettlementInvalidationRefreshesImmediately",
+    "TestAttemptBoundaryCacheInvalidationDuringSnapshotDiscardsStaleResult",
+    "TestAttemptCutAssignmentVerificationIsCutLocal",
+    "TestAttemptAssignmentReuseCapacityEvictsAndReverifies",
+    "TestAttemptAssignmentReuseOwnsExactTupleBytes",
+    "TestAttemptAssignmentReuseAuthenticatesChangedValidMessage",
+    "TestAttemptAssignmentReuseDoesNotCacheFailure",
+    "TestAttemptAssignmentReuseBypassesOtherMessageShapes",
+    "TestAttemptSettlementClosureVerifiesEachCutOnce",
+    "TestAttemptCutVerifiesEachAssignmentOnce",
+    "TestAttemptCutAssignmentVerificationRechecksServerKeys",
+    "TestAttemptCutValidatorOnlyRetainsKeyMode",
+    "TestAttemptSettlementClosureFullVerificationRejectsServerForgery",
+    "TestAttemptSettlementClosureFullVerificationRetainsRejections"
+  ],
+  "selector": "^(TestProductionReceiptCheckpointMissesAreDisposable|TestProductionReceiptCheckpointRejectsForgedCoverageAndCustody|TestProductionReceiptCheckpointBindsScannerInputAndContinuity|TestReleaseClientKeyAuthorityV2SharesExactBoundaryWithIndependentSignatures|TestReleaseClientKeyAuthorityV2CacheHitDoesNotAuthenticateForgedClient|TestReleaseClientKeyAuthorityV2KeepsOperatorAndBoundaryDomainsSeparate|TestReleaseClientKeyAuthorityV2RejectsChangedDomainDecisionAndTransport|TestReleaseClientKeyAuthorityV2NewRuntimeAndUnownedCallsReadFreshSources|TestReleaseClientKeyAuthorityV2FailedReadCannotPoisonRetry|TestReleaseClientKeyAuthorityV2FinalWitnessRejectsChangedCanonicalBoundary|TestReleaseClientKeyAuthorityV2RejectsUnavailableNativeIdentityAtBothBoundaries|TestReleaseClientKeyAuthorityV2ConcurrentReadersShareOneActualRequestSet|TestReleaseClientKeyAuthorityV2CancelledWaiterDoesNotCancelLeader|TestReleaseClientKeyAuthorityV2OwnerCancellationJoinsRealTransport|TestReleaseClientKeyAuthorityV2UsesOneResponseAndEntryControlBudget|TestReleaseClientKeyAuthorityV2EntryBudgetRefusesNewBoundaryBeforeIo|TestReleaseClientKeyAuthorityV2CapturedIntentUsesScopedIndependentReads|TestReleaseClientKeyAuthorityV2RetainedRecoveryReusesOnlyExactCapturedBytes|TestReleaseClientKeyAuthorityV2ActualHeadDeduplicatesItsProviderCensus|TestAttemptBoundaryCacheWaiterDeadlinePreservesSharedPreparation|TestAttemptBoundaryCacheLifecycleShutdownCancelsAndJoinsPreparation|TestAttemptBoundaryCacheFailedOwnedPreparationRetries|TestAttemptBoundaryCacheInvalidationDuringOwnedCensus|TestAttemptBoundaryCacheScansUIDsAndBindingsOncePerBlock|TestAttemptBoundaryCacheRetainsStaleBindingWithoutHeadUID|TestAttemptBoundaryCacheCoalescesFirstHopSnapshotAndRefresh|TestAttemptBoundaryCacheDefaultDelayAvoidsPerBlockUIDScans|TestAttemptBoundaryCacheSettlementInvalidationRefreshesImmediately|TestAttemptBoundaryCacheInvalidationDuringSnapshotDiscardsStaleResult|TestAttemptCutAssignmentVerificationIsCutLocal|TestAttemptAssignmentReuseCapacityEvictsAndReverifies|TestAttemptAssignmentReuseOwnsExactTupleBytes|TestAttemptAssignmentReuseAuthenticatesChangedValidMessage|TestAttemptAssignmentReuseDoesNotCacheFailure|TestAttemptAssignmentReuseBypassesOtherMessageShapes|TestAttemptSettlementClosureVerifiesEachCutOnce|TestAttemptCutVerifiesEachAssignmentOnce|TestAttemptCutAssignmentVerificationRechecksServerKeys|TestAttemptCutValidatorOnlyRetainsKeyMode|TestAttemptSettlementClosureFullVerificationRejectsServerForgery|TestAttemptSettlementClosureFullVerificationRetainsRejections)$",
+  "status": "ROOT_VERIFIED_SOURCE_SELECTION_ONLY"
+}

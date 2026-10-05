@@ -28,6 +28,7 @@ type ReleaseEvidenceV2DecisionObservation struct {
 	CommitNativeEpoch      uint64                       `json:"commit_native_epoch,omitempty"`
 	RevealNativeEpoch      uint64                       `json:"reveal_native_epoch,omitempty"`
 	ApplicationNativeEpoch uint64                       `json:"application_native_epoch,omitempty"`
+	OwnerRecycle           *OwnerRecycleProductionProof `json:"owner_recycle,omitempty"`
 }
 
 // The prepared snapshot may precede an epoch boundary crossed by inclusion.
@@ -49,7 +50,11 @@ func observeReleaseDecisionLifecycleV2(ctx context.Context, native *crv4.Chain, 
 		if err != nil {
 			return 0, err
 		}
-		actual, err := crv4.ReadValidatorScheduleAtContext(ctx, native, crv4.ValidatorScheduleQuery{GenesisHash: native.GenesisHash, BlockHash: block, BlockNumber: number, Netuid: cfg.Netuid, Hotkey: hotkey, MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, HistoricalReleaseRuntimeArtifacts(releaseRuntimeIdentityV2(cfg))...)
+		allowed, err := releaseHistoricalRuntimeArtifactsAt(cfg, number)
+		if err != nil {
+			return 0, err
+		}
+		actual, err := crv4.ReadValidatorScheduleAtContext(ctx, native, crv4.ValidatorScheduleQuery{GenesisHash: native.GenesisHash, BlockHash: block, BlockNumber: number, Netuid: cfg.Netuid, Hotkey: hotkey, MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, allowed...)
 		if err != nil {
 			return 0, err
 		}
@@ -100,6 +105,8 @@ func (self *ReleaseEvidenceV2Archive) ObserveSources(ctx context.Context, chain 
 		}
 	}()
 	owner, history := self.owner, self.history
+	self.productionStages = nil
+	productionStages := map[string]*ownerRecycleProductionStage{}
 	bounds := owner.cfg.EvidenceV2.Bounds
 	runtime := releaseRuntimeIdentityV2(&owner.cfg)
 	keys, err := readReleaseServerKeysV2(ctx, &owner.cfg)
@@ -115,7 +122,7 @@ func (self *ReleaseEvidenceV2Archive) ObserveSources(ctx context.Context, chain 
 	}
 	for _, input := range self.inputs {
 		initial := input.Context
-		_, err := chain.AuthenticateReleaseActivationV2Context(ctx, native, ReleaseActivationV2Authority{Expected: initial.Activation, Journal: initial.Journal, RuntimeHash: initial.RuntimeHash, ValidatorUID: initial.ValidatorUID, NativeRuntime: runtime}, input.Candidate, input.VPKSignature, input.HotkeySignature, initial.ObservedEVMBlock, initial.ObservedEVMHash)
+		_, err := chain.AuthenticateReleaseActivationV2Context(ctx, native, ReleaseActivationV2Authority{Expected: initial.Activation, Journal: initial.Journal, RuntimeHash: initial.RuntimeHash, ValidatorUID: initial.ValidatorUID, NativeRuntime: runtime, productionRuntimeConfig: &owner.cfg}, input.Candidate, input.VPKSignature, input.HotkeySignature, initial.ObservedEVMBlock, initial.ObservedEVMHash)
 		if err != nil {
 			return nil, err
 		}
@@ -127,11 +134,11 @@ func (self *ReleaseEvidenceV2Archive) ObserveSources(ctx context.Context, chain 
 		for _, noID := range slices.Sorted(maps.Keys(history.inputByEpoch[epoch])) {
 			journal := history.inputByEpoch[epoch][noID]
 			initial := history.initial[noID]
-			if err := authenticateReleaseStartupNativeV2Context(ctx, native, initial, journal, runtime, false); err != nil {
+			if err := authenticateReleaseStartupNativeV2ContextWithConfig(ctx, native, initial, journal, runtime, false, false, &owner.cfg); err != nil {
 				return nil, err
 			}
 			input := journal.MeasurementInput
-			if err := chain.authenticateReleaseStartupBoundaryV2ContextWithRetainedHistory(ctx, initial.InitialCut.Activation.Domain, noID, AttemptBoundary{SettlementEpoch: input.SettlementEpoch, EVMBlock: input.CutEVMSnapshotBlock, EVMBlockHash: input.CutEVMSnapshotHash}, false, false); err != nil {
+			if err := chain.authenticateReleaseStartupBoundaryV2WithPolicy(ctx, initial.InitialCut.Activation.Domain, noID, AttemptBoundary{SettlementEpoch: input.SettlementEpoch, EVMBlock: input.CutEVMSnapshotBlock, EVMBlockHash: input.CutEVMSnapshotHash}, false, false, &history.cfg, journal.PolicyHash); err != nil {
 				return nil, err
 			}
 		}
@@ -139,12 +146,16 @@ func (self *ReleaseEvidenceV2Archive) ObserveSources(ctx context.Context, chain 
 	for _, epoch := range slices.Sorted(maps.Keys(history.terminals)) {
 		for _, transition := range history.terminals[epoch].Transitions {
 			noID := transition.Identity.NoID
-			if err := chain.authenticateReleaseStartupBoundaryV2ContextWithRetainedHistory(ctx, history.initial[noID].InitialCut.Activation.Domain, noID, transition.FromBoundary, true, false); err != nil {
+			if err := chain.authenticateReleaseStartupBoundaryV2WithPolicy(ctx, history.initial[noID].InitialCut.Activation.Domain, noID, transition.FromBoundary, true, false, &history.cfg, ""); err != nil {
 				return nil, err
 			}
 		}
 	}
 	for _, item := range self.intents {
+		decisionCfg, err := productionConfigForIntent(&owner.cfg, &item.Intent)
+		if err != nil {
+			return nil, err
+		}
 		artifact, err := decodeReleaseMeasurementV2Bytes(ctx, item.Measurement, bounds.MaxArtifactBytes, bounds.MaxOperators)
 		if err != nil {
 			return nil, err
@@ -166,8 +177,29 @@ func (self *ReleaseEvidenceV2Archive) ObserveSources(ctx context.Context, chain 
 		if err := observeReleaseDecisionLifecycleV2(ctx, native, &owner.cfg, &item.Intent, &observation); err != nil {
 			return nil, err
 		}
+		if isOwnerRecycleProductionConfig(&owner.cfg) {
+			options, err := self.decisionOptions(ctx, &item.Intent, artifact, observation)
+			if err != nil {
+				return nil, err
+			}
+			_, provider, err := DecodeReleaseMeasurementArtifactV2(ctx, item.Measurement, options)
+			if err != nil {
+				return nil, err
+			}
+			options, err = self.decisionOptions(ctx, &item.Intent, artifact, observation)
+			if err != nil {
+				return nil, err
+			}
+			stage, err := prepareOwnerRecycleProductionDecision(ctx, decisionCfg, native, chain, item.Measurement, artifact, provider.Decision, options)
+			if err != nil {
+				return nil, err
+			}
+			observation.OwnerRecycle = &stage.proof
+			productionStages[observation.MeasurementHash] = stage
+		}
 		result = append(result, observation)
 	}
+	self.productionStages = productionStages
 	return result, owner.check(ctx)
 }
 
@@ -228,6 +260,23 @@ func (self *ReleaseEvidenceV2Archive) ReplayDecisions(ctx context.Context, obser
 		if err != nil {
 			return err
 		}
+		stage := self.productionStages[observation.MeasurementHash]
+		if isOwnerRecycleProductionConfig(&self.owner.cfg) {
+			observed, err := ownerRecycleProductionProofBytes(ctx, observation.OwnerRecycle, bounds.MaxControlBytes)
+			if err != nil || stage == nil || !bytes.Equal(observed, stage.encoded) {
+				return errors.Join(errors.New("owner-recycle archive needs the complete independently observed production decision"), err)
+			}
+		} else if observation.OwnerRecycle != nil {
+			return errors.New("legacy archive cannot select production by an observation sidecar")
+		}
+		decisionCfg, err := productionConfigForIntent(&self.owner.cfg, &item.Intent)
+		if err != nil {
+			return err
+		}
+		verified.Decision, err = verifyOwnerRecycleProductionIntent(ctx, decisionCfg, stage, &item.Intent, item.Measurement, artifact, verified.Decision)
+		if err != nil {
+			return err
+		}
 		if err := VerifyReleaseMeasurementIntent(&item.Intent, artifact, verified.Decision); err != nil {
 			return err
 		}
@@ -248,13 +297,21 @@ func (self *ReleaseEvidenceV2Archive) ReplayDecisions(ctx context.Context, obser
 
 func (self *ReleaseEvidenceV2Archive) decisionOptions(ctx context.Context, intent *SteeringIntent, artifact *ReleaseMeasurementArtifact, observation ReleaseEvidenceV2DecisionObservation) (ReleaseMeasurementV2Options, error) {
 	history, bounds := self.history, self.owner.cfg.EvidenceV2.Bounds
+	decisionCfg, err := productionConfigForIntent(&self.owner.cfg, intent)
+	if err != nil {
+		return ReleaseMeasurementV2Options{}, err
+	}
 	contexts, inputs := history.inputContextsByEpoch[intent.SubnetEpoch], history.inputByEpoch[intent.SubnetEpoch]
 	if len(contexts) != len(history.participants) || len(inputs) != len(contexts) || len(artifact.Inputs) != len(contexts) {
 		return ReleaseMeasurementV2Options{}, errors.New("archive decision lacks a complete independently replayed native cut")
 	}
-	controlled := slices.Clone(history.cfg.ControlledNOIDs)
+	decisionPolicy, err := ReleasePolicyForHash(decisionCfg, observation.Decision.PolicyHash)
+	if err != nil {
+		return ReleaseMeasurementV2Options{}, err
+	}
+	controlled := slices.Clone(decisionCfg.ControlledNOIDs)
 	slices.Sort(controlled)
-	result := ReleaseMeasurementV2Options{Expected: observation.Decision, Policy: history.cfg.Policy, ControlledNOIDs: controlled, Bindings: observation.Bindings, Pools: observation.Pools, DepositAudits: observation.DepositAudits, Operators: map[uint64]ReleaseMeasurementV2OperatorOptions{}, MaxOperators: bounds.MaxOperators, MaxHeadEntries: bounds.MaxHeadEntries, MaxArtifactBytes: bounds.MaxArtifactBytes, MaxControlBytes: bounds.MaxControlBytes}
+	result := ReleaseMeasurementV2Options{Expected: observation.Decision, Policy: decisionPolicy, ControlledNOIDs: controlled, Bindings: observation.Bindings, Pools: observation.Pools, DepositAudits: observation.DepositAudits, Operators: map[uint64]ReleaseMeasurementV2OperatorOptions{}, MaxOperators: bounds.MaxOperators, MaxHeadEntries: bounds.MaxHeadEntries, MaxArtifactBytes: bounds.MaxArtifactBytes, MaxControlBytes: bounds.MaxControlBytes}
 	for _, participant := range history.participants {
 		expected, found := contexts[participant.NoID]
 		input := inputs[participant.NoID]
@@ -265,6 +322,10 @@ func (self *ReleaseEvidenceV2Archive) decisionOptions(ctx context.Context, inten
 		operator, err := history.operator(ctx, participant.NoID, cursor, expected.Boundary, 0, "decision")
 		if err != nil {
 			return ReleaseMeasurementV2Options{}, err
+		}
+		if result.ReplayPolicy == nil {
+			replayPolicy := operator.Policy
+			result.ReplayPolicy = &replayPolicy
 		}
 		result.Operators[participant.NoID] = ReleaseMeasurementV2OperatorOptions{Expected: operator.Expected, CutNativeBlock: input.MeasurementInput.CutNativeBlock, CutNativeBlockHash: input.MeasurementInput.CutNativeBlockHash, Bounds: operator.Bounds, Measurement: operator.Measurement}
 	}
@@ -311,8 +372,9 @@ func (self *ReleaseEvidenceV2Archive) Measurement(hash string) (*ReleaseMeasurem
 }
 
 // TerminalClosure returns the original, fully replayed terminal control as an
-// owned value. Every interior cut and both replicas were verified by Open;
-// callers must still authenticate its canonical EVM boundary on chain.
+// owned value while the original replay owner retains custody. Every interior
+// cut and both replicas were verified by Open; callers must still authenticate
+// its canonical EVM boundary on chain.
 func (self *ReleaseEvidenceV2Archive) TerminalClosure(epoch uint64) (*AttemptSettlementClosureV2, error) {
 	if self == nil || self.closed || self.history == nil {
 		return nil, errors.New("archive terminal owner is absent")
@@ -326,5 +388,9 @@ func (self *ReleaseEvidenceV2Archive) TerminalClosure(epoch uint64) (*AttemptSet
 	if err != nil {
 		return nil, err
 	}
-	return decodeAttemptSettlementClosureV2Bytes(self.owner.ctx, raw, bounds.MaxClosureBytes, bounds.MaxParticipants)
+	result, err := decodeAttemptSettlementClosureV2Bytes(self.owner.ctx, raw, bounds.MaxClosureBytes, bounds.MaxParticipants)
+	if err = errors.Join(err, self.owner.check(self.owner.ctx)); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

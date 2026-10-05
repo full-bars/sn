@@ -1,0 +1,23 @@
+{
+  "schema": "native-recipient-cross-domain-source-finding-v1",
+  "status": "IMPLEMENTATION_GAP_CONFIRMED_FIX_IN_PROGRESS",
+  "source_commit": "b32a5e864756f008e8527556cd75d3ec1e28b26f",
+  "source_blob": "273004f94f07d7f20297d03af8e855c4719b7bab",
+  "source_path": "mainnet/economic_native_execution.go",
+  "findings": [
+    "Kernel verifies original per-recipient gross/liquid/collateral/recycling effects, then retains recipient identity and aggregate totals only. Individual authenticated amount evidence is lost from nativeExecutionOutcome.",
+    "Independent EVM pool conservation and Claim receipt progress do not by themselves link settlement to the exact original native earning interval."
+  ],
+  "required_behavior": [
+    "Retain per-recipient amount/branch evidence bound to original job, trace, boundary and generation.",
+    "Reconcile each pool capture with the original native interval once; exclude duplicate capture and preserve unmatched obligations.",
+    "Carry obligations across RootMissed and later entitlement/payment epochs without assigning earnings to payment time or counting them twice.",
+    "Reject equal aggregate totals with changed recipients, boundary substitutions and mismatched liquid/collateral/recycle branches.",
+    "Distinguish authenticated amounts from full10/90 conformance, complete quantization and independently approved runtime/fee authority."
+  ],
+  "limits": [
+    "Source finding, not a reproduced production accounting loss.",
+    "Existing frozen producer and validator qualification remains valid for its exact scope.",
+    "Astra successor and deterministic public reconciliation controls are not yet qualified."
+  ]
+}

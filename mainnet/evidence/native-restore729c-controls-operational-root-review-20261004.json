@@ -1,0 +1,29 @@
+{
+  "schema": "native-restore729c-controls-operational-root-review-v1",
+  "status": "ADMITTED_AFTER_POSITIVE_COUNTERPART_JOIN",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/run-controls-v1.py",
+      "bytes": 13960,
+      "sha256": "1f464b62c93b31f6edfecd32cb857b68c1be010d75e231ca38a8b7e416e68742"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/controls-helper-preflight-v1.json",
+      "bytes": 5292,
+      "sha256": "5e6b110ab77c4eec1968dbd3c835e9fc82366f4e0b8fd8cac758da386ba1e6a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/operative-controls-v2.json",
+      "bytes": 7897,
+      "sha256": "04dbfd71665d73241bd9bd4dc4a0e263ec6962ddbbe64bc07febc5c3303a2c3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/source-overlay-stage-receipt.json",
+      "bytes": 2306,
+      "sha256": "fac97ea9ef5538758c8cd9c31e2485f71b248f2515c9334c31e91a4c8bc00e82"
+    }
+  ],
+  "review": "Read complete adapted diff against previously reviewed a499 control runner. Independently verify preflight and six mutated production sources. Every mode control joins both exact corrected tests with one production omission, unique mode-qualified overlay, corrected positive terminal schema/path and rehashed positive partition receipts. Protected image/ELF custody and original resource guard retained.",
+  "scope": "Six groups per normal/race mode only after its exact positive counterpart succeeds. Compile errors or generic refusals are not causal proof. No mainnet deployment authority.",
+  "whole_mainnet_complete": false
+}

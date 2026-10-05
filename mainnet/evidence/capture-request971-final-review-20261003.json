@@ -1,0 +1,713 @@
+{
+  "schema": "root-historical-request971-final-review-v1",
+  "status": "PASS_SCOPED",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-final-scoped-receipt.json",
+    "sha256": "0583add742909cf6074f42c03a8aa7980d5be11736c0c5aa983234c21f0bd9ec"
+  },
+  "source": {
+    "head": "971706d0f0a74ca338ca759f8849bd5f9ffdaf7f",
+    "own_archive": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source",
+    "tree": "7b5128d2010a31673ac0ed03c66327aaf71570a9"
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-final-scoped-receipt.json",
+      "bytes": 17505,
+      "sha256": "0583add742909cf6074f42c03a8aa7980d5be11736c0c5aa983234c21f0bd9ec"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/qualification-resource-admission-audit-20261003/root-adoption.json",
+      "bytes": 9231,
+      "sha256": "52b2a454dbc25d520ea293a83bee714f173f5c258903b6b1b1c3ec92f346ecc6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/qualification-resource-admission-audit-20261003/proposal.json",
+      "bytes": 12626,
+      "sha256": "2f973666d9c1633e60762635ecba93e1450b24de986cfd2ca77ca96a201153a7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-resource-independent-review.json",
+      "bytes": 2349,
+      "sha256": "b08915954641b3b7f51660adcb9544a5a420d36a1c4d78266defd83fffeb95b8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/971-race-grant-ledger.json",
+      "bytes": 19580,
+      "sha256": "368397abcb682561e4159810545a9ff9db0f6ebfc007f39f122221f348fcc47e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/run-971-race-controls.py",
+      "bytes": 10433,
+      "sha256": "eb55083af3f0577ba5520541306f0843d186624063e60037410e5e091502c7af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/source-readback.json",
+      "bytes": 290,
+      "sha256": "8585a7c973889473a1f79d85601204e8e3ad82baee85ff1ecc56ddf1a3d3db3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/peer-source-fence.json",
+      "bytes": 2544,
+      "sha256": "8fcb390ad23c58033becd6eee75e0445e5f7e65d63ba7be661fcaa26197df056"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-positive-receipt.json",
+      "bytes": 9693,
+      "sha256": "b644b297059e79fe4b858ce8f454e03de4a5265ab6230ed55d39b32b47cce77b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-causal-normal-provisional-receipt.json",
+      "bytes": 7802,
+      "sha256": "36f9fed587a44f6c286ecd403bfd9a9cef53a1a12462a0e7ab5270f64182f582"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-normal-provisional-receipt.json",
+      "bytes": 5086,
+      "sha256": "fba452746017d1482daa9aa456a0de8777f3844eeea16fc9fa2573011b1f55a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-deps.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-deps.stdout",
+      "bytes": 28557,
+      "sha256": "c67cb81be39eb8d0b79109790b52bdc0c77c45d330000c79c029d5382f29a3b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-vet.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/mainnet-vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/modules.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/modules.stdout",
+      "bytes": 26624,
+      "sha256": "72e69cc6c74353757fde48a03eed1d2cf0e4188dd1bb0c5c62d0b6d690c2ba4b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal-image.sha256",
+      "bytes": 349,
+      "sha256": "c27eb5b42b3411fed2a275eb9aa1f8ed2f34e0fce7081c9ae9fb08e2715e6f1e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal10.command.json",
+      "bytes": 1610,
+      "sha256": "5cb07a5022caf4d8749400ba6fb3edd39f455acb856ca70814326f569cc1a821"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal10.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal10.jsonl",
+      "bytes": 7142,
+      "sha256": "82f5d70526b0cc364d10f6e45ad770419a2aa0ae46d5b66cf54a83cfe30b1846"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/normal10.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/peer-source-fence.json",
+      "bytes": 2544,
+      "sha256": "8fcb390ad23c58033becd6eee75e0445e5f7e65d63ba7be661fcaa26197df056"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/preflight.exits",
+      "bytes": 4,
+      "sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-image-after-mode.sha256",
+      "bytes": 178,
+      "sha256": "0d01eeb6fce0c9c66f03e9d7381ac7a119917fb5c63f67df44b23e7de805f04b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-image-after-mode.txt",
+      "bytes": 25,
+      "sha256": "f6ef8f5330de734409daf27d6b5cf67b669e9dde170129258c836f5331b2f9e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-image-before-mode.sha256",
+      "bytes": 178,
+      "sha256": "0d01eeb6fce0c9c66f03e9d7381ac7a119917fb5c63f67df44b23e7de805f04b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race-direct-image-before-mode.txt",
+      "bytes": 25,
+      "sha256": "de604f00923f90961f5baa077c63ae491e6bd620d6b529ae75033092ba2386c1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.command.json",
+      "bytes": 1878,
+      "sha256": "0d34e3de07583b4ff7300b12371941dbc2acffcb481cef75afb8d970ad4ceb00"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.custody.json",
+      "bytes": 1019,
+      "sha256": "a15a0edc22dbf9d58144d9dfab37e9cee5b105f1783bf9a70bf0785b36bda415"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.jsonl",
+      "bytes": 7142,
+      "sha256": "7a3a6a2c8f6006db670a3aa323fcb48017de245eb16aa5d1927b6000ee8a2b1a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/race10.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/source-readback.json",
+      "bytes": 290,
+      "sha256": "8585a7c973889473a1f79d85601204e8e3ad82baee85ff1ecc56ddf1a3d3db3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-positive-receipt.json",
+      "bytes": 9693,
+      "sha256": "b644b297059e79fe4b858ce8f454e03de4a5265ab6230ed55d39b32b47cce77b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-normal-admission-free",
+      "bytes": 13,
+      "sha256": "eb5d042a2d7aa022b000e2232992a2ad73aa4accf83bd1d4aabf7c65ef5540e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-normal-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-normal.command.json",
+      "bytes": 2194,
+      "sha256": "0e77b1000d3bd6d5cd00d08c47fb3dd45c1e3ceb82ca027f7bace3c37843e77e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-normal.custody.json",
+      "bytes": 765,
+      "sha256": "a353d55181df8994617392a1c24a3e599ebf99e177b553bb3404f526397dc99c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-normal.jsonl",
+      "bytes": 3865,
+      "sha256": "c02a4c5f91710ab4b3b855705eb704e760932322ba9c8dde5b42f932147d4efb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-overlay.json",
+      "bytes": 288,
+      "sha256": "4e80018c732bca1e497066a6b7303cc42982b4e861c0fb30cb60ac3b537ce00f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-normal-admission-free",
+      "bytes": 13,
+      "sha256": "394b01d0c7ec69a19a59a4264d4014bb08102acfe7d29797c1390b44ca4c5744"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-normal-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-normal.command.json",
+      "bytes": 2178,
+      "sha256": "5666a47d333c05b317921a8c4f77b384b70b30da635c38aa767621fec68db284"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-normal.custody.json",
+      "bytes": 765,
+      "sha256": "39fb830cac6bc1c0c977aa9cccf76491853ab28f340efef63e058d7298f3b41c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-normal.jsonl",
+      "bytes": 3809,
+      "sha256": "63e9b7f5acc9a033ed1835d8dcad26c072f0df53c2767e88e7b7e1e7b996325d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-overlay.json",
+      "bytes": 284,
+      "sha256": "66e7f0de7ab92a50133e862300340f18bbf3a0b4dd5345ab180bfa4052660120"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-normal-admission-free",
+      "bytes": 13,
+      "sha256": "20d355766703e1e3e113f585da5765a081f91b67a707847dde6e315b112584a8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-normal-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-normal.command.json",
+      "bytes": 2185,
+      "sha256": "e6c99afd7cc55bdbaf7e470c09216250af7f42d555621f8b126246d2f230f7f2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-normal.custody.json",
+      "bytes": 765,
+      "sha256": "25c1f7ff46c2f813f47a24c406db99d7cf390bb1f85a18367964f739ac20d235"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-normal.jsonl",
+      "bytes": 5209,
+      "sha256": "2ae81909ca1ee280a02e373654f337a09bb3d8722fd2bee1add6b6f83fd1f40f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-overlay.json",
+      "bytes": 285,
+      "sha256": "39f75d908fd6618a0f5e4374fb858a18ec31311f218bed2c89f2f8c4481d65ce"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/evidence/controls/closing-canonical/historical_capture_request.go",
+      "bytes": 7578,
+      "sha256": "9f7b11379eadb1b4108f866b7f540a134972f1e9934874dac498181eed5634d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/historical_capture_request.go",
+      "bytes": 7651,
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/controls/closing-canonical/historical_capture_request.go",
+      "bytes": 7578,
+      "sha256": "9f7b11379eadb1b4108f866b7f540a134972f1e9934874dac498181eed5634d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/closing-canonical-normal-owned.test",
+      "bytes": 74244784,
+      "sha256": "eaabc60b8b3198b0e9ae8bfbbe5e37c745a114b067c23b78c0aeb93ba71a43ff"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/evidence/controls/complete-body/historical_capture_request.go",
+      "bytes": 7646,
+      "sha256": "3b056f9e033a15bea0b9712451af6eff1cfdc3cee072cac9e3ffed08a2fa2c05"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/historical_capture_request.go",
+      "bytes": 7651,
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/controls/complete-body/historical_capture_request.go",
+      "bytes": 7646,
+      "sha256": "3b056f9e033a15bea0b9712451af6eff1cfdc3cee072cac9e3ffed08a2fa2c05"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/complete-body-normal-owned.test",
+      "bytes": 74245176,
+      "sha256": "9a9dc3c38383266eca54a11b0293572630c95e79b8621c577e840d2cf12d3852"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/evidence/controls/parent-runtime/historical_capture_request.go",
+      "bytes": 7645,
+      "sha256": "cc9bf3bea6d61e5cdaa474cac1ca5f4d5b024c6df4b8f035fa39ac5a2fe123d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/historical_capture_request.go",
+      "bytes": 7651,
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/controls/parent-runtime/historical_capture_request.go",
+      "bytes": 7645,
+      "sha256": "cc9bf3bea6d61e5cdaa474cac1ca5f4d5b024c6df4b8f035fa39ac5a2fe123d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/parent-runtime-normal-owned.test",
+      "bytes": 74245296,
+      "sha256": "ba2ca4df1f29e819dccd3d74d5fe7cc231f2e7c8a4cd75053b2a81d472efd6ad"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/evidence/controls/parent-runtime/historical_capture_request.go",
+      "bytes": 7645,
+      "sha256": "cc9bf3bea6d61e5cdaa474cac1ca5f4d5b024c6df4b8f035fa39ac5a2fe123d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/historical_capture_request.go",
+      "bytes": 7651,
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/controls/parent-runtime/historical_capture_request.go",
+      "bytes": 7645,
+      "sha256": "cc9bf3bea6d61e5cdaa474cac1ca5f4d5b024c6df4b8f035fa39ac5a2fe123d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-overlay.json",
+      "bytes": 285,
+      "sha256": "39f75d908fd6618a0f5e4374fb858a18ec31311f218bed2c89f2f8c4481d65ce"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/parent-runtime-race-direct-owned.test",
+      "bytes": 99437392,
+      "sha256": "53b917f0c967624a0f17b8c9764063dad10965d198213232cdfa3bf52e72e388"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-race-direct-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-race.stdout",
+      "bytes": 5210,
+      "sha256": "6f101067e208e33cc2b04b1734e39e1345a1914ed81c77d34cdddc6ab9d5e9df"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-race-direct-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-race-direct-compile.resource.csv",
+      "bytes": 37351,
+      "sha256": "010fd0b6799b5e4dbdbf5fc74e0b1462ce7ab50aacc7bb2fc6cc05b8cfb94564"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-race.resource.csv",
+      "bytes": 383,
+      "sha256": "45b793791b5f64904765f050f75062429c3dd6257b12ab222862ba3aa6da0d39"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/parent-runtime-race-direct-owned.test",
+      "bytes": 99437392,
+      "sha256": "53b917f0c967624a0f17b8c9764063dad10965d198213232cdfa3bf52e72e388"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/evidence/controls/complete-body/historical_capture_request.go",
+      "bytes": 7646,
+      "sha256": "3b056f9e033a15bea0b9712451af6eff1cfdc3cee072cac9e3ffed08a2fa2c05"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/historical_capture_request.go",
+      "bytes": 7651,
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/controls/complete-body/historical_capture_request.go",
+      "bytes": 7646,
+      "sha256": "3b056f9e033a15bea0b9712451af6eff1cfdc3cee072cac9e3ffed08a2fa2c05"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-overlay.json",
+      "bytes": 284,
+      "sha256": "66e7f0de7ab92a50133e862300340f18bbf3a0b4dd5345ab180bfa4052660120"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/complete-body-race-direct-owned.test",
+      "bytes": 99437776,
+      "sha256": "7feaba826b0b0b274a28adaa3487d6f5cb17434de516261e99a3154d0f3e6594"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-race-direct-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-race.stdout",
+      "bytes": 3809,
+      "sha256": "8da2be6126595ef88629f246a35f69fc0c8cb9089fb0a4437beda21ae577fc5f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-race-direct-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-race-direct-compile.resource.csv",
+      "bytes": 38101,
+      "sha256": "012018e456b9dd67a14efc30ff88fa4d2011554efaa1af1fb3a5b5ccff786324"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-race.resource.csv",
+      "bytes": 382,
+      "sha256": "3ccabe99196cd3ee31e4ce994ba330676703b381be212848d954a5ff6a92cf85"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/complete-body-race-direct-owned.test",
+      "bytes": 99437776,
+      "sha256": "7feaba826b0b0b274a28adaa3487d6f5cb17434de516261e99a3154d0f3e6594"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-request/evidence/controls/closing-canonical/historical_capture_request.go",
+      "bytes": 7578,
+      "sha256": "9f7b11379eadb1b4108f866b7f540a134972f1e9934874dac498181eed5634d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/source/mainnet/historical_capture_request.go",
+      "bytes": 7651,
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/controls/closing-canonical/historical_capture_request.go",
+      "bytes": 7578,
+      "sha256": "9f7b11379eadb1b4108f866b7f540a134972f1e9934874dac498181eed5634d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-overlay.json",
+      "bytes": 288,
+      "sha256": "4e80018c732bca1e497066a6b7303cc42982b4e861c0fb30cb60ac3b537ce00f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/closing-canonical-race-direct-owned.test",
+      "bytes": 99437592,
+      "sha256": "8955d9f490dee9bdc636e7ba4139c262e7e7399c74381a87a1975aca1a389e93"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-race-direct-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-race.stdout",
+      "bytes": 3865,
+      "sha256": "3d0099d19dcea5fd2aa33286cfe66a8d1b22a7ca092330ff38bd1dfa12df5578"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-race-direct-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-race-direct-compile.resource.csv",
+      "bytes": 36751,
+      "sha256": "a4b3465f92f86ffb4a3909bbb8bf1204bf3c3167eee3d3691ffb9f28bbbabf51"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-race.resource.csv",
+      "bytes": 305,
+      "sha256": "14e969bbf2020b7d4c072656b27da3755b3e0feb5e0a18f9ba2d7484f3c99c3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/closing-canonical-race-direct-owned.test",
+      "bytes": 99437592,
+      "sha256": "8955d9f490dee9bdc636e7ba4139c262e7e7399c74381a87a1975aca1a389e93"
+    },
+    {
+      "path": "/home/by/urnetwork/sn/mainnet/evidence/capture-request971-positive-review-20261003.json",
+      "bytes": 15407,
+      "sha256": "d348365f8410676fb2fcd8e88a5a404f7aecd9ea593d6c7a45165dcb4568a090"
+    }
+  ],
+  "operative_controls": [
+    {
+      "name": "closing-canonical",
+      "mode": "normal",
+      "test": "TestHistoricalCaptureRequestClosingCanonicalAndRuntimeChangesRefuse",
+      "compile_exit": 0,
+      "intended_test_exit": 1,
+      "actual_assertion_site": "historical_capture_request_test.go:219:",
+      "actual_race_assertion_evidence": "historical_capture_request_test.go:219: changed finalized block or parent runtime became a capture request changed-canonical {urnetwork-historical-capture-observation-v1 owned-rpc-assertion {urnetwork-mainnet-rpc-identity-v1 2026-10-03T16:12:35.007730128Z http://127.0.0.1:36603 Bittensor 0x212121212",
+      "author_described_condition": "changed finalized block or parent runtime became a capture request"
+    },
+    {
+      "name": "complete-body",
+      "mode": "normal",
+      "test": "TestHistoricalCaptureRequestChangedOrMissingCompleteBodyRefuses",
+      "compile_exit": 0,
+      "intended_test_exit": 1,
+      "actual_assertion_site": "historical_capture_request_test.go:209:",
+      "actual_race_assertion_evidence": "historical_capture_request_test.go:209: incomplete or foreign body became an execution request changed-body {urnetwork-historical-capture-observation-v1 owned-rpc-assertion {urnetwork-mainnet-rpc-identity-v1 2026-10-03T16:10:54.463637009Z http://127.0.0.1:36055 Bittensor 0x21212121212121212121212121",
+      "author_described_condition": "incomplete or foreign body became an execution request"
+    },
+    {
+      "name": "parent-runtime",
+      "mode": "normal",
+      "test": "TestHistoricalCaptureRequestPublicCommandUsesParentRuntimeAtUpgrade",
+      "compile_exit": 0,
+      "intended_test_exit": 1,
+      "actual_assertion_site": "historical_capture_request_test.go:113:",
+      "actual_race_assertion_evidence": "historical_capture_request_test.go:113: capture read the upgrade child's code instead of parent execution code: state_getStorageHash [[34 48 120 51 97 54 51 54 102 54 52 54 53 34] [34 48 120 101 51 101 50 56 101 54 56 51 101 55 98 100 98 52 49 57 57 56 51 54 49 57 53 101 97 99 98 56 53 98 49 56 97 5",
+      "author_described_condition": "capture used current child code or promoted RPC observation authority"
+    },
+    {
+      "name": "parent-runtime",
+      "mode": "race",
+      "test": "TestHistoricalCaptureRequestPublicCommandUsesParentRuntimeAtUpgrade",
+      "compile_exit": 0,
+      "intended_test_exit": 1,
+      "actual_assertion_site": "historical_capture_request_test.go:113:",
+      "actual_race_assertion_evidence": "historical_capture_request_test.go:113: capture read the upgrade child's code instead of parent execution code: state_getStorageHash [[34 48 120 51 97 54 51 54 102 54 52 54 53 34] [34 48 120 101 51 101 50 56 101 54 56 51 101 55 98 100 98 52 49 57 57 56 51 54 49 57 53 101 97 99 98 56 53 98 49 56 97 5",
+      "author_described_condition": "capture used current child code or promoted RPC observation authority"
+    },
+    {
+      "name": "complete-body",
+      "mode": "race",
+      "test": "TestHistoricalCaptureRequestChangedOrMissingCompleteBodyRefuses",
+      "compile_exit": 0,
+      "intended_test_exit": 1,
+      "actual_assertion_site": "historical_capture_request_test.go:209:",
+      "actual_race_assertion_evidence": "historical_capture_request_test.go:209: incomplete or foreign body became an execution request changed-body {urnetwork-historical-capture-observation-v1 owned-rpc-assertion {urnetwork-mainnet-rpc-identity-v1 2026-10-03T16:10:54.463637009Z http://127.0.0.1:36055 Bittensor 0x21212121212121212121212121",
+      "author_described_condition": "incomplete or foreign body became an execution request"
+    },
+    {
+      "name": "closing-canonical",
+      "mode": "race",
+      "test": "TestHistoricalCaptureRequestClosingCanonicalAndRuntimeChangesRefuse",
+      "compile_exit": 0,
+      "intended_test_exit": 1,
+      "actual_assertion_site": "historical_capture_request_test.go:219:",
+      "actual_race_assertion_evidence": "historical_capture_request_test.go:219: changed finalized block or parent runtime became a capture request changed-canonical {urnetwork-historical-capture-observation-v1 owned-rpc-assertion {urnetwork-mainnet-rpc-identity-v1 2026-10-03T16:12:35.007730128Z http://127.0.0.1:36603 Bittensor 0x212121212",
+      "author_described_condition": "changed finalized block or parent runtime became a capture request"
+    }
+  ],
+  "positives": {
+    "normal_roots": 10,
+    "race_roots": 10,
+    "vet_exit": 0
+  },
+  "resource_grant": {
+    "aggregate_cap_bytes": 4294967296,
+    "attempts": 3,
+    "baseline_available_bytes": 118672678912,
+    "lease_released": true,
+    "no_recharge": true,
+    "observed_cumulative_consumption_bytes": 749080576,
+    "protected_floor_bytes": 114377711616,
+    "resource_samples_persisted": true,
+    "runner_exit": 0,
+    "sampled_low_bytes": 117923598336,
+    "sampler_interval_seconds": 0.2
+  },
+  "lease_released_kernel_check": "Root flock -n true succeeded after terminal runner.",
+  "limits": [
+    "The selected causal tests are intentionally failing overlays; they are not race-positive PASS claims.",
+    "The 0.2-second sampled low-water is evidence of observed available space, not proof of an instantaneous maximum.",
+    "This frozen971 module graph and source do not qualify current-main or later collector joins.",
+    "Current-main composition ad0 requires its separate source/archive/eight-root join.",
+    "Actual archive execution witness, exact source/runtime authority and independent finality remain required."
+  ],
+  "root_review_corrections": [
+    "Normalized image custody omits path; use separately bound ELF artifact path.",
+    "Race JSON events are stored in .stdout, normal events in .jsonl; use actual receipt-bound filenames.",
+    "Terminal state is THREE_ATTEMPTS_TERMINAL; actual source assertion sites113/209/219 are not replaced by descriptive labels. No product/test was rerun."
+  ]
+}

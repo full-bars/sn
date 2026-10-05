@@ -1,0 +1,49 @@
+{
+  "schema": "mainnet-qualification-cache-reclaim-v1",
+  "status": "COMPLETE",
+  "deleted_archives": 63,
+  "reclaimed_bytes": 4321755136,
+  "minimum_age_hours": 48,
+  "minimum_bytes": 8388608,
+  "files": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-4-20261002/reclaim.go": {
+      "bytes": 7047,
+      "sha256": "02798e1c0545f64ad0449bd497da1e6f11a35dcd59969fbb1598e50a8ece73a1"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-4-20261002/plan.json": {
+      "bytes": 19375,
+      "sha256": "7a55a229790f0bff69dfd1f78244bfa4a840c5fff8da6483b77ca11d0c17d43c"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-4-20261002/receipt.json": {
+      "bytes": 19656,
+      "sha256": "727dc870c497f14a37a8714ba2d9d9b69310cb7fba5a0eb5a71834d7382bd1b7"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-4-20261002/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "67b0085ea05008f40894092428146700f75017fe094f25212b08e02c854f4b4e"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-4-20261002/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "3adb68a6fc2f8304a32b5931c26f3c8e2dcc100d8fe0bfbbc96d87e855ebac5c"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-4-20261002/candidate-paths.txt": {
+      "bytes": 6237,
+      "sha256": "fd0ebc657c3a0b298684f25672f8cd0d72751f36df833d54b6596039c13c07b6"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-4-20261002/reference-matches.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-4-20261002/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-4-20261002/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "verification": "Privileged process references absent, compiler archive magic/private identity/stat rechecked before deletion, all63 paths absent afterward",
+  "reference_scope": "Declared Markdown/receipt/manifest/checksum metadata up to5MiB under SN and testdata root; compiler/module/container/git trees excluded. Not global raw-artifact absence proof.",
+  "preserved": "All active caches, source, module downloads, immutable evidence and ELF executables"
+}

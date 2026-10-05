@@ -60,9 +60,24 @@ func validateEvidenceRelayContinuationCapacity(cfg *ResolvedConfig, bounds valid
 	if !ok {
 		return errors.New("relay continuation raw record forecast overflows")
 	}
-	within := func(used, next, limit uint64) bool { total, ok := checkedAdd(used, next); return ok && total <= limit }
-	if !within(observed.Head.TrailCount, trails, bounds.Disk.MaxTrailCount) || !within(observed.Head.LastSequence, records, bounds.Disk.MaxRecordCount) || !within(observed.Head.RecordBytes, raw, bounds.Disk.MaxRawRecordBytes) || observed.StorageBytes > bounds.Disk.MaxStorageBytes || observed.StorageFiles > bounds.Disk.MaxStorageFiles {
-		return errors.New("relay continuation exceeds unchanged source lifetime or storage bounds")
+	var exceeded []error
+	for _, capacity := range []struct {
+		name                string
+		used, future, limit uint64
+	}{
+		{name: "trails", used: observed.Head.TrailCount, future: trails, limit: bounds.Disk.MaxTrailCount},
+		{name: "records", used: observed.Head.LastSequence, future: records, limit: bounds.Disk.MaxRecordCount},
+		{name: "raw_record_bytes", used: observed.Head.RecordBytes, future: raw, limit: bounds.Disk.MaxRawRecordBytes},
+		{name: "storage_bytes", used: observed.StorageBytes, limit: bounds.Disk.MaxStorageBytes},
+		{name: "storage_files", used: observed.StorageFiles, limit: bounds.Disk.MaxStorageFiles},
+	} {
+		total, ok := checkedAdd(capacity.used, capacity.future)
+		if !ok || total > capacity.limit {
+			exceeded = append(exceeded, fmt.Errorf("%s: retained=%d forecast=%d limit=%d", capacity.name, capacity.used, capacity.future, capacity.limit))
+		}
+	}
+	if len(exceeded) != 0 {
+		return fmt.Errorf("relay continuation exceeds approved source lifetime or storage bounds: %w", errors.Join(exceeded...))
 	}
 	return nil
 }
@@ -112,7 +127,11 @@ func readEvidenceRelayContinuationDebits(ctx context.Context, stateDir string, p
 	var retained []validatorcomponent.ValidatorEvidenceTransactionV2Expected
 	maximum := evidenceRelayOriginalSlots
 	if plan.EvidenceRelayContinuation != nil {
-		maximum = evidenceRelayContinuationSlots
+		var err error
+		_, maximum, err = plan.EvidenceRelayContinuation.feeTerms()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	for _, entry := range entries {
 		if !strings.HasPrefix(entry.ActionID, evidenceRelayActionPrefix) || seen[entry.ActionID] {
@@ -156,11 +175,15 @@ func readEvidenceRelayContinuationDebits(ctx context.Context, stateDir string, p
 	return debits, retained, nil
 }
 
-func (self *evidenceRelayRuntime) readContinuationPublicCensus(ctx context.Context, block uint64, hash [32]byte) ([]validatorcomponent.ValidatorEvidenceTransactionV2Expected, error) {
+func (self *evidenceRelayRuntime) readContinuationPublicCensus(ctx context.Context, block uint64, hash [32]byte, maximum uint64) ([]validatorcomponent.ValidatorEvidenceTransactionV2Expected, error) {
+	inventories, err := self.evidenceRelayStartupInventories(ctx, maximum)
+	if err != nil {
+		return nil, err
+	}
 	var result []validatorcomponent.ValidatorEvidenceTransactionV2Expected
 	for index := range self.sources {
 		source := &self.sources[index]
-		closed, err := validatorcomponent.DiscoverValidatorEvidencePublicationV2Manifests(ctx, source.stateDir, source.bounds)
+		closed, audits, err := self.readEvidenceRelayStartupManifests(ctx, source, inventories[source.validatorId])
 		if err != nil {
 			return nil, err
 		}
@@ -171,10 +194,6 @@ func (self *evidenceRelayRuntime) readContinuationPublicCensus(ctx context.Conte
 			}
 			result = append(result, requests...)
 		}
-		audits, err := validatorcomponent.DiscoverValidatorEvidenceDepositAuditV2Manifests(ctx, source.stateDir, source.bounds)
-		if err != nil {
-			return nil, err
-		}
 		for index := range audits {
 			requests, err := self.readAuditPublication(ctx, source, &audits[index], block, hash)
 			if err != nil {
@@ -182,7 +201,7 @@ func (self *evidenceRelayRuntime) readContinuationPublicCensus(ctx context.Conte
 			}
 			result = append(result, requests...)
 		}
-		if len(result) > int(evidenceRelayContinuationSlots) {
+		if uint64(len(result)) > maximum {
 			return nil, errors.New("relay continuation public census exceeds its original aggregate monetary reserve")
 		}
 	}
@@ -210,9 +229,9 @@ func canonicalEvidenceRelayContinuationRequests(requests []validatorcomponent.Va
 		}
 		keys = append(keys, key)
 		bySlot[key] = request
-	}
-	if len(keys) > int(evidenceRelayContinuationSlots) {
-		return nil, errors.New("relay continuation unique source census exceeds its bound")
+		if uint64(len(keys)) > evidenceRelayContinuationExpandedSlots {
+			return nil, errors.New("relay continuation unique source census exceeds its bound")
+		}
 	}
 	sort.Strings(keys)
 	result := make([]validatorcomponent.ValidatorEvidenceTransactionV2Expected, 0, len(keys))
@@ -251,8 +270,11 @@ func (self *Executor) observeEvidenceRelayContinuationNonces(ctx context.Context
 		}
 		if independentRPCRequired(self.cfg) {
 			independent, err := self.independentEVM.NonceAt(ctx, point.Address, new(big.Int).SetUint64(block))
-			if err != nil || independent != point.Finalized {
-				return nil, errors.Join(errors.New("relay continuation independent finalized nonce differs"), err)
+			if err != nil {
+				return nil, fmt.Errorf("read relay continuation independent finalized nonce: %w", err)
+			}
+			if independent != point.Finalized {
+				return nil, errors.New("relay continuation independent finalized nonce differs")
 			}
 		}
 	}
@@ -260,11 +282,33 @@ func (self *Executor) observeEvidenceRelayContinuationNonces(ctx context.Context
 }
 
 func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig, stateDir string, base *SetupPlan, endBlock uint64, pin *EvidenceRelayContinuation) (result *SetupPlan, resultErr error) {
-	if ctx == nil || cfg == nil || base == nil || provisionalResumeEnabled(cfg) || endBlock == 0 {
+	return captureEvidenceRelayContinuationWithSlotsAt(ctx, cfg, stateDir, base, endBlock, 0, pin)
+}
+
+// Capture permits one explicit aggregate expansion; the imported plan fixes
+// the same schema on re-capture, preserving every clock and approval byte.
+func captureEvidenceRelayContinuationWithSlotsAt(ctx context.Context, cfg *ResolvedConfig, stateDir string, base *SetupPlan, endBlock, slots uint64, pin *EvidenceRelayContinuation) (result *SetupPlan, resultErr error) {
+	return captureEvidenceRelayContinuationWithLimitsAt(ctx, cfg, stateDir, base, endBlock, slots, 0, pin)
+}
+
+// Recheck the predecessor under its original bounds before forecasting through
+// an explicit capacity successor. Import retains the exact approved decision.
+func captureEvidenceRelayContinuationWithLimitsAt(ctx context.Context, cfg *ResolvedConfig, stateDir string, base *SetupPlan, endBlock, slots, sourceMultiplier uint64, pin *EvidenceRelayContinuation) (result *SetupPlan, resultErr error) {
+	if ctx == nil || cfg == nil || base == nil || endBlock == 0 {
 		return nil, errors.New("relay continuation requires one explicit strict end and original source approval")
 	}
-	if prior := base.EvidenceRelayContinuation; prior != nil && prior.Schema != evidenceRelayContinuationSchema && prior.Schema != evidenceRelayContinuationRefreshSchema {
-		return nil, errors.New("relay refresh cannot change an older approved fee version")
+	capture := provisionalResumeEnabled(cfg)
+	if capture {
+		if err := validateProvisionalRelayCaptureContext(cfg, base); err != nil {
+			return nil, err
+		}
+		if pin != nil {
+			return nil, errors.New("provisional relay capture cannot apply or recertify an imported plan")
+		}
+	}
+	schema, err := evidenceRelayContinuationCaptureSchema(base, slots, pin)
+	if err != nil {
+		return nil, err
 	}
 	defer func() {
 		resultErr = errors.Join(resultErr, ctx.Err())
@@ -272,7 +316,21 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 			result = nil
 		}
 	}()
-	resolved, roles, renderBase, activationPlan, prepared, completed, err := strictHistoryAdoptionInputs(ctx, cfg, stateDir, base)
+	resolved, roles, renderBase, activationPlan, prepared, completed, err := historyAdoptionInputs(ctx, cfg, stateDir, base, capture)
+	if err != nil {
+		return nil, err
+	}
+	sourceBounds, err := captureEvidenceRelaySourceBounds(resolved, base, sourceMultiplier, pin)
+	if err != nil {
+		return nil, err
+	}
+	if len(sourceBounds) != 0 {
+		if !evidenceRelayExpandedFunding(schema) {
+			return nil, errors.New("relay source lifetime expansion requires exactly 2048 aggregate relay slots")
+		}
+		schema = evidenceRelayContinuationSourceExpansionSchema
+	}
+	historyConfig, err := relayContinuationHistoryConfig(resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +355,11 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 	}
 	defer runtime.cancel()
 	defer runtime.chain.Close()
-	work, err := evidenceRelayConfiguredWork(cfg)
+	runtime.retainedPublications, err = newEvidenceRelayRetainedPublications(ctx, resolved, stateDir, base)
+	if err != nil {
+		return nil, err
+	}
+	work, err := evidenceRelayApprovalWork(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -313,22 +375,36 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 	if err != nil {
 		return nil, err
 	}
+	nativeMode := evidenceRelayNativeCurrentSnapshot
+	if capture {
+		nativeMode = evidenceRelayNativePreviewSnapshot
+	}
 	if pin != nil {
 		if pin.SourcePlanHash != base.PlanHash || pin.EndBlock != endBlock || pin.EVMHead.Number > block || pin.NativeHead.Number > nativeBlock {
 			return nil, errors.New("relay continuation imported snapshot is not finalized in its original source")
 		}
 		canonical, err := runtime.chain.BlockHashContext(ctx, pin.EVMHead.Number)
-		if err != nil || fmt.Sprintf("0x%x", canonical) != pin.EVMHead.Hash {
-			return nil, errors.Join(errors.New("relay continuation approved EVM snapshot is no longer canonical"), err)
+		if err != nil {
+			return nil, fmt.Errorf("read relay continuation approved EVM snapshot: %w", err)
+		}
+		if fmt.Sprintf("0x%x", canonical) != pin.EVMHead.Hash {
+			return nil, errors.New("relay continuation approved EVM snapshot is no longer canonical")
 		}
 		block, hash = pin.EVMHead.Number, canonical
 		nativeBlock, nativeHash = pin.NativeHead.Number, nativeTypes.Hash(common.HexToHash(pin.NativeHead.Hash))
+		nativeMode = evidenceRelayNativeContinuationSnapshot
+	}
+	// Authenticate all retained signatures before replaying either source.
+	// Operator workers may have advanced nonces outside the simulator journal.
+	transactionCensus, err := executor.readEvidenceRelayContinuationTransactionCensus(ctx, block)
+	if err != nil {
+		return nil, err
 	}
 	anchor := runtime.sources[0].activations[0]
 	freshNative := anchor
 	freshNative.NativeBlock = nativeBlock
 	freshNative.NativeHash = [32]byte(nativeHash)
-	nativeEpoch, err := runtime.readHorizonNative(ctx, freshNative, evidenceRelayNativeCurrentSnapshot)
+	nativeEpoch, err := runtime.readHorizonNative(ctx, freshNative, nativeMode)
 	if err != nil {
 		return nil, err
 	}
@@ -342,11 +418,14 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 	}
 	c := EvidenceRelayContinuation{Schema: evidenceRelayContinuationSchema, SourcePlanHash: base.PlanHash, ConfigHash: cfg.ConfigHash, ActivationPlanHash: activationPlan, PreparedSHA256: prepared, CompletedSHA256: completed, JournalHash: entries[len(entries)-1].EntryHash, OriginalReserve: reserve, EVMHead: ChainHead{Number: block, Hash: fmt.Sprintf("0x%x", hash)}, NativeHead: ChainHead{Number: nativeBlock, Hash: nativeHash.Hex()}, SettlementEpoch: oracle.CurrentEpoch, NativeEpoch: nativeEpoch, EndBlock: endBlock}
 	if base.EvidenceRelayContinuation != nil {
-		c.Schema = evidenceRelayContinuationRefreshSchema
 		c.OriginalReserve = base.EvidenceRelayContinuation.OriginalReserve
+		c.ConfigHash = base.EvidenceRelayContinuation.ConfigHash
 	}
-	if pin != nil {
-		c.Schema = pin.Schema
+	c.Schema = schema
+	c.SourceBounds = sourceBounds
+	forecastSources, err := applyEvidenceRelaySourceBounds(resolved.Config.ValidatorEvidenceV2, &c)
+	if err != nil {
+		return nil, err
 	}
 	c.RequiredWorkBlocks, err = work.remaining("release-1.0", false)
 	if err != nil {
@@ -374,7 +453,7 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 	}
 	for index, configured := range resolved.Config.ValidatorEvidenceV2 {
 		id := int(configured.ValidatorID)
-		configBytes, err := marshalRuntimeValidatorConfig(resolved, stateDir, roles, renderBase, id)
+		configBytes, err := marshalRuntimeValidatorConfig(historyConfig, stateDir, roles, renderBase, id)
 		if err != nil {
 			return nil, err
 		}
@@ -430,8 +509,8 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 			if err != nil {
 				return nil, err
 			}
-			if err := validateEvidenceRelayContinuationCapacity(cfg, configured.Evidence.Bounds, endBlock-block, capacity); err != nil {
-				return nil, err
+			if err := validateEvidenceRelayContinuationCapacity(cfg, forecastSources[index].Evidence.Bounds, endBlock-block, capacity); err != nil {
+				return nil, fmt.Errorf("validator %d operator %d: %w", id, operator.NoID, err)
 			}
 			c.Sources = append(c.Sources, EvidenceRelayContinuationSource{ValidatorID: configured.ValidatorID, NoID: operator.NoID, CoordinatorStateDir: request.CoordinatorStateDir, IntentPrefixSHA256: request.IntentPrefixSHA256, IntentPrefixCount: request.IntentPrefixCount, LastNativeEpoch: request.LastNativeEpoch, LastArtifactHash: request.LastArtifactHash, Activation: activation, Capacity: capacity})
 		}
@@ -440,7 +519,11 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 	if err != nil {
 		return nil, err
 	}
-	pending, err := runtime.readContinuationPublicCensus(ctx, block, hash)
+	_, maximum, err := c.feeTerms()
+	if err != nil {
+		return nil, err
+	}
+	pending, err := runtime.readContinuationPublicCensus(ctx, block, hash, maximum)
 	if err != nil {
 		return nil, err
 	}
@@ -452,18 +535,10 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 	if err != nil {
 		return nil, err
 	}
-	transactions, err := readEvidenceRelayContinuationTransactions(cfg, stateDir, base)
-	if err != nil {
+	if err := executor.recheckEvidenceRelayContinuationTransactionCensus(ctx, block, transactionCensus); err != nil {
 		return nil, err
 	}
-	exposure, err := fleetRenewalCampaignExposure(stateDir, base, entries, transactions)
-	if err != nil {
-		return nil, err
-	}
-	c.Nonces, err = executor.observeEvidenceRelayContinuationNonces(ctx, exposure, block)
-	if err != nil {
-		return nil, err
-	}
+	c.Nonces = transactionCensus.nonces
 	admitted := map[string]bool{}
 	for _, entry := range entries {
 		if entry.TransactionHash == "" || !base.allowedPlanHashes()[entry.PlanHash] {
@@ -479,16 +554,12 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 			}
 		}
 	}
-	for hash, transaction := range exposure.Transactions {
+	for hash, transaction := range transactionCensus.exposure.Transactions {
 		if transaction.To() != nil && *transaction.To() == base.ValidatorEvidence.Address && !admitted[hash.Hex()] {
 			return nil, errors.New("relay continuation found a signed companion transaction outside original relay admission")
 		}
 	}
-	encoded, err := json.Marshal(transactions)
-	if err != nil {
-		return nil, err
-	}
-	c.TransactionsSHA256 = bytesSHA256(encoded)
+	c.TransactionsSHA256 = transactionCensus.sha256
 	latest, err := readJournalEntries(stateDir)
 	if err != nil || !reflect.DeepEqual(entries, latest) {
 		return nil, errors.Join(errors.New("relay continuation deployment journal changed during capture"), err)
@@ -503,6 +574,9 @@ func captureEvidenceRelayContinuationAt(ctx context.Context, cfg *ResolvedConfig
 	}
 	if current > endBlock || c.RequiredWorkBlocks > endBlock-current {
 		return nil, errors.New("relay continuation capture exhausted its fixed remaining-work runway")
+	}
+	if capture {
+		c.ProvisionalCapture = &EvidenceRelayProvisionalCapture{Record: *cfg.provisionalResume.Record, RecordPath: cfg.provisionalResume.RecordPath, RecordSHA256: cfg.provisionalResume.RecordHash}
 	}
 	return appendEvidenceRelayContinuationPlan(base, c)
 }

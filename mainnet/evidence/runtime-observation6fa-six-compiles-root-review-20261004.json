@@ -1,0 +1,54 @@
+{
+  "schema": "mainnet-independent-six-package-compile-review-v1",
+  "status": "COMPILE_PASS_BEHAVIOR_UNPROVED",
+  "census": {
+    "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/selected-compiles-receipt.json",
+    "bytes": 2709,
+    "sha256": "408d1b7b714dc22fab847403e300a182fbb8f7b956221039787cdc81262c5ff6"
+  },
+  "verified_receipts": [
+    {
+      "bytes": 2598,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-compile-crv4.receipt.json",
+      "sha256": "cbc02e1dc51ee9823446743668c56237a80b60c9c901696244a208d18fcdaeed"
+    },
+    {
+      "bytes": 2623,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-compile-validator.receipt.json",
+      "sha256": "22e6c234c5827b37e1415baaef1117879e9ce0ff60441f0f61bcebc806b90822"
+    },
+    {
+      "bytes": 2603,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-compile-chain.receipt.json",
+      "sha256": "e219a3c54f609f83fd573b11f968e8c8e051f4e664f6c4ea0f8964dbd92d2c5d"
+    },
+    {
+      "bytes": 2603,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-compile-miner.receipt.json",
+      "sha256": "74e97385432e1713d9d3e3703dc08774498f51f702252e0f17848c3a36e69868"
+    },
+    {
+      "bytes": 2633,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-compile-sim_testnet.receipt.json",
+      "sha256": "fb232fc17c379b5766b107aacf2dfb86a740f3498d06bc0006d3cfaf159b0a40"
+    },
+    {
+      "bytes": 2613,
+      "path": "/mnt/data/sn-testnet/sol-ph18-owner-nil-6fa-20261004/evidence/6fa-compile-mainnet.receipt.json",
+      "sha256": "15d7ac2b7e8b59301b9d073eb6565f8ed34a3b42906b92a7e730bbc5b81f0562"
+    }
+  ],
+  "packages": [
+    "./crv4",
+    "./validator",
+    "./chain",
+    "./miner",
+    "./sim-testnet",
+    "./mainnet"
+  ],
+  "scope": "Exact6fa whole-read source and six package compile-only commands; -c -o /dev/null executes no test body.",
+  "limits": [
+    "Fifty-root normal/race scope, six vets and twelve causal control groups remain.",
+    "Original reconnect failures retained; compilation does not establish recovery."
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "schema": "root-capacity-affected-failure-verification-v1",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-affected-four-normal-race-vet-terminal-receipt.json",
+    "sha256": "43daa3a826f0ec0176331fcedae1f40e3e2bac3d872dbfcf68cff5d808d0c068",
+    "bytes": 8390
+  },
+  "source_commit": "ec396f3ad0719e99e9bfa5d83031e896c2f337ba",
+  "source_tree": "1a5feecf026b708e43e1df45754d8826c18fc3a5",
+  "verified_artifacts": [
+    {
+      "bytes": 2360,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-test-only-source-join.json",
+      "sha256": "721e6f196603f8328aa4980a729ee409b29afd33c7a66c1a78b9a5bdb48ccc6a"
+    },
+    {
+      "bytes": 756,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/overlay-ec396.json",
+      "sha256": "a9e8ef7a48c29741699226841d5cf4ebd72f738b522214d029f8f5d1c0b716d7"
+    },
+    {
+      "bytes": 97,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-normal.phase",
+      "sha256": "0b66748f822ed3d1e4fc14c292eeb472b8bf8b51df01917fde8cc0588b3df023"
+    },
+    {
+      "bytes": 160,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-normal.preflight",
+      "sha256": "24d4b780305f4c0c475f76ce99e36b51c554a1a4c574d0147b863f26579e4d4a"
+    },
+    {
+      "bytes": 2819,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-normal.jsonl",
+      "sha256": "d2f2ad69118058dc5606487be44e803854b04dfd7e1a12350158533d3c839165"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 93,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-race.phase",
+      "sha256": "150540c879445426ecde1e1d16964c2f407c046c7ca3ba3826d97974bea4d0f3"
+    },
+    {
+      "bytes": 160,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-race.preflight",
+      "sha256": "24d4b780305f4c0c475f76ce99e36b51c554a1a4c574d0147b863f26579e4d4a"
+    },
+    {
+      "bytes": 2824,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-race.jsonl",
+      "sha256": "d2db19540c856a3ee01480dc3c9aab212fd8e70861cbda26b40ab0c0079ed2fe"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-validator-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 93,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-normal.phase",
+      "sha256": "4c6a156ccf356609bd78952dca522bb4afd0f44d254caba26af1000356d8c0d8"
+    },
+    {
+      "bytes": 160,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-normal.preflight",
+      "sha256": "24d4b780305f4c0c475f76ce99e36b51c554a1a4c574d0147b863f26579e4d4a"
+    },
+    {
+      "bytes": 2381,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-normal.jsonl",
+      "sha256": "b0742230064b9be5fd2d7711a0a57cc3c735e4352d941584a9ff244f7162f520"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 89,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-race.phase",
+      "sha256": "03e0466043ab2b52f020cbe915c638d332f8cebe25a11aa13154fbaec7a2c682"
+    },
+    {
+      "bytes": 160,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-race.preflight",
+      "sha256": "24d4b780305f4c0c475f76ce99e36b51c554a1a4c574d0147b863f26579e4d4a"
+    },
+    {
+      "bytes": 2378,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-race.jsonl",
+      "sha256": "3de07bc27a9c663759810f84b98719667ada4c3b29e2f83546dd970e307c0e55"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-mainnet-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 59,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-vet.phase",
+      "sha256": "603f4a8183b1ba6f64855afb68a5c28f2fd06a7159813b021324f64e94b56d1b"
+    },
+    {
+      "bytes": 160,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-vet.preflight",
+      "sha256": "24d4b780305f4c0c475f76ce99e36b51c554a1a4c574d0147b863f26579e4d4a"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-vet.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-validator-capacity-b1-independent-20261003/evidence/ec396-vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    }
+  ],
+  "verified_raw_results": [
+    {
+      "package": "validator",
+      "mode": "normal",
+      "roots": {
+        "TestProductionCapacityRuntimeRetainsSignedPrefixAndLaterProgress": "pass",
+        "TestProductionCapacityRetainsOriginalSignedSidecar": "fail"
+      },
+      "exit": 1
+    },
+    {
+      "package": "validator",
+      "mode": "race",
+      "roots": {
+        "TestProductionCapacityRuntimeRetainsSignedPrefixAndLaterProgress": "pass",
+        "TestProductionCapacityRetainsOriginalSignedSidecar": "fail"
+      },
+      "exit": 1
+    },
+    {
+      "package": "mainnet",
+      "mode": "normal",
+      "roots": {
+        "TestValidatorCapacityPreviewRefusesMissingCheckpointAndOwner": "pass",
+        "TestValidatorCapacityPreviewRefusesActiveOwnerCancellationAndShortOutput": "pass"
+      },
+      "exit": 0
+    },
+    {
+      "package": "mainnet",
+      "mode": "race",
+      "roots": {
+        "TestValidatorCapacityPreviewRefusesMissingCheckpointAndOwner": "pass",
+        "TestValidatorCapacityPreviewRefusesActiveOwnerCancellationAndShortOutput": "pass"
+      },
+      "exit": 0
+    }
+  ],
+  "vet_exit": 0,
+  "outcome": "Three pass and one canonical-config sidecar failure in each mode",
+  "limits": [
+    "Not a capacity product/release acceptance",
+    "Receipt artifact hashes and raw terminals checked; full source overlay join verification remains separate",
+    "Fixture correction and adjacent public pre-sign round-trip successor remain pending",
+    "Do not bypass retained economic approval or waive production document identity"
+  ]
+}

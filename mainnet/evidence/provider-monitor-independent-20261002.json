@@ -1,0 +1,203 @@
+{
+  "appended_root": "TestProviderDiagnosticsStatusShutdownJoinsAdmittedHandler",
+  "author_e4_receipt_sha256": "22506bdd16e7f6ec4a8ca4d52f0e7154d737d817388c70b7dcf58e63399f0e0c",
+  "author_parent98_receipt_sha256": "fa3a978f0d2e30fce8c6c1382e53ef32ff62c923bec40aad22dd3ea601dfc916",
+  "causal_old_c525": {
+    "normal": {
+      "causal_outputs": [
+        "monitor_provider_test.go:383: policy exceeded shared output domain capacity before role validation service roles must be unique bounded names",
+        "monitor_provider_test.go:454: maximum-roster event was dropped by actual bounded exporter # TYPE sn_mainnet_provider_status gauge"
+      ],
+      "exit": 1,
+      "failed_roots": [
+        "TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent",
+        "TestMonitorProviderSharedOutputBoundsAreAdmittedBeforeOwners"
+      ],
+      "package": "fail",
+      "passed_roots": [],
+      "skipped_roots": []
+    },
+    "race": {
+      "causal_outputs": [
+        "monitor_provider_test.go:383: policy exceeded shared output domain capacity before role validation service roles must be unique bounded names",
+        "monitor_provider_test.go:454: maximum-roster event was dropped by actual bounded exporter # TYPE sn_mainnet_provider_status gauge"
+      ],
+      "exit": 1,
+      "failed_roots": [
+        "TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent",
+        "TestMonitorProviderSharedOutputBoundsAreAdmittedBeforeOwners"
+      ],
+      "package": "fail",
+      "passed_roots": [],
+      "skipped_roots": []
+    }
+  },
+  "effective_graph_sha256": "0e7faa860204704e41a89d097adb950b235ed7851752592a3a74c05721b8da1c",
+  "fixed": {
+    "normal": {
+      "admitted-handler": {
+        "causal_outputs": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestProviderDiagnosticsStatusShutdownJoinsAdmittedHandler"
+        ],
+        "skipped_roots": []
+      },
+      "mainnet9": {
+        "causal_outputs": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestMonitorProviderCancellationJoinsPartialHttpBody",
+          "TestMonitorProviderExpectedRosterCannotComeFromCandidate",
+          "TestMonitorProviderOutageDoesNotInventReadinessOrProof",
+          "TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal",
+          "TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent",
+          "TestMonitorProviderPublicRolesRecoverWithoutResettingPeer",
+          "TestMonitorProviderSequenceAndRestartCannotRefreshStaleSuccess",
+          "TestMonitorProviderSharedOutputBoundsAreAdmittedBeforeOwners",
+          "TestMonitorServicesCommandSeparatesBlockedChainAndRoleOutage"
+        ],
+        "skipped_roots": []
+      },
+      "miner7": {
+        "causal_outputs": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestProviderDiagnosticsStatusOwnerJoins",
+          "TestProviderProgressCanceledObservationDoesNotReadOrRefresh",
+          "TestProviderProgressOwnedHttpUsesActualFactsAndFreshSequence",
+          "TestProviderProgressPublicSwarmWiresRealDeviceObservation",
+          "TestProviderProgressRetiredGenerationCannotPublishReadiness",
+          "TestProviderProgressStatusRefusesUnownedReadiness",
+          "TestProviderProgressSwarmExposesMemberCensus"
+        ],
+        "skipped_roots": []
+      },
+      "protocol3": {
+        "causal_outputs": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestProviderProgressProtocolBoundsBeforeMemberAllocation",
+          "TestProviderProgressProtocolRejectsAmbiguousWire",
+          "TestProviderProgressProtocolRejectsUnqualifiedProofAndReadiness"
+        ],
+        "skipped_roots": []
+      }
+    },
+    "race": {
+      "admitted-handler": {
+        "causal_outputs": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestProviderDiagnosticsStatusShutdownJoinsAdmittedHandler"
+        ],
+        "skipped_roots": []
+      },
+      "mainnet9": {
+        "causal_outputs": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestMonitorProviderCancellationJoinsPartialHttpBody",
+          "TestMonitorProviderExpectedRosterCannotComeFromCandidate",
+          "TestMonitorProviderOutageDoesNotInventReadinessOrProof",
+          "TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal",
+          "TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent",
+          "TestMonitorProviderPublicRolesRecoverWithoutResettingPeer",
+          "TestMonitorProviderSequenceAndRestartCannotRefreshStaleSuccess",
+          "TestMonitorProviderSharedOutputBoundsAreAdmittedBeforeOwners",
+          "TestMonitorServicesCommandSeparatesBlockedChainAndRoleOutage"
+        ],
+        "skipped_roots": []
+      },
+      "miner7": {
+        "causal_outputs": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestProviderDiagnosticsStatusOwnerJoins",
+          "TestProviderProgressCanceledObservationDoesNotReadOrRefresh",
+          "TestProviderProgressOwnedHttpUsesActualFactsAndFreshSequence",
+          "TestProviderProgressPublicSwarmWiresRealDeviceObservation",
+          "TestProviderProgressRetiredGenerationCannotPublishReadiness",
+          "TestProviderProgressStatusRefusesUnownedReadiness",
+          "TestProviderProgressSwarmExposesMemberCensus"
+        ],
+        "skipped_roots": []
+      },
+      "protocol3": {
+        "causal_outputs": [],
+        "exit": 0,
+        "failed_roots": [],
+        "package": "pass",
+        "passed_roots": [
+          "TestProviderProgressProtocolBoundsBeforeMemberAllocation",
+          "TestProviderProgressProtocolRejectsAmbiguousWire",
+          "TestProviderProgressProtocolRejectsUnqualifiedProofAndReadiness"
+        ],
+        "skipped_roots": []
+      }
+    }
+  },
+  "limits": [
+    "Twenty independent selected roots per mode, including one separately appended admitted-handler ownership root; not the author 42-root suite.",
+    "Old c525 overlay replaces two production bodies only and proves two capacity regressions per mode.",
+    "Read-only offline tests; no deployment, device, signing, live RPC submission, or independent compiler/release provenance claim."
+  ],
+  "manifest_entries": 52,
+  "manifest_sha256": "716e79d3a26cf25b520b3a8caa0836a1696b3cf7d569f6f3c928e827566aca46",
+  "schema": "sol-independent-provider-e4-v1",
+  "selected_original_roots": [
+    "TestProviderProgressPublicSwarmWiresRealDeviceObservation",
+    "TestProviderProgressOwnedHttpUsesActualFactsAndFreshSequence",
+    "TestProviderProgressRetiredGenerationCannotPublishReadiness",
+    "TestProviderProgressStatusRefusesUnownedReadiness",
+    "TestProviderProgressSwarmExposesMemberCensus",
+    "TestProviderProgressCanceledObservationDoesNotReadOrRefresh",
+    "TestProviderDiagnosticsStatusOwnerJoins",
+    "TestMonitorProviderPublicLostCheckpointAckReconcilesOriginal",
+    "TestMonitorProviderPublicRolesRecoverWithoutResettingPeer",
+    "TestMonitorProviderExpectedRosterCannotComeFromCandidate",
+    "TestMonitorProviderOutageDoesNotInventReadinessOrProof",
+    "TestMonitorProviderSequenceAndRestartCannotRefreshStaleSuccess",
+    "TestMonitorProviderSharedOutputBoundsAreAdmittedBeforeOwners",
+    "TestMonitorProviderPublicMaximumRosterRetainsBoundedEvent",
+    "TestMonitorProviderCancellationJoinsPartialHttpBody",
+    "TestMonitorServicesCommandSeparatesBlockedChainAndRoleOutage",
+    "TestProviderProgressProtocolBoundsBeforeMemberAllocation",
+    "TestProviderProgressProtocolRejectsAmbiguousWire",
+    "TestProviderProgressProtocolRejectsUnqualifiedProofAndReadiness"
+  ],
+  "server_commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "source_commit": "e4fca9e0f95323d716e4ca711e8f37b12b8bfb54",
+  "source_readback": {
+    "mismatches": [],
+    "source": "e4fca9e0f95323d716e4ca711e8f37b12b8bfb54",
+    "tracked_blobs": 20028,
+    "tree": "e971c7eeab5ef0bec52b7a7bc944918ecffcaefb"
+  },
+  "source_tree": "e971c7eeab5ef0bec52b7a7bc944918ecffcaefb",
+  "terminal_source_readback": {
+    "mismatches": [],
+    "tracked_blobs": 20028
+  },
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0,
+  "vet_packages": [
+    "./miner",
+    "./mainnet",
+    "./protocol"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "native-engine-lifetime-failure-root-review-v1",
+  "source_scope": "Frozen native producer b32/8eb; original Core631, Rust1.89 and authenticated SDKcacb",
+  "phase": "05-compile-distinct-native-engines",
+  "status": "COMPILE_FAILURE_RETAINED",
+  "diagnostic_code": "E0309",
+  "diagnostic": "error[E0309]: the parameter type `B` may not live long enough\n   --> src/historical_capture_scope.rs:200:20\n    |\n197 | impl<'a, B: Backend<Blake2Hasher, Error = String>> Backend<Blake2Hasher> for ScopedBackend<'a, B> {\n    |      -- the parameter type `B` must be valid for the lifetime `'a` as defined here...\n...\n200 |     type RawIter = ScopedIterator<'a, B>;\n    |                    ^^^^^^^^^^^^^^^^^^^^^ ...so that the type `B` will meet its required lifetime bounds...\n    |\nnote: ...that is required by this bound\n   --> src/historical_capture_scope.rs:156:5\n    |\n156 |     marker: PhantomData<&'a B>,\n    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^\nhelp: consider adding an explicit lifetime bound\n    |\n197 | impl<'a, B: Backend<Blake2Hasher, Error = String> + 'a> Backend<Blake2Hasher> for ScopedBackend<'a, B> {\n    |                                                   ++++\n\n",
+  "checked_command_logs": {
+    "/mnt/data/sn-testnet/sol-native-producer-20261004/evidence/05-compile-distinct-native-engines-1-metadata.stdout": "f05b418da6e5a4188fc1534da4cd11885db079005cd630bbf1b6d614cac3710f",
+    "/mnt/data/sn-testnet/sol-native-producer-20261004/evidence/05-compile-distinct-native-engines-1-metadata.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/data/sn-testnet/sol-native-producer-20261004/evidence/05-compile-distinct-native-engines-2-package-only-clean.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/data/sn-testnet/sol-native-producer-20261004/evidence/05-compile-distinct-native-engines-2-package-only-clean.stderr": "df421ddece98de901e4f7615928a648a8f0e7457f26d716814616295634172b7",
+    "/mnt/data/sn-testnet/sol-native-producer-20261004/evidence/05-compile-distinct-native-engines-3-dual-engine-compile.stdout": "1d8a7e9e2343f30877a897859f9edfe41b74886f3e64114ad7322397e564ca2b",
+    "/mnt/data/sn-testnet/sol-native-producer-20261004/evidence/05-compile-distinct-native-engines-3-dual-engine-compile.stderr": "e47948bad45ba5503977437cfad8988271bdd4203548ecaf96a7345cd24d925c"
+  },
+  "phase_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-native-producer-20261004/evidence/05-compile-distinct-native-engines-receipt.json",
+    "bytes": 8798,
+    "sha256": "768ecb9a6a326bb2b4824291ff01f54430dfbd55f69e6e7e7428f4a17d98ebde"
+  },
+  "root_cause": "ScopedIterator holds PhantomData<&a B>; the Backend associated RawIter requires a matching B:a bound. Correction and adjacent borrowed-backend tests are being prepared by Astra in a separate child.",
+  "recovery": "Keep original successful source and graph stages, run independent Go/Capacity/Prefix scopes, and resume only affected native compile/test/export/SN engine consumers on the corrected source.",
+  "limits": [
+    "No native engine execution or positive producer qualification follows from the source/graph stages.",
+    "The original batch is still running; this is not a terminal count or a complete-success claim."
+  ]
+}

@@ -1,0 +1,22 @@
+[Unit]
+Description=Approved standard validator sn-mainnet-validator-synthetic.service
+DefaultDependencies=no
+After=network-online.target
+
+[Service]
+Type=exec
+User=29001
+Group=29001
+WorkingDirectory=/var/lib/synthetic-validator
+ExecStart=/opt/synthetic-release/validator run --config=/etc/synthetic-validator/config.json --progress-file=/var/lib/synthetic-validator/progress.json
+Restart=no
+KillMode=control-group
+SendSIGKILL=yes
+TimeoutStartSec=30
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=yes
+Delegate=no
+
+[Install]
+WantedBy=multi-user.target

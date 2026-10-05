@@ -1,0 +1,52 @@
+{
+  "schema": "model405-body-and-teardown-gap-root-review-v1",
+  "observed_utc": "2026-10-04T03:23:45.087881+00:00",
+  "census": {
+    "path": "/mnt/data/sn-testnet/sol-model-405-affected-plan-20261004/evidence/405-targeted-independent-census-v2.json",
+    "bytes": 6846,
+    "sha256": "75515c34f192179cd22b5f42c8aa9fadfaabf0bda51369bfa970d25208d1d5dd"
+  },
+  "terminal": {
+    "bytes": 3600,
+    "path": "/mnt/data/sn-testnet/sol-model-405-affected-plan-20261004/evidence/model-405-companion.terminal.json",
+    "sha256": "0c57626a357b870e7d8ea94e317a5ac912e9bc0e8e74961544ad0f0d77cb05a6"
+  },
+  "raw_resource_samples": {
+    "path": "/mnt/data/sn-testnet/sol-model-405-affected-plan-20261004/evidence/model-405-companion.resource.csv",
+    "bytes": 87502,
+    "sha256": "0b7f961d29e0536e6a82ad91912e7dd786854070ebc46645fc5ae27f604b566b"
+  },
+  "body_qualified": true,
+  "resource_qualified": false,
+  "normal_roots": 11,
+  "race_roots": 11,
+  "vet_exit": 0,
+  "fixture_control_failures": 4,
+  "verified_raw_bindings": 8,
+  "host_resource_samples": 494,
+  "container_gap": {
+    "sequence": "492",
+    "kind": "periodic",
+    "utc": "2026-10-04T03:19:09.147054+00:00",
+    "data_available_bytes": "98658205696",
+    "data_available_inodes": "94158831",
+    "data_status": "available",
+    "data_error_type": "",
+    "docker_root_available_bytes": "304229888000",
+    "docker_root_available_inodes": "50989876",
+    "docker_root_status": "available",
+    "docker_root_error_type": "",
+    "memory_available_bytes": "122270089216",
+    "memory_status": "available",
+    "memory_error_type": "",
+    "postgres_cgroup_memory_bytes": "156889088",
+    "postgres_status": "available",
+    "postgres_error_type": "",
+    "redis_cgroup_memory_bytes": "",
+    "redis_status": "unavailable",
+    "redis_error_type": "FileNotFoundError"
+  },
+  "continuation_disposition": "Successful bodies are reusable. Single Redis process disappearance at owned teardown is a retained non-blocking measurement exception; fresh original-baseline resource/lease and owned cleanup checks are still required before the next run.",
+  "preserved_terminal_status": "FAIL_OR_INCOMPLETE",
+  "remaining": "Complete corrected model and final SN/Server/Core source qualification remain; no full requirement or deployment authority is closed."
+}

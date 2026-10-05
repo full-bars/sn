@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/urfoundation/sn/internal/durablefixture"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -72,7 +73,11 @@ func newAttemptRecordStoreTestFixture(t *testing.T, trails int) attemptRecordSto
 // Open helpers arrange cleanup but individual tests still assert Close errors.
 func openAttemptRecordStoreTest(t *testing.T, path string, fixture attemptRecordStoreTestFixture, bounds attemptRecordStoreBounds, hooks attemptRecordStoreHooks) *attemptRecordStore {
 	t.Helper()
-	store, err := openAttemptRecordStoreWithHooks(context.Background(), path, fixture.identity, "0x1111111111111111111111111111111111111111", fixture.validatorKey.Public().(ed25519.PublicKey), bounds, hooks)
+	ctx := t.Context()
+	if fixture.identity.ChainID == 964 {
+		ctx = durablefixture.New(t, ctx, filepath.Dir(path)).Context
+	}
+	store, err := openAttemptRecordStoreWithHooks(ctx, path, fixture.identity, "0x1111111111111111111111111111111111111111", fixture.validatorKey.Public().(ed25519.PublicKey), bounds, hooks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1082,7 +1087,7 @@ func TestAttemptRecordStoreCreateCollisionNeverTruncates(t *testing.T) {
 	}
 }
 
-// Reopen performs two exact one-record passes; Walk decodes each selected
+// Reopen authenticates each indexed record once; Walk decodes each selected
 // record once, independent of how much prior history the store contains.
 func TestAttemptRecordStoreBoundsStreamingDecodeWork(t *testing.T) {
 	fixture := newAttemptRecordStoreTestFixture(t, 2)
@@ -1109,7 +1114,7 @@ func TestAttemptRecordStoreBoundsStreamingDecodeWork(t *testing.T) {
 		}
 		return nil
 	}})
-	if decodes.Load() != 32 || largest.Load() == 0 || largest.Load() > bounds.MaxRecordBytes {
+	if decodes.Load() != 16 || largest.Load() == 0 || largest.Load() > bounds.MaxRecordBytes {
 		t.Fatalf("reopen work/maximum record bytes = %d/%d", decodes.Load(), largest.Load())
 	}
 	decodes.Store(0)

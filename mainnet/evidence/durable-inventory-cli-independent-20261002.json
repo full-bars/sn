@@ -1,0 +1,38 @@
+{
+  "author_artifacts_rehashed": 61,
+  "author_receipt_sha256": "ddab1e139aa5fcb62b01a58e66af4a21d2bf0f2fbea3d6de0f2227f1d38936ef",
+  "baseline_caveat": "Rebound root fails first on missing v3 bounds; it is not an isolated old-source rebound decision proof.",
+  "baseline_delta": [
+    "mainnet/storage_inventory_custody_test.go"
+  ],
+  "baseline_intended_failures": {
+    "normal": 3,
+    "race": 3
+  },
+  "baseline_parent_production": "f1b445f9e8dafca790f7bc147430bc9c242b65e5",
+  "baseline_test_only_commit": "d6e72e859f1c32c215732482e43e763f120bbecd",
+  "data_floor_bytes": 118111600640,
+  "fixed_commit": "7fb6b6a1bd52cf243fcbd717f0f48a9cf86027ab",
+  "fixed_tree": "ba8e0f0de97b3b6f49c4e3f87ad39e592a64ddc2",
+  "limits": [
+    "Selected public inventory command roots only; no full monitor/miner/validator/server package or composed release.",
+    "Local Connect0a5 module package is author-retained and hash-rechecked; no remote publication or sumdb corroboration.",
+    "No production mount, owner-local provisioning, semantic restore/rebind, signing, broadcast, deployment or service start."
+  ],
+  "local_connect_sum": "h1:BRKzwfvyy9uY2O844QQVO7jWZp/e/19NBuH5uCVVHBk=",
+  "local_connect_version": "v0.0.0-20261002121440-0a5cda0ebe78",
+  "manifest_entries": 18,
+  "manifest_sha256": "c5fdf0a3a645ab93d6df8636835a16a6daa2723f789e1fcd9577c7d97c9e7665",
+  "normal_roots_passed": 9,
+  "race_roots_passed": 9,
+  "schema": "sol-inventory-cli-independent-v1",
+  "selected_module_sha256": "aa322d59762a0d089a99283d2e1e86b15753c8047aa7aac42028a256828984fa",
+  "source_readback_sha256": "3a301e09e0a5bf84b3926f8d5fd6874174e7386caf6b332de71ea13c68d1db7a",
+  "status": "PASS_SCOPED",
+  "vet_exit": 0,
+  "vet_packages": [
+    "./mainnet",
+    "./internal/durablepath",
+    "./internal/durablefixture"
+  ]
+}

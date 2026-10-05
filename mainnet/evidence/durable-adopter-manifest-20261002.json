@@ -1,0 +1,1334 @@
+{
+  "entries": [
+    {
+      "archive_included": true,
+      "bytes": 14158,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-adoption-reaper-fixed-normal.jsonl",
+      "relative_path": "blob-adoption-reaper-fixed-normal.jsonl",
+      "sha256": "a3ea794ebb5df7e05219d6c673f713127f0923eb4542c2d534cc7e65d27cb0df"
+    },
+    {
+      "archive_included": true,
+      "bytes": 7387,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-durable-normal-initial.jsonl",
+      "relative_path": "blob-durable-normal-initial.jsonl",
+      "sha256": "cd548253dd86d954e10bd11770ebf7cbb2b150e2f89bccb08dbd9194befae2b6"
+    },
+    {
+      "archive_included": true,
+      "bytes": 17002,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-durable-v2-generation-normal.jsonl",
+      "relative_path": "blob-durable-v2-generation-normal.jsonl",
+      "sha256": "befd70f7928c8488f5f389e8a140bee035c9a82c9fab70d8e47228271f8ce628"
+    },
+    {
+      "archive_included": true,
+      "bytes": 7392,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-durable-v2-normal.jsonl",
+      "relative_path": "blob-durable-v2-normal.jsonl",
+      "sha256": "b8145707c84eab8a318130f884146481c8596ec91eb54199fd4aefbac31a1c66"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3156,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-generation-after.jsonl",
+      "relative_path": "blob-generation-after.jsonl",
+      "sha256": "25f551dbb7adbc8e1b43ec7456681e7dd31e9e88669b9787e6513af478455757"
+    },
+    {
+      "archive_included": true,
+      "bytes": 22300,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-generation-before-source.tar.gz",
+      "relative_path": "blob-generation-before-source.tar.gz",
+      "sha256": "7b44e41a6892c618fd2baf36269d4d7f5d03d9432658696df3474c4288577b41"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3478,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-generation-before.jsonl",
+      "relative_path": "blob-generation-before.jsonl",
+      "sha256": "60adadea78396ffc8a0626fd465b8c8184fca3b70a285d610c3403e2922befec"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2803,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-reap-before-normal.jsonl",
+      "relative_path": "blob-reap-before-normal.jsonl",
+      "sha256": "19fde57369f94dc67f27e0028453ada746f23972c60312dccb8bec3122ec53ee"
+    },
+    {
+      "archive_included": true,
+      "bytes": 43623,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-reap-before-source/blob.go",
+      "relative_path": "blob-reap-before-source/blob.go",
+      "sha256": "6fc7da6ca6277a2751507ab701107130fda3881123845e9dd356a982f0f5808e"
+    },
+    {
+      "archive_included": true,
+      "bytes": 21539,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-reap-before-source/blob_durable.go",
+      "relative_path": "blob-reap-before-source/blob_durable.go",
+      "sha256": "bbaa2fef14ad3a67be38a0c64adeb80d1b1b6f6d9c52a9ac8dca69d426c85062"
+    },
+    {
+      "archive_included": true,
+      "bytes": 21226,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/blob-reap-before-source/blob_durable_test.go",
+      "relative_path": "blob-reap-before-source/blob_durable_test.go",
+      "sha256": "6097edc8c0c7b49e7e1ce54249dacc684fc1ed4ab431d2b1c53abfabfbeea8ef"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2125,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/bootstrap-fresh-markers-before-causal-normal.jsonl",
+      "relative_path": "bootstrap-fresh-markers-before-causal-normal.jsonl",
+      "sha256": "bdb0f6a2dba181c603a449346b0be70280ff5229aaac8ed760f5ca1e484b4978"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2119,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/bootstrap-fresh-markers-before-normal.jsonl",
+      "relative_path": "bootstrap-fresh-markers-before-normal.jsonl",
+      "sha256": "fdefc53627b715656e5b9b23afb7e3b7a1e258d507b35f7d27e19461a713bdb8"
+    },
+    {
+      "archive_included": true,
+      "bytes": 9992,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/bootstrap-host-adoption-fixed-build-normal.jsonl",
+      "relative_path": "bootstrap-host-adoption-fixed-build-normal.jsonl",
+      "sha256": "4943cba5f945ad26f63a7a8d8a412309d2dafc95e85f2a4dc2e5f5793f2c47e8"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2887,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/bootstrap-host-adoption-normal.jsonl",
+      "relative_path": "bootstrap-host-adoption-normal.jsonl",
+      "sha256": "3fc27d7a40b672feacbf9f1485b8d1022972c3abbae785dc6e7e4fccf0667909"
+    },
+    {
+      "archive_included": true,
+      "bytes": 8951,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/bootstrap-passive-adoption-normal.jsonl",
+      "relative_path": "bootstrap-passive-adoption-normal.jsonl",
+      "sha256": "de16559d72dbb9e36692ffe743c8b85c016347efc7f0ce648cfc3a082ebeb6cc"
+    },
+    {
+      "archive_included": true,
+      "bytes": 16287,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/bootstrap-recycle-snapshot-fixed-build-normal.jsonl",
+      "relative_path": "bootstrap-recycle-snapshot-fixed-build-normal.jsonl",
+      "sha256": "58b4b952ceada997d7cf1edba5e789d766708127a967061e080ed453a61a087d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1000,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/bootstrap-recycle-snapshot-normal.jsonl",
+      "relative_path": "bootstrap-recycle-snapshot-normal.jsonl",
+      "sha256": "de5d477af4272d7fcd8bcc82b7e0b95a1f7225709f5476e257f404a2c9385ea0"
+    },
+    {
+      "archive_included": true,
+      "bytes": 362,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/compile-initial.log",
+      "relative_path": "compile-initial.log",
+      "sha256": "720aede73453bdac75cba9d7ad3261d06e69979cccdb04203896f74328dad56a"
+    },
+    {
+      "archive_included": true,
+      "bytes": 132,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/compile-wip.log",
+      "relative_path": "compile-wip.log",
+      "sha256": "8e1437fd9f18603be0171370a3a9a8cb0db6cd5c254d3f03ba79b9e918a4a236"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4985,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/evm-snapshot-adoption-corrected-normal.jsonl",
+      "relative_path": "evm-snapshot-adoption-corrected-normal.jsonl",
+      "sha256": "03d19c06fddd09252b65f9bfde2c412520eec845e9a8e7f3f5b7f670503604c3"
+    },
+    {
+      "archive_included": true,
+      "bytes": 6949,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/evm-snapshot-adoption-normal.jsonl",
+      "relative_path": "evm-snapshot-adoption-normal.jsonl",
+      "sha256": "35c9b347e15ee96e5d655e230a3868e227003bd33aba6aac1ef0ae53aa887580"
+    },
+    {
+      "archive_included": true,
+      "bytes": 17526,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/mainnet-admission-contention-normal.jsonl",
+      "relative_path": "mainnet-admission-contention-normal.jsonl",
+      "sha256": "ddd5ce058eaa6a899f1fbadaadc15669115d7383ef587c69bb301123ad562ef5"
+    },
+    {
+      "archive_included": true,
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/mainnet-durable-first.jsonl",
+      "relative_path": "mainnet-durable-first.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive_included": true,
+      "bytes": 9724,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/mainnet-durable-normal-protected.jsonl",
+      "relative_path": "mainnet-durable-normal-protected.jsonl",
+      "sha256": "54c5b75a4a131f4b115f39500b9d67a223fea9883c38f6af57215bd13ae98fb8"
+    },
+    {
+      "archive_included": true,
+      "bytes": 11233,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/mainnet-durable-normal.jsonl",
+      "relative_path": "mainnet-durable-normal.jsonl",
+      "sha256": "5df42c92604f5d59dbe2b4cc8d7fd66dd58b1240de9f77e263533bdb1655083d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 19324,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/mainnet-durable-strict-normal.jsonl",
+      "relative_path": "mainnet-durable-strict-normal.jsonl",
+      "sha256": "6e3a63e5d97a2da586a6311c4a910bde576bbc0524120f937db6b4bb32af90d5"
+    },
+    {
+      "archive_included": true,
+      "bytes": 18509,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/mainnet-durable-v2-normal.jsonl",
+      "relative_path": "mainnet-durable-v2-normal.jsonl",
+      "sha256": "bbaa59b9a76fcfb6f1017a73d9363558d4c14546e45dbe34ede2e6ea9596f855"
+    },
+    {
+      "archive_included": true,
+      "bytes": 11472,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/mainnet-store-boundaries.txt",
+      "relative_path": "mainnet-store-boundaries.txt",
+      "sha256": "f6ee6157b5840ceb300ff4243dd8441ae8df7451e6b8087d55e2a38e3788e21e"
+    },
+    {
+      "archive_included": true,
+      "bytes": 10667,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/mainnet-store-callers.txt",
+      "relative_path": "mainnet-store-callers.txt",
+      "sha256": "85cf5ac79ad3a4938273a598676e6e9257407138325c3d1569c3d08b69d61cff"
+    },
+    {
+      "archive_included": true,
+      "bytes": 15147,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/native-host-snapshot-adoption-normal.jsonl",
+      "relative_path": "native-host-snapshot-adoption-normal.jsonl",
+      "sha256": "1c68f5cdda5eebc6cd8daede8bd9b30f8b4e3b2638268f4de0efb807298e11e6"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1427,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-baseline-overlay.go",
+      "relative_path": "owner-local-baseline-overlay.go",
+      "sha256": "a4bbce0182b5cd1bd39b9f6af7973722848b7198eefc1d160aece2db680e12c2"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1649,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-baseline.jsonl",
+      "relative_path": "owner-local-baseline.jsonl",
+      "sha256": "7f30000910babf23a3aba37ced27252545c8f6566c8eaaff2d83280c36063820"
+    },
+    {
+      "archive_included": true,
+      "bytes": 29741,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-normal-protected.jsonl",
+      "relative_path": "owner-local-normal-protected.jsonl",
+      "sha256": "65735cbcfe2c4c316f405d2695dc90475eee062c71d92142d5ebcd0e932c8ccb"
+    },
+    {
+      "archive_included": true,
+      "bytes": 36572,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-normal.jsonl",
+      "relative_path": "owner-local-normal.jsonl",
+      "sha256": "24682e21016c118958d507d63901375b5178f59f9e79891100b841ca1294b08b"
+    },
+    {
+      "archive_included": true,
+      "bytes": 29762,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-race.jsonl",
+      "relative_path": "owner-local-race.jsonl",
+      "sha256": "0cd19b732f5df4cdba2d54d454b53adda0948ff9562ec475ed7f51b5b1e133a1"
+    },
+    {
+      "archive_included": true,
+      "bytes": 8198,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-receipt.json",
+      "relative_path": "owner-local-receipt.json",
+      "sha256": "dde420a78b5cfca4e0aba18628bd2e48387028134bda8160cbd9e009dd39a972"
+    },
+    {
+      "archive_included": true,
+      "bytes": 18989,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-source.patch",
+      "relative_path": "owner-local-source.patch",
+      "sha256": "df648539905068fbe68d188077d34bba547848ca18432406f9b4b85ddc38e417"
+    },
+    {
+      "archive_included": true,
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-local-vet.log",
+      "relative_path": "owner-local-vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive_included": true,
+      "bytes": 9480,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-selected-adjacent-corrected-normal.jsonl",
+      "relative_path": "owner-selected-adjacent-corrected-normal.jsonl",
+      "sha256": "8becd11b0ae5cd8517dd400ee1a9b80b5f98cbad4c40fc2310021871e6beba23"
+    },
+    {
+      "archive_included": true,
+      "bytes": 30019,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/owner-selected-adoption-normal.jsonl",
+      "relative_path": "owner-selected-adoption-normal.jsonl",
+      "sha256": "44798d45adfaae0d4608db02335c92a991b665a1352b64b0c680410d0f46fef0"
+    },
+    {
+      "archive_included": true,
+      "bytes": 14033,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/passive-root-recovery-final-normal.jsonl",
+      "relative_path": "passive-root-recovery-final-normal.jsonl",
+      "sha256": "cb78d485a14f44159890234b1bed0f4ae7e954589455b4ae81e063faa507887f"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2726,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/public-admission-fixture-corrected-normal.jsonl",
+      "relative_path": "public-admission-fixture-corrected-normal.jsonl",
+      "sha256": "62d0364622cb9b3ec3ba94c869e21eeefaa9facf23c7fe57f30350d198e32c71"
+    },
+    {
+      "archive_included": true,
+      "bytes": 943,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/blob-reaper-before-control.json",
+      "relative_path": "qualification-eb0abe22/blob-reaper-before-control.json",
+      "sha256": "35f7964df4acad2130950390aed0a6989167fb0f08735e9ee45a42dab30d2f91"
+    },
+    {
+      "archive_included": true,
+      "bytes": 649,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/blob-reaper-before-overlay.json",
+      "relative_path": "qualification-eb0abe22/blob-reaper-before-overlay.json",
+      "sha256": "6c17e0f0e7a2586ec6df7ce8f05d31dc04b56f3fa581dcc9cdbebb7387112f08"
+    },
+    {
+      "archive_included": true,
+      "bytes": 695,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/compiler-fence.json",
+      "relative_path": "qualification-eb0abe22/compiler-fence.json",
+      "sha256": "456c93db9cbf30788273c15c6a9ffccb1760f038fa0f96540e5834eab97d95ec"
+    },
+    {
+      "archive_included": true,
+      "bytes": 29035,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/jobs.json",
+      "relative_path": "qualification-eb0abe22/jobs.json",
+      "sha256": "a47858ff50e706d5ef7d48b4e0ae1f7cfc867ea7c92a6bfbc918cb8b336c5c1e"
+    },
+    {
+      "archive_included": true,
+      "bytes": 524,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/ledger-head-omission/control.json",
+      "relative_path": "qualification-eb0abe22/ledger-head-omission/control.json",
+      "sha256": "eefdd97f8b68afd3519de2e13fbe7164eaeacffe2c96db63f16fd1663a6210cd"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4686,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/ledger-head-omission/omission.patch",
+      "relative_path": "qualification-eb0abe22/ledger-head-omission/omission.patch",
+      "sha256": "a52461a8849deab36cb640d6590e3e3d03ed2a7cc7628b4094c5add2f83a5d26"
+    },
+    {
+      "archive_included": true,
+      "bytes": 6653,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-blob-result.json",
+      "relative_path": "qualification-eb0abe22/normal-blob-result.json",
+      "sha256": "3abc161889e9a427a9a4fe467ebbee7253482bf3a8d1df1869c1921a3001c7cc"
+    },
+    {
+      "archive_included": true,
+      "bytes": 31332,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-blob.jsonl",
+      "relative_path": "qualification-eb0abe22/normal-blob.jsonl",
+      "sha256": "547f9d2901b80cf1faec8a44b9b9f6a5a25f92cee382802a5e73bf352c42f69a"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1250,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-inspect-result.json",
+      "relative_path": "qualification-eb0abe22/normal-inspect-result.json",
+      "sha256": "2ceaba04d9f53361dd723bfb5f791e53497d57e65a85e319f08e716ee28bf03d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2418,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-inspect.jsonl",
+      "relative_path": "qualification-eb0abe22/normal-inspect.jsonl",
+      "sha256": "e6c8d396632a34c65c8748a17652035501e65fd008bc50b83a1556e9df937803"
+    },
+    {
+      "archive_included": true,
+      "bytes": 13846,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-mainnet-result.json",
+      "relative_path": "qualification-eb0abe22/normal-mainnet-result.json",
+      "sha256": "5172a4c1b115e9c71511b22309cb274ec296410b83a79d055206a60519a635c4"
+    },
+    {
+      "archive_included": true,
+      "bytes": 47268,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-mainnet.jsonl",
+      "relative_path": "qualification-eb0abe22/normal-mainnet.jsonl",
+      "sha256": "e8d093b29a2d1cc4357c600e1c25c4fa33b473385d3cd98466cefa9bebc1b678"
+    },
+    {
+      "archive_included": true,
+      "bytes": 7517,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-validator-result.json",
+      "relative_path": "qualification-eb0abe22/normal-validator-result.json",
+      "sha256": "5fd3c948206ffe860259517c04fa05224e4031a00b8b7fec22e6a4411fb7dc80"
+    },
+    {
+      "archive_included": true,
+      "bytes": 39076,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/normal-validator.jsonl",
+      "relative_path": "qualification-eb0abe22/normal-validator.jsonl",
+      "sha256": "ca308fbbdeccf2c002fbfd81d04dbb2e261c2392f8389d23e8eef47077b36b1a"
+    },
+    {
+      "archive_included": true,
+      "bytes": 592,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/passive-monitor-head-omission/control.json",
+      "relative_path": "qualification-eb0abe22/passive-monitor-head-omission/control.json",
+      "sha256": "af01a84ea33b441f78901fe5135832a868371288c53e9f41236ccdeb2aae0de6"
+    },
+    {
+      "archive_included": true,
+      "bytes": 892,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/passive-monitor-head-omission/omission.patch",
+      "relative_path": "qualification-eb0abe22/passive-monitor-head-omission/omission.patch",
+      "sha256": "6fd0dd45ad88c49226de2f742e73e2b309516bd9a11009cb6bdf373026e8fbb1"
+    },
+    {
+      "archive_included": true,
+      "bytes": 243,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/passive-monitor-head-omission/omitted-function.txt",
+      "relative_path": "qualification-eb0abe22/passive-monitor-head-omission/omitted-function.txt",
+      "sha256": "a772aa5d892cafd494588d5a3430d1be73230c5c76ee0e765e45620a904caa27"
+    },
+    {
+      "archive_included": true,
+      "bytes": 6664,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-blob-result.json",
+      "relative_path": "qualification-eb0abe22/race-blob-result.json",
+      "sha256": "9fd83a2ef1c8f67cfdeb4b8c5ef3d618d05f71cdd0a9bf63eafd6744821fb8e9"
+    },
+    {
+      "archive_included": true,
+      "bytes": 31345,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-blob.jsonl",
+      "relative_path": "qualification-eb0abe22/race-blob.jsonl",
+      "sha256": "e64afa46161821f3fd44154a7048208aa50d06246551af28ac6f77020524e7de"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1262,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-inspect-result.json",
+      "relative_path": "qualification-eb0abe22/race-inspect-result.json",
+      "sha256": "fca9ad2066ff747286d5058a899f9b7f58c0c87d5c6a38946077a030e758f331"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2420,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-inspect.jsonl",
+      "relative_path": "qualification-eb0abe22/race-inspect.jsonl",
+      "sha256": "0f5ed12c79b394688a883ddfed7ede3aacf7b194a623cf43eb75d6ae0056c228"
+    },
+    {
+      "archive_included": true,
+      "bytes": 13857,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-mainnet-result.json",
+      "relative_path": "qualification-eb0abe22/race-mainnet-result.json",
+      "sha256": "d28028806ae709030d6b941c4dc20fe739d17a88420cc065cac0f59c8d75854d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 47320,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-mainnet.jsonl",
+      "relative_path": "qualification-eb0abe22/race-mainnet.jsonl",
+      "sha256": "4e5aeefe3fb24916f77c277ba786db258b99faac183b15afb3dc5829d99ae2ff"
+    },
+    {
+      "archive_included": true,
+      "bytes": 7528,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-validator-result.json",
+      "relative_path": "qualification-eb0abe22/race-validator-result.json",
+      "sha256": "4b90ea191042d044d622a90b4bc242a461cbdc1441e3b0752a550c16d4913e6c"
+    },
+    {
+      "archive_included": true,
+      "bytes": 45656,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/race-validator.jsonl",
+      "relative_path": "qualification-eb0abe22/race-validator.jsonl",
+      "sha256": "e9bc5775ec1031d1b1c7dfbc94cd748a4589103972398b7dc15ef08c05f15c77"
+    },
+    {
+      "archive_included": true,
+      "bytes": 5238,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/shared-source-join.json",
+      "relative_path": "qualification-eb0abe22/shared-source-join.json",
+      "sha256": "1257573fb2ed5dffe9e9266e1786bf6a14069212310db8f222112e27de94ac74"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2584,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/source-fence-terminal.json",
+      "relative_path": "qualification-eb0abe22/source-fence-terminal.json",
+      "sha256": "09c208a1c13ee99635a664b9a278e68d3bec3f0c2dd6f8c303b0fd785592c5ad"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2834,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/source-fence.json",
+      "relative_path": "qualification-eb0abe22/source-fence.json",
+      "sha256": "11367f118b54bc9e045ab7c42eb7725f7b3eb955c472aa3ffac571716b775896"
+    },
+    {
+      "archive_included": true,
+      "bytes": 7159,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/jobs.json",
+      "relative_path": "qualification-eb0abe22/supplement/jobs.json",
+      "sha256": "902335f8206eec40826129566127f110ffb3c162189f78df18bd401ed1042c39"
+    },
+    {
+      "archive_included": false,
+      "bytes": 68152440,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/mainnet-inspector-normal.test",
+      "relative_path": "qualification-eb0abe22/supplement/mainnet-inspector-normal.test",
+      "sha256": "03682c2c1cde44d526c52003251c873002cdd3c89063288ae8ef006af3b13e68"
+    },
+    {
+      "archive_included": false,
+      "bytes": 90693816,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/mainnet-inspector-race.test",
+      "relative_path": "qualification-eb0abe22/supplement/mainnet-inspector-race.test",
+      "sha256": "e937decddb7ae1874b0efa4b91a8d4a5e0cbc6103b61a0b51744f35cb4d26adb"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1272,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-blob-reaper-before-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/normal-blob-reaper-before-result.json",
+      "sha256": "092ef7920d3c6f34fc2612166419fdc9b2e3f4e0523a8cb2f69ce1f87c5df790"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2799,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-blob-reaper-before.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/normal-blob-reaper-before.jsonl",
+      "sha256": "91e231aefee416dae8597b5c8029c828c4dae92d8e1e0815ec2410fcc134581f"
+    },
+    {
+      "archive_included": true,
+      "bytes": 950,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-inspector-build-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/normal-inspector-build-result.json",
+      "sha256": "0fbce9d92c52f6b6e3d0a047dd78def018e8e0b13498c11e2c989b0c40cbe727"
+    },
+    {
+      "archive_included": true,
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-inspector-build.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/normal-inspector-build.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1483,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-inspector-real-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/normal-inspector-real-result.json",
+      "sha256": "796b3b9149e2d11c4a34fc1e88649cc8e3823c6a57190ba67772235109c287d9"
+    },
+    {
+      "archive_included": true,
+      "bytes": 967,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-inspector-real.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/normal-inspector-real.jsonl",
+      "sha256": "bb6601b88046b20a1ca97cf241660c39f10ec2b106666b9c1c3ff59d462df959"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1328,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-ledger-omission-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/normal-ledger-omission-result.json",
+      "sha256": "21a3fb275a8d8d9663179b0b89931015336732156099ad225dc45708bbfd14d7"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3067,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-ledger-omission.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/normal-ledger-omission.jsonl",
+      "sha256": "aaa72a829fb97532affec02676cae682a8ffe35987bedd42a9e6d642dd88772e"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1381,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-passive-omission-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/normal-passive-omission-result.json",
+      "sha256": "6ab453199f9ba226f7e19f1abef130e3763caa3890aa2ade751d9e9aee2a84e7"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2818,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/normal-passive-omission.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/normal-passive-omission.jsonl",
+      "sha256": "b030778b4579e185fb50e6637f149ea269d1b7f6daf2efb6cd88d5e8b589e646"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1283,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-blob-reaper-before-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/race-blob-reaper-before-result.json",
+      "sha256": "cae642f446797686c745ac31bb7c0a546971c5c7ba5a6bc072a0dcdd8758b6e5"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2801,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-blob-reaper-before.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/race-blob-reaper-before.jsonl",
+      "sha256": "42af79863cc123533aa69ee600d4373d08fcbf55c03137e51fdfe2a865374d08"
+    },
+    {
+      "archive_included": true,
+      "bytes": 958,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-inspector-build-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/race-inspector-build-result.json",
+      "sha256": "b12cbdba3769f11578c2170e5af46e7866fec193643244e0e159b20faf758c8b"
+    },
+    {
+      "archive_included": true,
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-inspector-build.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/race-inspector-build.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1477,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-inspector-real-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/race-inspector-real-result.json",
+      "sha256": "3c207de06551173a606f9cb76f0bef17bd072b3bfc6652e63272553c0cd64f61"
+    },
+    {
+      "archive_included": true,
+      "bytes": 969,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-inspector-real.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/race-inspector-real.jsonl",
+      "sha256": "837c011d9f8f500921dece845bebedd2d1a4f73116a58b80b4c83d6e2013a970"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1340,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-ledger-omission-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/race-ledger-omission-result.json",
+      "sha256": "99382b34e247a915df9fd9ae062f77456547278d93c1e34df8d36a440975d387"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3066,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-ledger-omission.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/race-ledger-omission.jsonl",
+      "sha256": "2ea2f4f75be3e58f2755d64ccf7a4c6ba5ec6da51af3637171ac54a7aced3c46"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1392,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-passive-omission-result.json",
+      "relative_path": "qualification-eb0abe22/supplement/race-passive-omission-result.json",
+      "sha256": "47aa7355f59433324327802bbce8d6529ca3743a50e38649f855855efea7f748"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2809,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/race-passive-omission.jsonl",
+      "relative_path": "qualification-eb0abe22/supplement/race-passive-omission.jsonl",
+      "sha256": "e2ff0842faf06646d6310633cf397873b356f6c3b2d68c4621c8555a180d7bf8"
+    },
+    {
+      "archive_included": true,
+      "bytes": 446,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/resource-pause.json",
+      "relative_path": "qualification-eb0abe22/supplement/resource-pause.json",
+      "sha256": "87be61735d308ab9bc16738b9d50a70902c9ead5432b8bd856362d571e6c0634"
+    },
+    {
+      "archive_included": true,
+      "bytes": 435,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/supplement/resource-resume.json",
+      "relative_path": "qualification-eb0abe22/supplement/resource-resume.json",
+      "sha256": "e627480d844ec202405032036dbfbad8f2ad4aa69779ed9b66da795550657374"
+    },
+    {
+      "archive_included": true,
+      "bytes": 639,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/vet-blob-result.json",
+      "relative_path": "qualification-eb0abe22/vet-blob-result.json",
+      "sha256": "334bac0b24748cfadff7484f6cb6216374c0de2463a86fb3c53ec02a5ce3f615"
+    },
+    {
+      "archive_included": true,
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/vet-blob.jsonl",
+      "relative_path": "qualification-eb0abe22/vet-blob.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive_included": true,
+      "bytes": 695,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/vet-sn-result.json",
+      "relative_path": "qualification-eb0abe22/vet-sn-result.json",
+      "sha256": "4b435faadc4d69ae979abf7903cd8b64c25b21f5d7887ed2bdc76f63ee634500"
+    },
+    {
+      "archive_included": true,
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22/vet-sn.jsonl",
+      "relative_path": "qualification-eb0abe22/vet-sn.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive_included": true,
+      "bytes": 960,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22-driver.log",
+      "relative_path": "qualification-eb0abe22-driver.log",
+      "sha256": "4bcbcf3c83e861aa0c5a862cf9832492817355ddb1ef1446ba314d6d3f18238f"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1262,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/qualification-eb0abe22-supplement-driver.log",
+      "relative_path": "qualification-eb0abe22-supplement-driver.log",
+      "sha256": "b35a07aad160860a8441024a0fd8a82f4df3999c402316b3d56f63d57cd492d3"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3968,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-bounded-recovery-extra-normal.jsonl",
+      "relative_path": "root-bounded-recovery-extra-normal.jsonl",
+      "sha256": "c06531ef46fddcd02a89956e20984cf42377becfaee4e08cdab47a5598bb5939"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4652,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-bounded-recovery-normal.jsonl",
+      "relative_path": "root-bounded-recovery-normal.jsonl",
+      "sha256": "3539d5488033bd14b1958697d8b580202b20ffb5eb19230e9db2428b21603b3a"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1350,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-bounded-recovery-pressure-normal.jsonl",
+      "relative_path": "root-bounded-recovery-pressure-normal.jsonl",
+      "sha256": "b65f576e6c25e47696945406d01e6c6747a7f6ed5f9f718d54f65bac9ffc1d4b"
+    },
+    {
+      "archive_included": true,
+      "bytes": 28152,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-durable-bounded-race.jsonl",
+      "relative_path": "root-durable-bounded-race.jsonl",
+      "sha256": "917e254c1ffa3975ab961a5a564075c120324ef398f4c96f21b7caad2b4c6506"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1669,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-member-restart-before.jsonl",
+      "relative_path": "root-member-restart-before.jsonl",
+      "sha256": "c097c6eac499eb9d1e998d1a88bbd16cffc79eeb23adfab156259126351f256d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3858,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-recovery-fixture-normal.jsonl",
+      "relative_path": "root-recovery-fixture-normal.jsonl",
+      "sha256": "6aa0692ec06645ad0998738f3e5947355f3b32341aa8b039e2ebaf5a47cbd769"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1361,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-recovery-fixture-successor.jsonl",
+      "relative_path": "root-recovery-fixture-successor.jsonl",
+      "sha256": "3b7c0c11f3132176fc0d25f0a76059695002aa6fdcad9a31d6a416b33e659a52"
+    },
+    {
+      "archive_included": true,
+      "bytes": 6142,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-service-continuation-after.jsonl",
+      "relative_path": "root-service-continuation-after.jsonl",
+      "sha256": "1468149a6c2d5cfdf99db3c3b041d6cf023865a6618197b47b59baca163e5222"
+    },
+    {
+      "archive_included": true,
+      "bytes": 37857,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-service-continuation-before-source.tar.gz",
+      "relative_path": "root-service-continuation-before-source.tar.gz",
+      "sha256": "9d34d1a7c687568c2e1c1bb40afe6ffb0671046d518db1056a18cc684c96fa1c"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3606,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-service-continuation-before.jsonl",
+      "relative_path": "root-service-continuation-before.jsonl",
+      "sha256": "a0266ab27435eda8831d46dcfc4c90095dfc358ac0a858c65084ea92f653c481"
+    },
+    {
+      "archive_included": true,
+      "bytes": 54238,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-snapshot-adjacent-normal.jsonl",
+      "relative_path": "root-snapshot-adjacent-normal.jsonl",
+      "sha256": "e3be80f77fedc96ada9d4e5ca1620204b87c105481b39bae2025f8fb3280ed34"
+    },
+    {
+      "archive_included": true,
+      "bytes": 7872,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-snapshot-native-adoption-normal.jsonl",
+      "relative_path": "root-snapshot-native-adoption-normal.jsonl",
+      "sha256": "48faa318e79febf8d460f500503db7cae66ac293a626bf09423800e72f36d880"
+    },
+    {
+      "archive_included": true,
+      "bytes": 16593,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-snapshot-prepared-child-fixed-import-normal.jsonl",
+      "relative_path": "root-snapshot-prepared-child-fixed-import-normal.jsonl",
+      "sha256": "9e52dc79b51865086f9b1534ce4e69f43e5ac0ad9d8bd389284468676c29dc53"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1007,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/root-snapshot-prepared-child-normal.jsonl",
+      "relative_path": "root-snapshot-prepared-child-normal.jsonl",
+      "sha256": "c941ac4b42ffaf8926d718de96c5e84a4b5c92ac456e167902931fcdff9e67c5"
+    },
+    {
+      "archive_included": true,
+      "bytes": 5578,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/causal-worktree.patch",
+      "relative_path": "seal-inputs-eb0abe22/causal-worktree.patch",
+      "sha256": "98e417b95841f7c93f34e8f0d477002bccf59991337a3816793671c1bcdf7315"
+    },
+    {
+      "archive_included": true,
+      "bytes": 132,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/causal.go.work",
+      "relative_path": "seal-inputs-eb0abe22/causal.go.work",
+      "sha256": "ffec77daf7e8ac1e64158657f217632d0d2f29df89e5f4889719200df22af42b"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4854,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/compare-module-pin.go",
+      "relative_path": "seal-inputs-eb0abe22/compare-module-pin.go",
+      "sha256": "5ed83e135fa7e7e10065c36c3d3e0d5c6a2d25ef9eb2a514aeccf90a97c4d51d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 33769,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/coverage-index.json",
+      "relative_path": "seal-inputs-eb0abe22/coverage-index.json",
+      "sha256": "09490f3cd5f21973feee09db8dab15094e8223f049d6c1996f6725c9db0be98f"
+    },
+    {
+      "archive_included": true,
+      "bytes": 11919,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/inspector-normal-buildinfo.txt",
+      "relative_path": "seal-inputs-eb0abe22/inspector-normal-buildinfo.txt",
+      "sha256": "f4eee70dbcf2cb4eac020a2e2057f113efc4cd8b4cf41ab14e8d8e432bf0d053"
+    },
+    {
+      "archive_included": true,
+      "bytes": 11935,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/inspector-race-buildinfo.txt",
+      "relative_path": "seal-inputs-eb0abe22/inspector-race-buildinfo.txt",
+      "sha256": "5de98cd4860df1965c38674a55fd28edd6b49ed14f18ce84a33e2e8cbed7bcb1"
+    },
+    {
+      "archive_included": true,
+      "bytes": 20593,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/native-independent.json",
+      "relative_path": "seal-inputs-eb0abe22/native-independent.json",
+      "sha256": "d0fc6021be65a0b0556989b398a8d5b3563da4d56ceb5a54e6e71a9eac67fba2"
+    },
+    {
+      "archive_included": true,
+      "bytes": 14860,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/omitted-attempt-ledger-custody.go.txt",
+      "relative_path": "seal-inputs-eb0abe22/omitted-attempt-ledger-custody.go.txt",
+      "sha256": "272d23523c2ec3d5519bfac9d8da9701130649a6c94f9b45d2eba631d25e7d10"
+    },
+    {
+      "archive_included": true,
+      "bytes": 9775,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/omitted-bootstrap-root-store.go.txt",
+      "relative_path": "seal-inputs-eb0abe22/omitted-bootstrap-root-store.go.txt",
+      "sha256": "7469440fffdb3a949c10e0196688d66a3bd0627f86cd9941c157ffefec83dc79"
+    },
+    {
+      "archive_included": true,
+      "bytes": 5990,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/qualification-eb0abe22-supplement.go",
+      "relative_path": "seal-inputs-eb0abe22/qualification-eb0abe22-supplement.go",
+      "sha256": "0b247fdbf91a13cf44c093419c772c84ed1db0568634fc7356eda917c664a25c"
+    },
+    {
+      "archive_included": true,
+      "bytes": 8011,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/qualification-eb0abe22.go",
+      "relative_path": "seal-inputs-eb0abe22/qualification-eb0abe22.go",
+      "sha256": "9540455710b7339b0f8439001d8c24f08349fd06f4a7259acaca1b1406a7379d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 134,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/qualified.go.work",
+      "relative_path": "seal-inputs-eb0abe22/qualified.go.work",
+      "sha256": "12eb26f2f22e091886770892ea3bb3037c24f6d8380848bab6fb2457c8f489f2"
+    },
+    {
+      "archive_included": true,
+      "bytes": 10974,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/seal-adopter-eb0abe22.py",
+      "relative_path": "seal-inputs-eb0abe22/seal-adopter-eb0abe22.py",
+      "sha256": "602cf1d7aec20331026d5351045efcbc70771fe66165fc6cb01d7e8e4c6379d9"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1647,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/seed-module-view.go",
+      "relative_path": "seal-inputs-eb0abe22/seed-module-view.go",
+      "sha256": "d95b5d2003fef0099f105029aa95b50c9292a0ebb03157dec1c0494ffdb2d83d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 10468,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/server-successor.go.mod",
+      "relative_path": "seal-inputs-eb0abe22/server-successor.go.mod",
+      "sha256": "dcbc91ae9c6737a4d79921ef1f0d720352ad4bc41d26c0c9f49279d7ae662917"
+    },
+    {
+      "archive_included": true,
+      "bytes": 67462,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/server-successor.go.sum",
+      "relative_path": "seal-inputs-eb0abe22/server-successor.go.sum",
+      "sha256": "ff45d3706f736fa6609b043be621109911ef2fe8d2cbbf094d2965f01ddabe2a"
+    },
+    {
+      "archive_included": true,
+      "bytes": 9035,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/seal-inputs-eb0abe22/snapshot-independent.json",
+      "relative_path": "seal-inputs-eb0abe22/snapshot-independent.json",
+      "sha256": "c714c4b75bb343b2885dd95859eca4bc2c6eaf44fcccadd3a26d28812948caa5"
+    },
+    {
+      "archive_included": true,
+      "bytes": 13897,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-blob-1b7cc78b.bundle",
+      "relative_path": "server-blob-1b7cc78b.bundle",
+      "sha256": "f5ffe53bbe941b5be852910af8c81b4379b6793e1dffe2e7938b15daa3bd565d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 58,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-blob-compile-protected.log",
+      "relative_path": "server-blob-compile-protected.log",
+      "sha256": "5443bbe570ed4137a0de82c81bfb45a14e83881eca7fe7213750a1b938fa994a"
+    },
+    {
+      "archive_included": true,
+      "bytes": 560,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-blob-compile.log",
+      "relative_path": "server-blob-compile.log",
+      "sha256": "8a32085e59fff94adec1df6f4885c7b688ecaf052a2818687f17dc2f1abb9b2b"
+    },
+    {
+      "archive_included": true,
+      "bytes": 757,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-blob-module-005a9066.bundle",
+      "relative_path": "server-blob-module-005a9066.bundle",
+      "sha256": "cedd426fb24273fe0b197fb2f4d19b95f3a52938ff18639f818785f8f00eea12"
+    },
+    {
+      "archive_included": true,
+      "bytes": 118,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-after-go-list.json",
+      "relative_path": "server-pin-after-go-list.json",
+      "sha256": "457686dc3308e07fd6b0e541ab611c874d055988e0008680030882cdf8b38305"
+    },
+    {
+      "archive_included": true,
+      "bytes": 121,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-before-go-list.log",
+      "relative_path": "server-pin-before-go-list.log",
+      "sha256": "22104d9813d8a2507d5ef651517b422d508a40060f0e149ae65f170720a13fe9"
+    },
+    {
+      "archive_included": true,
+      "bytes": 34,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-cache-view.log",
+      "relative_path": "server-pin-cache-view.log",
+      "sha256": "22c39b0210f944faf95ad09dde3ebfe3bb20678fb4c0448b9f6a6685ce716b69"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4883,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-cached-after-go-list.json",
+      "relative_path": "server-pin-cached-after-go-list.json",
+      "sha256": "f3949657ea85ed5fad7caa872751c2f393f40677e71b40fd5913bf8e29782472"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1529,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-include-join.json",
+      "relative_path": "server-pin-include-join.json",
+      "sha256": "57afb3821595d271b71da71fc46e5e8b37f27416362c50a7cb24fc41227dd095"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1034,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-module-download.json",
+      "relative_path": "server-pin-module-download.json",
+      "sha256": "1036f167c131e73556cff79c490f19279ddb7f24ffabac4f07ca5da02ae7a544"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4670564,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-qualified-workspace-packages.jsonl",
+      "relative_path": "server-pin-qualified-workspace-packages.jsonl",
+      "sha256": "f88e396c4b001efb450043284bb83a38746ce1d1fdad6ad043bb3ef2832902f4"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3481473,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-source-join.json",
+      "relative_path": "server-pin-source-join.json",
+      "sha256": "cca30dca0ad25d86edd929212c83bab6ac642e902673491f0929bc440c0b0454"
+    },
+    {
+      "archive_included": true,
+      "bytes": 163,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-source-join.log",
+      "relative_path": "server-pin-source-join.log",
+      "sha256": "de0e9893c6977a9dcbf39357d04c7eecb1d2520aeec7ef551c1812ae592b445b"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4906184,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/server-pin-standalone-packages.jsonl",
+      "relative_path": "server-pin-standalone-packages.jsonl",
+      "sha256": "e12e31c997e19ce19433b4beff2ae2534ccac93e9e69982f5d349f3c076a5b8a"
+    },
+    {
+      "archive_included": true,
+      "bytes": 9593,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-inspector-before-source/bootstrap_chain_contracts_state.go",
+      "relative_path": "service-inspector-before-source/bootstrap_chain_contracts_state.go",
+      "sha256": "271190a712d34e0079112be2680a29b139429f0ef15b998ea8e240235aa5a4f4"
+    },
+    {
+      "archive_included": true,
+      "bytes": 5111,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-inspector-before-source/durable_volume_owner.go",
+      "relative_path": "service-inspector-before-source/durable_volume_owner.go",
+      "sha256": "5c787dfbaabc48f330f38054e729bb8c0be00779510a5ad7e0b6a8f319bcd9e6"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4507,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-inspector-before-source/durable_volume_unit_inspector.go",
+      "relative_path": "service-inspector-before-source/durable_volume_unit_inspector.go",
+      "sha256": "32cccc03e3ecf55ef8e03776add19546843465729df2312aefcd7b84ee067298"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2535,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-inspector-paths-before-causal-normal.jsonl",
+      "relative_path": "service-inspector-paths-before-causal-normal.jsonl",
+      "sha256": "dbeae7bfaa698f10688c7d8937b1fd60f51da128b9cb5b84606973ffcec077c3"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1404,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-inspector-paths-before-normal.jsonl",
+      "relative_path": "service-inspector-paths-before-normal.jsonl",
+      "sha256": "75603fe1421c07f50592a87e37875964d7c78afb2c0663da6ee3045ead91b311"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1736,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-inspector-read-limit-before-normal.jsonl",
+      "relative_path": "service-inspector-read-limit-before-normal.jsonl",
+      "sha256": "cf1ad41a88e2c76d3816d9265f39c0083ef6dbf18a412cae453d1c4f47a0d4c1"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4841,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-inspector-read-limit-before-source/durable_volume_readiness_test.go",
+      "relative_path": "service-inspector-read-limit-before-source/durable_volume_readiness_test.go",
+      "sha256": "b965ffc72e1ba9ac663e4e155c8e9a78ae00d21e6484907a8e6b92c6b41d285a"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4735,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-inspector-read-limit-before-source/durable_volume_unit_inspector.go",
+      "relative_path": "service-inspector-read-limit-before-source/durable_volume_unit_inspector.go",
+      "sha256": "a2e929ffd85584a1a036d5e5a96d54ab21b08939c89af1bbaa7e104828d3fb67"
+    },
+    {
+      "archive_included": true,
+      "bytes": 16932,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-root-census-corrected-normal.jsonl",
+      "relative_path": "service-root-census-corrected-normal.jsonl",
+      "sha256": "41648927656e939c0ea635deb89c2044cf419f2f075c237afc00386f800e2c0c"
+    },
+    {
+      "archive_included": true,
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-storage-inspector-build.log",
+      "relative_path": "service-storage-inspector-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive_included": true,
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-storage-inspector-fixed-build.log",
+      "relative_path": "service-storage-inspector-fixed-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2420,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-storage-inspector-normal.jsonl",
+      "relative_path": "service-storage-inspector-normal.jsonl",
+      "sha256": "367ba2e216dd4a6641ec2f042e15d3010c68e1df8ed8ce8df972b1c816c7470a"
+    },
+    {
+      "archive_included": true,
+      "bytes": 125,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-storage-inspector-real-fixed-normal.log",
+      "relative_path": "service-storage-inspector-real-fixed-normal.log",
+      "sha256": "26fb6cc3548285d6dab1c1bac0fb88a53e05bf2feb47434ec4d2f9961561fa06"
+    },
+    {
+      "archive_included": true,
+      "bytes": 255,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-storage-inspector-real-normal.log",
+      "relative_path": "service-storage-inspector-real-normal.log",
+      "sha256": "addf9e7681e3878f47f08897f0cfc0b9fd1c88298c6cee996512ea2641ee9613"
+    },
+    {
+      "archive_included": false,
+      "bytes": 67939744,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-storage-mainnet-fixed.test",
+      "relative_path": "service-storage-mainnet-fixed.test",
+      "sha256": "41e05742e5f7857081a0658c6ae6510fa6ebae3be1a79f61622cdd963dc39566"
+    },
+    {
+      "archive_included": false,
+      "bytes": 67939792,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/service-storage-mainnet.test",
+      "relative_path": "service-storage-mainnet.test",
+      "sha256": "6eb88efdbfd03b25bf493359b76de966436a0bfc9c6c90d6843cce91ec2979d4"
+    },
+    {
+      "archive_included": true,
+      "bytes": 205307,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/sn-adopter-eb0abe22.bundle",
+      "relative_path": "sn-adopter-eb0abe22.bundle",
+      "sha256": "a3a730a01fc778cd6a76aecf91ee9c54828df6a820d302da9f11318768f5083c"
+    },
+    {
+      "archive_included": true,
+      "bytes": 2842,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/sn-owner-types.txt",
+      "relative_path": "sn-owner-types.txt",
+      "sha256": "85c2580110356fcb629583d7b4253a0e36e8d927ecb43eca4ab686b3d37324cb"
+    },
+    {
+      "archive_included": true,
+      "bytes": 29343,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-adopter-freeze-normal.jsonl",
+      "relative_path": "validator-adopter-freeze-normal.jsonl",
+      "sha256": "269bccdbed7a3cdaa17dca84add3f95cc3d64d61ba7e32522d485b594d3c7652"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3166,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-directory-taxonomy-normal.jsonl",
+      "relative_path": "validator-directory-taxonomy-normal.jsonl",
+      "sha256": "fcf5a744b1a5f3f5445e9079d1758921fcb24e73aa16d08cd6ac1f2f20cffb5c"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4661,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-durable-ledger-initial.jsonl",
+      "relative_path": "validator-durable-ledger-initial.jsonl",
+      "sha256": "54794c6fb8291ae667deec306e345dda7c47ea883a89bbcd2ea843870c0a7f27"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4283,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-durable-ledger-mainnet-normal.jsonl",
+      "relative_path": "validator-durable-ledger-mainnet-normal.jsonl",
+      "sha256": "a619c79ce4fcccb6dc6050fcf62e2f6950756b9f797a3dbb7e52112e87cfd8e9"
+    },
+    {
+      "archive_included": true,
+      "bytes": 5394,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-durable-ledger-successor.jsonl",
+      "relative_path": "validator-durable-ledger-successor.jsonl",
+      "sha256": "14f224a0ef4f6356cf5140b3e3152ce699a20c74130dbf68e392d9dad10d851f"
+    },
+    {
+      "archive_included": true,
+      "bytes": 8100,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-anchor-first.jsonl",
+      "relative_path": "validator-ledger-anchor-first.jsonl",
+      "sha256": "46b865f0fe49f16adb701ed7dfaded8a55807d2ad128abf7bae15c1b646b0a6b"
+    },
+    {
+      "archive_included": true,
+      "bytes": 5683,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-anchor-private-normal.jsonl",
+      "relative_path": "validator-ledger-anchor-private-normal.jsonl",
+      "sha256": "82973bcf543a0992e2a16761075dd47f865f546691bce56eaefdad0e6c56d78e"
+    },
+    {
+      "archive_included": true,
+      "bytes": 6999,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-pending-normal.jsonl",
+      "relative_path": "validator-ledger-pending-normal.jsonl",
+      "sha256": "5bd120fc06664ae93a57cd1d183557ac364a42d1169fc0767912bb30875539ca"
+    },
+    {
+      "archive_included": true,
+      "bytes": 12996,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-restart-before-source/attempt_ledger_directory.go",
+      "relative_path": "validator-ledger-restart-before-source/attempt_ledger_directory.go",
+      "sha256": "e5994fc315519a8026747ce1964624c172f512dd5b849362de13bc8587c41e77"
+    },
+    {
+      "archive_included": true,
+      "bytes": 13388,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-restart-before-source/attempt_ledger_disk.go",
+      "relative_path": "validator-ledger-restart-before-source/attempt_ledger_disk.go",
+      "sha256": "bcdfeb0f52b2abff526f360d878de72aac8ba7a89bd44ed0f72f20f33d8aab9d"
+    },
+    {
+      "archive_included": true,
+      "bytes": 55090,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-restart-before-source/attempt_record_store.go",
+      "relative_path": "validator-ledger-restart-before-source/attempt_record_store.go",
+      "sha256": "929e9f09537d4e9b5520c31014bb2734f32a34ad56b51354f06a2721c72c6fb3"
+    },
+    {
+      "archive_included": true,
+      "bytes": 5060,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-restart-before-source/durable_volume_ledger_restart_test.go",
+      "relative_path": "validator-ledger-restart-before-source/durable_volume_ledger_restart_test.go",
+      "sha256": "dc44a8fcfa14156aa067ec7725161c24e0a90ba979eebfc5c7f3333222602ce0"
+    },
+    {
+      "archive_included": true,
+      "bytes": 3067,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-restart-before.jsonl",
+      "relative_path": "validator-ledger-restart-before.jsonl",
+      "sha256": "cd8ecb001d7658da6648b0f848ac6ae7690b445ad6ad664dedf470013412aae3"
+    },
+    {
+      "archive_included": true,
+      "bytes": 241674,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-restart-before.patch",
+      "relative_path": "validator-ledger-restart-before.patch",
+      "sha256": "e2b7ecef2ec0746a0f5b15b8cdc642deb66c03d75999748db029f4f7d1d14fa5"
+    },
+    {
+      "archive_included": true,
+      "bytes": 682,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-restart-before.sha256",
+      "relative_path": "validator-ledger-restart-before.sha256",
+      "sha256": "1e1cba42dd407bf3937d19867c8d8931e724a841c747ac6ca6efbeaeb3d92603"
+    },
+    {
+      "archive_included": true,
+      "bytes": 22874,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-ledger-unit-adjacent-normal.jsonl",
+      "relative_path": "validator-ledger-unit-adjacent-normal.jsonl",
+      "sha256": "43671f471ecf10dac2e936821f60d8d791be3f5ebb99b5be9353df0b171f8abc"
+    },
+    {
+      "archive_included": true,
+      "bytes": 5179,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-native-adoption-fixed-workspace-normal.jsonl",
+      "relative_path": "validator-native-adoption-fixed-workspace-normal.jsonl",
+      "sha256": "5cd1d88a26074738929eec89389bea69c32d23903869a200dc995ca9ddaecca4"
+    },
+    {
+      "archive_included": true,
+      "bytes": 272,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-native-adoption-normal.jsonl",
+      "relative_path": "validator-native-adoption-normal.jsonl",
+      "sha256": "d187d34c84d3df876e25019da870e483c4c9ea464ca7ab55bbf0efad22b8c999"
+    },
+    {
+      "archive_included": true,
+      "bytes": 4021,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-production-adoption-normal.jsonl",
+      "relative_path": "validator-production-adoption-normal.jsonl",
+      "sha256": "e7d4a69006da5321e822348dad012249b3ff99bb6c58e60f3e9624e6dfbdb882"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1914,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-public-admission-normal.jsonl",
+      "relative_path": "validator-public-admission-normal.jsonl",
+      "sha256": "a48f31985afe3c289c497f8e7502460739dfa3ae63795b48d38450bdd1e1e2fb"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1385,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-public-admission-successor.jsonl",
+      "relative_path": "validator-public-admission-successor.jsonl",
+      "sha256": "a122940455588615e6ed567d38311bae64ac8c6088d62b602394e049d4c76964"
+    },
+    {
+      "archive_included": true,
+      "bytes": 5740,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-public-ledger-v2-normal.jsonl",
+      "relative_path": "validator-public-ledger-v2-normal.jsonl",
+      "sha256": "70787deebea526f910e0ac4383d565c5906f9a70fff30e108cdb1f6068746d78"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1674,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-public-v2-fixture-normal.jsonl",
+      "relative_path": "validator-public-v2-fixture-normal.jsonl",
+      "sha256": "678310177828b7e1fc12c334aee3496d929b66da1c5b031b1e7140d7a989a2e7"
+    },
+    {
+      "archive_included": true,
+      "bytes": 1723,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/evidence/validator-public-v2-fixture-successor.jsonl",
+      "relative_path": "validator-public-v2-fixture-successor.jsonl",
+      "sha256": "e9689981d3c2e12852d20275b49a81864c5b9c3cea2aec7edc705d70458f96a8"
+    }
+  ],
+  "exclusions": [
+    "disposable caches and worktrees",
+    "mutable prose draft",
+    "test executable bytes from archive only; their paths and hashes remain listed"
+  ],
+  "schema": "immutable-evidence-manifest-v1",
+  "scope": "Exact current bytes of listed raw evidence. Older embedded receipts keep their original scopes; no transitive rerun claim."
+}

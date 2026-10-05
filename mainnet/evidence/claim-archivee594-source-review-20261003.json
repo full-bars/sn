@@ -1,0 +1,210 @@
+{
+  "actual_new_test_declarations": [
+    "TestMonitorClaimArchivePublicRestartRetainsUnresolvedAndOriginalPayment",
+    "TestMonitorClaimArchiveLostAcknowledgmentResumesExactHeads",
+    "TestMonitorClaimArchiveRefusesOmittedForgedAndRegressedEvidence",
+    "TestMonitorClaimArchiveActualHistoryReadOnceAndCustodyAfterAdmission",
+    "TestMonitorClaimArchivePolicyRenewalPreservesUnresolvedPrefix",
+    "TestMonitorClaimArchiveCancellationAndObservationErrorsDoNotInventConflict",
+    "TestMonitorClaimArchiveForecastRefusesBeforeEffects",
+    "TestMonitorClaimArchiveOriginalCheckpointGrammarRemainsExact",
+    "TestMonitorClaimCatalogPublicSignedGrowthKeepsOriginalEvidence",
+    "TestMonitorClaimCatalogCannotEnrollLegacyOrReplaceOriginalKey",
+    "TestMonitorClaimArchivePublicInputReadErrorsPrecedeDigestRefusal"
+  ],
+  "adjacent_finding": {
+    "file": "mainnet/monitor_claim_archive.go",
+    "function": "externalizeMonitorClaimRecord",
+    "limits": "No timing benchmark, runtime stall, compile result or behavioral failure is inferred from this source finding.",
+    "observation": "Each save loops state.Epochs over Archive.Epochs. Lookup comparisons grow with the product of both censuses even though hashes are computed only on matching epochs.",
+    "required_fix": "Build/use an admitted epoch-to-commitment lookup, preserving original evidence hashes and ordered/duplicate census checks; deterministic growing-census work-count coverage and full-history foreground measurements.",
+    "status": "Source finding confirmed by Astra; separate successor required, frozen e594 preserved."
+  },
+  "bindings": [
+    {
+      "bytes": 16722,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/durable_volume_owner.go",
+      "sha256": "871c8b5a3fd3065a858b90df4ef1aa30a9c388fee8db03b9ed3c879d97fea0cc"
+    },
+    {
+      "bytes": 24428,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/main.go",
+      "sha256": "790bc79e92d02c63c5c2406a42a1c4162f32c8d55d76b78a9b704428671a33ec"
+    },
+    {
+      "bytes": 8218,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/monitor_claim.go",
+      "sha256": "957b9fc33817dd72c8f129ad54c6ebedf3512135bf418ecc7396880eb8990102"
+    },
+    {
+      "bytes": 19486,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/monitor_claim_archive.go",
+      "sha256": "9bef4bfb2b74a5b9b5a720f53490a3a046a9b706e8b74d10943e8e8696d6dc74"
+    },
+    {
+      "bytes": 13504,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/monitor_claim_archive_command.go",
+      "sha256": "113c9550a5d613898d41a478393acdf99a765aa5403705b329df9e69891d7e2a"
+    },
+    {
+      "bytes": 27602,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/monitor_claim_archive_test.go",
+      "sha256": "d55c3575db0ab5658315de1b3ddc735b24e6f90670d30eee2e90bea40d0b5aef"
+    },
+    {
+      "bytes": 17663,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/monitor_claim_catalog.go",
+      "sha256": "0f3f2013946ca8e03ae9cb4045fc348d585bf38d17ced67b10b44d1ed69a014a"
+    },
+    {
+      "bytes": 13470,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/monitor_claim_state.go",
+      "sha256": "64dc5fabec232508d250635c3f10aff6a5e34c360b4f84ace84932a4e12c5f7a"
+    },
+    {
+      "bytes": 15476,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/monitor_claim_worker.go",
+      "sha256": "07b0cf297e1441160765fdc5a879a50ffaba5539556378ad48070a16a1ec1add"
+    },
+    {
+      "bytes": 19051,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/compaction-omitted/monitor_claim_archive.go",
+      "sha256": "dea6e590714e2b20662367e2f641606196572c3c1ad28679fb7193128914df2f"
+    },
+    {
+      "bytes": 280,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/compaction-omitted/overlay.json",
+      "sha256": "ec04af133bbaa8f533972f4fb67cd25cf1e2e535469bfd830d49336c156f9c34"
+    },
+    {
+      "bytes": 19355,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/held-custody-omitted/monitor_claim_archive.go",
+      "sha256": "f1e3a668d2fe6ad6bbad2aef85cceb4c7293e2837aab77ea713c95cd3f94b640"
+    },
+    {
+      "bytes": 282,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/held-custody-omitted/overlay.json",
+      "sha256": "dc0c4246c06255f323c017935cfce466d686aef870ecb71bd8895a4a144605ab"
+    },
+    {
+      "bytes": 18621,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/receipt-retention-omitted/monitor_claim_archive.go",
+      "sha256": "82483f0e50d98d0c87070022bf4a38e2781db85f7fef0f71f6fc1ef5bd9dc1bc"
+    },
+    {
+      "bytes": 287,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/receipt-retention-omitted/overlay.json",
+      "sha256": "da97dab52b57e1365fd95a2d248285c75157cab4bc3dea90a372ab009a158055"
+    },
+    {
+      "bytes": 10031,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/catalog-signature-omitted/monitor_history_catalog.go",
+      "sha256": "bc7fb429670c3933d04c4c2b1a7ce8999ba7fb8fa8bf8de5d193d3628373da16"
+    },
+    {
+      "bytes": 10020,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/mainnet/monitor_history_catalog.go",
+      "sha256": "7229d167f1b26f35fa0754c3f8a53da6802a56f85f3c44e116b38c0ad492a2a9"
+    },
+    {
+      "bytes": 291,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/catalog-signature-omitted/overlay.json",
+      "sha256": "7045ca0727d55b9f79c69aee179551dd79628c251d9d9c304f1a7c0729b57afb"
+    },
+    {
+      "bytes": 13504,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/archive-first-order-omitted/monitor_claim_archive_command.go",
+      "sha256": "67b92ad6f5f3d5e4a91cc55f1bb21ab24cead9f86bef299b5db86458e6c08327"
+    },
+    {
+      "bytes": 305,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/controls/archive-first-order-omitted/overlay.json",
+      "sha256": "cc18c4744097f14b55dc20e54e6763ac89dfe715520bc9dbe95b01511a12b105"
+    },
+    {
+      "bytes": 2987,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-peer-graph.json",
+      "sha256": "67a567368a074ac5003d4986563a4ceffd7c96515a4b582f83715d990d1829a0"
+    },
+    {
+      "bytes": 11292,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/go.mod",
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "bytes": 66649,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn/go.sum",
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "bytes": 11062,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/seal_intake.py",
+      "sha256": "42b7ce9887bc076be018afb89d26202a20ba45864224067e6ac65cdb9d34f722"
+    },
+    {
+      "bytes": 10798,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/source-fence.json",
+      "sha256": "f3471c25dad96b2e3501590f1489302a316b5226282cd94967208ab70e6f4b54"
+    },
+    {
+      "bytes": 17330,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/evidence/intake.json",
+      "sha256": "6ec211dd168fd867ba51ffab7d2bab59802982f0e68f73d3f511205938d91761"
+    }
+  ],
+  "captured_utc": "2026-10-03T16:57:24.636022+00:00",
+  "git_verification": {
+    "all_other_git_entries_unchanged_from_base": true,
+    "clean_head_tree": true,
+    "exact_changed_git_blobs": [
+      "mainnet/durable_volume_owner.go",
+      "mainnet/main.go",
+      "mainnet/monitor_claim.go",
+      "mainnet/monitor_claim_archive.go",
+      "mainnet/monitor_claim_archive_command.go",
+      "mainnet/monitor_claim_archive_test.go",
+      "mainnet/monitor_claim_catalog.go",
+      "mainnet/monitor_claim_state.go",
+      "mainnet/monitor_claim_worker.go"
+    ],
+    "unchanged_go_module_inputs": true
+  },
+  "planned_neighbors": [
+    "TestMonitorClaimPublicLostAckReopensExactCheckpoint",
+    "TestMonitorClaimLegacyCheckpointRenewalPreservesExactOrigin",
+    "TestMonitorClaimRenewalRefusesExpectationAndIdentityRewrites",
+    "TestMonitorClaimEpochCapacityGrowthRetainsEveryExpectedDebt",
+    "TestMonitorClaimContradictionCannotRewriteRetainedReceipt",
+    "TestMonitorClaimReceiptRetainsEarlierMerkleWitness",
+    "TestMonitorClaimUnavailableAndClockKeepAcceptedHistory"
+  ],
+  "proposed_qualification": {
+    "actual_root_census_required": true,
+    "expected_top_level_roots_per_mode": 18,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "owned_protected_test_image_required": true,
+    "package": "./mainnet",
+    "resource_admission": "Separately queued; not authorized by current mixed V2 grant",
+    "vet": [
+      "./mainnet"
+    ]
+  },
+  "remaining_scope": [
+    "Whole-Claim restore/cohort adapter remains unimplemented in this candidate",
+    "Epoch and policy-review history remain finite; archive frees byte pressure, not their cardinality; safe continued renewal beyond those bounds remains required",
+    "Archive/catalog count, bytes and held owners remain explicitly finite; no infinite retention or automatic cleanup claim",
+    "Retained claim observations are configured-RPC assertions; no independently verified finality or per-epoch payment allocation",
+    "No compile, behavioral result, current deployment or runtime472/fee authority claim"
+  ],
+  "schema": "urnetwork-root-claim-archive-source-review-v1",
+  "source": {
+    "base": "ad42742e1d2a0085250c1570bb0a369376edd926",
+    "commit": "e5947c6f8e132f0cdb6127ceeb17959ab292081d",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-history-archive/sn",
+    "tree": "58a0b304e23240c056cd8bedba7c529df725757c"
+  },
+  "status": "SOURCE_ONLY_UNCOMPILED_WITH_ADJACENT_EFFICIENCY_FINDING"
+}

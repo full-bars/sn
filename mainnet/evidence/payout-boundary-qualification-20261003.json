@@ -1,0 +1,39 @@
+{
+  "limits": [
+    "Initial private fixture bind setup failure remains separate and corrected by exact mode-only mount copy.",
+    "Full model suite was run separately against financial Server630, not this cdcb source.",
+    "Wallet GET Server25f and composition Server2a453 remain separate, unqualified by this receipt.",
+    "No signing, payout send or deployment."
+  ],
+  "references": {
+    "bind-fixture-preflight.json": "6b7a4ad2add8da41006e31b354d10c626bd7cd7e315f34e49af5382a169e3e81",
+    "causal-normal-receipt.json": "7982ed7e32ecbae3fcba202c8332df40545b56a988f384a9293f2a5160108468",
+    "causal-race-receipt.json": "f500ba78ac3f4aeff088c95a8f944da0f73645e753d33a884db9ffae7f055dfb",
+    "controls/manifest.json": "f9763e7b74dc496dc7c9841364165dbb5bde1589e92cf7cf1a06c5f73c484cbf",
+    "normal-receipt.json": "5b60472c2eb300ee09815c22e313ed0e9872f29df510b0fd4a712ed4a444a6ce",
+    "race-receipt.json": "70222b81f172af2dab9275d5fe228db842eb8c7ed2918fa356fecc3d4c8850e5",
+    "setup-failure-receipt.json": "bff9ae329bb7f723ddb129dc25c5411f52e932d33eb1ca7bae57b73e87e43a6d",
+    "vet-build-receipt.json": "8c38eb8856ef2a2995ace78d73b089deb9a1193b81b99e50bac12052d76535a8"
+  },
+  "result": {
+    "bringyourctl_build_exit": 0,
+    "causal_expected_fail_normal": 8,
+    "causal_expected_fail_race": 8,
+    "causal_positive_pass_each_mode": 1,
+    "owned_fixture_cleanup_each_phase": 0,
+    "race_reports": 0,
+    "selected_fail": 0,
+    "selected_normal": 28,
+    "selected_race": 28,
+    "selected_skip": 0,
+    "vet_packages": 5
+  },
+  "schema": "sol-provider-boundary-cdcb-independent-qualification-v1",
+  "source": {
+    "config_commit": "93dc65fd84da9a0f5423b5cab9bfc650692fded8",
+    "graph": "GOWORK=off; published Connecte0d/SCTP644 and exact local sibling pins",
+    "server_commit": "cdcb61fa3db72fb5c5844358224eeb0fb3cbd661",
+    "server_tree": "3a6b153001e7f36c9ec986ca06931a9a49b461f3"
+  },
+  "status": "PASS_SCOPED"
+}

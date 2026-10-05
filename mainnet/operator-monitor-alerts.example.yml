@@ -1,0 +1,32 @@
+# Independent expected roster and alert delivery must be provisioned separately.
+groups:
+  - name: sn-mainnet-operator-monitor
+    interval: 30s
+    rules:
+      - alert: SnMainnetOperatorMonitorMissing
+        expr: sn_mainnet_operator_expected == 1 unless on (env, host, role) sn_mainnet_operator_sample_timestamp_seconds
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: 'Operator observer is absent for {{ $labels.role }} on {{ $labels.host }}'
+      - alert: SnMainnetOperatorMonitorStale
+        expr: (time() - sn_mainnet_operator_sample_timestamp_seconds >= 120) or (sn_mainnet_operator_sample_timestamp_seconds > time() + 30)
+        labels: {severity: critical}
+        annotations:
+          summary: 'Operator observer clock or sample age is unsafe for {{ $labels.role }}'
+      - alert: SnMainnetOperatorObservationCritical
+        expr: (sn_mainnet_operator_read_severity == 2) or (sn_mainnet_operator_scan_severity == 2) or (sn_mainnet_operator_transactions_severity == 2) or (sn_mainnet_operator_publications_severity == 2)
+        labels: {severity: critical}
+        annotations:
+          summary: 'Operator journal observation requires review for {{ $labels.role }}'
+      - alert: SnMainnetOperatorTransactionIncidentOpen
+        expr: sn_mainnet_operator_transactions_incident_open == 1
+        labels: {severity: warning}
+        annotations:
+          summary: 'Operator transaction incident remains unresolved for {{ $labels.role }}'
+      - alert: SnMainnetOperatorSourceUnknown
+        expr: (sn_mainnet_operator_read_current == 0) or (sn_mainnet_operator_scan_known == 0)
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: 'Operator journal source or scan progress is unknown for {{ $labels.role }}'

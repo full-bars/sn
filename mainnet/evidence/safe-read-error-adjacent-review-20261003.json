@@ -1,0 +1,49 @@
+{
+  "files": {
+    "mainnet/bootstrap_successor_canonical_state.go": {
+      "bytes": 16982,
+      "sha256": "1ee81310e9de23cff8120cd7b565526bf984345ab1d80f8ce9430440135b1d4c"
+    },
+    "mainnet/safe_current_storage_rpc.go": {
+      "bytes": 5501,
+      "sha256": "76cdc7e9f91f703f50b7ddfcbc7e4297f33c4f07621f99802035f8e18b6dab02"
+    }
+  },
+  "findings": [
+    {
+      "file": "mainnet/bootstrap_successor_canonical_state.go",
+      "issue": "Read errors share condition with mismatch; returned error includes differs/active labels even when observation unavailable.",
+      "sites": [
+        "owner storage words",
+        "Safe nonce storage word",
+        "guard/module guard/fallback words",
+        "Safe retained inner digest"
+      ]
+    },
+    {
+      "file": "mainnet/safe_current_storage_rpc.go",
+      "issue": "RPC read failure joins changed label without a returned contradictory value.",
+      "sites": [
+        "pending code",
+        "pending authority words"
+      ]
+    }
+  ],
+  "limits": [
+    "Source review proves combined error branches, not observed production outage or false transaction result.",
+    "Pure local hashing, signature and byte validation errors are not classified as transient just because they use errors.Join."
+  ],
+  "qualification": [
+    "Deterministic actual public-path transport timeout, expected-null, cancellation and delayed valid read controls.",
+    "Positive returned code/word/nonce/digest conflicts remain refused.",
+    "Frozen5a0 historical receipt scope remains separate; new successor required."
+  ],
+  "required_behavior": [
+    "On read failure retain typed unavailability/cancellation and original approved retry budget; never infer changed chain evidence from a failed read.",
+    "Only after successful read compare returned evidence; actual malformed or contradictory authority is an integrity refusal.",
+    "Keep affected signing/action pending with original bytes and custody; healthy independent work may continue."
+  ],
+  "schema": "mainnet-safe-read-error-adjacent-review-v1",
+  "source_commit": "8d8229263193ed86cf64684016144d58d8296f45",
+  "status": "SOURCE_FINDING_IMPLEMENTATION_PENDING"
+}

@@ -1,0 +1,211 @@
+{
+  "schema": "0e5-sixteen-operative-controls-independent-review-v1",
+  "status": "16_INTENDED_ASSERTION_FAILURES_CLEAN_COMPILES_ZERO_SKIP",
+  "job": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/0e5-operative-controls-job-v1.json",
+    "sha256": "a427ac71d383394181dddc1e1b072c0244ba3b79f15b4e0fae5d85c60ac4b9bb"
+  },
+  "batch": {
+    "path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-operative-control-batch-receipt.json",
+    "sha256": "0eecb8e4b4c83b8b2cddbfe159ee0ac86832b8e4f81d34074ad53e929124d46f"
+  },
+  "controls": [
+    {
+      "phase": "0e5-18-control-old-acknowledgment-read-body-normal",
+      "mode": "normal",
+      "root": "TestSnapshotHeadAcknowledgmentReadFailureRetainsOriginalWrite",
+      "receipt": {
+        "phase_id": "0e5-18-control-old-acknowledgment-read-body-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-18-control-old-acknowledgment-read-body-normal-control-receipt.json",
+        "receipt_sha256": "0515ea97524998838d3762075543bbf8c3bc42937366db29fbf662ba25a98700",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "failed acknowledgment invented changed custody or lost pending cause"
+    },
+    {
+      "phase": "0e5-19-control-old-named-observation-body-normal",
+      "mode": "normal",
+      "root": "TestMonitorCheckpointNamedObservationPreservesCancellationCauses",
+      "receipt": {
+        "phase_id": "0e5-19-control-old-named-observation-body-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-19-control-old-named-observation-body-normal-control-receipt.json",
+        "receipt_sha256": "bade0451930b17b7de4a9d51d861daf2ae031eff078243b137920d6495b700a4",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "pure named-read cancellation acquired an invented custody cause"
+    },
+    {
+      "phase": "0e5-20-control-old-plan-input-body-normal",
+      "mode": "normal",
+      "root": "TestPlanInputObservationPreservesCancellationAndReadCauses",
+      "receipt": {
+        "phase_id": "0e5-20-control-old-plan-input-body-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-20-control-old-plan-input-body-normal-control-receipt.json",
+        "receipt_sha256": "59875bd0931fe115e1c8288a09e2680bc873277204028d820f33248bf8f69599",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "canceled owner observed a file or lost its cause"
+    },
+    {
+      "phase": "0e5-21-control-claim-compaction-omitted-normal",
+      "mode": "normal",
+      "root": "TestMonitorClaimArchivePublicRestartRetainsUnresolvedAndOriginalPayment",
+      "receipt": {
+        "phase_id": "0e5-21-control-claim-compaction-omitted-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-21-control-claim-compaction-omitted-normal-control-receipt.json",
+        "receipt_sha256": "728072898757fab5c52cc38ba42d0eff0bd488b398601f98d54dffea8a286b8c",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "claim compaction lost original progress, policy or unresolved evidence commitments"
+    },
+    {
+      "phase": "0e5-22-control-claim-held-custody-omitted-normal",
+      "mode": "normal",
+      "root": "TestMonitorClaimArchiveActualHistoryReadOnceAndCustodyAfterAdmission",
+      "receipt": {
+        "phase_id": "0e5-22-control-claim-held-custody-omitted-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-22-control-claim-held-custody-omitted-normal-control-receipt.json",
+        "receipt_sha256": "e2b7f34a86e758de8038c0865ee9bd5f68205203ab3370162f660d1c9260bd8a",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "changed archive custody admitted another source sample"
+    },
+    {
+      "phase": "0e5-23-control-claim-receipt-retention-omitted-normal",
+      "mode": "normal",
+      "root": "TestMonitorClaimArchiveRefusesOmittedForgedAndRegressedEvidence",
+      "receipt": {
+        "phase_id": "0e5-23-control-claim-receipt-retention-omitted-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-23-control-claim-receipt-retention-omitted-normal-control-receipt.json",
+        "receipt_sha256": "984031eb327a052cafe523b8fa56a49fcb15463c0c19a71b4493db63adc66c34",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "refused Claim custody emitted another source sample"
+    },
+    {
+      "phase": "0e5-24-control-claim-original-nested-search-normal",
+      "mode": "normal",
+      "root": "TestMonitorClaimArchivedSaveWorkGrowsWithEpochCensus",
+      "receipt": {
+        "phase_id": "0e5-24-control-claim-original-nested-search-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-24-control-claim-original-nested-search-normal-control-receipt.json",
+        "receipt_sha256": "5b674e813e5aef993173a9df37f1173537dbc5faf149c290fef2109261398b27",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "archived save repeated census search instead of one admitted lookup per epoch"
+    },
+    {
+      "phase": "0e5-25-control-mixed-owner-cancellation-refused-normal",
+      "mode": "normal",
+      "root": "TestMonitorCheckpointCancellationRetainsHardCausePrecedence",
+      "receipt": {
+        "phase_id": "0e5-25-control-mixed-owner-cancellation-refused-normal",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-25-control-mixed-owner-cancellation-refused-normal-control-receipt.json",
+        "receipt_sha256": "9576a2a8e56931bd9639bd561900879a6ac4136cd03f47c3790c987476e55afe",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "joined child deadline and canceled owner invented an independent failure"
+    },
+    {
+      "phase": "0e5-26-control-old-acknowledgment-read-body-race",
+      "mode": "race",
+      "root": "TestSnapshotHeadAcknowledgmentReadFailureRetainsOriginalWrite",
+      "receipt": {
+        "phase_id": "0e5-26-control-old-acknowledgment-read-body-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-26-control-old-acknowledgment-read-body-race-control-receipt.json",
+        "receipt_sha256": "85b649dae6d2f29fb3bd7b2d94bf3d4873f6986db10efca7a6fa491aa44184d2",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "failed acknowledgment invented changed custody or lost pending cause"
+    },
+    {
+      "phase": "0e5-27-control-old-named-observation-body-race",
+      "mode": "race",
+      "root": "TestMonitorCheckpointNamedObservationPreservesCancellationCauses",
+      "receipt": {
+        "phase_id": "0e5-27-control-old-named-observation-body-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-27-control-old-named-observation-body-race-control-receipt.json",
+        "receipt_sha256": "de5cff538dae004598efc2af64f915e23f38eccb3d1e2c072d5cf7ba894620fc",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "pure named-read cancellation acquired an invented custody cause"
+    },
+    {
+      "phase": "0e5-28-control-old-plan-input-body-race",
+      "mode": "race",
+      "root": "TestPlanInputObservationPreservesCancellationAndReadCauses",
+      "receipt": {
+        "phase_id": "0e5-28-control-old-plan-input-body-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-28-control-old-plan-input-body-race-control-receipt.json",
+        "receipt_sha256": "aeef625c0a678146310e5eaf26cb3c810c1fc7f82859120c2e43c6d59a2713a1",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "canceled owner observed a file or lost its cause"
+    },
+    {
+      "phase": "0e5-29-control-claim-compaction-omitted-race",
+      "mode": "race",
+      "root": "TestMonitorClaimArchivePublicRestartRetainsUnresolvedAndOriginalPayment",
+      "receipt": {
+        "phase_id": "0e5-29-control-claim-compaction-omitted-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-29-control-claim-compaction-omitted-race-control-receipt.json",
+        "receipt_sha256": "6ed0ef9029c01406b4f2c3056f58f7e8c77d25f850c52185e3189ca279c7b7ba",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "claim compaction lost original progress, policy or unresolved evidence commitments"
+    },
+    {
+      "phase": "0e5-30-control-claim-held-custody-omitted-race",
+      "mode": "race",
+      "root": "TestMonitorClaimArchiveActualHistoryReadOnceAndCustodyAfterAdmission",
+      "receipt": {
+        "phase_id": "0e5-30-control-claim-held-custody-omitted-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-30-control-claim-held-custody-omitted-race-control-receipt.json",
+        "receipt_sha256": "c8a0614f4be2354ebafffdd73b70c6958565bee8c3871ef3db4ac76a8e28a05d",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "changed archive custody admitted another source sample"
+    },
+    {
+      "phase": "0e5-31-control-claim-receipt-retention-omitted-race",
+      "mode": "race",
+      "root": "TestMonitorClaimArchiveRefusesOmittedForgedAndRegressedEvidence",
+      "receipt": {
+        "phase_id": "0e5-31-control-claim-receipt-retention-omitted-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-31-control-claim-receipt-retention-omitted-race-control-receipt.json",
+        "receipt_sha256": "1ad03f883d7268be2de2cc18e4e00b5076640638ca64f8643a5452c983666c77",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "refused Claim custody emitted another source sample"
+    },
+    {
+      "phase": "0e5-32-control-claim-original-nested-search-race",
+      "mode": "race",
+      "root": "TestMonitorClaimArchivedSaveWorkGrowsWithEpochCensus",
+      "receipt": {
+        "phase_id": "0e5-32-control-claim-original-nested-search-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-32-control-claim-original-nested-search-race-control-receipt.json",
+        "receipt_sha256": "c21f0583edafd1b33ed294dde21ef576c1bf742fe63df7de42fa4796e45fb8f4",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "archived save repeated census search instead of one admitted lookup per epoch"
+    },
+    {
+      "phase": "0e5-33-control-mixed-owner-cancellation-refused-race",
+      "mode": "race",
+      "root": "TestMonitorCheckpointCancellationRetainsHardCausePrecedence",
+      "receipt": {
+        "phase_id": "0e5-33-control-mixed-owner-cancellation-refused-race",
+        "receipt_path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/0e5-33-control-mixed-owner-cancellation-refused-race-control-receipt.json",
+        "receipt_sha256": "55608748be9fc8a11118d6cf26c2db9c47d28ca7a54278929a171267b80a894f",
+        "status": "BEHAVIORAL_RED_PENDING_CAUSE_REVIEW"
+      },
+      "verified_assertion": "joined child deadline and canceled owner invented an independent failure"
+    }
+  ],
+  "limits": [
+    "Eight controls in each mode; selected causal checks only, not full release or deployment.",
+    "Original0e5 positive result remains49PASS3FAIL per mode; foreground successor qualification is separate.",
+    "Old plan-input body control specifically proves early cancellation cause retention."
+  ]
+}

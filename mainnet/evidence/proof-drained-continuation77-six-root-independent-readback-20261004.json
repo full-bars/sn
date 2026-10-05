@@ -1,0 +1,409 @@
+{
+  "schema": "proof-drained-continuation77-six-root-independent-readback-v1",
+  "status": "SCOPED_SIX_ROOT_PASS_CONTROLS_AND_DEPENDENT_GO_PENDING",
+  "source_head": "77a4ab3814e22afbbff4fe27fbb185b52c24b936",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/rust-six-adoption-v1.json",
+      "bytes": 1016,
+      "sha256": "40873c150f0ea6e34bb537f7b46cad40e2c176a49571b23c7744ff6b455dc12c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/rust-crate-stage-receipt-v1.json",
+      "bytes": 7770,
+      "sha256": "6946c530f38058f9d36e2921ae1731c65e616a38088e7e0fcab8a6f099cce1cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/rust-six-job-v1.json",
+      "bytes": 2505,
+      "sha256": "d6adff358010f704930b068f6c2b8af5b676e2047bf0b860e5f5da06e43750a5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-export-v1.terminal.json",
+      "bytes": 1870,
+      "sha256": "78eab50d30271e0e468ac85d424bebe7124808949edf1db54a03491e4cec0dde"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-rust-positives-v1.terminal.json",
+      "bytes": 4118,
+      "sha256": "64882d13458d9ffbeea6d8d77e4ea81f207fd71d4dc9e50d83bfdbc3bf09cb03"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-package-clean.receipt.json",
+      "bytes": 2821,
+      "sha256": "5f4037176d32b800d5df41c5d47f0896eace7a34efc92e5f197d49883ae888a2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-libtest-compile.receipt.json",
+      "bytes": 3046,
+      "sha256": "3f3f03eff3b62a51a211c89231760cb8ed8362d29b59de5b66c5e5ad2b27fc7c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-01.receipt.json",
+      "bytes": 4364,
+      "sha256": "373e3666a46d2b27d4f832e68cbf2b4c2c925b8e975fad191103607eec5f7594"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-02.receipt.json",
+      "bytes": 4328,
+      "sha256": "e3a7b59b66a728efc3fe9ccdc4d73bb64743583096f533f371fe6208aa8a68fd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-03.receipt.json",
+      "bytes": 3429,
+      "sha256": "beec11b1fb75675c9cd4cfbd9b4bc6c4ff86e4c9d06209d12324af2d96f0bbc7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-04.receipt.json",
+      "bytes": 4090,
+      "sha256": "9d8f7150503a54d551b37fe40976c56b2b38191cb5b4a9be4e2620dc1b1694eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-05.receipt.json",
+      "bytes": 4899,
+      "sha256": "2a0c221e7e73eb11275016aa89e2b73ad731f9e02875c412cfee6008bbf3a0ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-06.receipt.json",
+      "bytes": 3097,
+      "sha256": "6ea4ea44657f4d1d4d4cb4dfc8724f60246678b9334a488bb5d2cc95f4ec7c42"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-six-v1.terminal.json",
+      "bytes": 4767,
+      "sha256": "e9b6d6f73fb7582454b7988c6f8ebffd9c2ccccf73f182a11c01baf640c0235f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-clean.resources.csv",
+      "bytes": 286,
+      "sha256": "5be459542e9acea0190e7d7410b4a3fa13dee3e64e070d04ae6f71f9f52562df"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-clean.stderr",
+      "bytes": 168,
+      "sha256": "bffa812a2a7695dd1aee0feedee4336c6dfcb1409ecad34a3443487934d5b14a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-clean.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/images/77-libtest",
+      "bytes": 63812312,
+      "sha256": "bd5690b93067b42515499841f2bcebe4eb9133bab36e98e25a49007d27c26e38"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-libtest-build.resources.csv",
+      "bytes": 3339,
+      "sha256": "57bd94e0d39a144e1e8052fd2d2b0f3daaf802548969131f831e0ed5cc3f22e7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-libtest-build.stderr",
+      "bytes": 185,
+      "sha256": "1e6f9fb2b8dee98ce81cb3010a3455206126f55ac2b0bcc16ade10bb9dd197aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-libtest-build.stdout",
+      "bytes": 501309,
+      "sha256": "9081df2f47592e4e103eedb980a7e33fa463a58189e27cb54cf4c65ff821a833"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-01/native-job-101.json",
+      "bytes": 15359,
+      "sha256": "c8bc1772810fc7d9a3dfcb80304960aed790113811176b682312c4f37858f0f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-01/native-job-102.json",
+      "bytes": 15879,
+      "sha256": "191855959beeaee19c8341442cb19ff955e2a5acf4d44df55824b0a21d13bf35"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-01/native-job-103.json",
+      "bytes": 15766,
+      "sha256": "8a7d3b1dd77a1b829feefa61508378061d7097a594679912d4348575fb751e0d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-01/native-job-104.json",
+      "bytes": 15765,
+      "sha256": "24c77e441c35d2ffba1b6599c3a61864df003dd4043c971b9ec4a7c5862acf21"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-01/native-job-105.json",
+      "bytes": 15761,
+      "sha256": "d8ea3f420059db09eca9cb97ff58994bb71c424b770b2023292269f6319d07bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-01.resources.csv",
+      "bytes": 227,
+      "sha256": "0a91b3406f8a848fb59a19b8c0a45551b7240ff2bf02690c7eee5d02134e5869"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-01.stdout",
+      "bytes": 237,
+      "sha256": "9563a41639892e16a37a5837d607848ba3dbfbee835f168f8cf536ea5a22d6ef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-02/native-job-101.json",
+      "bytes": 15165,
+      "sha256": "61c863ef0dfb57b7cabacbfd0ecc46067412bdaa3292e14fef462bcbdc9db74b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-02/native-job-102.json",
+      "bytes": 15693,
+      "sha256": "308d7ecaf1deb4511304bd9a7e53153139c7c09588d59c0345b8ed598b0c97e1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-02/native-job-103.json",
+      "bytes": 15582,
+      "sha256": "4b6e372be6e94056af5769fe9f17e7c971d7c45ab6276b5acbb5602582746ef3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-02/native-job-104.json",
+      "bytes": 15586,
+      "sha256": "03f47548dc35474ed36916ed58a5f0bc72426a3d3f7ff7b2518aed2e70b50e5a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-02/native-job-105.json",
+      "bytes": 15588,
+      "sha256": "a10150f376d6faae1b632be32b6964cec33fc07153950034cd9b9a1e21608580"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-02.resources.csv",
+      "bytes": 162,
+      "sha256": "2a0ff6216e680d854af0fc94dc368b2100fb6eea55edddb831eb2d6af323d42b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-02.stdout",
+      "bytes": 228,
+      "sha256": "0f9bb6ebf562a14d54a78a302a9d166befab09e51746e34d8058b32cc9634df6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-03/native-job.json",
+      "bytes": 15005,
+      "sha256": "ac5a3976971af4324f8c466b555db4f1e697e4500dfafea70d40dcf8131de188"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-03.resources.csv",
+      "bytes": 155,
+      "sha256": "c958aa9b8db727cef94b7f71ed4197cb1086901504a42b475e3f8563cd43dbf8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-03.stdout",
+      "bytes": 244,
+      "sha256": "0acfa019b0e9278a832d9fb0e2aed0c65651d8664bd73433ff345d690cb5cf70"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-04/principal-present.json",
+      "bytes": 15355,
+      "sha256": "ab1a9552fe02e4590e30172c6c30fcf42de50bfe2c7f7834c7d0aec3e21ae179"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-04/principal-zero.json",
+      "bytes": 15364,
+      "sha256": "efe0deca462fc056fb98025cdca1cafd60b60319e8dad99d28daa730bd30b4a5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-04/principal-absent.json",
+      "bytes": 15020,
+      "sha256": "9b2e96b7a658e24bae12342b09d12b9bcddda44681bdf518e868c4dcf20c5ee0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-04/principal-missing-api.json",
+      "bytes": 15436,
+      "sha256": "54085e00705989f7855dda03d6e6a568298c266469922b94ad3a0b21a150651c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-04.resources.csv",
+      "bytes": 162,
+      "sha256": "1e6a57393b9e0539a01e32c3aa6b50459d31968f86cae9ee78f3f401d488d6f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-04.stdout",
+      "bytes": 225,
+      "sha256": "b7ed66aaa8751f5f5f15ac663cb6cef5dc95aef787481bea95f14222ea3465f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-05/principal-effects-earning.json",
+      "bytes": 18900,
+      "sha256": "e6bc6ae5276898910761c8094d41a785d8455c1f1c8e717ba422e42a163b95d4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-05/principal-effects-causes.json",
+      "bytes": 18927,
+      "sha256": "2ab7504e0f701f43f4f2fbc609a49a8d09bf25d01f2f3bdacb4d5bee236d0c6e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-05/principal-effects-zero.json",
+      "bytes": 18900,
+      "sha256": "056dfe534bda382ef2bb6cbc53ec3465072daecbdd3ab80323bb5ce81cbe1146"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-05/principal-effects-absent.json",
+      "bytes": 18717,
+      "sha256": "5dec82a19b3dd091b8e1d70e558f0e5f6162e0fea6ef3538f86522e3bb8045ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-05/principal-effects-unclassified.json",
+      "bytes": 19137,
+      "sha256": "0c7c5e32128bd2dcf661fe7fb2eddfa16b0f10fcf9d1341f66733514162905ca"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-05/principal-effects-residual.json",
+      "bytes": 19036,
+      "sha256": "5746a90f04288a8d4f4fca1dd913ceaccbc57cada91fa79802617d97f430a4c7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/exports/root-05/principal-effects-rollback.json",
+      "bytes": 18917,
+      "sha256": "9d6f9a2157004f3d37ef52df3caeacc8f474b254b6484301c343ca0e2b78981a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-05.resources.csv",
+      "bytes": 227,
+      "sha256": "5b73e5c2db0e0a183ff7ee519ed754d406b4a61625a671756bc3ae85b21f8ce6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-05.stdout",
+      "bytes": 232,
+      "sha256": "105a95fd7eff9d0a196ba945e1fd4839e4e3a773020e73c0a4112d51717e6fa5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-06.resources.csv",
+      "bytes": 162,
+      "sha256": "735ed293982ad4008a89f965d37874759cf54b4755d572a9455e12debe65a5e0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-root-06.stdout",
+      "bytes": 248,
+      "sha256": "7e9dfd495341934affb29dac43fa2d838364e4cd7a16810ea8657fde8426d919"
+    }
+  ],
+  "independent_checks": {
+    "actual_raw_named_roots": [
+      {
+        "root": "historical::tests::native_execution_tests::historical_native_conservation_exports_proof_drained_contiguous_jobs",
+        "actual_named_passes": 1,
+        "failed": 0,
+        "ignored": 0,
+        "exit": 0,
+        "tree_joined": true,
+        "exports": [
+          "native-job-101.json",
+          "native-job-102.json",
+          "native-job-103.json",
+          "native-job-104.json",
+          "native-job-105.json"
+        ]
+      },
+      {
+        "root": "historical::tests::native_execution_tests::historical_native_producer_exports_contiguous_original_jobs",
+        "actual_named_passes": 1,
+        "failed": 0,
+        "ignored": 0,
+        "exit": 0,
+        "tree_joined": true,
+        "exports": [
+          "native-job-101.json",
+          "native-job-102.json",
+          "native-job-103.json",
+          "native-job-104.json",
+          "native-job-105.json"
+        ]
+      },
+      {
+        "root": "historical::tests::native_execution_tests::historical_native_execution_exports_actual_original_program_for_go_consumer",
+        "actual_named_passes": 1,
+        "failed": 0,
+        "ignored": 0,
+        "exit": 0,
+        "tree_joined": true,
+        "exports": [
+          "native-job.json"
+        ]
+      },
+      {
+        "root": "historical::tests::native_execution_tests::historical_native_principal_exports_original_parent_jobs",
+        "actual_named_passes": 1,
+        "failed": 0,
+        "ignored": 0,
+        "exit": 0,
+        "tree_joined": true,
+        "exports": [
+          "principal-present.json",
+          "principal-zero.json",
+          "principal-absent.json",
+          "principal-missing-api.json"
+        ]
+      },
+      {
+        "root": "historical::tests::native_execution_tests::historical_native_principal_effects_export_original_causal_jobs",
+        "actual_named_passes": 1,
+        "failed": 0,
+        "ignored": 0,
+        "exit": 0,
+        "tree_joined": true,
+        "exports": [
+          "principal-effects-earning.json",
+          "principal-effects-causes.json",
+          "principal-effects-zero.json",
+          "principal-effects-absent.json",
+          "principal-effects-unclassified.json",
+          "principal-effects-residual.json",
+          "principal-effects-rollback.json"
+        ]
+      },
+      {
+        "root": "historical::tests::native_execution_tests::historical_native_principal_activation_is_proof_drained_before_original_accrual",
+        "actual_named_passes": 1,
+        "failed": 0,
+        "ignored": 0,
+        "exit": 0,
+        "tree_joined": true,
+        "exports": []
+      }
+    ],
+    "required_exports": 22,
+    "fresh_compile_exit": 0,
+    "cargo_build_finished_success": true,
+    "owned_libtest_physical_identity_hash_mode_links": true,
+    "all_export_hashes_and_private_regular_file_modes": true
+  },
+  "retained_failure_sha256": "78eab50d30271e0e468ac85d424bebe7124808949edf1db54a03491e4cec0dde",
+  "limits": [
+    "Six synthetic original-Wasm roots only; not approval of mainnet runtime or deployment.",
+    "Three causal controls and dependent Go19 roots remain separate pending scopes.",
+    "Previously running long recovery and larger source composition are not qualified by this result.",
+    "Resource samples are observed maxima, not upper bounds."
+  ]
+}

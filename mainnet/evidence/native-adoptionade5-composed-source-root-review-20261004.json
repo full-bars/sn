@@ -1,0 +1,159 @@
+{
+  "schema": "native-adoptionade5-composed-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_UNQUALIFIED",
+  "source_head": "ade5a21403746a620bc37ace3415f83dd4402e61",
+  "source_tree": "20468bbcdb5680cbfbb6797500834446c5d545cc",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-adoption-qualified-inputs/evidence/intake-v2.json",
+      "bytes": 2835,
+      "sha256": "39268069282e11a00cf0304d768c0a7687fd1ea0aa280118c5793af7c891c4ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/intake.json",
+      "bytes": 7123,
+      "sha256": "f6f7810f0e44af80de0193ef4d43ffb7ac3064d59bcae19b4c7cc4d971f14b74"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-fixture-admission/evidence/intake-v2.json",
+      "bytes": 4868,
+      "sha256": "d65f87edeb4d919a062e23cf8eba43cc4f4ab075b947f7a0f4b85712b8a145d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/principal-activation-fixture/evidence/intake.json",
+      "bytes": 9205,
+      "sha256": "667b81e73f18a5f07dbb6b2469e1bd01cdbdf3a886f2f4cc612bc32c372b7040"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-adoption-qualified-inputs/evidence/source-join.json",
+      "bytes": 5066,
+      "sha256": "9cb07cd45143654e0b68f383c95411c62381b5e25d328ab25ce2491ed60a2bbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-adoption-qualified-inputs/evidence/qualification-recipe-v2.json",
+      "bytes": 17944,
+      "sha256": "18b9ae86e8e11acb64103f24de3782a990a4b5bc2f47feb950a24871b0d48bdd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-adoption-qualified-inputs/evidence/operative-controls.json",
+      "bytes": 6663,
+      "sha256": "9409b240714963cab5d70880d3c6ed2ed329002a35ce9ac28f3bd80ce88b035b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-adoption-qualified-inputs/evidence/intake.json",
+      "bytes": 2436,
+      "sha256": "ff2aaf49e88dcb7b0fa31f006d38672c4d3e998116a6c89a696602453fad3547"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-original-policy-normalization-omitted.go",
+      "bytes": 7832,
+      "sha256": "9ca7bad6357f620fcb60b008016d4d02e1649218911e956e2f01612deeb989cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-original-signature-omitted.go",
+      "bytes": 9217,
+      "sha256": "a223b9b4deab0de4a95b41535b30663baacf373ca357e7f6c5d732e566536607"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-inner-approval-refusal-omitted.go",
+      "bytes": 9217,
+      "sha256": "16aba8559b44b2ed885f30547f625ffc0c5bcf77c4ac162f48c920264fb32c7c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-original-predecessor-omitted.go",
+      "bytes": 9217,
+      "sha256": "120d33c3212ee23c1fac150606676423a8b15740242fcd5baee0f9269186e195"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-archived-review-reuse-refusal-omitted.go",
+      "bytes": 6079,
+      "sha256": "eb3cf68113f4de61ea73a436487a0b449d8031658adca9854c0ea8e19702a5d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-approval-renewal/evidence/controls/native-restore-adopted-authority-selection-omitted.go",
+      "bytes": 9885,
+      "sha256": "5739161311740d9b0898a418373081fdb9137511f15e046d3ada239f0b9e2c1d"
+    }
+  ],
+  "changed_git_blobs_vs_reviewed1fe": [
+    {
+      "relative": "mainnet/economic_conservation_claim_window_test.go",
+      "git_blob": "210e7c63de455209096bde5d9ab412787af8d886",
+      "bytes": 19925,
+      "sha256": "f90b6beac163381549e320933ce46f80d0a25f95f9225a4f28dd6b08efa63822"
+    },
+    {
+      "relative": "mainnet/economic_conservation_principal_activation_test.go",
+      "git_blob": "378acb52d7c38720739d13c66936995e420e1ca8",
+      "bytes": 1385,
+      "sha256": "86ba5234914ce5f48ef3ccdfa6754866ae98b8010559f7af70fc1fccf351806a"
+    },
+    {
+      "relative": "mainnet/economic_conservation_principal_test.go",
+      "git_blob": "c7ab2ef95b7bcb66624e83d660daa15fd0154a7f",
+      "bytes": 17208,
+      "sha256": "8622ac54ccdcfa19fb87849f331da69075afca88b57b44b362ae2cfd484fc66d"
+    },
+    {
+      "relative": "mainnet/economic_conservation_restore_test.go",
+      "git_blob": "c035ff73887872b3486ddddb09cf2d4ac9fbca94",
+      "bytes": 22962,
+      "sha256": "4a09de3a8208e7a3aaf5edeba103bcafd5cbe605d205a89051a107f8750bb746"
+    },
+    {
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "git_blob": "3f29e1ea1aa3bdb0524cd078392fa334e9a3fccb",
+      "bytes": 31110,
+      "sha256": "9ce71fd2f268f4bdaad1f66ef05d0c9081937514168e8b51e8c71de1abfd376f"
+    },
+    {
+      "relative": "mainnet/economic_restore_fixture_admission_test.go",
+      "git_blob": "3ac78f0d6c3a2d9a8dfb5e2554ff8a7fd81e51fb",
+      "bytes": 2183,
+      "sha256": "425e44f3816064e4d2ca6acb527b4385fc4cb7373c6be8d585c3985391279497"
+    },
+    {
+      "relative": "mainnet/historical_replay.go",
+      "git_blob": "637ad0b68f8c31afbbe2760b73f6681242486170",
+      "bytes": 18617,
+      "sha256": "d6023645b3ebe83762282c36ec98618bb6a935138d3ae18a0d6ce310455f6acd"
+    },
+    {
+      "relative": "mainnet/historical_replay_diagnostic_test.go",
+      "git_blob": "0930be050203a849e536d25470976a1a6b1aebcd",
+      "bytes": 2294,
+      "sha256": "ec482b180db4fab019450d0a58a5662a7ee6e1d155ba9fae89830def2d0de1e2"
+    },
+    {
+      "relative": "mainnet/historical_replay_test.go",
+      "git_blob": "4f2386c87abb4f93c1af1c3aad5f2a540eb2ce92",
+      "bytes": 20190,
+      "sha256": "7d1fc1a281a64d57be53e04f09c98d028e401acff4c058fe6b44d5feedfb82a8"
+    },
+    {
+      "relative": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "git_blob": "9932a3717b667647547963aa94366d8cadddf9a1",
+      "bytes": 32110,
+      "sha256": "80cf1bd61d926db1e4ce87eb766666813e1148c2070e8729d0e068883df4cbfc"
+    }
+  ],
+  "review": "Read complete manual Rust fixture union, recipe and all remaining1fe-to-ade5 diffs. Earlier separately reviewed729/ec242/425 corrections are retained, with original native1fe production unchanged except bounded subprocess diagnostic. Shared four-argument Rust fixture retains original effects census and genuinely drained activation followed by original accrual. Exact input and original-control bindings independently rehashed; declared25 roots verified against Git blobs.",
+  "qualification_scope": "25 prescribed Go roots plus additional425 affected paths from same composed protected image, normal/race; separate full128/full129 long partitions, six native production control groups plus retained restore controls. Three exact joined Rust fixture/exporter roots need fresh libtest, unchanged production engines reusable after closure proof.",
+  "union_roots_per_mode": 38,
+  "additional425_roots": [
+    "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues",
+    "TestEconomicConservationRestorePublicReconstructsOriginalClaimHead",
+    "TestEconomicConservationRestorePublicRejectsChangedAuthorityAndReserve",
+    "TestEconomicConservationRestorePublicRequiresEverySourceAndCoowner",
+    "TestEconomicConservationRestorePublicSingleRootKeepsFullClaimWindow",
+    "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody",
+    "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects",
+    "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted",
+    "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput",
+    "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot",
+    "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval",
+    "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint",
+    "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress"
+  ],
+  "whole_mainnet_complete": false
+}

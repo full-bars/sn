@@ -1,0 +1,148 @@
+{
+  "schema": "admission-ab0-independent-compile-readback-v1",
+  "status": "NORMAL_AND_RACE_COMPILE_PASS_BEHAVIOR_PENDING",
+  "head": "ab0b1a6fc58f4d0be4bfe84d26d4bb892ddd6a64",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-images-v1.terminal.json",
+      "bytes": 950,
+      "sha256": "6403babcf024318cbc97cc39545713f933232c60645706a4e6b330eccbf10a6a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-compile.receipt.json",
+      "bytes": 7468,
+      "sha256": "be567e5521fad9b57fc7c6f5cc6bb26b27fc907add1bb392ab628e15567d3dc4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/source-stage-receipt-v1.json",
+      "bytes": 609,
+      "sha256": "78e036e79f3a7088ddc63ac80a84c99cadc9da5b7d9d3be376ded82606495fc0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/source-full-readback-v1.json",
+      "bytes": 472,
+      "sha256": "c2b88156166808ed9586b21ceb86b470931c293b951521a36ac6438d5c308e9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/go-peer-stage-receipt-v1.json",
+      "bytes": 2436,
+      "sha256": "0943244ef96c96ccc310f9cfdb4609faef907bc42645f560d095af112f6f9e08"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/go-mainnet-selected-graph-v4.receipt.json",
+      "bytes": 13464,
+      "sha256": "c32372dc48e3fdcf602f380436cb1e8b851de04f9fa07924a47a61b9a0aa9261"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/evidence/qualification-recipe.json",
+      "bytes": 22921,
+      "sha256": "361dfa33df2b28ef63d7173e2fbdae454a4d0b9f0005533980d47b74be96a554"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/go.work",
+      "bytes": 496,
+      "sha256": "42aceb17dee4868d51d10bf41155f8b3e0ecdaf64f451d571d4b63e391ab7cbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/source/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/source/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-compile.resources.csv",
+      "bytes": 11937,
+      "sha256": "1321e1f2c139a2be3c161931a898175a77b4d73301965667ad030379a700d06f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/images/ab0-go-normal-compile.test",
+      "bytes": 79772936,
+      "sha256": "c35d4da691c03870acd5435f429543ad521e8b5e0203f3c76944cd46edfa7fbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-race-compile.receipt.json",
+      "bytes": 7484,
+      "sha256": "8b38596a7340f09e851bb2cbfd49bdea039260e5ba4c0314c7b84ee008693ca1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-race-compile.resources.csv",
+      "bytes": 17656,
+      "sha256": "8420aa12f4323676432a2ebfafe6b7fac4ccd069782c03039bcf70088e6aa4d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/images/ab0-go-race-compile.test",
+      "bytes": 107679504,
+      "sha256": "d8d70cac3daf179b20db333630717368dd7391406d5d458d1f4fb63177986c6d"
+    }
+  ],
+  "images": [
+    {
+      "mode": "normal",
+      "image": {
+        "bytes": 79772936,
+        "ctime_ns": 1791111851662107348,
+        "device": 2081,
+        "gid": 1000,
+        "inode": 18934929,
+        "links": 1,
+        "mode": 320,
+        "mtime_ns": 1791111851662107348,
+        "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/images/ab0-go-normal-compile.test",
+        "sha256": "c35d4da691c03870acd5435f429543ad521e8b5e0203f3c76944cd46edfa7fbe",
+        "type": 32768,
+        "uid": 1000
+      },
+      "compile_exit": 0,
+      "process_tree_joined": true
+    },
+    {
+      "mode": "race",
+      "image": {
+        "bytes": 107679504,
+        "ctime_ns": 1791112001303396766,
+        "device": 2081,
+        "gid": 1000,
+        "inode": 18934934,
+        "links": 1,
+        "mode": 320,
+        "mtime_ns": 1791112001303396766,
+        "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/images/ab0-go-race-compile.test",
+        "sha256": "d8d70cac3daf179b20db333630717368dd7391406d5d458d1f4fb63177986c6d",
+        "type": 32768,
+        "uid": 1000
+      },
+      "compile_exit": 0,
+      "process_tree_joined": true
+    }
+  ],
+  "scope": "Actual mainnet normal/race test-image compile only; immutable retained images physically hashed and private single-link ownership checked. Source-stage and selected graph receipts bound; no independent rerun of entire20782-file source readback claimed.",
+  "limits": [
+    "No selected root, vet, regression control or Rust exporter result inferred.",
+    "Later profile/entitlement/populated Yuma join not compiled by these images.",
+    "No production deployment, signing authority or readiness established."
+  ]
+}

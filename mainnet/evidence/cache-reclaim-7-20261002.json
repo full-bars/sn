@@ -1,0 +1,115 @@
+{
+  "schema": "urnetwork-inactive-cache-reclaim-7-v1",
+  "status": "COMPLETE",
+  "reclaimed_bytes": 17215897600,
+  "deleted_archives": 369,
+  "minimum_age_hours": 48,
+  "minimum_bytes": 8388608,
+  "root_verified_absent": true,
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/broad-scan-interrupted-reference-matches.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/broad-scan-interrupted-reference-scan.exit",
+      "bytes": 4,
+      "sha256": "0e55cbbc9d11449b186092d82905aa6974858df7a0b7d706ae51c4716c9461ef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/broad-scan-interrupted-reference-scan.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/candidate-paths.txt",
+      "bytes": 36531,
+      "sha256": "bd251f83fb8ca961e42813da052b7608bb69e974052b8c75d649a75f3968d001"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/initial-self-reference-reference-matches.txt",
+      "bytes": 133947,
+      "sha256": "d27bd05b6e5ccaae73b864f20787b841a429e988b30259d551ca0fe74ac3a96a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/initial-self-reference-reference-scan.exit",
+      "bytes": 4,
+      "sha256": "0e55cbbc9d11449b186092d82905aa6974858df7a0b7d706ae51c4716c9461ef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/initial-self-reference-reference-scan.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/plan.json",
+      "bytes": 113006,
+      "sha256": "9a966c2904bd6624ac93549cff2f1d7ab05810217c4940ba620c8f11e088290a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/process-census-apply.json",
+      "bytes": 73,
+      "sha256": "622e7a1f371ef7ed79545841b0937cdbe701b84ee56877af5ffe6b446ba23433"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/process-census-plan.json",
+      "bytes": 73,
+      "sha256": "ca9e8dbd8618ce42e57b9407010878124d42637469cf0a46811682b914c08b08"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/receipt.json",
+      "bytes": 113288,
+      "sha256": "51a6e220aa4b0523f834891682281f81131f28f84b52ddee2d1b95ef50c677b0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/reclaim",
+      "bytes": 3849124,
+      "sha256": "9946d1cfde464a8dd06adda11659f4b3cef4557ba95382ebdab66b920989fced"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/reclaim.go",
+      "bytes": 7048,
+      "sha256": "f20e102a297852ebf281e5e990fc93f7e9262867ee032978a0385bad2b66dd58"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/reference-matches.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/reference-scan.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/reference-scan.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-7-20261002/reference-scope.json",
+      "bytes": 551,
+      "sha256": "af6a704370d3d563852f5aad040b20235ca61d471a9114d8f105c6c9938ab6c0"
+    }
+  ],
+  "guards": [
+    "Privileged process cmdline/environ/maps/fd/cwd/exe census at plan and apply: zero old-cache references.",
+    "Archive magic, regular type, link count, age and exact stat identity repeated before unlink.",
+    "Final bounded declared receipts/manifests/plans/source-fences/jobs/documentation/config scan: exit1, zero matches and empty stderr. See reference-scope.json."
+  ],
+  "initial_scan_attempts": [
+    "Self-referencing scan interrupted; no deletion.",
+    "Broad raw-output scan interrupted to reduce operational load; no deletion."
+  ],
+  "preserves": [
+    "active caches",
+    "source",
+    "evidence",
+    "modules",
+    "ELF executables"
+  ],
+  "limits": [
+    "No global raw-output reference census or production capacity qualification is claimed."
+  ]
+}

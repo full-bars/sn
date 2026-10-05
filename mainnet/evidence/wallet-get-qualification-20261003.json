@@ -1,0 +1,33 @@
+{
+  "causal_normal_intended_failures": 9,
+  "causal_positive_pass_each_mode": 5,
+  "causal_race_intended_failures": 9,
+  "component_receipts": {
+    "causal-normal-receipt": "561b1ea893441afb23629664db29a442bd062c9ec1a750200e9e5c0a1a96180d",
+    "causal-race-receipt": "607eee6dd7093aeadf81674348030e04a3301ee89234938bdf4e987005308a72",
+    "normal-receipt": "010fa79752ba4434df92bb1f844f374aca6abaa420c0f871ba1435315023e7c6",
+    "race-receipt": "9c9672a8fde2cf6ff772c745c82c63d873ac2f5117a9b7839033eda02fbc6ee1"
+  },
+  "files": {
+    "evidence/module-graph.jsonl": "18cc301f34660c46eedfa6fd705d507bc8b7c14d6a0e51d3154fd363e20de78c",
+    "evidence/run-wallet-vet.sh": "51abfcad0ae9b68bd5c63898bb4236f9a51cac8670cca4b4b4c5aa2fbfe3cc00",
+    "evidence/source-fence.json": "6d9dbf830d77fab548f5dac24f1ddddd8216f89bc805b1906bdef9d931d098fb",
+    "evidence/wallet-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/wallet-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": [
+    "Frozen wallet25f component only; combined financial2a and newer Server migration join have separate gates.",
+    "No live Circle API call or payout."
+  ],
+  "normal_roots": 26,
+  "owned_fixture_cleanup_exit": 0,
+  "race_roots": 26,
+  "schema": "sol-wallet-get-25f-terminal-v1",
+  "source_commit": "25f617dc30ec49b5162d51082498beaef583bf00",
+  "source_tree": "74e91f4aab9c6eff3ed28f30c5888315e713e7cd",
+  "status": "PASS_SCOPED",
+  "vet_packages": [
+    "./controller"
+  ]
+}

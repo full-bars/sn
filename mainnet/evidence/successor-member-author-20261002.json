@@ -1,0 +1,633 @@
+{
+  "schema": "urnetwork-successor-member-census-author-v1",
+  "verdict": "PASS_SCOPED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-ordering-fix/sn",
+    "commit": "2c8017f59bff318f762624b62641d437358f8d4f",
+    "tree": "3d513a8b019a37f3472a715fd50b65108de907f0"
+  },
+  "dependencies": {
+    "connect": {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/source/connect",
+      "commit": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+      "tree": "010533a40c31403c14a810828fee3c47e324c143"
+    },
+    "glog": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/source/server",
+      "commit": "1b7cc78b2dc43f5191cc7b0d3d22f0754fedc662",
+      "tree": "e8097e705ab2479e181bcfe37ec2d3926d3afab4"
+    },
+    "sn": {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-ordering-fix/sn",
+      "commit": "2c8017f59bff318f762624b62641d437358f8d4f",
+      "tree": "3d513a8b019a37f3472a715fd50b65108de907f0"
+    },
+    "userwireguard": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "toolchain": "go1.26.6",
+  "platform": "linux/amd64",
+  "scopes": {
+    "causal-e07-protected-normal": {
+      "Source": "f3c8a618ecb5f636b538abef760135ce6203546d",
+      "Tree": "a8d3c6269e29d47e6f40e8daf96c6fd99a29bca6",
+      "TestSource": "e07a705175eefeb5ac8ebfc9d5ecb1f3ddd169ff",
+      "TestSha256": "35eccb028a5885c2dc48f3d389852f9ba9fd504a86ab5a0495f1593a66f36279",
+      "Mode": "normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=30m",
+        "-overlay",
+        "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/evidence/causal-e07-overlay.json",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCountedTailCensus|TestBootstrapSuccessorNonceRegistryRetainsMemberCensus|TestBootstrapSuccessorExecutionRetainsMemberInode)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-write-fix/sn",
+      "Started": "2026-10-02T16:00:58.113792213Z",
+      "Finished": "2026-10-02T16:01:08.400654108Z",
+      "AvailableBytesBefore": 125290229760,
+      "ExitCode": 1,
+      "Census": {
+        "TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus": "fail",
+        "TestBootstrapSuccessorExecutionRetainsCountedTailCensus": "fail",
+        "TestBootstrapSuccessorExecutionRetainsMemberInode": "fail",
+        "TestBootstrapSuccessorNonceRegistryRetainsMemberCensus": "fail",
+        "TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus": "fail"
+      },
+      "Matched": true,
+      "LogSha256": "569a7aa50771d0054a17e02b2b8ab69b372240325ab747b5901bc7a3b045d933"
+    },
+    "causal-e07-protected-race": {
+      "Source": "f3c8a618ecb5f636b538abef760135ce6203546d",
+      "Tree": "a8d3c6269e29d47e6f40e8daf96c6fd99a29bca6",
+      "TestSource": "e07a705175eefeb5ac8ebfc9d5ecb1f3ddd169ff",
+      "TestSha256": "35eccb028a5885c2dc48f3d389852f9ba9fd504a86ab5a0495f1593a66f36279",
+      "Mode": "race",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=30m",
+        "-overlay",
+        "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/evidence/causal-e07-overlay.json",
+        "-race",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCountedTailCensus|TestBootstrapSuccessorNonceRegistryRetainsMemberCensus|TestBootstrapSuccessorExecutionRetainsMemberInode)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-write-fix/sn",
+      "Started": "2026-10-02T16:01:08.670522271Z",
+      "Finished": "2026-10-02T16:01:36.698104587Z",
+      "AvailableBytesBefore": 125140852736,
+      "ExitCode": 1,
+      "Census": {
+        "TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus": "fail",
+        "TestBootstrapSuccessorExecutionRetainsCountedTailCensus": "fail",
+        "TestBootstrapSuccessorExecutionRetainsMemberInode": "fail",
+        "TestBootstrapSuccessorNonceRegistryRetainsMemberCensus": "fail",
+        "TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus": "fail"
+      },
+      "Matched": true,
+      "LogSha256": "f55abd26dbfee15d54908453db6e6128937b425180bbe2faa459974acf452e1c"
+    },
+    "member-2c801-adjacent-normal": {
+      "Source": "2c8017f59bff318f762624b62641d437358f8d4f",
+      "Tree": "3d513a8b019a37f3472a715fd50b65108de907f0",
+      "Job": "adjacent-normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorExecutionDurableWriteAdmission|TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend|TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects|TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage|TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains|TestBootstrapSuccessorExecutionSerializesRootAndRegistryOwners|TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects|TestBootstrapSuccessorPreparationClaimsOnceAndResumesSameRoot|TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects|TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending|TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage|TestBootstrapSuccessorPreparationReaderRequiresCompleteClaim|TestBootstrapSuccessorPreparationRecoversEveryPublicationBoundary|TestBootstrapSuccessorPreparationRecoversOnlyExactPartialBytes|TestBootstrapSuccessorRuntimeRevisionConservesCustody|TestBootstrapSuccessorRuntimeRevisionOrdersInterruptedEvents|TestBootstrapSuccessorRuntimeRevisionRecoversPublication|TestBootstrapSuccessorSafeCurrentRevisionConservesCustody|TestBootstrapSuccessorSafeCurrentRevisionOrdersInterruptedEvents|TestBootstrapSuccessorSafeCurrentRevisionRecoversPublication)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-ordering-fix/sn",
+      "Started": "2026-10-02T16:38:10.414003549Z",
+      "Finished": "2026-10-02T16:41:50.132735582Z",
+      "AvailableBytesBefore": 120724066304,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission": "pass",
+        "TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend": "pass",
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects": "pass",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage": "pass",
+        "TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains": "pass",
+        "TestBootstrapSuccessorExecutionSerializesRootAndRegistryOwners": "pass",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects": "pass",
+        "TestBootstrapSuccessorPreparationClaimsOnceAndResumesSameRoot": "pass",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects": "pass",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending": "pass",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage": "pass",
+        "TestBootstrapSuccessorPreparationReaderRequiresCompleteClaim": "pass",
+        "TestBootstrapSuccessorPreparationRecoversEveryPublicationBoundary": "pass",
+        "TestBootstrapSuccessorPreparationRecoversOnlyExactPartialBytes": "pass",
+        "TestBootstrapSuccessorRuntimeRevisionConservesCustody": "pass",
+        "TestBootstrapSuccessorRuntimeRevisionOrdersInterruptedEvents": "pass",
+        "TestBootstrapSuccessorRuntimeRevisionRecoversPublication": "pass",
+        "TestBootstrapSuccessorSafeCurrentRevisionConservesCustody": "pass",
+        "TestBootstrapSuccessorSafeCurrentRevisionOrdersInterruptedEvents": "pass",
+        "TestBootstrapSuccessorSafeCurrentRevisionRecoversPublication": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "f3396fa546a4070777e374985972b83df1b130b8f2ccf52eb5916955435b988b"
+    },
+    "member-2c801-adjacent-race": {
+      "Source": "2c8017f59bff318f762624b62641d437358f8d4f",
+      "Tree": "3d513a8b019a37f3472a715fd50b65108de907f0",
+      "Job": "adjacent-race",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "-race",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorExecutionDurableWriteAdmission|TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend|TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects|TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage|TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains|TestBootstrapSuccessorExecutionSerializesRootAndRegistryOwners|TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects|TestBootstrapSuccessorPreparationClaimsOnceAndResumesSameRoot|TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects|TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending|TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage|TestBootstrapSuccessorPreparationReaderRequiresCompleteClaim|TestBootstrapSuccessorPreparationRecoversEveryPublicationBoundary|TestBootstrapSuccessorPreparationRecoversOnlyExactPartialBytes|TestBootstrapSuccessorRuntimeRevisionConservesCustody|TestBootstrapSuccessorRuntimeRevisionOrdersInterruptedEvents|TestBootstrapSuccessorRuntimeRevisionRecoversPublication|TestBootstrapSuccessorSafeCurrentRevisionConservesCustody|TestBootstrapSuccessorSafeCurrentRevisionOrdersInterruptedEvents|TestBootstrapSuccessorSafeCurrentRevisionRecoversPublication)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-ordering-fix/sn",
+      "Started": "2026-10-02T16:53:00.352535368Z",
+      "Finished": "2026-10-02T17:01:49.232941061Z",
+      "AvailableBytesBefore": 118880825344,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission": "pass",
+        "TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend": "pass",
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects": "pass",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage": "pass",
+        "TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains": "pass",
+        "TestBootstrapSuccessorExecutionSerializesRootAndRegistryOwners": "pass",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects": "pass",
+        "TestBootstrapSuccessorPreparationClaimsOnceAndResumesSameRoot": "pass",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects": "pass",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending": "pass",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage": "pass",
+        "TestBootstrapSuccessorPreparationReaderRequiresCompleteClaim": "pass",
+        "TestBootstrapSuccessorPreparationRecoversEveryPublicationBoundary": "pass",
+        "TestBootstrapSuccessorPreparationRecoversOnlyExactPartialBytes": "pass",
+        "TestBootstrapSuccessorRuntimeRevisionConservesCustody": "pass",
+        "TestBootstrapSuccessorRuntimeRevisionOrdersInterruptedEvents": "pass",
+        "TestBootstrapSuccessorRuntimeRevisionRecoversPublication": "pass",
+        "TestBootstrapSuccessorSafeCurrentRevisionConservesCustody": "pass",
+        "TestBootstrapSuccessorSafeCurrentRevisionOrdersInterruptedEvents": "pass",
+        "TestBootstrapSuccessorSafeCurrentRevisionRecoversPublication": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "de6746a58430ec6b3ff67cc3ac97ae7836b3787a7671d62b01a719c05a076bc4"
+    },
+    "member-2c801-core-normal": {
+      "Source": "2c8017f59bff318f762624b62641d437358f8d4f",
+      "Tree": "3d513a8b019a37f3472a715fd50b65108de907f0",
+      "Job": "core-normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorChangedMemberDoesNotRehashUnrelatedHistory|TestBootstrapSuccessorExecutionResumesReservedCountedIntentBeforeStage|TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCountedTailCensus|TestBootstrapSuccessorExecutionRetainsMemberInode|TestBootstrapSuccessorMaximumPendingPayloadRecoversWithoutNewAuthority|TestBootstrapSuccessorMemberCrashResumesExactPreparedPayload|TestBootstrapSuccessorMemberRecoveryRefusesUnknownPartialBytes|TestBootstrapSuccessorMemberUncertaintyRetainsOriginalCountedIntent|TestBootstrapSuccessorNonceRegistryRetainsMemberCensus|TestBootstrapSuccessorPendingCapacityCoversBoundedMemberLayout|TestBootstrapSuccessorPendingMembersReadOnlyTheirNewPayload|TestBootstrapSuccessorPreparationResumesReservedIntentBeforeStage|TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus|TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering|TestBootstrapSuccessorUnchangedMembersAvoidRepeatedPayloadReads|TestBootstrapSuccessorUnrelatedDirectoryPressureDoesNotPoisonCustody)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-ordering-fix/sn",
+      "Started": "2026-10-02T16:33:02.968613349Z",
+      "Finished": "2026-10-02T16:36:00.341392121Z",
+      "AvailableBytesBefore": 121388806144,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapSuccessorChangedMemberDoesNotRehashUnrelatedHistory": "pass",
+        "TestBootstrapSuccessorExecutionResumesReservedCountedIntentBeforeStage": "pass",
+        "TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus": "pass",
+        "TestBootstrapSuccessorExecutionRetainsCountedTailCensus": "pass",
+        "TestBootstrapSuccessorExecutionRetainsMemberInode": "pass",
+        "TestBootstrapSuccessorMaximumPendingPayloadRecoversWithoutNewAuthority": "pass",
+        "TestBootstrapSuccessorMemberCrashResumesExactPreparedPayload": "pass",
+        "TestBootstrapSuccessorMemberRecoveryRefusesUnknownPartialBytes": "pass",
+        "TestBootstrapSuccessorMemberUncertaintyRetainsOriginalCountedIntent": "pass",
+        "TestBootstrapSuccessorNonceRegistryRetainsMemberCensus": "pass",
+        "TestBootstrapSuccessorPendingCapacityCoversBoundedMemberLayout": "pass",
+        "TestBootstrapSuccessorPendingMembersReadOnlyTheirNewPayload": "pass",
+        "TestBootstrapSuccessorPreparationResumesReservedIntentBeforeStage": "pass",
+        "TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus": "pass",
+        "TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering": "pass",
+        "TestBootstrapSuccessorUnchangedMembersAvoidRepeatedPayloadReads": "pass",
+        "TestBootstrapSuccessorUnrelatedDirectoryPressureDoesNotPoisonCustody": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "51b1f17a0e58260571d7adbd7ebf2122edb8696481c5683a1cd6674fe846987b"
+    },
+    "member-2c801-core-race": {
+      "Source": "2c8017f59bff318f762624b62641d437358f8d4f",
+      "Tree": "3d513a8b019a37f3472a715fd50b65108de907f0",
+      "Job": "core-race",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "-race",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorChangedMemberDoesNotRehashUnrelatedHistory|TestBootstrapSuccessorExecutionResumesReservedCountedIntentBeforeStage|TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCountedTailCensus|TestBootstrapSuccessorExecutionRetainsMemberInode|TestBootstrapSuccessorMaximumPendingPayloadRecoversWithoutNewAuthority|TestBootstrapSuccessorMemberCrashResumesExactPreparedPayload|TestBootstrapSuccessorMemberRecoveryRefusesUnknownPartialBytes|TestBootstrapSuccessorMemberUncertaintyRetainsOriginalCountedIntent|TestBootstrapSuccessorNonceRegistryRetainsMemberCensus|TestBootstrapSuccessorPendingCapacityCoversBoundedMemberLayout|TestBootstrapSuccessorPendingMembersReadOnlyTheirNewPayload|TestBootstrapSuccessorPreparationResumesReservedIntentBeforeStage|TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus|TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering|TestBootstrapSuccessorUnchangedMembersAvoidRepeatedPayloadReads|TestBootstrapSuccessorUnrelatedDirectoryPressureDoesNotPoisonCustody)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-ordering-fix/sn",
+      "Started": "2026-10-02T16:45:04.578980048Z",
+      "Finished": "2026-10-02T16:53:00.064471147Z",
+      "AvailableBytesBefore": 119770521600,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapSuccessorChangedMemberDoesNotRehashUnrelatedHistory": "pass",
+        "TestBootstrapSuccessorExecutionResumesReservedCountedIntentBeforeStage": "pass",
+        "TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus": "pass",
+        "TestBootstrapSuccessorExecutionRetainsCountedTailCensus": "pass",
+        "TestBootstrapSuccessorExecutionRetainsMemberInode": "pass",
+        "TestBootstrapSuccessorMaximumPendingPayloadRecoversWithoutNewAuthority": "pass",
+        "TestBootstrapSuccessorMemberCrashResumesExactPreparedPayload": "pass",
+        "TestBootstrapSuccessorMemberRecoveryRefusesUnknownPartialBytes": "pass",
+        "TestBootstrapSuccessorMemberUncertaintyRetainsOriginalCountedIntent": "pass",
+        "TestBootstrapSuccessorNonceRegistryRetainsMemberCensus": "pass",
+        "TestBootstrapSuccessorPendingCapacityCoversBoundedMemberLayout": "pass",
+        "TestBootstrapSuccessorPendingMembersReadOnlyTheirNewPayload": "pass",
+        "TestBootstrapSuccessorPreparationResumesReservedIntentBeforeStage": "pass",
+        "TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus": "pass",
+        "TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering": "pass",
+        "TestBootstrapSuccessorUnchangedMembersAvoidRepeatedPayloadReads": "pass",
+        "TestBootstrapSuccessorUnrelatedDirectoryPressureDoesNotPoisonCustody": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "36cefa22dce1f84ec8f269d7185cc93efb336a4234c4a305438c8660efb5e327"
+    },
+    "member-2c801-public-normal": {
+      "Source": "2c8017f59bff318f762624b62641d437358f8d4f",
+      "Tree": "3d513a8b019a37f3472a715fd50b65108de907f0",
+      "Job": "public-normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorPublicClaimRequiresBothMemberHeads)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-ordering-fix/sn",
+      "Started": "2026-10-02T16:43:02.734631478Z",
+      "Finished": "2026-10-02T16:44:27.174915007Z",
+      "AvailableBytesBefore": 120095977472,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapSuccessorPublicClaimRequiresBothMemberHeads": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "85808ab108a93d77e37f3621f7242dd811a92df0d5e8fcdfced2a799817fc019"
+    },
+    "member-2c801-public-race": {
+      "Source": "2c8017f59bff318f762624b62641d437358f8d4f",
+      "Tree": "3d513a8b019a37f3472a715fd50b65108de907f0",
+      "Job": "public-race",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "-race",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorPublicClaimRequiresBothMemberHeads)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-ordering-fix/sn",
+      "Started": "2026-10-02T17:01:49.654560168Z",
+      "Finished": "2026-10-02T17:07:31.190926366Z",
+      "AvailableBytesBefore": 118880698368,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapSuccessorPublicClaimRequiresBothMemberHeads": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "d982c5c82027ab7f69d8dd8451db3d08c8765406fbc6e9c57d69d0f3b5e0bb88"
+    },
+    "member-2c801-vet": {
+      "Source": "2c8017f59bff318f762624b62641d437358f8d4f",
+      "Tree": "3d513a8b019a37f3472a715fd50b65108de907f0",
+      "Job": "vet",
+      "Args": [
+        "vet",
+        "-p=1",
+        "./mainnet"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-ordering-fix/sn",
+      "Started": "2026-10-02T17:12:03.641991718Z",
+      "Finished": "2026-10-02T17:12:17.794699723Z",
+      "AvailableBytesBefore": 118605144064,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {},
+      "Matched": true,
+      "LogSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "member-8d37-ordering-causal-normal": {
+      "Source": "8d37e7a5c11c535f1cf3ae8a2b34c3d8e84c4dcc",
+      "Tree": "9c70e398c27b3027af1cbdb673d6d992a2262067",
+      "Job": "normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "-overlay",
+        "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/evidence/member-8d37-ordering-overlay.json",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-compile-fix/sn",
+      "Started": "2026-10-02T16:44:27.795334696Z",
+      "Finished": "2026-10-02T16:45:04.282166019Z",
+      "AvailableBytesBefore": 119813599232,
+      "ExitCode": 1,
+      "Expected": "fail",
+      "Census": {
+        "TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering": "fail"
+      },
+      "Matched": true,
+      "LogSha256": "8cabb868b9519be229cb26f8eb28dffddf68db8b4fce3ef395678255b454565d"
+    },
+    "member-8d37-ordering-causal-race": {
+      "Source": "8d37e7a5c11c535f1cf3ae8a2b34c3d8e84c4dcc",
+      "Tree": "9c70e398c27b3027af1cbdb673d6d992a2262067",
+      "Job": "race",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "-overlay",
+        "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/evidence/member-8d37-ordering-overlay.json",
+        "-race",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering|TestBootstrapSuccessorRuntimeRevisionOrdersInterruptedEvents|TestBootstrapSuccessorSafeCurrentRevisionOrdersInterruptedEvents)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-compile-fix/sn",
+      "Started": "2026-10-02T17:07:31.584884942Z",
+      "Finished": "2026-10-02T17:12:03.323632573Z",
+      "AvailableBytesBefore": 118880624640,
+      "ExitCode": 1,
+      "Expected": "fail",
+      "Census": {
+        "TestBootstrapSuccessorReservedOutcomeRetainsApplicationOrdering": "fail",
+        "TestBootstrapSuccessorRuntimeRevisionOrdersInterruptedEvents": "fail",
+        "TestBootstrapSuccessorSafeCurrentRevisionOrdersInterruptedEvents": "fail"
+      },
+      "Matched": true,
+      "LogSha256": "b6858de95557947562d7e604e8615a796ccf06152d40c0d78c9ecf97cd3577d1"
+    }
+  },
+  "historical_scopes": {
+    "causal-e07-normal": {
+      "Source": "f3c8a618ecb5f636b538abef760135ce6203546d",
+      "Tree": "a8d3c6269e29d47e6f40e8daf96c6fd99a29bca6",
+      "TestSource": "e07a705175eefeb5ac8ebfc9d5ecb1f3ddd169ff",
+      "TestSha256": "35eccb028a5885c2dc48f3d389852f9ba9fd504a86ab5a0495f1593a66f36279",
+      "Mode": "normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=30m",
+        "-overlay",
+        "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/evidence/causal-e07-overlay.json",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCountedTailCensus|TestBootstrapSuccessorNonceRegistryRetainsMemberCensus|TestBootstrapSuccessorExecutionRetainsMemberInode)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-write-fix/sn",
+      "Started": "2026-10-02T15:27:30.061602799Z",
+      "Finished": "2026-10-02T15:27:57.920402363Z",
+      "AvailableBytesBefore": 129110687744,
+      "ExitCode": 1,
+      "Census": {
+        "TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus": "fail",
+        "TestBootstrapSuccessorExecutionRetainsCountedTailCensus": "fail",
+        "TestBootstrapSuccessorExecutionRetainsMemberInode": "fail",
+        "TestBootstrapSuccessorNonceRegistryRetainsMemberCensus": "fail",
+        "TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus": "fail"
+      },
+      "Matched": true,
+      "LogSha256": "8afe1c811e207f390a47b602266d1e4456a6d6ee55572d7e7307412386b2330f"
+    },
+    "causal-e07-race": {
+      "Source": "f3c8a618ecb5f636b538abef760135ce6203546d",
+      "Tree": "a8d3c6269e29d47e6f40e8daf96c6fd99a29bca6",
+      "TestSource": "e07a705175eefeb5ac8ebfc9d5ecb1f3ddd169ff",
+      "TestSha256": "35eccb028a5885c2dc48f3d389852f9ba9fd504a86ab5a0495f1593a66f36279",
+      "Mode": "race",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=30m",
+        "-overlay",
+        "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/evidence/causal-e07-overlay.json",
+        "-race",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCountedTailCensus|TestBootstrapSuccessorNonceRegistryRetainsMemberCensus|TestBootstrapSuccessorExecutionRetainsMemberInode)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/source-write-fix/sn",
+      "Started": "2026-10-02T15:27:58.170314654Z",
+      "Finished": "2026-10-02T15:28:58.288542594Z",
+      "AvailableBytesBefore": 128913248256,
+      "ExitCode": 1,
+      "Census": {
+        "TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus": "fail",
+        "TestBootstrapSuccessorExecutionRetainsCountedTailCensus": "fail",
+        "TestBootstrapSuccessorExecutionRetainsMemberInode": "fail",
+        "TestBootstrapSuccessorNonceRegistryRetainsMemberCensus": "fail",
+        "TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus": "fail"
+      },
+      "Matched": true,
+      "LogSha256": "a5cdcc7441e6971552450f1071c9a102fdd42b49f79975a1dafe319e134da37c"
+    },
+    "member-8573-core-normal": {
+      "Source": "8573f8f91d748d5b5466ec296859347037582949",
+      "Tree": "8eaf47cb15fb44b47764ad3779e93b99eaa51b3a",
+      "Job": "core-normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorChangedMemberDoesNotRehashUnrelatedHistory|TestBootstrapSuccessorExecutionResumesReservedCountedIntentBeforeStage|TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCountedTailCensus|TestBootstrapSuccessorExecutionRetainsMemberInode|TestBootstrapSuccessorMaximumPendingPayloadRecoversWithoutNewAuthority|TestBootstrapSuccessorMemberCrashResumesExactPreparedPayload|TestBootstrapSuccessorMemberRecoveryRefusesUnknownPartialBytes|TestBootstrapSuccessorMemberUncertaintyRetainsOriginalCountedIntent|TestBootstrapSuccessorNonceRegistryRetainsMemberCensus|TestBootstrapSuccessorPendingCapacityCoversBoundedMemberLayout|TestBootstrapSuccessorPendingMembersReadOnlyTheirNewPayload|TestBootstrapSuccessorPreparationResumesReservedIntentBeforeStage|TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus|TestBootstrapSuccessorUnchangedMembersAvoidRepeatedPayloadReads|TestBootstrapSuccessorUnrelatedDirectoryPressureDoesNotPoisonCustody)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source/sn",
+      "Started": "2026-10-02T16:11:13.078525224Z",
+      "Finished": "2026-10-02T16:12:16.235953385Z",
+      "AvailableBytesBefore": 124552409088,
+      "ExitCode": 1,
+      "Expected": "pass",
+      "Census": {},
+      "Matched": false,
+      "LogSha256": "fe6382fc4f4e1d63541718415940a9f695fab7f5e5597b693beeb754c72c5432"
+    },
+    "member-8d37-adjacent-normal": {
+      "Source": "8d37e7a5c11c535f1cf3ae8a2b34c3d8e84c4dcc",
+      "Tree": "9c70e398c27b3027af1cbdb673d6d992a2262067",
+      "Job": "adjacent-normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorExecutionDurableWriteAdmission|TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend|TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects|TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage|TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains|TestBootstrapSuccessorExecutionSerializesRootAndRegistryOwners|TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects|TestBootstrapSuccessorPreparationClaimsOnceAndResumesSameRoot|TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects|TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending|TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage|TestBootstrapSuccessorPreparationReaderRequiresCompleteClaim|TestBootstrapSuccessorPreparationRecoversEveryPublicationBoundary|TestBootstrapSuccessorPreparationRecoversOnlyExactPartialBytes|TestBootstrapSuccessorRuntimeRevisionConservesCustody|TestBootstrapSuccessorRuntimeRevisionOrdersInterruptedEvents|TestBootstrapSuccessorRuntimeRevisionRecoversPublication|TestBootstrapSuccessorSafeCurrentRevisionConservesCustody|TestBootstrapSuccessorSafeCurrentRevisionOrdersInterruptedEvents|TestBootstrapSuccessorSafeCurrentRevisionRecoversPublication)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-compile-fix/sn",
+      "Started": "2026-10-02T16:18:26.924692585Z",
+      "Finished": "2026-10-02T16:21:39.265680226Z",
+      "AvailableBytesBefore": 123716534272,
+      "ExitCode": 1,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission": "fail",
+        "TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend": "pass",
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects": "pass",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage": "pass",
+        "TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains": "fail",
+        "TestBootstrapSuccessorExecutionSerializesRootAndRegistryOwners": "pass",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects": "pass",
+        "TestBootstrapSuccessorPreparationClaimsOnceAndResumesSameRoot": "pass",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects": "pass",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending": "pass",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage": "pass",
+        "TestBootstrapSuccessorPreparationReaderRequiresCompleteClaim": "pass",
+        "TestBootstrapSuccessorPreparationRecoversEveryPublicationBoundary": "pass",
+        "TestBootstrapSuccessorPreparationRecoversOnlyExactPartialBytes": "pass",
+        "TestBootstrapSuccessorRuntimeRevisionConservesCustody": "fail",
+        "TestBootstrapSuccessorRuntimeRevisionOrdersInterruptedEvents": "fail",
+        "TestBootstrapSuccessorRuntimeRevisionRecoversPublication": "pass",
+        "TestBootstrapSuccessorSafeCurrentRevisionConservesCustody": "fail",
+        "TestBootstrapSuccessorSafeCurrentRevisionOrdersInterruptedEvents": "fail",
+        "TestBootstrapSuccessorSafeCurrentRevisionRecoversPublication": "pass"
+      },
+      "Matched": false,
+      "LogSha256": "528aebc3caa805b75a924739ea81b36debc5941c1f1a700720a965d43e5a2b8f"
+    },
+    "member-8d37-core-normal": {
+      "Source": "8d37e7a5c11c535f1cf3ae8a2b34c3d8e84c4dcc",
+      "Tree": "9c70e398c27b3027af1cbdb673d6d992a2262067",
+      "Job": "core-normal",
+      "Args": [
+        "test",
+        "-p=1",
+        "-count=1",
+        "-json",
+        "-timeout=45m",
+        "./mainnet",
+        "-run",
+        "^(TestBootstrapSuccessorChangedMemberDoesNotRehashUnrelatedHistory|TestBootstrapSuccessorExecutionResumesReservedCountedIntentBeforeStage|TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus|TestBootstrapSuccessorExecutionRetainsCountedTailCensus|TestBootstrapSuccessorExecutionRetainsMemberInode|TestBootstrapSuccessorMaximumPendingPayloadRecoversWithoutNewAuthority|TestBootstrapSuccessorMemberCrashResumesExactPreparedPayload|TestBootstrapSuccessorMemberRecoveryRefusesUnknownPartialBytes|TestBootstrapSuccessorMemberUncertaintyRetainsOriginalCountedIntent|TestBootstrapSuccessorNonceRegistryRetainsMemberCensus|TestBootstrapSuccessorPendingCapacityCoversBoundedMemberLayout|TestBootstrapSuccessorPendingMembersReadOnlyTheirNewPayload|TestBootstrapSuccessorPreparationResumesReservedIntentBeforeStage|TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus|TestBootstrapSuccessorUnchangedMembersAvoidRepeatedPayloadReads|TestBootstrapSuccessorUnrelatedDirectoryPressureDoesNotPoisonCustody)$"
+      ],
+      "Workdir": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/source-compile-fix/sn",
+      "Started": "2026-10-02T16:13:59.29276231Z",
+      "Finished": "2026-10-02T16:16:45.719907718Z",
+      "AvailableBytesBefore": 124071845888,
+      "ExitCode": 0,
+      "Expected": "pass",
+      "Census": {
+        "TestBootstrapSuccessorChangedMemberDoesNotRehashUnrelatedHistory": "pass",
+        "TestBootstrapSuccessorExecutionResumesReservedCountedIntentBeforeStage": "pass",
+        "TestBootstrapSuccessorExecutionRetainsCompletedMemberCensus": "pass",
+        "TestBootstrapSuccessorExecutionRetainsCountedTailCensus": "pass",
+        "TestBootstrapSuccessorExecutionRetainsMemberInode": "pass",
+        "TestBootstrapSuccessorMaximumPendingPayloadRecoversWithoutNewAuthority": "pass",
+        "TestBootstrapSuccessorMemberCrashResumesExactPreparedPayload": "pass",
+        "TestBootstrapSuccessorMemberRecoveryRefusesUnknownPartialBytes": "pass",
+        "TestBootstrapSuccessorMemberUncertaintyRetainsOriginalCountedIntent": "pass",
+        "TestBootstrapSuccessorNonceRegistryRetainsMemberCensus": "pass",
+        "TestBootstrapSuccessorPendingCapacityCoversBoundedMemberLayout": "pass",
+        "TestBootstrapSuccessorPendingMembersReadOnlyTheirNewPayload": "pass",
+        "TestBootstrapSuccessorPreparationResumesReservedIntentBeforeStage": "pass",
+        "TestBootstrapSuccessorPreparationRetainsCompletedMemberCensus": "pass",
+        "TestBootstrapSuccessorUnchangedMembersAvoidRepeatedPayloadReads": "pass",
+        "TestBootstrapSuccessorUnrelatedDirectoryPressureDoesNotPoisonCustody": "pass"
+      },
+      "Matched": true,
+      "LogSha256": "2740d3cedd9cce5d8e89ccf63437ef976ea93a9fcaf5065b2d48c1e89baf861f"
+    }
+  },
+  "manifest": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/evidence/member-2c801-author-manifest.json",
+    "size": 21047,
+    "sha256": "23c2f45f740360cb6fff6f845eda25180ac38c5f27b8f201be51c601a5dd510d"
+  },
+  "archive": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/evidence/member-2c801-author-raw.tar.gz",
+    "size": 204346,
+    "sha256": "b8486ba545dc54a7da5158fdae5f9131601ca195a12264bfd2657515c928f37f"
+  },
+  "source_bundle": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/immutable-census/evidence/member-2c801-source.bundle",
+    "size": 31136,
+    "sha256": "5013aa026d0c2059e58e368f5631cd374e8deda1a4e4d7d1b23bd83cd3e883a5"
+  },
+  "limits": [
+    "Fixed2c has38 distinct selected normal and38 race PASS (17core,20adjacent,1public); mainnet package vet0. This is not a full-package or composed-release qualification.",
+    "Exact f3 plus e07 test-only overlay reproduces five intended member loss/inode failures in both modes. The global-nonce causal control reaches its first failing domain; it does not prove both old domains independently. Fixed tests cover both.",
+    "Exact8d plus only the frozen2c recovery test overlay fails the new pre-stage ordering root normal and that root plus two unchanged application-ordering roots under race. The original8d adjacent normal retains14PASS/6FAIL: two real premature-finalization failures plus four immutable-byte assertion expectations that included the newly mutable census head.",
+    "Original8573 build failure (missing required Publish hook argument), original e07 protected-ancestor setup refusals in both modes, and failed empty Git export remain retained. They are not causal product failures or passing qualification.",
+    "Member census binds original acknowledged names, inodes, exact bytes and pending payload. Initial bounded full hash is followed by named metadata checks; unchanged members are not rehashed. Namespace scan pressure is unavailable, not evidence of identity loss.",
+    "Two separate local/global head kinds use8MiB capacity; member bounds remain4096count,256MiBtotal,512KiBexecution and256KiBpreparation. Exact pending recovery materializes only the original missing stage; existing application readback retains authority over terminal outcomes.",
+    "Source bundle requires f3; all physical dependency worktrees were clean at seal. Later server module packaging, monitor composition and offline preparation are separate source scopes.",
+    "No live signing, broadcast, deployment, volume enrollment, remote database/object restore, live approval or release claim."
+  ]
+}

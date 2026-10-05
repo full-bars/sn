@@ -1,0 +1,403 @@
+{
+  "dependencies": {
+    "glog": {
+      "head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "userwireguard": {
+      "head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "deployment_authorized": false,
+  "effective_sn_connect": "0a5cda0ebe78f6200c4cff6fd3d1aa172a2b172c",
+  "files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/before-control-overlay.json": {
+      "bytes": 247,
+      "sha256": "be26a930efbc414c9e918631f7d81c278499d3c16d901c4faa6285ea8a371ff5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/before-control.go": {
+      "bytes": 11509,
+      "sha256": "1fa64157e57a353569b1c9ff79a37185d78eaa326c46fd087f7e759d5beebc86"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-baseline-2445245-normal.command.json": {
+      "bytes": 628,
+      "sha256": "5380cb96f9d9549956651a1b7063301c1e3582ae76dda8ad6dccb68bce5d08a7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-baseline-2445245-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-baseline-2445245-normal.jsonl": {
+      "bytes": 4366,
+      "sha256": "06a7aac2f64fbbeb5d17fafadeca8f83e17503ff1ffa8babdf8cb92dce7a218a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-baseline-2445245-normal.result.json": {
+      "bytes": 346,
+      "sha256": "91b63a763f54cc49813e7c1b3aa3f6d732f0d6176a5fdd430a04eee909bafe7b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-baseline-2445245-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-normal.command.json": {
+      "bytes": 769,
+      "sha256": "e0649fe95cfc540687c567a3ff044ff93eaa36a125af50ea5ecc3d4653030b24"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-normal.jsonl": {
+      "bytes": 4365,
+      "sha256": "cc36f3b8611bb454f68ad6ae5c3bcfaf672db4707a9dc48fed2591cef13ec360"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-normal.result.json": {
+      "bytes": 346,
+      "sha256": "4c99670efbe7ae9f6ed4a9615d8bf0576c35384eba14f9919867bdf6b141380a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-race.command.json": {
+      "bytes": 782,
+      "sha256": "ea03bc4325afc395c546df78a8083d98f5903a7ca836116ed653dfea9260e5b3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-race.jsonl": {
+      "bytes": 4368,
+      "sha256": "12ec166dd0cacafc643dd656b0cbad761425211fb6fa92af9e48047f561588a4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-race.result.json": {
+      "bytes": 346,
+      "sha256": "9e82019b8880e913b9b4d303b5c4d2e1833cc6c56b09aa84d14cd8445b18a5c6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-before-control-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-normal.command.json": {
+      "bytes": 532,
+      "sha256": "f78eb3489b12a68829b39f5192bfd663f2fd125d627175bf2d7d82586cfb3971"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-normal.jsonl": {
+      "bytes": 37321,
+      "sha256": "7236a4dab58700c7cc4f5ce4f391e26ae5112bfc6aede6c183718f6c0a7b4942"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-normal.result.json": {
+      "bytes": 2642,
+      "sha256": "89af26057532f9d2ccc256669812ebcb4b743cab434d25f3577dff064d187624"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-race.command.json": {
+      "bytes": 545,
+      "sha256": "0ace9a1a88e18e5cc770fd8e406409cd192bc12c6b20ed8d6429330445776d98"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-race.jsonl": {
+      "bytes": 37318,
+      "sha256": "56b2742c310e87292510140255be6307b2df374f05989000321322ed8248afa6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-race.result.json": {
+      "bytes": 2642,
+      "sha256": "f107a3a408b08496f3245cf750a6fba2bd1f39081ea1b30b1f3e28a9f6f61a4e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-vet.command.json": {
+      "bytes": 421,
+      "sha256": "1500ff7530fd71ff172c00b1eaed0d80546c642962671d367a24ca485e6e4225"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-vet.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-vet.result.json": {
+      "bytes": 153,
+      "sha256": "7cb63725cedf121474d44122edd2d3367b1b9367bbef562ef272de3e12511cce"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/callback-fixed-3664820-vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/sn.mod": {
+      "bytes": 11722,
+      "sha256": "ed505877a29afc8c5105bda3d5d7b98c373cb24a142738a4019474f071def27b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/evidence/sn.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/seal.go": {
+      "bytes": 6021,
+      "sha256": "d3b77f10b7f48e8c2e20862a76d768a5d9d2280ae227ba3127985f503b2e6154"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/sn/go.mod": {
+      "bytes": 11211,
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/sn/go.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/sn/miner/swarm.go": {
+      "bytes": 22164,
+      "sha256": "2b12ba2146dd022740d66b50d625e5e17772214ccf58398ff48e00d62b991890"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/sn/miner/swarm_callbacks.go": {
+      "bytes": 2049,
+      "sha256": "675fd54880d1760cf605c04dee3894f1235801b1aa979ea839d433bd1664b18f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/sn/miner/swarm_callbacks_test.go": {
+      "bytes": 7355,
+      "sha256": "a9cb42132766823462a74140dbb03ea2cb9bdef67b753efa5f7c0f336f3c6856"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/sn/miner/swarm_control.go": {
+      "bytes": 12144,
+      "sha256": "fdcfd7c523a0988505b51b0af5e0e43704087c15dc2a1ed89b441c2975454df5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/sn/miner/swarm_startup_test.go": {
+      "bytes": 4446,
+      "sha256": "4326571a7e728e831f843343de8e0b8fe427b7e2ccb788bd9f68f489836eb7a5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/evidence/callback-baseline-731951f-normal.command.json": {
+      "bytes": 618,
+      "sha256": "3d95372afe48aa0cb384b3a308b1ad608b0173b4027c0ff1119dcc88a871ac1f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/evidence/callback-baseline-731951f-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/evidence/callback-baseline-731951f-normal.jsonl": {
+      "bytes": 4941,
+      "sha256": "cebe82a9e78e7ae3c0f1c72eff2d1f9ea6affa98dd0e2d0b026fff03aa98f96d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/evidence/callback-baseline-731951f-normal.result.json": {
+      "bytes": 345,
+      "sha256": "79d9b72798102b2c695b60fcaeea1a066d07db6fd886ecda22a3b7a2392e2b9e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/evidence/callback-baseline-731951f-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/evidence/startup-c370737-physical-freeze.json": {
+      "bytes": 880,
+      "sha256": "4ba7a19dec74bba9af97a00dd89c28beda0ba266607c3df319df5f5c5d4ac301"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/evidence/startup-c370737-receipt.json": {
+      "bytes": 9525,
+      "sha256": "34f7dfdfe56005bdefe14ef26622ec149e79ebd2f794ae786820dd5223592718"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/evidence/startup-c370737-retention-repair.json": {
+      "bytes": 1128,
+      "sha256": "5c0713489ee00db7bb7da38a845f6b6954fe7a62d7a2c45e9f05e9eab6785714"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/run-scope.go": {
+      "bytes": 3980,
+      "sha256": "6721d0f8e3a7b6990090ef981bf487c762cd60db0409a2cc3f02772e5147abdd"
+    }
+  },
+  "limitations": [
+    "Exact author callback/startup/control selection; independent scoped rerun remains separate.",
+    "The real JWT refresh persistence failure quarantines and joins only its current generation. Healthy peers survive; explicit public enable waits for teardown; stale generation callbacks do not affect a replacement.",
+    "Authentication and other hard joined causes retain terminal policy. No automatic signed wallet request resend or credential rewrite.",
+    "Original731 first baseline includes one platform errno assertion mistake in addition to the causal healthy-cancel failure; corrected244 baseline and unchanged old control overlay isolate that product cause.",
+    "The original c370 physical source mismatch was repaired without changing its receipt or rerunning passed tests, and distinct next-writer ownership/read-only freezing now prevents accidental reuse.",
+    "No expected provider roster, freshness/proof progress, full miner, release artifact, live deployment, signing or broadcast qualification."
+  ],
+  "normal_roots": 40,
+  "old_body_causal_failures_per_mode": 1,
+  "phases": {
+    "callback-baseline-2445245-normal": {
+      "exit": 1,
+      "fail": [
+        "TestProviderSwarmRunQuarantinesJwtPersistenceFailure"
+      ],
+      "intended_causal_assertion_present": true,
+      "pass": [
+        "TestProviderSwarmJwtRefreshPreservesStorageCause",
+        "TestProviderSwarmRunPersistenceAndAuthenticationFailureIsTerminal"
+      ],
+      "skip": []
+    },
+    "callback-before-control-normal": {
+      "exit": 1,
+      "fail": [
+        "TestProviderSwarmRunQuarantinesJwtPersistenceFailure"
+      ],
+      "intended_causal_assertion_present": true,
+      "pass": [
+        "TestProviderSwarmJwtRefreshPreservesStorageCause",
+        "TestProviderSwarmRunPersistenceAndAuthenticationFailureIsTerminal"
+      ],
+      "skip": []
+    },
+    "callback-before-control-race": {
+      "exit": 1,
+      "fail": [
+        "TestProviderSwarmRunQuarantinesJwtPersistenceFailure"
+      ],
+      "intended_causal_assertion_present": true,
+      "pass": [
+        "TestProviderSwarmJwtRefreshPreservesStorageCause",
+        "TestProviderSwarmRunPersistenceAndAuthenticationFailureIsTerminal"
+      ],
+      "skip": []
+    },
+    "callback-fixed-3664820-normal": {
+      "exit": 0,
+      "fail": [],
+      "intended_causal_assertion_present": false,
+      "pass": [
+        "TestProviderSwarmConfigPinsLoopbackDNSPumpToConnectIngress",
+        "TestProviderSwarmConfigRejectsAliasedIdentityResources",
+        "TestProviderSwarmControlCanceledWaitersDoNotOutliveTeardown",
+        "TestProviderSwarmControlClassifiesTypedTransientFailures",
+        "TestProviderSwarmControlDisableWaitsForStartup",
+        "TestProviderSwarmControlDisablesAndRestoresOneRealMemberSlot",
+        "TestProviderSwarmControlEnableWaitsForTeardown",
+        "TestProviderSwarmControlInstanceCancelsBeforeJoining",
+        "TestProviderSwarmControlRejectsCanceledRequestBeforeMutation",
+        "TestProviderSwarmControlRejectsStaleGenerationCallbacks",
+        "TestProviderSwarmControlRunCancelsBeforeClosingStartedMembers",
+        "TestProviderSwarmControlShutdownJoinsDisable",
+        "TestProviderSwarmControlShutdownJoinsStartupCleanup",
+        "TestProviderSwarmControlStartupCallbackFailureIsRetryable",
+        "TestProviderSwarmControlStartupHasIndependentDeadline",
+        "TestProviderSwarmControlStartupSurvivesCallerCancellation",
+        "TestProviderSwarmControlStatusDoesNotConsultCarrierReadiness",
+        "TestProviderSwarmControlWalletBoundsStreamedReply",
+        "TestProviderSwarmControlWalletClassifiesEveryJoinedCause",
+        "TestProviderSwarmControlWalletClosesCanceledResponses",
+        "TestProviderSwarmControlWalletDoesNotFollowSignedWriteRedirect",
+        "TestProviderSwarmControlWalletLostReplyNeedsFreshChallenge",
+        "TestProviderSwarmControlWalletPreservesDialDeadline",
+        "TestProviderSwarmControlWalletPreservesReadAndCloseFailures",
+        "TestProviderSwarmControlWalletPreservesRefusalWithReadFailure",
+        "TestProviderSwarmDialerUsesExactLoopbackSource",
+        "TestProviderSwarmInstanceCloseCancelsMemberLifetime",
+        "TestProviderSwarmInstanceCloseJoinsNetworkSpace",
+        "TestProviderSwarmJwtRefreshPreservesStorageCause",
+        "TestProviderSwarmMemberDisablesTheExtenderRole",
+        "TestProviderSwarmRunPersistenceAndAuthenticationFailureIsTerminal",
+        "TestProviderSwarmRunQuarantinesJwtPersistenceFailure",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterStartupDeadline",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterTemporaryStartupFailure",
+        "TestProviderSwarmStatusFailsClosedOnMissingMember",
+        "TestSetSwarmMemberWalletCancellationStopsChallenge",
+        "TestSetSwarmMemberWalletClosesOneShotStrategy",
+        "TestSetSwarmMemberWalletPreservesServerRefusal",
+        "TestSetSwarmMemberWalletRejectsKeyMismatchBeforeHTTP",
+        "TestSetSwarmMemberWalletSignsFreshChallengeForExistingProvider"
+      ],
+      "skip": []
+    },
+    "callback-fixed-3664820-race": {
+      "exit": 0,
+      "fail": [],
+      "intended_causal_assertion_present": false,
+      "pass": [
+        "TestProviderSwarmConfigPinsLoopbackDNSPumpToConnectIngress",
+        "TestProviderSwarmConfigRejectsAliasedIdentityResources",
+        "TestProviderSwarmControlCanceledWaitersDoNotOutliveTeardown",
+        "TestProviderSwarmControlClassifiesTypedTransientFailures",
+        "TestProviderSwarmControlDisableWaitsForStartup",
+        "TestProviderSwarmControlDisablesAndRestoresOneRealMemberSlot",
+        "TestProviderSwarmControlEnableWaitsForTeardown",
+        "TestProviderSwarmControlInstanceCancelsBeforeJoining",
+        "TestProviderSwarmControlRejectsCanceledRequestBeforeMutation",
+        "TestProviderSwarmControlRejectsStaleGenerationCallbacks",
+        "TestProviderSwarmControlRunCancelsBeforeClosingStartedMembers",
+        "TestProviderSwarmControlShutdownJoinsDisable",
+        "TestProviderSwarmControlShutdownJoinsStartupCleanup",
+        "TestProviderSwarmControlStartupCallbackFailureIsRetryable",
+        "TestProviderSwarmControlStartupHasIndependentDeadline",
+        "TestProviderSwarmControlStartupSurvivesCallerCancellation",
+        "TestProviderSwarmControlStatusDoesNotConsultCarrierReadiness",
+        "TestProviderSwarmControlWalletBoundsStreamedReply",
+        "TestProviderSwarmControlWalletClassifiesEveryJoinedCause",
+        "TestProviderSwarmControlWalletClosesCanceledResponses",
+        "TestProviderSwarmControlWalletDoesNotFollowSignedWriteRedirect",
+        "TestProviderSwarmControlWalletLostReplyNeedsFreshChallenge",
+        "TestProviderSwarmControlWalletPreservesDialDeadline",
+        "TestProviderSwarmControlWalletPreservesReadAndCloseFailures",
+        "TestProviderSwarmControlWalletPreservesRefusalWithReadFailure",
+        "TestProviderSwarmDialerUsesExactLoopbackSource",
+        "TestProviderSwarmInstanceCloseCancelsMemberLifetime",
+        "TestProviderSwarmInstanceCloseJoinsNetworkSpace",
+        "TestProviderSwarmJwtRefreshPreservesStorageCause",
+        "TestProviderSwarmMemberDisablesTheExtenderRole",
+        "TestProviderSwarmRunPersistenceAndAuthenticationFailureIsTerminal",
+        "TestProviderSwarmRunQuarantinesJwtPersistenceFailure",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterStartupDeadline",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterTemporaryStartupFailure",
+        "TestProviderSwarmStatusFailsClosedOnMissingMember",
+        "TestSetSwarmMemberWalletCancellationStopsChallenge",
+        "TestSetSwarmMemberWalletClosesOneShotStrategy",
+        "TestSetSwarmMemberWalletPreservesServerRefusal",
+        "TestSetSwarmMemberWalletRejectsKeyMismatchBeforeHTTP",
+        "TestSetSwarmMemberWalletSignsFreshChallengeForExistingProvider"
+      ],
+      "skip": []
+    },
+    "callback-fixed-3664820-vet": {
+      "exit": 0,
+      "fail": [],
+      "intended_causal_assertion_present": false,
+      "pass": [],
+      "skip": []
+    }
+  },
+  "race_roots": 40,
+  "schema": "urnetwork-swarm-published-callback-qualification-v1",
+  "server_commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "server_tree": "622c52b73f71b7652cf508856198ffa6aa85f574",
+  "source": "3664820382ba38c8672fea09e58381eb5e541ed1",
+  "source_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/provider-progress/callbacks/sn",
+  "tools": {
+    "/usr/local/go/bin/go": {
+      "bytes": 15434687,
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  },
+  "tree": "ffbef01345bf273bf4953c5b6dbdfa634945c7aa",
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0
+}

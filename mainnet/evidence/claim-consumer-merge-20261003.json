@@ -1,0 +1,16 @@
+{
+  "schema": "claim-consumer-merge-source-join-v1",
+  "merge_tree": "12df98f70b693ae724812bdca32aa1db46720409",
+  "qualified_candidate": "80030acb1024f8a74967ae9948ceea6ed9e5faee",
+  "production_and_test_join": "all nine changed files match qualified candidate Git blobs exactly",
+  "other_candidate_to_merge_differences": "mainnet documentation and evidence only",
+  "module_scope": "unchanged producer347 graph; published current dependencies require separate composition",
+  "limits": [
+    "No deployment, signing or claim submission.",
+    "Finite expectation window; continuous renewal and economic observers remain implementation work."
+  ],
+  "original_local_merge_commit": "5d8e73d7fab263d46daecbd0df6d638183e74222",
+  "rebased_implementation_tip": "66f922205b011513f23b8248fb8fca01d697a157",
+  "post_pull_rebase_source_verified_at": "484c1b94794dab57d4c4fbed39ffc2905939e2a1",
+  "pull_rebase_note": "Pull/rebase replayed source commits; all nine qualified blobs and module graph remain unchanged."
+}

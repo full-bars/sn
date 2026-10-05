@@ -1,0 +1,15 @@
+{
+  "bytes": 31470,
+  "connect_commit": "631bcb282d392a24df6b509b89a0337c2fd4d7e7",
+  "finding": "Per-head owner preparation for a native history namespace above32 heads cannot fit this request validator. Accepted archive/catalog capacity and whole-union restore must be joined, not tested only at small history.",
+  "git_blob": "b22b431383e6ae5a511c0b06ee7111610d5136ec",
+  "limits": [
+    "Actual 512-segment restore reproduction and successor qualification pending",
+    "No product cap changed by this source review"
+  ],
+  "path": "/home/by/urnetwork/connect/durablevolume/preparation_plan_linux.go",
+  "preparation_max_owner_attributes": 128,
+  "preparation_max_owner_profiles": 32,
+  "sha256": "023d22a64103e307b80b5b604dc3c48cda4accade3d9f24bf4c7d945fc5d2201",
+  "status": "ROOT_VERIFIED_SOURCE_LIMITS_ONLY"
+}

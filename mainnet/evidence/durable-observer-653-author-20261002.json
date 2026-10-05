@@ -1,0 +1,316 @@
+{
+  "causal_controls": {
+    "before_retry": {
+      "body": "observer-before-retry/root_command.go",
+      "normal_intended_failures": 4,
+      "race_intended_failures": 4
+    },
+    "joined_error_precedence": {
+      "body": "observer-fbf-vet/root_command.go",
+      "normal_intended_failures": 1,
+      "race_intended_failures": 1,
+      "scope": "already-classified joined error invariant, not a claimed emitted mixed kernel fault"
+    }
+  },
+  "files": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a-driver.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a-driver.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a-driver.stdout",
+      "bytes": 394,
+      "sha256": "b804dad4ce79edc853e52fa5e7038ee1db996e99ba825e8a7a3ff10baaf7d793"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-normal.command.json",
+      "bytes": 1714,
+      "sha256": "0c09153ee6b9ab656fa64592409f0002cd213d6ae71cb19a4f69577e08d45afa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-normal.jsonl",
+      "bytes": 6133,
+      "sha256": "b20d0da02246099507ed9254af0369a99a750b867de55fc54eeb0514149c8f06"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-normal.result.json",
+      "bytes": 565,
+      "sha256": "0214104274137def3db14d9507ba31999187ad319efe82d5cd9240de71143c6e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-overlay.json",
+      "bytes": 236,
+      "sha256": "cc5aecb324180772480af686f4c9b100687786c409fd98fd4eeed0f411593ec9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-race.command.json",
+      "bytes": 1727,
+      "sha256": "d08b981e0a8ef2d2c55e62637f8c1c998ca03a6c5a6f4d5ce10dfcbb6b18ba52"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-race.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-race.jsonl",
+      "bytes": 6140,
+      "sha256": "f17a504549eee3dc48e638b577d6bb8e71b65e04375120cdd1c8c93c70683390"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-race.result.json",
+      "bytes": 566,
+      "sha256": "6317d351aa22862d2f4df658819f70cf8555507a986e1278fecf03dc871680b3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/before-retry-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-normal.command.json",
+      "bytes": 1340,
+      "sha256": "cb41ab3a27392f59bbcc7bf1c6036cdd0cb035f518218a751fbfea8021e3340d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-normal.jsonl",
+      "bytes": 1691,
+      "sha256": "8d74b69008b62aed73c1bdf202720e0be1138f24e05c8f8616d4980d7ab25e31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-normal.result.json",
+      "bytes": 366,
+      "sha256": "4dcb968f3d3cd5b6079690d466e369d5b3fa436b5fb355ed9bd87e662e2051c6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-overlay.json",
+      "bytes": 231,
+      "sha256": "4ec54f20cffc33d272c6c2cc35914cfeca6bcc5bbf4f02c01925d5923f530930"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-race.command.json",
+      "bytes": 1353,
+      "sha256": "eff14aff21d81c955b486ff8ab7b8d25374a9344941710249ade56a9e9532a51"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-race.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-race.jsonl",
+      "bytes": 1695,
+      "sha256": "841eb9ec9e204f1d6df362a8c98d17f7fab9bf999434145dbf98f88042ab0646"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-race.result.json",
+      "bytes": 366,
+      "sha256": "16191487dc59e56a0a6aaa0d6172afa88e4f4b244a1671cd69b9e21c3bdd0f8b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/joined-identity-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/normal.command.json",
+      "bytes": 2531,
+      "sha256": "2d2fe0742600618f95550c50c7c7ded3a36b63d3f887f0ee811f4d12302ac800"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/normal.jsonl",
+      "bytes": 10478,
+      "sha256": "46d3b4f44a557db2400c13ffd6d08b6942301661af0b3d89e2804e7532fd8435"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/normal.result.json",
+      "bytes": 1069,
+      "sha256": "b57ec504a8b4e0a44c6fe1f0ab387c13cc663bc438031fd3cb765b39e45ebe79"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/race.command.json",
+      "bytes": 2544,
+      "sha256": "9a902f40c3b3f50c17de204b6c601cb5062212e35d4c65f6944e0844afaae0f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/race.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/race.jsonl",
+      "bytes": 10495,
+      "sha256": "c2a8a810b9fbef6c833346096dc4b322f7e430ac85af24e2bdd1d4e2fb20d0f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/race.result.json",
+      "bytes": 1069,
+      "sha256": "f6e99827f38e0a67547883b41419fa2df9744adc31e0f52d8d145de82a74fdb8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/vet.command.json",
+      "bytes": 1807,
+      "sha256": "d6f26bd5436ffc03e91f0be2a235f69b3845aa4e878ff1723fe8494f9f07f23c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/vet.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/vet.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/vet.result.json",
+      "bytes": 299,
+      "sha256": "2c972d4444a9976fdf2c1d60adc4744037d13e2071f15abca02ade18b638f77b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-653061a/vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-before-retry/root_command.go",
+      "bytes": 13616,
+      "sha256": "5bb6eb9478fea301a60fa19f4e3a2d90ff71af43e0f9303cb04bd89b95c66c9f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-fbf-vet/root_command.go",
+      "bytes": 15069,
+      "sha256": "3703c305edff3eec451afcb64093a48fcb9cc4e866112b56a7586ecfe35aefa2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/qualify-observer-successor.go",
+      "bytes": 6088,
+      "sha256": "3b6c285aaae00bbeae91c6b98f44b076a8b054e095d9e39fb7512f4712979791"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/server.mod",
+      "bytes": 10820,
+      "sha256": "70e49df70dff9f13004757a19c9632186b58aad6edc7a73c06c1cfa0927f9901"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/server.sum",
+      "bytes": 67462,
+      "sha256": "ff45d3706f736fa6609b043be621109911ef2fe8d2cbbf094d2965f01ddabe2a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/sn.mod",
+      "bytes": 11690,
+      "sha256": "5ee854f6e2e8d56554eb3f91830aa526c511197a09f0674b94d3acb5790452d4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/sn.sum",
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/source-join.json",
+      "bytes": 81318,
+      "sha256": "d6081b5a2545da6a5f4c42d530be16ea2e177b5e9f297dae6296929d85bf9fc5"
+    },
+    {
+      "path": "/usr/local/go/bin/go",
+      "bytes": 15434687,
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  ],
+  "limits": [
+    "Rendered passive service uses Restart=no; exhausting one soft observation sample currently exits1 and abandons later signed samples. Separate successor required.",
+    "Source qualification only; no composed full-mainnet, current-module71df, release, independent rerun or deployment claim.",
+    "Each command record contains a historical overlay_body_sha256 field fixed to the before-retry body, even on non-overlay and joined-identity jobs. Actual applied overlay is the GOFLAGS map; both maps and their exact distinct bodies are retained and hash-bound here."
+  ],
+  "normal_roots": 11,
+  "race_roots": 11,
+  "schema": "urnetwork-mainnet-observer-qualification-v1",
+  "server_commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "source_commit": "653061a15ee32b56f8dfb602d3bfcdaea7d30b47",
+  "source_files": [
+    {
+      "path": "mainnet/root_command.go",
+      "bytes": 15296,
+      "sha256": "970d89f37b8e1f39d71b0e56fc6a0b132e728b6647daa9c90880a6956b40213c"
+    },
+    {
+      "path": "mainnet/root_passive_command.go",
+      "bytes": 7619,
+      "sha256": "7ab491a3899b90fd84ac06b56048e680c087e9b0c0e399a411dfcc39ab73b36a"
+    },
+    {
+      "path": "mainnet/main.go",
+      "bytes": 22866,
+      "sha256": "1998a0ff325084c24be0ee8bdaa16b7e894835eee05537bdd9f9939b841cb814"
+    },
+    {
+      "path": "mainnet/durable_volume_observer_test.go",
+      "bytes": 14647,
+      "sha256": "f6fc0b7b1f4143a4e158438abb5055c1734f3b00ad6219e9de7608a95da91521"
+    },
+    {
+      "path": "mainnet/durable_volume_composition_test.go",
+      "bytes": 4806,
+      "sha256": "be3a5c620cafa44e19f2f2435ba04ab3c6dbd7d8711e2e1f519b46b87dabcf26"
+    },
+    {
+      "path": "go.mod",
+      "bytes": 11211,
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    {
+      "path": "go.sum",
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    }
+  ],
+  "source_tree": "90f653f8abe1088e7a2dfd151fd67268b8263253",
+  "verdict": "PASS_SCOPED_WITH_CONFIRMED_CONTINUATION_GAP",
+  "vet_packages": [
+    "mainnet",
+    "internal/durablepath",
+    "internal/durablehead"
+  ]
+}

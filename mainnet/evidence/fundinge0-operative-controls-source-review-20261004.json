@@ -1,0 +1,110 @@
+{
+  "schema": "funding-operative-controls-root-review-v1",
+  "status": "SOURCE_REVIEWED_EXECUTION_PENDING",
+  "head": "e0f1011d467712f32b9d3d75293a4b57a20040e2",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/evidence/controls/opening-stock-counted-as-income.go",
+      "bytes": 19590,
+      "sha256": "93d20ed9532a5c40b09fbe8fde196043efd31d3480b0ebc7597f0e457cd245d9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/evidence/controls/cold-original-capture-total-omitted.go",
+      "bytes": 4163,
+      "sha256": "659fc5645250097d0cac794554f2ff4e24f63535ca5016180200502eebad3961"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/evidence/controls/original-carry-composition-omitted.go",
+      "bytes": 19632,
+      "sha256": "778ed728654b3f7ba0e7f752f1d182043461dc030ed57294cc2343620c254688"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/evidence/controls/observed-capital-contradiction-omitted.go",
+      "bytes": 8714,
+      "sha256": "29ac5f4c784c627ca96a4dd7b32ca7e031fece4935725ea9d016c193299f05b0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/evidence/controls/final-quantization-counted-twice.go",
+      "bytes": 8852,
+      "sha256": "a35e0eb66f9832de75d13d5b2fd3e4389bb7059ca96bdb4bcfe777bae921137d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/evidence/controls/stale-acceptance-and-fee-reset-omitted.go",
+      "bytes": 8629,
+      "sha256": "e513b02247ca5f72cf412cc9a43a78dcaa7558ddde92cf3f1e13c6cf874bb485"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/evidence/controls/original-funding-owner-admission-refusal-omitted.go",
+      "bytes": 19611,
+      "sha256": "b2b00aaea87f8f9728c402ff4211b0d354383f734abc2843ff914bbe52469fc0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-custody/evidence/controls/final-funding-owner-refusal-omitted.go",
+      "bytes": 19611,
+      "sha256": "c2e22667f115685cc1af3f66600475c564fd4434d12ba5dcbf784b78732b056c"
+    }
+  ],
+  "groups": [
+    {
+      "name": "opening-stock-counted-as-income",
+      "roots": [
+        "TestEconomicFundingPublicActualCaptureDoesNotEarnOpeningStock"
+      ],
+      "assertion": "original funding bounds differ"
+    },
+    {
+      "name": "cold-original-capture-total-omitted",
+      "roots": [
+        "TestEconomicFundingPublicActualWithdrawalKeepsSourceBoundsThroughArchive"
+      ],
+      "assertion": "cold funding admission changed original fungible source bounds"
+    },
+    {
+      "name": "original-carry-composition-omitted",
+      "roots": [
+        "TestEconomicFundingPublicMissedRootPaysOriginalStockWithoutEarningItAgain"
+      ],
+      "assertion": "original funding bounds differ"
+    },
+    {
+      "name": "observed-capital-contradiction-omitted",
+      "roots": [
+        "TestEconomicFundingPublicMissedRootPaysOriginalStockWithoutEarningItAgain"
+      ],
+      "assertion": "original capital-funded payment became compliant native income"
+    },
+    {
+      "name": "final-quantization-counted-twice",
+      "roots": [
+        "TestEconomicFundingFullToleranceDoesNotDoubleCountFinalStage"
+      ],
+      "assertion": "duplicated final quantization tolerance admitted original out-of-bound split"
+    },
+    {
+      "name": "stale-acceptance-and-fee-reset-omitted",
+      "roots": [
+        "TestEconomicFundingConformanceRefreshDropsStaleAcceptanceAndFeeProjection"
+      ],
+      "assertion": "true-to-unknown retained stale acceptance, fee or income projection"
+    },
+    {
+      "name": "original-funding-owner-admission-refusal-omitted",
+      "roots": [
+        "TestEconomicFundingClosedOriginalCannotPublishRetainedAmounts"
+      ],
+      "assertion": "closed funding owner exposed retained amounts"
+    },
+    {
+      "name": "final-funding-owner-refusal-omitted",
+      "roots": [
+        "TestEconomicFundingPublicEqualByteCustodyLossPublishesNoSummary"
+      ],
+      "assertion": "public funding used a replaced original after arithmetic"
+    }
+  ],
+  "review": [
+    "Read eight exact operative mutations against pinned original source. One inserted error branch is gofmt-expanded; semantic tokens match declared mutation. No test assertions changed.",
+    "Controls cover opening stock/income, cold totals, carry, capital contradiction, tolerance, stale acceptance and entry/final owner checks. Early owner regression also counts arithmetic-hook calls."
+  ],
+  "limits": "Controls not compiled or executed. Join corrected ABI fixture before complete funding qualification."
+}

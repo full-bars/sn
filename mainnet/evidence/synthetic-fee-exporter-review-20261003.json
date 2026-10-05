@@ -1,0 +1,175 @@
+{
+  "actual_selected_terminal_roots": [
+    [
+      "TestExportHistoricalFeeContextSyntheticInputs",
+      "pass"
+    ]
+  ],
+  "bindings": [
+    {
+      "bytes": 1742,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/exporter-scoped-receipt.json",
+      "sha256": "30c987f7cbbe31066f629a836e67b4e94e84bf11473dc00c182e212e51456ea4"
+    },
+    {
+      "bytes": 11449,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/exporter-ledger-snapshot.json",
+      "sha256": "54108134f0c921eed4b91689eb9d3a4ce7ecd134409abd317eebf2278732a132"
+    },
+    {
+      "bytes": 2193,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/fixture-output/export1-manifest.json",
+      "sha256": "602e21049214307322dc94e667762fd7a7efd1e0547597ec7ee36656164eb960"
+    },
+    {
+      "bytes": 55830,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_exporter.stdout",
+      "sha256": "dd70396fdc19d4a6eae82a71402992d87c7c5dc1451dbe8b84b924a73259fc6a"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_exporter.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 540,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_exporter.resource.csv",
+      "sha256": "ede463c5529dddb426ddb1eea3a92c5a3f8eac6768e81166445e6dc16c0ba9be"
+    },
+    {
+      "bytes": 1596,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/graph_exporter.json",
+      "sha256": "dc6c417bcfe30de1ff98f0034d7edd028f2b56509960dd6b76c405f4e6386615"
+    },
+    {
+      "bytes": 2408,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/export_test.go",
+      "sha256": "f4dae16cf3a790bcfffdcf33b6ec50fb5a1f8fb4af3499e80713c56f2cc04da8"
+    },
+    {
+      "bytes": 10651,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server/go.mod",
+      "sha256": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8"
+    },
+    {
+      "bytes": 69535,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server/go.sum",
+      "sha256": "faf759f6bd62a41e196e796268466aadb3dcc13ac3b65fb724bbdc870f53e5b6"
+    },
+    {
+      "bytes": 11292,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/sn/go.mod",
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "bytes": 282,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/exporter-overlay.json",
+      "sha256": "8a7dc681333da30239a658ffb02e13d1e98f1d54aea35678746c24609c30f83f"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 5441,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_compile.resource.csv",
+      "sha256": "aa3f6c6f54d937f36b0b1dc54f5d65707dc8b1d3437d5eb46e9043e88bbcb8e9"
+    },
+    {
+      "bytes": 1928,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/exporter_compile.json",
+      "sha256": "2c7be9efb84c0190d8d81b3a96ba051e13b0d56696061c9bcbd1bf393504cc81"
+    },
+    {
+      "bytes": 1609,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_test.stdout",
+      "sha256": "18364cf12b2aad8293e02804a1f53568335365737d1c6e04b1e1e09318945721"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_test.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 391,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/exporter_test.resource.csv",
+      "sha256": "655beae3e2f65e88d9ee157b8ba819748631e1e6e970e07bf397c60f7ab0e817"
+    },
+    {
+      "bytes": 2214,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/exporter_test.json",
+      "sha256": "5f4ef28c8d6841b37ad5b766f8587e280a7449aae8663292c9e50b02d3f5eebe"
+    },
+    {
+      "bytes": 61047864,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/bin/server5f-strecovery-exporter-normal-owned.test",
+      "sha256": "57d8ad60ed7bff451f37a94b51541da5b94b0587fa39f49b162167d87103c5a3"
+    },
+    {
+      "bytes": 1385,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/exporter-custody-addendum.json",
+      "sha256": "057792aa054bca01563e7e21911b57720d7f851851b84aa8b64e5247c7c98f8b"
+    },
+    {
+      "bytes": 85566,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/fixture-output/export1/reverted.json",
+      "sha256": "e3df5645a79f131341001a38f14fa51907a8537a57ac95853a77d131e64cd5ec"
+    },
+    {
+      "bytes": 85571,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/fixture-output/export1/success.json",
+      "sha256": "2d01cad0c8793e244d68a41f66cbd149edf084e947a2c39499147b666b33d4fb"
+    }
+  ],
+  "captured_utc": "2026-10-03T17:02:25.042252+00:00",
+  "current_image_matches_compiler_custody": true,
+  "custody_limit": "COMPILER_POSTMODE_AND_TEST_INPUT_HASH_AND_LATER_READBACK_MATCH; test-before/test-after inode/mode/hash were not captured as a paired execution boundary, so no stronger during-test custody claim is made.",
+  "limits": [
+    "No test repetition, production process, real chain authority or DB/model qualification.",
+    "Future runner now records paired execution custody; exporter original omission remains retained.",
+    "Fee-context public verifier must consume and independently verify these artifacts; fixture generation is not verifier qualification."
+  ],
+  "observed_cumulative_consumption_bytes": 191385600,
+  "outputs": [
+    {
+      "blocks": 1,
+      "bytes": 85566,
+      "complete_contexts": true,
+      "file": "reverted.json",
+      "scope": "Synthetic inputs only; authority flags inside synthetic expected report do not admit real chain evidence.",
+      "transactions": 6
+    },
+    {
+      "blocks": 1,
+      "bytes": 85571,
+      "complete_contexts": true,
+      "file": "success.json",
+      "scope": "Synthetic inputs only; authority flags inside synthetic expected report do not admit real chain evidence.",
+      "transactions": 6
+    }
+  ],
+  "phase_exits": {
+    "exporter_compile": 0,
+    "exporter_test": 0,
+    "graph_exporter": 0
+  },
+  "schema": "urnetwork-root-synthetic-fee-exporter-review-v1",
+  "scope": "Exact Server5f with declared ready-current SN866 peer; actual selected module/dependency graph bound. No unused peer package qualification inferred.",
+  "source": {
+    "export_test_sha256": "f4dae16cf3a790bcfffdcf33b6ec50fb5a1f8fb4af3499e80713c56f2cc04da8",
+    "overlay_sha256": "8a7dc681333da30239a658ffb02e13d1e98f1d54aea35678746c24609c30f83f",
+    "server_head": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+    "server_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server",
+    "server_tree": "4728109a6e40394c56f50e14f2a66c24c6623d00",
+    "sn_peer_head": "86639215a99565bca469e123e8bc53660f081ce2",
+    "sn_peer_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/sn",
+    "sn_peer_tree": "a547a135bf9d12b16aae17b77300f75fd370be92"
+  },
+  "status": "SELECTED_SYNTHETIC_EXPORT_PASS_WITH_RECORDED_CUSTODY_LIMIT"
+}

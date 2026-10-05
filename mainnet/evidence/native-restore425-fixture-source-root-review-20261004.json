@@ -1,0 +1,75 @@
+{
+  "schema": "native-restore425-fixture-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_UNQUALIFIED",
+  "source_head": "42546e7a1437e37a96b9efc474974a86f0fe42ef",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-fixture-admission/evidence/intake.json",
+      "bytes": 4318,
+      "sha256": "ed1cc0c43a6679e39de2e61c65f7baca1a2594ef73d4d7895bc2a955dcf2ee85"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-fixture-admission/sn/mainnet/economic_conservation_restore_test.go",
+      "bytes": 22962,
+      "sha256": "4a09de3a8208e7a3aaf5edeba103bcafd5cbe605d205a89051a107f8750bb746"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-fixture-admission/sn/mainnet/economic_native_producer_restore_test.go",
+      "bytes": 30565,
+      "sha256": "5655daad5ad916f6dddcdec689390d0776a91542dd798dd78007a6d4d8e19fc1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-fixture-admission/sn/mainnet/economic_restore_fixture_admission_test.go",
+      "bytes": 2183,
+      "sha256": "425e44f3816064e4d2ca6acb527b4385fc4cb7373c6be8d585c3985391279497"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-test-types/evidence/intake.json",
+      "bytes": 3059,
+      "sha256": "8bb8e179c1780e9031cddccf956caacb1873c8d096ca2d84a6a18233721433c3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-fixture-admission/evidence/qualification-recipe.json",
+      "bytes": 11112,
+      "sha256": "541c3f52e9511cacac1289dcbc0d8f272fe615021f5c939fb6b11889722c14e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-fixture-admission/evidence/operative-controls.json",
+      "bytes": 1827,
+      "sha256": "6c7d6e5e96d923f8724f8890243fc7f56fcf04f6e1bdd4633c55dcab7569f7a5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-actual_dual_engine_12-body.stdout",
+      "bytes": 13909,
+      "sha256": "7ae62d6892605c893109f4aeddaf7fdff9963a8eb5be0031b96ddf468742f9a3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-long_129_review_1-body.stdout",
+      "bytes": 1425,
+      "sha256": "a1d73c1e4022c0c0a069b452148c6650e2fb353d9aa5fd22d13947be72a3ef21"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/testtypes729/evidence/a499-729-normal-ordinary_12-body.stdout",
+      "bytes": 11018,
+      "sha256": "9ccb31d58fc1b21c3bf816cd4833e22873a00258d34699950a7b0a812e54d661"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-fixture-admission/evidence/controls/fresh-ancestor-protection-omitted.go",
+      "bytes": 22978,
+      "sha256": "4214bf0c03628f205ee975dcfef3728187f774151859d97a84a2dc2ba74cc681"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-fixture-admission/evidence/controls/future-target-preenrollment.go",
+      "bytes": 30553,
+      "sha256": "dca352b2b767b5594fab24eaa24b5822ab976dc7a8bda849310ac2295c1b6348"
+    }
+  ],
+  "review": "Read full three-file correction vs729, recipe and two fixture-control diffs. Protect explicitly fresh combined parent before public preparation; initial durable fixture declares existing observation roots, leaving fresh target roots without previous generation metadata. Production/module/Rust bytes unchanged. New public tests use explicit0770 ancestor and actual target preparation; no ambient-umask dependence.",
+  "scope": "Fourteen previously failed roots plus two new roots per mode; preserve eleven prior positives. Fixture controls are not production causality; six original restore production controls remain separate.",
+  "runner_requirements": [
+    "Join explicit qualified Corec618 workspace; recipe legacy GOWORK-off wording cannot override actual mandatory dependency join.",
+    "Use additive32768 entry cap over actual20774 entries, preserving original cumulative baseline and2x margin.",
+    "Long129 separate7200-second normal/14400-second race partition; do not shrink complete history to achieve PASS."
+  ],
+  "whole_mainnet_complete": false
+}

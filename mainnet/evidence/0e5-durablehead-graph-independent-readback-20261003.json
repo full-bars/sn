@@ -1,0 +1,30 @@
+{
+  "schema": "0e5-durablehead-graph-independent-readback-v1",
+  "status": "PASS_GRAPH_ONLY",
+  "source_commit": "0e5ace17d6cdd419331a3dbca13fb3ec96c67808",
+  "core_commit": "2ea8d82ea5cbc8bdebdee05f5b90a9f21b64128f",
+  "wrapper_receipt_sha256": "51c796e3b57a901776f54bf707abca60c613977d9bce676e41608e342c22d36b",
+  "graph_receipt_sha256": "7da85ec9004ba369390f07ac04292aef5f23af37c1a264c117574275fda58974",
+  "module_gomod_readbacks": 4,
+  "raw": {
+    "bytes": 276472,
+    "path": "/mnt/data/sn-testnet/sol-0e5-monitor-qualification-20261003/evidence/selected-durablehead-deps.jsonl",
+    "sha256": "86c299395781b45b83257597bd16d07db767d4307c47d1b56d44961ecc68ae5e"
+  },
+  "selected_packages": [
+    "./internal/durablehead"
+  ],
+  "source_before": {
+    "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+    "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+  },
+  "source_after": {
+    "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+    "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+  },
+  "limits": [
+    "Selected durablehead dependency resolution only.",
+    "No compile or behavioral success inferred.",
+    "Source stage and prior graphs retained without repetition."
+  ]
+}

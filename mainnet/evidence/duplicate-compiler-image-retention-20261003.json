@@ -1,0 +1,335 @@
+{
+  "schema": "root-owned-image-retention-supplement-v1",
+  "cleanup": {
+    "schema": "retained-owned-image-duplicate-compiler-reclaim-v1",
+    "status": "COMPLETE",
+    "files": [
+      {
+        "removed": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/mainnet-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/mainnet-owned.test",
+        "sha256": "33500739e5fdecdc8bcd04e724a4f3423a86bba330b66fe49a762cb205d28cb7",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 16810861,
+          "bytes": 74723920,
+          "allocated": 74731520,
+          "mtime_ns": 1791038784652786991,
+          "ctime_ns": 1791038784652786991,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 16808650,
+          "bytes": 74723920,
+          "allocated": 74731520,
+          "mtime_ns": 1791038784883779460,
+          "ctime_ns": 1791038784885779395,
+          "mode": "0o500"
+        }
+      },
+      {
+        "removed": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/mainnet-race-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/mainnet-race-owned.test",
+        "sha256": "9ce96157434dbc964380a8ddd5bb8c2e32dab0d30569de50b7b63a1239cd3284",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 16840211,
+          "bytes": 100164856,
+          "allocated": 100171776,
+          "mtime_ns": 1791039055390679516,
+          "ctime_ns": 1791039055390679516,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 16809203,
+          "bytes": 100164856,
+          "allocated": 100171776,
+          "mtime_ns": 1791039055745667266,
+          "ctime_ns": 1791039055749667128,
+          "mode": "0o500"
+        }
+      },
+      {
+        "removed": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-original-normal-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-original-normal-owned.test",
+        "sha256": "03f878d323b46403f9178d35481fcc46c1e79be50a8d187ced214039205dcfa0",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 16808413,
+          "bytes": 74727560,
+          "allocated": 74735616,
+          "mtime_ns": 1791039244010085963,
+          "ctime_ns": 1791039244011085928,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 16808391,
+          "bytes": 74727560,
+          "allocated": 74735616,
+          "mtime_ns": 1791039244184079811,
+          "ctime_ns": 1791039244187079705,
+          "mode": "0o500"
+        }
+      },
+      {
+        "removed": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-original-race-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-original-race-owned.test",
+        "sha256": "51402059813aeb3b472e343c87cb0aae6cbc2a0c44ed21bd00d8116603a089ca",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 16659321,
+          "bytes": 100172248,
+          "allocated": 100175872,
+          "mtime_ns": 1791039467801093935,
+          "ctime_ns": 1791039467801093935,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 16821360,
+          "bytes": 100172248,
+          "allocated": 100179968,
+          "mtime_ns": 1791039467995086947,
+          "ctime_ns": 1791039467998086838,
+          "mode": "0o500"
+        }
+      },
+      {
+        "removed": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-published-normal-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-published-normal-owned.test",
+        "sha256": "71f8711250b669fd7183f1a33718120ec879ffe42f156141b6669328f178b9cb",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 16942845,
+          "bytes": 74727920,
+          "allocated": 74735616,
+          "mtime_ns": 1791039563987618660,
+          "ctime_ns": 1791039563988618624,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 16821361,
+          "bytes": 74727920,
+          "allocated": 74735616,
+          "mtime_ns": 1791039564143613008,
+          "ctime_ns": 1791039564145612935,
+          "mode": "0o500"
+        }
+      },
+      {
+        "removed": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-published-race-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-published-race-owned.test",
+        "sha256": "ab9954b115318c825c6fd72c9d24f47fdb2f32549130a8a282498a698fb63ae1",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 16942856,
+          "bytes": 100173696,
+          "allocated": 100179968,
+          "mtime_ns": 1791039722642847769,
+          "ctime_ns": 1791039722642847769,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 16821364,
+          "bytes": 100173696,
+          "allocated": 100175872,
+          "mtime_ns": 1791039722782842659,
+          "ctime_ns": 1791039722786842513,
+          "mode": "0o500"
+        }
+      }
+    ],
+    "reclaimed_allocated_bytes": 524730368,
+    "original_receipt_bytes_unchanged": true,
+    "retention": "Historical compiler paths are retired; exact qualified image bytes remain at each mapped owned path. No source, log, original receipt or owned executable removed.",
+    "processes_checked": 371,
+    "process_matches": 0
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-duplicate-elf-reclaim-20261003/plan.json",
+      "bytes": 5196,
+      "sha256": "f0cfb3807c42abe08dacf56ea15f1e0c6cdf6adc40f0cbf520aa3820eae4c0bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-duplicate-elf-reclaim-20261003/receipt.json",
+      "bytes": 5553,
+      "sha256": "772621f9a8735c456d622282d261a816e3c1f252c543f048bf4b3c931f510f74"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-duplicate-elf-reclaim-20261003/971-plan.json",
+      "bytes": 816,
+      "sha256": "291e0685d9872e116b7a861b3778d73dde0c607f18125673f889021d7d109c48"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-duplicate-elf-reclaim-20261003/971-receipt.json",
+      "bytes": 1107,
+      "sha256": "fc79c92baf8ceb6268abe3b5a7fb9bfae000fc76e118a3eb549ef19e56547d16"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-duplicate-elf-reclaim-20261003/additional4-plan.json",
+      "bytes": 3805,
+      "sha256": "53d2308ecfde2f8f0b76ac0728be78a31c7e99933c97929e49442cc730d2ed54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-duplicate-elf-reclaim-20261003/additional4-receipt.json",
+      "bytes": 4181,
+      "sha256": "73b577f4e5c51f0236eb6631e7e7708d6a112b50de5577d40469276c5a607280"
+    }
+  ],
+  "scope": "Qualified nine-d source, raw logs, receipts and six exact owned executable images preserved; only inactive duplicate compiler output paths retired.",
+  "authoritative_bytes": "Use each retained owned path and its original matching SHA256 when reproducing old compiler-byte observations; old receipt text is not rewritten.",
+  "cache_attempts": {
+    "31": "Superseded author cache2h plan refused no eligible archives; no deletion.",
+    "32": "Legacy global cache2h plan found1 archive1,867,776allocated bytes; no apply or deletion because insufficient headroom."
+  },
+  "additional_971_cleanup": {
+    "status": "COMPLETE",
+    "mapping": {
+      "removed": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/mainnet-normal-compiler.test",
+      "retained": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/bin/mainnet-normal-owned.test",
+      "sha256": "4d075d110dc909504e92c61ad0f9901088aacdc00c0eebde717d0f4f1bd5a3fc",
+      "removed_identity": {
+        "device": 2081,
+        "inode": 16943344,
+        "size": 74245296,
+        "mtime_ns": 1791040124547085964,
+        "ctime_ns": 1791040124547085964,
+        "allocated": 74248192,
+        "mode": "0o700"
+      },
+      "retained_identity": {
+        "device": 2081,
+        "inode": 16821372,
+        "size": 74245296,
+        "mtime_ns": 1791040124722079506,
+        "ctime_ns": 1791040124724079432,
+        "allocated": 74252288,
+        "mode": "0o500"
+      },
+      "processes_checked": 370,
+      "process_matches": 0
+    },
+    "reclaimed_allocated_bytes": 74248192,
+    "original_receipt_bytes_unchanged": true,
+    "scope": "Normal provisional10-root bytes preserved at owned path; race and causal qualification remain pending."
+  },
+  "total_reclaimed_allocated_bytes": 947253248,
+  "additional_four_cleanup": {
+    "schema": "retained-owned-image-duplicate-compiler-reclaim-v1",
+    "status": "COMPLETE",
+    "files": [
+      {
+        "removed": "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/bin/mainnet-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/bin/mainnet-owned.test",
+        "sha256": "a3f1407b37600b7aadf0f16dfba43fb70f0f9d2e65304ab7adb68d14e09f2555",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 16565748,
+          "bytes": 74679360,
+          "mtime_ns": 1791037313345093229,
+          "ctime_ns": 1791037313345093229,
+          "allocated": 74686464,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 16565493,
+          "bytes": 74679360,
+          "mtime_ns": 1791037313587084543,
+          "ctime_ns": 1791037313589084472,
+          "allocated": 74686464,
+          "mode": "0o500"
+        }
+      },
+      {
+        "removed": "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/bin/mainnet-race-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-native-evm-current-0f-independent-20261003/bin/mainnet-race-owned.test",
+        "sha256": "ea09a275496b680cc4a1f31f72cef50a4d3fbf025aab769cdf13927209e95f4d",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 16538336,
+          "bytes": 100102320,
+          "mtime_ns": 1791037737287562113,
+          "ctime_ns": 1791037737287562113,
+          "allocated": 100106240,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 16517955,
+          "bytes": 100102320,
+          "mtime_ns": 1791037737646548759,
+          "ctime_ns": 1791037737649548648,
+          "allocated": 100110336,
+          "mode": "0o500"
+        }
+      },
+      {
+        "removed": "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/bin/mainnet-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/bin/mainnet-owned.test",
+        "sha256": "fe3146a71990d7fb85dec8233759a599349e582b42e4ac896668943c2e8e26f3",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 10941401,
+          "bytes": 74155224,
+          "mtime_ns": 1791036405515980153,
+          "ctime_ns": 1791036405515980153,
+          "allocated": 74162176,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 9892811,
+          "bytes": 74155224,
+          "mtime_ns": 1791036405768970053,
+          "ctime_ns": 1791036405771969933,
+          "allocated": 74162176,
+          "mode": "0o500"
+        }
+      },
+      {
+        "removed": "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/bin/mainnet-race-compiler.test",
+        "retained": "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/bin/mainnet-race-owned.test",
+        "sha256": "0d0def3c43bdeb6acfc571d380facd03593e3d72107cd874a839aeedf0884138",
+        "removed_identity": {
+          "device": 2081,
+          "inode": 15791043,
+          "bytes": 99313352,
+          "mtime_ns": 1791036688887121221,
+          "ctime_ns": 1791036688887121221,
+          "allocated": 99319808,
+          "mode": "0o700"
+        },
+        "retained_identity": {
+          "device": 2081,
+          "inode": 9892831,
+          "bytes": 99313352,
+          "mtime_ns": 1791036689175112478,
+          "ctime_ns": 1791036689177112418,
+          "allocated": 99319808,
+          "mode": "0o500"
+        }
+      }
+    ],
+    "reclaimed_allocated_bytes": 348274688,
+    "qualification_proofs": [
+      {
+        "path": "/home/by/urnetwork/sn/mainnet/evidence/native-evm-current0f-qualification-20261003.json",
+        "sha256": "3a42e698575b353be08e817a508b945355beeb5db8bce934b81d0dd42d9208ea"
+      },
+      {
+        "path": "/home/by/urnetwork/sn/mainnet/evidence/proof-capture7b81-go10-review-20261003.json",
+        "sha256": "2e6fa10224d2ec7a5147908044c8633be0b603651b158d1727ec80785bfffddf"
+      }
+    ],
+    "proof_bytes_unchanged": true,
+    "process_matches": 0,
+    "processes_checked": 371,
+    "retention": "Only inactive compiler duplicates retired; exact original-qualified bytes remain at protected owned paths. Original raw receipts and their compiler observations remain immutable."
+  }
+}

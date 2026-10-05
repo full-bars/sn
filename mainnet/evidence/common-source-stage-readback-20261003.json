@@ -1,0 +1,48 @@
+{
+  "scope": "Independent successful source-stage readback only; no module/graph/test or launch qualification",
+  "status": "SOURCE_STAGE_PASS",
+  "wrapper_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/source-stage-wrapper-receipt.json",
+    "sha256": "e878a740d1feba36810adaf01ef836d3beb76517da0b204ba1bfd212f660d66b"
+  },
+  "source_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/source-stage-receipt.json",
+    "sha256": "b2651db55464cc1c8ffa1702d8c595f58614911fc26da80da6a0f68b0ac70221"
+  },
+  "exit_code": 0,
+  "stderr_bytes": 0,
+  "sources": {
+    "connect": {
+      "go_mod_sha256": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d",
+      "go_sum_sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693",
+      "head": "2ea8d82ea5cbc8bdebdee05f5b90a9f21b64128f",
+      "objects_alternates_present": false,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/connect",
+      "physical": {
+        "physical_census_sha256": "b46f6207c19c1a5f33a290d1fe1f1c74141bd801070763027cd49a636d726f69",
+        "tracked_bytes": 263836865,
+        "tracked_entries": 3790
+      },
+      "tree": "1fc3f0f491127ead2d4cfed8980e0d24520e3bbd"
+    },
+    "sn": {
+      "go_mod_sha256": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+      "go_sum_sha256": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed",
+      "head": "b6b7880ea4059af1a77f232a1ed597fe11cc8999",
+      "objects_alternates_present": false,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn",
+      "physical": {
+        "physical_census_sha256": "96e3cbd66073c2eeb56cc4e34d0f18c6991c5eccf769b8b4b3bf92b050e11ff9",
+        "tracked_bytes": 224940591,
+        "tracked_entries": 20650
+      },
+      "tree": "b01047e569d7398f2efb242dd7d139fa7ab9399b"
+    }
+  },
+  "peer_count": 7,
+  "net_data_consumption_bytes": 653303808,
+  "source_forecast_bytes": 1073741824,
+  "root_review": "Exact SN/Core HEAD/tree/clean checked independently after staging; floor631bcb282d392a24df6b509b89a0337c2fd4d7e7 object exists. Stage script previously reviewed to verify every tracked physical Git blob and executable/symlink mode, including seven peers.",
+  "resource_continuity": "Canonical shared lock, original fixed32GiB baseline/cap retained. Completed source will not be archived again for later phase admission.",
+  "next_phase": "Official Core ZIP/hash packaging subsequently passed; see common-module-package-readback-20261003.json. Composed graph/test qualification remains pending."
+}

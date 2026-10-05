@@ -1,0 +1,211 @@
+{
+  "limits": [
+    "Readback of author terminal evidence, not an independent test rerun.",
+    "Prior653 author and independentf3 receipts preserve distinct exact source and module scopes.",
+    "No production deployment, release or all-mainnet qualification claim."
+  ],
+  "schema": "urnetwork-passive-observer-soft-outage-checkpoint-v1",
+  "scopes": [
+    {
+      "directory": "observer-soft-baseline",
+      "files": [
+        {
+          "bytes": 1888,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/normal.command.json",
+          "sha256": "0d88dd155014aab7c02b36254a82924702b9cc8315005bb73f9611f5e97383b0"
+        },
+        {
+          "bytes": 76161,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/normal.jsonl",
+          "sha256": "01a410d23ab33a0e94a73c5df0344f597c7cad0b37b15e63615fb4ad7f5a4b16"
+        },
+        {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 2,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/normal.exit",
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "bytes": 585,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/normal.result.json",
+          "sha256": "75ea3bd003231fe5325261f82428c2c85080b94fa77f97c1033410f6e1f308c3"
+        }
+      ],
+      "phase": "normal",
+      "result": {
+        "elapsed_seconds": 41.103306592,
+        "exit": 1,
+        "expectation_met": true,
+        "fail": [
+          "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+          "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+          "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+          "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops"
+        ],
+        "pass": null,
+        "skip": null,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "01a410d23ab33a0e94a73c5df0344f597c7cad0b37b15e63615fb4ad7f5a4b16"
+      },
+      "source_commit": "81a492bb067012c9abc1830aeb7bf1b643590d70"
+    },
+    {
+      "directory": "observer-soft-baseline",
+      "files": [
+        {
+          "bytes": 1901,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/race.command.json",
+          "sha256": "675374b6fd5d71df839dda444ac280ec37b5ea7c5295326c96b4e16d133e0759"
+        },
+        {
+          "bytes": 76175,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/race.jsonl",
+          "sha256": "13c076ba27f4684b213397995a23aad8dae41d6d8093b5b5b901f06379fc4831"
+        },
+        {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/race.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 2,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/race.exit",
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "bytes": 586,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-soft-baseline/race.result.json",
+          "sha256": "ef39e950c22b727fc500f1ca148e0c67e7aaa78c54e471d2b4e156d389c85cc7"
+        }
+      ],
+      "phase": "race",
+      "result": {
+        "elapsed_seconds": 115.641907667,
+        "exit": 1,
+        "expectation_met": true,
+        "fail": [
+          "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+          "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc",
+          "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+          "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops"
+        ],
+        "pass": null,
+        "skip": null,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "13c076ba27f4684b213397995a23aad8dae41d6d8093b5b5b901f06379fc4831"
+      },
+      "source_commit": "81a492bb067012c9abc1830aeb7bf1b643590d70"
+    },
+    {
+      "directory": "observer-97c7ae8",
+      "files": [
+        {
+          "bytes": 4204,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/normal.command.json",
+          "sha256": "9516549ce1534387421cde3003460655e0ef1a49e017316de829444df08687c0"
+        },
+        {
+          "bytes": 16301,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/normal.jsonl",
+          "sha256": "41987b868b6fe8117d9c6873102903c03e95ab8de2239c04cbc04ae3f75e7276"
+        },
+        {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/normal.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 2,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/normal.exit",
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "bytes": 1503,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/normal.result.json",
+          "sha256": "de57a3341066b018210eb53c02a4081d6dc9b7169b8ab993ab06ebda6ed3c651"
+        }
+      ],
+      "phase": "normal",
+      "result": {
+        "elapsed_seconds": 78.157053536,
+        "exit": 1,
+        "expectation_met": false,
+        "fail": [
+          "TestDurableCompositionPassiveUnavailableSampleContinuesAfterRpc"
+        ],
+        "pass": [
+          "TestDurableCompositionDeclaredRootObserverRetainsCompletedCheckpoint",
+          "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+          "TestDurableCompositionPassiveJoinedIdentityRemainsTerminal",
+          "TestDurableCompositionPassiveObservationCancellationJoinsOwners",
+          "TestDurableCompositionPassiveObservationRetriesAfterRpc",
+          "TestDurableCompositionPassiveObservationRetriesBeforeRpc",
+          "TestDurableCompositionPassiveObservationRetryBudgetIsFinite",
+          "TestDurableCompositionPassivePreparationLossDuringRpcStopsOnlyOwner",
+          "TestDurableCompositionPassivePreparationRequiresRetainedHead",
+          "TestDurableCompositionPassiveReadersSharePreparationWithoutWriteReserve",
+          "TestDurableCompositionPassiveUnavailableCannotHideRpcIntegrity",
+          "TestDurableCompositionPassiveUnavailableCannotRetryUncertainCheckpoint",
+          "TestDurableCompositionPassiveUnavailableSampleCancellationJoins",
+          "TestDurableCompositionPassiveUnavailableSampleContinuesBeforeRpc",
+          "TestDurableCompositionPassiveUnavailableSampleIdentityLossStops",
+          "TestDurableCompositionRootPersistentEntrypointsRequireDeclaration"
+        ],
+        "skip": null,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "41987b868b6fe8117d9c6873102903c03e95ab8de2239c04cbc04ae3f75e7276"
+      },
+      "source_commit": "97c7ae85aaa7a3db60d4f6050ec93023ae0f47f7"
+    },
+    {
+      "directory": "observer-97c7ae8",
+      "files": [
+        {
+          "bytes": 3089,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/vet.command.json",
+          "sha256": "0e2e5a43e1f62475f157bcdd675d1818e7144e4974a6570cbfd841f81d9242e4"
+        },
+        {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/vet.jsonl",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 0,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/vet.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 2,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/vet.exit",
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "bytes": 298,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/observer-97c7ae8/vet.result.json",
+          "sha256": "8a20a49092008cdc71b3686c4ac2e4f3d63852008b92dbdc27ff66f7a081d0a0"
+        }
+      ],
+      "phase": "vet",
+      "result": {
+        "elapsed_seconds": 4.84006565,
+        "exit": 0,
+        "expectation_met": true,
+        "fail": null,
+        "pass": null,
+        "skip": null,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "source_commit": "97c7ae85aaa7a3db60d4f6050ec93023ae0f47f7"
+    }
+  ],
+  "successor_qualification": "pending; active output excluded from this terminal historical census",
+  "successor_source": "6d3986625455ec841528fd6eff795b8f93478414",
+  "successor_test_only_delta_from": "97c7ae85aaa7a3db60d4f6050ec93023ae0f47f7",
+  "successor_tree": "6e1e11966fd2d0ba7e7346052d4daf5edb3b0cf0"
+}

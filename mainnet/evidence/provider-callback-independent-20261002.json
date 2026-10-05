@@ -1,0 +1,169 @@
+{
+  "author_file_bindings_verified": 51,
+  "author_physical_freeze_sha256": "9f60bf524cf1838b9d52c351f2f68b07618a9e84b1d32fdda1fa9a80a62be0cc",
+  "author_receipt_sha256": "0ce7279352fc1e196d0b92ec3a4bc2e0971e21b673cd4a6f3d5dfc4d8ef40848",
+  "dependencies": {
+    "glog": {
+      "head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "userwireguard": {
+      "head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "limits": [
+    "Twelve selected miner callback roots normal/race, not an independent repeat of the author 40-root suite.",
+    "Old244 overlay proves one healthy-member cancellation defect while two callback cause/authentication controls remain green in both modes.",
+    "No composed source/release inheritance from this isolated callback patch; no live signer, network submission, deployment, or restart authorization."
+  ],
+  "module_selection_sha256": "7bdd7c03948753393e89802ea259c8bb221ff1fe45e501142fd50fc52641f10b",
+  "old244_body_sha256": "1fa64157e57a353569b1c9ff79a37185d78eaa326c46fd087f7e759d5beebc86",
+  "private_fixture_preflight": {
+    "child_umask": "0o077",
+    "pass": true,
+    "paths": [
+      {
+        "mode": "0o755",
+        "path": "/",
+        "uid": 0
+      },
+      {
+        "mode": "0o755",
+        "path": "/mnt",
+        "uid": 0
+      },
+      {
+        "mode": "0o755",
+        "path": "/mnt/data",
+        "uid": 0
+      },
+      {
+        "mode": "0o755",
+        "path": "/mnt/data/sn-testnet",
+        "uid": 1000
+      },
+      {
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002",
+        "uid": 1000
+      },
+      {
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/miner-callback-366",
+        "uid": 1000
+      },
+      {
+        "mode": "0o700",
+        "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/miner-callback-366/tmp",
+        "uid": 1000
+      }
+    ]
+  },
+  "schema": "sol-independent-miner-callback-366-v1",
+  "scopes": {
+    "fixed-normal": {
+      "elapsed_seconds": 57.616424798965454,
+      "exit_code": 0,
+      "expected_roots": [
+        "TestProviderSwarmRunQuarantinesJwtPersistenceFailure",
+        "TestProviderSwarmRunPersistenceAndAuthenticationFailureIsTerminal",
+        "TestProviderSwarmJwtRefreshPreservesStorageCause",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterTemporaryStartupFailure",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterStartupDeadline",
+        "TestProviderSwarmControlRejectsStaleGenerationCallbacks",
+        "TestProviderSwarmControlShutdownJoinsStartupCleanup",
+        "TestProviderSwarmControlShutdownJoinsDisable",
+        "TestProviderSwarmControlRunCancelsBeforeClosingStartedMembers",
+        "TestProviderSwarmControlEnableWaitsForTeardown",
+        "TestProviderSwarmControlClassifiesTypedTransientFailures",
+        "TestProviderSwarmControlStartupHasIndependentDeadline"
+      ],
+      "fail": 0,
+      "log_sha256": "e017db98f005b2b715da6067e799cf640068758da3f192251a80baf8d20e34cf",
+      "pass": 12,
+      "result_sha256": "38e69ed8c8f3111a386e1af55cead02db80b83d03a61a31781a90a814180d49e",
+      "skip": 0
+    },
+    "fixed-race": {
+      "elapsed_seconds": 82.28317427635193,
+      "exit_code": 0,
+      "expected_roots": [
+        "TestProviderSwarmRunQuarantinesJwtPersistenceFailure",
+        "TestProviderSwarmRunPersistenceAndAuthenticationFailureIsTerminal",
+        "TestProviderSwarmJwtRefreshPreservesStorageCause",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterTemporaryStartupFailure",
+        "TestProviderSwarmRunRetainsHealthyMembersAfterStartupDeadline",
+        "TestProviderSwarmControlRejectsStaleGenerationCallbacks",
+        "TestProviderSwarmControlShutdownJoinsStartupCleanup",
+        "TestProviderSwarmControlShutdownJoinsDisable",
+        "TestProviderSwarmControlRunCancelsBeforeClosingStartedMembers",
+        "TestProviderSwarmControlEnableWaitsForTeardown",
+        "TestProviderSwarmControlClassifiesTypedTransientFailures",
+        "TestProviderSwarmControlStartupHasIndependentDeadline"
+      ],
+      "fail": 0,
+      "log_sha256": "6aec26951d35eddab452c52794e438ec6d9743ae3ccc5a58b51875740be37276",
+      "pass": 12,
+      "result_sha256": "022c90e9a6b10730ec76fd06c31fb8e2820db062f226050ebdd6b512dab507c5",
+      "skip": 0
+    },
+    "old244-normal": {
+      "elapsed_seconds": 22.279053926467896,
+      "exit_code": 1,
+      "expected_roots": [
+        "TestProviderSwarmRunQuarantinesJwtPersistenceFailure",
+        "TestProviderSwarmRunPersistenceAndAuthenticationFailureIsTerminal",
+        "TestProviderSwarmJwtRefreshPreservesStorageCause"
+      ],
+      "fail": 1,
+      "log_sha256": "9a8ba05732337df9531aef518650cb2660a91846770a062b4254ea12f3f19cb2",
+      "pass": 2,
+      "result_sha256": "3bace42bd634402ee69c43023f91f1540a9f018577e288189b9c86d1a9742a6f",
+      "skip": 0
+    },
+    "old244-race": {
+      "elapsed_seconds": 27.586567878723145,
+      "exit_code": 1,
+      "expected_roots": [
+        "TestProviderSwarmRunQuarantinesJwtPersistenceFailure",
+        "TestProviderSwarmRunPersistenceAndAuthenticationFailureIsTerminal",
+        "TestProviderSwarmJwtRefreshPreservesStorageCause"
+      ],
+      "fail": 1,
+      "log_sha256": "8b2015192adc9017566dc58e714380b98c899870b7d14552a38bf8c9b89ff4b9",
+      "pass": 2,
+      "result_sha256": "bd756b04547b89ca676c3245404aec30c6dc64a5d25bbeffdcf58170fafd9c7a",
+      "skip": 0
+    }
+  },
+  "server": {
+    "blobs_verified": 5240,
+    "commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+    "tree": "622c52b73f71b7652cf508856198ffa6aa85f574"
+  },
+  "source": {
+    "blobs_verified": 20021,
+    "commit": "3664820382ba38c8672fea09e58381eb5e541ed1",
+    "tree": "ffbef01345bf273bf4953c5b6dbdfa634945c7aa"
+  },
+  "verdict": "PASS_SCOPED",
+  "vet": {
+    "exit_code": 0,
+    "free_after_bytes": 118823120896,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "matched": true
+  }
+}

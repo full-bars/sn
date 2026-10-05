@@ -1,0 +1,137 @@
+{
+  "files": {
+    "912/evidence/corrected-normal-mainnet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "912/evidence/corrected-normal-mainnet.jsonl": "3c2f8b6ca0cc6a20166350c635495fe67452c073ee09561415910a40b42cd213",
+    "912/evidence/corrected-normal-mainnet.phase": "1cf99dc113147df1c3ee8e1e5d6cc23ddeb5b644f98a8e1516ea1c0835bdbca1",
+    "912/evidence/corrected-normal-mainnet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/corrected-normal-validator.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "912/evidence/corrected-normal-validator.jsonl": "346dc7fa6a0c0f4be484296a2444d9bae88eb60571a2d3e93302213926b47e9a",
+    "912/evidence/corrected-normal-validator.phase": "fa16b93fec8fa78cf5ddfde92429149100cfed8c5f1868c520b9853a9f601a47",
+    "912/evidence/corrected-normal-validator.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/corrected-race-mainnet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "912/evidence/corrected-race-mainnet.jsonl": "d36897524fed35052ada0e538dd3fcfb05480d16f89f30865e0ffca98499267e",
+    "912/evidence/corrected-race-mainnet.phase": "ad9d7d407a0bd29f847d1dd4333676bc33414e90e7f9ed6079255d1a7bcb604c",
+    "912/evidence/corrected-race-mainnet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/corrected-race-validator.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "912/evidence/corrected-race-validator.jsonl": "cb1e05fd72c65bf2980dd593914b5213d07a3d55fa234bec43b46a7ef835c806",
+    "912/evidence/corrected-race-validator.phase": "d51f9dca914879a14cc00eb0d57344ebe1e8bc676e2f90fd123cc2f58029267b",
+    "912/evidence/corrected-race-validator.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/corrected-vet-mainnet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "912/evidence/corrected-vet-mainnet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/corrected-vet-mainnet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/corrected-vet-validator.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "912/evidence/corrected-vet-validator.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/corrected-vet-validator.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "912/evidence/setup-failure-receipt.json": "081c95ef915cdd7733712731bd4623457425240d9d457730ad7e5c44144eca5e",
+    "912/source/go.work": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778",
+    "912/source/sn/go.mod": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "912/source/sn/go.sum": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61",
+    "912/source/sn/mainnet/storage_prepare_ledger_restore_test.go": "fce8c754042418db697792690123e384a7750746013415904c5e5a178f66fa76",
+    "912/source/sn/validator/attempt_ledger_restore_test.go": "45ae9b48747e55cdf5c0a8fb068c24b36268f05d9ef4374cb0ca96e460440498",
+    "run-912-corrected.sh": "99b32395fc12723d0b0c7a374c0dcfabb66b5ff64cce93846d6439b518ced68d"
+  },
+  "historical_setup_failure_receipt_sha256": "081c95ef915cdd7733712731bd4623457425240d9d457730ad7e5c44144eca5e",
+  "limits": [
+    "Exactly six selected roots per mode; unchanged core32 and broader restore adoption are not claimed.",
+    "Original mode775 setup failures remain separate and unchanged."
+  ],
+  "private_tmp_ancestry": [
+    {
+      "mode": "0o755",
+      "owner_uid": 0,
+      "path": "/"
+    },
+    {
+      "mode": "0o755",
+      "owner_uid": 0,
+      "path": "/mnt"
+    },
+    {
+      "mode": "0o755",
+      "owner_uid": 0,
+      "path": "/mnt/data"
+    },
+    {
+      "mode": "0o755",
+      "owner_uid": 1000,
+      "path": "/mnt/data/sn-testnet"
+    },
+    {
+      "mode": "0o700",
+      "owner_uid": 1000,
+      "path": "/mnt/data/sn-testnet/sol-restore-private-tmp-20261003"
+    },
+    {
+      "mode": "0o700",
+      "owner_uid": 1000,
+      "path": "/mnt/data/sn-testnet/sol-restore-private-tmp-20261003/912"
+    }
+  ],
+  "schema": "sol-restore-ledger-912-corrected-independent-v1",
+  "scopes": [
+    {
+      "exit": 0,
+      "jsonl_sha256": "3c2f8b6ca0cc6a20166350c635495fe67452c073ee09561415910a40b42cd213",
+      "mode": "normal",
+      "package": "./mainnet",
+      "race_reports": 0,
+      "roots": {
+        "TestStoragePreparationRestoreValidatorLedgerKeepsActualOwner": "pass",
+        "TestStoragePreparationRestoreValidatorRefusesLostOriginalHead": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "346dc7fa6a0c0f4be484296a2444d9bae88eb60571a2d3e93302213926b47e9a",
+      "mode": "normal",
+      "package": "./validator",
+      "race_reports": 0,
+      "roots": {
+        "TestAttemptLedgerRestoreKeepsOriginalSignedLegacyPrefix": "pass",
+        "TestAttemptLedgerRestoreRefusesMissingOrPartialPendingIntent": "pass",
+        "TestAttemptLedgerRestoreRejectsWrongHeadAndUnknownMembers": "pass",
+        "TestAttemptLedgerRestoreRetainsPendingAndCleanupPhases": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "d36897524fed35052ada0e538dd3fcfb05480d16f89f30865e0ffca98499267e",
+      "mode": "race",
+      "package": "./mainnet",
+      "race_reports": 0,
+      "roots": {
+        "TestStoragePreparationRestoreValidatorLedgerKeepsActualOwner": "pass",
+        "TestStoragePreparationRestoreValidatorRefusesLostOriginalHead": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "cb1e05fd72c65bf2980dd593914b5213d07a3d55fa234bec43b46a7ef835c806",
+      "mode": "race",
+      "package": "./validator",
+      "race_reports": 0,
+      "roots": {
+        "TestAttemptLedgerRestoreKeepsOriginalSignedLegacyPrefix": "pass",
+        "TestAttemptLedgerRestoreRefusesMissingOrPartialPendingIntent": "pass",
+        "TestAttemptLedgerRestoreRejectsWrongHeadAndUnknownMembers": "pass",
+        "TestAttemptLedgerRestoreRetainsPendingAndCleanupPhases": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source": {
+    "commit": "912315cf99edb0ec0d0969239065ed7000bb6d9a",
+    "connect": "53bc92fabb28",
+    "go_mod_sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "go_sum_sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61",
+    "server": "c2563f9a7ae7",
+    "tree": "5432daab3fb0e61517474c038af096945c065a4c"
+  },
+  "status": "PASS_SCOPED",
+  "total_pass_across_modes": 12,
+  "vet_mainnet_exit": 0,
+  "vet_validator_exit": 0
+}

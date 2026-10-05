@@ -1,0 +1,11 @@
+{
+  "endpoint": "https://archive.chain.opentensor.ai",
+  "method_count": 187,
+  "observed_at_utc": "2026-10-02T02:45:31.216109+00:00",
+  "selected": {
+    "chain_getBlock": true,
+    "grandpa_proveFinality": false,
+    "grandpa_roundState": false,
+    "state_getReadProof": true
+  }
+}

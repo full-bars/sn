@@ -1,0 +1,560 @@
+{
+  "commands": {
+    "baseline_exact_parent": "cb2e3ffe5db724ea2bae32e395aa258d79c9393e with test-only read aliases and two reopen controls",
+    "baseline_observation": "same parent with preserved read-admission intermediate package and instance-only observation-failure seam; overlay map/source bytes retained",
+    "environment": {
+      "GOCACHE": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-cache",
+      "GOENV": "off",
+      "GOFLAGS": "-mod=readonly",
+      "GOMAXPROCS": "4",
+      "GOMODCACHE": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache",
+      "GOPROXY": "off",
+      "GOSUMDB": "off",
+      "GOTOOLCHAIN": "local",
+      "GOWORK": "off",
+      "TMPDIR": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/tmp",
+      "umask": "077"
+    },
+    "fixed": "go test [-race] -json -count=1 -timeout=3m ./durablevolume; go vet ./durablevolume"
+  },
+  "compiler": "go version go1.26.6 linux/amd64",
+  "files": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/baseline-connect-read/durablevolume/read_admission_alias_test.go",
+      "sha256": "cfab42bac6567734bfa22d9f265d56976b35cf33bb55d8af54bde78f9f849a2b",
+      "bytes": 454
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/baseline-connect-read/durablevolume/read_admission_test.go",
+      "sha256": "7fac799b13632f0962647439882b86fbfbe04e5a2ed9c7a5ab365ec3456f9cc6",
+      "bytes": 2448
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/baseline-connect-read/durablevolume/root_generation_test.go",
+      "sha256": "175f5068be4f6f030d145027491a6123fd496728fb90d07662ebb9827ec34164",
+      "bytes": 2228
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-initial-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-initial-normal.jsonl",
+      "sha256": "e12a2ddbe0afdde3b946c4499d6fe9e0455cee6f6081d4062326766e1ed45a1a",
+      "bytes": 40969
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-initial-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-normal.jsonl",
+      "sha256": "e36539d7f2a3675ccd93dbadec4a7c9f6b2e3879f584c5341abb1e0e87718c92",
+      "bytes": 40955
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-race.jsonl",
+      "sha256": "e5a76ea7ba03b4fffb18643b00d3aca9ef0f2dcb9af550817c8b22c576cf0b31",
+      "bytes": 41003
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-generation-fixed-vet.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/observation-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/observation-baseline-normal.jsonl",
+      "sha256": "4b1203dc4434fc889194e244b7f01dd6c140f68f459bf5cdfab30b93686b0871",
+      "bytes": 32504
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/observation-baseline-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/observation-baseline-overlay.json",
+      "sha256": "c1e0200de29b75672479afd1c0392038645e937341a6c915eb81377f0020d24d",
+      "bytes": 3315
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/observation-baseline-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/observation-baseline-race.jsonl",
+      "sha256": "3f30f181a90e65122483a1177a53909ead4aa490877e2bd8ed7094d300ef3d9c",
+      "bytes": 32490
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/observation-baseline-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/observation-baseline-source-hashes.json",
+      "sha256": "d3213fac9d6c45ef721ee496e1b5df9d9054984e808da7d14d00e3836d4d875e",
+      "bytes": 2612
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/prepare-observation-control.go",
+      "sha256": "662021155691af8308229b02fe150aedc1922c4c88fb33472ad3ad079a6607b0",
+      "bytes": 1427
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-admission-fixed-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-admission-fixed-normal.jsonl",
+      "sha256": "e97e89cc87aeaf36bd3c90d563b9afaf58ce59a77602171ddcef04be638b438f",
+      "bytes": 33338
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-admission-fixed-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-admission-fixed-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-admission-fixed-race.jsonl",
+      "sha256": "badeab7bd1e7e5b95854fe83ed941d9d7acab08c11e947768c27e9a92c65b290",
+      "bytes": 33366
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-admission-fixed-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-generation-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-generation-baseline-normal.jsonl",
+      "sha256": "904a2a9ef4c2970b6adaab8ad4060be147a0ee7081f4e87dcf9f54366673618e",
+      "bytes": 7347
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-generation-baseline-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-generation-baseline-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-generation-baseline-race.jsonl",
+      "sha256": "7f2f0416edf466dc6c9af3d8adcafada42dcddf201c14dd5b60d9cce1f2808ec",
+      "bytes": 7350
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-generation-baseline-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-observation-intermediate-baseline.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-observation-intermediate-baseline.jsonl",
+      "sha256": "36e44e9708251bbce8f2ba06bd7d784e7ba8a74551e95ddfbae642c7aa9e9338",
+      "bytes": 29856
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-observation-intermediate-baseline.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/config.go",
+      "sha256": "824fa0d616e7379af23dfb891248474403b2996986f682960ddd69e69f4ebb40",
+      "bytes": 9076
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/host_linux.go",
+      "sha256": "59b7b7130fe6fbb7b53c01c1b2981e5c6f77cd5829b9c88939dd5b0fc77a1564",
+      "bytes": 22757
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/host_other.go",
+      "sha256": "7b903f7e9d161423f7f4bfc1eb3d549491599f6b2e94d3261df651e89b58ef1b",
+      "bytes": 1303
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/inventory.go",
+      "sha256": "cf36d2bc36e9bbae65794a5a5c1a1021d9b7335600f03ebea47795f2822e50da",
+      "bytes": 8339
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/inventory_linux.go",
+      "sha256": "0165f8ebb23fd90f21b8a0935d268efc90162196cbad46b68e8eaa516f9cd6c8",
+      "bytes": 5180
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/inventory_other.go",
+      "sha256": "7f170caeea9d988d1f860903c27291afb0bf19ba2b7894746fdaba84a099d5bf",
+      "bytes": 299
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/inventory_test.go",
+      "sha256": "1f5dcbf1a5f1a1fcbe3a82a46831b8aaa50bfe467dccbaafb0affbb2af5aab51",
+      "bytes": 11384
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/observation_test.go",
+      "sha256": "abb872fdbb47ca38b8ae86ab234fa19781ad3ae7f95c14ef6f6f25283c1d31d9",
+      "bytes": 3154
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/owner.go",
+      "sha256": "51f60688ad97154d2b02a6ebcf7d8aa2a803f873b224fdbb26369acdfa6a9798",
+      "bytes": 9268
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/owner_local_test.go",
+      "sha256": "47319b05303324d4b04881f720fa54c43707185ec226bf7520e819daea7348aa",
+      "bytes": 10388
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/owner_test.go",
+      "sha256": "bc97774b5c975443f4b50bd07c9247f3ed7dd5e1b8c156990b78605a0af927d7",
+      "bytes": 24603
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/read_admission_test.go",
+      "sha256": "cef81dbe80934fdcd7e9f2c64011fc25427f1bab56855304125840a8ca269cd5",
+      "bytes": 3829
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/read-successor-intermediate-source/durablevolume/root_generation_test.go",
+      "sha256": "175f5068be4f6f030d145027491a6123fd496728fb90d07662ebb9827ec34164",
+      "bytes": 2228
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/seal-generation.go",
+      "sha256": "75860138090297231a55a9cc478f6344831ad08ce6e3616f56159d644a71c609",
+      "bytes": 6711
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/config.go",
+      "sha256": "68ac9ed2bbc8e0fded670b4a0e6ceb1c418136be19cc7682f7736e4d5cdb5e5c",
+      "bytes": 9464
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/host_linux.go",
+      "sha256": "b2591196fe70dd89e97267e1137d19b7b5878d07d1f8b6dae98c87e5ee4f5a5d",
+      "bytes": 25756
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/host_other.go",
+      "sha256": "7b903f7e9d161423f7f4bfc1eb3d549491599f6b2e94d3261df651e89b58ef1b",
+      "bytes": 1303
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/inventory.go",
+      "sha256": "79e9e8390e1a7653806eb71a73e387fd02d6a1ca2acd8d7d8c7998a642dbca7b",
+      "bytes": 10780
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/inventory_linux.go",
+      "sha256": "ec06d0769cc932e4905c128e4a5a441487ff5bd2c88e5975eeb91da846745879",
+      "bytes": 5883
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/inventory_other.go",
+      "sha256": "7f170caeea9d988d1f860903c27291afb0bf19ba2b7894746fdaba84a099d5bf",
+      "bytes": 299
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/inventory_test.go",
+      "sha256": "9144d619e9cf52002d9f5998cb0d326420e96f5d1f4e6940b113020f70c81108",
+      "bytes": 12162
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/observation_test.go",
+      "sha256": "abb872fdbb47ca38b8ae86ab234fa19781ad3ae7f95c14ef6f6f25283c1d31d9",
+      "bytes": 3154
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/owner.go",
+      "sha256": "1f38fc38c537ad4cfef3fa2c1526ff1816dce113349ca9a7fb513e26b4138cd9",
+      "bytes": 9266
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/owner_local_test.go",
+      "sha256": "47319b05303324d4b04881f720fa54c43707185ec226bf7520e819daea7348aa",
+      "bytes": 10388
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/owner_test.go",
+      "sha256": "aefb0b5e1a7c577a3733d3871dd9e2e15f4ff29232ea81bf58a94d49a2bc6eb7",
+      "bytes": 25194
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/read_admission_test.go",
+      "sha256": "cef81dbe80934fdcd7e9f2c64011fc25427f1bab56855304125840a8ca269cd5",
+      "bytes": 3829
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/root_generation_linux.go",
+      "sha256": "e9b80675ec957ce9313f7dd856647b360f0bf35398527c171a8adefd8c908cda",
+      "bytes": 2547
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/durablevolume/root_generation_test.go",
+      "sha256": "7b17b640358a450010d780724195f16c2a80b2b3ac3d51e34b24799eec11a633",
+      "bytes": 6657
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/go.mod",
+      "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7",
+      "bytes": 3847
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect/go.sum",
+      "sha256": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693",
+      "bytes": 21922
+    },
+    {
+      "path": "/usr/local/go/bin/go",
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45",
+      "bytes": 15434687
+    }
+  ],
+  "limits": [
+    "local synthetic kernel facts and real protected descriptor/xattr I/O only; no live mount change",
+    "xattr unsupported/EIO paths use instance-local refusal injection; successful descriptor I/O is real",
+    "inode-reuse control preserves the same inode and changes/misses its nonce; it does not force allocator reuse",
+    "independent qualification pending; no adopter, full Connect, database backup, cross-host restore, signing, deployment or launch claim"
+  ],
+  "phases": [
+    {
+      "name": "guard-generation-fixed-normal",
+      "exit": 0,
+      "pass": [
+        "TestInventoryAndRestoreRetainExactLocalCustody",
+        "TestInventoryNamedObservationUnavailableCanRetry",
+        "TestInventoryRejectsAliasesAndNestedMounts",
+        "TestInventoryRequiresExactFormerWriterFence",
+        "TestInventoryRestoredRootReportsChangedPhysicalIdentity",
+        "TestInventoryWorkAndByteBoundsAndCancellation",
+        "TestLoadRejectsAmbiguousDeclaration",
+        "TestMountParserPreservesEscapedCoordinates",
+        "TestOwnerAdmitsDeclaredRootAndDescendant",
+        "TestOwnerCallerErrorsDoNotPoisonIdentity",
+        "TestOwnerCloseJoinsCheckAndRejectsLateAdmission",
+        "TestOwnerClosedBorrowedDescriptorDoesNotPoison",
+        "TestOwnerConcurrentCheckAndClose",
+        "TestOwnerCopiedNonceCannotAuthorizeReplacementRoot",
+        "TestOwnerCrashReleasesLeaseAndRetainsCompletedBytes",
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerLocalAdmitsDeclaredSystemDevice",
+        "TestOwnerLocalPolicyCannotAuthorizeDaemon",
+        "TestOwnerLocalPressureAndObservationCanRetrySameOwner",
+        "TestOwnerLocalRemountKeepsStickyGeneration",
+        "TestOwnerLocalReopenRejectsEmptyReplacementRoot",
+        "TestOwnerLocalReplacementRequiresOriginalCustodyReopen",
+        "TestOwnerLocalRootMountKeepsPathAndMountBounds",
+        "TestOwnerLocalSnapshotPreservesPendingAndCompletedIntent",
+        "TestOwnerNamedObservationUnavailableRetainsGeneration",
+        "TestOwnerReadAdmissionPreservesIdentityWithoutWriteReserve",
+        "TestOwnerReadOnlyInspectionCannotMutate",
+        "TestOwnerRefusesAbsentMountBeforeCreatingState",
+        "TestOwnerRefusesMissingRootWithoutRecreation",
+        "TestOwnerRefusesReadOnlyAndExhaustedReserve",
+        "TestOwnerRefusesWrongUuidAndRootFilesystem",
+        "TestOwnerRejectsLeaseInsideStateRootAndLeaseReplacement",
+        "TestOwnerRejectsReplacementRootAndMarker",
+        "TestOwnerRejectsSymlinkAndReplacedDescendant",
+        "TestOwnerReopenRejectsEmptyReplacementRoot",
+        "TestOwnerRewalkRejectsAncestorSymlinkToRetainedInode",
+        "TestOwnerRewalkRejectsWritableAncestor",
+        "TestOwnerRootGenerationMismatchPoisonsSameInode",
+        "TestOwnerRootGenerationRequiresVersionedAuthority",
+        "TestOwnerRootGenerationUnavailableCanRetry",
+        "TestOwnerSameVolumeRecoveryPreservesCustody",
+        "TestOwnerSnapshotLeaseConflictsWithoutWaiting",
+        "TestOwnerSnapshotOfStoppedRootCoexistsWithOtherRootWriter",
+        "TestOwnerTransientKernelObservationRetainsGeneration",
+        "TestOwnerZeroAndNilStayClosed",
+        "TestProtectedEvidenceReadStopsBetweenFiniteChunks",
+        "TestVerifyInventoryCancellationPrecedesExpectedEvidenceRead",
+        "TestVerifyInventoryNilContextPrecedesExpectedEvidenceRead"
+      ],
+      "fail": null,
+      "skip": null
+    },
+    {
+      "name": "guard-generation-fixed-race",
+      "exit": 0,
+      "pass": [
+        "TestInventoryAndRestoreRetainExactLocalCustody",
+        "TestInventoryNamedObservationUnavailableCanRetry",
+        "TestInventoryRejectsAliasesAndNestedMounts",
+        "TestInventoryRequiresExactFormerWriterFence",
+        "TestInventoryRestoredRootReportsChangedPhysicalIdentity",
+        "TestInventoryWorkAndByteBoundsAndCancellation",
+        "TestLoadRejectsAmbiguousDeclaration",
+        "TestMountParserPreservesEscapedCoordinates",
+        "TestOwnerAdmitsDeclaredRootAndDescendant",
+        "TestOwnerCallerErrorsDoNotPoisonIdentity",
+        "TestOwnerCloseJoinsCheckAndRejectsLateAdmission",
+        "TestOwnerClosedBorrowedDescriptorDoesNotPoison",
+        "TestOwnerConcurrentCheckAndClose",
+        "TestOwnerCopiedNonceCannotAuthorizeReplacementRoot",
+        "TestOwnerCrashReleasesLeaseAndRetainsCompletedBytes",
+        "TestOwnerDescendantLossRemainsPoisonedAfterRestoration",
+        "TestOwnerLocalAdmitsDeclaredSystemDevice",
+        "TestOwnerLocalPolicyCannotAuthorizeDaemon",
+        "TestOwnerLocalPressureAndObservationCanRetrySameOwner",
+        "TestOwnerLocalRemountKeepsStickyGeneration",
+        "TestOwnerLocalReopenRejectsEmptyReplacementRoot",
+        "TestOwnerLocalReplacementRequiresOriginalCustodyReopen",
+        "TestOwnerLocalRootMountKeepsPathAndMountBounds",
+        "TestOwnerLocalSnapshotPreservesPendingAndCompletedIntent",
+        "TestOwnerNamedObservationUnavailableRetainsGeneration",
+        "TestOwnerReadAdmissionPreservesIdentityWithoutWriteReserve",
+        "TestOwnerReadOnlyInspectionCannotMutate",
+        "TestOwnerRefusesAbsentMountBeforeCreatingState",
+        "TestOwnerRefusesMissingRootWithoutRecreation",
+        "TestOwnerRefusesReadOnlyAndExhaustedReserve",
+        "TestOwnerRefusesWrongUuidAndRootFilesystem",
+        "TestOwnerRejectsLeaseInsideStateRootAndLeaseReplacement",
+        "TestOwnerRejectsReplacementRootAndMarker",
+        "TestOwnerRejectsSymlinkAndReplacedDescendant",
+        "TestOwnerReopenRejectsEmptyReplacementRoot",
+        "TestOwnerRewalkRejectsAncestorSymlinkToRetainedInode",
+        "TestOwnerRewalkRejectsWritableAncestor",
+        "TestOwnerRootGenerationMismatchPoisonsSameInode",
+        "TestOwnerRootGenerationRequiresVersionedAuthority",
+        "TestOwnerRootGenerationUnavailableCanRetry",
+        "TestOwnerSameVolumeRecoveryPreservesCustody",
+        "TestOwnerSnapshotLeaseConflictsWithoutWaiting",
+        "TestOwnerSnapshotOfStoppedRootCoexistsWithOtherRootWriter",
+        "TestOwnerTransientKernelObservationRetainsGeneration",
+        "TestOwnerZeroAndNilStayClosed",
+        "TestProtectedEvidenceReadStopsBetweenFiniteChunks",
+        "TestVerifyInventoryCancellationPrecedesExpectedEvidenceRead",
+        "TestVerifyInventoryNilContextPrecedesExpectedEvidenceRead"
+      ],
+      "fail": null,
+      "skip": null
+    },
+    {
+      "name": "read-generation-baseline-normal",
+      "exit": 1,
+      "pass": null,
+      "fail": [
+        "TestOwnerLocalReopenRejectsEmptyReplacementRoot",
+        "TestOwnerReadAdmissionPreservesIdentityWithoutWriteReserve",
+        "TestOwnerReopenRejectsEmptyReplacementRoot",
+        "TestVerifyInventoryCancellationPrecedesExpectedEvidenceRead",
+        "TestVerifyInventoryNilContextPrecedesExpectedEvidenceRead"
+      ],
+      "skip": null
+    },
+    {
+      "name": "read-generation-baseline-race",
+      "exit": 1,
+      "pass": null,
+      "fail": [
+        "TestOwnerLocalReopenRejectsEmptyReplacementRoot",
+        "TestOwnerReadAdmissionPreservesIdentityWithoutWriteReserve",
+        "TestOwnerReopenRejectsEmptyReplacementRoot",
+        "TestVerifyInventoryCancellationPrecedesExpectedEvidenceRead",
+        "TestVerifyInventoryNilContextPrecedesExpectedEvidenceRead"
+      ],
+      "skip": null
+    },
+    {
+      "name": "observation-baseline-normal",
+      "exit": 1,
+      "pass": [
+        "TestOwnerClosedBorrowedDescriptorDoesNotPoison"
+      ],
+      "fail": [
+        "TestInventoryNamedObservationUnavailableCanRetry",
+        "TestOwnerNamedObservationUnavailableRetainsGeneration"
+      ],
+      "skip": null
+    },
+    {
+      "name": "observation-baseline-race",
+      "exit": 1,
+      "pass": [
+        "TestOwnerClosedBorrowedDescriptorDoesNotPoison"
+      ],
+      "fail": [
+        "TestInventoryNamedObservationUnavailableCanRetry",
+        "TestOwnerNamedObservationUnavailableRetainsGeneration"
+      ],
+      "skip": null
+    }
+  ],
+  "schema": "durable-volume-generation-author-qualification-v1",
+  "scope": [
+    "v2 external inode plus fixed 32-byte descriptor xattr generation authority; v1 refused",
+    "identity-only read admission retains write reserve refusal and sticky proven loss",
+    "bounded cancellation precedes evidence open/read/hash",
+    "transient metadata and xattr errors retain cause and retry on same owner; caller-closed descriptors are not identity loss",
+    "inventory v2 retains exact required root nonce metadata; explicit target-declaration comparison never authorizes restart"
+  ],
+  "source": {
+    "commit": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+    "parent": "cb2e3ffe5db724ea2bae32e395aa258d79c9393e",
+    "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/connect",
+    "status": "clean",
+    "tree": "010533a40c31403c14a810828fee3c47e324c143"
+  },
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0
+}

@@ -1,0 +1,459 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1262,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-normal.command.json",
+      "sha256": "08b7778e1f3bedfe0206b3b2736e432a0c7f103a59d69527d2904af124e8c595"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 8076,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-normal.jsonl",
+      "sha256": "e89a6c58227a7d4b37c48ebcd6b7961c8d0aee471f88cd597d393b7bd5490648"
+    },
+    {
+      "bytes": 353,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-normal.result.json",
+      "sha256": "f422c3c521d959b6380cf17e201c2c5cc7ae0a4c41dec2a95ea5d11f0f6f1a38"
+    },
+    {
+      "bytes": 80,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-normal.stderr",
+      "sha256": "4a46357d25248af095dc960221ce550b8348c6e0c146f68e04f68fcea79643c4"
+    },
+    {
+      "bytes": 1275,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-race.command.json",
+      "sha256": "736ab28fd0f0ac8556c723ec7fda6b391e82046201b92aa13e81944e2834de83"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 8088,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-race.jsonl",
+      "sha256": "fbfec7b7714c6ee5b869583bc1c541dc4c9dcc367a000f946da9772011e0a987"
+    },
+    {
+      "bytes": 352,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-race.result.json",
+      "sha256": "fb8074557168bf9b51e52fa4761403ab96ba425527ff6bfc46f126106fa6268f"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 762,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline-results.json",
+      "sha256": "981b22c2af8fdf6732ce723654fc82529542b5e4da2380e66db06b0897fe0577"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 94,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-baseline.stdout",
+      "sha256": "2e6f0a2e31f8d2efba88dda93885369cc6195c45acbd3ae061e7dfe5d57e6362"
+    },
+    {
+      "bytes": 11685,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-checkpoint.mod",
+      "sha256": "7a145d979a888ed2cab08d458e724e691d5ddeb676ce1154f9790b2ba46d3716"
+    },
+    {
+      "bytes": 65343,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-checkpoint.sum",
+      "sha256": "22ab013eb268370f8912ae78cab43baa65d8bc3e66477ca76a8f454cbd83197b"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-continuation.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-continuation.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 85,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-continuation.stdout",
+      "sha256": "d6fb553e230fb2510f137136e1e9e2ed91400aef105b227105aee3fe9affc746"
+    },
+    {
+      "bytes": 1096,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-normal.command.json",
+      "sha256": "10fdf85ba47e23a34c6dae4b6c54e26a3713e40d474241feb0dd80a34e24a2cc"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 8160,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-normal.jsonl",
+      "sha256": "6662e095c16843ae0c336fe10f6e1ee4622857d2105b6296a710febf3f6902a2"
+    },
+    {
+      "bytes": 694,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-normal.result.json",
+      "sha256": "20f8e5fc2fd23546f4d6bcaeee15547544a9536ce759152d84da341ec7154cfa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1109,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-race.command.json",
+      "sha256": "3e306f166485177b4202276de554e2c5934cb1be64fb2ece037248724f26ab99"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 8164,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-race.jsonl",
+      "sha256": "3a0dfe7855794df89d4a44f0e926caa64638dac17675a1f1b5361bfdbf4ee3a9"
+    },
+    {
+      "bytes": 691,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-race.result.json",
+      "sha256": "ce2d5ee536bbacd3918e888d90dce8b44b17a32d78b39d7f9d20a6b130c66e67"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 896,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-results.json",
+      "sha256": "81f8bccb920c942c7c896e1be2a998f18ee9827b8d4fd649e0cbbad64d5b3959"
+    },
+    {
+      "bytes": 1049,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-vet.command.json",
+      "sha256": "5380ef742af1a5009fb78d30a2ede4f802a8ed4527cc208606fd9b1281b3ae98"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-vet.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 144,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-vet.result.json",
+      "sha256": "5a707edbe515d6cdca8a0301541a443a69be251435e5bba8ec449d941579e44c"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed-vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 188,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed.stderr",
+      "sha256": "5aa7afb8137bdfaac40240b2897f8df193078e7531f4446432f65e47c1de2675"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-fixed.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1920,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-module-packaging.json",
+      "sha256": "2f8261dc2fab76ac62b327db9365526eb3cf3ffc8993977ecfe40d4019e4b1ca"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-preparation.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 11727,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-preparation.mod",
+      "sha256": "d72099d72aeb6c430ae1b295b21cbc4ee72feabfde0a857886517346ca3d47c3"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-preparation.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 109,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-preparation.stdout",
+      "sha256": "c1941a571f5202ff1b3f3dc44fbe501823a616716178b9105888ec0f6addd290"
+    },
+    {
+      "bytes": 65112,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-preparation.sum",
+      "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3"
+    },
+    {
+      "bytes": 3739,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/prepare-inventory-cli-attempt-1.go",
+      "sha256": "c29219a762351ec4dac4cf9df9e820e4397f23758834661e6186ed6915015753"
+    },
+    {
+      "bytes": 3755,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/prepare-inventory-cli.go",
+      "sha256": "f797040f68a2ad02644055473ad96cf7354f95d601a06998b3b6e962b26d0580"
+    },
+    {
+      "bytes": 4195,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/qualify-inventory-cli-continue.go",
+      "sha256": "18e84279fae7d54e18ab14a65e7a7b3a8939fe31fc2a34e2539ba01703b3a842"
+    },
+    {
+      "bytes": 4205,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/qualify-inventory-cli.go",
+      "sha256": "5b204e05b38569e478f1267224508e6f8e4d0a116b3ddd60dec67db4386edd59"
+    },
+    {
+      "bytes": 9425,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/seal-inventory-cli.go",
+      "sha256": "6a8068db8f57a302f329a0dc1d8c024ee41a35bf168716d6b73811a7874e7133"
+    },
+    {
+      "bytes": 11211,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-checkpoint/go.mod",
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    {
+      "bytes": 65343,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-checkpoint/go.sum",
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    {
+      "bytes": 7500,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-checkpoint/internal/durablepath/directory.go",
+      "sha256": "6097f14511f651ed0df4c584716b01e670404a7bc6da4c25e8909292ef293adf"
+    },
+    {
+      "bytes": 22445,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-checkpoint/mainnet/main.go",
+      "sha256": "ce1fca05f4acf46ef37805cf885dcd97c92a9465fa8183a6084ed231f05a55b5"
+    },
+    {
+      "bytes": 5997,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-checkpoint/mainnet/storage_inventory.go",
+      "sha256": "9960d53bbbf79ad04d733b7da088d9666f5d79a1fcce68508dd799c9350658a7"
+    },
+    {
+      "bytes": 9568,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-checkpoint/mainnet/storage_inventory_test.go",
+      "sha256": "1747ca62705f85c668139a575a304c1d9bea8fe113fea2d1c8c73628691ef114"
+    },
+    {
+      "bytes": 10237,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-checkpoint/mainnet/storage_inventory_custody_test.go",
+      "sha256": "105832dc49ede0ff9ff1956922ddfcdee5ae6e7f7a2375035ff39bd3e0301c45"
+    },
+    {
+      "bytes": 36376666,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-proxy/github.com/urnetwork/connect/@v/v0.0.0-20261002121440-0a5cda0ebe78.zip",
+      "sha256": "65faf72308d517ed79068a12013421955b03b841e9f6a4f7dbedb4458b9581e9"
+    },
+    {
+      "bytes": 3847,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-proxy/github.com/urnetwork/connect/@v/v0.0.0-20261002121440-0a5cda0ebe78.mod",
+      "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7"
+    },
+    {
+      "bytes": 79,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-proxy/github.com/urnetwork/connect/@v/v0.0.0-20261002121440-0a5cda0ebe78.info",
+      "sha256": "30f6ae742e7e897d15692c99905fc9a5b0f0b3107b502bababb885fecef7ae7f"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-proxy-attempt-1/github.com/urnetwork/connect/@v/v0.0.0-20261002121440-0a5cda0ebe78.zip",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 15434687,
+      "path": "/usr/local/go/bin/go",
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  ],
+  "baseline": {
+    "limits": "These composition controls do not retroactively invalidate f1b's separately qualified6cd scope. Rebound control first refuses the missing metadata limits; later successful explicit comparison is a positive feature control.",
+    "production": "unchanged f1b storage commands composed with the exact new0a5 inventory API",
+    "test_only_head": "d6e72e859f1c32c215732482e43e763f120bbecd",
+    "tree": "3cada7c27a36f4a547270828929df5c8474c4c09"
+  },
+  "behavior": [
+    "Public daemon inventory/verify commands pass explicit bounded owner-attribute count and bytes to inventory-v3, retaining opaque original owner xattrs.",
+    "Separate storage-owner-inventory/storage-owner-verify commands accept only explicit owner-local policy; daemon and owner-local scopes reject each other's declarations, and absent/canceled context remains refused.",
+    "Verification requires explicit --compare-reviewed-rebound to compare a separately declared replacement root. Exact file and opaque attribute equality never rebinds embedded inodes or authorizes restart.",
+    "Busy roots, cancellation, malformed limits, missing retained metadata and short stdout writes refuse a complete successful report; all reports retain restart_authorized=false."
+  ],
+  "core": {
+    "head": "0a5cda0ebe78f6200c4cff6fd3d1aa172a2b172c",
+    "module_packaging": {
+      "files": [
+        {
+          "bytes": 36376666,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-proxy/github.com/urnetwork/connect/@v/v0.0.0-20261002121440-0a5cda0ebe78.zip",
+          "sha256": "65faf72308d517ed79068a12013421955b03b841e9f6a4f7dbedb4458b9581e9"
+        },
+        {
+          "bytes": 3847,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-proxy/github.com/urnetwork/connect/@v/v0.0.0-20261002121440-0a5cda0ebe78.mod",
+          "sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7"
+        },
+        {
+          "bytes": 79,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-proxy/github.com/urnetwork/connect/@v/v0.0.0-20261002121440-0a5cda0ebe78.info",
+          "sha256": "30f6ae742e7e897d15692c99905fc9a5b0f0b3107b502bababb885fecef7ae7f"
+        },
+        {
+          "bytes": 11685,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-checkpoint.mod",
+          "sha256": "7a145d979a888ed2cab08d458e724e691d5ddeb676ce1154f9790b2ba46d3716"
+        },
+        {
+          "bytes": 65343,
+          "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/inventory-cli-checkpoint.sum",
+          "sha256": "22ab013eb268370f8912ae78cab43baa65d8bc3e66477ca76a8f454cbd83197b"
+        }
+      ],
+      "go_mod_sum": "h1:A88Ceqd8zbfpUB4+1pTsT1G3kiS9kgB22ZuljBZVw4k=",
+      "head": "0a5cda0ebe78f6200c4cff6fd3d1aa172a2b172c",
+      "independent_sumdb_verification": false,
+      "method": "golang.org/x/mod/zip.CreateFromVCS from exact clean Git commit; file proxy only",
+      "module_sum": "h1:BRKzwfvyy9uY2O844QQVO7jWZp/e/19NBuH5uCVVHBk=",
+      "remote_publication": false,
+      "schema": "local-authenticated-module-packaging-v1",
+      "source": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/backup-custody-checkpoint",
+      "tree": "2e364a5e88562b6daf0a00ca0bc2415d83657e64",
+      "version": "v0.0.0-20261002121440-0a5cda0ebe78"
+    },
+    "selected_module": "{\n\t\"Path\": \"github.com/urnetwork/connect\",\n\t\"Version\": \"v0.0.0\",\n\t\"Replace\": {\n\t\t\"Path\": \"github.com/urnetwork/connect\",\n\t\t\"Version\": \"v0.0.0-20261002121440-0a5cda0ebe78\",\n\t\t\"Time\": \"2026-10-02T12:14:40Z\",\n\t\t\"Dir\": \"/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002121440-0a5cda0ebe78\",\n\t\t\"GoMod\": \"/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/cache/download/github.com/urnetwork/connect/@v/v0.0.0-20261002121440-0a5cda0ebe78.mod\",\n\t\t\"GoVersion\": \"1.26.3\",\n\t\t\"Sum\": \"h1:BRKzwfvyy9uY2O844QQVO7jWZp/e/19NBuH5uCVVHBk=\",\n\t\t\"GoModSum\": \"h1:A88Ceqd8zbfpUB4+1pTsT1G3kiS9kgB22ZuljBZVw4k=\"\n\t},\n\t\"Dir\": \"/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/github.com/urnetwork/connect@v0.0.0-20261002121440-0a5cda0ebe78\",\n\t\"GoMod\": \"/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/module-cache/cache/download/github.com/urnetwork/connect/@v/v0.0.0-20261002121440-0a5cda0ebe78.mod\",\n\t\"GoVersion\": \"1.26.3\"\n}",
+    "tree": "2e364a5e88562b6daf0a00ca0bc2415d83657e64"
+  },
+  "limits": [
+    "Nine selected public storage command tests normal/race and three-package vet; no fresh full monitor/miner/validator/server or release composition claim.",
+    "Core0a5 is independently queued; this author receipt does not claim independent primitive or CLI verification.",
+    "Local module archive and h1 values derive from exact retained Git source. No remote module availability, sumdb corroboration or independent compiler provenance claim.",
+    "Offline plan/apply provisioning, semantic owner restore/rebind, DB/MinIO recovery, capacity rotation and deployment remain separate open scopes.",
+    "No production signing, broadcast, mount, deployment or service start."
+  ],
+  "phases": [
+    {
+      "exit": "1",
+      "fail": [
+        "TestStorageInspectionOwnerLocalCommandsRemainSeparate",
+        "TestStorageInspectionPublicInventoryPreservesOwnerAttributesAndBounds",
+        "TestStorageInspectionReboundComparisonRequiresExplicitOption"
+      ],
+      "pass": null,
+      "phase": "baseline-normal",
+      "skip": null
+    },
+    {
+      "exit": "1",
+      "fail": [
+        "TestStorageInspectionOwnerLocalCommandsRemainSeparate",
+        "TestStorageInspectionPublicInventoryPreservesOwnerAttributesAndBounds",
+        "TestStorageInspectionReboundComparisonRequiresExplicitOption"
+      ],
+      "pass": null,
+      "phase": "baseline-race",
+      "skip": null
+    },
+    {
+      "exit": "0",
+      "fail": null,
+      "pass": [
+        "TestStorageInspectionBoundsAndCancellationEmitNoReport",
+        "TestStorageInspectionBusyRootRetainsCustody",
+        "TestStorageInspectionOwnerLocalCommandsRemainSeparate",
+        "TestStorageInspectionPublicDispatchRequiresAndRetainsAuthority",
+        "TestStorageInspectionPublicInventoryPreservesOwnerAttributesAndBounds",
+        "TestStorageInspectionReboundComparisonRequiresExplicitOption",
+        "TestStorageInspectionRejectsShortOutput",
+        "TestStorageInspectionRequiresExplicitDeclaration",
+        "TestStorageInspectionRetainedLocalVerification"
+      ],
+      "phase": "fixed-normal",
+      "skip": null
+    },
+    {
+      "exit": "0",
+      "fail": null,
+      "pass": [
+        "TestStorageInspectionBoundsAndCancellationEmitNoReport",
+        "TestStorageInspectionBusyRootRetainsCustody",
+        "TestStorageInspectionOwnerLocalCommandsRemainSeparate",
+        "TestStorageInspectionPublicDispatchRequiresAndRetainsAuthority",
+        "TestStorageInspectionPublicInventoryPreservesOwnerAttributesAndBounds",
+        "TestStorageInspectionReboundComparisonRequiresExplicitOption",
+        "TestStorageInspectionRejectsShortOutput",
+        "TestStorageInspectionRequiresExplicitDeclaration",
+        "TestStorageInspectionRetainedLocalVerification"
+      ],
+      "phase": "fixed-race",
+      "skip": null
+    },
+    {
+      "exit": "0",
+      "fail": null,
+      "pass": null,
+      "phase": "fixed-vet",
+      "skip": null
+    }
+  ],
+  "preserved_attempts": [
+    "Original fixed normal invocation passed all9 roots and exited0; its wrapper incorrectly required at least10, then exited1. No source changed. Continuation ran only race and three-package vet; this sealer reparses the retained normal JSON and validates the exact9-root list.",
+    "Initial packaging helper was refused by read-only module resolution before creating the proxy. Its private helper module was prepared separately without changing the sealed prior module files. CreateFromVCS then refused a linked-worktree .git file; original helper and empty archive are retained. Successful packaging uses the physical shared Git repository with the same exact0a5 revision; no remote publication or sumdb assertion."
+  ],
+  "schema": "mainnet-storage-inventory-v3-cli-author-v1",
+  "source": {
+    "base": "f1b445f9e8dafca790f7bc147430bc9c242b65e5",
+    "changed_paths": [
+      "go.mod",
+      "go.sum",
+      "internal/durablepath/directory.go",
+      "mainnet/main.go",
+      "mainnet/storage_inventory.go",
+      "mainnet/storage_inventory_custody_test.go"
+    ],
+    "clean": true,
+    "head": "7fb6b6a1bd52cf243fcbd717f0f48a9cf86027ab",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/inventory-cli-checkpoint",
+    "tree": "ba8e0f0de97b3b6f49c4e3f87ad39e592a64ddc2"
+  },
+  "time": "2026-10-02T13:08:58.026569443Z",
+  "verdict": "PASS_SCOPED_AUTHOR_ONLY"
+}

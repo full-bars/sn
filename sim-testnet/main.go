@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	server "github.com/urnetwork/server"
 	serverapi "github.com/urnetwork/server/api"
 	serverconnect "github.com/urnetwork/server/connect"
 	servertaskworker "github.com/urnetwork/server/taskworker"
@@ -27,8 +28,19 @@ var version = "1.0"
 var defaultConfigPath = "sim-testnet/testnet.yml"
 
 type cliOptions struct {
+	DiagnosticOutput                                                                                                                string
+	ProvisionalReleaseRunID                                                                                                         string
+	WaitForTerminal                                                                                                                 bool
+	RolloverPlan, RolloverPlanHash                                                                                                  string
+	RolloverEpoch, RolloverGeneration                                                                                               uint64
+	RolloverSourceRole                                                                                                              bool
+	ProbeRecoveryExecute                                                                                                            bool
+	ProbeRecoveryReviseGas                                                                                                          bool
+	ProbeRecoveryBudget, ProbeRecoveryBudgetSHA256                                                                                  string
 	RelayContinuationPlan                                                                                                           string
 	RelayEndBlock                                                                                                                   uint64
+	RelaySlots                                                                                                                      uint64
+	RelaySourceLimitMultiplier                                                                                                      uint64
 	RenewalPlan, RenewalTransactionEvidence                                                                                         string
 	RenewalTransactions                                                                                                             []string
 	RenewalValidFrom, RenewalValidTo, RenewalFeePerGas                                                                              uint64
@@ -40,7 +52,8 @@ type cliOptions struct {
 	OwnedRPCAuthority                                                                                                               string
 	ThenReleaseCandidate                                                                                                            bool
 	Config, SNRepo, ServerRepo, OperatorProxyRepo, VaultRepo, PlatformConfigRepo, StateDir, PlanHash, Name, Manifest, RunID, Format string
-	Apply, Detach, ProvisionalResume, PrepareOnly                                                                                   bool
+	Apply, Detach, ProvisionalResume, ProvisionalCapture, PrepareOnly                                                               bool
+	AllowanceOnly                                                                                                                   bool
 }
 
 func usage() {
@@ -51,18 +64,22 @@ Usage: sim-testnet <command> [options]
 Commands:
   doctor   read-only configuration, repository, tool, RPC, wallet, and subnet checks
   release-lock  render or atomically refresh observed release-lock fields from clean repositories
-  plan     print the canonical setup diff, costs, actions, and plan hash; never writes
+  plan     archive and print the exact setup review; never changes the active plan or chain
   history-adoption  capture a source-pinned request for strict startup after retained V2 history
   relay-continuation  capture or adopt one fixed continuation inside the original relay reserve
   setup    converge the existing subnet and install contracts (dry-run unless approved)
   launch   setup, start topology, readiness, and smoke scenario (dry-run unless approved)
+  audit    read-only retained-plan and action-history checks; reports all findings
+  terminal-diagnostics  independent non-accepting terminal checks; writes only an external diagnostic directory
   resume   reconcile the journal and continue an interrupted approved action
   coordinator-repair  apply one bounded provisional coordinator implementation correction
+  probe-recovery  authorize bounded probe recovery, or execute it with --execute-recovery under exclusive journal ownership
   fleet-renew  plan or resume an exact next-generation renewal of existing fleets
+  policy-rollover  review or publish a fresh policy evidence generation and durable handoff
   status   show process and finalized on-chain state
   inspect  emit the complete public live-state view
   analyze  reconstruct weights, roots, claims, reserve, and conservation evidence
-  scenario run a named scenario (precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
+  scenario run a named scenario (precompile-prepare, precompile-conformance, smoke, epoch, release-1.0, production-soak, release-candidate, or fault scenario)
   tail     multiplex structured process logs
   stop     stop local processes only; preserves keys, evidence, and chain state
   retire   plan future-effective operator retirement; dry-run by default
@@ -77,10 +94,16 @@ Common options:
   --platform-config-repo PATH  platform config repository override
   --format human|json
   --apply --plan-hash HASH  mandatory pair for chain/process writes; release-lock uses --apply alone
+  --revise-recovery-gas  propose/sign a fixed 6M-gas revision of the first unsigned probe top-up
   --prepare-only      approved setup/launch/resume preparation; report all failures and stop before actions
-  --provisional-resume  reuse authenticated verified receipts under the exact persisted testnet plan; no final release acceptance
+  --allowance-only    plan an EVM/TAO cap increase over --plan-hash without changing any action or release proof
+  --provisional-resume  reuse authenticated testnet evidence for diagnostics, continuation and exact setup/fleet repairs; no final release acceptance
+                        doctor observes the exact retained --plan-hash without --apply
+  --provisional-release-run-id ID  exact failed terminal release predecessor for an explicitly provisional production soak
   --first-native-epoch N  exact fresh native epoch for read-only history-adoption capture
   --relay-end-block N  fixed absolute end for read-only relay continuation capture
+  --relay-slots 2048  capture an explicit doubled aggregate relay funding revision
+  --provisional-capture  read-only non-accepting relay capture against the exact active plan
   --relay-continuation-plan PATH  exact saved continuation plan for adoption
   --strict-history-adoption PATH --strict-history-adoption-sha256 HASH  exact request for strict launch/resume
   --then-release-candidate  strict detached resume continues the full campaign under the same writer; returns only after the campaign
@@ -91,12 +114,17 @@ Common options:
   --repair-budget PATH --repair-budget-sha256 HASH  exact campaign allowance suballocation receipt
   --renewal-valid-from-epoch N --renewal-valid-to-epoch N  exact common future binding window
   --renewal-max-fee-per-gas-wei N  renewal ceiling bounded by the configured maximum
+  --rollover-epoch N --rollover-generation N  explicit future activation and fresh source generation
+  --rollover-plan PATH --rollover-plan-hash HASH  immutable rollover subplan; required for apply
+  --rollover-source-role  review or select a role-only predecessor proof for the active generation
   --renewal-plan PATH  exact JSON plan emitted by fleet-renew; required for apply/resume
   --renewal-transaction-evidence PATH  JSON array of signed external EVM transaction hex strings
   --detach            persistent supervisor mode for launch
   --name NAME         scenario name
   --manifest PATH     public manifest for secretless inspect/analyze
   --run-id ID         exact signed campaign run for public analyze
+  --diagnostic-output PATH  new external terminal diagnostic directory
+  --wait-for-terminal wait for the signed finalized terminal block before diagnostics
 `)
 }
 
@@ -105,14 +133,23 @@ func parseCLI(args []string) (string, cliOptions, error) {
 		return "", cliOptions{}, errors.New("missing command")
 	}
 	cmd := args[0]
-	valid := map[string]bool{"doctor": true, "release-lock": true, "plan": true, "history-adoption": true, "relay-continuation": true, "setup": true, "launch": true, "resume": true, "coordinator-repair": true, "fleet-renew": true, "status": true, "inspect": true, "analyze": true, "scenario": true, "tail": true, "stop": true, "retire": true}
+	valid := map[string]bool{"doctor": true, "audit": true, "release-lock": true, "plan": true, "history-adoption": true, "relay-continuation": true, "setup": true, "launch": true, "resume": true, "coordinator-repair": true, "fleet-renew": true, "status": true, "inspect": true, "analyze": true, "scenario": true, "tail": true, "stop": true, "retire": true}
+	valid["probe-recovery"] = true
+	valid["policy-rollover"] = true
+	valid["terminal-diagnostics"] = true
 	if !valid[cmd] {
 		return "", cliOptions{}, fmt.Errorf("unknown command %q", cmd)
 	}
 	fs := flag.NewFlagSet(cmd, flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	var o cliOptions
+	fs.StringVar(&o.DiagnosticOutput, "diagnostic-output", "", "")
+	fs.BoolVar(&o.WaitForTerminal, "wait-for-terminal", false, "")
 	fs.StringVar(&o.Config, "config", defaultConfigPath, "")
+	fs.BoolVar(&o.ProbeRecoveryExecute, "execute-recovery", false, "")
+	fs.BoolVar(&o.ProbeRecoveryReviseGas, "revise-recovery-gas", false, "")
+	fs.StringVar(&o.ProbeRecoveryBudget, "probe-recovery-budget", "", "")
+	fs.StringVar(&o.ProbeRecoveryBudgetSHA256, "probe-recovery-budget-sha256", "", "")
 	fs.StringVar(&o.StateDir, "state-dir", "", "")
 	fs.StringVar(&o.SNRepo, "sn-repo", "", "")
 	fs.StringVar(&o.ServerRepo, "server-repo", "", "")
@@ -124,14 +161,19 @@ func parseCLI(args []string) (string, cliOptions, error) {
 	fs.StringVar(&o.Name, "name", "", "")
 	fs.StringVar(&o.Manifest, "manifest", "", "")
 	fs.StringVar(&o.RunID, "run-id", "", "")
+	fs.StringVar(&o.ProvisionalReleaseRunID, "provisional-release-run-id", "", "")
 	fs.BoolVar(&o.Apply, "apply", false, "")
 	fs.BoolVar(&o.PrepareOnly, "prepare-only", false, "")
 	fs.BoolVar(&o.Detach, "detach", false, "")
 	fs.BoolVar(&o.ThenReleaseCandidate, "then-release-candidate", false, "")
 	fs.BoolVar(&o.ProvisionalResume, "provisional-resume", false, "")
+	fs.BoolVar(&o.ProvisionalCapture, "provisional-capture", false, "")
 	fs.Uint64Var(&o.FirstNativeEpoch, "first-native-epoch", 0, "")
 	fs.StringVar(&o.RelayContinuationPlan, "relay-continuation-plan", "", "")
 	fs.Uint64Var(&o.RelayEndBlock, "relay-end-block", 0, "")
+	fs.Uint64Var(&o.RelaySlots, "relay-slots", 0, "")
+	fs.Uint64Var(&o.RelaySourceLimitMultiplier, "relay-source-limit-multiplier", 0, "")
+	fs.BoolVar(&o.AllowanceOnly, "allowance-only", false, "")
 	fs.StringVar(&o.StrictHistoryAdoption, "strict-history-adoption", "", "")
 	fs.StringVar(&o.StrictHistoryAdoptionSHA256, "strict-history-adoption-sha256", "", "")
 	fs.StringVar(&o.ProvisionalRPCAuthority, "provisional-rpc-authority", "", "")
@@ -141,6 +183,11 @@ func parseCLI(args []string) (string, cliOptions, error) {
 	fs.StringVar(&o.RepairArtifactSHA256, "repair-artifact-sha256", "", "")
 	fs.StringVar(&o.RepairBudget, "repair-budget", "", "")
 	fs.StringVar(&o.RepairBudgetSHA256, "repair-budget-sha256", "", "")
+	fs.StringVar(&o.RolloverPlan, "rollover-plan", "", "")
+	fs.StringVar(&o.RolloverPlanHash, "rollover-plan-hash", "", "")
+	fs.Uint64Var(&o.RolloverEpoch, "rollover-epoch", 0, "")
+	fs.Uint64Var(&o.RolloverGeneration, "rollover-generation", 0, "")
+	fs.BoolVar(&o.RolloverSourceRole, "rollover-source-role", false, "")
 	fs.StringVar(&o.RenewalPlan, "renewal-plan", "", "")
 	fs.StringVar(&o.RenewalTransactionEvidence, "renewal-transaction-evidence", "", "")
 	fs.Uint64Var(&o.RenewalValidFrom, "renewal-valid-from-epoch", 0, "")
@@ -173,19 +220,40 @@ func parseCLI(args []string) (string, cliOptions, error) {
 	if err := validateStrictResumeCampaignOptions(cmd, o); err != nil {
 		return "", o, err
 	}
-	if o.RunID != "" && (cmd != "analyze" || o.Manifest == "") {
+	if cmd == "audit" && (o.Apply || o.Detach || o.ProvisionalResume || o.PrepareOnly || o.Manifest != "") {
+		return "", o, errors.New("audit is read-only and cannot apply, detach, prepare, resume provisionally, or override the manifest")
+	}
+	if o.RunID != "" && cmd != "terminal-diagnostics" && (cmd != "analyze" || o.Manifest == "") {
 		return "", o, errors.New("--run-id is valid only for public analyze with --manifest")
 	}
 	if cmd == "analyze" && o.Manifest != "" && (o.RunID == "" || o.RunID != strings.TrimSpace(o.RunID) || strings.ContainsAny(o.RunID, "/\\\r\n\x00")) {
 		return "", o, errors.New("public analyze requires a valid exact --run-id")
 	}
+	if o.Name == precompilePreparationScenario && (cmd != "scenario" || !o.ProvisionalResume || o.Detach || o.PrepareOnly || o.ThenReleaseCandidate || o.Manifest != "") {
+		return "", o, errors.New("precompile-prepare requires an exact provisional scenario approval and cannot launch or accept a campaign")
+	}
 	if err := validateProvisionalResumeOptions(cmd, o); err != nil {
+		return "", o, err
+	}
+	if err := validateTerminalDiagnosticOptions(cmd, o); err != nil {
+		return "", o, err
+	}
+	if err := validateAllowanceOnlyOptions(cmd, o); err != nil {
 		return "", o, err
 	}
 	if err := validateStrictHistoryAdoptionOptions(cmd, o); err != nil {
 		return "", o, err
 	}
 	if err := validateCoordinatorRepairOptions(cmd, o); err != nil {
+		return "", o, err
+	}
+	if err := validatePrecompileRecoveryOptions(cmd, o); err != nil {
+		return "", o, err
+	}
+	if err := validatePolicyRolloverOptionsV2(cmd, o); err != nil {
+		return "", o, err
+	}
+	if err := validateProvisionalProductionOptions(cmd, o); err != nil {
 		return "", o, err
 	}
 	if err := validateFleetRenewalOptions(cmd, o); err != nil {
@@ -229,6 +297,22 @@ func configPathForExecutable(executable string) string {
 
 func runMain(args []string) error {
 	return runMainWithReleaseDependencies(args, LoadResolved, authenticateRunningReleaseExecutable)
+}
+
+// Runs the database catalog embedded in the workload image. Keeping the
+// callback explicit lets tests prove the internal command without a database.
+func runServerDatabaseMigration(ctx context.Context, args []string, migrate func(context.Context)) error {
+	if len(args) != 0 {
+		return errors.New("invalid internal server database migration invocation")
+	}
+	if ctx == nil || migrate == nil {
+		return errors.New("internal server database migration is unavailable")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	migrate(ctx)
+	return ctx.Err()
 }
 
 // Inject the two pre-dispatch release authorities so tests can prove that
@@ -295,6 +379,14 @@ func runMainWithReleaseDependencies(args []string, loadResolved resolvedConfigLo
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer cancel()
 		return runRPCProxy(ctx, config)
+	}
+	if len(args) > 0 && args[0] == "__server_db_migrate" {
+		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer cancel()
+		return runServerDatabaseMigration(ctx, args[1:], func(migrationCtx context.Context) {
+			server.DbMigrationVerbose = true
+			server.ApplyDbMigrations(migrationCtx)
+		})
 	}
 	if len(args) > 0 && (args[0] == "__miner_swarm" || args[0] == "__claim_swarm" || args[0] == "__validator") {
 		component := args[0]
@@ -426,7 +518,8 @@ func runMainWithReleaseDependencies(args []string, loadResolved resolvedConfigLo
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
-	requireSecrets := cmd == "doctor" || cmd == "plan" || cmd == "history-adoption" || cmd == "relay-continuation" || cmd == "setup" || cmd == "launch" || cmd == "resume" || cmd == "scenario" || cmd == "retire" || cmd == "coordinator-repair" || cmd == "fleet-renew"
+	requireSecrets := cmd == "audit" || cmd == "doctor" || cmd == "plan" || cmd == "history-adoption" || cmd == "relay-continuation" || cmd == "setup" || cmd == "launch" || cmd == "resume" || cmd == "scenario" || cmd == "retire" || cmd == "coordinator-repair" || cmd == "fleet-renew"
+	requireSecrets = requireSecrets || cmd == "probe-recovery" || cmd == "policy-rollover" || cmd == "terminal-diagnostics"
 	if loadResolved == nil {
 		return errors.New("resolved configuration loader is unavailable")
 	}
@@ -465,10 +558,18 @@ func runMainWithReleaseDependencies(args []string, loadResolved resolvedConfigLo
 		}
 	}
 	switch cmd {
+	case "terminal-diagnostics":
+		report, err := runTerminalDiagnostics(ctx, resolved, stateDir, o)
+		return printResult(o.Format, report, err)
+	case "audit":
+		report, err := runHistoricalAudit(ctx, resolved, readResolved, stateDir, o.PlanHash)
+		return printResult(o.Format, report, err)
 	case "relay-continuation":
 		return runEvidenceRelayContinuation(ctx, resolved, stateDir, o)
 	case "fleet-renew":
 		return runFleetRenewal(ctx, resolved, stateDir, o)
+	case "policy-rollover":
+		return runPolicyRolloverV2(ctx, resolved, stateDir, o)
 	case "history-adoption":
 		bundle, err := captureStrictHistoryAdoption(ctx, resolved, stateDir, o.FirstNativeEpoch)
 		if err != nil {
@@ -477,11 +578,29 @@ func runMainWithReleaseDependencies(args []string, loadResolved resolvedConfigLo
 		return printResult(o.Format, bundle, nil)
 	case "coordinator-repair":
 		return runCoordinatorRepair(ctx, resolved, stateDir, o)
+	case "probe-recovery":
+		if o.ProbeRecoveryExecute {
+			return runPrecompileRecovery(ctx, resolved, stateDir, o)
+		}
+		return runPrecompileRecoveryAuthorization(ctx, resolved, stateDir, o)
 	case "doctor":
-		report := RunDoctorForState(ctx, resolved, stateDir)
+		doctorCfg, err := prepareProvisionalDoctor(ctx, resolved, stateDir, o)
+		if err != nil {
+			return err
+		}
+		report := RunDoctorForState(ctx, doctorCfg, stateDir)
 		return printResult(o.Format, report, report.Error())
 	case "plan":
-		p, err := BuildPlanForState(ctx, resolved, stateDir)
+		var p *SetupPlan
+		if o.AllowanceOnly {
+			p, err = buildAllowanceOnlyPlan(ctx, resolved, stateDir, o.PlanHash)
+		} else {
+			p, err = BuildPlanForState(ctx, resolved, stateDir)
+		}
+		if err != nil {
+			return err
+		}
+		p, err = archiveReviewedSetupPlan(stateDir, p)
 		if err != nil {
 			return err
 		}
@@ -510,7 +629,7 @@ func runMainWithReleaseDependencies(args []string, loadResolved resolvedConfigLo
 // Identifies the read-only commands which may run concurrently with a live
 // campaign and therefore must share its single public-provider egress gate.
 func commandUsesCampaignEgress(command string) bool {
-	return command == "status" || command == "inspect" || command == "analyze"
+	return command == "audit" || command == "status" || command == "inspect" || command == "analyze"
 }
 
 // Selects the exact internally derived transport copy only while the
@@ -590,8 +709,11 @@ func printResult(format string, v any, resultErr error) error {
 // Other result schemas keep their existing canonical indented representation.
 func writeJSONResult(writer io.Writer, v any) error {
 	compact := false
+	boundedPlan := false
 	switch value := v.(type) {
-	case *SetupPlan, SetupPlan, *fleetRenewalBudgetError:
+	case *SetupPlan, SetupPlan:
+		compact, boundedPlan = true, true
+	case *fleetRenewalBudgetError:
 		compact = true
 	case map[string]any:
 		_, compact = value["plan"].(*SetupPlan)
@@ -605,6 +727,11 @@ func writeJSONResult(writer io.Writer, v any) error {
 	}
 	if err != nil {
 		return err
+	}
+	if boundedPlan {
+		if err := validateSetupPlanWireSize(len(b) + 1); err != nil {
+			return err
+		}
 	}
 	_, err = fmt.Fprintln(writer, string(b))
 	return err

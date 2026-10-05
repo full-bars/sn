@@ -1,0 +1,476 @@
+{
+  "schema": "provider-closed-work-root-production-review-v1",
+  "status": "PRODUCTION_SOURCE_REVIEWED_QUALIFICATION_PENDING",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/evidence/intake.json",
+    "bytes": 27227,
+    "sha256": "659720645c0fa1cf101c76dceb03a36e28de263f0457a27c6eab4b2ce9df2697"
+  },
+  "sources": {
+    "sn": {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "tree": "75d1f13930c5936ccdf1ba8afd9cd05ec9e60a7c",
+      "base": "e51dfea301ed048c530877bfed3b04ee770e0032",
+      "clean": true,
+      "sparse": true,
+      "changed_paths": [
+        "mainnet/economic_conservation_closed_work.go",
+        "mainnet/economic_conservation_closed_work_test.go",
+        "mainnet/economic_conservation_entitlement.go",
+        "mainnet/economic_conservation_entitlement_fixture_test.go",
+        "mainnet/economic_conservation_entitlement_read.go",
+        "mainnet/economic_conservation_entitlement_tuple_test.go",
+        "payoutartifact/artifact.go",
+        "payoutartifact/closed_work.go",
+        "payoutartifact/closed_work_test.go",
+        "validator/artifact.go",
+        "validator/artifact_closed_work_test.go"
+      ]
+    },
+    "server": {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "tree": "eb693b8e22be5e6790de66b1e438f235f6a8093f",
+      "base": "5b22f984f51b279f88a83d6f3fb41b19ab46b22a",
+      "clean": true,
+      "sparse": true,
+      "changed_paths": [
+        "controller/st_closed_work_test.go",
+        "controller/st_controller.go",
+        "model/st_provider_closed_work_test.go",
+        "model/st_provider_usage.go",
+        "startifact/artifact.go"
+      ]
+    }
+  },
+  "verified_bindings": [
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "payoutartifact/closed_work_test.go",
+      "git_blob": "e25d59a7d351eaaa0e4f46eaf8515669e52e8570",
+      "bytes": 11406,
+      "sha256": "17ed54819e3877abc9474e1cc0f164a41a0f6250bda6565b3a02e5d51b808bf8",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/payoutartifact/closed_work_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "payoutartifact/artifact_test.go",
+      "git_blob": "d8168e2aa442f371c0530221d0860d4cd07cbe70",
+      "bytes": 4179,
+      "sha256": "1aa43ed488f7738348959c3cd163a857d40d6d077bd80abe0a6bf4c29ad713a5",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/payoutartifact/artifact_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "validator/artifact_closed_work_test.go",
+      "git_blob": "d15666f42d983781a8b794f43cce12e4de23d037",
+      "bytes": 5157,
+      "sha256": "f725aa2a746d092481a324854484015ec35377a9c74e6cf449e6f08514214794",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/validator/artifact_closed_work_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "validator/artifact_test.go",
+      "git_blob": "3aba04cc7acdb5549b2d95eb9234ffed8c1d0193",
+      "bytes": 8070,
+      "sha256": "5c649e8f622cfa05db69aaba9fcd3a32c4cde4c27ebc18a09e22fd1c5989467b",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/validator/artifact_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "validator/release_artifact_observation_v2_test.go",
+      "git_blob": "5e1756eef1594dadcc8e077d38057c3c69f6d211",
+      "bytes": 7567,
+      "sha256": "50834bd38ab7b5ce0259833c223f871dd0bb79a3a16167c760df6658f74c67be",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/validator/release_artifact_observation_v2_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_closed_work_test.go",
+      "git_blob": "a5c6f541d911aabf17e826c05ba0fcf4ca94f9d1",
+      "bytes": 9293,
+      "sha256": "e46c656fffe13020dc97d71e39871b13e0893c9aed688710dd7d63423025a9aa",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_closed_work_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_entitlement_test.go",
+      "git_blob": "41737dbeba8bfdc9e82f16aba5081f1182c18001",
+      "bytes": 17142,
+      "sha256": "28abe33a990a66d223170703cd6751b42d375f4f8427647c9b44f91e473c477c",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_entitlement_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_entitlement_archive_test.go",
+      "git_blob": "528020097ae71e9ab766222513dd43dff809a39f",
+      "bytes": 8660,
+      "sha256": "4eed258a709b3d3664d5f2c11203cf088d2c8805f50545cb145d5891f1b1b9f1",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_entitlement_archive_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_entitlement_tuple_test.go",
+      "git_blob": "9288952a412cdfd8585ea73de68f09570cd00f05",
+      "bytes": 5243,
+      "sha256": "0fa119b23d7b1e4fde06294ff70ea401d1ae1646c9f3bfe4977a8d90c72ea8de",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_entitlement_tuple_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/st_provider_closed_work_test.go",
+      "git_blob": "298751131d49110411887647ed3d2dae42f79b77",
+      "bytes": 5856,
+      "sha256": "449ed622b6ba193752cf1257da573720b789d06ca720881ecb54c909c600a4a0",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/model/st_provider_closed_work_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/contract_usage_db_test.go",
+      "git_blob": "b82ff055d6a8dd90116bd7df3d61a537b037e0cd",
+      "bytes": 14449,
+      "sha256": "5d6d7c119f35f0470bea51a7f246ccd3a027f880c2133bb40849f2862931f119",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/model/contract_usage_db_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/contract_usage_archive_test.go",
+      "git_blob": "3ce9bdcb34c666040b277bc8b32e923e131606ab",
+      "bytes": 11628,
+      "sha256": "a9054d7231a6dd8d2b6b282f7c76635ec8e855d899f7d8b0ce8be0a2a8d6142b",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/model/contract_usage_archive_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/contract_usage_legacy_exclusion_test.go",
+      "git_blob": "1cddc3d811191e2b6e990c2eb2422723677b28f1",
+      "bytes": 7112,
+      "sha256": "d2d0acfe96981653861ac64dbf49ab2e8a3c10e3bf357c192f3628cbd46e28d4",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/model/contract_usage_legacy_exclusion_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/contract_usage_time_custody_test.go",
+      "git_blob": "9b649ffc6d270b6f0fa5cf5ba14667057fb45adf",
+      "bytes": 10243,
+      "sha256": "df6d7905de8ffd037c2fd980224717f849b732cdbf1900e2d4e350811f844482",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/model/contract_usage_time_custody_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "controller/st_closed_work_test.go",
+      "git_blob": "adeda11672db2f40908e28a68319c210efc138e8",
+      "bytes": 5820,
+      "sha256": "e34fd1515d7f888cc960f48cefe3baf03aa7b8f74333d4051bba20229c7af288",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/controller/st_closed_work_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "controller/st_payout_policy_rollover_test.go",
+      "git_blob": "eed8c84531b2316c8fa8b105e380e1b59d71722e",
+      "bytes": 24226,
+      "sha256": "039197925f02423231d18079c02d0a64024f91056e9fe0362e3ea5c425c407e5",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/controller/st_payout_policy_rollover_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "controller/st_payout_canonical_test.go",
+      "git_blob": "f519aea173651bfdc45cf000d79ba6285830a373",
+      "bytes": 6923,
+      "sha256": "b1c70f75264e4b702322822bc29f3dd39f6ea19f2baa1fad2ec782a9f8df1f8d",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/controller/st_payout_canonical_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "controller/st_usage_time_custody_test.go",
+      "git_blob": "635d53c5e864b2c9a4682655aaa06064ddba81f8",
+      "bytes": 2260,
+      "sha256": "e02e1a18eced45028f6c5bdefdf9513451544c9af40e5756c5fc03100c691e5d",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/controller/st_usage_time_custody_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "startifact/artifact_test.go",
+      "git_blob": "ffc45869f269e203cc39926dc871e5e5508da680",
+      "bytes": 11091,
+      "sha256": "495ad32465d51833c30ce00c58919e76e46bb66e5d833f8ee37baa916923ba18",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/startifact/artifact_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "go.mod",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/go.mod"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "go.sum",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/go.sum"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_closed_work.go",
+      "git_blob": "841454a0ac56b264e251c13046bab14d80a4adea",
+      "bytes": 4189,
+      "sha256": "4da6d1b1ac900dc7dc1f8a7390716fccbff8d52ebef5afd27c3a0c8e91d756a4",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_closed_work.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_entitlement.go",
+      "git_blob": "4a542feb652fd78945418ebbdd4e14f2fb73d1d4",
+      "bytes": 34309,
+      "sha256": "16d17662eceec47b84ab520df4e683dc3d7afb10a902341a46cc0d951e64d790",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_entitlement.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_entitlement_fixture_test.go",
+      "git_blob": "9ffc2d81f66832f6c0dd8f4ef0684bc3c7998670",
+      "bytes": 10764,
+      "sha256": "b1eac70cb109759512545eb5cf6c16375ff38b13e77b0d087ceae160829f72bc",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_entitlement_fixture_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_entitlement_read.go",
+      "git_blob": "9c28fd7b549ae013bd4de3a687adbeb23b6cb9dc",
+      "bytes": 11558,
+      "sha256": "dcca27459301447231ae781ff1536a68a98909c71e74e9ca654b79e6413cdf13",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_entitlement_read.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "payoutartifact/artifact.go",
+      "git_blob": "a39173b2e448d7ad6537ceada5f99e73a1dbcd95",
+      "bytes": 15265,
+      "sha256": "307de204e1799c5bb0c6837353304d41e11374e97439b98449c184172949e1be",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/payoutartifact/artifact.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "payoutartifact/closed_work.go",
+      "git_blob": "fd05f2e2c96ca85203a126d10229deee2126075c",
+      "bytes": 14244,
+      "sha256": "64ea7390c5950d80e220aa8a550f9d20a98252e80bfdb21163d9d138ba26a946",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/payoutartifact/closed_work.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "validator/artifact.go",
+      "git_blob": "f340e2bb2ea73909cdb618b42166ecab8b32952b",
+      "bytes": 12610,
+      "sha256": "5355097ead210f81e87a5ea670d9e230b11b0b12f5000f2ec10d522a448b222b",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/validator/artifact.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "go.mod",
+      "git_blob": "0212b7ac9f0eadfeae004f1f6cd8c779e86d78ce",
+      "bytes": 10651,
+      "sha256": "0b46ffc190eb63fec79e852dc73c37d5aa81b11450f34452655c7dc7bab043b6",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/go.mod"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "go.sum",
+      "git_blob": "5702bae66ed28bf059432277fed2e8a06e428855",
+      "bytes": 69997,
+      "sha256": "df20bacb30f7a2fc1cf4ea27fc021959b2b369bc6fae3656c6ab269835120a23",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/go.sum"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "controller/st_controller.go",
+      "git_blob": "a2f5ac965816bb57defc783d4792116b676b85b4",
+      "bytes": 180740,
+      "sha256": "be4fc58b98c5aa7655281c6db5311e5096265ef8ad9debdf14500106079aaa1a",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/controller/st_controller.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/st_provider_usage.go",
+      "git_blob": "d3ec98b1428265b86dbfda21ef82dbeec0906de2",
+      "bytes": 7613,
+      "sha256": "42cda699fc937560f798b602b77402e9a1e237cbc6fe6ea30d6e67dd7bd9ca9c",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/model/st_provider_usage.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "startifact/artifact.go",
+      "git_blob": "cd81657ddd0f24884d16f5d08118017fd17cb986",
+      "bytes": 5378,
+      "sha256": "c7d46f50b801e3c6e677d7f1c51ef3e805737243d05f134c92706a1a6530fb56",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/startifact/artifact.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_fixture_test.go",
+      "git_blob": "1b3e03b4c8c433a764b82535162e3513ddbd685e",
+      "bytes": 13329,
+      "sha256": "919a06488b0e97710f8ebd4a1e10807e3700c9a157ff8de2290c56339bbe98d2",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_fixture_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_archive_test.go",
+      "git_blob": "d5045d10b71754b0ddf3cd3b393d097d2c0d82ee",
+      "bytes": 21589,
+      "sha256": "3d4c0147791a6ce4f1cbc344d0728463317386d1b652dde2aef466a0ef0ad125",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_archive_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "validator/release_artifact_observation_v2.go",
+      "git_blob": "36e9f8485253f2df7064ae295e32dc96d195d460",
+      "bytes": 21033,
+      "sha256": "5acf5cd20ea77fcfd8bf51ae14e9d33747f5d6ceda83c2ae63c9bed5497498fe",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/validator/release_artifact_observation_v2.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/contract_usage.go",
+      "git_blob": "bcce71378385eef0bd3c9642cf4a458ba4ee168b",
+      "bytes": 11917,
+      "sha256": "5e4b95d646773cae7d2dccdb75800a4b37b3fe93a8020a5891b2c5b97136bd4c",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/model/contract_usage.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/subscription_model.go",
+      "git_blob": "c27ec3d6c5bd9967aaf2995f3f14c7396e58342d",
+      "bytes": 210867,
+      "sha256": "5219516d01dcc83ce1baae938ee2df69ce877dfc18b476d0918067fb30c5b09f",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/model/subscription_model.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "model/st_payout_transition.go",
+      "git_blob": "f2490392268e2dea69d86fcdbd5eeb9806c2efd7",
+      "bytes": 1520,
+      "sha256": "c240a569181997b00fe08cdacd58604d3540546e74ae3a60d258eb0d7ccb3e35",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/model/st_payout_transition.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server",
+      "head": "5460b1d7e840d2a6023f1bf216239a881477f39d",
+      "relative": "controller/st_client_key_history_test.go",
+      "git_blob": "4a52486f6dbd25b652c1f112950602cad3f91119",
+      "bytes": 13524,
+      "sha256": "e87e609f783872734c03cbbbe359a1a671b58af55f5f3b7f153a3c050729de87",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/server/controller/st_client_key_history_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_entitlement_fixture_test.go",
+      "git_blob": "9ffc2d81f66832f6c0dd8f4ef0684bc3c7998670",
+      "bytes": 10764,
+      "sha256": "b1eac70cb109759512545eb5cf6c16375ff38b13e77b0d087ceae160829f72bc",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_entitlement_fixture_test.go"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn",
+      "head": "768e188ab450f01f19708bcc002858a1dc201ff6",
+      "relative": "mainnet/economic_conservation_entitlement_tuple_test.go",
+      "git_blob": "9288952a412cdfd8585ea73de68f09570cd00f05",
+      "bytes": 5243,
+      "sha256": "0fa119b23d7b1e4fde06294ff70ea401d1ae1646c9f3bfe4977a8d90c72ea8de",
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/sn/mainnet/economic_conservation_entitlement_tuple_test.go"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/evidence/selectors.json",
+      "bytes": 12061,
+      "sha256": "331d46efe1b0d1ab24beaa526758c9802bdf980d7adc0a9b66d487b57e2fd08b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/evidence/operative-controls.json",
+      "bytes": 24414,
+      "sha256": "28c10ebc8ede72e0dad4f8e2998f88944cedbc6b3cd5f2e1552f229f40c72202"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/evidence/source-review.json",
+      "bytes": 3344,
+      "sha256": "3398652600789b38a8d1c5d350de8990a1d2bfbde6a944b2cc2c921153464f95"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/evidence/qualification-recipe.json",
+      "bytes": 4768,
+      "sha256": "c929769f93a2b18ab38bffa9aad5a17a93bd73ca1b34b32b7405293e13eb71df"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/provider-closed-work/seal.py",
+      "bytes": 20157,
+      "sha256": "16f97b11eae351a845832ce8f73474cd878ce86170e451e55cd812edc0e01c7b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-capture-precompile-interface/evidence/intake.json",
+      "bytes": 3495,
+      "sha256": "e9f02e60dac2e70aba619421dc7248268b1f1ae0ca855e3df2576e548bdabb0e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/server-participant-identity/evidence/intake.json",
+      "bytes": 8256,
+      "sha256": "1799828eea7713edbfa80a72458fad6d07ee5775db6da222709c4efc206eed34"
+    }
+  ],
+  "production_review": [
+    "Read complete new payoutartifact closed-work decoder/verifier, mainnet active/cold component and all existing production path deltas.",
+    "Server obtains usage and optional original-row census in one SQL statement snapshot. Capacity overflow discards the complete optional census rather than publishing a prefix, preserving existing payout usage.",
+    "Optional artifact field omitted for legacy signed bytes; Build clones original snapshot bytes. Validator actual HTTP and monitor active/cold paths reconstruct partition, identities and totals.",
+    "Original SQL-row component does not prove original signed client close, independent window completeness, reliability or eligibility. Economic authentication remains unknown; these producers are still required."
+  ],
+  "qualification": {
+    "new_provider_roots": 23,
+    "go_roots_per_mode": 50,
+    "vets": 6,
+    "control_groups_per_mode": 9,
+    "intended_failed_roots_per_mode": 13
+  },
+  "limits": "Test declarations and controls are not executed results. Root has not yet reviewed all behavioral test/control source. Whole producer authentication and launch acceptance remain open."
+}

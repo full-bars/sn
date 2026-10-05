@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
 	"strconv"
 	"sync"
 
@@ -58,6 +59,13 @@ func orderFleetRenewalActions(actions []Action, renewal FleetRenewal) ([]Action,
 					a.Parameters["renewal_expected_nonce"] = strconv.FormatUint(keeperNonce, 10)
 					keeperNonce++
 					next = append(next, a.ID)
+				}
+				if !renewal.AllowanceExtensionWei.IsZero() && a.Kind == "evm-transaction" {
+					role := "keeper"
+					if operation == "mirror" {
+						role = "commitment-oracle"
+					}
+					a.DependsOn = append(a.DependsOn, fleetRenewalFundingID(renewal.Round, role))
 				}
 				a.IntentHash, err = actionIntentHash(a)
 				if err != nil {
@@ -115,7 +123,7 @@ func (m *EvmTxManager) submitFleetRenewal(ctx context.Context, planHash string, 
 	if err != nil {
 		return nil, err
 	}
-	if receipt, err := m.client.TransactionReceipt(ctx, signed.Hash()); err == nil {
+	if receipt, err := readExactEvmReceipt(ctx, m.client, signed.Hash(), false, defaultFinalSemanticRPCRetryPolicy()); err == nil {
 		if err := validateEVMReceiptIdentity(receipt, signed.Hash()); err != nil {
 			return nil, err
 		}
@@ -136,9 +144,16 @@ func (m *EvmTxManager) submitFleetRenewal(ctx context.Context, planHash string, 
 		return nil, err
 	}
 	if nonce > signed.Nonce() {
-		return nil, fmt.Errorf("renewal nonce %d was consumed by another finalized transaction", signed.Nonce())
+		if _, err := readExactEvmReceipt(ctx, m.client, signed.Hash(), true, defaultFinalSemanticRPCRetryPolicy()); err != nil {
+			return nil, err
+		}
+		return signed, nil
 	}
 	if err := m.client.SendTransaction(ctx, signed); !knownEVMTxError(err) {
+		if ctx.Err() == nil && evmReadRpcErrorIsTransient(err) {
+			fmt.Fprintf(os.Stderr, "sim-testnet: renewal submission response is uncertain; reconciling retained exact transaction %s: %v\n", signed.Hash(), err)
+			return signed, nil
+		}
 		return nil, fmt.Errorf("submit exact renewal %s: %w", signed.Hash(), err)
 	}
 	return signed, nil
@@ -199,10 +214,7 @@ func (e *Executor) finishFleetRenewalPipelineAction(ctx context.Context, action 
 func (e *Executor) executeFleetRenewalPipeline(ctx context.Context, actions []Action) error {
 	for offset := 0; offset < len(actions); {
 		operation := actions[offset].Parameters["operation"]
-		end := offset
-		for end < len(actions) && end-offset < int(fleetRenewalMaximumInFlight) && actions[end].Parameters["operation"] == operation {
-			end++
-		}
+		end := fleetRenewalWaveEnd(actions, offset)
 		wave := actions[offset:end]
 		if operation == "commitment" {
 			jobs := make([]func(context.Context) error, 0, len(wave))

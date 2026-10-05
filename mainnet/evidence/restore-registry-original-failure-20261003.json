@@ -1,0 +1,57 @@
+{
+  "connect_commit": "332b1f438a62edddb4747119fbcc1fed8047ecbc",
+  "connect_tree": "7b58d775421439ccfa8e168f16d370ea8c5022fc",
+  "diagnosis": "Actual generation-lineage rejection exits nonzero with no output. Frozen test expects a diagnostic containing rebind; assertion text at line205 misclassifies refusal as admission. Separate test-only correction required.",
+  "files": {
+    "evidence/module-graph.jsonl": "371fb02fd4119970dec36035c358e556710566a9e59e156c459de045f3593edc",
+    "evidence/module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/normal.jsonl": "0088c7472d48460c9255f83b9f31d34ad3f441618832ab9d7ecb2e11c3e98d31",
+    "evidence/normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/race.jsonl": "dea4b2a7b84b7cd6cfd91ffb767708ff706c47c7145c701e2a5e5cc111dc93f0",
+    "evidence/race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/source-fence.json": "2ade04983fe4e462d59665a9d05f7c788c2051498ddac39f507798a21c5a7431",
+    "evidence/vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": [
+    "No production change or broad registry completion claim."
+  ],
+  "outcomes": {
+    "normal": {
+      "assertions": [
+        "bootstrap_successor_registry_rebind_test.go:205: invalid independent registry approval was admitted generation 1 successor execution custody unresolved; retain original and nonce registry files: successor registry approval differs from exact restored lineage"
+      ],
+      "exit": 1,
+      "failed": [
+        "TestBootstrapSuccessorRegistryRebindPublicResumeKeepsOriginalAuthority"
+      ],
+      "passed": [
+        "TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains",
+        "TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend",
+        "TestBootstrapSuccessorExecutionFencesRegistryReplacement"
+      ]
+    },
+    "race": {
+      "assertions": [
+        "bootstrap_successor_registry_rebind_test.go:205: invalid independent registry approval was admitted generation 1 successor execution custody unresolved; retain original and nonce registry files: successor registry approval differs from exact restored lineage"
+      ],
+      "exit": 1,
+      "failed": [
+        "TestBootstrapSuccessorRegistryRebindPublicResumeKeepsOriginalAuthority"
+      ],
+      "passed": [
+        "TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains",
+        "TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend",
+        "TestBootstrapSuccessorExecutionFencesRegistryReplacement"
+      ]
+    }
+  },
+  "schema": "sol-registry-94e-original-failed-v1",
+  "sn_commit": "94e087da4448a32c600e4d98837c0db13400916f",
+  "sn_tree": "050df94a9bd4bb221a262e7623b4bbe4fd5bf4f5",
+  "status": "SCOPED_FAILURE_RETAINED",
+  "vet_exit": 0
+}

@@ -1,0 +1,321 @@
+{
+  "actual_changed_git_blobs_and_modes_verified": [
+    {
+      "git_blob": "551253ed9854d1e08c4b12137d6ea0fb5aab2ae4",
+      "mode": "100644",
+      "path": "mainnet/durable_volume_owner.go"
+    },
+    {
+      "git_blob": "f840165f44feb854aa4a1b7d71a41cd9aacbc399",
+      "mode": "100644",
+      "path": "mainnet/main.go"
+    },
+    {
+      "git_blob": "76803ca5db123ebf986e8129920b140d44aa4fa0",
+      "mode": "100644",
+      "path": "mainnet/monitor_economic_evm.go"
+    },
+    {
+      "git_blob": "b7d3467a95bb478ceae9cc593640c6f985b10317",
+      "mode": "100644",
+      "path": "mainnet/monitor_economic_evm_archive.go"
+    },
+    {
+      "git_blob": "c8e5b0d38eb93410472f9f6b39a366835b9c646a",
+      "mode": "100644",
+      "path": "mainnet/monitor_economic_evm_archive_command.go"
+    },
+    {
+      "git_blob": "25c958211cb2aa3944dede849e499f9de351468f",
+      "mode": "100644",
+      "path": "mainnet/monitor_economic_evm_archive_review_test.go"
+    },
+    {
+      "git_blob": "f43804cb3714d92205ef57a14cf2c6f28536d6ee",
+      "mode": "100644",
+      "path": "mainnet/monitor_economic_evm_archive_test.go"
+    },
+    {
+      "git_blob": "91553f2d67bfe98daf1bb5f49f29a2865e340f68",
+      "mode": "100644",
+      "path": "mainnet/monitor_economic_evm_catalog.go"
+    },
+    {
+      "git_blob": "ba2e18f9b9d3a43fa4c3edec3082e7960b423f39",
+      "mode": "100644",
+      "path": "mainnet/monitor_economic_evm_catalog_test.go"
+    },
+    {
+      "git_blob": "67160080a8af3502542361d90dcf56a8b2ab9e95",
+      "mode": "100644",
+      "path": "mainnet/monitor_economic_evm_ledger.go"
+    },
+    {
+      "git_blob": "7d7ed39cce1d38c3d5eab1dab91a9a90c8e39a8f",
+      "mode": "100644",
+      "path": "mainnet/monitor_economic_evm_worker.go"
+    }
+  ],
+  "artifact_bindings_verified": 42,
+  "behavior_pending": {
+    "controls": [
+      "retained-archive-custody-omitted",
+      "retained-fee-prefix-omitted",
+      "archive-before-compact-publication-omitted",
+      "legacy-review-origin-discarded",
+      "retained-observation-census-omitted"
+    ],
+    "neighbors": [
+      "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment",
+      "TestMonitorEconomicEvmPublicLostCheckpointAckDoesNotRepeatPayment",
+      "TestMonitorEconomicEvmPublicPartialReceiptOutageKeepsOriginalCursor",
+      "TestMonitorEconomicEvmPublicReviewedResourceGrowthKeepsOriginalHistory",
+      "TestMonitorEconomicEvmLegacyCheckpointKeepsOriginalReviewProvenance",
+      "TestMonitorEconomicEvmResourceShrinkAndContractReplacementRefuseRetainedCheckpoint",
+      "TestMonitorNativeArchivePublicRolloverContinuesOriginalPendingRange",
+      "TestMonitorNativeCatalogPublicSignedGrowthKeepsOriginalPendingRange"
+    ],
+    "new_roots": [
+      "TestMonitorEvmArchivePublicRolloverContinuesCreditCarryAndCosts",
+      "TestMonitorEvmArchivePublicLostAcknowledgmentsReuseExactHeads",
+      "TestMonitorEvmArchivePublicRefusesActiveAndUnreviewedOwners",
+      "TestMonitorEvmArchiveMissingRetainedSegmentStopsOnlyAffectedRole",
+      "TestMonitorEvmArchiveUnchangedChecksDoNotRereadPayload",
+      "TestMonitorEvmArchivePublicRefusesOmittedAndForgedPrefix",
+      "TestMonitorEvmArchiveForecastRefusesBeforePublication",
+      "TestMonitorEvmCatalogPublicSignedGrowthKeepsOriginalPendingRange",
+      "TestMonitorEvmCatalogPublicLostAcknowledgmentReusesExactApproval",
+      "TestMonitorEvmCatalogPublicRefusesForeignAndRewrittenAuthority",
+      "TestMonitorEvmCatalogPublicRefusesLegacyEnrollmentAndPolicySwap",
+      "TestMonitorEvmCatalogPublicBoundsAllForecastDimensions",
+      "TestMonitorEvmCatalogPublicRefusesActiveOwnerAndCanceledImport",
+      "TestMonitorEvmCatalogSignedPrefixSurvivesLaterCapacityAndRefusesDrop",
+      "TestMonitorEvmCatalogLegacyCheckpointCannotEnrollAuthority",
+      "TestMonitorEvmCatalogRequiresBothPhysicalForecastReserves",
+      "TestMonitorEvmCatalogPublicImportsCompleteBoundedApprovalFrame",
+      "TestMonitorEvmArchiveRetainsResourceReviewsAcrossLargerReadBudget",
+      "TestMonitorEvmArchiveImportsLegacyLatestReviewUsingOriginalChecksum"
+    ]
+  },
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-caller/evidence/peer-graph.json": {
+      "bytes": 2987,
+      "sha256": "67a567368a074ac5003d4986563a4ceffd7c96515a4b582f83715d990d1829a0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/compile-receipt.json": {
+      "bytes": 2615,
+      "sha256": "70dabfa7c9481d0a5d2345dbebaf5efa3e7728f0f923aadd8983a2a5139b5ad3"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/archive-before-compact-publication-omitted/monitor_economic_evm_archive_command.go": {
+      "bytes": 13042,
+      "sha256": "cc7e34a5121aba1b0463c1021ad76cf092be8953e572960e34c2f93efeab8c8c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/archive-before-compact-publication-omitted/overlay.json": {
+      "bytes": 330,
+      "sha256": "2a483e4971752ccbb44ee8b5d21a1f4db613a19aef0eb6c55abc356ddc23a6ce"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/legacy-review-origin-discarded/monitor_economic_evm_archive.go": {
+      "bytes": 10778,
+      "sha256": "e61e2715a0c407238641ef6c2ca1beec1290ff4fb458226b06566fe85681beb4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/legacy-review-origin-discarded/overlay.json": {
+      "bytes": 302,
+      "sha256": "8e95286f4316e9c9c537dd38daf70ac16e0921b26715db87e709e16dfad0a1e2"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/retained-archive-custody-omitted/monitor_economic_evm_archive.go": {
+      "bytes": 10630,
+      "sha256": "b9ea455bab9e26e78fad6fc19cea56e81091b0b42decf7c3a8b927287b688d27"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/retained-archive-custody-omitted/overlay.json": {
+      "bytes": 304,
+      "sha256": "46b34db2e5dcc393bda0661ab91f5f85dfb030080b06f356e84d0bb17593b96a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/retained-fee-prefix-omitted/monitor_economic_evm_archive.go": {
+      "bytes": 10736,
+      "sha256": "297ab6ecdbdcbcc84b5864ddf8c4a9a2abd48b700ede0191959ca73480ab6573"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/retained-fee-prefix-omitted/overlay.json": {
+      "bytes": 299,
+      "sha256": "17815c1c758db7f8ecebbdf323315691aa8cc113f3dd2ed6db526e38ee088e39"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/retained-observation-census-omitted/monitor_economic_evm_ledger.go": {
+      "bytes": 20851,
+      "sha256": "9e1b24062e5de0980e2d890d45147c3d29e915d1688f433bd41ebca6d88ad9b0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/controls/retained-observation-census-omitted/overlay.json": {
+      "bytes": 305,
+      "sha256": "632f33462a47d9ccdbea6c0086469a999e7e41f26b6c7fba502006591ab5b115"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/source-readback.json": {
+      "bytes": 6779052,
+      "sha256": "7cb56abf06dacfca29d059172b14b07d48f71ba7909ae754a75a224f078819e1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/compile-admission.json": {
+      "bytes": 67,
+      "sha256": "55c3242472760cdac9f8a848f27bacbf6fe97894f1460d6dcf02afcdfb3b47ad"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/compile.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/compile.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/compile.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/mainnet.test": {
+      "bytes": 74488904,
+      "sha256": "4bc83e3f110fa959c36d2a2aa73f24cdf8f3f52fc06d3952414fa23af6af180d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/modules-admission.json": {
+      "bytes": 67,
+      "sha256": "2c45f05a41952d39fcc9abb3ad0c4ac8a470d9ed16dbdb08d18b05493486bd3d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/modules.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/modules.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/modules.stdout": {
+      "bytes": 173992,
+      "sha256": "ca5b57a15e603d365c2bd18a46f1f313ac08f365482142d57405f0230eccd8ba"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/recipe.json": {
+      "bytes": 890,
+      "sha256": "54a6b03366525c2dcc02eb65b23b5c8b42fa5affc5ebfd727fba41397b776b9c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/preflight/run.py": {
+      "bytes": 748,
+      "sha256": "4abb1918494dc62590e6462b9c22d39063c74d78b40ac7728786f27122a59dfb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/go.mod": {
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/go.sum": {
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/durable_volume_owner.go": {
+      "bytes": 16672,
+      "sha256": "ae9d14c677e8fb3a99271133626e6ed2df61b824c39eca9a3b264bb99d3d3792"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/main.go": {
+      "bytes": 24029,
+      "sha256": "a4f5fe41569db10676e53490cd49cdfcb31bc51fcb040791e1d0a24f99ae0948"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_evm.go": {
+      "bytes": 8182,
+      "sha256": "f461bbc0defc07a65c646401e022728eb218463ce72ac0124dc7ff7091793eba"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_evm_archive.go": {
+      "bytes": 10729,
+      "sha256": "9879688623951c0f9d061ebab859c87d40fea84eceb26055256f14d3a8034cae"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_evm_archive_command.go": {
+      "bytes": 13277,
+      "sha256": "bc46e90986d481f5682833445cd0e660baaea8d6593ab742ebddf55367484afa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_evm_archive_review_test.go": {
+      "bytes": 3648,
+      "sha256": "cd01af7e042e86500508c8576f7215df446bc9530cb978cbb9ceb3e20d31d5b7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_evm_archive_test.go": {
+      "bytes": 19207,
+      "sha256": "e00707f080fc59df9fa57bf09910d6c77481682ae7c4bdad7efcf2f9eb2faa10"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_evm_catalog.go": {
+      "bytes": 17172,
+      "sha256": "5071f7d3f27b2f4a25484bc0146eb1b911cb0b39fd56a71e994b7107e344e39f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_evm_catalog_test.go": {
+      "bytes": 21577,
+      "sha256": "1b88c1df7577773f2d31813ceae871a3914aad0f984ed71701597b030f8c9557"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_evm_ledger.go": {
+      "bytes": 21064,
+      "sha256": "0518f01e24633ce06f1a91952d609e0861bf9c8ec5affb05d1892e9986084da0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_evm_worker.go": {
+      "bytes": 21469,
+      "sha256": "24fd75a3dcd3094e0f8deb94fac90a9639bb9482ad8bcf784c3796921b875b53"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_native_archive.go": {
+      "bytes": 7832,
+      "sha256": "dae8c86f46cbbc6a0f484af5e66bcebe8672f4dd0d42043e07181ee45197885e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_native_archive_command.go": {
+      "bytes": 15652,
+      "sha256": "ec27cdb9e6b81144633e86f393f46c0fba209328e9decfa5e219a5de03d604bb"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_native_catalog.go": {
+      "bytes": 16977,
+      "sha256": "40a1f73880788c72acf310e04b131bf1f48e94b161d9820e10cba0987b64eff0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_history_archive.go": {
+      "bytes": 4465,
+      "sha256": "04d1cae5d3a54dc6a965c33dfbe6fcfda9d302c2dc7bd437e7d9220d94629d9d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_history_catalog.go": {
+      "bytes": 10020,
+      "sha256": "7229d167f1b26f35fa0754c3f8a53da6802a56f85f3c44e116b38c0ad492a2a9"
+    }
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/evidence/intake.json",
+    "sha256": "5183aecfdc1e12cfd1c773fc64efdb39e00d2ca2d389f4faf3986e71b79e3c54"
+  },
+  "limits": [
+    "Only eleven changed source blobs/modes independently checked here; entire20503-source census is author inventory, not root qualification.",
+    "Compile-only and source review do not establish any root passed.",
+    "No actual-chain native fee, complete entitlement, finality, deployment, Claim adapter or full-union cross-root restore authority."
+  ],
+  "module_and_compile_exits": 0,
+  "reviewed_semantics": [
+    "Publish authenticated original archive before compact head; lost acknowledgments accept only exact original or planned next bytes.",
+    "Authenticate every original predecessor, signed catalog and resource-review prefix; retain snapshot, event/fee census and receipt-derived fee total.",
+    "Keep held shared readers and check named custody without payload rereads during subsequent samples.",
+    "Forecast segment/catalog/head/owner/disk/inode limits before publication with explicit two-times physical reserve."
+  ],
+  "shared_exact_component_bindings": [
+    {
+      "bytes": 4465,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_history_archive.go",
+      "sha256": "04d1cae5d3a54dc6a965c33dfbe6fcfda9d302c2dc7bd437e7d9220d94629d9d"
+    },
+    {
+      "bytes": 10020,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_history_catalog.go",
+      "sha256": "7229d167f1b26f35fa0754c3f8a53da6802a56f85f3c44e116b38c0ad492a2a9"
+    },
+    {
+      "bytes": 7832,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_native_archive.go",
+      "sha256": "dae8c86f46cbbc6a0f484af5e66bcebe8672f4dd0d42043e07181ee45197885e"
+    },
+    {
+      "bytes": 15652,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_native_archive_command.go",
+      "sha256": "ec27cdb9e6b81144633e86f393f46c0fba209328e9decfa5e219a5de03d604bb"
+    },
+    {
+      "bytes": 16977,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn/mainnet/monitor_economic_native_catalog.go",
+      "sha256": "40a1f73880788c72acf310e04b131bf1f48e94b161d9820e10cba0987b64eff0"
+    }
+  ],
+  "source": {
+    "composition": "currentmain3dc + qualified shared/native catalog1b5; both public dispatch and validator-capacity-preview retained",
+    "head": "8d9904a5c8803c5d05b449e3db8031a3573b09b2",
+    "parent": "051bad022ea73ef6db701a1184d29ea12625aab6",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-evm-history/sn",
+    "tree": "cabda01ae3fb781ca3d1b98bafafdd73c868a281"
+  },
+  "status": "ROOT_VERIFIED_SELECTED_SOURCE_AND_COMPILE_ONLY_NOT_BEHAVIOR"
+}

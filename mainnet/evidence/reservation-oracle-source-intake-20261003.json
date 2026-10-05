@@ -1,0 +1,97 @@
+{
+  "causal": [
+    {
+      "expected_failed_roots": 2,
+      "intended_assertions": [
+        "public dispute reservation was not observed before settlement",
+        "mixed reservation oracle did not observe both owners"
+      ],
+      "kind": "exact3f32 test-state reader body, not a production causal failure",
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "original-legacy-only-oracle",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-reservation-oracles/evidence/old-oracle/overlay.json",
+      "package": "./model",
+      "selector": "^(TestForceCloseDisputeSettlementFailureRollsBack|TestPublicDisputeAndLegacyPeerKeepSeparateReservations)$"
+    }
+  ],
+  "intake_path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-reservation-oracles/evidence/intake.json",
+  "intake_sha256": "6872cca5b6c8e047d16e7438c48607d60179ec8a37f54474e9cdbfa5991f2b99",
+  "limits": [
+    "No behavioral pass or final release claim; original full model now reports nine failures while frozen intake retained earlier seven.",
+    "Old-oracle causal is a test-oracle discriminator, not evidence of a production fix."
+  ],
+  "policy_provenance": {
+    "accepted_approximation": "FP2FIX5516 onward explicitly accepts approximate admission at crash/reconciliation edges. docs/operator/contract-admission.md explicitly accepts cache loss and still-open contracts older than24h as temporary over-admission. Durable usage, settlement debit and provider payout remain authoritative.",
+    "admission_document_commit": "75b4097346688f5ee21a853bb6c62077a966fbe9",
+    "fp2fix_head": "febd7ab852f773016621fd8f2eff891db95fbf4d",
+    "legacy_mirror": "SQL revision-fenced mirror retains separate bounded90d horizon. Explicit reconciliation may repair it while preserving Redis request amount/lease.",
+    "public_lease": "24h from first request acceptance,25h idle cache; existing-token reconciliation preserves exact expiry. Does not prove zero over-admission after cache loss/expiry.",
+    "recovery": "ReconcileNetEscrow worker runs every5min after completion with30min task max. bringyourctl reconcile_net_escrow [--network_id=...] [--dry-run] applies by default, context.Background has no explicit finite whole-operation budget. No --apply flag."
+  },
+  "root_verification": {
+    "all_changed_git_blobs_matched": true,
+    "clean_head_and_tree_matched": true,
+    "exact_four_test_only_delta": [
+      "model/subscription_force_close_dispute_test.go",
+      "model/subscription_model_test.go",
+      "model/subscription_reservation_domains_test.go",
+      "model/subscription_settlement_amplification_test.go"
+    ],
+    "file_bindings_rehashed": 34
+  },
+  "schema": "root-reservation-oracle-source-intake-v1",
+  "scope": [
+    {
+      "expected": 5,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./model",
+      "roots": [
+        "TestForceCloseDisputeSettlementFailureRollsBack",
+        "TestReconcileNetEscrowCorrectsDrift",
+        "TestNetEscrowLongLivedBalanceTtlIsCapped",
+        "TestPublicDisputeAndLegacyPeerKeepSeparateReservations",
+        "TestPublicRedisLongLivedGrantRetainsOriginalRequestLease"
+      ],
+      "selector": "^(TestForceCloseDisputeSettlementFailureRollsBack|TestReconcileNetEscrowCorrectsDrift|TestNetEscrowLongLivedBalanceTtlIsCapped|TestPublicDisputeAndLegacyPeerKeepSeparateReservations|TestPublicRedisLongLivedGrantRetainsOriginalRequestLease)$"
+    },
+    {
+      "expected": 14,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./model",
+      "roots": [
+        "TestForceCloseCheckpointDisputeConvergesInOneSweep",
+        "TestForceCloseHealthyFinalizationSkipsDisputeSettlement",
+        "TestForceCloseDisputeCancellationPreservesReservation",
+        "TestForceCloseAccountingRejectionReportsVerifiedProgress",
+        "TestForceCloseAccountingNewDisputeRequiresFirstPassVerification",
+        "TestNetEscrowKeyFormatAndTtl",
+        "TestRedisExpiredBalanceKnownContractRecoveryAndRelease",
+        "TestRedisAdmissionOlderRecoveryPreservesYoungerLease",
+        "TestEscrowSettlementLegacyRowsUseOneStatement",
+        "TestEscrowSettlementEmptyBatchHasNoStatement",
+        "TestEscrowSettlementLegacyRowsPreserveAccounting",
+        "TestEscrowSettlementZeroUseOmitsEmptyPosts",
+        "TestEscrowSettlementLegacyRejectionKeepsReservation",
+        "TestEscrowSettlementZeroQuarantinePreservesUnrelatedMirror"
+      ],
+      "selector": "^(TestForceCloseCheckpointDisputeConvergesInOneSweep|TestForceCloseHealthyFinalizationSkipsDisputeSettlement|TestForceCloseDisputeCancellationPreservesReservation|TestForceCloseAccountingRejectionReportsVerifiedProgress|TestForceCloseAccountingNewDisputeRequiresFirstPassVerification|TestNetEscrowKeyFormatAndTtl|TestRedisExpiredBalanceKnownContractRecoveryAndRelease|TestRedisAdmissionOlderRecoveryPreservesYoungerLease|TestEscrowSettlementLegacyRowsUseOneStatement|TestEscrowSettlementEmptyBatchHasNoStatement|TestEscrowSettlementLegacyRowsPreserveAccounting|TestEscrowSettlementZeroUseOmitsEmptyPosts|TestEscrowSettlementLegacyRejectionKeepsReservation|TestEscrowSettlementZeroQuarantinePreservesUnrelatedMirror)$"
+    }
+  ],
+  "source": {
+    "base": "4aaf440289bfeb81eb93e86ee967607892148ab2",
+    "head": "1d3c275b698d58c528ff87ac24903e9da1b433ea",
+    "original_full_model_source": "3f32d7301c9e381eac4de368c62357c14dfc36a7",
+    "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-reservation-oracles/server",
+    "tree": "dd7e7c876d678a96c913ecdfd37e122fac17250e"
+  },
+  "status": "TEST_ONLY_SOURCE_VERIFIED_BEHAVIOR_PENDING"
+}

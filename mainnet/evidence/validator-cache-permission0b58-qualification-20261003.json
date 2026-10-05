@@ -1,0 +1,110 @@
+{
+  "artifact_bindings_verified": 21,
+  "artifact_sha256": {
+    "ancestry-preflight-normal.txt": "e85b5146628d1454f46ea570d1f3bd129c110a9377fc9a56065c5202a839ab48",
+    "ancestry-preflight-race.txt": "e85b5146628d1454f46ea570d1f3bd129c110a9377fc9a56065c5202a839ab48",
+    "ancestry-preflight-vet.txt": "e85b5146628d1454f46ea570d1f3bd129c110a9377fc9a56065c5202a839ab48",
+    "modules.jsonl": "a59fe782b3ef475ed0428d586e83bf60835092f5e4871860edfcb7c5ab8fa4cb",
+    "permission3-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "permission3-normal.jsonl": "ec77301faac2571811b616ea84028c4febb7a12efcd3c3d0324ae0875a5b8df9",
+    "permission3-normal.phase": "ddc9dd5e49441c2cad80cf651bcb1677b2ef91c6aa5934ab707b67a573f0a6db",
+    "permission3-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "permission3-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "permission3-race.jsonl": "a58b8ab2911baf5028a9994e1c8bb8ec1fd702fac3cc4cd56decf74c47984a8f",
+    "permission3-race.phase": "8a776d81c609f2cb4346ce23e7b9c2fad3f7c8e789f3bfa749e754b98691764e",
+    "permission3-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "permission3-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "permission3-vet.phase": "74f5d674c67594260e7f536a16e2e8013fee0591336ed992742e8b1f1e5b9121",
+    "permission3-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "permission3-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "root-preflight-normal.json": "941d9b289b594ec005448dd7057d3eabd8f2027e6fcac690cb06c2a202211670",
+    "root-preflight-race.json": "941d9b289b594ec005448dd7057d3eabd8f2027e6fcac690cb06c2a202211670",
+    "root-preflight-vet.json": "941d9b289b594ec005448dd7057d3eabd8f2027e6fcac690cb06c2a202211670",
+    "run-permission.sh": "8d8bcdeafeb8fd5bc6d1b9ff1f3429adfcdd354b4fd7ad2824f4736471b792d3",
+    "source-readback.json": "df5e3b79efddb3719fe41b66dedbd760e734460fc6595798c94c549265b2128a"
+  },
+  "git_delta": [
+    "validator/production_receipt_checkpoint_test.go"
+  ],
+  "joined_qualification": "38 exact unchanged roots passed normally/race on556; all3 same-file affected roots passed normally/race on0b58. No single-invocation41 claim.",
+  "limits": [
+    "Test-only permission fault correction, no production or module change",
+    "Original normal/race40PASS1fixtureFAIL preserved",
+    "Full-lineage archive/predecessor work-count probe remains"
+  ],
+  "only_changed_function": "TestProductionReceiptCheckpointRejectsForgedCoverageAndCustody",
+  "physical_source_git_blobs_modes_verified": 20461,
+  "raw_affected_root_outcomes": {
+    "normal": {
+      "TestProductionReceiptCheckpointBindsScannerInputAndContinuity": "pass",
+      "TestProductionReceiptCheckpointMissesAreDisposable": "pass",
+      "TestProductionReceiptCheckpointRejectsForgedCoverageAndCustody": "pass"
+    },
+    "race": {
+      "TestProductionReceiptCheckpointBindsScannerInputAndContinuity": "pass",
+      "TestProductionReceiptCheckpointMissesAreDisposable": "pass",
+      "TestProductionReceiptCheckpointRejectsForgedCoverageAndCustody": "pass"
+    }
+  },
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-validator-cache-permission-0b58-independent-20261003/evidence/cache-permission-0b58-affected3-receipt.json",
+    "sha256": "5ab5c7a1da1c201f832ec066ea009969cbee846ddfa530dd425c5ca64dd21d2a"
+  },
+  "retained_original_unchanged_roots": {
+    "TestAttemptAssignmentReuseAuthenticatesChangedValidMessage": "pass",
+    "TestAttemptAssignmentReuseBypassesOtherMessageShapes": "pass",
+    "TestAttemptAssignmentReuseCapacityEvictsAndReverifies": "pass",
+    "TestAttemptAssignmentReuseDoesNotCacheFailure": "pass",
+    "TestAttemptAssignmentReuseOwnsExactTupleBytes": "pass",
+    "TestAttemptBoundaryCacheCoalescesFirstHopSnapshotAndRefresh": "pass",
+    "TestAttemptBoundaryCacheDefaultDelayAvoidsPerBlockUIDScans": "pass",
+    "TestAttemptBoundaryCacheFailedOwnedPreparationRetries": "pass",
+    "TestAttemptBoundaryCacheInvalidationDuringOwnedCensus": "pass",
+    "TestAttemptBoundaryCacheInvalidationDuringSnapshotDiscardsStaleResult": "pass",
+    "TestAttemptBoundaryCacheLifecycleShutdownCancelsAndJoinsPreparation": "pass",
+    "TestAttemptBoundaryCacheRetainsStaleBindingWithoutHeadUID": "pass",
+    "TestAttemptBoundaryCacheScansUIDsAndBindingsOncePerBlock": "pass",
+    "TestAttemptBoundaryCacheSettlementInvalidationRefreshesImmediately": "pass",
+    "TestAttemptBoundaryCacheWaiterDeadlinePreservesSharedPreparation": "pass",
+    "TestAttemptCutAssignmentVerificationIsCutLocal": "pass",
+    "TestAttemptCutAssignmentVerificationRechecksServerKeys": "pass",
+    "TestAttemptCutValidatorOnlyRetainsKeyMode": "pass",
+    "TestAttemptCutVerifiesEachAssignmentOnce": "pass",
+    "TestAttemptSettlementClosureFullVerificationRejectsServerForgery": "pass",
+    "TestAttemptSettlementClosureFullVerificationRetainsRejections": "pass",
+    "TestAttemptSettlementClosureVerifiesEachCutOnce": "pass",
+    "TestReleaseClientKeyAuthorityV2ActualHeadDeduplicatesItsProviderCensus": "pass",
+    "TestReleaseClientKeyAuthorityV2CacheHitDoesNotAuthenticateForgedClient": "pass",
+    "TestReleaseClientKeyAuthorityV2CancelledWaiterDoesNotCancelLeader": "pass",
+    "TestReleaseClientKeyAuthorityV2CapturedIntentUsesScopedIndependentReads": "pass",
+    "TestReleaseClientKeyAuthorityV2ConcurrentReadersShareOneActualRequestSet": "pass",
+    "TestReleaseClientKeyAuthorityV2EntryBudgetRefusesNewBoundaryBeforeIo": "pass",
+    "TestReleaseClientKeyAuthorityV2FailedReadCannotPoisonRetry": "pass",
+    "TestReleaseClientKeyAuthorityV2FinalWitnessRejectsChangedCanonicalBoundary": "pass",
+    "TestReleaseClientKeyAuthorityV2KeepsOperatorAndBoundaryDomainsSeparate": "pass",
+    "TestReleaseClientKeyAuthorityV2NewRuntimeAndUnownedCallsReadFreshSources": "pass",
+    "TestReleaseClientKeyAuthorityV2OwnerCancellationJoinsRealTransport": "pass",
+    "TestReleaseClientKeyAuthorityV2RejectsChangedDomainDecisionAndTransport": "pass",
+    "TestReleaseClientKeyAuthorityV2RejectsUnavailableNativeIdentityAtBothBoundaries": "pass",
+    "TestReleaseClientKeyAuthorityV2RetainedRecoveryReusesOnlyExactCapturedBytes": "pass",
+    "TestReleaseClientKeyAuthorityV2SharesExactBoundaryWithIndependentSignatures": "pass",
+    "TestReleaseClientKeyAuthorityV2UsesOneResponseAndEntryControlBudget": "pass"
+  },
+  "source": {
+    "commit": "0b58ad52cb243c38257a8fc1e97faa13754ac26f",
+    "peer_symlinks": {
+      "glog": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "goidenticons": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "gvisor": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+      "proxy": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "server": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server",
+      "userwireguard": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "warp": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp"
+    },
+    "tracked_count": 20461,
+    "tracked_entries_sha256": "25651ac6638ebe351d8e96654ce8c70807ad7aaeb2666f4c48a27a68d969c26d",
+    "tree": "b85ff1932d35fcef5b93b43d943fa494126b5c9b"
+  },
+  "status": "ROOT_VERIFIED_SCOPED_CORRECTION",
+  "validator_vet_exit": 0
+}

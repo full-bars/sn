@@ -1,0 +1,57 @@
+{
+  "changed_files": [
+    "mainnet/bootstrap_successor_execution_census_fixture_test.go",
+    "mainnet/bootstrap_successor_execution_command_test.go"
+  ],
+  "limits": [
+    "Only the affected public execution root was rerun; the nine unchanged passing 5f roots are not claimed on this test-only successor.",
+    "No live signing, submission, deployment or release authority."
+  ],
+  "manifest_sha256": "ed4aec817950256b4fae2f890a004cb67a5f54ed50dbc5434ebc47b8eac1af12",
+  "normal": {
+    "package": [
+      "pass",
+      84.766
+    ],
+    "started": [
+      "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody"
+    ],
+    "terminal": {
+      "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody": [
+        "pass",
+        84.73
+      ]
+    },
+    "unresolved": []
+  },
+  "parent": "5f1fe123474e6464e8cb30c17577de577517367b",
+  "prior_failed_scope_receipt_sha256": "adc3e158a841e05bb6a80929127f41e73c46d9fab64d471e45af33baf9e312b8",
+  "production_and_module_bytes_equal_parent": true,
+  "race": {
+    "package": [
+      "pass",
+      385.38
+    ],
+    "started": [
+      "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody"
+    ],
+    "terminal": {
+      "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody": [
+        "pass",
+        384.2
+      ]
+    },
+    "unresolved": []
+  },
+  "schema": "sol-composition-d878-independent-v1",
+  "server": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "source": "d8788c9ed8ade71acb287ea97621a77dfe175ec8",
+  "source_readback": {
+    "initial_tracked_blobs": 20041,
+    "mismatches": 0,
+    "terminal_tracked_blobs": 20041
+  },
+  "tree": "0aa7f108213353e8beb46f65697724360df9049f",
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0
+}

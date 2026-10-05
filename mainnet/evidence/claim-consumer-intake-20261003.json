@@ -1,0 +1,277 @@
+{
+  "causal_failure_roots_per_mode": 8,
+  "commands": [
+    "normal and race: go test -modfile=\u003cown remapped sn.mod\u003e -count=1 -timeout=15m -json [-race] \u003cpackage\u003e -run \u003cselector\u003e",
+    "go vet -modfile=\u003cown remapped sn.mod\u003e ./mainnet ./miner"
+  ],
+  "commit": "80030acb1024f8a74967ae9948ceea6ed9e5faee",
+  "controls": [
+    {
+      "Name": "old-public-policy",
+      "Classification": "exact old4e loadMonitorServices operative body; current declarations retained",
+      "Overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/old-public-policy.json",
+      "Selector": "^TestMonitorClaimPublicExpectedPoolObservesAcceptedNotPaid$",
+      "ExpectedFailures": 1
+    },
+    {
+      "Name": "heartbeat-progress-omission",
+      "Classification": "explicit invariant omission, not historical source",
+      "Overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/heartbeat-progress-omission.json",
+      "Selector": "^(TestMonitorClaimHeartbeatCannotMoveAcceptanceDeadline|TestMonitorClaimWeakerReportingCannotResetProofProgress)$",
+      "ExpectedFailures": 2
+    },
+    {
+      "Name": "proof-retention-omission",
+      "Classification": "explicit invariant omission, not historical source",
+      "Overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/proof-retention-omission.json",
+      "Selector": "^TestMonitorClaimReceiptRetainsEarlierMerkleWitness$",
+      "ExpectedFailures": 1
+    },
+    {
+      "Name": "receipt-contradiction-omission",
+      "Classification": "explicit retained-evidence comparison omission, not historical source",
+      "Overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/receipt-contradiction-omission.json",
+      "Selector": "^TestMonitorClaimContradictionCannotRewriteRetainedReceipt$",
+      "ExpectedFailures": 1
+    },
+    {
+      "Name": "peer-cancellation-omission",
+      "Classification": "explicit healthy-peer isolation invariant omission",
+      "Overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/peer-cancellation-omission.json",
+      "Selector": "^(TestMonitorClaimPublicOutageAndForeignIdentityPreservePeer|TestMonitorClaimPublicCompletedCheckpointLossPreservesPeer)$",
+      "ExpectedFailures": 2
+    },
+    {
+      "Name": "uncertain-continuation-omission",
+      "Classification": "explicit continuation invariant omission via premature terminal branch",
+      "Overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/uncertain-continuation-omission.json",
+      "Selector": "^TestMonitorClaimPublicLostAckReopensExactCheckpoint$",
+      "ExpectedFailures": 1
+    }
+  ],
+  "files": [
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/go.mod",
+      "Sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503",
+      "GitBlob": "352f2c4528b01e667c05b7c9981d1e6ef3be9535",
+      "Bytes": 11211
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/go.sum",
+      "Sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545",
+      "GitBlob": "b44589456dc25004263dd976f7cc797fb7d1b1e8",
+      "Bytes": 65343
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_claim.go",
+      "Sha256": "f5a357882df14b81f0f509c4d2877497011a4f3cacb300fc57591f4145c9fb34",
+      "GitBlob": "6197386d2e911bd6564e94b59299a399ce8e0817",
+      "Bytes": 6544
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_claim_composition_test.go",
+      "Sha256": "f326c25910f53a644cf6b2d48e2237abecc22a1df01475ba0bbf3715e6fc66bc",
+      "GitBlob": "ff9837a3ff3b3b003d9880aa70632ce434d6b215",
+      "Bytes": 16763
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_claim_state.go",
+      "Sha256": "aa4794819e5779583d736618d681780006e81a7cdd32207405ce66f8ef84832b",
+      "GitBlob": "4910ee08520a745d017c23640adbbf156e87f563",
+      "Bytes": 13384
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_claim_state_test.go",
+      "Sha256": "90e208b54c0658821e387cba0e8f302f3c4be6f3344a8c06733ee7ea9b048ffd",
+      "GitBlob": "c526f0651e37924697788528bd889b207e11bcf6",
+      "Bytes": 12470
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_claim_test.go",
+      "Sha256": "b66151c25fcce8ac86a3a0da13c6a92b7ade133d920ad866ba86e62f4f155595",
+      "GitBlob": "a7edaf31f52fa7029acf3cf1e27b6134e266c082",
+      "Bytes": 6048
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_claim_worker.go",
+      "Sha256": "530bb3bc4d21a66ddd89237840a138dddf9c2c14d92f158d7721e22e69a661fb",
+      "GitBlob": "05dcfc302ac0eacb3d30fee22eae766d0a522523",
+      "Bytes": 11713
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_output_fixture_test.go",
+      "Sha256": "5dcf430f76f8078ba409db3a1d74947ce70f17cef10d2857b81ba23a9d01feec",
+      "GitBlob": "865d01c2e0c4aaaea864ed130e9940de161d8df0",
+      "Bytes": 5024
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_provider_test.go",
+      "Sha256": "2764c95d553c3dc4fca38a6d3ae4293a297e99552385e09301047ec8f64e22ca",
+      "GitBlob": "00e8bb2d57337e3ced332a03a579d2ddfa8d9a9e",
+      "Bytes": 22689
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_services.go",
+      "Sha256": "480f05c344ae33bb13f9d3a314d3f362169d1cd02b6d730d2df8c022d7aae887",
+      "GitBlob": "72ae513987cec26285158dcbd0b87d1f27782500",
+      "Bytes": 14120
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_services_policy.go",
+      "Sha256": "af1557f05f35fec8e608ecc921f77dc461c0f4614a4edb0384a4d69e1e7f007f",
+      "GitBlob": "cb9b7da7abffd147756b72f999e4b6aec1ca8e7e",
+      "Bytes": 9488
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/mainnet/monitor_storage_recovery.go",
+      "Sha256": "b4a4c938d5b5d0b9d2bc934dd4417afc10eb351788b419ff9a30b813a2e490d1",
+      "GitBlob": "ce3c8e57173dd9af8b67dfe8a879e030c89fae8c",
+      "Bytes": 1592
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/miner/claim_observation.go",
+      "Sha256": "442f72420c71e3ae3dbfee239d5571b4c060c1857f9dfdade482200c4ceced15",
+      "GitBlob": "d32c0f4dbd8985fc3126ef1135c45915ff1ff27a",
+      "Bytes": 6322
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/miner/claim_progress.go",
+      "Sha256": "1352b7f1aa308e4b8f2c3ab418cfe8ed493e19e593dda9e6bd229839d426aca8",
+      "GitBlob": "9ecffc8fe3ec7b782546826247a5595dc452d2c9",
+      "Bytes": 8099
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/miner/claim_progress_custody_test.go",
+      "Sha256": "3ea4da60aef943e1019aa52b143d53b2fa401e5ec1fb7a0e023e537d1f4e5e7b",
+      "GitBlob": "80dbbcd3856f592d6de606e6794dd786864c0e53",
+      "Bytes": 12456
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/miner/claim_progress_source_test.go",
+      "Sha256": "f59228895301cbfa08012c7d910dfa3ff90e43f451983b55912db80151f6a2c1",
+      "GitBlob": "94cc418ecf00982447e5731a98e4b797b07257bf",
+      "Bytes": 10054
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/miner/claim_progress_test.go",
+      "Sha256": "9f455dd0292aefed4e59eb1b3b2aabc828406b0df0567c1d713b1c1ac902d6b4",
+      "GitBlob": "5c0866ef8b237d55fccd5a68406edc47d265afdc",
+      "Bytes": 5313
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn/protocol/claim_progress.go",
+      "Sha256": "a8c1fb000e7a043e180d7cb1cce26e85685cf124b66c2f24e4b827239ad1af9c",
+      "GitBlob": "0378dbb6275a56f815c08c23a5cf5af31eb0a7b6",
+      "Bytes": 15382
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/old-public-policy.go",
+      "Sha256": "6bb555ac9737b391d6631da58aa3a6e3218df673a74d288c2a3b8e212c010b85",
+      "GitBlob": "",
+      "Bytes": 8327
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/old-public-policy.json",
+      "Sha256": "9c980d158cddfbe512ba2b126baa6130248118cb4f81340f467aec4f9909ff39",
+      "GitBlob": "",
+      "Bytes": 266
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/heartbeat-progress-omission.go",
+      "Sha256": "b37b4198f10a7f56da4ffdbcab75090f995e5af12afb1f8629809af68fd17321",
+      "GitBlob": "",
+      "Bytes": 13378
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/heartbeat-progress-omission.json",
+      "Sha256": "cbdb91a32373792e939bdc582b94a8d27c21d0039f12aa2aab840052e3c2348f",
+      "GitBlob": "",
+      "Bytes": 272
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/proof-retention-omission.go",
+      "Sha256": "1ee1558f781fd731002b047b6c6a99b6a867426bb403ecd9a43ce5cd382ff331",
+      "GitBlob": "",
+      "Bytes": 13393
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/proof-retention-omission.json",
+      "Sha256": "13c6b3e32911deed1b02a160abfcb6dc2b44454eb79f3e2e63d485509155a692",
+      "GitBlob": "",
+      "Bytes": 269
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/receipt-contradiction-omission.go",
+      "Sha256": "492c83f124d9ff3ce732f474e18deffd84ea0fb0fcf980f6a61f9aff06d0fe6b",
+      "GitBlob": "",
+      "Bytes": 12183
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/receipt-contradiction-omission.json",
+      "Sha256": "9e533e74666543a77c9710ef8e5ecfe8b858d1379e0510894bcbb5da712013d1",
+      "GitBlob": "",
+      "Bytes": 275
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/peer-cancellation-omission.go",
+      "Sha256": "f34ab480092b4154240b38b2d27c45a62dfdff63f8523515d143bbe52fafbd43",
+      "GitBlob": "",
+      "Bytes": 14132
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/peer-cancellation-omission.json",
+      "Sha256": "4b8f5e3c0b35113a533dcef4e7ccc7a63da445794c6eb21f98f6e6b35176329e",
+      "GitBlob": "",
+      "Bytes": 268
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/uncertain-continuation-omission.go",
+      "Sha256": "01ce0bf572a1df06782ee6dc9d595025101896344002a69cd483282e00bb466d",
+      "GitBlob": "",
+      "Bytes": 11811
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/uncertain-continuation-omission.json",
+      "Sha256": "07f610de36bedf1c7b2cb1f0e0a81c5c974b477c6f8ccafdf3859c8a2fa5a029",
+      "GitBlob": "",
+      "Bytes": 277
+    }
+  ],
+  "jobs": [
+    {
+      "Name": "claims",
+      "Package": "./mainnet",
+      "Selector": "^TestMonitorClaim",
+      "ExpectedRoots": 16
+    },
+    {
+      "Name": "workers",
+      "Package": "./mainnet",
+      "Selector": "^(TestMonitorProviderPublicRolesRecoverWithoutResettingPeer|TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer)$",
+      "ExpectedRoots": 2
+    },
+    {
+      "Name": "actual-producer",
+      "Package": "./miner",
+      "Selector": "^(TestClaimProgressActualReceiptRetainsAggregatePayment|TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit|TestClaimProgressUnsignedLeafCannotInventReceiptOrPayment|TestClaimProgressPublicSwarmUsesActualWriterAndJoinedLifecycle|TestClaimProgressFailedDurableSaveCannotPublish)$",
+      "ExpectedRoots": 5
+    }
+  ],
+  "limits": [
+    "No tests executed by author; controls must compile and reach expected behavioral assertion before causal claim",
+    "16 claim roots plus two worker neighbors and five actual producer roots, not full mainnet/miner qualification",
+    "configured RPC assertions remain unverified genesis/finality; accepted credit and aggregate payment never per-epoch paid",
+    "unsigned leaf finalization and signed receipt are distinct actual producer paths; consumer evidence-strength progression is not a claim one queue emits both",
+    "no preparation/deployment/repair authority, no runtime472 authority, no economic-monitor completion"
+  ],
+  "main_base": "4e413cb019062ecabd8afd6d3f84340421bc713f",
+  "modfile": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/evidence-final/sn.mod",
+  "module_scope": "Exact unchanged tracked go.mod/go.sum from qualified producer347; same remapped Sol347 graph, server10a/Connect0a5; no current-server or published Connect9e adoption claim",
+  "paused_source": "e7965b4ccf183eef58b6108d0d61c2786f11e4bd",
+  "runner": "Sol-owned only; GOWORK=off; GOFLAGS=-mod=readonly; umask077 plus private0700 root/TMPDIR; retained shared module/build cache, no new broad cache; all new phases respect110GiB floor",
+  "schema": "urnetwork-claim-consumer-intake-v1",
+  "selected_roots": 23,
+  "source": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-consumer-integration/sn",
+  "status": "FROZEN_SOURCE_TESTS_NOT_RUN",
+  "tree": "4249ab40291e6e5c6d48cba44ae0fb3a5eb185f6"
+}

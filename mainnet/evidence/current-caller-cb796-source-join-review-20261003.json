@@ -1,0 +1,272 @@
+{
+  "artifact_bindings_verified": 27,
+  "bindings": [
+    {
+      "bytes": 11292,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/go.mod",
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "bytes": 66649,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/go.sum",
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "bytes": 2987,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-caller/evidence/peer-graph.json",
+      "sha256": "67a567368a074ac5003d4986563a4ceffd7c96515a4b582f83715d990d1829a0"
+    },
+    {
+      "bytes": 5659,
+      "component_match": true,
+      "git_blob": "9102cf5d2c6a95d7b15cc07bd9e657b8cb6cb068",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/durable_volume_unit_inspector.go",
+      "relative": "mainnet/durable_volume_unit_inspector.go",
+      "sha256": "1f1237dd2425bfc6f0d6eb8d9a6b38c294657ba6ea67bbbb8257f2c4803a11ce"
+    },
+    {
+      "bytes": 13222,
+      "component_match": true,
+      "git_blob": "98ef9a90c981846a9440d1f3079b448a9cac2fdf",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/historical_replay.go",
+      "relative": "mainnet/historical_replay.go",
+      "sha256": "c9a92078d07c6e3f38fbb6e9248bb4c979e584374a182bb20aa0e5b6719ca432"
+    },
+    {
+      "bytes": 1680,
+      "component_match": true,
+      "git_blob": "5c1aea5c8093c2600b7051c5fe0b20359c7cdf73",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/historical_replay_command.go",
+      "relative": "mainnet/historical_replay_command.go",
+      "sha256": "c33361ecfe12e95653fb1bcb99a177b85f7600fc8f1a2c20983f41d09fa5dfc4"
+    },
+    {
+      "bytes": 16401,
+      "component_match": true,
+      "git_blob": "a6dd7fe512ddbffb7eeb2b12d27dc6b178c1fd0a",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/historical_replay_observation.go",
+      "relative": "mainnet/historical_replay_observation.go",
+      "sha256": "d47f0724068cbbb7992ec939c2f21d016ee2a6bdfc92b005327827c6e9173222"
+    },
+    {
+      "bytes": 9902,
+      "component_match": true,
+      "git_blob": "28091c884dd2ecbee6f31aff94550db476c43ccd",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/historical_replay_observation_test.go",
+      "relative": "mainnet/historical_replay_observation_test.go",
+      "sha256": "b488c9421dcc021a2c32b99081a6b240c32a1c4eb8be12d674dc6a12ea790134"
+    },
+    {
+      "bytes": 2704,
+      "component_match": true,
+      "git_blob": "3cc9140f40c76d70dc4a07f08f78a982abfbfb10",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/historical_replay_supervisor.go",
+      "relative": "mainnet/historical_replay_supervisor.go",
+      "sha256": "29bbfdc9a05e39a4d547d8ed9d9d6b84181243ec124fcb43e4a60a392585c33b"
+    },
+    {
+      "bytes": 16599,
+      "component_match": true,
+      "git_blob": "cd2e99b6152ba43272aea74b57b3369e1acad038",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/historical_replay_test.go",
+      "relative": "mainnet/historical_replay_test.go",
+      "sha256": "b8b50170f019f6207c80959055e91b388af5689a68e1f591c4a1fee851d2e158"
+    },
+    {
+      "bytes": 23640,
+      "component_match": false,
+      "git_blob": "a2dc33fa91e75b101ddf6b772f00b6af197f6f5c",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/main.go",
+      "relative": "mainnet/main.go",
+      "sha256": "38b2ec49fedf641b5766da25f7a7b4450135a66106e129976cfeee3c2b0d771b"
+    },
+    {
+      "bytes": 18185,
+      "component_match": true,
+      "git_blob": "edf3c643d570d57d04d8d0cf6c87a0b1d951fd6e",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/owner_signing_device.go",
+      "relative": "mainnet/owner_signing_device.go",
+      "sha256": "3648312f32284d2fa01c452fa009e2ec5237e76d502201754aa1b621ab9e73fa"
+    },
+    {
+      "bytes": 21823,
+      "component_match": true,
+      "git_blob": "3e3901ecd23cdfb4534de225d1e57b5fafe8326e",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/repair_validator_host.go",
+      "relative": "mainnet/repair_validator_host.go",
+      "sha256": "dce533c5686ca165b68542ac07512277ed0d63c7de3d1014af7da8096501dbc7"
+    },
+    {
+      "bytes": 10998,
+      "component_match": true,
+      "git_blob": "d31677b2c185c5ec1d3e8d4b4537e2f8afc5a763",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/source_lock.go",
+      "relative": "mainnet/source_lock.go",
+      "sha256": "1bd1788ac4b20a24becf3c5f1745b11d1f67e8d19fef160a873d587ce4951605"
+    },
+    {
+      "bytes": 6509,
+      "component_match": true,
+      "git_blob": "0f83517737448ccd58951d73f3aa4bc2512d5ac9",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/mainnet/subprocess_output_test.go",
+      "relative": "mainnet/subprocess_output_test.go",
+      "sha256": "afc27342b31e30477dfccc9483f51a83155b9bfa186261a04c60252ba8816649"
+    },
+    {
+      "bytes": 118683,
+      "component_match": true,
+      "git_blob": "ae63def29a1e18534fa944321492baada3c31980",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "relative": "tools/runtime-metadata-probe/Cargo.lock",
+      "sha256": "2440fcbe35c1a6359e78c4d42e9bbfca9c81c6afceccc0e2b7c8892648bb6e82"
+    },
+    {
+      "bytes": 2242,
+      "component_match": true,
+      "git_blob": "1ce942efc9d378510cde7671fc113da2f3c018b3",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "relative": "tools/runtime-metadata-probe/Cargo.toml",
+      "sha256": "6c70b093da6045f99b5a7abac4fc70429ef61952f202dc4b32d367be5758fe7d"
+    },
+    {
+      "bytes": 6107,
+      "component_match": true,
+      "git_blob": "bbbf35171d7697ddd631cbc618d843a5065e5ebc",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "relative": "tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "sha256": "7533b688d8d4f9fe25f5a6a9a39091912216ea9e6c302e1a8c13711848a8a3b7"
+    },
+    {
+      "bytes": 1182,
+      "component_match": true,
+      "git_blob": "ff781544810d8ed9d7c3a02c90f041cd0f103bee",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+      "relative": "tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+      "sha256": "06310aec3708943ce37b097c33d2fda13f240ddcac6fb99fe1f5ad69227a7f21"
+    },
+    {
+      "bytes": 17419,
+      "component_match": true,
+      "git_blob": "73e819f48a0a818dff74c3f8f61707ffe8ae520e",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/src/historical.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical.rs",
+      "sha256": "49daff04f06f45766dff4ec4ee86ec9335f68a8c0d3b46d825652794eadd302f"
+    },
+    {
+      "bytes": 6330,
+      "component_match": true,
+      "git_blob": "6e46286459bf2b0ed44a80aec7dadb5d9bac7e35",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/src/historical_backend.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_backend.rs",
+      "sha256": "1a62ea226930f693a8c3e67a88d890df1a4d62ccf7a23dbd50cd0aa073577e4a"
+    },
+    {
+      "bytes": 20107,
+      "component_match": true,
+      "git_blob": "15185dd9ce4c9849d833f5be321938e4ec0987df",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/src/historical_fee_events.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_fee_events.rs",
+      "sha256": "beb7d149d7b2e3c1adfdb5b11c15c1003ec96e14ca20e96bba7ebbc1a14e395b"
+    },
+    {
+      "bytes": 9933,
+      "component_match": true,
+      "git_blob": "725b750193c4d0e9dc7eec52458488f53dfaf602",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "sha256": "98771e9be5adef72dc7201c861947b757397067dd0c4b6a1f84464ae1bda1ea3"
+    },
+    {
+      "bytes": 14534,
+      "component_match": true,
+      "git_blob": "3aaab0c3dbc6c85718f5759c365490c7b14bd79f",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/src/historical_observer.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_observer.rs",
+      "sha256": "80911cd4449c89ef00d30ce529c806a0310d084d8f248382106ebc7b8a5ad855"
+    },
+    {
+      "bytes": 37639,
+      "component_match": true,
+      "git_blob": "0d39fefbd2c594a9c634d9d76c0197853e7557b6",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/src/historical_tests.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_tests.rs",
+      "sha256": "6bd767f0197e2185e39229dee0d0803b6e32eea6c406ebf73a29bb2f91a83edc"
+    },
+    {
+      "bytes": 17694,
+      "component_match": true,
+      "git_blob": "c5a94fee89cdeffe163d58dac63424153e36cbee",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn/tools/runtime-metadata-probe/src/lib.rs",
+      "relative": "tools/runtime-metadata-probe/src/lib.rs",
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39"
+    },
+    {
+      "bytes": 6779170,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/evidence/source-readback.json",
+      "sha256": "d04e18abbf78d7cc3976fac93dcfb8134f671871ef10a7d38a9193d6fbf8d7f9"
+    }
+  ],
+  "changed_paths": [
+    "mainnet/durable_volume_unit_inspector.go",
+    "mainnet/historical_replay.go",
+    "mainnet/historical_replay_command.go",
+    "mainnet/historical_replay_observation.go",
+    "mainnet/historical_replay_observation_test.go",
+    "mainnet/historical_replay_supervisor.go",
+    "mainnet/historical_replay_test.go",
+    "mainnet/main.go",
+    "mainnet/owner_signing_device.go",
+    "mainnet/repair_validator_host.go",
+    "mainnet/source_lock.go",
+    "mainnet/subprocess_output_test.go",
+    "tools/runtime-metadata-probe/Cargo.lock",
+    "tools/runtime-metadata-probe/Cargo.toml",
+    "tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+    "tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+    "tools/runtime-metadata-probe/src/historical.rs",
+    "tools/runtime-metadata-probe/src/historical_backend.rs",
+    "tools/runtime-metadata-probe/src/historical_fee_events.rs",
+    "tools/runtime-metadata-probe/src/historical_hosts.rs",
+    "tools/runtime-metadata-probe/src/historical_observer.rs",
+    "tools/runtime-metadata-probe/src/historical_tests.rs",
+    "tools/runtime-metadata-probe/src/lib.rs"
+  ],
+  "current_556_modules_0b58_fixture_and_existing_docs_preserved": true,
+  "exact_component_files": 22,
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/evidence/intake.json",
+    "sha256": "3a5939ebdd03d55dc513ac184f64b9fb4284685805f7d928a63b88fbfc01300f"
+  },
+  "limits": [
+    "Current source compatibility qualification pending",
+    "Suggested12 selection contains root-only inspector; regular run must retain its SKIP and qualify that root separately",
+    "Host9cf increment not part of this candidate",
+    "No inherited component test PASS, actual runtime fee authority, deployment or signing acceptance"
+  ],
+  "physical_git_blobs_and_modes_verified": 20503,
+  "public_dispatcher_only_local_join": true,
+  "selected_compatibility_roots": [
+    "TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority",
+    "TestHistoricalReplayPublicObservationRetainsUnapprovedExactCandidate",
+    "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins",
+    "TestHistoricalReplayExpiredOwnerRefusesBeforeEngineAdmission",
+    "TestHistoricalReplayExecutesSealedImageAfterSourceReplacement",
+    "TestHistoricalReplayObservationDistinguishesMissingAndActualZeroRefund",
+    "TestHistoricalReplayDescendantPipesCannotOutliveResult",
+    "TestCommandPipeCopyCannotBypassAnyOutputLimit",
+    "TestRepairCommandOutputOverflowCancelsActualChild",
+    "TestSourceLockBindsCleanLocalDependencies",
+    "TestOwnerAdapterOutputOverflowCancelsActualBoundary",
+    "TestServiceStorageCredentialInspectorRealHost"
+  ],
+  "source": {
+    "head": "cb796a302df8029d0fe3be455ef7715d64f45a48",
+    "parents": [
+      "3dc73489c888c6c4f062a205fb8755b8c294ec7e",
+      "4c96e89c485033a5a1d1db6d907de6bac92da1dc"
+    ],
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-current-integration/sn",
+    "tree": "a3903dd1dabac39834a1c85425de766496ad5d1f"
+  },
+  "status": "ROOT_VERIFIED_SOURCE_JOIN_ONLY"
+}

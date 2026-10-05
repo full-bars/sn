@@ -29,6 +29,10 @@ func (self *releaseRuntimeV2) depositAuditSourcesV2(ctx context.Context, decisio
 	if ctx == nil || self == nil || self.history == nil || self.chain == nil || self.native == nil || self.hotkey == nil || len(self.history.participants) == 0 {
 		return nil, window, errors.New("deposit audit source owner is incomplete")
 	}
+	decisionCfg, err := releaseConfigForPolicyHash(&self.cfg, decision.PolicyHash)
+	if err != nil {
+		return nil, window, err
+	}
 	bounds := self.cfg.EvidenceV2.Bounds
 	if len(claimed) != len(self.history.participants) || uint64(len(claimed)) > bounds.MaxParticipants || decision.PreviousArtifactHash != "" || decision.ValidatorID != self.cfg.ValidatorID || self.cfg.Policy.Deposit.UsageLagEpochs == 0 || decision.SettlementEpoch < self.cfg.Policy.Deposit.UsageLagEpochs {
 		return nil, window, errors.New("deposit audit source census or later usage lag differs")
@@ -42,7 +46,12 @@ func (self *releaseRuntimeV2) depositAuditSourcesV2(ctx context.Context, decisio
 	if err != nil {
 		return nil, window, err
 	}
-	query := releaseDecisionChainV2Query{domain: domain, boundary: AttemptBoundary{SettlementEpoch: decision.SettlementEpoch, EVMBlock: decision.EVMSnapshotBlock, EVMBlockHash: decision.EVMSnapshotHash}, policy: self.cfg.Policy,
+	queryDomain := domain
+	queryDomain.PolicyHash, err = decisionCfg.Policy.Hash()
+	if err != nil {
+		return nil, window, err
+	}
+	query := releaseDecisionChainV2Query{domain: queryDomain, boundary: AttemptBoundary{SettlementEpoch: decision.SettlementEpoch, EVMBlock: decision.EVMSnapshotBlock, EVMBlockHash: decision.EVMSnapshotHash}, policy: decisionCfg.Policy,
 		maxOperators: bounds.MaxOperators, maxProviders: bounds.MaxProviders, maxControlBytes: bounds.MaxControlBytes}
 	for index, participant := range self.history.participants {
 		if claimed[index].NoID != participant.NoID || self.sources[participant.NoID] == nil {
@@ -55,17 +64,17 @@ func (self *releaseRuntimeV2) depositAuditSourcesV2(ctx context.Context, decisio
 		return nil, window, err
 	}
 	observationCtx, cancel := context.WithTimeout(ctx, releaseNativeEndpointTimeout(&self.cfg))
-	observed, schedule, err := readReleaseDecisionV2Context(observationCtx, self.chain, self.native, query, crv4.ValidatorScheduleQuery{GenesisHash: types.Hash(domain.GenesisHash), BlockHash: types.Hash(nativeHash), BlockNumber: decision.NativeSnapshotBlock, Netuid: domain.Netuid, Hotkey: self.hotkey.PublicKey(), MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, releaseRuntimeIdentityV2(&self.cfg))
+	observed, schedule, err := readReleaseDecisionWithConfigV2Context(observationCtx, self.chain, self.native, query, crv4.ValidatorScheduleQuery{GenesisHash: types.Hash(domain.GenesisHash), BlockHash: types.Hash(nativeHash), BlockNumber: decision.NativeSnapshotBlock, Netuid: domain.Netuid, Hotkey: self.hotkey.PublicKey(), MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, releaseRuntimeIdentityV2(&self.cfg), decisionCfg)
 	cancel()
-	if err != nil || schedule.SubnetEpochIndex != decision.SubnetEpoch || schedule.Stake.Identity.UID != decision.SelfUID {
-		return nil, window, errors.Join(errors.New("deposit audit native observation differs from its actual decision"), err)
+	if err := releaseRpcObservationError(err, schedule.SubnetEpochIndex == decision.SubnetEpoch && schedule.Stake.Identity.UID == decision.SelfUID, errors.New("deposit audit native observation differs from its actual decision")); err != nil {
+		return nil, window, err
 	}
 	window = protocol.ValidatorEvidenceWindow{Epoch: observed.sourceEpoch, StartBlock: observed.sourceStart, EndBlock: observed.sourceEnd, FinalizedBlock: observed.boundary.EVMBlock,
 		Subject: protocol.ValidatorEvidenceSubject{ObservationEpoch: observed.boundary.SettlementEpoch, NativeEpoch: schedule.SubnetEpochIndex}}
-	if err := validateValidatorEvidenceDepositAuditV2Decision(decision, domain, window); err != nil {
+	if err := validateValidatorEvidenceDepositAuditV2DecisionWithPolicy(decision, domain, window, &self.cfg.Policy, self.cfg.PreviousPolicy); err != nil {
 		return nil, window, err
 	}
-	projection := releaseDepositAuditV2Artifact(decision, claimed, self.cfg.Policy)
+	projection := releaseDepositAuditV2Artifact(decision, claimed, decisionCfg.Policy)
 	custody := &releaseEvidenceV2StartupReferences{remaining: bounds.MaxHistoryBytes}
 	defer func() {
 		resultErr = errors.Join(resultErr, custody.close(), ctx.Err())
@@ -73,13 +82,15 @@ func (self *releaseRuntimeV2) depositAuditSourcesV2(ctx context.Context, decisio
 			payloads, window = nil, protocol.ValidatorEvidenceWindow{}
 		}
 	}()
+	history := *self.history
+	history.cfg = *decisionCfg
 	for index, operator := range observed.operators {
 		if !operator.version.Active {
 			return nil, window, errors.New("deposit audit current source was inactive at its actual observation")
 		}
-		audit, err := self.history.historicalDepositAuditWithCaptureV2(ctx, observed, operator, claimed[index], projection, custody)
-		if err != nil || audit != claimed[index] {
-			return nil, window, errors.Join(errors.New("deposit audit differs from actual pinned chain and retained payout source replay"), err)
+		audit, err := history.historicalDepositAuditWithCaptureV2(ctx, observed, operator, claimed[index], projection, custody)
+		if err := releaseRpcObservationError(err, audit == claimed[index], errors.New("deposit audit differs from actual pinned chain and retained payout source replay")); err != nil {
+			return nil, window, err
 		}
 		payload := ValidatorEvidenceDepositAuditV2Payload{Schema: ValidatorEvidenceDepositAuditV2Schema, Decision: decision, Audit: audit}
 		if audit.HttpObservationHash != "" {
@@ -100,8 +111,8 @@ func (self *releaseRuntimeV2) depositAuditSourcesV2(ctx context.Context, decisio
 			}
 			maximum := min(bounds.MaxArtifactBytes, bounds.MaxControlBytes/8)
 			raw, err := custody.read(ctx, path, maximum, false)
-			if err != nil || ReleaseMeasurementContentHash(raw) != audit.HttpObservationHash {
-				return nil, window, errors.Join(errors.New("deposit audit actual HTTP custody differs"), err)
+			if err := releaseRpcObservationError(err, ReleaseMeasurementContentHash(raw) == audit.HttpObservationHash, errors.New("deposit audit actual HTTP custody differs")); err != nil {
+				return nil, window, err
 			}
 			if _, err := decodeArtifactHttpObservationV2(ctx, raw, maximum, expected); err != nil {
 				return nil, window, err

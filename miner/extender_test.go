@@ -71,8 +71,8 @@ func TestProviderExtenderKeySeedRoundTrips(t *testing.T) {
 	}
 }
 
-// The public key the operator signs records for is printed once, and an
-// unreadable seed prints nothing rather than a wrong identity.
+// A persisted seed still derives its identity; diagnostic observation does not
+// expose it or make malformed material a successful identity observation.
 func TestProviderExtenderIdentityIsReadableFromTheSeed(t *testing.T) {
 	extenderKeySeed, err := connect.NewExtenderKeySeed()
 	if err != nil {
@@ -85,9 +85,8 @@ func TestProviderExtenderIdentityIsReadableFromTheSeed(t *testing.T) {
 	if len(publicKey) == 0 {
 		t.Fatal("the persisted seed derives an empty public key")
 	}
-	// the printers take a seed that is not one without failing the launch
-	printProviderExtenderIdentity(nil)
-	printProviderExtenderIdentity([]byte{1, 2, 3})
+	observeProviderExtenderIdentity(nil, 0, nil)
+	observeProviderExtenderIdentity(nil, 0, []byte{1, 2, 3})
 }
 
 // Every swarm member runs with the provider extender role off: one process
@@ -109,18 +108,18 @@ func TestProviderSwarmMemberDisablesTheExtenderRole(t *testing.T) {
 	}
 }
 
-// The provider extender status reads as one line per state, so a launch prints
-// the activation once it settles and nothing while it holds (F3, G3).
+// Callback state keeps closed scalar facts, including unknown versus disabled.
+// Repeated facts do not depend on arbitrary SDK error/address text.
 func TestProviderExtenderStatusLine(t *testing.T) {
 	cases := []struct {
 		status *sdk.ExtenderProvideStatus
-		expect string
+		expect providerExtenderObservation
 	}{
-		{status: nil, expect: "off"},
-		{status: &sdk.ExtenderProvideStatus{}, expect: "off"},
+		{status: nil, expect: providerExtenderObservation{}},
+		{status: &sdk.ExtenderProvideStatus{}, expect: providerExtenderObservation{Known: true}},
 		{
 			status: &sdk.ExtenderProvideStatus{Enabled: true},
-			expect: "not listening, v4 not activated, v6 not activated",
+			expect: providerExtenderObservation{Known: true, Enabled: true},
 		},
 		{
 			status: &sdk.ExtenderProvideStatus{
@@ -129,7 +128,7 @@ func TestProviderExtenderStatusLine(t *testing.T) {
 				ActivatedV4: true,
 				Ipv4:        "198.51.100.11",
 			},
-			expect: "listening, v4 activated at 198.51.100.11, v6 not activated",
+			expect: providerExtenderObservation{Known: true, Enabled: true, Listening: true, ActivatedV4: true},
 		},
 		{
 			status: &sdk.ExtenderProvideStatus{
@@ -142,21 +141,14 @@ func TestProviderExtenderStatusLine(t *testing.T) {
 				Ipv6:                "2001:db8::11",
 				LastActivationError: "refused",
 			},
-			expect: "listening, carriers dns: bind, v4 activated at 198.51.100.11, " +
-				"v6 activated at 2001:db8::11, last error refused",
+			expect: providerExtenderObservation{Known: true, Enabled: true, Listening: true, ListenFailed: true, ActivatedV4: true, ActivatedV6: true, ActivationFailed: true},
 		},
 	}
 	for _, c := range cases {
-		if line := providerExtenderStatusLine(c.status); line != c.expect {
-			t.Errorf("line = %q, expected %q", line, c.expect)
+		listener := newProviderExtenderStatusListener(nil, 0)
+		listener.ExtenderProvideStatusChanged(c.status)
+		if listener.last != c.expect {
+			t.Errorf("scalar observation = %+v, expected %+v", listener.last, c.expect)
 		}
-	}
-
-	// only a change prints, so a status that repeats is silent
-	listener := newProviderExtenderStatusListener()
-	status := &sdk.ExtenderProvideStatus{Enabled: true, Listening: true}
-	listener.ExtenderProvideStatusChanged(status)
-	if listener.line != providerExtenderStatusLine(status) {
-		t.Fatalf("the listener kept %q", listener.line)
 	}
 }

@@ -1,0 +1,35 @@
+{
+  "schema": "foreground-successor-race-independent-readback-v1",
+  "status": "20_RACE_PASS_ZERO_FAIL_ZERO_SKIP",
+  "source_commit": "2477a2cac00115a8936230a731e76c0635341302",
+  "phase": {
+    "path": "/mnt/data/sn-testnet/sol-2477-foreground-qualification-20261004/evidence/2477-validator-race-runtime-receipt.json",
+    "sha256": "f98627c015e97f82f0e5e49b518222ddd105e61757bd82c511090d90e30c8742"
+  },
+  "raw_roots": [
+    "TestAttemptCutV2SealBoundaryControls",
+    "TestAttemptCutV2SealCallbackReleasesForegroundProjectionIterator",
+    "TestAttemptCutV2SealCancellationAtOwnedBoundaries",
+    "TestAttemptCutV2SealCheckedEmptyPrefix",
+    "TestAttemptCutV2SealClosesScratchBeforeReturningHeader",
+    "TestAttemptCutV2SealExactNoninitialPrefix",
+    "TestAttemptCutV2SealHeadSnapshotExcludesLaterAppends",
+    "TestAttemptCutV2SealObjectCallbackCanAppend",
+    "TestAttemptCutV2SealReaderCloseFailurePreventsSignature",
+    "TestAttemptCutV2SealRejectsExpectedContextContradictions",
+    "TestAttemptCutV2SealRejectsUnavailableOrLegacyLedger",
+    "TestDiskAttemptProofProjectionIncrementalWorkUsesOnlyNewRecords",
+    "TestDiskAttemptProofProjectionQueuedCallerCancelsWithoutJoiningOwner",
+    "TestReleaseForegroundCancellationJoinsBlockedUploadWithoutLosingAppend",
+    "TestReleaseForegroundCapacityRefusesBeforeBackgroundEffects",
+    "TestReleaseForegroundHeaderAllowanceMatchesActualPublicMetadata",
+    "TestReleaseForegroundLedgerCloseCancelsAndJoinsHeldUpload",
+    "TestReleaseForegroundOriginalRecordCeilingStillRefusesAdditionalTrail",
+    "TestReleaseForegroundProgressDuringBlockedHttpAndReplay",
+    "TestReleaseForegroundProgressDuringContinuousActualReplay"
+  ],
+  "limits": [
+    "Two causal controls per mode remain pending acceptance.",
+    "Focused scope only; actual host resource sizing and full native conservation remain."
+  ]
+}

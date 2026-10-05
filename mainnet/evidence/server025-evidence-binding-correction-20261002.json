@@ -1,0 +1,81 @@
+{
+  "cause": "A shared audit-owned stage runner was edited to add later stages after earlier receipts had sealed its path and hash. The fixture, full-model, and focused historical bytes cannot simultaneously occupy the same path.",
+  "created_utc": "2026-10-02T08:04:13.509601+00:00",
+  "current_integrated_runner": {
+    "path": "run_private_stage-integrated.sh",
+    "sha256": "0464d6d265c73a2f7d5274fa24020d890258791c818923ada41c2871a972686f"
+  },
+  "receipts": [
+    {
+      "all_other_bound_files_readback": true,
+      "bound_file_count": 34,
+      "current_path_mismatches": [
+        {
+          "bound_sha256": "076306e210b3062efd0930e8f95ab18a4630b2bd533323796c3ede6efe924700",
+          "current_sha256": "0464d6d265c73a2f7d5274fa24020d890258791c818923ada41c2871a972686f",
+          "original_path": "run_private_stage.sh"
+        }
+      ],
+      "historical_binding_correction": {
+        "current_shared_path_sha256": "0464d6d265c73a2f7d5274fa24020d890258791c818923ada41c2871a972686f",
+        "original_bound_sha256": "076306e210b3062efd0930e8f95ab18a4630b2bd533323796c3ede6efe924700",
+        "original_path": "run_private_stage.sh",
+        "recovered_immutable_path": "run_private_stage-focused-sealed.sh",
+        "recovered_sha256": "076306e210b3062efd0930e8f95ab18a4630b2bd533323796c3ede6efe924700"
+      },
+      "receipt_path": "focused-causal-receipt.json",
+      "receipt_sha256": "484ada95842abdc5eed1b24a57bc0460d541c16c90d61884648ccb3055b9c31d"
+    },
+    {
+      "all_other_bound_files_readback": true,
+      "bound_file_count": 16,
+      "current_path_mismatches": [
+        {
+          "bound_sha256": "1561b50e8e0965c463f93b358e8239b0792241202ef06777615c080236963e61",
+          "current_sha256": "0464d6d265c73a2f7d5274fa24020d890258791c818923ada41c2871a972686f",
+          "original_path": "run_private_stage.sh"
+        }
+      ],
+      "historical_binding_correction": {
+        "current_shared_path_sha256": "0464d6d265c73a2f7d5274fa24020d890258791c818923ada41c2871a972686f",
+        "original_bound_sha256": "1561b50e8e0965c463f93b358e8239b0792241202ef06777615c080236963e61",
+        "original_path": "run_private_stage.sh",
+        "recovered_immutable_path": "run_private_stage-full-sealed.sh",
+        "recovered_sha256": "1561b50e8e0965c463f93b358e8239b0792241202ef06777615c080236963e61"
+      },
+      "receipt_path": "full-model-receipt.json",
+      "receipt_sha256": "4e580a88539860f503f8ac0f0d77a3978634c731a9ce5a3dd18565c7a6e92373"
+    },
+    {
+      "all_other_bound_files_readback": true,
+      "bound_file_count": 21,
+      "current_path_mismatches": [
+        {
+          "bound_sha256": "ba31333e0655e65d72d1daf4e72e5623012019c71c3dd352bbcb1de10b7eac91",
+          "current_sha256": "0464d6d265c73a2f7d5274fa24020d890258791c818923ada41c2871a972686f",
+          "original_path": "run_private_stage.sh"
+        }
+      ],
+      "historical_binding_correction": {
+        "current_shared_path_sha256": "0464d6d265c73a2f7d5274fa24020d890258791c818923ada41c2871a972686f",
+        "original_bound_sha256": "ba31333e0655e65d72d1daf4e72e5623012019c71c3dd352bbcb1de10b7eac91",
+        "original_path": "run_private_stage.sh",
+        "recovered_immutable_path": "run_private_stage-fixture-sealed.sh",
+        "recovered_sha256": "ba31333e0655e65d72d1daf4e72e5623012019c71c3dd352bbcb1de10b7eac91"
+      },
+      "receipt_path": "fixture-repair-receipt.json",
+      "receipt_sha256": "dc951c14366b4afac730ecbc8e68606c23c008c1dac4edaff0cea924d2d7ba4e"
+    },
+    {
+      "all_other_bound_files_readback": true,
+      "bound_file_count": 9,
+      "current_path_mismatches": [],
+      "historical_binding_correction": null,
+      "receipt_path": "sn-fixture-receipt.json",
+      "receipt_sha256": "c54bfc26a96f96f171bcebf3eaa314728200a8c1cc6922c6590f31e1c66cdbaa"
+    }
+  ],
+  "schema": "sol-independent-evidence-binding-correction-v1",
+  "scope_limit": "Original receipt JSON, test logs, source fences, fixture records, and test outcomes are unchanged. This addendum rebinds only the three historical runner byte sequences at immutable scope-specific paths; it does not claim the shared path currently matches all three hashes.",
+  "status": "HISTORICAL_PATH_COLLISION_CORRECTED_BY_EXACT_BYTE_RECOVERY"
+}

@@ -1,0 +1,48 @@
+{
+  "bindings": [
+    {
+      "bytes": 2096,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/model-adoption.json",
+      "sha256": "7a2f337ba688f549a6cc070d562e5b6ee568f72aaf75a7a688386449a47f626b"
+    },
+    {
+      "bytes": 2059,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/sampler-model-adoption-v2.json",
+      "sha256": "389160c8839c9b82be66fe40d5eda83ccc02f0b6ed27374ee0004e85902b1959"
+    },
+    {
+      "bytes": 2126,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/job-manifest-v2.json",
+      "sha256": "df9a9b8683e7fe2e202ed4032634a3dfda3e2a78e2b7319257b1151fd2d762b8"
+    },
+    {
+      "bytes": 1334,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/sampler-v2-static-check.json",
+      "sha256": "002864fb9b775fc47701ae88492ec08fa009b429bd449afd4226578fd0168069"
+    },
+    {
+      "bytes": 2344,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/sampler-v2-intake.json",
+      "sha256": "29b9c6e9b4b8509c972adad7a13d320ff3ae04b50cf44dd35b39ed024ef96c62"
+    },
+    {
+      "bytes": 16827,
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/run-admitted-phase-v2.py",
+      "sha256": "015108ca19500b0f5a4d9d593d9dfb7d87672cccb1edea8e5ab6b951920697ac"
+    }
+  ],
+  "captured_utc": "2026-10-03T19:01:21.187004+00:00",
+  "completion": "All38 requirements remain open; full model and composed economic/recovery qualification pending.",
+  "correction": "Provision missing private TMPDIR before retry. Sampler reports typed observation gaps and explicit terminal CSV verification separately from child outcome; observation failure does not terminate admitted model.",
+  "limits": {
+    "data_grant_gib": 8,
+    "docker_root_grant_gib": 5,
+    "model_memory_admission_gib": 96,
+    "total_charged_operations": 4
+  },
+  "retained_first_two_attempts_sha256": "c46bd9fb15c9a081174d7bd1f239bf8f5b24c6850708cda39f2a5540bc76f6aa",
+  "schema": "urnetwork-root-model-continuation-adoption-v1",
+  "scope": "Retain successful source archive and failed dependency graph preparation; one corrected graph retry then one full current Server5f model invocation. No baseline reset.",
+  "status": "CONTINUATION_ADOPTED_NOT_MODEL_PASS",
+  "validation": "Four independent import-safe sampler controls: complete qualifies; injected memory and container observation failures retain final CSV but do not qualify telemetry; existing CSV refuses exclusive creation. Full runner and model behavior are not proven by these controls."
+}

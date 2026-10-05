@@ -1,0 +1,64 @@
+{
+  "adjacent_candidate": "The new continuous EVM candidate also compares the entire policy hash including read budget, history capacity, batch size and stall threshold; implementation agent notified before freezing. Mutable candidate bytes are not admitted by this source review.",
+  "adjacent_http_read_findings": {
+    "classification": "SOURCE_REVIEW_IMPLEMENTATION_REQUIRED",
+    "client_timeout_seconds": 5,
+    "provider_and_claim_reads": "One HTTP GET per sample; 408 and 429 enter the generic invalid-4xx branch instead of transient unavailability.",
+    "required_continuation": "Use at least sixty seconds total retry authority for expected GETs, defaulting to three hundred seconds; one owned deadline, bounded backoff and joined bodies. Preserve immediate caller cancellation and known authentication/identity failures. A failed read never fabricates a current sample."
+  },
+  "bindings": {
+    "mainnet/monitor_claim.go": {
+      "bytes": 6544,
+      "sha256": "f5a357882df14b81f0f509c4d2877497011a4f3cacb300fc57591f4145c9fb34"
+    },
+    "mainnet/monitor_claim_worker.go": {
+      "bytes": 11713,
+      "sha256": "530bb3bc4d21a66ddd89237840a138dddf9c2c14d92f158d7721e22e69a661fb"
+    },
+    "mainnet/monitor_provider.go": {
+      "bytes": 8454,
+      "sha256": "8fcbbf32ff984dadf908f0bbca5a49c362fab64d6dba3d053de2c6a0c117237a"
+    },
+    "mainnet/monitor_provider_worker.go": {
+      "bytes": 11918,
+      "sha256": "36369b434cc949a272a1c2f924f58e6cd734c96492e9eca55a5e3709dd1d42c6"
+    }
+  },
+  "classification": "SOURCE_REVIEW_IMPLEMENTATION_REQUIRED",
+  "findings": [
+    {
+      "boundary": "checkpoint load requires exact complete policy hash",
+      "evolving_authority": [
+        "Epochs"
+      ],
+      "operational_fields": [
+        "FreshnessSeconds"
+      ],
+      "owner": "claim monitor",
+      "risk": "A replacement declaration rejects the original retained checkpoint. Append-only independently reviewed epochs and acknowledged operational settings need a durable continuation path."
+    },
+    {
+      "boundary": "checkpoint load requires exact complete policy hash",
+      "evolving_authority": [
+        "Members"
+      ],
+      "operational_fields": [
+        "FreshnessSeconds"
+      ],
+      "owner": "provider monitor",
+      "risk": "An operational freshness change or independently reviewed roster revision cannot continue existing evidence. Original roster/source generations and incidents must remain attributable."
+    }
+  ],
+  "limits": [
+    "No behavioral qualification or production activation claim.",
+    "Original finite monitor scopes remain valid at their exact policies; this review concerns continuation across reviewed policy revisions."
+  ],
+  "required_fixes": [
+    "Keep original chain, member/pool/source, policy generation, incident history and unresolved obligations durable.",
+    "Implement an explicit approved predecessor-linked renewal; do not merely remove fields from the authenticated hash.",
+    "Allow bounded acknowledged budget and capacity increases without resetting cursor or history; reject shrink/drop or unreviewed identity replacement.",
+    "Qualify actual load/reopen, cancellation, invalid predecessor, old checkpoint serialization and healthy independent owner continuation."
+  ],
+  "schema": "urnetwork-mainnet-monitor-renewal-source-review-v1",
+  "source_commit": "6056c92dcdcf7e9d879eb1abf9150f1324bed368"
+}

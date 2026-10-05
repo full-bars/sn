@@ -1,0 +1,51 @@
+{
+  "schema": "full512-race-independent-readback-v1",
+  "status": "PASS_SCOPE_ONLY",
+  "source_commit": "b6b7880ea4059af1a77f232a1ed597fe11cc8999",
+  "core_commit": "2ea8d82ea5cbc8bdebdee05f5b90a9f21b64128f",
+  "phase_receipt_sha256": "32eb4d2cba674bdc25f32b94ea9c8914ad46a097541f97dffb173115fffb4bd2",
+  "batch_receipt_sha256": "c7a98155516b9d12c486b0d5257ca155ee14e0f40f3ba79adf4c427ace947215",
+  "verified_artifacts": [
+    {
+      "bytes": 1222,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/26-test-mainnet-full512-race.jsonl",
+      "sha256": "421e6d76de390c03378af1d9b6562a5791155015d1a53b04ee05e655c6c62ac5"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/26-test-mainnet-full512-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 42847,
+      "child_path_churn_missing_total": 9,
+      "error": null,
+      "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/26-test-mainnet-full512-race.samples.csv",
+      "peak_allocated_bytes": 127963136,
+      "peak_entries": 5738,
+      "peak_logical_bytes": 117234217,
+      "rows": 719,
+      "sha256": "cd2ce0281c68b1f843bab91b96d519f830268a52d8c78f7c4cfe2750ab0de7b7"
+    }
+  ],
+  "body": {
+    "root": "TestMonitorEvmRestoreCohortAdmitsAll512OriginalSegments",
+    "run": 1,
+    "pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "elapsed_seconds": 864.38
+  },
+  "measurement": {
+    "rows": 719,
+    "sampled_peak_allocated_bytes": 127963136,
+    "ordinary_child_churn": 9,
+    "final_fixture_entries": 0
+  },
+  "custody": "Before/after image identities equal; unique0500 executable inode and current SHA independently checked.",
+  "limits": [
+    "Synthetic retained EVM restore of512 segments only, not production sizing or native producer proof.",
+    "Earlier normal summary collision and original failures remain retained.",
+    "Ordinary corrected race, correction successor and full composition remain pending."
+  ]
+}

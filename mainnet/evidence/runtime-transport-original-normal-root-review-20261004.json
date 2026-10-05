@@ -1,0 +1,101 @@
+{
+  "schema": "runtime-transport-original-normal-root-review-v1",
+  "observed_utc": "2026-10-04T05:12:44.585074+00:00",
+  "status": "NORMAL_32_PASS_ONE_RECONNECT_FAILURE_RACE_PENDING",
+  "source_head": "f3baff84b70d047039680210d14a48d784b24a28",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-33root-receipt.json",
+    "bytes": 21108,
+    "sha256": "c963c86d9125255b0c55929f7fd23058aeb2cfc624b36ce0c043d177c6ad5a51"
+  },
+  "verified_raw_and_image_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-0-body.stdout",
+      "bytes": 18120,
+      "sha256": "45f62b2fc36ed15ae3030bd060718e0fcc788d11512382da99599dd7eca6f8ba"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-0-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-0-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-0-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/images/ph18-normal-0.test",
+      "bytes": 16021098,
+      "sha256": "990f34a8afb08dbb8a8fc26bc311a0f7bdc01702112916431cd2f22e84beba69"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-1-body.stdout",
+      "bytes": 4364,
+      "sha256": "133ea936086d931ed6fe26df857c0cf73f591c7f2e61fdf0892f3b08189363ba"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-1-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-1-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-1-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/images/ph18-normal-1.test",
+      "bytes": 82011080,
+      "sha256": "32fd39073841592637ecadfe1e5cf7598f53369118020cdcf5d3b27b0677b37b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-2-body.stdout",
+      "bytes": 4101,
+      "sha256": "3db23a6bd4a8f2e7765e0455b1b128c19518d1c24238f355527c7f448cd97872"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-2-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-2-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/evidence/ph18-normal-2-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-ph18-f3-20261004/images/ph18-normal-2.test",
+      "bytes": 11416562,
+      "sha256": "3a64b4bd76d56e059bdb85e7f2a8b82b809dc3cfe9d26ea134c359c3f863995e"
+    }
+  ],
+  "census": {
+    "run": 33,
+    "pass": 32,
+    "fail": 1
+  },
+  "failed_root_outputs": {
+    "TestRuntimeTransportActualWebsocketReconnectRevokesSameApiProof": "=== RUN   TestRuntimeTransportActualWebsocketReconnectRevokesSameApiProof\n    runtime_transport_test.go:151: same API failed to reobserve after actual reconnect: connections=3 err=runtime transport observation expired; reobserve the original pinned block\n--- FAIL: TestRuntimeTransportActualWebsocketReconnectRevokesSameApiProof (0.01s)\n"
+  },
+  "next_action": "Astra must correct whole-read reobservation when implicit WS reconnect advances the client generation. Qualify real public owner recovery under original budget and original pinned block; do not disable generation binding or weaken returned semantic contradictions. Collect original race independently.",
+  "limits": [
+    "Complete selected normal result is a failure, despite32 retained positives.",
+    "No all-role or mainnet authority admission."
+  ]
+}

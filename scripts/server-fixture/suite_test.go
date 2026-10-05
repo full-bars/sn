@@ -77,13 +77,17 @@ func TestServerFixtureSuiteSatisfiesActualResourceCensus(t *testing.T) {
 		if kind == "vault_tree" {
 			kind = "vault"
 		}
-		info, err := os.Lstat(filepath.Join(report.Workspace, kind, name))
+		info, err := os.Lstat(filepath.Join(report.Workspace, kind, filepath.FromSlash(name)))
 		if err != nil || info.Mode()&os.ModeSymlink != 0 {
 			t.Fatalf("required physical %s: %v", line, err)
 		}
 		count++
 	}
-	if count != 30 {
+	wantCount := 28
+	if strings.Contains(string(manifest), "\nvault=ipinfo.yml\n") {
+		wantCount = 30
+	}
+	if count != wantCount {
 		t.Fatalf("independent suite census changed: %d", count)
 	}
 	err = filepath.Walk(report.Workspace, func(path string, info os.FileInfo, err error) error {
@@ -120,6 +124,44 @@ func TestServerFixtureSuiteSatisfiesActualResourceCensus(t *testing.T) {
 		second, err := os.ReadFile(filepath.Join(report.Workspace, pair[1]))
 		if err != nil || !bytes.Equal(first, second) {
 			t.Fatalf("maintenance source differs: %v", err)
+		}
+	}
+}
+
+// Both explicitly supported manifests get their own complete typed resource
+// set. Compatibility never becomes permission for generic unknown files.
+func TestServerFixtureSuiteSelectsExactGeographyProfile(t *testing.T) {
+	for _, legacy := range []bool{true, false} {
+		parent, server := suiteFixtureTestInputs(t)
+		path := filepath.Join(server, "local", "suite-resource-manifest.txt")
+		manifest, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, name := range []string{"vault=ipinfo.yml", "config=city-list.yml", "config=iso-country-list.yml", "config=mmdb/places.yml"} {
+			manifest = bytes.ReplaceAll(manifest, []byte(name+"\n"), nil)
+		}
+		if legacy {
+			manifest = append(manifest, []byte("vault=ipinfo.yml\nconfig=city-list.yml\nconfig=iso-country-list.yml\n")...)
+		} else {
+			manifest = append(manifest, []byte("config=mmdb/places.yml\n")...)
+		}
+		if err := os.WriteFile(path, manifest, 0600); err != nil {
+			t.Fatal(err)
+		}
+		selectedLegacy, err := validateSuiteFixtureManifest(manifest)
+		if err != nil || selectedLegacy != legacy {
+			t.Fatalf("geography profile differs: legacy=%v selected=%v error=%v", legacy, selectedLegacy, err)
+		}
+		report, err := createSuiteFixture(parent, server, "127.0.0.1:35431", "127.0.0.1:36371")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for name, want := range map[string]string{"vault/ipinfo.yml": "token: ''\n", "config/city-list.yml": "{}\n", "config/iso-country-list.yml": "{}\n"} {
+			actual, err := os.ReadFile(filepath.Join(report.Workspace, filepath.FromSlash(name)))
+			if legacy && (err != nil || string(actual) != want) || !legacy && !os.IsNotExist(err) {
+				t.Fatalf("legacy=%v resource %s differs: error=%v", legacy, name, err)
+			}
 		}
 	}
 }
@@ -175,7 +217,7 @@ func TestServerFixtureSuiteUsesDocumentationIpOverrideWithoutMmdb(t *testing.T) 
 			t.Fatalf("fixture override %d lost its synthetic location fields", index)
 		}
 	}
-	if _, err := os.Lstat(filepath.Join(report.Workspace, "config", "mmdb", "ip-ipinfo.mmdb")); !os.IsNotExist(err) {
+	if _, err := os.Lstat(filepath.Join(report.Workspace, "config", "mmdb", "geolite2.mmdb")); !os.IsNotExist(err) {
 		t.Fatalf("portable fixture unexpectedly materialized the location database: %v", err)
 	}
 }
@@ -204,7 +246,7 @@ func TestServerFixtureSuiteLoopbackResolvesWithoutDatabases(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"mmdb/ip-ipinfo.mmdb", "arindb/arin.mmdb"} {
+	for _, name := range []string{"mmdb/geolite2.mmdb", "arindb/arin.mmdb"} {
 		if _, err := os.Lstat(filepath.Join(report.Workspace, "config", name)); !os.IsNotExist(err) {
 			t.Fatalf("portable fixture unexpectedly has database %s: %v", name, err)
 		}
@@ -256,6 +298,83 @@ func TestServerFixtureSuiteProConfigIsSyntheticAndParseable(t *testing.T) {
 	}
 }
 
+// The synthetic place-list resource has the intended schema and exact values.
+// Exporter/loader parity remains separate until the owning server API exists.
+func TestServerFixtureSuitePlacesHaveSyntheticSchemaAndValues(t *testing.T) {
+	parent, server := suiteFixtureTestInputs(t)
+	report, err := createSuiteFixture(parent, server, "127.0.0.1:35431", "127.0.0.1:36371")
+	if err != nil {
+		t.Fatal(err)
+	}
+	written, err := os.ReadFile(filepath.Join(report.Workspace, "config", "mmdb", "places.yml"))
+	if err != nil || !bytes.Equal(written, []byte(suiteFixturePlaces)) {
+		t.Fatalf("place-list resource bytes differ: %v", err)
+	}
+	type country struct {
+		Name          string `yaml:"name"`
+		GeonameId     uint64 `yaml:"geoname_id"`
+		ContinentCode string `yaml:"continent_code"`
+		Continent     string `yaml:"continent"`
+	}
+	type place struct {
+		GeonameId       uint64  `yaml:"geoname_id"`
+		RegionGeonameId uint64  `yaml:"region_geoname_id"`
+		Latitude        float64 `yaml:"latitude"`
+		Longitude       float64 `yaml:"longitude"`
+		SpreadKm        float64 `yaml:"spread_km"`
+		TimeZone        string  `yaml:"time_zone"`
+	}
+	var resource struct {
+		Version    int                                    `yaml:"version"`
+		Source     string                                 `yaml:"source"`
+		BuildEpoch uint64                                 `yaml:"build_epoch"`
+		Countries  map[string]country                     `yaml:"countries"`
+		Places     map[string]map[string]map[string]place `yaml:"places"`
+	}
+	decoder := yaml.NewDecoder(bytes.NewReader(written))
+	decoder.KnownFields(true)
+	if err := decoder.Decode(&resource); err != nil {
+		t.Fatal(err)
+	}
+	if resource.Version != 1 || resource.Source != "fixture" || resource.BuildEpoch != 946684800 || len(resource.Countries) != 4 || len(resource.Places) != 4 {
+		t.Fatalf("synthetic place-list header or country census differs: %+v", resource)
+	}
+	expectedCountries := map[string]country{
+		"de": {Name: "Germany", GeonameId: 2921044, ContinentCode: "eu", Continent: "Europe"},
+		"gb": {Name: "United Kingdom", GeonameId: 2635167, ContinentCode: "eu", Continent: "Europe"},
+		"sg": {Name: "Singapore", GeonameId: 1880251, ContinentCode: "as", Continent: "Asia"},
+		"us": {Name: "United States", GeonameId: 6252001, ContinentCode: "na", Continent: "North America"},
+	}
+	cityCount := 0
+	for countryCode, regions := range resource.Places {
+		if resource.Countries[countryCode] != expectedCountries[countryCode] || len(regions) == 0 {
+			t.Fatalf("country %s has the wrong identity or no regions", countryCode)
+		}
+		for _, cities := range regions {
+			cityCount += len(cities)
+		}
+	}
+	if cityCount != 5 {
+		t.Fatalf("synthetic place list has %d cities, expected five", cityCount)
+	}
+	for _, expected := range []struct {
+		countryCode string
+		region      string
+		city        string
+		value       place
+	}{
+		{countryCode: "de", region: "Hesse", city: "Frankfurt am Main", value: place{GeonameId: 2925533, RegionGeonameId: 2905330, Latitude: 50.1155, Longitude: 8.6842, TimeZone: "Europe/Berlin"}},
+		{countryCode: "gb", region: "England", city: "East Finchley", value: place{GeonameId: 2650444, RegionGeonameId: 6269131, Latitude: 51.5967, Longitude: -0.1593, TimeZone: "Europe/London"}},
+		{countryCode: "gb", region: "England", city: "London", value: place{GeonameId: 2643743, RegionGeonameId: 6269131, Latitude: 51.5081, Longitude: -0.1278, TimeZone: "Europe/London"}},
+		{countryCode: "sg", region: "Singapore", city: "Bedok New Town", value: place{GeonameId: 1884382, Latitude: 1.3264, Longitude: 103.9394, TimeZone: "Asia/Singapore"}},
+		{countryCode: "us", region: "California", city: "Palo Alto", value: place{GeonameId: 5380748, RegionGeonameId: 5332921, Latitude: 37.4419, Longitude: -122.143, SpreadKm: 6, TimeZone: "America/Los_Angeles"}},
+	} {
+		if actual := resource.Places[expected.countryCode][expected.region][expected.city]; actual != expected.value {
+			t.Fatalf("synthetic %s/%s/%s differs: got=%+v want=%+v", expected.countryCode, expected.region, expected.city, actual, expected.value)
+		}
+	}
+}
+
 // Required tls aliases carry a valid generated key pair with a synthetic
 // certificate identity, never the live names used by the legacy path contract.
 func TestServerFixtureSuiteUsesSyntheticCertificatesForRequiredAliases(t *testing.T) {
@@ -297,7 +416,7 @@ func TestServerFixtureSuiteUsesSyntheticCertificatesForRequiredAliases(t *testin
 // A missing implementation, duplicate or altered format refuses before output;
 // silently creating placeholder files could not satisfy this contract.
 func TestServerFixtureSuiteRejectsManifestDriftBeforeMutation(t *testing.T) {
-	for _, fault := range []string{"missing", "duplicate", "unknown", "format"} {
+	for _, fault := range []string{"missing", "duplicate", "unknown", "format", "mixed-geography", "missing-geography"} {
 		parent, server := suiteFixtureTestInputs(t)
 		path := filepath.Join(server, "local", "suite-resource-manifest.txt")
 		data, err := os.ReadFile(path)
@@ -313,6 +432,16 @@ func TestServerFixtureSuiteRejectsManifestDriftBeforeMutation(t *testing.T) {
 			data = append(data, []byte("vault=unknown.yml\n")...)
 		case "format":
 			data = bytes.Replace(data, []byte("resources-v1"), []byte("resources-v2"), 1)
+		case "mixed-geography":
+			if bytes.Contains(data, []byte("config=mmdb/places.yml\n")) {
+				data = append(data, []byte("vault=ipinfo.yml\n")...)
+			} else {
+				data = append(data, []byte("config=mmdb/places.yml\n")...)
+			}
+		case "missing-geography":
+			for _, name := range []string{"vault=ipinfo.yml", "config=city-list.yml", "config=iso-country-list.yml", "config=mmdb/places.yml"} {
+				data = bytes.ReplaceAll(data, []byte(name+"\n"), nil)
+			}
 		}
 		if err := os.WriteFile(path, data, 0600); err != nil {
 			t.Fatal(err)

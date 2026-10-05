@@ -1,0 +1,85 @@
+rule_files:
+  - service-alerts.example.yml
+evaluation_interval: 30s
+tests:
+  - name: submission margin uses explicit role evidence and does not wait for wall time
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_native_deadline_status{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '5 6 7 8 4 4 4'
+      - series: 'sn_mainnet_validator_native_deadline_current{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1+0x6'
+      - series: 'sn_mainnet_validator_protocol_deadline_known{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1 1 1 1 0 0 0'
+      - series: 'sn_mainnet_validator_native_deadline_unresolved{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0 0 0 1 1 1 1'
+      - series: 'sn_mainnet_validator_native_deadline_status{env="fixture",host="first.example",job="node",role="beta"}'
+        values: '5+0x6'
+      - series: 'sn_mainnet_validator_native_deadline_current{env="fixture",host="first.example",job="node",role="beta"}'
+        values: '1+0x6'
+      - series: 'sn_mainnet_validator_protocol_deadline_known{env="fixture",host="first.example",job="node",role="beta"}'
+        values: '1+0x6'
+      - series: 'sn_mainnet_validator_native_deadline_unresolved{env="fixture",host="first.example",job="node",role="beta"}'
+        values: '0+0x6'
+    alert_rule_test:
+      - eval_time: 0m
+        alertname: SnMainnetValidatorNativeDeadlineWarning
+        exp_alerts: []
+      - eval_time: 30s
+        alertname: SnMainnetValidatorNativeDeadlineWarning
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: warning}
+            exp_annotations: {summary: "Validator alpha native submission window is approaching on first.example"}
+      - eval_time: 1m
+        alertname: SnMainnetValidatorNativeDeadlineCritical
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: critical}
+            exp_annotations: {summary: "Validator alpha native submission completion margin is exhausted on first.example"}
+      - eval_time: 3m
+        alertname: SnMainnetValidatorNativeDeadlineCritical
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: SnMainnetValidatorNativeWindowMissed
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: critical}
+            exp_annotations: {summary: "Validator alpha has an unresolved reported native window miss on first.example"}
+  - name: unknown and unavailable schedules do not fabricate a missed window
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_native_deadline_status{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '2+0x12'
+      - series: 'sn_mainnet_validator_native_deadline_enabled{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1+0x12'
+      - series: 'sn_mainnet_validator_native_deadline_unresolved{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '0+0x12'
+      - series: 'sn_mainnet_validator_native_deadline_status{env="fixture",host="first.example",job="node",role="beta"}'
+        values: '4+0x12'
+      - series: 'sn_mainnet_validator_native_deadline_enabled{env="fixture",host="first.example",job="node",role="beta"}'
+        values: '1+0x12'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: SnMainnetValidatorNativeDeadlineUnknown
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: warning}
+            exp_annotations: {summary: "Validator alpha native deadline evidence is unavailable on first.example"}
+      - eval_time: 5m
+        alertname: SnMainnetValidatorNativeWindowMissed
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: SnMainnetValidatorNativeDeadlineCritical
+        exp_alerts: []
+  - name: a retained incident survives a subsequent read outage and disabled inference
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_validator_native_deadline_status{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '8 2 2 0 0 0'
+      - series: 'sn_mainnet_validator_native_deadline_current{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1 0 0 0 0 0'
+      - series: 'sn_mainnet_validator_native_deadline_unresolved{env="fixture",host="first.example",job="node",role="alpha"}'
+        values: '1+0x5'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: SnMainnetValidatorNativeWindowMissed
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, job: node, role: alpha, severity: critical}
+            exp_annotations: {summary: "Validator alpha has an unresolved reported native window miss on first.example"}

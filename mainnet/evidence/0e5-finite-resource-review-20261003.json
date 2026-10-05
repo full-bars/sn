@@ -1,0 +1,26 @@
+{
+  "schema": "0e5-finite-qualification-resource-review-v1",
+  "status": "PROPOSAL_AND_RESOURCE_REVIEW_ONLY_EXECUTABLE_PHASE_ADOPTION_REQUIRED",
+  "proposal_sha256": "6cd449fb7afee958250a4d562f7fb024664d1f840f2ad023b515596bbd4d700d",
+  "proposal": "/mnt/data/sn-testnet/sol-final-sn-go-positive-plan-20261003/b6-monitor-0e5-finite-proposal-v1.json",
+  "phases": 33,
+  "positive_roots_per_mode": 52,
+  "operative_groups_per_mode": 8,
+  "canonical_lease_pid": 510787,
+  "kernel_lock_conflict": true,
+  "baseline_sha256": "6daddb91b697c57c7cb12f7eaacbb175ade967cfa6883045493f517c2a34b02f",
+  "fixed_baseline_unchanged": true,
+  "observed_unix_ns": 1791069615242822396,
+  "available_bytes": 110807646208,
+  "used_since_fixed_baseline_bytes": 2873856000,
+  "conservative_retained_active_reservation_bytes": 12213813248,
+  "new_two_x_forecast_bytes": 28991029248,
+  "aggregate_fixed_baseline_cap_bytes": 51539607552,
+  "authority": "User authorized budget increases; resource budget increase only, no chain spending or launch authority.",
+  "conditions": [
+    "Every executable job/runner and inputs require exact reviewed bindings before launch.",
+    "Retain both live races unchanged and do not reset cumulative consumption baseline.",
+    "No uncontrolled heavy workers; serial new compile/test phases.",
+    "Recheck resource and lease before each phase; forecast is not actual peak evidence."
+  ]
+}

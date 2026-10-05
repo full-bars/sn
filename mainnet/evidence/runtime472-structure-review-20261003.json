@@ -1,0 +1,61 @@
+{
+  "schema": "runtime472-structure-root-review-v1",
+  "structure_sha256": "2cc681c6c7cda38f8641a231e49bae9b80d2b50e0ec081b06d6978ce19bc6872",
+  "verified_bindings": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-runtime472-review/evidence/runtime472-code.bin": {
+      "bytes": 2561862,
+      "sha256": "5e4ff64971b4baa31738215b4f79b0db3aaee1833d0a4f3ca62ff36de50f394f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-runtime472-review/evidence/runtime472-expanded.wasm": {
+      "bytes": 10468647,
+      "sha256": "f2dd7829e360b76964436815adee41da62255597f6e47afa92557a95df16a06d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-runtime472-review/evidence/runtime472-metadata.scale": {
+      "bytes": 354693,
+      "sha256": "11d536a4d31e1140630d4b443996c544ec2cdad82076241a66e3ef31d728eb18"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-route-check-20261002/runtime-snapshot.json": {
+      "bytes": 5834134,
+      "sha256": "ff19773735b9284f229d13731f303551a26e32eff2853ccca33156ce762b607c"
+    }
+  },
+  "compressed_code_and_metadata_match_retained_snapshot": true,
+  "independent_decompression_matches": true,
+  "independent_total_imports": 51,
+  "independent_function_imports": 50,
+  "independent_memory_imports": 1,
+  "independent_defined_bodies": 7791,
+  "verified_original_function_bodies": [
+    {
+      "body_bytes": 4648,
+      "body_sha256": "b6e76414b56b49c95555b98ea38d4a4fcae4fc4307dec5ca151d52de9607551a",
+      "index": 1281,
+      "name": "_ZN12frame_system55_$LT$impl$u20$frame_system..pallet..Pallet$LT$T$GT$$GT$21deposit_event_indexed17h54acccc795606923E"
+    },
+    {
+      "body_bytes": 12808,
+      "body_sha256": "8208f5c49c27f597bd910b9fd0fc2788626e3774c2d78e4737e6cbcb7b8a7fe0",
+      "index": 1713,
+      "name": "_ZN15pallet_ethereum58_$LT$impl$u20$pallet_ethereum..pallet..Pallet$LT$T$GT$$GT$27apply_validated_transaction17h14db1926d87ac08aE"
+    },
+    {
+      "body_bytes": 66,
+      "body_sha256": "ab8dfd8fd02871b25c7d9055ee2aaa25365faa0c63ae449bf1359885e234fc14",
+      "index": 2281,
+      "name": "_ZN109_$LT$pallet_contracts..weights..SubstrateWeight$LT$T$GT$$u20$as$u20$pallet_contracts..weights..WeightInfo$GT$18seal_deposit_event17h95ba3bdc47670061E"
+    },
+    {
+      "body_bytes": 530,
+      "body_sha256": "865e75f5e720f79ff00c0749ef9aed55f817c6f21cd2b9ad4d40ffce7237e2b2",
+      "index": 3053,
+      "name": "_ZN127_$LT$subtensor_transaction_fee..SubtensorEvmFeeHandler$LT$F$C$OU$GT$$u20$as$u20$pallet_evm..OnChargeEVMTransaction$LT$T$GT$$GT$12withdraw_fee17h74fa99816a362c40E"
+    },
+    {
+      "body_bytes": 721,
+      "body_sha256": "52e3c84ffe5116bc3e5ec185c84497870727e6dedf682635194bf3b1a114d754",
+      "index": 3058,
+      "name": "_ZN127_$LT$subtensor_transaction_fee..SubtensorEvmFeeHandler$LT$F$C$OU$GT$$u20$as$u20$pallet_evm..OnChargeEVMTransaction$LT$T$GT$$GT$23correct_and_deposit_fee17he6631f113cef7ce4E"
+    }
+  ],
+  "limits": "Byte/structure review of retained unapproved owned-RPC observation only. Names/indices are leads, not semantics or source/build correspondence, runtime approval, finality or admitted fee authority. Runtime470 function indices cannot be carried into472. Initial root verifier assumed all51 imports were functions and refused; corrected to distinguish memory before body indexing, no product failure inferred."
+}

@@ -1,0 +1,349 @@
+{
+  "aggregate_grant_bytes": 25769803776,
+  "bindings": [
+    {
+      "bytes": 3694,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-published-current/evidence/intake.json",
+      "sha256": "a99554571829b8e67422f5823297735a0b207de5ddd973968608b1c4de164d65"
+    },
+    {
+      "bytes": 15898,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-capture-published-current/evidence/source-join.json",
+      "sha256": "9d4840c862ede6db54da928f7a42bc1c4d8d5e1f93f2e34a9ee96a4b4af6b15b"
+    },
+    {
+      "bytes": 2408,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-fee-context/evidence/export_test.go",
+      "sha256": "f4dae16cf3a790bcfffdcf33b6ec50fb5a1f8fb4af3499e80713c56f2cc04da8"
+    },
+    {
+      "bytes": 2987,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-peer-graph.json",
+      "sha256": "67a567368a074ac5003d4986563a4ceffd7c96515a4b582f83715d990d1829a0"
+    },
+    {
+      "bytes": 1214,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/evidence/compile_only.sh",
+      "sha256": "1133eb2c1d2005c74f9738451e944ccfdb41d3d3522fa36f7158e6a728dc8c15"
+    },
+    {
+      "bytes": 16291,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/evidence/intake.json",
+      "sha256": "27b2bab0b53310f8041eb76ff8d1a379584830058065761cbe1395c5e41f1cbc"
+    },
+    {
+      "bytes": 1013,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/go.work",
+      "sha256": "d209432c2d87b829bb0e38729848a14fa2d8fea51e1d73547450e44308a3fd97"
+    },
+    {
+      "bytes": 6724,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/connect/durablevolume/inventory_linux.go",
+      "sha256": "c94416d5b98c23d612269c695c4d9a3ad82473488813608d98567701ff9b8ddc"
+    },
+    {
+      "bytes": 42432,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/connect/durablevolume/preparation_apply_linux.go",
+      "sha256": "dad0928534eebef22cde78d8b58e8c2855f73a1c3bb99a8606cfcb188fa6cb5e"
+    },
+    {
+      "bytes": 3811,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/connect/durablevolume/preparation_capacity_linux.go",
+      "sha256": "d38dc89956ea91209654bd96e8c84a6b6b683261d613583cf5ff442e717f52d1"
+    },
+    {
+      "bytes": 12087,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/connect/durablevolume/preparation_cohort_linux.go",
+      "sha256": "e5e09a9cc7e3e72d1439650beef57375fccd40c7227b4f457cd93e35bce09e3f"
+    },
+    {
+      "bytes": 23677,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/connect/durablevolume/preparation_restore_linux.go",
+      "sha256": "129ef6f0a9db91685f6887f9a5fb506167f171db2d0801efbc887d47cf917d03"
+    },
+    {
+      "bytes": 1570,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/author_compile.sh",
+      "sha256": "64f0fb4335c1db5a012f8a8e8415138131a2d3e32f9371dc92ecf9eb976a2170"
+    },
+    {
+      "bytes": 86,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/compile-exits.json",
+      "sha256": "5a0e668306cc47e3ac07b9cc54f475f1b56f1f9b34420b9fe0ec67b9930b5eb3"
+    },
+    {
+      "bytes": 12402,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/intake.json",
+      "sha256": "cbfe90289878e1eefb0a10f93c9cb0d07caf4a371deccd3f86877c06620df6cf"
+    },
+    {
+      "bytes": 4182,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/jobs.json",
+      "sha256": "b91c6d26c972da0876f1f5dec06433686216a6fa116b090027dc5cb718152926"
+    },
+    {
+      "bytes": 2040,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/old-source-join.json",
+      "sha256": "d853955f353e70b1ab5940731a62d2bd47addb9551b02c50e91928799bf3a5c4"
+    },
+    {
+      "bytes": 41301,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/old1610/preparation_apply_linux.go",
+      "sha256": "1035c364a11b968d7e660546f7d4d47bb7fd3d4fa6b7b59dee90c969b9ff2a70"
+    },
+    {
+      "bytes": 5985,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/old1610/preparation_cohort_admission_linux.go",
+      "sha256": "739521b820fada910c3efe386866fb892681722d13e9a708f675293ecfc873f2"
+    },
+    {
+      "bytes": 11900,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/old1610/preparation_cohort_linux.go",
+      "sha256": "41a9161361902e3a297fdedb223c818337178322b3f7b3ca94b89c715bfc9c66"
+    },
+    {
+      "bytes": 32898,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/old1610/preparation_plan_linux.go",
+      "sha256": "7a020c14a4ff61f642707b5163379b76c65d1255cead7ecba59494036038836a"
+    },
+    {
+      "bytes": 22274,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/old1610/preparation_restore_linux.go",
+      "sha256": "602aaf9702fce47ef3a8563da42c2bb66d6f5d41991962b714b0168e2583fd4d"
+    },
+    {
+      "bytes": 1635,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/old1610-overlay.json",
+      "sha256": "b58a9e745a6e7279cae48523ce4ea05cc3a3ad1ccd473a08a1f0c598c6b5de9f"
+    },
+    {
+      "bytes": 37137,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/evidence/peer-graph.json",
+      "sha256": "173d48592cff09302e69a0996e01eee5e5bd95f1592c4e954c88de98cc522870"
+    },
+    {
+      "bytes": 1013,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/go.work",
+      "sha256": "d209432c2d87b829bb0e38729848a14fa2d8fea51e1d73547450e44308a3fd97"
+    },
+    {
+      "bytes": 12051,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/sn/mainnet/economic_emission_fixture_test.go",
+      "sha256": "e99017652ce4d0fd29b2f01d54d1417d59534801c5f685c0492a22bc0088066b"
+    },
+    {
+      "bytes": 7832,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/sn/mainnet/monitor_economic_native_archive.go",
+      "sha256": "dae8c86f46cbbc6a0f484af5e66bcebe8672f4dd0d42043e07181ee45197885e"
+    },
+    {
+      "bytes": 16977,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/sn/mainnet/monitor_economic_native_catalog.go",
+      "sha256": "40a1f73880788c72acf310e04b131bf1f48e94b161d9820e10cba0987b64eff0"
+    },
+    {
+      "bytes": 7480,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/sn/mainnet/monitor_economic_native_cohort_admission_test.go",
+      "sha256": "88c3691eb7d2b0af0ca86eac82e6e40128461cf573f01bcdbe2329866b705042"
+    },
+    {
+      "bytes": 16389,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/sn/mainnet/monitor_economic_native_cohort_test.go",
+      "sha256": "cbc7825c67e4a3cb9455e68de4a252a9e41f173862f15b01e010cb4a4f400ee4"
+    },
+    {
+      "bytes": 7488,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/sn/mainnet/monitor_economic_native_fixture_test.go",
+      "sha256": "97a933759114d01d69c8af2d9fe4f4e372596391961f51ded3f20cf863d2e826"
+    },
+    {
+      "bytes": 19080,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/sn/mainnet/monitor_economic_native_restore_test.go",
+      "sha256": "da192e7890b322fdfbb85954618c7929193ce3c11fc122079f6d3bc75c4d42e7"
+    },
+    {
+      "bytes": 8815,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/sn/mainnet/storage_prepare_command_test.go",
+      "sha256": "f0545be732f59c7869afbc80b42732b882c46405995b2c8b144e26b0eaf43b54"
+    },
+    {
+      "bytes": 19547,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-cohort-source-admission/sn/mainnet/storage_prepare_snapshot_restore_test.go",
+      "sha256": "8e80356fea367abff18ce89d4f2f3d61e8a57b1f7cf7ed887bbfb2e31e935ad3"
+    },
+    {
+      "bytes": 10651,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server/go.mod",
+      "sha256": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8"
+    },
+    {
+      "bytes": 69535,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server/go.sum",
+      "sha256": "faf759f6bd62a41e196e796268466aadb3dcc13ac3b65fb724bbdc870f53e5b6"
+    },
+    {
+      "bytes": 11292,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/sn/go.mod",
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "bytes": 66649,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/sn/go.sum",
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "bytes": 12626,
+      "path": "/mnt/data/sn-testnet/qualification-resource-admission-audit-20261003/proposal.json",
+      "sha256": "2f973666d9c1633e60762635ecba93e1450b24de986cfd2ca77ca96a201153a7"
+    },
+    {
+      "bytes": 9231,
+      "path": "/mnt/data/sn-testnet/qualification-resource-admission-audit-20261003/root-adoption.json",
+      "sha256": "52b2a454dbc25d520ea293a83bee714f173f5c258903b6b1b1c3ec92f346ecc6"
+    },
+    {
+      "bytes": 49163,
+      "path": "/mnt/data/sn-testnet/qualification-resource-mixed-63-collector-20261003/proposal.json",
+      "sha256": "151f9345ddaf0088aa7836d146bad8720c5b1d195446eadb11359feae374270b"
+    },
+    {
+      "bytes": 19580,
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/971-race-grant-ledger.json",
+      "sha256": "368397abcb682561e4159810545a9ff9db0f6ebfc007f39f122221f348fcc47e"
+    },
+    {
+      "bytes": 17505,
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-final-scoped-receipt.json",
+      "sha256": "0583add742909cf6074f42c03a8aa7980d5be11736c0c5aa983234c21f0bd9ec"
+    },
+    {
+      "bytes": 2349,
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/capture-request971-resource-independent-review.json",
+      "sha256": "b08915954641b3b7f51660adcb9544a5a420d36a1c4d78266defd83fffeb95b8"
+    },
+    {
+      "bytes": 36751,
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-race-direct-compile.resource.csv",
+      "sha256": "a4b3465f92f86ffb4a3909bbb8bf1204bf3c3167eee3d3691ffb9f28bbbabf51"
+    },
+    {
+      "bytes": 305,
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/closing-canonical-race.resource.csv",
+      "sha256": "14e969bbf2020b7d4c072656b27da3755b3e0feb5e0a18f9ba2d7484f3c99c3a"
+    },
+    {
+      "bytes": 38101,
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-race-direct-compile.resource.csv",
+      "sha256": "012018e456b9dd67a14efc30ff88fa4d2011554efaa1af1fb3a5b5ccff786324"
+    },
+    {
+      "bytes": 382,
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/complete-body-race.resource.csv",
+      "sha256": "3ccabe99196cd3ee31e4ce994ba330676703b381be212848d954a5ff6a92cf85"
+    },
+    {
+      "bytes": 37351,
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-race-direct-compile.resource.csv",
+      "sha256": "010fd0b6799b5e4dbdbf5fc74e0b1462ce7ab50aacc7bb2fc6cc05b8cfb94564"
+    },
+    {
+      "bytes": 383,
+      "path": "/mnt/data/sn-testnet/sol-historical-capture-request-971-independent-20261003/evidence/parent-runtime-race.resource.csv",
+      "sha256": "45b793791b5f64904765f050f75062429c3dd6257b12ab222862ba3aa6da0d39"
+    },
+    {
+      "bytes": 2728,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/review.json",
+      "sha256": "27924c8775a87ac9a9b26371de8a538cf98e63ebe8a22da1819de470c742af1d"
+    },
+    {
+      "bytes": 858,
+      "path": "/mnt/data/sn-testnet/sol-native-cohort-source63-independent-20261003/evidence/author-source-readback.json",
+      "sha256": "378abfee63b6515c10467ef8d7f9fb3994b8871f45b38c38d06c91e99454bc3d"
+    },
+    {
+      "bytes": 52782,
+      "path": "/mnt/data/sn-testnet/qualification-resource-mixed-63-collector-v2-20261003/proposal.json",
+      "sha256": "f4f11c3248ace2181f6ba24610baca82a5c6ab9d5af47582c3f4d4702af86e21"
+    },
+    {
+      "bytes": 3130,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/review-v2.json",
+      "sha256": "30fd48d842af6ed15f41e16ea6a046a4b8c8397fbbf0b2aa4f1a7ea0012b05a3"
+    },
+    {
+      "bytes": 723,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/lease-baseline.json",
+      "sha256": "331b6887893acb0fcdfe9d6b6a03a510694d18064e60c645ea8cf897fc148ea9"
+    },
+    {
+      "bytes": 7119,
+      "path": "/mnt/data/sn-testnet/qualification-resource-mixed-63-collector-v2-20261003/root-adoption.json",
+      "sha256": "c590636ac005fd5e026097ebdebcbf8cba0b0d7479ca22ee1b9f7efd59fa9dcb"
+    }
+  ],
+  "captured_utc": "2026-10-03T16:52:40.945871+00:00",
+  "expires_new_admission_utc": "2026-10-03T22:51:30.534241+00:00",
+  "fixed_admission_floor_bytes": 92385947648,
+  "fixed_baseline_available_bytes": 118155751424,
+  "limits": [
+    "Reversible local qualification resources only. No production reserve, application limit, chain authority, signing, deployment or activation changed. Original971 grant remains terminal; no recharge or extra attempt. Existing generic110GiB policy remains for excluded workloads.",
+    "Byte/inode samples are observations, not an OS write quota or instantaneous peak guarantee. Stop new admissions and independently review forecast overshoot; join already admitted children.",
+    "No completed test, final combined-source qualification or live mainnet acceptance is established by adoption. Server synthetic exporter uses exact5f plus selected SN866 graph, not previous5f+b18.",
+    "Original16GiB proposal and review retained; conservative V2 budgets512MiB retained/cache growth per12 compiles, twice total forecast21.5GiB rounded24GiB."
+  ],
+  "maximum_phase_attempts": 34,
+  "phase_ids": [
+    "archive63",
+    "archive_collector",
+    "graph_63",
+    "graph_collector",
+    "graph_exporter",
+    "graph_evm",
+    "63_new_core_normal_compile",
+    "63_new_core_normal_test",
+    "63_new_core_race_compile",
+    "63_new_core_race_test",
+    "63_new_mainnet_normal_compile",
+    "63_new_mainnet_normal_test",
+    "63_new_mainnet_normal_full512",
+    "63_new_mainnet_race_compile",
+    "63_new_mainnet_race_test",
+    "63_new_mainnet_race_full512",
+    "63_old1610_core_normal_compile",
+    "63_old1610_core_normal_test",
+    "63_old1610_core_race_compile",
+    "63_old1610_core_race_test",
+    "63_old1610_mainnet_normal_compile",
+    "63_old1610_mainnet_normal_test",
+    "63_old1610_mainnet_race_compile",
+    "63_old1610_mainnet_race_test",
+    "63_core_vet",
+    "63_mainnet_vet",
+    "collector_normal_compile",
+    "collector_normal_test",
+    "collector_race_compile",
+    "collector_race_test",
+    "collector_vet",
+    "exporter_compile",
+    "exporter_test",
+    "evm42_compile"
+  ],
+  "root_verified": {
+    "arithmetic_verified": true,
+    "bindings_rehashed": 52,
+    "clean_head_tree_pins": [
+      "collector",
+      "core63",
+      "evm_compile_only",
+      "server_exporter_read_only",
+      "server_exporter_selected_sn_peer",
+      "sn63"
+    ],
+    "kernel_flock_conflict_observed": true,
+    "live_owner_pid": 104400,
+    "phase_ids_unique": true
+  },
+  "schema": "urnetwork-root-mixed-qualification-admission-review-v1",
+  "status": "FINITE_LOCAL_GRANT_ADOPTED_NOT_BEHAVIORAL_QUALIFICATION"
+}

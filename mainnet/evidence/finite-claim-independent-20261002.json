@@ -1,0 +1,89 @@
+{
+  "author_receipt_sha256": "3d16f436e1134cdf0074e981cc6f554306f1b2beb3788ad39a0a0b64e0ee5f76",
+  "effective_connect": "v0.0.0-20261002121440-0a5cda0ebe78",
+  "fixed_normal": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      35.448
+    ],
+    "pass": 9,
+    "skip": 0,
+    "started": 9,
+    "terminal": 9,
+    "unresolved": []
+  },
+  "fixed_race": {
+    "causal_outputs": [],
+    "fail": 0,
+    "failed_roots": [],
+    "package": [
+      "pass",
+      42.345
+    ],
+    "pass": 9,
+    "skip": 0,
+    "started": 9,
+    "terminal": 9,
+    "unresolved": []
+  },
+  "limits": [
+    "Old read-calls overlay swaps one exact prior production body, not a full old-source rebuild.",
+    "No live signing, submission, deployment, or broad miner suite claim."
+  ],
+  "manifest_sha256": "b03cbc0ed515b5cb0e92984771498e68c4286043030ff14753be550284ac3606",
+  "old_body_normal": {
+    "causal_outputs": [
+      "claim: 503 Service Unavailable: synthetic temporary outage",
+      "claim: 503 Service Unavailable: synthetic temporary outage"
+    ],
+    "fail": 2,
+    "failed_roots": [
+      "TestFiniteClaimPublicEpochGetRecovers",
+      "TestFiniteClaimPublicPoolGetRecovers"
+    ],
+    "package": [
+      "fail",
+      1.335
+    ],
+    "pass": 0,
+    "skip": 0,
+    "started": 2,
+    "terminal": 2,
+    "unresolved": []
+  },
+  "old_body_race": {
+    "causal_outputs": [
+      "claim: 503 Service Unavailable: synthetic temporary outage",
+      "claim: 503 Service Unavailable: synthetic temporary outage"
+    ],
+    "fail": 2,
+    "failed_roots": [
+      "TestFiniteClaimPublicEpochGetRecovers",
+      "TestFiniteClaimPublicPoolGetRecovers"
+    ],
+    "package": [
+      "fail",
+      2.635
+    ],
+    "pass": 0,
+    "skip": 0,
+    "started": 2,
+    "terminal": 2,
+    "unresolved": []
+  },
+  "schema": "sol-finite40d-independent-v1",
+  "server_commit": "10a8f4d8ab73822b4c796f9035486f0507e09bd2",
+  "setup_failure": "First module preflight found five dangling local sibling links; corrected private links before any product test; retained graph-setup-failure.json.",
+  "sn_commit": "40d07ae67cf43e9870a0578faa6f51073346dd2a",
+  "sn_tree": "975dcf42f3f86adc2c99769ae7825dcf6ae15498",
+  "source_readback": {
+    "initial_tracked_blobs": 20039,
+    "mismatches": 0,
+    "terminal_tracked_blobs": 20039
+  },
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0
+}

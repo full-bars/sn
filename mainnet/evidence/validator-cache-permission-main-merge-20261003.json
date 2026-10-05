@@ -1,0 +1,16 @@
+{
+  "candidate": "0b58ad52cb243c38257a8fc1e97faa13754ac26f",
+  "changed_paths": [
+    "validator/production_receipt_checkpoint_test.go"
+  ],
+  "limits": [
+    "No mainnet deployment or runtime authority claim",
+    "Full-lineage archive probe remains separate"
+  ],
+  "main_merge": "f834409a0402eb31e0be6e9320805453a129f997",
+  "previous_main": "dc597308226b85d67276d27a9bffad4ee0f44b43",
+  "production_and_module_inputs_unchanged": true,
+  "qualification": "validator-cache-permission0b58-qualification-20261003.json",
+  "qualified_fixture_bytes_exact": true,
+  "status": "ROOT_VERIFIED_MERGED_EXACT_TEST_FIXTURE"
+}

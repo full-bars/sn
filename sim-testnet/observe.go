@@ -18,6 +18,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -199,7 +200,74 @@ type JournalSummary struct {
 	Actions       map[string]bool `json:"verified_actions,omitempty"`
 }
 
+// Status is polled throughout a campaign. The journal is append-only, so its
+// parsed summary is reusable while its size and modification time are stable.
+// Evidence producers and final validation independently reread the complete
+// hash chain; this cache only avoids turning routine health observation into
+// repeated multi-gigabyte local I/O.
+type statusJournalSummaryCacheEntry struct {
+	size    int64
+	modTime int64
+	summary JournalSummary
+}
+
+var statusJournalSummaryCache = struct {
+	sync.Mutex
+	entries map[string]statusJournalSummaryCacheEntry
+}{entries: map[string]statusJournalSummaryCacheEntry{}}
+
+func cloneJournalSummary(summary JournalSummary) JournalSummary {
+	copy := JournalSummary{Entries: summary.Entries, LastHash: summary.LastHash, LatestByStage: map[string]int{}, Actions: map[string]bool{}}
+	for key, value := range summary.LatestByStage {
+		copy.LatestByStage[key] = value
+	}
+	for key, value := range summary.Actions {
+		copy.Actions[key] = value
+	}
+	return copy
+}
+
+func statusJournalSummary(path string) (JournalSummary, error) {
+	info, err := os.Stat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return JournalSummary{}, nil
+	}
+	if err != nil {
+		return JournalSummary{}, err
+	}
+	modTime := info.ModTime().UnixNano()
+	statusJournalSummaryCache.Lock()
+	if cached, found := statusJournalSummaryCache.entries[path]; found && cached.size == info.Size() && cached.modTime == modTime {
+		result := cloneJournalSummary(cached.summary)
+		statusJournalSummaryCache.Unlock()
+		return result, nil
+	}
+	statusJournalSummaryCache.Unlock()
+	entries, err := readJournal(path)
+	if err != nil {
+		return JournalSummary{}, err
+	}
+	summary := summarizeJournal(entries)
+	statusJournalSummaryCache.Lock()
+	statusJournalSummaryCache.entries[path] = statusJournalSummaryCacheEntry{size: info.Size(), modTime: modTime, summary: cloneJournalSummary(summary)}
+	statusJournalSummaryCache.Unlock()
+	return summary, nil
+}
+
 func Status(ctx context.Context, cfg *ResolvedConfig, stateDir string) (*DeploymentStatus, error) {
+	return statusWithContractReader(ctx, cfg, stateDir, inspectContracts)
+}
+
+// Keep partial diagnostic status, but do not turn a transient deployed-contract
+// read failure into an apparent absence. The scenario's bounded retry owner
+// must receive the original typed cause rather than only its warning text.
+func statusWithContractReader(ctx context.Context, cfg *ResolvedConfig, stateDir string, readContracts func(context.Context, *ResolvedConfig, string, string) (*ContractView, error)) (*DeploymentStatus, error) {
+	if ctx == nil || cfg == nil || cfg.Config == nil || readContracts == nil {
+		return nil, errors.New("deployment status has no observation owner")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	s := &DeploymentStatus{
 		Schema:       "urnetwork-sim-status-v1",
 		GeneratedAt:  time.Now().UTC().Format(time.RFC3339),
@@ -230,22 +298,30 @@ func Status(ctx context.Context, cfg *ResolvedConfig, stateDir string) (*Deploym
 		s.Warnings = append(s.Warnings, "local supervisor has not started")
 		s.Healthy = false
 	}
-	entries, err := readJournal(filepath.Join(stateDir, "journal.jsonl"))
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
+	summary, err := statusJournalSummary(filepath.Join(stateDir, "journal.jsonl"))
+	if err != nil {
 		return nil, err
 	}
-	s.Journal = summarizeJournal(entries)
+	s.Journal = summary
 	if _, err := os.Stat(filepath.Join(stateDir, "public", "contracts.json")); err == nil {
-		view, viewErr := inspectContracts(ctx, cfg, stateDir, "")
+		view, viewErr := readContracts(ctx, cfg, stateDir, "")
 		if viewErr != nil {
 			s.Warnings = append(s.Warnings, viewErr.Error())
 			s.Healthy = false
+			if ctx.Err() != nil || scenarioSnapshotTransportError(viewErr, false) {
+				return s, fmt.Errorf("deployed contract observation: %w", errors.Join(viewErr, ctx.Err()))
+			}
 		} else {
+			if view == nil {
+				return s, errors.New("deployed contract observation returned no view")
+			}
 			s.Contracts = view
 			if !view.ConservationHolds || !view.RuntimeCodeMatches {
 				s.Healthy = false
 			}
 		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return s, fmt.Errorf("read deployed contract manifest: %w", err)
 	}
 	return s, nil
 }
@@ -472,7 +548,7 @@ func (self *liveScenarioProbe) fetchReplicatedCampaignEnvelopeWithDecodeV2(ctx c
 	var first *ReleaseEvidenceEnvelope
 	for _, operator := range public.Operators {
 		evidenceURL := strings.TrimSuffix(operator.APIURL, "/") + "/sn/evidence?hash=" + strings.ToLower(hash)
-		encoded, _, err := self.get(ctx, evidenceURL, maximumBytes)
+		encoded, _, err := self.getCampaignEvidence(ctx, evidenceURL, kind, maximumBytes, limits)
 		if err == nil {
 			err = ctx.Err()
 		}
@@ -2046,7 +2122,7 @@ func inspectContracts(ctx context.Context, cfg *ResolvedConfig, stateDir, manife
 	}
 	var fleetBatcher common.Address
 	var fleetBatcherRuntimeHash string
-	if plan, planErr := readPersistedPlan(stateDir); planErr == nil {
+	if plan, planErr := readFleetCensusPlan(cfg, stateDir); planErr == nil {
 		if plan.DeploymentID != deployment.DeploymentID {
 			return nil, errors.New("persisted plan deployment differs from observed contract deployment")
 		}
@@ -2449,7 +2525,7 @@ func contractCallAt(ctx context.Context, client *ethclient.Client, address commo
 	if err != nil {
 		return nil, err
 	}
-	out, err := client.CallContract(ctx, ethereum.CallMsg{To: &address, Data: data}, new(big.Int).SetUint64(block))
+	out, err := readEvmContractAt(ctx, client, address, data, block)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", method, err)
 	}
@@ -2628,7 +2704,10 @@ func (self ethEVMBlockReader) EVMBlockByNumber(ctx context.Context, number *big.
 		argument = "0x" + number.Text(16)
 	}
 	var block *evmRPCBlock
-	if err := self.client.Client().CallContext(ctx, &block, "eth_getBlockByNumber", argument, false); err != nil {
+	if err := retryEvmReadRpcCall(ctx, "eth_getBlockByNumber "+argument, defaultFinalSemanticRPCRetryPolicy(), func(attempt context.Context) error {
+		block = nil
+		return self.client.Client().CallContext(attempt, &block, "eth_getBlockByNumber", argument, false)
+	}); err != nil {
 		return ChainHead{}, err
 	}
 	return decodeEVMRPCBlock(block, number)

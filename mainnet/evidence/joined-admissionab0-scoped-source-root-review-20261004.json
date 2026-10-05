@@ -1,0 +1,129 @@
+{
+  "schema": "joined-admission-ab0-scoped-source-review-v1",
+  "status": "SOURCE_REVIEWED_BEHAVIOR_PENDING",
+  "head": "ab0b1a6fc58f4d0be4bfe84d26d4bb892ddd6a64",
+  "base": "ade5a21403746a620bc37ace3415f83dd4402e61",
+  "git_sources": [
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/sn",
+      "git_path": "mainnet/economic_conservation_admission_fixture_test.go",
+      "git_blob": "8718e63c760f8ff495c232d43b3484ca997c762e",
+      "bytes": 3293,
+      "sha256": "9c5a19486da64afea4815495f22ad1b0c0c05b02a692997633f31767c7934279",
+      "reader": "git show pinned HEAD:path; sparse checkout availability does not define source"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/sn",
+      "git_path": "mainnet/economic_conservation_archive_command.go",
+      "git_blob": "bad0a90c35747047c5601c2fcec4966dcf2c739c",
+      "bytes": 19558,
+      "sha256": "0b4060b524d5bcc83b342633e4fd47c8418aee1a8642ac86f5ccee8bd673354e",
+      "reader": "git show pinned HEAD:path; sparse checkout availability does not define source"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/sn",
+      "git_path": "mainnet/economic_conservation_joined_admission_test.go",
+      "git_blob": "3f168ba2b2ff4b653dab4f2fdadeeb8cc1b71868",
+      "bytes": 7543,
+      "sha256": "09fccf27d931db6ff0f160941405e5a72f469260cbf8308c85933aefd1f31343",
+      "reader": "git show pinned HEAD:path; sparse checkout availability does not define source"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/sn",
+      "git_path": "mainnet/economic_conservation_native_renewal_test.go",
+      "git_blob": "21a8481aed21c928e1cc255268b5870060d123c6",
+      "bytes": 25944,
+      "sha256": "15fc9a1d339a1ede7bb3eed191fbcbb66c6c403ebd20c8d83efc20c15aa4c4ae",
+      "reader": "git show pinned HEAD:path; sparse checkout availability does not define source"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/sn",
+      "git_path": "mainnet/economic_conservation_principal_test.go",
+      "git_blob": "6e7f889fe5983f2d446921f828a6f586a31e2cdc",
+      "bytes": 17294,
+      "sha256": "1e6f6f19dd2c5973cfc7618d365c0f270ecddff5126de621732a5fa39daa0113",
+      "reader": "git show pinned HEAD:path; sparse checkout availability does not define source"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/sn",
+      "git_path": "mainnet/economic_conservation_restore_test.go",
+      "git_blob": "818fa4dbf324b805188c39854fffb52d801351b9",
+      "bytes": 23055,
+      "sha256": "9d32ef4a0791a082666f575146607b4e6cd053ab3794e61b6d1f554a495af8bc",
+      "reader": "git show pinned HEAD:path; sparse checkout availability does not define source"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/sn",
+      "git_path": "mainnet/economic_native_producer_restore_test.go",
+      "git_blob": "0984f7af91ada490a7194930b92f44d05ee4bf53",
+      "bytes": 32562,
+      "sha256": "15d00f02177ac578203ee69714a59f054fd88ff2359d765140838c749a49cb54",
+      "reader": "git show pinned HEAD:path; sparse checkout availability does not define source"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/sn",
+      "git_path": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "git_blob": "3f380b0436b57902db295ac9540e6dae401ddfd1",
+      "bytes": 34059,
+      "sha256": "badfb6f7aa688dd6eed779f417d40b06b7b1aee1760a996bab0eed321d3b339d",
+      "reader": "git show pinned HEAD:path; sparse checkout availability does not define source"
+    }
+  ],
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/evidence/qualification-recipe.json",
+      "bytes": 22921,
+      "sha256": "361dfa33df2b28ef63d7173e2fbdae454a4d0b9f0005533980d47b74be96a554"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-admission-counter/evidence/intake.json",
+      "bytes": 2317,
+      "sha256": "1b3733851927cc3066433790d72830ee162328622d363fc2cd4bb72fce17980f"
+    }
+  ],
+  "review_scope": "Complete new admission helper and joined regression files; complete diffs of six remaining changed files. This is source review, not test execution.",
+  "production_change": "After authoritative original archive admission and Claim basis, reattach compacted.archiveView to the admitted shared view before Claim/native adoption. Earlier candidate-private fee compaction cannot publish private state on a failed admission.",
+  "regression_scope": [
+    "Real fee verifier and original Claim HTTP publication; separately signed Claim and native revisions.",
+    "Actual directory sync EIO after completed checkpoint publication; identical retry twice, exact original archive bytes and next hash, reopened second archive, unknown obligations unchanged.",
+    "Validly re-signed inconsistent Claim epoch refused with unchanged original; same original then admits valid successor.",
+    "Unobserved initial Claim census refused; actual HTTP establishes census. Counter assertion corrected before compilation."
+  ],
+  "fixture_corrections": [
+    "Dedicated economic-review namespace preserves original daemon preparation request hash.",
+    "Explicit64MiB/4096 declaration precedes archives; free-space observation does not enlarge authority.",
+    "Common fixture mount/type/UUID rebound before target preparation; source request pinned before export.",
+    "Separate proof-drained combined exporter checks all three pending parent values and executes all five original jobs before exclusive exports; standalone producer remains separate."
+  ],
+  "qualification_scope": {
+    "go_roots_per_mode": 41,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "partitions": [
+      {
+        "name": "ordinary",
+        "count": 21
+      },
+      {
+        "name": "actual-dual-engine",
+        "count": 19
+      },
+      {
+        "name": "long-129-review",
+        "count": 1
+      }
+    ],
+    "vet_packages": [
+      "./mainnet"
+    ],
+    "rust_export": "historical::tests::native_execution_tests::historical_native_conservation_exports_proof_drained_contiguous_jobs"
+  },
+  "reviewer_reader_failure": "First evidence collector expected all sparse paths physically present and stopped on FileNotFoundError before writing evidence. Repeated source census using pinned Git objects; no product or compiler failure inferred.",
+  "limits": [
+    "No compiled/executed result forab0, production handoff, joined restore or control inferred.",
+    "Exact effectiveCorec618 graph remains required.",
+    "Does not include later large-head profile, populated Yuma, entitlement or unattended producer join."
+  ]
+}

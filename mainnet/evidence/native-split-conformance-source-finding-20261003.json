@@ -1,0 +1,23 @@
+{
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-execution-witness/sn/mainnet/economic_native_accounting.go",
+      "sha256": "13f43188b0389ebb511614b7f207b085a0162b2aa99c3804b15146ea60a43112"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-execution-witness/sn/mainnet/monitor_economic_native.go",
+      "sha256": "3a134e676c7fad954893549d532b5d288fcde075a10adb3b40c370575c68811f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-execution-witness/sn/mainnet/monitor_economic_native_worker.go",
+      "sha256": "9984ed0d96eff5410a4f517217c682e9b462a001e331dee1e2b69a742f7d8b38"
+    }
+  ],
+  "captured_utc": "2026-10-03T19:04:35.104315+00:00",
+  "deterministic_control": "A conserving wrong split, including 20/80, cannot qualify 10/90 acceptance. Page partition must not reset rounding carry or tolerance.",
+  "finding": "Window validation conserves original miner tranche and recomputes 10/90 references but does not compare actual provider/owner amounts against those references. Worker known flags establish presence of accounting, not policy conformance.",
+  "required_behavior": "Keep authenticated observation separate from governed launch conformance. Compare cumulative provider and recycle sums against exact reference with reviewed rounding/capture/Claim reconciliation; expose deviation and unknown authority explicitly.",
+  "schema": "urnetwork-root-native-split-source-finding-v1",
+  "scope_limit": "Review of unsealed source only; actual runtime/layout/finality, full quantization and cross-domain conservation remain unqualified.",
+  "status": "UNSEALED_WIP_SOURCE_REVIEW_NOT_BEHAVIOR"
+}

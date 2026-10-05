@@ -1,0 +1,52 @@
+rule_files:
+  - operator-monitor-alerts.example.yml
+evaluation_interval: 30s
+tests:
+  - name: independently expected second role stays visible
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_operator_expected{env="fixture",host="first.example",role="operator-a"}'
+        values: '1+0x8'
+      - series: 'sn_mainnet_operator_expected{env="fixture",host="first.example",role="operator-b"}'
+        values: '1+0x8'
+      - series: 'sn_mainnet_operator_sample_timestamp_seconds{env="fixture",host="first.example",role="operator-a"}'
+        values: '1+30x8'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetOperatorMonitorMissing
+        exp_alerts:
+          - exp_labels: {env: fixture, host: first.example, role: operator-b, severity: critical}
+            exp_annotations: {summary: 'Operator observer is absent for operator-b on first.example'}
+  - name: empty pending count cannot heal a lost source or an open incident
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_operator_read_current{role="operator-a"}'
+        values: '0+0x8'
+      - series: 'sn_mainnet_operator_pending_intents{role="operator-a"}'
+        values: '0+0x8'
+      - series: 'sn_mainnet_operator_transactions_incident_open{role="operator-a"}'
+        values: '1+0x8'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetOperatorSourceUnknown
+        exp_alerts:
+          - exp_labels: {role: operator-a, severity: warning}
+            exp_annotations: {summary: 'Operator journal source or scan progress is unknown for operator-a'}
+      - eval_time: 3m
+        alertname: SnMainnetOperatorTransactionIncidentOpen
+        exp_alerts:
+          - exp_labels: {role: operator-a, severity: warning}
+            exp_annotations: {summary: 'Operator transaction incident remains unresolved for operator-a'}
+  - name: stopped sampler cannot remain fresh through retained zero counts
+    interval: 30s
+    input_series:
+      - series: 'sn_mainnet_operator_sample_timestamp_seconds{role="operator-a"}'
+        values: '30+0x8'
+      - series: 'sn_mainnet_operator_pending_intents{role="operator-a"}'
+        values: '0+0x8'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: SnMainnetOperatorMonitorStale
+        exp_alerts:
+          - exp_labels: {role: operator-a, severity: critical}
+            exp_annotations: {summary: 'Operator observer clock or sample age is unsafe for operator-a'}

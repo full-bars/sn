@@ -24,6 +24,8 @@ import (
 	"sync"
 	"testing"
 
+	"golang.org/x/crypto/blake2b"
+
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	gsrpcgeth "github.com/centrifuge/go-substrate-rpc-client/v4/gethrpc"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -54,26 +56,29 @@ type runtimeEvidenceNativeKeyV2 struct {
 // Test mutations are serialized with individual raw responses; tests alter
 // state only after the previous complete production call has returned.
 type runtimeEvidenceActivationRpcV2TestFixture struct {
-	base               *runtimeEvidenceProvisionV2TestFixture
-	executor           *Executor
-	chain              *validatorcomponent.ChainClient
-	stateLock          sync.Mutex
-	metadataHex        string
-	nativeRuntime      crv4.RuntimeArtifactIdentity
-	nativeHash         types.Hash
-	nativeNumber       uint64
-	genesis            types.Hash
-	evmHash            common.Hash
-	evmNumber          uint64
-	finalizedEvmNumber uint64
-	finalizedEvmHash   common.Hash
-	hotkeys            [3][32]byte
-	permits            [3]bool
-	totalStake         [3]uint64
-	threshold          uint64
-	storageKeys        map[string]runtimeEvidenceNativeKeyV2
-	views              map[string]string
-	calls              map[string]uint64
+	base                   *runtimeEvidenceProvisionV2TestFixture
+	executor               *Executor
+	chain                  *validatorcomponent.ChainClient
+	stateLock              sync.Mutex
+	metadataHex            string
+	provisionalRuntimeAPIs bool
+	nativeRuntime          crv4.RuntimeArtifactIdentity
+	nativeHeader           types.Header
+	nativeHash             types.Hash
+	nativeNumber           uint64
+	genesis                types.Hash
+	evmHash                common.Hash
+	evmNumber              uint64
+	finalizedEvmNumber     uint64
+	finalizedEvmHash       common.Hash
+	hotkeys                [3][32]byte
+	permits                [3]bool
+	totalStake             [3]uint64
+	threshold              uint64
+	storageKeys            map[string]runtimeEvidenceNativeKeyV2
+	views                  map[string]string
+	calls                  map[string]uint64
+	requestError           func(string, []json.RawMessage) error
 }
 
 // Both validators inhabit one real three-entry census. Storage keys use the
@@ -93,9 +98,18 @@ func newRuntimeEvidenceActivationConfiguredRpcV2TestFixture(t *testing.T, config
 	if err := os.Chmod(stateDir, 0o700); err != nil {
 		t.Fatal(err)
 	}
-	self := &runtimeEvidenceActivationRpcV2TestFixture{base: base, nativeHash: types.Hash{0x31}, nativeNumber: 100, genesis: types.Hash(base.plan.ValidatorEvidence.GenesisHash),
+	self := &runtimeEvidenceActivationRpcV2TestFixture{base: base, nativeNumber: 100, genesis: types.Hash(base.plan.ValidatorEvidence.GenesisHash),
 		evmHash: common.Hash{0x32}, evmNumber: 200, finalizedEvmNumber: 200, finalizedEvmHash: common.Hash{0x32}, threshold: 100,
 		hotkeys: [3][32]byte{{0x71}}, permits: [3]bool{false, true, true}, totalStake: [3]uint64{0, 150, 170}, storageKeys: map[string]runtimeEvidenceNativeKeyV2{}, views: map[string]string{}, calls: map[string]uint64{}}
+	// The pinned native hash commits the complete synthetic SCALE header.
+	// Readers must authenticate real fields; a hash-shaped placeholder is not
+	// a canonical header and a non-genesis block cannot have a zero parent.
+	self.nativeHeader = types.Header{ParentHash: types.Hash{0x30}, Number: types.BlockNumber(self.nativeNumber), StateRoot: types.Hash{5}, ExtrinsicsRoot: types.Hash{6}, Digest: types.Digest{}}
+	headerRaw, err := codec.Encode(self.nativeHeader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	self.nativeHash = types.Hash(blake2b.Sum256(headerRaw))
 	if base.cfg.Config.Topology.Validators != 2 || base.cfg.Config.Topology.Operators != 2 {
 		t.Fatal("activation transport fixture requires the real four source pairs")
 	}
@@ -223,6 +237,11 @@ func (self *runtimeEvidenceActivationRpcV2TestFixture) serve(writer http.Respons
 		self.stateLock.Lock()
 		defer self.stateLock.Unlock()
 		self.calls[call.Method]++
+		if self.requestError != nil {
+			if err := self.requestError(call.Method, call.Params); err != nil {
+				return nil, err
+			}
+		}
 		return self.dispatchWithLock(request.Context(), call.Method, call.Params)
 	}()
 	response := map[string]any{"jsonrpc": "2.0", "id": call.Id}
@@ -311,7 +330,7 @@ func (self *runtimeEvidenceActivationRpcV2TestFixture) dispatchWithLock(ctx cont
 		if err := check(self.nativeHash.Hex()); err != nil {
 			return nil, err
 		}
-		return map[string]any{"parentHash": types.Hash{}.Hex(), "number": hexutil.EncodeUint64(self.nativeNumber), "stateRoot": types.Hash{5}.Hex(), "extrinsicsRoot": types.Hash{6}.Hex(), "digest": map[string]any{"logs": []string{}}}, nil
+		return map[string]any{"parentHash": self.nativeHeader.ParentHash.Hex(), "number": hexutil.EncodeUint64(uint64(self.nativeHeader.Number)), "stateRoot": self.nativeHeader.StateRoot.Hex(), "extrinsicsRoot": self.nativeHeader.ExtrinsicsRoot.Hex(), "digest": map[string]any{"logs": []string{}}}, nil
 	case "chain_getBlockHash":
 		if len(params) != 1 {
 			return nil, errors.New("activation native block parameter count differs")
@@ -330,6 +349,10 @@ func (self *runtimeEvidenceActivationRpcV2TestFixture) dispatchWithLock(ctx cont
 	case "state_getRuntimeVersion":
 		if err := check(self.nativeHash.Hex()); err != nil {
 			return nil, err
+		}
+		if self.provisionalRuntimeAPIs {
+			v := self.nativeRuntime.Version
+			return map[string]any{"specName": v.SpecName, "specVersion": v.SpecVersion, "transactionVersion": v.TransactionVersion, "stateVersion": v.StateVersion, "apis": []any{[]any{"0x8375104b299b74c5", 2}}}, nil
 		}
 		return self.nativeRuntime.Version, nil
 	case "state_getStorageHash":

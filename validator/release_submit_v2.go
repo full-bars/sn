@@ -38,6 +38,12 @@ func releaseRuntimeIdentityV2(cfg *ReleaseConfig) crv4.RuntimeArtifactIdentity {
 // workers. Exact head math is subsequently replayed by the V2 intent store;
 // this boundary proves native byte identity, finality and real signer authority.
 func authenticateReleaseNativeSourceReferenceV2(ctx context.Context, native *crv4.Chain, cfg *ReleaseConfig, intent *SteeringIntent, artifact *ReleaseMeasurementArtifact) error {
+	lifecycleCfg := cfg
+	var err error
+	cfg, err = productionConfigForIntent(cfg, intent)
+	if err != nil {
+		return err
+	}
 	if ctx == nil || native == nil || cfg == nil || intent == nil || intent.Prepared == nil || artifact == nil || artifact.Schema != ReleaseMeasurementSchemaV2 {
 		return errors.New("V2 native source reference owner is incomplete")
 	}
@@ -46,7 +52,11 @@ func authenticateReleaseNativeSourceReferenceV2(ctx context.Context, native *crv
 		return err
 	}
 	prepared := intent.Prepared
-	if prepared.SourceCommitment == nil || prepared.SourceCommitment.Hash != releaseHex32(releaseNativeSourceHashV2(encoded)) || !releaseBlockAtOrBefore(artifact.NativeSnapshotBlock, artifact.NativeSnapshotHash, prepared.PreparedAtBlock, prepared.PreparedAtBlockHash) {
+	sourceHash, err := releaseIntentNativeSourceHash(ctx, encoded, intent)
+	if err != nil {
+		return err
+	}
+	if prepared.SourceCommitment == nil || prepared.SourceCommitment.Hash != releaseHex32(sourceHash) || !releaseBlockAtOrBefore(artifact.NativeSnapshotBlock, artifact.NativeSnapshotHash, prepared.PreparedAtBlock, prepared.PreparedAtBlockHash) {
 		return errors.New("V2 native source does not commit its exact pre-Prepared artifact")
 	}
 	own := *native
@@ -54,7 +64,11 @@ func authenticateReleaseNativeSourceReferenceV2(ctx context.Context, native *crv
 	if err != nil {
 		return err
 	}
-	if err := authenticateHistoricalNativeRuntimeAtContext(ctx, &own, cfg, hash); err != nil {
+	authenticateSource := authenticateHistoricalNativeRuntimeAtContext
+	if isOwnerRecycleProductionConfig(cfg) && intent.FinalizedBlock != 0 {
+		authenticateSource = authenticateProductionSourceRuntimeAtContext
+	}
+	if err := authenticateSource(ctx, &own, cfg, hash); err != nil {
 		return err
 	}
 	if err := own.ValidatePreparedSource(prepared); err != nil {
@@ -64,9 +78,14 @@ func authenticateReleaseNativeSourceReferenceV2(ctx context.Context, native *crv
 	if err != nil {
 		return err
 	}
-	observed, err := crv4.ReadValidatorScheduleAtContext(ctx, &own, crv4.ValidatorScheduleQuery{GenesisHash: own.GenesisHash, BlockHash: hash, BlockNumber: prepared.PreparedAtBlock, Netuid: cfg.Netuid, Hotkey: hotkey, MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, HistoricalReleaseRuntimeArtifacts(releaseRuntimeIdentityV2(cfg))...)
-	if err != nil || !observed.Stake.MeetsNonSelfStakeAndPermit() || observed.SubnetEpochIndex != intent.SubnetEpoch || observed.Stake.Identity.UID != intent.SelfUID {
-		return errors.Join(errors.New("V2 prepared signer lacks actual canonical native schedule/eligibility"), err)
+	allowed, err := releaseHistoricalRuntimeArtifactsAt(cfg, prepared.PreparedAtBlock)
+	if err != nil {
+		return err
+	}
+	observed, err := crv4.ReadValidatorScheduleAtContext(ctx, &own, crv4.ValidatorScheduleQuery{GenesisHash: own.GenesisHash, BlockHash: hash, BlockNumber: prepared.PreparedAtBlock, Netuid: cfg.Netuid, Hotkey: hotkey, MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, allowed...)
+	matches := observed.Stake.MeetsNonSelfStakeAndPermit() && observed.SubnetEpochIndex == intent.SubnetEpoch && observed.Stake.Identity.UID == intent.SelfUID
+	if err := releaseRpcObservationError(err, matches, errors.New("V2 prepared signer lacks actual canonical native schedule/eligibility")); err != nil {
+		return err
 	}
 	if intent.FinalizedBlock == 0 {
 		return ctx.Err()
@@ -79,14 +98,34 @@ func authenticateReleaseNativeSourceReferenceV2(ctx context.Context, native *crv
 	if err != nil {
 		return err
 	}
-	if err := authenticateHistoricalNativeRuntimeAtContext(ctx, &own, cfg, blockHash); err != nil {
+	// The signed source keeps its original authority. Its eventual receipt is
+	// a distinct historical read and may belong to a later approved window.
+	if isOwnerRecycleProductionConfig(lifecycleCfg) {
+		return authenticateProductionFinalizedSourceContext(ctx, &own, lifecycleCfg, prepared,
+			&crv4.FinalizedExtrinsic{ExtrinsicHash: txHash, BlockHash: blockHash, BlockNumber: intent.FinalizedBlock})
+	}
+	if err := authenticateHistoricalNativeRuntimeAtContext(ctx, &own, lifecycleCfg, blockHash); err != nil {
 		return err
 	}
 	return own.VerifyFinalizedSourceContext(ctx, prepared, &crv4.FinalizedExtrinsic{ExtrinsicHash: txHash, BlockHash: blockHash, BlockNumber: intent.FinalizedBlock})
 }
 
 func newReleaseSteererV2(cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, hotkey *crv4.Keypair, contexts []*ReleaseMeasurementContext, runtime *releaseRuntimeV2) (*ReleaseSteerer, error) {
-	if cfg == nil || chain == nil || !chain.release || native == nil || hotkey == nil || runtime == nil || runtime.ctx == nil || runtime.hotkey == nil || runtime.native != native || runtime.chain != chain || runtime.hotkey.PublicKey() != hotkey.PublicKey() {
+	var ctx context.Context
+	if runtime != nil {
+		ctx = runtime.ctx
+	}
+	return newReleaseSteererV2Context(ctx, cfg, chain, native, hotkey, contexts, runtime)
+}
+
+// Startup reads have a bounded context while the completed steerer retains its
+// enclosing runtime lifecycle. Canceling a successful startup attempt cannot
+// cancel the service or remove the predecessor proof's read budget.
+func newReleaseSteererV2Context(ctx context.Context, cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, hotkey *crv4.Keypair, contexts []*ReleaseMeasurementContext, runtime *releaseRuntimeV2) (*ReleaseSteerer, error) {
+	if err := ownerRecycleProductionBoundary(cfg); err != nil {
+		return nil, err
+	}
+	if ctx == nil || cfg == nil || chain == nil || !chain.release || native == nil || hotkey == nil || runtime == nil || runtime.ctx == nil || runtime.hotkey == nil || runtime.native != native || runtime.chain != chain || runtime.hotkey.PublicKey() != hotkey.PublicKey() {
 		return nil, errors.New("V2 steerer requires its actual authenticated production root")
 	}
 	if !reflect.DeepEqual(*cfg, runtime.cfg) {
@@ -121,10 +160,10 @@ func newReleaseSteererV2(cfg *ReleaseConfig, chain *ChainClient, native *crv4.Ch
 	if err != nil {
 		return nil, err
 	}
-	if _, err := intents.currentV2(runtime.ctx); err != nil {
+	if _, err := intents.currentV2(ctx); err != nil {
 		return nil, err
 	}
-	ema, err := NewHeadEMAStoreV2(runtime.ctx, ownedCfg.StateDir, ownedCfg.EvidenceV2.Bounds.HeadEMA)
+	ema, err := NewHeadEMAStoreV2(ctx, ownedCfg.StateDir, ownedCfg.EvidenceV2.Bounds.HeadEMA)
 	if err != nil {
 		return nil, err
 	}
@@ -132,6 +171,10 @@ func newReleaseSteererV2(cfg *ReleaseConfig, chain *ChainClient, native *crv4.Ch
 	ema.v2.historyAdoption = runtime.history.historyAdoption
 	self := &ReleaseSteerer{cfg: &ownedCfg, chain: chain, native: native, hotkey: runtime.hotkey, contexts: byNo, operators: operators, intents: intents, headEMA: ema, runtimeV2: runtime}
 	if err := requireReleaseEvidenceV2Runtime(self); err != nil {
+		return nil, err
+	}
+	self.sourceRolePredecessorV2, err = authenticateReleaseSourceRolePredecessorV2(ctx, &ownedCfg, native, self.hotkey.PublicKey())
+	if err != nil {
 		return nil, err
 	}
 	return self, nil
@@ -146,6 +189,9 @@ func requireReleaseEvidenceV2Runtime(self *ReleaseSteerer) error {
 	runtime := self.runtimeV2
 	if runtime.ctx == nil || runtime.history == nil || runtime.disk == nil || runtime.gate == nil || runtime.hotkey == nil || runtime.native == nil || runtime.chain == nil || !runtime.chain.release || self.hotkey != runtime.hotkey || self.native != runtime.native || self.chain != runtime.chain {
 		return errors.New("V2 production chain or semantic startup owner differs")
+	}
+	if isOwnerRecycleProductionConfig(self.cfg) && (runtime.preparation == nil || runtime.preparation.requested == nil || runtime.preparation.ready == nil) {
+		return errors.New("V2 production fresh preparation ownership is absent")
 	}
 	if err := runtime.ctx.Err(); err != nil {
 		return err
@@ -168,6 +214,9 @@ func requireReleaseEvidenceV2Runtime(self *ReleaseSteerer) error {
 		if !ok || reader == nil || reader.baseURL == nil || reader.baseURL.String() != operator.APIURL || reader.deploymentID != self.cfg.DeploymentID || reader.netuid != self.cfg.Netuid {
 			return errors.New("V2 production artifact reader differs from its configured source")
 		}
+	}
+	if isOwnerRecycleProductionConfig(self.cfg) {
+		return validateReleaseReservedAttemptCensusOwnershipV2(self.cfg, runtime.origins, runtime.runtimes)
 	}
 	_, err := releaseReservedAttemptCensusReplicasV2(self.cfg, runtime.origins, runtime.runtimes)
 	return err
@@ -239,6 +288,9 @@ func (self *ReleaseSteerer) checkSourceRoleV2(ctx context.Context, snapshot *Rel
 	if matches(previous) {
 		return ctx.Err()
 	}
+	if self.sourceRolePredecessorV2.matches(self.cfg.Netuid, self.hotkey.PublicKey(), observed) {
+		return ctx.Err()
+	}
 	history, err := self.intents.authenticatedIntentsV2(ctx)
 	if err != nil {
 		return err
@@ -251,23 +303,72 @@ func (self *ReleaseSteerer) checkSourceRoleV2(ctx context.Context, snapshot *Rel
 	return errors.New("validator source native slot belongs to another role or unretained write")
 }
 
-func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) error {
+func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) (resultErr error) {
+	if err := ownerRecycleProductionBoundary(self.cfg); err != nil {
+		return err
+	}
 	// Runtime authentication mutates a signing view, never the process-wide
 	// metadata pointer used concurrently by independent native observers.
 	owned := *self
 	native := *self.native
 	owned.native = &native
 	self = &owned
-	allowWeightRejection := self.runtimeV2.history.retainedStartup && provisionalClosedNativeInputEnabled(self.cfg)
-	nativeHash, err := authenticatePinnedNativeRuntimeContext(ctx, self.native, self.cfg)
-	if err != nil {
-		return fmt.Errorf("authenticate native runtime before steering snapshot: %w", err)
+	var retained *SteeringIntent
+	if isOwnerRecycleProductionConfig(self.cfg) {
+		if err := self.productionRead(ctx, productionReadIntent, nil, func(readCtx context.Context) error {
+			var err error
+			retained, err = self.intents.currentV2(readCtx)
+			return err
+		}); err != nil {
+			return err
+		}
+		if retained != nil && retained.Status == "pending" {
+			resolved, err := self.reconcileProductionPendingV2(ctx, retained, nil)
+			if err != nil {
+				return err
+			}
+			if resolved {
+				return ErrSteeringAlreadyFinal
+			}
+			// A terminal foreign-nonce/dispatch outcome was durably recorded;
+			// the next poll reopens it before considering a successor decision.
+			return &productionSteeringTransition{nativeEpoch: retained.SubnetEpoch}
+		}
+		if retained != nil && retained.Status == "finalized" {
+			return self.observeProductionApplicationV2(ctx, retained)
+		}
+		if err := self.requestProductionPreparation(retained); err != nil {
+			return err
+		}
 	}
-	nativeState, err := self.native.EpochScheduleStateAtContext(ctx, self.cfg.Netuid, nativeHash)
+	preparingProduction := isOwnerRecycleProductionConfig(self.cfg)
+	defer func() {
+		var wait *productionSteeringReadWait
+		if preparingProduction && !errors.As(resultErr, &wait) && retryableProductionSteeringRead(resultErr) && !errors.Is(ctx.Err(), context.Canceled) {
+			resultErr = &productionSteeringReadWait{phase: productionReadPreparation, cause: resultErr}
+		}
+	}()
+	var nativeHash types.Hash
+	var nativeState *crv4.EpochScheduleState
+	err := self.productionRead(ctx, productionReadPreparation, retained, func(readCtx context.Context) error {
+		var err error
+		nativeHash, err = authenticatePinnedNativeRuntimeContext(readCtx, self.native, self.cfg)
+		if err != nil {
+			return fmt.Errorf("authenticate native runtime before steering snapshot: %w", err)
+		}
+		nativeState, err = self.native.EpochScheduleStateAtContext(readCtx, self.cfg.Netuid, nativeHash)
+		return err
+	})
+	self.runtimeProgress().observeNative(nativeState, err)
 	if err != nil {
 		return err
 	}
-	snapshot, err := self.chain.ReleaseSnapshotContext(ctx)
+	var snapshot *ReleaseSnapshot
+	err = self.productionRead(ctx, productionReadPreparation, retained, func(readCtx context.Context) error {
+		var err error
+		snapshot, err = self.chain.ReleaseSnapshotContext(readCtx)
+		return err
+	})
 	if err != nil {
 		return err
 	}
@@ -288,6 +389,9 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) error {
 	}
 	current, err := self.intents.currentV2(ctx)
 	if err != nil {
+		return err
+	}
+	if err := requireOwnerRecycleProductionFirstIntent(self.cfg, current, nativeState.SubnetEpochIndex); err != nil {
 		return err
 	}
 	if err := self.intents.v2.historyAdoption.requireFirstEpoch(current, nativeState.SubnetEpochIndex); err != nil {
@@ -329,13 +433,19 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) error {
 			return fmt.Errorf("prior subnet epoch %d intent is %s; refusing a new commit", current.SubnetEpoch, current.Status)
 		}
 	}
+	allowWeightRejection := provisionalNativeWeightRejectionEnabled(self.cfg, self.runtimeV2.history, current)
+	allowReadRetry := provisionalFreshNativePreparationEnabled(self.cfg, self.runtimeV2.history, current)
+	defer func() {
+		resultErr = classifyProvisionalNativeRead(allowReadRetry, nativeState.SubnetEpochIndex, resultErr)
+	}()
 	if err := loadHotkeyUids(); err != nil {
 		return err
 	}
 	runtimeIdentity := releaseRuntimeIdentityV2(self.cfg)
 	observed, err := crv4.ReadValidatorScheduleAtContext(ctx, self.native, crv4.ValidatorScheduleQuery{GenesisHash: self.native.GenesisHash, BlockHash: nativeHash, BlockNumber: nativeState.CurrentBlock, Netuid: self.cfg.Netuid, Hotkey: self.hotkey.PublicKey(), MaximumSubnetUIDs: releaseNativeValidatorMaximumUIDs}, runtimeIdentity)
-	if err != nil || !observed.Stake.MeetsNonSelfStakeAndPermit() || observed.SubnetEpochIndex != nativeState.SubnetEpochIndex || hotkeyUids[self.hotkey.PublicKey()] != observed.Stake.Identity.UID {
-		return errors.Join(errors.New("V2 current native validator schedule/stake/permit differs from independent EVM registration"), err)
+	scheduleMatches := observed.Stake.MeetsNonSelfStakeAndPermit() && observed.SubnetEpochIndex == nativeState.SubnetEpochIndex && hotkeyUids[self.hotkey.PublicKey()] == observed.Stake.Identity.UID
+	if err := releaseRpcObservationError(err, scheduleMatches, errors.New("V2 current native validator schedule/stake/permit differs from independent EVM registration")); err != nil {
+		return err
 	}
 	inputs, options, err := self.runtimeV2.collect(ctx, self, current, snapshot, nativeState.SubnetEpochIndex, nativeState.CurrentBlock, nativeHash.Hex(), hotkeyUids)
 	if err != nil {
@@ -419,6 +529,21 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) error {
 		return err
 	}
 	verifiedMeasurement := verified.Decision
+	var productionStage *ownerRecycleProductionStage
+	if isOwnerRecycleProductionConfig(self.cfg) {
+		options, err = self.runtimeV2.measurementReplayOptionsV2(ctx, options, "owner-recycle-production")
+		if err != nil {
+			return err
+		}
+		productionStage, err = prepareOwnerRecycleProductionDecision(ctx, self.cfg, self.native, self.chain, measurementBytes, measurementArtifact, verifiedMeasurement, options)
+		if err != nil {
+			return err
+		}
+		verifiedMeasurement, err = ownerRecycleProductionRowDecision(verifiedMeasurement, productionStage.proof.Row)
+		if err != nil {
+			return err
+		}
+	}
 	uids := verifiedMeasurement.UIDs
 	scores := verifiedMeasurement.Scores
 	encodedScores, err := rationalJSON(scores)
@@ -442,6 +567,12 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) error {
 	}
 	submitOptions := releaseSubmitOptions(self.cfg)
 	submitOptions.SourceHash = releaseNativeSourceHashV2(measurementBytes)
+	if productionStage != nil {
+		submitOptions.SourceHash = productionStage.sourceHash
+	}
+	if err := self.runtimeV2.authenticationPending(current); err != nil {
+		return err
+	}
 	prepared, err := crv4.PrepareWeightsCRv4ExactAtContext(ctx, self.native, self.hotkey, self.cfg.Netuid, uids, scores, submitOptions, preparedRuntimeHash)
 	if err != nil {
 		return classifyProvisionalNativeWeights(ctx, allowWeightRejection, nativeState.SubnetEpochIndex, snapshot.Epoch.Uint64(), err)
@@ -473,6 +604,21 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	var productionIntent *OwnerRecycleProductionIntent
+	if productionStage != nil {
+		productionIntent, err = sealOwnerRecycleProductionIntent(ctx, productionStage, self.hotkey, prepared, envelopeHash)
+		if err != nil {
+			return err
+		}
+	}
+	// From this point an intent may exist even when its write returns an error.
+	// Its normal durable reconciliation must own every subsequent retry.
+	allowReadRetry = false
+	preparingProduction = false
+	var durableIntent *SteeringIntent
+	defer func() {
+		resultErr = self.productionRetainedReadFailure(ctx, productionReadIntent, durableIntent, resultErr)
+	}()
 	intent, err := self.intents.beginV2(ctx, SteeringIntent{
 		ValidatorID:             self.cfg.ValidatorID,
 		Netuid:                  self.cfg.Netuid,
@@ -489,6 +635,7 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) error {
 		MeasurementEnvelopePath: envelopePath,
 		MeasurementEnvelopeHash: envelopeHash,
 		MeasurementEnvelopeSize: envelopeSize,
+		OwnerRecycle:            productionIntent,
 		SelfUID:                 selfUid,
 		MaskedUIDs:              verifiedMeasurement.MaskedUIDs,
 		EligibleHeadUIDs:        headSelectionUIDs(verifiedMeasurement.EligibleHead),
@@ -504,17 +651,25 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	durableIntent = intent
 	if err := self.runtimeV2.publishDepositAuditV2(ctx, measurementArtifact); err != nil {
 		return err
 	}
 	if err := self.headEMA.CommitForEpochV2(ctx, measurementArtifact.SubnetEpoch, measurementArtifact.HeadEMA, measurementArtifact.Policy.Steering.HeadScoreEMA); err != nil {
 		return fmt.Errorf("commit head EMA after steering intent: %w", err)
 	}
-	if _, err := authenticatePinnedNativeRuntimeContext(ctx, self.native, self.cfg); err != nil {
-		return fmt.Errorf("authenticate native runtime before steering broadcast: %w", err)
-	}
-	result, err := crv4.SubmitPrepared(ctx, self.native, prepared)
+	submissionConfig, err := self.intents.ownerRecyclePreparedConfig(ctx, self.cfg, prepared)
 	if err != nil {
+		return err
+	}
+	if err := self.runtimeV2.authenticationPending(intent); err != nil {
+		return err
+	}
+	result, attempted, err := submitPreparedNativeRuntimeContext(ctx, self.native, submissionConfig, prepared)
+	if err != nil {
+		if !attempted {
+			return err
+		}
 		// The error can occur after broadcast but before finality was observed.
 		// Preserve an uncertain pending state so a restart cannot double-submit.
 		return self.recordReleasePendingError(intent.VectorHash, err)
@@ -526,6 +681,9 @@ func (self *ReleaseSteerer) submitOnceV2(ctx context.Context) error {
 }
 
 func (self *ReleaseSteerer) reconcilePendingV2(ctx context.Context, current *SteeringIntent, nativeState *crv4.EpochScheduleState) (bool, error) {
+	if isOwnerRecycleProductionConfig(self.cfg) {
+		return self.reconcileProductionPendingV2(ctx, current, nativeState)
+	}
 	if current == nil || current.Status != "pending" || current.Prepared == nil {
 		return false, errors.New("cannot reconcile a non-pending steering intent")
 	}
@@ -537,7 +695,11 @@ func (self *ReleaseSteerer) reconcilePendingV2(ctx context.Context, current *Ste
 		return false, fmt.Errorf("pending steering preparation hash: %w", err)
 	}
 	historical := *self.native
-	if err := authenticateHistoricalNativeRuntimeAtContext(ctx, &historical, self.cfg, preparedRuntimeHash); err != nil {
+	decisionCfg, err := productionConfigForIntent(self.cfg, current)
+	if err != nil {
+		return false, err
+	}
+	if err := authenticateHistoricalNativeRuntimeAtContext(ctx, &historical, decisionCfg, preparedRuntimeHash); err != nil {
 		return false, fmt.Errorf("authenticate pending steering preparation runtime at %s: %w", preparedRuntimeHash.Hex(), err)
 	}
 	hash, err := types.NewHashFromHexString(current.Prepared.ExtrinsicHash)
@@ -546,7 +708,12 @@ func (self *ReleaseSteerer) reconcilePendingV2(ctx context.Context, current *Ste
 	}
 	receipt, found, err := historical.LocateFinalizedExtrinsic(ctx, hash, current.Prepared.PreparedAtBlock)
 	if err != nil {
-		return false, fmt.Errorf("reconcile pending steering finality: %w", err)
+		cause := fmt.Errorf("reconcile pending steering finality: %w", err)
+		if isOwnerRecycleProductionConfig(self.cfg) && decisionCfg.ownerRecycleProduction.historicalOnly && nativeState != nil &&
+			ctx != nil && !errors.Is(ctx.Err(), context.Canceled) && RetryableEvidenceTransportError(err) {
+			return false, &productionPendingReconciliation{nativeEpoch: nativeState.SubnetEpochIndex, extrinsicHash: current.Prepared.ExtrinsicHash, cause: cause}
+		}
+		return false, cause
 	}
 	if found {
 		if err := authenticateHistoricalNativeRuntimeAtContext(ctx, &historical, self.cfg, receipt.BlockHash); err != nil {
@@ -564,8 +731,8 @@ func (self *ReleaseSteerer) reconcilePendingV2(ctx context.Context, current *Ste
 		}
 		return true, nil
 	}
-	if err := authenticatePinnedNativeRuntimeAtContext(ctx, &historical, self.cfg, preparedRuntimeHash); err != nil {
-		return false, fmt.Errorf("pending steering replay uses a historical signing runtime: %w", err)
+	if err := ownerRecycleProductionBoundary(self.cfg); err != nil {
+		return false, err
 	}
 	if current.SubnetEpoch < nativeState.SubnetEpochIndex {
 		err := fmt.Errorf("unfinalized steering submission expired at subnet epoch %d", current.SubnetEpoch)
@@ -577,9 +744,18 @@ func (self *ReleaseSteerer) reconcilePendingV2(ctx context.Context, current *Ste
 	if current.SubnetEpoch > nativeState.SubnetEpochIndex {
 		return false, fmt.Errorf("pending steering epoch %d is ahead of finalized epoch %d", current.SubnetEpoch, nativeState.SubnetEpochIndex)
 	}
+	if isOwnerRecycleProductionConfig(self.cfg) && decisionCfg.ownerRecycleProduction.historicalOnly {
+		return false, &productionPendingReconciliation{nativeEpoch: nativeState.SubnetEpochIndex, extrinsicHash: current.Prepared.ExtrinsicHash}
+	}
+	if err := authenticatePinnedNativeRuntimeAtContext(ctx, &historical, self.cfg, preparedRuntimeHash); err != nil {
+		return false, fmt.Errorf("pending steering replay uses a historical signing runtime: %w", err)
+	}
 	nonceHash, err := authenticatePinnedNativeRuntimeContext(ctx, self.native, self.cfg)
 	if err != nil {
 		return false, fmt.Errorf("authenticate steering nonce runtime: %w", err)
+	}
+	if err := validatePreparedNativeRuntimeContext(ctx, self.native, self.cfg, preparedRuntimeHash, nonceHash); err != nil {
+		return false, err
 	}
 	finalizedNonce, err := self.native.AccountNonceAtContext(ctx, self.hotkey.PublicKey(), nonceHash)
 	if err != nil {
@@ -595,8 +771,19 @@ func (self *ReleaseSteerer) reconcilePendingV2(ctx context.Context, current *Ste
 	if finalizedNonce < current.Prepared.AccountNonce {
 		return false, fmt.Errorf("steering nonce gap: finalized %d, prepared %d", finalizedNonce, current.Prepared.AccountNonce)
 	}
-	if _, err := authenticatePinnedNativeRuntimeContext(ctx, self.native, self.cfg); err != nil {
+	replayHash, err := authenticatePinnedNativeRuntimeContext(ctx, self.native, self.cfg)
+	if err != nil {
 		return false, fmt.Errorf("authenticate native runtime before pending replay: %w", err)
+	}
+	if err := validatePreparedNativeRuntimeContext(ctx, self.native, self.cfg, preparedRuntimeHash, replayHash); err != nil {
+		return false, err
+	}
+	submissionConfig, err := self.intents.ownerRecyclePreparedConfig(ctx, self.cfg, current.Prepared)
+	if err != nil {
+		return false, err
+	}
+	if err := validateOwnerRecyclePreparedAuthorization(submissionConfig, current.Prepared); err != nil {
+		return false, err
 	}
 	result, err := crv4.SubmitPrepared(ctx, self.native, current.Prepared)
 	if err != nil {
@@ -627,18 +814,14 @@ func (self *ReleaseSteerer) checkApplicationV2(ctx context.Context, snapshot *Re
 	if err != nil {
 		return err
 	}
-	header, err := self.native.HeaderAtContext(ctx, hash)
+	block, _, err := self.native.CanonicalHeaderAtContext(ctx, hash)
 	if err != nil {
 		return fmt.Errorf("read applied-weight finalized header at %s: %w", hash.Hex(), err)
-	}
-	if header == nil {
-		return fmt.Errorf("applied-weight finalized header at %s is unavailable", hash.Hex())
 	}
 	row, err := self.native.WeightsAtContext(ctx, self.cfg.Netuid, uid, hash)
 	if err != nil {
 		return err
 	}
-	block := uint64(header.Number)
 	if block < current.RevealBlock {
 		return nil
 	}
@@ -659,6 +842,9 @@ func (self *ReleaseSteerer) checkApplicationV2(ctx context.Context, snapshot *Re
 		if got[targetUid] != value {
 			return nil
 		}
+	}
+	if err := self.native.CheckCanonicalBlockAtContext(ctx, hash, block); err != nil {
+		return err
 	}
 	return self.intents.markAppliedV2(ctx, current.VectorHash, block, hash.Hex())
 }

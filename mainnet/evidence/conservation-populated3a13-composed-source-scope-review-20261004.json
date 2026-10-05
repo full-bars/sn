@@ -1,0 +1,1029 @@
+{
+  "schema": "conservation-populated3a13-composed-source-scope-review-v1",
+  "status": "SOURCE_COMPOSITION_AND_DECLARATIONS_VERIFIED_EXECUTION_PENDING",
+  "head": "3a13c6977d8880891b3683db8ef82d1fa3b34526",
+  "tree": "149deb7d8c2946c9cdc3cb87eec17b7261a2c061",
+  "comparison_base": "f8d8f1f7768bbb98225169aadda83c044132584d",
+  "changed_paths": [
+    "mainnet/economic_conservation_principal_test.go",
+    "mainnet/economic_conservation_yuma.go",
+    "mainnet/economic_conservation_yuma_populated_test.go",
+    "mainnet/economic_conservation_yuma_test.go",
+    "mainnet/economic_native_producer_test.go",
+    "mainnet/economic_native_yuma.go",
+    "mainnet/economic_native_yuma_capture.go",
+    "mainnet/economic_native_yuma_equivalence_test.go",
+    "mainnet/economic_native_yuma_math.go",
+    "mainnet/economic_native_yuma_model.go",
+    "mainnet/economic_native_yuma_workload.go",
+    "mainnet/economic_native_yuma_workload_test.go",
+    "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+    "tools/runtime-metadata-probe/src/historical_native_yuma_capacity_tests.rs",
+    "tools/runtime-metadata-probe/src/historical_native_yuma_populated_tests.rs"
+  ],
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-profile-restore/evidence/intake.json",
+      "bytes": 3170,
+      "sha256": "a253ff7a50d6f5adbc890459464e75dab6a2d413a6ccb81ecf069e9f09223be2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/evidence/intake.json",
+      "bytes": 23925,
+      "sha256": "2f61439159261916369a946df88748d75acfe85d1d33593b3cef0f92e84bd654"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/intake.json",
+      "bytes": 5585,
+      "sha256": "ccccb33a7d6e8b6b6002316f69e33ca450722af1f1d5fa0be4a1874d5df994b3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/source-review.json",
+      "bytes": 28203,
+      "sha256": "3b23a20f07faca6a3ecfc9bcc5310b666fd82af6216f3f0fbddec59e12d67436"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/selectors.json",
+      "bytes": 74082,
+      "sha256": "8ebc52c8d01fc1d2731df3f577c9c21430fdf3534de04b8cadd98d17c2194899"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/operative-controls.json",
+      "bytes": 155671,
+      "sha256": "ab160adca31d0aabe54ed0ec2256dcbbabdd7e831306c7af1d7bda26f260df90"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/qualification-recipe.json",
+      "bytes": 22931,
+      "sha256": "cf6c0c3f5200a88a3df5b70b2c895abd90b003c8b78c4e1091b967479e75d31c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/seal_source.py",
+      "bytes": 10829,
+      "sha256": "b93932210bdf4ea7e524398f383165a4d3920ac5f623fc307f189518870a5f2d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_archive_test.go",
+      "bytes": 21589,
+      "sha256": "3d4c0147791a6ce4f1cbc344d0728463317386d1b652dde2aef466a0ef0ad125"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_capture_sequence_test.go",
+      "bytes": 11620,
+      "sha256": "089940be1230f64db5db91105e7e3eb90893417a195c960d083deed695d6df74"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_capture_test.go",
+      "bytes": 15396,
+      "sha256": "b2fc058078676894edcb2542438f92f8c5cd4fd0a43e64a8eba2d725f422cf2b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_entitlement_archive_test.go",
+      "bytes": 8660,
+      "sha256": "4eed258a709b3d3664d5f2c11203cf088d2c8805f50545cb145d5891f1b1b9f1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_entitlement_test.go",
+      "bytes": 17142,
+      "sha256": "28abe33a990a66d223170703cd6751b42d375f4f8427647c9b44f91e473c477c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_fee_retention_test.go",
+      "bytes": 12710,
+      "sha256": "01af0eda7405deef30b70ee6a0af486b429b56787c0b5b0a510416047b93e46a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_fee_revision_test.go",
+      "bytes": 19128,
+      "sha256": "a0a9a926f8a37a5a8e8dca24180259fa4667694f19742adf57b4e55ad5e33c5e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_fee_worker_test.go",
+      "bytes": 14585,
+      "sha256": "e384280163706ecfec8df9d5d6b51b990af4b83d1b2cfccede4ecec1a9b78f50"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_fixture_protection_test.go",
+      "bytes": 1931,
+      "sha256": "644bafa7b394613c9b75ade45161cebb935376b880d7c005bfd23a1142057e0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_joined_admission_test.go",
+      "bytes": 7576,
+      "sha256": "dd1c0696a336e46142cedd41870d223022adef2bc466d3384594d97e299dac80"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_native_renewal_test.go",
+      "bytes": 26586,
+      "sha256": "9e5c20dfd9632bfd731dc6d59e74f1c1ffc24a3e7fb8f85a2be044a2aa8c7480"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_principal_activation_test.go",
+      "bytes": 1385,
+      "sha256": "86ba5234914ce5f48ef3ccdfa6754866ae98b8010559f7af70fc1fccf351806a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_principal_custody_test.go",
+      "bytes": 3008,
+      "sha256": "859dc2d5b15fb7b9a1eee9a502f9690241117b93be946209cfe602929d2788d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_principal_effects_test.go",
+      "bytes": 10561,
+      "sha256": "5bfff9bd7121aa3f8dbb297c3f50d1888cbfa94f4d5cd82790b33033caba0e90"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 20181,
+      "sha256": "55467e2d473d54cc10ecf94831cea4c9bf6968d6e4c5bac93a4d78101a5b7c84"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_profile_restore_test.go",
+      "bytes": 15952,
+      "sha256": "71958a8a9e52e63a683a6e3f58bbf7d01a101e3b787e41273b27217feb0a12c7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_receipt_test.go",
+      "bytes": 8027,
+      "sha256": "d9ce5ac212ea843d03401c67a721aabb91e483401622c26bc44d836e9e98643f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_restore_test.go",
+      "bytes": 23055,
+      "sha256": "9d32ef4a0791a082666f575146607b4e6cd053ab3794e61b6d1f554a495af8bc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_storage_test.go",
+      "bytes": 14543,
+      "sha256": "0881cf04cc02af1518c2e7e4663fdd71c0ee76055fa9de00c37d5cfc543b4ac6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_test.go",
+      "bytes": 27285,
+      "sha256": "a8053264fa890a531aca2c7011c100b54368cba94a85cb4a8f5566b5cfc3c807"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_yuma.go",
+      "bytes": 11416,
+      "sha256": "80ef7d50ca2fd285f0cdad46bb2bf982c1c379d33de0b4a3aee91bbe9e81b795"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_yuma_populated_test.go",
+      "bytes": 7710,
+      "sha256": "2888be8c588b39e5cb7f53f40c44ba1f6b14ec3c1d8558e3e09ce9f91be4779c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_conservation_yuma_test.go",
+      "bytes": 15030,
+      "sha256": "39335ce8025b750c8bc9d3e3311e268c285fbca381cca6a7f905e6f3814c2200"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_execution_test.go",
+      "bytes": 32574,
+      "sha256": "6ca68d699946484d38c2c770446eeec20ebe846ccd84671d577385c26dfd44cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_producer_renewal_test.go",
+      "bytes": 35792,
+      "sha256": "ef2906dbbad2f341de98a347f553099dfbed8aa68550f712e52eb2dcd399e5c8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_producer_restore_test.go",
+      "bytes": 32572,
+      "sha256": "bcc04b72e8ca37ef163634668055416f15245f12fac41f301a8fb3eae4d89347"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_producer_test.go",
+      "bytes": 32611,
+      "sha256": "00d806968b02845d52c01050adc711ce9a45e471bd6c18ec5799dd5800b5bf26"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_yuma.go",
+      "bytes": 11483,
+      "sha256": "508a38e112b96caeecea9a850ee8d001c073bfedffc51b4758bcd67cfaa81198"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_yuma_capture.go",
+      "bytes": 10813,
+      "sha256": "6a9637c8c3f104783f4153cf20e7c42f7362b79a5bc94acb0cfe615bbd67b135"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_yuma_equivalence_test.go",
+      "bytes": 6608,
+      "sha256": "5d0c26664257d6b6888f2f0313ad8e7579ed7b43f856101dacb8e44d5ad74675"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_yuma_math.go",
+      "bytes": 9613,
+      "sha256": "768e278ec200e13f6e47b1e99830c3111318c7882a8bbdc06a50f98d9419ecf7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_yuma_math_test.go",
+      "bytes": 9347,
+      "sha256": "868d337213d60b80b0a01ec412c1684544b654815109c697569fdc9fffde8488"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_yuma_model.go",
+      "bytes": 18600,
+      "sha256": "6748fe67279fedd1e24ae1b9286a1019331906acb3b05975d1a01068460f1d28"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_yuma_owner_test.go",
+      "bytes": 9543,
+      "sha256": "790cacb9b18777b3309a0b53c98e326c9c991b6a0849967b806823bda4bd0d46"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_yuma_workload.go",
+      "bytes": 5702,
+      "sha256": "f9551599ab26e801f068767c7cc164a3e88eb121ecb3abb6434b82a22e799d0b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/economic_native_yuma_workload_test.go",
+      "bytes": 12475,
+      "sha256": "5de9577eec63a5d9b67e37a12accdb3631aaae4ff15a8e039c52b596f0817580"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/mainnet/monitor_economic_evm_test.go",
+      "bytes": 27499,
+      "sha256": "46a0fe29b7d4df01ae963245f36ad935727b507742f6bf9332518bb63c90000c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "bytes": 8563,
+      "sha256": "dd3a0ace7c633121d3f124b178d1af869b1ce41abb4e74825307a73819e44494"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 46017,
+      "sha256": "4779b4a631fe88b895192756493388d955824eda7cd198e16b15fb3e85e282ae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/tools/runtime-metadata-probe/src/historical_native_yuma_capacity_tests.rs",
+      "bytes": 8693,
+      "sha256": "827c914b889114a2aba74eae6c7074505d89d019abf730f05aa2fb1b5c61ed7f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/tools/runtime-metadata-probe/src/historical_native_yuma_populated_tests.rs",
+      "bytes": 21804,
+      "sha256": "2b7916646c669a894010db06e46f89e65e509d4576bf1c07e132ac8095540180"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/tools/runtime-metadata-probe/src/historical_native_yuma_tests.rs",
+      "bytes": 13503,
+      "sha256": "fe78b4f2e542a69ac54dd0eed394878acf7cdc353c2b69b97aaaef62bb3af90e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/tools/runtime-metadata-probe/src/historical_tests.rs",
+      "bytes": 57370,
+      "sha256": "cf4a12e5bc7cf96e3ff0093daecdc5f8c47dab771c6bdc1d337ca40884b3feb9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/validator/artifact_census_test.go",
+      "bytes": 6851,
+      "sha256": "0029b6d81b1542a2df0021682feae24b3160ef14857cf3e2f7b650fad9eb7495"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/sn/validator/artifact_test.go",
+      "bytes": 8070,
+      "sha256": "5c649e8f622cfa05db69aaba9fcd3a32c4cde4c27ebc18a09e22fd1c5989467b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-profile-restore/evidence/selectors.json",
+      "bytes": 61863,
+      "sha256": "88d12778fc7dbed3f369bdaa7988e6a33207b4951a02941c66f426e9829b8068"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/evidence/selectors.json",
+      "bytes": 40336,
+      "sha256": "bf693f8bc672b3b9c983693307c49419c736ec656897d28dfb0b0ca2d28aae1e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/selectors.json",
+      "bytes": 3214,
+      "sha256": "59d66f7640f85ff6d3fe228f881974d3e8676ae66dcdfacd5403fb1ea89bc75a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/conservation-entitlement-census-original-committer-omitted/economic_conservation_entitlement_read.go",
+      "bytes": 11366,
+      "sha256": "0a14feeee69dd09eb2a776882f887b5e83fcce9dc760e1d198a0e03c6abfae08"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-profile-restore/evidence/operative-controls.json",
+      "bytes": 114829,
+      "sha256": "eb7b8efec526f23ca108e5d38fbecbebba2543d77ef6fce93d51221d7ac63caa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/conservation-entitlement-census-original-recipient-leaf-omitted/economic_conservation_entitlement.go",
+      "bytes": 33247,
+      "sha256": "dd8bee50d15800dfbbe4af0c6489aebdc631781cf697f020c439a4b0900953e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/conservation-entitlement-census-archived-original-receipt-omitted/economic_conservation_entitlement.go",
+      "bytes": 32284,
+      "sha256": "547622e32745327c6faf2e6767dc365d7cfbc573dacc78c943c7b3ef9707fc3f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/conservation-entitlement-census-carry-pool-identity-omitted/economic_conservation_entitlement.go",
+      "bytes": 33245,
+      "sha256": "b8b927b2a1a701e5c530879a1dfa319ea6a757d3f2620b9a6ec2df71f6c06790"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/conservation-entitlement-census-complete-census-retirement-omitted/economic_conservation_archive.go",
+      "bytes": 32544,
+      "sha256": "425cc0322968b2c7ed2f850c10d52636b9f22b2658ce9cb8c91aba483ad017ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/conservation-entitlement-census-unchanged-capacity-retry-guard-omitted/economic_conservation_entitlement_worker.go",
+      "bytes": 7964,
+      "sha256": "3ea718908b7fcd40a8ca7e6a2f80fac687eb673f5216e355eb7a18604cd26e14"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/conservation-entitlement-census-resident-provider-census-bound-omitted/artifact.go",
+      "bytes": 12270,
+      "sha256": "45b5f14379f12cb7be8db6717b8cc8e661a509a138bafcbe8d66515e7dae4845"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-same-block-original-ordinal/economic_conservation_capture_effects.go",
+      "bytes": 12065,
+      "sha256": "9fd8cf100dfa75e3c9415c45d73122da2994fa7b12e8f5f051c43e99f31b5a88"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-archived-original-capture-cursor/economic_conservation_archive.go",
+      "bytes": 32471,
+      "sha256": "30576982a4e99dece0d438df17d9d8afd8624aa517d10ce7fcc1669f20b09e7a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-retired-original-capture-inputs/economic_conservation_capture_effects.go",
+      "bytes": 12140,
+      "sha256": "afa43f1c626199cba67add1c6e9611669e8430a8dff3c77140a5049efa2f3015"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-restore-wrong-fixture-outage-target/economic_conservation_capture_fixture_test.go",
+      "bytes": 14419,
+      "sha256": "de6d6f8f848db50ac5bed621e58637f633e4d8ae3f367e1a1d04a6ce84664ca3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-erase-second-original-apply-index/historical_native_execution_tests.rs",
+      "bytes": 46017,
+      "sha256": "1d01af0c9041cfda236cebd5e54a87a7ee8139fa125d6a499317e207de78304c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-physical-resource-bound/economic_conservation_storage.go",
+      "bytes": 4456,
+      "sha256": "150bd46b2175744a50cf70294589fa047c975010ad562ac035a25045c3ad442d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-monotonic-head-budget/economic_conservation_resources.go",
+      "bytes": 8518,
+      "sha256": "55df975afcad14931d2d070435ece1185f0082b8446406fbfb77c85a03b11a4e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-restore-legacy-combined-clone-budget/economic_conservation_command.go",
+      "bytes": 28103,
+      "sha256": "adc94b7519f82e2ad1a78c88d466dc3e5183665ef10b569b53bcac632cf149b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-restore-legacy-native-reference-budget/monitor_economic_native_archive.go",
+      "bytes": 8619,
+      "sha256": "6fd335088a8921282e83a677618cb41b4032659b6aba45880e2fb44e146ec79a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-full-physical-archive-forecast/economic_conservation_archive_command.go",
+      "bytes": 19717,
+      "sha256": "d096f18a8993e380aa5bf1e49194710a2d05c6643be54c836b46bb0a4e5bc98b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-last-original-uid-row/historical_native_yuma_capacity_tests.rs",
+      "bytes": 8717,
+      "sha256": "89e0d7364b311291d6ea24d8cba8446a2f7ba0b8be9ec12d087f88503304a6fb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-complete-original-stage-comparison/economic_native_yuma.go",
+      "bytes": 11494,
+      "sha256": "6bf1cd60e2beed7187483d8c6e7694c97e0bf12685c810b2be9c6166ae38491f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-complete-yuma-retirement/economic_conservation_archive.go",
+      "bytes": 32517,
+      "sha256": "04acc3b97fb60e432d2bbd242c1d98683c02ffb722004361b9e7890e5d016989"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-cold-summary-equality/economic_conservation_archive.go",
+      "bytes": 32533,
+      "sha256": "ac1c9dd53941eb1f56e035695f5110d398c2f338a2c259f38e201f1c3a9db967"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-yuma-source-signature/economic_native_producer_authority.go",
+      "bytes": 15964,
+      "sha256": "97a06fdca1559b6e14f4192b0976dbccc55fd062a421f9becdad2d84eb9eadc6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-substitute-selected-provider-denominator/economic_native_yuma.go",
+      "bytes": 11490,
+      "sha256": "3071b426ec13d93b314a81b8be39cfb9a651d6ab694938aa390af91d9551bb63"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-inherited-original-u64-conversion/economic_native_yuma_model.go",
+      "bytes": 18572,
+      "sha256": "231d3fce1bc64ad75f8c7d8959dad7455409c02eae60ae22cf3327cedd8bd677"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-active-commit-generation-mask/economic_native_yuma_model.go",
+      "bytes": 18609,
+      "sha256": "7a349b5ec95adb838d665a7268967aa5ea708e7572defac4b9b63e090204277c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-restore-old-only-dynamic-bonds/economic_native_yuma_model.go",
+      "bytes": 18609,
+      "sha256": "b97220214eda61beb585006e8b65b8fb2b5908c660af5d3f5bd221509474b5ce"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-change-original-median-tie/economic_native_yuma_math.go",
+      "bytes": 9614,
+      "sha256": "cc087839d1dff331e052c8166761b76489ebccd6eb1f1e1f5d0afa7e7802cbf5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-erase-liquid-sigmoid-steepness/economic_native_yuma_model.go",
+      "bytes": 18579,
+      "sha256": "2acd7482a7cfeb0dc183c36b0d557015b421dcfc4ca482f753da0fdeff1beea2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-discard-revalidation-owner-context/economic_native_yuma.go",
+      "bytes": 11500,
+      "sha256": "84dcb7f87b24ced59eb19e2cbb2ae9c9d8b20f268c7fdf97e9ddbf6362d10b27"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-whole-witness-resource-preflight/economic_conservation.go",
+      "bytes": 40240,
+      "sha256": "219ab14969ed9a19c96be0ddebee7c6f7463d58de2fbf4a9200239e16bde4333"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-admitted-finite-arithmetic-work/economic_native_yuma_math.go",
+      "bytes": 9622,
+      "sha256": "84df151dd213e8d5e591180740711b344b317c69b1269762ff59ec196820772c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-yuma-input-observation/historical_observer.rs",
+      "bytes": 32813,
+      "sha256": "17ad07b97c4ac0ada50b55a6387417604183091a1b974958d0f4480d4e14ebed"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-restore-yuma-integrity-wrapper/economic_native_execution.go",
+      "bytes": 30630,
+      "sha256": "1d6aa795f460074da872423bc25013bb4c44309262bbaab8ec2e0befef6d1359"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-restore-append-cancellation-hold/economic_conservation_command.go",
+      "bytes": 28123,
+      "sha256": "7251b65d37eddcd71314fb8ca56f1d36a620b6955e7208a52bffb346a8943929"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-archive-owned-cancellation-disposition/economic_conservation_command.go",
+      "bytes": 28124,
+      "sha256": "ec7b1adee4ae30793716fc1e041ab1da4013d35411c6126516043b4e377e6d75"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-existing-integrity-precedence/economic_native_yuma_owner.go",
+      "bytes": 1488,
+      "sha256": "ee485f32102dac97add0b0c87dc665c6a7511fd39c1dd24b3dac1b2d4a11bca1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-derivation-conflict-marker/economic_native_yuma_owner.go",
+      "bytes": 1519,
+      "sha256": "3f33fe6ec6e4120ea1cebab571fce3599d6b748ea77a37d5e908716b64ceee09"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-transaction-join/economic_conservation_capture_effects.go",
+      "bytes": 12080,
+      "sha256": "1e8102dc10dec50b8cdcd9369d5187295a3fe3e5ba94c6db2f3b7c7afc8b9131"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-vault-coldkey-join/economic_conservation_capture_effects.go",
+      "bytes": 12082,
+      "sha256": "62cbdcf21ae4c14952a8c5146b70b64b7b85cc9505ae4be6a777acdf112f5402"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-complete-original-mutation-census/economic_conservation_capture_effects.go",
+      "bytes": 12124,
+      "sha256": "ac6558bcec46a6cdfd118d931a37a97335fd752ce1799c6e316a0834a96eff44"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-retired-native-causal-input/economic_conservation_principal_effects.go",
+      "bytes": 11596,
+      "sha256": "cf4e43effab26cd926462f6c2c1245569af3a603df1f4097f939af495596996d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-unknown-capture-retirement-guard/economic_conservation_archive.go",
+      "bytes": 32454,
+      "sha256": "dfd3a859bb1b166f0213b80fda759f67c17364b23a445251817e98934b297feb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-capture-revalidation/economic_conservation_capture_effects.go",
+      "bytes": 12153,
+      "sha256": "ee544b76477eecaf89a8fe8b9e7928d15364977d1d7ae84fa7c206607788046d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-failed-receipt-log-refusal/monitor_economic_evm_read.go",
+      "bytes": 19827,
+      "sha256": "469e6122e1419f9682d585f308f1c73d8c009b52b3309afd7dc230eb23eb1eae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-omit-original-body-transaction-memory/historical_native_execution_tests.rs",
+      "bytes": 46012,
+      "sha256": "182491228057ee6b04926f52b9d90f32f659e53ceddee166192f5310d844f47f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-vault-capture-sequence-restore-original-yuma-pending-parent/historical_native_execution_tests.rs",
+      "bytes": 45999,
+      "sha256": "614f78b1b8dc6ae0087db5036b03de9eaec399d867e1789a071ba68918f91d91"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/conservation-admission-corrections-admitted-view-reattachment-omitted/economic_conservation_archive_command.go",
+      "bytes": 19702,
+      "sha256": "3dc62d355a49f28836af56ca326beb3464240aabdb4805bb72749262e55b11a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/conservation-admission-corrections-combined-parent-drain-omitted/historical_native_execution_tests.rs",
+      "bytes": 46018,
+      "sha256": "e9dbccc431a93cb86044416251456377fdff0d5d3acb5860569e0a9170326af0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/copied-profile-limit-omitted/economic_conservation_restore_linux.go",
+      "bytes": 10084,
+      "sha256": "e8c844c512a0fb6b63973fd443ae9e77ec183474b51c2b5349f8f0a4c79c7401"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/native-original-checkpoint-profile-omitted/economic_native_producer_restore_review_linux.go",
+      "bytes": 7436,
+      "sha256": "c42a60e59b057ff05d04f08a5b9209d61474fe33ae7a86dbb40f38a41c31963a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/conservation-profile-restore/nested-original-profile-omitted/monitor_history_restore_linux.go",
+      "bytes": 11221,
+      "sha256": "effc1f096e06ab85828050e5acdf69ec9a2121bc1f38fed34cb37bd52aef7eec"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/omit-share-aggregate-reserve/economic_native_yuma_workload.go",
+      "bytes": 5731,
+      "sha256": "cae5cf36bbbb240b4224643419a6cc7e48628c9ae0f98d6170257a1a74d7bf5c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/evidence/operative-controls.json",
+      "bytes": 14025,
+      "sha256": "f6cc82ec9e77938d90aba3f66796d938c4f69ea0593388e826bc12e4c803883d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/omit-pair-work-margin/economic_native_yuma_workload.go",
+      "bytes": 5698,
+      "sha256": "d95491543ea71a2af74e148e725966ea33efa782b32636c85df5ef81e2a04000"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/omit-complete-parent-share-admission/economic_native_yuma_workload.go",
+      "bytes": 5672,
+      "sha256": "fbd59e79996374e3d7891f35b87620cfd414acd4847f9f2eb179e181dafcbd4a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/omit-complete-permitted-row-admission/economic_native_yuma_workload.go",
+      "bytes": 5666,
+      "sha256": "2c5e86e37bff633517ee20092f7b4836eb74557370075a8681934f01bbc8ec74"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/restore-untyped-work-exhaustion/economic_native_yuma_math.go",
+      "bytes": 9572,
+      "sha256": "7264272c19115ca8841c98931d3812cdbf1981d1757f29d98218c0d7e81e4098"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/omit-charged-owner-cancellation/economic_native_yuma_math.go",
+      "bytes": 9598,
+      "sha256": "8e43c29f37537d1aa8601a942b6fce47fd1ee9e61586f22d30af89ed8c6df541"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/omit-old-only-ordered-ema/economic_native_yuma_model.go",
+      "bytes": 18570,
+      "sha256": "a9ebaf70b4c16d894855fe7d528bbf65d771f9cadf45e6ddfa36cea2d12270b9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/reverse-original-signed-interpolation/economic_native_yuma_model.go",
+      "bytes": 18600,
+      "sha256": "2df1e728a47dca908b9a4a698fdfd0d8978066f56091be9b8cb854a2fd6a1f67"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/omit-exact-liquid-consensus-key/economic_native_yuma_model.go",
+      "bytes": 18569,
+      "sha256": "4616aceef1878f68820aca9b6a2ec6198bf4855d8ce1d1dce3b2b9bae46ec973"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/omit-populated-original-authority-signature/economic_native_producer_authority.go",
+      "bytes": 15964,
+      "sha256": "97a06fdca1559b6e14f4192b0976dbccc55fd062a421f9becdad2d84eb9eadc6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-yuma-populated-workload/truncate-populated-original-matrix-rows/historical_native_yuma_populated_tests.rs",
+      "bytes": 21803,
+      "sha256": "2e78f661d7067be17434b72a282d33d91566b0e8bf46f54e155e1d88ba00b2e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-drained-continuation-fixture/restore-pending-before-first-accrual-guard/historical_native_execution_tests.rs",
+      "bytes": 46026,
+      "sha256": "693d4ebf4ffd742ebaeca7dde5be8d7d353bc3e34d85ed84a83e1d69c32b4bb2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/operative-controls.json",
+      "bytes": 7296,
+      "sha256": "85c0981fdc98df13800fcf4efaa3d190bb171bcdb6a380a643847df2795ff50b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-drained-continuation-fixture/ignore-retained-epoch-on-later-block/historical_native_execution_tests.rs",
+      "bytes": 45992,
+      "sha256": "24b0e15a6ed7f62fe454be0e2383e685272218d98d6f31880f9eaf031ea8f35f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/controls/native-drained-continuation-fixture/restore-nonzero-original-opening-pending/historical_native_execution_tests.rs",
+      "bytes": 46036,
+      "sha256": "4dea292d499a9595c4f8b6eeab6f8ecb219663b309f1dfe5c1a9b276568dc890"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/publication.json",
+      "bytes": 4387,
+      "sha256": "33a55bd749db05833e0fe84997a09cd9996fad5dcb4871b7e4ab155873f70fcc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-adoption-qualified-inputs/evidence/qualification-recipe-v2.json",
+      "bytes": 17944,
+      "sha256": "18b9ae86e8e11acb64103f24de3782a990a4b5bc2f47feb950a24871b0d48bdd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-profile-restore/evidence/qualification-recipe.json",
+      "bytes": 20792,
+      "sha256": "b8c808b6876cfb27e02c29968eb371081e39a333360fcd2d10d94373ec5775ca"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-yuma-populated-workload/evidence/recipe.json",
+      "bytes": 3418,
+      "sha256": "7614d6ca77e04c75412873645825ac75a5608d7a67835f6fa04bba0c7e4ddf19"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/qualification-recipe.json",
+      "bytes": 7364,
+      "sha256": "b14c292b941ff34748c5700ed979a52f9151d1ecd09910d5ef84dc312f10ff6d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/intake.json",
+      "bytes": 2648,
+      "sha256": "dc7eb1a00bad398ca5085cce9e7134786e7729a6067ea6a77b3f2de6875228cd"
+    }
+  ],
+  "git_sources": [
+    {
+      "git_path": "go.mod",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "git_path": "go.sum",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_archive_test.go",
+      "git_blob": "d5045d10b71754b0ddf3cd3b393d097d2c0d82ee",
+      "bytes": 21589,
+      "sha256": "3d4c0147791a6ce4f1cbc344d0728463317386d1b652dde2aef466a0ef0ad125"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_capture_sequence_test.go",
+      "git_blob": "c8ae502dd65eea3217e9dcaebfc7257bdeea6232",
+      "bytes": 11620,
+      "sha256": "089940be1230f64db5db91105e7e3eb90893417a195c960d083deed695d6df74"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_capture_test.go",
+      "git_blob": "b68c62b4b678b9144d82d7048f713eb89e60d1cf",
+      "bytes": 15396,
+      "sha256": "b2fc058078676894edcb2542438f92f8c5cd4fd0a43e64a8eba2d725f422cf2b"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement_archive_test.go",
+      "git_blob": "528020097ae71e9ab766222513dd43dff809a39f",
+      "bytes": 8660,
+      "sha256": "4eed258a709b3d3664d5f2c11203cf088d2c8805f50545cb145d5891f1b1b9f1"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement_test.go",
+      "git_blob": "41737dbeba8bfdc9e82f16aba5081f1182c18001",
+      "bytes": 17142,
+      "sha256": "28abe33a990a66d223170703cd6751b42d375f4f8427647c9b44f91e473c477c"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_fee_retention_test.go",
+      "git_blob": "ddcda8e342df86a38fe111c37f12e4df0f337c81",
+      "bytes": 12710,
+      "sha256": "01af0eda7405deef30b70ee6a0af486b429b56787c0b5b0a510416047b93e46a"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_fee_revision_test.go",
+      "git_blob": "620bde7f0e24d08a709422cbf973bad6fb45a2f4",
+      "bytes": 19128,
+      "sha256": "a0a9a926f8a37a5a8e8dca24180259fa4667694f19742adf57b4e55ad5e33c5e"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_fee_worker_test.go",
+      "git_blob": "4f1384cb0c5d5de07dbb88637e4856bee40345b8",
+      "bytes": 14585,
+      "sha256": "e384280163706ecfec8df9d5d6b51b990af4b83d1b2cfccede4ecec1a9b78f50"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_fixture_protection_test.go",
+      "git_blob": "0319d5b3052748f9f7a04196d170634bb1f57fe5",
+      "bytes": 1931,
+      "sha256": "644bafa7b394613c9b75ade45161cebb935376b880d7c005bfd23a1142057e0a"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_joined_admission_test.go",
+      "git_blob": "b35b2849017c663fa0804584060d33c072dac840",
+      "bytes": 7576,
+      "sha256": "dd1c0696a336e46142cedd41870d223022adef2bc466d3384594d97e299dac80"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_native_renewal_test.go",
+      "git_blob": "18ef9b631c98013b8cd198f2e052ae715d3c27ac",
+      "bytes": 26586,
+      "sha256": "9e5c20dfd9632bfd731dc6d59e74f1c1ffc24a3e7fb8f85a2be044a2aa8c7480"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_principal_activation_test.go",
+      "git_blob": "378acb52d7c38720739d13c66936995e420e1ca8",
+      "bytes": 1385,
+      "sha256": "86ba5234914ce5f48ef3ccdfa6754866ae98b8010559f7af70fc1fccf351806a"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_principal_custody_test.go",
+      "git_blob": "8fca2f13b29027a800571b433f320211a35011dc",
+      "bytes": 3008,
+      "sha256": "859dc2d5b15fb7b9a1eee9a502f9690241117b93be946209cfe602929d2788d2"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_principal_effects_test.go",
+      "git_blob": "56aef41f2610245df784d7f121fff64ef1570ab2",
+      "bytes": 10561,
+      "sha256": "5bfff9bd7121aa3f8dbb297c3f50d1888cbfa94f4d5cd82790b33033caba0e90"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_principal_test.go",
+      "git_blob": "0bf266645f84d53540b4f53860f3242cd7b7f404",
+      "bytes": 20181,
+      "sha256": "55467e2d473d54cc10ecf94831cea4c9bf6968d6e4c5bac93a4d78101a5b7c84"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_profile_restore_test.go",
+      "git_blob": "725a9681f5cf4ca7d706cae4d863dc66e654fc37",
+      "bytes": 15952,
+      "sha256": "71958a8a9e52e63a683a6e3f58bbf7d01a101e3b787e41273b27217feb0a12c7"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_receipt_test.go",
+      "git_blob": "c722ea3721daec1a7c31cf1c02542a794415ad85",
+      "bytes": 8027,
+      "sha256": "d9ce5ac212ea843d03401c67a721aabb91e483401622c26bc44d836e9e98643f"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_restore_test.go",
+      "git_blob": "818fa4dbf324b805188c39854fffb52d801351b9",
+      "bytes": 23055,
+      "sha256": "9d32ef4a0791a082666f575146607b4e6cd053ab3794e61b6d1f554a495af8bc"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_storage_test.go",
+      "git_blob": "763a25baab13288762de27c84fb5eea374a4766f",
+      "bytes": 14543,
+      "sha256": "0881cf04cc02af1518c2e7e4663fdd71c0ee76055fa9de00c37d5cfc543b4ac6"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_test.go",
+      "git_blob": "e72540962f53727e76959a34971088d4f8084561",
+      "bytes": 27285,
+      "sha256": "a8053264fa890a531aca2c7011c100b54368cba94a85cb4a8f5566b5cfc3c807"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_yuma.go",
+      "git_blob": "fa2cbdbcd8984cd9a06ce3a80ec9f4af76a8aa06",
+      "bytes": 11416,
+      "sha256": "80ef7d50ca2fd285f0cdad46bb2bf982c1c379d33de0b4a3aee91bbe9e81b795"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_yuma_populated_test.go",
+      "git_blob": "8f31c3353ff3c6e655c3a06dcd96586fbcc502df",
+      "bytes": 7710,
+      "sha256": "2888be8c588b39e5cb7f53f40c44ba1f6b14ec3c1d8558e3e09ce9f91be4779c"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_yuma_test.go",
+      "git_blob": "858ebccd15532f6cba26563f0a9abb19e1da12ac",
+      "bytes": 15030,
+      "sha256": "39335ce8025b750c8bc9d3e3311e268c285fbca381cca6a7f905e6f3814c2200"
+    },
+    {
+      "git_path": "mainnet/economic_native_execution_test.go",
+      "git_blob": "86d449a6055f06d4ebd2af2d6a6d4770ab51a3c4",
+      "bytes": 32574,
+      "sha256": "6ca68d699946484d38c2c770446eeec20ebe846ccd84671d577385c26dfd44cc"
+    },
+    {
+      "git_path": "mainnet/economic_native_producer_renewal_test.go",
+      "git_blob": "2177f9d35b4e3d2e0d82728745aa705abfcba765",
+      "bytes": 35792,
+      "sha256": "ef2906dbbad2f341de98a347f553099dfbed8aa68550f712e52eb2dcd399e5c8"
+    },
+    {
+      "git_path": "mainnet/economic_native_producer_restore_test.go",
+      "git_blob": "eedbb9dd39b11483513be4522469127aa3d0a977",
+      "bytes": 32572,
+      "sha256": "bcc04b72e8ca37ef163634668055416f15245f12fac41f301a8fb3eae4d89347"
+    },
+    {
+      "git_path": "mainnet/economic_native_producer_test.go",
+      "git_blob": "84f627477461945d74b35fce9c0a33d1e0511c52",
+      "bytes": 32611,
+      "sha256": "00d806968b02845d52c01050adc711ce9a45e471bd6c18ec5799dd5800b5bf26"
+    },
+    {
+      "git_path": "mainnet/economic_native_yuma.go",
+      "git_blob": "6f5d1e7c161e0613276c548e08ecf8ee791a93a7",
+      "bytes": 11483,
+      "sha256": "508a38e112b96caeecea9a850ee8d001c073bfedffc51b4758bcd67cfaa81198"
+    },
+    {
+      "git_path": "mainnet/economic_native_yuma_capture.go",
+      "git_blob": "c041f66c637ab5813928f3d9bda0a43fd048858a",
+      "bytes": 10813,
+      "sha256": "6a9637c8c3f104783f4153cf20e7c42f7362b79a5bc94acb0cfe615bbd67b135"
+    },
+    {
+      "git_path": "mainnet/economic_native_yuma_equivalence_test.go",
+      "git_blob": "d1e744401f3de7c2eb25247fb264f284fce4c60e",
+      "bytes": 6608,
+      "sha256": "5d0c26664257d6b6888f2f0313ad8e7579ed7b43f856101dacb8e44d5ad74675"
+    },
+    {
+      "git_path": "mainnet/economic_native_yuma_math.go",
+      "git_blob": "4b0a5b47687553c4f64e31d1f3cc06a834f34edf",
+      "bytes": 9613,
+      "sha256": "768e278ec200e13f6e47b1e99830c3111318c7882a8bbdc06a50f98d9419ecf7"
+    },
+    {
+      "git_path": "mainnet/economic_native_yuma_math_test.go",
+      "git_blob": "8c9aa129f5842e1d053f8500032aae33fed482af",
+      "bytes": 9347,
+      "sha256": "868d337213d60b80b0a01ec412c1684544b654815109c697569fdc9fffde8488"
+    },
+    {
+      "git_path": "mainnet/economic_native_yuma_model.go",
+      "git_blob": "8a6f2b1bc8e924dc7a825292c395f4017bb871c3",
+      "bytes": 18600,
+      "sha256": "6748fe67279fedd1e24ae1b9286a1019331906acb3b05975d1a01068460f1d28"
+    },
+    {
+      "git_path": "mainnet/economic_native_yuma_owner_test.go",
+      "git_blob": "1da57761669666682e516974c825d6b50aa5a180",
+      "bytes": 9543,
+      "sha256": "790cacb9b18777b3309a0b53c98e326c9c991b6a0849967b806823bda4bd0d46"
+    },
+    {
+      "git_path": "mainnet/economic_native_yuma_workload.go",
+      "git_blob": "0b5ca10b40a6fe526deba07878c34e3ce6d5306a",
+      "bytes": 5702,
+      "sha256": "f9551599ab26e801f068767c7cc164a3e88eb121ecb3abb6434b82a22e799d0b"
+    },
+    {
+      "git_path": "mainnet/economic_native_yuma_workload_test.go",
+      "git_blob": "d447e2f98a7037a621fb95eb761e3691ab2bd6a8",
+      "bytes": 12475,
+      "sha256": "5de9577eec63a5d9b67e37a12accdb3631aaae4ff15a8e039c52b596f0817580"
+    },
+    {
+      "git_path": "mainnet/economic_restore_fixture_admission_test.go",
+      "git_blob": "3ac78f0d6c3a2d9a8dfb5e2554ff8a7fd81e51fb",
+      "bytes": 2183,
+      "sha256": "425e44f3816064e4d2ca6acb527b4385fc4cb7373c6be8d585c3985391279497"
+    },
+    {
+      "git_path": "mainnet/monitor_economic_evm_test.go",
+      "git_blob": "f2edadc60a0496a94a4290cddc7f33d37a0dd77a",
+      "bytes": 27499,
+      "sha256": "46a0fe29b7d4df01ae963245f36ad935727b507742f6bf9332518bb63c90000c"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/Cargo.lock",
+      "git_blob": "185310d18fcb00bcffd17ddacd80db8d34707651",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/Cargo.toml",
+      "git_blob": "a698109860741b88d661c29d95be93d81c62a160",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "git_blob": "fa9eeaf7a3e54be719299a4e01d8f98f421e7597",
+      "bytes": 25440,
+      "sha256": "78b8cd2a92711611132ece01655b9c9a90a0855821ecdc4d7fb0592be396ff1a"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "git_blob": "4cd5f14e7e82c6d3944363c1b6fd6441fc3a0c02",
+      "bytes": 8563,
+      "sha256": "dd3a0ace7c633121d3f124b178d1af869b1ce41abb4e74825307a73819e44494"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "git_blob": "782dcd0731c6a80a9f564e81f89cdace02ad2f79",
+      "bytes": 46017,
+      "sha256": "4779b4a631fe88b895192756493388d955824eda7cd198e16b15fb3e85e282ae"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/src/historical_native_yuma_capacity_tests.rs",
+      "git_blob": "f6158db671259857178102d6a5a486445e15ce0c",
+      "bytes": 8693,
+      "sha256": "827c914b889114a2aba74eae6c7074505d89d019abf730f05aa2fb1b5c61ed7f"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/src/historical_native_yuma_populated_tests.rs",
+      "git_blob": "f4fc6d23bc8a148bb09e48a9e9f3e30aa2aface4",
+      "bytes": 21804,
+      "sha256": "2b7916646c669a894010db06e46f89e65e509d4576bf1c07e132ac8095540180"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/src/historical_native_yuma_tests.rs",
+      "git_blob": "9f72d1aaa3bdb536167ee08de5d89b537e074db5",
+      "bytes": 13503,
+      "sha256": "fe78b4f2e542a69ac54dd0eed394878acf7cdc353c2b69b97aaaef62bb3af90e"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/src/historical_principal_tests.rs",
+      "git_blob": "f7becd36d0e85575f257e58ed8cd63f0ea09fc91",
+      "bytes": 8831,
+      "sha256": "743cba18c8c7e29ca5974344d445e2aeb1b37aef4dc89ba26d550a3c25a3b2ba"
+    },
+    {
+      "git_path": "tools/runtime-metadata-probe/src/historical_tests.rs",
+      "git_blob": "549e93b3e26cd0a91f9f67afe7bf95987f5c9076",
+      "bytes": 57370,
+      "sha256": "cf4a12e5bc7cf96e3ff0093daecdc5f8c47dab771c6bdc1d337ca40884b3feb9"
+    },
+    {
+      "git_path": "validator/artifact_census_test.go",
+      "git_blob": "c01cb06788e53d3b4aa3e341b5c2cd7c0c50599d",
+      "bytes": 6851,
+      "sha256": "0029b6d81b1542a2df0021682feae24b3160ef14857cf3e2f7b650fad9eb7495"
+    },
+    {
+      "git_path": "validator/artifact_test.go",
+      "git_blob": "3aba04cc7acdb5549b2d95eb9234ffed8c1d0193",
+      "bytes": 8070,
+      "sha256": "5c649e8f622cfa05db69aaba9fcd3a32c4cde4c27ebc18a09e22fd1c5989467b"
+    }
+  ],
+  "source_checks": {
+    "clean_exact_composition": true,
+    "go_declarations_per_mode": 174,
+    "rust_exact_declarations": 17,
+    "exact_control_mutations": 65,
+    "no_omitted_populated_source_paths": true,
+    "two_composed_helper_deltas": {
+      "mainnet/economic_conservation_principal_test.go": "diff --git a/mainnet/economic_conservation_principal_test.go b/mainnet/economic_conservation_principal_test.go\nindex f1796cc8..0bf26664 100644\n--- a/mainnet/economic_conservation_principal_test.go\n+++ b/mainnet/economic_conservation_principal_test.go\n@@ -165,7 +165,9 @@ func newEconomicConservationPrincipalFixtureWithSequence(t *testing.T, name stri\n \tproducer.ctx = storage.Context\n \tmetadata := t.TempDir()\n \tprotectFreshEconomicConservationTestRoot(t, metadata)\n-\treturn &economicConservationArchiveFixture{source: f, ctx: storage.Context, metadata: metadata}, producer\n+\tctx := economicConservationTestArchiveReserves(t, storage.Context, metadata, f.policy)\n+\tproducer.ctx = ctx\n+\treturn &economicConservationArchiveFixture{source: f, ctx: ctx, metadata: metadata, storage: storage}, producer\n }\n \n // Provision only the fresh test fixture. Public observers never recreate a lost\n",
+      "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs": "diff --git a/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs b/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs\nindex cf8eea89..782dcd07 100644\n--- a/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs\n+++ b/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs\n@@ -60,7 +60,7 @@ fn fixture_with_principal(\n     continuous: bool,\n     principal: Option<Option<u64>>,\n ) -> (HistoricalJob, sp_core::storage::Storage) {\n-    fixture_with_principal_effects(continuous, principal, None)\n+    fixture_with_principal_activation(continuous, principal, principal.is_some())\n }\n \n fn fixture_with_principal_effects(\n@@ -71,6 +71,14 @@ fn fixture_with_principal_effects(\n     fixture_with_allocation(continuous, principal, effects, None)\n }\n \n+fn fixture_with_principal_activation(\n+    continuous: bool,\n+    principal: Option<Option<u64>>,\n+    drained_activation: bool,\n+) -> (HistoricalJob, sp_core::storage::Storage) {\n+    fixture_with_allocation_activation(continuous, principal, None, None, drained_activation)\n+}\n+\n fn fixture_with_allocation(\n     continuous: bool,\n     principal: Option<Option<u64>>,\n@@ -207,10 +215,22 @@ fn fixture_with_allocation_activation(\n         // blocks perform no drain/epoch/allocation, rather than fabricating a\n         // zero emission or spending the first block's recipient amounts again.\n         declarations.push_str(&segment(1900, &[0]));\n-        body = format!(\n-            \"(call $set (i64.const {}) (i64.const {})) (local.set $n (i32.wrap_i64 (call $get (i64.const {})))) (if (i64.ne (i64.load offset=2 (local.get $n)) (i64.const 0)) (then {}))\",\n-            span(1400, events.len()), span(1900, 1), span(1000, drains[0].len()), body\n-        );\n+        if drained_activation {\n+            // The original pending inputs are zero before first-block accrual.\n+            // Their value cannot guard the body that creates them. The original\n+            // epoch key is absent only at this fixture's independently proved\n+            // opening state and remains present after the first actual epoch.\n+            body = format!(\n+                \"(call $set (i64.const {}) (i64.const {})) (local.set $n (i32.wrap_i64 (call $get (i64.const {})))) (if (i32.eqz (i32.load8_u (local.get $n))) (then {}))\",\n+                span(1400, events.len()), span(1900, 1), span(1700, epoch.len()), body\n+            );\n+        } else {\n+            // Keep the undrained standalone fixture's original program exact.\n+            body = format!(\n+                \"(call $set (i64.const {}) (i64.const {})) (local.set $n (i32.wrap_i64 (call $get (i64.const {})))) (if (i64.ne (i64.load offset=2 (local.get $n)) (i64.const 0)) (then {}))\",\n+                span(1400, events.len()), span(1900, 1), span(1000, drains[0].len()), body\n+            );\n+        }\n     }\n     let principal_key = b\"synthetic-opening-stake\";\n     if principal.is_some() {\n@@ -572,7 +592,66 @@ fn fixture_with_allocation_activation(\n // the next clears its events and the later blocks reproduce unchanged state.\n #[test]\n fn historical_native_producer_exports_contiguous_original_jobs() {\n-    let (first, mut post_storage) = fixture_with_continuation(true);\n+    let (first, post_storage) = fixture_with_continuation(true);\n+    export_contiguous_jobs(\n+        first,\n+        post_storage,\n+        \"URNETWORK_NATIVE_PRODUCER_FIXTURE_OUT\",\n+        false,\n+    );\n+}\n+\n+// Combined accounting starts at the proof-drained parent, before the original\n+// next-block accrual. Standalone producer exports retain their original input.\n+#[test]\n+fn historical_native_conservation_exports_proof_drained_contiguous_jobs() {\n+    let (first, post_storage) = fixture_with_principal_activation(true, None, true);\n+    let parent: NativeHeader = scale_exact(\n+        \"parent\",\n+        &hex_bytes(\"parent\", &first.parent_header_hex, MAXIMUM_HEADER_BYTES).unwrap(),\n+    )\n+    .unwrap();\n+    let nodes = first\n+        .proof_nodes_hex\n+        .iter()\n+        .map(|node| hex_bytes(\"node\", node, MAXIMUM_CODE_BYTES).unwrap());\n+    let backend =\n+        create_proof_check_backend::<Blake2Hasher>(*parent.state_root(), StorageProof::new(nodes))\n+            .unwrap();\n+    assert_eq!(\n+        backend.storage(b\"synthetic-native-epoch\").unwrap(),\n+        None,\n+        \"combined original activation parent already contains an epoch\"\n+    );\n+    for item in [\n+        b\"PendingServerEmission\".as_slice(),\n+        b\"PendingValidatorEmission\".as_slice(),\n+        b\"PendingRootAlphaDivs\".as_slice(),\n+    ] {\n+        assert_eq!(\n+            backend\n+                .storage(&key(b\"SubtensorModule\", item, true))\n+                .unwrap(),\n+            Some(words(&[0])),\n+            \"combined original activation parent must be proof-drained\"\n+        );\n+    }\n+    export_contiguous_jobs(\n+        first,\n+        post_storage,\n+        \"URNETWORK_NATIVE_CONSERVATION_FIXTURE_OUT\",\n+        true,\n+    );\n+}\n+\n+// Preserve each original parent proof and execute every linked job before\n+// publishing any fixture. Export paths are exclusive, then durably synced.\n+fn export_contiguous_jobs(\n+    first: HistoricalJob,\n+    mut post_storage: sp_core::storage::Storage,\n+    output_variable: &str,\n+    proof_drained: bool,\n+) {\n     let mut jobs = vec![first];\n     let code = hex_bytes(\n         \"producer code\",\n@@ -617,13 +696,150 @@ fn historical_native_producer_exports_contiguous_original_jobs() {\n         job.proof_nodes_hex = proof.clone();\n         jobs.push(job);\n     }\n+    // Every child root above is built from an independent complete map before\n+    // any replay runs. Proof checks also preserve the original first/later\n+    // dispatch distinction; returned replay roots never supply expectations.\n     for (index, job) in jobs.iter().enumerate() {\n-        let report = run(job).expect(\"contiguous actual native producer job\");\n+        let parent: NativeHeader = scale_exact(\n+            \"contiguous parent\",\n+            &hex_bytes(\n+                \"contiguous parent\",\n+                &job.parent_header_hex,\n+                MAXIMUM_HEADER_BYTES,\n+            )\n+            .unwrap(),\n+        )\n+        .unwrap();\n+        let nodes = job\n+            .proof_nodes_hex\n+            .iter()\n+            .map(|node| hex_bytes(\"contiguous node\", node, MAXIMUM_CODE_BYTES).unwrap());\n+        let backend = create_proof_check_backend::<Blake2Hasher>(\n+            *parent.state_root(),\n+            StorageProof::new(nodes),\n+        )\n+        .unwrap();\n+        assert_eq!(\n+            parent.hash().0,\n+            job.parent_hash,\n+            \"contiguous original parent identity changed\"\n+        );\n+        assert_eq!(\n+            backend.storage(b\"synthetic-native-epoch\").unwrap(),\n+            if index == 0 {\n+                None\n+            } else {\n+                Some(words(&[200]))\n+            },\n+            \"contiguous original epoch marker is not the first/later proof state\"\n+        );\n+        for (offset, item) in [\n+            b\"PendingServerEmission\".as_slice(),\n+            b\"PendingValidatorEmission\".as_slice(),\n+            b\"PendingRootAlphaDivs\".as_slice(),\n+        ]\n+        .into_iter()\n+        .enumerate()\n+        {\n+            assert_eq!(\n+                backend\n+                    .storage(&key(b\"SubtensorModule\", item, true))\n+                    .unwrap(),\n+                Some(words(&[if index == 0 && !proof_drained && offset < 2 {\n+                    100\n+                } else {\n+                    0\n+                }])),\n+                \"contiguous original pending parent differs from its activation\"\n+            );\n+        }\n+        if index > 0 {\n+            assert_eq!(\n+                backend\n+                    .storage(b\"synthetic-native-provider-credit\")\n+                    .unwrap(),\n+                Some(words(&[9, 3, 6])),\n+                \"empty continuation lost original provider effects\"\n+            );\n+            assert_eq!(\n+                backend.storage(b\"synthetic-native-owner-recycle\").unwrap(),\n+                Some(words(&[89])),\n+                \"empty continuation lost original owner effects\"\n+            );\n+        }\n+        let report = run(job).unwrap_or_else(|error| {\n+            panic!(\n+                \"contiguous original block {} failed independently declared post-state: {error}\",\n+                index + 101\n+            )\n+        });\n         assert!(report.post_state_reproduced && !report.runtime_admitted);\n+        if proof_drained {\n+            let captured = super::capture_tests::collect(job).unwrap_or_else(|error| {\n+                panic!(\n+                    \"proof-drained original block {} capture failed: {error}\",\n+                    index + 101\n+                )\n+            });\n+            let exported: HistoricalJob = serde_json::from_str(&captured.job_json).unwrap();\n+            assert_eq!(\n+                exported.parent_header_hex, job.parent_header_hex,\n+                \"capture replaced the independently declared parent\"\n+            );\n+            assert_eq!(\n+                exported.child_header_hex, job.child_header_hex,\n+                \"capture replaced the independently declared child\"\n+            );\n+            assert_eq!(\n+                exported.runtime_code_sha256, job.runtime_code_sha256,\n+                \"capture replaced the original drained program\"\n+            );\n+            let replayed = run(&exported).unwrap_or_else(|error| {\n+                panic!(\n+                    \"proof-drained original block {} reduced replay failed: {error}\",\n+                    index + 101\n+                )\n+            });\n+            for actual in [&captured.replay, &replayed] {\n+                assert!(actual.post_state_reproduced && !actual.runtime_admitted);\n+                assert_eq!(\n+                    actual\n+                        .hook_observations\n+                        .as_ref()\n+                        .unwrap()\n+                        .observations\n+                        .len(),\n+                    if index == 0 { 7 } else { 0 },\n+                    \"proof-drained capture/replay changed the first/later original census\"\n+                );\n+            }\n+        }\n         let records = &report.hook_observations.as_ref().unwrap().observations;\n-        assert_eq!(records.len(), if index == 0 { 7 } else { 0 });\n+        assert_eq!(\n+            records.len(),\n+            if index == 0 { 7 } else { 0 },\n+            \"contiguous original first/later observation census changed\"\n+        );\n+        if index == 0 {\n+            for (offset, amount) in [100u64, 100, 0].into_iter().enumerate() {\n+                assert_eq!(\n+                    records[offset].storage_return.as_ref().unwrap().value_hex,\n+                    Some(encoded(&words(&[amount]))),\n+                    \"first original epoch did not drain its witnessed next-block accrual\"\n+                );\n+            }\n+            let emitted = records[3]\n+                .native\n+                .as_ref()\n+                .unwrap()\n+                .memory\n+                .iter()\n+                .find(|value| value.name == \"emission\")\n+                .unwrap();\n+            assert_eq!(emitted.bytes_hex, encoded(&words(&[9, 89])));\n+        }\n     }\n-    if let Some(directory) = std::env::var_os(\"URNETWORK_NATIVE_PRODUCER_FIXTURE_OUT\") {\n+    if let Some(directory) = std::env::var_os(output_variable) {\n         let directory = Path::new(&directory);\n         assert!(directory.is_absolute() && directory.is_dir());\n         for (index, job) in jobs.iter().enumerate() {\n"
+    }
+  },
+  "review_findings": [
+    "Read complete populated original-Wasm exporter: all original nonzero stakes,64 dense weight/bond rows and every recipient execute; widened independent expected storage precedes replay. Fixture code has no deployed-runtime authority.",
+    "Reviewed workload dimensions before multiplication, complete raw row/share census and separately signed twofold logical reserves. Wire feasibility floor does not replace actual serialized size or host sizing.",
+    "Reviewed source-order positive-stake median reuse, sparse ordered EMA/interpolation and at-most256 owner-local exact-rational liquid coefficient entries. Retained original helper comparisons cover fixed/exact arithmetic and all varying coefficient inputs; actual body results remain pending.",
+    "Joined principal helper preserves original protected storage owner and physical-profile-based twofold reserves. Joined Rust constructor preserves populated and legacy dispatch alongside the corrected drained-continuation epoch gate."
+  ],
+  "qualification": {
+    "go_roots_per_mode": 174,
+    "rust_roots": 17,
+    "control_groups": 65
+  },
+  "reviewer_reader_failure": "Initial declaration reader assumed declarations keyed by package and raised KeyError before evidence mutation. Correct schema uses root-name keys; all174 Go and17 Rust declaration locations/Git blobs independently checked. No product failure inferred.",
+  "limits": [
+    "This composition proof does not claim every inherited production file was newly fully reviewed in this turn. Component source reviews and exact identities remain separate.",
+    "No composed compile, behavioral root, causal-control success, actual host capacity or deployment inferred.",
+    "Later native-follow and archive-performance changes are excluded until separately frozen and joined.",
+    "Native-income-to-entitlement funding conformance and complete38 requirement acceptance remain open."
+  ]
+}

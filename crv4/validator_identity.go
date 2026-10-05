@@ -51,6 +51,12 @@ type ValidatorIdentityObservation struct {
 // on an otherwise immutable Chain. RPC transport response limits remain the
 // transport's responsibility; bounded storage decoding adds no unbounded copy.
 func ReadValidatorIdentityAtContext(ctx context.Context, chain *Chain, query ValidatorIdentityQuery, allowed ...RuntimeArtifactIdentity) (ValidatorIdentityObservation, error) {
+	return readValidatorIdentityWithRuntimeAtContext(ctx, chain, query, nil, allowed...)
+}
+
+// A dependent read may require its narrow runtime capability before the first
+// storage decode. Identity-only callers retain their exact-artifact behavior.
+func readValidatorIdentityWithRuntimeAtContext(ctx context.Context, chain *Chain, query ValidatorIdentityQuery, admit func(AuthenticatedRuntimeArtifact) error, allowed ...RuntimeArtifactIdentity) (ValidatorIdentityObservation, error) {
 	empty := ValidatorIdentityObservation{}
 	if ctx == nil || chain == nil || chain.API == nil || chain.API.Client == nil {
 		return empty, errors.New("validator identity context is unavailable")
@@ -91,25 +97,25 @@ func ReadValidatorIdentityAtContext(ctx context.Context, chain *Chain, query Val
 	if canonical != query.BlockHash {
 		return empty, errors.New("validator identity block is not canonical at its pinned height")
 	}
-	header, err := chain.HeaderAtContext(ctx, query.BlockHash)
+	number, _, err := chain.ReceiptHeaderAtContext(ctx, query.BlockHash)
 	if err != nil {
 		return empty, err
 	}
-	if uint64(header.Number) != query.BlockNumber {
+	if number != query.BlockNumber {
 		return empty, errors.New("validator identity header number differs from the independent pin")
 	}
 	finalized, err := FinalizedHeadContext(ctx, chain)
 	if err != nil {
 		return empty, err
 	}
-	finalizedHeader, err := chain.HeaderAtContext(ctx, finalized)
+	finalizedNumber, _, err := chain.ReceiptHeaderAtContext(ctx, finalized)
 	if err != nil {
 		return empty, err
 	}
-	if uint64(finalizedHeader.Number) < query.BlockNumber {
+	if finalizedNumber < query.BlockNumber {
 		return empty, errors.New("validator identity block is not finalized")
 	}
-	finalizedCanonical, err := validatorIdentityBlockHashAtContext(ctx, chain, uint64(finalizedHeader.Number))
+	finalizedCanonical, err := validatorIdentityBlockHashAtContext(ctx, chain, finalizedNumber)
 	if err != nil {
 		return empty, err
 	}
@@ -119,6 +125,11 @@ func ReadValidatorIdentityAtContext(ctx context.Context, chain *Chain, query Val
 	artifact, err := AuthenticateRuntimeArtifactAtContext(ctx, chain, query.BlockHash, allowed...)
 	if err != nil {
 		return empty, err
+	}
+	if admit != nil {
+		if err := admit(artifact); err != nil {
+			return empty, err
+		}
 	}
 	read := func(name string, maximum int, optional bool, args ...[]byte) ([]byte, error) {
 		if err := ctx.Err(); err != nil {
@@ -208,9 +219,14 @@ func ReadValidatorIdentityAtContext(ctx context.Context, chain *Chain, query Val
 	if err := ctx.Err(); err != nil {
 		return empty, err
 	}
+	if finalized != query.BlockHash {
+		if err := chain.CheckCanonicalBlockAtContext(ctx, finalized, finalizedNumber); err != nil {
+			return empty, err
+		}
+	}
 	observation := ValidatorIdentityObservation{
 		GenesisHash: query.GenesisHash, BlockHash: query.BlockHash, BlockNumber: query.BlockNumber,
-		FinalizedHash: finalized, FinalizedNumber: uint64(finalizedHeader.Number),
+		FinalizedHash: finalized, FinalizedNumber: finalizedNumber,
 		Netuid: query.Netuid, UID: query.UID, SubnetUIDs: count,
 		StakeAlphaRao: stakeAlphaRao, ValidatorPermit: permit,
 		Runtime: RuntimeArtifactIdentity{Version: artifact.Version, CodeHash: artifact.CodeHash, MetadataHash: artifact.MetadataHash},
@@ -220,7 +236,7 @@ func ReadValidatorIdentityAtContext(ctx context.Context, chain *Chain, query Val
 	return observation, nil
 }
 
-// Checks exact native RPC identity without the synthetic-header hashing path.
+// Decodes one exact fixed-width native canonical hash response.
 func validatorIdentityBlockHashAtContext(ctx context.Context, chain *Chain, number uint64) (types.Hash, error) {
 	if err := ctx.Err(); err != nil {
 		return types.Hash{}, err

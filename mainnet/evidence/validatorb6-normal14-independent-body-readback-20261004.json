@@ -1,0 +1,133 @@
+{
+  "schema": "validatorb6-normal14-independent-body-readback-v1",
+  "status": "EXACT_NORMAL_FOURTEEN_ROOTS_PASS_RACE_AND_CONTROLS_PENDING",
+  "head": "b6f05dc5df9ef84898b25d6aac47ebdb0a04e27a",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.receipt.json",
+      "bytes": 8896,
+      "sha256": "adefcdfb2403c7de47a372b682ae03cb92de60341c022959592751bd92b84b9b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/images/b6-go-validator-normal-compile.test",
+      "bytes": 82034256,
+      "sha256": "c43d8431f04fd4da18252135b7bab0e2aadae624c1c82ed3fd896933b6cc0902"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-go-validator-normal-compile.receipt.json",
+      "bytes": 7803,
+      "sha256": "c79350cb2084858d9eddf94bfa8e2befccbb114aee41a724cef844e6c65c6586"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.resources.csv",
+      "bytes": 22619,
+      "sha256": "393c27d071975328176365c7477f6562f5a88f40fb1ae0235dfb4b6945c7e655"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.stdout",
+      "bytes": 13641,
+      "sha256": "600be24b613c5be2fe2d5cbaba1b920bd0f5118e5e4157663d8dcf61a7243927"
+    }
+  ],
+  "events": {
+    "TestReleaseArchiveFullLineageOwnedReadsDoNotReplayHistory": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveFullLineageRejectsRemovedPredecessor": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveFullLineageCountsNonemptyHeadAndRefusesDoubleFold": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveFullLineageRejectsLateEnvelopeWithoutPartialOwner": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveFullLineageLateObservationPublishesNoCache": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveFullLineageCancellationRetainsFreshReplay": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveFullLineageBlockedReplayAllowsOwnedForegroundRead": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveV2RejectsArchiveByteBudgetBeforeReads": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveV2RejectsSelfDeclaredEMAAndChangedSourceBytes": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseMeasurementV2SettlementLineageAcceptsRealPrefixAndNativeRetry": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseMeasurementV2SettlementNativeRetryRejectsDoubleFoldedHead": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveFullLineageTerminalRefusesLostOwner": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveFullLineageTerminalOwnerCancellation": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestReleaseArchiveV2ReplaysCompleteSignedHistoryWithoutLiveState": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    }
+  },
+  "census": {
+    "run": 14,
+    "pass": 14,
+    "fail": 0,
+    "skip": 0
+  },
+  "exit": 0,
+  "tree_joined": true,
+  "scope": "Full signed-lineage cache reads, owned copies, cancellation, original predecessor/byte/source authority, terminal closure original-owner refusal and fresh reopen.",
+  "limits": "Normal selected scope only. Race, vet and six causal controls remain distinct required results; not complete validator, release or launch qualification."
+}

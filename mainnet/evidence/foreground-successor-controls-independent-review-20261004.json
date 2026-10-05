@@ -1,0 +1,60 @@
+{
+  "schema": "foreground-successor-controls-independent-review-v1",
+  "status": "FOCUSED_CORRECTION_QUALIFIED_NORMAL_RACE_VET_AND_CONTROLS",
+  "terminal": {
+    "path": "/mnt/data/sn-testnet/sol-2477-foreground-qualification-20261004/evidence/2477-foreground-scoped-terminal-v1.json",
+    "sha256": "1c88aaaedeb542d49b42689454c59552f7fd2bcc0ccf8324f11f5b190effcacf"
+  },
+  "controls": [
+    {
+      "phase": "2477-control-1-original-iterator-held-across-upload-normal",
+      "mode": "normal",
+      "kind": "production_iterator_regression",
+      "verified_assertion": "remote object callback retained the foreground projection iterator",
+      "receipt": {
+        "bytes": 5184,
+        "path": "/mnt/data/sn-testnet/sol-2477-foreground-qualification-20261004/evidence/2477-control-1-original-iterator-held-across-upload-normal-control-receipt.json",
+        "sha256": "e80af168bf0f9f8df41b95b98fcbb43507beb6bce16dea98dd068da8c001399b"
+      }
+    },
+    {
+      "phase": "2477-control-2-original-128-record-fixture-capacity-normal",
+      "mode": "normal",
+      "kind": "test_fixture_capacity_regression",
+      "verified_assertion": "attempt record store limit exceeded",
+      "receipt": {
+        "bytes": 5181,
+        "path": "/mnt/data/sn-testnet/sol-2477-foreground-qualification-20261004/evidence/2477-control-2-original-128-record-fixture-capacity-normal-control-receipt.json",
+        "sha256": "c7ad04c7ee8cd9db193cf6f3e511555e25c49c12d393a884856ba316f5b37726"
+      }
+    },
+    {
+      "phase": "2477-control-3-original-iterator-held-across-upload-race",
+      "mode": "race",
+      "kind": "production_iterator_regression",
+      "verified_assertion": "remote object callback retained the foreground projection iterator",
+      "receipt": {
+        "bytes": 5177,
+        "path": "/mnt/data/sn-testnet/sol-2477-foreground-qualification-20261004/evidence/2477-control-3-original-iterator-held-across-upload-race-control-receipt.json",
+        "sha256": "612e4b151be4496083cbe3e91549e5c43b9c9b10f71141283c44a789a659bac0"
+      }
+    },
+    {
+      "phase": "2477-control-4-original-128-record-fixture-capacity-race",
+      "mode": "race",
+      "kind": "test_fixture_capacity_regression",
+      "verified_assertion": "attempt record store limit exceeded",
+      "receipt": {
+        "bytes": 5174,
+        "path": "/mnt/data/sn-testnet/sol-2477-foreground-qualification-20261004/evidence/2477-control-4-original-128-record-fixture-capacity-race-control-receipt.json",
+        "sha256": "0f26fbfc0082ff723e0b909d14875454eb4aaf6e7d142457360b8573d133e682"
+      }
+    }
+  ],
+  "positive_scope": "20 roots in each mode and validator vet independently verified in prior root proofs",
+  "limits": [
+    "Two controls per mode: one production gate regression and one fixture-capacity regression. Fixture mutation is not a second production defect.",
+    "Owner cancellation has deterministic positive coverage; these controls do not separately prove that lifetime branch.",
+    "Focused correction ready for integration; no actual host sizing, combined release or mainnet activation claimed."
+  ]
+}

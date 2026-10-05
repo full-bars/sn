@@ -10,37 +10,74 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/urfoundation/sn/protocol"
 	"github.com/urfoundation/sn/stabi"
+	validatorcomponent "github.com/urfoundation/sn/validator"
 )
 
 // Resolve a completed ancestor without changing its signatures, first epoch,
 // quotas or runtime domain. Same-plan setup keeps its existing fresh admission.
+// historicalPlanConfig retains the live transport and runtime readers but binds
+// immutable replay to the archived approval identity. It is used only after
+// lineage, deployment, role and receipt authentication has selected that plan.
+func historicalPlanConfig(cfg *ResolvedConfig, plan *SetupPlan, owners ...*SetupPlan) *ResolvedConfig {
+	if cfg == nil || plan == nil {
+		return cfg
+	}
+	copy := *cfg
+	copy.ConfigHash = plan.ConfigHash
+	copy.PolicyHash = plan.PolicyHash
+	if cfg.previousPolicy != nil {
+		if hash, err := cfg.previousPolicy.HashHex(); err == nil && hash == plan.PolicyHash {
+			policy := *cfg.previousPolicy
+			policy.Deposit.Tiers = append([]protocol.DepositTier(nil), policy.Deposit.Tiers...)
+			copy.Policy = &policy
+		}
+	}
+	for _, owner := range owners {
+		if policyRateAmendmentAllowsAncestor(owner, plan) {
+			policy := owner.PolicyRateAmendment.Previous
+			policy.Deposit.Tiers = append([]protocol.DepositTier(nil), policy.Deposit.Tiers...)
+			copy.Policy = &policy
+		}
+	}
+	return &copy
+}
+
+// Every retained preparation and completion must authenticate, even before the
+// first revision. Ancestor sources additionally require exact durable history.
 func runtimeEvidenceSetupSourcePlanV2(cfg *ResolvedConfig, plan *SetupPlan, stateDir string, roles *RoleSecrets, prepared *runtimeEvidenceActivationPreparedV2, encoded []byte, completed *runtimeEvidenceActivationCompletedV2, entries []JournalEntry) (*SetupPlan, error) {
 	if cfg == nil || cfg.Config == nil || plan == nil || roles == nil || prepared == nil {
 		return nil, errors.New("activation setup carry owners are incomplete")
 	}
-	if prepared.PlanHash == plan.PlanHash {
-		return plan, nil
+	source := plan
+	if prepared.PlanHash != plan.PlanHash {
+		if !plan.allowedPlanHashes()[prepared.PlanHash] {
+			return nil, errors.New("activation setup source is outside approved lineage")
+		}
+		var err error
+		source, err = readValidatorEvidenceHistoricalPlan(stateDir, prepared.PlanHash)
+		if err != nil {
+			return nil, err
+		}
+		if err := validatorEvidenceSourcePlanMatches(plan, source); err != nil {
+			return nil, err
+		}
 	}
-	if !plan.allowedPlanHashes()[prepared.PlanHash] {
-		return nil, errors.New("activation setup source is outside approved lineage")
-	}
-	source, err := readValidatorEvidenceHistoricalPlan(stateDir, prepared.PlanHash)
-	if err != nil {
-		return nil, err
-	}
-	if err := validatorEvidenceSourcePlanMatches(plan, source); err != nil {
-		return nil, err
-	}
-	if source.ConfigHash != plan.ConfigHash || source.ConfigHash != cfg.ConfigHash || source.PolicyHash != plan.PolicyHash || source.PolicyHash != cfg.PolicyHash {
+	// The prepared evidence is signed against the source approval. A successor
+	// may change only an independent allowance and therefore has a different
+	// full config hash; its current config must still match its own plan and its
+	// policy must remain identical. Revalidate the signature using the archived
+	// source identity below, then retain the exact source actions and receipts.
+	if !validCanonicalHashHex(source.ConfigHash) || cfg.ConfigHash != plan.ConfigHash || cfg.PolicyHash != plan.PolicyHash || (source.PolicyHash != plan.PolicyHash && !policyRateAmendmentAllowsAncestor(plan, source)) {
 		return nil, errors.New("activation setup carry changed its approved configuration or policy")
 	}
-	if err := validateRuntimeEvidencePreparedInputsV2(cfg, source, roles, prepared); err != nil {
+	sourceConfig := historicalPlanConfig(cfg, source, plan)
+	if err := validateRuntimeEvidencePreparedInputsV2(sourceConfig, source, roles, prepared); err != nil {
 		return nil, err
 	}
 	preparedHash := fmt.Sprintf("0x%x", sha256.Sum256(encoded))
@@ -49,6 +86,9 @@ func runtimeEvidenceSetupSourcePlanV2(cfg *ResolvedConfig, plan *SetupPlan, stat
 	}
 	if err := verifyFinalHead("activation setup original boundary", completed.Boundary); err != nil {
 		return nil, err
+	}
+	if source == plan {
+		return plan, nil
 	}
 	actions := make([]Action, 0, len(prepared.Members)+1)
 	for _, member := range prepared.Members {
@@ -243,7 +283,10 @@ func validateRuntimeEvidenceSetupRevisionV2(cfg *ResolvedConfig, stateDir string
 	}
 	var prepared runtimeEvidenceActivationPreparedV2
 	encoded, err := readRuntimeEvidenceSetupV2(context.Background(), filepath.Join(stateDir, "evidence-v2-setup", "prepared.json"), limit, &prepared)
-	if errors.Is(err, os.ErrNotExist) {
+	if validatorcomponent.ReleaseEvidenceV2SetupFileInitiallyMissing(err) {
+		if err := requireRuntimeEvidenceSetupUnpreparedV2(context.Background(), stateDir, limit); err != nil {
+			return err
+		}
 		for _, entry := range entries {
 			if plan.allowedPlanHashes()[entry.PlanHash] && (strings.HasPrefix(entry.ActionID, "evidence.activate.") || entry.ActionID == runtimeEvidenceActivationBoundaryActionId) {
 				return errors.New("activation setup revision has progress without its original preparation")

@@ -246,7 +246,7 @@ contract ReleaseSettlementMinimumsTest is ReleaseBase {
         assertEq(staking.stakes(escrow, PROVIDER1), 100);
     }
 
-    function test_claimRejectsDestinationAndSourceRuntimeDriftAtomically() public {
+    function test_claimDefersDestinationAndSourceRuntimeDriftAtomically() public {
         (STSettlementVault standalone, bytes32 escrow, bytes32 vaultColdkey, bytes32 pool) =
             _standaloneVault(100);
         staking.setMinimumMoveAmount(100);
@@ -256,22 +256,24 @@ contract ReleaseSettlementMinimumsTest is ReleaseBase {
         );
         staking.setTransferStakeShortfall(1);
 
-        vm.expectRevert(STSettlementVault.RuntimeAccountingMismatch.selector);
         standalone.claim(0, NO1, PROVIDER1, 1_000, proof);
         STSettlementVault.Entitlement memory record = standalone.entitlement(0, NO1);
-        assertEq(record.claimed, 0);
-        assertEq(standalone.claimCredit(PROVIDER1), 0);
+        assertEq(record.claimed, 100);
+        assertEq(standalone.claimCredit(PROVIDER1), 100);
         assertEq(staking.stakes(escrow, vaultColdkey), 1_000);
         assertEq(staking.stakes(escrow, PROVIDER1), 0);
 
         staking.setTransferStakeShortfall(0);
         staking.setTransferStakeSourceResidue(1);
         vm.expectRevert(STSettlementVault.RuntimeAccountingMismatch.selector);
-        standalone.claim(0, NO1, PROVIDER1, 1_000, proof);
+        standalone.withdrawClaimCredit(PROVIDER1);
         record = standalone.entitlement(0, NO1);
-        assertEq(record.claimed, 0);
-        assertEq(standalone.claimCredit(PROVIDER1), 0);
+        assertEq(record.claimed, 100);
+        assertEq(standalone.claimCredit(PROVIDER1), 100);
         assertEq(staking.stakes(escrow, vaultColdkey), 1_000);
+        assertEq(staking.stakes(escrow, PROVIDER1), 0);
+        assertEq(standalone.totalPaid(), 0);
+        assertTrue(standalone.conservationHolds());
     }
 
     function test_withdrawBelowMinimumAndVaultSelfClaimFailClosed() public {

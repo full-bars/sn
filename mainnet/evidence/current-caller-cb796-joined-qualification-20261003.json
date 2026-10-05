@@ -1,0 +1,314 @@
+{
+  "artifact_bindings_verified": 59,
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/ancestry-preflight-build-normal.txt",
+      "sha256": "6c87665a61c40264958c15c28f2ae3d8094fe961efd2fb296a513297faea17f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/ancestry-preflight-build-race.txt",
+      "sha256": "6c87665a61c40264958c15c28f2ae3d8094fe961efd2fb296a513297faea17f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/ancestry-preflight-normal.txt",
+      "sha256": "6c87665a61c40264958c15c28f2ae3d8094fe961efd2fb296a513297faea17f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/ancestry-preflight-race.txt",
+      "sha256": "6c87665a61c40264958c15c28f2ae3d8094fe961efd2fb296a513297faea17f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/ancestry-preflight-vet.txt",
+      "sha256": "6c87665a61c40264958c15c28f2ae3d8094fe961efd2fb296a513297faea17f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-normal.binary-sha256",
+      "sha256": "921db30551beb3585c7d1708107434aad6049069cd0c80ec39e260e97ddfacdc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-normal.binary-stat",
+      "sha256": "f7df4cba81dd5dca8e8430126b6628b07fcfa7f58dbff63dac1b43f425b6116e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-normal.phase",
+      "sha256": "9da3cb3edd29e31b22eff57103e838da323aba28f952e81b71e04d30f31b9968"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-normal.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-race.binary-sha256",
+      "sha256": "986331462188b2837e3b74e0b47610609eeed5c1d15d1f9804528d4a6afbe244"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-race.binary-stat",
+      "sha256": "953aaea06d8973a732a0a004e56d9c50a45148ad45b009923f0b7403f739eddb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-race.phase",
+      "sha256": "ce1d444334c56f01a1026893ec3e1d19beaa17071630f4e55d6dcc0966c36c72"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-build-race.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-normal-inspector-receipt.json",
+      "sha256": "8504fffc03078b0002c17a49ce5e9b6d8b18db31665f84507684d698e74c7c8b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-normal.jsonl",
+      "sha256": "cce2f77cbe355b3986239df0fde6ab80bef6fd5e804380ea33e916fef3035938"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-normal.phase",
+      "sha256": "8d5343554ffaa67c1279d5911ce106bc05198c03bf65ab52746ef085237d486d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-race.jsonl",
+      "sha256": "6a2fbc7edd54a3b6999d6738f8edec57a944f16e3fd7653f9b987ba6e74eb302"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-race.phase",
+      "sha256": "63e5dfa8276ed59cd3bf70b35c3d80f6a6ddd750a823064c8774805b5a8f578b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-normal.binary-after",
+      "sha256": "921db30551beb3585c7d1708107434aad6049069cd0c80ec39e260e97ddfacdc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-normal.binary-before",
+      "sha256": "921db30551beb3585c7d1708107434aad6049069cd0c80ec39e260e97ddfacdc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-normal.fixture-after",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-normal.fixture-before",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-normal.mount",
+      "sha256": "bb0963dd948373e16e4373ac4603b4a2a46c9f39f69e812dcb763472f97777dd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-normal.phase",
+      "sha256": "9c5fb65902f14bfe14bb57666083da15d764031e728e14c76a623dcdda4463e8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-normal.stdout",
+      "sha256": "fdf2c2e02d0a2316d050ed2ace7118c58aab2eeb3a142e80e30c557057a7de92"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-race.binary-after",
+      "sha256": "986331462188b2837e3b74e0b47610609eeed5c1d15d1f9804528d4a6afbe244"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-race.binary-before",
+      "sha256": "986331462188b2837e3b74e0b47610609eeed5c1d15d1f9804528d4a6afbe244"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-race.fixture-after",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-race.fixture-before",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-race.mount",
+      "sha256": "bb0963dd948373e16e4373ac4603b4a2a46c9f39f69e812dcb763472f97777dd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-race.phase",
+      "sha256": "5b50aef5411a9ba1c20a0c8f3527a33c393fb16900a22de22b63d015b14e34f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-real-inspector-race.stdout",
+      "sha256": "34d77cbd000003d43111fab85d37b649b57eafbee2ebdb3980a6ab52e97cef69"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-vet.phase",
+      "sha256": "e988ef5337c1dffcf3466f9415c37dbd229b12e9ffad371d5eb925b2aad95de9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-vet.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/connect-module.json",
+      "sha256": "66e7a44630bbbc85bbbd6905acc5fe69e20dbd6d471f06dbac24d20fc8ba6e3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/go-selected-deps.txt",
+      "sha256": "c67cb81be39eb8d0b79109790b52bdc0c77c45d330000c79c029d5382f29a3b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/inspector-invocation.json",
+      "sha256": "50b79cf518172cb90047389532e6c42e20bf5a7ce5f526104405aad61caeeff7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/peer-graph.json",
+      "sha256": "67a567368a074ac5003d4986563a4ceffd7c96515a4b582f83715d990d1829a0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/root-preflight-build-normal.json",
+      "sha256": "6f64587f0a5a82523795d68118c0b66f7af2dd394999a791e464cc0f61214ed0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/root-preflight-build-race.json",
+      "sha256": "6f64587f0a5a82523795d68118c0b66f7af2dd394999a791e464cc0f61214ed0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/root-preflight-normal.json",
+      "sha256": "6f64587f0a5a82523795d68118c0b66f7af2dd394999a791e464cc0f61214ed0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/root-preflight-race.json",
+      "sha256": "6f64587f0a5a82523795d68118c0b66f7af2dd394999a791e464cc0f61214ed0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/root-preflight-vet.json",
+      "sha256": "6f64587f0a5a82523795d68118c0b66f7af2dd394999a791e464cc0f61214ed0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/run-current.sh",
+      "sha256": "0ab5acf8927d0d93edc8f79718682be24d7cd79f0d8c3ae8002328e0c9bc16bc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/source-readback.json",
+      "sha256": "a859550e30fc6e28a46026f18868a073a91ca9d7732e8f71d930f76d64517728"
+    }
+  ],
+  "limits": [
+    "Each ordinary mode11PASS/1intentionalSKIP, separately selected inspectorPASSboth modes; not single12PASSordinaryrun.",
+    "Source proof independently verified full physical author source; Sol own20503inventory bound here, not independently reread all ownsourcefiles.",
+    "Synthetic real-kernel fixture and current join qualification do not prove deployed service custody, actual mainnet runtime/finality or native fee authority."
+  ],
+  "raw_selected_root_census": {
+    "normal": {
+      "TestCommandPipeCopyCannotBypassAnyOutputLimit": "pass",
+      "TestHistoricalReplayDescendantPipesCannotOutliveResult": "pass",
+      "TestHistoricalReplayExecutesSealedImageAfterSourceReplacement": "pass",
+      "TestHistoricalReplayExpiredOwnerRefusesBeforeEngineAdmission": "pass",
+      "TestHistoricalReplayObservationDistinguishesMissingAndActualZeroRefund": "pass",
+      "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins": "pass",
+      "TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority": "pass",
+      "TestHistoricalReplayPublicObservationRetainsUnapprovedExactCandidate": "pass",
+      "TestOwnerAdapterOutputOverflowCancelsActualBoundary": "pass",
+      "TestRepairCommandOutputOverflowCancelsActualChild": "pass",
+      "TestServiceStorageCredentialInspectorRealHost": "skip",
+      "TestSourceLockBindsCleanLocalDependencies": "pass"
+    },
+    "race": {
+      "TestCommandPipeCopyCannotBypassAnyOutputLimit": "pass",
+      "TestHistoricalReplayDescendantPipesCannotOutliveResult": "pass",
+      "TestHistoricalReplayExecutesSealedImageAfterSourceReplacement": "pass",
+      "TestHistoricalReplayExpiredOwnerRefusesBeforeEngineAdmission": "pass",
+      "TestHistoricalReplayObservationDistinguishesMissingAndActualZeroRefund": "pass",
+      "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins": "pass",
+      "TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority": "pass",
+      "TestHistoricalReplayPublicObservationRetainsUnapprovedExactCandidate": "pass",
+      "TestOwnerAdapterOutputOverflowCancelsActualBoundary": "pass",
+      "TestRepairCommandOutputOverflowCancelsActualChild": "pass",
+      "TestServiceStorageCredentialInspectorRealHost": "skip",
+      "TestSourceLockBindsCleanLocalDependencies": "pass"
+    }
+  },
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/evidence/cb796-final-joined-receipt.json",
+    "sha256": "92697039faa3858b8b5f2a964a35a7c19b584b60a2810163d24fd1363a9d8b68"
+  },
+  "root_only_inspector": {
+    "binary_nlink": 1,
+    "binary_paths": {
+      "normal": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/bin/cb796-mainnet-normal.test",
+      "race": "/mnt/data/sn-testnet/sol-historical-current-cb796-independent-20261003/bin/cb796-mainnet-race.test"
+    },
+    "binary_sha256": {
+      "normal": "c5ba3e900e706f258176b04e4d574ecb37fe1c9905d611a61564cd28aad4a0b9",
+      "race": "28484bbd19eec796a0575db8361cd970b86a3c2baae65047e216c4bb10fc00b1"
+    },
+    "compiled_uid": 1000,
+    "executed_uid": 0,
+    "fixture": "approved-test-only",
+    "fixture_cleanup": "synthetic /mnt/data/sn-service-inspector-test-* inventory unchanged before/after both modes",
+    "manager": "simulated test transport; no service start",
+    "mount": "/dev/sdc1 ext4 /mnt/data maj:min8:33",
+    "normal": "PASS",
+    "observed_data_uuid": "b1792c45-b3d9-4ea2-b3a4-9cdd3e1b38c0",
+    "race": "PASS",
+    "selected_root": "TestServiceStorageCredentialInspectorRealHost"
+  },
+  "source": {
+    "commit": "cb796a302df8029d0fe3be455ef7715d64f45a48",
+    "mismatches": [],
+    "tracked_count": 20503,
+    "tracked_entries_sha256": "ee24d599477f77d841241a29904f2c37616367b4c739f64ab97b7936965454a7",
+    "tree": "a3903dd1dabac39834a1c85425de766496ad5d1f"
+  },
+  "source_proof": {
+    "path": "mainnet/evidence/current-caller-cb796-source-join-review-20261003.json",
+    "sha256": "82be32e99ff388fffb2340630e7bcd1d6442841e4cdc11a133f3ee32106075ef"
+  },
+  "status": "ROOT_VERIFIED_CURRENT_JOIN_SCOPED_QUALIFICATION",
+  "vet_exit": 0
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "capture-extrinsic-framing-successor-root-source-review-v1",
+  "status": "TEST_SOURCE_FIX_AND_DETERMINISTIC_REGRESSIONS_REVIEWED_EXECUTION_PENDING",
+  "head": "e00e9068ccebe92f2352d4e72300acac4fe91331",
+  "parent": "fd9229f26db7788b84584f2287d194760ada4eb2",
+  "bindings": [
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "bytes": 11731,
+      "sha256": "3f76d44b4f89ac636df0f4e6f446caa49efc6741eb2cc326a13a4491b8ad5a11",
+      "blob": "989a2fafbe2f8b0ffd447ed2a85589fe0e057520"
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 46056,
+      "sha256": "0d77acec8611a20176891e1411cf1fbb52e9f2929dc806235a3b07386a32f009",
+      "blob": "f02d12405031ec8546c8922b77132a98c2baf4e5"
+    }
+  ],
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-extrinsic-fixture/evidence/intake.json",
+    "sha256": "a50d5e4a8d55b687c30c2f2c915c6df54ddc6f8a2dac208828fa77a694f3f6dc"
+  },
+  "review": [
+    "Fix only native test fixtures with explicit u8 byte vectors at shared single/same-block and later-child body/header construction sites.",
+    "Canonical regression derives independent exact SCALE bytes: compact32 prefix0x80 plus32 actual transaction bytes, checks exact original header trie commitment and opaque decode/reencode.",
+    "Actual capture and replay public entry points reject original inferred-i32 words, truncated/trailing payload and nonminimal length. No decoder relaxation.",
+    "Existing7 original Yuma/populated assets and unaffected Go/production engines remain retained. Execute2 new framing roots and2 failed exporters with rebased5 controls plus inference-restoration control."
+  ],
+  "limits": [
+    "Source-only reviewed; no corrected capture execution or export claim.",
+    "Full funding41 and independent original authority/finality/fees remain incomplete."
+  ]
+}

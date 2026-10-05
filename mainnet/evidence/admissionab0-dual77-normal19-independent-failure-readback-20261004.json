@@ -1,0 +1,202 @@
+{
+  "schema": "admissionab0-dual77-normal19-independent-failure-readback-v1",
+  "status": "NORMAL19_TERMINAL9_PASS10_FAIL_RACE_CONTINUES",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-normal-actual-dual-engine.receipt.json",
+      "bytes": 12412,
+      "sha256": "920ef4a28f22ad7b6a316bc267171e2689e013175b4fe180121c4c7a0272410e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/images/ab0-go-normal-compile.test",
+      "bytes": 79772936,
+      "sha256": "c35d4da691c03870acd5435f429543ad521e8b5e0203f3c76944cd46edfa7fbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-normal-actual-dual-engine.resources.csv",
+      "bytes": 14886,
+      "sha256": "3c60fd0d3e5065071a2b9fab0148fad366dd4849d53fa1025b096a5ddb32636f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-normal-actual-dual-engine.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-dual77-normal-actual-dual-engine.stdout",
+      "bytes": 17420,
+      "sha256": "25730ec20db86e901ca2d00f6366fa9100bb5bb6d6738149094e6352d94ba1b2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/images/ade5-capture",
+      "bytes": 53745800,
+      "sha256": "7dbf990f65501c21b4bc3ac3f9f5f719599a9abfba0155cb39fac7fc2537a71c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/images/ade5-replay",
+      "bytes": 51561432,
+      "sha256": "437baed67cb327e4cd0ced3b243c9f4998254eb8da828398f4318705a62ace75"
+    }
+  ],
+  "actual_events": {
+    "TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestEconomicConservationPrincipalFixtureProvisionsAbsentHeadAndRefusesLostLock": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestEconomicConservationPublicPrincipalRefusesUndrainedActivationWithHealthySiblings": {
+      "run": 1,
+      "pass": 1,
+      "fail": 0,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    },
+    "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress": {
+      "run": 1,
+      "pass": 0,
+      "fail": 1,
+      "skip": 0
+    }
+  },
+  "passed_roots": [
+    "TestEconomicConservationPrincipalFixtureProvisionsAbsentHeadAndRefusesLostLock",
+    "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed",
+    "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings",
+    "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive",
+    "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative",
+    "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative",
+    "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown",
+    "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping",
+    "TestEconomicConservationPublicPrincipalRefusesUndrainedActivationWithHealthySiblings"
+  ],
+  "failure_groups": [
+    {
+      "diagnostic": "native economic completed block lacks runtime read context",
+      "roots": [
+        "TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart",
+        "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody",
+        "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects",
+        "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob",
+        "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput",
+        "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot",
+        "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval",
+        "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint",
+        "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress"
+      ],
+      "triage": "Astra tracing fixture construction through finite CLI versus complete actual monitor observation; do not fabricate runtime companion fields or relax real append requirements."
+    },
+    {
+      "diagnostic": "combined restore changed original economic liabilities or approvals",
+      "roots": [
+        "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted"
+      ],
+      "triage": "Separate full restore-continuity comparison under investigation; no production-state corruption inferred from assertion alone."
+    }
+  ],
+  "retention": [
+    "Nine successful normal roots remain retained.",
+    "Original exporter failure and corrected six Rust positives/three controls remain separate.",
+    "Race19 and existing long history continue; no restart or second long body."
+  ],
+  "limits": [
+    "Normal selected scope only; no race or entire release success inferred.",
+    "Failure diagnosis is preliminary; root cause fixes and deterministic adjacent coverage remain Astra work.",
+    "No mainnet signing, deployment or activation inferred."
+  ]
+}

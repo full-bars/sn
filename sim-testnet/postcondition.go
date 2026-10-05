@@ -532,6 +532,9 @@ func legacyRegistrationBalancePostconditionHash(record *ActionPostcondition) (st
 }
 
 func (e *Executor) persistActionPostcondition(record *ActionPostcondition) (string, string, error) {
+	if e != nil && e.cfg != nil && e.cfg.readOnlyAudit {
+		return "", "", errors.New("historical audit cannot persist action postconditions")
+	}
 	if record == nil {
 		return "", "", errors.New("action postcondition is unavailable")
 	}
@@ -952,6 +955,8 @@ func (e *Executor) actionPostState(ctx context.Context, a Action, evmHead ChainH
 			state["scheduled_policy_effective_block"] = scheduled.EffectiveBlock
 		}
 		return state, nil
+	case strings.HasPrefix(a.ID, precompileRecoveryActionPrefix):
+		return e.verifyPrecompileRecoveryPostState(ctx, a, evmHead, state)
 	case strings.HasPrefix(a.ID, "precompile."):
 		return e.verifyPrecompileConformancePostState(ctx, a, evmHead, state)
 	case strings.HasPrefix(a.ID, "governance."):
@@ -959,7 +964,7 @@ func (e *Executor) actionPostState(ctx context.Context, a Action, evmHead ChainH
 	case strings.HasPrefix(a.ID, "operator.register."):
 		return e.verifyOperatorPostState(ctx, a, state)
 	case strings.HasPrefix(a.ID, "fleet.commitment."):
-		return e.verifyFleetCommitmentPostState(a, suffixInt(a.ID), state)
+		return e.verifyFleetCommitmentPostState(ctx, a, suffixInt(a.ID), state)
 	case strings.HasPrefix(a.ID, "fleet.mirror."):
 		if a.Parameters["batch_installed"] == "true" {
 			_, _, observed, err := e.verifyFleetInstallAliasState(a, state)
@@ -1147,6 +1152,7 @@ func productionPolicyEvidenceMatches(cfg *ResolvedConfig, evidence ProductionPol
 	return evidence.Schema == "urnetwork-production-policy-evidence-v2" && evidence.DeploymentID == cfg.Config.Deployment.DeploymentID &&
 		strings.EqualFold(evidence.PolicyHash, cfg.PolicyHash) && evidence.ReleaseRunID == gate.RunID &&
 		strings.EqualFold(evidence.ReleaseResultHash, gate.ResultHash) && strings.EqualFold(evidence.ReleaseCompleteHash, gate.CompleteContentHash) &&
+		evidence.ProvisionalReleaseHandoffHash == gate.ProvisionalHandoffHash && (evidence.ReleaseGate == nil || releaseCampaignGatesEqual(evidence.ReleaseGate, gate)) &&
 		strings.EqualFold(evidence.ReleaseHandoffHash, gate.LifecycleHandoff.ContentHash) && evidence.ReleaseHandoffSize == gate.LifecycleHandoff.SizeBytes &&
 		evidence.CampaignStartEpoch == gate.StartEpoch && evidence.CampaignEndEpoch == gate.EndEpoch && evidence.ScheduledFromEpoch >= gate.EndEpoch &&
 		evidence.EffectiveEpoch == evidence.ScheduledFromEpoch+1 && evidence.EffectiveBlock != 0 &&
@@ -1156,6 +1162,10 @@ func productionPolicyEvidenceMatches(cfg *ResolvedConfig, evidence ProductionPol
 }
 
 func productionPolicyReleaseGate(evidence ProductionPolicyEvidence) *ReleaseCampaignGate {
+	if evidence.ReleaseGate != nil {
+		gate := *evidence.ReleaseGate
+		return &gate
+	}
 	return &ReleaseCampaignGate{
 		Schema: releaseCampaignGateSchema, RunID: evidence.ReleaseRunID, ResultHash: evidence.ReleaseResultHash,
 		CompleteContentHash: evidence.ReleaseCompleteHash, StartEpoch: evidence.CampaignStartEpoch, EndEpoch: evidence.CampaignEndEpoch,
@@ -1188,22 +1198,20 @@ func (e *Executor) verifyProductionPolicyPostState(ctx context.Context, head Cha
 	if err != nil {
 		return nil, fmt.Errorf("production policy transaction: %w", err)
 	}
-	coordinator := stabi.NewSTCoordinator()
 	address := e.payloads.Manifest.CoordinatorProxy
-	count, err := rawCoordinatorCall(ctx, e.owner, address, coordinator.PackPolicyCount(), coordinator.UnpackPolicyCount)
-	if err != nil || !count.IsUint64() || count.Uint64() < 2 || count.Uint64() > 3 {
-		return nil, stateMismatchError(err, "policy count=%v, want fresh or migrated release history", count)
+	history, err := readProductionPolicyHistory(ctx, e.cfg, e.plan, e.owner, address, head.Number)
+	if err != nil {
+		return nil, err
 	}
-	lastIndex := new(big.Int).Sub(new(big.Int).Set(count), big.NewInt(1))
-	policy, err := rawCoordinatorCall(ctx, e.owner, address, coordinator.PackPolicyByIndex(lastIndex), coordinator.UnpackPolicyByIndex)
-	if err != nil || !productionPolicyMatches(e.cfg, policy) || policy.EffectiveEpoch != evidence.EffectiveEpoch || policy.EffectiveBlock != evidence.EffectiveBlock {
-		return nil, stateMismatchError(err, "finalized production policy does not match evidence")
+	policy := history.policies[len(history.policies)-1]
+	if !history.scheduled || policy.EffectiveEpoch != evidence.EffectiveEpoch || policy.EffectiveBlock != evidence.EffectiveBlock {
+		return nil, errors.New("finalized production policy does not match evidence")
 	}
-	if err := productionPolicyReceiptMatches(receipt, address, policy, count.Uint64()-1); err != nil {
+	if err := productionPolicyReceiptMatches(receipt, address, policy, uint64(len(history.policies)-1)); err != nil {
 		return nil, err
 	}
 	state["effective_epoch"], state["effective_block"], state["epoch_blocks"] = policy.EffectiveEpoch, policy.EffectiveBlock, policy.EpochBlocks
-	state["policy_count"] = count.String()
+	state["policy_count"] = strconv.Itoa(len(history.policies))
 	return state, nil
 }
 
@@ -1936,8 +1944,8 @@ func (e *Executor) verifyOperatorPostState(ctx context.Context, action Action, s
 	return state, nil
 }
 
-func (e *Executor) verifyFleetCommitmentPostState(action Action, fleet int, state map[string]any) (map[string]any, error) {
-	_, commitmentHash, evidence, _, err := e.validatedFleetCommitmentGeneration(fleet, 1)
+func (e *Executor) verifyFleetCommitmentPostState(ctx context.Context, action Action, fleet int, state map[string]any) (map[string]any, error) {
+	_, commitmentHash, evidence, _, err := e.validatedFleetCommitmentGenerationContext(ctx, fleet, 1)
 	if err != nil {
 		return nil, err
 	}

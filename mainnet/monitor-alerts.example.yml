@@ -1,0 +1,50 @@
+# Install in an independent rule evaluator after assigning the expected host
+# roster. The existing Fluent Bit pipeline supplies env, host and job labels.
+groups:
+  - name: sn-mainnet-monitor
+    interval: 30s
+    rules:
+      - alert: SnMainnetMonitorMissing
+        expr: sn_mainnet_monitor_expected == 1 unless on (env, host) sn_mainnet_monitor_sample_timestamp_seconds
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mainnet monitor telemetry is absent on {{ $labels.host }}"
+      - alert: SnMainnetMonitorNotSampled
+        expr: sn_mainnet_monitor_sample_timestamp_seconds == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mainnet monitor has not completed its first sample on {{ $labels.host }}"
+      - alert: SnMainnetMonitorStaleWarning
+        expr: (sn_mainnet_monitor_sample_timestamp_seconds > 0) and (time() - sn_mainnet_monitor_sample_timestamp_seconds >= 90)
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mainnet monitor samples are delayed on {{ $labels.host }}"
+      - alert: SnMainnetMonitorStale
+        expr: (sn_mainnet_monitor_sample_timestamp_seconds > 0) and (time() - sn_mainnet_monitor_sample_timestamp_seconds >= 120)
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mainnet monitor samples stopped on {{ $labels.host }}"
+      - alert: SnMainnetMonitorClockAhead
+        expr: sn_mainnet_monitor_sample_timestamp_seconds > time() + 30
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mainnet monitor clock is ahead on {{ $labels.host }}"
+      - alert: SnMainnetMonitorCritical
+        expr: sn_mainnet_monitor_severity == 2
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mainnet monitor reports a critical condition on {{ $labels.host }}"
+      - alert: SnMainnetMonitorWarning
+        expr: sn_mainnet_monitor_severity == 1
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mainnet monitor reports a warning on {{ $labels.host }}"

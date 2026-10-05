@@ -1,0 +1,115 @@
+{
+  "bindings": [
+    {
+      "bytes": 9452,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-nested/evidence/intake.json",
+      "sha256": "d25ae28ffe88d46dc0c5841b26b85480587b9d739792b03c754dd1f250516649"
+    },
+    {
+      "bytes": 16291,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evm-history-restore-current/evidence/intake.json",
+      "sha256": "27b2bab0b53310f8041eb76ff8d1a379584830058065761cbe1395c5e41f1cbc"
+    },
+    {
+      "bytes": 6369,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/evidence/seal_source.py",
+      "sha256": "2d6f6b2609a0257923d053a076c63d8f15dfeeaba0664451b00da6cbedd01d90"
+    },
+    {
+      "bytes": 28501,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/sn/mainnet/monitor_economic_evm_restore_test.go",
+      "sha256": "3b6345d2a54d47ef28473d23d94b2d0b0168fae90ce86cb207634c0d485ac944"
+    },
+    {
+      "bytes": 17807,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/sn/mainnet/monitor_economic_native_cohort_test.go",
+      "sha256": "4d6b37f7b35837d43e321b077ec6b45afb3cf7ba399121af7a3c83e9b8663b67"
+    },
+    {
+      "bytes": 4634,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/sn/mainnet/monitor_history_namespace_restore_test.go",
+      "sha256": "9f8315da4d2d5de307b169a7bc28db2933281a12ab5ba5221014972ba33a5519"
+    },
+    {
+      "bytes": 15684,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/sn/mainnet/storage_prepare_monitor_tree_linux.go",
+      "sha256": "5ac1484e2f4f509293548774c7109b1f272c4093652ad490e74f8a44cee0c8cf"
+    },
+    {
+      "bytes": 2323,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/connect/durablevolume/preparation_inventory_depth_test.go",
+      "sha256": "ebb90d15b0635427429758de1bf6707fb1076ac6ca6b5748daae277bb04d059c"
+    },
+    {
+      "bytes": 33559,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/connect/durablevolume/preparation_plan_linux.go",
+      "sha256": "6639983b3f7c19c137a1ecbd0cfd8a57963aaf22b02d885ebcdc003e99517f0d"
+    },
+    {
+      "bytes": 4310,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/evidence/source-join.json",
+      "sha256": "f71a426a97c38d0beca6f90434c6a7627b21b78e8d93fa9221bd48ba6194e4cf"
+    },
+    {
+      "bytes": 4267,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/evidence/jobs.json",
+      "sha256": "8f52259ba40a19682e5461388ac55b38d650acdced31d57d323241804d40d5fc"
+    },
+    {
+      "bytes": 4485,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-nested/evidence/graph-recipe.json",
+      "sha256": "bfad7bebf4c4eb885a0aa5bf166a6a53d55c292d3a18f473dfda52269e9771e9"
+    },
+    {
+      "bytes": 10666,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/monitor-history-namespace/evidence/intake.json",
+      "sha256": "ab623690f6bf9d14db3d8495d89ee9ab304741d2be372d85fbd20497dbdfb65d"
+    }
+  ],
+  "captured_utc": "2026-10-03T17:55:42.583332+00:00",
+  "lesson": "Restore must cover namespace depth already accepted by runtime/inventory. A smaller fresh-provisioning bound must not be reused to reject an authenticated original restore.",
+  "limits": [
+    "Root verified12 intake bindings plus intake itself and exact six changed Git blobs. No full physical independent archive, new effective graph, compile, behavior/race/vet or actual host restore established.",
+    "Sparse source predecessor d0 remains retained; this successor does not inherit broader qualification from shallow namespace controls."
+  ],
+  "remaining": [
+    "No work in this intake is admitted by the active mixed V2 grant; no competing compile/archive/reclaim was executed.",
+    "Full physical independent archives, dependency preflight and Sol-owned behavior/race/vet remain pending.",
+    "The existing32-component inventory ceiling remains explicit; paths deeper than exported inventory are not silently claimed restorable.",
+    "Parent EVM42/custody63 qualification, full published-current composition, Claim archive, all-role capacity/conservation and actual host restore remain separate.",
+    "No runtime enrollment, signed-reference relocation, activation or restart authorization."
+  ],
+  "schema": "urnetwork-root-namespace-restore-source-review-v1",
+  "source_review": [
+    "Original monitor absolute path1024/name155 bound retained; relative1024 cap is not tighter than that absolute bound.",
+    "Inventory permits32 components; original preparation and monitor-tree restore independently capped16. Successor permitsrestore32 while retainingfresh16.",
+    "Authored public controls reach native32-component and EVM1024-byte escaped/name155 paths, retain original references through pending continuation, and refuse33/overflow before target effects."
+  ],
+  "status": "SOURCE_ONLY_UNCOMPILED_NAMESPACE_FIDELITY_SUCCESSOR",
+  "verified_source_deltas": {
+    "connect": {
+      "commit": "e7f247172e2cf30553f0281f0f92f8332a9cbe40",
+      "every_other_git_entry_same_parent": true,
+      "exact_changed_paths": [
+        "durablevolume/preparation_inventory_depth_test.go",
+        "durablevolume/preparation_plan_linux.go"
+      ],
+      "go_module_inputs_unchanged": true,
+      "parent": "77235bb4cad46b59e12e0898349b4b2ba16f4389",
+      "tree": "6e70ec4a5c5092fdb34740ac1bbc2c707d9d4e78"
+    },
+    "sn": {
+      "commit": "aa46d5c11611e79e5464eddbd520e32b7fb6789f",
+      "every_other_git_entry_same_parent": true,
+      "exact_changed_paths": [
+        "mainnet/monitor_economic_evm_restore_test.go",
+        "mainnet/monitor_economic_native_cohort_test.go",
+        "mainnet/monitor_history_namespace_restore_test.go",
+        "mainnet/storage_prepare_monitor_tree_linux.go"
+      ],
+      "go_module_inputs_unchanged": true,
+      "parent": "d0e5d95bb195ef7d7727c92df0c4b152df9c4094",
+      "tree": "63eb505cd6b1722e749b3da486f6eff03620cc02"
+    }
+  }
+}

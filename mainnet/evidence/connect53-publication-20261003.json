@@ -1,0 +1,17 @@
+{
+  "schema": "mainnet-source-publication-checkpoint-v1",
+  "published_commit": "9e7ec0afa426472c083c750196155f5708e7d23b",
+  "tree": "b1919e473daab790c5cf7a6fb6fc56e74831d636",
+  "source_join_commit": "da2385aab6246f928c327463ddbac60fa8e276b8",
+  "source_join_sha256": "7b6b813ad4df4484875fbeab06258508ce7ff6edc52d77a4b693d9a5adcde10b",
+  "entire_tree_equal": true,
+  "root_worktree_clean": true,
+  "remote_main_observed": "9e7ec0afa426472c083c750196155f5708e7d23b",
+  "remote_observation": "git ls-remote origin refs/heads/main, terminal exit0 after terminal push0",
+  "bound_files_verified": 37,
+  "limits": [
+    "Byte-preserving source publication; no new behavioral execution.",
+    "Current SN/server module consumption and release qualification remain required.",
+    "Member332 and live restore excluded."
+  ]
+}

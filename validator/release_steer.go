@@ -16,6 +16,7 @@ import (
 
 	"github.com/urfoundation/sn/crv4"
 	"github.com/urfoundation/sn/payoutartifact"
+	"github.com/urfoundation/sn/protocol"
 	"github.com/urfoundation/sn/stabi"
 )
 
@@ -38,6 +39,9 @@ type ReleaseSteerer struct {
 	intents   *IntentStore
 	headEMA   *HeadEMAStore
 
+	sourceRolePredecessorV2 *releaseSourceRoleWitnessV2
+	productionReadHooks     releaseHttpGetRetryHooks
+
 	// A native-tempo egress window is detached exactly once and then reused for
 	// retries in that epoch. Without this cache, a transient EVM read failure
 	// after rotation could make the retry score a new, nearly empty window.
@@ -54,6 +58,12 @@ func releaseAttemptClaimMatchesBinding(claim AttemptEgressClaim, binding stabi.S
 }
 
 func NewReleaseSteerer(cfg *ReleaseConfig, chain *ChainClient, native *crv4.Chain, hotkey *crv4.Keypair, contexts []*ReleaseMeasurementContext) (*ReleaseSteerer, error) {
+	if err := ownerRecycleProductionBoundary(cfg); err != nil {
+		return nil, err
+	}
+	if isOwnerRecycleProductionConfig(cfg) {
+		return nil, errors.New("owner-recycle production requires the concrete V2 runtime and durable intent owner")
+	}
 	if cfg == nil || chain == nil || native == nil || hotkey == nil {
 		return nil, errors.New("release steerer requires config, EVM chain, native chain and hotkey")
 	}
@@ -98,10 +108,8 @@ func (s *ReleaseSteerer) validatePinnedChains(ctx context.Context, snapshot *Rel
 	if !bytes.Equal(s.native.GenesisHash[:], commonHashBytes(s.cfg.GenesisHash)) {
 		return fmt.Errorf("native genesis %s does not match configured %s", s.native.GenesisHash.Hex(), s.cfg.GenesisHash)
 	}
-	if s.native.Runtime == nil ||
-		uint32(s.native.Runtime.SpecVersion) != s.cfg.RuntimeSpec ||
-		uint32(s.native.Runtime.TransactionVersion) != s.cfg.TransactionVersion {
-		return errors.New("native signing runtime is not bound to the configured spec and transaction versions")
+	if err := validateReleaseNativeSigningRuntime(s.native, s.cfg); err != nil {
+		return err
 	}
 	netuid, err := s.chain.ReleaseNetuidAtHashContext(ctx, snapshot.BlockNumber, snapshot.BlockHash)
 	if err != nil {
@@ -161,7 +169,14 @@ func commonHashBytes(value string) []byte {
 // native getter even though legacy storage metadata still exists.
 func releaseSubmitOptions(cfg *ReleaseConfig) crv4.SubmitOptions {
 	maxWeightLimit := cfg.Policy.Steering.MaxWeightLimitU16
-	return crv4.SubmitOptions{VersionKey: cfg.VersionKey, MaxWeightLimit: &maxWeightLimit}
+	options := crv4.SubmitOptions{VersionKey: cfg.VersionKey, MaxWeightLimit: &maxWeightLimit}
+	if isOwnerRecycleProductionConfig(cfg) {
+		options.RequireProductionRuntime = true
+		if approved, err := ownerRecycleProductionApproval(cfg); err == nil {
+			options.EpochScheduleProfile = approved.Approval.Production.EpochScheduleProfile
+		}
+	}
+	return options
 }
 
 type releaseHeadMember struct {
@@ -457,7 +472,11 @@ func (s *ReleaseSteerer) gatherPools(ctx context.Context, snapshot *ReleaseSnaps
 		}
 
 		var audit DepositAudit
-		if currentEpoch < s.cfg.Policy.Deposit.UsageLagEpochs {
+		if s.cfg.Policy.IsZeroPrice() {
+			// Zero price: nothing to size or audit, so no payout artifact is
+			// read for steering; the pool is eligible on chain state alone.
+			audit = ZeroPriceDepositAudit(currentEpoch, sourceEpoch, noID, deposit, convictionBefore)
+		} else if currentEpoch < s.cfg.Policy.Deposit.UsageLagEpochs {
 			audit = baseDepositAudit(currentEpoch, 0, noID, deposit, convictionBefore)
 			audit.Status = DepositAuditBootstrap
 			audit.Disposition = "zero_pool_weight_bootstrap"
@@ -535,7 +554,7 @@ func (s *ReleaseSteerer) gatherPools(ctx context.Context, snapshot *ReleaseSnaps
 		if qualityErr != nil {
 			return nil, nil, nil, fmt.Errorf("no_id %d pool quality: %w", noID, qualityErr)
 		}
-		score, err := impliedUsageQuality(deposit, convictionBefore, quality, s.cfg.Policy)
+		score, err := impliedUsageQuality(audit.UsageBytes, audit.Users, convictionBefore, quality, s.cfg.Policy)
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("no_id %d weight: %w", noID, err)
 		}
@@ -596,18 +615,14 @@ func (s *ReleaseSteerer) checkApplication(ctx context.Context, snapshot *Release
 	if err != nil {
 		return err
 	}
-	header, err := s.native.HeaderAtContext(ctx, hash)
+	block, _, err := s.native.CanonicalHeaderAtContext(ctx, hash)
 	if err != nil {
 		return fmt.Errorf("read applied-weight finalized header at %s: %w", hash.Hex(), err)
-	}
-	if header == nil {
-		return fmt.Errorf("applied-weight finalized header at %s is unavailable", hash.Hex())
 	}
 	row, err := s.native.WeightsAtContext(ctx, s.cfg.Netuid, uid, hash)
 	if err != nil {
 		return err
 	}
-	block := uint64(header.Number)
 	if block < current.RevealBlock {
 		return nil
 	}
@@ -628,6 +643,9 @@ func (s *ReleaseSteerer) checkApplication(ctx context.Context, snapshot *Release
 		if got[targetUID] != value {
 			return nil
 		}
+	}
+	if err := s.native.CheckCanonicalBlockAtContext(ctx, hash, block); err != nil {
+		return err
 	}
 	return s.intents.MarkApplied(current.VectorHash, block, hash.Hex())
 }
@@ -699,6 +717,9 @@ func (s *ReleaseSteerer) reconcilePending(ctx context.Context, current *Steering
 	}
 	// Historical inclusion can close an old intent, but absent inclusion its
 	// original signing runtime must still be the current approved artifact.
+	if err := ownerRecycleProductionBoundary(s.cfg); err != nil {
+		return false, err
+	}
 	if err := authenticatePinnedNativeRuntimeAtContext(ctx, &historical, s.cfg, preparedRuntimeHash); err != nil {
 		return false, fmt.Errorf("pending steering replay uses a historical signing runtime: %w", err)
 	}
@@ -716,6 +737,9 @@ func (s *ReleaseSteerer) reconcilePending(ctx context.Context, current *Steering
 	if err != nil {
 		return false, fmt.Errorf("authenticate steering nonce runtime: %w", err)
 	}
+	if err := validatePreparedNativeRuntimeContext(ctx, s.native, s.cfg, preparedRuntimeHash, nonceHash); err != nil {
+		return false, err
+	}
 	finalizedNonce, err := s.native.AccountNonceAtContext(ctx, s.hotkey.PublicKey(), nonceHash)
 	if err != nil {
 		return false, err
@@ -730,8 +754,12 @@ func (s *ReleaseSteerer) reconcilePending(ctx context.Context, current *Steering
 	if finalizedNonce < current.Prepared.AccountNonce {
 		return false, fmt.Errorf("steering nonce gap: finalized %d, prepared %d", finalizedNonce, current.Prepared.AccountNonce)
 	}
-	if _, err := authenticatePinnedNativeRuntimeContext(ctx, s.native, s.cfg); err != nil {
+	replayHash, err := authenticatePinnedNativeRuntimeContext(ctx, s.native, s.cfg)
+	if err != nil {
 		return false, fmt.Errorf("authenticate native runtime before pending replay: %w", err)
+	}
+	if err := validatePreparedNativeRuntimeContext(ctx, s.native, s.cfg, preparedRuntimeHash, replayHash); err != nil {
+		return false, err
 	}
 	result, err := crv4.SubmitPrepared(ctx, s.native, current.Prepared)
 	if err != nil {
@@ -747,7 +775,10 @@ func (s *ReleaseSteerer) reconcilePending(ctx context.Context, current *Steering
 }
 
 func (s *ReleaseSteerer) SubmitOnce(ctx context.Context) error {
-	if s.runtimeV2 != nil || s.intents != nil && s.intents.v2 != nil || s.cfg != nil && s.cfg.EvidenceV2.Schema != "" {
+	if err := ownerRecycleProductionBoundary(s.cfg); err != nil {
+		return err
+	}
+	if isOwnerRecycleProductionConfig(s.cfg) || s.runtimeV2 != nil || s.intents != nil && s.intents.v2 != nil || s.cfg != nil && s.cfg.EvidenceV2.Schema != "" {
 		if err := requireReleaseEvidenceV2Runtime(s); err != nil {
 			return err
 		}
@@ -941,11 +972,11 @@ func (s *ReleaseSteerer) SubmitOnce(ctx context.Context) error {
 	if err := s.headEMA.CommitForEpoch(measurementArtifact.SubnetEpoch, measurementArtifact.HeadEMA, measurementArtifact.Policy.Steering.HeadScoreEMA); err != nil {
 		return fmt.Errorf("commit head EMA after steering intent: %w", err)
 	}
-	if _, err := authenticatePinnedNativeRuntimeContext(ctx, s.native, s.cfg); err != nil {
-		return fmt.Errorf("authenticate native runtime before steering broadcast: %w", err)
-	}
-	result, err := crv4.SubmitPrepared(ctx, s.native, prepared)
+	result, attempted, err := submitPreparedNativeRuntimeContext(ctx, s.native, s.cfg, prepared)
 	if err != nil {
+		if !attempted {
+			return err
+		}
 		// The error can occur after broadcast but before finality was observed.
 		// Preserve an uncertain pending state so a restart cannot double-submit.
 		return s.recordReleasePendingError(intent.VectorHash, err)
@@ -971,19 +1002,23 @@ func runReleaseSteeringLoop(ctx context.Context, poll time.Duration, epoch func(
 }
 
 func runReleaseSteeringLoopWithDeferral(ctx context.Context, poll time.Duration, epoch func() (uint64, error), submit func() error, allowDeferral bool) error {
+	return runReleaseSteeringLoopWithPermissions(ctx, poll, epoch, submit, allowDeferral, false)
+}
+
+func runReleaseSteeringLoopWithPermissions(ctx context.Context, poll time.Duration, epoch func() (uint64, error), submit func() error, allowDeferral, allowFreshWeights bool) error {
 	if ctx == nil || poll <= 0 || epoch == nil || submit == nil {
 		return errors.New("release steering loop configuration is incomplete")
 	}
 	ticker := time.NewTicker(poll)
 	defer ticker.Stop()
-	return runReleaseSteeringLoopWithWaitAndDeferral(ctx, epoch, submit, func() bool {
+	return runReleaseSteeringLoopWithWaitAndPermissions(ctx, epoch, submit, func() bool {
 		select {
 		case <-ctx.Done():
 			return false
 		case <-ticker.C:
 			return true
 		}
-	}, allowDeferral)
+	}, allowDeferral, allowFreshWeights)
 }
 
 // Injects only the existing poll decision so tests can force a ready tick
@@ -993,6 +1028,10 @@ func runReleaseSteeringLoopWithWait(ctx context.Context, epoch func() (uint64, e
 }
 
 func runReleaseSteeringLoopWithWaitAndDeferral(ctx context.Context, epoch func() (uint64, error), submit func() error, wait func() bool, allowDeferral bool) error {
+	return runReleaseSteeringLoopWithWaitAndPermissions(ctx, epoch, submit, wait, allowDeferral, false)
+}
+
+func runReleaseSteeringLoopWithWaitAndPermissions(ctx context.Context, epoch func() (uint64, error), submit func() error, wait func() bool, allowDeferral, allowFreshWeights bool) error {
 	if ctx == nil || epoch == nil || submit == nil || wait == nil {
 		return errors.New("release steering loop configuration is incomplete")
 	}
@@ -1001,31 +1040,43 @@ func runReleaseSteeringLoopWithWaitAndDeferral(ctx context.Context, epoch func()
 	completed := false
 	deferred := false
 	weightRejected := false
+	retryableCut := false
+	pendingReconciliation := false
 	rejectedAttempts := 0
 	failures := 0
 	// At most the existing failure budget is retained. Expected drain polls
 	// keep prior causes; a completed retry clears the recovered failures.
 	var pendingErr error
+	var schedulerErr error
 	for {
 		// A ready poll may win alongside cancellation; never let that
 		// decision authorize another scheduler read or submission.
 		if ctx.Err() != nil {
-			return releaseRuntimeError(ctx, pendingErr)
+			return releaseRuntimeError(ctx, errors.Join(pendingErr, schedulerErr))
 		}
 		currentEpoch, err := epoch()
 		if ctx.Err() != nil {
-			return releaseRuntimeError(ctx, errors.Join(pendingErr, err))
+			return releaseRuntimeError(ctx, errors.Join(pendingErr, schedulerErr, err))
 		}
 		if err == nil {
+			schedulerErr = nil
 			if targetKnown && currentEpoch < targetEpoch {
 				return errors.Join(fmt.Errorf("release steering epoch regressed from %d to %d", targetEpoch, currentEpoch), pendingErr)
 			}
 			if !targetKnown || currentEpoch > targetEpoch {
-				if targetKnown && !completed && !deferred && !weightRejected {
+				if targetKnown && !completed && !deferred && !weightRejected && !retryableCut && !pendingReconciliation {
 					return errors.Join(fmt.Errorf("release steering advanced from incomplete epoch %d to %d", targetEpoch, currentEpoch), pendingErr)
+				}
+				if targetKnown && retryableCut {
+					fmt.Printf("release steer: provisional native epoch %d retryable cut continued in native epoch %d; no process restart\n", targetEpoch, currentEpoch)
+				}
+				if targetKnown && pendingReconciliation {
+					fmt.Printf("release steer: original pending transaction from native epoch %d requires receipt or expiry reconciliation in native epoch %d; no completion inferred\n", targetEpoch, currentEpoch)
 				}
 				targetEpoch, targetKnown, completed, failures = currentEpoch, true, false, 0
 				deferred = false
+				retryableCut = false
+				pendingReconciliation = false
 				weightRejected, rejectedAttempts = false, 0
 				pendingErr = nil
 			}
@@ -1033,40 +1084,80 @@ func runReleaseSteeringLoopWithWaitAndDeferral(ctx context.Context, epoch func()
 				err = submit()
 				var closedInput *provisionalClosedNativeInput
 				var rejected *provisionalNativeWeightRejection
+				var interrupted *provisionalNativeReadInterruption
+				var replayInterrupted *attemptReplayReadInterruption
+				var originalPending *productionPendingReconciliation
+				pendingReconciliation = false
+				retryablePreparation, interruptedPreparation := classifyReleasePreparationRetry(err)
 				if err == nil || releaseOnlyErrors(err, ErrSteeringAlreadyFinal) {
 					completed, failures = true, 0
+					retryableCut = false
 					weightRejected = false
 					pendingErr = nil
-				} else if allowDeferral && errors.As(err, &closedInput) && closedInput.nativeEpoch == targetEpoch && releaseOnlyErrors(err, errProvisionalClosedNativeInput) {
+				} else if errors.As(err, &originalPending) && originalPending.nativeEpoch == targetEpoch && releaseOnlyErrors(err, originalPending) {
+					// This is a real retained intent awaiting observation, not a
+					// failed preparation or permission to skip its native outcome.
+					// Keep prior hard causes; the next epoch must reconcile it.
+					pendingReconciliation = pendingErr == nil
+					weightRejected, retryableCut = false, false
+					fmt.Printf("release steer: %v; retrying receipt observation on next poll\n", originalPending)
+				} else if errors.As(err, &closedInput) && (allowDeferral || allowFreshWeights && closedInput.beforeFirstIntent) && closedInput.nativeEpoch == targetEpoch && releaseOnlyErrors(err, errProvisionalClosedNativeInput) && pendingErr == nil {
 					deferred, failures, pendingErr = true, 0, nil
+					retryableCut = false
 					fmt.Printf("release steer: %v; waiting for next native epoch\n", closedInput)
-				} else if allowDeferral && errors.As(err, &rejected) && rejected.nativeEpoch == targetEpoch && releaseOnlyErrors(err, rejected) {
+				} else if (allowDeferral || allowFreshWeights) && errors.As(err, &rejected) && rejected.nativeEpoch == targetEpoch && releaseOnlyErrors(err, rejected) {
 					// Funding and eligibility can change before this native epoch
 					// ends. Keep the existing poll/retry, without killing independent
 					// proof workers or erasing an unrelated unresolved failure.
 					weightRejected = pendingErr == nil
+					retryableCut = false
 					rejectedAttempts++
 					fmt.Printf("release steer: %v; rejected attempt %d; retrying on next poll\n", rejected, rejectedAttempts)
-				} else if releaseOnlyErrors(err, errAttemptCutPending) {
+				} else if allowFreshWeights && errors.As(err, &interrupted) && interrupted.nativeEpoch == targetEpoch && releaseOnlyErrors(err, interrupted) {
 					weightRejected = false
-					// Admitted trails drain under their existing contexts. Waiting
-					// neither spends nor resets the real native-failure budget;
-					// the next scheduler read still enforces exact epoch continuity.
-				} else if releaseOnlyErrors(err, errAttemptCutSnapshotStale) {
+					retryableCut = pendingErr == nil
+					fmt.Printf("release steer: %v; retrying authenticated preparation on next poll\n", interrupted)
+				} else if errors.As(err, &replayInterrupted) && RetryableEvidenceTransportError(err) {
 					weightRejected = false
-					// A cut keeps its reservation while the next submission reads
-					// a fresh canonical snapshot. Earlier signed operator inputs
-					// remain immutable and are reused by that same-epoch retry.
-					fmt.Printf("release steer: %v; retrying on next poll\n", err)
+					retryableCut = allowDeferral && pendingErr == nil
+					// Retained intent reads replay before the pre-intent handler.
+					// Retry the read without spending native failures; existing
+					// intent reconciliation and strict epoch continuity still apply.
+					fmt.Printf("release steer: %v; retrying authenticated compact replay on next poll\n", err)
+				} else if retryablePreparation && !interruptedPreparation {
+					weightRejected = false
+					retryableCut = allowDeferral && pendingErr == nil
+					// Parallel operators may report different cut waits. Keep each
+					// reservation and the previous failure budget while trails drain
+					// or the next poll supplies the fresh canonical snapshot.
+					if !releaseOnlyErrors(err, errAttemptCutPending) {
+						fmt.Printf("release steer: %v; retrying on next poll\n", err)
+					}
+				} else if allowDeferral && (retryablePreparation || transientReleaseSnapshotError(err)) {
+					weightRejected = false
+					retryableCut = pendingErr == nil
+					// An interrupted authenticated replica body retains its immutable
+					// cut and retry context, including another operator's cut wait.
+					// Mixed integrity or lifecycle errors remain nonretryable.
+					fmt.Printf("release steer: %v; retrying authenticated collection on next poll\n", err)
 				} else {
 					weightRejected = false
+					retryableCut = false
 					failures++
 					pendingErr = errors.Join(pendingErr, err)
 					fmt.Printf("release steer: subnet epoch %d attempt %d: %v\n", targetEpoch, failures, err)
 				}
 			}
+		} else if RetryableEvidenceTransportError(err) {
+			// This read creates no native intent. Keep the current epoch and
+			// pending submission unchanged while its bounded transport retries.
+			schedulerErr = err
+			fmt.Printf("release steer: finalized scheduler read interrupted: %v; retrying on next poll\n", err)
 		} else {
+			schedulerErr = nil
+			pendingReconciliation = false
 			weightRejected = false
+			retryableCut = false
 			failures++
 			pendingErr = errors.Join(pendingErr, err)
 			fmt.Printf("release steer: finalized scheduler attempt %d: %v\n", failures, err)
@@ -1075,26 +1166,62 @@ func runReleaseSteeringLoopWithWaitAndDeferral(ctx context.Context, epoch func()
 			return releaseRuntimeError(ctx, fmt.Errorf("release steering failed %d consecutive attempts: %w", failures, pendingErr))
 		}
 		if !wait() {
-			return releaseRuntimeError(ctx, pendingErr)
+			return releaseRuntimeError(ctx, errors.Join(pendingErr, schedulerErr))
 		}
 	}
+}
+
+// runReleaseSteeringOperation bounds one RPC-bearing steering operation. The
+// outer service context remains responsible for shutdown; an operation deadline
+// returns transport stalls to the loop so retained intent state can be retried
+// without restarting the validator or duplicating a prepared submission.
+func runReleaseSteeringOperation(ctx context.Context, timeout time.Duration, operation func(context.Context) error) error {
+	if ctx == nil || timeout <= 0 || operation == nil {
+		return errors.New("release steering operation configuration is incomplete")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	operationCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	return operation(operationCtx)
+}
+
+// A steering decision includes authenticated client-key capture. Its admitted
+// batch envelope is longer than the native-only observation window, so the
+// enclosing deadline must never cancel a valid batch before that envelope
+// expires. Separate compact transport and native windows cover retained replay
+// and pinned reads before/after capture while keeping the whole retry finite.
+func releaseSteeringOperationTimeout(cfg *ReleaseConfig) time.Duration {
+	native := releaseNativeEndpointTimeout(cfg)
+	batch := time.Duration(protocol.ClientKeyObservationBatchOperationSeconds) * time.Second
+	return batch + native + attemptStreamV2HttpReadIoTimeout
 }
 
 // Run supervises release steering until cancellation or a process-fatal state
 // error. The caller must propagate a non-nil result to its service supervisor.
 func (s *ReleaseSteerer) Run(ctx context.Context) error {
 	poll := time.Duration(s.cfg.PollSeconds) * time.Second
-	return runReleaseSteeringLoopWithDeferral(ctx, poll, func() (uint64, error) {
-		finalized, err := authenticatePinnedNativeRuntimeContext(ctx, s.native, s.cfg)
-		if err != nil {
-			return 0, err
-		}
-		state, err := s.native.EpochScheduleStateAtContext(ctx, s.cfg.Netuid, finalized)
-		if err != nil {
-			return 0, err
-		}
-		return state.SubnetEpochIndex, nil
+	operationTimeout := releaseSteeringOperationTimeout(s.cfg)
+	if isOwnerRecycleProductionConfig(s.cfg) {
+		return s.runProductionSteering(ctx, poll, max(operationTimeout, productionSteeringReadTimeout))
+	}
+	return runReleaseSteeringLoopWithPermissions(ctx, poll, func() (uint64, error) {
+		var epoch uint64
+		err := runReleaseSteeringOperation(ctx, operationTimeout, func(operationCtx context.Context) error {
+			finalized, err := authenticatePinnedNativeRuntimeContext(operationCtx, s.native, s.cfg)
+			if err != nil {
+				return err
+			}
+			state, err := s.native.EpochScheduleStateAtContext(operationCtx, s.cfg.Netuid, finalized)
+			if err != nil {
+				return err
+			}
+			epoch = state.SubnetEpochIndex
+			return nil
+		})
+		return epoch, err
 	}, func() error {
-		return s.SubmitOnce(ctx)
-	}, provisionalClosedNativeInputEnabled(s.cfg))
+		return runReleaseSteeringOperation(ctx, operationTimeout, s.SubmitOnce)
+	}, provisionalClosedNativeInputEnabled(s.cfg), provisionalNativeWeightRejectionEnabled(s.cfg, s.runtimeV2.history, nil))
 }

@@ -1,0 +1,24 @@
+{
+  "status": "ADOPTED",
+  "observed_utc": "2026-10-04T17:58:43.985871+00:00",
+  "forecast_sha256": "505550fac06d6283179a8f9d419ec66e34575ee428d0814f5816effcfded8ad3",
+  "cap_bytes": 107374182400,
+  "data_baseline_bytes": 113681502208,
+  "docker_root_cap_bytes": 8589934592,
+  "docker_root_baseline_bytes": 304423350272,
+  "resource_margin": 2,
+  "data_forecast_bytes": 8589934592,
+  "memory_forecast_bytes": 8589934592,
+  "docker_root_forecast_bytes": 2147483648,
+  "data_minimum_available_bytes": 23487188992,
+  "docker_root_minimum_available_bytes": 300128382976,
+  "memory_minimum_available_bytes": 120259084288,
+  "observed_data_available_bytes": 37429182464,
+  "observed_docker_root_available_bytes": 302755500032,
+  "orphan_cleanup_receipt": {
+    "path": "/mnt/data/urnetwork/orphan-gate-census-20261004/after.json",
+    "sha256": "ef20894c2d254ac59dc84b552363eb0de74f631a32eccbb8adecdd5c27513066"
+  },
+  "scope": "One owned private PG/Redis fixture, full normal model and selected normal/race bodies, after all images/helpers precompiled. No compiler/other DB fixture or long-history overlap. Require live resource lease and fresh guards before start.",
+  "runner_requirements": "Bind explicit original Docker baseline/cap in BOTH admission and terminal thresholds, preserve forecast log/time limits, seal final runner and verify exact owned cleanup. Passing resource admission does not imply test success."
+}

@@ -224,7 +224,7 @@ func TestAccountNonceContextCancelsPublicRPC(t *testing.T) {
 func TestReleaseStateReadersUseExactBlockAndCallerContext(t *testing.T) {
 	type callerContextKey struct{}
 	const callerContextValue = "release-state"
-	blockHash := types.Hash{12}
+	headerValue, blockHash := receiptTestHeader(t, types.Hash{12}, 42, nil, 1)
 	storageCalls := 0
 	headerCalls := 0
 	client := &runtimeIdentityTestClient{callContext: func(ctx context.Context, result any, method string, args ...any) error {
@@ -237,8 +237,16 @@ func TestReleaseStateReadersUseExactBlockAndCallerContext(t *testing.T) {
 			if len(args) != 1 || args[0] != blockHash.Hex() {
 				return fmt.Errorf("header args=%v, want exact block %s", args, blockHash.Hex())
 			}
-			*(result.(*types.Header)) = types.Header{Number: types.BlockNumber(42)}
-			return nil
+			if target, ok := result.(*types.Header); ok {
+				*target = headerValue
+				return nil
+			}
+			return setRuntimeIdentityTestResult(result, receiptTestHeaderWire(headerValue))
+		case "chain_getBlockHash":
+			if len(args) != 1 || args[0] != uint64(42) {
+				return errors.New("canonical schedule height changed")
+			}
+			return setRuntimeIdentityTestResult(result, blockHash.Hex())
 		case "state_getStorage":
 			storageCalls++
 			if len(args) != 2 || args[1] != blockHash.Hex() {

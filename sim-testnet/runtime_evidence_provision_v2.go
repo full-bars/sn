@@ -15,7 +15,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -29,6 +28,9 @@ import (
 )
 
 const runtimeEvidenceActivationBoundaryActionId = "evidence.activation-boundary"
+
+// An empty immutable receipt is incomplete setup, never permission to recreate it.
+var errRuntimeEvidenceSetupEmpty = errors.New("validator evidence setup receipt is empty")
 
 // A prepared member retains the original randomized consent bytes across
 // process restarts. Native uid is only a historical observation at Native.
@@ -102,19 +104,38 @@ func writeRuntimeEvidenceSetupV2(ctx context.Context, path string, value any, li
 	return encoded, nil
 }
 
+// Required receipts must contain canonical data. Optional callers may separately
+// admit the descriptor reader's verified initial absence, never empty bytes.
 func readRuntimeEvidenceSetupV2(ctx context.Context, path string, limit uint64, value any) ([]byte, error) {
 	encoded, err := validatorcomponent.ReadReleaseEvidenceV2SetupFile(ctx, path, limit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validator evidence setup %s: %w", filepath.Base(path), err)
+	}
+	if len(encoded) == 0 {
+		return nil, fmt.Errorf("validator evidence setup %s: %w", filepath.Base(path), errRuntimeEvidenceSetupEmpty)
 	}
 	if err := decodeStrictJSONBytes(encoded, value); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validator evidence setup %s: %w", filepath.Base(path), err)
 	}
 	canonical, err := json.Marshal(value)
 	if err != nil || !bytes.Equal(encoded, append(canonical, '\n')) {
 		return nil, errors.Join(errors.New("validator evidence setup bytes are noncanonical"), err)
 	}
 	return encoded, ctx.Err()
+}
+
+// Preparation may start only when neither immutable receipt exists. An orphan
+// completion, including an empty or malformed one, still owns its namespace.
+func requireRuntimeEvidenceSetupUnpreparedV2(ctx context.Context, stateDir string, limit uint64) error {
+	var completed runtimeEvidenceActivationCompletedV2
+	_, err := readRuntimeEvidenceSetupV2(ctx, filepath.Join(stateDir, "evidence-v2-setup", "completed.json"), limit, &completed)
+	if validatorcomponent.ReleaseEvidenceV2SetupFileInitiallyMissing(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return errors.New("activation setup completion exists without its original preparation")
 }
 
 // Public identities and both seeds come from the existing admitted role owner.
@@ -159,6 +180,15 @@ func (self *Executor) runtimeEvidenceActivationChainV2(ctx context.Context) (*va
 		endpoint = verificationEVMEndpoint(self.cfg)
 	}
 	return validatorcomponent.DialReleaseChainContext(ctx, []string{endpoint}, self.plan.ValidatorEvidence.Coordinator)
+}
+
+// The approved deployment identity every harness activation binds, in the
+// shape the shared validator builder consumes.
+func (self *Executor) runtimeEvidenceDeploymentV2(policyHash [32]byte) validatorcomponent.ReleaseActivationDeploymentV2 {
+	return validatorcomponent.ReleaseActivationDeploymentV2{
+		DeploymentID: self.cfg.Config.Deployment.DeploymentID, ChainID: testnetChainID, GenesisHash: [32]byte(self.plan.ValidatorEvidence.GenesisHash), Netuid: self.cfg.Netuid,
+		Coordinator: [20]byte(self.plan.ValidatorEvidence.Coordinator), SettlementVault: [20]byte(self.plan.ValidatorEvidence.SettlementVault), PolicyHash: policyHash,
+	}
 }
 
 func (self *Executor) runtimeEvidenceNativeIdentityV2() crv4.RuntimeArtifactIdentity {
@@ -267,7 +297,10 @@ func (self *Executor) prepareRuntimeEvidenceActivationsV2(ctx context.Context, c
 		}
 		return &prepared, encoded, nil
 	}
-	if !errors.Is(err, os.ErrNotExist) {
+	if !validatorcomponent.ReleaseEvidenceV2SetupFileInitiallyMissing(err) {
+		return nil, nil, err
+	}
+	if err := requireRuntimeEvidenceSetupUnpreparedV2(ctx, self.stateDir, limit); err != nil {
 		return nil, nil, err
 	}
 	if err := requireRuntimeEvidenceFreshStateV2(self.cfg, self.stateDir); err != nil {
@@ -306,18 +339,15 @@ func (self *Executor) prepareRuntimeEvidenceActivationsV2(ctx context.Context, c
 			if err != nil || !observation.Stake.MeetsNonSelfStakeAndPermit() {
 				return nil, nil, errors.Join(errors.New("activation preparation lacks native stake or permit"), err)
 			}
-			activation := protocol.ValidatorEvidenceActivation{Domain: protocol.ValidatorEvidenceActivationDomain{ChainID: testnetChainID, GenesisHash: [32]byte(self.plan.ValidatorEvidence.GenesisHash), Netuid: self.cfg.Netuid,
-				Coordinator: [20]byte(self.plan.ValidatorEvidence.Coordinator), SettlementVault: [20]byte(self.plan.ValidatorEvidence.SettlementVault), DeploymentIDHash: [32]byte(self.plan.ValidatorEvidence.DeploymentIDHash), PolicyHash: policyHash, Epoch: prepared.Epoch},
-				Hotkey: hotkey.PublicKey(), NoID: uint64(noId), VPK: [32]byte(key[ed25519.SeedSize:]), FirstSequence: 1, NativeBlock: prepared.Native.Number, NativeHash: [32]byte(nativeHash), EVMBlock: block, EVMHash: hash}
-			vpkSignature, err := activation.SignVPK(key)
+			// The validator binary builds and signs its own activations through
+			// these same shared helpers; only the identities and snapshots differ.
+			activation, err := validatorcomponent.BuildFreshReleaseActivationV2(self.runtimeEvidenceDeploymentV2(policyHash),
+				validatorcomponent.ReleaseActivationSnapshotV2{Epoch: prepared.Epoch, NativeBlock: prepared.Native.Number, NativeHash: [32]byte(nativeHash), EVMBlock: block, EVMHash: hash},
+				hotkey.PublicKey(), uint64(noId), [32]byte(key[ed25519.SeedSize:]))
 			if err != nil {
 				return nil, nil, err
 			}
-			digest, err := activation.Digest()
-			if err != nil {
-				return nil, nil, err
-			}
-			hotkeySignature, err := hotkey.Sign(digest[:])
+			vpkSignature, hotkeySignature, err := validatorcomponent.SignReleaseActivationV2(activation, hotkey, key)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -493,16 +523,17 @@ func (self *Executor) runtimeEvidenceActivationBoundaryV2(ctx context.Context, c
 	if err != nil || start == 0 || end <= start {
 		return nil, errors.Join(errors.New("activation epoch geometry is invalid"), err)
 	}
-	boundary := start
+	published := make([]uint64, 0, len(prepared.Members))
 	for _, member := range prepared.Members {
 		observed, err := chain.ValidatorEvidenceActivationAtHashContext(ctx, self.plan.ValidatorEvidence.Address, [32]byte(self.plan.ValidatorEvidence.RuntimeCodeHash), member.Activation, block, hash)
 		if err != nil {
 			return nil, err
 		}
-		boundary = max(boundary, observed.PublishedBlock)
+		published = append(published, observed.PublishedBlock)
 	}
-	if boundary >= end || boundary > block || boundary <= prepared.Evm.Number {
-		return nil, errors.New("all activations must be finalized before their common initial epoch boundary")
+	boundary, err := validatorcomponent.ReleaseActivationBoundaryBlockV2(start, end, prepared.Evm.Number, block, published)
+	if err != nil {
+		return nil, err
 	}
 	boundaryHash, err := chain.BlockHashContext(ctx, boundary)
 	if err != nil {
@@ -529,7 +560,8 @@ func (self *Executor) runtimeEvidenceActivationPostStateV2(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	if prepared.PlanHash != self.plan.PlanHash {
+	historicalSource := prepared.PlanHash != self.plan.PlanHash
+	if historicalSource {
 		var completed runtimeEvidenceActivationCompletedV2
 		if _, err := readRuntimeEvidenceSetupV2(ctx, filepath.Join(self.stateDir, "evidence-v2-setup", "completed.json"), limit, &completed); err != nil {
 			return nil, err
@@ -545,6 +577,7 @@ func (self *Executor) runtimeEvidenceActivationPostStateV2(ctx context.Context, 
 		// retain exact current-plan admission and cannot republish an ancestor.
 		verifier := *self
 		verifier.plan = source
+		verifier.cfg = historicalPlanConfig(self.cfg, source, self.plan)
 		self = &verifier
 	}
 	chain, err := self.runtimeEvidenceActivationChainV2(ctx)
@@ -575,8 +608,15 @@ func (self *Executor) runtimeEvidenceActivationPostStateV2(ctx context.Context, 
 		if retained != *expected {
 			return nil, errors.New("retained activation boundary differs from actual public history")
 		}
-		if _, err := runtimeEvidenceV2ResolvedConfig(self.cfg, self.stateDir); err != nil {
-			return nil, err
+		// The current persisted plan may be a successor whose independent
+		// allowance changed its config hash. Its retained activation files
+		// have already been authenticated against the archived source above;
+		// reloading them through the current-plan renderer would reject that
+		// valid source identity and repeat unrelated setup work.
+		if !historicalSource {
+			if _, err := runtimeEvidenceV2ResolvedConfig(self.cfg, self.stateDir); err != nil {
+				return nil, err
+			}
 		}
 		state["boundary"], state["pair_count"] = retained.Boundary, len(prepared.Members)
 	} else {

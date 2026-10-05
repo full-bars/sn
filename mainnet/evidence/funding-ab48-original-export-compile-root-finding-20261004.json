@@ -1,0 +1,503 @@
+{
+  "schema": "ab48-original-export-libtest-compile-root-finding-v1",
+  "status": "COMPILE_FAILED_NO_EXPORTER_BODIES",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-required-rust-exports-v1.terminal.json",
+      "bytes": 3244,
+      "sha256": "f1fda14dc73c5558f0955291d6813ddc459664aaa73e8432220459275e167208"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-required-rust-libtest-compile.receipt.json",
+      "bytes": 2841,
+      "sha256": "06901aea9ccfd9ed537189792dcf9288bbd54cb4ce76314ddc1b4b58f8db7582"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-required-rust-libtest-build.stdout",
+      "bytes": 490872,
+      "sha256": "17a4927ac81c3cfb4b898a2631495ace2061d7f482941931cdb4c70809f767a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab48/evidence/ab48-required-rust-libtest-build.stderr",
+      "bytes": 211,
+      "sha256": "34e98f23c15e96710077bb4ae567a8f759b6adc86982c317e6664badd6850c6b"
+    }
+  ],
+  "errors": [
+    {
+      "rendered": "error[E0433]: failed to resolve: use of unresolved module or unlinked crate `codec`\n  --> src/historical_native_yuma_capacity_tests.rs:53:27\n   |\n53 |     let event_bytes = 5 + codec::Compact(count as u32).encode().len() + count * 8 + 1;\n   |                           ^^^^^ use of unresolved module or unlinked crate `codec`\n   |\n   = help: if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`\nhelp: consider importing one of these crates\n   |\n3  + use sp_runtime::codec;\n   |\n3  + use sp_runtime_interface::codec;\n   |\n\n",
+      "$message_type": "diagnostic",
+      "children": [
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`",
+          "rendered": null,
+          "spans": []
+        },
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "consider importing one of these crates",
+          "rendered": null,
+          "spans": [
+            {
+              "byte_end": 156,
+              "byte_start": 156,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_yuma_capacity_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 3,
+              "line_start": 3,
+              "suggested_replacement": "use sp_runtime::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            },
+            {
+              "byte_end": 156,
+              "byte_start": 156,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_yuma_capacity_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 3,
+              "line_start": 3,
+              "suggested_replacement": "use sp_runtime_interface::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "code": {
+        "code": "E0433",
+        "explanation": "An undeclared crate, module, or type was used.\n\nErroneous code example:\n\n```compile_fail,E0433\nlet map = HashMap::new();\n// error: failed to resolve: use of undeclared type `HashMap`\n```\n\nPlease verify you didn't misspell the type/module's name or that you didn't\nforget to import it:\n\n```\nuse std::collections::HashMap; // HashMap has been imported.\nlet map: HashMap<u32, u32> = HashMap::new(); // So it can be used!\n```\n\nIf you've expected to use a crate name:\n\n```compile_fail\nuse ferris_wheel::BigO;\n// error: failed to resolve: use of undeclared module or unlinked crate\n```\n\nMake sure the crate has been added as a dependency in `Cargo.toml`.\n\nTo use a module from your current crate, add the `crate::` prefix to the path.\n"
+      },
+      "level": "error",
+      "message": "failed to resolve: use of unresolved module or unlinked crate `codec`",
+      "spans": [
+        {
+          "byte_end": 2043,
+          "byte_start": 2038,
+          "column_end": 32,
+          "column_start": 27,
+          "expansion": null,
+          "file_name": "src/historical_native_yuma_capacity_tests.rs",
+          "is_primary": true,
+          "label": "use of unresolved module or unlinked crate `codec`",
+          "line_end": 53,
+          "line_start": 53,
+          "suggested_replacement": null,
+          "suggestion_applicability": null,
+          "text": [
+            {
+              "highlight_end": 32,
+              "highlight_start": 27,
+              "text": "    let event_bytes = 5 + codec::Compact(count as u32).encode().len() + count * 8 + 1;"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rendered": "error[E0433]: failed to resolve: use of unresolved module or unlinked crate `codec`\n   --> src/historical_native_yuma_populated_tests.rs:175:27\n    |\n175 |     let event_bytes = 5 + codec::Compact(count as u32).encode().len() + count * 8 + 1;\n    |                           ^^^^^ use of unresolved module or unlinked crate `codec`\n    |\n    = help: if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`\nhelp: consider importing one of these crates\n    |\n5   + use sp_runtime::codec;\n    |\n5   + use sp_runtime_interface::codec;\n    |\n\n",
+      "$message_type": "diagnostic",
+      "children": [
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`",
+          "rendered": null,
+          "spans": []
+        },
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "consider importing one of these crates",
+          "rendered": null,
+          "spans": [
+            {
+              "byte_end": 299,
+              "byte_start": 299,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_yuma_populated_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 5,
+              "line_start": 5,
+              "suggested_replacement": "use sp_runtime::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            },
+            {
+              "byte_end": 299,
+              "byte_start": 299,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_yuma_populated_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 5,
+              "line_start": 5,
+              "suggested_replacement": "use sp_runtime_interface::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "code": {
+        "code": "E0433",
+        "explanation": "An undeclared crate, module, or type was used.\n\nErroneous code example:\n\n```compile_fail,E0433\nlet map = HashMap::new();\n// error: failed to resolve: use of undeclared type `HashMap`\n```\n\nPlease verify you didn't misspell the type/module's name or that you didn't\nforget to import it:\n\n```\nuse std::collections::HashMap; // HashMap has been imported.\nlet map: HashMap<u32, u32> = HashMap::new(); // So it can be used!\n```\n\nIf you've expected to use a crate name:\n\n```compile_fail\nuse ferris_wheel::BigO;\n// error: failed to resolve: use of undeclared module or unlinked crate\n```\n\nMake sure the crate has been added as a dependency in `Cargo.toml`.\n\nTo use a module from your current crate, add the `crate::` prefix to the path.\n"
+      },
+      "level": "error",
+      "message": "failed to resolve: use of unresolved module or unlinked crate `codec`",
+      "spans": [
+        {
+          "byte_end": 9643,
+          "byte_start": 9638,
+          "column_end": 32,
+          "column_start": 27,
+          "expansion": null,
+          "file_name": "src/historical_native_yuma_populated_tests.rs",
+          "is_primary": true,
+          "label": "use of unresolved module or unlinked crate `codec`",
+          "line_end": 175,
+          "line_start": 175,
+          "suggested_replacement": null,
+          "suggestion_applicability": null,
+          "text": [
+            {
+              "highlight_end": 32,
+              "highlight_start": 27,
+              "text": "    let event_bytes = 5 + codec::Compact(count as u32).encode().len() + count * 8 + 1;"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rendered": "error[E0433]: failed to resolve: use of unresolved module or unlinked crate `codec`\n   --> src/historical_native_yuma_populated_tests.rs:187:33\n    |\n187 |             first = 32768 + 5 + codec::Compact(count as u32).encode().len(),\n    |                                 ^^^^^ use of unresolved module or unlinked crate `codec`\n    |\n    = help: if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`\nhelp: consider importing one of these crates\n    |\n5   + use sp_runtime::codec;\n    |\n5   + use sp_runtime_interface::codec;\n    |\n\n",
+      "$message_type": "diagnostic",
+      "children": [
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`",
+          "rendered": null,
+          "spans": []
+        },
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "consider importing one of these crates",
+          "rendered": null,
+          "spans": [
+            {
+              "byte_end": 299,
+              "byte_start": 299,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_yuma_populated_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 5,
+              "line_start": 5,
+              "suggested_replacement": "use sp_runtime::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            },
+            {
+              "byte_end": 299,
+              "byte_start": 299,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_yuma_populated_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 5,
+              "line_start": 5,
+              "suggested_replacement": "use sp_runtime_interface::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "code": {
+        "code": "E0433",
+        "explanation": "An undeclared crate, module, or type was used.\n\nErroneous code example:\n\n```compile_fail,E0433\nlet map = HashMap::new();\n// error: failed to resolve: use of undeclared type `HashMap`\n```\n\nPlease verify you didn't misspell the type/module's name or that you didn't\nforget to import it:\n\n```\nuse std::collections::HashMap; // HashMap has been imported.\nlet map: HashMap<u32, u32> = HashMap::new(); // So it can be used!\n```\n\nIf you've expected to use a crate name:\n\n```compile_fail\nuse ferris_wheel::BigO;\n// error: failed to resolve: use of undeclared module or unlinked crate\n```\n\nMake sure the crate has been added as a dependency in `Cargo.toml`.\n\nTo use a module from your current crate, add the `crate::` prefix to the path.\n"
+      },
+      "level": "error",
+      "message": "failed to resolve: use of unresolved module or unlinked crate `codec`",
+      "spans": [
+        {
+          "byte_end": 10326,
+          "byte_start": 10321,
+          "column_end": 38,
+          "column_start": 33,
+          "expansion": null,
+          "file_name": "src/historical_native_yuma_populated_tests.rs",
+          "is_primary": true,
+          "label": "use of unresolved module or unlinked crate `codec`",
+          "line_end": 187,
+          "line_start": 187,
+          "suggested_replacement": null,
+          "suggestion_applicability": null,
+          "text": [
+            {
+              "highlight_end": 38,
+              "highlight_start": 33,
+              "text": "            first = 32768 + 5 + codec::Compact(count as u32).encode().len(),"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rendered": "error[E0433]: failed to resolve: use of unresolved module or unlinked crate `codec`\n   --> src/historical_native_yuma_populated_tests.rs:245:30\n    |\n245 |     event.extend_from_slice(&codec::Compact(count as u32).encode());\n    |                              ^^^^^ use of unresolved module or unlinked crate `codec`\n    |\n    = help: if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`\nhelp: consider importing one of these crates\n    |\n5   + use sp_runtime::codec;\n    |\n5   + use sp_runtime_interface::codec;\n    |\n\n",
+      "$message_type": "diagnostic",
+      "children": [
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`",
+          "rendered": null,
+          "spans": []
+        },
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "consider importing one of these crates",
+          "rendered": null,
+          "spans": [
+            {
+              "byte_end": 299,
+              "byte_start": 299,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_yuma_populated_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 5,
+              "line_start": 5,
+              "suggested_replacement": "use sp_runtime::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            },
+            {
+              "byte_end": 299,
+              "byte_start": 299,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_yuma_populated_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 5,
+              "line_start": 5,
+              "suggested_replacement": "use sp_runtime_interface::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "code": {
+        "code": "E0433",
+        "explanation": "An undeclared crate, module, or type was used.\n\nErroneous code example:\n\n```compile_fail,E0433\nlet map = HashMap::new();\n// error: failed to resolve: use of undeclared type `HashMap`\n```\n\nPlease verify you didn't misspell the type/module's name or that you didn't\nforget to import it:\n\n```\nuse std::collections::HashMap; // HashMap has been imported.\nlet map: HashMap<u32, u32> = HashMap::new(); // So it can be used!\n```\n\nIf you've expected to use a crate name:\n\n```compile_fail\nuse ferris_wheel::BigO;\n// error: failed to resolve: use of undeclared module or unlinked crate\n```\n\nMake sure the crate has been added as a dependency in `Cargo.toml`.\n\nTo use a module from your current crate, add the `crate::` prefix to the path.\n"
+      },
+      "level": "error",
+      "message": "failed to resolve: use of unresolved module or unlinked crate `codec`",
+      "spans": [
+        {
+          "byte_end": 13181,
+          "byte_start": 13176,
+          "column_end": 35,
+          "column_start": 30,
+          "expansion": null,
+          "file_name": "src/historical_native_yuma_populated_tests.rs",
+          "is_primary": true,
+          "label": "use of unresolved module or unlinked crate `codec`",
+          "line_end": 245,
+          "line_start": 245,
+          "suggested_replacement": null,
+          "suggestion_applicability": null,
+          "text": [
+            {
+              "highlight_end": 35,
+              "highlight_start": 30,
+              "text": "    event.extend_from_slice(&codec::Compact(count as u32).encode());"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rendered": "error[E0433]: failed to resolve: use of unresolved module or unlinked crate `codec`\n   --> src/historical_native_execution_tests.rs:121:30\n    |\n121 |     event.extend_from_slice(&codec::Compact(allocation_count as u32).encode());\n    |                              ^^^^^ use of unresolved module or unlinked crate `codec`\n    |\n    = help: if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`\nhelp: consider importing one of these crates\n    |\n17  + use sp_runtime::codec;\n    |\n17  + use sp_runtime_interface::codec;\n    |\n\n",
+      "$message_type": "diagnostic",
+      "children": [
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "if you wanted to use a crate named `codec`, use `cargo add codec` to add it to your `Cargo.toml`",
+          "rendered": null,
+          "spans": []
+        },
+        {
+          "children": [],
+          "code": null,
+          "level": "help",
+          "message": "consider importing one of these crates",
+          "rendered": null,
+          "spans": [
+            {
+              "byte_end": 529,
+              "byte_start": 529,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_execution_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 17,
+              "line_start": 17,
+              "suggested_replacement": "use sp_runtime::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            },
+            {
+              "byte_end": 529,
+              "byte_start": 529,
+              "column_end": 1,
+              "column_start": 1,
+              "expansion": null,
+              "file_name": "src/historical_native_execution_tests.rs",
+              "is_primary": true,
+              "label": null,
+              "line_end": 17,
+              "line_start": 17,
+              "suggested_replacement": "use sp_runtime_interface::codec;\n",
+              "suggestion_applicability": "MaybeIncorrect",
+              "text": [
+                {
+                  "highlight_end": 1,
+                  "highlight_start": 1,
+                  "text": "use super::*;"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "code": {
+        "code": "E0433",
+        "explanation": "An undeclared crate, module, or type was used.\n\nErroneous code example:\n\n```compile_fail,E0433\nlet map = HashMap::new();\n// error: failed to resolve: use of undeclared type `HashMap`\n```\n\nPlease verify you didn't misspell the type/module's name or that you didn't\nforget to import it:\n\n```\nuse std::collections::HashMap; // HashMap has been imported.\nlet map: HashMap<u32, u32> = HashMap::new(); // So it can be used!\n```\n\nIf you've expected to use a crate name:\n\n```compile_fail\nuse ferris_wheel::BigO;\n// error: failed to resolve: use of undeclared module or unlinked crate\n```\n\nMake sure the crate has been added as a dependency in `Cargo.toml`.\n\nTo use a module from your current crate, add the `crate::` prefix to the path.\n"
+      },
+      "level": "error",
+      "message": "failed to resolve: use of unresolved module or unlinked crate `codec`",
+      "spans": [
+        {
+          "byte_end": 3774,
+          "byte_start": 3769,
+          "column_end": 35,
+          "column_start": 30,
+          "expansion": null,
+          "file_name": "src/historical_native_execution_tests.rs",
+          "is_primary": true,
+          "label": "use of unresolved module or unlinked crate `codec`",
+          "line_end": 121,
+          "line_start": 121,
+          "suggested_replacement": null,
+          "suggestion_applicability": null,
+          "text": [
+            {
+              "highlight_end": 35,
+              "highlight_start": 30,
+              "text": "    event.extend_from_slice(&codec::Compact(allocation_count as u32).encode());"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "finding": "Five unresolved codec namespace references across three test files. Repair source imports/namespace in an exact successor; preserve economic assertions and all four exporter/five control scopes.",
+  "limits": [
+    "Compiler exit101 is not a failing executed test, RPC failure or original-runtime contradiction.",
+    "No exporter output or populated workload measurement was produced."
+  ]
+}

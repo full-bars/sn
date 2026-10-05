@@ -1,0 +1,132 @@
+{
+  "corrected_bind_fixture_preflight_sha256": "6b7a4ad2add8da41006e31b354d10c626bd7cd7e315f34e49af5382a169e3e81",
+  "files": {
+    "evidence/bind-fixture-preflight.json": "6b7a4ad2add8da41006e31b354d10c626bd7cd7e315f34e49af5382a169e3e81",
+    "evidence/corrected-normal-bringyourctl.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/corrected-normal-bringyourctl.jsonl": "5bc320617d110dffd3f9ac4f1748577e7c6f12f391670ee3d3add4c0f94d966b",
+    "evidence/corrected-normal-bringyourctl.phase": "f9b1656fc09b1aefb99cee7c6b579e2934bcf7dc5c0e8e8b2c698d07b5486136",
+    "evidence/corrected-normal-bringyourctl.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/corrected-normal-controller.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/corrected-normal-controller.jsonl": "fa96783787ca920603a18d1169cb3b279b113b7a925ab0520a2f790504f17eb9",
+    "evidence/corrected-normal-controller.phase": "c3a7617f3d23269d3129e7ae375d5a1e6dc81993a6f205a0509ba91e54943906",
+    "evidence/corrected-normal-controller.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/corrected-normal-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "evidence/corrected-normal-model.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/corrected-normal-model.jsonl": "0698f5fb1f23ef46d06b6b63b6a1d67e919f92f328c85969e2aeadadc7897610",
+    "evidence/corrected-normal-model.phase": "6893f2a8125980f02c45c5c9c52c61e1fd1a3262124d03b1d82dc30ef0770ec1",
+    "evidence/corrected-normal-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/corrected-normal-network-cleanup.log": "3e4b63a9b1f4466f595f7fd40a3ffb7596340ccb63b93190afeee92a18f11da9",
+    "evidence/corrected-normal-root.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/corrected-normal-root.jsonl": "6266fd699c232ef66245420e3c6219d3fdbad3ec25abe49b743337fe9d5a4b07",
+    "evidence/corrected-normal-root.phase": "c3af5550ff33df82d01f6392e8e3e71de275db1175609465259a8f81f04d1c90",
+    "evidence/corrected-normal-root.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/corrected-normal-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/corrected-normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/corrected-normal-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/corrected-normal-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/corrected-normal-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/corrected-normal-taskworker.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/corrected-normal-taskworker.jsonl": "bbfe50bf54abb9d4bbdce2f98175528c08fe2f038560d22416370248f745f983",
+    "evidence/corrected-normal-taskworker.phase": "75ecd6e90360e4459b143ff116cabebe033d280b38f3e37571a5b21019cfd98b",
+    "evidence/corrected-normal-taskworker.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/corrected-normal-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/module-graph.jsonl": "139cd61351f56c351dd83d4db64468cd706e98ff9aadb97e8b22c6edbde5434a",
+    "evidence/release-gate-services-private-network-corrected.sh": "f58b002afa79713ab4752eebdc130b0708ab277a80048fd6c34fbf0c6750118e",
+    "evidence/run-selected-corrected.sh": "bf156df6501638f50237cfb900e4895c1c95f1a740c4ac371edc01b4b15910cf",
+    "evidence/selection.json": "d829560a402bd26bfb619a59c4319bce73f881030fd27c961250438fa1642260",
+    "evidence/setup-failure-receipt.json": "bff9ae329bb7f723ddb129dc25c5411f52e932d33eb1ca7bae57b73e87e43a6d",
+    "fixture/postgres-initdb/01-init-app-db.sh": "424c6fa9f136cb7323b887b00e013cf26f0529a6ceeecd2444e7eb5de20afe18",
+    "source/server/go.mod": "ad4b307433de35ab9f40df50d0c6906ec2eef1a4bfdec1adad700c3b3c842147",
+    "source/server/go.sum": "a805fb68cf119986df0d3fb630081d7b0fcac1e7b0470181934bc6b763616555"
+  },
+  "initial_setup_failure_receipt_sha256": "bff9ae329bb7f723ddb129dc25c5411f52e932d33eb1ca7bae57b73e87e43a6d",
+  "limits": [
+    "Selected28 only; full model suite remains exact 630 source.",
+    "Race, vet/build and causal overlays are separate queued phases; no launch claim."
+  ],
+  "owned_services_cleanup_exit": 0,
+  "schema": "sol-provider-boundary-cdcb-normal-v1",
+  "scopes": [
+    {
+      "exit": 0,
+      "jsonl_sha256": "6266fd699c232ef66245420e3c6219d3fdbad3ec25abe49b743337fe9d5a4b07",
+      "package": ".",
+      "roots": {
+        "TestProviderBoundaryConcurrentConflictingPreparation": "pass",
+        "TestProviderBoundaryConcurrentSamePreparation": "pass",
+        "TestProviderBoundaryExplicitPreparationAndReadinessIndependence": "pass",
+        "TestProviderBoundaryObservationClassificationAndOwnerCancellation": "pass",
+        "TestProviderBoundaryPanicAndCancellationPreserveCause": "pass",
+        "TestProviderBoundaryRequiredSchemaAndImmutableRows": "pass",
+        "TestProviderBoundaryRestartRetainsAuthority": "pass",
+        "TestProviderPayoutTransitionStrictReadinessAndSchema": "pass",
+        "TestProviderTransitionSchemaCapabilityRejectsDisabledOrChangedGuard": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "0698f5fb1f23ef46d06b6b63b6a1d67e919f92f328c85969e2aeadadc7897610",
+      "package": "./model",
+      "roots": {
+        "TestProviderBoundaryDriftCannotReassignPlannedOrUnplannedUsage": "pass",
+        "TestProviderBoundaryUnpreparedPlannerRetainsSource": "pass",
+        "TestProviderTransitionBonusAuthorityAndSafeReplan": "pass",
+        "TestProviderTransitionFreeAndPaidUsageHaveEqualSubnetWeight": "pass",
+        "TestProviderTransitionLegacyComponentsRetainOriginalAllocation": "pass",
+        "TestProviderTransitionPlannerPartitionAndDelayedSweep": "pass",
+        "TestProviderTransitionSubsidyOnlyFinalShortTail": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "fa96783787ca920603a18d1169cb3b279b113b7a925ab0520a2f790504f17eb9",
+      "package": "./controller",
+      "roots": {
+        "TestProviderBoundaryAcceptedAttemptReconcilesDuringDrift": "pass",
+        "TestProviderBoundaryDatabaseObservationTimeoutSchedulesSamePayment": "pass",
+        "TestProviderBoundaryFinalCircleWaitCannotChangeEarningAsset": "pass",
+        "TestProviderTransitionFinalCircleBindsActualArguments": "pass",
+        "TestProviderTransitionHeldPaymentPostSchedulesBoundedContinuation": "pass",
+        "TestProviderTransitionPublicStWritersBlockedButReadMirrorContinues": "pass",
+        "TestProviderTransitionQueuedLegacyAmbiguousRetryKeepsKey": "pass",
+        "TestProviderTransitionQueuedPostCutoffRefusesBeforeSend": "pass",
+        "TestProviderTransitionRepeatedCancellationRetainsSameComponentsAndHistory": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "bbfe50bf54abb9d4bbdce2f98175528c08fe2f038560d22416370248f745f983",
+      "package": "./taskworker/work",
+      "roots": {
+        "TestProviderTransitionPayoutRetryAndStartupPreservePending": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "jsonl_sha256": "5bc320617d110dffd3f9ac4f1748577e7c6f12f391670ee3d3add4c0f94d966b",
+      "package": "./bringyourctl",
+      "roots": {
+        "TestProviderBoundaryMigrationPreparationRequiresExactDigest": "pass",
+        "TestProviderTransitionBonusCommandPropagatesRefusal": "pass"
+      },
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "selection_sha256": "d829560a402bd26bfb619a59c4319bce73f881030fd27c961250438fa1642260",
+  "source": {
+    "commit": "cdcb61fa3db72fb5c5844358224eeb0fb3cbd661",
+    "go_mod_sha256": "ad4b307433de35ab9f40df50d0c6906ec2eef1a4bfdec1adad700c3b3c842147",
+    "go_sum_sha256": "a805fb68cf119986df0d3fb630081d7b0fcac1e7b0470181934bc6b763616555",
+    "module_graph_sha256": "139cd61351f56c351dd83d4db64468cd706e98ff9aadb97e8b22c6edbde5434a",
+    "tree": "3a6b153001e7f36c9ec986ca06931a9a49b461f3"
+  },
+  "status": "PASS_SCOPED",
+  "total_fail": 0,
+  "total_pass": 28,
+  "total_skip": 0,
+  "total_unique_roots": 28
+}

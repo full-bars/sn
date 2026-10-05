@@ -1,0 +1,302 @@
+{
+  "endpoints": {
+    "official_entrypoint": "https://entrypoint-finney.opentensor.ai",
+    "rao_archive": "https://archive.chain.opentensor.ai"
+  },
+  "methods": [
+    "chain_getBlockHash",
+    "chain_getFinalizedHead",
+    "chain_getHeader",
+    "state_getRuntimeVersion",
+    "state_getMetadata",
+    "state_getStorage(:code)",
+    "eth_chainId"
+  ],
+  "observed_at_utc": "2026-10-02T02:36:17.546950+00:00",
+  "readbacks": {
+    "official_entrypoint": {
+      "evm_chain_id": "0x3c4",
+      "finalized_head_now": "0xfbedfb1a383b97491541c288727fc248886e1fcf1827971f3da7a8e5b4dd3520",
+      "genesis": "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03",
+      "header": {
+        "digest": {
+          "logs": [
+            "0x0661757261200b42e50800000000",
+            "0x0466726f6e88018669d7efacca4710fe7ab7ebd1ac17fa1d091974f145540101d8d9566a597a1a00",
+            "0x05617572610101468085ea5a646222de9b516ada52f48ede231db7a093500ba69ffd3d7390a5689c085eed993f000335fd611e570b8762990f1b8f456cade6fb9b5a978221a181"
+          ]
+        },
+        "extrinsicsRoot": "0x4a353b2c859fa8a996dc870b9450ee4cedc092c521e9fb59dfdc687afe975e7e",
+        "number": "0x8c42e6",
+        "parentHash": "0xd24e82bf54f982c139bf493a43d5431bcd2fcb68863975eacaa33f4a2ce14e44",
+        "stateRoot": "0x2c575f3e7e164598619a79619e78cc9fcecf95cc77139da00a0cc637ccb56f3b"
+      },
+      "metadata": {
+        "blake2b_256": "0x8b1c467c05efc33e2a8f546bd63ca263d24fc11e89284c072ee7b18e58b4cb34",
+        "bytes": 354056
+      },
+      "pinned_hash": "0xfbedfb1a383b97491541c288727fc248886e1fcf1827971f3da7a8e5b4dd3520",
+      "runtime_code": {
+        "blake2b_256": "0x5675b684d69a07f6f224c2ba9cabef719804911fba40fbe1a2295198c9cb7c47",
+        "bytes": 2556358
+      },
+      "runtime_version": {
+        "apis": [
+          [
+            "0xdf6acb689907609b",
+            5
+          ],
+          [
+            "0x37e397fc7c91f5e4",
+            2
+          ],
+          [
+            "0x40fe3ad401f8959a",
+            6
+          ],
+          [
+            "0xfbc577b9d747efd6",
+            1
+          ],
+          [
+            "0xd2bc9897eed08f15",
+            3
+          ],
+          [
+            "0xf78b278be53f454c",
+            2
+          ],
+          [
+            "0xdd718d5cc53262d4",
+            1
+          ],
+          [
+            "0xab3c0572291feb8b",
+            1
+          ],
+          [
+            "0xed99c5acb25eedf5",
+            3
+          ],
+          [
+            "0xbc9d89904f5b923f",
+            1
+          ],
+          [
+            "0x37c8bb1350a9a2a8",
+            4
+          ],
+          [
+            "0xf3ff14d5ab527059",
+            3
+          ],
+          [
+            "0x582211f65bb14b89",
+            6
+          ],
+          [
+            "0xe65b00e46cedd0aa",
+            2
+          ],
+          [
+            "0x68b66ba122c93fa7",
+            2
+          ],
+          [
+            "0x42e62be4a39e5b60",
+            1
+          ],
+          [
+            "0x806df4ccaa9ed485",
+            1
+          ],
+          [
+            "0x8375104b299b74c5",
+            2
+          ],
+          [
+            "0x5d1fbfbe852f2807",
+            1
+          ],
+          [
+            "0xc6886e2f8e598b0a",
+            1
+          ],
+          [
+            "0x43580abff6baab45",
+            5
+          ],
+          [
+            "0xc0de4984d112f3b4",
+            1
+          ],
+          [
+            "0xcbca25e39f142387",
+            2
+          ],
+          [
+            "0xa8b093e6508d9e9c",
+            1
+          ],
+          [
+            "0x1c4585bd5c707202",
+            1
+          ]
+        ],
+        "authoringVersion": 1,
+        "implName": "node-subtensor",
+        "implVersion": 1,
+        "specName": "node-subtensor",
+        "specVersion": 470,
+        "stateVersion": 1,
+        "systemVersion": 1,
+        "transactionVersion": 1
+      }
+    },
+    "rao_archive": {
+      "evm_chain_id": "0x3c4",
+      "finalized_head_now": "0xfbedfb1a383b97491541c288727fc248886e1fcf1827971f3da7a8e5b4dd3520",
+      "genesis": "0x2f0555cc76fc2840a25a6ea3b9637146806f1f44b090c175ffde2a7e5ab36c03",
+      "header": {
+        "digest": {
+          "logs": [
+            "0x0661757261200b42e50800000000",
+            "0x0466726f6e88018669d7efacca4710fe7ab7ebd1ac17fa1d091974f145540101d8d9566a597a1a00",
+            "0x05617572610101468085ea5a646222de9b516ada52f48ede231db7a093500ba69ffd3d7390a5689c085eed993f000335fd611e570b8762990f1b8f456cade6fb9b5a978221a181"
+          ]
+        },
+        "extrinsicsRoot": "0x4a353b2c859fa8a996dc870b9450ee4cedc092c521e9fb59dfdc687afe975e7e",
+        "number": "0x8c42e6",
+        "parentHash": "0xd24e82bf54f982c139bf493a43d5431bcd2fcb68863975eacaa33f4a2ce14e44",
+        "stateRoot": "0x2c575f3e7e164598619a79619e78cc9fcecf95cc77139da00a0cc637ccb56f3b"
+      },
+      "metadata": {
+        "blake2b_256": "0x8b1c467c05efc33e2a8f546bd63ca263d24fc11e89284c072ee7b18e58b4cb34",
+        "bytes": 354056
+      },
+      "pinned_hash": "0xfbedfb1a383b97491541c288727fc248886e1fcf1827971f3da7a8e5b4dd3520",
+      "runtime_code": {
+        "blake2b_256": "0x5675b684d69a07f6f224c2ba9cabef719804911fba40fbe1a2295198c9cb7c47",
+        "bytes": 2556358
+      },
+      "runtime_version": {
+        "apis": [
+          [
+            "0xdf6acb689907609b",
+            5
+          ],
+          [
+            "0x37e397fc7c91f5e4",
+            2
+          ],
+          [
+            "0x40fe3ad401f8959a",
+            6
+          ],
+          [
+            "0xfbc577b9d747efd6",
+            1
+          ],
+          [
+            "0xd2bc9897eed08f15",
+            3
+          ],
+          [
+            "0xf78b278be53f454c",
+            2
+          ],
+          [
+            "0xdd718d5cc53262d4",
+            1
+          ],
+          [
+            "0xab3c0572291feb8b",
+            1
+          ],
+          [
+            "0xed99c5acb25eedf5",
+            3
+          ],
+          [
+            "0xbc9d89904f5b923f",
+            1
+          ],
+          [
+            "0x37c8bb1350a9a2a8",
+            4
+          ],
+          [
+            "0xf3ff14d5ab527059",
+            3
+          ],
+          [
+            "0x582211f65bb14b89",
+            6
+          ],
+          [
+            "0xe65b00e46cedd0aa",
+            2
+          ],
+          [
+            "0x68b66ba122c93fa7",
+            2
+          ],
+          [
+            "0x42e62be4a39e5b60",
+            1
+          ],
+          [
+            "0x806df4ccaa9ed485",
+            1
+          ],
+          [
+            "0x8375104b299b74c5",
+            2
+          ],
+          [
+            "0x5d1fbfbe852f2807",
+            1
+          ],
+          [
+            "0xc6886e2f8e598b0a",
+            1
+          ],
+          [
+            "0x43580abff6baab45",
+            5
+          ],
+          [
+            "0xc0de4984d112f3b4",
+            1
+          ],
+          [
+            "0xcbca25e39f142387",
+            2
+          ],
+          [
+            "0xa8b093e6508d9e9c",
+            1
+          ],
+          [
+            "0x1c4585bd5c707202",
+            1
+          ]
+        ],
+        "authoringVersion": 1,
+        "implName": "node-subtensor",
+        "implVersion": 1,
+        "specName": "node-subtensor",
+        "specVersion": 470,
+        "stateVersion": 1,
+        "systemVersion": 1,
+        "transactionVersion": 1
+      }
+    }
+  },
+  "same_evm_chain_id": true,
+  "same_genesis": true,
+  "same_metadata_hash": true,
+  "same_pinned_header": true,
+  "same_runtime_code_hash": true,
+  "same_runtime_version": true
+}

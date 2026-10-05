@@ -1,0 +1,83 @@
+{
+  "schema": "core-c618-overlap-operational-root-adoption-v1",
+  "status": "ADMITTED_EXACT_CORE_C618_SCOPE",
+  "review": [
+    "Read complete executable runner and actual helper preflight. Exact10roots/mode,vet,two old-production-file causal groups/mode; protected images and raw named event census required.",
+    "Independently verified3797 physical Git blobs/modes and both exact local replacement peers. Prior103 resource samples reproduce400879616B data decline; sampled prior maxima are not future upper bounds.",
+    "Original baseline113681502208B and cumulative56GiBcap retained. Aggregate7GiBdiskforecast has2x15,032,385,536B margin; memory96GiBbase plus2x(one4GiBcompiler+two1GiBshortbodies)=108GiB.",
+    "8d3normalFAIL guarantees its future control compilers are skipped; its race compile finished. Core phases may overlap its remaining short race body/vet, with fresh per-phase resource/compiler census. No Rust/new long body or second compiler admitted. Preserve existing SN workload if overlap ceases to be available."
+  ],
+  "fresh_readback": {
+    "data_available_bytes": 78228344832,
+    "memory_available_bytes": 122102206464,
+    "free_inodes": 93714847,
+    "no_compiler": true,
+    "lease_pid": 620836,
+    "lease_start_ticks": "94830154"
+  },
+  "runner_sha256": "e59705236ff1acb6fb326ff95e80d92ae3c797fcef436f0a2887f105a3ffeb2f",
+  "proposal_sha256": "2fe710059a19bd7818323df6947da84b34c13de15f442797ac76ed55c7415635",
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/intake.json",
+      "bytes": 3159,
+      "sha256": "4d4fe74365642358e5db195cdb3366b4709c67a6d19e3bad3be8cf7b43a98592"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/qualification-recipe.json",
+      "bytes": 5024,
+      "sha256": "3a053d866edb5f4989a66582cd2751cc38bcf2e5d3330658d959b42f4df30fb7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-core-ac65-concurrent-20261004/evidence/resource.csv",
+      "bytes": 9450,
+      "sha256": "327e8e848695e0e34ca37a187b00d8d9cd72e99ff76829450793594ad339d387"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/adoption-v1.json",
+      "bytes": 4280,
+      "sha256": "f610a655ff47bbff612ee4add6bb363129cd45820db7a290fb23b37a24c991a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-core-c618-concurrent-20261004/run-core-c618-v1.py",
+      "bytes": 15795,
+      "sha256": "e59705236ff1acb6fb326ff95e80d92ae3c797fcef436f0a2887f105a3ffeb2f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-rust-only-v3.py",
+      "bytes": 20536,
+      "sha256": "841afa13a85d88ddad669b7893eab0abf3ad1e0ccd522fc756c35e4bbee0c472"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-result-classifier/sn/scripts/qualification/cargo_control.py",
+      "bytes": 23340,
+      "sha256": "df98ea4bfe54f7e0e2c7586722781884c0984fb3ac74b80c1d2c9579f367337e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/go-test-image-guard/sn/scripts/qualification/go_test_image.py",
+      "bytes": 10122,
+      "sha256": "63444702ee731ef3a1b22d6073fb7b4e436691c7cf6a41b475e237f25286bb11"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/run-dc1-go-positives-v2.py",
+      "bytes": 12880,
+      "sha256": "d56ae51568f3b46cb802276e779de8566ce0f5bbdcb3d36e0099b9a2e139c9b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-core-c618-concurrent-20261004/source-stage-receipt-v3.json",
+      "bytes": 730,
+      "sha256": "f337c741214bb49da4e93b6c7301ee945ba48e19ab6f1d9332afedfde4cf28a5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-core-c618-concurrent-20261004/peer-links-receipt-v1.json",
+      "bytes": 1117,
+      "sha256": "91d38f729e1069cfa8ba0c6a0bbb372c3997ffb460beae724264276f08f0873d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-core-c618-concurrent-20261004/evidence/selected-graph-receipt-v1.json",
+      "bytes": 2192,
+      "sha256": "a349b299b9f15cfef9507055e4706fe053a4533d893361228d5e75f897a5504e"
+    }
+  ],
+  "requirement_closure": false
+}

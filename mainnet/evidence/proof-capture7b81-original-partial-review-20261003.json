@@ -1,0 +1,44 @@
+{
+  "schema": "proof-capture7b81-original-partial-review-v1",
+  "source_commit": "7b81da23084f6817722e9ee4b803308364d1c522",
+  "source_archive": "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/source",
+  "passed_roots": [
+    "historical::tests::capture_tests::historical_capture_parent_body_and_runtime_identity_are_independent",
+    "historical::tests::capture_tests::historical_capture_exact_decoder_refuses_unknown_duplicate_trailing_and_bounds",
+    "historical::tests::capture_tests::historical_capture_retained_directory_uses_content_addressed_nodes_without_writes",
+    "historical::tests::capture_tests::historical_capture_complete_parent_replays_top_and_child_without_committing",
+    "historical::tests::capture_tests::historical_capture_incomplete_read_proof_never_claims_completeness",
+    "historical::tests::capture_tests::historical_capture_missing_write_paths_cannot_reuse_declared_parent_root",
+    "historical::tests::capture_tests::historical_capture_missing_refund_and_observed_zero_remain_distinct_and_unadmitted"
+  ],
+  "failed_roots": [
+    "historical::tests::capture_tests::historical_capture_cancellation_before_and_after_real_backend_read_refuses_output"
+  ],
+  "exit": 101,
+  "bindings": {
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/rust8.stdout": {
+      "sha256": "adcda1451ca3dc5c2b3e33fa0243f66c1df33e5760fadc77f105f6736a1200a9",
+      "bytes": 1770
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/rust8.stderr": {
+      "sha256": "3d6183f01772cf548449ac2fd7b821e6862b9b499fb051de3dcae5619d800ffe",
+      "bytes": 4084
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/rust8.exit": {
+      "sha256": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c",
+      "bytes": 4
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/rust8.command": {
+      "sha256": "48f1d1de877076b55e4bc4ade728afa7aecec31b161742fd707c11a01fbb9d02",
+      "bytes": 128
+    },
+    "/mnt/data/sn-testnet/sol-proof-capture-7b81-independent-20261003/evidence/rust8.sha256": {
+      "sha256": "81038b7a2b10b5a2212dc3483ab02ab0749eebe415122f1c5997a7d1e0e578f4",
+      "bytes": 306
+    }
+  },
+  "finding": "Cancellation after an actual parent root read is translated by SDK to Invalid state root before caller returns its retained cancellation cause. Astra confirmed product propagation gap; distinct successor required.",
+  "limits": "Seven scoped Rust roots passed, one failed. No complete collector qualification, source authority, full actual runtime fee admission, finality, Go gate or deployment inferred.",
+  "source_tree": "56a18ec107417ff3da557fc86c50889a2cb2ab42",
+  "intake_sha256": "04532f3348790f067a8441079b4a116aab08dd21db93dee19249249b5494ecb5"
+}

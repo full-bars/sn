@@ -1,0 +1,26 @@
+{
+  "lesson": "Copy byte-exact compiled artifacts into bounded owned immutable-evidence paths before reusing a compiler target. Preserve original receipts rather than relabeling newer binary as older source.",
+  "limits": [
+    "Binary retention only; no new execution, runtime authority or deployment claim"
+  ],
+  "mutable_original_build_path": {
+    "current_sha256": "0babf7e7cdcaf5d628c25cac0a4ea90718b46ce1fdbef445c85a5392af9a3550",
+    "explanation": "Shared compiler target rebuilt by fee decoder/caller. Prior binary build observation remains historical; the stable retained artifact supplies reproducible original bytes.",
+    "path": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/runtime-historical-proof"
+  },
+  "prior_root_proof": {
+    "path": "mainnet/evidence/original-wasm-observer-binary-causal-qualification-20261003.json",
+    "sha256": "f18c92ad1d0eee803bb327105e69bd908390f355281b6c2b9bc9d22e50128a1e"
+  },
+  "recovered_exact_compiler_artifact": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/deps/runtime_historical_proof-28742776428bff6b",
+  "retained_binary": {
+    "bytes": 43367936,
+    "mode": "0500",
+    "nlink": 1,
+    "path": "/mnt/data/sn-testnet/root-mainnet-observer-binary-retention-20261003/runtime-historical-proof-d022",
+    "sha256": "a3d899a32a65ae7b60381f46a3384799027ccab04d994c019da275e62a6f4464",
+    "uid": 1000
+  },
+  "source_commit": "d022c648bd0d2c285353b12c4b6b1ca39fc9388d",
+  "status": "ROOT_VERIFIED_RETAINED_EXACT_BINARY"
+}

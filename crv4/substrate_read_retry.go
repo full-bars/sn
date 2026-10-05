@@ -1,10 +1,15 @@
+// Allowlisted native reads share finite retry ownership. Structured transport
+// causes retain their origin; RPC application and integrity errors stay hard.
 package crv4
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net"
+	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"syscall"
@@ -29,22 +34,111 @@ func substrateRPCReadMayReplay(method string) bool {
 }
 
 func substrateRPCDisconnected(err error) bool {
+	return retryableSubstrateRpcReadTransport(err, false, true)
+}
+
+// Every joined cause must be transient. Decoder EOF has no retry authority
+// unless the actual URL/socket boundary retained its transport origin.
+func retryableSubstrateRpcReadTransport(err error, transportOrigin, allowReconnectMarker bool) bool {
 	var rpcError gsrpcgeth.Error
-	if err == nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) ||
-		errors.Is(err, gsrpcgeth.ErrClientQuit) || errors.As(err, &rpcError) {
+	if err == nil || err == context.Canceled || err == gsrpcgeth.ErrClientQuit || errors.As(err, &rpcError) {
 		return false
 	}
-	var closed *websocket.CloseError
-	if errors.As(err, &closed) {
-		return closed.Code == websocket.CloseAbnormalClosure || closed.Code == websocket.CloseGoingAway
+	if _, localFile := err.(*os.PathError); localFile {
+		return false
 	}
-	return errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.EPIPE) || errors.Is(err, net.ErrClosed) ||
-		err.Error() == "client reconnected"
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		causes := joined.Unwrap()
+		if len(causes) == 0 {
+			return false
+		}
+		for _, cause := range causes {
+			if !retryableSubstrateRpcReadTransport(cause, transportOrigin, allowReconnectMarker) {
+				return false
+			}
+		}
+		return true
+	}
+	switch cause := err.(type) {
+	case *SubstrateReadHttpStatusError:
+		return retryableSubstrateReadHttpStatus(cause.status)
+	case *substrateReadHttpTransportError:
+		return retryableSubstrateRpcReadTransport(cause.cause, true, false)
+	case *substrateReadHttpCloseError:
+		return retryableSubstrateRpcReadTransport(cause.cause, true, false)
+	case *url.Error:
+		return retryableSubstrateRpcReadTransport(cause.Err, true, allowReconnectMarker)
+	case *net.OpError:
+		return retryableSubstrateRpcReadTransport(cause.Err, true, allowReconnectMarker)
+	}
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return retryableSubstrateRpcReadTransport(wrapped.Unwrap(), transportOrigin, allowReconnectMarker)
+	}
+	if closed, ok := err.(*websocket.CloseError); ok {
+		switch closed.Code {
+		case websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseAbnormalClosure,
+			websocket.CloseInternalServerErr, websocket.CloseServiceRestart, websocket.CloseTryAgainLater:
+			return true
+		default:
+			return false
+		}
+	}
+	if network, ok := err.(net.Error); ok && (network.Timeout() || network.Temporary()) {
+		return true
+	}
+	if err == io.EOF || err == io.ErrUnexpectedEOF {
+		return transportOrigin
+	}
+	// GSRPC's reconnect marker is private. Only this exact allowlisted read
+	// owner may interpret it; arbitrary RPC application messages cannot retry.
+	return err == context.DeadlineExceeded || err == syscall.ECONNRESET || err == syscall.ECONNREFUSED ||
+		err == syscall.EPIPE || err == syscall.ETIMEDOUT || err == net.ErrClosed || allowReconnectMarker && err.Error() == "client reconnected"
+}
+
+const substrateRpcReadRetryTimeout = 300 * time.Second
+const substrateRpcReadAttemptTimeout = 60 * time.Second
+
+// Only clock and pacing boundaries are replaceable in deterministic tests.
+// Requests still use the real shared GSRPC client and frozen arguments.
+type substrateRpcReadRetryHooks struct {
+	withTimeout  func(context.Context, time.Duration) (context.Context, context.CancelFunc)
+	wait         func(context.Context, <-chan struct{}, time.Duration) error
+	waitCapacity func(context.Context, <-chan struct{}, *substrateRPCCapacityGate) error
+}
+
+// Backoff belongs to the same finite read owner as the current request.
+func waitSubstrateRpcRead(ctx context.Context, closed <-chan struct{}, delay time.Duration) error {
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-closed:
+		return gsrpcgeth.ErrClientQuit
+	case <-timer.C:
+		return nil
+	}
 }
 
 // Route GSRPC's contextless storage helpers through the same bounded read path.
 func (self *contextSubstrateClient) Call(result any, method string, args ...any) error {
 	return self.CallContext(context.Background(), result, method, args...)
+}
+
+// An explicit private-IP endpoint is the operator-owned LAN route. It has no
+// provider capacity quota, so a generic historical-capacity cooldown would
+// only turn a recoverable response into minutes of idle plan time.
+func (self *contextSubstrateClient) ownedPrivateEndpoint() bool {
+	if self == nil {
+		return false
+	}
+	parsed, err := url.Parse(self.url)
+	if err != nil || parsed == nil {
+		return false
+	}
+	host := parsed.Hostname()
+	ip := net.ParseIP(host)
+	return ip != nil && ip.To4() != nil && ip.IsPrivate()
 }
 
 // A capacity refusal pauses every read client for the same endpoint. It does
@@ -115,22 +209,59 @@ func (self *contextSubstrateClient) Close() {
 	self.readClosed()
 	self.readLifecycle.close.Do(func() { close(self.readLifecycle.closed) })
 	self.Client.Close()
+	if self.closeReadHttp != nil {
+		self.closeReadHttp()
+	}
 }
 
 func substrateRPCHistoricalCapacity(err error) bool {
-	var rpcError gsrpcgeth.Error
-	return errors.As(err, &rpcError) && strings.EqualFold(strings.TrimSpace(rpcError.Error()), "Historical work rate limit exceeded")
+	if err == nil {
+		return false
+	}
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		causes := joined.Unwrap()
+		if len(causes) == 0 {
+			return false
+		}
+		for _, cause := range causes {
+			if !substrateRPCHistoricalCapacity(cause) {
+				return false
+			}
+		}
+		return true
+	}
+	if rpcError, ok := err.(gsrpcgeth.Error); ok {
+		return strings.EqualFold(strings.TrimSpace(rpcError.Error()), "Historical work rate limit exceeded")
+	}
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return substrateRPCHistoricalCapacity(wrapped.Unwrap())
+	}
+	return false
 }
 
 func (self *contextSubstrateClient) CallContext(ctx context.Context, result any, method string, args ...any) error {
 	if !substrateRPCReadMayReplay(method) {
 		return self.Client.CallContext(ctx, result, method, args...)
 	}
-	// Capacity waits have a separate caller-bounded total. Actual network work
-	// and disconnect backoff retain one cumulative thirty-second budget.
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	withTimeout := self.readRetry.withTimeout
+	if withTimeout == nil {
+		withTimeout = context.WithTimeout
+	}
+	wait := self.readRetry.wait
+	if wait == nil {
+		wait = waitSubstrateRpcRead
+	}
+	waitCapacity := self.readRetry.waitCapacity
+	if waitCapacity == nil {
+		waitCapacity = func(ctx context.Context, closed <-chan struct{}, gate *substrateRPCCapacityGate) error {
+			return gate.wait(ctx, closed)
+		}
+	}
+	// Expected reads retain five minutes across requests, reconnects and shared
+	// provider cooldowns. A single request is bounded so a recovered endpoint
+	// can be tried again before the caller-owned total expires.
+	ctx, cancel := withTimeout(ctx, substrateRpcReadRetryTimeout)
 	defer cancel()
-	networkRemaining := 30 * time.Second
 	frozen := make([]any, len(args))
 	for index, argument := range args {
 		encoded, err := json.Marshal(argument)
@@ -139,46 +270,52 @@ func (self *contextSubstrateClient) CallContext(ctx context.Context, result any,
 		}
 		frozen[index] = json.RawMessage(encoded)
 	}
-	gate, closed := substrateCapacityGate(self.url), self.readClosed()
-	for attempt := 0; ; attempt++ {
-		if err := gate.wait(ctx, closed); err != nil {
-			return err
+	owned, gate, closed := self.ownedPrivateEndpoint(), substrateCapacityGate(self.url), self.readClosed()
+	var lastErr error
+	delay := time.Second
+	for {
+		if err := ctx.Err(); err != nil {
+			return errors.Join(lastErr, err)
 		}
-		if networkRemaining <= 0 {
-			return context.DeadlineExceeded
-		}
-		callCtx, stop := context.WithTimeout(ctx, networkRemaining)
-		started := time.Now()
-		err := self.Client.CallContext(callCtx, result, method, frozen...)
-		networkRemaining -= time.Since(started)
-		stop()
-		if substrateRPCHistoricalCapacity(err) {
-			gate.refuse()
-			if attempt == 3 {
-				return err
+		if !owned {
+			if err := waitCapacity(ctx, closed, gate); err != nil {
+				return errors.Join(lastErr, err)
 			}
+		}
+		if err := ctx.Err(); err != nil {
+			return errors.Join(lastErr, err)
+		}
+		select {
+		case <-closed:
+			return errors.Join(lastErr, gsrpcgeth.ErrClientQuit)
+		default:
+		}
+		callCtx, stop := withTimeout(ctx, substrateRpcReadAttemptTimeout)
+		callCtx = context.WithValue(callCtx, substrateReadHttpContextKey{}, true)
+		err := self.Client.CallContext(callCtx, result, method, frozen...)
+		err = errors.Join(err, callCtx.Err())
+		stop()
+		if ctx.Err() != nil {
+			return errors.Join(err, ctx.Err())
+		}
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		if substrateRPCHistoricalCapacity(err) && !owned {
+			gate.refuse()
 			continue
 		}
-		if !substrateRPCDisconnected(err) || attempt == 3 {
+		if !substrateRPCDisconnected(err) {
 			return err
 		}
-		// Reuse GSRPC's serialized reconnect. Capacity waits do not replenish
-		// the remaining network/disconnect budget or the three-replay bound.
-		waitCtx, stop := context.WithTimeout(ctx, networkRemaining)
-		started = time.Now()
-		timer := time.NewTimer(time.Second << attempt)
-		select {
-		case <-waitCtx.Done():
-			timer.Stop()
-			stop()
-			return waitCtx.Err()
-		case <-closed:
-			timer.Stop()
-			stop()
-			return gsrpcgeth.ErrClientQuit
-		case <-timer.C:
+		// Reuse GSRPC's serialized reconnect without an early attempt-count
+		// cutoff. Repeated fast refusals retain the same overall deadline.
+		if waitErr := wait(ctx, closed, delay); waitErr != nil {
+			return errors.Join(lastErr, waitErr)
 		}
-		networkRemaining -= time.Since(started)
-		stop()
+		if delay < 8*time.Second {
+			delay *= 2
+		}
 	}
 }

@@ -1,0 +1,103 @@
+{
+  "schema": "root-inactive-cache-reclaim24-verification-v1",
+  "task_root": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/reclaim.go",
+      "bytes": 7042,
+      "sha256": "978e49c7f40209a4a85d62397171075cc800313b659286f9f842b496f7d55486"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/helper-changes.json",
+      "bytes": 739,
+      "sha256": "55552b779ccf144dfba376bc3463a8b63e0098f8db99f696096e9f50a02622d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/plan.json",
+      "bytes": 1359079,
+      "sha256": "1bf4f424089ccacb75ecd2bfed60e2dcb357db45648562853eaebf40d1812594"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/plan.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/process-census-plan.json",
+      "bytes": 73,
+      "sha256": "577cdcbe3ba1faead8fe97b646def2eee05997a486a200130e9c880ca02e3864"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/process-census-apply.json",
+      "bytes": 73,
+      "sha256": "ff1875f5af959201e6e0882f9ce708df4f8aba93f77872076246ac80091ca6fb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/reference-command.json",
+      "bytes": 1022,
+      "sha256": "a3c4844a3506d1554df946b597d56e078b5fcc0ac225b673249ef30d811ede98"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/reference-scope.json",
+      "bytes": 815,
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/reference-scan.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/reference-scan.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/reference-scan.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/receipt.json",
+      "bytes": 1359359,
+      "sha256": "7843ced99b9a532ce736233e7b8c7c9edb376a3c2e47e02ed4ba77ae5a9d7e45"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/apply.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/apply.stdout",
+      "bytes": 47,
+      "sha256": "1d14ca62a9d1755a5b5cb92d57067577da25108e13891553c9739dee54db6a31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/apply.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/initial-missing-scan-alias-apply.exit",
+      "bytes": 2,
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-24-20261003/initial-missing-scan-alias-apply.stderr",
+      "bytes": 328,
+      "sha256": "769d0c91784148e54b0517a07b3fe3db16e4996cc6330df15a40e14458249b6b"
+    }
+  ],
+  "deleted_archives": 4500,
+  "reclaimed_bytes": 3400179712,
+  "all_selected_paths_absent": true,
+  "helper_changes": "Only receipt directory and minimum archive size1MiB to256KiB; exact comparison verified;48h/process/reference/identity/archive guards unchanged",
+  "retained_failed_attempt": "Initial apply refused missing reference-scan alias before deletion; original clean privileged scan copied under required names; repeated process and identity census before successful apply",
+  "free_bytes_after": 123307765760,
+  "free_gib_after": 114.83930587768555,
+  "limits": [
+    "Old unused regenerable Go archives only",
+    "Active caches,sources,evidence,module cache and ELF preserved",
+    "New admission headroom never requires stopping/restarting existing work"
+  ]
+}

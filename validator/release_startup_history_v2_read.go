@@ -37,6 +37,8 @@ type releaseEvidenceV2HistoryDirectory struct {
 	absent     string
 	entries    map[string]attemptPrivateFileState
 	maxEntries uint64
+	uid        uint32
+	singleLink bool
 	hooks      releaseMeasurementInputV2ReadHooks
 	closed     bool
 	closeErr   error
@@ -53,17 +55,23 @@ type releaseEvidenceV2HistoryFiles struct {
 // The existing history byte bound also bounds entry count before allocation;
 // no candidate epoch or directory size selects an unbounded scan or slice.
 func openReleaseEvidenceV2HistoryDirectory(ctx context.Context, coordinator string, suffix []string, maxEntries uint64, hooks releaseMeasurementInputV2ReadHooks) (result *releaseEvidenceV2HistoryDirectory, resultErr error) {
+	return openReleaseEvidenceV2HistoryDirectoryForUid(ctx, coordinator, suffix, maxEntries, uint32(os.Geteuid()), false, hooks)
+}
+
+// Only read-only history admission can select a different expected owner. The
+// ordinary producer keeps its current-user policy and original link grammar.
+func openReleaseEvidenceV2HistoryDirectoryForUid(ctx context.Context, coordinator string, suffix []string, maxEntries uint64, uid uint32, singleLink bool, hooks releaseMeasurementInputV2ReadHooks) (result *releaseEvidenceV2HistoryDirectory, resultErr error) {
 	if ctx == nil || maxEntries == 0 || maxEntries >= uint64(^uint(0)>>1) {
 		return nil, errors.New("startup history directory context or bound is absent")
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	root, err := openAttemptPrivateDirectory(coordinator)
+	root, err := openAttemptPrivateDirectory(coordinator, ctx)
 	if err != nil {
 		return nil, err
 	}
-	owned := &releaseEvidenceV2HistoryDirectory{ctx: ctx, root: root, entries: map[string]attemptPrivateFileState{}, maxEntries: maxEntries, hooks: hooks}
+	owned := &releaseEvidenceV2HistoryDirectory{ctx: ctx, root: root, entries: map[string]attemptPrivateFileState{}, maxEntries: maxEntries, uid: uid, singleLink: singleLink, hooks: hooks}
 	defer func() {
 		resultErr = errors.Join(resultErr, ctx.Err())
 		if resultErr != nil {
@@ -83,10 +91,10 @@ func openReleaseEvidenceV2HistoryDirectory(ctx context.Context, coordinator stri
 			owned.absent = name
 			return owned, owned.check()
 		}
-		if err != nil || !before.directory() || before.mode&0o077 != 0 || before.uid != uint32(os.Geteuid()) {
+		if err != nil || !before.directory() || before.mode&0o077 != 0 || before.uid != uid {
 			return nil, errors.Join(errors.New("startup history namespace is not a private physical directory"), err)
 		}
-		child, err := openAttemptPrivateDirectory(filepath.Join(owned.root.path, name))
+		child, err := openAttemptPrivateDirectory(filepath.Join(owned.root.path, name), ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +126,7 @@ func (self *releaseEvidenceV2HistoryDirectory) readEntries() (result map[string]
 	if err := errors.Join(self.ctx.Err(), self.root.check()); err != nil {
 		return nil, err
 	}
-	reader, err := openAttemptPrivateDirectory(self.root.path)
+	reader, err := openAttemptPrivateDirectory(self.root.path, self.ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +162,7 @@ func (self *releaseEvidenceV2HistoryDirectory) readEntries() (result map[string]
 				return nil, errors.New("startup history directory census repeats a name")
 			}
 			state, err := self.root.stat(name)
-			if err != nil || !state.regular() || state.mode&0o077 != 0 || state.uid != uint32(os.Geteuid()) || state.size < 0 {
+			if err != nil || !state.regular() || state.mode&0o077 != 0 || state.uid != self.uid || state.size < 0 || self.singleLink && state.links != 1 {
 				return nil, errors.Join(errors.New("startup history entry is not a private regular file"), err)
 			}
 			result[name] = state
@@ -218,7 +226,7 @@ func (self *releaseEvidenceV2HistoryDirectory) close() error {
 	if self.hooks.afterClose != nil {
 		self.closeErr = errors.Join(self.closeErr, self.hooks.afterClose(file))
 	}
-	witness, err := openAttemptPrivateDirectory(root.path)
+	witness, err := openAttemptPrivateDirectory(root.path, root.storageCtx)
 	self.closeErr = errors.Join(self.closeErr, err)
 	if err != nil {
 		return self.closeErr
@@ -226,7 +234,7 @@ func (self *releaseEvidenceV2HistoryDirectory) close() error {
 	if witness.anchor.dev != root.anchor.dev || witness.anchor.ino != root.anchor.ino || witness.anchor.mode != root.anchor.mode || witness.anchor.uid != root.anchor.uid {
 		self.closeErr = errors.Join(self.closeErr, errors.New("startup history namespace changed after actual Close"))
 	} else {
-		final := &releaseEvidenceV2HistoryDirectory{ctx: context.WithoutCancel(self.ctx), root: witness, absent: self.absent, entries: self.entries, maxEntries: self.maxEntries}
+		final := &releaseEvidenceV2HistoryDirectory{ctx: context.WithoutCancel(self.ctx), root: witness, absent: self.absent, entries: self.entries, maxEntries: self.maxEntries, uid: self.uid, singleLink: self.singleLink}
 		self.closeErr = errors.Join(self.closeErr, final.check())
 	}
 	self.closeErr = errors.Join(self.closeErr, witness.close(), self.ctx.Err())
@@ -266,6 +274,12 @@ func releaseEvidenceV2HistoryTemporary(name, prefix string) bool {
 // Acquire both namespaces before decoding any candidate. The aggregate byte
 // allowance covers every observed file, including crash-leftover temporaries.
 func readReleaseEvidenceV2HistoryFiles(ctx context.Context, coordinator string, bounds ReleaseEvidenceV2Bounds, hooks releaseMeasurementInputV2ReadHooks) (result *releaseEvidenceV2HistoryFiles, resultErr error) {
+	return readReleaseEvidenceV2HistoryFilesForUid(ctx, coordinator, bounds, uint32(os.Geteuid()), bounds.MaxHistoryBytes, false, hooks)
+}
+
+// The explicit owner applies only to the fixed ordinary/terminal namespaces;
+// no key path, writer, producer state repair or permission change is available.
+func readReleaseEvidenceV2HistoryFilesForUid(ctx context.Context, coordinator string, bounds ReleaseEvidenceV2Bounds, uid uint32, maximumEntries uint64, singleLink bool, hooks releaseMeasurementInputV2ReadHooks) (result *releaseEvidenceV2HistoryFiles, resultErr error) {
 	if ctx == nil {
 		return nil, errors.New("startup history file context is absent")
 	}
@@ -287,7 +301,7 @@ func readReleaseEvidenceV2HistoryFiles(ctx context.Context, coordinator string, 
 	}()
 	remaining := bounds.MaxHistoryBytes
 	for index, suffix := range [][]string{{"measurements", "inputs"}, {"settlement-closures-v2"}} {
-		directory, err := openReleaseEvidenceV2HistoryDirectory(ctx, coordinator, suffix, bounds.MaxHistoryBytes, hooks)
+		directory, err := openReleaseEvidenceV2HistoryDirectoryForUid(ctx, coordinator, suffix, maximumEntries, uid, singleLink, hooks)
 		if err != nil {
 			return nil, err
 		}

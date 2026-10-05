@@ -15,6 +15,22 @@ import (
 // new login, credential file, artifact signing key or raw object-store client.
 // Inputs must not be mutated during construction; returned routing owns values.
 func releaseAttemptUploadReplicasV2(cfg *ReleaseConfig, origins [2]string, runtimes []*releaseOperatorRuntime) ([2]AttemptCutV2Replica, error) {
+	replicas, err := releaseAttemptUploadConfiguredReplicasV2(cfg, origins, runtimes)
+	if err != nil {
+		return [2]AttemptCutV2Replica{}, err
+	}
+	for _, runtime := range runtimes {
+		if err := runtime.attemptUpload.ctx.Err(); err != nil {
+			return [2]AttemptCutV2Replica{}, err
+		}
+	}
+	return replicas, nil
+}
+
+// Configured identity, bounds and concrete writer ownership survive session
+// withdrawal. This does not admit publication: every callback still joins the
+// original session, and live builders above additionally require active owners.
+func releaseAttemptUploadConfiguredReplicasV2(cfg *ReleaseConfig, origins [2]string, runtimes []*releaseOperatorRuntime) ([2]AttemptCutV2Replica, error) {
 	var zero [2]AttemptCutV2Replica
 	if cfg == nil || len(cfg.Operators) < 2 || len(runtimes) != len(cfg.Operators) ||
 		uint64(len(runtimes)) > cfg.EvidenceV2.Bounds.MaxOperators || uint64(len(runtimes)) > cfg.EvidenceV2.Bounds.MaxParticipants {
@@ -37,9 +53,6 @@ func releaseAttemptUploadReplicasV2(cfg *ReleaseConfig, origins [2]string, runti
 		operator, found := configured[owner.noID]
 		if !found || seen[owner.noID] || runtime.measurement.NoID != owner.noID || owner.origin != operator.APIURL || owner.bounds != cfg.EvidenceV2.Bounds.Cut || owner.maxTransitionBytes != cfg.EvidenceV2.Bounds.MaxTransitionBytes || owner.ctx == nil || owner.cancel == nil || owner.writer == nil {
 			return zero, errors.New("release attempt upload runtime differs from its configured operator")
-		}
-		if err := owner.ctx.Err(); err != nil {
-			return zero, err
 		}
 		// Check the actual attached writer, not only its owner's markers. This
 		// constructs no request and never calls the live credential getter.

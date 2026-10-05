@@ -1,0 +1,283 @@
+{
+  "schema": "root-server-current-financial-source-join-v1",
+  "source": {
+    "commit": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+    "mergeBase": "29ce22d66801c4c79f2abfff3c3874b2c8e8cbaf",
+    "parents": [
+      "5089a9dde0ca5d60a8dda0493c861de53ed4e0c4",
+      "f024b11a7666d3ba0e1025c083123d32f01285c2"
+    ],
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server",
+    "tree": "4728109a6e40394c56f50e14f2a66c24c6623d00"
+  },
+  "author_intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-intake.json",
+    "sha256": "2ce17a1eac0b32a9480685ba10ba0c1ec7434d98165abce9765c09aa0e224a81",
+    "bytes": 16827
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-composition-compile.go",
+      "bytes": 3641,
+      "sha256": "30190d80e34336046a0e3b961481bf5524745e7650ef7a1128336ec4b48bf577"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/prepare-server-f024-graph.go",
+      "bytes": 2799,
+      "sha256": "c7e4063cf1154881900f68d5d96a08906c99c956dde63c28c6d2dcc631c3e437"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-server-f024-intake.go",
+      "bytes": 11441,
+      "sha256": "e2716bcafc23c8e027dbfcaf01e1df175161e494385c7ff86696a2d2292d5f17"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-compile-jobs.json",
+      "bytes": 2261,
+      "sha256": "1420a7ec46dc1d579fcc6c0e62f417c53dafe9f2167ad2660b76c2fdbd923035"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-controls/hook.go",
+      "bytes": 22583,
+      "sha256": "b7e46a3ec5dcc08acb65606fd1d7b6942dbd46b142cf2ddc6c17d12328f7a6d3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-controls/recovery.go",
+      "bytes": 15292,
+      "sha256": "bb0e8fe5aef9101d9bdfe5c7c4f0c3fd18cc92346e43bfe54db52187186e15e3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-controls/selection.go",
+      "bytes": 11078,
+      "sha256": "7a443c8f866d9149b73ba35dae208016be71d7440b42afd58543c1f5a01139b7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-model-compile.json",
+      "bytes": 926,
+      "sha256": "facd8d151ab36e307acb32123de5a5baa59a2944f303b37c7475aecf2b3405d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-model-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-modules.json",
+      "bytes": 756,
+      "sha256": "7c0292579c790b4057c610fa07d066d77a6daef6afdbf1ebc4c923d65a3a9e66"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-modules.log",
+      "bytes": 178031,
+      "sha256": "f1faedde4bd6c56abbbae57c4581159d78378d21884744d7e2fa7500ef026e4a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-peer-graph.json",
+      "bytes": 2622,
+      "sha256": "7e497f775d490e95a90fc2ed13e5f2da20d9d35741e4e88bf159691c08791160"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-preflight.json",
+      "bytes": 870,
+      "sha256": "5352aa45258aaf4b3ccd2e2aac219945ec740dc7dccf465b813b40c7f8cddbbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-preflight.log",
+      "bytes": 37455,
+      "sha256": "cf618866d06628ec51b491f63569de7eed23ba5a6a511a9a0740c8ccb6fab670"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-root-compile.json",
+      "bytes": 918,
+      "sha256": "0919e3baea121f99a9d818e2f3f2bb56f3134146878440fefc2939d4befbb45f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-root-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/db_current_financial_join_test.go",
+      "bytes": 973,
+      "sha256": "9d3821efe4642122add720deac38043eacc1df5854f652a9156fe9d0944c1cd4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/db_migrations.go",
+      "bytes": 386726,
+      "sha256": "f246d553f664019ff886bf00ff276673a2abf8fb38d384dc0fd0a43073bc2f49"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/docs/operator/current-financial-join-20261003.md",
+      "bytes": 2190,
+      "sha256": "27a617a1a9fbf951ea22e9958e6bdb7d072f42b8b77ad3b9f797318f47e0c6f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/go.mod",
+      "bytes": 10651,
+      "sha256": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/go.sum",
+      "bytes": 69535,
+      "sha256": "faf759f6bd62a41e196e796268466aadb3dcc13ac3b65fb724bbdc870f53e5b6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/model/subscription_model.go",
+      "bytes": 209917,
+      "sha256": "4c702f4ad67452a78c7eab454bf7ff33923e3788733ff751f7a6e78db4a828d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/model/subscription_redis_admission.go",
+      "bytes": 19942,
+      "sha256": "2d84b50e1ec3faaa39c5b59a5bb469a6958d6f57b01d4a71130d8b7af9a20bef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/model/subscription_redis_current_join_test.go",
+      "bytes": 10233,
+      "sha256": "c51f7dfc994b65b26949aec3b552664f8a975ac0226f20ca35aa62d9d1563df6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/model/subscription_redis_recovery.go",
+      "bytes": 16122,
+      "sha256": "25af205a411a242bafaad648d54245edff406a18ed995260f41990d14d005fea"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/model/subscription_redis_selection.go",
+      "bytes": 11388,
+      "sha256": "5468d6b903c1bb6671f5bb498f62195cbafa6c516239a98e3d064e1ebf358c77"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/server-publication-f024/server/model/subscription_transfer_debit_test.go",
+      "bytes": 22681,
+      "sha256": "6fa90bcc105a567024ad3494ea1b672c32b27db8aa5f805926b0e5e7a7eb3d13"
+    }
+  ],
+  "physical_git_blobs_verified": 5439,
+  "actual_parent_blob_classification": {
+    "ours_or_unchanged": 5326,
+    "incoming": 104,
+    "different_from_both_parents": 9
+  },
+  "different_from_both_parents": {
+    "db_current_financial_join_test.go": {
+      "mode": "100644",
+      "git_blob": "e6beaefc949189b3d074f845c77df1ce6dbd6f83",
+      "sha256": "9d3821efe4642122add720deac38043eacc1df5854f652a9156fe9d0944c1cd4",
+      "bytes": 973
+    },
+    "db_migrations.go": {
+      "mode": "100644",
+      "git_blob": "40dd79a90d368818af491963b184febe012d5685",
+      "sha256": "f246d553f664019ff886bf00ff276673a2abf8fb38d384dc0fd0a43073bc2f49",
+      "bytes": 386726
+    },
+    "docs/operator/current-financial-join-20261003.md": {
+      "mode": "100644",
+      "git_blob": "71f4efd31a34296f6db60bf572f2fc692849c534",
+      "sha256": "27a617a1a9fbf951ea22e9958e6bdb7d072f42b8b77ad3b9f797318f47e0c6f4",
+      "bytes": 2190
+    },
+    "model/subscription_model.go": {
+      "mode": "100644",
+      "git_blob": "c891da1ee845e48e3af77de4c3365351cd81760b",
+      "sha256": "4c702f4ad67452a78c7eab454bf7ff33923e3788733ff751f7a6e78db4a828d7",
+      "bytes": 209917
+    },
+    "model/subscription_redis_admission.go": {
+      "mode": "100644",
+      "git_blob": "e5e612140da17a90663529fe286a783d33a0d7de",
+      "sha256": "2d84b50e1ec3faaa39c5b59a5bb469a6958d6f57b01d4a71130d8b7af9a20bef",
+      "bytes": 19942
+    },
+    "model/subscription_redis_current_join_test.go": {
+      "mode": "100644",
+      "git_blob": "f288910ec267e236af8c4144994ad9a223233a9d",
+      "sha256": "c51f7dfc994b65b26949aec3b552664f8a975ac0226f20ca35aa62d9d1563df6",
+      "bytes": 10233
+    },
+    "model/subscription_redis_recovery.go": {
+      "mode": "100644",
+      "git_blob": "ed343d5b2392f096c576dbc44f0dfe210686fd5d",
+      "sha256": "25af205a411a242bafaad648d54245edff406a18ed995260f41990d14d005fea",
+      "bytes": 16122
+    },
+    "model/subscription_redis_selection.go": {
+      "mode": "100644",
+      "git_blob": "d08861c1ad9a61dccc4f449af31d47de95f7408a",
+      "sha256": "5468d6b903c1bb6671f5bb498f62195cbafa6c516239a98e3d064e1ebf358c77",
+      "bytes": 11388
+    },
+    "model/subscription_transfer_debit_test.go": {
+      "mode": "100644",
+      "git_blob": "22104ec7969d7e20725ed256f20f2be0ad85295a",
+      "sha256": "6fa90bcc105a567024ad3494ea1b672c32b27db8aa5f805926b0e5e7a7eb3d13",
+      "bytes": 22681
+    }
+  },
+  "author_review_scope_note": "Author reviews10named files including go.mod; go.mod is exactly retained from5089, so actual blob classification is5326retained/104incoming/9different. Initial root assertion treating review category as blob difference was corrected; no production change.",
+  "migration_verification": "Published f024 db_migrations.go preserved byte-for-byte except one exact final customer migration append before list closing brace",
+  "compile_only_jobs": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-modules.json",
+      "sha256": "7c0292579c790b4057c610fa07d066d77a6daef6afdbf1ebc4c923d65a3a9e66",
+      "exit": 0,
+      "args": [
+        "list",
+        "-m",
+        "-json",
+        "all"
+      ]
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-preflight.json",
+      "sha256": "5352aa45258aaf4b3ccd2e2aac219945ec740dc7dccf465b813b40c7f8cddbbe",
+      "exit": 0,
+      "args": [
+        "list",
+        "-mod=readonly",
+        "-deps",
+        "-test",
+        "./",
+        "./model",
+        "./controller",
+        "./monitor",
+        "./taskworker/work"
+      ]
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-root-compile.json",
+      "sha256": "0919e3baea121f99a9d818e2f3f2bb56f3134146878440fefc2939d4befbb45f",
+      "exit": 0,
+      "args": [
+        "test",
+        "-c",
+        "-vet=off",
+        "-mod=readonly",
+        "-o",
+        "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/tmp/server-f024-root.test",
+        "./"
+      ]
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/server-f024-model-compile.json",
+      "sha256": "facd8d151ab36e307acb32123de5a5baa59a2944f303b37c7475aecf2b3405d0",
+      "exit": 0,
+      "args": [
+        "test",
+        "-c",
+        "-vet=off",
+        "-mod=readonly",
+        "-o",
+        "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/tmp/server-f024-model.test",
+        "./model"
+      ]
+    }
+  ],
+  "qualification": "SOURCE_JOIN_AND_COMPILE_ONLY",
+  "limits": [
+    "No behavioral test result from source verification",
+    "Original1d3c full model remains exact separate graph/source",
+    "Current independent22 normal/race, five vets and causal controls remain pending",
+    "No database migration, live payout, signing or deployment"
+  ]
+}

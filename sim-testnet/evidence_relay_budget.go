@@ -25,8 +25,9 @@ const evidenceRelayActionBytes = 256 * 1024
 // These are explicit testnet execution allowances, not protocol defaults.
 // Closed censuses and later audit subjects share this one aggregate ceiling.
 type evidenceRelayConfig struct {
-	MaxSlots uint64 `yaml:"max_slots" json:"max_slots"`
-	GasUnits uint64 `yaml:"gas_units" json:"gas_units"`
+	MaxSlots            uint64 `yaml:"max_slots" json:"max_slots"`
+	GasUnits            uint64 `yaml:"gas_units" json:"gas_units"`
+	SourceHorizonBlocks uint64 `yaml:"source_horizon_blocks,omitempty" json:"source_horizon_blocks,omitempty"`
 }
 
 // A missing relay configuration is valid only when V2 itself is not enabled.
@@ -112,6 +113,9 @@ func evidenceRelayAdmissionCount(entries []JournalEntry, planHash string, action
 // Only its one relay worker may admit dynamic slots; account nonce ownership
 // remains in EvmTxManager and is shared with the ordinary keeper actions.
 func (self *Executor) admitEvidenceRelayAction(ctx context.Context, supplied validatorcomponent.ValidatorEvidenceTransactionV2Expected) (Action, error) {
+	if self != nil && self.cfg != nil && self.cfg.readOnlyAudit {
+		return Action{}, errors.New("read-only observation cannot admit relay actions")
+	}
 	if ctx == nil || ctx.Err() != nil {
 		return Action{}, errors.New("evidence relay admission context is absent or canceled")
 	}
@@ -138,8 +142,8 @@ func (self *Executor) admitEvidenceRelayAction(ctx context.Context, supplied val
 		if err := validateEvidenceRelayContinuationBudget(self.plan); err != nil {
 			return Action{}, err
 		}
-		if self.cfg.ConfigHash != self.plan.EvidenceRelayContinuation.ConfigHash || reserve.Spend != actual.Spend {
-			return Action{}, errors.New("relay continuation changed the original configured monetary reserve")
+		if err := validateEvidenceRelayContinuationConfig(self.cfg, self.plan); err != nil {
+			return Action{}, err
 		}
 		reserve = *actual
 		reserve.Parameters = maps.Clone(actual.Parameters)

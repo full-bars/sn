@@ -1,0 +1,51 @@
+{
+  "actual_three_workflow_blobs_verified": [
+    {
+      "bytes": 13843,
+      "git_blob": "7e6047a70cde33e2259342f18447ee226dc87362",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/cargo-control-guard/sn/scripts/qualification/cargo_control.py",
+      "relative": "scripts/qualification/cargo_control.py",
+      "sha256": "abf47db261d228bf311261927c2ac7c02ceb6ebab7e41eb65394f62d8306fff1"
+    },
+    {
+      "bytes": 4802,
+      "git_blob": "d2fc3828f0b85e3f78c6c05e53b289ea2b6ff496",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/cargo-control-guard/sn/scripts/qualification/cargo_control_test.py",
+      "relative": "scripts/qualification/cargo_control_test.py",
+      "sha256": "b18747207bcf7e0a0cdc78f4ee6663ca15c33d6d517424ac1b3803cafdc6f7b0"
+    },
+    {
+      "bytes": 3006,
+      "git_blob": "20704b48a74312332bf69fd79d9cd3d96e048122",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/cargo-control-guard/sn/scripts/qualification/CARGO-CONTROLS.md",
+      "relative": "scripts/qualification/CARGO-CONTROLS.md",
+      "sha256": "72cfb81cdd44c245c7594922ff83ea85218e13a555bddb9bcc033a7a2972512b"
+    }
+  ],
+  "findings_sent_to_astra": [
+    "Process wait joins leader only: surviving descendants are unchecked after normal exit or timeout where leader exits before a TERM-ignoring child.",
+    "Admission checks floor but lacks explicit two-times incremental compilation/retention/log forecast.",
+    "Recipe/compiled stdout reads allocate full file before bounding; bounded regular-file reads needed."
+  ],
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/cargo-control-guard/evidence/intake.json",
+    "sha256": "f5f28947311cb4a31cd9c6455ef605e98a6255a1a2b0e241ed6cae893470ded7"
+  },
+  "limits": [
+    "No behavior executed by root; six existing guard roots and a real existing omission await Sol qualification.",
+    "Passing selected freshness tests would not close newly identified lifecycle/resource/bounded-read gaps.",
+    "Parent9cf host increment remains separate; integrating this workflow must not inadvertently adopt unqualified parent production."
+  ],
+  "production_changes": false,
+  "reviewed_guard": [
+    "Exact baseline/mutation crate census, package-only clean and fresh:false compiler-artifact from physical control root required.",
+    "Retained binary checksum and exact selected assertion/count checked; false-green/stale compilation cannot qualify.",
+    "Shared target lease and existing-process refusal; all target users must cooperate."
+  ],
+  "source": {
+    "commit": "f0efe0f68ee980464269ac5c6a22c242de91241c",
+    "parent": "9cfdd793260babe6ce3c5e440167f4abccbd996f",
+    "tree": "39eda09479cb0afe4fcaacdad27ab5e6943a33cb"
+  },
+  "status": "ROOT_VERIFIED_WORKFLOW_SOURCE_WITH_ADJACENT_GAPS"
+}

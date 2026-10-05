@@ -1,0 +1,112 @@
+{
+  "schema": "mainnet-independent-source-review-v1",
+  "status": "SOURCE_REVIEWED_NOT_BEHAVIORALLY_QUALIFIED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/sn",
+    "head": "3e7feec728d5666ad355942177cfa42a161359ce",
+    "tree": "157a794eea746110e72a3dff8aabd9469c3ef589",
+    "base": "bb716e6b440318ed00de91a42c14c82e3cbe9155",
+    "clean": true,
+    "sparse": true
+  },
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/evidence/intake.json",
+    "sha256": "2b9324b5c57285b35ae78e72eaa6cffc4cc2f86eff83e65c552fc701067d0032"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31",
+      "relative": "go.mod",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981",
+      "relative": "go.sum",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 24410,
+      "sha256": "6759df2cf7c569a550b15cf3ff240a9c07fa3126a00e8dac82a9633f2558b7ef",
+      "relative": "mainnet/economic_conservation_archive.go",
+      "git_blob": "c7e6d554425201c62bbc4fb4e0c54f5dde1e992e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/sn/mainnet/economic_conservation_archive_index_test.go",
+      "bytes": 4031,
+      "sha256": "4cfbcfc8c776663368f627eb0019db8fd1d2833562cfe06d58f3521155047e7b",
+      "relative": "mainnet/economic_conservation_archive_index_test.go",
+      "git_blob": "f9117fedc05e4dfd4b4fa26f4c810f86644a7357"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/sn/mainnet/economic_conservation_receipt_test.go",
+      "bytes": 8027,
+      "sha256": "d9ce5ac212ea843d03401c67a721aabb91e483401622c26bc44d836e9e98643f",
+      "relative": "mainnet/economic_conservation_receipt_test.go",
+      "git_blob": "c722ea3721daec1a7c31cf1c02542a794415ad85"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/sn/mainnet/economic_conservation_fee_revision.go",
+      "bytes": 7912,
+      "sha256": "2b9782c3158a20535aae0a7d57e7a74e2f6c339aa510de26ee891a384cc14adf",
+      "relative": "mainnet/economic_conservation_fee_revision.go",
+      "git_blob": "c9597de455c3f3f1ca5bc7decb6ca1c1a9089d6f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/sn/mainnet/economic_conservation_fee_revision_test.go",
+      "bytes": 19128,
+      "sha256": "a0a9a926f8a37a5a8e8dca24180259fa4667694f19742adf57b4e55ad5e33c5e",
+      "relative": "mainnet/economic_conservation_fee_revision_test.go",
+      "git_blob": "620bde7f0e24d08a709422cbf973bad6fb45a2f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/evidence/selectors.json",
+      "bytes": 19615,
+      "sha256": "5b4c8714e247b0258a805ab74c5d52e3394ccbfc7add93d596b5f121c833abd5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision-corrected/evidence/operative-controls.json",
+      "bytes": 14094,
+      "sha256": "063bcbd74417bb2f46ca7bc215c1acfe6cfabb0b3d98d491efa63faab77aaafd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision/evidence/intake.json",
+      "bytes": 10429,
+      "sha256": "7bd2c60f74b93054b31c53c23c3fe0f853c3b6e90183310e035f7caab5c7065b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-revision/evidence/selector-addendum-v2.json",
+      "bytes": 1695,
+      "sha256": "bd063e4f10b23e257775f2a97269e3b4ba9788dadf92fb0d355e741a8523f658"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-retention-index/evidence/intake.json",
+      "bytes": 6538,
+      "sha256": "f714a9f1815e9b7010bd9f22faab6b3166a8025d9c7a007ed76788ed001f2bff"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-receipt-status/evidence/intake.json",
+      "bytes": 4765,
+      "sha256": "3fe8a5f54800538fb6702fd224811ea078a998563a9582e6e2f7f4f5a52a2a3d"
+    }
+  ],
+  "review": [
+    "Three-path merge preserves exact original bb716 signed revision mechanisms and all module bytes.",
+    "Archive admission guard runs before retainFeeRevision and retainFeeEvidence; no nil/empty-catalog branch reaches partial revision/evidence mutation.",
+    "Index tests and per-command status correction match reviewed6580/6820 components byte-for-byte."
+  ],
+  "limits": [
+    "Source only:54roots per normal/race mode, nine controls and vet remain.",
+    "Opening principal, full native denominator/quantization and complete entitlement/funding witnesses remain incomplete."
+  ],
+  "qualification": {
+    "roots_per_mode": 54,
+    "controls_per_mode": 9,
+    "vet": "./mainnet",
+    "unchanged": "All signed revision bodies/tests and modules/Server1709/964 fixtures unchanged; receipt status/index guards are exact corrected components. Retain original bb716 and121/c04 outcomes separately."
+  }
+}

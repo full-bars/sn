@@ -1,0 +1,277 @@
+{
+  "schema": "native-capture263b-sequence-source-root-review-v1",
+  "status": "SOURCE_REVIEW_ONLY_UNCOMPILED_UNEXECUTED",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn",
+    "head": "263b00961391e4573184fbc1e3ceec0ea18841b1",
+    "tree": "2ff2edbdd27f3fb3063e9862b67a59933ea75457",
+    "parent": "5f5d2990fa9c80edb7be0f21b78854336a487d01",
+    "clean": true
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_archive_test.go",
+      "bytes": 21501,
+      "sha256": "f09514d9601b5d9369afde25bf2a680d223b009b250ce44df947d1c55b4e6ebf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_capture_fixture_test.go",
+      "bytes": 14452,
+      "sha256": "d372d5c5d39f30a434fcecad673fe281fd28b05f3c5e578f9db0a17a0e6b8bfb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_capture_sequence_test.go",
+      "bytes": 11620,
+      "sha256": "089940be1230f64db5db91105e7e3eb90893417a195c960d083deed695d6df74"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_capture_test.go",
+      "bytes": 15396,
+      "sha256": "b2fc058078676894edcb2542438f92f8c5cd4fd0a43e64a8eba2d725f422cf2b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_fee_retention_test.go",
+      "bytes": 12710,
+      "sha256": "01af0eda7405deef30b70ee6a0af486b429b56787c0b5b0a510416047b93e46a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_fee_revision_test.go",
+      "bytes": 19128,
+      "sha256": "a0a9a926f8a37a5a8e8dca24180259fa4667694f19742adf57b4e55ad5e33c5e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_fee_worker_test.go",
+      "bytes": 14585,
+      "sha256": "e384280163706ecfec8df9d5d6b51b990af4b83d1b2cfccede4ecec1a9b78f50"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_fixture_protection_test.go",
+      "bytes": 1931,
+      "sha256": "644bafa7b394613c9b75ade45161cebb935376b880d7c005bfd23a1142057e0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_fixture_test.go",
+      "bytes": 13329,
+      "sha256": "919a06488b0e97710f8ebd4a1e10807e3700c9a157ff8de2290c56339bbe98d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_principal_custody_test.go",
+      "bytes": 3008,
+      "sha256": "859dc2d5b15fb7b9a1eee9a502f9690241117b93be946209cfe602929d2788d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_principal_effects_test.go",
+      "bytes": 10561,
+      "sha256": "5bfff9bd7121aa3f8dbb297c3f50d1888cbfa94f4d5cd82790b33033caba0e90"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 19780,
+      "sha256": "5dd2fe9b425464e133dae964f8c41b1a04fbfa088504f4c7570ae74b18c23a61"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_receipt_test.go",
+      "bytes": 8027,
+      "sha256": "d9ce5ac212ea843d03401c67a721aabb91e483401622c26bc44d836e9e98643f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_storage_test.go",
+      "bytes": 14543,
+      "sha256": "0881cf04cc02af1518c2e7e4663fdd71c0ee76055fa9de00c37d5cfc543b4ac6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_test.go",
+      "bytes": 27285,
+      "sha256": "a8053264fa890a531aca2c7011c100b54368cba94a85cb4a8f5566b5cfc3c807"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_yuma_test.go",
+      "bytes": 14407,
+      "sha256": "25c687e86c53fa606907af4e3968581f661f3946cf07b4f5fde233f2ff6f915f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_native_execution_test.go",
+      "bytes": 32574,
+      "sha256": "6ca68d699946484d38c2c770446eeec20ebe846ccd84671d577385c26dfd44cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_native_producer_renewal_test.go",
+      "bytes": 35792,
+      "sha256": "ef2906dbbad2f341de98a347f553099dfbed8aa68550f712e52eb2dcd399e5c8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_native_producer_test.go",
+      "bytes": 32058,
+      "sha256": "8021bd0ff5f050b4188c3747149f2af7a79a1273db7af141f27f120fd81f8f27"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_native_yuma_math_test.go",
+      "bytes": 9347,
+      "sha256": "868d337213d60b80b0a01ec412c1684544b654815109c697569fdc9fffde8488"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_native_yuma_owner_test.go",
+      "bytes": 9543,
+      "sha256": "790cacb9b18777b3309a0b53c98e326c9c991b6a0849967b806823bda4bd0d46"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/monitor_economic_evm_fixture_test.go",
+      "bytes": 19337,
+      "sha256": "c2a09eac53914e88436b0ab71e28113b8ff6f7e82b22bcb2a206b31e80a1491e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/monitor_economic_evm_test.go",
+      "bytes": 27499,
+      "sha256": "46a0fe29b7d4df01ae963245f36ad935727b507742f6bf9332518bb63c90000c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "bytes": 118692,
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "bytes": 2260,
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "bytes": 8563,
+      "sha256": "dd3a0ace7c633121d3f124b178d1af869b1ce41abb4e74825307a73819e44494"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 37388,
+      "sha256": "15a7a63f5c1c8d412b4fe39c0af7bffbabcc043c423ace0550df7e91ca25e1f0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/selectors.json",
+      "bytes": 32798,
+      "sha256": "38ecd8c23ea0dce45a7e170173aca2892029710f5fdd36095c814e3236821de3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/operative-controls.json",
+      "bytes": 6331,
+      "sha256": "8305782d4a36311b46bc3e975b7e7472b324c5c3b9642a82a411829e3e3dbe35"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/inherited-controls.json",
+      "bytes": 71996,
+      "sha256": "f7937fefb3a3bb08e3ccb36b00c618158c3567c0804a739ea782a4f0829ef1a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/recipe.json",
+      "bytes": 3147,
+      "sha256": "04979fb8553b8214f93216807a014e5c68f55232efd3121d14532fb327da778c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/source-review.json",
+      "bytes": 1725,
+      "sha256": "8b6b63dfd8d1cbcd6d8407f0b818354f94180c93df9c349737e52e20123ccdaf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/economic-conservation-storage-profile/evidence/intake.json",
+      "bytes": 21829,
+      "sha256": "5fc41530d07c428d5c02db2563115dbd87e3ae3e1891e2c0751e27c2281ad55b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/seal.py",
+      "bytes": 11469,
+      "sha256": "be806fb3458a78efa709902c0092822efcc7014050751e2831aa9ef37138da93"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_capture_effects.go",
+      "bytes": 12142,
+      "sha256": "795ac3408ae0b716adfd3ddb360b5a7521eedefbf245dc3467b3fbd3ba8c00a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/controls/omit-same-block-original-ordinal/economic_conservation_capture_effects.go",
+      "bytes": 12065,
+      "sha256": "9fd8cf100dfa75e3c9415c45d73122da2994fa7b12e8f5f051c43e99f31b5a88"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/controls/omit-same-block-original-ordinal/overlay.json",
+      "bytes": 362,
+      "sha256": "b5eb5481bc45006bb6d1775f37251ec2d6015e4884cc7d775f84f3fe41499fa6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 26598,
+      "sha256": "2a6ded2cf8e48e9c61f7efb0a53e6c703b5bdeef781ebf6dc5fccce4d87613d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/controls/omit-archived-original-capture-cursor/economic_conservation_archive.go",
+      "bytes": 26545,
+      "sha256": "337233d9e9fc68cf229845658b1e372214b0d41d83821d44de3ff7e6cac9927f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/controls/omit-archived-original-capture-cursor/overlay.json",
+      "bytes": 351,
+      "sha256": "61ecb32298181bec8d3ea73dc56b4e51a8bceeefa301ce6d9046723b59ea75a1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/controls/omit-retired-original-capture-inputs/economic_conservation_capture_effects.go",
+      "bytes": 12140,
+      "sha256": "afa43f1c626199cba67add1c6e9611669e8430a8dff3c77140a5049efa2f3015"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/controls/omit-retired-original-capture-inputs/overlay.json",
+      "bytes": 366,
+      "sha256": "5ca89548b07c006edd992c1b61d11470f98cdec7dca7df42df07e29f5d3153f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/controls/restore-wrong-fixture-outage-target/economic_conservation_capture_fixture_test.go",
+      "bytes": 14419,
+      "sha256": "de6d6f8f848db50ac5bed621e58637f633e4d8ae3f367e1a1d04a6ce84664ca3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/controls/restore-wrong-fixture-outage-target/overlay.json",
+      "bytes": 375,
+      "sha256": "1f1aa649ab727dada22f8f19c78c3d9a8a6ce9458815f34b3561239c3bc10943"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-sequence/evidence/controls/erase-second-original-apply-index/historical_native_execution_tests.rs",
+      "bytes": 37388,
+      "sha256": "f40051181a770b275964f433cf7adcde95a9efe011f72532c336f1724b84b658"
+    }
+  ],
+  "changed_paths": [
+    "mainnet/economic_conservation_capture_fixture_test.go",
+    "mainnet/economic_conservation_capture_sequence_test.go",
+    "mainnet/economic_conservation_fixture_test.go",
+    "mainnet/economic_conservation_principal_test.go",
+    "mainnet/economic_native_producer_test.go",
+    "mainnet/monitor_economic_evm_fixture_test.go",
+    "tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+    "tools/runtime-metadata-probe/src/historical_native_execution_tests.rs"
+  ],
+  "review_scope": [
+    "Complete221-line public sequence test and all seven supporting test-only file deltas.",
+    "Five new control source/replacement comparisons; inherited controls identities retain their separate qualification scope."
+  ],
+  "findings": [
+    "Same-block receipts retain distinct transaction/Apply ordinals and cumulative gas/log census; first20 consists of14opening stock plus6earnings, second5is deposit rather than repeat earnings.",
+    "Later block native proof begins at prior actual post-state; archive continuation retains original capture cursor and stock14is not counted again.",
+    "Missing first receipt leaves the vault page pending while native/Claim observers advance; after both original native witnesses retire, recovery uses retained original inputs in order without new proofs.",
+    "The prior outage helper targeted block12 first transaction, which the capture fixture removed; new explicit original first-capture transaction targeting makes the outage reachable.",
+    "Production and module changes are absent; exporter/source tests still require actual execution."
+  ],
+  "qualification": [
+    "Final union86Go roots per normal/race mode,15Rust roots and vet.",
+    "Four newGo controls per mode: three production omissions and one fixture-reachability control; one newRust Apply-index control;34 inherited overlays.",
+    "Qualify the final joined successor including admission corrections and entitlement/profile joins; do not duplicate superseded intermediate builds."
+  ],
+  "limits": [
+    "No test pass, production capacity, economic conformance, runtime authority or complete readiness established."
+  ]
+}

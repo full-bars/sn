@@ -1,0 +1,268 @@
+{
+  "schema": "proof-drained-continuation77-three-controls-independent-readback-v1",
+  "status": "THREE_SCOPED_CAUSAL_CONTROLS_PASS",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-controls-v1.terminal.json",
+      "bytes": 4891,
+      "sha256": "b479c6c48f24899f3b5237cb93e68b662b2b43bc485c26a6485cf3e0878dca89"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/rust-controls-adoption-v1.json",
+      "bytes": 1116,
+      "sha256": "13bbc38b75e80d590a21f61400038d2c0781934309b906396b6a3cf451244b6c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/rust-controls-stage-receipt-v1.json",
+      "bytes": 4592,
+      "sha256": "8e2c85bf023f53ef7cf215dfd1a26f166cbb7e453e39dc8a436b0fd54dbb309a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-drained-continuation-fixture/evidence/operative-controls.json",
+      "bytes": 7296,
+      "sha256": "85c0981fdc98df13800fcf4efaa3d190bb171bcdb6a380a643847df2795ff50b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-six-v1.terminal.json",
+      "bytes": 4767,
+      "sha256": "e9b6d6f73fb7582454b7988c6f8ebffd9c2ccccf73f182a11c01baf640c0235f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-clean.receipt.json",
+      "bytes": 3216,
+      "sha256": "d3daa4b11278faf9d59a31d77f69205b31bedb163d46bf17fb161574ccab3db7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-compile.receipt.json",
+      "bytes": 3463,
+      "sha256": "2026c5aff8a374e658fb23815ee88cba3c6a029d6c710ac0e8966f37c4aedc8e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard.receipt.json",
+      "bytes": 3546,
+      "sha256": "f9069f39392a7dbd832a08251b7789a953215b0db7e191d78bf37602047a15a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-clean.receipt.json",
+      "bytes": 3168,
+      "sha256": "56b6b0349303af8b54730ba57edfda699374ac31860527b7e053bd97e970e5c7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-compile.receipt.json",
+      "bytes": 3409,
+      "sha256": "48a90a3fe82c0656d900ed5705666f621c86e4771c71c7947adca783777bb5d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block.receipt.json",
+      "bytes": 3498,
+      "sha256": "be552bf576fdbe4ac9f0d3ef482f78144c76e1142b3ca9f131780be6b8da609e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-clean.receipt.json",
+      "bytes": 3200,
+      "sha256": "7a0e95bbe34d5c5a709a74ec16ba0bb3fcfaca5620b3461c5e9db23437e09436"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-compile.receipt.json",
+      "bytes": 3445,
+      "sha256": "1da6cd043608c9caee1e483100df115d3bd8c7682e8409381c356ffa332f8488"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending.receipt.json",
+      "bytes": 3510,
+      "sha256": "cc3a35c0d8141383778f27fae439bba1765c6a183b6b184ad19ba058ea55e7b3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-body.resources.csv",
+      "bytes": 162,
+      "sha256": "427dda365e3ee5287cf08b8ec6c12722b05ccb4698ac312a553cd6f8ae642bd7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-body.stderr",
+      "bytes": 380,
+      "sha256": "e6c3e19977f133a9107ed227c25458c6da7694d3f83f17b795dd4bc0a369644b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-body.stdout",
+      "bytes": 383,
+      "sha256": "74f27a41ae67d16d147b54e654056673f8df18817a8659ffac74482ff3880b95"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/images/restore-pending-before-first-accrual-guard-libtest",
+      "bytes": 63806872,
+      "sha256": "0d67492fbb4d0a1c3439d98b0441afd796ed5b39fb884fc172461a37074c1e0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-compile.resources.csv",
+      "bytes": 3340,
+      "sha256": "9f68b4b83518d070fabb085e2399b573d04b896c4052a041f94ef5f03ce943b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-compile.stderr",
+      "bytes": 237,
+      "sha256": "6eab987aaddbdb128e89bc3fa5ef43c853e74b85c132d50c6fba379c95a2b2bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-compile.stdout",
+      "bytes": 505053,
+      "sha256": "5af30b90668bc56724f8ad5ceca8b12b6cd5d085f65a93677d5fece62fa72dbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-clean.resources.csv",
+      "bytes": 286,
+      "sha256": "ee14fd519d749b7866b715536ce035dc3b822c2462f7fb76e88d3189271241f6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-clean.stderr",
+      "bytes": 168,
+      "sha256": "bffa812a2a7695dd1aee0feedee4336c6dfcb1409ecad34a3443487934d5b14a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-pending-before-first-accrual-guard-clean.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-body.resources.csv",
+      "bytes": 162,
+      "sha256": "e961e2d305302fac74491899906bb095f5606cc9f7cd2adbe87be2186ece6cd1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-body.stderr",
+      "bytes": 380,
+      "sha256": "123892d3f83b809c9ecdb21a5402165fd3420edf0b253e99cc19a744c6529f6b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-body.stdout",
+      "bytes": 383,
+      "sha256": "385c063d357c7e2c33a7b458a7e2fc139b62f6c11583c8548359b025e6c3299c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/images/ignore-retained-epoch-on-later-block-libtest",
+      "bytes": 63812312,
+      "sha256": "b1f903a2db892b98096a34dd2937f1b2cb12bfe241dfeef6f6852f3eb403ca71"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-compile.resources.csv",
+      "bytes": 3206,
+      "sha256": "f469bc46b8024ddfe21e7eed3f9ed4967c07c92be3d0afb0b25029889112275e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-compile.stderr",
+      "bytes": 231,
+      "sha256": "639ce52a9d1b5cb0af3b5bb4f7384161399d0d47dfcb6085fd98d97b1e97851f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-compile.stdout",
+      "bytes": 504621,
+      "sha256": "2d718f7cb573a6346f8386d26bf2bc4fe1506d1db9bb108c47d0ed70be023458"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-clean.resources.csv",
+      "bytes": 293,
+      "sha256": "77a5b3a5ccf24e6d20a824c4474362c0f3f96752dfbbb698ff594de6ab9743c4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-clean.stderr",
+      "bytes": 168,
+      "sha256": "bffa812a2a7695dd1aee0feedee4336c6dfcb1409ecad34a3443487934d5b14a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-ignore-retained-epoch-on-later-block-clean.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-body.resources.csv",
+      "bytes": 155,
+      "sha256": "6b3fc9cec837aacec848b2398d9b3a2bbcc75b63137038f202237cd0ad285536"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-body.stderr",
+      "bytes": 432,
+      "sha256": "a340c9ddfacf658237b990e038a228afa9ca7a28e9530038a703df4c9131053a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-body.stdout",
+      "bytes": 383,
+      "sha256": "2cad6ff798e03d5c844b01aa075435710f4646a79758fdba9de53a8beaed2dbf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/images/restore-nonzero-original-opening-pending-libtest",
+      "bytes": 63812208,
+      "sha256": "fbf57dc0738e342bde1d5f6febf646269c185e5e9865501522d90eeb5270cefd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-compile.resources.csv",
+      "bytes": 3273,
+      "sha256": "0938931d11d81b3d63ecc1a1744df10a7cc42850e8b80b25db5b8e9f9ac5f681"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-compile.stderr",
+      "bytes": 235,
+      "sha256": "71a8e78e26eab4e6521fff442c44e21c75f4658708804f0fef018aa43b6ae0ca"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-compile.stdout",
+      "bytes": 504909,
+      "sha256": "49aeae541b27e4d3e0455808171b4b1aa39de9d7b6cbeff0a841148c97ee6efc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-clean.resources.csv",
+      "bytes": 293,
+      "sha256": "cb064726db1b08316753747e7202d23868519b058927e4796b3680cb69e35a68"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-clean.stderr",
+      "bytes": 168,
+      "sha256": "bffa812a2a7695dd1aee0feedee4336c6dfcb1409ecad34a3443487934d5b14a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-control-restore-nonzero-original-opening-pending-clean.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "actual_controls": [
+    {
+      "control": "restore-pending-before-first-accrual-guard",
+      "root": "historical::tests::native_execution_tests::historical_native_conservation_exports_proof_drained_contiguous_jobs",
+      "compiler_exit": 0,
+      "body_exit": 101,
+      "actual_failed_roots": 1,
+      "ignored": 0,
+      "exact_expected_assertion": "contiguous original block 101 failed independently declared post-state",
+      "tree_joined": true
+    },
+    {
+      "control": "ignore-retained-epoch-on-later-block",
+      "root": "historical::tests::native_execution_tests::historical_native_conservation_exports_proof_drained_contiguous_jobs",
+      "compiler_exit": 0,
+      "body_exit": 101,
+      "actual_failed_roots": 1,
+      "ignored": 0,
+      "exact_expected_assertion": "contiguous original block 102 failed independently declared post-state",
+      "tree_joined": true
+    },
+    {
+      "control": "restore-nonzero-original-opening-pending",
+      "root": "historical::tests::native_execution_tests::historical_native_conservation_exports_proof_drained_contiguous_jobs",
+      "compiler_exit": 0,
+      "body_exit": 101,
+      "actual_failed_roots": 1,
+      "ignored": 0,
+      "exact_expected_assertion": "combined original activation parent must be proof-drained",
+      "tree_joined": true
+    }
+  ],
+  "positive_prerequisite": {
+    "bytes": 4767,
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture77/evidence/77-rust-six-v1.terminal.json",
+    "sha256": "e9b6d6f73fb7582454b7988c6f8ebffd9c2ccccf73f182a11c01baf640c0235f"
+  },
+  "limits": [
+    "These deliberately failing mutated fixture bodies prove the selected regressions are detected; they are not production failures or whole-release qualification.",
+    "Six corrected positive roots remain separately qualified. Dependent Go19 and full composed source scope still need their own results.",
+    "No mainnet runtime approval, deployment, activation or host sizing inferred."
+  ]
+}

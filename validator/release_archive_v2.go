@@ -48,14 +48,15 @@ type ReleaseEvidenceV2ArchiveOptions struct {
 // Returned measurements are available only after all signed history succeeds.
 // A caller must Close and join its error before publishing any acceptance.
 type ReleaseEvidenceV2Archive struct {
-	owner        *releaseEvidenceV2ArchiveOwner
-	history      *releaseEvidenceV2StartupHistory
-	inputs       []releaseEvidenceV2ActivationInput
-	intents      []ReleaseEvidenceV2CapturedIntent
-	adoption     *releaseHistoryAdoptionV2
-	measurements map[string]releaseEvidenceV2ArchiveMeasurement
-	closed       bool
-	closeErr     error
+	owner            *releaseEvidenceV2ArchiveOwner
+	history          *releaseEvidenceV2StartupHistory
+	inputs           []releaseEvidenceV2ActivationInput
+	intents          []ReleaseEvidenceV2CapturedIntent
+	adoption         *releaseHistoryAdoptionV2
+	measurements     map[string]releaseEvidenceV2ArchiveMeasurement
+	productionStages map[string]*ownerRecycleProductionStage
+	closed           bool
+	closeErr         error
 }
 
 type releaseEvidenceV2ArchiveOwner struct {
@@ -116,6 +117,14 @@ func newReleaseEvidenceV2ArchiveOwner(ctx context.Context, options ReleaseEviden
 	var cfg ReleaseConfig
 	if err := json.Unmarshal(encoded, &cfg); err != nil {
 		return nil, err
+	}
+	if isOwnerRecycleProductionConfig(options.Config) {
+		cfg.ownerRecycleProduction = options.Config.ownerRecycleProduction
+		cfg.productionRuntimeHistory = options.Config.productionRuntimeHistory
+		cfg.productionAuthorityHistory = options.Config.productionAuthorityHistory
+		if err := validateOwnerRecycleProductionConfig(&cfg); err != nil {
+			return nil, err
+		}
 	}
 	if !filepath.IsAbs(options.ScratchRoot) || filepath.Clean(options.ScratchRoot) != options.ScratchRoot {
 		return nil, errors.New("archive scratch root is not a clean absolute path")

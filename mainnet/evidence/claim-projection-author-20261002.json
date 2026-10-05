@@ -1,0 +1,804 @@
+{
+  "affected_existing_roots": 18,
+  "causal_failures_each_mode": 3,
+  "causal_positive_controls_each_mode": 2,
+  "changed_paths": [
+    "miner/claim_daemon.go",
+    "miner/claim_observation.go",
+    "miner/claim_observation_capacity.go",
+    "miner/claim_progress.go",
+    "miner/claim_progress_custody_test.go",
+    "miner/claim_progress_source_test.go",
+    "miner/claim_progress_test.go",
+    "miner/claim_signed_outcome.go",
+    "miner/claim_swarm.go",
+    "protocol/claim_progress.go",
+    "protocol/claim_progress_test.go"
+  ],
+  "deployment_authorized": false,
+  "files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/build-controls.go": {
+      "bytes": 3411,
+      "sha256": "014ee7323b63ee80b9165e48cc50e49280efbbaa2481374ea4c6c709a9e4ed3f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/capture-graph.go": {
+      "bytes": 4870,
+      "sha256": "018685a20e25efacb6bca9c683400004ca92c0ff35e662ce1164f0accfd058a7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/affected-347605f-vet.command.json": {
+      "bytes": 426,
+      "sha256": "afea1d01d6a0e35d07fe499ed919979cfeb9bdd2b159fdee08946412cdfdb2ba"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/affected-347605f-vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/affected-347605f-vet.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/affected-347605f-vet.result.json": {
+      "bytes": 152,
+      "sha256": "05268b96e09414a370d10b6ea4c5f560536b8f322a5263e14592fd6c1774797e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/affected-347605f-vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-payment-topic-normal.command.json": {
+      "bytes": 630,
+      "sha256": "d9e2151696f6c4f4701c253e34aa54aa971989ce95fc8b5548cbf7cdea1a4d2b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-payment-topic-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-payment-topic-normal.jsonl": {
+      "bytes": 5076,
+      "sha256": "06b32b5abb238f92ee54951f8451e73a231860e7dc062358edc7c80ac8635d2d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-payment-topic-normal.result.json": {
+      "bytes": 359,
+      "sha256": "618839aa3fd9e0c3e4b5b7002f3fe3acc60c022ed7ac5cf0ac4ed2aabff699d6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-payment-topic-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-projection-normal.command.json": {
+      "bytes": 593,
+      "sha256": "be15f0fc567ab31c9edc6d17750fb75b7fb0e47d9fab04a55175077000795174"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-projection-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-projection-normal.jsonl": {
+      "bytes": 4183,
+      "sha256": "9a370673fef2d197581a6087bfca5ca897d8d77e0c492b10497f04da552386e1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-projection-normal.result.json": {
+      "bytes": 298,
+      "sha256": "d94d03c1cc1c4c6b90e87088acc9d679eb8cf295359f7c68d0e2f3850cc79ec4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/before-projection-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/bundle-attempt-1-note.json": {
+      "bytes": 596,
+      "sha256": "981a5c81178718f503c607275d27ae9a44b7ca445dd08ed9311057bf6f8ccf08"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/bundle-verify.txt": {
+      "bytes": 325,
+      "sha256": "4b8d6bb94d458ec5b7f68ceeb8f2a9c6f87ef0876d12b298a6cd1fe14c5d803a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-normal.command.json": {
+      "bytes": 710,
+      "sha256": "ab5bd5c257c4896c0f0ae91b4f1e61ef423f1ae76807b68e851882c45233de47"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-normal.jsonl": {
+      "bytes": 3549,
+      "sha256": "21a97643b9ab60a67387324bdac3a3d47e79caaa0a2116b21fc66359e987f5d4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-normal.result.json": {
+      "bytes": 281,
+      "sha256": "f10a7c661bbbd632adc6c617eb69326589f42656de093051aeea5a33203072fa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-race.command.json": {
+      "bytes": 723,
+      "sha256": "c82a7831c4cd2c1fca444fd183647eee4e23f72ac8875fce22dc612d30efe17a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-race.jsonl": {
+      "bytes": 3554,
+      "sha256": "34e5364bc8bea71c45b94d2c79e2abeb150e1e2e1adc15ca6d8a60b036266aaf"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-race.result.json": {
+      "bytes": 280,
+      "sha256": "3af18e9c3c524a9b52fef48575931a151043ebfc99d884207cdeb60d8e7e995b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity.go": {
+      "bytes": 2129,
+      "sha256": "cba665c69b82ec610b17aadaf31c0a29750eae2d2664849a480ace5a17892996"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-capacity.overlay.json": {
+      "bytes": 242,
+      "sha256": "802bf2985d0ba1b949ac95e9f797fb05ae767026acfe00b1986166064eb19755"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-normal.command.json": {
+      "bytes": 699,
+      "sha256": "892d8e0746aaf4065de0a874896bd013d22f1dc315a7836798cd7b88e86f180f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-normal.jsonl": {
+      "bytes": 4191,
+      "sha256": "59979213faec7deffdc36b456f9ecf09037ab5fecaf5d46805287a492bdd538b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-normal.result.json": {
+      "bytes": 288,
+      "sha256": "934d09d36007811d94bf515a4cd239b787b00cf54229da2c9ba465b6aca4b341"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-race.command.json": {
+      "bytes": 712,
+      "sha256": "9f508549d53df85a65f62e38b419e3fd1fff5f3df9ffcba84a03d5af658549e2"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-race.jsonl": {
+      "bytes": 4190,
+      "sha256": "536907719425840cb2f30ee9dbc3c75d1cf804e918c12ff14096f36d1be790e6"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-race.result.json": {
+      "bytes": 287,
+      "sha256": "4072c867d3e52aa333bf1d508413ca2025ab422b0af343b4dd198eccac443192"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic.go": {
+      "bytes": 6396,
+      "sha256": "0281806e5d16fb703f2071d37187dd00bc5b0522fec339e6e105203c8f24f380"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-paid-topic.overlay.json": {
+      "bytes": 235,
+      "sha256": "e43af4a25269bcbef61459772513c713a3374a2439c181f82938765ba2b4d4e9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-normal.command.json": {
+      "bytes": 679,
+      "sha256": "7812e4f95445b0d7a57812c4f97b6821f0a849b6a8354c837a059cc465596719"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-normal.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-normal.jsonl": {
+      "bytes": 2659,
+      "sha256": "7f6f33044421451135e2f8cfbcf922c46009b9a05d47c979a676fc26cc9c991f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-normal.result.json": {
+      "bytes": 217,
+      "sha256": "cfd63c234367cc8561e0d7b3a9e86986086f40279580b3bc2ed7beb798909d8d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-race.command.json": {
+      "bytes": 692,
+      "sha256": "f406cd1cdd09b6e5459cc5a9cb5980a777f9050a5d0814b5380b9b591e446c18"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-race.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-race.jsonl": {
+      "bytes": 2657,
+      "sha256": "d61c80fc534c1b21f5d72d9a235b35b1061ac3cc38b73da9c53a2c00ccc34ce2"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-race.result.json": {
+      "bytes": 217,
+      "sha256": "0e9b6cbde764a8e3fb09af31e3e7b7872758bf4db0936c02233777ad9cb552a1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order.go": {
+      "bytes": 8099,
+      "sha256": "c74e152f95c502fa0b0342f30bf64ea9f28e4a666542ba579551aa79846b26db"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/control-prior-unresolved-order.overlay.json": {
+      "bytes": 238,
+      "sha256": "acc7cb605df7e9d37bf78459e9007be48a1ad8d448f14cee4877c316a1645e8d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/controls.json": {
+      "bytes": 2726,
+      "sha256": "36d60bf45e8b9deb1ab6c7cb6c607925cb4f1270ac2abeb9de0b608a4d154a6b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/effective-modules.json": {
+      "bytes": 211420,
+      "sha256": "70e2a5ebed542c94a7ab7a8b2d1b751dc5893987f08fb3ec768891e6aa05a2e1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/effective-modules.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/graph.json": {
+      "bytes": 7198,
+      "sha256": "ca4f51f6e01b3924a60badf9b605123bae4bb5140d101242cb2866b924858c64"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-normal.command.json": {
+      "bytes": 1089,
+      "sha256": "341fed1ae751825cda70d0da64491623904d03ad415cee18b718a63653f86cd1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-normal.jsonl": {
+      "bytes": 26295,
+      "sha256": "b1a4d50452d8b78d18d4ea8519c06c77766beecab9c371b307d1040828688c6e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-normal.result.json": {
+      "bytes": 1307,
+      "sha256": "55fd3e0325560d89cd8880a953d202c038022bb14c7535421806b93e19320eb8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-race.command.json": {
+      "bytes": 1102,
+      "sha256": "89af30f396ac48cd156bc879b92c99db9614d89a3b6ed18c7ddb74e52b72f186"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-race.jsonl": {
+      "bytes": 26295,
+      "sha256": "5711f5df54a20324f83737997b0e95aba57b8907ca5072e3b56e37e3c2d8cdb7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-race.result.json": {
+      "bytes": 1307,
+      "sha256": "b96a22e2096f74287dad5a1f972ca1c140f0fe9f0e777f1d9cb8818b0274523d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/neighbors-347605f-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-normal.command.json": {
+      "bytes": 496,
+      "sha256": "08700dbc87a79eff8a6e24762b50529865ee80d0d28a8d50564ab5b7ee5d08e8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-normal.jsonl": {
+      "bytes": 14578,
+      "sha256": "e7ce5ab8f1868b223ae0e24440d92d09a961702f12a8f30d551f917ddfd5f82c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-normal.result.json": {
+      "bytes": 1138,
+      "sha256": "bd659fc6344af7fefdec10b10181b27d19eae05da08fad4df0a4646cbaf8ae68"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-race.command.json": {
+      "bytes": 509,
+      "sha256": "8e95161dd3b43b24f2afe9b3714d727ec612158d1852c18e7bed3b11b315ad6f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-race.jsonl": {
+      "bytes": 14579,
+      "sha256": "aa9a19841599b530d5819bef3f2fb55fc81b68355acc08c17c4b2eb104c57924"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-race.result.json": {
+      "bytes": 1138,
+      "sha256": "3f310b85b7222ae3fcd458d10c2e29b560e3ad9dcea63b914c146f4fc67ea292"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/producer-347605f-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-normal.command.json": {
+      "bytes": 499,
+      "sha256": "d378cf54e2862931c40e56c990c2cc7b11d581f660edd1e36606b1dd124fce19"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-normal.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-normal.jsonl": {
+      "bytes": 3983,
+      "sha256": "16ebd99492fa8f611ab8fe008e025bc189fa7400a82f574e8b5cc78c096f2962"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-normal.result.json": {
+      "bytes": 406,
+      "sha256": "e6db025461872d470a045030ac06823178bbf388b5e2bbc0179f371b2e9c58e2"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-normal.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-race.command.json": {
+      "bytes": 512,
+      "sha256": "4581d983ca7be30bedb364634cdea7f3ca1ecd0d3889adb9cbe4c18b3e35362f"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-race.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-race.jsonl": {
+      "bytes": 3986,
+      "sha256": "721456f32b16c83adc215e03c72f910315e71ca4ceaec748de3522e1ddce2272"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-race.result.json": {
+      "bytes": 405,
+      "sha256": "3d7ad34acbaa43da86652c520091116ba67a5ecd88c1171ed09d8895d9182c78"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/protocol-347605f-race.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/seal-attempt-1-note.json": {
+      "bytes": 546,
+      "sha256": "964de7504ec03b3a36b2fde1fcbb9da6c46cb4c5fca0bd6870c1ce22db1faa87"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/sn.mod": {
+      "bytes": 11696,
+      "sha256": "547da6eb0f805563ddb5e82f6ac7a5dd6223f0e5f48c70ab01875fe839b83eac"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/sn.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/evidence/source.bundle": {
+      "bytes": 24042,
+      "sha256": "13b28dde0e01d140d09ae722ead207f04e0f8461d1fef26b329e0814289f51f2"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/finish-scope.sh": {
+      "bytes": 2618,
+      "sha256": "dcd881a61fc8fecbc9ef8fe875a04400d9beea2e872cdffb8aa3ed1bcea6c166"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/prepare.go": {
+      "bytes": 760,
+      "sha256": "64f2fb32959a722454c70faf80d9ba1bd85a5483dce4a8ba19cec128a363b543"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/run-product-scope.go": {
+      "bytes": 4168,
+      "sha256": "5ac9c720766c469695fa1df78eb608bbc24b1438c908d1626a736919780c9160"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/run-scope.go": {
+      "bytes": 3967,
+      "sha256": "bc7b5511eba02c7463ad2476deaf0320fc77171a2bed64840de86cb800442d6e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/seal-attempt-1.go": {
+      "bytes": 9064,
+      "sha256": "779c9a5224698bb07996beadf6d1837a2bcdbbfeae4ed1e90b289b454c46fde0"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/seal.go": {
+      "bytes": 9902,
+      "sha256": "bee1daf9df363ad8adb976969bfb2ad189c1ba6b3f5a935a7d16d8b470a2b9a9"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/evm/src/STSettlementVault.sol": {
+      "bytes": 21716,
+      "sha256": "ac76e47f8744bf65d621005b4765985002e17a706f380c914987af4af55ede4a"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/go.mod": {
+      "bytes": 11211,
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/go.sum": {
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_daemon.go": {
+      "bytes": 39776,
+      "sha256": "84e8e1d69b6bb6580caccd649359e93a8ca2b2ea418eab1d8fa06773a434e074"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_durable_fixture_test.go": {
+      "bytes": 4661,
+      "sha256": "e391aad4f6df9405686678e52fbff42f5834bc8bb067ef3a77aa9b13832be4df"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_finality_submit_test.go": {
+      "bytes": 4017,
+      "sha256": "5641d90349900321430ed2a8c4a27492b37a813a9ec514db81328245498de211"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_finality_test.go": {
+      "bytes": 16181,
+      "sha256": "c81e14a5e7405806f87581da721d702aa20793bb215af8d1246c7da54efa357e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_observation.go": {
+      "bytes": 6322,
+      "sha256": "442f72420c71e3ae3dbfee239d5571b4c060c1857f9dfdade482200c4ceced15"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_observation_capacity.go": {
+      "bytes": 2611,
+      "sha256": "16023a89985caa48ba909cd84ce22f363b41c49990d6a9435b05ef914bc86fb4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_progress.go": {
+      "bytes": 8099,
+      "sha256": "1352b7f1aa308e4b8f2c3ab418cfe8ed493e19e593dda9e6bd229839d426aca8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_progress_custody_test.go": {
+      "bytes": 12456,
+      "sha256": "3ea4da60aef943e1019aa52b143d53b2fa401e5ec1fb7a0e023e537d1f4e5e7b"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_progress_source_test.go": {
+      "bytes": 10054,
+      "sha256": "f59228895301cbfa08012c7d910dfa3ff90e43f451983b55912db80151f6a2c1"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_progress_test.go": {
+      "bytes": 5313,
+      "sha256": "9f455dd0292aefed4e59eb1b3b2aabc828406b0df0567c1d713b1c1ac902d6b4"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_queue_capacity_test.go": {
+      "bytes": 12303,
+      "sha256": "75116410a5f90ae2d9aa32774368f7792816f1d19041c63c75dbd9c172e161af"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_queue_owner_test.go": {
+      "bytes": 23006,
+      "sha256": "f83d5d8b1cafcd9a17a23d3a3e3415c1c74e6dfbb65533ec280cbc0b146088dd"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_queue_poll.go": {
+      "bytes": 7563,
+      "sha256": "624223e25f69ecc28768afa0b2880d9d0236b8b83060f544e3dd95c91d05562d"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_queue_poll_test.go": {
+      "bytes": 17774,
+      "sha256": "7c74b10afd202b7e87100be7c733634f626cb8ce2592e9706d43762fc9ad9bf7"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_queue_run.go": {
+      "bytes": 1955,
+      "sha256": "b682309fa8c0a06b1e145f5acd39ed945ebfbb08673d6ec74295ab35d1ef5b3e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_receipt_identity_test.go": {
+      "bytes": 7361,
+      "sha256": "528308c198c1fe2881815cd03bbba86ba682dff68efe47f1c9d8683e73209220"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_signed_outcome.go": {
+      "bytes": 5934,
+      "sha256": "31bb9c16e587ba8def36399884d84766c3cf9a786147645c5789b63b48212ba8"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_signed_outcome_test.go": {
+      "bytes": 15699,
+      "sha256": "b68b44af384e20ad2d1145bbe0ba59e30c9f9e7c47a202a1eca637b9c8c26c2e"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_storage_recovery_test.go": {
+      "bytes": 14613,
+      "sha256": "46b86ce4c53d354eab6b676dc202e7468ebb6b142a4816b1d31a52c6d2eb2a40"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/miner/claim_swarm.go": {
+      "bytes": 10361,
+      "sha256": "3aa62a7cbf307f4d2bdcd1c864e8d6624f386752126147cd6cc6f1773240a213"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/protocol/claim_progress.go": {
+      "bytes": 15382,
+      "sha256": "a8c1fb000e7a043e180d7cb1cce26e85685cf124b66c2f24e4b827239ad1af9c"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/protocol/claim_progress_test.go": {
+      "bytes": 5935,
+      "sha256": "a7d33795388bb73b8a882f6addb3a10250bdd25dee1e6fbcbacce081b0afed22"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn/stabi/stsettlementvault.go": {
+      "bytes": 103485,
+      "sha256": "a6a24c294c523a5d75f3ec99fe05e21b92f9e52ca0757d569d0e9ee712001f99"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/go.mod": {
+      "bytes": 10468,
+      "sha256": "dcbc91ae9c6737a4d79921ef1f0d720352ad4bc41d26c0c9f49279d7ae662917"
+    },
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/server/go.sum": {
+      "bytes": 67462,
+      "sha256": "ff45d3706f736fa6609b043be621109911ef2fe8d2cbbf094d2965f01ddabe2a"
+    }
+  },
+  "independent_finality_verified": false,
+  "intermediate_topic_normal_fail": 1,
+  "intermediate_topic_normal_pass": 2,
+  "limitations": [
+    "Actual synthetic signed receipt reconciliation, finalized entitlement/leaf closure and API absence feed the existing queue writer. Only acknowledged retained bytes reach a bounded public ClaimSwarm endpoint; failed/pending writes do not advance its sequence or digest.",
+    "Claimed is accepted liability, not payment. ClaimPaid and ClaimPaymentDeferred use exact authoritative ABI identifiers and matching receipt coordinates; full aggregate coldkey amounts may span epochs/operators and are never allocated per pool. Malformed, duplicate, wrong-coordinate or smaller-than-accepted payment observations degrade payment reporting while preserving original finalized signed custody.",
+    "All receipt/leaf observations remain configured-RPC assertions and genesis unverified; API no-claim remains an API assertion with unknown payment. No independent native finality, code authority, economics or actual mainnet472 approval is inferred.",
+    "Public detail is at most64 entries, ordered oldest unresolved then recent terminal; full bounded-queue counts and omitted unresolved detail remain explicit. Sequence means durable acknowledgement/heartbeat, not settlement progress. Future/invalid observations are omitted without rewriting original custody; byte pressure can omit new or prior optional metadata, never signatures or operational history.",
+    "Original unchanged17cc plus test-only56c failed both actual missing-observation boundaries. Intermediateb68 retained a wrong ClaimPaid topic with two positive/one failed root. Final overlays are exact prior capacity source plus narrow prior topic/order expressions; they are not whole-old-source race runs. The prior-order overlay is refused by new complete-census validation rather than claiming an isolated old wire-format rerun.",
+    "Exact effective server10a/Connect0a5/sdk5d37 graph only;636 modules and seven local physical Git trees are captured. Later current server/module, provider98/e4 composition, independent claim monitor, contract carry/reserve/payment/native economics and full release qualification remain separate.",
+    "Tests use local synthetic keys/RPC/HTTP/files and deterministic after-sync failure/cancellation barriers. No live transaction, deployment, service activation, signing approval or current mainnet authority is performed. Normal/race scope is37 selected roots, not the full miner or protocol suite."
+  ],
+  "live_signing_authorized": false,
+  "mainnet_runtime_authorized": false,
+  "new_miner_roots": 15,
+  "new_protocol_roots": 4,
+  "normal_roots": 37,
+  "original_baseline_normal_failures": 2,
+  "phases": {
+    "before-payment-topic-normal": {
+      "exit": 1,
+      "fail": [
+        "TestClaimProgressActualReceiptRetainsAggregatePayment"
+      ],
+      "intended_failure_causes": {
+        "TestClaimProgressActualReceiptRetainsAggregatePayment": "actual ClaimPaid was lost or allocated only to this epoch"
+      },
+      "pass": [
+        "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit",
+        "TestClaimProgressPublicHandlerReportsUnknownBeforeWriterAdmission"
+      ],
+      "skip": [],
+      "source": "b68b0845f0d040886dcc09dc7b8736ff01eaff32"
+    },
+    "before-projection-normal": {
+      "exit": 1,
+      "fail": [
+        "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit",
+        "TestClaimProgressPublicHandlerReportsUnknownBeforeWriterAdmission"
+      ],
+      "intended_failure_causes": {
+        "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit": "actual finalized queue discarded accepted-credit and deferred-payment evidence",
+        "TestClaimProgressPublicHandlerReportsUnknownBeforeWriterAdmission": "actual public handler lacks bounded unknown claim projection"
+      },
+      "pass": [],
+      "skip": [],
+      "source": "56c52df03b99c4a6a2d72a698ec962a3e18b4e86"
+    },
+    "control-prior-capacity-normal": {
+      "exit": 1,
+      "fail": [
+        "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth"
+      ],
+      "intended_failure_causes": {
+        "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth": "prior monitoring metadata blocked operational growth claim queue exceeds the 16 MiB retained byte limit"
+      },
+      "pass": [
+        "TestClaimProgressCapacityCannotBlockSignedOutcome"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "control-prior-capacity-race": {
+      "exit": 1,
+      "fail": [
+        "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth"
+      ],
+      "intended_failure_causes": {
+        "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth": "prior monitoring metadata blocked operational growth claim queue exceeds the 16 MiB retained byte limit"
+      },
+      "pass": [
+        "TestClaimProgressCapacityCannotBlockSignedOutcome"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "control-prior-paid-topic-normal": {
+      "exit": 1,
+      "fail": [
+        "TestClaimProgressActualReceiptRetainsAggregatePayment"
+      ],
+      "intended_failure_causes": {
+        "TestClaimProgressActualReceiptRetainsAggregatePayment": "actual ClaimPaid was lost or allocated only to this epoch"
+      },
+      "pass": [
+        "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "control-prior-paid-topic-race": {
+      "exit": 1,
+      "fail": [
+        "TestClaimProgressActualReceiptRetainsAggregatePayment"
+      ],
+      "intended_failure_causes": {
+        "TestClaimProgressActualReceiptRetainsAggregatePayment": "actual ClaimPaid was lost or allocated only to this epoch"
+      },
+      "pass": [
+        "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "control-prior-unresolved-order-normal": {
+      "exit": 1,
+      "fail": [
+        "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat"
+      ],
+      "intended_failure_causes": {
+        "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat": "public projection does not decode: claim progress byte bound"
+      },
+      "pass": [],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "control-prior-unresolved-order-race": {
+      "exit": 1,
+      "fail": [
+        "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat"
+      ],
+      "intended_failure_causes": {
+        "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat": "public projection does not decode: claim progress byte bound"
+      },
+      "pass": [],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "neighbors-347605f-normal": {
+      "exit": 0,
+      "fail": [],
+      "intended_failure_causes": {},
+      "pass": [
+        "TestClaimClockFreshSubmitClosesFinalityBeforePublication",
+        "TestClaimClockFreshSubmitAuthenticatesReconciledReceiptIdentityAndEvent",
+        "TestClaimQueueCapacityReadAcceptsExactLimitAndRejectsExcess",
+        "TestClaimQueueCapacityReadRejectsGrowthAfterStat",
+        "TestClaimQueueCapacitySavePreservesExactLimitBytesOnExcess",
+        "TestClaimQueueCapacityPublisherRefusesExcessBeforeFileCreation",
+        "TestClaimQueueCapacityDaemonRefusesExcessBeforeNetwork",
+        "TestClaimQueueCapacitySupportsDocumentedRetainedHorizon",
+        "TestClaimQueuePollPreservesImmediateTransactionCheckpoints",
+        "TestClaimQueuePollCannotSubmitAfterIntentCheckpointFailure",
+        "TestClaimQueueStoreSkipsOnlyCurrentIdenticalBytes",
+        "TestClaimQueueStoreRefusesChangedPrivacyBeforeSkippingSave",
+        "TestClaimQueueStoreReacknowledgesPreviouslyVisibleBytes",
+        "TestSignedClaimReconcilesCanonicalReceiptWithoutHistoricalAPI",
+        "TestSignedClaimRejectsReceiptWithoutMatchingIntentEvent",
+        "TestSignedClaimMissingReceiptCannotBecomeAPINoClaim",
+        "TestClaimQueueCannotClearSignedHistoryForRetryOrNoClaim",
+        "TestClaimStorageSwarmLossDoesNotCancelSibling"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "neighbors-347605f-race": {
+      "exit": 0,
+      "fail": [],
+      "intended_failure_causes": {},
+      "pass": [
+        "TestClaimClockFreshSubmitClosesFinalityBeforePublication",
+        "TestClaimClockFreshSubmitAuthenticatesReconciledReceiptIdentityAndEvent",
+        "TestClaimQueueCapacityReadAcceptsExactLimitAndRejectsExcess",
+        "TestClaimQueueCapacityReadRejectsGrowthAfterStat",
+        "TestClaimQueueCapacitySavePreservesExactLimitBytesOnExcess",
+        "TestClaimQueueCapacityPublisherRefusesExcessBeforeFileCreation",
+        "TestClaimQueueCapacityDaemonRefusesExcessBeforeNetwork",
+        "TestClaimQueueCapacitySupportsDocumentedRetainedHorizon",
+        "TestClaimQueuePollPreservesImmediateTransactionCheckpoints",
+        "TestClaimQueuePollCannotSubmitAfterIntentCheckpointFailure",
+        "TestClaimQueueStoreSkipsOnlyCurrentIdenticalBytes",
+        "TestClaimQueueStoreRefusesChangedPrivacyBeforeSkippingSave",
+        "TestClaimQueueStoreReacknowledgesPreviouslyVisibleBytes",
+        "TestSignedClaimReconcilesCanonicalReceiptWithoutHistoricalAPI",
+        "TestSignedClaimRejectsReceiptWithoutMatchingIntentEvent",
+        "TestSignedClaimMissingReceiptCannotBecomeAPINoClaim",
+        "TestClaimQueueCannotClearSignedHistoryForRetryOrNoClaim",
+        "TestClaimStorageSwarmLossDoesNotCancelSibling"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "producer-347605f-normal": {
+      "exit": 0,
+      "fail": [],
+      "intended_failure_causes": {},
+      "pass": [
+        "TestClaimProgressCapacityCannotBlockSignedOutcome",
+        "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth",
+        "TestClaimProgressFailedDurableSaveCannotPublish",
+        "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat",
+        "TestClaimProgressFutureObservationDegradesWithoutStoppingSave",
+        "TestClaimProgressCanceledReadAndMutationCannotExposeWriterState",
+        "TestClaimProgressPaymentAmbiguityCannotRewriteSignedOutcome",
+        "TestClaimProgressUnsignedLeafCannotInventReceiptOrPayment",
+        "TestClaimProgressApiAbsenceKeepsPaymentAndGenesisUnknown",
+        "TestClaimProgressChangedFinalizedWitnessCannotPublishObservation",
+        "TestClaimProgressPublicSwarmUsesActualWriterAndJoinedLifecycle",
+        "TestClaimProgressDeclaredPoolMismatchRemainsVisible",
+        "TestClaimProgressActualReceiptRetainsAggregatePayment",
+        "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit",
+        "TestClaimProgressPublicHandlerReportsUnknownBeforeWriterAdmission"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "producer-347605f-race": {
+      "exit": 0,
+      "fail": [],
+      "intended_failure_causes": {},
+      "pass": [
+        "TestClaimProgressCapacityCannotBlockSignedOutcome",
+        "TestClaimProgressPriorOptionalMetadataYieldsToCustodyGrowth",
+        "TestClaimProgressFailedDurableSaveCannotPublish",
+        "TestClaimProgressCensusKeepsOldestAndSeparatesHeartbeat",
+        "TestClaimProgressFutureObservationDegradesWithoutStoppingSave",
+        "TestClaimProgressCanceledReadAndMutationCannotExposeWriterState",
+        "TestClaimProgressPaymentAmbiguityCannotRewriteSignedOutcome",
+        "TestClaimProgressUnsignedLeafCannotInventReceiptOrPayment",
+        "TestClaimProgressApiAbsenceKeepsPaymentAndGenesisUnknown",
+        "TestClaimProgressChangedFinalizedWitnessCannotPublishObservation",
+        "TestClaimProgressPublicSwarmUsesActualWriterAndJoinedLifecycle",
+        "TestClaimProgressDeclaredPoolMismatchRemainsVisible",
+        "TestClaimProgressActualReceiptRetainsAggregatePayment",
+        "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit",
+        "TestClaimProgressPublicHandlerReportsUnknownBeforeWriterAdmission"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "protocol-347605f-normal": {
+      "exit": 0,
+      "fail": [],
+      "intended_failure_causes": {},
+      "pass": [
+        "TestClaimProgressDecodeBoundsEntryCountAndGrammar",
+        "TestClaimProgressDecodeRejectsForgedAuthorityAndPayment",
+        "TestClaimProgressDecodeRejectsFutureOrContradictoryCensus",
+        "TestClaimProgressDecodeRetainsUnavailableAndClosedEvidence"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    },
+    "protocol-347605f-race": {
+      "exit": 0,
+      "fail": [],
+      "intended_failure_causes": {},
+      "pass": [
+        "TestClaimProgressDecodeBoundsEntryCountAndGrammar",
+        "TestClaimProgressDecodeRejectsForgedAuthorityAndPayment",
+        "TestClaimProgressDecodeRejectsFutureOrContradictoryCensus",
+        "TestClaimProgressDecodeRetainsUnavailableAndClosedEvidence"
+      ],
+      "skip": [],
+      "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f"
+    }
+  },
+  "race_roots": 37,
+  "schema": "urnetwork-claim-progress-qualification-v1",
+  "source": "347605fd1d01b5404b969602c05cf3e8c5feef9f",
+  "source_parent": "17cc30994318564b739c047907e51f1ab0d26bcc",
+  "source_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-progress/sn",
+  "tools": {
+    "/usr/local/go/bin/go": {
+      "bytes": 15434687,
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  },
+  "tree": "04199a9573b1e391062b532cf16dca2b08cfb6db",
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0,
+  "vet_packages": [
+    "./miner",
+    "./protocol"
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "binding_correction_receipt_sha256": "9ce6ac74279fa5d993ddcdb61199abd98b5bdadcf8a5c45cfed86a8d9f5ee59d",
+  "created_utc": "2026-10-02T08:05:45.209234+00:00",
+  "files_sha256": {
+    "binding-correction-receipt.json": "9ce6ac74279fa5d993ddcdb61199abd98b5bdadcf8a5c45cfed86a8d9f5ee59d",
+    "integrated-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "integrated-network-cleanup.log": "c2ebdc5ff0610f8b35b8cbee663e191f94d3144d158eb6ef3fc36c516ecbd82f",
+    "integrated-network.id": "c2ebdc5ff0610f8b35b8cbee663e191f94d3144d158eb6ef3fc36c516ecbd82f",
+    "integrated-network.owner": "2b5026714c51ab302a28f20894ab41c27be7ba84b1c5f8a8c5d6adb9b06c831b",
+    "integrated-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "integrated-normal.jsonl": "172edf633d0f3f355760bfb693fb12ce129d543ba4fad13399ee9bab47b7cd4e",
+    "integrated-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "integrated-race.jsonl": "b64a99010273f29a0f89cdbb4a0c8835a619c4ee5c0427cd121fe8ab4ff5f0e3",
+    "integrated-results.json": "0742924d9e2e651e70e531f14ab3f9111bcd641b95959205410f41bf1f54dfa8",
+    "integrated-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "integrated-runner.log": "0fc6bb92ea4ffb40f662347a6274a440900ddd129d8af648343cbabc4475c7bc",
+    "integrated-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "integrated-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "integrated-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "integrated-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "integrated-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "integrated-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "integrated-vet.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run_integrated.py": "5b1d846193176cf04fdb16278ffd74ae0c1b96a35de57c8b81fb9c024c660aad",
+    "run_private_stage-integrated.sh": "0464d6d265c73a2f7d5274fa24020d890258791c818923ada41c2871a972686f",
+    "source/server-fixture/model/contract_stats_model_test.go": "3d7f660cb79b8ed171913cb8c6058c927efe86926f733d99f170408ccaf6e8ca",
+    "source/server-integrated/model/contract_stats_model_test.go": "3d7f660cb79b8ed171913cb8c6058c927efe86926f733d99f170408ccaf6e8ca"
+  },
+  "limits": "Eight affected model roots only on integrated server0739; no full model suite or new upstream 15-file qualification. No production DB or network effects.",
+  "normal": {
+    "census_pass": true,
+    "command": [
+      "go",
+      "test",
+      "-json",
+      "-count=1",
+      "-parallel=2",
+      "-timeout=25m",
+      "-run",
+      "^(TestContractStatsFixtureRetainsExplicitZeroSettlement|TestCountOpenContracts|TestContractHourWindowCountsAndCache|TestContractHourBucketSettles|TestContractHourBucketsAreSharedAcrossWindows|TestOpenContractStatsCapsLargePopulation|TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership|TestOpenContractStatsKeepsExactSmallPopulation)$",
+      "./model"
+    ],
+    "exit": 0,
+    "failed": [],
+    "mode": "normal",
+    "passed": [
+      "TestContractHourBucketSettles",
+      "TestContractHourBucketsAreSharedAcrossWindows",
+      "TestContractHourWindowCountsAndCache",
+      "TestContractStatsFixtureRetainsExplicitZeroSettlement",
+      "TestCountOpenContracts",
+      "TestOpenContractStatsCapsLargePopulation",
+      "TestOpenContractStatsKeepsExactSmallPopulation",
+      "TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership"
+    ],
+    "run": [
+      "TestContractHourBucketSettles",
+      "TestContractHourBucketsAreSharedAcrossWindows",
+      "TestContractHourWindowCountsAndCache",
+      "TestContractStatsFixtureRetainsExplicitZeroSettlement",
+      "TestCountOpenContracts",
+      "TestOpenContractStatsCapsLargePopulation",
+      "TestOpenContractStatsKeepsExactSmallPopulation",
+      "TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership"
+    ],
+    "skipped": []
+  },
+  "owned_network_removed": true,
+  "prior_distinct_receipts": {
+    "a3fc_fixture_repair_sha256": "dc951c14366b4afac730ecbc8e68606c23c008c1dac4edaff0cea924d2d7ba4e",
+    "original_025_full_model_failed_sha256": "4e580a88539860f503f8ac0f0d77a3978634c731a9ce5a3dd18565c7a6e92373"
+  },
+  "private_fixture_cleanup_exit": 0,
+  "race": {
+    "census_pass": true,
+    "command": [
+      "go",
+      "test",
+      "-json",
+      "-count=1",
+      "-parallel=2",
+      "-timeout=25m",
+      "-race",
+      "-run",
+      "^(TestContractStatsFixtureRetainsExplicitZeroSettlement|TestCountOpenContracts|TestContractHourWindowCountsAndCache|TestContractHourBucketSettles|TestContractHourBucketsAreSharedAcrossWindows|TestOpenContractStatsCapsLargePopulation|TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership|TestOpenContractStatsKeepsExactSmallPopulation)$",
+      "./model"
+    ],
+    "exit": 0,
+    "failed": [],
+    "mode": "race",
+    "passed": [
+      "TestContractHourBucketSettles",
+      "TestContractHourBucketsAreSharedAcrossWindows",
+      "TestContractHourWindowCountsAndCache",
+      "TestContractStatsFixtureRetainsExplicitZeroSettlement",
+      "TestCountOpenContracts",
+      "TestOpenContractStatsCapsLargePopulation",
+      "TestOpenContractStatsKeepsExactSmallPopulation",
+      "TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership"
+    ],
+    "run": [
+      "TestContractHourBucketSettles",
+      "TestContractHourBucketsAreSharedAcrossWindows",
+      "TestContractHourWindowCountsAndCache",
+      "TestContractStatsFixtureRetainsExplicitZeroSettlement",
+      "TestCountOpenContracts",
+      "TestOpenContractStatsCapsLargePopulation",
+      "TestOpenContractStatsKeepsExactSmallPopulation",
+      "TestOpenContractStatsSamplesNewestRowsBeforeExtenderMembership"
+    ],
+    "skipped": []
+  },
+  "runner_used_bytes_sha256": "0464d6d265c73a2f7d5274fa24020d890258791c818923ada41c2871a972686f",
+  "schema": "sol-independent-server-integrated-model-fixture-v1",
+  "source": {
+    "clean_physical_no_alternates": true,
+    "go_mod_sum_unchanged_from_parent": true,
+    "matches_preintegration_test_file_sha256": "3d7f660cb79b8ed171913cb8c6058c927efe86926f733d99f170408ccaf6e8ca",
+    "only_changed_file": "model/contract_stats_model_test.go",
+    "parent": "2bbea1f128e0d87b65266cf688e9175542819916",
+    "server_commit": "0739cab5b74f5d0defcfd17c9194277842dfc521",
+    "server_tree": "910e98d2185436918ec9572425a7580e84e78a65",
+    "test_file_sha256": "3d7f660cb79b8ed171913cb8c6058c927efe86926f733d99f170408ccaf6e8ca"
+  },
+  "verdict": "PASS_SCOPED",
+  "vet_exit": 0
+}

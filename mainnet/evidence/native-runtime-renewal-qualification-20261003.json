@@ -1,0 +1,139 @@
+{
+  "artifact_sha256": {
+    "affected16-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "affected16-normal.jsonl": "7c2a01a17268cf908edb4b277bba963396c214398d67346e77e314284fe20599",
+    "affected16-normal.phase": "22ff794cd7d58886251dfeb05c93fb15f5918a75d8b799a61b304e0ae3d3c372",
+    "affected16-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "affected16-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "affected16-race.jsonl": "49da16edd883aa4b583f76d9c7ec0bc0a8fbb7695620a01ced4e9c379bc0458d",
+    "affected16-race.phase": "c5732c44425b862aa5a367240f223b07688a3d84381e4dc6f95a9ca2c906d2e6",
+    "affected16-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "08e49978b1d5ab43d3f840f22408e99e4fe01edd36d25668ee830aee76387926",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "new10-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "new10-normal.jsonl": "1bac8f762f386a31a4677491db6fb2b508b48a37ad4ad21ac7ae4c75e88130cc",
+    "new10-normal.phase": "57738d14ff8cc43929a5e3e5ec2bd275125b54bf63f3e31b34e85d5ff23fc717",
+    "new10-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "new10-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "new10-race.jsonl": "95a644f3f3f44be4c9b93aa8e72560f525cb0b90980545818287f407218a98cd",
+    "new10-race.phase": "2f44cfe8216cbed863016422ed1fb9bef0632ae5522b07e129a7ba10d84b1a0f",
+    "new10-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-selected.sh": "f96d51bbe59b84cccba48a785f665c9ddd7b97bdab1bd3098f2dbf56018f7afb",
+    "selector-affected16.txt": "b5fba1c9f9e4e5e543d6d1651eeb51c926f4aa13475c044832c321996dec6106",
+    "selector-new10.txt": "49203549116de74890c12d699f4408dd4a317ae70c23087f43804c9ab6aab595",
+    "sn.mod": "fd1139eed13f949e76c3f03f62249ad07081d8257264087e9527e36c76890bef",
+    "sn.sum": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5",
+    "source-readback.json": "bae4ac2aacd92a2ce510f39c6dec7719990194cb9d09e2c1b6428b046d20e80e",
+    "vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "classification": "PASS_SCOPED",
+  "intake_sha256": "0f10c8aa66bf434b20a808a66e1b5ebc40669811b2ce62b17101d4ed9c061565",
+  "limits": [
+    "Selected ten new and sixteen affected roots only; author broader scope not inherited.",
+    "Operative causal overlays and old-grammar control are not included in this receipt.",
+    "No current module graph, device, signing, or deployment qualification."
+  ],
+  "module_graph_exit": 0,
+  "package": "./mainnet",
+  "physical_git_blobs_verified": 20221,
+  "root_verification": {
+    "artifact_bindings_rehashed": 28,
+    "distinct_roots_per_mode": 26,
+    "exit_markers_verified": true,
+    "raw_fail_skip_count": 0,
+    "raw_pass_census": {
+      "affected16-normal": 16,
+      "affected16-race": 16,
+      "new10-normal": 10,
+      "new10-race": 10
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-economic-native-renewal-881-independent-20261003/evidence/native-881-product26-receipt.json",
+    "receipt_sha256": "862aac7890fe448c52ae8024ce344260b6d38afaab8e27d394fdbc87f6789d25"
+  },
+  "schema": "sol-economic-native-881-product26-v1",
+  "selection": {
+    "affected16-normal": {
+      "package_elapsed_seconds": 22.289,
+      "passed_roots": [
+        "TestEconomicEmissionCollectsContiguousEvidenceWithoutClaimingTarget",
+        "TestEconomicEmissionRejectsChangedMetadataSemantics",
+        "TestEconomicEmissionRejectsGenerationChangeAndUnapprovedMechanism",
+        "TestEconomicEmissionUsesParentRuntimeAndRetainsEventsAtUnknownUpgrade",
+        "TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard",
+        "TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage",
+        "TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit",
+        "TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping",
+        "TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage",
+        "TestMonitorEconomicNativePublicPartialOutageKeepsCursorUntilRecovery",
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees",
+        "TestOwnerTrimReceiptCanonicalFinancialOutcomeSurvivesCensusGap",
+        "TestRootReceiptCanonicalInclusion",
+        "TestRootReceiptConstructionAuthorityBounds",
+        "TestRootReceiptRejectsAdjacentAccountAndFeeWidthDrift",
+        "TestRootReceiptUpgradeUsesParentAndRetainsUnapprovedHead"
+      ],
+      "root_count": 16
+    },
+    "affected16-race": {
+      "package_elapsed_seconds": 146.843,
+      "passed_roots": [
+        "TestEconomicEmissionCollectsContiguousEvidenceWithoutClaimingTarget",
+        "TestEconomicEmissionRejectsChangedMetadataSemantics",
+        "TestEconomicEmissionRejectsGenerationChangeAndUnapprovedMechanism",
+        "TestEconomicEmissionUsesParentRuntimeAndRetainsEventsAtUnknownUpgrade",
+        "TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard",
+        "TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage",
+        "TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit",
+        "TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping",
+        "TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage",
+        "TestMonitorEconomicNativePublicPartialOutageKeepsCursorUntilRecovery",
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees",
+        "TestOwnerTrimReceiptCanonicalFinancialOutcomeSurvivesCensusGap",
+        "TestRootReceiptCanonicalInclusion",
+        "TestRootReceiptConstructionAuthorityBounds",
+        "TestRootReceiptRejectsAdjacentAccountAndFeeWidthDrift",
+        "TestRootReceiptUpgradeUsesParentAndRetainsUnapprovedHead"
+      ],
+      "root_count": 16
+    },
+    "new10-normal": {
+      "package_elapsed_seconds": 12.669,
+      "passed_roots": [
+        "TestMonitorEconomicRuntimeCatalogCapacityCanGrowWithoutHistoryLoss",
+        "TestMonitorEconomicRuntimeDecodedCacheIsBoundedAndCancellationJoins",
+        "TestMonitorEconomicRuntimeLiteral00dCheckpointKeepsChecksumAndHistory",
+        "TestMonitorEconomicRuntimePublicOldCheckpointUsesLargerOwnedBudget",
+        "TestMonitorEconomicRuntimePublicRenewalRetainsCursorAndPeers",
+        "TestMonitorEconomicRuntimePublicUpgradeKeepsExecutionAndPostState",
+        "TestMonitorEconomicRuntimePurposeRenewalDoesNotBorrowSigning",
+        "TestMonitorEconomicRuntimeRenewalAcknowledgesOnlyDurableSettings",
+        "TestMonitorEconomicRuntimeRestartRefusesReviewAndCapacityReplacement",
+        "TestMonitorEconomicRuntimeReviewsAreBoundedAndMonotonic"
+      ],
+      "root_count": 10
+    },
+    "new10-race": {
+      "package_elapsed_seconds": 81.171,
+      "passed_roots": [
+        "TestMonitorEconomicRuntimeCatalogCapacityCanGrowWithoutHistoryLoss",
+        "TestMonitorEconomicRuntimeDecodedCacheIsBoundedAndCancellationJoins",
+        "TestMonitorEconomicRuntimeLiteral00dCheckpointKeepsChecksumAndHistory",
+        "TestMonitorEconomicRuntimePublicOldCheckpointUsesLargerOwnedBudget",
+        "TestMonitorEconomicRuntimePublicRenewalRetainsCursorAndPeers",
+        "TestMonitorEconomicRuntimePublicUpgradeKeepsExecutionAndPostState",
+        "TestMonitorEconomicRuntimePurposeRenewalDoesNotBorrowSigning",
+        "TestMonitorEconomicRuntimeRenewalAcknowledgesOnlyDurableSettings",
+        "TestMonitorEconomicRuntimeRestartRefusesReviewAndCapacityReplacement",
+        "TestMonitorEconomicRuntimeReviewsAreBoundedAndMonotonic"
+      ],
+      "root_count": 10
+    }
+  },
+  "source_commit": "881b967a5670931f70e9bda72a3b636838b1a70c",
+  "source_path": "/mnt/data/sn-testnet/sol-economic-native-renewal-881-independent-20261003/source/sn",
+  "source_tree": "ffc9eabd4c18067bca705f931d92108074358509",
+  "vet_exit": 0
+}

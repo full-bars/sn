@@ -1,0 +1,49 @@
+{
+  "schema": "native-vault-capture-d039-partial-source-root-review-v1",
+  "status": "SELECTED_SOURCE_PATHS_REVIEWED_EXECUTION_PENDING",
+  "source_head": "d039fe283054d64dc749c600224a70f65ee1d463",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-join/sn/mainnet/economic_conservation_capture_effects.go",
+      "bytes": 12142,
+      "sha256": "795ac3408ae0b716adfd3ddb360b5a7521eedefbf245dc3467b3fbd3ba8c00a1",
+      "relative": "mainnet/economic_conservation_capture_effects.go"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-join/sn/mainnet/monitor_economic_evm_capture.go",
+      "bytes": 2822,
+      "sha256": "d57721a19bf51a87436016be9897246bc54c1a177638d2bdc64d6cdefa2a9bbb",
+      "relative": "mainnet/monitor_economic_evm_capture.go"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-join/sn/mainnet/economic_conservation_capture_test.go",
+      "bytes": 15396,
+      "sha256": "b2fc058078676894edcb2542438f92f8c5cd4fd0a43e64a8eba2d725f422cf2b",
+      "relative": "mainnet/economic_conservation_capture_test.go"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-join/sn/mainnet/economic_conservation_capture_fixture_test.go",
+      "bytes": 12564,
+      "sha256": "5760aa4eff03945308c7dcf09e62a25cbcd47615afc48d1157763eef353b2d8b",
+      "relative": "mainnet/economic_conservation_capture_fixture_test.go"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/native-vault-capture-join/sn/tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "bytes": 3193,
+      "sha256": "5243f105e40992874ecdb963acd5125fc92b5a66a78e4fadfe7f97031897388d",
+      "relative": "tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs"
+    }
+  ],
+  "review": [
+    "Full read of causal capture derivation and pinned identity getter; receipt identity, native block, transaction hash, extrinsic hash/index, pool hotkey/coldkey/netuid and mutation ordinal remain distinct requirements.",
+    "Opening stock plus deposits plus refunds minus withdrawals plus liquid earnings must reproduce captured stock. Stock is not counted as fresh earnings; unknown intermediate causes, missing executions or receipts remain incomplete.",
+    "Read full public capture tests and actual vault bytecode fixture. Signed transaction uses core.ApplyMessage with StateDB journal, real contract accounting revert and successful/failed receipt census. Runtime precompiles remain explicitly synthetic.",
+    "Read complete Rust capture exporter; it independently runs original capture and replay, checks committed/discarded mutations and actual transaction bytes from encoded body.",
+    "Read integration diffs relative to726: archive retains original principal inputs for lagging vault pages; unknown suffix stays hot; failed receipts cannot retain committed logs."
+  ],
+  "remaining": [
+    "This supplements source review only; it is not a complete26-file source review or a passing23-root normal/race scope.",
+    "Repeated same-pool captures within a native block and next-block capture after prior archive retirement need adjacent public coverage; implementation agent notified.",
+    "Capacity, entitlement/funding and final runtime/finality authority remain open."
+  ]
+}

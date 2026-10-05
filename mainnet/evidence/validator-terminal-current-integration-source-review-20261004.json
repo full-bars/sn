@@ -1,0 +1,31 @@
+{
+  "schema": "validator-terminal-current-integration-root-source-review-v1",
+  "status": "EXACT_QUALIFIED_DELTA_JOINED_CURRENT_GRAPH_QUALIFICATION_PENDING",
+  "head": "e9b274ee64fcd5533d163e40063800117e39a922",
+  "base": "f43e466244cbf470081565a0aeb74aa540177a2e",
+  "qualified_component": "b6f05dc5df9ef84898b25d6aac47ebdb0a04e27a",
+  "bindings": [
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/validator-terminal-current/sn",
+      "head": "e9b274ee64fcd5533d163e40063800117e39a922",
+      "relative": "validator/release_archive_decision_v2.go",
+      "blob": "4efb98afc8da1fc701691ae7d8a430ead9802ab0",
+      "bytes": 18806,
+      "sha256": "78dc49519f12c9532cbb073de99c9063708ffe1aa53ea9e60f0e99cdf277e5f9"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/validator-terminal-current/sn",
+      "head": "e9b274ee64fcd5533d163e40063800117e39a922",
+      "relative": "validator/release_archive_terminal_custody_test.go",
+      "blob": "896032c43921ce0dfba2a0cc0f492b73e3cb0e0d",
+      "bytes": 5322,
+      "sha256": "812371ec2ce0b0280debcce4dfd403f924c3eff9802ad925fbfc12f03f18f275"
+    }
+  ],
+  "review": [
+    "Read full isolated two-path terminal custody delta/test source; both exact file bytes equal qualifiedb6. All other Git tree entries unchanged from base because exact diff contains only those two paths.",
+    "Current tracked module bytes unchanged; Core2ea and validator artifact package differ from original qualified c618 graph. Current affected-root normal/race and vet requested before publishing this integration.",
+    "Owner.check after decode refuses canceled/replaced custody, returns no terminal and avoids rereading historical payload; healthy independent owner remains usable."
+  ],
+  "limits": "Current-graph execution not complete. Original selected14+six controls/mode qualified elsewhere; no broader release or whole requirement closure."
+}

@@ -1,0 +1,153 @@
+{
+  "schema": "funding72-selected-mathematics-source-review-v1",
+  "status": "SELECTED_IMMUTABLE_SOURCE_REVIEW_EXECUTION_PENDING_CUSTODY_SUCCESSOR_REQUIRED",
+  "head": "72c166c5c23231dc79043792c1840975c6459b3c",
+  "bindings": [
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-composition/sn",
+      "head": "72c166c5c23231dc79043792c1840975c6459b3c",
+      "relative": "mainnet/economic_conservation_conformance.go",
+      "blob": "41b54f32163109f1b60b3e630670311899d1386b",
+      "bytes": 8705,
+      "sha256": "02de1d5a071716029b92dcc9bce8b72cd5861f20efdecda7e479ad2ca17f8917"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-composition/sn",
+      "head": "72c166c5c23231dc79043792c1840975c6459b3c",
+      "relative": "mainnet/economic_conservation_funding.go",
+      "blob": "15228c1b0bcaa9d8b7b4ef7d5cf38e32046b9f8d",
+      "bytes": 18763,
+      "sha256": "83e252a581958012e602d87e7117b55fc3139102f9664c365fa860b9384259ec"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-composition/sn",
+      "head": "72c166c5c23231dc79043792c1840975c6459b3c",
+      "relative": "mainnet/economic_conservation_funding_archive.go",
+      "blob": "f21ec3a7e964d9d528c7d7f9740835001a3ce653",
+      "bytes": 4183,
+      "sha256": "f42d2de904bf83f7860fad269152283601f10ee2b0a54e0d41153e472898366c"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-composition/sn",
+      "head": "72c166c5c23231dc79043792c1840975c6459b3c",
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "blob": "0ceacb053d6c654585f7ea1d4213a7518b5323f4",
+      "bytes": 13878,
+      "sha256": "d5316a8f13b6c11bd92828bfa47135147c16cfa37d7b260f7d4b8c195acda6b4"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-funding-composition/sn",
+      "head": "72c166c5c23231dc79043792c1840975c6459b3c",
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "blob": "063bd1cebec371214d933c7e6cdd588c70125e19",
+      "bytes": 21738,
+      "sha256": "1595e4d4483d18ea205895a43116d2f55d1e13f33a55ff768801f54f7b99c3cf"
+    }
+  ],
+  "declared_selected_roots": [
+    {
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "line": 24,
+      "name": "TestEconomicFundingWithdrawalAndPartialCreditDoNotInventColoring"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "line": 51,
+      "name": "TestEconomicFundingMissingOpeningCreditRemainsUnknown"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "line": 77,
+      "name": "TestEconomicFundingCanceledAndDuplicateCensusNeverBuildsAuthority"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "line": 105,
+      "name": "TestEconomicFundingCarryRetainsOriginalEpochAndPool"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "line": 141,
+      "name": "TestEconomicFundingNativeSplitUsesCompleteDenominatorAndExactTolerance"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "line": 157,
+      "name": "TestEconomicFundingDefiniteCapitalConsumptionIsNotUnknownConformance"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "line": 174,
+      "name": "TestEconomicFundingConformanceRefreshDropsStaleAcceptanceAndFeeProjection"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "line": 219,
+      "name": "TestEconomicFundingUnclassifiedRecipientWithValidOwnerRemainsUnknown"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_test.go",
+      "line": 236,
+      "name": "TestEconomicFundingFullToleranceDoesNotDoubleCountFinalStage"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "line": 28,
+      "name": "TestEconomicFundingPublicActualCaptureDoesNotEarnOpeningStock"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "line": 43,
+      "name": "TestEconomicFundingPublicActualWithdrawalKeepsSourceBoundsThroughArchive"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "line": 67,
+      "name": "TestEconomicFundingPublicSameBlockDepositCannotRepeatNativeIncome"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "line": 87,
+      "name": "TestEconomicFundingPublicNextBlockKeepsOriginalIncomeAcrossRetirement"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "line": 194,
+      "name": "TestEconomicFundingPublicOriginalIncomeFundsLaterAuthorizedPayment"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "line": 265,
+      "name": "TestEconomicFundingPublicMissedRootPaysOriginalStockWithoutEarningItAgain"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "line": 303,
+      "name": "TestEconomicFundingPublicLostAckRetainsPaidSourceComposition"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "line": 329,
+      "name": "TestEconomicFundingPublicSelfSealedCaptureCannotAuthorizeCapitalIncome"
+    },
+    {
+      "relative": "mainnet/economic_conservation_funding_public_test.go",
+      "line": 358,
+      "name": "TestEconomicFundingPublicCompleteYumaComparesOriginalTenNinety"
+    }
+  ],
+  "reviewed_scope": [
+    "Complementary integer income/non-income bounds, fungible subset withdrawals and additive unique source accounting.",
+    "Original capture, pool and epoch identity; bounded/cancellable source resolution; original carried obligations and whole-credit transfers.",
+    "Conformance distinguishes observed contradiction from missing measurements, finality, fee census and recipient classification.",
+    "Complete arithmetic tolerance is consumed once; final-stage diagnostic is not added again. Summary reassessment resets target, fee and source projections.",
+    "Complete249-line ordinary test file and367-line public test file: independent expected ranges, original capture/replay, synthetic owned EVM authority, paid credits, cold retirement, signed root distinction, lost ACK and forged checkpoint refusal."
+  ],
+  "declared_public_limits": "Actual original Wasm/source execution remains to be exercised. Synthetic receipt/commitment fixtures do not establish independent production finality or measurements. Internal projection booleans appear only in a refresh unit baseline, not as public authority.",
+  "remaining_reviews": [
+    "Narrow child adds public funding owner/context before-and-after fences; original72 preserved.",
+    "Trace candidate isolation of shared funding maps through fee retirement and later refused archive adoption.",
+    "Full original provider measurement, independent vault finality and complete provider fee producers remain required to make truthful positive whole conformance reachable."
+  ],
+  "limits": "Selected source review, not all twelve changed files, frozen intake, compiler/test result, complete producer join or launch readiness."
+}

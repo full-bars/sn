@@ -17,6 +17,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/urfoundation/sn/internal/durablepath"
+	"github.com/urnetwork/connect/durablevolume"
 	"io"
 	"os"
 	"path/filepath"
@@ -102,6 +104,7 @@ type attemptRecordStore struct {
 	head       attemptRecordStoreHead
 	db         *leveldb.DB
 	disk       *attemptRecordStoreStorage
+	custody    *attemptLedgerCustody
 }
 
 // Opens a single-owner private namespace. Reopen verifies records and the
@@ -117,12 +120,18 @@ func openAttemptRecordStoreWithHooks(ctx context.Context, path string, identity 
 
 // Migration passes its already opened parent root; no pathname re-resolution
 // can redirect the database away from the state-directory migration gate.
-func openAttemptRecordStoreWithParent(ctx context.Context, path string, identity AttemptLedgerIdentity, coordinator string, vpk ed25519.PublicKey, bounds attemptRecordStoreBounds, hooks attemptRecordStoreHooks, parent *os.Root) (*attemptRecordStore, error) {
+func openAttemptRecordStoreWithParent(ctx context.Context, path string, identity AttemptLedgerIdentity, coordinator string, vpk ed25519.PublicKey, bounds attemptRecordStoreBounds, hooks attemptRecordStoreHooks, parent *os.Root, custodies ...*attemptLedgerCustody) (*attemptRecordStore, error) {
+	if len(custodies) > 1 {
+		return nil, errors.New("attempt record store custody is ambiguous")
+	}
 	if ctx == nil || ctx.Err() != nil {
 		return nil, errors.New("attempt record store opening context is unavailable")
 	}
 	if len(vpk) != ed25519.PublicKeySize || validateAttemptLedgerIdentity(identity, vpk) != nil {
 		return nil, errors.New("attempt record store identity is invalid")
+	}
+	if err := requireAttemptDurableReference(ctx, identity); err != nil {
+		return nil, err
 	}
 	address, err := hex.DecodeString(strings.TrimPrefix(coordinator, "0x"))
 	if err != nil || len(address) != 20 || coordinator != "0x"+hex.EncodeToString(address) || bytes.Equal(address, make([]byte, 20)) {
@@ -137,11 +146,14 @@ func openAttemptRecordStoreWithParent(ctx context.Context, path string, identity
 		identity: attemptRecordStoreIdentity{Schema: attemptStoreSchema, Identity: identity, Coordinator: coordinator},
 		vpk:      append(ed25519.PublicKey(nil), vpk...), bounds: bounds,
 	}
+	if len(custodies) == 1 {
+		self.custody = custodies[0]
+	}
 	var disk *attemptRecordStoreStorage
 	if parent == nil {
-		disk, err = openAttemptRecordStoreStorage(path, bounds, hooks, self.latchFault)
+		disk, err = openAttemptRecordStoreStorage(path, bounds, hooks, self.latchFault, ctx)
 	} else {
-		disk, err = openAttemptRecordStoreStorageAt(parent, path, bounds, hooks, self.latchFault)
+		disk, err = openAttemptRecordStoreStorageAt(parent, path, bounds, hooks, self.latchFault, ctx)
 	}
 	if err != nil {
 		cancel()
@@ -150,6 +162,7 @@ func openAttemptRecordStoreWithParent(ctx context.Context, path string, identity
 	self.disk = disk
 	db, err := leveldb.Open(disk, &opt.Options{
 		Strict: opt.StrictAll, BlockCacheCapacity: 8 * 1024 * 1024, WriteBuffer: 4 * 1024 * 1024,
+		ErrorIfMissing:      self.custody != nil,
 		CompactionTableSize: 2 * 1024 * 1024, CompactionTableSizeMultiplier: 1,
 		OpenFilesCacheCapacity: 64, DisableLargeBatchTransaction: true,
 	})
@@ -159,6 +172,9 @@ func openAttemptRecordStoreWithParent(ctx context.Context, path string, identity
 	}
 	self.db = db
 	if err := self.openContents(ctx); err != nil {
+		return nil, errors.Join(err, self.Close())
+	}
+	if err := self.custody.reconcile(ctx, self); err != nil {
 		return nil, errors.Join(err, self.Close())
 	}
 	return self, nil
@@ -202,12 +218,22 @@ func (self *attemptRecordStore) check(ctx context.Context) error {
 		return err
 	}
 	self.stateLock.Lock()
-	defer self.stateLock.Unlock()
-	if self.closing {
+	closing, fault := self.closing, self.fault
+	self.stateLock.Unlock()
+	if closing {
 		return errAttemptRecordStoreClosed
 	}
-	if self.fault != nil {
-		return errors.Join(errAttemptRecordStoreFaulted, self.fault)
+	if fault != nil {
+		return errors.Join(errAttemptRecordStoreFaulted, fault)
+	}
+	if err := self.disk.step("read-admission", ""); err != nil {
+		return err
+	}
+	if err := self.custody.check(ctx); err != nil {
+		if errors.Is(err, durablevolume.ErrIdentity) {
+			self.latchFault(err)
+		}
+		return err
 	}
 	return nil
 }
@@ -288,19 +314,26 @@ func attemptStoreCheckLifecycle(pending map[connect.Id]AttemptRecord, terminal m
 // DeploymentID may require six output bytes per input byte when JSON-escaped;
 // this bounded factor precedes the exact MaxRecordBytes check. These checks
 // do not replace the subsequent record hash and signature verification.
-func (self *attemptRecordStore) encodeRecord(record AttemptRecord) ([]byte, error) {
+func (self *attemptRecordStore) checkRecordShape(record AttemptRecord) error {
 	if record.Identity != self.identity.Identity || record.M < connect.VerifyMMin || record.M > connect.VerifyMMax || len(record.Assignments) == 0 || len(record.Assignments) >= record.M || len(record.ServerNonce) != connect.VerifyNonceSize || len(record.VPK) != ed25519.PublicKeySize || len(record.Signature) != ed25519.SignatureSize || len(record.RecordHash) != 66 || len(record.PreviousHash) != 66 || len(record.Boundary.EVMBlockHash) != 66 || len(record.Schema) > 128 || len(record.Disposition) > 64 {
-		return nil, errors.New("attempt record store record shape is invalid")
+		return errors.New("attempt record store record shape is invalid")
 	}
 	for _, assignment := range record.Assignments {
 		if len(assignment.Trail) >= record.M || len(assignment.AssignMessage) > 1024 || len(assignment.AssignSignature) != ed25519.SignatureSize || len(assignment.Binding.FleetID) != 66 || len(assignment.Binding.Hotkey) != 66 {
-			return nil, errors.New("attempt record store assignment shape is invalid")
+			return errors.New("attempt record store assignment shape is invalid")
 		}
 	}
 	if proof := record.Proof; proof != nil {
 		if len(proof.Hops) != record.M || len(proof.ServerNonce) != connect.VerifyNonceSize || len(proof.Vpk) != ed25519.PublicKeySize || len(proof.FinalSig) != ed25519.SignatureSize || len(proof.VerifierSig) != ed25519.SignatureSize || len(proof.VpkSig) != ed25519.SignatureSize || len(proof.FinalDigest) != 32 || len(proof.PathId) != 32 {
-			return nil, errors.New("attempt record store proof shape is invalid")
+			return errors.New("attempt record store proof shape is invalid")
 		}
+	}
+	return nil
+}
+
+func (self *attemptRecordStore) encodeRecord(record AttemptRecord) ([]byte, error) {
+	if err := self.checkRecordShape(record); err != nil {
+		return nil, err
 	}
 	raw, err := json.Marshal(&record)
 	if err != nil {
@@ -321,13 +354,15 @@ func (self *attemptRecordStore) decodeRecord(raw []byte) (AttemptRecord, error) 
 	if err := attemptStoreDecode(raw, &record); err != nil {
 		return record, err
 	}
-	if _, err := self.encodeRecord(record); err != nil {
+	if err := self.checkRecordShape(record); err != nil {
 		return record, err
 	}
 	if err := verifyAttemptRecord(&record, self.identity.Identity, self.vpk, nil, false); err != nil {
 		return record, err
 	}
-	if self.disk.hooks.Step != nil {
+	// Public preparation verifies retained bytes through a read-only backend;
+	// it has no writable storage owner or optional write-owner observation hook.
+	if self.disk != nil && self.disk.hooks.Step != nil {
 		if err := self.disk.step("decode-record", strconv.Itoa(len(raw))); err != nil {
 			return record, err
 		}
@@ -335,9 +370,11 @@ func (self *attemptRecordStore) decodeRecord(raw []byte) (AttemptRecord, error) 
 	return record, nil
 }
 
-// Missing an in-range record is corruption, not an empty successful read.
+// Missing an in-range record is corruption, not an empty successful read. The
+// existing bounded cache shares decompressed blocks for adjacent checkpoints
+// during the otherwise random trail-order replay.
 func (self *attemptRecordStore) readRecord(sequence uint64) (AttemptRecord, error) {
-	raw, err := self.db.Get(attemptStoreRecordKey(sequence), &opt.ReadOptions{DontFillCache: true, Strict: opt.StrictAll})
+	raw, err := self.db.Get(attemptStoreRecordKey(sequence), &opt.ReadOptions{Strict: opt.StrictAll})
 	if err != nil {
 		return AttemptRecord{}, err
 	}
@@ -352,6 +389,9 @@ func (self *attemptRecordStore) readRecord(sequence uint64) (AttemptRecord, erro
 func (self *attemptRecordStore) openContents(ctx context.Context) error {
 	raw, err := self.db.Get([]byte("identity"), nil)
 	if errors.Is(err, leveldb.ErrNotFound) {
+		if self.custody != nil {
+			return attemptLedgerCustodyLoss("guarded attempt database lost its initialized identity", err)
+		}
 		iterator := self.db.NewIterator(nil, &opt.ReadOptions{DontFillCache: true, Strict: opt.StrictAll})
 		nonempty := iterator.Next()
 		iterateErr := iterator.Error()
@@ -391,9 +431,11 @@ func (self *attemptRecordStore) openContents(ctx context.Context) error {
 	return self.check(ctx)
 }
 
-// Two ordered scans verify the global chain and each complete trail history
-// without retaining either collection. Marker identity and exact counts make
-// record -> marker -> terminal/pending state a bijection, not a count heuristic.
+// Ordered scans verify the global chain and each complete trail history without
+// retaining either collection. The first pass reads only chain headers; the
+// exact marker bijection fully decodes and authenticates every record once in
+// the second pass. No result is admitted until both passes and the key census
+// succeed against this exclusively owned database.
 func (self *attemptRecordStore) verifyContents(ctx context.Context) error {
 	if self.head.LastSequence > self.bounds.MaxRecordCount || self.head.RecordBytes > self.bounds.MaxRawRecordBytes || self.head.TrailCount > self.bounds.MaxTrailCount {
 		return errAttemptRecordStoreLimit
@@ -412,7 +454,19 @@ func (self *attemptRecordStore) verifyContents(ctx context.Context) error {
 			return errors.New("attempt record store record sequence is incomplete")
 		}
 		raw := iterator.Value()
-		record, err := self.decodeRecord(raw)
+		if uint64(len(raw)) > self.bounds.MaxRecordBytes {
+			iterator.Release()
+			return fmt.Errorf("%w: stored record bytes", errAttemptRecordStoreLimit)
+		}
+		// This is only a chain projection, never independent authority. Full
+		// canonical JSON, shape, identity, hash and signature validation follows
+		// through each unique exact trail marker below, including skipped fields.
+		var record struct {
+			Sequence     uint64 `json:"sequence"`
+			PreviousHash string `json:"previous_hash"`
+			RecordHash   string `json:"record_hash"`
+		}
+		err := json.Unmarshal(raw, &record)
 		if err != nil || record.Sequence != count+1 || record.PreviousHash != root || uint64(len(raw)) > self.bounds.MaxRawRecordBytes-recordBytes {
 			iterator.Release()
 			return errors.Join(errors.New("attempt record store record chain differs"), err)
@@ -595,14 +649,36 @@ func (self *attemptRecordStore) Append(ctx context.Context, record AttemptRecord
 	if err := self.disk.step("before-batch", ""); err != nil {
 		return err
 	}
+	// Reserve refusal before the database call cannot have appended a record.
+	if err := self.disk.writeAdmission(); err != nil {
+		return err
+	}
+	if err := self.custody.begin(ctx, head, raw); err != nil {
+		if errors.Is(err, ErrDurablePublicationUncertain) || errors.Is(err, durablevolume.ErrIdentity) {
+			self.latchFault(err)
+		}
+		return err
+	}
 	if err := self.db.Write(batch, &opt.WriteOptions{Sync: true}); err != nil {
+		if self.disk.storage != nil && !errors.Is(err, durablevolume.ErrIdentity) {
+			err = errors.Join(ErrDurablePublicationUncertain, err)
+		}
 		self.latchFault(err)
 		return errors.Join(errAttemptRecordStoreFaulted, err)
 	}
 	if err := self.disk.step("after-batch", ""); err != nil {
 		return err
 	}
-	if err := self.check(context.Background()); err != nil {
+	if err := self.check(ctx); err != nil {
+		if self.custody != nil {
+			err = errors.Join(ErrDurablePublicationUncertain, err)
+			self.latchFault(err)
+		}
+		return err
+	}
+	if err := self.custody.complete(ctx, head); err != nil {
+		err = errors.Join(ErrDurablePublicationUncertain, err)
+		self.latchFault(err)
 		return err
 	}
 	self.stateLock.Lock()
@@ -611,12 +687,25 @@ func (self *attemptRecordStore) Append(ctx context.Context, record AttemptRecord
 	return nil
 }
 
+// The ledger checks physical write admission before it touches its signing
+// key. Append checks again at the actual persistence boundary below; neither
+// check grants permission to retry a previous uncertain append.
+func (self *attemptRecordStore) admitAppend(ctx context.Context) error {
+	if err := self.check(ctx); err != nil {
+		return err
+	}
+	return self.disk.writeAdmission()
+}
+
 // The returned head is an owned value, not a mutable cached-verdict handle.
 func (self *attemptRecordStore) Head() (attemptRecordStoreHead, error) {
 	if err := self.begin(context.Background()); err != nil {
 		return attemptRecordStoreHead{}, err
 	}
 	defer self.active.Done()
+	if err := self.check(context.Background()); err != nil {
+		return attemptRecordStoreHead{}, err
+	}
 	self.stateLock.Lock()
 	defer self.stateLock.Unlock()
 	if self.closing {
@@ -792,6 +881,7 @@ func (self *attemptRecordStore) Close() error {
 // Descriptor-relative storage adds strict CURRENT selection, no-alias private
 // files, bounded reservations and parent durability to the LevelDB engine.
 type attemptRecordStoreStorage struct {
+	storage   *durablepath.Directory
 	stateLock sync.Mutex
 	metaLock  sync.Mutex
 	path      string
@@ -811,7 +901,7 @@ type attemptRecordStoreStorage struct {
 
 // Creates only the final private directory through an anchored parent. All
 // subsequent data I/O is relative to the retained root, never the pathname.
-func openAttemptRecordStoreStorage(path string, bounds attemptRecordStoreBounds, hooks attemptRecordStoreHooks, fault func(error)) (*attemptRecordStoreStorage, error) {
+func openAttemptRecordStoreStorage(path string, bounds attemptRecordStoreBounds, hooks attemptRecordStoreHooks, fault func(error), storageContexts ...context.Context) (*attemptRecordStoreStorage, error) {
 	if !filepath.IsAbs(path) || filepath.Clean(path) != path || filepath.Dir(path) == path {
 		return nil, errors.New("attempt record store path is not a clean absolute directory")
 	}
@@ -824,20 +914,30 @@ func openAttemptRecordStoreStorage(path string, bounds attemptRecordStoreBounds,
 		return nil, err
 	}
 	defer parentRoot.Close()
-	return openAttemptRecordStoreStorageAt(parentRoot, filepath.Join(parent, filepath.Base(path)), bounds, hooks, fault)
+	return openAttemptRecordStoreStorageAt(parentRoot, filepath.Join(parent, filepath.Base(path)), bounds, hooks, fault, storageContexts...)
 }
 
 // A retained parent root can be supplied by a migration or scratch owner.
-func openAttemptRecordStoreStorageAt(parentRoot *os.Root, path string, bounds attemptRecordStoreBounds, hooks attemptRecordStoreHooks, fault func(error)) (*attemptRecordStoreStorage, error) {
-	return openAttemptRecordStoreStorageAtWithAnchor(parentRoot, path, nil, bounds, hooks, fault)
+func openAttemptRecordStoreStorageAt(parentRoot *os.Root, path string, bounds attemptRecordStoreBounds, hooks attemptRecordStoreHooks, fault func(error), storageContexts ...context.Context) (*attemptRecordStoreStorage, error) {
+	return openAttemptRecordStoreStorageAtWithAnchor(parentRoot, path, nil, bounds, hooks, fault, storageContexts...)
 }
 
 // A fresh-directory owner binds its earlier inode observation to the actual
 // storage descriptor before parent fsync, owner locking or backend mutation.
-func openAttemptRecordStoreStorageAtWithAnchor(parentRoot *os.Root, path string, expected os.FileInfo, bounds attemptRecordStoreBounds, hooks attemptRecordStoreHooks, fault func(error)) (*attemptRecordStoreStorage, error) {
+func openAttemptRecordStoreStorageAtWithAnchor(parentRoot *os.Root, path string, expected os.FileInfo, bounds attemptRecordStoreBounds, hooks attemptRecordStoreHooks, fault func(error), storageContexts ...context.Context) (*attemptRecordStoreStorage, error) {
 	if parentRoot == nil || expected != nil && !attemptStorePrivateDirectory(expected) {
 		return nil, errors.New("attempt record store directory authority is incomplete")
 	}
+	guard, err := openValidatorDurableDirectory(validatorStorageContext(storageContexts), path, durablevolume.ReadWrite, expected == nil)
+	if err != nil {
+		return nil, err
+	}
+	transferred := false
+	defer func() {
+		if !transferred {
+			_ = guard.Close()
+		}
+	}()
 	name := filepath.Base(path)
 	if info, err := parentRoot.Lstat(name); errors.Is(err, os.ErrNotExist) {
 		if expected != nil {
@@ -856,7 +956,7 @@ func openAttemptRecordStoreStorageAtWithAnchor(parentRoot *os.Root, path string,
 	if !attemptStorePrivateDirectory(anchor) || expected != nil && !os.SameFile(expected, anchor) {
 		return nil, errors.New("attempt record store owned directory changed before open")
 	}
-	self := &attemptRecordStoreStorage{path: path, anchor: anchor, bounds: bounds, hooks: hooks, fault: fault, sizes: map[string]uint64{}, used: attemptStoreMetadataReserve}
+	self := &attemptRecordStoreStorage{storage: guard, path: path, anchor: anchor, bounds: bounds, hooks: hooks, fault: fault, sizes: map[string]uint64{}, used: attemptStoreMetadataReserve}
 	if err := self.step("after-directory-check", ""); err != nil {
 		return nil, err
 	}
@@ -877,6 +977,9 @@ func openAttemptRecordStoreStorageAtWithAnchor(parentRoot *os.Root, path string,
 	opened, err := self.directory.Stat()
 	if err != nil || !attemptStorePrivateDirectory(opened) || !os.SameFile(anchor, opened) || expected != nil && !os.SameFile(expected, opened) {
 		return nil, errors.New("attempt record store directory changed during open")
+	}
+	if err := checkValidatorDurableDirectory(guard, self.directory); err != nil {
+		return nil, err
 	}
 	parentFile, err := parentRoot.Open(".")
 	if err != nil {
@@ -939,6 +1042,7 @@ func openAttemptRecordStoreStorageAtWithAnchor(parentRoot *os.Root, path string,
 		return nil, err
 	}
 	complete = true
+	transferred = true
 	return self, nil
 }
 
@@ -974,6 +1078,9 @@ func (self *attemptRecordStoreLocker) Unlock() {
 // The first persistence failure also stops background backend mutations.
 func (self *attemptRecordStoreStorage) fail(err error) error {
 	if err != nil {
+		if self.storage != nil && !errors.Is(err, durablevolume.ErrIdentity) {
+			err = errors.Join(ErrDurablePublicationUncertain, err)
+		}
 		self.stateLock.Lock()
 		if self.failure == nil {
 			self.failure = err
@@ -1000,9 +1107,20 @@ func (self *attemptRecordStoreStorage) step(operation, name string) error {
 	if failure != nil {
 		return failure
 	}
+	if self.storage != nil {
+		if err := self.storage.CheckRead(); err != nil {
+			if errors.Is(err, durablevolume.ErrIdentity) {
+				return self.fail(err)
+			}
+			return err
+		}
+	}
 	info, err := os.Lstat(self.path)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return errors.Join(&durablevolume.UnavailableError{Reason: "cannot observe attempt record directory"}, err)
+	}
 	if err != nil || !attemptStorePrivateDirectory(info) || !os.SameFile(info, self.anchor) {
-		err = errors.New("attempt record store directory anchor changed")
+		err = errors.Join(durablevolume.ErrIdentity, errors.New("attempt record store directory anchor changed"), err)
 		return self.fail(err)
 	}
 	// Hooks run after the pathname check so swap tests exercise the actual
@@ -1013,6 +1131,18 @@ func (self *attemptRecordStoreStorage) step(operation, name string) error {
 		}
 	}
 	return nil
+}
+
+// Background compaction and foreground appends share the same physical gate.
+// Admission is outside stateLock and has not yet mutated persistent bytes.
+func (self *attemptRecordStoreStorage) writeAdmission() error {
+	if err := self.step("write-admission", ""); err != nil {
+		return err
+	}
+	if self.storage == nil {
+		return nil
+	}
+	return self.storage.CheckWrite()
 }
 
 // Fsync the directory containing every newly created durable file name.
@@ -1044,6 +1174,11 @@ func (self *attemptRecordStoreStorage) checkFile(name string, missingAllowed boo
 // No-follow descriptor-relative open checks the actual opened inode as well as
 // both directory observations. A swapped path never redirects outside root.
 func (self *attemptRecordStoreStorage) openFile(name string, flags int, missingAllowed bool) (*os.File, error) {
+	if flags&(os.O_WRONLY|os.O_RDWR|os.O_CREATE|os.O_TRUNC) != 0 {
+		if err := self.writeAdmission(); err != nil {
+			return nil, err
+		}
+	}
 	if err := self.checkFile(name, missingAllowed); err != nil {
 		return nil, err
 	}
@@ -1125,6 +1260,9 @@ func (self *attemptRecordStoreStorage) GetMeta() (storage.FileDesc, error) {
 
 // CURRENT replacement is durable before its manifest is treated as selected.
 func (self *attemptRecordStoreStorage) SetMeta(fd storage.FileDesc) error {
+	if err := self.writeAdmission(); err != nil {
+		return err
+	}
 	if !storage.FileDescOk(fd) || fd.Type != storage.TypeManifest {
 		return storage.ErrInvalidFile
 	}
@@ -1176,6 +1314,9 @@ func (self *attemptRecordStoreStorage) SetMeta(fd storage.FileDesc) error {
 	}
 	if err := self.step("before-meta-rename", name); err != nil {
 		return err
+	}
+	if err := self.writeAdmission(); err != nil {
+		return self.fail(err)
 	}
 	if err := self.root.Rename(name, "CURRENT"); err != nil {
 		return self.fail(err)
@@ -1260,6 +1401,9 @@ func (self *attemptRecordStoreStorage) List(types storage.FileType) ([]storage.F
 // New files reserve a bounded descriptor before creation; their names are
 // parent-fsynced immediately and again after syncing record-bearing contents.
 func (self *attemptRecordStoreStorage) Create(fd storage.FileDesc) (storage.Writer, error) {
+	if err := self.writeAdmission(); err != nil {
+		return nil, err
+	}
 	if !storage.FileDescOk(fd) {
 		return nil, storage.ErrInvalidFile
 	}
@@ -1296,6 +1440,9 @@ func (self *attemptRecordStoreStorage) Create(fd storage.FileDesc) (storage.Writ
 
 // Backend compaction may remove only its own validated file descriptors.
 func (self *attemptRecordStoreStorage) Remove(fd storage.FileDesc) error {
+	if err := self.writeAdmission(); err != nil {
+		return err
+	}
 	if err := self.checkFile(fd.String(), false); err != nil {
 		return err
 	}
@@ -1311,6 +1458,9 @@ func (self *attemptRecordStoreStorage) Remove(fd storage.FileDesc) error {
 
 // Renamed backend files retain the same conservative byte reservation.
 func (self *attemptRecordStoreStorage) Rename(old, next storage.FileDesc) error {
+	if err := self.writeAdmission(); err != nil {
+		return err
+	}
 	if old == next {
 		return self.checkFile(old.String(), false)
 	}
@@ -1353,6 +1503,7 @@ func (self *attemptRecordStoreStorage) Close() error {
 	if self.root != nil {
 		err = errors.Join(err, self.root.Close())
 	}
+	err = errors.Join(err, self.storage.Close())
 	return self.fail(err)
 }
 
@@ -1375,6 +1526,9 @@ func (self *attemptRecordStoreWriter) check() error {
 
 // Reserve before writing and never free an ambiguous partially written range.
 func (self *attemptRecordStoreWriter) Write(data []byte) (int, error) {
+	if err := self.disk.writeAdmission(); err != nil {
+		return 0, err
+	}
 	if err := self.disk.step("before-write", self.name); err != nil {
 		return 0, err
 	}

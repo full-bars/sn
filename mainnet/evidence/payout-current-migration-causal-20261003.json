@@ -1,0 +1,75 @@
+{
+  "control_manifest_sha256": "4bbba8165005a1023b9a2570d38e9ec2a3d23eb146e6cc56aebbcd0f9dd1dfe3",
+  "files": {
+    "evidence/controls/manifest.json": "4bbba8165005a1023b9a2570d38e9ec2a3d23eb146e6cc56aebbcd0f9dd1dfe3",
+    "evidence/controls/old-2a-db_migrations.go": "9a99b3c30aac6796ae0f22c2928892865eb36b0d9481e97c940895670cc96fee",
+    "evidence/controls/old-2a-order.overlay.json": "e7d34e4033c20cd0ecdee848def0af9c15093084e2d12e2f17dd4f2cf461aa82",
+    "evidence/current-migration-old2a-normal-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "evidence/current-migration-old2a-normal-network-cleanup.log": "2325c13ac0a76f9d197e49f521f76943a5554cf3ccd50ccf3fcf1239f2e956c8",
+    "evidence/current-migration-old2a-normal-network.id": "2325c13ac0a76f9d197e49f521f76943a5554cf3ccd50ccf3fcf1239f2e956c8",
+    "evidence/current-migration-old2a-normal-network.owner": "b6602ba9e405d12f4c38ac376f4d1bba5715c3ce9c568af0ed46452bf736744c",
+    "evidence/current-migration-old2a-normal-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/current-migration-old2a-normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/current-migration-old2a-normal-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/current-migration-old2a-normal-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/current-migration-old2a-normal-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/current-migration-old2a-normal-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/current-migration-old2a-normal-tests.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/current-migration-old2a-normal-tests.jsonl": "2bd63a462696a51184061def64cf1e0e0e792cd3a87cb681bceb078a91223d66",
+    "evidence/current-migration-old2a-normal-tests.phase": "7a9bfb19cefcf03e5d8fccf64b37eaf5e35272952cf21e2f4aa976964bf63eb1",
+    "evidence/current-migration-old2a-normal-tests.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/current-migration-old2a-race-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "evidence/current-migration-old2a-race-network-cleanup.log": "1f0c233de70acc012bb91003928ed142ac0c48df4a0d8f99e8c85e65d5cf8409",
+    "evidence/current-migration-old2a-race-network.id": "1f0c233de70acc012bb91003928ed142ac0c48df4a0d8f99e8c85e65d5cf8409",
+    "evidence/current-migration-old2a-race-network.owner": "d20fb015a43fe706a9427a3009bde6b2c45180028dee40052d37f5a33e555630",
+    "evidence/current-migration-old2a-race-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/current-migration-old2a-race-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/current-migration-old2a-race-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/current-migration-old2a-race-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/current-migration-old2a-race-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/current-migration-old2a-race-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/current-migration-old2a-race-tests.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/current-migration-old2a-race-tests.jsonl": "04886e3717042285e82a4906ca56cae36795ed81466da5f235073bd1a60bdbc6",
+    "evidence/current-migration-old2a-race-tests.phase": "2d4c2e5ac1e19df37ea4166beb6512bdac651b87e6ec1793d62cd51160ab4a34",
+    "evidence/current-migration-old2a-race-tests.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/run-old-2a-control.sh": "edc83cc15d4cef991068dbad193994d5b784a785d449711ffbfabf6a987e5fe2"
+  },
+  "kind": "Exact frozen2a db_migrations.go body only; fixed199 tests/declarations retained.",
+  "limits": [
+    "No production database migration or live payout."
+  ],
+  "modes": {
+    "normal": {
+      "assertion_excerpts": [
+        "db_provider_current_migration_test.go:17: published 755-entry migration prefix changed: b1c331737ae17311efe80b696e7de365e0a9b96526b96e29afccc1a193720324, <nil>",
+        "test_util.go:952: published Redis admission feature missing at version 755",
+        "test_util.go:952: conflicting old payout migration history was not refused <nil>"
+      ],
+      "intended_failed_roots": [
+        "TestProviderCurrentMigrationPreservesPublishedHistory",
+        "TestProviderCurrentMigrationUpgradesPublishedSchemaWithoutReplay",
+        "TestProviderCurrentMigrationRefusesConflictingBranchHistory"
+      ],
+      "owned_fixture_cleanup_exit": 0,
+      "race_reports": 0
+    },
+    "race": {
+      "assertion_excerpts": [
+        "db_provider_current_migration_test.go:17: published 755-entry migration prefix changed: b1c331737ae17311efe80b696e7de365e0a9b96526b96e29afccc1a193720324, <nil>",
+        "test_util.go:952: published Redis admission feature missing at version 755",
+        "test_util.go:952: conflicting old payout migration history was not refused <nil>"
+      ],
+      "intended_failed_roots": [
+        "TestProviderCurrentMigrationPreservesPublishedHistory",
+        "TestProviderCurrentMigrationUpgradesPublishedSchemaWithoutReplay",
+        "TestProviderCurrentMigrationRefusesConflictingBranchHistory"
+      ],
+      "owned_fixture_cleanup_exit": 0,
+      "race_reports": 0
+    }
+  },
+  "schema": "sol-current-migration-199-causal-v1",
+  "source_commit": "1995218329ba712f82f53751653e3048aee79b02",
+  "source_tree": "38fd8199a442f0e0a8fa5d1aa32d6b4591da3373",
+  "status": "PASS_SCOPED_CAUSAL_NEGATIVES"
+}

@@ -1,0 +1,188 @@
+{
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/safe-state-296-compile-jobs.json": {
+      "bytes": 1175,
+      "sha256": "48be15bdae9bd123e147a3b84edce3ad0ef53306e3431c3b220756df0ce04cf1"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/safe-state-296-compile.json": {
+      "bytes": 1083,
+      "sha256": "7232988dbe0d8865cb38f00b3c7e02ab06a0beb697d840b4a2f79438c5e7c8a3"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/safe-state-296-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/safe-state-296-preflight.json": {
+      "bytes": 955,
+      "sha256": "583d46e380139dd834aca424308d62b1e1bc4e371d5907228f6457c0d54f6118"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/safe-state-296-preflight.jsonl": {
+      "bytes": 3645184,
+      "sha256": "5362ae45c810cf06f72ff08054e16a447ad7c7e003c947abf0273b3bfb3b5648"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-safe-state-296-intake.go": {
+      "bytes": 5811,
+      "sha256": "abe1adf11f70b1c2f8710ffa07834b38c48ecd7b97d86d117caa9e6b2bacbc0d"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/qualify-scoped.go": {
+      "bytes": 3425,
+      "sha256": "1a7b115440ecd7ce543810e9a08a751f4e2c1bb213ee2439b8a9e55455753e26"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn/go.mod": {
+      "bytes": 11252,
+      "sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn/go.sum": {
+      "bytes": 65954,
+      "sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn/mainnet/bootstrap_successor_canonical_state.go": {
+      "bytes": 17973,
+      "sha256": "6c47941241892d7bd7df29eaf4610584e54603efc61ac6bda83df4d5b97827c6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn/mainnet/bootstrap_successor_safe_current_capability.go": {
+      "bytes": 8132,
+      "sha256": "265a3d04dc842a0ae957da835ee0604e4aead99788fd909f4d396900eceaf334"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn/mainnet/evidence/safe-state-observation-errors-20261003.md": {
+      "bytes": 2514,
+      "sha256": "9a1ef97fcb2fba003ba94da582afc3f91aa64f4b2b7a2b8a21fc9bbcdd54d53b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn/mainnet/evm_action_rpc.go": {
+      "bytes": 28371,
+      "sha256": "7fd495b800a3f6ff0070b6769999b1772290b3de710fc934b63c12823c0694ef"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn/mainnet/safe_current_storage_rpc.go": {
+      "bytes": 5579,
+      "sha256": "53cc572175a4d97f523effebfc91cdf60853211aa529984603cd0be6d0c76ac3"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn/mainnet/safe_state_read_public_test.go": {
+      "bytes": 5626,
+      "sha256": "1b62c9c70d7239ae27cd6c3796ae382db65d400d6fd2db03ef68f43ceaca8c5b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn/mainnet/safe_state_read_test.go": {
+      "bytes": 12520,
+      "sha256": "64096876654c5e59fb7a2ccf2301833b7566e89afbf04456b5cc05be6c85f970"
+    }
+  },
+  "causal": {
+    "base": "5a0a8f666faa0a55b05efceac20173a29144af4e",
+    "expected": "Required state null is immediately rejected instead of retried, or a transport/cancellation error acquires a false changed-authority/integrity label. Record each actual failure boundary. Positive returned conflicts remain a separate required refusal control, not causal absence evidence.",
+    "overlay": [
+      "mainnet/safe_state_read_test.go",
+      "mainnet/safe_state_read_public_test.go"
+    ],
+    "roots": [
+      "TestSafeStateReadRetainsOriginalRetryBudget",
+      "TestSafeStateReadUnavailableDoesNotClaimChangedAuthority",
+      "TestSafeCurrentPendingSeparatesUnavailableFromChanged",
+      "TestEvmRequiredStateAbsencePreservesRetainedReceipt",
+      "TestSafeCurrentPublicReadFailurePreservesOriginalAttempt"
+    ]
+  },
+  "dependencies": {
+    "connect": {
+      "commit": "9fb897f8d880ab813dd61dc02fa187e3d85f13a5",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/connect",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect",
+      "tree": "a3500ca8e57b70c78951fe91871d6bdc7a93f7c7"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/glog",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/goidenticons",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/proxy",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/server",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/userwireguard",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/warp",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "invariants": [
+    "The existing original signed 60-900 second read allowance is unchanged; synthetic new 300-second authority demonstrates delayed valid data after 82.5 logical seconds.",
+    "Required code/storage/call absence is unavailable. Nullable pending transaction lookup and direct legacy read profiles remain unchanged.",
+    "Positive returned encoding, hash, nonce, status, owner, singleton, module, guard or digest conflicts remain hard integrity failures.",
+    "Actual public Safe-current submission refuses failed pending admission without a new counted attempt, nonce or send; the same original custody can later continue with healthy reads.",
+    "No protocol signing bytes or retained history are rewritten."
+  ],
+  "limits": "No behavior claim from compilation. This inherits frozen5a0 and its historical Connect9fb/Serverc256 workspace. Public paired restore39e, capacity/retention revisions and the current published dependency composition remain separate scopes.",
+  "root_verification": {
+    "bindings_rehashed": 17,
+    "changed_git_blobs_verified": 7,
+    "classification": "SOURCE_VERIFIED_BEHAVIOR_PENDING",
+    "clean_head_tree_verified": true,
+    "intake_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/safe-state-296-intake.json",
+    "intake_sha256": "ca8d97204db8fdfa5fa7ad2b7e7b92bc1d846a7e5a79785ce4f22cd39572997c",
+    "review": "Required code/storage/getter absence retains original retry authority; read errors return before changed-authority comparison, while positive returned contradictions remain integrity failures. Actual public-attempt custody behavior awaits independent execution."
+  },
+  "schema": "urnetwork-author-source-handoff-v1",
+  "scope": {
+    "expectedPass": 10,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "package": "./mainnet",
+    "roots": [
+      "TestSafeStateReadRetainsOriginalRetryBudget",
+      "TestSafeStateReadUnavailableDoesNotClaimChangedAuthority",
+      "TestSafeStateReadReturnedConflictsRemainIntegrity",
+      "TestSafeCurrentPendingSeparatesUnavailableFromChanged",
+      "TestEvmRequiredStateAbsencePreservesRetainedReceipt",
+      "TestSafeCurrentPublicReadFailurePreservesOriginalAttempt",
+      "TestBootstrapSuccessorCanonicalSafeAuthority",
+      "TestSafeCurrentPendingRecheckCannotClaimCompleteAuthority",
+      "TestEvmReadProfileAbsenceIsReceiptOnly",
+      "TestEvmReadProfileBoundsEveryReply"
+    ],
+    "vet": true
+  },
+  "source": {
+    "changedPaths": [
+      "mainnet/bootstrap_successor_canonical_state.go",
+      "mainnet/bootstrap_successor_safe_current_capability.go",
+      "mainnet/evidence/safe-state-observation-errors-20261003.md",
+      "mainnet/evm_action_rpc.go",
+      "mainnet/safe_current_storage_rpc.go",
+      "mainnet/safe_state_read_public_test.go",
+      "mainnet/safe_state_read_test.go"
+    ],
+    "commit": "296980a056b7a92596d51d17e8ad020e8329bc2c",
+    "parent": "5a0a8f666faa0a55b05efceac20173a29144af4e",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/sn",
+    "tree": "ed0cdac0a7db0bf4b7ba285948ca8eb4c84b6352"
+  },
+  "status": "SOURCE_PREFLIGHT_COMPILE_ONLY_BEHAVIOR_PENDING",
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/safe-state-read/go.work"
+}

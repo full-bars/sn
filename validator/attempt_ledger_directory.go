@@ -9,9 +9,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/urfoundation/sn/internal/durablepath"
+	"github.com/urnetwork/connect/durablevolume"
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -25,6 +28,9 @@ const (
 // Operations are serialized by enter/leave. Hooks expose actual inode and I/O
 // boundaries for deterministic tests and are nil in production.
 type attemptLedgerDirectory struct {
+	stateLock sync.Mutex
+	failure   error
+	storage   *durablepath.Directory
 	path      string
 	name      string
 	anchor    os.FileInfo
@@ -37,35 +43,47 @@ type attemptLedgerDirectory struct {
 
 // Only the final directory is created here; existing parents are resolved
 // once, then all evidence access uses descriptor-relative no-follow opens.
-func openAttemptLedgerDirectory(path string, step func(string, string) error) (*attemptLedgerDirectory, error) {
+func openAttemptLedgerDirectory(path string, step func(string, string) error, storageContexts ...context.Context) (*attemptLedgerDirectory, error) {
 	path, err := filepath.Abs(path)
 	if err != nil || filepath.Dir(path) == path {
 		return nil, errors.New("attempt ledger state directory is invalid")
 	}
-	// Preserve the legacy constructor's support for nested new state paths.
-	// Existing directory modes are never broadened or silently repaired.
-	ancestor := filepath.Dir(path)
-	for {
-		if _, err := os.Stat(ancestor); err == nil {
-			break
-		} else if !errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
-		ancestor = filepath.Dir(ancestor)
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+	storage, err := openValidatorDurableDirectory(validatorStorageContext(storageContexts), path, durablevolume.ReadWrite, false)
+	if err != nil {
 		return nil, err
 	}
-	for current := filepath.Dir(path); ; current = filepath.Dir(current) {
-		file, err := os.Open(current)
-		if err != nil {
+	transferred := false
+	defer func() {
+		if !transferred {
+			_ = storage.Close()
+		}
+	}()
+	// Preserve the legacy constructor's support for nested new state paths.
+	// Existing directory modes are never broadened or silently repaired.
+	if storage == nil {
+		ancestor := filepath.Dir(path)
+		for {
+			if _, err := os.Stat(ancestor); err == nil {
+				break
+			} else if !errors.Is(err, os.ErrNotExist) {
+				return nil, err
+			}
+			ancestor = filepath.Dir(ancestor)
+		}
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 			return nil, err
 		}
-		if err := errors.Join(file.Sync(), file.Close()); err != nil {
-			return nil, err
-		}
-		if current == ancestor {
-			break
+		for current := filepath.Dir(path); ; current = filepath.Dir(current) {
+			file, err := os.Open(current)
+			if err != nil {
+				return nil, err
+			}
+			if err := errors.Join(file.Sync(), file.Close()); err != nil {
+				return nil, err
+			}
+			if current == ancestor {
+				break
+			}
 		}
 	}
 	parentPath, err := filepath.EvalSymlinks(filepath.Dir(path))
@@ -76,7 +94,8 @@ func openAttemptLedgerDirectory(path string, step func(string, string) error) (*
 	if err != nil {
 		return nil, err
 	}
-	self := &attemptLedgerDirectory{path: filepath.Join(parentPath, filepath.Base(path)), name: filepath.Base(path), parent: parent, gate: make(chan struct{}, 1), step: step}
+	self := &attemptLedgerDirectory{storage: storage, path: filepath.Join(parentPath, filepath.Base(path)), name: filepath.Base(path), parent: parent, gate: make(chan struct{}, 1), step: step}
+	transferred = true
 	complete := false
 	defer func() {
 		if !complete {
@@ -119,10 +138,31 @@ func openAttemptLedgerDirectory(path string, step func(string, string) error) (*
 }
 
 // Replacing or chmodding the directory never redirects an existing owner.
-func (self *attemptLedgerDirectory) check() error {
+func (self *attemptLedgerDirectory) check() (resultErr error) {
+	self.stateLock.Lock()
+	failure := self.failure
+	self.stateLock.Unlock()
+	if failure != nil {
+		return failure
+	}
+	defer func() {
+		if errors.Is(resultErr, durablevolume.ErrIdentity) {
+			self.stateLock.Lock()
+			if self.failure == nil {
+				self.failure = resultErr
+			}
+			self.stateLock.Unlock()
+		}
+	}()
+	if err := checkValidatorDurableDirectory(self.storage, self.directory); err != nil {
+		return err
+	}
 	info, err := self.parent.Lstat(self.name)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return errors.Join(&durablevolume.UnavailableError{Reason: "cannot observe attempt ledger state directory"}, err)
+	}
 	if err != nil || !attemptLedgerPrivateDirectory(info) || !os.SameFile(info, self.anchor) {
-		return errors.New("attempt ledger state directory changed after open")
+		return errors.Join(durablevolume.ErrIdentity, errors.New("attempt ledger state directory changed after open"), err)
 	}
 	return nil
 }
@@ -195,6 +235,9 @@ func (self *attemptLedgerDirectory) requireLegacy() error {
 // Existing evidence must be owned, single-link and private at both the name
 // and opened descriptor. Exclusive creates never truncate an unexpected file.
 func (self *attemptLedgerDirectory) openFile(name string, flags int, create bool) (*os.File, error) {
+	if err := self.check(); err != nil {
+		return nil, err
+	}
 	if filepath.Base(name) != name || name == "." {
 		return nil, errors.New("attempt ledger private filename is invalid")
 	}
@@ -381,5 +424,5 @@ func (self *attemptLedgerDirectory) Close() error {
 		err = errors.Join(err, self.parent.Close())
 		self.parent = nil
 	}
-	return err
+	return errors.Join(err, self.storage.Close())
 }

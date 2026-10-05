@@ -1,0 +1,18 @@
+{
+  "claim": "Core source identity only; no additive backup or adopter qualification",
+  "core_subtree_and_go_module_diff": "empty",
+  "created_utc": "2026-10-02T05:53:15.851678+00:00",
+  "five_changed_files_from_remote371": [
+    "durablevolume/config.go",
+    "durablevolume/host_linux.go",
+    "durablevolume/host_other.go",
+    "durablevolume/owner.go",
+    "durablevolume/owner_test.go"
+  ],
+  "integrated_commit": "6d0eca1e77cc7f84ebd9615ec43cc876201a1f92",
+  "integrated_tree": "be4115102ff64241afcbaeeb7e6312788aaa0d42",
+  "integration_tree_clean": true,
+  "qualified_core_commit": "5930a97086733acd9ba5b09ab891dcd1b03be651",
+  "qualified_core_receipt_sha256": "dcbe525ec9fd39d556a8b7d441bb58981d1b56a2866e2edab082d2c5cfdb61fc",
+  "schema": "sol-connect-core-integration-byte-join-v1"
+}

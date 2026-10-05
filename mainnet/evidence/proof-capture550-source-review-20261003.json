@@ -1,0 +1,30 @@
+{
+  "schema": "proof-capture550-source-review-v1",
+  "source": {
+    "head": "5501f9ac8be4c61ada7bc8d1ef1d5054a35c67a7",
+    "parent": "7b81da23084f6817722e9ee4b803308364d1c522",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-capture-cancellation/sn",
+    "physical_scope": "sparse runtime-metadata-probe; independent full archive required",
+    "tree": "8cdb69298f1d2f7b96cd3da65326b64bec141d48"
+  },
+  "intake_sha256": "fb1eb19373e5072e78462193de3d548ef181db75cd18b3d2af4c5375a38ca182",
+  "changed_files": [
+    {
+      "bytes": 21171,
+      "git_blob": "a5e095ad0409dc819be797436870bb1c9927bb1b",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-capture-cancellation/sn/tools/runtime-metadata-probe/src/historical_capture.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_capture.rs",
+      "sha256": "02847d4fe85f9982008d73010e68c57bfa76bac8e47057bfdd8d8752a9bf36a2"
+    },
+    {
+      "bytes": 25187,
+      "git_blob": "1a7bc96c5c24a77e7e3772f0dfe97af0e1fb2c78",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-capture-cancellation/sn/tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "relative": "tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "sha256": "7f4fff8fd567160dd515018c1aa4747141e215217da05af3bd1776bcb13b846b"
+    }
+  ],
+  "go_and_cargo_inputs_unchanged": true,
+  "review": "Accessor cause is checked before SDK translation; returned node contradiction survives cancellation; completed code/heap/execution/root/replay/report boundaries use instance-local controls.",
+  "scope": "Two physical Rust files and exact unchanged Go/Cargo inputs verified. Prior Go10 results retain their source/context; independent Rust/control/exporter qualification, actualruntime source/profile/finality and deployment remain separate."
+}

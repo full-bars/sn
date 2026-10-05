@@ -21,12 +21,31 @@ build_target() {
         GOARCH="$target_arch"
     )
 
+    # mips64/mips64le read GOMIPS64 and ignore GOMIPS (https://go.dev/wiki/GoMips).
     case "$target_arch" in
-        mips*) target_env+=(GOMIPS=softfloat) ;;
+        mips|mipsle) target_env+=(GOMIPS=softfloat) ;;
+        mips64|mips64le) target_env+=(GOMIPS64=softfloat) ;;
     esac
 
     echo "== build $command ($target_os/$target_arch)"
-    env "${target_env[@]}" go build -trimpath -o /dev/null "./cli/$command"
+    case "$target_arch" in
+        mips*)
+            # MIPS routers commonly have no FPU, so a hardfloat binary crashes
+            # there. Check the float mode the toolchain recorded.
+            local out
+            out="$(mktemp "${TMPDIR:-/tmp}/sn-build.XXXXXX")"
+            env "${target_env[@]}" go build -trimpath -o "$out" "./cli/$command"
+            if ! go version -m "$out" | grep -Eq 'GOMIPS(64)?=softfloat'; then
+                echo "error: $command ($target_os/$target_arch) is not softfloat" >&2
+                rm -f "$out"
+                return 1
+            fi
+            rm -f "$out"
+            ;;
+        *)
+            env "${target_env[@]}" go build -trimpath -o /dev/null "./cli/$command"
+            ;;
+    esac
 }
 
 miner_targets=(

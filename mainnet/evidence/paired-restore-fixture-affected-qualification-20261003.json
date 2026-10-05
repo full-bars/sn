@@ -1,0 +1,61 @@
+{
+  "artifact_sha256": {
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "6c8bfb38058f5ac965448c22678e6e962b6e702b92dfa112930c4f59015bd142",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-three.sh": "0c647270c234cd0eaee08a6190e81e941946abd25b58df86baf079e5877b1442",
+    "selector-three.txt": "f82f2237bf8eb81527df152c8a943188ea5eeffe79b9d93950ba3ce0c1ac16ed",
+    "source-readback.json": "c5b5b4b1611ca4b5840eb2fc72daaf5ef0be74f0897a30a71476ba617dfae6b5",
+    "three-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "three-normal.jsonl": "651214aef8646d22b68c0c7bb5b32141519fe3813bb1878932fde4496c47cca9",
+    "three-normal.phase": "4ba2b74b7d0fe0f72cdd35d84136187f487c4bf86afb09c50159915de07d5183",
+    "three-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "three-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "three-race.jsonl": "3c4ea99c5423737dfa3332bbfcf9c3804682ebaa15f9d4aee45459284f2955ba",
+    "three-race.phase": "a4324e7422f892abaa39b2efc1ed002975c812a17e3b2d19437f9ce22a38d178",
+    "three-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "classification": "PASS_SCOPED",
+  "fail": 0,
+  "historical_39e_receipt_sha256": "ab0e196fb30eb1dbb7b80e13d26f08ffc3034d392b0a021d3dffc301997e2528",
+  "intake_sha256": "0ea5c1a5180d061a687a0d57f271e73f518fdf5ace1e76a7b3aa9025b7636639",
+  "limits": [
+    "Test-only correction of three affected roots. Original39e two failures per mode remain distinct. Five other39e positive roots are not rerun or relabeled.",
+    "Historical Connect5c48/Serverc256 graph only; no current release/deployment qualification."
+  ],
+  "normal_pass": 3,
+  "package": "./mainnet",
+  "physical_git_blobs_verified": 20177,
+  "physical_source": "/mnt/data/sn-testnet/sol-outer-rebind-3af-independent-20261003/source/sn",
+  "race_pass": 3,
+  "root_verification": {
+    "artifact_bindings_rehashed": 17,
+    "raw_terminal_census_verified": {
+      "normal": {
+        "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome": "pass",
+        "TestBootstrapSuccessorRestoredReaderReadsOnlyChangedPendingStage": "pass",
+        "TestBootstrapSuccessorRestoredReaderReusesUnchangedMembers": "pass"
+      },
+      "race": {
+        "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome": "pass",
+        "TestBootstrapSuccessorRestoredReaderReadsOnlyChangedPendingStage": "pass",
+        "TestBootstrapSuccessorRestoredReaderReusesUnchangedMembers": "pass"
+      }
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-outer-rebind-3af-independent-20261003/evidence/outer-3af-affected-three-receipt.json",
+    "receipt_sha256": "1b415351066b77ecceaeede907a15d8fd9660d36202b995d3e8956d8e33751dc"
+  },
+  "schema": "sol-outer-3af-affected-three-v1",
+  "selected_roots": [
+    "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome",
+    "TestBootstrapSuccessorRestoredReaderReusesUnchangedMembers",
+    "TestBootstrapSuccessorRestoredReaderReadsOnlyChangedPendingStage"
+  ],
+  "skip": 0,
+  "source_commit": "3af77073a0e2aa1f9ad4c20096377c54454a2cba",
+  "source_tree": "c0db9d8bf165609bca771aab04ca3dabce5d9be7",
+  "vet_exit": 0
+}

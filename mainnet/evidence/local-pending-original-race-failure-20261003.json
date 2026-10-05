@@ -1,0 +1,48 @@
+{
+  "assertions": [
+    "bootstrap_successor_local_pending_test.go:185: fixed owner public planning failed 2 storage preparation: restore coverage omitted original members or owner checkpoints",
+    "bootstrap_successor_local_pending_test.go:189: fixed owner public planning failed 2 storage preparation: restore coverage omitted original members or owner checkpoints",
+    "bootstrap_successor_local_rebind_command_test.go:173: fixed owner public planning failed 2 storage preparation: restore coverage omitted original members or owner checkpoints",
+    "bootstrap_successor_local_rebind_test.go:22: fixed owner public planning failed 2 storage preparation: restore coverage omitted original members or owner checkpoints"
+  ],
+  "classification": "Same four fixed-owner public coverage refusals in race; three adjacent first-stage/authority controls pass. Public continuation not qualified.",
+  "commit": "bdf63dea4177a7b7fd5d07442039b517bbc261be",
+  "failed_roots": [
+    "TestBootstrapSuccessorLocalRebindLostAcknowledgementResumesOriginalReceipt",
+    "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority",
+    "TestBootstrapSuccessorLocalRebindRetainsAcknowledgedOriginalOutcome",
+    "TestBootstrapSuccessorLocalRebindRetainsReservedOriginalOutcome"
+  ],
+  "normal_failed_receipt": "/mnt/data/sn-testnet/sol-local-pending-bdf-independent-20261003/evidence/original-normal-failed-receipt.json",
+  "normal_failed_receipt_sha256": "e8e4471b28baacbdf222f3562ac8f0bc41c54e038aa5ab6071a2c1a30f1d730f",
+  "passed_roots": [
+    "TestBootstrapSuccessorLocalInspectionCannotBorrowWriterAuthority",
+    "TestBootstrapSuccessorRebindRetainsFirstPendingStageGeneration",
+    "TestBootstrapSuccessorUnapprovedLocalReceiptCannotAcquireAuthority"
+  ],
+  "root_verification": {
+    "raw_top_level_results": {
+      "race.jsonl": {
+        "fail": 4,
+        "pass": 3,
+        "skip": 0
+      }
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-local-pending-bdf-independent-20261003/evidence/original-race-failed-receipt.json",
+    "receipt_sha256": "e77e527fbb5ebb33c43ee65bb467502e739556941025304e4af63ba6b0576b3d",
+    "rehashed_artifact_bindings": 9
+  },
+  "schema": "sol-local-bdf-original-race-failed-v1",
+  "sha256": {
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "c958fe19c0f2d3f5964334d2c4144c4fc5a4c2334bd8fc8e07b027d3d32051e3",
+    "race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "race.jsonl": "f526f0c912dbc2a2275115c17963b2727c98ebf5d3d87d8756914ce21dfd247d",
+    "race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source-preflight.json": "f98528eba3a3eca569bd75e089228030edfcf33b382a4d7fd62fd5f06dc5c8c0",
+    "vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "tree": "308474922df30107ac67a93bb586407facc6aa6a"
+}

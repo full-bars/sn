@@ -1,0 +1,442 @@
+{
+  "scope": "Six ordinary-mode frozen b6/Core2ea package compiles only; race compilation and behavioral qualification remain incomplete",
+  "status": "SIX_NORMAL_COMPILES_PASS",
+  "retained_results": [
+    {
+      "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-05-compile-mainnet-normal-receipt.json",
+      "receipt_sha256": "1d72e6eb425c29bc475d586ebd9ce1ea3007fcfb4abb6eacfc8577dc72bffe4e",
+      "result": {
+        "admission_free_bytes": 112669618176,
+        "argv": [
+          "/usr/local/go/bin/go",
+          "test",
+          "-mod=readonly",
+          "-p=2",
+          "-c",
+          "-o",
+          "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/mainnet-normal.test",
+          "./mainnet"
+        ],
+        "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn",
+        "environment": {
+          "GOCACHE": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+          "GOENV": "off",
+          "GOFLAGS": "",
+          "GOMAXPROCS": "2",
+          "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+          "GOPROXY": "file:///mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy",
+          "GOSUMDB": "off",
+          "GOTOOLCHAIN": "local",
+          "GOWORK": "off",
+          "TMPDIR": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/tmp"
+        },
+        "execution": {
+          "exit_code": 0,
+          "failure": null,
+          "stderr": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/05-compile-mainnet-normal.stderr",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/05-compile-mainnet-normal.stdout",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "finished_unix_ns": 1791065204450465169,
+        "image": {
+          "bytes": 76946960,
+          "ctime_ns": 1791065203639112556,
+          "device": 2081,
+          "gid": 1000,
+          "inode": 121042211,
+          "links": 1,
+          "mode": 320,
+          "mtime_ns": 1791065203027137407,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/mainnet-normal.test",
+          "sha256_after": "a595d43f2dd8bdb67d2c454bfe86f2bc10e530c129f540d990972a6d2570027e",
+          "sha256_before": "a595d43f2dd8bdb67d2c454bfe86f2bc10e530c129f540d990972a6d2570027e",
+          "type": 32768,
+          "uid": 1000
+        },
+        "phase_id": "05-compile-mainnet-normal",
+        "source_after": {
+          "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+          "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+        },
+        "source_before": {
+          "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+          "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+        },
+        "started_unix_ns": 1791065033867350677,
+        "status": "PASS"
+      }
+    },
+    {
+      "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-06-compile-durablevolume-normal-receipt.json",
+      "receipt_sha256": "bc1ed8d494a0298dcb90f8831e7ea75c5627853080410857a6ae95a8be884082",
+      "result": {
+        "admission_free_bytes": 112278720512,
+        "argv": [
+          "/usr/local/go/bin/go",
+          "test",
+          "-mod=readonly",
+          "-p=2",
+          "-c",
+          "-o",
+          "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/durablevolume-normal.test",
+          "./durablevolume"
+        ],
+        "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/connect",
+        "environment": {
+          "GOCACHE": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+          "GOENV": "off",
+          "GOFLAGS": "",
+          "GOMAXPROCS": "2",
+          "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+          "GOPROXY": "file:///mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy",
+          "GOSUMDB": "off",
+          "GOTOOLCHAIN": "local",
+          "GOWORK": "off",
+          "TMPDIR": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/tmp"
+        },
+        "execution": {
+          "exit_code": 0,
+          "failure": null,
+          "stderr": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/06-compile-durablevolume-normal.stderr",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/06-compile-durablevolume-normal.stdout",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "finished_unix_ns": 1791065210298838989,
+        "image": {
+          "bytes": 6987462,
+          "ctime_ns": 1791065210204845980,
+          "device": 2081,
+          "gid": 1000,
+          "inode": 121042208,
+          "links": 1,
+          "mode": 320,
+          "mtime_ns": 1791065210035852840,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/durablevolume-normal.test",
+          "sha256_after": "86a386b59e1cd8748ea744b77fd6b32e97c519cf11d94241448f1e57e94d8e3e",
+          "sha256_before": "86a386b59e1cd8748ea744b77fd6b32e97c519cf11d94241448f1e57e94d8e3e",
+          "type": 32768,
+          "uid": 1000
+        },
+        "phase_id": "06-compile-durablevolume-normal",
+        "source_after": {
+          "go.mod": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d",
+          "go.sum": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+        },
+        "source_before": {
+          "go.mod": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d",
+          "go.sum": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+        },
+        "started_unix_ns": 1791065204455728217,
+        "status": "PASS"
+      }
+    },
+    {
+      "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-07-compile-validator-normal-receipt.json",
+      "receipt_sha256": "a45b23847221a3f7525b4bf38c57ae1a7009518d002c127c63a1ab46bdae91ff",
+      "result": {
+        "admission_free_bytes": 112265662464,
+        "argv": [
+          "/usr/local/go/bin/go",
+          "test",
+          "-mod=readonly",
+          "-p=2",
+          "-c",
+          "-o",
+          "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/validator-normal.test",
+          "./validator"
+        ],
+        "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn",
+        "environment": {
+          "GOCACHE": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+          "GOENV": "off",
+          "GOFLAGS": "",
+          "GOMAXPROCS": "2",
+          "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+          "GOPROXY": "file:///mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy",
+          "GOSUMDB": "off",
+          "GOTOOLCHAIN": "local",
+          "GOWORK": "off",
+          "TMPDIR": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/tmp"
+        },
+        "execution": {
+          "exit_code": 0,
+          "failure": null,
+          "stderr": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/07-compile-validator-normal.stderr",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/07-compile-validator-normal.stdout",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "finished_unix_ns": 1791065293474881042,
+        "image": {
+          "bytes": 81935360,
+          "ctime_ns": 1791065292783500690,
+          "device": 2081,
+          "gid": 1000,
+          "inode": 121042212,
+          "links": 1,
+          "mode": 320,
+          "mtime_ns": 1791065292181525029,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/validator-normal.test",
+          "sha256_after": "041eb99eaa73a75fed78503d4cced05dd605847e5e92b2906919893fa0e98680",
+          "sha256_before": "041eb99eaa73a75fed78503d4cced05dd605847e5e92b2906919893fa0e98680",
+          "type": 32768,
+          "uid": 1000
+        },
+        "phase_id": "07-compile-validator-normal",
+        "source_after": {
+          "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+          "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+        },
+        "source_before": {
+          "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+          "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+        },
+        "started_unix_ns": 1791065210304510648,
+        "status": "PASS"
+      }
+    },
+    {
+      "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-08-compile-miner-normal-receipt.json",
+      "receipt_sha256": "c26ebe3bdcef27ffdf4330df26bfc39ec72f0de92e01fcb3709e8cf59bfcf968",
+      "result": {
+        "admission_free_bytes": 112102809600,
+        "argv": [
+          "/usr/local/go/bin/go",
+          "test",
+          "-mod=readonly",
+          "-p=2",
+          "-c",
+          "-o",
+          "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/miner-normal.test",
+          "./miner"
+        ],
+        "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn",
+        "environment": {
+          "GOCACHE": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+          "GOENV": "off",
+          "GOFLAGS": "",
+          "GOMAXPROCS": "2",
+          "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+          "GOPROXY": "file:///mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy",
+          "GOSUMDB": "off",
+          "GOTOOLCHAIN": "local",
+          "GOWORK": "off",
+          "TMPDIR": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/tmp"
+        },
+        "execution": {
+          "exit_code": 0,
+          "failure": null,
+          "stderr": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/08-compile-miner-normal.stderr",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/08-compile-miner-normal.stdout",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "finished_unix_ns": 1791065351215231636,
+        "image": {
+          "bytes": 101177976,
+          "ctime_ns": 1791065349993190507,
+          "device": 2081,
+          "gid": 1000,
+          "inode": 121042210,
+          "links": 1,
+          "mode": 320,
+          "mtime_ns": 1791065349416213779,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/miner-normal.test",
+          "sha256_after": "6d2cb8d7a502abbb30b0b06a3a83bd1ea2074188f141c72f127621d4e490646e",
+          "sha256_before": "6d2cb8d7a502abbb30b0b06a3a83bd1ea2074188f141c72f127621d4e490646e",
+          "type": 32768,
+          "uid": 1000
+        },
+        "phase_id": "08-compile-miner-normal",
+        "source_after": {
+          "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+          "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+        },
+        "source_before": {
+          "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+          "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+        },
+        "started_unix_ns": 1791065293479122781,
+        "status": "PASS"
+      }
+    },
+    {
+      "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-09-compile-chain-normal-receipt.json",
+      "receipt_sha256": "36bdb9f2abcc61aeea3ba3d2413905a87c26ad01b600f34263469922c7229988",
+      "result": {
+        "admission_free_bytes": 111918374912,
+        "argv": [
+          "/usr/local/go/bin/go",
+          "test",
+          "-mod=readonly",
+          "-p=2",
+          "-c",
+          "-o",
+          "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/chain-normal.test",
+          "./chain"
+        ],
+        "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/sn",
+        "environment": {
+          "GOCACHE": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+          "GOENV": "off",
+          "GOFLAGS": "",
+          "GOMAXPROCS": "2",
+          "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+          "GOPROXY": "file:///mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy",
+          "GOSUMDB": "off",
+          "GOTOOLCHAIN": "local",
+          "GOWORK": "off",
+          "TMPDIR": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/tmp"
+        },
+        "execution": {
+          "exit_code": 0,
+          "failure": null,
+          "stderr": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/09-compile-chain-normal.stderr",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/09-compile-chain-normal.stdout",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "finished_unix_ns": 1791065354939191417,
+        "image": {
+          "bytes": 13025366,
+          "ctime_ns": 1791065354794996856,
+          "device": 2081,
+          "gid": 1000,
+          "inode": 121042205,
+          "links": 1,
+          "mode": 320,
+          "mtime_ns": 1791065354548006816,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/chain-normal.test",
+          "sha256_after": "bcd1dc311b9e4a8f52bda1af26eefb975da6d00f25c5ceb0e71dfc02b5ad97bb",
+          "sha256_before": "bcd1dc311b9e4a8f52bda1af26eefb975da6d00f25c5ceb0e71dfc02b5ad97bb",
+          "type": 32768,
+          "uid": 1000
+        },
+        "phase_id": "09-compile-chain-normal",
+        "source_after": {
+          "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+          "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+        },
+        "source_before": {
+          "go.mod": "543360e03a8664cff87e8edd128cf34b231c57ba67f793951853f81a475d7eb6",
+          "go.sum": "824153f16a83536693997321c9bd116f7783c56c3fd2427d3b7c290ef49fc5ed"
+        },
+        "started_unix_ns": 1791065351227680565,
+        "status": "PASS"
+      }
+    },
+    {
+      "receipt_path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/compile-10-compile-protocol-normal-receipt.json",
+      "receipt_sha256": "a09c0f607c852f470b43535ec4e5815b48dc8f7617193ba828481584bde34718",
+      "result": {
+        "admission_free_bytes": 111902482432,
+        "argv": [
+          "/usr/local/go/bin/go",
+          "test",
+          "-mod=readonly",
+          "-p=2",
+          "-c",
+          "-o",
+          "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/protocol-normal.test",
+          "./protocol"
+        ],
+        "cwd": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/source/connect",
+        "environment": {
+          "GOCACHE": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+          "GOENV": "off",
+          "GOFLAGS": "",
+          "GOMAXPROCS": "2",
+          "GOMODCACHE": "/mnt/data/sn-testnet/gomodcache",
+          "GOPROXY": "file:///mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/module-proxy",
+          "GOSUMDB": "off",
+          "GOTOOLCHAIN": "local",
+          "GOWORK": "off",
+          "TMPDIR": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/tmp"
+        },
+        "execution": {
+          "exit_code": 0,
+          "failure": null,
+          "stderr": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/10-compile-protocol-normal.stderr",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stdout": {
+            "bytes": 0,
+            "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/evidence/10-compile-protocol-normal.stdout",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "finished_unix_ns": 1791065356864255618,
+        "image": {
+          "bytes": 9403201,
+          "ctime_ns": 1791065356750917987,
+          "device": 2081,
+          "gid": 1000,
+          "inode": 121042206,
+          "links": 1,
+          "mode": 320,
+          "mtime_ns": 1791065356643922301,
+          "path": "/mnt/data/sn-testnet/sol-final-sn-b6-qualification-20261003/images/protocol-normal.test",
+          "sha256_after": "94b8771e119dd11d713cb0f5065ddb054145fabab50e14f6fbaafc86ef00df2f",
+          "sha256_before": "94b8771e119dd11d713cb0f5065ddb054145fabab50e14f6fbaafc86ef00df2f",
+          "type": 32768,
+          "uid": 1000
+        },
+        "phase_id": "10-compile-protocol-normal",
+        "source_after": {
+          "go.mod": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d",
+          "go.sum": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+        },
+        "source_before": {
+          "go.mod": "a5e67acaa489fdd5fd7346024caa7a66d249013a1e18aac375a088e26490144d",
+          "go.sum": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+        },
+        "started_unix_ns": 1791065354943388177,
+        "status": "PASS"
+      }
+    }
+  ],
+  "root_review": "Independently verified each normal ELF full named stat identity and SHA against runtime job bc07248b87d8fb48ce1ba6acf4bd908c71dcc23ca800b820b32fc0e461f72cf3; no source changes, zero compiler exit, private0500 unique owned files.",
+  "continuity": "203 ordinary normal test roots admitted separately alongside retained serial race compilation, with combined2x peak margin and original32GiB cap; no baseline reset.",
+  "not_qualified": [
+    "Race execution",
+    "Full512 replay",
+    "Rust cross-engine execution",
+    "Operative omission controls",
+    "New continuous native producer",
+    "Actual host/runtime/launch authority"
+  ]
+}

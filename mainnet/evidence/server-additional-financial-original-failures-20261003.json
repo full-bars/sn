@@ -1,0 +1,45 @@
+{
+  "schema": "mainnet-server-additional-financial-original-failures-v1",
+  "status": "ORIGINAL_FAILURES_RETAINED_SUCCESSOR_UNQUALIFIED",
+  "bindings": [
+    {
+      "root": "TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy",
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestCompletedTransferBalanceRetentionPreservesDebtAndLegacy-original-failure.jsonl",
+      "bytes": 36479,
+      "records": 96,
+      "sha256": "000c569eb97ec440b1a4370d25cdb8c4cf1239972e301e4d8a9cbd0b999da2e8"
+    },
+    {
+      "root": "TestForceCloseCheckpointDisputeConvergesInOneSweep",
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestForceCloseCheckpointDisputeConvergesInOneSweep-original-failure.jsonl",
+      "bytes": 40427,
+      "records": 112,
+      "sha256": "c3bf2f2f0bb8d4e5e8eed6e687a5ffb043874ee2d4499dc794fd9285c4627f94"
+    },
+    {
+      "root": "TestForceCloseHealthyFinalizationSkipsDisputeSettlement",
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestForceCloseHealthyFinalizationSkipsDisputeSettlement-original-failure.jsonl",
+      "bytes": 41990,
+      "records": 104,
+      "sha256": "ea3ab6464475a8241dd64f07539b83ed363c281d482d0ea15fb74e7e4f5ecc06"
+    },
+    {
+      "root": "TestEscrow",
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestEscrow-original-failure.jsonl",
+      "bytes": 37523,
+      "records": 116,
+      "sha256": "156c238e2dbb15aa2ac453168091406f4def719429be91af6413b8357fd9f596"
+    },
+    {
+      "root": "TestCompanionEscrowAndCheckpoint",
+      "path": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestCompanionEscrowAndCheckpoint-original-failure.jsonl",
+      "bytes": 40758,
+      "records": 118,
+      "sha256": "efce2d4661a191e1830633a45df53826af1ee55de401bce18f5fd592cae77c6a"
+    }
+  ],
+  "prior_4754_source_preserved": true,
+  "prior_4754_not_complete_failure_coverage": true,
+  "triage": "Five additional retention/force-close/escrow fixtures require separate causal review; returned grant and pending debit lifecycle assertions must precede public flushing.",
+  "qualification_pending": true
+}

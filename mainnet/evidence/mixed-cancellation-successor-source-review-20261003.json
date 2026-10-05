@@ -1,0 +1,34 @@
+{
+  "schema": "mixed-cancellation-successor-source-review-v1",
+  "status": "SOURCE_REVIEWED_UNEXECUTED",
+  "source": {
+    "base": "c5737e0d91dabe1c7a89b1f3865e2316d33f0e58",
+    "commit": "0e5ace17d6cdd419331a3dbca13fb3ec96c67808",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-mixed-cancellation/sn",
+    "sparse": true,
+    "tree": "72a346cbf56cf44d52decb6045d974f442b093a9"
+  },
+  "intake_sha256": "fd2b2502906c2b80140e2ef5b9ab918e3f12c036cbaec391fa9613b6b3297d5f",
+  "verified_physical_bindings": [
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-mixed-cancellation/sn/mainnet/monitor_cancellation.go",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-mixed-cancellation/sn/mainnet/monitor_cancellation_test.go",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-mixed-cancellation/sn/mainnet/monitor_directory.go",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-mixed-cancellation/evidence/operative-controls.json",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-mixed-cancellation/evidence/intake.json",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-monitor-corrections/evidence/operative-controls.json",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-monitor-corrections/evidence/intake.json"
+  ],
+  "changed_files": [
+    "mainnet/monitor_cancellation.go",
+    "mainnet/monitor_cancellation_test.go",
+    "mainnet/monitor_directory.go"
+  ],
+  "review": "Both classifiers now traverse each joined error leaf, allowing Canceled and DeadlineExceeded together. Owner classifier still requires ctx.Err and its returned cause; independent I/O, integrity, ownership and cleanup causes remain excluded. Tests include both mixed orderings and wrapped leaves with hard-cause controls.",
+  "selected_roots": 52,
+  "operative_controls": 8,
+  "limits": [
+    "No execution or behavioral qualification.",
+    "Supersedes c573 for upcoming correction qualification without changing original live b6 runs.",
+    "Native producer and Core read-cause successors remain separate."
+  ]
+}

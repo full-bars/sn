@@ -1,0 +1,936 @@
+{
+  "schema": "root-native-evm-read-causes9d-qualification-v1",
+  "status": "PASS_SCOPED",
+  "source": {
+    "commit": "9d18176226dc3846f23efbdf055a4478964a730f",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn",
+    "tree": "dbf38454325d07a5b418745e1eb741b647eaa5b9"
+  },
+  "parent": "0f8886946b7d58808ef9ae89dbdd968f31e77298",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/intake.json",
+    "bytes": 10864,
+    "sha256": "7c0a9d1a984626bc0bc70467833ed9ba9b27d4effff4912f2bdc6db34835414a"
+  },
+  "positive_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/read-causes9d-positive-receipt.json",
+    "bytes": 6592,
+    "sha256": "ed6e9d91638fed2b6646a51c20a97aa1a19fcd65d29abb16114d35e2edca0180"
+  },
+  "terminal_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/read-causes9d-final-receipt.json",
+    "bytes": 13148,
+    "sha256": "a2f8e29070261f79f841330c35718971d6218806bb84baa5d6d802c0a5458106"
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/intake.json",
+      "bytes": 10864,
+      "sha256": "7c0a9d1a984626bc0bc70467833ed9ba9b27d4effff4912f2bdc6db34835414a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/author_compile.sh",
+      "bytes": 1200,
+      "sha256": "d1bf8b01f275a03382337cd019e8ce9312b805389a0f961113f604bb014ba755"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/compile-exits.json",
+      "bytes": 61,
+      "sha256": "45fb64c0c488ce765be27022e25590db29346cb8ec36649efaf86e98dc097bcd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/deps.log",
+      "bytes": 28557,
+      "sha256": "c67cb81be39eb8d0b79109790b52bdc0c77c45d330000c79c029d5382f29a3b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/deps.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/jobs.json",
+      "bytes": 2745,
+      "sha256": "3d5ec1b75873c15c0b4c67f89824b7907f4be7ed9436c53936aab33c32bb2340"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/modules.log",
+      "bytes": 175012,
+      "sha256": "1766d2e979ee679584937dbd527f125d6692274377c6343f7aac6be03cd959f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/modules.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-original-overlay.json",
+      "bytes": 1286,
+      "sha256": "181be6a56154397ed28aed3aa41abc551003ab86609c0041f5043253f8d8f171"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-original/monitor_economic_evm_archive_command.go",
+      "bytes": 13473,
+      "sha256": "498dafb046b84e64c6d61966d7d9d263937456e3597b35fab306a13ce1e9adb5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-original/monitor_economic_evm_catalog.go",
+      "bytes": 17435,
+      "sha256": "bf768a3111ad84662b52036365096bfd67101ff3777e73dbdf7b4a1ec627d803"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-original/monitor_economic_native_archive_command.go",
+      "bytes": 15851,
+      "sha256": "ec145a327994fc5566247f7d1c3a2c055d2460c41d7865ee84204be1718235af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-original/monitor_economic_native_catalog.go",
+      "bytes": 17243,
+      "sha256": "054b6d646578ea6702613902bfea8be7875a61324b56e16a346f333a522426c8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-published-overlay.json",
+      "bytes": 1290,
+      "sha256": "277149358a6777f88207b9cae56c53eca97f1bab829a896430d5c0567fa2a8a2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-published/monitor_economic_evm_archive_command.go",
+      "bytes": 13577,
+      "sha256": "c17d8a46bfb382193b9006ea7ba2dec8d7a055596d91a905ba7b5cbe015de8e2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-published/monitor_economic_evm_catalog.go",
+      "bytes": 17594,
+      "sha256": "918fdaa7d61640cc37298cc01b5ac74a06e06305d66f95cabec86fa662a6d1fd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-published/monitor_economic_native_archive_command.go",
+      "bytes": 15958,
+      "sha256": "5dcbe82a92370d485ad163bec05030c512d7a3ba88fa4f683919144bf36d6aea"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/old-published/monitor_economic_native_catalog.go",
+      "bytes": 17408,
+      "sha256": "f6087e69b82fb77be7476fef526f73959595236d486c1b7041af4ac013f7003e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/peer-graph.json",
+      "bytes": 3483,
+      "sha256": "d6590a4be4be5e3384067940c613c0be2b273d2ff8a0cde88805a4684817956b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/seal-attempt1-result.json",
+      "bytes": 421,
+      "sha256": "c87cc665abea8b6db0ddd2d3590a2cd96cf40f294af5873b74e200f3e288a2c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/seal.go",
+      "bytes": 6075,
+      "sha256": "541d4adaead3f1a8f1afbac08845850c2b9ec3cf6020eed93bc4e8387805708d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/seal_fixed.go",
+      "bytes": 6209,
+      "sha256": "b98e68ed5a6706859e923d1f7eaae30f7c2a803ec2945e2d43c25a3bf6c48e1c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/source-join.json",
+      "bytes": 604,
+      "sha256": "4140dd649ae56488f3bed2c1b69a9b203e70814ce5db346987350371c75a9e16"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/source-manifest-verified.json",
+      "bytes": 8680601,
+      "sha256": "2441be437502bb7b7a27935108a6b6d75b32df41fe197f76f091ed9fa41046ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/evidence/source-manifest.json",
+      "bytes": 8680601,
+      "sha256": "2441be437502bb7b7a27935108a6b6d75b32df41fe197f76f091ed9fa41046ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/mainnet-compile.test",
+      "bytes": 74753696,
+      "sha256": "cd24c3ae076773629bcbcfc209b2d162f06e7a52362cc8cd2ed4a057406bbedd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_economic_evm_archive_command.go",
+      "bytes": 13629,
+      "sha256": "58839b862ff8306946b566934a679eaef61b38e06ee937330f120781905c2b24"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_economic_evm_catalog.go",
+      "bytes": 17643,
+      "sha256": "68978a7855ca4dd49f9bf693155d2dead9e571d9a7cab2468ffd8850f86d7bc7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_economic_native_archive_command.go",
+      "bytes": 16013,
+      "sha256": "0d6e567348751d5f8baf6968ecd9ba5a0554094cab0ec860ab32cad0929ba0cb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_economic_native_catalog.go",
+      "bytes": 17460,
+      "sha256": "1872eb18d626fc7359bfdb73cdd5795e4b265599530c1f8bac821664146bdb46"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_history_archive.go",
+      "bytes": 4747,
+      "sha256": "a2e39fea52fb6a93ec372ed7034522675ade4af119e96be24ae449605d05eb30"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_history_read_cause_test.go",
+      "bytes": 11868,
+      "sha256": "a5760c7a04782206119d70a519705172c2bf31f46c19c4967bd743a396223e31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_services.go",
+      "bytes": 17148,
+      "sha256": "bae71c54d423124977523efbe10edd58435085861c2973d5294ee7539ac3652e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/read-causes9d-positive-receipt.json",
+      "bytes": 6592,
+      "sha256": "ed6e9d91638fed2b6646a51c20a97aa1a19fcd65d29abb16114d35e2edca0180"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/read-causes9d-final-receipt.json",
+      "bytes": 13148,
+      "sha256": "a2f8e29070261f79f841330c35718971d6218806bb84baa5d6d802c0a5458106"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/compile-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/compile-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/compile-normal.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/compile-race.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/compile-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/compile-race.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/image-normal.sha256",
+      "bytes": 325,
+      "sha256": "55f1bb1aa05e1f794d70688fb296475e9a31a6b932367dfdba45eb47eff201f8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/image-race.sha256",
+      "bytes": 335,
+      "sha256": "496f7cf0f8ea953ed8fe70e5948c8771d33f253ca2b279a96fef87384b7d8c5f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/mainnet-deps.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/mainnet-deps.stdout",
+      "bytes": 28557,
+      "sha256": "c67cb81be39eb8d0b79109790b52bdc0c77c45d330000c79c029d5382f29a3b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/mainnet-vet.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/mainnet-vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/mainnet-vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/modules.jsonl",
+      "bytes": 173998,
+      "sha256": "430e3cdb2e82c47afad8ae4c2308af511d17e0dc29ff77f5f6a1a0d11f371a6d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/preflight.exits",
+      "bytes": 4,
+      "sha256": "0ccdb5a77ba5bf7687f2565a8ed97dfb9c1af45503c496fb646312239fab5101"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/seven-normal.command.json",
+      "bytes": 1419,
+      "sha256": "42554be7416ab50a01a5c9f06b0bf031be8fc992ed6e0fd68286c99840727251"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/seven-normal.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/seven-normal.jsonl",
+      "bytes": 5186,
+      "sha256": "6282ba7ea9fc3761cc929725cc4f77471645cf51f554df908b9dfa6c2da746be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/seven-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/seven-race.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/seven-race.jsonl",
+      "bytes": 5198,
+      "sha256": "9907ad59696c0f7fea379351e6e671b6da19cfb54574321bc88e01536e57cdc0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/seven-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/source-readback.json",
+      "bytes": 166,
+      "sha256": "4fcc81fa1d55cc059dba7f8b93adae48f2c7aaa87027bd2e2fb6b8358149686a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-normal-admission-free",
+      "bytes": 13,
+      "sha256": "f543879a418a6d496e6bc598596206b3a4e51b65c1197e21fa147e70446b88c7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-normal-compile-admission-free",
+      "bytes": 13,
+      "sha256": "49d6d6a9c23c5fd8054e7278436c67e476d8734f6cc1df92c88ad8d6a5ee44ae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-normal-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-normal-image.sha256",
+      "bytes": 349,
+      "sha256": "6d749078b849de330766f5b58413a9880a7c207c2ae6fc676f60463957f087f5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-normal.jsonl",
+      "bytes": 9189,
+      "sha256": "d339f3d20bc9c7b72e3e27e76746ddfbdb31c87d993e1c2c4442b0d437016c65"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-race-admission-free",
+      "bytes": 13,
+      "sha256": "ea9c66f809f4335d7efde375bfbbdcf15e670e5374b4bb7065712af52f3f336e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-race-compile-admission-free",
+      "bytes": 13,
+      "sha256": "9c3f3708cc0916afe08b2b6434ee6eb3ba2dacd7988e4819c206e268fd45e9eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-race-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-race-image.sha256",
+      "bytes": 345,
+      "sha256": "409e5a6e01ad3c785046b147a5c7f17e8ed5d6510aec65462f26c3ef26597539"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-race.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-race.jsonl",
+      "bytes": 9193,
+      "sha256": "03627889634611d91ce9bb7cfaa9069e6b19fe704566280e4d42e3149a11f0f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-remap.json",
+      "bytes": 1086,
+      "sha256": "68c10263d6e7f63555ee63806236da0162fe67bba42fd0e96e229f58b58f0f4d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-original-source-proof.json",
+      "bytes": 1317,
+      "sha256": "a9e930e5a8a0a5aed7a5601258e26b100fef623625d374de5318643c14a0acf4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-normal-admission-free",
+      "bytes": 13,
+      "sha256": "987c948172a7bb50a05488401e244cf7b9e30e75698103786bae821c1e16c995"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-normal-compile-admission-free",
+      "bytes": 13,
+      "sha256": "6ae35bc54d6deaf3d98ea5c6267a85eb10cac9dcaa458f830cc809d80a402c54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-normal-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-normal-image.sha256",
+      "bytes": 351,
+      "sha256": "c8cddb3e7916db252a9873e27e940ad085fda62bb7557549a79a3c2aad1233fd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-normal.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-normal.jsonl",
+      "bytes": 8066,
+      "sha256": "5cf085ed3e6ac0e2b68ad3aa85ca3275f6b3e7fda8efc13c6709d27ff586a88b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-normal.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-race-admission-free",
+      "bytes": 13,
+      "sha256": "229651f25ba5d01427ff3c3cf7a98d7fa8e0031abfc1ee85398b0e0577b69114"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-race-compile-admission-free",
+      "bytes": 13,
+      "sha256": "d1c550429d15e3d1e7c001e4b28001f068d3feac29c62c761377d3aad6bf9e1b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-race-compile.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-race-image.sha256",
+      "bytes": 347,
+      "sha256": "2da3394446820b9b3ece8699bcf9a37fbd31485966aadbe3dc1e1d2ef01ff4eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-race.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-race.jsonl",
+      "bytes": 8077,
+      "sha256": "7c7069210f2b7f38a34b0edabf706ffedbaa891f03fcf75d3948b9e72858354b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-race.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-remap.json",
+      "bytes": 1090,
+      "sha256": "dbd514376fb5c675e690d040f2020af62bd1307d98f8ff7f86a7ddbcbda3545f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/old-published-source-proof.json",
+      "bytes": 1317,
+      "sha256": "745ed5be200e85f9994dafad5d6d0bc04f087ea8405cebdc9a5e7a3cd3698bcd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/evidence/read-causes9d-positive-receipt.json",
+      "bytes": 6592,
+      "sha256": "ed6e9d91638fed2b6646a51c20a97aa1a19fcd65d29abb16114d35e2edca0180"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/mainnet-owned.test",
+      "bytes": 74723920,
+      "sha256": "33500739e5fdecdc8bcd04e724a4f3423a86bba330b66fe49a762cb205d28cb7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/mainnet-race-owned.test",
+      "bytes": 100164856,
+      "sha256": "9ce96157434dbc964380a8ddd5bb8c2e32dab0d30569de50b7b63a1239cd3284"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-original-normal-owned.test",
+      "bytes": 74727560,
+      "sha256": "03f878d323b46403f9178d35481fcc46c1e79be50a8d187ced214039205dcfa0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-original-race-owned.test",
+      "bytes": 100172248,
+      "sha256": "51402059813aeb3b472e343c87cb0aae6cbc2a0c44ed21bd00d8116603a089ca"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-published-normal-owned.test",
+      "bytes": 74727920,
+      "sha256": "71f8711250b669fd7183f1a33718120ec879ffe42f156141b6669328f178b9cb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-published-race-owned.test",
+      "bytes": 100173696,
+      "sha256": "ab9954b115318c825c6fd72c9d24f47fdb2f32549130a8a282498a698fb63ae1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_evm_archive_command.go",
+      "bytes": 13629,
+      "sha256": "58839b862ff8306946b566934a679eaef61b38e06ee937330f120781905c2b24"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/controls/old-original/monitor_economic_evm_archive_command.go",
+      "bytes": 13473,
+      "sha256": "498dafb046b84e64c6d61966d7d9d263937456e3597b35fab306a13ce1e9adb5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_evm_catalog.go",
+      "bytes": 17643,
+      "sha256": "68978a7855ca4dd49f9bf693155d2dead9e571d9a7cab2468ffd8850f86d7bc7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/controls/old-original/monitor_economic_evm_catalog.go",
+      "bytes": 17435,
+      "sha256": "bf768a3111ad84662b52036365096bfd67101ff3777e73dbdf7b4a1ec627d803"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_native_archive_command.go",
+      "bytes": 16013,
+      "sha256": "0d6e567348751d5f8baf6968ecd9ba5a0554094cab0ec860ab32cad0929ba0cb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/controls/old-original/monitor_economic_native_archive_command.go",
+      "bytes": 15851,
+      "sha256": "ec145a327994fc5566247f7d1c3a2c055d2460c41d7865ee84204be1718235af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_native_catalog.go",
+      "bytes": 17460,
+      "sha256": "1872eb18d626fc7359bfdb73cdd5795e4b265599530c1f8bac821664146bdb46"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/controls/old-original/monitor_economic_native_catalog.go",
+      "bytes": 17243,
+      "sha256": "054b6d646578ea6702613902bfea8be7875a61324b56e16a346f333a522426c8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_evm_archive_command.go",
+      "bytes": 13629,
+      "sha256": "58839b862ff8306946b566934a679eaef61b38e06ee937330f120781905c2b24"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/controls/old-published/monitor_economic_evm_archive_command.go",
+      "bytes": 13577,
+      "sha256": "c17d8a46bfb382193b9006ea7ba2dec8d7a055596d91a905ba7b5cbe015de8e2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_evm_catalog.go",
+      "bytes": 17643,
+      "sha256": "68978a7855ca4dd49f9bf693155d2dead9e571d9a7cab2468ffd8850f86d7bc7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/controls/old-published/monitor_economic_evm_catalog.go",
+      "bytes": 17594,
+      "sha256": "918fdaa7d61640cc37298cc01b5ac74a06e06305d66f95cabec86fa662a6d1fd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_native_archive_command.go",
+      "bytes": 16013,
+      "sha256": "0d6e567348751d5f8baf6968ecd9ba5a0554094cab0ec860ab32cad0929ba0cb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/controls/old-published/monitor_economic_native_archive_command.go",
+      "bytes": 15958,
+      "sha256": "5dcbe82a92370d485ad163bec05030c512d7a3ba88fa4f683919144bf36d6aea"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_native_catalog.go",
+      "bytes": 17460,
+      "sha256": "1872eb18d626fc7359bfdb73cdd5795e4b265599530c1f8bac821664146bdb46"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/controls/old-published/monitor_economic_native_catalog.go",
+      "bytes": 17408,
+      "sha256": "f6087e69b82fb77be7476fef526f73959595236d486c1b7041af4ac013f7003e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_economic_evm_archive_command.go",
+      "bytes": 13629,
+      "sha256": "58839b862ff8306946b566934a679eaef61b38e06ee937330f120781905c2b24"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_evm_archive_command.go",
+      "bytes": 13629,
+      "sha256": "58839b862ff8306946b566934a679eaef61b38e06ee937330f120781905c2b24"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_economic_evm_catalog.go",
+      "bytes": 17643,
+      "sha256": "68978a7855ca4dd49f9bf693155d2dead9e571d9a7cab2468ffd8850f86d7bc7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_evm_catalog.go",
+      "bytes": 17643,
+      "sha256": "68978a7855ca4dd49f9bf693155d2dead9e571d9a7cab2468ffd8850f86d7bc7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_economic_native_archive_command.go",
+      "bytes": 16013,
+      "sha256": "0d6e567348751d5f8baf6968ecd9ba5a0554094cab0ec860ab32cad0929ba0cb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_native_archive_command.go",
+      "bytes": 16013,
+      "sha256": "0d6e567348751d5f8baf6968ecd9ba5a0554094cab0ec860ab32cad0929ba0cb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_economic_native_catalog.go",
+      "bytes": 17460,
+      "sha256": "1872eb18d626fc7359bfdb73cdd5795e4b265599530c1f8bac821664146bdb46"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_economic_native_catalog.go",
+      "bytes": 17460,
+      "sha256": "1872eb18d626fc7359bfdb73cdd5795e4b265599530c1f8bac821664146bdb46"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_history_archive.go",
+      "bytes": 4747,
+      "sha256": "a2e39fea52fb6a93ec372ed7034522675ade4af119e96be24ae449605d05eb30"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_history_archive.go",
+      "bytes": 4747,
+      "sha256": "a2e39fea52fb6a93ec372ed7034522675ade4af119e96be24ae449605d05eb30"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_history_read_cause_test.go",
+      "bytes": 11868,
+      "sha256": "a5760c7a04782206119d70a519705172c2bf31f46c19c4967bd743a396223e31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_history_read_cause_test.go",
+      "bytes": 11868,
+      "sha256": "a5760c7a04782206119d70a519705172c2bf31f46c19c4967bd743a396223e31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-read-causes/sn/mainnet/monitor_services.go",
+      "bytes": 17148,
+      "sha256": "bae71c54d423124977523efbe10edd58435085861c2973d5294ee7539ac3652e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/source/mainnet/monitor_services.go",
+      "bytes": 17148,
+      "sha256": "bae71c54d423124977523efbe10edd58435085861c2973d5294ee7539ac3652e"
+    }
+  ],
+  "owned_images": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/mainnet-owned.test",
+      "bytes": 74723920,
+      "sha256": "33500739e5fdecdc8bcd04e724a4f3423a86bba330b66fe49a762cb205d28cb7",
+      "mode": "0500",
+      "links": 1,
+      "uid": 1000
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/mainnet-race-owned.test",
+      "bytes": 100164856,
+      "sha256": "9ce96157434dbc964380a8ddd5bb8c2e32dab0d30569de50b7b63a1239cd3284",
+      "mode": "0500",
+      "links": 1,
+      "uid": 1000
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-original-normal-owned.test",
+      "bytes": 74727560,
+      "sha256": "03f878d323b46403f9178d35481fcc46c1e79be50a8d187ced214039205dcfa0",
+      "mode": "0500",
+      "links": 1,
+      "uid": 1000
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-original-race-owned.test",
+      "bytes": 100172248,
+      "sha256": "51402059813aeb3b472e343c87cb0aae6cbc2a0c44ed21bd00d8116603a089ca",
+      "mode": "0500",
+      "links": 1,
+      "uid": 1000
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-published-normal-owned.test",
+      "bytes": 74727920,
+      "sha256": "71f8711250b669fd7183f1a33718120ec879ffe42f156141b6669328f178b9cb",
+      "mode": "0500",
+      "links": 1,
+      "uid": 1000
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-evm-read-causes-9d-independent-20261003/bin/old-published-race-owned.test",
+      "bytes": 100173696,
+      "sha256": "ab9954b115318c825c6fd72c9d24f47fdb2f32549130a8a282498a698fb63ae1",
+      "mode": "0500",
+      "links": 1,
+      "uid": 1000
+    }
+  ],
+  "changed_paths": [
+    {
+      "path": "mainnet/monitor_economic_evm_archive_command.go",
+      "sha256": "58839b862ff8306946b566934a679eaef61b38e06ee937330f120781905c2b24"
+    },
+    {
+      "path": "mainnet/monitor_economic_evm_catalog.go",
+      "sha256": "68978a7855ca4dd49f9bf693155d2dead9e571d9a7cab2468ffd8850f86d7bc7"
+    },
+    {
+      "path": "mainnet/monitor_economic_native_archive_command.go",
+      "sha256": "0d6e567348751d5f8baf6968ecd9ba5a0554094cab0ec860ab32cad0929ba0cb"
+    },
+    {
+      "path": "mainnet/monitor_economic_native_catalog.go",
+      "sha256": "1872eb18d626fc7359bfdb73cdd5795e4b265599530c1f8bac821664146bdb46"
+    },
+    {
+      "path": "mainnet/monitor_history_archive.go",
+      "sha256": "a2e39fea52fb6a93ec372ed7034522675ade4af119e96be24ae449605d05eb30"
+    },
+    {
+      "path": "mainnet/monitor_history_read_cause_test.go",
+      "sha256": "a5760c7a04782206119d70a519705172c2bf31f46c19c4967bd743a396223e31"
+    },
+    {
+      "path": "mainnet/monitor_services.go",
+      "sha256": "bae71c54d423124977523efbe10edd58435085861c2973d5294ee7539ac3652e"
+    }
+  ],
+  "census": {
+    "positive-normal": {
+      "run": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "pass": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "fail": [],
+      "skip": []
+    },
+    "old-original-normal": {
+      "run": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "pass": [
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal"
+      ],
+      "fail": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "skip": []
+    },
+    "old-published-normal": {
+      "run": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "pass": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes"
+      ],
+      "fail": [
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "skip": []
+    },
+    "positive-race": {
+      "run": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "pass": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "fail": [],
+      "skip": []
+    },
+    "old-original-race": {
+      "run": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "pass": [
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal"
+      ],
+      "fail": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "skip": []
+    },
+    "old-published-race": {
+      "run": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "pass": [
+        "TestMonitorCatalogForecastObservationRetainsOriginalCause",
+        "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal",
+        "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes"
+      ],
+      "fail": [
+        "TestMonitorEvmArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorEvmCatalogReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeArchiveReadErrorsRetainOriginalCauseAndResume",
+        "TestMonitorNativeCatalogReadErrorsRetainOriginalCauseAndResume"
+      ],
+      "skip": []
+    }
+  },
+  "scope": "Seven read-error/cause and same-plan recovery roots normal/race, vet0; two four-file operative old-branch overlays, 20 intended behavioral failures across modes with unaffected positives.",
+  "limitations": [
+    "No automatic controller retry authority introduced; this scope preserves diagnostic causes and separates observation failure from returned absence/digest/byte contradiction.",
+    "Operative overlays retain new callbacks and are not whole-old-release qualification.",
+    "Actual host topology, complete economic authority and final combined release remain unproved."
+  ]
+}

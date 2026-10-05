@@ -56,6 +56,8 @@ func newValidatorUploadAuthorityTestFixture(t *testing.T) *validatorUploadAuthor
 	base := newReleaseActivationV2TestFixture(t, "")
 	self := &validatorUploadAuthorityTestFixture{releaseActivationV2TestFixture: base, now: time.Now().Truncate(time.Second), currentHash: types.Hash{0x29}, currentPermit: true,
 		records: make(map[[32]byte]ValidatorEvidenceActivationPublication), events: make([]ValidatorUploadActivationEvent, 0)}
+	currentHeader, currentHash := releaseReceiptTestHeader(t, base.native.block, 101)
+	self.currentHash = currentHash
 	self.currentMillis = uint64(self.now.UnixMilli())
 	original := base.native.chain.API.Client
 	var metadataHex string
@@ -106,12 +108,7 @@ func newValidatorUploadAuthorityTestFixture(t *testing.T) *validatorUploadAuthor
 			return setValidatorRuntimeIdentityTestResult(result, self.currentHash.Hex())
 		}
 		if method == "chain_getHeader" && len(args) == 1 && args[0] == self.currentHash.Hex() {
-			header, ok := result.(*types.Header)
-			if !ok {
-				return errors.New("current fixture header target differs")
-			}
-			*header = types.Header{Number: 101}
-			return nil
+			return setReleaseHistoricalTestResult(result, releaseReceiptTestHeaderWire(currentHeader))
 		}
 		if method == "state_getMetadata" {
 			return setValidatorRuntimeIdentityTestResult(result, metadataHex)

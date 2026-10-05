@@ -1,0 +1,126 @@
+{
+  "schema": "mainnet-independent-native-build-review-v1",
+  "status": "TWO_DISTINCT_RUST_ENGINES_COMPILED",
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-dual-engine-build.receipt.json",
+      "bytes": 3387,
+      "sha256": "2022d0fe74a8bd74f262dad4194eb29b3d185f1493805e8a0ddeeb7b159cbd4d"
+    },
+    {
+      "bytes": 497612,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-bins-build.stdout",
+      "sha256": "f0faee92a0a203c7a6f3eeaf772c6345b298cf13a61134b27da83094c9bc32ea"
+    },
+    {
+      "bytes": 202,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-bins-build.stderr",
+      "sha256": "535a43cd780ff4960fe199b8eb90b62f5322d47cfbc6ac5acd6d7528dbbd06de"
+    },
+    {
+      "bytes": 3069,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-bins-build.resources.csv",
+      "sha256": "9af6535919e40a78f8fa324f07bcebe75b69d2a89cc33e888adb44f4c5fc72c8"
+    },
+    {
+      "bytes": 53657192,
+      "ctime_ns": 1791098406407615485,
+      "device": 2081,
+      "inode": 18641309,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791098406264621764,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-capture",
+      "sha256": "bde25ccda67b5321849c190139f2ff1de7bc2caa0234df5514183f6059d2447d",
+      "uid": 1000
+    },
+    {
+      "bytes": 51509672,
+      "ctime_ns": 1791098407928548704,
+      "device": 2081,
+      "inode": 18641310,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791098407786554938,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-replay",
+      "sha256": "abbbbae181a120c04359d39d8448b12034367f235131f4627d5106d0ddb5b5d0",
+      "uid": 1000
+    }
+  ],
+  "compiler_artifacts": [
+    {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe#0.1.0",
+      "manifest_path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "runtime-historical-capture",
+        "src_path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-capture.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 0,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": false
+      },
+      "features": [],
+      "filenames": [
+        "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/runtime-historical-capture"
+      ],
+      "executable": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/runtime-historical-capture",
+      "fresh": false
+    },
+    {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe#0.1.0",
+      "manifest_path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "runtime-historical-proof",
+        "src_path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/source/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 0,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": false
+      },
+      "features": [],
+      "filenames": [
+        "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/runtime-historical-proof"
+      ],
+      "executable": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/runtime-historical-proof",
+      "fresh": false
+    }
+  ],
+  "samples": 45,
+  "sampled_forest_rss_max_bytes": 1751871488,
+  "sampling_limit": "0.5-second measurements, not an upper bound",
+  "scope": "Fresh offline locked changed dc1 crate bin build and protected distinct ELF readback only. No cross-ELF actual execution, Rust positive/control test, dependent Go or live runtime authority inferred.",
+  "remaining": [
+    "24 selected Rust roots and exports",
+    "Two Rust causal groups",
+    "Dependent actual fd4 capture/replay public Go roots"
+  ],
+  "requirement_closure": false
+}

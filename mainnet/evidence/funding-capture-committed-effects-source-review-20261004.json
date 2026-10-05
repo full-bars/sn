@@ -1,0 +1,60 @@
+{
+  "schema": "capture-committed-effects-root-source-review-v1",
+  "status": "ONE_TEST_MODULE_CORRECTION_REVIEWED_EXECUTION_PENDING",
+  "head": "8ad5ac7e93ef4faa91b0dc688a9c7c703ea22d20",
+  "parent": "e00e9068ccebe92f2352d4e72300acac4fe91331",
+  "bindings": [
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-capture-effects-fixture/sn",
+      "head": "8ad5ac7e93ef4faa91b0dc688a9c7c703ea22d20",
+      "path": "tools/runtime-metadata-probe/src/historical_native_capture_join_tests.rs",
+      "bytes": 14448,
+      "sha256": "a3d0f04f4a6e450a1557f9c8be705c8904f83ebb1f328ba277f78144f6c92ecd"
+    },
+    {
+      "repository": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-original-finality/sn",
+      "head": "f7bb5d29674b1d0302f9b89fc1fbf23c76afad86",
+      "path": "mainnet/economic_native_principal_effects.go",
+      "bytes": 17238,
+      "sha256": "192cacaf3a8f888bfb58791557d9bbd2f90da73feb1c6ac391be3c33e783a429"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-capture-effects-fixture/evidence/source-review.json",
+      "bytes": 2783,
+      "sha256": "97dc249e8738f23fee867c6bbfe98f971d38f6e95fa8c2087db67f26d28ca663"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-capture-effects-fixture/evidence/crate-source-census.json",
+      "bytes": 9576,
+      "sha256": "9d865bed3b6983811fd7c077d150b3f2973c16ed0c95d4182464d118d37d3680"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-capture-effects-fixture/evidence/qualification-recipe.json",
+      "bytes": 6026,
+      "sha256": "b4aee0f44a8177502e6521c19c9c00727df59bea5fb1aa83d0ee26b37b9bb118"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/rust-native-capture-effects-fixture/evidence/operative-controls.json",
+      "bytes": 40384,
+      "sha256": "ce16a49e7cf59baab8463cc3a00e74dbee96d310cc3861ec4d4306db8d797a56"
+    }
+  ],
+  "scope": {
+    "changed_test_files": 1,
+    "failed_export_roots": 2,
+    "positive_export_files": 7,
+    "new_fixture_control": 1,
+    "inherited_unexecuted_controls": 6
+  },
+  "review": [
+    "Original host get/set observations remain retained; pair must share key/Apply identity and host order, actual returned-before storage and committed-after bytes.",
+    "Every selected write must match exactly one independent mutation by ordinal, operation, key and value hash; reads must have no mutation.",
+    "Existing committed-count, transaction bytes, Apply index, economic amounts and rollback assertions remain unchanged; no source row is blindly dropped.",
+    "Adjacent Go original effect derivation already filters set operations and matches mutation ordinal/key, then validates original mutation/phase identities. No production count patch is justified by these fixture failures.",
+    "Retain seven original Yuma/populated assets and two original framing positives. Execute only two affected exporters and seven inherited/new controls."
+  ],
+  "limits": [
+    "No corrected exporter execution claim; source-only controls remain unexecuted.",
+    "Full funding41, finality and whole-fee authority qualification remain required."
+  ]
+}

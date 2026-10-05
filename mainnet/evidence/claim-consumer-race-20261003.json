@@ -1,0 +1,86 @@
+{
+  "count": 23,
+  "failures": 0,
+  "files": {
+    "evidence/jobs-race.tsv": "781395d36271bc6ba9b0d1d82034fa1dffa5d7e9140cca3d6c6a250cb5eedb41",
+    "evidence/module-graph.jsonl": "366d39cb2e40995e1a2b8a045d8f1d603d05b796305f25303028bae5ab49f07f",
+    "evidence/race-actual-producer.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/race-actual-producer.jsonl": "3881d5a7cb22abf8c238a1ce2628ebd4006bd50cac839a56db55380364811fdf",
+    "evidence/race-actual-producer.phase": "4c4c0844d1d25b2e0304e4fd601a29a2e9d27944cb128eb55f1770be88eee705",
+    "evidence/race-actual-producer.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/race-claims.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/race-claims.jsonl": "1dce9711dcaa6a3931c2d05e86864353890839f834d47fddd8894ceec20cc993",
+    "evidence/race-claims.phase": "209cd0ef6591a1cf841d02dc7ba688a0b860db3a05897c18a8b512d376f2b976",
+    "evidence/race-claims.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/race-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/race-workers.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/race-workers.jsonl": "9374e7e124f87434e3771500af56b24a497dff5066b7632c5a26e4ab284542d3",
+    "evidence/race-workers.phase": "9f63f9804ea2852831aff7e86103867363d83a3fe53e608059cc9282e3ed20af",
+    "evidence/race-workers.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/run-selected.sh": "6e0b2ab64631c402407f47e0f20600f086ba2604969d26f8a505e73c17eae146",
+    "evidence/sn.mod": "8c486a23eb35061d2c96d3d7c8ea044dc037a13f61eedea8958b5e52a630fba9",
+    "evidence/sn.sum": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545",
+    "evidence/source-fence.json": "15bad86d0eb62cd8dced95d6fb76963a08db37e559842c464584577cc7bfae2f",
+    "evidence/source-graph-receipt.json": "92a8ad3b8ca68d965425b5e86c18c611c120d6a1791ef309d0498f188236c44f"
+  },
+  "groups": [
+    {
+      "count": 16,
+      "name": "claims",
+      "package": "./mainnet",
+      "roots": [
+        "TestMonitorClaimAggregatePaymentRetainsExactAmountWithoutAllocation",
+        "TestMonitorClaimBodyCancellationAndBoundsJoin",
+        "TestMonitorClaimCheckpointReopenFencesLostOrRetargetedHistory",
+        "TestMonitorClaimContradictionCannotRewriteRetainedReceipt",
+        "TestMonitorClaimHeartbeatCannotMoveAcceptanceDeadline",
+        "TestMonitorClaimIdentityAndAuthDominateBodyCloseOutage",
+        "TestMonitorClaimPolicyRequiresIndependentBoundedExpectations",
+        "TestMonitorClaimPublicCompletedCheckpointLossPreservesPeer",
+        "TestMonitorClaimPublicExpectedPoolObservesAcceptedNotPaid",
+        "TestMonitorClaimPublicLostAckReopensExactCheckpoint",
+        "TestMonitorClaimPublicOutageAndForeignIdentityPreservePeer",
+        "TestMonitorClaimPublicUnsignedLeafAdvancesWithoutPayment",
+        "TestMonitorClaimReceiptRetainsEarlierMerkleWitness",
+        "TestMonitorClaimSequenceAndRestartCannotRefreshCachedSuccess",
+        "TestMonitorClaimUnavailableAndClockKeepAcceptedHistory",
+        "TestMonitorClaimWeakerReportingCannotResetProofProgress"
+      ],
+      "selector": "^TestMonitorClaim"
+    },
+    {
+      "count": 2,
+      "name": "workers",
+      "package": "./mainnet",
+      "roots": [
+        "TestMonitorProviderPublicRolesRecoverWithoutResettingPeer",
+        "TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer"
+      ],
+      "selector": "^(TestMonitorProviderPublicRolesRecoverWithoutResettingPeer|TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer)$"
+    },
+    {
+      "count": 5,
+      "name": "actual-producer",
+      "package": "./miner",
+      "roots": [
+        "TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit",
+        "TestClaimProgressActualReceiptRetainsAggregatePayment",
+        "TestClaimProgressFailedDurableSaveCannotPublish",
+        "TestClaimProgressPublicSwarmUsesActualWriterAndJoinedLifecycle",
+        "TestClaimProgressUnsignedLeafCannotInventReceiptOrPayment"
+      ],
+      "selector": "^(TestClaimProgressActualReceiptRetainsAggregatePayment|TestClaimProgressActualReceiptRetainsAcceptedAndDeferredCredit|TestClaimProgressUnsignedLeafCannotInventReceiptOrPayment|TestClaimProgressPublicSwarmUsesActualWriterAndJoinedLifecycle|TestClaimProgressFailedDurableSaveCannotPublish)$"
+    }
+  ],
+  "intake_sha256": "a85836daec51e1b85f6a3193416057181e9aa04bf9f5dbf1e9c45b43c13882af",
+  "limits": [
+    "Published Connect0a5 and frozen Server10a graph; no Connect9e/current Server composition claim.",
+    "No live claim submission or signer."
+  ],
+  "race_reports": 0,
+  "schema": "sol-claim-consumer-800-race-v1",
+  "skips": 0,
+  "source_commit": "80030acb1024f8a74967ae9948ceea6ed9e5faee",
+  "source_tree": "4249ab40291e6e5c6d48cba44ae0fb3a5eb185f6",
+  "status": "PASS_SCOPED"
+}

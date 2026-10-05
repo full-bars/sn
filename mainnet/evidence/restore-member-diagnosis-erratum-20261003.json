@@ -1,0 +1,15 @@
+{
+  "corrected_successor_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-member-restore-6b23-independent-20261003/evidence/qualification-receipt.json",
+    "sha256": "9b315f92fd1f1d85ee93e30a449736d1a3a07752990601e58e423196f5e924d8"
+  },
+  "correction": "Original f4e test requires nil owner and physical-directory error. Production returns a nonnil already-closed owner with that error; deferred close clears file/head and the caller refuses publication. The original receipt sentence saying the test required nonnil is reversed. No original raw test result, source byte, or receipt was changed.",
+  "original_frozen_predicate": "owner != nil || err == nil || !strings.Contains(err.Error(), \"physical directory changed\")",
+  "original_receipt": {
+    "path": "/mnt/data/sn-testnet/sol-member-restore-f4e-independent-20261003/evidence/original-failed-receipt.json",
+    "sha256": "e28a1265b63dd68d78db2e276c5bbb37e64d24943387c2f553d67507835f22ab"
+  },
+  "schema": "sol-member-f4e-diagnosis-erratum-v1",
+  "source_file": "/mnt/data/sn-testnet/sol-member-restore-f4e-independent-20261003/source/sn/mainnet/storage_prepare_member_restore_test.go",
+  "source_sha256": "757705aaf74406322708f0d578ad6f158284a48a16cc4204e433e183e9e5d55b"
+}

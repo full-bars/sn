@@ -1,0 +1,436 @@
+{
+  "schema": "urnetwork-native-economic-intake-v1",
+  "commit": "00d7efcd18c3a4d08c2883de9c50bb6376cba716",
+  "tree": "c7033a67db36e05bda50ae505922caaad80e044b",
+  "source": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn",
+  "parent": "ec2ed96eceba4374e59462398015ad3fc6f4ee9b",
+  "changed_paths": [
+    "mainnet/economic_emission.go",
+    "mainnet/economic_emission_events.go",
+    "mainnet/economic_emission_historical.go",
+    "mainnet/economic_emission_observe.go",
+    "mainnet/economic_native_fee.go",
+    "mainnet/monitor_economic_native.go",
+    "mainnet/monitor_economic_native_fixture_test.go",
+    "mainnet/monitor_economic_native_test.go",
+    "mainnet/monitor_economic_native_worker.go",
+    "mainnet/monitor_services.go",
+    "mainnet/monitor_services_policy.go",
+    "mainnet/native_event_records.go",
+    "mainnet/root_receipt_events.go"
+  ],
+  "tests_executed_by_author": false,
+  "jobs": [
+    {
+      "name": "new-native-economic",
+      "package": "./mainnet",
+      "roots": [
+        "TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard",
+        "TestEconomicNativeFeesRefuseBorrowedPhaseAndDuplicatedOutcome",
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees",
+        "TestMonitorEconomicNativePublicPartialOutageKeepsCursorUntilRecovery",
+        "TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage",
+        "TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage",
+        "TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole",
+        "TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit",
+        "TestMonitorEconomicNativePublicHistoricalCanonicalChangeRefusesReset",
+        "TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping"
+      ],
+      "selector": "^(TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard|TestEconomicNativeFeesRefuseBorrowedPhaseAndDuplicatedOutcome|TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees|TestMonitorEconomicNativePublicPartialOutageKeepsCursorUntilRecovery|TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage|TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage|TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole|TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit|TestMonitorEconomicNativePublicHistoricalCanonicalChangeRefusesReset|TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping)$"
+    },
+    {
+      "name": "shared-decoder-neighbors",
+      "package": "./mainnet",
+      "roots": [
+        "TestEconomicEmissionTempoContextPreservesUncheckedAndScheduledUpdates",
+        "TestEconomicEmissionTempoResetRejectsUnexplainedState",
+        "TestEconomicEmissionTempoContextRetainsOrderedWrites",
+        "TestEconomicEmissionTakeoverRejectsUnexplainedUidVector",
+        "TestEconomicEmissionTakeoverWithoutAppendRetainsRecipientUncertainty",
+        "TestEconomicEmissionContextAuthenticatesMetadataSemantics",
+        "TestEconomicEmissionContextRejectsMalformedEnvelope",
+        "TestEconomicEmissionObservesTempoResetWithoutConsumedEpoch",
+        "TestEconomicEmissionRejectsDeferredEpochAnchorReset",
+        "TestEconomicEmissionObservesOwnerTakeoverUidAppend",
+        "TestEconomicEmissionCollectsContiguousEvidenceWithoutClaimingTarget",
+        "TestEconomicEmissionZeroIncentiveDoesNotEraseMinerTranche",
+        "TestEconomicEmissionUsesExactAlphaBeyondUint64AndLeavesRoundingUnknown",
+        "TestEconomicEmissionAuthenticatesCompatibleEventReindex",
+        "TestEconomicEmissionRejectsChangedMetadataSemantics",
+        "TestEconomicEmissionRejectsWrongPhaseAndAdditionalMechanism",
+        "TestEconomicEmissionRejectsDuplicateTruncatedAndOverboundEvents",
+        "TestEconomicEmissionRetainsSkippedAndDeferredEpochs",
+        "TestEconomicEmissionDistinguishesNullEventsFromMissingResult",
+        "TestEconomicEmissionRejectsGenerationChangeAndUnapprovedMechanism",
+        "TestEconomicEmissionObservesBurnWithoutPassingRecycleGate",
+        "TestEconomicEmissionRejectsAnchorAndClosingCanonicalConflicts",
+        "TestEconomicEmissionUsesParentRuntimeAndRetainsEventsAtUnknownUpgrade",
+        "TestEconomicEmissionRejectsBodyCommitmentAndEpochCorrespondenceConflicts",
+        "TestEconomicEmissionRejectsMissingTerminalEventForConsumedEpoch",
+        "TestEconomicEmissionRejectsUnboundedPolicyAndPreservesCancellation",
+        "TestEconomicEmissionCommandKeepsSuccessAndPartialOutcomeGatesUnresolved",
+        "TestEconomicEmissionTraversesUnrelatedEventsBeforeReturningTarget",
+        "TestRootReceiptCanonicalInclusion",
+        "TestRootReceiptDispatchFailure",
+        "TestRootReceiptRejectsAmbiguousEvents",
+        "TestRootReceiptRejectsAdjacentAccountAndFeeWidthDrift",
+        "TestRootReceiptUpgradeUsesParentAndRetainsUnapprovedHead",
+        "TestRootReceiptCancellationPreservesUnresolvedAction",
+        "TestRootReceiptRejectsCorruptChainEvidence",
+        "TestOwnerTrimReceiptCanonicalFinancialOutcomeSurvivesCensusGap",
+        "TestOwnerTrimReceiptRejectsBodyEventAndCanonicalConflicts",
+        "TestOwnerTrimReceiptEventAssociationPreservesRootRequirements",
+        "TestMonitorClaimPublicExpectedPoolObservesAcceptedNotPaid",
+        "TestMonitorClaimPublicLostAckReopensExactCheckpoint"
+      ],
+      "selector": "^(TestEconomicEmissionTempoContextPreservesUncheckedAndScheduledUpdates|TestEconomicEmissionTempoResetRejectsUnexplainedState|TestEconomicEmissionTempoContextRetainsOrderedWrites|TestEconomicEmissionTakeoverRejectsUnexplainedUidVector|TestEconomicEmissionTakeoverWithoutAppendRetainsRecipientUncertainty|TestEconomicEmissionContextAuthenticatesMetadataSemantics|TestEconomicEmissionContextRejectsMalformedEnvelope|TestEconomicEmissionObservesTempoResetWithoutConsumedEpoch|TestEconomicEmissionRejectsDeferredEpochAnchorReset|TestEconomicEmissionObservesOwnerTakeoverUidAppend|TestEconomicEmissionCollectsContiguousEvidenceWithoutClaimingTarget|TestEconomicEmissionZeroIncentiveDoesNotEraseMinerTranche|TestEconomicEmissionUsesExactAlphaBeyondUint64AndLeavesRoundingUnknown|TestEconomicEmissionAuthenticatesCompatibleEventReindex|TestEconomicEmissionRejectsChangedMetadataSemantics|TestEconomicEmissionRejectsWrongPhaseAndAdditionalMechanism|TestEconomicEmissionRejectsDuplicateTruncatedAndOverboundEvents|TestEconomicEmissionRetainsSkippedAndDeferredEpochs|TestEconomicEmissionDistinguishesNullEventsFromMissingResult|TestEconomicEmissionRejectsGenerationChangeAndUnapprovedMechanism|TestEconomicEmissionObservesBurnWithoutPassingRecycleGate|TestEconomicEmissionRejectsAnchorAndClosingCanonicalConflicts|TestEconomicEmissionUsesParentRuntimeAndRetainsEventsAtUnknownUpgrade|TestEconomicEmissionRejectsBodyCommitmentAndEpochCorrespondenceConflicts|TestEconomicEmissionRejectsMissingTerminalEventForConsumedEpoch|TestEconomicEmissionRejectsUnboundedPolicyAndPreservesCancellation|TestEconomicEmissionCommandKeepsSuccessAndPartialOutcomeGatesUnresolved|TestEconomicEmissionTraversesUnrelatedEventsBeforeReturningTarget|TestRootReceiptCanonicalInclusion|TestRootReceiptDispatchFailure|TestRootReceiptRejectsAmbiguousEvents|TestRootReceiptRejectsAdjacentAccountAndFeeWidthDrift|TestRootReceiptUpgradeUsesParentAndRetainsUnapprovedHead|TestRootReceiptCancellationPreservesUnresolvedAction|TestRootReceiptRejectsCorruptChainEvidence|TestOwnerTrimReceiptCanonicalFinancialOutcomeSurvivesCensusGap|TestOwnerTrimReceiptRejectsBodyEventAndCanonicalConflicts|TestOwnerTrimReceiptEventAssociationPreservesRootRequirements|TestMonitorClaimPublicExpectedPoolObservesAcceptedNotPaid|TestMonitorClaimPublicLostAckReopensExactCheckpoint)$"
+    }
+  ],
+  "new_roots": 10,
+  "affected_roots": 50,
+  "controls": [
+    {
+      "name": "prior-public-parser",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/prior-public-parser.json",
+      "selector": "^(TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees)$",
+      "expected_failed_roots": 1,
+      "classification": "Exact ec2 loadMonitorServices body in current declarations; no old whole-source compatibility claim."
+    },
+    {
+      "name": "acknowledge-before-durability",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/acknowledge-before-durability.json",
+      "selector": "^(TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage)$",
+      "expected_failed_roots": 1,
+      "classification": "Explicit acknowledgement invariant omission, not historical source."
+    },
+    {
+      "name": "finite-head-ancestry",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/finite-head-ancestry.json",
+      "selector": "^(TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit)$",
+      "expected_failed_roots": 1,
+      "classification": "Reintroduce original finite-reader ancestry policy at actual continuous read call."
+    },
+    {
+      "name": "fixed-page-capacity",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/fixed-page-capacity.json",
+      "selector": "^(TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage|TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping)$",
+      "expected_failed_roots": 2,
+      "classification": "Explicit adaptive-subpage omission; retain actual evidence/history bounds."
+    },
+    {
+      "name": "signing-tip-guard-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/signing-tip-guard-omitted.json",
+      "selector": "^(TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard)$",
+      "expected_failed_roots": 1,
+      "classification": "Explicit existing signing zero-tip invariant omission in operative decoder."
+    },
+    {
+      "name": "duplicate-fee-guard-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/duplicate-fee-guard-omitted.json",
+      "selector": "^(TestEconomicNativeFeesRefuseBorrowedPhaseAndDuplicatedOutcome)$",
+      "expected_failed_roots": 1,
+      "classification": "Explicit duplicate-fee invariant omission; other phase/outcome cases remain positive."
+    },
+    {
+      "name": "restart-discards-cursor",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/restart-discards-cursor.json",
+      "selector": "^(TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees)$",
+      "expected_failed_roots": 1,
+      "classification": "Explicit actual retained-load omission; custody/JSON checks still execute."
+    },
+    {
+      "name": "failed-role-cancels-peers",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/failed-role-cancels-peers.json",
+      "selector": "^(TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole)$",
+      "expected_failed_roots": 1,
+      "classification": "Explicit healthy-peer isolation invariant omission."
+    }
+  ],
+  "causal_failed_roots_per_mode": 9,
+  "vet": [
+    "./mainnet"
+  ],
+  "modfile": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/sn.mod",
+  "qualification_graph": {
+    "origin": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/evidence/source-fence.json",
+    "server": {
+      "commit": "0e04f0381f813acff45b9c9af3d1a5b93e7d7ccf",
+      "git_blobs": 5369,
+      "tree": "ab30a9299bd9cf7b51ae4012b936ea6660555fa4"
+    },
+    "local": {
+      "glog": {
+        "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+        "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+      },
+      "goidenticons": {
+        "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+        "tree": "553487079352d9544edb62850328305e97668790"
+      },
+      "proxy": {
+        "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+        "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+      },
+      "userwireguard": {
+        "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+        "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+      },
+      "warp": {
+        "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+        "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+      }
+    },
+    "published_versions": {
+      "github.com/pion/sctp": "v0.0.0-20261002163341-6443417d70dc",
+      "github.com/urnetwork/connect": "v0.0.0-20261003021534-5def2fa4391b",
+      "github.com/urnetwork/sdk": "v0.0.0-20261003021240-95ccd57da971"
+    },
+    "scope": "Existing published-floor modfile remapped to candidate SN and same exact Server/local modules; Sol must independently preflight current imported-package/module graph. No tracked module adoption or graph test inheritance."
+  },
+  "commands": [
+    "GOWORK=off GOFLAGS=-mod=readonly go test -modfile=<own remapped sn.mod> -count=1 -timeout=15m -json [-race] ./mainnet -run <selector>",
+    "go vet -modfile=<own remapped sn.mod> ./mainnet"
+  ],
+  "environment": {
+    "umask": "0077",
+    "private_root_and_tmp": "0700",
+    "cache": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+    "modulecache": "/mnt/data/sn-testnet/gomodcache",
+    "new_phase_free_floor_bytes": 118111600640
+  },
+  "scope_limits": [
+    "Owned RPC assertions only; independent finality/storage proof, native denominator/recipient entitlement/recycling and economic target remain unknown.",
+    "Actual native fees bind configured payer to ApplyExtrinsic index and authenticated body hash; event actual_fee and tip remain separate exact decimal values. No signed action is sent.",
+    "Existing finite stdout command retains original ancestry policy; explicit continuous historical pages authenticate range linkage and recheck canonical hashes without claiming distant-head independent ancestry proof.",
+    "One real503 reaches an injected deadline-exhaustion wait in the public outage control; 300 seconds is the configured owner budget, not elapsed test duration.",
+    "History capacity is declared, measured and visibly held without pruning. Reviewed archive/capacity renewal remains a separate required implementation.",
+    "Continuous EVM credit/reserve/capture/fee monitoring and rolling independently expected claim epochs remain separate required work."
+  ],
+  "files": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/go.mod",
+      "bytes": 11211,
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503",
+      "git_blob": "352f2c4528b01e667c05b7c9981d1e6ef3be9535"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/go.sum",
+      "bytes": 65343,
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545",
+      "git_blob": "b44589456dc25004263dd976f7cc797fb7d1b1e8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/economic_emission.go",
+      "bytes": 11093,
+      "sha256": "6691669022aaa6adcfcb0e1759c9a07599a9c6059e224b2ac146dc262579deaa",
+      "git_blob": "000e793307f2f60e53c168e636fe6bea3611041b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/economic_emission_events.go",
+      "bytes": 9417,
+      "sha256": "43f8af91cbf7714865c07d86bbf1e874dfbde02d393a920092516de38866d6b2",
+      "git_blob": "5562fb77b472874ea1697e8390666cc1298051a3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/economic_emission_historical.go",
+      "bytes": 2399,
+      "sha256": "210e6b4f58e519c0d039939ac6ccbdf3ad9d8046fb1592f7b879f3d69a9febb1",
+      "git_blob": "e2235613505b06da007884660c864bcbe3adecd1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/economic_emission_observe.go",
+      "bytes": 11531,
+      "sha256": "77b9cd49dc531d3434c2d90febe4c510d532733875648785d690181d796ab9df",
+      "git_blob": "114337caa88829bdcbfd98c3b202b14d625d8865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/economic_native_fee.go",
+      "bytes": 3630,
+      "sha256": "4160995531b9185ac063410fbe9f6cbbd900b9617064a3646b59528d22514c7f",
+      "git_blob": "06b4e948fa28565e55586c4d5105dc30abff7364"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/monitor_economic_native.go",
+      "bytes": 20127,
+      "sha256": "7318c500c54bebe094f4f9e4a39df2834522d9bb56c1438f5132bb23fdb3c4da",
+      "git_blob": "063cb11254be1b2bc96996b3e381c2216abd6628"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/monitor_economic_native_fixture_test.go",
+      "bytes": 7488,
+      "sha256": "97a933759114d01d69c8af2d9fe4f4e372596391961f51ded3f20cf863d2e826",
+      "git_blob": "43da28d08c8e474366b932cbbea5c76c8025b41b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/monitor_economic_native_test.go",
+      "bytes": 16355,
+      "sha256": "9b1287f7617f3cbf8f4b4bb01efba08e6a814d0e56cc0f21d90546d460fac230",
+      "git_blob": "4085377905f40a87e2cd96b8a9f5595b160f18cf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/monitor_economic_native_worker.go",
+      "bytes": 15961,
+      "sha256": "40cadb7792aed06b16bc7dcdcade3095dd9a4438ba722641cc96bab934769831",
+      "git_blob": "b09ebb3b45cd9b1efd90e6d074f2331e319f6783"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/monitor_services.go",
+      "bytes": 15220,
+      "sha256": "3cfdf7a5562bc3ef667e389c8d83b34a5a8879e2bc6d4662382288beed49b1f3",
+      "git_blob": "e3fbe834a48deeacde0508d88a4028309f1655b1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/monitor_services_policy.go",
+      "bytes": 10706,
+      "sha256": "3be5b3fcb035f85b6aa0e3973a5955f6dde63d649a76d9dd02f684969c1fa5ac",
+      "git_blob": "21de9de5a6a9c00015e651c475379b7b1f3184c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/native_event_records.go",
+      "bytes": 2712,
+      "sha256": "5da2293afd094cd5a729f70a9af4b112ea3fdc107a891573763bea3482524add",
+      "git_blob": "76e8730e41b77b5e362c01c3891375993328aab4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/root_receipt_events.go",
+      "bytes": 6131,
+      "sha256": "eeec96551b488ba6c0a2df8409f45f0dc05a540e277a5dcecb372b4708ea5687",
+      "git_blob": "dadd0e91bb31132bb739a1ee74c5ec6046bd4bb4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/prior-public-parser.go",
+      "bytes": 9646,
+      "sha256": "574c9470e13830a4b6b4fb826c6e62592779febaf1b847f59674940ef5c4c7bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/prior-public-parser.json",
+      "bytes": 242,
+      "sha256": "7a55cc06a9075e6e6d9ea5c5981628bc4fea15e9ab6adf7143cff2fa7047b95e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/acknowledge-before-durability.go",
+      "bytes": 15928,
+      "sha256": "96a3c216671e0fae3084421bc47c096c6b08efc968a8eb80591832a255046639"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/acknowledge-before-durability.json",
+      "bytes": 259,
+      "sha256": "b034fcd6c189afe1bdbcf87c5360529a909a7e67feba3bfa73e92daff8780213"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/finite-head-ancestry.go",
+      "bytes": 20128,
+      "sha256": "9324e4fe3e31cb6d054439fb3a0904bc9ba3897d423344e967ca1392d01bdc0d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/finite-head-ancestry.json",
+      "bytes": 243,
+      "sha256": "c1b7dbc3155e5d050088c32923d9ebc4bb8f258f6cba3d0f5b784abcadeb3f54"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/fixed-page-capacity.go",
+      "bytes": 20111,
+      "sha256": "de45607380dbecf0b35c121ea935ece799d2def9159cd6ab0935bd3263c2850a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/fixed-page-capacity.json",
+      "bytes": 242,
+      "sha256": "5f4ae56ed93eeb9436f153ab05a1c23987ded1c64cfb39811ad7b66b655292f2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/signing-tip-guard-omitted.go",
+      "bytes": 6078,
+      "sha256": "06722e547d0c1f5b96c1bc621acd7ff9d90e2da8629263201a4ccd287f6c7409"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/signing-tip-guard-omitted.json",
+      "bytes": 244,
+      "sha256": "a6b4bc7602e2039908d45d8f99e129222a7046f097319ac7c8d13326279f02bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/duplicate-fee-guard-omitted.go",
+      "bytes": 3592,
+      "sha256": "b7843a433858828d933a6fe35c04023fef69b4d8fc6e33d962b35341ff84f8f1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/duplicate-fee-guard-omitted.json",
+      "bytes": 246,
+      "sha256": "f5b19f74bca105027e0e98944049bdc83425f5aebb1e293cfa5f3383e547bbab"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/restart-discards-cursor.go",
+      "bytes": 15990,
+      "sha256": "a282171c9e4c44ab75fdc09c3a0cc0901c7f3a14bb4329db619a8d44b9e35d26"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/restart-discards-cursor.json",
+      "bytes": 253,
+      "sha256": "4ebcd786f03574140f57bb00042a53c571dc0158cd898a4499d151e149f8718b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/failed-role-cancels-peers.go",
+      "bytes": 15232,
+      "sha256": "cc5eb4f25733770c5b435acb20497fca7d28b0099c01fcc6152d2155461ed1ef"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/failed-role-cancels-peers.json",
+      "bytes": 241,
+      "sha256": "cfd58e05062f18a1c70132e4f143ff03285b31a434015030ff6ce56118003593"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/sn.mod",
+      "bytes": 11930,
+      "sha256": "972d10d6aeba804de7128ea16cfdc2a7d7a86eece9646a8939b05f51fed0608a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/sn.sum",
+      "bytes": 66880,
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/source/sn/go.mod",
+      "bytes": 11263,
+      "sha256": "effdb95eba38a5faaff2bec91053cddc5328ad6573dc1ace561fb80e45e9595d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/source/sn/go.sum",
+      "bytes": 66880,
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/source/server/go.mod",
+      "bytes": 10468,
+      "sha256": "728f009656617e6a7dbc560aae58f4f4bc4fa47b45cec5a5c463667cadcf2407"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/source/server/go.sum",
+      "bytes": 68619,
+      "sha256": "d03416de1cad1e0ecd0f36bfc4fc9b027b0e4aca5f889cabc0932b4046a8f1a8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/evidence/source-fence.json",
+      "bytes": 2595,
+      "sha256": "da2a63ce5452ebe3fb273d3871b7b5b8dfb2375c247efc4d2cb32c436ecbe53f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/evidence/sn-qualification-receipt.json",
+      "bytes": 6289,
+      "sha256": "8bdddd91bd7c37e8b1dde6e0e5c317f73fd26f40dbce856351daafd802fd09cd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/new-roots.txt",
+      "bytes": 664,
+      "sha256": "2468172128b29f3415f1c8b5fc7811cbb93cd9ddd448833105213c91509cbfa2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/evidence/affected-roots.txt",
+      "bytes": 2981,
+      "sha256": "e7170072bbbaceec4da54bca6018bfa64f3cab3b0c42ec9448826728c7373594"
+    }
+  ]
+}

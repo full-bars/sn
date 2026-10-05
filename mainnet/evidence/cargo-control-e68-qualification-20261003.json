@@ -1,0 +1,146 @@
+{
+  "actual_real_control": {
+    "actual_new_compile_verified": true,
+    "all_step_process_trees_joined": true,
+    "cargo_artifact_fresh": false,
+    "exact_sdk_failure_payload": "memory read is out of bounds: could not marshal the 'msg' argument",
+    "exact_source_assertion_site": "historical_tests.rs:1105:5",
+    "retained_binary": {
+      "cargo": {
+        "executable": "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/deps/runtime_metadata_probe-0fb7a89b7bf4f8ad",
+        "features": [],
+        "filenames": [
+          "/mnt/data/sn-testnet/sol-historical-observer-d022-independent-20261003/target/debug/deps/runtime_metadata_probe-0fb7a89b7bf4f8ad"
+        ],
+        "fresh": false,
+        "manifest_path": "/mnt/data/sn-testnet/sol-historical-hosts-9cf-independent-20261003/controls/crypto-memory-bound-omitted/Cargo.toml",
+        "package_id": "path+file:///mnt/data/sn-testnet/sol-historical-hosts-9cf-independent-20261003/controls/crypto-memory-bound-omitted#runtime-metadata-probe@0.1.0",
+        "profile": {
+          "debug_assertions": true,
+          "debuginfo": 0,
+          "opt_level": "0",
+          "overflow_checks": true,
+          "test": true
+        },
+        "reason": "compiler-artifact",
+        "target": {
+          "crate_types": [
+            "lib"
+          ],
+          "doc": true,
+          "doctest": true,
+          "edition": "2021",
+          "kind": [
+            "lib"
+          ],
+          "name": "runtime_metadata_probe",
+          "src_path": "/mnt/data/sn-testnet/sol-historical-hosts-9cf-independent-20261003/controls/crypto-memory-bound-omitted/src/lib.rs",
+          "test": true
+        }
+      },
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-run/control-test",
+      "sha256": "c1018507527db91261c1987a48963cc654941285922a479f9820409e14e596f7"
+    },
+    "steps_exits": [
+      0,
+      0,
+      101
+    ]
+  },
+  "artifact_bindings": [
+    {
+      "bytes": 3833831,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/guard11-receipt.json",
+      "sha256": "768f49e42986b0c35daf56d40433321bb67f63eb7a9e53815475eb69d0b7f395"
+    },
+    {
+      "bytes": 4227,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-recipe.json",
+      "sha256": "f45c1413231066b593c2dcdd13302534a99ad688e7f67d37f99260b6104a6049"
+    },
+    {
+      "bytes": 168,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-run/clean.stderr",
+      "sha256": "87c629f5fb9e90ba33e0ab59831a6ba214df4f2fa38ec88d8fac44d180e33133"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-run/clean.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 211,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-run/compile.stderr",
+      "sha256": "a2fb1399eb5663ef735f209dc1eea59ea174c1cf23b2d67d40d1d925f62b2c69"
+    },
+    {
+      "bytes": 504525,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-run/compile.stdout",
+      "sha256": "74055707aca35ecdb1173931ca0dab3e0daff12b6cd5ec96dca1e4ce0a0d32b6"
+    },
+    {
+      "bytes": 56927976,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-run/control-test",
+      "sha256": "c1018507527db91261c1987a48963cc654941285922a479f9820409e14e596f7"
+    },
+    {
+      "bytes": 6226,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-run/receipt.json",
+      "sha256": "3ec9cea1ce7b59df96b5c9f4443930213e9b8095745d2d0e47a4f7aecd3e20bc"
+    },
+    {
+      "bytes": 548,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-run/test.stderr",
+      "sha256": "40f31bb84d0f162e79d4b0f5431ef78ae9ddb92a2522f0e7a89d8fd4430c8781"
+    },
+    {
+      "bytes": 335,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/hosts9cf-crypto-omission-run/test.stdout",
+      "sha256": "3bbc65e9943da365f620a9eff45b31ad85e34d87ab745a48f6b43c3c1c70b9f4"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/real.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/real.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "limits": [
+    "Workflow scope only; parent host production not admitted by these tests.",
+    "One existing approved omission with source-site refinement; no product-scope blanket rerun.",
+    "All users sharing a Cargo target must honor its lease; not a host deployment or mainnet acceptance claim."
+  ],
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-cargo-guard-e68-independent-20261003/evidence/guard11-real-final-receipt.json",
+    "sha256": "bccda52c4fe16c38b1e389fa2fbec74d1a62b5e92dcf6c4327e790be32215e68"
+  },
+  "self_test_roots": 11,
+  "status": "ROOT_VERIFIED_WORKFLOW_GUARD11_AND_REAL_FRESH_OMISSION",
+  "workflow_blobs_verified_against_author_and_executed_source": [
+    {
+      "bytes": 19934,
+      "git_blob": "54b1deff561e5e0b88c7497cef2629e71d64b173",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/cargo-control-successor/sn/scripts/qualification/cargo_control.py",
+      "relative": "scripts/qualification/cargo_control.py",
+      "sha256": "b720d63c788c167c5afadc7c2d82e5c765c4f627fdc7032ec80be818c91820ce"
+    },
+    {
+      "bytes": 8821,
+      "git_blob": "216c2c2d0a53ad5f517497734cd53a4c0cfb0fba",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/cargo-control-successor/sn/scripts/qualification/cargo_control_test.py",
+      "relative": "scripts/qualification/cargo_control_test.py",
+      "sha256": "713d8c55e7ce4c184f4064660efb26f3bf3a814cbd4677d631117e75c1af81c6"
+    },
+    {
+      "bytes": 3973,
+      "git_blob": "a247f93de3d665ea53a7cd59922532db235eab72",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/cargo-control-successor/sn/scripts/qualification/CARGO-CONTROLS.md",
+      "relative": "scripts/qualification/CARGO-CONTROLS.md",
+      "sha256": "18da7028806caddb73973d6c504e8296459065708298c335e09491ba3e41d48e"
+    }
+  ]
+}

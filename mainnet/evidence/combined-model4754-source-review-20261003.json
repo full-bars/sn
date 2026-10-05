@@ -1,0 +1,139 @@
+{
+  "captured_utc": "2026-10-03T19:48:22.032763+00:00",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/model-async-fixtures/evidence/intake.json",
+    "sha256": "6ccee5a11db0111cab8a1fe03ba631042036bea60d1932dee1a55cff51cac309"
+  },
+  "qualification": "Tenaffected roots and six exact neighbors normal/race after originalfullsuite joins.804-only repeat superseded; original9failure records remain retained. No production change, passing behavior or finalreadyclaim.",
+  "review": "Exact cleanHEAD/tree, fourtest-only deltas, all16 Gitblob/SHA/size bindings and four physicaltestfiles verified. Realpendingjournal plus checkedRedis counters, zero availablecredit, boundedpublicflush and emptyreplay retain provider/account allocations. Actual lock-bearing AST branch and targeted coverage mutation retain missing/late-lock rejection.",
+  "schema": "urnetwork-root-combined-model4754-source-review-v1",
+  "source": {
+    "base": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+    "changed_paths": [
+      "model/account_payment_model_test.go",
+      "model/contract_lifecycle_clock_guard_test.go",
+      "model/contract_payout_test.go",
+      "model/subscription_payout_debit_fixture_test.go"
+    ],
+    "checkout": "Sparse: four test files and module files only. Unchecked-out production is authenticated directly from exact Git blobs and the existing full5f archive.",
+    "commit": "4754cca86f600c86927fba713c5f32ed9a86043a",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/model-async-fixtures/server",
+    "precursor": "80485878bde4e0761e45669643b0f5eb794ae9f2",
+    "tree": "2b10ef503aa5047eaff0f8e1dff65e28aa3aeafc"
+  },
+  "status": "SOURCE_REVIEWED_NOT_EXECUTED",
+  "verified_bindings": [
+    {
+      "bytes": 65721,
+      "git_blob": "da8aac7c730aa7d96bb5095fd55e98a58e994032",
+      "path": "model/account_payment_model_test.go",
+      "physical": true,
+      "sha256": "9caa70531155da0f8608d1956a49ffda1aa8d27423f6be4cdba2a4291bed41fb"
+    },
+    {
+      "bytes": 9195,
+      "git_blob": "fe14d9ba0907aaeff7a06f52d3bd6e2fbecf119f",
+      "path": "model/contract_lifecycle_clock_guard_test.go",
+      "physical": true,
+      "sha256": "dfd32a38568c0aa01198e14e352063a3581c33ef7e2be0c8d476f44495444ecd"
+    },
+    {
+      "bytes": 43959,
+      "git_blob": "ae4eb79641b3cde4f262de70ea00875839ad09cc",
+      "path": "model/contract_payout_test.go",
+      "physical": true,
+      "sha256": "588652a352aa2e2b07cbddea7ce27ceed3a2a2b192443b3a8043cf092d7d6d6d"
+    },
+    {
+      "bytes": 7311,
+      "git_blob": "3659b3e7c79c2364cb0576a0678aaf643696f535",
+      "path": "model/subscription_payout_debit_fixture_test.go",
+      "physical": true,
+      "sha256": "474cb77c7e474abebf2073fb26b00f6390bdcfc686df460d31dc2372c4f1fff6"
+    },
+    {
+      "bytes": 209917,
+      "git_blob": "c891da1ee845e48e3af77de4c3365351cd81760b",
+      "path": "model/subscription_model.go",
+      "physical": false,
+      "sha256": "4c702f4ad67452a78c7eab454bf7ff33923e3788733ff751f7a6e78db4a828d7"
+    },
+    {
+      "bytes": 10342,
+      "git_blob": "3bbf386a47733ee50cc8bfaa1e6a1722a4354d6b",
+      "path": "model/subscription_transfer_debit.go",
+      "physical": false,
+      "sha256": "30a4bb2f1b347eaad27e4f35082b4d85b51a9c401dec0e11c3754e098d070c57"
+    },
+    {
+      "bytes": 22681,
+      "git_blob": "22104ec7969d7e20725ed256f20f2be0ad85295a",
+      "path": "model/subscription_transfer_debit_test.go",
+      "physical": false,
+      "sha256": "6fa90bcc105a567024ad3494ea1b672c32b27db8aa5f805926b0e5e7a7eb3d13"
+    },
+    {
+      "bytes": 19942,
+      "git_blob": "e5e612140da17a90663529fe286a783d33a0d7de",
+      "path": "model/subscription_redis_admission.go",
+      "physical": false,
+      "sha256": "2d84b50e1ec3faaa39c5b59a5bb469a6958d6f57b01d4a71130d8b7af9a20bef"
+    },
+    {
+      "bytes": 16122,
+      "git_blob": "ed343d5b2392f096c576dbc44f0dfe210686fd5d",
+      "path": "model/subscription_redis_recovery.go",
+      "physical": false,
+      "sha256": "25af205a411a242bafaad648d54245edff406a18ed995260f41990d14d005fea"
+    },
+    {
+      "bytes": 23779,
+      "git_blob": "aa8d411fa4bb623f768ae3158dd4f1d9b2cd165d",
+      "path": "model/contract_lifecycle_model_test.go",
+      "physical": false,
+      "sha256": "6ef7b8e8027ac2d46381b4d1d9ca2f961d38cb16fe0a1c516786100aa12de2a1"
+    },
+    {
+      "bytes": 16309,
+      "git_blob": "cde272c4783e4a81bfd9ae31895e2574ab2dae0b",
+      "path": "model/provider_payout_attribution_test.go",
+      "physical": false,
+      "sha256": "f930f5cdb559aee701482c19d25acbf03eadbd9ac99098fa1396c8316401e90b"
+    },
+    {
+      "bytes": 8708,
+      "git_blob": "e8d538237ebc80495a8f0dec302959cb38351665",
+      "path": "model/contract_provider_attribution_test.go",
+      "physical": false,
+      "sha256": "af2be50b32baa94c866904f9ec7dab94b5cd97cbfb138752f504571ca77b91e8"
+    },
+    {
+      "bytes": 15322,
+      "git_blob": "337aa821f606ec5a9b5127b653efd48e2917b894",
+      "path": "model/subscription_escrow_shrink_test.go",
+      "physical": false,
+      "sha256": "77720ccdb11977d0f4848fed930c2b02770978f4a0c14ddf3263368e5e81c894"
+    },
+    {
+      "bytes": 386726,
+      "git_blob": "40dd79a90d368818af491963b184febe012d5685",
+      "path": "db_migrations.go",
+      "physical": false,
+      "sha256": "f246d553f664019ff886bf00ff276673a2abf8fb38d384dc0fd0a43073bc2f49"
+    },
+    {
+      "bytes": 10651,
+      "git_blob": "a190544065db636d96cb7fe4e8a4595fa9a90e58",
+      "path": "go.mod",
+      "physical": true,
+      "sha256": "9d0987966432f87d9c2c7b7ac0e6893e164df4d1e21e7b75a7bce8bba87367d8"
+    },
+    {
+      "bytes": 69535,
+      "git_blob": "64196defd4d83f778c42fecd14a1677f154d000e",
+      "path": "go.sum",
+      "physical": true,
+      "sha256": "faf759f6bd62a41e196e796268466aadb3dcc13ac3b65fb724bbdc870f53e5b6"
+    }
+  ]
+}

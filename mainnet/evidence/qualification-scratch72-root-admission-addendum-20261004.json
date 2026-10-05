@@ -1,0 +1,36 @@
+{
+  "schema": "qualification-scratch72-root-admission-addendum-v1",
+  "status": "AUTHORIZED_FUTURE_EXACT_RUNNERS_FRESH_GUARD_REQUIRED",
+  "authorization": "User explicitly automatically approved all budget increases; scratch capacity only, no mainnet transaction authority.",
+  "proposal": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/scratch-cap72-proposal-v1.json",
+    "sha256": "6e5dd273a3f95cc6e80c1676b1d04d08026ab695540434ab31dd4cdb22646311"
+  },
+  "scope": {
+    "authorized_use": "Only future separately bound serial Rust exporter compile and one short Go body beside original old long; current live runners retain their original caps",
+    "combined_data_forecast_bytes": 7516192768,
+    "combined_memory_forecast_bytes": 6442450944,
+    "forecasts_not_measured_maxima": true,
+    "free_inodes": 93347612,
+    "fresh_data_available_bytes": 59328434176,
+    "fresh_memory_available_bytes": 120867586048,
+    "kernel_flock_conflict": true,
+    "lease_pid": 620836,
+    "lease_starttime": "94830154",
+    "lock_device": 2081,
+    "lock_inode": 16941991,
+    "original_fixed_baseline_bytes": 113681502208,
+    "passes": true,
+    "previous_cumulative_cap_bytes": 68719476736,
+    "proposed_cumulative_cap_bytes": 77309411328,
+    "schema": "mixed-qualification-cumulative-scratch-cap72-addendum-v1",
+    "status": "FINITE_RESOURCE_PROPOSAL",
+    "two_times_data_threshold_bytes": 51404476416,
+    "two_times_memory_threshold_bytes": 115964116992
+  },
+  "limits": [
+    "Do not mutate running guards, reset original cumulative baseline or lower2x memory/resource margins.",
+    "Each future bound runner requires fresh canonical kernel lease/process identity, free-space/inode checks and enumeration of concurrent bodies.",
+    "No production economic allowance, live signing or activation granted."
+  ]
+}

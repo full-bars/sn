@@ -323,12 +323,50 @@ func TestCoordinatorRepairCarryReplaysExactFinalizedCorrectionWithoutWrites(t *t
 	}
 }
 
+// A current revision owns the repaired implementation while the corrective
+// approval remains signed by its archived source plan.
+func TestProvisionalCoordinatorRepairObserverAuthenticatesDescendantCarry(t *testing.T) {
+	fixture := newCoordinatorRepairCarryFixture(t)
+	executor := fixture.executor
+	descendant := *executor.plan
+	descendant.PlanHash = "0x" + strings.Repeat("42", 32)
+	descendant.PriorPlanHashes = append(append([]string(nil), executor.plan.PriorPlanHashes...), executor.plan.PlanHash)
+	descendant.CoordinatorUpgrade = fixture.reference.Request.Request.Upgrade
+	carry := fixture.reference
+	descendant.CoordinatorRepairCarry = &carry
+	observedHead := fixture.reference.Result.Result.ObservedHead
+	if got, hash, err := loadProvisionalCoordinatorRepairResult(executor.stateDir, &descendant, descendant.CoordinatorUpgrade, ChainHead{Number: observedHead.Number - 1}, fixture.reference.Result); err != nil || got != descendant.CoordinatorUpgrade || hash != "" {
+		t.Fatalf("pre-observation descendant changed correction: got=%+v hash=%q err=%v", got, hash, err)
+	}
+	got, hash, err := loadProvisionalCoordinatorRepairResult(executor.stateDir, &descendant, descendant.CoordinatorUpgrade, observedHead, fixture.reference.Result)
+	if err != nil || got != descendant.CoordinatorUpgrade || hash != fixture.reference.Result.Hash {
+		t.Fatalf("descendant did not authenticate source-plan correction: got=%+v hash=%q err=%v", got, hash, err)
+	}
+	artifactPath := filepath.Join(executor.stateDir, coordinatorRepairDirectory, "artifact.json")
+	artifact, err := os.ReadFile(artifactPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifact[len(artifact)/2] ^= 1
+	if err := os.WriteFile(artifactPath, artifact, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got, hash, err := loadProvisionalCoordinatorRepairResult(executor.stateDir, &descendant, descendant.CoordinatorUpgrade, observedHead, fixture.reference.Result); err == nil || got != descendant.CoordinatorUpgrade || hash != "" {
+		t.Fatalf("changed carried artifact admitted: got=%+v hash=%q err=%v", got, hash, err)
+	}
+}
+
 func TestCoordinatorRepairCarryRejectsChangedSourceAndIncompleteHistory(t *testing.T) {
 	fixture := newCoordinatorRepairCarryFixture(t)
 	e := fixture.executor
 	entries := e.journal.Entries()
 	if _, err := readCoordinatorRepairCarry(e.stateDir, e.plan, entries); err != nil {
 		t.Fatal(err)
+	}
+	allowanceRevision := *e.plan
+	allowanceRevision.ConfigHash = "0x" + strings.Repeat("cd", 32)
+	if _, err := readCoordinatorRepairCarry(e.stateDir, &allowanceRevision, entries); err != nil {
+		t.Fatalf("operational allowance revision lost retained coordinator custody: %v", err)
 	}
 	for _, name := range []string{"artifact.json", "budget.json", "request.json", "result.json"} {
 		t.Run(name, func(t *testing.T) {

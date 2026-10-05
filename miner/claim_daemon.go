@@ -23,24 +23,31 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/urfoundation/sn/internal/durablehead"
+	"github.com/urfoundation/sn/internal/durablepath"
 	"github.com/urnetwork/connect"
+	"github.com/urnetwork/connect/durablevolume"
 	"github.com/urnetwork/sdk"
 	"gopkg.in/yaml.v3"
 
+	"github.com/urfoundation/sn/evmrpc"
 	"github.com/urfoundation/sn/merkle"
 	"github.com/urfoundation/sn/miner/onchain"
+	"github.com/urfoundation/sn/protocol"
 )
 
 type ClaimDaemonConfig struct {
-	SchemaVersion  int      `yaml:"schema_version" json:"schema_version"`
-	Release        string   `yaml:"release" json:"release"`
-	APIURL         string   `yaml:"api_url" json:"api_url"`
-	RPC            []string `yaml:"rpc" json:"rpc"`
-	KeyFile        string   `yaml:"key_file" json:"key_file"`
-	JWTFile        string   `yaml:"jwt_file,omitempty" json:"jwt_file,omitempty"`
-	StateDir       string   `yaml:"state_dir" json:"state_dir"`
-	PollSeconds    int      `yaml:"poll_seconds" json:"poll_seconds"`
-	LookbackEpochs uint64   `yaml:"lookback_epochs" json:"lookback_epochs"`
+	SchemaVersion  int                         `yaml:"schema_version" json:"schema_version"`
+	Release        string                      `yaml:"release" json:"release"`
+	APIURL         string                      `yaml:"api_url" json:"api_url"`
+	RPC            []string                    `yaml:"rpc" json:"rpc"`
+	KeyFile        string                      `yaml:"key_file" json:"key_file"`
+	JWTFile        string                      `yaml:"jwt_file,omitempty" json:"jwt_file,omitempty"`
+	StateDir       string                      `yaml:"state_dir" json:"state_dir"`
+	PollSeconds    int                         `yaml:"poll_seconds" json:"poll_seconds"`
+	LookbackEpochs uint64                      `yaml:"lookback_epochs" json:"lookback_epochs"`
+	ProgressPool   *protocol.ClaimProgressPool `yaml:"progress_pool,omitempty" json:"progress_pool,omitempty"`
+	progress       *claimProgressOwner
 }
 
 func LoadClaimDaemonConfig(path string) (*ClaimDaemonConfig, error) {
@@ -90,6 +97,11 @@ func LoadClaimDaemonConfig(path string) (*ClaimDaemonConfig, error) {
 	if cfg.SchemaVersion != 1 || cfg.Release != "1.0" || cfg.APIURL == "" || len(cfg.RPC) == 0 || cfg.PollSeconds < 5 || cfg.PollSeconds > 3600 || cfg.LookbackEpochs > 256 {
 		return nil, errors.New("invalid release-1.0 claim daemon configuration")
 	}
+	if cfg.ProgressPool != nil {
+		if err := cfg.ProgressPool.Validate(); err != nil {
+			return nil, err
+		}
+	}
 	if _, err := os.Stat(cfg.KeyFile); err != nil {
 		return nil, fmt.Errorf("claim relayer key: %w", err)
 	}
@@ -106,18 +118,20 @@ func LoadClaimDaemonConfig(path string) (*ClaimDaemonConfig, error) {
 }
 
 type ClaimQueueEntry struct {
-	Epoch              int64  `json:"epoch"`
-	Status             string `json:"status"`
-	Attempts           int    `json:"attempts"`
-	UpdatedAt          string `json:"updated_at"`
-	NextRetryAt        string `json:"next_retry_at,omitempty"`
-	TxHash             string `json:"tx_hash,omitempty"`
-	RawTxHex           string `json:"raw_tx_hex,omitempty"`
-	FinalizedBlock     uint64 `json:"finalized_block,omitempty"`
-	FinalizedBlockHash string `json:"finalized_block_hash,omitempty"`
-	ReceiptStatus      uint64 `json:"receipt_status,omitempty"`
-	ReceiptLogsHash    string `json:"receipt_logs_sha256,omitempty"`
-	LastError          string `json:"last_error,omitempty"`
+	Epoch              int64                      `json:"epoch"`
+	Status             string                     `json:"status"`
+	Attempts           int                        `json:"attempts"`
+	ReconcileAttempts  int                        `json:"reconcile_attempts,omitempty"`
+	UpdatedAt          string                     `json:"updated_at"`
+	NextRetryAt        string                     `json:"next_retry_at,omitempty"`
+	TxHash             string                     `json:"tx_hash,omitempty"`
+	RawTxHex           string                     `json:"raw_tx_hex,omitempty"`
+	FinalizedBlock     uint64                     `json:"finalized_block,omitempty"`
+	FinalizedBlockHash string                     `json:"finalized_block_hash,omitempty"`
+	ReceiptStatus      uint64                     `json:"receipt_status,omitempty"`
+	ReceiptLogsHash    string                     `json:"receipt_logs_sha256,omitempty"`
+	LastError          string                     `json:"last_error,omitempty"`
+	PublicObservation  *protocol.ClaimObservation `json:"public_observation,omitempty"`
 }
 
 type ClaimQueue struct {
@@ -126,25 +140,121 @@ type ClaimQueue struct {
 	Entries        map[string]*ClaimQueueEntry `json:"entries"`
 }
 
-type claimQueueStore struct{ path string }
-
-func newClaimQueueStore(stateDir string) (*claimQueueStore, error) {
-	if !filepath.IsAbs(stateDir) {
-		return nil, errors.New("claim queue state_dir must be absolute")
-	}
-	if err := os.MkdirAll(stateDir, 0o700); err != nil {
-		return nil, err
-	}
-	info, err := os.Stat(stateDir)
-	if err != nil || !info.IsDir() || info.Mode().Perm()&0o077 != 0 {
-		return nil, fmt.Errorf("claim queue state_dir %s must have mode 0700 or stricter", stateDir)
-	}
-	return &claimQueueStore{path: filepath.Join(stateDir, "claim-queue.json")}, nil
+// One daemon owns the locked physical directory until every worker has joined.
+// Methods are not concurrent-safe. Only a successful file and directory sync
+// can establish the same-process acknowledgement used for unchanged saves.
+type claimQueueStore struct {
+	path      string
+	directory *os.File
+	guard     *durablepath.Directory
+	head      *durablehead.Owner
+	ctx       context.Context
+	afterSync func(*os.File) error // observes real file and directory syncs
+	uncertain bool
+	savedHash [sha256.Size]byte
+	saved     bool
+	progress  *claimProgressOwner
 }
 
-func (s *claimQueueStore) load() (*ClaimQueue, error) {
-	b, err := os.ReadFile(s.path)
-	if errors.Is(err, os.ErrNotExist) {
+// Resolve aliases once, then retain a directory descriptor and its process
+// lock. The queue itself is replaced atomically and cannot serve as the lock.
+func newClaimQueueStore(stateDir string, contexts ...context.Context) (*claimQueueStore, error) {
+	if len(contexts) != 1 {
+		return nil, errors.New("claim queue requires one explicit durable-volume context")
+	}
+	ctx := contexts[0]
+	if err := durablepath.Require(ctx); err != nil {
+		return nil, err
+	}
+	if err := claimQueuePlatformSupported(); err != nil {
+		return nil, err
+	}
+	physical, err := canonicalClaimStateDirectory(stateDir)
+	if err != nil {
+		return nil, err
+	}
+	guard, err := durablepath.Open(ctx, physical, durablevolume.ReadWrite, false)
+	if err != nil {
+		return nil, err
+	}
+	store := &claimQueueStore{path: filepath.Join(physical, "claim-queue.json"), directory: guard.File(), guard: guard, ctx: ctx}
+	fail := func(err error) (*claimQueueStore, error) { return nil, errors.Join(err, store.close()) }
+	if err := claimQueueLockDirectory(store.directory); err != nil {
+		return fail(err)
+	}
+	spec := durablehead.Spec{Kind: "provider-claim-queue", Name: "claim-queue.json", MaximumBytes: maximumClaimQueueBytes}
+	store.head, err = durablehead.Open(ctx, guard, store.directory, spec)
+	// The opener has no live worker. Keep its original lock during one exact
+	// pending-byte reconciliation; missing/partial history is never rebuilt.
+	if errors.Is(err, durablehead.ErrUncertain) {
+		store.head, err = durablehead.Reconcile(ctx, guard, store.directory, spec)
+	}
+	if err != nil {
+		return fail(err)
+	}
+	if err := store.requireOwner(); err != nil {
+		return fail(err)
+	}
+	return store, nil
+}
+
+// Closing the descriptor releases ownership on normal return and every error
+// path. A closed store cannot resume reading or writing retained custody.
+func (self *claimQueueStore) close() error {
+	if self != nil {
+		self.progress.unavailable()
+	}
+	if self == nil || self.directory == nil {
+		return nil
+	}
+	guard := self.guard
+	self.directory, self.guard, self.saved = nil, nil, false
+	err := self.head.Close()
+	self.head = nil
+	return errors.Join(err, guard.Close())
+}
+
+// Reads retain identity without imposing unused write reserve. Missing named
+// bytes remain custody loss even when every other file under the root is intact.
+func (self *claimQueueStore) requireOwner() error {
+	if self == nil || self.head == nil || self.directory == nil {
+		return errors.New("claim queue store has no durable owner")
+	}
+	if self.uncertain {
+		return durablehead.ErrUncertain
+	}
+	return self.head.Check()
+}
+
+// The current request, owned checkpoint and write reserve separately gate
+// signing/publication. Cached byte equality never bypasses this boundary.
+func (self *claimQueueStore) requireWrite(ctx context.Context) error {
+	if ctx == nil {
+		return errors.New("claim queue request context is absent")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if self == nil || self.head == nil || self.directory == nil {
+		return errors.New("claim queue store has no durable owner")
+	}
+	if self.uncertain {
+		return durablehead.ErrUncertain
+	}
+	return errors.Join(self.head.CheckWrite(), ctx.Err())
+}
+
+// Startup reads only from the held physical namespace, before any network
+// worker can consume signed state or seed the shared nonce floor.
+func (self *claimQueueStore) load() (*ClaimQueue, error) {
+	if err := self.requireOwner(); err != nil {
+		return nil, err
+	}
+	b, present, err := self.head.Read()
+	if err != nil {
+		return nil, err
+	}
+	if !present {
 		return &ClaimQueue{Schema: "urnetwork-provider-claim-queue-v1", LastDiscovered: -1, Entries: map[string]*ClaimQueueEntry{}}, nil
 	}
 	if err != nil {
@@ -161,8 +271,11 @@ func (s *claimQueueStore) load() (*ClaimQueue, error) {
 	// record with those bytes is recoverable; without them, the child had not
 	// yet reached the broadcast boundary and a fresh attempt is safe.
 	for _, entry := range q.Entries {
+		if entry == nil {
+			return nil, errors.New("claim queue contains a nil entry")
+		}
 		if entry.Status == "submitting" {
-			if entry.RawTxHex != "" && entry.TxHash != "" {
+			if entry.RawTxHex != "" || entry.TxHash != "" {
 				entry.Status = "uncertain"
 				entry.LastError = "process restarted after exact transaction preparation; automatic canonical reconciliation pending"
 			} else {
@@ -174,41 +287,59 @@ func (s *claimQueueStore) load() (*ClaimQueue, error) {
 	return &q, nil
 }
 
-func (s *claimQueueStore) save(q *ClaimQueue) error {
-	b, err := json.MarshalIndent(q, "", "  ")
+// Compare acknowledged bytes only after physical head admission. Lost or
+// replaced files cannot be recreated from the daemon's process-local cache.
+func (self *claimQueueStore) save(q *ClaimQueue) (saveErr error) {
+	if self == nil {
+		return errors.New("claim queue store is absent")
+	}
+	if q == nil || q.Entries == nil {
+		return errors.New("claim queue observation has no owned inventory")
+	}
+	defer func() {
+		if saveErr != nil {
+			self.progress.unavailable()
+		}
+	}()
+	if err := self.requireWrite(self.ctx); err != nil {
+		return err
+	}
+	b, err := marshalClaimQueue(q)
 	if err != nil {
 		return err
 	}
-	f, err := os.CreateTemp(filepath.Dir(s.path), ".claim-queue-")
+	committed, b, omitted, err := self.observationCapacity(q, b)
 	if err != nil {
 		return err
 	}
-	tmp := f.Name()
-	defer os.Remove(tmp)
-	if err := f.Chmod(0o600); err != nil {
-		f.Close()
+	hash := sha256.Sum256(b)
+	if self.saved && self.savedHash == hash {
+		prior, present, err := self.head.Read()
+		if err != nil {
+			return err
+		}
+		if present && bytes.Equal(prior, b) {
+			if err := self.requireWrite(self.ctx); err != nil {
+				return err
+			}
+			adoptClaimObservationCapacity(q, committed)
+			self.progress.acknowledge(committed, hash, omitted)
+			return nil
+		}
+	}
+	self.saved = false
+	if err := self.head.Publish(b, self.afterSync); err != nil {
+		self.uncertain = errors.Is(err, durablehead.ErrUncertain)
 		return err
 	}
-	if _, err := f.Write(append(b, '\n')); err != nil {
-		f.Close()
-		return err
+	if err := self.requireWrite(self.ctx); err != nil {
+		self.uncertain = true
+		return errors.Join(durablehead.ErrUncertain, err)
 	}
-	if err := f.Sync(); err != nil {
-		f.Close()
-		return err
-	}
-	if err := f.Close(); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, s.path); err != nil {
-		return err
-	}
-	dir, err := os.Open(filepath.Dir(s.path))
-	if err != nil {
-		return err
-	}
-	defer dir.Close()
-	return dir.Sync()
+	self.savedHash, self.saved = hash, true
+	adoptClaimObservationCapacity(q, committed)
+	self.progress.acknowledge(committed, hash, omitted)
+	return nil
 }
 
 func claimRetry(attempt int) time.Duration {
@@ -396,21 +527,12 @@ func claimCalldata(claim *sdk.SnPoolClaimResult) (common.Address, []byte, error)
 	return common.HexToAddress(vault), calldata, nil
 }
 
-func finalizedNumber(ctx context.Context, client *ethclient.Client) (uint64, error) {
-	var hash string
-	if err := client.Client().CallContext(ctx, &hash, "chain_getFinalizedHead"); err != nil {
-		return 0, err
-	}
-	var header struct {
-		Number string `json:"number"`
-	}
-	if err := client.Client().CallContext(ctx, &header, "chain_getHeader", hash); err != nil {
-		return 0, err
-	}
-	return parseEthHexQuantity(header.Number)
+func queryClaimedFinalized(ctx context.Context, cfg *ClaimDaemonConfig, claim *sdk.SnPoolClaimResult) (bool, error) {
+	return queryClaimedFinalizedObserved(ctx, cfg, claim, nil)
 }
 
-func queryClaimedFinalized(ctx context.Context, cfg *ClaimDaemonConfig, claim *sdk.SnPoolClaimResult) (bool, error) {
+// The optional observer receives only a closed actual finalized observation.
+func queryClaimedFinalizedObserved(ctx context.Context, cfg *ClaimDaemonConfig, claim *sdk.SnPoolClaimResult, observe func(*protocol.ClaimObservation)) (bool, error) {
 	if claim == nil {
 		return false, errors.New("claim response is nil")
 	}
@@ -444,18 +566,18 @@ func queryClaimedFinalized(ctx context.Context, cfg *ClaimDaemonConfig, claim *s
 	copy(advertisedRoot[:], claim.PayoutRoot)
 	var failures []error
 	for _, endpoint := range cfg.RPC {
-		client, dialErr := ethclient.DialContext(ctx, endpoint)
+		client, dialErr := evmrpc.DialContext(ctx, endpoint)
 		if dialErr != nil {
 			failures = append(failures, fmt.Errorf("%s: %w", endpoint, dialErr))
 			continue
 		}
 		chainID, idErr := client.ChainID(ctx)
-		if idErr != nil || !chainID.IsUint64() || chainID.Uint64() != uint64(claim.ChainId) {
+		if idErr != nil || chainID == nil || !chainID.IsUint64() || chainID.Uint64() != uint64(claim.ChainId) {
 			client.Close()
 			failures = append(failures, fmt.Errorf("%s: chain id %v, want %d: %v", endpoint, chainID, claim.ChainId, idErr))
 			continue
 		}
-		finalized, finalErr := finalizedNumber(ctx, client)
+		finalized, finalErr := claimFinalizedEVM(ctx, client)
 		if finalErr != nil {
 			client.Close()
 			failures = append(failures, fmt.Errorf("%s: finalized head: %w", endpoint, finalErr))
@@ -463,19 +585,32 @@ func queryClaimedFinalized(ctx context.Context, cfg *ClaimDaemonConfig, claim *s
 		}
 		address := common.HexToAddress(vault)
 		entitlementData := stSettlementVault.PackEntitlement(epoch, noID)
-		entitlementOut, entitlementErr := client.CallContract(ctx, ethereum.CallMsg{To: &address, Data: entitlementData}, new(big.Int).SetUint64(finalized))
+		entitlementOut, entitlementErr := client.CallContract(ctx, ethereum.CallMsg{To: &address, Data: entitlementData}, new(big.Int).SetUint64(finalized.Number))
 		if entitlementErr != nil {
 			client.Close()
 			failures = append(failures, fmt.Errorf("%s: entitlement: %w", endpoint, entitlementErr))
 			continue
 		}
 		entitlement, entitlementErr := stSettlementVault.UnpackEntitlement(entitlementOut)
-		if entitlementErr != nil || entitlement.PayoutRoot != advertisedRoot {
+		if entitlementErr != nil {
 			client.Close()
-			failures = append(failures, fmt.Errorf("%s: finalized payout root does not match claim artifact", endpoint))
+			failures = append(failures, fmt.Errorf("%s: decode finalized entitlement: %w", endpoint, entitlementErr))
 			continue
 		}
-		out, callErr := client.CallContract(ctx, ethereum.CallMsg{To: &address, Data: data}, new(big.Int).SetUint64(finalized))
+		if entitlement.PayoutRoot != advertisedRoot {
+			if err := closeClaimFinalizedEVM(ctx, client, finalized); err != nil {
+				client.Close()
+				failures = append(failures, err)
+				continue
+			}
+			client.Close()
+			failures = append(failures, &claimArtifactRootMismatchError{epoch: claim.Epoch, advertised: advertisedRoot, finalized: entitlement.PayoutRoot})
+			continue
+		}
+		out, callErr := client.CallContract(ctx, ethereum.CallMsg{To: &address, Data: data}, new(big.Int).SetUint64(finalized.Number))
+		if callErr == nil {
+			callErr = closeClaimFinalizedEVM(ctx, client, finalized)
+		}
 		client.Close()
 		if callErr != nil {
 			failures = append(failures, fmt.Errorf("%s: leafClaimed: %w", endpoint, callErr))
@@ -486,136 +621,83 @@ func queryClaimedFinalized(ctx context.Context, cfg *ClaimDaemonConfig, claim *s
 			failures = append(failures, fmt.Errorf("%s: decode leafClaimed: %w", endpoint, unpackErr))
 			continue
 		}
+		if observe != nil {
+			if observation := finalizedClaimObservation(claim, entitlement, finalized, claimed); observation != nil {
+				observe(observation)
+			}
+		}
 		return claimed, nil
 	}
 	return false, errors.Join(failures...)
 }
 
-// uncertainClaimRetryable returns true only after the exact transaction has
-// a canonical, finalized failure receipt. A missing or pending transaction is
-// intentionally left uncertain; leafClaimed is checked first on every pass.
-func uncertainClaimRetryable(ctx context.Context, cfg *ClaimDaemonConfig, txHash string) (bool, error) {
-	if cfg == nil {
-		return false, errors.New("claim receipt configuration is unavailable")
-	}
-	raw, err := hex.DecodeString(strings.TrimPrefix(txHash, "0x"))
-	if err != nil || len(raw) != common.HashLength {
-		return false, fmt.Errorf("invalid uncertain transaction hash %q", txHash)
-	}
-	hash := common.BytesToHash(raw)
-	var failures []error
-	for _, endpoint := range cfg.RPC {
-		client, dialErr := ethclient.DialContext(ctx, endpoint)
-		if dialErr != nil {
-			failures = append(failures, dialErr)
-			continue
-		}
-		receipt, receiptErr := client.TransactionReceipt(ctx, hash)
-		if receiptErr == ethereum.NotFound {
-			client.Close()
-			continue
-		}
-		if receiptErr != nil {
-			client.Close()
-			failures = append(failures, receiptErr)
-			continue
-		}
-		if receipt == nil || receipt.TxHash != hash || receipt.BlockNumber == nil || !receipt.BlockNumber.IsUint64() || receipt.BlockNumber.Sign() <= 0 || receipt.BlockHash == (common.Hash{}) {
-			client.Close()
-			failures = append(failures, errors.New("uncertain claim receipt has an incomplete or mismatched identity"))
-			continue
-		}
-		finalized, finalErr := finalizedNumber(ctx, client)
-		if finalErr != nil || finalized < receipt.BlockNumber.Uint64() {
-			client.Close()
-			if finalErr != nil {
-				failures = append(failures, finalErr)
-			}
-			continue
-		}
-		block, blockErr := onchain.ReadEVMBlockIdentity(ctx, client, receipt.BlockNumber)
-		client.Close()
-		if blockErr != nil {
-			failures = append(failures, blockErr)
-			continue
-		}
-		if block.Hash != receipt.BlockHash {
-			return false, fmt.Errorf("transaction %s receipt is not canonical", txHash)
-		}
-		if receipt.Status == types.ReceiptStatusFailed {
-			return true, nil
-		}
-		return false, fmt.Errorf("transaction %s finalized successfully but leafClaimed is false", txHash)
-	}
-	if len(failures) > 0 {
-		return false, errors.Join(failures...)
-	}
-	return false, nil
-}
-
-func rebroadcastExactClaim(ctx context.Context, cfg *ClaimDaemonConfig, claim *sdk.SnPoolClaimResult, entry *ClaimQueueEntry) (bool, error) {
-	vault, calldata, err := claimCalldata(claim)
-	if err != nil {
+// The caller already authenticated the exact signed transaction. Replaying
+// those bytes needs finalized chain authority, not a retained historical API.
+func rebroadcastSignedClaim(ctx context.Context, cfg *ClaimDaemonConfig, tx *types.Transaction, from common.Address, store *claimQueueStore) (bool, error) {
+	if err := store.requireSigned(ctx, tx); err != nil {
 		return false, err
-	}
-	raw, err := hex.DecodeString(strings.TrimPrefix(entry.RawTxHex, "0x"))
-	if err != nil || len(raw) == 0 {
-		return false, errors.New("uncertain claim has no valid exact signed transaction")
-	}
-	var tx types.Transaction
-	if err := tx.UnmarshalBinary(raw); err != nil || !strings.EqualFold(tx.Hash().Hex(), entry.TxHash) {
-		return false, errors.New("uncertain claim transaction bytes/hash mismatch")
-	}
-	if tx.To() == nil || *tx.To() != vault || tx.Value().Sign() != 0 || !bytes.Equal(tx.Data(), calldata) {
-		return false, errors.New("uncertain claim transaction does not match the current verified claim")
-	}
-	if claim.ChainId < 0 || !tx.ChainId().IsUint64() || tx.ChainId().Uint64() != uint64(claim.ChainId) {
-		return false, errors.New("uncertain claim transaction chain identity mismatch")
-	}
-	signer := types.LatestSignerForChainID(tx.ChainId())
-	from, err := types.Sender(signer, &tx)
-	if err != nil {
-		return false, err
-	}
-	key, err := onchain.LoadKeyFile(cfg.KeyFile)
-	if err != nil || crypto.PubkeyToAddress(key.PublicKey) != from {
-		return false, errors.New("uncertain claim signer does not match configured relayer")
 	}
 	var failures []error
 	for _, endpoint := range cfg.RPC {
-		client, dialErr := ethclient.DialContext(ctx, endpoint)
+		client, dialErr := evmrpc.DialContext(ctx, endpoint)
 		if dialErr != nil {
 			failures = append(failures, dialErr)
 			continue
 		}
 		chainID, idErr := client.ChainID(ctx)
-		if idErr != nil || chainID.Cmp(tx.ChainId()) != 0 {
+		if idErr != nil || chainID == nil || chainID.Cmp(tx.ChainId()) != 0 {
 			client.Close()
 			failures = append(failures, fmt.Errorf("%s chain identity mismatch", endpoint))
 			continue
 		}
-		finalized, finalErr := finalizedNumber(ctx, client)
+		finalized, finalErr := claimFinalizedEVM(ctx, client)
 		if finalErr != nil {
 			client.Close()
 			failures = append(failures, finalErr)
 			continue
 		}
-		nonce, nonceErr := client.NonceAt(ctx, from, new(big.Int).SetUint64(finalized))
+		nonce, nonceErr := client.NonceAt(ctx, from, new(big.Int).SetUint64(finalized.Number))
 		if nonceErr != nil {
 			client.Close()
 			failures = append(failures, nonceErr)
 			continue
 		}
 		if nonce > tx.Nonce() {
+			if err := closeClaimFinalizedEVM(ctx, client, finalized); err != nil {
+				client.Close()
+				failures = append(failures, err)
+				continue
+			}
 			client.Close()
 			return true, nil
 		}
-		sendErr := client.SendTransaction(ctx, &tx)
+		// The vault checks the saved epoch, proof and claim status at the
+		// finalized head. A now-invalid intent remains a signed liability;
+		// it is never converted into a new transaction or erased.
+		_, preflightErr := client.CallContract(ctx, ethereum.CallMsg{From: from, To: tx.To(), Gas: tx.Gas(), GasPrice: tx.GasPrice(), Value: tx.Value(), Data: tx.Data()}, new(big.Int).SetUint64(finalized.Number))
+		if preflightErr != nil {
+			client.Close()
+			failures = append(failures, fmt.Errorf("finalized exact-claim preflight: %w", preflightErr))
+			continue
+		}
+		if err := closeClaimFinalizedEVM(ctx, client, finalized); err != nil {
+			client.Close()
+			failures = append(failures, err)
+			continue
+		}
+		if err := store.requireSigned(ctx, tx); err != nil {
+			client.Close()
+			return false, err
+		}
+		sendErr := client.SendTransaction(ctx, tx)
 		client.Close()
 		if sendErr == nil || knownClaimTransaction(sendErr) {
 			return false, nil
 		}
 		failures = append(failures, sendErr)
+	}
+	if len(failures) == 0 {
+		return false, errors.New("exact claim replay has no RPC endpoint")
 	}
 	return false, errors.Join(failures...)
 }
@@ -651,77 +733,68 @@ type claimAPI interface {
 	SnPoolClaimSyncWithContext(context.Context, *sdk.SnPoolClaimArgs) (*sdk.SnPoolClaimResult, error)
 }
 
-// The injectable form used to prove that finalized observation shares the
-// operator-local chain/nonce boundary with transaction submission.
-type claimReconcileFunc func(context.Context, *ClaimDaemonConfig, claimAPI, *ClaimQueueEntry) (string, error)
-
-// Serializes multi-call finalized reconciliation for one operator. Without
-// this boundary, hundreds of payable miners can enter a source-wide public RPC
-// queue at once and starve validators even though submissions are serialized.
-func reconcileClaimEntryWithLock(ctx context.Context, cfg *ClaimDaemonConfig, api claimAPI, entry *ClaimQueueEntry, chainStateLock *sync.Mutex, reconcile claimReconcileFunc) (string, error) {
-	if chainStateLock == nil || reconcile == nil {
-		return "", errors.New("claim reconciliation chain boundary is unavailable")
+// The daemon calls reconciliation and submission inside one shared admission.
+// Its finite context also bounds every multi-call finalized observation.
+func reconcileClaimEntry(ctx context.Context, cfg *ClaimDaemonConfig, api claimAPI, entry *ClaimQueueEntry, store *claimQueueStore) (string, error) {
+	if err := store.requireOwner(); err != nil {
+		return "", err
 	}
-	chainStateLock.Lock()
-	defer chainStateLock.Unlock()
-	return reconcile(ctx, cfg, api, entry)
-}
-
-func reconcileClaimEntry(ctx context.Context, cfg *ClaimDaemonConfig, api claimAPI, entry *ClaimQueueEntry) (string, error) {
+	if entry == nil || cfg == nil {
+		return "", errors.New("claim reconciliation is unavailable")
+	}
+	if entry.TxHash != "" || entry.RawTxHex != "" {
+		return reconcileSignedClaim(ctx, cfg, entry, store)
+	}
+	if api == nil {
+		return "", errors.New("claim API is unavailable")
+	}
 	claim, err := api.SnPoolClaimSyncWithContext(ctx, &sdk.SnPoolClaimArgs{Epoch: entry.Epoch})
 	if err != nil {
 		return "", err
+	}
+	if claim == nil {
+		return "", errors.New("claim response is nil")
 	}
 	if claim.Error != nil {
 		return "", errors.New(claim.Error.Message)
 	}
+	if claim.Epoch != entry.Epoch {
+		return "", errors.New("claim artifact epoch differs from the queued epoch")
+	}
 	if len(claim.NoId) == 0 {
-		// A finalized epoch with no provider leaf is a terminal zero payout, not
-		// a transaction failure to retry forever.
+		// Only an unsigned entry can become a terminal API zero payout.
+		// Signed liabilities need exact canonical receipt evidence instead.
+		entry.PublicObservation = absentClaimObservation(entry.Epoch)
 		return "no-claim", nil
 	}
-	claimed, err := queryClaimedFinalized(ctx, cfg, claim)
+	claimed, err := queryClaimedFinalizedObserved(ctx, cfg, claim, func(observation *protocol.ClaimObservation) { entry.PublicObservation = observation })
 	if err != nil {
 		return "", err
 	}
 	if claimed {
-		if entry.TxHash != "" && entry.FinalizedBlock == 0 {
-			receipt, err := finalizedClaimReceipt(ctx, cfg, entry.TxHash)
-			if err != nil {
-				return "", err
-			}
-			if err := recordFinalizedClaimReceipt(entry, receipt); err != nil {
-				return "", err
-			}
-		}
 		return "finalized", nil
-	}
-	if entry.Status == "uncertain" && entry.TxHash != "" {
-		retryable, err := uncertainClaimRetryable(ctx, cfg, entry.TxHash)
-		if err != nil {
-			return "", err
-		}
-		if retryable {
-			return "retry", nil
-		}
-		retryable, err = rebroadcastExactClaim(ctx, cfg, claim, entry)
-		if err != nil {
-			return "", err
-		}
-		if retryable {
-			return "retry", nil
-		}
 	}
 	return "", nil
 }
 
-func submitClaimDirect(ctx context.Context, cfg *ClaimDaemonConfig, api claimAPI, entry *ClaimQueueEntry, submitLock *sync.Mutex, store *claimQueueStore, queue *ClaimQueue) error {
+// Admission already covers reconciliation through finality. Never wait for
+// another nonce lock after recording the durable submitting state.
+func submitClaimDirect(ctx context.Context, cfg *ClaimDaemonConfig, api claimAPI, entry *ClaimQueueEntry, store *claimQueueStore, queue *ClaimQueue, admission *claimAdmission) error {
+	if err := store.requireWrite(ctx); err != nil {
+		return err
+	}
 	claim, err := api.SnPoolClaimSyncWithContext(ctx, &sdk.SnPoolClaimArgs{Epoch: entry.Epoch})
 	if err != nil {
 		return err
 	}
+	if claim == nil {
+		return errors.New("claim response is nil")
+	}
 	if claim.Error != nil {
 		return errors.New(claim.Error.Message)
+	}
+	if claim.Epoch != entry.Epoch {
+		return errors.New("claim artifact epoch differs from the queued epoch")
 	}
 	vault, calldata, err := claimCalldata(claim)
 	if err != nil {
@@ -730,18 +803,25 @@ func submitClaimDirect(ctx context.Context, cfg *ClaimDaemonConfig, api claimAPI
 	if claim.ChainId < 0 {
 		return fmt.Errorf("negative claim chain id %d", claim.ChainId)
 	}
+	if err := store.requireWrite(ctx); err != nil {
+		return err
+	}
 	key, err := onchain.LoadKeyFile(cfg.KeyFile)
 	if err != nil {
 		return err
 	}
-	if submitLock == nil {
-		return errors.New("claim submit lock is nil")
+	if err := admission.checkChain(big.NewInt(claim.ChainId)); err != nil {
+		return err
 	}
-	submitLock.Lock()
-	defer submitLock.Unlock()
 	receipt, err := onchain.SubmitWithHooks(ctx, onchain.SubmitParams{
-		Contract: vault, Rpcs: cfg.RPC, Key: key, Calldata: calldata,
+		Contract: vault, Rpcs: cfg.RPC, Key: key, Calldata: calldata, NonceFloor: admission.nonceMinimum(),
 		ChainID: new(big.Int).SetUint64(uint64(claim.ChainId)),
+		RuntimeAdmission: func(request context.Context, _ *ethclient.Client, number *big.Int) error {
+			if number != nil {
+				return errors.Join(request.Err(), store.requireOwner())
+			}
+			return store.requireWrite(request)
+		},
 	}, onchain.SubmitHooks{
 		Prepared: func(hash common.Hash, raw []byte) error {
 			priorHash, priorRaw := entry.TxHash, entry.RawTxHex
@@ -749,10 +829,26 @@ func submitClaimDirect(ctx context.Context, cfg *ClaimDaemonConfig, api claimAPI
 			entry.RawTxHex = "0x" + hex.EncodeToString(raw)
 			entry.UpdatedAt = time.Now().UTC().Format(time.RFC3339Nano)
 			if saveErr := store.save(queue); saveErr != nil {
+				// An uncertain checkpoint may already contain these exact
+				// signed bytes. Preserve their nonce floor before this worker
+				// releases the shared relayer, even before joined reconciliation.
+				if errors.Is(saveErr, durablehead.ErrUncertain) {
+					saveErr = errors.Join(saveErr, admission.rememberSigned(cfg, entry))
+				}
 				entry.TxHash, entry.RawTxHex = priorHash, priorRaw
 				return saveErr
 			}
-			return nil
+			return admission.rememberSigned(cfg, entry)
+		},
+		BeforeBroadcast: func(hash common.Hash) error {
+			tx, _, _, err := authenticateSignedClaim(cfg, entry)
+			if err != nil {
+				return err
+			}
+			if tx.Hash() != hash {
+				return errors.New("claim handoff differs from retained prepared bytes")
+			}
+			return store.requireSigned(ctx, tx)
 		},
 		Broadcast: func(hash common.Hash) error {
 			if !strings.EqualFold(entry.TxHash, hash.Hex()) {
@@ -765,7 +861,25 @@ func submitClaimDirect(ctx context.Context, cfg *ClaimDaemonConfig, api claimAPI
 	if err != nil {
 		return err
 	}
-	return recordFinalizedClaimReceipt(entry, receipt)
+	tx, intent, from, err := authenticateSignedClaim(cfg, entry)
+	if err != nil {
+		return err
+	}
+	reconciled, err := finalizedClaimReceipt(ctx, cfg, entry.TxHash, tx.ChainId())
+	if err != nil {
+		return err
+	}
+	if receipt == nil || receipt.BlockNumber == nil || receipt.TxHash != reconciled.TxHash || receipt.BlockHash != reconciled.BlockHash || receipt.BlockNumber.Cmp(reconciled.BlockNumber) != 0 || receipt.TransactionIndex != reconciled.TransactionIndex {
+		return errors.New("claim finality reconciliation changed the original receipt identity")
+	}
+	if err := verifySignedClaimReceipt(tx, intent, from, reconciled); err != nil {
+		return err
+	}
+	if err := recordFinalizedClaimReceipt(entry, reconciled); err != nil {
+		return err
+	}
+	entry.PublicObservation = signedClaimObservation(tx, intent, from, reconciled)
+	return nil
 }
 
 // recordFinalizedClaimReceipt binds a successful queue entry to the exact
@@ -797,9 +911,9 @@ func recordFinalizedClaimReceipt(entry *ClaimQueueEntry, receipt *types.Receipt)
 // finalizedClaimReceipt recovers inclusion evidence after a crash between
 // chain finality and the queue fsync. An endpoint must provide a canonical
 // finalized block before its recovered receipt is accepted.
-func finalizedClaimReceipt(ctx context.Context, cfg *ClaimDaemonConfig, txHash string) (*types.Receipt, error) {
-	if cfg == nil {
-		return nil, errors.New("claim receipt configuration is unavailable")
+func finalizedClaimReceipt(ctx context.Context, cfg *ClaimDaemonConfig, txHash string, chainId *big.Int) (*types.Receipt, error) {
+	if cfg == nil || chainId == nil || chainId.Sign() <= 0 {
+		return nil, errors.New("claim receipt chain configuration is unavailable")
 	}
 	raw, err := hex.DecodeString(strings.TrimPrefix(txHash, "0x"))
 	if err != nil || len(raw) != common.HashLength {
@@ -808,9 +922,15 @@ func finalizedClaimReceipt(ctx context.Context, cfg *ClaimDaemonConfig, txHash s
 	hash := common.BytesToHash(raw)
 	var failures []error
 	for _, endpoint := range cfg.RPC {
-		client, dialErr := ethclient.DialContext(ctx, endpoint)
+		client, dialErr := evmrpc.DialContext(ctx, endpoint)
 		if dialErr != nil {
 			failures = append(failures, dialErr)
+			continue
+		}
+		observedChainId, idErr := client.ChainID(ctx)
+		if idErr != nil || observedChainId == nil || observedChainId.Cmp(chainId) != 0 {
+			client.Close()
+			failures = append(failures, fmt.Errorf("claim receipt RPC chain identity mismatch: %v", idErr))
 			continue
 		}
 		receipt, receiptErr := client.TransactionReceipt(ctx, hash)
@@ -824,8 +944,8 @@ func finalizedClaimReceipt(ctx context.Context, cfg *ClaimDaemonConfig, txHash s
 			failures = append(failures, errors.New("claim receipt has an incomplete or mismatched identity"))
 			continue
 		}
-		finalized, finalErr := finalizedNumber(ctx, client)
-		if finalErr != nil || finalized < receipt.BlockNumber.Uint64() {
+		finalized, finalErr := claimFinalizedEVM(ctx, client)
+		if finalErr != nil || finalized.Number < receipt.BlockNumber.Uint64() {
 			client.Close()
 			if finalErr != nil {
 				failures = append(failures, finalErr)
@@ -835,14 +955,28 @@ func finalizedClaimReceipt(ctx context.Context, cfg *ClaimDaemonConfig, txHash s
 			continue
 		}
 		block, blockErr := onchain.ReadEVMBlockIdentity(ctx, client, receipt.BlockNumber)
-		client.Close()
 		if blockErr != nil {
+			client.Close()
 			failures = append(failures, blockErr)
 			continue
 		}
 		if block.Hash != receipt.BlockHash {
+			client.Close()
 			return nil, fmt.Errorf("claim transaction %s receipt is not canonical", txHash)
 		}
+		// Close both inclusion and the separate finalized witness. A later
+		// head may advance, but neither original coordinate may be replaced.
+		if err := checkClaimEVMCanonical(ctx, client, block); err != nil {
+			client.Close()
+			failures = append(failures, err)
+			continue
+		}
+		if err := closeClaimFinalizedEVM(ctx, client, finalized); err != nil {
+			client.Close()
+			failures = append(failures, err)
+			continue
+		}
+		client.Close()
 		return receipt, nil
 	}
 	if len(failures) == 0 {
@@ -866,16 +1000,33 @@ func readClaimDaemonJWT(cfg *ClaimDaemonConfig) (string, error) {
 	return jwt, nil
 }
 
-func runClaimDaemonWithLock(ctx context.Context, configPath string, chainStateLock *sync.Mutex, initialDelay time.Duration, onReady func()) error {
-	if ctx == nil {
-		return errors.New("claim daemon context is nil")
+func runClaimDaemonWithAdmission(ctx context.Context, configPath string, admission *claimAdmission, initialDelay time.Duration, onReady func()) (runErr error) {
+	if ctx == nil || admission == nil {
+		return errors.New("claim daemon context or admission is unavailable")
+	}
+	if err := durablepath.Require(ctx); err != nil {
+		return err
 	}
 	cfg, err := LoadClaimDaemonConfig(configPath)
 	if err != nil {
 		return err
 	}
-	store, err := newClaimQueueStore(cfg.StateDir)
+	store, err := newClaimQueueStore(cfg.StateDir, ctx)
 	if err != nil {
+		return err
+	}
+	defer func() { runErr = errors.Join(runErr, store.close()) }()
+	return runClaimOwner(ctx, cfg, store, claimOwnerHooks{run: func(owner *claimQueueStore) error {
+		return runClaimDaemonWithStore(ctx, cfg, owner, admission, initialDelay, onReady)
+	}})
+}
+
+// The caller retains the queue owner until this function has joined all local
+// work. A swarm supplies its already loaded config and already locked store.
+func runClaimDaemonWithStore(ctx context.Context, cfg *ClaimDaemonConfig, store *claimQueueStore, admission *claimAdmission, initialDelay time.Duration, onReady func()) (runErr error) {
+	store.progress = cfg.progress
+	defer admission.forget(cfg.StateDir)
+	if err := admission.seedMember(cfg, store); err != nil {
 		return err
 	}
 	queue, err := store.load()
@@ -889,7 +1040,9 @@ func runClaimDaemonWithLock(ctx context.Context, configPath string, chainStateLo
 	defer strategy.Close()
 	api := sdk.NewApi(ctx, strategy, cfg.APIURL)
 	defer func() {
-		_ = api.CloseAndWait(context.Background())
+		closeCtx, closeCancel := context.WithTimeout(context.Background(), claimOperationTimeout)
+		defer closeCancel()
+		runErr = errors.Join(runErr, api.CloseAndWait(closeCtx))
 	}()
 	jwt, err := readClaimDaemonJWT(cfg)
 	if err != nil {
@@ -906,101 +1059,72 @@ func runClaimDaemonWithLock(ctx context.Context, configPath string, chainStateLo
 		case <-time.After(initialDelay):
 		}
 	}
-	ticker := time.NewTicker(time.Duration(cfg.PollSeconds) * time.Second)
+	period := time.Duration(cfg.PollSeconds) * time.Second
+	epochCtx, epochCancel := context.WithCancel(ctx)
+	epochs, epochDone := startClaimEpochReader(epochCtx, period, func(ctx context.Context) (int64, error) {
+		return readClaimEpoch(ctx, strategy, cfg.APIURL, api.GetByJwt())
+	})
+	defer func() { epochCancel(); <-epochDone }()
+	ticker := time.NewTicker(period)
 	defer ticker.Stop()
-	for {
-		current, err := readClaimEpoch(ctx, strategy, cfg.APIURL, api.GetByJwt())
-		if err == nil {
-			discoverClaims(queue, current, cfg.LookbackEpochs)
-			if err := store.save(queue); err != nil {
-				return err
-			}
-		}
-		for epoch := int64(0); epoch <= queue.LastDiscovered; epoch++ {
-			entry := queue.Entries[fmt.Sprint(epoch)]
-			if entry == nil || entry.Status == "finalized" || entry.Status == "no-claim" {
-				continue
-			}
-			reconciled, reconcileErr := reconcileClaimEntryWithLock(ctx, cfg, api, entry, chainStateLock, reconcileClaimEntry)
-			if reconciled != "" {
-				entry.Status = reconciled
-				entry.UpdatedAt = time.Now().UTC().Format(time.RFC3339Nano)
-				entry.LastError = ""
-				entry.NextRetryAt = ""
-				if err := store.save(queue); err != nil {
-					return err
-				}
-				if reconciled == "finalized" || reconciled == "no-claim" {
-					continue
-				}
-			}
-			if entry.Status == "uncertain" {
-				if reconcileErr != nil {
-					entry.LastError = "uncertain transaction reconciliation: " + reconcileErr.Error()
-					entry.UpdatedAt = time.Now().UTC().Format(time.RFC3339Nano)
-					_ = store.save(queue)
-				}
-				continue
-			}
-			if reconcileErr != nil {
-				entry.Status = "retry"
-				entry.LastError = "claim is not ready for finalized reconciliation: " + reconcileErr.Error()
-				entry.NextRetryAt = time.Now().Add(claimRetry(max(1, entry.Attempts))).UTC().Format(time.RFC3339Nano)
-				entry.UpdatedAt = time.Now().UTC().Format(time.RFC3339Nano)
-				if err := store.save(queue); err != nil {
-					return err
-				}
-				continue
-			}
-			if entry.NextRetryAt != "" {
-				when, parseErr := time.Parse(time.RFC3339Nano, entry.NextRetryAt)
-				if parseErr == nil && time.Now().Before(when) {
-					continue
-				}
-			}
-			entry.Status = "submitting"
-			entry.Attempts++
-			entry.TxHash = ""
-			entry.RawTxHex = ""
-			entry.UpdatedAt = time.Now().UTC().Format(time.RFC3339Nano)
-			entry.LastError = ""
-			if err := store.save(queue); err != nil {
-				return err
-			}
-			claimErr := submitClaimDirect(ctx, cfg, api, entry, chainStateLock, store, queue)
-			entry.UpdatedAt = time.Now().UTC().Format(time.RFC3339Nano)
-			if claimErr == nil {
-				entry.Status = "finalized"
-				entry.NextRetryAt = ""
-			} else if entry.TxHash != "" {
-				entry.Status = "uncertain"
-				entry.LastError = "transaction was broadcast but finality was not confirmed: " + claimErr.Error()
-			} else {
-				entry.Status = "retry"
-				entry.LastError = claimErr.Error()
-				entry.NextRetryAt = time.Now().Add(claimRetry(entry.Attempts)).UTC().Format(time.RFC3339Nano)
-			}
-			if err := store.save(queue); err != nil {
-				return err
-			}
-		}
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-ticker.C:
-		}
-	}
+	return runClaimQueue(ctx, queue, cfg.LookbackEpochs, epochs, ticker.C, func() <-chan struct{} {
+		return admission.ready(cfg.StateDir)
+	}, claimQueuePollHooks{
+		now: time.Now, save: store.save, latestEpoch: admission.observeEpoch,
+		begin: func(ctx context.Context, candidates []claimPollCandidate) (int, context.Context, func(), error) {
+			return beginClaimOperation(ctx, admission, cfg.StateDir, candidates)
+		},
+		reconcile: func(ctx context.Context, entry *ClaimQueueEntry) (string, error) {
+			return reconcileClaimEntry(ctx, cfg, api, entry, store)
+		},
+		submit: func(ctx context.Context, entry *ClaimQueueEntry) error {
+			return submitClaimDirect(ctx, cfg, api, entry, store, queue, admission)
+		},
+	})
 }
 
 // RunClaimDaemon runs the production claim worker using direct package calls;
 // it never shells out to the provider or snclaim CLIs.
 func RunClaimDaemon(ctx context.Context, configPath string) error {
-	var chainStateLock sync.Mutex
-	return runClaimDaemonWithLock(ctx, configPath, &chainStateLock, 0, nil)
+	return runClaimDaemonWithAdmission(ctx, configPath, &claimAdmission{}, 0, nil)
 }
 
-func runClaimDaemon(configPath string) error {
-	event := connect.NewEventWithContext(context.Background())
+func runClaimDaemon(ctx context.Context, configPath string) error {
+	event := connect.NewEventWithContext(ctx)
 	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	return RunClaimDaemon(event.Ctx(), configPath)
+}
+
+// A physical writer alone cannot authorize unrelated transaction bytes. The
+// exact original signed RLP and hash must still exist in the acknowledged queue.
+func (self *claimQueueStore) requireSigned(ctx context.Context, tx *types.Transaction) error {
+	if err := self.requireWrite(ctx); err != nil {
+		return err
+	}
+	if tx == nil {
+		return errors.New("claim signed transaction is absent")
+	}
+	raw, err := tx.MarshalBinary()
+	if err != nil {
+		return err
+	}
+	queue, err := self.load()
+	if err != nil {
+		return err
+	}
+	matched := false
+	for _, entry := range queue.Entries {
+		if entry == nil || !strings.EqualFold(entry.TxHash, tx.Hash().Hex()) {
+			continue
+		}
+		retained, err := hex.DecodeString(strings.TrimPrefix(entry.RawTxHex, "0x"))
+		if err == nil && bytes.Equal(retained, raw) {
+			matched = true
+			break
+		}
+	}
+	if !matched {
+		return errors.New("claim exact signed transaction is absent from acknowledged custody")
+	}
+	return self.requireWrite(ctx)
 }

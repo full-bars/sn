@@ -1,0 +1,20 @@
+{
+  "schema": "rpc-retry-cause-traversal-source-finding-v1",
+  "status": "SOURCE_ADJACENCY_REVIEW_REQUESTED",
+  "source_commit": "8ebf05b2be9a39a040f1e0ad7566b7563509660f",
+  "source_blob": "b7ab78374c3760cbb6b51116783e77706e8c10cf",
+  "path": "strecovery/receipt_collect_retry.go",
+  "findings": [
+    "receiptCollectorRetryable recursively traverses one/many Unwrap without a shared depth or visited-node budget. A cyclic cause cannot terminate and a very deep/wide cause can exceed intended work.",
+    "A nonempty joined cause list containing only nil elements currently returns true; it establishes no transient cause."
+  ],
+  "required_follow_up": [
+    "Use bounded traversal and require at least one real transient leaf; unknown, cyclic, empty/all-nil and over-budget shapes must not gain retry admission.",
+    "Preserve genuine timeout/EOF/network cause retries and permanent-cause dominance in mixed trees.",
+    "Add deterministic depth, width, cycle and nil-list controls and inspect adjacent retry classifiers."
+  ],
+  "limits": [
+    "Source review only, not a reproduced live failure.",
+    "Does not invalidate the frozen native producer intake or authorize a broad qualification restart."
+  ]
+}

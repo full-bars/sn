@@ -1,0 +1,225 @@
+{
+  "schema": "conservation-native-followce78-scoped-root-source-review-v1",
+  "status": "SOURCE_REVIEWED_BEHAVIOR_PENDING",
+  "head": "ce78b81cd74d85cb581185e5063e48f395f5cbf2",
+  "tree": "d9c08fc85da6b9749198a25c761ffecd19ad7292",
+  "parent": "3a13c6977d8880891b3683db8ef82d1fa3b34526",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/intake.json",
+      "bytes": 2648,
+      "sha256": "dc7eb1a00bad398ca5085cce9e7134786e7729a6067ea6a77b3f2de6875228cd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/source-review.json",
+      "bytes": 7280,
+      "sha256": "92ad0e3ffb4d44a538bd67fb6bff03f594ddcdf328846de49cada826c2f5f912"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/selectors.json",
+      "bytes": 6541,
+      "sha256": "84fff1aa838d4175df66cc9714168768c05e0f9c43d3dc951207e4848ce2f099"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/operative-controls.json",
+      "bytes": 3643,
+      "sha256": "10223a1810965325c83790f4842ca1c5e26d511cf8ba89f92976d20c93f2a34a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/qualification-recipe.json",
+      "bytes": 5491,
+      "sha256": "4795d6fde97c28f0bb92767c66fd20de11dce97de6dc4e1f01cb1cf1cb8cd02f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/seal_source.py",
+      "bytes": 8048,
+      "sha256": "43373caf57ffe380d21e316c60501aabee195007a22e59c4e8240c5dc1e9302f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation.go",
+      "bytes": 40354,
+      "sha256": "cc1a5fde85fa1c65981173fefa87e6417c8a8a7c587a79d59b3dec16b7deca05"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_command.go",
+      "bytes": 29648,
+      "sha256": "a17a1308a07de30b55ab40e7c9ad7244441254dd0bc0f686aa326529a94769d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_native_worker.go",
+      "bytes": 3804,
+      "sha256": "13c155391f2afc2e75dd55ded0e92ae6647f7db8a8181aa8e3196691d9105568"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_native_worker_test.go",
+      "bytes": 19768,
+      "sha256": "940186b1e32de10abf304797fe3b591b284b6deb865ad6d2c5c46c015c7667e3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_principal_test.go",
+      "bytes": 20958,
+      "sha256": "ba075d3af87d834372314a0d3da60a8f181f581a44600c9b181738deed759f75"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/monitor_services.go",
+      "bytes": 13769,
+      "sha256": "4169f4727c8369fed23bb66deb3bcf645b53bcc4b8b5b4848c2fa97ebed14b3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_entitlement_test.go",
+      "bytes": 17142,
+      "sha256": "28abe33a990a66d223170703cd6751b42d375f4f8427647c9b44f91e473c477c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_fee_worker_test.go",
+      "bytes": 14585,
+      "sha256": "e384280163706ecfec8df9d5d6b51b990af4b83d1b2cfccede4ecec1a9b78f50"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/mainnet/economic_conservation_test.go",
+      "bytes": 27285,
+      "sha256": "a8053264fa890a531aca2c7011c100b54368cba94a85cb4a8f5566b5cfc3c807"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/controls/native-owner-isolation-omitted.go",
+      "bytes": 29657,
+      "sha256": "5a551134dc1b82b112ebe3929a84c12ef8b99410cc67157ae11a6178f5d7b6b1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/controls/native-original-handoff-omitted.go",
+      "bytes": 29659,
+      "sha256": "cacbb113f53e2649e14368c62a8da59c2de2eb91aaa262bae0cbbfaee1163cae"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/controls/native-pending-issue-retention-omitted.go",
+      "bytes": 29630,
+      "sha256": "7413e5138b810a7c136f9ab83bb3fdc134540c2020db16d35bec1ef2ed0a21cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-readonly-core/evidence/publication.json",
+      "bytes": 4387,
+      "sha256": "33a55bd749db05833e0fe84997a09cd9996fad5dcb4871b7e4ab155873f70fcc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-adoption-qualified-inputs/evidence/qualification-recipe-v2.json",
+      "bytes": 17944,
+      "sha256": "18b9ae86e8e11acb64103f24de3782a990a4b5bc2f47feb950a24871b0d48bdd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-populated-composed/evidence/qualification-recipe.json",
+      "bytes": 22931,
+      "sha256": "cf6c0c3f5200a88a3df5b70b2c895abd90b003c8b78c4e1091b967479e75d31c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-native-follow/evidence/intake.json",
+      "bytes": 2188,
+      "sha256": "5bad8380f30736cb7b6f403be91473a0576ff681934183dcc8ec146798773037"
+    }
+  ],
+  "git_sources": [
+    {
+      "git_path": "mainnet/economic_conservation.go",
+      "bytes": 40354,
+      "sha256": "cc1a5fde85fa1c65981173fefa87e6417c8a8a7c587a79d59b3dec16b7deca05",
+      "git_blob": "17dc69db3a6085bd5550ad6dcd19dc29e61f0d91"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_command.go",
+      "bytes": 29648,
+      "sha256": "a17a1308a07de30b55ab40e7c9ad7244441254dd0bc0f686aa326529a94769d7",
+      "git_blob": "b2f5d4221e603dcdbd1e7a45c459ad71794025f4"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_native_worker.go",
+      "bytes": 3804,
+      "sha256": "13c155391f2afc2e75dd55ded0e92ae6647f7db8a8181aa8e3196691d9105568",
+      "git_blob": "892b75e859347a9770e14d5fcf360dd038e3ba5f"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_native_worker_test.go",
+      "bytes": 19768,
+      "sha256": "940186b1e32de10abf304797fe3b591b284b6deb865ad6d2c5c46c015c7667e3",
+      "git_blob": "acda28e068f34692347195bbf92e9d1da952306e"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_principal_test.go",
+      "bytes": 20958,
+      "sha256": "ba075d3af87d834372314a0d3da60a8f181f581a44600c9b181738deed759f75",
+      "git_blob": "126d53053c49793851f1fad417d284f970b04d63"
+    },
+    {
+      "git_path": "mainnet/monitor_services.go",
+      "bytes": 13769,
+      "sha256": "4169f4727c8369fed23bb66deb3bcf645b53bcc4b8b5b4848c2fa97ebed14b3d",
+      "git_blob": "f3d6c7acc7ac061bd334a56172df24cd81ed2655"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_entitlement_test.go",
+      "bytes": 17142,
+      "sha256": "28abe33a990a66d223170703cd6751b42d375f4f8427647c9b44f91e473c477c",
+      "git_blob": "41737dbeba8bfdc9e82f16aba5081f1182c18001"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_fee_worker_test.go",
+      "bytes": 14585,
+      "sha256": "e384280163706ecfec8df9d5d6b51b990af4b83d1b2cfccede4ecec1a9b78f50",
+      "git_blob": "4f1384cb0c5d5de07dbb88637e4856bee40345b8"
+    },
+    {
+      "git_path": "mainnet/economic_conservation_test.go",
+      "bytes": 27285,
+      "sha256": "a8053264fa890a531aca2c7011c100b54368cba94a85cb4a8f5566b5cfc3c807",
+      "git_blob": "e72540962f53727e76959a34971088d4f8084561"
+    },
+    {
+      "git_path": "go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31",
+      "git_blob": "c49a8da6762fa52eefd4be73d401358e5f43d24d"
+    },
+    {
+      "git_path": "go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981",
+      "git_blob": "ff9f61011bba461e1194e25aec8c034410cf3e57"
+    }
+  ],
+  "scope": {
+    "new_go_roots": 7,
+    "actual_dual_engine_roots": 5,
+    "go_roots_per_mode": 12,
+    "control_groups": 3
+  },
+  "review_findings": [
+    "Complete110-line worker,472-line new test file and all six-file changes read. Continuous admitted producer receives a detached native state and immutable operating policy; parent alone changes combined checkpoint and lifecycle fields.",
+    "One bounded result slot carries actual native observation/error plus exact predecessor and native policy hashes. Parent joins its owned work before handoff and applies only to matching current native lineage; latest vault/Claim/artifact facts stay retained.",
+    "Pending work does not manufacture current evidence or clear a retained unavailable cause. Completed transient observations keep original cursor for retry; genuine native contradictions hold only native.",
+    "Parent cancellation joins actual capture/replay subprocess work before releasing outer custody. Lost checkpoint acknowledgement tests reconcile original completed job without fresh proof/input acquisition.",
+    "Seven new roots include five actual dual-engine/public-HTTP paths plus two real observed handoff cases. Three exact production omissions target isolation, original predecessor binding and pending issue retention; outcomes are still pending."
+  ],
+  "qualification": {
+    "go_roots_per_mode": 12,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "control_groups": 3,
+    "effective_dependency": "Corec618 source/import closure required; tracked module bytes unchanged from3a13."
+  },
+  "reviewer_reader_failure": "Initial generic selector inspection expected packages key and raised KeyError before any evidence mutation. Native-follow schema has one package/roots list; all12 declaration paths/Git blobs subsequently checked.",
+  "limits": [
+    "No fresh compile, behavior/control pass, deployed continuous daemon or full resource measurement inferred.",
+    "Funding composition and full10/90 native-income conformance are subsequent work; no principal subsidy approved.",
+    "One-shot and static-admission route remains separate from continuous approved producer mode."
+  ]
+}

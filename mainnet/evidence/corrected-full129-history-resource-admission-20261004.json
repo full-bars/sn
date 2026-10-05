@@ -1,0 +1,38 @@
+{
+  "schema": "corrected-full129-history-admission-v1",
+  "observed_utc": "2026-10-04T18:07:39.459065+00:00",
+  "status": "ADOPTED_FRESH_GUARDS_REQUIRED",
+  "baseline_available_bytes": 113681502208,
+  "cap_bytes": 107374182400,
+  "resource_margin": 2,
+  "history_disk_forecast_bytes": 4294967296,
+  "history_memory_forecast_bytes": 4294967296,
+  "inodes_forecast": 65536,
+  "history_only_disk_threshold_bytes": 14897254400,
+  "history_only_memory_threshold_bytes": 111669149696,
+  "with_one_warm_compiler_disk_threshold_bytes": 27782156288,
+  "with_one_warm_compiler_memory_threshold_bytes": 120259084288,
+  "observed_available_bytes": 35979505664,
+  "observed_memory_available_bytes": 130394116096,
+  "normal_expected_minutes_per_root": 17,
+  "race_expected_minutes_per_root": 120,
+  "duration_basis": "Astra Claim estimates from corrected2/4/8 actual setup costs. Not a measured129 upper bound; retain per-root2x deadline reservation (35min normal/4h race).",
+  "roots": [
+    "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues",
+    "TestEconomicConservationClaimWindowPublicBeyond128ReviewsRetainsCompleteLineage"
+  ],
+  "normal_image_sha256": "22663bccbfec8823b1afff739a403fbd2b69a2fb09e1132b05f6a4e505a26a69",
+  "race_image_sha256": "88d1e6cb247d6c5e77b49339521db6c60be982c476dc9c33ea4ac886c265a06b",
+  "scope": "One corrected full129 body at a time, retained6a protected images. May overlap at most one warm6GiBdisk/4GiBmemory Go compiler and two bounded1GiBdisk/1GiBmemory short bodies after fresh combined guards. No second compiler, Rust or DB overlap under this receipt. DB overlap requires separate combined workload admission. Preserve original stopped-raceunknown and normaltimeout evidence; durable systemd owner, per-chunk flushed/fsynced raw output and retained wait receipts.",
+  "limitation": "Component recovery does not qualify later finalsource graph or productionhost rehearsal.",
+  "short_body_disk_forecasts_bytes": [
+    1073741824,
+    1073741824
+  ],
+  "short_body_memory_forecasts_bytes": [
+    1073741824,
+    1073741824
+  ],
+  "with_one_compiler_two_short_bodies_disk_threshold_bytes": 32077123584,
+  "with_one_compiler_two_short_bodies_memory_threshold_bytes": 124554051584
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "root-ready-publication-source-successor-review-v1",
+  "commit": "556e14767fddbaf4db469fb5f1019bcbdd2bc9ce",
+  "tree": "32c3727d17f9252ee4073f3a853b9e41982f3424",
+  "physical_source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/publication-candidate/sn",
+  "base_qualified_source_review": "ready-866-source-join-review-20261003.json",
+  "source_delta_paths": [
+    "mainnet/MAINNET.md",
+    "mainnet/PRELAUNCH-FIXES.md",
+    "mainnet/evidence/cache-reclaim-24-20261003.json",
+    "mainnet/evidence/capacity-public-completion-qualification-20261003.json",
+    "mainnet/evidence/capacity-test-successor-source-review-20261003.json",
+    "mainnet/evidence/current-readiness-checkpoint-20261003.json",
+    "mainnet/evidence/current-readiness-checkpoint-20261003.md",
+    "mainnet/evidence/evm-review-reuse-causal-qualification-20261003.json",
+    "mainnet/evidence/evm-review-reuse-selected-qualification-20261003.json",
+    "mainnet/evidence/monitor-policy-renewal-qualification-20261003.json",
+    "mainnet/evidence/monitor-progress-body-qualification-20261003.json",
+    "mainnet/monitor_economic_evm_resources.go",
+    "mainnet/monitor_economic_evm_review_reuse_test.go"
+  ],
+  "only_go_or_module_changes": [
+    "mainnet/monitor_economic_evm_resources.go",
+    "mainnet/monitor_economic_evm_review_reuse_test.go"
+  ],
+  "qualified8a_files_byte_exact": true,
+  "latest083main_ancestor_and_both_plans_exact": true,
+  "limits": [
+    "Sourcejoinreview only;16-root composedqualification pending",
+    "Nativearchive/replay/feeobserver remainseparatesources",
+    "Nosigning,deployment,actualhostadoption orlivegateclosure"
+  ]
+}

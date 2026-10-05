@@ -1,0 +1,33 @@
+{
+  "bindings": {
+    "causal-normal-receipt": "316af3456bc76a27e47e9abf3f425c905378abae21183a47950db3d631881186",
+    "causal-race-receipt": "e5bd942c593ca09e229ece0504546aa0ab9c455fe2187d719388b6d99fd7b675",
+    "normal-receipt": "899e19f25be8615333c850bf845625ba6bc40ddcf3b59c27d82a0fbacdc46c49",
+    "race-receipt": "0b9681ae745844a93a675948a7b20393612d164f6fd0f0f16d9f2005a9932534",
+    "source-fence": "0e9e24faf1e073e6ff34b87a64bbdd09584e21e0e1b25882bfb5e48b75ca6dd5",
+    "source-join-readback": "a6cdfbbce0930766246ff80e09beb971a94915e988ddbc9599fc5f340f9ad33f",
+    "vet-build-receipt": "377d87850cdcfcc30e641ea6aed58aad9a4ceea7eb7b0141f2bdb1a5fc92a864"
+  },
+  "component_source_commits": [
+    "cdcb61fa3db72fb5c5844358224eeb0fb3cbd661",
+    "25f617dc30ec49b5162d51082498beaef583bf00"
+  ],
+  "failures": 0,
+  "five_package_vet_exit": 0,
+  "limits": [
+    "Frozen2a exact source and declared module graph only; Server18ec migration join remains unqualified.",
+    "Original Server630 full-model run and wallet25f component scopes are separate and not relabeled as2a.",
+    "No live Circle API call, payout, migration or deployment."
+  ],
+  "offline_cli_build_exit": 0,
+  "operative_causal_intended_failures_each_mode": 4,
+  "owned_fixture_cleanup_exit": 0,
+  "race_reports": 0,
+  "schema": "sol-financial-get-2a-terminal-v1",
+  "selected_roots_normal": 10,
+  "selected_roots_race": 10,
+  "skips": 0,
+  "source_commit": "2a453df9bd7967776889b5f15cd8724d6f9255cb",
+  "source_tree": "9a9307d81a3d431501fc40518214873ae4e4f92a",
+  "status": "PASS_SCOPED"
+}

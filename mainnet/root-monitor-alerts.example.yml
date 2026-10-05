@@ -1,0 +1,45 @@
+# Provisional independent Mimir rules; configure expected env/host/role outside
+# this monitor. Default sample threshold allows bounded root census/continuity.
+groups:
+  - name: sn-mainnet-root-monitor
+    interval: 30s
+    rules:
+      - alert: SnMainnetRootMonitorMissing
+        expr: sn_mainnet_root_monitor_expected == 1 unless on (env, host, role) sn_mainnet_root_monitor_sample_timestamp_seconds
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: "Root monitor {{ $labels.role }} telemetry is absent on {{ $labels.host }}"
+      - alert: SnMainnetRootMonitorNotSampled
+        expr: sn_mainnet_root_monitor_sample_timestamp_seconds == 0
+        for: 15m
+        labels: {severity: critical}
+        annotations:
+          summary: "Root monitor {{ $labels.role }} has not completed a sample on {{ $labels.host }}"
+      - alert: SnMainnetRootMonitorStale
+        expr: (sn_mainnet_root_monitor_sample_timestamp_seconds > 0) and (time() - sn_mainnet_root_monitor_sample_timestamp_seconds >= 900)
+        labels: {severity: critical}
+        annotations:
+          summary: "Root monitor {{ $labels.role }} observations stopped on {{ $labels.host }}"
+      - alert: SnMainnetRootMonitorClockAhead
+        expr: sn_mainnet_root_monitor_sample_timestamp_seconds > time() + 30
+        labels: {severity: critical}
+        annotations:
+          summary: "Root monitor {{ $labels.role }} clock is ahead on {{ $labels.host }}"
+      - alert: SnMainnetRootMonitorOutputUnavailable
+        expr: sn_mainnet_root_monitor_output_status >= 2
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: "Root monitor {{ $labels.role }} diagnostic output is unavailable on {{ $labels.host }}"
+      - alert: SnMainnetRootMonitorOutputDropped
+        expr: increase(sn_mainnet_root_monitor_output_dropped_total[5m]) > 0
+        labels: {severity: warning}
+        annotations:
+          summary: "Root monitor {{ $labels.role }} diagnostic records were dropped on {{ $labels.host }}"
+      - alert: SnMainnetRootMonitorExportUnconfirmed
+        expr: (sn_mainnet_root_monitor_publication_last_success_timestamp_seconds == 0) or (time() - sn_mainnet_root_monitor_publication_last_success_timestamp_seconds >= 900)
+        for: 15m
+        labels: {severity: warning}
+        annotations:
+          summary: "Root monitor {{ $labels.role }} export acknowledgment is unconfirmed on {{ $labels.host }}"

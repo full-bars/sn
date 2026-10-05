@@ -1,0 +1,408 @@
+{
+  "causal": [
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "restart lost original carry, aggregate credit or exact transaction costs"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "original-cursor-reset",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/original-cursor-reset/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "economic ledger accepted a payment/carry authority substitution"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "contract-ledger-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/contract-ledger-omitted/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "receipt contradiction advanced affected EVM role"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "receipt-cumulative-gas-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/receipt-cumulative-gas-omitted/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "bounded EVM byte page stalled or lost complete original prefix"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "page-byte-budget-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/page-byte-budget-omitted/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "owned observations were promoted to independent economic authority"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "unproved-fee-authority",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/unproved-fee-authority/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "retained EVM checkpoint accepted resource shrink or identity replacement"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "acknowledged-resource-shrink",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/acknowledged-resource-shrink/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmResourceShrinkAndContractReplacementRefuseRetainedCheckpoint)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "unacknowledged resource renewal advertised a completed checkpoint"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "resource-ack-before-publication",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/resource-ack-before-publication/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication)$"
+    }
+  ],
+  "environment": {
+    "cache": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+    "modulecache": "/mnt/data/sn-testnet/gomodcache",
+    "new_phase_free_floor_bytes": 118111600640,
+    "private_root_and_tmp": "0700",
+    "umask": "0077"
+  },
+  "files": [
+    {
+      "bytes": 7247467,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/source-join.json",
+      "sha256": "d4b3520cf08f2e6803ff34acac5bbdd7af32b03d132c36c402cffb993681329a"
+    },
+    {
+      "bytes": 3742,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/jobs.json",
+      "sha256": "1a0d4e7d5fb912f7ed7479238b93faabdc68aac6e1a7d90c9b50f59d9939a823"
+    },
+    {
+      "bytes": 11938,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/sn.mod",
+      "sha256": "ce942afedde594571472e13a8b95f38ee6be72f3459d402e41a495c941379e27"
+    },
+    {
+      "bytes": 66880,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/sn.sum",
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    {
+      "bytes": 1334,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/scope.json",
+      "sha256": "0fe6006a6ce393f8c83fd9baec1ee68a0ae597a2dc0065cc127586f58689ab88"
+    },
+    {
+      "bytes": 9120,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/seal-intake.py",
+      "sha256": "a496e553c2d868a72fddda14267cc1e641a900d1d690910b48158cef20671377"
+    },
+    {
+      "bytes": 27615,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/evm_action_rpc.go",
+      "sha256": "e7231d67b26f08163674c9a2f32a6ce0e795381e2adf657866a6c652a4b9bd3d"
+    },
+    {
+      "bytes": 8055,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/monitor_economic_evm.go",
+      "sha256": "cd9ac6be9d4e4e6f006ddf8b6c7937a779e85bad842ce97a283048916982e555"
+    },
+    {
+      "bytes": 18755,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/monitor_economic_evm_fixture_test.go",
+      "sha256": "82bb88a36210014db77023bc0fbc4fee7bf18a6f12dc40fe05b5ffec8d657e5f"
+    },
+    {
+      "bytes": 20127,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/monitor_economic_evm_ledger.go",
+      "sha256": "e2320ea61eded4b54363736fbf8b50ba0d395e52cc560ef9f693406a1bccbe81"
+    },
+    {
+      "bytes": 19014,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/monitor_economic_evm_read.go",
+      "sha256": "ec0178ca937e0becebb6252aceb00484a45fb9230433b4855bef5ac2088ab963"
+    },
+    {
+      "bytes": 2562,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/monitor_economic_evm_resources.go",
+      "sha256": "401801ff399aeafebf530878b984e96abb05a1517aa7834974dc80f46e284256"
+    },
+    {
+      "bytes": 26559,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/monitor_economic_evm_test.go",
+      "sha256": "aba741a054b94b0871fe360e0e059b3b84c3d19af9789aaa2095fa40e64cdbc7"
+    },
+    {
+      "bytes": 17610,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/monitor_economic_evm_worker.go",
+      "sha256": "ab4219eb2d6bc6bb9f40761c27ba2997a5b03d12334c88980fcfb6932320f6a2"
+    },
+    {
+      "bytes": 16272,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/monitor_services.go",
+      "sha256": "d62d8505beecee0d0f7fcbbd76edb0787f94eab3d0c0df477e26c11b5e441056"
+    },
+    {
+      "bytes": 11670,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/mainnet/monitor_services_policy.go",
+      "sha256": "cf2ced010a95b061253f72730b1a4111bfc64993452e792ecc327aca215033b7"
+    },
+    {
+      "bytes": 11211,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/go.mod",
+      "sha256": "b5c53a2b844389cda1cfb9a9f9422f71181aeaef4cb0dc948ad00bd48dab1503"
+    },
+    {
+      "bytes": 65343,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn/go.sum",
+      "sha256": "966eeab4dc1b075adbe162968672f0436f5b4d7630e515a5fbf6980967433545"
+    },
+    {
+      "bytes": 17563,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/acknowledged-resource-shrink/monitor_economic_evm_worker.go",
+      "sha256": "6763f6b9d0fbd91c4282422d42aa329a752f1569fc7b3ea9cb9514469a2608d8"
+    },
+    {
+      "bytes": 20273,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/contract-ledger-omitted/monitor_economic_evm_ledger.go",
+      "sha256": "5517a69c99b83266828f75fbf1894ded0042fbc51c45591d0f25a201d335f82c"
+    },
+    {
+      "bytes": 17624,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/original-cursor-reset/monitor_economic_evm_worker.go",
+      "sha256": "bac6108d04b8c2457d957a9140b328678e2e9886ba048ed5bf456a1fd62d2074"
+    },
+    {
+      "bytes": 19029,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/page-byte-budget-omitted/monitor_economic_evm_read.go",
+      "sha256": "88ad693b98f5818e3550f4ada199012421ab2a3e95bfe9bcdca5bdd52005c2a6"
+    },
+    {
+      "bytes": 18955,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/receipt-cumulative-gas-omitted/monitor_economic_evm_read.go",
+      "sha256": "69229ebb9ec8e2440bd797230863e04c82f975978e2c6cc93627c8d976843b72"
+    },
+    {
+      "bytes": 17682,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/resource-ack-before-publication/monitor_economic_evm_worker.go",
+      "sha256": "b0b8e677575e062aae9854792a491e27c754a27e046b3f722e086ba4fbcf423c"
+    },
+    {
+      "bytes": 17644,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/unproved-fee-authority/monitor_economic_evm_worker.go",
+      "sha256": "00f681237aeafdf10474c02038e5efc0831b1a6a2665e30404549e63006d45f5"
+    },
+    {
+      "bytes": 300,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/acknowledged-resource-shrink/overlay.json",
+      "sha256": "265da4c8ff7c700b90f2de99f93cac7eb8fcbda66e4c7dbf3a040624d784da2e"
+    },
+    {
+      "bytes": 295,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/contract-ledger-omitted/overlay.json",
+      "sha256": "eb09ead6d64348ba6ca56c343bc6858770f7560dd127e4c86d4c5189b2aa320d"
+    },
+    {
+      "bytes": 293,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/original-cursor-reset/overlay.json",
+      "sha256": "446266a1e118ac96f95962627d5f05baa8b21fc25bba35bd35570b30fd813dd5"
+    },
+    {
+      "bytes": 292,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/page-byte-budget-omitted/overlay.json",
+      "sha256": "829acd0f2a3aaee8e6dfa4004edd77fa82561c85eaf72a2bfa6fad8534a7f5ee"
+    },
+    {
+      "bytes": 298,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/receipt-cumulative-gas-omitted/overlay.json",
+      "sha256": "1892de538a2d1e44df08b40b2c10e9c2035925aa9ffca4cb3275001cf2c7223c"
+    },
+    {
+      "bytes": 303,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/resource-ack-before-publication/overlay.json",
+      "sha256": "fe37003503ded0e3895c6e5dde9e047b48b8f70175469adc28c4d14c096845c1"
+    },
+    {
+      "bytes": 294,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/unproved-fee-authority/overlay.json",
+      "sha256": "56921bfaed9a8dc7cda197e26eb6b46e847e2a2ef3ce793584e259322275fde5"
+    }
+  ],
+  "first_run": "Run17 new normal first; retain all compile/behavioral failures. Only Sol executes test/build/vet. Current source remains immutable.",
+  "jobs": [
+    {
+      "expected": 17,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./mainnet",
+      "roots": [
+        "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment",
+        "TestMonitorEconomicEvmPublicPartialReceiptOutageKeepsOriginalCursor",
+        "TestMonitorEconomicEvmPublicLostCheckpointAckDoesNotRepeatPayment",
+        "TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole",
+        "TestMonitorEconomicEvmPublicReserveReadsActualPrincipalAndBacking",
+        "TestMonitorEconomicEvmReaderRequiresCompleteReceiptAndTransactionTries",
+        "TestMonitorEconomicEvmReaderRefusesChangedCursorAndCode",
+        "TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment",
+        "TestMonitorEconomicEvmPublicCapacityKeepsOriginalPendingRange",
+        "TestMonitorEconomicEvmPublicCancellationJoinsInFlightRead",
+        "TestMonitorEconomicEvmPolicyDoesNotBorrowDiscoveredContractIdentity",
+        "TestMonitorEconomicEvmReceiptFeeIncludesFailedExecution",
+        "TestMonitorEconomicEvmPublicReviewedResourceGrowthKeepsOriginalHistory",
+        "TestMonitorEconomicEvmResourceShrinkAndContractReplacementRefuseRetainedCheckpoint",
+        "TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication",
+        "TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues",
+        "TestMonitorEconomicEvmPublicHistoricalBacklogDoesNotResetOrRequireFullAncestry"
+      ],
+      "selector": "^(TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment|TestMonitorEconomicEvmPublicPartialReceiptOutageKeepsOriginalCursor|TestMonitorEconomicEvmPublicLostCheckpointAckDoesNotRepeatPayment|TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole|TestMonitorEconomicEvmPublicReserveReadsActualPrincipalAndBacking|TestMonitorEconomicEvmReaderRequiresCompleteReceiptAndTransactionTries|TestMonitorEconomicEvmReaderRefusesChangedCursorAndCode|TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment|TestMonitorEconomicEvmPublicCapacityKeepsOriginalPendingRange|TestMonitorEconomicEvmPublicCancellationJoinsInFlightRead|TestMonitorEconomicEvmPolicyDoesNotBorrowDiscoveredContractIdentity|TestMonitorEconomicEvmReceiptFeeIncludesFailedExecution|TestMonitorEconomicEvmPublicReviewedResourceGrowthKeepsOriginalHistory|TestMonitorEconomicEvmResourceShrinkAndContractReplacementRefuseRetainedCheckpoint|TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication|TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues|TestMonitorEconomicEvmPublicHistoricalBacklogDoesNotResetOrRequireFullAncestry)$"
+    },
+    {
+      "expected": 9,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./mainnet",
+      "roots": [
+        "TestEvmReadProfileKeepsMethodsScoped",
+        "TestEvmReadProfileAbsenceIsReceiptOnly",
+        "TestEvmReadProfileBoundsEveryReply",
+        "TestFinalizedMappingAuthenticatesUnequalHeightsAndExactRlp",
+        "TestEvmVaultLinkRequiresExactReceiptAndEvent",
+        "TestEvmEscrowRegisterRequiresExactReceiptAndEvent",
+        "TestEvmReserveLinkRequiresExactReceiptAndEvent",
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees",
+        "TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole"
+      ],
+      "selector": "^(TestEvmReadProfileKeepsMethodsScoped|TestEvmReadProfileAbsenceIsReceiptOnly|TestEvmReadProfileBoundsEveryReply|TestFinalizedMappingAuthenticatesUnequalHeightsAndExactRlp|TestEvmVaultLinkRequiresExactReceiptAndEvent|TestEvmEscrowRegisterRequiresExactReceiptAndEvent|TestEvmReserveLinkRequiresExactReceiptAndEvent|TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees|TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole)$"
+    }
+  ],
+  "modfile": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/sn.mod",
+  "qualification_graph": {
+    "local": {
+      "glog": {
+        "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+        "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+      },
+      "goidenticons": {
+        "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+        "tree": "553487079352d9544edb62850328305e97668790"
+      },
+      "proxy": {
+        "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+        "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+      },
+      "userwireguard": {
+        "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+        "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+      },
+      "warp": {
+        "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+        "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+      }
+    },
+    "origin": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/evidence/source-fence.json",
+    "published_versions": {
+      "github.com/pion/sctp": "v0.0.0-20261002163341-6443417d70dc",
+      "github.com/urnetwork/connect": "v0.0.0-20261003021534-5def2fa4391b",
+      "github.com/urnetwork/sdk": "v0.0.0-20261003021240-95ccd57da971"
+    },
+    "scope": "Existing published-floor modfile remapped to candidate SN and same exact Server/local modules; Sol must independently preflight current imported-package/module graph. No tracked module adoption or graph test inheritance.",
+    "server": {
+      "commit": "0e04f0381f813acff45b9c9af3d1a5b93e7d7ccf",
+      "git_blobs": 5369,
+      "tree": "ab30a9299bd9cf7b51ae4012b936ea6660555fa4"
+    }
+  },
+  "root_verification": {
+    "bindings_rehashed": 32,
+    "changed_git_blobs_verified": 10,
+    "changed_paths": [
+      "mainnet/evm_action_rpc.go",
+      "mainnet/monitor_economic_evm.go",
+      "mainnet/monitor_economic_evm_fixture_test.go",
+      "mainnet/monitor_economic_evm_ledger.go",
+      "mainnet/monitor_economic_evm_read.go",
+      "mainnet/monitor_economic_evm_resources.go",
+      "mainnet/monitor_economic_evm_test.go",
+      "mainnet/monitor_economic_evm_worker.go",
+      "mainnet/monitor_services.go",
+      "mainnet/monitor_services_policy.go"
+    ],
+    "classification": "SOURCE_VERIFIED_BEHAVIOR_PENDING",
+    "clean_head_tree_verified": true,
+    "intake_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/intake.json",
+    "intake_sha256": "01f99a1535ec0136ce06d2c49192166c10fcccbd06700f23a6f26d09d9cb5890",
+    "remaining_scope": [
+      "Independent rolling claim expectations and provider/claim HTTP retry renewal.",
+      "Native execution payer debit/refund attribution.",
+      "Independent finality/entitlement, archive lifecycle and current composed release."
+    ],
+    "source_review_gap": "Resource renewal preserves original identity and prevents acknowledged shrink, but only latest review provenance is persisted; an append-only acknowledged revision history remains required in a separate successor. Digest syntax alone is not independently signed review authority."
+  },
+  "schema": "urnetwork-continuous-evm-economic-intake-v1",
+  "source": {
+    "base": "00d7efcd18c3a4d08c2883de9c50bb6376cba716",
+    "head": "0fb5db88f8c194dccae0b87e08900d4ab13f6f0a",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/sn",
+    "tree": "bb0a0dce2bd5f21ed9788ed5b7c3c388d2256670"
+  },
+  "status": "FROZEN_FIRST_SOURCE_NO_ASTRA_TEST_BUILD_OR_VET",
+  "vets": [
+    "./mainnet"
+  ]
+}

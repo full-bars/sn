@@ -1,0 +1,495 @@
+{
+  "schema": "validator-b6-four-controls-two-modes-root-readback-v1",
+  "status": "EIGHT_ACTUAL_CAUSAL_FAILURES_REPRODUCED_REMAINING_CONTROLS_PENDING",
+  "head": "b6f05dc5df9ef84898b25d6aac47ebdb0a04e27a",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-normal.receipt.json",
+      "bytes": 9984,
+      "sha256": "5345f23fa9feb4547ad5638f38663b03d95b4ee139d52a0ef94ad7fe36e281e4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-normal-compile.resources.csv",
+      "bytes": 7800,
+      "sha256": "b2d84843d02658041005891153fed9cc28236017ff867a6cf902ef90a3e625a3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-normal-body.stdout",
+      "bytes": 1125,
+      "sha256": "5e8ce72a49e8be28823c819aabbe760c1955d9d2213fc0f3f9fa759393d801fe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-normal-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-normal-body.resources.csv",
+      "bytes": 1933,
+      "sha256": "bdfa99c9ff83c3a6aac832e1971fd5aec86a004338442b4b508089629ca4d201"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-normal-selected14.receipt.json",
+      "bytes": 8896,
+      "sha256": "adefcdfb2403c7de47a372b682ae03cb92de60341c022959592751bd92b84b9b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/first-predecessor-check-omitted/overlay.json",
+      "bytes": 297,
+      "sha256": "bb9f795f9bad919698af035629892b8971278928c3738f8fe9f9f145041502de"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-first-predecessor-check-omitted-normal.test",
+      "bytes": 82034440,
+      "sha256": "f9163a36b2cc451ff2521d31dedb187bf5134721fbebd31324a8d4ea8a3fe7b0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/source/sn/validator/release_archive_history_v2.go",
+      "bytes": 15412,
+      "sha256": "7e2c1366277f1e56c5a3b719041b4cefc6b5ed63b6fec8ee49a23eb2d67064a4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/first-predecessor-check-omitted/release_archive_history_v2.go",
+      "bytes": 15421,
+      "sha256": "b2068276caca8c0981cbb0121876a32356122d000f263b42b5e20bea7da6f110"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-race.receipt.json",
+      "bytes": 9988,
+      "sha256": "3e9ce8507629a882d7a4aaf703aff643f51dc2cd6ed58b906960dc941c8571b9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-race-compile.resources.csv",
+      "bytes": 10612,
+      "sha256": "38327e4f3fd229f39dbd13f0a8c6a0ca3e28bf0b2d69a50f36e7a94c40b69c00"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-race-body.stdout",
+      "bytes": 1125,
+      "sha256": "c85e6aab38e62a53c609cf5d4ef875504e604679feae454991b57eea52373f24"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-race-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-first-predecessor-check-omitted-race-body.resources.csv",
+      "bytes": 11118,
+      "sha256": "c701796506e78dc1eb5f3af7e74b8c107e633ce39bc30d2bb5e24441b4ad1a88"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/evidence/b6-validator-race-selected14.receipt.json",
+      "bytes": 8880,
+      "sha256": "65acb501cd63d6d6ee0c95b71742578a59a8e18df64b4ecf2fab1bd4f73bf2ec"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-first-predecessor-check-omitted-race.test",
+      "bytes": 108946936,
+      "sha256": "d34700336931d98af314768f6f36babaadc5f72b800aed5862e72675efc59a00"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-normal.receipt.json",
+      "bytes": 9978,
+      "sha256": "68bab99b42e4d6e47660650bc9a302f06564f8f245608d8d47994d867c9f5be8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-normal-compile.resources.csv",
+      "bytes": 7597,
+      "sha256": "57440ad086a1ad4d45ef1926a77659d3b8b36e8634b81e2897e066f0900278f1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-normal-body.stdout",
+      "bytes": 1146,
+      "sha256": "e86b1c6d466e493d49d784070592b4323901dc5c98d918d3bfc726c422b8a3a5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-normal-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-normal-body.resources.csv",
+      "bytes": 2254,
+      "sha256": "fc0f09c5284064d96bdbefbc52d201ce7f3a8fe6824129d5438850bddcfd9758"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/cached-lookup-rereads-original/overlay.json",
+      "bytes": 298,
+      "sha256": "775e7cba4e6294b1a58c8c963793662a619582e590fac78b8e62e97cb4adcf38"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-cached-lookup-rereads-original-normal.test",
+      "bytes": 82034312,
+      "sha256": "95b2385e78d789f9ad360f8a6abba22aea0ed19edfce2a51cdfce050149c7205"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/source/sn/validator/release_archive_decision_v2.go",
+      "bytes": 18806,
+      "sha256": "78dc49519f12c9532cbb073de99c9063708ffe1aa53ea9e60f0e99cdf277e5f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/cached-lookup-rereads-original/release_archive_decision_v2.go",
+      "bytes": 19036,
+      "sha256": "43c4db537a5a0b3344646d91e404c6b8f970d80edad697cb52a70004d7448c13"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-race.receipt.json",
+      "bytes": 9982,
+      "sha256": "23095b6563b95fae0e5a70c694de8988154d2b7bce2be496da6aa4dae198c605"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-race-compile.resources.csv",
+      "bytes": 10877,
+      "sha256": "9350d9d9b9953b75b5aab1f973c243d4ed491ac431941cb777618e9b6dc7def6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-race-body.stdout",
+      "bytes": 1149,
+      "sha256": "ecc38b25b29861d4b1dbc2f4ae01a3d54477831173defdfea9794c9484048da7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-race-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-rereads-original-race-body.resources.csv",
+      "bytes": 12768,
+      "sha256": "4bdf91fc878cde368003ade3f18f88e787fc4f1ef0cd85586634207d4b83a1a2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-cached-lookup-rereads-original-race.test",
+      "bytes": 108946896,
+      "sha256": "92acc2259c6d010992d407b6f16b0339f7ca8e74114e845d192ae7438159b42b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-normal.receipt.json",
+      "bytes": 9968,
+      "sha256": "36bb8cc210ea98aba33f1c9bc0e60e1cb1126d4a88bbbf2c33da1d74de4c7e12"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-normal-compile.resources.csv",
+      "bytes": 7519,
+      "sha256": "19cc547094ffcf637f0f40657dccce5b6e9c7e82126512ac6db60d247017a78a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-normal-body.stdout",
+      "bytes": 1172,
+      "sha256": "5e8823d987ecac0d1190327476034433b21289e79dad953e9d98ced857e70a6f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-normal-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-normal-body.resources.csv",
+      "bytes": 2396,
+      "sha256": "89d560479829f99a5b334e3ab68f4bfd50e80c6785aef9639698968dac11d30c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/cached-lookup-custody-omitted/overlay.json",
+      "bytes": 297,
+      "sha256": "9f29d730f6e715c56d65edac56fab8d3d2c6e436a8baf75502e17f8d46c02a2b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-cached-lookup-custody-omitted-normal.test",
+      "bytes": 82034280,
+      "sha256": "ac2366b8e512309c5a7e93fa4cb4e24dca136cfadd9213a1dd5c0d4632bb1aa4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/cached-lookup-custody-omitted/release_archive_decision_v2.go",
+      "bytes": 18777,
+      "sha256": "0baf2d595e78a8ab5e358f58ca403635c207003a0f5dcbdac1439f9cb79b5f6d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-race.receipt.json",
+      "bytes": 9972,
+      "sha256": "948bf5dcf7b54611c3984baae04cbe8f39e52bb8b5141fed7bf864bc70e8d75f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-race-compile.resources.csv",
+      "bytes": 10878,
+      "sha256": "08a29490169975859ced3bcbeb67617b8b0f209fcbf1d920dbd3b8acb7ae4db9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-race-body.stdout",
+      "bytes": 1175,
+      "sha256": "11a6d8780dffeefe50c7011a9f409a97d98529f25d13bdcfef3df35e28558314"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-race-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-cached-lookup-custody-omitted-race-body.resources.csv",
+      "bytes": 14345,
+      "sha256": "85fa861521f22fb75c6eb2e51df485f9da9bf7c123bd2bbf38197e68828a60f8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-cached-lookup-custody-omitted-race.test",
+      "bytes": 108947136,
+      "sha256": "92e218421bd4736a762540b418d4bf3a23590c2cb04eb4ef7b17a994a568ca3b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-normal.receipt.json",
+      "bytes": 10206,
+      "sha256": "00ef3710111c8d857a41e05de58dd033d3f63efe602499cc735f9999791ece8d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-normal-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-normal-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-normal-compile.resources.csv",
+      "bytes": 7462,
+      "sha256": "28661e09bc8f5c400c88733db1ce82d0435c3ce5e60e6903dafbdd99106c414d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-normal-body.stdout",
+      "bytes": 1166,
+      "sha256": "de79ee27d8ef826e0327ab6fcdea591a8d2aced38d57ed15ee330d21908021e0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-normal-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-normal-body.resources.csv",
+      "bytes": 1992,
+      "sha256": "a71dbe708d88185e0fec62e0abd9a397e0fa085d30c0375c5a310cafcdad27cc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/decision-census-atomic-publication-omitted/overlay.json",
+      "bytes": 310,
+      "sha256": "2b31471eb77c3909444ef4f0e09cf021091270c88060c76d27d059e813f12fab"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-decision-census-atomic-publication-omitted-normal.test",
+      "bytes": 82034072,
+      "sha256": "47e0ae8013055da7c5c09e4c1464dccf067127ee445a45c925a7bed0de4b9c70"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/decision-census-atomic-publication-omitted/release_archive_decision_v2.go",
+      "bytes": 18847,
+      "sha256": "8281eb2d9d6289ae0324dd7ede571294ca1bd45f45159ece2d4c7d509dd150bd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-race.receipt.json",
+      "bytes": 10210,
+      "sha256": "9fa7188583b29793a11bc232042f16fad1cbfff3c68c527e97ff2af9e9d74d80"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-race-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-race-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-race-compile.resources.csv",
+      "bytes": 10676,
+      "sha256": "4f099ef8692aef3de33fd6013a6f570f3f5244865bb8c022682930406ee7ea28"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-race-body.stdout",
+      "bytes": 1169,
+      "sha256": "834aebcbc23a95b7bbde73a9ae71e3882ef28f91ed878e806d3b4868ba83e1eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-race-body.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/evidence/b6-validator-control-decision-census-atomic-publication-omitted-race-body.resources.csv",
+      "bytes": 12174,
+      "sha256": "4dffe31d08185fcdb3174f26c457817ae41cea20dcca9b9122c0c8ccfd1f129c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureb6/validator-controls/images/b6-validator-control-decision-census-atomic-publication-omitted-race.test",
+      "bytes": 108946944,
+      "sha256": "7ad48f8e2cedc1214be656ecc8f0305a50c9b9cdc88e7b3d01453afbfea4122b"
+    }
+  ],
+  "results": [
+    {
+      "group": "first-predecessor-check-omitted",
+      "mode": "normal",
+      "root": "TestReleaseArchiveFullLineageRejectsRemovedPredecessor",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:423: removed original predecessor was accepted: <nil>"
+      ]
+    },
+    {
+      "group": "first-predecessor-check-omitted",
+      "mode": "race",
+      "root": "TestReleaseArchiveFullLineageRejectsRemovedPredecessor",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:423: removed original predecessor was accepted: <nil>"
+      ]
+    },
+    {
+      "group": "cached-lookup-rereads-original",
+      "mode": "normal",
+      "root": "TestReleaseArchiveFullLineageOwnedReadsDoNotReplayHistory",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:384: repeated verified lookup replayed complete source history"
+      ]
+    },
+    {
+      "group": "cached-lookup-rereads-original",
+      "mode": "race",
+      "root": "TestReleaseArchiveFullLineageOwnedReadsDoNotReplayHistory",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:384: repeated verified lookup replayed complete source history"
+      ]
+    },
+    {
+      "group": "cached-lookup-custody-omitted",
+      "mode": "normal",
+      "root": "TestReleaseArchiveFullLineageCancellationRetainsFreshReplay",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:680: cached decision ignored lost original scratch custody: <nil>"
+      ]
+    },
+    {
+      "group": "cached-lookup-custody-omitted",
+      "mode": "race",
+      "root": "TestReleaseArchiveFullLineageCancellationRetainsFreshReplay",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:680: cached decision ignored lost original scratch custody: <nil>"
+      ]
+    },
+    {
+      "group": "decision-census-atomic-publication-omitted",
+      "mode": "normal",
+      "root": "TestReleaseArchiveFullLineageLateObservationPublishesNoCache",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:616: late observation refusal published partial decision cache"
+      ]
+    },
+    {
+      "group": "decision-census-atomic-publication-omitted",
+      "mode": "race",
+      "root": "TestReleaseArchiveFullLineageLateObservationPublishesNoCache",
+      "events": {
+        "run": 1,
+        "output": 3,
+        "fail": 1
+      },
+      "assertions": [
+        "release_archive_lineage_work_test.go:616: late observation refusal published partial decision cache"
+      ]
+    }
+  ],
+  "review": "Root read exact four operative production overlay diffs and actual assertion output. Compiles pass; each same positive root passed in original14 selected body and fails under its intended omission/performance regression in normal and race modes.",
+  "limits": "Four of six groups only. Live runner preserved; no whole validator or launch gate closure claimed."
+}

@@ -1,0 +1,159 @@
+{
+  "adjacent": {
+    "note": "Preserve independently completed parent normal results; do not repeat passing normal roots merely for a fixture correction. Remaining race scope may use this exact successor with the test-only join explicit.",
+    "roots": [
+      "TestBootstrapSuccessorOuterLocalPublicResume",
+      "TestBootstrapSuccessorOuterRegistryPublicResume",
+      "TestBootstrapSuccessorRestoredReaderRetainsMetadataLoss",
+      "TestBootstrapSuccessorRebindRetainsFirstPendingStageGeneration",
+      "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority"
+    ]
+  },
+  "affectedScope": {
+    "expectedPass": 3,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "package": "./mainnet",
+    "roots": [
+      "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome",
+      "TestBootstrapSuccessorRestoredReaderReusesUnchangedMembers",
+      "TestBootstrapSuccessorRestoredReaderReadsOnlyChangedPendingStage"
+    ],
+    "vet": true
+  },
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/fixture-922-3af-compile-jobs.json": {
+      "bytes": 2800,
+      "sha256": "8dae0d98c8d26ea247bd895adf97f3404435e6e03f0737ff9765d712dfd3ac3c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-fixture-3af-compile.json": {
+      "bytes": 1101,
+      "sha256": "49cf826edbc68c28878104e2f6dbd5e7efacdb7d393e35bc6ed6e2b5294d6952"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-fixture-3af-compile.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-fixture-3af-preflight.json": {
+      "bytes": 971,
+      "sha256": "4172b8b5349a552e05ba0ffd748e51be023fd4a0f9d587a64e8a978654bbdfb6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-fixture-3af-preflight.jsonl": {
+      "bytes": 3647126,
+      "sha256": "c6ce8160ecac6e1b10d2786f280b17a44899181d74a9bf826b71cfe886e7cb7b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-fixture-922-3af-intakes.go": {
+      "bytes": 6065,
+      "sha256": "90e4c5467688158731e19676b5e1490940705e7150595e094ca859640246e9f6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/sn/go.mod": {
+      "bytes": 11252,
+      "sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/sn/go.sum": {
+      "bytes": 65954,
+      "sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/sn/mainnet/bootstrap_successor_outer_rebind_test.go": {
+      "bytes": 15853,
+      "sha256": "eff2ea1dc3cf3596110d97d985f16f36e2fa9c68dac2d59cb66c90c9a223a725"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/sn/mainnet/bootstrap_successor_restored_reader_test.go": {
+      "bytes": 9679,
+      "sha256": "4c760ccf76f97ea3165d5efbe5c1811469893f9b799808e052a4a505484d04bb"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/sn/mainnet/evidence/paired-restore-assertion-correction-20261003.md": {
+      "bytes": 1726,
+      "sha256": "99631e627e015c40c20babee0f4a7d5dbb040509343d3868c4603db3eac087fd"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/qualify-scoped.go": {
+      "bytes": 3425,
+      "sha256": "1a7b115440ecd7ce543810e9a08a751f4e2c1bb213ee2439b8a9e55455753e26"
+    },
+    "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/seven-normal.jsonl": {
+      "bytes": 7532,
+      "sha256": "81d46ec2027e8c5fb88dc1c77ba77514754e91d3d5d76c75cede290b78e07661"
+    }
+  },
+  "dependencies": {
+    "connect": {
+      "commit": "5c48c3e5f53b7f4654570193448b4da73b75aaff",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/connect",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/connect",
+      "tree": "06a164cca3c72b776f69ec7ffd94b3c338ef622a"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/glog",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/goidenticons",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/proxy",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/server",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/userwireguard",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/warp",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "limits": "No behavioral claim from compilation. No signing, broadcast, deployment or service start. Historical workspace only; capacity revisions and current published dependency composition remain separate.",
+  "originalFailure": {
+    "log": "/mnt/data/sn-testnet/sol-outer-rebind-39e-independent-20261003/evidence/seven-normal.jsonl",
+    "note": "Original failed results remain authoritative for their exact source. These assertion corrections do not retroactively pass those runs.",
+    "source": "39e2744ae639711ab43c104d227cbfc2c213df33"
+  },
+  "root_verification": {
+    "bindings_rehashed": 14,
+    "changed_git_blobs_verified": 3,
+    "classification": "SOURCE_VERIFIED_BEHAVIOR_PENDING",
+    "clean_head_tree_verified": true,
+    "intake_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/outer-fixture-3af-intake.json",
+    "intake_sha256": "0ea5c1a5180d061a687a0d57f271e73f518fdf5ace1e76a7b3aa9025b7636639",
+    "production_and_modules_unchanged": true
+  },
+  "schema": "urnetwork-author-source-handoff-v1",
+  "source": {
+    "changedPaths": [
+      "mainnet/bootstrap_successor_outer_rebind_test.go",
+      "mainnet/bootstrap_successor_restored_reader_test.go",
+      "mainnet/evidence/paired-restore-assertion-correction-20261003.md"
+    ],
+    "commit": "3af77073a0e2aa1f9ad4c20096377c54454a2cba",
+    "parent": "39e2744ae639711ab43c104d227cbfc2c213df33",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/sn",
+    "productionAndModuleBytesIdentical": true,
+    "tree": "c0db9d8bf165609bca771aab04ca3dabce5d9be7"
+  },
+  "status": "SOURCE_PREFLIGHT_COMPILE_ONLY_BEHAVIOR_PENDING",
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/outer-reader-fixture/go.work"
+}

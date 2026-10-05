@@ -1,0 +1,145 @@
+{
+  "expected_top_level_failures": 9,
+  "groups": [
+    {
+      "assertions": [
+        "monitor_economic_native_test.go:73: public native economic monitor ended before its sample 2 monitor service policy: service policy requires at least one role, at most eight validators and four each of operators, providers, claim sources and native economic readers within shared output capacity"
+      ],
+      "failed_roots": [
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees"
+      ],
+      "name": "prior-public-parser",
+      "overlay_sha256": "d1b8e7a68ca17d86417dcd1fc0fe74fcc38b7c9918f071fab319a1ae21d6146c",
+      "selector": "^(TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees)$"
+    },
+    {
+      "assertions": [
+        "monitor_economic_native_test.go:167: lost acknowledgement advanced published native cursor {urnetwork-mainnet-native-economic-event-v1 native-a observed-economic-outcome-unresolved false false {{102 0x61e8025574aa6ac1be404ef474e8b32034f0afe1c72f7d4141d2b7f8128345de} <nil> 0xc0012d03c0 1 sha256:530ffa99c93e91da5075daeac65748b0392ccad4d33fe1cdc3fcee9f5da10edb 10 0xc0012c07d0 1 2 30 785606 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 0 owned-rpc-assertion <nil> <nil> <nil> false} snapshot publication requires joined reconciliation"
+      ],
+      "failed_roots": [
+        "TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage"
+      ],
+      "name": "acknowledge-before-durability",
+      "overlay_sha256": "e65b8ba662c577cbf49d4f53a35c8a411bf58818c0549ef84a65a8f77a000c61",
+      "selector": "^(TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage)$"
+    },
+    {
+      "assertions": [
+        "monitor_economic_native_test.go:266: healthy archive could not commit bounded page behind distant head {urnetwork-mainnet-native-economic-event-v1 native-a unavailable false true {{100 0x7dd63984d2d58494b3ebe4431e140c77bb293dc3f8b79f982b77c8463cc09af2} <nil> <nil> 0 sha256:5432a070b95588b44dfd512c3d95fa5cbe1cd792ff669e063ab39156e2080f04 0 <nil> 1 0 32 786430 2026-01-02 03:04:05 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 1 owned-rpc-assertion <nil> <nil> <nil> false} native incentive finalized ancestry is behind the boundary or exceeds 4096 blocks}"
+      ],
+      "failed_roots": [
+        "TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit"
+      ],
+      "name": "finite-head-ancestry",
+      "overlay_sha256": "6ad164a7253f722817a5b3d646a95b3cb7eca6360e543bb139544e36b7199662",
+      "selector": "^(TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit)$"
+    },
+    {
+      "assertions": [
+        "monitor_economic_native_test.go:195: bounded native subpage did not retain original requested high-water {urnetwork-mainnet-native-economic-event-v1 native-a capacity-held false true {{100 0x7dd63984d2d58494b3ebe4431e140c77bb293dc3f8b79f982b77c8463cc09af2} <nil> <nil> 0 sha256:711d890d5f83ab1dffef0a527fe1f191bb388313ac3448927a09a5d572cfa19c 0 <nil> 1 0 1 786430 2026-01-02 03:04:05 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 1 owned-rpc-assertion <nil> <nil> <nil> false} native economic retained history capacity requires reviewed archive continuation; original cursor held}",
+        "monitor_economic_native_test.go:341: large legitimate census stalled, dropped events or abandoned original high-water {urnetwork-mainnet-native-economic-event-v1 native-a unavailable false true {{100 0x7dd63984d2d58494b3ebe4431e140c77bb293dc3f8b79f982b77c8463cc09af2} <nil> <nil> 0 sha256:16b1b6b39ebd1b69203fdceaaa5e21444042303e697c624cdd9edf802ac9abe7 0 <nil> 0 0 2048 786430 2026-01-02 03:04:05 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 1 owned-rpc-assertion <nil> <nil> <nil> false} native incentive retained evidence exceeds 8 MiB budget}"
+      ],
+      "failed_roots": [
+        "TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage",
+        "TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping"
+      ],
+      "name": "fixed-page-capacity",
+      "overlay_sha256": "c132314908d3d2618180355eb893bc96ba27e7c2e544ad89d16c1ae334e339d3",
+      "selector": "^(TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage|TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping)$"
+    },
+    {
+      "assertions": [
+        "monitor_economic_native_test.go:30: observational fee decoding weakened signing's zero-tip guard"
+      ],
+      "failed_roots": [
+        "TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard"
+      ],
+      "name": "signing-tip-guard-omitted",
+      "overlay_sha256": "1fc99e981e4495d7e3b6f262b96147f7e734f2381e02f54f743d6b224ddcf326",
+      "selector": "^(TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard)$"
+    },
+    {
+      "assertions": [
+        "monitor_economic_native_test.go:62: ambiguous native fee became accepted evidence duplicate-fee [{0 ApplyExtrinsic 0 0xac1df047e36531a712df2d4b5054ce80d6ab11665896c97daf1ae7e99e17ea1c 0x1111111111111111111111111111111111111111111111111111111111111111 12 0 true } {1 ApplyExtrinsic 0 0xac1df047e36531a712df2d4b5054ce80d6ab11665896c97daf1ae7e99e17ea1c 0x1111111111111111111111111111111111111111111111111111111111111111 12 0 true }] <nil>"
+      ],
+      "failed_roots": [
+        "TestEconomicNativeFeesRefuseBorrowedPhaseAndDuplicatedOutcome"
+      ],
+      "name": "duplicate-fee-guard-omitted",
+      "overlay_sha256": "86e0eff17118a3928ba1208b869c30d02f9851176b77ebb9a2d6c747a4f6ac55",
+      "selector": "^(TestEconomicNativeFeesRefuseBorrowedPhaseAndDuplicatedOutcome)$"
+    },
+    {
+      "assertions": [
+        "monitor_economic_native_test.go:81: restart repeated or skipped retained economic history {urnetwork-mainnet-native-economic-event-v1 native-a observed-economic-outcome-unresolved true true {{101 0x8d85e1f4a4706424fd377225d7e3982ecbae179217c68235d7455ec2a4cc68f9} <nil> 0xc000948048 1 sha256:6a1e61a9614e1a11af1cac5068b374b01040d214a40ba6c7e1cd90fd3b390a3b 10 0xc000c56040 1 1 31 786082 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 0 owned-rpc-assertion <nil> <nil> <nil> false} }"
+      ],
+      "failed_roots": [
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees"
+      ],
+      "name": "restart-discards-cursor",
+      "overlay_sha256": "d407541618f7ffc2f3c13d825f893d86ad59fff14f849e475b629cec665ca69a",
+      "selector": "^(TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees)$"
+    },
+    {
+      "assertions": [
+        "monitor_economic_native_test.go:248: native loss stopped unrelated monitor"
+      ],
+      "failed_roots": [
+        "TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole"
+      ],
+      "name": "failed-role-cancels-peers",
+      "overlay_sha256": "63bb919a12d249aa574b64628e8a8a992e315f930b073d7a3396ea5a1684085d",
+      "selector": "^(TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole)$"
+    }
+  ],
+  "runner_exit": 0,
+  "schema": "sol-economic-native-causal-race-v1",
+  "scope": "Eight operative overlays only; no whole-old-source causal claim and no race claim.",
+  "sha256": {
+    "acknowledge-before-durability.overlay.json": "e65b8ba662c577cbf49d4f53a35c8a411bf58818c0549ef84a65a8f77a000c61",
+    "causal-jobs.tsv": "b0037645f4f57448655b487d502d23e12fd0fdb64d67ad9314da04e1666cda58",
+    "causal-race-acknowledge-before-durability.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-race-acknowledge-before-durability.jsonl": "2f284f112431482ef2af855c24d0d85e24cfec5415fd267c72114e0385b17aae",
+    "causal-race-acknowledge-before-durability.phase": "fb9e2d12c31dc0d657d711bd5f180a54d7813c4e0b5453fdfe086848a5fffe46",
+    "causal-race-acknowledge-before-durability.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "causal-race-duplicate-fee-guard-omitted.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-race-duplicate-fee-guard-omitted.jsonl": "0bb2a0ab9ed93304b2d5481757a8100ecc79d28c30edbbc1b20bf90426a41ca2",
+    "causal-race-duplicate-fee-guard-omitted.phase": "a13f93b4d1969b66b1dd8c20f39624f5dae400293135c02428d91ebce76db0f1",
+    "causal-race-duplicate-fee-guard-omitted.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "causal-race-failed-role-cancels-peers.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-race-failed-role-cancels-peers.jsonl": "9e2bec82217eeee57a75f5a80ea4de61d4dcc68cfd1b7baaa26da3f02b08af51",
+    "causal-race-failed-role-cancels-peers.phase": "648aee42c171a5cb989567a5a76b429e0f21cdd43700e6ea620c968cb22a854c",
+    "causal-race-failed-role-cancels-peers.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "causal-race-finite-head-ancestry.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-race-finite-head-ancestry.jsonl": "3f3df17d54d01114205b96adf1f992aa42b041f3d66e44d54e524dd57b169dd0",
+    "causal-race-finite-head-ancestry.phase": "5fca54a06fc8d7614ec961860ebb880b83c288d1e345824384bfc540f0d99bc8",
+    "causal-race-finite-head-ancestry.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "causal-race-fixed-page-capacity.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-race-fixed-page-capacity.jsonl": "024a63e4a29911cfbccf2bde5ccb0457fcefc4ec895869b174cf907912687122",
+    "causal-race-fixed-page-capacity.phase": "d6034fcd73fdfe1e3f4a19021c85341da6b56e0459622ce7a1baca7a3f79cf60",
+    "causal-race-fixed-page-capacity.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "causal-race-prior-public-parser.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-race-prior-public-parser.jsonl": "91643a410a9b82e28f2ab2b90ba77f2f36d2f9a4537399601179596ea043e348",
+    "causal-race-prior-public-parser.phase": "03c80c96c59f537926cd7d991462e8fae16f21bbd7529701e07ef605b8cd59d5",
+    "causal-race-prior-public-parser.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "causal-race-restart-discards-cursor.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-race-restart-discards-cursor.jsonl": "fb364cc46053c700498ac6233ac6f44bd3b6053dae98e7860abf7c1997b7cb37",
+    "causal-race-restart-discards-cursor.phase": "a7a88051420d4cb1b048b865fb65bf6f3c7d16103d978eeac1dc2ec8d2fd1e5d",
+    "causal-race-restart-discards-cursor.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "causal-race-signing-tip-guard-omitted.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "causal-race-signing-tip-guard-omitted.jsonl": "c1d70b9f1fa4fff8ee5d1a2dc030af6ac8a42afcf976a270960152304ad9e008",
+    "causal-race-signing-tip-guard-omitted.phase": "3f5c23922f68b07487f1557739e38f874932a67e3b2fc2a6554ead15fc3aae67",
+    "causal-race-signing-tip-guard-omitted.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "duplicate-fee-guard-omitted.overlay.json": "86e0eff17118a3928ba1208b869c30d02f9851176b77ebb9a2d6c747a4f6ac55",
+    "failed-role-cancels-peers.overlay.json": "63bb919a12d249aa574b64628e8a8a992e315f930b073d7a3396ea5a1684085d",
+    "finite-head-ancestry.overlay.json": "6ad164a7253f722817a5b3d646a95b3cb7eca6360e543bb139544e36b7199662",
+    "fixed-page-capacity.overlay.json": "c132314908d3d2618180355eb893bc96ba27e7c2e544ad89d16c1ae334e339d3",
+    "prior-public-parser.overlay.json": "d1b8e7a68ca17d86417dcd1fc0fe74fcc38b7c9918f071fab319a1ae21d6146c",
+    "restart-discards-cursor.overlay.json": "d407541618f7ffc2f3c13d825f893d86ad59fff14f849e475b629cec665ca69a",
+    "run-causal.sh": "ae663393755669fbf2784641f8010db0c2859a4bc2de810a7473b0ba2f535402",
+    "signing-tip-guard-omitted.overlay.json": "1fc99e981e4495d7e3b6f262b96147f7e734f2381e02f54f743d6b224ddcf326",
+    "source-preflight.json": "476ed1c2247aacf7588d51ec0592eb57da89c5ce1661b09c48ccd5a888fe0ebb"
+  },
+  "source_commit": "00d7efcd18c3a4d08c2883de9c50bb6376cba716",
+  "source_tree": "c7033a67db36e05bda50ae505922caaad80e044b"
+}

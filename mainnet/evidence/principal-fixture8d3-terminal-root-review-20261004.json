@@ -1,0 +1,230 @@
+{
+  "schema": "principal-fixture8d3-terminal-root-review-v1",
+  "status": "TERMINAL_MIXED",
+  "bindings": [
+    {
+      "bytes": 4280,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/adoption-v1.json",
+      "sha256": "f610a655ff47bbff612ee4add6bb363129cd45820db7a290fb23b37a24c991a4"
+    },
+    {
+      "bytes": 2361,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/dc1-go-fd4-positives-v1.terminal.json",
+      "sha256": "37ab4ba17439efc278388ebac703b6bf9a66c7283f5478e7df1a3c050193cdf4"
+    },
+    {
+      "bytes": 4921,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/finite-resource-proposal-v1.json",
+      "sha256": "35a186ad3cabe6c7e84469a325ed71cf30fc82b1b4839f2a46bc6835c0ce34a4"
+    },
+    {
+      "bytes": 28622,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/selected-graph.receipt.json",
+      "sha256": "dc29303c80cc1d6e4c9bdaaea4d1d191bd2f2bec70fba57cfbd1e4b114f942f5"
+    },
+    {
+      "bytes": 15977,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/fixture8d3-normal.receipt.json",
+      "sha256": "a976b5532b36c90c68bd64b8a9059bfc4b238e98a00f1bba8ccd0f9711faaa51"
+    },
+    {
+      "bytes": 15984,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/fixture8d3-race.receipt.json",
+      "sha256": "1d8f0ec789283afeffd010dbbbf0dfaed365da3b62ba5c93c66d00a6f972d67b"
+    },
+    {
+      "bytes": 2048,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/vet.receipt.json",
+      "sha256": "a6b7b9d8d36ea9792ac0eb6475dd75a0fa3e781038f6b921c7565cbe190655aa"
+    },
+    {
+      "bytes": 1503,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/source-overlay-stage-receipt.json",
+      "sha256": "4e27427a6ce3dadb2b017e716f4a3ba16609d8ebbad78b8548ba94712c66db09"
+    },
+    {
+      "bytes": 12958,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-normal-body.resources.csv",
+      "sha256": "29f7c66437c5b0850a9a90339be5b8fff5f00e1eb7e8abe84f2364d885ad7fff"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-normal-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 19925,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-normal-body.stdout",
+      "sha256": "0504c49578ba08e7fbd414b7cf9bfac711cf73c79db462586e573b56ab38b700"
+    },
+    {
+      "bytes": 8062,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-normal-compile.resources.csv",
+      "sha256": "028e6c78d9a9fc968aeb99f11b5d10f48a4ff47c34c42fb5338fcc7fd046edc4"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-normal-compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-normal-compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 53657192,
+      "ctime_ns": 1791098406407615485,
+      "device": 2081,
+      "inode": 18641309,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791098406264621764,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-capture",
+      "sha256": "bde25ccda67b5321849c190139f2ff1de7bc2caa0234df5514183f6059d2447d",
+      "uid": 1000
+    },
+    {
+      "bytes": 51509672,
+      "ctime_ns": 1791098407928548704,
+      "device": 2081,
+      "inode": 18641310,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791098407786554938,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/dc1-replay",
+      "sha256": "abbbbae181a120c04359d39d8448b12034367f235131f4627d5106d0ddb5b5d0",
+      "uid": 1000
+    },
+    {
+      "bytes": 78907984,
+      "ctime_ns": 1791101114518088736,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 18642356,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791101114307096640,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/fixture8d3-normal.test",
+      "sha256": "65f1b0bd5a5fd42ef4b1ae5054caf4bb37afc0498877cbd348fe275b2589b96e",
+      "type": 32768,
+      "uid": 1000
+    },
+    {
+      "bytes": 534,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/go-overlay.json",
+      "sha256": "6d6087b828b4c535088c84a19ac2d70d7ecc131d9c0162210353e17cdbd9ea00"
+    },
+    {
+      "bytes": 75506,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-race-body.resources.csv",
+      "sha256": "474308191a452edb9b200ed322c43a93e13e799494feee9474ceab3e2f64fd8b"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-race-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 19960,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-race-body.stdout",
+      "sha256": "01fbb974d8d378bc320569abf92ae78a10644527fbf221e231682022c1103871"
+    },
+    {
+      "bytes": 12349,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-race-compile.resources.csv",
+      "sha256": "27db8a6096e7e5d15dd10b48772ea6afe1e951ec4638109ba683d5681778a8b2"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-race-compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/evidence/fixture8d3-race-compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 106385776,
+      "ctime_ns": 1791101333481869816,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 18642371,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791101333310876246,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/images/fixture8d3-race.test",
+      "sha256": "9eb1832c9bbd59677dea0891ea9e1be1e3070b911ee4c1127e97fd4a73d0244a",
+      "type": 32768,
+      "uid": 1000
+    }
+  ],
+  "results": [
+    {
+      "phase": "fixture8d3-normal",
+      "pass_roots": [
+        "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt",
+        "TestEconomicConservationArchivePublicAdmitsOnceThenUsesRetainedIndex",
+        "TestEconomicConservationPublicRetiredUnknownFeeMustRemainHot",
+        "TestEconomicConservationPublicFeeRevisionRetainsOriginalKeyReviewAndArchivedPolicies",
+        "TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress",
+        "TestEconomicConservationFixtureProtectsFreshRootWithoutWeakeningCustody",
+        "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan",
+        "TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt",
+        "TestEconomicConservationPublicRetainsOriginalEarningsCarryAndAggregatePayment",
+        "TestEconomicConservationPublicOutageRetainsOneDomainAndRecoversOriginalPage"
+      ],
+      "fail_roots": [
+        "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome",
+        "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive",
+        "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping",
+        "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown",
+        "TestEconomicConservationPublicPrincipalReviewCannotReplaceOriginalSignature",
+        "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative",
+        "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative",
+        "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings",
+        "TestEconomicConservationPublicMissingPrincipalProofKeepsSiblings",
+        "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed"
+      ],
+      "cause": "open checkpoint lock: no such file or directory",
+      "skip": 0
+    },
+    {
+      "phase": "fixture8d3-race",
+      "pass_roots": [
+        "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt",
+        "TestEconomicConservationArchivePublicAdmitsOnceThenUsesRetainedIndex",
+        "TestEconomicConservationPublicRetiredUnknownFeeMustRemainHot",
+        "TestEconomicConservationPublicFeeRevisionRetainsOriginalKeyReviewAndArchivedPolicies",
+        "TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress",
+        "TestEconomicConservationFixtureProtectsFreshRootWithoutWeakeningCustody",
+        "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan",
+        "TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt",
+        "TestEconomicConservationPublicRetainsOriginalEarningsCarryAndAggregatePayment",
+        "TestEconomicConservationPublicOutageRetainsOneDomainAndRecoversOriginalPage"
+      ],
+      "fail_roots": [
+        "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome",
+        "TestEconomicConservationPublicPrincipalAbsentAndZeroSurviveArchive",
+        "TestEconomicConservationPublicPrincipalNeedsExactParentFrontierMapping",
+        "TestEconomicConservationPublicPrincipalIncompletePoolCensusStaysUnknown",
+        "TestEconomicConservationPublicPrincipalReviewCannotReplaceOriginalSignature",
+        "TestEconomicConservationPublicPrincipalForeignPoolRouteHoldsOnlyNative",
+        "TestEconomicConservationPublicPrincipalForeignApiIdentityHoldsOnlyNative",
+        "TestEconomicConservationPublicMissingPrincipalApiKeepsSiblings",
+        "TestEconomicConservationPublicMissingPrincipalProofKeepsSiblings",
+        "TestEconomicConservationPublicArchivedPrincipalCannotBeResealed"
+      ],
+      "cause": "open checkpoint lock: no such file or directory",
+      "skip": 0
+    }
+  ],
+  "terminal": {
+    "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixture8d3/qualification-v1.terminal.json",
+    "bytes": 2638,
+    "sha256": "dfb994eb4d7c3753edbb3c98f241c2c96f742e1f078c2f1a1b23a2718b9a303a"
+  },
+  "scope": "Both exact twenty-root bodies finish ten passes/ten identical lock failures, zero skips. Vet passes; fixture controls not run because positives failed. Retain passing bodies for targeted 4af successor.",
+  "whole_mainnet_complete": false
+}

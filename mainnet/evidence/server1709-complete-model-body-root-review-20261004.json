@@ -1,0 +1,144 @@
+{
+  "schema": "mainnet-independent-complete-model-body-review-v1",
+  "status": "BODY_PASS_WITH_SKIPS_RESOURCE_GAP_RETAINED",
+  "terminal": {
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.terminal.json",
+    "bytes": 5798,
+    "sha256": "b7deef9db4cbe0b0ee2e373b3c5f042c3134acac0685fcd3f4e2cb1d74142dd6"
+  },
+  "verified_terminal_bindings": [
+    {
+      "bytes": 3765,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/full-adoption.json",
+      "sha256": "e931bd26d91b117f53ed9ec07fee36687cc7868468e3f1a2bcd3d1e6261b5998"
+    },
+    {
+      "bytes": 11798,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-selected-model-graph-receipt-v1.json",
+      "sha256": "7951d655a7ee926768a891cef8d576dc4690261b4d8d931aa7809801f725096f"
+    },
+    {
+      "bytes": 4766,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/full-job-v1.json",
+      "sha256": "6823d8c44f920034559b5c34dffccef34e1d4eddf3348a0fbd1298a930ff662f"
+    },
+    {
+      "bytes": 19954,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/run-full-model-v2.py",
+      "sha256": "af1c0f131b2c16347353fc74c5be2bc87074076b6b832892f7aa46ba8b19f2dd"
+    },
+    {
+      "bytes": 3892,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-compile-receipt.json",
+      "sha256": "63021b2851c607bda3389d3bfd80f384d46ea5e49f70797d116f240fc98bf556"
+    },
+    {
+      "bytes": 3017,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server-stage-receipt.json",
+      "sha256": "f7313c041c3a92afb2793deb0967d369c284ad66373d18262f7c8be5d954713c"
+    },
+    {
+      "bytes": 3517,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/run-full-model-v1.sh",
+      "sha256": "d85bbaea2c6a4cb34ec1dd52d534dbcb360b03bae8f4843eacb4e177451971ed"
+    },
+    {
+      "bytes": 2524,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-model-sn663-import-readback-v1.json",
+      "sha256": "eb145d708cb88b1e86e8d9c174225727288f082241e68263e4f35378991ea45e"
+    },
+    {
+      "bytes": 1164,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/source-stage-receipt.json",
+      "sha256": "0b771874d63bfe15fb6808ffb44df953b8a8af840ebfb6aaab061f1ed3a59cea"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.runner.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.runner.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "raw_model": {
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current-model.jsonl",
+    "bytes": 53775593,
+    "sha256": "1a1f57e48c60bfd92c9eb2734c0bc88dc48ddc69f4297edc06b104a5a15bb02a"
+  },
+  "resource_csv": {
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current.resource.csv",
+    "bytes": 1099376,
+    "sha256": "500b22e755cb18b104e00845562a8779de2ac7e67fb067a252f0149d263155f8"
+  },
+  "top_level_census": {
+    "run": 1540,
+    "pass": 1529,
+    "fail": 0,
+    "skip": 11,
+    "unrun": 0
+  },
+  "skipped_roots": [
+    "TestGeolocationSourceHostsMatchProberSourcesWhenCheckedOutAlongside",
+    "TestGeoLite2CitiesAsLegacyRowsResolveToThemselves",
+    "TestClientScoreReaderSourceCosts",
+    "TestNetworkReferralCode",
+    "TestNetworkReferral",
+    "TestAddReferralBonusesGrantsBothSides",
+    "TestOnboardingRegistryFile",
+    "TestReferralBonusCount",
+    "TestProConfig",
+    "TestSubscriberGuardQueryPlan",
+    "TestNetEscrowRevisionTriggerUsesContractKeyAfterUpgrade"
+  ],
+  "test_exit": {
+    "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/model-1709-sn663-full-current-model.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  "test_exit_mtime_utc": "2026-10-04T06:09:55.160483+00:00",
+  "post_test_observation_error": {
+    "sequence": "6176",
+    "kind": "periodic",
+    "utc": "2026-10-04T06:09:56.105660+00:00",
+    "data_available_bytes": "87885606912",
+    "data_available_inodes": "93846989",
+    "data_status": "available",
+    "data_error_type": "",
+    "docker_root_available_bytes": "304102199296",
+    "docker_root_available_inodes": "50989274",
+    "docker_root_status": "available",
+    "docker_root_error_type": "",
+    "memory_available_bytes": "122271485952",
+    "memory_status": "available",
+    "memory_error_type": "",
+    "postgres_cgroup_memory_bytes": "",
+    "postgres_status": "unavailable",
+    "postgres_error_type": "ValueError",
+    "redis_cgroup_memory_bytes": "",
+    "redis_status": "absent",
+    "redis_error_type": ""
+  },
+  "original_terminal_status": "FAIL_OR_INCOMPLETE",
+  "original_resource_qualified": false,
+  "cleanup_exit": 0,
+  "process_group_remaining": false,
+  "owned_container_readback": {
+    "owner": "3ac7ad2f221dd923a2c4e53cbe1fa82f",
+    "checked_utc": "2026-10-04T06:14:28.749619+00:00",
+    "docker_query_exit": 0,
+    "remaining": []
+  },
+  "disposition": [
+    "Reuse completed bodies on exact Server1709/SN663/Coread6 imports; do not rerun1540roots solely for post-body telemetry gap.",
+    "Preserve original FAIL_OR_INCOMPLETE wrapper/resourcequalifiedfalse; no full resource qualification inferred.",
+    "Follow up exact public configuration/optional benchmark inputs and actual auto_explain trigger-plan check separately; historical missing prober source comparison requires current-contract review.",
+    "Integrate reviewed lifecycle helper in future owned fixtures and qualify its real cleanup path separately."
+  ],
+  "limits": [
+    "Model suite does not qualify final SN mainnet package or all changed Server/controller/helper packages.",
+    "No deployment, chain runtime authority or production host capacity inferred."
+  ]
+}

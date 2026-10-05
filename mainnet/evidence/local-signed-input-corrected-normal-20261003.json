@@ -1,0 +1,61 @@
+{
+  "artifact_sha256": {
+    "cheap-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "cheap-normal.jsonl": "6fe350ee668c3d1bc3c0bcf41b72a902783ea6c603495bab3a49bb32c4a4c5d3",
+    "cheap-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "330b4548dfec8f411ff4e437c451f6eabcf099cf4c3d39dd547a1bcf35c62d62",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "remaining5-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "remaining5-normal.jsonl": "fdd7c76a0a24a3cb86f044d0e400971610e1f37cdf8831531398b9231ffbc5bf",
+    "remaining5-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "remaining5-selector.txt": "8645a51615ff9975fd6beb605f1bb27ac0b988e4ab598c70a5460da58000c77f"
+  },
+  "assertions": [
+    "bootstrap_successor_local_pending_test.go:185: unresolved restored outcome became another send 1 successor canonical execution unresolved; retain signatures, authority and cumulative custody: successor canonical original receipt or historical postcondition differs",
+    "bootstrap_successor_local_pending_test.go:189: unresolved restored outcome became another send 1 successor canonical execution unresolved; retain signatures, authority and cumulative custody: successor canonical original receipt or historical postcondition differs"
+  ],
+  "changed_source_hashes": {
+    "mainnet/bootstrap_successor_local_rebind_command_test.go": "b233aae81e7ba1e12b817f6198a9730b42824ae0712155b7a32dba361e590544",
+    "mainnet/evidence/local-restore-input-fixture-20261003.md": "97136f41d231e76e1cd10e563aafa397caacb4933f9d00818e89d5fa66ccbed6",
+    "mainnet/evm_signed_input_fixture_test.go": "72c5dfd5ebaa0088c61d8372b9d65775fcada3563394c855d7ddd085323eaef5",
+    "mainnet/evm_vault_create_test.go": "991659dff8b7809ae016d9632b35551b5d0d831d254866e574b67387a133a5ea"
+  },
+  "classification": "Coverage refusal removed in fixed fixture; two pending tests now fail before intended no-send boundary because test override hides eight canonical historical receipts. Four other selected roots pass. Not complete public-pending qualification.",
+  "failed_roots": [
+    "TestBootstrapSuccessorLocalRebindRetainsAcknowledgedOriginalOutcome",
+    "TestBootstrapSuccessorLocalRebindRetainsReservedOriginalOutcome"
+  ],
+  "intake_sha256": "b6c8ebe637371da88e4466e4dd3e966a800a4ece6c78c0844a73ac108a5dcbfe",
+  "module_hashes": {
+    "go.mod": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f",
+    "go.sum": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+  },
+  "passed_roots": [
+    "TestBootstrapSuccessorLocalRebindLostAcknowledgementResumesOriginalReceipt",
+    "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority",
+    "TestEvmActionFixtureKeepsSignedInputOutsideComposedRuntime",
+    "TestEvmCoordinatorCreateRejectsVaultSignatureAndCustodyAlias"
+  ],
+  "production_module_parent": "bdf63dea4177a7b7fd5d07442039b517bbc261be",
+  "root_verification": {
+    "raw_top_level_results": {
+      "cheap-normal.jsonl": {
+        "fail": 0,
+        "pass": 1,
+        "skip": 0
+      },
+      "remaining5-normal.jsonl": {
+        "fail": 2,
+        "pass": 3,
+        "skip": 0
+      }
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-local-coverage-b35-independent-20261003/evidence/b35-normal-partial-failed-receipt.json",
+    "receipt_sha256": "cb23012392f5f8a0d90535194ffc139231b7b3a9264cffdc884d8dcb5ac5b187",
+    "rehashed_artifact_bindings": 10
+  },
+  "schema": "sol-local-b35-normal-partial-failed-v1",
+  "source_commit": "b35ca9c9c18dfca1c80a98a406a2677cfa535bd1",
+  "source_tree": "5340a146497d0865e725e6d0bf078f767d6d65e0"
+}

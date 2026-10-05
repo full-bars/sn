@@ -180,7 +180,7 @@ func (self attemptSettlementV2IO) finishWitnesses() error {
 	slices.Sort(paths)
 	for _, path := range paths {
 		expected := registry.roots[path]
-		root, err := openAttemptPrivateDirectory(path)
+		root, err := openAttemptPrivateDirectory(path, self.context())
 		if err != nil {
 			registry.resultErr = errors.Join(registry.resultErr, fmt.Errorf("compact final directory witness %s: %w", path, err))
 			continue

@@ -1,0 +1,238 @@
+{
+  "schema": "root-replay-caller454-original-failure-review-v1",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/caller454-original-new10-normal-receipt.json",
+      "bytes": 3733,
+      "sha256": "e106bf4439036dbcf8602483516beb680182d6b9b643ab5a8aebc2f69fd7253c"
+    },
+    {
+      "bytes": 2219,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/source-join.json",
+      "sha256": "dad67c9fdb4bd440d226b96bd810e2bb14f54cb797e212a20d79b97ab51f0c10"
+    },
+    {
+      "bytes": 12031,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/sn.mod",
+      "sha256": "195451f77eac0eff4338878ee945c0ed4019e030a1132c3992c9030c37871920"
+    },
+    {
+      "bytes": 66649,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/sn.sum",
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "bytes": 3662,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/overlay.json",
+      "sha256": "356c81d3849088c9d2df5a93cef9efe82441fae2454fcc300e8f4a8bcdff457b"
+    },
+    {
+      "bytes": 549,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/selector-new.txt",
+      "sha256": "28c90c16f95bc9ef0da03936a5f8abd9132938cc8c75feaef2c2174f0b31d5a6"
+    },
+    {
+      "bytes": 1609,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/run-new10.sh",
+      "sha256": "6bc2dcabbcb1ccb0e7e16e75d1c7625c4e5c834d3896b6884ee64ad1872643aa"
+    },
+    {
+      "bytes": 84,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/new10-normal.phase",
+      "sha256": "8e3d4de379a9d11f2b698bb89cfe1ed07638c0fa6769678c95424c0901d97cb5"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/new10-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 10744,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/new10-normal.jsonl",
+      "sha256": "900ece1f70ca69e5e81f1cd585acae0594024b52ba52c7ab1edc30b7940f41b4"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/new10-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/caller454-later-four-normal-receipt.json",
+      "bytes": 6379,
+      "sha256": "518e5a5887d1ac8ff9a05871e91661e88e667c05bf7f91a938b978e8c3051cb6"
+    },
+    {
+      "bytes": 395,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/root-preflight.json",
+      "sha256": "ff57449917f8e271d15183516ddce9fa2c7203f388c16188bb6e2ca75a3239e1"
+    },
+    {
+      "bytes": 165,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/ancestry-preflight.txt",
+      "sha256": "a42090e89a8df8e53682b941fb7af472cddb1c2604a5b2545a6861d48bf1d478"
+    },
+    {
+      "bytes": 1727,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/run-later.sh",
+      "sha256": "67ba56e97ae0b996fc8cf14af7e67134a9b304d66d3e0f93d2de84d27f0f78ec"
+    },
+    {
+      "bytes": 139,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayInputPinsAndCanonicalDigestsPrecedeLaunch-normal.phase",
+      "sha256": "9db4229148627e86395561db97df5750c40918b7864c0935924a87ffc244922b"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayInputPinsAndCanonicalDigestsPrecedeLaunch-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1420,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayInputPinsAndCanonicalDigestsPrecedeLaunch-normal.jsonl",
+      "sha256": "b306ccaf0ac2905f3e2bd4efb19af5dbcece07fce25ee1e4df667044534062e7"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayInputPinsAndCanonicalDigestsPrecedeLaunch-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 124,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayCanceledOwnerDoesNotLaunch-normal.phase",
+      "sha256": "03facd9851278ca5e5c063050269eb575e3187e5137c0bc65baa1ecb1412cf4b"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayCanceledOwnerDoesNotLaunch-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1329,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayCanceledOwnerDoesNotLaunch-normal.jsonl",
+      "sha256": "668292f0bfc7c5b1c0bc4d16bfa235363ce4a3c0efbf97c40f363e2ab14fb95a"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayCanceledOwnerDoesNotLaunch-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 132,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayDescendantPipesCannotOutliveResult-normal.phase",
+      "sha256": "392cd9075a4dfecec8159507bbe28cef7c03eed915e6d4847fada35485da10cf"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayDescendantPipesCannotOutliveResult-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1377,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayDescendantPipesCannotOutliveResult-normal.jsonl",
+      "sha256": "0cbdb853631703c934338e1f5ed56bdeb020cab288700b7a88e49ba48445a757"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayDescendantPipesCannotOutliveResult-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 127,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayCancellationJoinsBlockedInput-normal.phase",
+      "sha256": "b166ba2f81da554e965627c32e7fbd674209a3c76023469f3631515f9050ae71"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayCancellationJoinsBlockedInput-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1900,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayCancellationJoinsBlockedInput-normal.jsonl",
+      "sha256": "6e4b0bbfbc5157e5129db2d14e0bff7fa6e01450bd9f9ccc0961e1eb69ced678"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/TestHistoricalReplayCancellationJoinsBlockedInput-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "verified_results": [
+    {
+      "receipt": "/mnt/data/sn-testnet/sol-historical-caller-454-independent-20261003/evidence/caller454-original-new10-normal-receipt.json",
+      "roots": {
+        "TestHistoricalReplayCanceledOwnerDoesNotLaunch": {
+          "action": "pass",
+          "elapsed": 0.77
+        },
+        "TestHistoricalReplayCancellationJoinsBlockedInput": {
+          "action": "fail",
+          "elapsed": 301.23
+        },
+        "TestHistoricalReplayCancellationJoinsPartialOutput": {
+          "action": "fail",
+          "elapsed": 301.11
+        },
+        "TestHistoricalReplayDescendantPipesCannotOutliveResult": {
+          "action": "pass",
+          "elapsed": 1.83
+        },
+        "TestHistoricalReplayExecutesSealedImageAfterSourceReplacement": {
+          "action": "pass",
+          "elapsed": 1.8
+        },
+        "TestHistoricalReplayInputPinsAndCanonicalDigestsPrecedeLaunch": {
+          "action": "pass",
+          "elapsed": 0.92
+        },
+        "TestHistoricalReplayOutputBoundsCancelRealChild": {
+          "action": "fail",
+          "elapsed": 300.62
+        },
+        "TestHistoricalReplayOwnerDeadlineClipsChildAndJoins": {
+          "action": "pass",
+          "elapsed": 6.09
+        },
+        "TestHistoricalReplayPublicCommandRetainsUnknownFeeAndAuthority": {
+          "action": "pass",
+          "elapsed": 2.2
+        },
+        "TestHistoricalReplayReportBindsOriginalJobAndAuthority": {
+          "action": "pass",
+          "elapsed": 14.15
+        }
+      },
+      "source": "45417d920044cd74a9c67a18feecfb455ecab310"
+    },
+    {
+      "receipt": "/mnt/data/sn-testnet/sol-historical-caller-later-454-independent-20261003/evidence/caller454-later-four-normal-receipt.json",
+      "roots": {
+        "TestHistoricalReplayCanceledOwnerDoesNotLaunch": {
+          "action": "pass",
+          "elapsed": 1.03
+        },
+        "TestHistoricalReplayCancellationJoinsBlockedInput": {
+          "action": "fail",
+          "elapsed": 301.19
+        },
+        "TestHistoricalReplayDescendantPipesCannotOutliveResult": {
+          "action": "pass",
+          "elapsed": 2.11
+        },
+        "TestHistoricalReplayInputPinsAndCanonicalDigestsPrecedeLaunch": {
+          "action": "pass",
+          "elapsed": 0.6
+        }
+      },
+      "source": "45417d920044cd74a9c67a18feecfb455ecab310"
+    }
+  ],
+  "finding": "Original10roots7PASS/3fail at~300s forpartialoutput/outputbound/blockedinput;separate4laterroot invocation3PASS/1sameblockedinputFAIL;duplicateobservationsnotadditionaluniqueroots",
+  "source_cause_reference": "subprocess-fast-copy-bypass-source-review-20261003.json",
+  "required_successor": "1b3f5856 namedbuffers+activeboundedcancel+adjacentdevice/inspector/repair/sourceLockfix;Solqualification pending",
+  "limits": [
+    "Failedoldsource remainsfailed;sevenpassesdonotqualifycaller",
+    "Originalandlaterhandlesauthoritativelyterminal,noobservationtimeoutrestarts",
+    "Actualfee/finalityauthority notproven"
+  ]
+}

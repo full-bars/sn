@@ -8,9 +8,11 @@ package validator
 // logical aliases are resolved once and rechecked, never followed for writes.
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"github.com/urnetwork/connect/durablevolume"
 	"io"
 	"os"
 	"path/filepath"
@@ -68,7 +70,7 @@ func statsSnapshotOnlyMissing(err error) bool {
 // The physical opener rejects every symlink ancestor, including Darwin /tmp
 // and /var aliases. Only the explicit legacy branch resolves existing aliases;
 // a dangling alias is occupied invalid state, never permission to create.
-func acquireStatsSnapshotDirectory(path string, physical bool, hooks statsSnapshotIOHooks) (*statsSnapshotDirectory, error) {
+func acquireStatsSnapshotDirectory(path string, physical bool, hooks statsSnapshotIOHooks, storageContexts ...context.Context) (*statsSnapshotDirectory, error) {
 	if filepath.Base(path) != "stats.json" {
 		return nil, errors.New("statistics snapshot target must be stats.json")
 	}
@@ -99,7 +101,7 @@ func acquireStatsSnapshotDirectory(path string, physical bool, hooks statsSnapsh
 					return owner, err
 				}
 			}
-			directory, err := openAttemptPrivateDirectory(resolved)
+			directory, err := openAttemptPrivateDirectory(resolved, storageContexts...)
 			if err != nil {
 				return owner, err
 			}
@@ -223,6 +225,11 @@ func (self *statsSnapshotDirectory) makeReady() error {
 		}
 		name := self.missing[len(self.missing)-1]
 		parent := self.current
+		if parent.directory.storage != nil {
+			if err := parent.directory.storage.CheckWrite(); err != nil {
+				return err
+			}
+		}
 		if err := unix.Mkdirat(int(parent.directory.file.Fd()), name, 0o700); err != nil {
 			return err
 		}
@@ -238,7 +245,11 @@ func (self *statsSnapshotDirectory) makeReady() error {
 		if err != nil || state.dev != before.dev || state.ino != before.ino || state.mode != before.mode || state.uid != before.uid {
 			return errors.Join(errors.New("statistics snapshot directory changed during acquisition"), err, file.Close())
 		}
-		directory := &attemptPrivateDirectory{file: file, path: filepath.Join(parent.directory.path, name), anchor: state}
+		directory := &attemptPrivateDirectory{file: file, path: filepath.Join(parent.directory.path, name), anchor: state, storageCtx: parent.directory.storageCtx}
+		directory.storage, err = openValidatorDurableDirectory(directory.storageCtx, directory.path, durablevolume.ReadWrite, false)
+		if err != nil {
+			return errors.Join(err, file.Close())
+		}
 		child := &statsSnapshotRoot{directory: directory, logical: filepath.Join(parent.logical, name)}
 		self.roots, self.current = append(self.roots, child), child
 		self.missing = self.missing[:len(self.missing)-1]
@@ -416,7 +427,7 @@ func (self *statsSnapshotDirectory) checkFinal() error {
 	}
 	var resultErr error
 	for _, root := range self.roots {
-		current, err := openAttemptPrivateDirectory(root.directory.path)
+		current, err := openAttemptPrivateDirectory(root.directory.path, root.directory.storageCtx)
 		if err != nil {
 			resultErr = errors.Join(resultErr, err)
 			continue

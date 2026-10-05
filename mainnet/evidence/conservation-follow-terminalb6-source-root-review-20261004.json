@@ -1,0 +1,453 @@
+{
+  "schema": "conservation-follow-terminalb6-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_EXACT_COMPOSITION_EXECUTION_PENDING",
+  "head": "b6f05dc5df9ef84898b25d6aac47ebdb0a04e27a",
+  "tree": "9fcb1bcf14f3267bc2eed2f85fcd9fb8470cc89c",
+  "base": "ffe74b36b5fb5aa453bc62d8734462fcd4993706",
+  "terminal_component": "464b5038291c61c1af4b7369fb3918fbc95de52d",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-terminal/evidence/intake.json",
+      "bytes": 2238,
+      "sha256": "9c54f9e258e74361a6745630abcda20e3c24cafdf0da025a55f88f62b2719cdf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-history/evidence/intake.json",
+      "bytes": 2429,
+      "sha256": "08d248908006ed3dbc10b81012d78e07baebb447d1d22aa563fa9f29325aec12"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/validator-terminal-custody/evidence/intake.json",
+      "bytes": 6232,
+      "sha256": "90aa5fcdbf3d020d0620dc9d4730ed5c9d5d159f1f367fe30b8ef7b6494d69f7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-terminal/evidence/source-review.json",
+      "bytes": 1621,
+      "sha256": "a56d794efdc8a4b76d60784015357181c298ee96fe2399f251f14308a237d66f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-terminal/evidence/selectors.json",
+      "bytes": 24013,
+      "sha256": "455e41c7e0d61e902810ce04d83d86f484c7868307f196073a27abc4b2ea814c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-terminal/evidence/operative-controls.json",
+      "bytes": 1262,
+      "sha256": "c8076960eb75e416a1751a6ea54f5c5eaaef404fb17e80c4f81391d205f1cb1b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-terminal/evidence/qualification-recipe.json",
+      "bytes": 4217,
+      "sha256": "42896dd3ceac264ac5967d6187129587d2ef9d753be573d3bb637e2cd8d466eb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-terminal/sn/validator/release_archive_decision_v2.go",
+      "bytes": 18806,
+      "sha256": "78dc49519f12c9532cbb073de99c9063708ffe1aa53ea9e60f0e99cdf277e5f9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/conservation-follow-terminal/sn/validator/release_archive_terminal_custody_test.go",
+      "bytes": 5322,
+      "sha256": "812371ec2ce0b0280debcce4dfd403f924c3eff9802ad925fbfc12f03f18f275"
+    }
+  ],
+  "changed_sources": [
+    {
+      "relative": "validator/release_archive_decision_v2.go",
+      "blob": "4efb98afc8da1fc701691ae7d8a430ead9802ab0",
+      "sha256": "78dc49519f12c9532cbb073de99c9063708ffe1aa53ea9e60f0e99cdf277e5f9"
+    },
+    {
+      "relative": "validator/release_archive_terminal_custody_test.go",
+      "blob": "896032c43921ce0dfba2a0cc0f492b73e3cb0e0d",
+      "sha256": "812371ec2ce0b0280debcce4dfd403f924c3eff9802ad925fbfc12f03f18f275"
+    }
+  ],
+  "declarations": [
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveAdmissionCancellationHasNoReusablePrefix",
+      "relative": "mainnet/economic_conservation_archive_admission_test.go",
+      "blob": "5360fdfe4d15a1e30918b9046d539c65263aff2c"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveAdmissionChecksCompletePrefixOnce",
+      "relative": "mainnet/economic_conservation_archive_admission_test.go",
+      "blob": "5360fdfe4d15a1e30918b9046d539c65263aff2c"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveAdmissionClosedIndexCannotSeedNewFacts",
+      "relative": "mainnet/economic_conservation_archive_admission_test.go",
+      "blob": "5360fdfe4d15a1e30918b9046d539c65263aff2c"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveAdmissionCompletionCancellationReturnsNoIndex",
+      "relative": "mainnet/economic_conservation_archive_admission_test.go",
+      "blob": "5360fdfe4d15a1e30918b9046d539c65263aff2c"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveAdmissionEmptyCancellationReturnsNoIndex",
+      "relative": "mainnet/economic_conservation_archive_admission_test.go",
+      "blob": "5360fdfe4d15a1e30918b9046d539c65263aff2c"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveAdmissionLateReplacementCannotPublishIndex",
+      "relative": "mainnet/economic_conservation_archive_admission_test.go",
+      "blob": "5360fdfe4d15a1e30918b9046d539c65263aff2c"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveAdmissionPublicLateCustodyLossStopsBeforeSources",
+      "relative": "mainnet/economic_conservation_archive_admission_test.go",
+      "blob": "5360fdfe4d15a1e30918b9046d539c65263aff2c"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveCanceledReadNeverInventsIdentityDifference",
+      "relative": "mainnet/economic_conservation_archive_test.go",
+      "blob": "d5045d10b71754b0ddf3cd3b393d097d2c0d82ee"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveChangedCustodyStopsBeforeNextSourceRead",
+      "relative": "mainnet/economic_conservation_archive_test.go",
+      "blob": "d5045d10b71754b0ddf3cd3b393d097d2c0d82ee"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveIndexLostCustodyRefusesBeforeMutation",
+      "relative": "mainnet/economic_conservation_archive_index_test.go",
+      "blob": "f9117fedc05e4dfd4b4fa26f4c810f86644a7357"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveIndexMalformedCatalogRefusesBeforeMutation",
+      "relative": "mainnet/economic_conservation_archive_index_test.go",
+      "blob": "f9117fedc05e4dfd4b4fa26f4c810f86644a7357"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt",
+      "relative": "mainnet/economic_conservation_receipt_test.go",
+      "blob": "c722ea3721daec1a7c31cf1c02542a794415ad85"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchiveIndexNilOperandsRefuseBeforeMutation",
+      "relative": "mainnet/economic_conservation_archive_index_test.go",
+      "blob": "f9117fedc05e4dfd4b4fa26f4c810f86644a7357"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchivePublicAdmitsOnceThenUsesRetainedIndex",
+      "relative": "mainnet/economic_conservation_archive_test.go",
+      "blob": "d5045d10b71754b0ddf3cd3b393d097d2c0d82ee"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt",
+      "relative": "mainnet/economic_conservation_archive_test.go",
+      "blob": "d5045d10b71754b0ddf3cd3b393d097d2c0d82ee"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationNativeHandoffKeepsLatestIndependentPublication",
+      "relative": "mainnet/economic_conservation_native_worker_test.go",
+      "blob": "acda28e068f34692347195bbf92e9d1da952306e"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationNativeHandoffRefusesChangedOriginalCursor",
+      "relative": "mainnet/economic_conservation_native_worker_test.go",
+      "blob": "acda28e068f34692347195bbf92e9d1da952306e"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationNativeRenewalHeldArchiveCustodyBeforeDispatch",
+      "relative": "mainnet/economic_conservation_native_renewal_test.go",
+      "blob": "18ef9b631c98013b8cd198f2e052ae715d3c27ac"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationNativeRenewalPublicPreservesOriginalPolicyAndArchive",
+      "relative": "mainnet/economic_conservation_native_renewal_test.go",
+      "blob": "18ef9b631c98013b8cd198f2e052ae715d3c27ac"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart",
+      "relative": "mainnet/economic_conservation_native_renewal_test.go",
+      "blob": "18ef9b631c98013b8cd198f2e052ae715d3c27ac"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationPublicCancelJoinsHeldFeeReplayAfterHealthyPublication",
+      "relative": "mainnet/economic_conservation_fee_worker_test.go",
+      "blob": "4f1384cb0c5d5de07dbb88637e4856bee40345b8"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationPublicFollowJoinsOwnedReadsAndOutput",
+      "relative": "mainnet/economic_conservation_test.go",
+      "blob": "e72540962f53727e76959a34971088d4f8084561"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationPublicNativeCaptureCancellationJoinsAfterSiblingPublication",
+      "relative": "mainnet/economic_conservation_native_worker_test.go",
+      "blob": "acda28e068f34692347195bbf92e9d1da952306e"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationPublicNativeCapturePendingKeepsEntitlementProgress",
+      "relative": "mainnet/economic_conservation_native_worker_test.go",
+      "blob": "acda28e068f34692347195bbf92e9d1da952306e"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationPublicNativeCompletionLostAckReusesOriginalJob",
+      "relative": "mainnet/economic_conservation_native_worker_test.go",
+      "blob": "acda28e068f34692347195bbf92e9d1da952306e"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationPublicNativeContradictionHoldsOnlyOriginalProducer",
+      "relative": "mainnet/economic_conservation_native_worker_test.go",
+      "blob": "acda28e068f34692347195bbf92e9d1da952306e"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome",
+      "relative": "mainnet/economic_conservation_principal_test.go",
+      "blob": "126d53053c49793851f1fad417d284f970b04d63"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress",
+      "relative": "mainnet/economic_conservation_fee_worker_test.go",
+      "blob": "4f1384cb0c5d5de07dbb88637e4856bee40345b8"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationPublicTransientNativeReadRecoversOriginalBoundary",
+      "relative": "mainnet/economic_conservation_native_worker_test.go",
+      "blob": "acda28e068f34692347195bbf92e9d1da952306e"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues",
+      "relative": "mainnet/economic_conservation_restore_test.go",
+      "blob": "818fa4dbf324b805188c39854fffb52d801351b9"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicEntitlementPublicArchiveCannotDropOriginalReceipt",
+      "relative": "mainnet/economic_conservation_entitlement_archive_test.go",
+      "blob": "528020097ae71e9ab766222513dd43dff809a39f"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicEntitlementPublicArchiveKeepsOriginalCensusAndColdClaims",
+      "relative": "mainnet/economic_conservation_entitlement_archive_test.go",
+      "blob": "528020097ae71e9ab766222513dd43dff809a39f"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestEconomicEntitlementPublicHeldHttpKeepsNativeVaultAndClaimProgress",
+      "relative": "mainnet/economic_conservation_entitlement_test.go",
+      "blob": "41737dbeba8bfdc9e82f16aba5081f1182c18001"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestMonitorClaimFullHistoryCancellationDiscardsPartialAdmission",
+      "relative": "mainnet/monitor_claim_history_work_test.go",
+      "blob": "5a2b0f2983beb933db2cb259831181f2ac86d0cf"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestMonitorClaimFullHistoryCountsAdmissionAndHotSaveWork",
+      "relative": "mainnet/monitor_claim_history_work_test.go",
+      "blob": "5a2b0f2983beb933db2cb259831181f2ac86d0cf"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestoreCopiedReadKeepsIoUnknownAndExactMismatchDistinct",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestoreGrammarKeepsPartialEvidenceAndRejectsForeignMembers",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestoreHeightBoundaryNeverWrapsPendingInterval",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestoreOriginalSignedApprovalAndCursorStayIndependent",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./mainnet",
+      "name": "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "blob": "64ed828a00108ea62cad3f5af48b426b1ed70678"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveFullLineageOwnedReadsDoNotReplayHistory",
+      "relative": "validator/release_archive_lineage_work_test.go",
+      "blob": "86128d8169122a4db0c2920bcbeff867f3731797"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveFullLineageRejectsRemovedPredecessor",
+      "relative": "validator/release_archive_lineage_work_test.go",
+      "blob": "86128d8169122a4db0c2920bcbeff867f3731797"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveFullLineageCountsNonemptyHeadAndRefusesDoubleFold",
+      "relative": "validator/release_archive_lineage_work_test.go",
+      "blob": "86128d8169122a4db0c2920bcbeff867f3731797"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveFullLineageRejectsLateEnvelopeWithoutPartialOwner",
+      "relative": "validator/release_archive_lineage_work_test.go",
+      "blob": "86128d8169122a4db0c2920bcbeff867f3731797"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveFullLineageLateObservationPublishesNoCache",
+      "relative": "validator/release_archive_lineage_work_test.go",
+      "blob": "86128d8169122a4db0c2920bcbeff867f3731797"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveFullLineageCancellationRetainsFreshReplay",
+      "relative": "validator/release_archive_lineage_work_test.go",
+      "blob": "86128d8169122a4db0c2920bcbeff867f3731797"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveFullLineageBlockedReplayAllowsOwnedForegroundRead",
+      "relative": "validator/release_archive_lineage_work_test.go",
+      "blob": "86128d8169122a4db0c2920bcbeff867f3731797"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveV2RejectsArchiveByteBudgetBeforeReads",
+      "relative": "validator/release_archive_v2_test.go",
+      "blob": "aa62b0f642078f5fffd3b22de48284f665b26f45"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveV2RejectsSelfDeclaredEMAAndChangedSourceBytes",
+      "relative": "validator/release_archive_v2_test.go",
+      "blob": "aa62b0f642078f5fffd3b22de48284f665b26f45"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseMeasurementV2SettlementLineageAcceptsRealPrefixAndNativeRetry",
+      "relative": "validator/release_measurement_v2_settlement_test.go",
+      "blob": "ed79b566ebc088b250a8a9f23144cf50ad5b7909"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseMeasurementV2SettlementNativeRetryRejectsDoubleFoldedHead",
+      "relative": "validator/release_measurement_v2_settlement_test.go",
+      "blob": "ed79b566ebc088b250a8a9f23144cf50ad5b7909"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveFullLineageTerminalRefusesLostOwner",
+      "relative": "validator/release_archive_terminal_custody_test.go",
+      "blob": "896032c43921ce0dfba2a0cc0f492b73e3cb0e0d"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveFullLineageTerminalOwnerCancellation",
+      "relative": "validator/release_archive_terminal_custody_test.go",
+      "blob": "896032c43921ce0dfba2a0cc0f492b73e3cb0e0d"
+    },
+    {
+      "package": "./validator",
+      "name": "TestReleaseArchiveV2ReplaysCompleteSignedHistoryWithoutLiveState",
+      "relative": "validator/release_archive_v2_test.go",
+      "blob": "aa62b0f642078f5fffd3b22de48284f665b26f45"
+    }
+  ],
+  "counts": {
+    "mainnet": 48,
+    "validator": 14,
+    "roots_per_mode": 62,
+    "control_groups_declared": 14
+  },
+  "review": {
+    "terminal_accessor": "Decodes an owned closure copy, then joins decode error with original owner custody/context check before returning. Lost identity or canceled owner returns no closure.",
+    "tests": "Read complete 134-line original terminal-custody test plus complete eleven-line production diff; retained full-lineage tests check lost directory identity, healthy copies, cancellation, no extra source reads and fresh independent reopen. Close is idempotent and returns retained cancellation error.",
+    "composition": "Exactly two paths changed over reviewed ffe; both complete blobs equal frozen464. Other entries, modules and Rust are preserved by complete Git diff census.",
+    "limits": "Declarations, source review and staging do not prove compilation, behavior, resource capacity, complete funding conformance or launch approval."
+  }
+}

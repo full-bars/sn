@@ -16,13 +16,15 @@ func newEVMCheckpointTestFixture(t *testing.T) (*validatorIdentityTestFixture, E
 	f := newValidatorIdentityTestFixture(t)
 	f.metadata.AsMetadataV14.Pallets = append(f.metadata.AsMetadataV14.Pallets, types.PalletMetadataV14{Name: "Ethereum", HasStorage: true, Storage: types.StorageMetadataV14{Prefix: "Ethereum", Items: []types.StorageEntryMetadataV14{{Name: "BlockHash", Modifier: types.StorageFunctionModifierV0{IsDefault: true}, Type: types.StorageEntryTypeV14{IsMap: true, AsMap: types.MapTypeV14{Hashers: []types.StorageHasherV10{{IsTwox64Concat: true}}}}}}}})
 	f.publishMetadata(t)
-	query := EVMCheckpointQuery{GenesisHash: f.query.GenesisHash, NativeHash: f.query.BlockHash, NativeNumber: 100, EVMHash: types.Hash{77}, EVMNumber: 70}
-	parent := types.Hash{5}
-	header := f.headers[query.NativeHash.Hex()]
-	header.ParentHash = parent
-	f.headers[query.NativeHash.Hex()] = header
-	f.headers[parent.Hex()] = types.Header{Number: 99}
+	parentHeader, parent := receiptTestHeader(t, types.Hash{5}, 99, nil, 1)
+	header, block := receiptTestHeader(t, parent, 100, nil, 1)
+	delete(f.headers, f.query.BlockHash.Hex())
+	f.query.BlockHash = block
+	f.blockHashes[100] = block
+	f.headers[block.Hex()] = header
+	f.headers[parent.Hex()] = parentHeader
 	f.blockHashes[99] = parent
+	query := EVMCheckpointQuery{GenesisHash: f.query.GenesisHash, NativeHash: block, NativeNumber: 100, EVMHash: types.Hash{77}, EVMNumber: 70}
 	arg := make([]byte, 32)
 	binary.LittleEndian.PutUint64(arg, 70)
 	key, err := types.CreateStorageKey(f.metadata, "Ethereum", "BlockHash", arg)

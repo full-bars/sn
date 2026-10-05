@@ -1,0 +1,184 @@
+{
+  "changed_files": [
+    {
+      "bytes": 118625,
+      "git_blob": "74f4755e72de5e7d3d1c9771e2ea0a628bac6423",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "sha256": "e58f8f186ccf8bc0301491104aff71b31f2d100a0a685f9f697febb82ef75722"
+    },
+    {
+      "bytes": 1892,
+      "git_blob": "f59919ec5e2916324df54c74908f13a425224c8f",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "sha256": "d70d1c92e4abfb2d9ddff86bb955a6d63613f2a86a7dddad397e4d31fcd3cd1f"
+    },
+    {
+      "bytes": 3464,
+      "git_blob": "4a7fed140a8ecf6974c42fbd32cf01dd66dffb38",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn/tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "sha256": "e695ef117862d29ba3f9eebaceebf1cc7f810227f20c0f7a77a117bc383b90a5"
+    },
+    {
+      "bytes": 1182,
+      "git_blob": "ff781544810d8ed9d7c3a02c90f041cd0f103bee",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+      "sha256": "06310aec3708943ce37b097c33d2fda13f240ddcac6fb99fe1f5ad69227a7f21"
+    },
+    {
+      "bytes": 15116,
+      "git_blob": "742e216427a34a706b52d0d0fb19eb6db56d9e4b",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn/tools/runtime-metadata-probe/src/historical.rs",
+      "sha256": "3f3cbfb839b91f184d7450ed9eae42ae80d1e6a920a7dfc66597d87677192663"
+    },
+    {
+      "bytes": 6330,
+      "git_blob": "6e46286459bf2b0ed44a80aec7dadb5d9bac7e35",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn/tools/runtime-metadata-probe/src/historical_backend.rs",
+      "sha256": "1a62ea226930f693a8c3e67a88d890df1a4d62ccf7a23dbd50cd0aa073577e4a"
+    },
+    {
+      "bytes": 9367,
+      "git_blob": "3c5ee87dc68a42637caefebecfc42ac3207db655",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn/tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "sha256": "2fda5b53805645beab40132c878f26b973263c5342f898d14e619806f0d55c6e"
+    },
+    {
+      "bytes": 15996,
+      "git_blob": "f23e3a00ba23d6a29bd631f92dca3e990f5a2e31",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn/tools/runtime-metadata-probe/src/historical_tests.rs",
+      "sha256": "9a6157fdca35711b8e9fd36e5d66717a6780fa3fab2418ee6ae7468c40c39f4a"
+    },
+    {
+      "bytes": 17694,
+      "git_blob": "c5a94fee89cdeffe163d58dac63424153e36cbee",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn/tools/runtime-metadata-probe/src/lib.rs",
+      "sha256": "50b785725ba5bb532597910f854e66e957a2694aa10ea40df9f718698a248f39"
+    }
+  ],
+  "controls": [
+    {
+      "expected": "behavioral assertion failure; no compile/setup failure counts",
+      "name": "omit-top-write-precheck",
+      "replacement": {
+        "bytes": 5454,
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/evidence/controls/omit-top-write-precheck.rs",
+        "sha256": "5889b205524fe7d0ff8e0c54125fbaebaca704d449fe11db4f9019a60f561a12"
+      },
+      "replacement_relative_path": "tools/runtime-metadata-probe/src/historical_backend.rs",
+      "root": "historical::tests::historical_missing_write_path_refuses_unchanged_declared_root"
+    },
+    {
+      "expected": "behavioral assertion failure; no compile/setup failure counts",
+      "name": "omit-child-write-precheck",
+      "replacement": {
+        "bytes": 4725,
+        "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/evidence/controls/omit-child-write-precheck.rs",
+        "sha256": "d53e9988750eebc1c35b7b1e50d2d7e3dc352c847470257a29881e5871d7e258"
+      },
+      "replacement_relative_path": "tools/runtime-metadata-probe/src/historical_backend.rs",
+      "root": "historical::tests::historical_missing_child_write_path_refuses_unchanged_declared_root"
+    }
+  ],
+  "environment_notes": [
+    "Reuse exact pinned cached SDK with no graph substitution",
+    "Own finite process timeout and join; floor110GiB/phase111GiB",
+    "Read-only source files and Cargo.lock equality before/after",
+    "Rust first12 and binary compile only; no Go graph change"
+  ],
+  "full_source": {
+    "bytes": 5387325,
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/evidence/source-readback.json",
+    "sha256": "458f00924200c3461f97db56c37b1e6a767226715b2b3b40e1f2aae584e8e6ee"
+  },
+  "limits": [
+    "Synthetic complete-parent-proof execution is not actual-runtime admission",
+    "Missing crypto/prefix/offchain/custom hosts refuse",
+    "Native fee withdrawal/refund hook absent, fee remains null",
+    "No finality/genesis/source-build approval, no signing or deployment",
+    "Production subprocess caller is not yet wired"
+  ],
+  "qualification_commands": [
+    "cargo test --locked --offline --manifest-path tools/runtime-metadata-probe/Cargo.toml --lib historical::tests:: -- --nocapture",
+    "cargo build --locked --offline --manifest-path tools/runtime-metadata-probe/Cargo.toml --bin runtime-historical-proof"
+  ],
+  "qualification_owner": "Sol only; no Astra behavioral execution",
+  "root_verification": {
+    "clean_head_tree_verified": true,
+    "exact_changed_git_blobs_verified": [
+      "tools/runtime-metadata-probe/Cargo.lock",
+      "tools/runtime-metadata-probe/Cargo.toml",
+      "tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "tools/runtime-metadata-probe/src/bin/runtime-historical-proof.rs",
+      "tools/runtime-metadata-probe/src/historical.rs",
+      "tools/runtime-metadata-probe/src/historical_backend.rs",
+      "tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "tools/runtime-metadata-probe/src/historical_tests.rs",
+      "tools/runtime-metadata-probe/src/lib.rs"
+    ],
+    "intake_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/evidence/intake.json",
+    "intake_sha256": "6ccf995b7ca9f232b47fc8806bc7de30a37843efca02eca7171be938fe884b47",
+    "limits": "Source intake only; independent behavior and final role/runtime/fee admission remain separate.",
+    "list_file_bindings_rehashed": 15
+  },
+  "sdk_finding": "Pinned trie_backend_essence.rs storage_root and child_storage_root can log errors and return old/default root; strict fallible precheck is required in this unshipped prototype.",
+  "sdk_revision": "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a",
+  "sdk_source_files": [
+    {
+      "bytes": 26939,
+      "git_blob": "057c742649db11298e8210c6b1192ee85db7c325",
+      "path": "/home/by/.cargo/git/checkouts/polkadot-sdk-778d4d407c7beeae/cacb431/substrate/primitives/state-machine/src/trie_backend_essence.rs",
+      "sha256": "2f5c4f66981d1ccfdaa8b5a75db40ee8e32fcc2eb8db14de71b8a3af9a8fa536"
+    },
+    {
+      "bytes": 59710,
+      "git_blob": "d31348c330ac3b4f67d2976d7fedf7b1cacc1a63",
+      "path": "/home/by/.cargo/git/checkouts/polkadot-sdk-778d4d407c7beeae/cacb431/substrate/primitives/state-machine/src/lib.rs",
+      "sha256": "b66f234603b8e713835c31d4f76e7a342aef207aa9886430dec03920a561c2fc"
+    },
+    {
+      "bytes": 12796,
+      "git_blob": "b0934a1b07cdb76b7e5462ef9d3f56209abab1e6",
+      "path": "/home/by/.cargo/git/checkouts/polkadot-sdk-778d4d407c7beeae/cacb431/substrate/primitives/state-machine/src/backend.rs",
+      "sha256": "b1d8b9701ea2d41de6cfcaba5a403829d7181ad59121cc7514b136b8baffc5c8"
+    },
+    {
+      "bytes": 34873,
+      "git_blob": "de828c2e10194a5ae4dd5badad5409ef16d1ee4a",
+      "path": "/home/by/.cargo/git/checkouts/polkadot-sdk-778d4d407c7beeae/cacb431/substrate/primitives/trie/src/lib.rs",
+      "sha256": "97988ec696a95d476dfed29ee6a915ecbcecb5c39c0a30df7a6464df3768fbf8"
+    },
+    {
+      "bytes": 25228,
+      "git_blob": "198a2a31ab8dbc375af36798fda5ea4888a67168",
+      "path": "/home/by/.cargo/git/checkouts/polkadot-sdk-778d4d407c7beeae/cacb431/substrate/client/executor/src/executor.rs",
+      "sha256": "133d001830b9e1c6dcdb6130055ea9d645f09250f1d93f51c0d2c0418d63d670"
+    },
+    {
+      "bytes": 32419,
+      "git_blob": "ac25bd573c3ebff0a4c6bec570688482503c5cff",
+      "path": "/home/by/.cargo/git/checkouts/polkadot-sdk-778d4d407c7beeae/cacb431/substrate/frame/executive/src/lib.rs",
+      "sha256": "3b0aaa5bdbc3e89e11c79e57b45434f97a13d6b7e7c2ec7d38f05f6da95c2c2f"
+    }
+  ],
+  "selected_roots": [
+    "historical::tests::historical_complete_parent_proof_replays_top_and_child_writes",
+    "historical::tests::historical_complete_parent_proof_retains_unread_top_and_child_nodes",
+    "historical::tests::historical_missing_read_node_is_not_authenticated_absence",
+    "historical::tests::historical_missing_write_path_refuses_unchanged_declared_root",
+    "historical::tests::historical_missing_child_write_path_refuses_unchanged_declared_root",
+    "historical::tests::historical_missing_child_read_refuses_before_empty_value",
+    "historical::tests::historical_complete_proof_supports_same_key_rollback_and_child_delete",
+    "historical::tests::historical_empty_block_and_sealed_header_keep_original_identity",
+    "historical::tests::historical_header_body_parent_code_and_post_root_are_independent_guards",
+    "historical::tests::historical_unsupported_host_is_not_a_successful_noop",
+    "historical::tests::historical_unfinished_transaction_and_work_exhaustion_publish_no_fact",
+    "historical::tests::historical_public_decoder_refuses_unknown_trailing_duplicate_and_bounded_inputs"
+  ],
+  "source": {
+    "head": "89e4c8c95c58761da65e863b9dc72dd6550e2730",
+    "parent": "62de96ff82d57af76654b845b0c2f62d008d970c",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/historical-proof-replay/sn",
+    "tree": "02f1f5d1ab869411c53ac034d179708b4537903b"
+  },
+  "status": "SOURCE_FROZEN_TESTS_PENDING"
+}

@@ -1,0 +1,26 @@
+{
+  "commit": "1b1624f0aa09c0173f8a0457207d9d1329319beb",
+  "coreFiles": 37,
+  "currentParent": "a53ed36a6e5d0c3d1c2b8c6951ce853fcfd83e06",
+  "limits": "No current SN/Server graph or consumer qualification inherited; publication and module lookup remain distinct next steps.",
+  "qualifiedParent": "5c48c3e5f53b7f4654570193448b4da73b75aaff",
+  "root_verification": {
+    "classification": "SOURCE_VERIFIED_CURRENT_CORE_BEHAVIOR_PENDING",
+    "clean_head_tree_verified": true,
+    "exact_mode_blob_union_verified": true,
+    "join_receipt_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/current-outer-core-1b-join.json",
+    "join_receipt_sha256": "25c9013c4363e7b7952ed3bbd3d5479629138ce8c9baf640ddf3403546579817",
+    "physical_git_blobs_verified": 3730
+  },
+  "rule": "Every durablevolume blob and mode equals frozen5c48; every outside blob/mode including go.mod/go.sum equals publisheda53. All physical files rehashed against exact Git blobs.",
+  "schema": "urnetwork-source-join-v1",
+  "scopedReceipt": {
+    "path": "/mnt/data/sn-testnet/sol-outer-head-11e-5c48-independent-20261003/evidence/connect-qualification-receipt.json",
+    "scope": "Seven selected paired-metadata controls normal/race/vet; earlier source scopes remain separate.",
+    "sha256": "1659c18fb5f03001af018bafc7c8a18c5b2b312b2fc1ef1754063efbce9c9e63"
+  },
+  "source": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-production/connect",
+  "status": "EXACT_SOURCE_JOIN_NO_NEW_BEHAVIOR",
+  "totalFiles": 3730,
+  "tree": "6c83bae54a47c0ca85ae566c2ef744c951ad8a34"
+}

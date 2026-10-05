@@ -1,0 +1,175 @@
+{
+  "schema": "admission-ab0-ordinary-terminal-and-drained-source-finding-v1",
+  "status": "NORMAL_RACE20_PASS1_FAIL_EACH_VET_PASS_RUST_FIXTURE_FAILED",
+  "head": "ab0b1a6fc58f4d0be4bfe84d26d4bb892ddd6a64",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-ordinary-v1.terminal.json",
+      "bytes": 2643,
+      "sha256": "889e83051b52f41b2a1f138bca560cbb3efcc7605130ca3da5aa04090a1672b0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-ordinary.receipt.json",
+      "bytes": 13432,
+      "sha256": "eb8f0416e710410e6c41317bc8c84d7ecb274ca39bceb9edf709949ea0cbf985"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-ordinary.stdout",
+      "bytes": 17082,
+      "sha256": "fb8929125136ae1aa6807ffebe7f1cbe94d27ba3c2ee41b437ea53fa30e9e2a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-ordinary.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-normal-ordinary.resources.csv",
+      "bytes": 10955,
+      "sha256": "ba1d87e7f57735cdefa23e7e111497861704dd38861dd0d99a9b4c7c0a6fab68"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-race-ordinary.receipt.json",
+      "bytes": 13418,
+      "sha256": "1f435effe4438a1167eca009a901c1b6f81f0783af0a7ba12332900a03542068"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-race-ordinary.stdout",
+      "bytes": 17114,
+      "sha256": "238bf219518ef49dd14040a939874fc9cd7adb3953b81ad774fcb1ef4e53052f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-race-ordinary.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-race-ordinary.resources.csv",
+      "bytes": 59299,
+      "sha256": "bc19e9c7c38e18b082fe0ac59947608db7f263ed8a44a5e3369cceb079bb9c2f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-mainnet-vet.receipt.json",
+      "bytes": 1915,
+      "sha256": "bef6131c55f15023afe75961ecbd02d2a119d5f35b1f93e9b7609a8cba59ef8e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-mainnet-vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-mainnet-vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-go-mainnet-vet.resources.csv",
+      "bytes": 1413,
+      "sha256": "e2ee7bf63988b0b780b9307d73702b58c902c73a887002196675a3203177a11c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-export-v1.terminal.json",
+      "bytes": 1870,
+      "sha256": "78eab50d30271e0e468ac85d424bebe7124808949edf1db54a03491e4cec0dde"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-package-clean.receipt.json",
+      "bytes": 2832,
+      "sha256": "13eadf05c0c2874cacf7c9bef90886d503671a11cdafaa74b2ba98f7f468f5c9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-clean.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-clean.stderr",
+      "bytes": 168,
+      "sha256": "471aa5f14611669395b1b8e89cef5da66db30bf49cbffc0aecacfe988e4d2528"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-clean.resources.csv",
+      "bytes": 286,
+      "sha256": "f87afc545af3d754b246b86c50d08c96241d670f122390ebc0e61193bde82064"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-libtest-compile.receipt.json",
+      "bytes": 3059,
+      "sha256": "47afe2e8e1f15622b76eef158abcd531fd21923df991d59fe4c1f693fb2d40dd"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-libtest-build.stdout",
+      "bytes": 501381,
+      "sha256": "06c1252af04ce1f6c19f4748b476a69d39335f3fe43fc1ed8e3fbae02734ec00"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-libtest-build.stderr",
+      "bytes": 186,
+      "sha256": "fe0f62615c3da87a8e9e91d644827fa886d785f797447b7dd463324c85f1d9d0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-libtest-build.resources.csv",
+      "bytes": 3272,
+      "sha256": "f12edebbea8dbabd458b59838c7e4a18da8f41eb0aa69c488398ed54aee224af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-export.receipt.json",
+      "bytes": 2891,
+      "sha256": "5109cbf36c71ec33ea0ef0e961e12343c633356b68ac2a3da4634aef998599a6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-body.stdout",
+      "bytes": 383,
+      "sha256": "b457eea5e969359c15b981191ff1d0c9d754ab0249baf89171e930c6f214c52e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-body.stderr",
+      "bytes": 361,
+      "sha256": "c5b67aac3f546e739d678694d22bb9d89427d0716a20847f959eb69f5c834d32"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/evidence/ab0-rust-drained-body.resources.csv",
+      "bytes": 162,
+      "sha256": "336b974a9b3ae3b787fac5bd71eaf6a94c2de2cb376e159ddbc9f2077b810895"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureab0/rust-crate/src/historical_native_execution_tests.rs",
+      "bytes": 34059,
+      "sha256": "badfb6f7aa688dd6eed779f417d40b06b7b1aee1760a996bab0eed321d3b339d"
+    }
+  ],
+  "go_census": {
+    "normal": {
+      "run": 21,
+      "pass": 20,
+      "fail": 1,
+      "skip": 0
+    },
+    "race": {
+      "run": 21,
+      "pass": 20,
+      "fail": 1,
+      "skip": 0
+    }
+  },
+  "vet": "PASS",
+  "drained_export": {
+    "compile": "PASS",
+    "body_exit": 101,
+    "positive_root_census": "0pass1fail0ignored",
+    "observed": "Child post-state reproduction refused; no completed five-file exported job corpus.",
+    "source_cause": "Drained parent has zero pending server emission; continuous mode gates the entire body on that value being nonzero. The body includes its own initial pending accrual, so it cannot reach the declared earning post-state.",
+    "fix_owner": "Astra Integration: separate original epoch-absence first-block gate for drained-continuous fixture, preserve standalone source family and independent expected roots."
+  },
+  "remaining": [
+    "Narrow b1 policy assertion successor qualification.",
+    "Corrected drained exporter, causal control and19 dependent Go roots per mode.",
+    "Long129 recovery and final composed physical/entitlement/populated source."
+  ],
+  "limits": [
+    "No production chain/runtime or post-state verifier defect demonstrated by synthetic fixture mismatch.",
+    "Do not replace independent expected state with returned replay root.",
+    "These scoped Go passes do not qualify later source joins or production activation."
+  ]
+}

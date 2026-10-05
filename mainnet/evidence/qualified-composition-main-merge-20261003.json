@@ -1,0 +1,36 @@
+{
+  "schema": "root-qualified-mainnet-composition-merge-v1",
+  "merge_commit": "e34c683eee7729f598fb4c33a3bc305ba4f1e275",
+  "parents": [
+    "a36db5b41d331d6efbc15efb9eef416465d9c661",
+    "556e14767fddbaf4db469fb5f1019bcbdd2bc9ce"
+  ],
+  "qualified_source": "556e14767fddbaf4db469fb5f1019bcbdd2bc9ce",
+  "qualified_source_tree": "32c3727d17f9252ee4073f3a853b9e41982f3424",
+  "qualification": "publication556-composed-qualification-20261003.json",
+  "only_delta_from_qualified_source": [
+    "mainnet/MAINNET.md",
+    "mainnet/PRELAUNCH-FIXES.md",
+    "mainnet/evidence/cache-reclaim-25-20261003.json",
+    "mainnet/evidence/cache-reclaim-26-20261003.json",
+    "mainnet/evidence/cache-reclaim-27-20261003.json",
+    "mainnet/evidence/current-readiness-checkpoint-20261003.json",
+    "mainnet/evidence/current-readiness-checkpoint-20261003.md",
+    "mainnet/evidence/current-release-556-source-compile-review-20261003.json",
+    "mainnet/evidence/native-archive-source-review-20261003.json",
+    "mainnet/evidence/original-wasm-observer-selected-qualification-20261003.json",
+    "mainnet/evidence/publication556-composed-qualification-20261003.json",
+    "mainnet/evidence/ready-866-source-join-review-20261003.json",
+    "mainnet/evidence/ready-publication-source-successor-review-20261003.json",
+    "mainnet/evidence/replay-caller454-original-failure-review-20261003.json",
+    "mainnet/evidence/subprocess-fast-copy-bypass-source-review-20261003.json"
+  ],
+  "all_non_plan_non_evidence_tracked_inputs_exact": true,
+  "newer_plans_exact_premerge_docs": true,
+  "scope": "PreservesqualifiedGo/modules/config/contracts/scripts/testfixtures pluslatestrootdocs;evidence-only successorneedsno16-root rerun",
+  "limits": [
+    "Noactualdeployment/signing/runtimeapproval/liveacceptance",
+    "Nativearchive,replayandnativefeeobserver notyetmerged",
+    "Releaseimage reproducibilityandhostadoptionremain"
+  ]
+}

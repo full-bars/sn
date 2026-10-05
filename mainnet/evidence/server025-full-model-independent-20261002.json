@@ -1,0 +1,84 @@
+{
+  "created_utc": "2026-10-02T07:46:40.597077+00:00",
+  "failure": {
+    "classification": "current test fixture does not supply required immutable provider usage; not a general source pass",
+    "error": "new contract settlement requires immutable provider usage (SQLSTATE P0001)",
+    "location": "model/contract_stats_model_test.go:34",
+    "root": "TestOpenContractStatsKeepsExactSmallPopulation"
+  },
+  "files_sha256": {
+    "focused-causal-receipt.json": "484ada95842abdc5eed1b24a57bc0460d541c16c90d61884648ccb3055b9c31d",
+    "full-model-census.json": "6241af8cebdf57712b8f03efea1ede5e0cfa778716b234782fb0ba38c3330969",
+    "full-model-eligible-list.log": "76e82d7fcee33226fbed55d6949fd4dc9e081cdc40f0bbb4f3b0a8c897df96d7",
+    "full-model-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "full-model-normal.jsonl": "da356730a239ab28477583d1ea71ed1fadb74742c69f280921bc5d42d66c891f",
+    "full-network-cleanup.log": "f7ff2304ef22c0202ff99ed2113b2c2ccebb79b1f635d8328bc227bdf6c31973",
+    "full-network.id": "f7ff2304ef22c0202ff99ed2113b2c2ccebb79b1f635d8328bc227bdf6c31973",
+    "full-runner.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "full-runner.log": "e848bbaf3134c8e49a3f6cd9cb3fe96bf7e57f986fb9a902c76a50198cb9f770",
+    "full-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "full-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "full-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "full-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "release-gate-services-private-network.sh": "bd4dfc1b3c3668f3fb7bab44a1768ba32dc368bbfc5605b54a336a407d571f1a",
+    "run_full.py": "59f947d7f3660ec17cfaea092082e8d5b8e19f51d09ba62103f8c77a4ce92f87",
+    "run_private_stage.sh": "1561b50e8e0965c463f93b358e8239b0792241202ef06777615c080236963e61"
+  },
+  "limits": [
+    "Full model normal only; focused affected roots separately passed normal/race",
+    "Private synthetic PG18/Redis8 only, no production DB/network writes",
+    "No patched-source rerun or live deployment claim"
+  ],
+  "run": {
+    "continuation_required": false,
+    "data_floor_abort": false,
+    "eligible_roots": 1345,
+    "failed_roots": [
+      "TestOpenContractStatsKeepsExactSmallPopulation"
+    ],
+    "finished_utc": "2026-10-02T07:44:39.536402+00:00",
+    "fixture_cleanup_exit": 0,
+    "missing_terminal": [],
+    "owned_network_removed": true,
+    "package_elapsed_seconds": 7192.793,
+    "package_exit": 1,
+    "package_terminal": "fail",
+    "passed_roots": 1334,
+    "skipped_roots": [
+      "TestAddReferralBonusesGrantsBothSides",
+      "TestClientScoreReaderSourceCosts",
+      "TestGeoLite2CitiesAsLegacyRowsResolveToThemselves",
+      "TestGeolocationSourceHostsMatchProberSourcesWhenCheckedOutAlongside",
+      "TestNetworkReferral",
+      "TestNetworkReferralCode",
+      "TestOnboardingRegistryFile",
+      "TestProConfig",
+      "TestReferralBonusCount",
+      "TestSubscriberGuardQueryPlan"
+    ],
+    "started_roots": 1345,
+    "started_utc": "2026-10-02T05:44:36.979724+00:00"
+  },
+  "schema": "sol-server025-full-model-independent-v1",
+  "skip_reasons": {
+    "TestAddReferralBonusesGrantsBothSides": "optional pro.yml absent",
+    "TestClientScoreReaderSourceCosts": "optional local source-load benchmark",
+    "TestGeoLite2CitiesAsLegacyRowsResolveToThemselves": "optional PLACES_YML/GeoLite place list absent",
+    "TestGeolocationSourceHostsMatchProberSourcesWhenCheckedOutAlongside": "optional operator-proxy sibling/URNETWORK_OPERATOR_PROXY absent",
+    "TestNetworkReferral": "optional pro.yml absent",
+    "TestNetworkReferralCode": "optional pro.yml absent",
+    "TestOnboardingRegistryFile": "optional separate config/main/onboarding.yml absent",
+    "TestProConfig": "optional pro.yml absent",
+    "TestReferralBonusCount": "optional pro.yml absent",
+    "TestSubscriberGuardQueryPlan": "optional disposable benchmark ARIN_SUBSCRIBER_BENCHMARK unset"
+  },
+  "source": {
+    "clean_physical_no_alternates": true,
+    "focused_causal_receipt_sha256": "484ada95842abdc5eed1b24a57bc0460d541c16c90d61884648ccb3055b9c31d",
+    "server_commit": "025802a50e2dc56dc56c3cb749db7375aa9f72be",
+    "server_tree": "adf05777aca3ad4fb97c4befd2163a74064d635b",
+    "sn_commit": "6cfc4773038fae8b1de07807eeeb4a97c32d07d3",
+    "sn_tree": "89ba29e90b731e5e344fbef539d3be9497fa0ba4"
+  },
+  "verdict": "NO_GO_FULL_MODEL_ONE_FIXTURE_FAILURE"
+}

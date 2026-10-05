@@ -1,0 +1,16 @@
+{
+  "schema": "mainnet-server-stats-original-failure-v1",
+  "status": "ORIGINAL_FAILURE_RETAINED_CORRECTION_UNQUALIFIED",
+  "root": "TestStatsProviderPayoutsPreserveSharedNetworkSettlement",
+  "original_excerpt": "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/evidence/server5f-TestStatsProviderPayoutsPreserveSharedNetworkSettlement-original-failure.jsonl",
+  "bytes": 38279,
+  "records": 102,
+  "sha256": "665d22330ef400eec162f84b4e545a12dc7809cfd38452a55ad210c886be40cc",
+  "observed_failure": "settled balance remaining/consumed = 121/121, want 0/121",
+  "correction_already_in_scope": true,
+  "correction_commit": "4754cca86f600c86927fba713c5f32ed9a86043a",
+  "proposal_path": "/mnt/data/sn-testnet/sol-model4754-affected-plan-20261003/proposal-v3.json",
+  "proposal_sha256": "19acce617a9ffda210e22fd8003f78dac6ed08bffdf5909fe945f672d32f6778",
+  "new_failure_class": false,
+  "qualification_pending": true
+}

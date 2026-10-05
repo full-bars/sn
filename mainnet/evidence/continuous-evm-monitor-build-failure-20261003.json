@@ -1,0 +1,37 @@
+{
+  "artifact_sha256": {
+    "module-graph.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "module-graph.jsonl": "8077093f80bcfd1d76383963d3629efa76f61ed16122d45e0e9af8e7768bf050",
+    "module-graph.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "new17-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "new17-normal.jsonl": "fd7734091476ef778241b7561c710236bbf94be9db5a3a1eeb92179ba31c24ce",
+    "new17-normal.phase": "e201abfaed3de1ddfd76ac3511181ae4a5cb0b172f9406b07561c2167e586ee3",
+    "new17-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "run-new17.sh": "0d7d869278015a0733b4eae1f56ab11856696c102eec04d4af8c6e0a17bb3537",
+    "selector-new17.txt": "d07ebf37e342f70a444b7cbdf34c2ab0de0c01134f2032e82c338bae8db1293f",
+    "sn.mod": "30fce6054870f7a343a79a43da4a503c5b3de8384987cb2ba7a158bdac815269",
+    "sn.sum": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5",
+    "source-readback.json": "7027c51db1af5e51ca25ecee58a0ce5b999d8c4c203ac5db908c647e4e138bff"
+  },
+  "build_diagnostic": "mainnet/monitor_economic_evm_test.go:173:12: peer.Current undefined (type monitorServiceEvent has no field or method Current)",
+  "classification": "BUILD_FAILURE_NO_TEST_EXECUTION",
+  "executed_roots": 0,
+  "intake_sha256": "01f99a1535ec0136ce06d2c49192166c10fcccbd06700f23a6f26d09d9cb5890",
+  "limits": [
+    "This is a source/test compile failure, not a behavioral result.",
+    "A corrected source requires a separate pin and gate; 0fb source and this receipt stay immutable."
+  ],
+  "physical_git_blobs_verified": 20222,
+  "root_verification": {
+    "artifact_bindings_rehashed": 12,
+    "compiler_diagnostic_verified": true,
+    "exit_marker_verified": true,
+    "raw_executed_test_roots": 0,
+    "receipt_path": "/mnt/data/sn-testnet/sol-economic-evm-monitor-0fb-independent-20261003/evidence/evm-0fb-build-failure-receipt.json",
+    "receipt_sha256": "ff691be9985ecee51bab1aa9fa93f4f24e0c14efb38c3f3e3212a08295f40496"
+  },
+  "schema": "sol-economic-evm-0fb-build-failure-v1",
+  "selected_roots": 17,
+  "source_commit": "0fb5db88f8c194dccae0b87e08900d4ab13f6f0a",
+  "source_tree": "bb0a0dce2bd5f21ed9788ed5b7c3c388d2256670"
+}

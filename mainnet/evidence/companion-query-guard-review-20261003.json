@@ -1,0 +1,24 @@
+{
+  "schema": "root-companion-query-guard-review-v1",
+  "scope": "Read-only exact-source diagnosis; no newly executed test, SQL-plan acceptance or full-model qualification",
+  "source_commit": "3f32d7301c9e381eac4de368c62357c14dfc36a7",
+  "failure": "TestOpenContractRuntimeQueriesUseStructuralPredicate checks only exported wrapper AST and finds zero predicates",
+  "diagnosis": "Exported entry delegates to private shared body, where both required SQL predicate families remain; source guard needs public-to-private linkage and actual-query protection, not relaxed expected counts",
+  "private_body_textual_counts": {
+    "dispute = false": 4,
+    "outcome is null": 4
+  },
+  "remaining": "Astra test correction and adjacent source-guard review; original full-model failure retained; current actual query-plan and final model results remain separately required",
+  "bindings": {
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-published/server/model/subscription_model.go": {
+      "bytes": 206130,
+      "sha256": "0d1d971d0fcea96e5270ade389064b54ea9db8a90c0c3c62a3481fb7fa47eea8",
+      "git_blob": "b1516ced7e91d38e858f6f5a22e600fb265cb986"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-published/server/model/open_contract_plan_test.go": {
+      "bytes": 14905,
+      "sha256": "23359a437bea745da1cd70b036d27e33adf1481d90c6e9529ccb4fbdc7824eab",
+      "git_blob": "43018f4d10619515036455a004a6311dbae492e4"
+    }
+  }
+}

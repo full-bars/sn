@@ -1,0 +1,147 @@
+{
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-2689-intake.json": {
+      "bytes": 13180,
+      "sha256": "08617a7f85a1d3aeaca31639d60ae14043a62715add8f4ff171f4571106e3744"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-fcf-intake.json": {
+      "bytes": 10633,
+      "sha256": "2adcc1cdb3e6c4a87b0af1698a6abf60ccb576e4dcac2216b9489b93b80f9bd6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/local-fixture-join-intake.json": {
+      "bytes": 6090,
+      "sha256": "d6147435e5fc6a4e13c21c7caed4372df3b031051a3f0eec6d6610650a7d8d9c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-local-b35-intake.go": {
+      "bytes": 5939,
+      "sha256": "084a7a0f77784c456f8d42596fed2c4135086c55032a048cf4ad81ed054b4c4f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/sn/go.mod": {
+      "bytes": 11252,
+      "sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/sn/go.sum": {
+      "bytes": 65954,
+      "sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/sn/mainnet/bootstrap_successor_local_rebind_command_test.go": {
+      "bytes": 20445,
+      "sha256": "b233aae81e7ba1e12b817f6198a9730b42824ae0712155b7a32dba361e590544"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/sn/mainnet/evidence/local-restore-input-fixture-20261003.md": {
+      "bytes": 2885,
+      "sha256": "97136f41d231e76e1cd10e563aafa397caacb4933f9d00818e89d5fa66ccbed6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/sn/mainnet/evm_signed_input_fixture_test.go": {
+      "bytes": 1273,
+      "sha256": "72c5dfd5ebaa0088c61d8372b9d65775fcada3563394c855d7ddd085323eaef5"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/sn/mainnet/evm_vault_create_test.go": {
+      "bytes": 37886,
+      "sha256": "991659dff8b7809ae016d9632b35551b5d0d831d254866e574b67387a133a5ea"
+    },
+    "/mnt/data/sn-testnet/sol-local-coverage-e266-independent-20261003/evidence/diagnostic-receipt.json": {
+      "bytes": 2842,
+      "sha256": "8937e0c81ed79778a41d8a91fc2fce1a78ce434052cc1f14e9270051de811e02"
+    }
+  },
+  "causal": {
+    "base": "e266603ed1a5223b16755423be49380818bd597e",
+    "boundary": "Old fixture helper creates a sidecar in an explicitly separate runtime root; the cheap root must reach that assertion. Existing original bdf four public coverage failures and e266 diagnostic are preserved, not rerun or relabeled.",
+    "overlay": [
+      "mainnet/evm_signed_input_fixture_test.go"
+    ],
+    "roots": [
+      "TestEvmActionFixtureKeepsSignedInputOutsideComposedRuntime"
+    ]
+  },
+  "cause": "Actual original union had eight fixture-emitted action-id.signed.bin input files, no missing owner attributes. All thirteen fixed-owner planners succeeded; final coverage correctly refused these unknown inputs. Production emits journal.Signed, not these file names.",
+  "dependencies": {
+    "connect": {
+      "commit": "9fb897f8d880ab813dd61dc02fa187e3d85f13a5",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/connect",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/union-restore/connect",
+      "tree": "a3500ca8e57b70c78951fe91871d6bdc7a93f7c7"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/glog",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/goidenticons",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/proxy",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/server",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/userwireguard",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/warp",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "invariants": [
+    "Every non-test Go source and all module bytes are exact bdf. No unknown-name exemption, signed-byte change, source deletion or new owner kind.",
+    "Composed fixture exports input next to its original config before import. Default single-directory fixture paths stay identical.",
+    "All eight original external inputs must equal their authenticated journal bytes/action lineage before restore and remain unchanged afterward. All four public variants preflight exact complete disjoint owner coverage, then use actual public plan/apply.",
+    "Public resumes receive no EVM signed-input path; they consume retained journal bytes. Native raw SCALE and immutable Safe approval inputs keep their separate existing owner grammars."
+  ],
+  "limits": "This is not behavioral qualification of bdf or its replacement, outer pending-head adoption, latest published modules/gvisor/current Server, a release or live authority. Original bdf three passing controls remain at their historical source scope; this six-root selection does not relabel them.",
+  "schema": "urnetwork-author-source-handoff-v1",
+  "scope": {
+    "expectedPass": 6,
+    "modes": [
+      "normal",
+      "race"
+    ],
+    "package": "./mainnet",
+    "roots": [
+      "TestEvmActionFixtureKeepsSignedInputOutsideComposedRuntime",
+      "TestBootstrapSuccessorLocalRebindPublicResumePreservesOriginalAuthority",
+      "TestBootstrapSuccessorLocalRebindLostAcknowledgementResumesOriginalReceipt",
+      "TestBootstrapSuccessorLocalRebindRetainsReservedOriginalOutcome",
+      "TestBootstrapSuccessorLocalRebindRetainsAcknowledgedOriginalOutcome",
+      "TestEvmCoordinatorCreateRejectsVaultSignatureAndCustodyAlias"
+    ],
+    "vet": true
+  },
+  "source": {
+    "changedPaths": [
+      "mainnet/bootstrap_successor_local_rebind_command_test.go",
+      "mainnet/evidence/local-restore-input-fixture-20261003.md",
+      "mainnet/evm_signed_input_fixture_test.go",
+      "mainnet/evm_vault_create_test.go"
+    ],
+    "commit": "b35ca9c9c18dfca1c80a98a406a2677cfa535bd1",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/sn",
+    "productionAndModuleParent": "bdf63dea4177a7b7fd5d07442039b517bbc261be",
+    "tree": "5340a146497d0865e725e6d0bf078f767d6d65e0"
+  },
+  "status": "TEST_FIXTURE_SOURCE_ONLY_BEHAVIOR_PENDING",
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/local-coverage-fix/go.work"
+}

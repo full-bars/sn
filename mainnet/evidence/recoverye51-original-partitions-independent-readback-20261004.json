@@ -1,0 +1,695 @@
+{
+  "schema": "recovery-e51-original-partition-root-readback-v1",
+  "head": "e51dfea301ed048c530877bfed3b04ee770e0032",
+  "status": "ORIGINAL_BODY_RESULTS_RETAINED_CORRECTED_ABI_REPLAY_PENDING",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-01.receipt.json",
+      "bytes": 12907,
+      "sha256": "db5ef574fffac37b1a5e052c78ec6a21be980de7fb6c95647364935bd85db7bb"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-01.stdout",
+      "bytes": 18401,
+      "sha256": "451327d10ed5e65559d2b75199d72e26bb3530e5ba579112688a81fedd52e744"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-01.resources.csv",
+      "bytes": 15259,
+      "sha256": "e32b414f23db1619856802afe8dd0ffb12c472488662e14627b325f2f6803c57"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/images/e51-go-mainnet-normal-compile.test",
+      "bytes": 81070568,
+      "sha256": "21452e2be015aba121a51a11b6916c16278ff0e4ab8f42689f7ccc2864981751"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-02.receipt.json",
+      "bytes": 12826,
+      "sha256": "c55daa54b288307a163401ded3a28ea748fac84839a9f9e3f5123fbdf37f80f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-02.stdout",
+      "bytes": 1211211,
+      "sha256": "b645ab7cdc03a8857cc21786483ace0164dda5c692c3046473242fb1d1a472d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-02.resources.csv",
+      "bytes": 103422,
+      "sha256": "6e583829df8350f7ae2e8ff8d860c515d140453fac0be44580027f83a65f7513"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-03.receipt.json",
+      "bytes": 7033,
+      "sha256": "2eee76b0037662b84d2427aed650eef46ab4b64ce445140bdbaa01d485c9790c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-03.stdout",
+      "bytes": 5541,
+      "sha256": "919fec38a748d614c414c07d7e13fc9eb52c985b86ce695f4336646505761dbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-03.resources.csv",
+      "bytes": 11582,
+      "sha256": "12f5d8e52b9a427d1ee8a7da4d89013e02aa4dd0b81829add2a4176e8d8e89ac"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-01.receipt.json",
+      "bytes": 12893,
+      "sha256": "6f5f701fba66ed9a058717b71919cdd323be49ffc71775201c3c31407373f563"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-01.stdout",
+      "bytes": 18438,
+      "sha256": "6a227c4f71bb281acb678b38f4fbe0599a5d76d67ddc1e8ec3e6dd304944e84d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-01.resources.csv",
+      "bytes": 84065,
+      "sha256": "e42184863863ea6dd2b1627a3a37e4e4f79c1540701c92e3769f5302bd56a968"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/images/e51-go-mainnet-race-compile.test",
+      "bytes": 109627856,
+      "sha256": "1762187436967c9956cd52e91aed0b18a6c7b80b2b80ad2e4951a98896fd20dc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-02.receipt.json",
+      "bytes": 12812,
+      "sha256": "c7d498b662b383ec794d571f1fcb421aa7cdc091ea6ddd31adfc565e4e763149"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-02.stdout",
+      "bytes": 1201650,
+      "sha256": "1b52504168eae90631077d3f9870a6e88901157beb236727cbf7d2c901e2c0f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-02.resources.csv",
+      "bytes": 154087,
+      "sha256": "d08194c4bedad4d29a0ee3bfa31e18e3c3c30d7a2b42a5e9af15c357b6ca58e7"
+    }
+  ],
+  "modes": {
+    "normal": {
+      "partitions": [
+        {
+          "receipt": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-01.receipt.json",
+          "exit": 0,
+          "status": "PASS",
+          "roots": 20
+        },
+        {
+          "receipt": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-02.receipt.json",
+          "exit": 1,
+          "status": "FAIL_RETAINED",
+          "roots": 20
+        },
+        {
+          "receipt": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-normal-ordinary-03.receipt.json",
+          "exit": 0,
+          "status": "PASS",
+          "roots": 7
+        }
+      ],
+      "roots": 47,
+      "pass": 43,
+      "fail": 4,
+      "skip": 0,
+      "results": {
+        "TestEconomicConservationArchiveAdmissionChecksCompletePrefixOnce": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionCancellationHasNoReusablePrefix": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionLateReplacementCannotPublishIndex": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionPublicLateCustodyLossStopsBeforeSources": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionCompletionCancellationReturnsNoIndex": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionEmptyCancellationReturnsNoIndex": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionClosedIndexCannotSeedNewFacts": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveIndexNilOperandsRefuseBeforeMutation": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveIndexMalformedCatalogRefusesBeforeMutation": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveIndexLostCustodyRefusesBeforeMutation": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchivePublicAdmitsOnceThenUsesRetainedIndex": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveCanceledReadNeverInventsIdentityDifference": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveChangedCustodyStopsBeforeNextSourceRead": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeRenewalPublicPreservesOriginalPolicyAndArchive": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeRenewalHeldArchiveCustodyBeforeDispatch": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeHandoffRefusesChangedOriginalCursor": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeHandoffKeepsLatestIndependentPublication": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicEntitlementPublicArchiveKeepsOriginalCensusAndColdClaims": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicEntitlementPublicArchiveCannotDropOriginalReceipt": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicEntitlementPublicHeldHttpKeepsNativeVaultAndClaimProgress": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicCancelJoinsHeldFeeReplayAfterHealthyPublication": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNativeCapturePendingKeepsEntitlementProgress": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNativeCaptureCancellationJoinsAfterSiblingPublication": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNativeContradictionHoldsOnlyOriginalProducer": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNativeCompletionLostAckReusesOriginalJob": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicTransientNativeReadRecoversOriginalBoundary": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicFollowJoinsOwnedReadsAndOutput": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestoreGrammarKeepsPartialEvidenceAndRejectsForeignMembers": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestoreOriginalSignedApprovalAndCursorStayIndependent": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestoreCopiedReadKeepsIoUnknownAndExactMismatchDistinct": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestoreHeightBoundaryNeverWrapsPendingInterval": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestMonitorClaimFullHistoryCountsAdmissionAndHotSaveWork": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestMonitorClaimFullHistoryCancellationDiscardsPartialAdmission": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicCohortResumesOriginalUnacknowledgedJob": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicRefusesOmittedApprovalOrArtifactRoot": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicIncompleteFirstCaptureRemainsUnaccounted": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicRenewalRetainsOriginalExternalApproval": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicSelfSealedHistoryCannotReplaceCheckpoint": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicSelfSealedNodeStillNeedsContentAddress": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicPendingJobCannotReplaceCapturedInput": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "complete47": true
+    },
+    "race": {
+      "partitions": [
+        {
+          "receipt": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-01.receipt.json",
+          "exit": 0,
+          "status": "PASS",
+          "roots": 20
+        },
+        {
+          "receipt": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixturee51/evidence/e51-mainnet-ordinary-race-ordinary-02.receipt.json",
+          "exit": 1,
+          "status": "FAIL_RETAINED",
+          "roots": 20
+        }
+      ],
+      "roots": 40,
+      "pass": 36,
+      "fail": 4,
+      "skip": 0,
+      "results": {
+        "TestEconomicConservationArchiveAdmissionChecksCompletePrefixOnce": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionCancellationHasNoReusablePrefix": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionLateReplacementCannotPublishIndex": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionPublicLateCustodyLossStopsBeforeSources": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionCompletionCancellationReturnsNoIndex": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionEmptyCancellationReturnsNoIndex": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveAdmissionClosedIndexCannotSeedNewFacts": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveIndexNilOperandsRefuseBeforeMutation": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveIndexMalformedCatalogRefusesBeforeMutation": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveIndexLostCustodyRefusesBeforeMutation": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchivePublicRetainsUnmatchedSourceCarryAndReceipt": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchivePublicAdmitsOnceThenUsesRetainedIndex": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveCanceledReadNeverInventsIdentityDifference": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveChangedCustodyStopsBeforeNextSourceRead": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeRenewalPublicPreservesOriginalPolicyAndArchive": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeRenewalHeldArchiveCustodyBeforeDispatch": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeRenewalPublicRestoredPendingJobAndRestart": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeHandoffRefusesChangedOriginalCursor": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationNativeHandoffKeepsLatestIndependentPublication": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicEntitlementPublicArchiveKeepsOriginalCensusAndColdClaims": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicEntitlementPublicArchiveCannotDropOriginalReceipt": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicEntitlementPublicHeldHttpKeepsNativeVaultAndClaimProgress": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicCancelJoinsHeldFeeReplayAfterHealthyPublication": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNativeCapturePendingKeepsEntitlementProgress": {
+          "run": 1,
+          "pass": 0,
+          "fail": 1,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNativeCaptureCancellationJoinsAfterSiblingPublication": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNativeContradictionHoldsOnlyOriginalProducer": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicNativeCompletionLostAckReusesOriginalJob": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicTransientNativeReadRecoversOriginalBoundary": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicOriginalParentStockNeverBecomesIncome": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestEconomicConservationPublicFollowJoinsOwnedReadsAndOutput": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicChangedPendingOrNodeBytesRefuseBeforeEffects": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestorePublicCancellationKeepsOriginalPendingCustody": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestoreGrammarKeepsPartialEvidenceAndRejectsForeignMembers": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestoreOriginalSignedApprovalAndCursorStayIndependent": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestoreCopiedReadKeepsIoUnknownAndExactMismatchDistinct": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestNativeProducerRestoreHeightBoundaryNeverWrapsPendingInterval": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestMonitorClaimFullHistoryCountsAdmissionAndHotSaveWork": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "TestMonitorClaimFullHistoryCancellationDiscardsPartialAdmission": {
+          "run": 1,
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "complete47": false
+    }
+  },
+  "conclusion": "Original normal47 complete:43PASS/4FAIL/no skip. Race counts represent only sealed partitions included. Failed fixture source root cause retained separately; corrected nine-root replay is running.",
+  "limits": "Original failure census is not corrected qualification. No full recovery or funding acceptance, long129 completion or production result claimed."
+}

@@ -1,0 +1,70 @@
+{
+  "artifact_sha256": {
+    "old-abb2-control-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "old-abb2-control-normal.jsonl": "648bc229df123b39319a2fd0a4a351971382aad6a03e5a817f220eadcf7c4fda",
+    "old-abb2-control-normal.phase": "1c70bbdc98c34373669399d98a2d8ce53128e0e505a89a996646bd0c63fbe355",
+    "old-abb2-control-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "old-abb2-control-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "old-abb2-control-race.jsonl": "20f9d42b8e67eb10b7cc0566341eb21abe4db8b5261415cddf4623bc1c6ada8a",
+    "old-abb2-control-race.phase": "80b3f68a284f5a013d12ae6305c1605c9fac43795f837cd5ef81ba2abd64418b",
+    "old-abb2-control-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "old-abb2-retained-control-overlay.json": "af53b3eb1fee8445d1aa5422b303a6937d9cb24944a9cc614b585de8ff383913",
+    "retained-5a0-product9-receipt.json": "76a11f9b43e7e136cddb30a6ba0ffca332333acc006addd0bf93922b0056c3e6",
+    "run-old-abb2-control.sh": "3f247595b4e779aaa6b27d5966c8d973559f8ae29f877fe3c912c41fad1fa957",
+    "selector-old-abb2-control.txt": "0da18a9d89735d9414a3642c3d935ea6ce06bcd09b7ba7a312136597cc8fa77b"
+  },
+  "classification": "EXPECTED_OLD_SOURCE_BEHAVIORAL_FAILURE",
+  "limits": [
+    "The overlay adds a new test file absent on exact old abb2 production; all four failures reached retained-history assertions in both modes.",
+    "Failures are expected negative controls, not positive qualification or a full old-source test census."
+  ],
+  "old_source_commit": "abb2e808fa5c706fdc61012832b7c4f0cba94aae",
+  "overlay_source_absent": "/mnt/data/sn-testnet/sol-local-pending-abb2-independent-20261003/source/sn/mainnet/evm_retained_read_test.go",
+  "overlay_test_file": "/mnt/data/sn-testnet/sol-retained-evm-read-5a0-independent-20261003/source/sn/mainnet/evm_retained_read_test.go",
+  "overlay_test_file_sha256": "9d9025f253e902e716e99082c454e63537566edc6dbdf69d8cb13baf25141517",
+  "positive_receipt_sha256": "76a11f9b43e7e136cddb30a6ba0ffca332333acc006addd0bf93922b0056c3e6",
+  "positive_source_commit": "5a0a8f666faa0a55b05efceac20173a29144af4e",
+  "root_verification": {
+    "artifact_bindings_rehashed": 12,
+    "per_root_assertions_verified": true,
+    "positive_receipt_matches_verified_scope": true,
+    "raw_expected_failed_roots": {
+      "normal": 4,
+      "race": 4
+    },
+    "receipt_path": "/mnt/data/sn-testnet/sol-retained-evm-read-5a0-independent-20261003/evidence/retained-5a0-old-abb2-causal-receipt.json",
+    "receipt_sha256": "248e51a3d3e87e2f53847b862c0ba83885f27d8daf865aee2ac1965c2f4c15bd",
+    "single_absent_path_test_overlay_verified": true
+  },
+  "schema": "sol-retained-evm-read-5a0-old-abb2-control-v1",
+  "selection": {
+    "normal": {
+      "assertion_matched": {
+        "TestBootstrapSuccessorCanonicalHistoricalReadUnavailable": "successor canonical original receipt or historical postcondition differs",
+        "TestEvmRetainedReadCancellationKeepsOtherOwnerUsable": "retained canonical EVM receipt disappeared",
+        "TestEvmRetainedReadExhaustionPreservesOriginalCustody": "retained canonical EVM receipt disappeared",
+        "TestEvmRetainedReadRecoversAfterLogicalMinute": "retained canonical EVM receipt disappeared"
+      },
+      "failed_roots": [
+        "TestBootstrapSuccessorCanonicalHistoricalReadUnavailable",
+        "TestEvmRetainedReadCancellationKeepsOtherOwnerUsable",
+        "TestEvmRetainedReadExhaustionPreservesOriginalCustody",
+        "TestEvmRetainedReadRecoversAfterLogicalMinute"
+      ]
+    },
+    "race": {
+      "assertion_matched": {
+        "TestBootstrapSuccessorCanonicalHistoricalReadUnavailable": "successor canonical original receipt or historical postcondition differs",
+        "TestEvmRetainedReadCancellationKeepsOtherOwnerUsable": "retained canonical EVM receipt disappeared",
+        "TestEvmRetainedReadExhaustionPreservesOriginalCustody": "retained canonical EVM receipt disappeared",
+        "TestEvmRetainedReadRecoversAfterLogicalMinute": "retained canonical EVM receipt disappeared"
+      },
+      "failed_roots": [
+        "TestBootstrapSuccessorCanonicalHistoricalReadUnavailable",
+        "TestEvmRetainedReadCancellationKeepsOtherOwnerUsable",
+        "TestEvmRetainedReadExhaustionPreservesOriginalCustody",
+        "TestEvmRetainedReadRecoversAfterLogicalMinute"
+      ]
+    }
+  }
+}

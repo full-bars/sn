@@ -1,0 +1,195 @@
+{
+  "schema": "native-complete-restorea499-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_EFFECTIVE_DEPENDENCY_JOIN_AND_EXECUTION_PENDING",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn",
+    "head": "a4990a2f1d76640eb8ed82f41e59946c08aa0a40",
+    "tree": "9740f8ab31c598de3096368a7be5a385c4f7311d",
+    "base": "a8764f9dc83ea856f5f69af636a1b1d8a9a43cb2",
+    "clean": true,
+    "sparse": true
+  },
+  "required_core": {
+    "head": "c6186b79caaaae7f7a35beee42e815c0c0ca7170",
+    "intake_sha256": "4d4fe74365642358e5db195cdb3366b4709c67a6d19e3bad3be8cf7b43a98592"
+  },
+  "review": [
+    "Read new native job and signed-approval fixed owners, full completion/finality/job/input/content-address/partial-byte history validator, public combined restore integration and all13new deterministic tests. Exact original checkpoint and independently signed approval lineage remain authority; restore never invents amounts or advances acknowledged cursor.",
+    "Actual fixture runs distinct capture/replay programs, retains two acknowledged jobs and a third lost acknowledgement, restores both namespaces and resumes the original job without recapture. Source-only; no behavioral success yet. Zero-completion, external signed approval, cancellation, pending bytes, forged self-sealed history/node/job, and u32 terminal boundaries have explicit controls.",
+    "All thirteen changed files and24root declarations match frozen Git. Existing source/module scope remains separate from mandatory qualified Corec618 dependency join. Shared exact8d3 fixture protection and explicit private new roots are retained.",
+    "Original unused-slices causal replacement retained as invalid construction evidence. Additive control manifestv2 preserves original typed expression underfalse&&; allsix exact one-production-file omission diffs reviewed. Actual fresh compile and named assertion must prove causality.",
+    "Full existing-checkpoint signed native renewal adoption, Yuma sizing/lifecycle, actual vault capture and complete economic census remain required successors; no whole mainnet closure from this source review."
+  ],
+  "qualification": {
+    "roots_per_mode": 24,
+    "new_roots": 13,
+    "control_groups_per_mode": 6,
+    "vet": [
+      "./mainnet"
+    ],
+    "long_root": "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues"
+  },
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/intake-v2.json",
+      "bytes": 7430,
+      "sha256": "95a00477ad058b2cae5aaf153bcf69857adbfee4f3c40c427a18c2d428643541"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/intake.json",
+      "bytes": 7005,
+      "sha256": "d0a781b2ad14f4343a557585725e06e86a5aedfa408744bf0fb6b3925da04354"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_conservation_fixture_protection_test.go",
+      "bytes": 1931,
+      "sha256": "644bafa7b394613c9b75ade45161cebb935376b880d7c005bfd23a1142057e0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_conservation_fixture_test.go",
+      "bytes": 12948,
+      "sha256": "617cb5aaf0a1a7f2797306e29739157369e8facd685cd657babe9bb4a03c3e9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_conservation_restore_linux.go",
+      "bytes": 9545,
+      "sha256": "46a8b9cad682de2c3b5b24dcb8a65fcbc19fccd4285a189cba5ae303a3e43289"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_conservation_restore_test.go",
+      "bytes": 22480,
+      "sha256": "bd5b6ebca05f297bc3c979a5c13fb29ad67912b600f82f0f7a926db425923330"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_native_producer_authority.go",
+      "bytes": 15788,
+      "sha256": "7f80f1f44bf3149e2d648a16b8708e7378cabb630644663aac53f1cb678e91af"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_native_producer_renewal.go",
+      "bytes": 23358,
+      "sha256": "d7909b03c9bb4e33430611734ebfce9f267f8da214a27e1f491a89b2b01622da"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_native_producer_restore_linux.go",
+      "bytes": 17748,
+      "sha256": "d67fcdc995dfc219f778bf32575d052f2eb25b1584327840b1e129568650b88b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_native_producer_restore_review_linux.go",
+      "bytes": 7367,
+      "sha256": "1b41f288e299fffe5fa6fb01a3e60b60708b5c9eb8f304b4b922370a4220e460"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_native_producer_restore_test.go",
+      "bytes": 30127,
+      "sha256": "f1881bfb7c6c88ed1e2aec83e9129091a34bf0a2f6d3ecfb0ad6488cf76f6889"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/storage_prepare_native_approval_linux.go",
+      "bytes": 5358,
+      "sha256": "fe2d317370e48225fb27ce293d4a392e6059dd507c80f9ad259ebd33c927710c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/storage_prepare_native_producer_linux.go",
+      "bytes": 16026,
+      "sha256": "beee18fac7dff36e4136f5a66a13779a05aca3e6ecfd4b97c81ef651c0fdd376"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/storage_prepare_restore_linux.go",
+      "bytes": 4167,
+      "sha256": "2c7e60ae88d10968a4dd1ab950590d644a0dcfd8f6677a7a34063f314c12cb6e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/storage_prepare_snapshot_restore_test.go",
+      "bytes": 19639,
+      "sha256": "141e1452a971776d5264e876b5f004e27029e8a9e5f96efd0bebaca5b9fba5dc"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "11069655677edbd4a3386c3bb351986b060cce31080aecf024d7af563026ee31"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/go.sum",
+      "bytes": 67111,
+      "sha256": "5500abdee6227bc5b2ef46a5e8856526b4e20f871755bdecd7a721ec5215d981"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/qualification-recipe.json",
+      "bytes": 14303,
+      "sha256": "1e52481dab22758c3567cae1138b96ff64a7e7a3e1daf95bad93cef591a2c0f4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/operative-controls-v2.json",
+      "bytes": 7897,
+      "sha256": "04dbfd71665d73241bd9bd4dc4a0e263ec6962ddbbe64bc07febc5c3303a2c3d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/source-audit.json",
+      "bytes": 2716,
+      "sha256": "3b6150d60d47c83ebfd1587114c969c0982e6b226c7babe783672bb88a617e2d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/checkpoint-binding-omitted.go",
+      "bytes": 17732,
+      "sha256": "b6fe3334fb4505bce8c8a5b15e5270329ba8dc90271b4941039741e43bbb75d4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_native_producer_restore_linux.go",
+      "bytes": 17748,
+      "sha256": "d67fcdc995dfc219f778bf32575d052f2eb25b1584327840b1e129568650b88b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/node-address-omitted.go",
+      "bytes": 17679,
+      "sha256": "8a9d0708ad3c54da7f82649a46388cc4b3f404aa59deb53a67feda95f6461d5a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_native_producer_restore_linux.go",
+      "bytes": 17748,
+      "sha256": "d67fcdc995dfc219f778bf32575d052f2eb25b1584327840b1e129568650b88b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/capture-input-binding-omitted-v2.go",
+      "bytes": 17759,
+      "sha256": "b03dd4ae8193cef46df9022b88659bd80a43815eb38c2987a59ade3c0e8846e4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_native_producer_restore_linux.go",
+      "bytes": 17748,
+      "sha256": "d67fcdc995dfc219f778bf32575d052f2eb25b1584327840b1e129568650b88b"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/original-summary-replay-omitted.go",
+      "bytes": 27395,
+      "sha256": "2cef270097dfe4a4ee93ed66e91a6a82a02f2cd55122c8cd0856678195b1bb00"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_conservation_archive.go",
+      "bytes": 27386,
+      "sha256": "b5e9a7e8abbfb6e2cc3ee5cafe62bc9c09b7a4fc41e7c2b62fe2385af26b00c4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/copied-returned-bytes-pin-omitted.go",
+      "bytes": 9556,
+      "sha256": "baab437bfee54ee222ed06acdc86b7c7a92954ef9bc3ed46c7b7c03247839c44"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_conservation_restore_linux.go",
+      "bytes": 9545,
+      "sha256": "46a8b9cad682de2c3b5b24dcb8a65fcbc19fccd4285a189cba5ae303a3e43289"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/controls/read-cause-invents-difference.go",
+      "bytes": 9636,
+      "sha256": "a760221b9de4e9f4933ac2f6a81e9562b0bdc570e71470070d3c7f14f97e640c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/sn/mainnet/economic_conservation_restore_linux.go",
+      "bytes": 9545,
+      "sha256": "46a8b9cad682de2c3b5b24dcb8a65fcbc19fccd4285a189cba5ae303a3e43289"
+    }
+  ],
+  "requirement_closure": false
+}

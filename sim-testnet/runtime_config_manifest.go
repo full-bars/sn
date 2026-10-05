@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -82,6 +80,9 @@ func expectedRuntimeConfigFiles(cfg *ResolvedConfig, stateDir string) (map[strin
 		return nil, errors.New("runtime config manifest context is incomplete")
 	}
 	paths := map[string]os.FileMode{}
+	if err := addPolicyRolloverRuntimeInputsV2(cfg, stateDir, paths); err != nil {
+		return nil, err
+	}
 	if cfg.Config.ProvisionValidatorEvidenceV2 {
 		for _, name := range []string{"prepared.json", "completed.json"} {
 			if err := addRuntimeConfigPath(paths, stateDir, filepath.Join(stateDir, "evidence-v2-setup", name), 0o600); err != nil {
@@ -241,12 +242,11 @@ func runtimeConfigFileDigest(path string) (string, os.FileMode, error) {
 	if !info.Mode().IsRegular() {
 		return "", 0, fmt.Errorf("runtime config %s is not a regular file", path)
 	}
-	wire, err := os.ReadFile(path)
+	digest, err := fileSHA256(path)
 	if err != nil {
 		return "", 0, err
 	}
-	digest := sha256.Sum256(wire)
-	return "sha256:" + hex.EncodeToString(digest[:]), info.Mode().Perm(), nil
+	return digest, info.Mode().Perm(), nil
 }
 
 // Hash the canonical manifest with its self-authenticating field cleared.
@@ -257,6 +257,12 @@ func runtimeConfigManifestHash(manifest RuntimeConfigManifest) (string, error) {
 
 // Observe the complete expected static input set after atomic rendering.
 func buildRuntimeConfigManifest(cfg *ResolvedConfig, stateDir string) (*RuntimeConfigManifest, error) {
+	return buildRuntimeConfigManifestWithPreview(cfg, stateDir, nil)
+}
+
+// Read all unchanged inputs and replace only explicitly rendered preview bytes.
+// This never writes the deployment tree or calls an external service.
+func buildRuntimeConfigManifestWithPreview(cfg *ResolvedConfig, stateDir string, preview map[string][]byte) (*RuntimeConfigManifest, error) {
 	resolved, err := runtimeEvidenceV2ResolvedConfig(cfg, stateDir)
 	if err != nil {
 		return nil, err
@@ -265,6 +271,11 @@ func buildRuntimeConfigManifest(cfg *ResolvedConfig, stateDir string) (*RuntimeC
 	expected, err := expectedRuntimeConfigFiles(cfg, stateDir)
 	if err != nil {
 		return nil, err
+	}
+	for relative := range preview {
+		if _, ok := expected[relative]; !ok {
+			return nil, fmt.Errorf("preview path %s is not an expected runtime input", relative)
+		}
 	}
 	paths := make([]string, 0, len(expected))
 	for path := range expected {
@@ -285,9 +296,15 @@ func buildRuntimeConfigManifest(cfg *ResolvedConfig, stateDir string) (*RuntimeC
 		if err := validateRuntimeConfigPathAncestry(stateDir, relative); err != nil {
 			return nil, err
 		}
-		digest, mode, err := resolvedRuntimeManifestInputDigest(cfg, stateDir, relative)
-		if err != nil {
-			return nil, err
+		var digest string
+		var mode os.FileMode
+		if wire, ok := preview[relative]; ok {
+			digest, mode = bytesSHA256(wire), expected[relative]
+		} else {
+			digest, mode, err = resolvedRuntimeManifestInputDigest(cfg, stateDir, relative)
+			if err != nil {
+				return nil, err
+			}
 		}
 		if mode != expected[relative] {
 			return nil, fmt.Errorf("runtime config %s mode is %04o, want %04o", relative, mode, expected[relative])
@@ -392,6 +409,12 @@ func validateRuntimeConfigStaticTrees(cfg *ResolvedConfig, stateDir string, expe
 // Authenticate the manifest identity and complete expected inventory before a
 // caller selects either every static input or a security-critical subset.
 func authenticatedRuntimeConfigManifest(cfg *ResolvedConfig, stateDir string) (*RuntimeConfigManifest, map[string]os.FileMode, error) {
+	return authenticatedRuntimeConfigManifestWithRetainedEvidence(cfg, stateDir, "")
+}
+
+// A retained caller may supply only the original evidence identity derived
+// from an authenticated V6 successor. Every other identity field stays exact.
+func authenticatedRuntimeConfigManifestWithRetainedEvidence(cfg *ResolvedConfig, stateDir, retainedEvidenceHash string) (*RuntimeConfigManifest, map[string]os.FileMode, error) {
 	var manifest RuntimeConfigManifest
 	path := runtimeConfigManifestPath(stateDir)
 	if err := decodeStrictJSONFile(path, &manifest); err != nil {
@@ -410,7 +433,8 @@ func authenticatedRuntimeConfigManifest(cfg *ResolvedConfig, stateDir string) (*
 		return nil, nil, stateMismatchError(err, "runtime config manifest is absent or not private")
 	}
 	if manifest.Schema != runtimeConfigManifestSchema || manifest.DeploymentID != cfg.Config.Deployment.DeploymentID ||
-		!strings.EqualFold(manifest.ConfigHash, cfg.ConfigHash) || !strings.EqualFold(manifest.PolicyHash, cfg.PolicyHash) || manifest.EvidenceV2Hash != evidenceHash || manifest.AttemptUploadHash != uploadHash {
+		!strings.EqualFold(manifest.ConfigHash, cfg.ConfigHash) || !strings.EqualFold(manifest.PolicyHash, cfg.PolicyHash) ||
+		(manifest.EvidenceV2Hash != evidenceHash && (retainedEvidenceHash == "" || manifest.EvidenceV2Hash != retainedEvidenceHash)) || manifest.AttemptUploadHash != uploadHash {
 		return nil, nil, errors.New("runtime config manifest identity does not match the active deployment")
 	}
 	if _, err := decodeHex32("runtime config manifest config hash", manifest.ConfigHash); err != nil {
@@ -476,7 +500,7 @@ func verifyRuntimeConfigManifestFile(cfg *ResolvedConfig, stateDir string, file 
 // completion boundary. Other runtime inputs may have undergone an approved
 // live transition, such as production verify-key rotation.
 func verifyRuntimeBlobConfigManifest(cfg *ResolvedConfig, stateDir string) error {
-	manifest, expected, err := authenticatedRuntimeConfigManifest(cfg, stateDir)
+	manifest, expected, err := authenticatedRuntimeBlobConfigManifest(cfg, stateDir)
 	if err != nil {
 		return err
 	}
@@ -510,6 +534,12 @@ func verifyRuntimeConfigManifest(cfg *ResolvedConfig, stateDir string) (runtimeC
 	if err != nil {
 		return runtimeConfigVerification{}, err
 	}
+	return verifyResolvedRuntimeConfigManifest(cfg, stateDir, manifest, expected)
+}
+
+// Strict render verification and explicit retained startup share every file,
+// mode and inventory check after selecting their own authenticated identity.
+func verifyResolvedRuntimeConfigManifest(cfg *ResolvedConfig, stateDir string, manifest *RuntimeConfigManifest, expected map[string]os.FileMode) (runtimeConfigVerification, error) {
 	for _, file := range manifest.Files {
 		mode := expected[file.Path]
 		if err := verifyRuntimeConfigManifestFile(cfg, stateDir, file, mode); err != nil {

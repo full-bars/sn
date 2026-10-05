@@ -1,0 +1,101 @@
+{
+  "causal_groups": 8,
+  "expected_causal_failures_per_mode": 10,
+  "intake_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-native-renewal/evidence/intake.json",
+  "intake_sha256": "0f10c8aa66bf434b20a808a66e1b5ebc40669811b2ce62b17101d4ed9c061565",
+  "jobs": [
+    {
+      "expected": 10,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./mainnet",
+      "roots": [
+        "TestMonitorEconomicRuntimePublicUpgradeKeepsExecutionAndPostState",
+        "TestMonitorEconomicRuntimePublicRenewalRetainsCursorAndPeers",
+        "TestMonitorEconomicRuntimePurposeRenewalDoesNotBorrowSigning",
+        "TestMonitorEconomicRuntimeCatalogCapacityCanGrowWithoutHistoryLoss",
+        "TestMonitorEconomicRuntimeRenewalAcknowledgesOnlyDurableSettings",
+        "TestMonitorEconomicRuntimeDecodedCacheIsBoundedAndCancellationJoins",
+        "TestMonitorEconomicRuntimeReviewsAreBoundedAndMonotonic",
+        "TestMonitorEconomicRuntimeLiteral00dCheckpointKeepsChecksumAndHistory",
+        "TestMonitorEconomicRuntimePublicOldCheckpointUsesLargerOwnedBudget",
+        "TestMonitorEconomicRuntimeRestartRefusesReviewAndCapacityReplacement"
+      ],
+      "selector": "^(TestMonitorEconomicRuntimePublicUpgradeKeepsExecutionAndPostState|TestMonitorEconomicRuntimePublicRenewalRetainsCursorAndPeers|TestMonitorEconomicRuntimePurposeRenewalDoesNotBorrowSigning|TestMonitorEconomicRuntimeCatalogCapacityCanGrowWithoutHistoryLoss|TestMonitorEconomicRuntimeRenewalAcknowledgesOnlyDurableSettings|TestMonitorEconomicRuntimeDecodedCacheIsBoundedAndCancellationJoins|TestMonitorEconomicRuntimeReviewsAreBoundedAndMonotonic|TestMonitorEconomicRuntimeLiteral00dCheckpointKeepsChecksumAndHistory|TestMonitorEconomicRuntimePublicOldCheckpointUsesLargerOwnedBudget|TestMonitorEconomicRuntimeRestartRefusesReviewAndCapacityReplacement)$"
+    },
+    {
+      "expected": 16,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./mainnet",
+      "roots": [
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees",
+        "TestMonitorEconomicNativePublicPartialOutageKeepsCursorUntilRecovery",
+        "TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage",
+        "TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage",
+        "TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit",
+        "TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping",
+        "TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard",
+        "TestEconomicEmissionCollectsContiguousEvidenceWithoutClaimingTarget",
+        "TestEconomicEmissionUsesParentRuntimeAndRetainsEventsAtUnknownUpgrade",
+        "TestEconomicEmissionRejectsChangedMetadataSemantics",
+        "TestEconomicEmissionRejectsGenerationChangeAndUnapprovedMechanism",
+        "TestRootReceiptCanonicalInclusion",
+        "TestRootReceiptUpgradeUsesParentAndRetainsUnapprovedHead",
+        "TestRootReceiptRejectsAdjacentAccountAndFeeWidthDrift",
+        "TestRootReceiptConstructionAuthorityBounds",
+        "TestOwnerTrimReceiptCanonicalFinancialOutcomeSurvivesCensusGap"
+      ],
+      "selector": "^(TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees|TestMonitorEconomicNativePublicPartialOutageKeepsCursorUntilRecovery|TestMonitorEconomicNativePublicLostAckReopensOriginalCompletedPage|TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage|TestMonitorEconomicNativePublicHistoricalCatchupBeyondAncestryLimit|TestMonitorEconomicNativePublicLargeCensusShrinksWithoutSkipping|TestEconomicNativeFeesAttributeExactExtrinsicAndPreserveSigningGuard|TestEconomicEmissionCollectsContiguousEvidenceWithoutClaimingTarget|TestEconomicEmissionUsesParentRuntimeAndRetainsEventsAtUnknownUpgrade|TestEconomicEmissionRejectsChangedMetadataSemantics|TestEconomicEmissionRejectsGenerationChangeAndUnapprovedMechanism|TestRootReceiptCanonicalInclusion|TestRootReceiptUpgradeUsesParentAndRetainsUnapprovedHead|TestRootReceiptRejectsAdjacentAccountAndFeeWidthDrift|TestRootReceiptConstructionAuthorityBounds|TestOwnerTrimReceiptCanonicalFinancialOutcomeSurvivesCensusGap)$"
+    }
+  ],
+  "limits": [
+    "Source verification does not prove renewal or runtime compatibility behavior.",
+    "Literal old-layout bytes are synthetic; the separate original00d grammar test must qualify old-wire compatibility, not claim old-binary fixture generation.",
+    "Frozen historical dependency graph and current composed release remain separate qualifications."
+  ],
+  "original_grammar_positive": {
+    "expected_passed_roots": 1,
+    "modes": [
+      "normal"
+    ],
+    "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-native-renewal/evidence/original-00d-grammar.json",
+    "package": "./mainnet",
+    "scope": "Actual original00d policy/checkpoint/state methods parse, validate and serialize literal synthetic bytes. This is not an old-binary generation or runtime-renewal result.",
+    "selector": "^TestMonitorEconomicLiteral00dOriginalGrammar$",
+    "source": "00d7efcd18c3a4d08c2883de9c50bb6376cba716",
+    "source_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn",
+    "tree": "c7033a67db36e05bda50ae505922caaad80e044b"
+  },
+  "root_verification": {
+    "changed_git_blobs_verified": [
+      "mainnet/economic_emission.go",
+      "mainnet/economic_emission_observe.go",
+      "mainnet/monitor_economic_native.go",
+      "mainnet/monitor_economic_native_worker.go",
+      "mainnet/monitor_economic_runtime.go",
+      "mainnet/monitor_economic_runtime_checkpoint_test.go",
+      "mainnet/monitor_economic_runtime_test.go",
+      "mainnet/root_receipt_chain.go",
+      "mainnet/root_receipt_profile.go",
+      "mainnet/testdata/native-economic-00d/README.md",
+      "mainnet/testdata/native-economic-00d/checkpoint.json",
+      "mainnet/testdata/native-economic-00d/policy.json"
+    ],
+    "clean_commit_tree_matched": true,
+    "file_bindings_rehashed": 40,
+    "modules_unchanged_from_00d": true
+  },
+  "schema": "root-native-runtime-renewal-intake-v1",
+  "source": {
+    "base": "00d7efcd18c3a4d08c2883de9c50bb6376cba716",
+    "head": "881b967a5670931f70e9bda72a3b636838b1a70c",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-native-renewal/sn",
+    "tree": "ffc9eabd4c18067bca705f931d92108074358509"
+  },
+  "status": "SOURCE_VERIFIED_BEHAVIOR_PENDING"
+}

@@ -1,0 +1,34 @@
+{
+  "author_artifacts_rehashed": 45,
+  "author_receipt_sha256": "0cefc7bfb4b13239e2abe4406cbee93b88cdb4fb46d52c3e7b58fba6d25d114f",
+  "baseline_delta": [
+    "durablevolume/inventory_custody_test.go"
+  ],
+  "baseline_failure_causes": [
+    "retained owner custody omitted from inventory",
+    "missing acknowledged anchor passed restore verification",
+    "unknown custody namespace silently omitted"
+  ],
+  "baseline_intended_failures": {
+    "normal": 3,
+    "race": 3
+  },
+  "baseline_parent_production": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+  "baseline_test_only_commit": "e36536dfe8ee945758c0ad2d7082bda9829d6a20",
+  "data_floor_bytes": 118111600640,
+  "fixed_commit": "0a5cda0ebe78f6200c4cff6fd3d1aa172a2b172c",
+  "fixed_tree": "2e364a5e88562b6daf0a00ca0bc2415d83657e64",
+  "limits": [
+    "Exact durablevolume package only; subset archive matches pinned Git blobs and module files.",
+    "No CLI, adopter, deployed backup or restore authorization.",
+    "No live mounts or production volume operation; tests use owned temporary files."
+  ],
+  "manifest_entries": 49,
+  "manifest_sha256": "0902bf6eb3a3162cc53f519684defc2d0d6628300e2eaa42b314a932ff18b26f",
+  "normal_roots_passed": 57,
+  "race_roots_passed": 57,
+  "schema": "sol-inventory-v3-independent-v1",
+  "source_readback_sha256": "692f7b2e0402e5878e8f28a95349c97379f04437900cd3b8d0217d72548f5b65",
+  "status": "PASS_SCOPED",
+  "vet_exit": 0
+}

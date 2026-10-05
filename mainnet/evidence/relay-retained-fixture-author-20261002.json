@@ -1,0 +1,185 @@
+{
+  "schema": "urnetwork-scoped-fixture-qualification-v1",
+  "status": "PASS_SCOPED",
+  "date": "2026-10-02",
+  "source": {
+    "sn": "734a82dc338e3a00ef790c7574f5110051475fcd",
+    "tree": "e1f7e290d029aa7c300b71ce6c9d03bad6ea0944",
+    "branch": "fix/sim-relay-retained-fixture-20261002",
+    "base": "0f42f8e8986dbc19b746532e9e80f6091c8f0ebe",
+    "baseline": "6cfc4773038fae8b1de07807eeeb4a97c32d07d3",
+    "clean": true,
+    "files": [
+      "sim-testnet/evidence_relay_provisional_continuation_test.go",
+      "sim-testnet/runtime_evidence_activation_rpc_v2_test.go"
+    ],
+    "production_change": false
+  },
+  "dependencies": {
+    "server": "025802a50e2dc56dc56c3cb749db7375aa9f72be",
+    "connect": "e1b5d77b5029a4d8ce75ff8c21c7360b51c66773",
+    "sdk": "5d37be3876e5",
+    "go": "go1.26.6 linux/amd64",
+    "go_work": "off",
+    "sibling_fence_receipt": {
+      "path": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/focused-causal-receipt.json",
+      "sha256": "484ada95842abdc5eed1b24a57bc0460d541c16c90d61884648ccb3055b9c31d"
+    }
+  },
+  "scope": [
+    "Fresh synchronization/derived horizon with original executor, plan, journal, source and epoch custody retained.",
+    "Shared synthetic native header contains nonzero parent plus all canonical SCALE fields; announced hash is Blake2b-256 of exact header.",
+    "Post-forecast candidate uses the actual producer-issued activation domain; strict acceptance and original slot limits remain tested."
+  ],
+  "normal": {
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "pass": 35,
+    "fail": 0,
+    "skip": 0,
+    "tests": [
+      "TestProvisionalRelayContinuationPreparesActualHorizonWithoutReapproval",
+      "TestProvisionalRelayContinuationForecastEndIsAdvisoryAcrossRestart",
+      "TestRuntimeEvidenceActivationRpcV2PreparesFourActualSignedSources",
+      "TestRuntimeEvidenceActivationRpcV2RetryRetainsOriginalSignedBytes",
+      "TestRuntimeEvidenceActivationRpcV2RejectsChangedHistoricalUid",
+      "TestRuntimeEvidenceActivationRpcV2RejectsLostHistoricalPermit",
+      "TestRuntimeEvidenceActivationRpcV2RejectsRawAlphaWithoutCalculatedStake",
+      "TestProvisionalRelayContinuationRejectsCorruptPendingCensus",
+      "TestProvisionalRelayContinuationRejectsCorruptDebit",
+      "TestProvisionalRelayContinuationRetainsExactSignedCensus",
+      "TestRelayContinuationRuntime461SnapshotSurvivesCurrentApproval",
+      "TestRelayContinuationRuntime461SnapshotRetainsAllIdentityChecks",
+      "TestEvidenceRelayHorizonReadsOriginalAndCurrentNativeAuthority",
+      "TestProvisionalRelayCaptureRequiresExactReadOnlyOwnedApproval",
+      "TestProvisionalRelayCaptureCLIAndMutationEntrypointsStayReadOnly",
+      "TestProvisionalRelayCaptureRuntime468SnapshotCannotAuthorizeCurrentOperation",
+      "TestProvisionalRelayCaptureMarkerRejectsAcceptanceAndTamperedProvenance",
+      "TestProvisionalRelayCaptureStrictReconciliationDoesNotGrantFinalAcceptance",
+      "TestProvisionalRelayCaptureHistoricalPrefixUsesOriginalConfigWithoutWriting",
+      "TestProvisionalRelayCaptureRetainsCompletePredecessorWork",
+      "TestStartedProvisionalTopologyAdoptsWithoutInventingFreshProofs",
+      "TestProvisionalScenarioAdoptsChangedGenerationWithoutLogGap",
+      "TestStartedProvisionalTopologyPropagatesTournamentFailure",
+      "TestStartedProvisionalTopologyRejectsGenerationChange",
+      "TestStartedProvisionalTopologyRetainsDeferredProofCorruption",
+      "TestRuntimeEvidenceSetupCarryV2StillChecksCurrentHistoricalEligibility",
+      "TestRuntimeEvidenceHistoricalRuntimeReplaysOriginalPreparation",
+      "TestRuntimeEvidenceHistoricalRuntimeRetainsEligibilityAndConsentChecks",
+      "TestRuntimeEvidenceHistoricalRuntimeCarriedActionUsesOriginalApproval",
+      "TestRuntimeEvidenceHistoricalRuntimeHorizonSeparatesOriginalAndFreshReads",
+      "TestRuntimeEvidenceHistoricalRuntimeFreshPreparationStillRequires461",
+      "TestEvidenceRelayPhaseSchedulerCancellationPreservesAdjacentErrors",
+      "TestEvidenceRelayPhaseSchedulerCanceledRequestAllowsFreshRetry",
+      "TestEvidenceRelayPhaseSchedulerKeepsRealValidationFailuresBlocking",
+      "TestEvidenceRelayPhaseSchedulerAdmitsBeforeBacklogDrains"
+    ],
+    "logs": [
+      "evidence/normal-successor.jsonl",
+      "evidence/normal-adjacent.jsonl",
+      "evidence/normal-fixture-callers.jsonl"
+    ]
+  },
+  "race": {
+    "exit_code": 0,
+    "pass": 10,
+    "fail": 0,
+    "skip": 0,
+    "package_seconds": 79.523,
+    "selector": "^(TestProvisionalRelayContinuation.*|TestRuntimeEvidenceActivationRpcV2.*)$",
+    "tests": [
+      "TestProvisionalRelayContinuationPreparesActualHorizonWithoutReapproval",
+      "TestProvisionalRelayContinuationRejectsCorruptPendingCensus",
+      "TestProvisionalRelayContinuationForecastEndIsAdvisoryAcrossRestart",
+      "TestProvisionalRelayContinuationRejectsCorruptDebit",
+      "TestProvisionalRelayContinuationRetainsExactSignedCensus",
+      "TestRuntimeEvidenceActivationRpcV2PreparesFourActualSignedSources",
+      "TestRuntimeEvidenceActivationRpcV2RetryRetainsOriginalSignedBytes",
+      "TestRuntimeEvidenceActivationRpcV2RejectsChangedHistoricalUid",
+      "TestRuntimeEvidenceActivationRpcV2RejectsLostHistoricalPermit",
+      "TestRuntimeEvidenceActivationRpcV2RejectsRawAlphaWithoutCalculatedStake"
+    ],
+    "log": "evidence/race.jsonl"
+  },
+  "vet": {
+    "command": "go vet ./sim-testnet",
+    "exit_code": 0,
+    "log": "evidence/vet.log"
+  },
+  "causal": {
+    "baseline": {
+      "exit_code": 1,
+      "vet": "off to reach original fixture setup despite copied mutexes",
+      "tests": [
+        "TestProvisionalRelayContinuationPreparesActualHorizonWithoutReapproval",
+        "TestProvisionalRelayContinuationForecastEndIsAdvisoryAcrossRestart"
+      ],
+      "failure": "crv4: receipt header fields are missing or invalid",
+      "log": "evidence/baseline-normal.log"
+    },
+    "mutex_only": {
+      "exit_code": 1,
+      "failure": "same original header setup failure",
+      "log": "evidence/normal.log"
+    },
+    "header_only": {
+      "exit_code": 1,
+      "pass": 6,
+      "fail": 1,
+      "failure": "evidence relay horizon source domain changed",
+      "log": "evidence/normal-fixed.jsonl"
+    },
+    "original_vet": {
+      "path": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/sim-testnet-vet.log",
+      "failure": "two evidenceRelayRuntime values copied sync.Mutex",
+      "bound_by_dependency_receipt": true
+    }
+  },
+  "artifacts": [
+    {
+      "path": "evidence/baseline-normal.log",
+      "sha256": "5ea71b99be22fb316676d15c99ad55307e19ce8e53736e503b57c63e0a4c6723"
+    },
+    {
+      "path": "evidence/normal.log",
+      "sha256": "ce0fc81bad16cb5d47004d593697f336e99a1c66fc23a1fe3c2f9a2cd714afab"
+    },
+    {
+      "path": "evidence/vet.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence/normal-adjacent.jsonl",
+      "sha256": "a75d483abf26008dec622342aad3b940d3905e87e76b4ff6a9dc8e8c5ebcb18f"
+    },
+    {
+      "path": "evidence/normal-fixed.jsonl",
+      "sha256": "3e9b4eaaf8eebc77b6ad0acedc1413c41c61a1c8d288cb28210b875a8a21f843"
+    },
+    {
+      "path": "evidence/normal-fixture-callers.jsonl",
+      "sha256": "7bbc785e3c238537bb7933a75660f669578c824e778f1308e18c6993999cba13"
+    },
+    {
+      "path": "evidence/normal-successor.jsonl",
+      "sha256": "d53c11c5a1875249283e619f297a5e443e1846083c4efc744213b117ea9376a1"
+    },
+    {
+      "path": "evidence/race.jsonl",
+      "sha256": "c4470b6f151be6377fcf1ae7d23618c59d005f637eac345ad2321e4ee27fca61"
+    },
+    {
+      "path": "evidence/source.patch",
+      "sha256": "f8f741c090af37be370128c57710c23f81ac970f6e97ebfafc330a4a30c5181c"
+    }
+  ],
+  "limitations": [
+    "Synthetic offline fixtures only; no live chain, signing, DB, deployment, or service start.",
+    "35 selected normal roots and 10 race roots, not the whole sim-testnet test suite.",
+    "No production decoder or runtime semantics changed.",
+    "Independent successor qualification remains separate."
+  ]
+}

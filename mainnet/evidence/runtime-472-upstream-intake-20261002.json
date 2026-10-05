@@ -1,0 +1,110 @@
+{
+  "status": "READ_ONLY_UPSTREAM_INTAKE_NOT_AUTHORITY",
+  "tag_query": "refs/tags/v47*",
+  "tag_results": [
+    "923fd1fa7d6eadad3ec16f3941826b86c9c3aa1d\trefs/tags/v470",
+    "c004cebf360f4088187ee49d851dfb1a1eaaf710\trefs/tags/v471"
+  ],
+  "release_api": "https://api.github.com/repos/RaoFoundation/subtensor/releases?per_page=10",
+  "release_results": [
+    {
+      "tag": "v471",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v471",
+      "published_at": "2026-09-25T17:14:43Z",
+      "prerelease": true,
+      "target_commitish": "c004cebf360f4088187ee49d851dfb1a1eaaf710",
+      "asset_count": 5
+    },
+    {
+      "tag": "v470",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v470",
+      "published_at": "2026-09-24T08:18:54Z",
+      "prerelease": true,
+      "target_commitish": "923fd1fa7d6eadad3ec16f3941826b86c9c3aa1d",
+      "asset_count": 5
+    },
+    {
+      "tag": "v469",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v469",
+      "published_at": "2026-09-22T09:35:55Z",
+      "prerelease": false,
+      "target_commitish": "370bac46fa8cf602c4f8283a0635b3a8b4675394",
+      "asset_count": 5
+    },
+    {
+      "tag": "v468",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v468",
+      "published_at": "2026-09-21T18:18:55Z",
+      "prerelease": false,
+      "target_commitish": "30c70d90f8a3708d85cf95ae992b7a3fe30d2c4c",
+      "asset_count": 5
+    },
+    {
+      "tag": "v467",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v467",
+      "published_at": "2026-09-18T16:33:31Z",
+      "prerelease": false,
+      "target_commitish": "c6bcb4a7400764c94c1d1b1938514c6c2dd3d33b",
+      "asset_count": 5
+    },
+    {
+      "tag": "v466",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v466",
+      "published_at": "2026-09-18T01:00:55Z",
+      "prerelease": false,
+      "target_commitish": "cdffbe2f7ab0c37ab07884387bfbd6443dca178d",
+      "asset_count": 5
+    },
+    {
+      "tag": "v464",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v464",
+      "published_at": "2026-09-17T12:58:31Z",
+      "prerelease": false,
+      "target_commitish": "5cd66b8597b3ce5f9f2bade2b11c91af57df923d",
+      "asset_count": 5
+    },
+    {
+      "tag": "v459",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v459",
+      "published_at": "2026-09-15T21:10:06Z",
+      "prerelease": false,
+      "target_commitish": "70378404b56c12a85bc8cd163aca2f32cf4d1b80",
+      "asset_count": 5
+    },
+    {
+      "tag": "v454",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v454",
+      "published_at": "2026-09-04T21:01:07Z",
+      "prerelease": false,
+      "target_commitish": "14cde6410fe8ec81a940e290c56f94a632a0988d",
+      "asset_count": 5
+    },
+    {
+      "tag": "v453",
+      "url": "https://github.com/RaoFoundation/subtensor/releases/tag/v453",
+      "published_at": "2026-09-03T16:12:43Z",
+      "prerelease": false,
+      "target_commitish": "823bdcbc58a29f60b243be4737a7c72b34ac7d93",
+      "asset_count": 5
+    }
+  ],
+  "limits": [
+    "This query found v470/v471 tags and releases; it does not establish global absence of v472 source, build artifacts or a pending proposal.",
+    "The separately observed v472 code/metadata are not approved by an older tag or the user v470 exception.",
+    "Source attribution, consumed-purpose review, independent finality and signing admission remain open."
+  ],
+  "files": {
+    "/mnt/data/sn-testnet/root-runtime472-upstream-intake-20261002/tags.txt": {
+      "bytes": 112,
+      "sha256": "41070ff2a25ee13ffe53aa5fe515ae8e1fd56497bb5c90bb7a02ccaf5c3d3750"
+    },
+    "/mnt/data/sn-testnet/root-runtime472-upstream-intake-20261002/tags.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-runtime472-upstream-intake-20261002/releases.json": {
+      "bytes": 133437,
+      "sha256": "2506bb15bdd3fc21d1aa5b7234493c05f5b4faa40ec49fe9685a39878485caf2"
+    }
+  }
+}

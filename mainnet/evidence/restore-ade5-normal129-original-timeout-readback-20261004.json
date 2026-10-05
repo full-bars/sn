@@ -1,0 +1,49 @@
+{
+  "schema": "restore-ade5-normal129-original-timeout-readback-v1",
+  "status": "ORIGINAL_TIMEOUT_RETAINED_CORRECTED_LONG_QUALIFICATION_PENDING",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-restore-cross128.receipt.json",
+      "bytes": 4127,
+      "sha256": "6db9b66549f03c97d5436e7328d093c3c054de61237e2be8f85a590200194213"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-restore-cross128.stdout",
+      "bytes": 35842,
+      "sha256": "e08745bdca78b7c2aece0a013904ba696b9f30e17709b401ae1fa75b4892ef99"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-restore-cross128.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureade5/evidence/ade5-go-recovery-normal-restore-cross128.resources.csv",
+      "bytes": 839052,
+      "sha256": "8d02d441e718c21284056f097f3fbbe37b6485bbb35d9de04fc3dcbbe661124b"
+    }
+  ],
+  "root": "TestEconomicConservationRestorePublicCohortCrosses128ReviewsThenContinues",
+  "mode": "normal",
+  "census": {
+    "run": 1,
+    "pass": 0,
+    "fail": 1,
+    "skip": 0
+  },
+  "timeout_seconds": 7200,
+  "elapsed_seconds": 7200.04,
+  "exit": 1,
+  "tree_joined": true,
+  "observed_stack": [
+    "durablevolume.Owner.CheckReadDirectory",
+    "durablehead.Owner.Check",
+    "economicConservationArchiveView.check",
+    "economicConservationArchiveView.indexAdmission",
+    "readEconomicConservationArchive",
+    "proposeEconomicConservationClaimWindow"
+  ],
+  "interpretation": "Actual old-body timeout while repeatedly checking original archive custody during historical admission, consistent with the separately reviewed cf738 private cold-admission optimization. A single timeout stack does not measure recurrence complexity or prove the corrected full body passes.",
+  "continuation": "Keep original failed body/source/image/results and automatically advanced race singleton. Run corrected e51 ordinary partitions independently; original129-review counterpart remains separately required under its reviewed long-workload reservation.",
+  "limits": "Not an RPC timeout or observed production-chain failure. No early manual stop, reset, discarded successful work or successful corrected full history is inferred."
+}

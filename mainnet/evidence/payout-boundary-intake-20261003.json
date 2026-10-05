@@ -1,0 +1,362 @@
+{
+  "combined_recommended_roots": 28,
+  "config_commit": "93dc65fd84da9a0f5423b5cab9bfc650692fded8",
+  "controls": [
+    {
+      "expected_fail_roots": 3,
+      "kind": "explicit-consumer-loader-omission-retaining-new-fixture-preparation",
+      "name": "unbound-consumers",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers.overlay.json",
+      "package": "./model ./controller",
+      "positive_selector": "^TestProviderBoundaryAcceptedAttemptReconcilesDuringDrift$",
+      "selector": "^(TestProviderBoundaryDriftCannotReassignPlannedOrUnplannedUsage|TestProviderBoundaryUnpreparedPlannerRetainsSource|TestProviderBoundaryFinalCircleWaitCannotChangeEarningAsset)$"
+    },
+    {
+      "expected_fail_roots": 1,
+      "kind": "exact-630-AdvancePayment-body-only",
+      "name": "old-advance",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/old-advance.overlay.json",
+      "package": "./controller",
+      "positive_selector": "",
+      "selector": "^TestProviderBoundaryDatabaseObservationTimeoutSchedulesSamePayment$"
+    },
+    {
+      "expected_fail_roots": 1,
+      "kind": "explicit-blanket-attempt-deadline-refusal",
+      "name": "attempt-timeout",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/attempt-timeout.overlay.json",
+      "package": ".",
+      "positive_selector": "",
+      "selector": "^TestProviderBoundaryObservationClassificationAndOwnerCancellation$"
+    },
+    {
+      "expected_fail_roots": 2,
+      "kind": "explicit-observed-SQL-schema-as-outage-mutation",
+      "name": "schema-outage",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/schema-outage.overlay.json",
+      "package": ".",
+      "positive_selector": "",
+      "selector": "^TestProviderBoundary(ObservationClassificationAndOwnerCancellation|RequiredSchemaAndImmutableRows)$"
+    },
+    {
+      "expected_fail_roots": 1,
+      "kind": "explicit-runtime-panic-as-observation-mutation",
+      "name": "programming-outage",
+      "overlay": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/programming-outage.overlay.json",
+      "package": ".",
+      "positive_selector": "",
+      "selector": "^TestProviderBoundaryPanicAndCancellationPreserveCause$"
+    }
+  ],
+  "files": [
+    {
+      "bytes": 89236,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/bringyourctl/main.go",
+      "sha256": "44864ddc89035d6cc0bebe5b9338f7c545f171806cd69ff83fe8ff369de58d11"
+    },
+    {
+      "bytes": 1088,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/bringyourctl/provider_payout_boundary.go",
+      "sha256": "2a5a30c300e600b77ac19f994ebbad36e63cc4de16371da21de843c65920bffb"
+    },
+    {
+      "bytes": 3110,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/bringyourctl/provider_payout_boundary_test.go",
+      "sha256": "8c9c41bc61c2ce692673c2c60e2250cde568851bb2a1ebca4887b081a1ed36df"
+    },
+    {
+      "bytes": 19890,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/controller/account_payment_controller.go",
+      "sha256": "c32f32494458fbfb4f23b52e9f991338a4a760dc8cd7f92d9b8193dfa303f042"
+    },
+    {
+      "bytes": 9394,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/controller/provider_payout_boundary_test.go",
+      "sha256": "294eaeda80834b7ea5add8e2a2b4ad85974a6b75c65ad7e47c54da196affb4d0"
+    },
+    {
+      "bytes": 12318,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/controller/provider_payout_transition_test.go",
+      "sha256": "a047f86ad8ab4f6f0ee74844ce7b62128002e01fc82bfcf21f17d16666196482"
+    },
+    {
+      "bytes": 179922,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/controller/st_controller.go",
+      "sha256": "ffb4a4992b0aff1aaa295ed96f5f5c63887b73dad8844c5ba72f462c0c9864be"
+    },
+    {
+      "bytes": 4671,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/controller/st_payout_transition.go",
+      "sha256": "3ce4c07eb6519498c39c456d934362455779c01583a28d37f7f53579f6a8db00"
+    },
+    {
+      "bytes": 384126,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/db_migrations.go",
+      "sha256": "9a99b3c30aac6796ae0f22c2928892865eb36b0d9481e97c940895670cc96fee"
+    },
+    {
+      "bytes": 12436,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/db_provider_payout_boundary.go",
+      "sha256": "a7074870cdeb476329c19ef40228ca354ca3fdc5289978ed81276ae71c631a9a"
+    },
+    {
+      "bytes": 13980,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/db_provider_payout_boundary_test.go",
+      "sha256": "2bc8de3d04389a702405fcfd35ecb8df477f7005b119ae6a2b3d1ee1c5374820"
+    },
+    {
+      "bytes": 12820,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/account_payment_attempt.go",
+      "sha256": "e14c71e0a3ee7a8fea27c2fd5b6c27ea7fe3996ef3e7326e65c97225ba6444b5"
+    },
+    {
+      "bytes": 6750,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/account_payment_bonus.go",
+      "sha256": "edf2f38b1b481e8590df60939adbfd10f3946c3126e3b4aaee819e7730f0d563"
+    },
+    {
+      "bytes": 34882,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/account_payment_model.go",
+      "sha256": "dd46d972d3992798d62114a919295b76d944b5dd1c7902b5a34cd11a85264efd"
+    },
+    {
+      "bytes": 41986,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/account_payment_model_plan.go",
+      "sha256": "2af15860b865ad0c70805f093fae545cf58b0de365e9bfc6d1e6984bc9b7b0ed"
+    },
+    {
+      "bytes": 6123,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/account_payment_transition.go",
+      "sha256": "894210dc10e5532ef0623c8885f5b680b2dfd2fd9c500be8427d69c4de9c2a60"
+    },
+    {
+      "bytes": 21345,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/account_point_model.go",
+      "sha256": "39345be3bbdefbe4b6e66643b8eaedf9d5272e955ab1b46a0d1c4ac1622b89dc"
+    },
+    {
+      "bytes": 4827,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/provider_payout_boundary_test.go",
+      "sha256": "819ac7577dd43fd6f889b5d28c5a723f9535b97da7682b18dc5c8f52543aff7e"
+    },
+    {
+      "bytes": 3163,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/provider_payout_model.go",
+      "sha256": "d91e3185784ca2e04b332f15d60deaf82dce23c783dff370746885328ee7f9f8"
+    },
+    {
+      "bytes": 14457,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/provider_payout_transition_test.go",
+      "sha256": "20e738cab7f8b41e272a381c9308f7b44c99e7f2bc24a6a57322663668c22cd7"
+    },
+    {
+      "bytes": 1520,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/st_payout_transition.go",
+      "sha256": "c240a569181997b00fe08cdacd58604d3540546e74ae3a60d258eb0d7ccb3e35"
+    },
+    {
+      "bytes": 5505,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/model/st_provider_usage.go",
+      "sha256": "c26f821695c7e28ac9e7ed1ac1486a497fa9f47528400825672406ad720912ae"
+    },
+    {
+      "bytes": 2769,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/taskworker/work/provider_payout_transition_test.go",
+      "sha256": "8070b2ef63842df26772ab4e1fab851b637f4bb14aa7a1415ca4117b5d604a26"
+    },
+    {
+      "bytes": 10468,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/go.mod",
+      "sha256": "ad4b307433de35ab9f40df50d0c6906ec2eef1a4bfdec1adad700c3b3c842147"
+    },
+    {
+      "bytes": 67934,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor/go.sum",
+      "sha256": "a805fb68cf119986df0d3fb630081d7b0fcac1e7b0470181934bc6b763616555"
+    },
+    {
+      "bytes": 19887,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-controller_account_payment_controller.go",
+      "sha256": "1b7bfa3f1d09fe01370c0009e952f443577eab69668f304e5ec18c9cf9a56c91"
+    },
+    {
+      "bytes": 179919,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-controller_st_controller.go",
+      "sha256": "a2f0f455712e3c76fdc1569dd936d36eb7e9c604e5d1634fd2a9e2d4fb9bcf76"
+    },
+    {
+      "bytes": 4668,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-controller_st_payout_transition.go",
+      "sha256": "fb62c306a38f867035a46ba946d4b3ba8a5eb746dac0e423e964d7da9c8128d8"
+    },
+    {
+      "bytes": 12817,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-model_account_payment_attempt.go",
+      "sha256": "6eb59fdb9ca2cbd4c53849be0587a6c21655a1e390379b549d96d75db7f8a936"
+    },
+    {
+      "bytes": 6747,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-model_account_payment_bonus.go",
+      "sha256": "0039b1e084aa49575ac4c4955bc6cd6231244eb0023de928a7c5cd1b22ce4a89"
+    },
+    {
+      "bytes": 34870,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-model_account_payment_model.go",
+      "sha256": "35e9450534f2311f994b880f2d7f0548d794bd1f6a61032d15c48c7f2cf63398"
+    },
+    {
+      "bytes": 41983,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-model_account_payment_model_plan.go",
+      "sha256": "e0f9352a4df5c2c71ca66018668b0d930d1f4ed50932a885fb1738ea0f6fb389"
+    },
+    {
+      "bytes": 6120,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-model_account_payment_transition.go",
+      "sha256": "1abacbc6c534848eac5f918f5bb9f7bbdbbd4634262abd1f8d82b31e15e3673e"
+    },
+    {
+      "bytes": 21342,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-model_account_point_model.go",
+      "sha256": "dadf549c9953b54b14811fa83f2c49310cbb5f115c865a53f325adb22dd405a7"
+    },
+    {
+      "bytes": 3160,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-model_provider_payout_model.go",
+      "sha256": "e56295361d0c032502a3751867511070f4b52fc02a83291b0ba721c6ef0ab8ca"
+    },
+    {
+      "bytes": 1517,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-model_st_payout_transition.go",
+      "sha256": "85004e6aadd5097f732daf4dc1b0a624946acca4eed201ff67d4bd6e615f0ac3"
+    },
+    {
+      "bytes": 5502,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers-model_st_provider_usage.go",
+      "sha256": "11e0c39905b3d3dc000eddae9fadab8d6f8f3fcf3e2a7d0b8806d0b26c59f0db"
+    },
+    {
+      "bytes": 3054,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/unbound-consumers.overlay.json",
+      "sha256": "62f8b11b5844bc846ebd332db3c0b03c238a9b931c7e1e3de1954aed762a2bc1"
+    },
+    {
+      "bytes": 19587,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/old-advance-controller_account_payment_controller.go",
+      "sha256": "e02955dc2443a1f5574fa42cad9410fa054812573cb747b0736b74465d4317b4"
+    },
+    {
+      "bytes": 286,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/old-advance.overlay.json",
+      "sha256": "79d7f2308982fe6eb09e45cb7eb9855d7c4c2687162233bd3ee0b52a0063dc9b"
+    },
+    {
+      "bytes": 12481,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/attempt-timeout-db_provider_payout_boundary.go",
+      "sha256": "b5100055bddd6ae294aac2a12742823f5e59eba686d9c1bd0d5691a42cd3aed2"
+    },
+    {
+      "bytes": 270,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/attempt-timeout.overlay.json",
+      "sha256": "2522842786cd8cf76e7233d66147bb07c5418a82e39e3acbe6e68723dcbabd73"
+    },
+    {
+      "bytes": 11801,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/schema-outage-db_provider_payout_boundary.go",
+      "sha256": "250e92489a0de4a9fc0167fe2f28551fdcd335d5483ed0f39aad2c18dc3c6ef7"
+    },
+    {
+      "bytes": 268,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/schema-outage.overlay.json",
+      "sha256": "61e6ad6681634080dcc1d1f134958922946fec012153be8207354c4c35878bab"
+    },
+    {
+      "bytes": 12508,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/programming-outage-db_provider_payout_boundary.go",
+      "sha256": "78e77aab54ffe9baa2d25381d3bb3448fd7ed43b75018a807cbeba2efe96cc52"
+    },
+    {
+      "bytes": 273,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/boundary-cdcb61fa/programming-outage.overlay.json",
+      "sha256": "5250690a4e6d13f32216dda8cb469e491100751d2a9abfb39ec4dccfd9738594"
+    },
+    {
+      "bytes": 590,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/config/main/sn.yml",
+      "sha256": "b77872f2ce61dc66621ae1455b440a34766ffcaca198f4a20b36bdecb522c134"
+    },
+    {
+      "bytes": 9179,
+      "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/create-boundary-intake.go",
+      "sha256": "392026fd787ebb4ab18d327f29c456cead5a2ac35783b141b9a49206a457f08e"
+    }
+  ],
+  "module_graph": "go.mod/go.sum byte-identical630; use the same Sol-owned exact replacement pins and GOWORK=off graph",
+  "new_root_count": 13,
+  "new_roots": {
+    ".": [
+      "TestProviderBoundaryConcurrentConflictingPreparation",
+      "TestProviderBoundaryConcurrentSamePreparation",
+      "TestProviderBoundaryExplicitPreparationAndReadinessIndependence",
+      "TestProviderBoundaryObservationClassificationAndOwnerCancellation",
+      "TestProviderBoundaryPanicAndCancellationPreserveCause",
+      "TestProviderBoundaryRequiredSchemaAndImmutableRows",
+      "TestProviderBoundaryRestartRetainsAuthority"
+    ],
+    "./bringyourctl": [
+      "TestProviderBoundaryMigrationPreparationRequiresExactDigest"
+    ],
+    "./controller": [
+      "TestProviderBoundaryAcceptedAttemptReconcilesDuringDrift",
+      "TestProviderBoundaryDatabaseObservationTimeoutSchedulesSamePayment",
+      "TestProviderBoundaryFinalCircleWaitCannotChangeEarningAsset"
+    ],
+    "./model": [
+      "TestProviderBoundaryDriftCannotReassignPlannedOrUnplannedUsage",
+      "TestProviderBoundaryUnpreparedPlannerRetainsSource"
+    ]
+  },
+  "recommended_neighbors": {
+    ".": [
+      "TestProviderPayoutTransitionStrictReadinessAndSchema",
+      "TestProviderTransitionSchemaCapabilityRejectsDisabledOrChangedGuard"
+    ],
+    "./bringyourctl": [
+      "TestProviderTransitionBonusCommandPropagatesRefusal"
+    ],
+    "./controller": [
+      "TestProviderTransitionQueuedLegacyAmbiguousRetryKeepsKey",
+      "TestProviderTransitionQueuedPostCutoffRefusesBeforeSend",
+      "TestProviderTransitionPublicStWritersBlockedButReadMirrorContinues",
+      "TestProviderTransitionFinalCircleBindsActualArguments",
+      "TestProviderTransitionRepeatedCancellationRetainsSameComponentsAndHistory",
+      "TestProviderTransitionHeldPaymentPostSchedulesBoundedContinuation"
+    ],
+    "./model": [
+      "TestProviderTransitionPlannerPartitionAndDelayedSweep",
+      "TestProviderTransitionSubsidyOnlyFinalShortTail",
+      "TestProviderTransitionLegacyComponentsRetainOriginalAllocation",
+      "TestProviderTransitionBonusAuthorityAndSafeReplan",
+      "TestProviderTransitionFreeAndPaidUsageHaveEqualSubnetWeight"
+    ],
+    "./taskworker/work": [
+      "TestProviderTransitionPayoutRetryAndStartupPreservePending"
+    ]
+  },
+  "schema": "provider-boundary-source-intake-v1",
+  "scope_limits": [
+    "No deployment/live financial operation",
+    "Initial config digest retained; readiness fields outside immutable earning identity",
+    "One appended migration; all prior migration source prefix preserved",
+    "Accepted-attempt reconciliation remains independent of new earning admission",
+    "630 full-model run remains exact original source; no inherited full-suite claim",
+    "Database child-restart inputs are owned ephemeral fixture resources through private stdin; never log them",
+    "GET5c93 remains separate qualified intermediate and is not in this source"
+  ],
+  "source": {
+    "commit": "cdcb61fa3db72fb5c5844358224eeb0fb3cbd661",
+    "parent": "630271301fdc18614cae6af76fed7d8c0c2c8ac4",
+    "path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/server-boundary-anchor",
+    "tree": "3a6b153001e7f36c9ec986ca06931a9a49b461f3"
+  },
+  "status": "SOURCE_FROZEN_TEST_EXECUTION_PENDING_SOL"
+}

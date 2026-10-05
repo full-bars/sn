@@ -1,0 +1,64 @@
+{
+  "schema": "current-hosts-main-integration-v1",
+  "base": "6a8d337cb681556610fd590187cac3d3783e18b6",
+  "candidate": "c59c3c414d024663f28e8a4e3cb8b4de85102813",
+  "main_merge": "0a9aeb348bd5ff9e92f6b5ff996fd5b9ce07d263",
+  "changed_files": [
+    {
+      "path": "mainnet/historical_replay.go",
+      "sha256": "34a1e584b3a95ab379485ffe3d3966cfa5870014b593d10ebdee838d7db79809",
+      "bytes": 13336,
+      "candidate_mode_and_blob_match": true
+    },
+    {
+      "path": "mainnet/historical_replay_observation.go",
+      "sha256": "30c11df236092f8137f248b80c6998b144a7996a3b067a19461984e2b209cc57",
+      "bytes": 16417,
+      "candidate_mode_and_blob_match": true
+    },
+    {
+      "path": "mainnet/historical_replay_test.go",
+      "sha256": "cf1b238495b34cf4e17ee4cf3a35d3aa0836211eca098eb72a3c1d7ba684cdc0",
+      "bytes": 19452,
+      "candidate_mode_and_blob_match": true
+    },
+    {
+      "path": "tools/runtime-metadata-probe/HISTORICAL-REPLAY.md",
+      "sha256": "72d2297ae534dccd2da0a1fadb216fdf358f8cad5b7d41cd507f0979ffa66d45",
+      "bytes": 7426,
+      "candidate_mode_and_blob_match": true
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical.rs",
+      "sha256": "571df144e95c0da4fce199fb5b29364723814eb18098917923066fc50b61ac88",
+      "bytes": 17600,
+      "candidate_mode_and_blob_match": true
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_backend.rs",
+      "sha256": "96338f4f6c09088bdc3fc4beffc8568fc3081b6d82615a1a76aed0014ab36137",
+      "bytes": 7301,
+      "candidate_mode_and_blob_match": true
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_hosts.rs",
+      "sha256": "49ee3c2f65680e25ea482eb2626fbdde977f765745e9cd37d15eab3a1765083d",
+      "bytes": 13967,
+      "candidate_mode_and_blob_match": true
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_pure_hosts.rs",
+      "sha256": "f6187f0e022076c3a47e6c6de007a8618f84b5915480233733189d0bee7b3084",
+      "bytes": 5064,
+      "candidate_mode_and_blob_match": true
+    },
+    {
+      "path": "tools/runtime-metadata-probe/src/historical_tests.rs",
+      "sha256": "973d555d8f1e9fe1e997540fb87b470acbf0708df1cebf1b3ea22ce2c4b68b18",
+      "bytes": 49213,
+      "candidate_mode_and_blob_match": true
+    }
+  ],
+  "qualified_workflow_guard_retained": true,
+  "scope": "Exact nine changed source files and modes; previously qualified guard preserved. No actual runtime authority or live deployment claim."
+}

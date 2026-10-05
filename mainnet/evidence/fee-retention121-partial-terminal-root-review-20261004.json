@@ -1,0 +1,95 @@
+{
+  "schema": "mainnet-independent-retention-terminal-review-v1",
+  "status": "FAILED_PARTIAL_SCOPE_RETAINED",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-fee-retention-121-20261004/evidence/retention121-normal-41root-receipt.json",
+    "sha256": "6b9934b86b3d324942274e4160a210cb8f0d053243e8313c68e3fbd5baf72dc2"
+  },
+  "bindings": [
+    {
+      "bytes": 31616,
+      "path": "/mnt/data/sn-testnet/sol-fee-retention-121-20261004/evidence/retention121-normal-body.stdout",
+      "sha256": "0d5f82fbb20c50e93a169c32438def83e7afe341eeb15f6e4a16c9c3c687b975"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-fee-retention-121-20261004/evidence/retention121-normal-body.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 78650232,
+      "ctime_ns": 1791091793561687509,
+      "device": 2081,
+      "gid": 1000,
+      "inode": 17623579,
+      "links": 1,
+      "mode": 320,
+      "mtime_ns": 1791091793451691465,
+      "path": "/mnt/data/sn-testnet/sol-fee-retention-121-20261004/images/retention121-mainnet-normal.test",
+      "sha256": "9e8612f43a15951b2e9647e1ec112b8cc5db87dd3e609f09f776be9b1f8a6111",
+      "type": 32768,
+      "uid": 1000
+    },
+    {
+      "bytes": 1067,
+      "path": "/mnt/data/sn-testnet/sol-fee-retention-121-20261004/evidence/source-stage-receipt.json",
+      "sha256": "1d72ef21fcee3a1aae6004f3097f421e69e9287f64b4f1f20a2a4ca0ba8093e4"
+    },
+    {
+      "bytes": 1902,
+      "path": "/mnt/data/sn-testnet/sol-fee-retention-121-20261004/evidence/selected-compile-receipt.json",
+      "sha256": "a7fa33c40a9926c2757e030007bb5b874d3836916446398b378e5f111264e8e8"
+    }
+  ],
+  "census": {
+    "selected": 41,
+    "pass": 33,
+    "fail": 2,
+    "unrun": 6,
+    "skip": 0
+  },
+  "failed_roots": [
+    "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan",
+    "TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt"
+  ],
+  "complete_failure_output": [
+    "=== RUN   TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan\n",
+    "    economic_conservation_receipt_test.go:58: public archived receipt contradiction was overwritten or reached another source read 2  economic archive: economic archived original Claim receipt contradicts retained evidence\n",
+    "        \n",
+    "--- FAIL: TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan (5.08s)\n",
+    "=== RUN   TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt\n",
+    "--- FAIL: TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt (5.22s)\n",
+    "panic: runtime error: invalid memory address or nil pointer dereference [recovered, repanicked]\n",
+    "[signal SIGSEGV: segmentation violation code=0x1 addr=0x28 pc=0x14b578b]\n",
+    "\n",
+    "goroutine 11427 [running]:\n",
+    "testing.tRunner.func1.2({0x20dcb80, 0x3adbff0})\n",
+    "\t/usr/local/go/src/testing/testing.go:1974 +0x232\n",
+    "testing.tRunner.func1()\n",
+    "\t/usr/local/go/src/testing/testing.go:1977 +0x349\n",
+    "panic({0x20dcb80?, 0x3adbff0?})\n",
+    "\t/usr/local/go/src/runtime/panic.go:860 +0x13a\n",
+    "github.com/urfoundation/sn/mainnet.(*economicConservationArchiveView).admit(0x116c5aa80628, 0x116c5aa814f8, 0x116c5aa810b8)\n",
+    "\t/mnt/data/sn-testnet/sol-fee-retention-121-20261004/source/sn/mainnet/economic_conservation_archive.go:379 +0x4b\n",
+    "github.com/urfoundation/sn/mainnet.TestEconomicConservationArchiveIndexNeverOverwritesOriginalReceipt(0x116c5adf2008)\n",
+    "\t/mnt/data/sn-testnet/sol-fee-retention-121-20261004/source/sn/mainnet/economic_conservation_receipt_test.go:75 +0x9e5\n",
+    "testing.tRunner(0x116c5adf2008, 0x26a2f60)\n",
+    "\t/usr/local/go/src/testing/testing.go:2036 +0xea\n",
+    "created by testing.(*T).Run in goroutine 1\n",
+    "\t/usr/local/go/src/testing/testing.go:2101 +0x4c5\n"
+  ],
+  "source_findings": [
+    "Archive view admission unconditionally dereferences compacted.Archive and selects the last segment before legacy receipt-only indexing; nil archive panics and an empty segment list would index -1.",
+    "Actual public production callers compact before admission; the helper must define safe legacy/no-retirement behavior and reject malformed retirement without mutating retained evidence.",
+    "The second failure is the known shared exit-code fixture expectation corrected separately in6820."
+  ],
+  "required_successor": [
+    "Retain33 positives and vet; collect six unrun roots and affected normal/race/control scopes independently.",
+    "Batch status correction with nil/empty retirement classification; deterministic adjacent invalid-input tests must prove no panic or unintended retained-index mutation."
+  ],
+  "limits": [
+    "No qualified121 race result.",
+    "Not evidence that public production accepted malformed archive state.",
+    "Whole provider economic witness remains incomplete."
+  ]
+}

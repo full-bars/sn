@@ -1,0 +1,91 @@
+{
+  "actual_source_git_blobs_modes_verified": 20382,
+  "artifact_bindings_verified": 27,
+  "artifact_sha256": {
+    "ancestry-preflight-normal.txt": "a40e2e5b78a91cc3ddbca52688a600f99531ed8c681f66c1aec570152c561a32",
+    "ancestry-preflight-race.txt": "a40e2e5b78a91cc3ddbca52688a600f99531ed8c681f66c1aec570152c561a32",
+    "ancestry-preflight-vet.txt": "a40e2e5b78a91cc3ddbca52688a600f99531ed8c681f66c1aec570152c561a32",
+    "control-old-b18-dispatch-overlay.json": "a76e7782d3e1ffa6b92abc81832ced27a2f0099252478fadce770839a251c3d9",
+    "control-old-b18-main.go": "715efd443fe0ed4e5ae9b6041f9bbbd30bdbd367f75659b1931879ce1382767d",
+    "control-old-b18-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "control-old-b18-normal.jsonl": "09a7cf46795e0deb4b44d8f45dd4bf27970334b7b14834e364ab8e18b5ea266f",
+    "control-old-b18-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control-prepared.json": "2d7f158a70d6509b4f6a50ff1954399c7ea6501ed696d7043dcf90a5124c6eb0",
+    "modules.jsonl": "1c0a83a7a4fb53ad5779e7681058c0d0a5fa9650c6a25bf0f96b613e6a3fdc3a",
+    "native9-normal.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "native9-normal.jsonl": "aeb383a71bc72a6754584a918caea5a04cfb8b8276efe6cd75410bb3f76288ac",
+    "native9-normal.phase": "888a749a52c005de5f4e3eb55437b9e182d5f91dcaa01dfcef686f67ab92280c",
+    "native9-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native9-race.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "native9-race.jsonl": "1c7aaba3d8774216d9226a643407c1820c191e32a306df848394356caf24cf1c",
+    "native9-race.phase": "aac70a0a0ea9cec8e0b98a556c30bc62ba385a63259b9561ea6748a7d4e61d67",
+    "native9-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native9-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "native9-vet.phase": "3a6650bb03a8a108d99fe6453059150d120ce263e73976bd9c1413491d923047",
+    "native9-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native9-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "root-preflight-normal.json": "1163e09c6c06d235e1239ae878f4ebfa6592663552b38dc9521f9dbfba65934d",
+    "root-preflight-race.json": "1163e09c6c06d235e1239ae878f4ebfa6592663552b38dc9521f9dbfba65934d",
+    "root-preflight-vet.json": "1163e09c6c06d235e1239ae878f4ebfa6592663552b38dc9521f9dbfba65934d",
+    "run-native.sh": "eba992e3279631bc1d1d7dfaea28d9fdb0991d0dede6437a08da78982bd851e2",
+    "source-readback.json": "2eb166a8a2f1027936c1f6337f85588631e1e05399019ce1ddf30d0832739ecf"
+  },
+  "limits": [
+    "Nine selected archive roots, not full native economics",
+    "Signed catalog successor and whole accepted archive restore are separate gates",
+    "Claim/EVM archive adapters and final production composition remain",
+    "No runtime fee authority, deployment or live custody acceptance"
+  ],
+  "mainnet_vet_exit": 0,
+  "operative_control": {
+    "assertion": "public native archive plan failed 2",
+    "exit": 1,
+    "old_main_git_bytes_verified": true,
+    "overlay_changes_only_main_dispatch": true,
+    "root": "TestMonitorNativeArchivePublicRolloverContinuesOriginalPendingRange"
+  },
+  "raw_root_outcomes": {
+    "normal": {
+      "TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage": "pass",
+      "TestMonitorEconomicRuntimeLiteral00dCheckpointKeepsChecksumAndHistory": "pass",
+      "TestMonitorNativeArchiveForecastRefusesBeforePublication": "pass",
+      "TestMonitorNativeArchiveMissingRetainedSegmentStopsOnlyAffectedRole": "pass",
+      "TestMonitorNativeArchivePublicLostAcknowledgmentsReuseExactHeads": "pass",
+      "TestMonitorNativeArchivePublicRefusesActiveAndUnreviewedOwners": "pass",
+      "TestMonitorNativeArchivePublicRefusesOmittedAndForgedPrefix": "pass",
+      "TestMonitorNativeArchivePublicRolloverContinuesOriginalPendingRange": "pass",
+      "TestMonitorNativeArchiveUnchangedChecksDoNotRereadPayload": "pass"
+    },
+    "race": {
+      "TestMonitorEconomicNativePublicCapacityCommitsOnlyCompleteSubpage": "pass",
+      "TestMonitorEconomicRuntimeLiteral00dCheckpointKeepsChecksumAndHistory": "pass",
+      "TestMonitorNativeArchiveForecastRefusesBeforePublication": "pass",
+      "TestMonitorNativeArchiveMissingRetainedSegmentStopsOnlyAffectedRole": "pass",
+      "TestMonitorNativeArchivePublicLostAcknowledgmentsReuseExactHeads": "pass",
+      "TestMonitorNativeArchivePublicRefusesActiveAndUnreviewedOwners": "pass",
+      "TestMonitorNativeArchivePublicRefusesOmittedAndForgedPrefix": "pass",
+      "TestMonitorNativeArchivePublicRolloverContinuesOriginalPendingRange": "pass",
+      "TestMonitorNativeArchiveUnchangedChecksDoNotRereadPayload": "pass"
+    }
+  },
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-native-archive-3bc-independent-20261003/evidence/native3bc-selected-final-receipt.json",
+    "sha256": "d3494ea7272ae63263400a59481e46f1c7fc83dd0d48e412ee35159e59547404"
+  },
+  "source": {
+    "commit": "3bc2f9a5212de972b9c14f802c1b60d9e2d803aa",
+    "peer_symlinks": {
+      "glog": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "goidenticons": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "gvisor": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+      "proxy": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "server": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/ready-current/server",
+      "userwireguard": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "warp": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp"
+    },
+    "tracked_count": 20382,
+    "tracked_entries_sha256": "8a24efd2fc10688b77affb595fff187e7e8aeb3c8bdd1a7a26f420bbb8ab1366",
+    "tree": "a646d8e41c1e512c51cdc9cee76816995371832e"
+  },
+  "status": "ROOT_VERIFIED_SCOPED"
+}

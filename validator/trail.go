@@ -38,6 +38,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/urnetwork/connect/durablevolume"
 	"os"
 	"path/filepath"
 	"sync"
@@ -216,6 +217,7 @@ func VerifyProofRecord(record *ProofRecord, expectedVPK ed25519.PublicKey, serve
 
 // ProofStore is an append-only JSONL store of completed proofs.
 type ProofStore struct {
+	storageCtx           context.Context
 	mu                   sync.Mutex
 	operationGate        chan struct{}
 	path                 string
@@ -245,11 +247,20 @@ func (self *ProofStore) validatePathWithLock() (bool, error) {
 	return true, nil
 }
 
-func NewProofStore(dir string) (*ProofStore, error) {
-	if err := ensurePrivateStateDir(dir); err != nil {
+func NewProofStore(dir string, storageContexts ...context.Context) (*ProofStore, error) {
+	ctx := validatorStorageContext(storageContexts)
+	storage, err := openValidatorDurableDirectory(ctx, dir, durablevolume.ReadWrite, true)
+	if err != nil {
 		return nil, err
 	}
-	return &ProofStore{path: filepath.Join(dir, "proofs.jsonl")}, nil
+	if storage != nil {
+		if err := storage.Close(); err != nil {
+			return nil, err
+		}
+	} else if err := ensurePrivateStateDir(dir); err != nil {
+		return nil, err
+	}
+	return &ProofStore{storageCtx: context.WithoutCancel(ctx), path: filepath.Join(dir, "proofs.jsonl")}, nil
 }
 
 func (self *ProofStore) Append(record *ProofRecord) (resultErr error) {
@@ -258,7 +269,7 @@ func (self *ProofStore) Append(record *ProofRecord) (resultErr error) {
 		return err
 	}
 	defer release()
-	directory, err := openAttemptLedgerDirectory(filepath.Dir(self.path), nil)
+	directory, err := openAttemptLedgerDirectory(filepath.Dir(self.path), nil, validatorProofStorageContext(self))
 	if err != nil {
 		return err
 	}
@@ -391,7 +402,7 @@ func (self *ProofStore) reconcileAttemptProofsWithWrite(ledger *AttemptLedger, w
 		return err
 	}
 	defer release()
-	directory, err := openAttemptLedgerDirectory(filepath.Dir(self.path), nil)
+	directory, err := openAttemptLedgerDirectory(filepath.Dir(self.path), nil, validatorProofStorageContext(self))
 	if err != nil {
 		return err
 	}
@@ -563,6 +574,11 @@ type TrailEngineConfig struct {
 	AttemptBoundaryResolver AttemptBoundaryResolver
 }
 
+const attemptBindingRetryDelay = 2 * time.Second
+
+// Waits between immutable binding reads or returns the owner's cancellation.
+type attemptBindingRetryWait func(context.Context, time.Duration) error
+
 func (self TrailEngineConfig) withDefaults() TrailEngineConfig {
 	if self.M == 0 {
 		self.M = connect.VerifyMDefault
@@ -590,12 +606,14 @@ type TrailEngine struct {
 	pickSeed  SeedPicker
 	stats     *StatsEngine
 	store     *ProofStore
-	// epochFn returns the current contract epoch for proof stamping
-	// (nil / 0 = unknown).
+	// epochFn returns the current contract epoch for proof stamping. A nil
+	// source is unknown; a configured source may report the initial epoch zero.
 	epochFn func() uint64
 	cfg     TrailEngineConfig
 	ledger  *AttemptLedger
 	resolve AttemptBoundaryResolver
+	// A retry retains the already verified assignment and exact pinned boundary.
+	bindingRetryWait attemptBindingRetryWait
 
 	seedDiscoverySchedule attemptSchedule
 	seedPostSchedule      attemptSchedule
@@ -674,21 +692,69 @@ func NewTrailEngine(
 	cfg TrailEngineConfig,
 ) *TrailEngine {
 	return &TrailEngine{
-		clientId:  clientId,
-		vsk:       vsk,
-		vpk:       vsk.Public().(ed25519.PublicKey),
-		transport: transport,
-		keys:      keys,
-		pickSeed:  pickSeed,
-		stats:     stats,
-		store:     store,
-		epochFn:   epochFn,
-		cfg:       cfg.withDefaults(),
-		ledger:    cfg.AttemptLedger,
-		resolve:   cfg.AttemptBoundaryResolver,
+		clientId:         clientId,
+		vsk:              vsk,
+		vpk:              vsk.Public().(ed25519.PublicKey),
+		transport:        transport,
+		keys:             keys,
+		pickSeed:         pickSeed,
+		stats:            stats,
+		store:            store,
+		epochFn:          epochFn,
+		cfg:              cfg.withDefaults(),
+		ledger:           cfg.AttemptLedger,
+		resolve:          cfg.AttemptBoundaryResolver,
+		bindingRetryWait: waitAttemptBindingRetry,
 	}
 }
 
+// Uses one cancellable production delay; tests replace the waiter without
+// changing the reviewed two-second pacing value.
+func waitAttemptBindingRetry(ctx context.Context, delay time.Duration) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(delay):
+		return nil
+	}
+}
+
+// Applies the fixed production delay through the engine-owned test seam.
+func (self *TrailEngine) waitForAttemptBindingRetry(ctx context.Context) error {
+	wait := self.bindingRetryWait
+	if wait == nil {
+		wait = waitAttemptBindingRetry
+	}
+	return wait(ctx, attemptBindingRetryDelay)
+}
+
+// Wrapper labels do not turn owner cancellation into local corruption, while
+// one independent joined branch keeps the complete tree hard.
+func onlyAttemptContextError(err, want error) bool {
+	if err == nil || want == nil {
+		return false
+	}
+	if joined, ok := err.(interface{ Unwrap() []error }); ok {
+		causes := joined.Unwrap()
+		if len(causes) == 0 {
+			return false
+		}
+		for _, cause := range causes {
+			if !onlyAttemptContextError(cause, want) {
+				return false
+			}
+		}
+		return true
+	}
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		cause := wrapped.Unwrap()
+		return cause != nil && onlyAttemptContextError(cause, want)
+	}
+	return err == want
+}
+
+// Retains one verified assignment and its exact boundary while a typed
+// transient binding read is retried; record mutation starts after validation.
 func (self *TrailEngine) captureAttemptAssignment(ctx context.Context, record *AttemptRecord, assign *connect.VerifyAssignResult) error {
 	if record == nil || assign == nil || self.resolve == nil {
 		return errors.New("attempt assignment capture is not configured")
@@ -697,9 +763,26 @@ func (self *TrailEngine) captureAttemptAssignment(ctx context.Context, record *A
 	if record.Boundary != (AttemptBoundary{}) {
 		pinned = &record.Boundary
 	}
-	boundary, bindings, err := self.resolve(ctx, pinned, []connect.Id{assign.NextHop})
-	if err != nil {
-		return fmt.Errorf("resolve attempt binding: %w", err)
+	var boundary AttemptBoundary
+	var bindings []AttemptBinding
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		var err error
+		boundary, bindings, err = self.resolve(ctx, pinned, []connect.Id{assign.NextHop})
+		if err == nil {
+			break
+		}
+		if ctxErr := ctx.Err(); ctxErr != nil && onlyAttemptContextError(err, ctxErr) {
+			return ctxErr
+		}
+		if !retryableAttemptBindingReadError(err) {
+			return fmt.Errorf("resolve attempt binding: %w", err)
+		}
+		if err := self.waitForAttemptBindingRetry(ctx); err != nil {
+			return err
+		}
 	}
 	if err := validateAttemptBoundary(boundary); err != nil {
 		return err
@@ -926,6 +1009,9 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 
 	if ledgerEnabled {
 		if err := self.captureAttemptAssignment(ctx, &attemptRecord, &assign); err != nil {
+			if ctxErr := ctx.Err(); ctxErr != nil && err == ctxErr {
+				return nil, ctxErr
+			}
 			return nil, fatalTrailState("capture first server assignment after reservation", err)
 		}
 		if err := self.stats.checkpointAttempt(self.ledger, attemptRecord); err != nil {
@@ -1005,7 +1091,7 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 			if err := json.Unmarshal(responseBody, &final); err != nil {
 				return failAttempt(TrailErrorProtocol, pendingHop, AttemptDispositionProtocol, err)
 			}
-			record, err := self.acceptFinal(final.Proof, trailId, serverNonce, m, trail, extendSig)
+			record, err := self.acceptFinal(ctx, final.Proof, trailId, serverNonce, m, trail, extendSig)
 			if err != nil {
 				// Unknown outcome (§9): a poisoned or forged FINAL is
 				// indistinguishable from the real thing except by its
@@ -1052,6 +1138,9 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 		recordConfirmation(latencyMs)
 		if ledgerEnabled {
 			if err := self.captureAttemptAssignment(ctx, &attemptRecord, &nextAssign); err != nil {
+				if ctxErr := ctx.Err(); ctxErr != nil && err == ctxErr {
+					return nil, ctxErr
+				}
 				self.stats.abortAttempt()
 				attemptActive = false
 				return nil, fatalTrailState("capture assigned hop after durable checkpoint", err)
@@ -1081,6 +1170,7 @@ func (self *TrailEngine) RunTrail(ctx context.Context) (*ProofRecord, error) {
 // then co-signs that same FINAL message with the vpk. The record carries its
 // compact digest and deterministic coverage as audit metadata.
 func (self *TrailEngine) acceptFinal(
+	ctx context.Context,
 	proof *connect.VerifyProof,
 	trailId connect.Id,
 	serverNonce []byte,
@@ -1146,7 +1236,7 @@ func (self *TrailEngine) acceptFinal(
 	}
 	if !bytes.Equal(proof.VerifierSig, sentExtendSig) {
 		// Not fatal (it verified), but flag the anomaly.
-		fmt.Printf("warning: proof verifier_sig differs from the signature we sent for trail %s\n", trailId)
+		observeTrailDiagnostic(ctx, trailDiagnosticSignatureVariant, nil, nil, false)
 	}
 
 	// Local validator audit co-signature over the same canonical FINAL bytes.
@@ -1197,7 +1287,7 @@ func (self *TrailEngine) Run(ctx context.Context, concurrency int) error {
 	var wg sync.WaitGroup
 	for i := 0; i < concurrency; i++ {
 		wg.Add(1)
-		go func(worker int) {
+		go func() {
 			defer wg.Done()
 			for {
 				select {
@@ -1210,22 +1300,17 @@ func (self *TrailEngine) Run(ctx context.Context, concurrency int) error {
 					self.failed.Add(1)
 					var fatalErr *TrailFatalError
 					if errors.As(err, &fatalErr) {
+						observeTrailDiagnostic(workerCtx, trailDiagnosticFatal, nil, nil, false)
 						failClosed(err)
 						return
 					}
 					if workerCtx.Err() != nil {
 						return
 					}
-					var trailErr *TrailError
-					if errors.As(err, &trailErr) {
-						fmt.Printf("[trail %d] %v\n", worker, trailErr)
-					} else {
-						fmt.Printf("[trail %d] error: %v\n", worker, err)
-					}
+					observeTrailDiagnostic(workerCtx, trailDiagnosticFailed, err, nil, false)
 				} else {
 					self.completed.Add(1)
-					fmt.Printf("[trail %d] completed trail %s depth %d (epoch %d, %d total)\n",
-						worker, record.TrailId, record.M, record.Epoch, self.completed.Load())
+					observeTrailDiagnostic(workerCtx, trailDiagnosticComplete, nil, record, self.ledger != nil || self.epochFn != nil)
 				}
 				select {
 				case <-workerCtx.Done():
@@ -1233,7 +1318,7 @@ func (self *TrailEngine) Run(ctx context.Context, concurrency int) error {
 				case <-time.After(self.cfg.Pace):
 				}
 			}
-		}(i)
+		}()
 	}
 	wg.Wait()
 	select {

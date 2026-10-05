@@ -1,0 +1,37 @@
+{
+  "scope": "Independent additive operative-control source review only; not behavioral qualification",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-b6-controls/evidence/intake.json",
+    "sha256": "a82f20801082646a20864a5dec0ab74d2b0b5955d1753aa83393d26d289fe02f"
+  },
+  "candidate": "b6b7880ea4059af1a77f232a1ed597fe11cc8999",
+  "physical_artifact_bindings_verified": 35,
+  "controls": [
+    {
+      "name": "claim-compaction-omitted",
+      "selector": "^TestMonitorClaimArchivePublicRestartRetainsUnresolvedAndOriginalPayment$",
+      "expected_assertion": "claim compaction lost original progress, policy or unresolved evidence commitments",
+      "mutation_sha256": "1c0992605753115ef721b1325758f548b40a634f6f3d4985873120f18746b753"
+    },
+    {
+      "name": "claim-held-custody-omitted",
+      "selector": "^TestMonitorClaimArchiveActualHistoryReadOnceAndCustodyAfterAdmission$",
+      "expected_assertion": "changed archive custody admitted another source sample",
+      "mutation_sha256": "0cd3d5530ddbb12849f2a1d09b3a59a34008a5bad9e169730d647b9b534094c3"
+    },
+    {
+      "name": "claim-receipt-retention-omitted",
+      "selector": "^TestMonitorClaimArchiveRefusesOmittedForgedAndRegressedEvidence$/^deferred-change$",
+      "expected_assertion": "invalid retained claim history emitted an observation",
+      "mutation_sha256": "82ef03da00a927600cac50d98e4e1a29ce73ecc3c52b9a807b5c2ec37349ffdb"
+    },
+    {
+      "name": "claim-original-nested-search",
+      "selector": "^TestMonitorClaimArchivedSaveWorkGrowsWithEpochCensus$/^8$",
+      "expected_assertion": "archived save repeated census search instead of one admitted lookup per epoch",
+      "mutation_sha256": "9f331c7aeec102178d2d666035258a1204a9081a896443e30d1a2f778b958cee"
+    }
+  ],
+  "review": "All four originals reproduce exact current b6 blob f4ac30c7. Each mutation preserves the typed cleanup marker; reversing only that carried marker substitution reproduces the exact retained prior operative mutation. Original controls and prior evidence remain unchanged.",
+  "qualification": "Pending separate finite control admission and actual intended assertion failures after successful compilation."
+}

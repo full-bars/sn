@@ -2,17 +2,18 @@ package miner
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"flag"
 	"fmt"
-	mathrand "math/rand"
+	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -73,37 +74,59 @@ Usage:
     	[--max-memory=<mem>]
     	[-v...]
     provider provide [--port=<port>]
+		[--allow-client-registration | --adopt-legacy-provider-key]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
-        [--wallet=<coldkey_ss58>]
+        [--wallet=<coldkey_ss58> [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]]
 		[--test-egress-source-ip=<source_ip>]
         [--max-memory=<mem>]
         [-v...]
     provider auth-provide ([<auth_code>] | --user_auth=<user_auth> [--password=<password>]) [-f]
+		[--allow-client-registration | --adopt-legacy-provider-key]
     	[--port=<port>]
         [--api_url=<api_url>]
         [--connect_url=<connect_url>]
-        [--wallet=<coldkey_ss58>]
+        [--wallet=<coldkey_ss58> [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]]
 		[--test-egress-source-ip=<source_ip>]
         [--max-memory=<mem>]
         [-v...]
-    provider wallet set <coldkey_ss58>
+    provider wallet set <coldkey_ss58> [--coldkey_seed_file=<path> | --message=<text> --signature=<hex>]
+        [--api_url=<api_url>]
+        [-v...]
+    provider wallet challenge <coldkey_ss58>
         [--api_url=<api_url>]
         [-v...]
     provider claim [--epoch=<epoch>] [--rpc=<rpc_url>]... [--key_file=<key_file>] [--dry-run]
         [--api_url=<api_url>]
         [-v...]
     provider claim-daemon --config=<path>
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
     provider fleet manifest --manifest=<path>
         [-v...]
+    provider fleet register --manifest=<path> --hotkey_seed_file=<path> --coldkey_seed_file=<path> --substrate=<ws_url>...
+        [--burn_limit_rao=<n>] [--fee_limit_rao=<n>] [--apply | --dry-run]
+        [--provisional-runtime-compatibility=<profile> --runtime-observation-dir=<path>]
+        [--mainnet-runtime-authority=<path> --mainnet-runtime-authority-sha256=<hex>]
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
+        [-v...]
     provider fleet publish --manifest=<path> --substrate=<ws_url>... --hotkey_seed_file=<path>
+        [--provisional-runtime-compatibility=<profile> --runtime-observation-dir=<path>]
+        [--mainnet-runtime-authority=<path> --mainnet-runtime-authority-sha256=<hex>]
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
     provider fleet bind --manifest=<path> --client_id=<hex> --client_seed_file=<path> --hotkey_seed_file=<path> --valid_from_epoch=<e> --valid_to_epoch=<e> --rpc=<rpc_url>... --relayer_key_file=<path> [--dry-run]
+        [--mainnet-runtime-authority=<path> --mainnet-runtime-authority-sha256=<hex>]
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
     provider fleet status --manifest=<path> --client_id=<hex> --substrate=<ws_url>... --rpc=<rpc_url>...
+        [--provisional-runtime-compatibility=<profile> --runtime-observation-dir=<path>]
+        [--mainnet-runtime-authority=<path> --mainnet-runtime-authority-sha256=<hex>]
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
     provider fleet revoke --manifest=<path> --client_id=<hex> --client_seed_file=<path> --effective_epoch=<e> --rpc=<rpc_url>... --relayer_key_file=<path> [--dry-run]
+        [--mainnet-runtime-authority=<path> --mainnet-runtime-authority-sha256=<hex>]
+        [--durable-volumes=<path> --durable-volumes-sha256=<hash>]
         [-v...]
     provider proxy auth add [<key>] <proxy_user> <proxy_password> [-f]
     provider proxy auth remove [<key>] [--all]
@@ -114,6 +137,8 @@ Usage:
     provider choose_network --show
 
 Options:
+    --durable-volumes=<path>          Exact external storage declaration; fleet writes require the owner-local schema.
+    --durable-volumes-sha256=<hash>   Reviewed sha256: digest; claim daemons require the daemon-volume schema.
     -h --help                        Show this help and exit.
     --version                        Show version.
     -v...                            Enable verbose mode. -v implies verbose level 1,
@@ -121,6 +146,8 @@ Options:
     -f                               Force overwrite the JWT token store file or proxy value, if exists.
                                      By default, existing values will not be overwritten.
     --api_url=<api_url>              Specify a custom API URL to use.
+	--allow-client-registration       Explicitly permit a new durable provider client operation; never replaces retained identity.
+	--adopt-legacy-provider-key       Assert the retained legacy provider key is original; refresh only, no new client allocation.
 	--config=<path>                    Strict release-1.0 daemon/component configuration.
     --connect_url=<connect_url>      Specify a custom connect URL to use.
     <api_url>                        API URL to save (https://, or http:// only for an explicit loopback host).
@@ -134,6 +161,25 @@ Options:
     --max-memory=<mem>               Set the maximum amount of memory in bytes, or the suffixes b, kib, mib, gib may be used [This is a soft limit].
     --wallet=<coldkey_ss58>          Also set the subnet claim wallet at startup, same as provider wallet set.
                                      A failure is logged and does not block providing.
+    --coldkey_seed_file=<path>       With --wallet / wallet set: the coldkey's 32-byte sr25519 seed (raw, or 64 hex
+                                     chars with an optional 0x prefix) in a private file that is never created here.
+                                     The CLI fetches the wallet challenge and signs it, proving the coldkey; refused
+                                     unless the seed derives <coldkey_ss58>. The seed never leaves the host.
+    --message=<text>                 With --wallet / wallet set: the challenge printed by "provider wallet challenge",
+                                     signed elsewhere (a literal \n stands for a newline). Needs --signature.
+    --signature=<hex>                The coldkey's 64-byte sr25519 signature over --message, hex (0x optional), made
+                                     in the "substrate" signing context over the exact UTF-8 text (LF line endings,
+                                     no trailing newline) or over that text wrapped in <Bytes>...</Bytes> (what a
+                                     Polkadot extension signRaw of type "bytes" signs). Without --coldkey_seed_file
+                                     or --message/--signature the set is sent unsigned, which the main network refuses.
+                                     With fleet register: the same seed grammar for the fleet coldkey that signs
+                                     register_limit (the hotkey's owner); keep it off the mining hosts.
+    --burn_limit_rao=<n>             fleet register: maximum registration burn in rao passed to register_limit;
+                                     the runtime rejects a higher live burn. Omitted: the burn observed at the read.
+    --fee_limit_rao=<n>              fleet register: maximum native transaction fee in rao, checked with
+                                     payment_queryInfo before broadcast [default: 10000000].
+    --apply                          fleet register: sign, journal and broadcast. Without it the command is a dry
+                                     run that reads the live burn economics and quotes the signed extrinsic.
 	--test-egress-source-ip=<source_ip>  Integration-harness-only IPv4 loopback source bound to both
 	                                     platform control and provider exit sockets.
     <coldkey_ss58>                   Subnet claim wallet: an ss58 coldkey address (prefix 42).
@@ -142,6 +188,10 @@ Options:
     --rpc=<rpc_url>                  EVM json-rpc endpoint used to check the payout root on-chain.
                                      May be repeated; endpoints are tried in order until one answers.
 	--substrate=<ws_url>               Substrate websocket endpoint; repeatable ordered failover.
+	--provisional-runtime-compatibility=<profile>  Explicit testnet consumed-runtime profile.
+	--runtime-observation-dir=<path>   Absolute durable directory required with the provisional profile.
+	--mainnet-runtime-authority=<path>  Independently reviewed exact mainnet fleet runtime authority document.
+	--mainnet-runtime-authority-sha256=<hex>  Approved SHA-256 of the exact authority bytes (64 lowercase hex digits).
 	--manifest=<path>                  Canonical urnetwork-fleet-manifest-v1 JSON file.
 	--client_id=<hex>                  Stable 16-byte UR client identity from the fleet manifest.
 	--client_seed_file=<path>          Raw or hex 32-byte Ed25519 client key seed.
@@ -151,15 +201,11 @@ Options:
 	--effective_epoch=<e>              Future epoch at which a fleet revocation takes effect.
 	--relayer_key_file=<path>          EVM transaction relayer key; it receives no binding ownership.
     --key_file=<key_file>            Path to a hex-encoded 32-byte secp256k1 EVM private key. When given,
-                                     claim / bind-head / unbind-head sign and submit the transaction (via
-                                     the sn/miner/onchain path) instead of only printing the calldata.
-    --dry-run                        With --key_file, stop at the eth_call preflight and send nothing.
-                                     Without --key_file the command only verifies, so it has no effect.
-    --hotkey=<hex>                   Head-tier miner hotkey as a 0x-optional 32-byte hex account id.
-    --registrant=<registrant>        The EVM address that will submit bindHead via snclaim (0x, 20 bytes).
-                                     The head-bind digest is bound to this address, so it MUST equal the
-                                     snclaim sender, whose mirror must be the hotkey's on-chain coldkey.
-    --contract=<contract>            STSubnet proxy contract address (0x, 20 bytes).
+                                     claim signs and submits the settlement-vault claim (via the
+                                     sn/miner/onchain path) instead of only printing the calldata.
+    --dry-run                        With --key_file / --relayer_key_file, stop at the eth_call preflight and
+                                     send nothing; for fleet register the explicit dry run (the default).
+                                     Without a key the claim command only verifies, so it has no effect.
     <key>                            Authentication key
     <proxy_user>                     SOCKS5 user
     <proxy_password>                 SOCKS5 password
@@ -173,7 +219,7 @@ Options:
 // Run is the miner CLI entry point (the executable lives at cli/miner). It takes
 // the argument slice (os.Args[1:]) so it can be driven from tests. The miner is
 // the subnet's provider: it runs the provide/proxy/auth flows plus the on-chain
-// wallet / claim / bind-head actions (formerly connect/provider).
+// wallet / claim / fleet actions (formerly connect/provider).
 func Run(args []string) {
 	opts, err := docopt.ParseArgs(mainUsage(), args, RequireVersion())
 
@@ -196,11 +242,13 @@ func Run(args []string) {
 	} else if wallet, _ := opts.Bool("wallet"); wallet {
 		if set, _ := opts.Bool("set"); set {
 			walletSet(opts)
+		} else if challenge, _ := opts.Bool("challenge"); challenge {
+			walletChallenge(opts)
 		}
 	} else if claim_, _ := opts.Bool("claim"); claim_ {
 		claim(opts)
 	} else if claimDaemon, _ := opts.Bool("claim-daemon"); claimDaemon {
-		if err := runClaimDaemon(fleetOpt(opts, "--config")); err != nil {
+		if err := runClaimDaemon(minerStorageContext(context.Background(), opts), fleetOpt(opts, "--config")); err != nil {
 			panic(err)
 		}
 	} else if fleet_, _ := opts.Bool("fleet"); fleet_ {
@@ -303,13 +351,14 @@ func auth(opts docopt.Opts) {
 		// auth_code
 		authCode, _ := opts.String("<auth_code>")
 		if authCode == "" {
-			fmt.Print("Enter auth code: ")
-			authCodeBytes, err := term.ReadPassword(int(syscall.Stdin))
+			stdin := int(syscall.Stdin)
+			var err error
+			authCode, err = readAuthCode(os.Stdin, os.Stdout, term.IsTerminal(stdin), func() ([]byte, error) {
+				return term.ReadPassword(stdin)
+			})
 			if err != nil {
 				panic(err)
 			}
-			authCode = strings.TrimSpace(string(authCodeBytes))
-			fmt.Printf("\n")
 		}
 
 		authCodeLogin := &sdk.AuthCodeLoginArgs{
@@ -384,29 +433,14 @@ func provide(opts docopt.Opts) {
 		panic(err)
 	}
 
-	// Bandwidth registry tracks per-proxy byte counters for billing.
-	// Both TCP (H1) and UDP (H3/QUIC) paths feed the same counters.
-	bwRegistry := bandwidth.NewRegistry()
-
-	event := connect.NewEventWithContext(context.Background())
-	event.SetOnSignals(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-
-	ctx, cancel := context.WithCancel(event.Ctx())
-	defer cancel()
+	ctx, stopSignals := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+	defer stopSignals()
 
 	// subnet claim wallet (sn/PLAN.md 7.3, decision D-2): validate the
-	// ss58 coldkey locally and idempotently register it with the platform
-	// before providing starts. A failure warns and does not block
-	// providing — the wallet may already be set from a previous run, and
-	// the call can be retried any time with `provider wallet set`.
-	if coldkeySs58, walletErr := opts.String("--wallet"); walletErr == nil && coldkeySs58 != "" {
-		walletClientStrategy := connect.NewClientStrategyWithDefaults(ctx)
-		if err := snSetWallet(ctx, walletClientStrategy, apiUrl, coldkeySs58); err != nil {
-			fmt.Printf("subnet wallet not set: %s\n", err)
-			fmt.Printf("continuing to provide. Retry with: provider wallet set <coldkey_ss58>\n")
-		}
-		walletClientStrategy.Close()
-	}
+	// ss58 coldkey locally, prove it with --coldkey_seed_file or
+	// --message/--signature (sn_wallet.go) and idempotently register it
+	// with the platform before providing starts.
+	provideSetWallet(ctx, apiUrl, opts)
 
 	allProxySettings := readProxySettings()
 	providerCount := len(allProxySettings)
@@ -423,13 +457,96 @@ func provide(opts docopt.Opts) {
 	)
 	applyProviderProcessMemory(memoryPlan)
 
-	provideWithProxy := func(proxySettings *connect.ProxySettings) {
+	allowClientRegistration, _ := opts.Bool("--allow-client-registration")
+	adoptLegacyProviderKey, _ := opts.Bool("--adopt-legacy-provider-key")
+	settings := providerRunSettings{apiUrl: apiUrl, connectUrl: connectUrl, port: port, proxySettings: allProxySettings, memoryPlan: memoryPlan, testEgressDialer: testEgressDialer, allowClientRegistration: allowClientRegistration, adoptLegacyProviderKey: adoptLegacyProviderKey}
+	// Preserve the legacy zero exit on daemon completion. Unlike os.Exit, a
+	// normal return releases the signal owner and all owned daemon workers.
+	_ = settings.run(ctx, os.Stdout)
+}
+
+// Each invocation owns its output, status server and provider children. The
+// finite CLI setup above retains its existing output and validation behavior.
+func (self providerRunSettings) run(parent context.Context, writer io.Writer) (returnErr error) {
+	output, err := newProviderDiagnostics(parent, writer)
+	if err != nil {
+		return err
+	}
+	hooks, _ := parent.Value(providerDiagnosticHooksKey{}).(providerDiagnosticHooks)
+	defer func() {
+		closeErr := output.close()
+		returnErr = errors.Join(returnErr, closeErr)
+		if hooks.afterClose != nil {
+			hooks.afterClose(output, closeErr)
+		}
+	}()
+	if hooks.afterCreate != nil {
+		hooks.afterCreate(output)
+	}
+	ctx, cancel := context.WithCancel(parent)
+	defer cancel()
+	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
+		return err
+	}
+	providers := self.proxySettings
+	if len(providers) == 0 {
+		providers = []*connect.ProxySettings{nil}
+	}
+	progressMembers := make([]providerProgressConfigMember, 0, len(providers))
+	for _, proxy := range providers {
+		progressMembers = append(progressMembers, providerProgressConfigMember{Slot: providerRegistrationSlot(proxy), ApiUrl: self.apiUrl, ConnectUrl: self.connectUrl})
+	}
+	progress, err := newProviderProgressOwner("standalone", progressMembers)
+	if err != nil {
+		return err
+	}
+	defer progress.close()
+	status, err := newProviderStatusServer(self.port, output, cancel, progress)
+	if err != nil {
+		output.observe(providerStatusFailed, 0, false, err, 0, nil)
+		return err
+	}
+	defer func() { returnErr = errors.Join(returnErr, status.close()) }()
+	if err := validateProviderRegistrationSlots(self.proxySettings); err != nil {
+		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
+		return err
+	}
+	keyPath, err := providerStatePath(".provider.key")
+	if err != nil {
+		output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
+		return err
+	}
+	keyOwner, err := clientauth.OpenProviderClientKey(ctx, keyPath, clientauth.ProviderClientKeyOptions{AllowCreate: self.allowClientRegistration, AdoptLegacyKey: self.adoptLegacyProviderKey})
+	if err != nil {
+		if ctx.Err() == nil {
+			output.observe(providerStartupRecoveryRequired, 0, false, err, 0, nil)
+		}
+		return err
+	}
+	defer func() { returnErr = errors.Join(returnErr, keyOwner.Close()) }()
+
+	// Bandwidth registry tracks per-proxy byte counters for billing.
+	// Both TCP (H1) and UDP (H3/QUIC) paths feed the same counters.
+	bwRegistry := bandwidth.NewRegistry()
+
+	provideWithProxy := func(index uint64, proxySettings *connect.ProxySettings) (returnErr error) {
+		defer func() {
+			// Registered first, this runs after every real cleanup below.
+			// Keep cleanup causes even when an SDK/operation panics.
+			if cause := recover(); cause != nil {
+				if original, ok := cause.(error); ok {
+					returnErr = errors.Join(returnErr, original)
+				} else {
+					returnErr = errors.Join(returnErr, errors.New("provider worker panicked"))
+				}
+			}
+		}()
 		proxyCtx, proxyCancel := context.WithCancel(ctx)
 		defer proxyCancel()
 
 		clientStrategySettings := connect.DefaultClientStrategySettings()
 		clientStrategySettings.ProxySettings = proxySettings
-		clientStrategySettings.DialContextSettings = testEgressDialer
+		clientStrategySettings.DialContextSettings = self.testEgressDialer
 		// Wrap with bandwidth tracking for billing (H1+H3).
 		bw := bwRegistry.Register(0) // direct connection by default
 		proxyAddr := ""
@@ -441,9 +558,17 @@ func provide(opts docopt.Opts) {
 		clientStrategySettings.DialContextSettings = bandwidth.WrapDialContextSettings(
 			clientStrategySettings.DialContextSettings, bw, proxyAddr,
 		)
-		networkSpace := sdk.NewNetworkSpaceWithUrls(proxyCtx, apiUrl, connectUrl, clientStrategySettings)
+		networkSpace := sdk.NewNetworkSpaceWithUrls(proxyCtx, self.apiUrl, self.connectUrl, clientStrategySettings)
 		defer networkSpace.Close()
 		api := networkSpace.GetApi()
+		// Authentication refusal also joins the API before the shared key owner
+		// is released; later callback cleanup may join this same owner again.
+		defer func() {
+			returnErr = errors.Join(returnErr, api.CloseAndWait(context.Background()))
+			if hook, ok := ctx.Value(providerRegistrationHooksKey{}).(providerRegistrationHooks); ok && hook.afterApiJoined != nil {
+				hook.afterApiJoined()
+			}
+		}()
 
 		networkJwtPath, err := providerStatePath("jwt")
 		if err != nil {
@@ -454,51 +579,29 @@ func provide(opts docopt.Opts) {
 			panic(err)
 		}
 
-		byClientJwt, clientId, err := func() (string, connect.Id, error) {
-			for {
-				byClientJwt, clientId, err := clientauth.LoadOrCreateClientJwt(
-					proxyCtx,
-					api,
-					networkJwtPath,
-					clientJwtPath,
-					fmt.Sprintf("provider %s %s", runtime.GOOS, RequireVersion()),
-				)
-				if err == nil {
-					return byClientJwt, clientId, nil
-				}
-				retryDelay := time.Duration(500+mathrand.Intn(10000)) * time.Millisecond
-				fmt.Printf("init proxy auth failed. Will retry in %.2fs\n", float64(retryDelay/time.Millisecond)/1000.0)
-				select {
-				case <-proxyCtx.Done():
-					return "", connect.Id{}, proxyCtx.Err()
-				case <-time.After(retryDelay):
-				}
-			}
-		}()
+		seed := keyOwner.Seed()
+		byClientJwt, _, err := authenticateProvider(proxyCtx, api, networkJwtPath, clientJwtPath, keyOwner, providerRegistrationSlot(proxySettings), self.allowClientRegistration, output, index)
 		if err != nil {
-			if proxyCtx.Err() != nil {
-				return
+			if proxyCtx.Err() == nil {
+				output.observe(providerStartupRecoveryRequired, index, true, err, 0, nil)
 			}
-			panic(err)
+			return err
 		}
 
-		refreshSub := api.AddJwtRefreshListener(clientauth.JwtRefreshListenerFunc(func(jwt string) {
-			if err := clientauth.WriteToken(clientJwtPath, jwt); err != nil {
-				fmt.Printf("provider client JWT save failed: %s\n", err)
-				cancel()
-			}
-		}))
-		defer refreshSub.Close()
-		logoutSub := api.AddAuthLogoutListener(clientauth.AuthLogoutListenerFunc(func() {
-			if err := clientauth.MarkRejected(clientJwtPath, networkJwtPath); err != nil {
-				fmt.Printf("provider client JWT rejection save failed: %s\n", err)
-			}
-			fmt.Printf("provider authentication was rejected; run `provider auth` if the bootstrap credential is no longer valid\n")
-			cancel()
-		}))
-		defer logoutSub.Close()
+		callbacks := &providerAuthenticationCallbacks{diagnostics: output, provider: index, clientJwtPath: clientJwtPath, networkJwtPath: networkJwtPath, cancel: cancel, custody: keyOwner}
+		boundRefresh := &providerBoundRefresh{original: byClientJwt, callbacks: callbacks}
+		refreshSub := api.AddJwtRefreshListener(boundRefresh)
+		integritySub := api.AddClientRefreshIntegrityListener(boundRefresh)
+		logoutSub := api.AddAuthLogoutListener(callbacks)
+		defer func() {
+			// Callbacks can cancel, but only this enclosing owner joins them.
+			returnErr = errors.Join(returnErr, api.CloseAndWait(context.Background()))
+			refreshSub.Close()
+			integritySub.Close()
+			logoutSub.Close()
+			returnErr = errors.Join(returnErr, callbacks.failure())
+		}()
 
-		seed, _ := readProviderClientKeySeed()
 		certPem, keyPem, _ := readProviderTlsCertAndKey()
 		extenderKeySeed, _ := readProviderExtenderKeySeed()
 		settings := sdk.DefaultDeviceLocalSettings()
@@ -508,12 +611,12 @@ func provide(opts docopt.Opts) {
 		// the role would activate under a new key every launch and the
 		// operator would revoke the old one as fast as it publishes it.
 		settings.KeyMaterial.SetExtenderKeySeed(extenderKeySeed)
-		applyProviderMemoryTarget(settings, memoryPlan.DeviceMemoryTargetByteCount)
+		applyProviderMemoryTarget(settings, self.memoryPlan.DeviceMemoryTargetByteCount)
 		// Wrap ProviderDialContextSettings with bandwidth tracking too.
 		// The SDK copies this into both TcpBufferSettings and UdpBufferSettings
 		// dial paths, so both TCP and QUIC egress get byte-counted.
 		settings.ProviderDialContextSettings = bandwidth.WrapDialContextSettings(
-			testEgressDialer, bw, proxyAddr,
+			self.testEgressDialer, bw, proxyAddr,
 		)
 		instanceId := sdk.NewId()
 		device, err := sdk.NewDeviceLocal(
@@ -529,119 +632,75 @@ func provide(opts docopt.Opts) {
 			panic(err)
 		}
 		defer func() {
-			_ = device.CloseAndWait(context.Background())
+			returnErr = errors.Join(returnErr, device.CloseAndWait(context.Background()))
 		}()
 
 		// Always-on public mode includes network and friends/family service,
 		// matching the SDK's hierarchical provide contract.
 		device.SetProvideControlMode(sdk.ProvideControlModeAlways)
+		progressGeneration, err := progress.attach(proxyCtx, providerRegistrationSlot(proxySettings), device)
+		if err != nil {
+			return err
+		}
+		defer progress.retire(providerRegistrationSlot(proxySettings), progressGeneration)
 
 		keyMaterial := device.GetKeyMaterial()
-		if seed := keyMaterial.GetClientKeySeed(); 0 < len(seed) {
-			if err := writeProviderClientKeySeed(seed); err != nil {
-				fmt.Printf("provider client key save failed: %s\n", err)
-			}
+		if !bytes.Equal(keyMaterial.GetClientKeySeed(), seed) {
+			return errors.New("provider device changed its retained registration key")
 		}
-		certPem = keyMaterial.GetProvideTlsCertificatePem()
-		keyPem = keyMaterial.GetProvideTlsPrivateKeyPem()
-		if 0 < len(certPem) && 0 < len(keyPem) {
-			if err := writeProviderTlsCertAndKey(certPem, keyPem); err != nil {
-				fmt.Printf("provider tls cert/key save failed: %s\n", err)
-			}
-		}
-		// the role generates an identity when there was none to pass in, so
-		// the seed is read back and kept for the next launch
-		if extenderKeySeed = keyMaterial.GetExtenderKeySeed(); 0 < len(extenderKeySeed) {
-			if err := writeProviderExtenderKeySeed(extenderKeySeed); err != nil {
-				fmt.Printf("provider extender key save failed: %s\n", err)
-			}
-		}
-
-		fmt.Printf("client_id: %s\n", clientId)
-		fmt.Printf("instance_id: %s\n", instanceId)
-		printProviderExtenderIdentity(extenderKeySeed)
+		persistProviderAuxiliaryKeyMaterial(output, index, keyMaterial)
+		observeProviderExtenderIdentity(output, index, keyMaterial.GetExtenderKeySeed())
 		// one line per change, so the activation prints once it settles and
 		// nothing repeats while it holds (connect/EXTENDER.md F3, G3)
 		extenderStatusSub := device.AddExtenderProvideStatusChangeListener(
-			newProviderExtenderStatusListener())
+			newProviderExtenderStatusListener(output, index))
 		defer extenderStatusSub.Close()
 
 		select {
 		case <-proxyCtx.Done():
 		}
+		return nil
 	}
 
 	var wg sync.WaitGroup
-
-	if 0 < len(allProxySettings) {
-		fmt.Printf("Using %d proxy servers:\n", len(allProxySettings))
-
-		for i, proxySettings := range allProxySettings {
-			var user string
-			var password string
-			if proxySettings.Auth != nil {
-				user = proxySettings.Auth.User
-				password = proxySettings.Auth.Password
-			}
-			fmt.Printf("  proxy[%d] %s (%s/%s)\n",
-				i,
-				proxySettings.Address,
-				obfuscateUser(user),
-				obfuscatePassword(password),
-			)
-		}
-		for i, proxySettings := range allProxySettings {
-			wg.Add(1)
-			go connect.HandleError(func() {
-				defer wg.Done()
-
-				initialDelay := time.Duration(i) * 100 * time.Millisecond
-				select {
-				case <-ctx.Done():
-				case <-time.After(initialDelay):
-				}
-
-				provideWithProxy(proxySettings)
-			})
-		}
-	} else {
+	results := make(chan error, len(providers))
+	for index, proxySettings := range providers {
 		wg.Add(1)
-		go connect.HandleError(func() {
+		go func() {
 			defer wg.Done()
-			provideWithProxy(nil)
-		})
-	}
-
-	if 0 < port {
-		fmt.Printf(
-			"Provider %s started. Status on *:%d\n",
-			RequireVersion(),
-			port,
-		)
-		statusServer := &http.Server{
-			Addr:    fmt.Sprintf(":%d", port),
-			Handler: &Status{},
-		}
-		defer statusServer.Shutdown(ctx)
-
-		go connect.HandleError(func() {
-			defer cancel()
-			err := statusServer.ListenAndServe()
-			if err != nil {
-				fmt.Printf("status error: %s\n", err)
+			var result error
+			defer func() {
+				if cause := recover(); cause != nil {
+					if original, ok := cause.(error); ok {
+						result = original
+					} else {
+						result = errors.New("provider worker panicked")
+					}
+				}
+				if result != nil {
+					output.observe(providerWorkerFailed, uint64(index), true, result, 0, nil)
+				}
+				results <- result
+			}()
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Duration(index) * 100 * time.Millisecond):
 			}
-		}, cancel)
-	} else {
-		fmt.Printf(
-			"Provider %s started\n",
-			RequireVersion(),
-		)
+			if ctx.Err() != nil {
+				return
+			}
+			output.observe(providerStarted, uint64(index), true, nil, 0, nil)
+			result = provideWithProxy(uint64(index), proxySettings)
+		}()
 	}
-
 	wg.Wait()
-
-	// exit
-	os.Exit(0)
+	cancel()
+	close(results)
+	for result := range results {
+		returnErr = errors.Join(returnErr, result)
+	}
+	return returnErr
 }
 
 // providerStateDir returns the absolute path of the provider state
@@ -750,90 +809,6 @@ func writeProviderExtenderKeySeed(extenderKeySeed []byte) error {
 	return os.WriteFile(p, extenderKeySeed, 0600)
 }
 
-// Prints the extender public key this provider activates under, which is what
-// the operator's records name and what the mesh peer id is derived from (B1).
-func printProviderExtenderIdentity(extenderKeySeed []byte) {
-	if len(extenderKeySeed) == 0 {
-		return
-	}
-	publicKey, err := connect.ExtenderPublicKeyFromSeed(extenderKeySeed)
-	if err != nil {
-		fmt.Printf("provider extender key is not readable: %s\n", err)
-		return
-	}
-	fmt.Printf("extender_public_key: %s\n", hex.EncodeToString(publicKey))
-}
-
-// providerExtenderStatusListener prints the provider extender status whenever
-// it changes (connect/EXTENDER.md F3, G3), so one line lands when the
-// activation settles and nothing repeats while it holds. The sdk already
-// coalesces these callbacks to at most one per second.
-type providerExtenderStatusListener struct {
-	stateLock sync.Mutex
-	line      string
-}
-
-func newProviderExtenderStatusListener() *providerExtenderStatusListener {
-	return &providerExtenderStatusListener{}
-}
-
-func (self *providerExtenderStatusListener) ExtenderProvideStatusChanged(
-	status *sdk.ExtenderProvideStatus,
-) {
-	line := providerExtenderStatusLine(status)
-	changed := func() bool {
-		self.stateLock.Lock()
-		defer self.stateLock.Unlock()
-		if self.line == line {
-			return false
-		}
-		self.line = line
-		return true
-	}()
-	if changed {
-		fmt.Printf("extender: %s\n", line)
-	}
-}
-
-// One extender status as a line, carrying only what changes: whether the
-// carriers bound, which families are activated and where, and the newest
-// failure either half is standing on.
-func providerExtenderStatusLine(status *sdk.ExtenderProvideStatus) string {
-	if status == nil || !status.Enabled {
-		return "off"
-	}
-	parts := []string{}
-	if status.Listening {
-		parts = append(parts, "listening")
-	} else {
-		parts = append(parts, "not listening")
-	}
-	if status.ListenError != "" {
-		parts = append(parts, "carriers "+status.ListenError)
-	}
-	for _, family := range []struct {
-		name      string
-		activated bool
-		ip        string
-	}{
-		{name: "v4", activated: status.ActivatedV4, ip: status.Ipv4},
-		{name: "v6", activated: status.ActivatedV6, ip: status.Ipv6},
-	} {
-		if family.activated {
-			parts = append(parts, fmt.Sprintf("%s activated at %s", family.name, family.ip))
-		} else {
-			parts = append(parts, family.name+" not activated")
-		}
-	}
-	if status.LastActivationError != "" {
-		parts = append(parts, "last error "+status.LastActivationError)
-	}
-	if status.RevokedTime != 0 {
-		parts = append(parts, "revoked")
-	}
-	return strings.Join(parts, ", ")
-}
-
 // readProviderTlsCertAndKey loads the sequence-level TLS server cert
 // chain and matching private key from `~/.urnetwork/.provider.cert`
 // (PEM, leaf first, possibly chained) and the private key from the
@@ -895,22 +870,30 @@ func writeProviderTlsCertAndKey(certPem, keyPem []byte) error {
 }
 
 type Status struct {
+	diagnostics *providerDiagnostics
+	progress    *providerProgressOwner
 }
 
 func (self *Status) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/provider-progress" {
+		serveProviderProgress(w, r, self.progress)
+		return
+	}
 	type WarpStatusResult struct {
-		Version       string `json:"version,omitempty"`
-		ConfigVersion string `json:"config_version,omitempty"`
-		Status        string `json:"status"`
-		ClientAddress string `json:"client_address,omitempty"`
-		Host          string `json:"host"`
+		Version       string                    `json:"version,omitempty"`
+		ConfigVersion string                    `json:"config_version,omitempty"`
+		Status        string                    `json:"status"`
+		ClientAddress string                    `json:"client_address,omitempty"`
+		Host          string                    `json:"host"`
+		Diagnostics   *providerDiagnosticStatus `json:"diagnostics,omitempty"`
 	}
 
 	result := &WarpStatusResult{
 		Version: RequireVersion(),
 		// ConfigVersion: RequireConfigVersion(),
-		Status: "ok",
-		Host:   RequireHost(),
+		Status:      "ok",
+		Host:        RequireHost(),
+		Diagnostics: self.diagnostics.snapshot(),
 	}
 
 	responseJson, err := json.Marshal(result)

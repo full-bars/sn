@@ -1,0 +1,1576 @@
+{
+  "artifacts": [
+    {
+      "bytes": 74620,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/miner-custody-receipt.json",
+      "sha256": "fff73485fe63aaeeae1c9212d05b301c01a6fafd9ddb4d10832bf6a04fefabbc"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-adoption-initial-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 82274,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-adoption-initial-normal.jsonl",
+      "sha256": "ebca1b8ea952d5d5409d7d10ca32f150e2566024c7faf2731658bf072dd19832"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-adoption-initial-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-admission-control.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1661,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-admission-control.jsonl",
+      "sha256": "1729ad7852c31e46fc95b708e415916aad101046d937482ab29d8951da8f18a3"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-admission-control.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 234,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-baseline-overlay.json",
+      "sha256": "2257f461e037eaebed016f3553e5be811d3f75104a288805448a13c6ebb15a0f"
+    },
+    {
+      "bytes": 19058,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-control-main.go",
+      "sha256": "261ec58d9e246bab9740615f6a5ded6b69d86e6a5a8aaf1340cbc32c89f969c8"
+    },
+    {
+      "bytes": 189,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-control-overlay.json",
+      "sha256": "2484784fcff720a6e6a42eef88bec7ff073b4e71f3f09d51bb759f9071f316f8"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-intermediate-red.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1374,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-intermediate-red.jsonl",
+      "sha256": "8bf648992a81726a9733e54cf57b6b4c2aea6268378557f0148fe80e8e1c30c7"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-intermediate-red.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 12235,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-original-body.go",
+      "sha256": "27002846ab0f147030b8ac13d421d97440523a44339533da73f9d06ddda9f2e5"
+    },
+    {
+      "bytes": 10018,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-cancel-prior-source.go",
+      "sha256": "0fd4d0099dbc35ada9bec21d5bf32b757b0c80de8a858c75fd49b1767d7d683b"
+    },
+    {
+      "bytes": 3579,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-causal-overlay-bindings.json",
+      "sha256": "57c7e8113ab49dbac995bc856333f6aac0f3dfb67fd563523d91c2f726672c36"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-census-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1648,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-census-baseline-normal.jsonl",
+      "sha256": "86343779ae499dae6200090be73974808dad016595502ce6b84dcfe30ceaec79"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-census-baseline-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 233,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-close-baseline-overlay.json",
+      "sha256": "29bd548f0d825f44e748db61e855293c3ce4ada9d83f52759708e4dcb39f7ba2"
+    },
+    {
+      "bytes": 12342,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-close-original-body.go",
+      "sha256": "69fc632842aeceffa191beb47f667555d6359020944611c73740f795fa59f7c1"
+    },
+    {
+      "bytes": 11068,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-close-prior-source.go",
+      "sha256": "253050f04f808b05098ebdbaa26b690072dfd1ee64d1b01dd64705febeed2107"
+    },
+    {
+      "bytes": 11689,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-checkpoint.mod",
+      "sha256": "aaa8ae7687c001dba17ea487eeb10d94a0dcb0b0b5deb0f9c68070736e8cb421"
+    },
+    {
+      "bytes": 65112,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-checkpoint.sum",
+      "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3"
+    },
+    {
+      "bytes": 1395,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-normal.command.json",
+      "sha256": "9adcc751ba19473e55a81701bde71f443337b790d6c69bc78f04fd5be4a8b590"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1806,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-normal.jsonl",
+      "sha256": "3c0b7069f8e2e7a75c08c4e3e9cbc1169828297d7162ee9d5d706fee8cff9c5f"
+    },
+    {
+      "bytes": 271,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-normal.result.json",
+      "sha256": "e0a1dca827b4d8c06cbde482bad6b1416c7a3c7566b5c8aee9cb5da61e32a0e0"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1408,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-race.command.json",
+      "sha256": "eeec16d8a19e23f6cdbfc641b8e2da15d2b0a75252385d43bcd47b8bb88c7984"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1806,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-race.jsonl",
+      "sha256": "47bcd59b54c10809ec95213961706e4e4a9ddd8f3635c0e3ca45bc1c4274a8b8"
+    },
+    {
+      "bytes": 269,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-race.result.json",
+      "sha256": "81d541a401a000012a2945a0e81bf20a2be189b324eece506f3e3ea5a51c0fa8"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-cancel-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1493,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-normal.command.json",
+      "sha256": "bf07b075ed43caafae9ad5aa57914e3ce3cea2bbce00e498fd826bcf1f2090da"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 3052,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-normal.jsonl",
+      "sha256": "42f52b66b16ccfdf7e6aa21b6c90dd8e857f791f46d70c353d87a7c8a79b327c"
+    },
+    {
+      "bytes": 323,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-normal.result.json",
+      "sha256": "73e8d0d9f6509ad1efb01fb8699fcc84e8403cb08446ba2608452f3bb988afe1"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1506,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-race.command.json",
+      "sha256": "3835f3157c281a9db1c4bec0e3a2b4de1f10fdd1d4b26a5017e7b4cf959d3c79"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 3053,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-race.jsonl",
+      "sha256": "beaab999ad45242299deb5e36050181f9406653abc78988c4d45f4ce9dee107e"
+    },
+    {
+      "bytes": 321,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-race.result.json",
+      "sha256": "2ede382cf05c8466536935ac86ed415fde933c7a06889db37d15dbd3f3eecd55"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-close-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1154,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-normal.command.json",
+      "sha256": "c0a60853ce500185721444fa8fda84978e0ffacd7698e2d84382c75da3c83aeb"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 99178,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-normal.jsonl",
+      "sha256": "fcf2a3c1cee4367ec290d418431cbb17902a211d1ceac9c561467455120b7a90"
+    },
+    {
+      "bytes": 7409,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-normal.result.json",
+      "sha256": "42e2970d6a6b1667304a6630ac916cf76b1e7e98abbb59a98462b8a39de96a01"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1167,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-race.command.json",
+      "sha256": "4c034e7bd71709930ad013c3fb272bf413202d9e509d63ae8f2fa28d5765658d"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-race.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 99185,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-race.jsonl",
+      "sha256": "06c61029168dff216535227f20185f810475b9dfc524222916e8c00c2baab334"
+    },
+    {
+      "bytes": 7409,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-race.result.json",
+      "sha256": "084ffa175c17f44db064e1a5b00b4c625f98027efa2472b7efaa12013e5e2a4c"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 17385,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-results.json",
+      "sha256": "5c74ac995d0fd4f9fce7cc064eca23e35d837643bd3cde2489b15bc2fdfcf559"
+    },
+    {
+      "bytes": 1381,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-normal.command.json",
+      "sha256": "05b6ea1c7048051d0d14a1b065e20a8765dfa48a4890cb37fb80d6316974cd2b"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1896,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-normal.jsonl",
+      "sha256": "c2423ccc763c8fdd32f9b61ca5dedd53b73fbe243ae170adaa7e7dfa3abdb96d"
+    },
+    {
+      "bytes": 264,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-normal.result.json",
+      "sha256": "5a23b5d737923dc9269d2490262061612b854976b2bb21b015cfa6d2bbd0ce85"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1394,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-race.command.json",
+      "sha256": "7eafaae1588c64b9356bf1c643a0d218c577d702fed9fac95f8c31d624c01c8e"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1893,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-race.jsonl",
+      "sha256": "84b8417ae4d92b6518eecbb6e57eacc2a1493cda322d7c3990adfe268faa5ddd"
+    },
+    {
+      "bytes": 262,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-race.result.json",
+      "sha256": "3cbdc7f3dd7a516ddc22691cf4e5635f19a81ee3e65a67ccf4e9006bc0afb7a3"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-resume-race.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.cleanup.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 53,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.daemon.txt",
+      "sha256": "ab753d878f483007af384ca907dea3175a3752820705c3014a00b43bdaae1a74"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 92,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.fixture-url.txt",
+      "sha256": "eb64f38a698634c071bb53630606c9baad9e5d32e1b852f5e4b2755b12b1ee2f"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.launch.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.launch.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.network-cleanup.log",
+      "sha256": "afa9dce845e1d61bcb4bb94bbf2adaa852849a79d35a972becba274ef76ce5ec"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.network.id",
+      "sha256": "afa9dce845e1d61bcb4bb94bbf2adaa852849a79d35a972becba274ef76ce5ec"
+    },
+    {
+      "bytes": 33,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.owner",
+      "sha256": "c73a66d7f05cb99171d2f38fcf37e2a246a40709d47f88adcde330e967a24ae3"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.postgres-cleanup.log",
+      "sha256": "2a2263e082c0c584a5e9e5004c8d3d7a8d1c222ee3bf0b66169c580b075a3f58"
+    },
+    {
+      "bytes": 10872,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.postgres-inspect.json",
+      "sha256": "b8101f3118c0e896efa20eb6aeeafbecd6933afab312c2bae24663b2d97e9adc"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.postgres-start.log",
+      "sha256": "2a2263e082c0c584a5e9e5004c8d3d7a8d1c222ee3bf0b66169c580b075a3f58"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.postgres.id",
+      "sha256": "2a2263e082c0c584a5e9e5004c8d3d7a8d1c222ee3bf0b66169c580b075a3f58"
+    },
+    {
+      "bytes": 9429,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.postgres.log",
+      "sha256": "5c871b7944b8a9e04a845e0bf339a3f66d6bcc3d3416e96a20f1156f760d2f00"
+    },
+    {
+      "bytes": 1627,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.resident-before.txt",
+      "sha256": "3d92c099f205586fb46592424e12ab4ff28cdb6ca32dc2715eb5349db353558f"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 591,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.stdout",
+      "sha256": "a5b2a1a3ea8999ab857e49484e1886cdb05dab19ee94bfb0e04d0c162c52f5f2"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-run.wrapper.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 1029,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-vet.command.json",
+      "sha256": "d0ee527064055abdec8741200bb7e50190a0012254b5a1befeea6ffef67de580"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-vet.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-vet.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 177,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-vet.result.json",
+      "sha256": "7f590a1c21c6dd4288a0c01c80eb4c18f0dc962b00881161ef800b844e5fd4ac"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-final-vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.cleanup.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 53,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.daemon.txt",
+      "sha256": "ab753d878f483007af384ca907dea3175a3752820705c3014a00b43bdaae1a74"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 92,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.fixture-url.txt",
+      "sha256": "08227b0f18b0ce90507eb27cc8872b03115decfe764192b214bc15c335c76053"
+    },
+    {
+      "bytes": 99554,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.jsonl",
+      "sha256": "4fc59658ae9676329af794eb78b009aacd673d146e33a19ff31609d140a444f5"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.launch.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.launch.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.network-cleanup.log",
+      "sha256": "fab2517c17a800010fd4fefb593592550e84085009fbc0456b463e34665170c5"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.network.id",
+      "sha256": "fab2517c17a800010fd4fefb593592550e84085009fbc0456b463e34665170c5"
+    },
+    {
+      "bytes": 33,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.owner",
+      "sha256": "057fc9254af1e89d73c9ff061e0d90b3517a4ad415625278f816fbe94c56c946"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.postgres-cleanup.log",
+      "sha256": "3fc99e43ccc5d6765198d8bf1202066a17087e4e35fb59f4c25bd3c04dc8026c"
+    },
+    {
+      "bytes": 10872,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.postgres-inspect.json",
+      "sha256": "0cae55e8d688c2011f706da89d376c6edddc0f3105905bf8c89d5f2e9f591973"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.postgres-start.log",
+      "sha256": "3fc99e43ccc5d6765198d8bf1202066a17087e4e35fb59f4c25bd3c04dc8026c"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.postgres.id",
+      "sha256": "3fc99e43ccc5d6765198d8bf1202066a17087e4e35fb59f4c25bd3c04dc8026c"
+    },
+    {
+      "bytes": 6234,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.postgres.log",
+      "sha256": "0bf5db9211896f63068757d2712b6d8324f8ed5dda8c3cabb0c35fc361d9df89"
+    },
+    {
+      "bytes": 1627,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.resident-before.txt",
+      "sha256": "3d92c099f205586fb46592424e12ab4ff28cdb6ca32dc2715eb5349db353558f"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal-retry.wrapper.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.cleanup.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 53,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.daemon.txt",
+      "sha256": "ab753d878f483007af384ca907dea3175a3752820705c3014a00b43bdaae1a74"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.launch.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.launch.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.network-cleanup.log",
+      "sha256": "226fc2b28159f301fe804c93272c27a87402d74d89c12a1f7614ef2faababd70"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.network.id",
+      "sha256": "226fc2b28159f301fe804c93272c27a87402d74d89c12a1f7614ef2faababd70"
+    },
+    {
+      "bytes": 33,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.owner",
+      "sha256": "28494f18489dbe116c1df382447e2b805e845deef4853e4959ea0a4bef1eaef6"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.postgres-cleanup.log",
+      "sha256": "641f1909320cfc2489ebf0cbe48b7fbccd671a1a2d5d48b5f85693be5f655157"
+    },
+    {
+      "bytes": 10712,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.postgres-inspect.json",
+      "sha256": "b72cf39655569708e0ddf50267ca203577c961cc8db9e6e131b1a7f4eb4a3c3b"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.postgres-start.log",
+      "sha256": "641f1909320cfc2489ebf0cbe48b7fbccd671a1a2d5d48b5f85693be5f655157"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.postgres.id",
+      "sha256": "641f1909320cfc2489ebf0cbe48b7fbccd671a1a2d5d48b5f85693be5f655157"
+    },
+    {
+      "bytes": 4865,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.postgres.log",
+      "sha256": "d93148fc67c39551802b0040102000b78828df99995bde152ea13079fc78bb83"
+    },
+    {
+      "bytes": 1627,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.resident-before.txt",
+      "sha256": "3d92c099f205586fb46592424e12ab4ff28cdb6ca32dc2715eb5349db353558f"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-normal.wrapper.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 1154,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-normal.command.json",
+      "sha256": "e2ea9a44c312f0463e9ef1c447b739680c5143149c26dfea068b7fbd8cd532ec"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 99546,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-normal.jsonl",
+      "sha256": "cdf6f37f40b780b02ee0096809152f6ed3ba3adef58ebd9f1b7715e0d8c2919a"
+    },
+    {
+      "bytes": 7411,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-normal.result.json",
+      "sha256": "6e6ad50ce348ed3421fcedc0efecf933cbe84b0f40614b7f883ac12579e578ca"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.cleanup.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 53,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.daemon.txt",
+      "sha256": "ab753d878f483007af384ca907dea3175a3752820705c3014a00b43bdaae1a74"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 92,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.fixture-url.txt",
+      "sha256": "80864716649e634009ccf08a5849926527dd73219d6b352f8f8be53af6fec91e"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.launch.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.launch.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.network-cleanup.log",
+      "sha256": "c95039b91cea845f580dd7ddf00261da8289d70f0933f530fe5d60f8f9e43d67"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.network.id",
+      "sha256": "c95039b91cea845f580dd7ddf00261da8289d70f0933f530fe5d60f8f9e43d67"
+    },
+    {
+      "bytes": 33,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.owner",
+      "sha256": "70a268358014f6e5fc7708287fd737bcf160bfe1f4cd9bea682bcf9e0d0b0e1b"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.postgres-cleanup.log",
+      "sha256": "e36e6eb95b3b6b8a71edcefd889db7eacbe1df37d42fa6b71a31b32b7a5a80d8"
+    },
+    {
+      "bytes": 10872,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.postgres-inspect.json",
+      "sha256": "465c83c40708b69a69e6aa050de49cf7856c5ade83288908f50133103610b08e"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.postgres-start.log",
+      "sha256": "e36e6eb95b3b6b8a71edcefd889db7eacbe1df37d42fa6b71a31b32b7a5a80d8"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.postgres.id",
+      "sha256": "e36e6eb95b3b6b8a71edcefd889db7eacbe1df37d42fa6b71a31b32b7a5a80d8"
+    },
+    {
+      "bytes": 6690,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.postgres.log",
+      "sha256": "3309bf3fc1eb5c323d458c0e4eab905d96b9144d25f2e8e79094f6bf845bbde5"
+    },
+    {
+      "bytes": 1627,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.resident-before.txt",
+      "sha256": "3d92c099f205586fb46592424e12ab4ff28cdb6ca32dc2715eb5349db353558f"
+    },
+    {
+      "bytes": 184,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.stderr",
+      "sha256": "82775ce4bd3f20578bb6e26b7aec340e3f55924a015dbb15b3537acc53aaf1ad"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.stdout",
+      "sha256": "4633ead68c29a7739e81feace404cf9124e9c0ba96fd2f3d85e7a16093c274ca"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-custody-qualified-run.wrapper.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-recovery-first-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 5012,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-recovery-first-normal.jsonl",
+      "sha256": "2f0db95c83c84011c78e36580cea34cf9e37fb706d9ce5c4749e03c157e27f75"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-recovery-first-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-recovery-second-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 11603,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-recovery-second-normal.jsonl",
+      "sha256": "341580a44fcd9141dde6bb56d41e0db620a328388a29c8143a38c073a6894d4c"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-recovery-second-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 234,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-resume-baseline-overlay.json",
+      "sha256": "d56823f49b719f7a2d548faf00631bd77815785e88c2edc438de7779a26c9a02"
+    },
+    {
+      "bytes": 11234,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-resume-original-body.go",
+      "sha256": "bc68db71f6462be15f42133528e5d61eb021e5d15b0e421a6f72fe00bfa5a38e"
+    },
+    {
+      "bytes": 10018,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-resume-prior-source.go",
+      "sha256": "0fd4d0099dbc35ada9bec21d5bf32b757b0c80de8a858c75fd49b1767d7d683b"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-snapshot-initial-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 5554,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-snapshot-initial-normal.jsonl",
+      "sha256": "39207e12dd3295d06cc69170bee1dbbb269e93ad770d7870ec92366653d219a6"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-snapshot-initial-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-successor-fixture-normal.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 5804,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-successor-fixture-normal.jsonl",
+      "sha256": "b2bba753438a769710bbb79fdfe3839d29f08f728f2ca099717263faf1d279b4"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/monitor-successor-fixture-normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 47120,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/native-journal-receipt.json",
+      "sha256": "c0569ceba8cf412f7447feeb60c1b90d7c01d31b08adc0354137454e8dbe57db"
+    },
+    {
+      "bytes": 5043,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/prepare-monitor-causal-overlays.go",
+      "sha256": "d24e05ba2b8697b0652c79aeab83616cd44141126d28b1c123c0c9b72d484f62"
+    },
+    {
+      "bytes": 909,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/prepare-monitor-final-runner.go",
+      "sha256": "8838ea18f911d3acb05aa720a69ce7a298caefb41a701da893879bc8aa139327"
+    },
+    {
+      "bytes": 1083,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/prepare-monitor-qualified-runner.go",
+      "sha256": "34f50b376c9cfa4b3d5a63c661b9e6e0307b3ebdb8dac54930d3c23c539d445b"
+    },
+    {
+      "bytes": 5462,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/qualify-monitor-custody-final.go",
+      "sha256": "c73389f927795230947a5d6383113ce5742993af16042f29ee8451cb80fbd67c"
+    },
+    {
+      "bytes": 5470,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/qualify-monitor-custody.go",
+      "sha256": "ca4c27b037f30b04b0351f17cb14883a1ec874246a254cab9af8ff85fab3bdae"
+    },
+    {
+      "bytes": 4379,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/run-monitor-custody-final.sh",
+      "sha256": "21d8352acaba2d36101f78521f633aa8dffe220284fc6170d0d76551f2f12a5b"
+    },
+    {
+      "bytes": 4425,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/run-monitor-custody-normal-retry.sh",
+      "sha256": "b61ca50438df9af86701d75f739a1f49f2a64b59a249c82fda972f9833bbf9e5"
+    },
+    {
+      "bytes": 4401,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/run-monitor-custody-normal.sh",
+      "sha256": "9be9662bb25300be46d06bbadd7265167b5a74ecdc7e3ede6bc074b938e104ac"
+    },
+    {
+      "bytes": 4377,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/run-monitor-custody-qualified.sh",
+      "sha256": "1ae13dcbbbac95f8ee32c84a10d81943de0817dcd9f666cff8a9c28861fa4601"
+    },
+    {
+      "bytes": 9899,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/seal-monitor-custody.go",
+      "sha256": "2a58bbd2042347ca835053329542a33e22579d3403a37e2271d87d887a365675"
+    },
+    {
+      "bytes": 16992,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/snapshot-readonly-receipt.json",
+      "sha256": "67b836274acf3d6bb2331bfc1298768af699094429acc10e9407ab8ea7f94f66"
+    },
+    {
+      "bytes": 11191,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/go.mod",
+      "sha256": "44ae2f38cf56c4981e2b3dcf393bc611dc79a95d4e3115b6387da45d9678ffdd"
+    },
+    {
+      "bytes": 65112,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/go.sum",
+      "sha256": "27b20d83aff6cb853384d5e39aca6b549324907d64d7439e49afa45cb33255e3"
+    },
+    {
+      "bytes": 7064,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/internal/durablefixture/fixture_linux.go",
+      "sha256": "1b6ec23982cd2140f7f0ee2afd9c90b3f0b20307b1c4592a6bd34bc9b3b43ff1"
+    },
+    {
+      "bytes": 3107,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/internal/durablefixture/snapshot_linux.go",
+      "sha256": "39fa14256ff241830f1642aaa9eba1eb6c8c29d751698872afa2c192410b7245"
+    },
+    {
+      "bytes": 2880,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/internal/durablehead/head.go",
+      "sha256": "9f43ffb336995eb3e2a30db0335ad50f99c1ef7635567e9c498f9b8de3f11491"
+    },
+    {
+      "bytes": 29282,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/internal/durablehead/head_linux.go",
+      "sha256": "a16e16e66b042f0864b8693284f606fda1deea5d1aafed700e1efc1632128872"
+    },
+    {
+      "bytes": 6695,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/internal/durablepath/directory.go",
+      "sha256": "8e7f30bbb721628b194bcc667703e88c13228e29f2a555c112d4e460bd066256"
+    },
+    {
+      "bytes": 1866,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/durable_volume_admission_test.go",
+      "sha256": "ea88d8d3f12c9916fd4ae61c73b6c1aacc4f3c8c89323a92281c2b43e62ff6ab"
+    },
+    {
+      "bytes": 1926,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/durable_volume_arguments.go",
+      "sha256": "492a07552705457f0f769b02cb0e3dac0edd2fe4b34522b6e177bfaf0db95537"
+    },
+    {
+      "bytes": 21858,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/main.go",
+      "sha256": "9a8e40d00b54768d8b8902ce8546caf8d2d5850423c5c469ad7a7242e9127300"
+    },
+    {
+      "bytes": 10538,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_checkpoint.go",
+      "sha256": "c10b12bff5bf9019bb81e495f67c4b038e1f0fb7ec3305cfc9daac8819851f72"
+    },
+    {
+      "bytes": 6195,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_checkpoint_test.go",
+      "sha256": "869b57802d4448aced2bf67b2d249d42fb6bfeee2128cd2505929fe273668eae"
+    },
+    {
+      "bytes": 9520,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_directory.go",
+      "sha256": "3196c637513e0f8f567781268ea4477dd0cac44fc93250e7399c5bcac250e7d2"
+    },
+    {
+      "bytes": 1293,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_durable_census_test.go",
+      "sha256": "3b9c9508c1f2fcc13ab3dd503e73f1a5cd144ce76aaeef4515f90cfdc137d612"
+    },
+    {
+      "bytes": 6698,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_durable_owner_test.go",
+      "sha256": "272cbf9fa78d4c2112709c723606280c0f8627fd8958bc1dade1878d1b18a9cc"
+    },
+    {
+      "bytes": 8908,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_initial_outage_test.go",
+      "sha256": "b843395df7e9e1b3e5ec2fc47b18e59ec2ac03b68572f792f88655d54ecc9631"
+    },
+    {
+      "bytes": 9083,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_metrics.go",
+      "sha256": "5332b287b2fdf052a7ca931b9a2713aeb45fb7fe94e60fef1f9d36abe4166089"
+    },
+    {
+      "bytes": 12039,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_metrics_test.go",
+      "sha256": "c4ecf0c514e08887e3efb6f3c2a35fc7ffaf26b23c5a1b72e22edb34da54a792"
+    },
+    {
+      "bytes": 26823,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_operator.go",
+      "sha256": "872542c39333013bd26d3d05571db194e11d8807d5e1f0121e4ba2bdb0694904"
+    },
+    {
+      "bytes": 19397,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_operator_test.go",
+      "sha256": "398299023db1af88c9a8b88f0b5f6b3812d82f65e6e23f10e2044628c1939eaa"
+    },
+    {
+      "bytes": 4658,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_output_fixture_test.go",
+      "sha256": "b2852ab4d3598e8852a623d09763ce01c3cbc1f4e5f96903909f16e11c87c7e9"
+    },
+    {
+      "bytes": 9542,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_output_test.go",
+      "sha256": "498d3de5a6d76f56e0edba623a06da7e8cc5b3c5f5a32a9d2961dada8dad9eb4"
+    },
+    {
+      "bytes": 28096,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_read_incident_test.go",
+      "sha256": "e97cf6fe5c7db4dc73f12c8ee3853b15bba1ee7015766b1139fd34c8a3b3ffe1"
+    },
+    {
+      "bytes": 10692,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_restart_publication_test.go",
+      "sha256": "7af3ea6d332d859dc91ad69df71aacd1c5bf225587c8241a30bb20fff2f69648"
+    },
+    {
+      "bytes": 12256,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_services.go",
+      "sha256": "2dc9e1189ad7a17d1fddca043d73c3492306ac0c1108924d2c3e4329fb5a5ebc"
+    },
+    {
+      "bytes": 8948,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_services_checkpoint.go",
+      "sha256": "3f621707e2026822de5177ce18ef54bab0c1938158be13dff7c3eec3f67d9cae"
+    },
+    {
+      "bytes": 12568,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_services_file_test.go",
+      "sha256": "a12906b25eae9497ecade6912bfaf998fad4e981dbf320b1f9038fcfe3e3d56a"
+    },
+    {
+      "bytes": 22717,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_services_test.go",
+      "sha256": "78e104783be870920008f516f98ee85178f87eff53d45bde8dd8bad3f7e17d73"
+    },
+    {
+      "bytes": 5866,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_services_workers_test.go",
+      "sha256": "c8b34cb9018f217cf4b795cab97c099020b8cea555034dfa4f55a998c954a0be"
+    },
+    {
+      "bytes": 2497,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_storage_fixture_test.go",
+      "sha256": "305f1a8f8c65d38012fa2ffbfe4713798200923f3c5cdeeb145ab52b5a9a5973"
+    },
+    {
+      "bytes": 1592,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_storage_recovery.go",
+      "sha256": "b4a4c938d5b5d0b9d2bc934dd4417afc10eb351788b419ff9a30b813a2e490d1"
+    },
+    {
+      "bytes": 19589,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_storage_recovery_test.go",
+      "sha256": "0e83c73223fbcf1aa5c4ad92e6ba8712367da5bf694ffa3ac46bef8d24357311"
+    },
+    {
+      "bytes": 7301,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/monitor_unavailable_test.go",
+      "sha256": "dad890ca1f0de74d816d8408bd7f2998af543e256bfe95592a2bba3ef68c7a75"
+    },
+    {
+      "bytes": 4422,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/storage_inventory.go",
+      "sha256": "7f36efee19deae71fa3256cbe609623efab184b2be00e6553eea766980454305"
+    },
+    {
+      "bytes": 9568,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/mainnet/storage_inventory_test.go",
+      "sha256": "1747ca62705f85c668139a575a304c1d9bea8fe113fea2d1c8c73628691ef114"
+    },
+    {
+      "bytes": 1505,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/third_party/go-substrate-rpc-client/go.mod",
+      "sha256": "2915174f97f9aeccd01002b6c61c86366eabcaa2e6f84a21e4ea880e8d45f8d9"
+    },
+    {
+      "bytes": 10513,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/third_party/go-substrate-rpc-client/go.sum",
+      "sha256": "a5bac63fcbe282e4af978e6fbd58eec74a9a92fd606b4944bf7c0a606dd0923e"
+    },
+    {
+      "bytes": 138,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/third_party/npipe/go.mod",
+      "sha256": "59af6d15db6f8d4765fc6a4df110651a895a4c7b3126c7882234cfa0ed9193d9"
+    },
+    {
+      "bytes": 330,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/third_party/npipe/go.sum",
+      "sha256": "d07138b47b7e360eebd880e37ba9ed07d47d45e479b3e31393ebc31421ad5ea7"
+    },
+    {
+      "bytes": 109,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/glog/go.mod",
+      "sha256": "5022a0fd461de289e6e84a4f0930a362613b5bcaaffe090a201e68b6714cb40b"
+    },
+    {
+      "bytes": 167,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/glog/go.sum",
+      "sha256": "6ba1f1ec5cac9d186a7701f560308f919d1d8ddccb49cbf2aaf6281a48268c74"
+    },
+    {
+      "bytes": 157,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/goidenticons/go.mod",
+      "sha256": "67dd6efd0fafd9d54e4bbf953eb07c9526ba55ee0dd4eb3e752ef201f619f28c"
+    },
+    {
+      "bytes": 386,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/goidenticons/go.sum",
+      "sha256": "bd0d81bad9b37ba97715ebb3124e837dcaa4475b92f126f9be95ba7a690fafa0"
+    },
+    {
+      "bytes": 1972,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/proxy/go.mod",
+      "sha256": "bd538f2de13d314e5604022082b28bb692702e3b68aa869abf1df2dfeab3a4e1"
+    },
+    {
+      "bytes": 8881,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/proxy/go.sum",
+      "sha256": "2b76cc33188e10bb564bbe78f82aa16e49d36700a7ad17ef44f94e716fe6e50d"
+    },
+    {
+      "bytes": 10468,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/server/go.mod",
+      "sha256": "a50c18b8e1ca83b8c9c0919a398261d4256a351da48e31f8435c49e97b00570b"
+    },
+    {
+      "bytes": 67231,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/server/go.sum",
+      "sha256": "6be07e61f4935b0f5f9d9f32eebe41424f0b81eb24d6ade6f50d2c9fe6de366b"
+    },
+    {
+      "bytes": 237,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/userwireguard/go.mod",
+      "sha256": "470b20749c9d46b715bce19db1e50618892417a2a4d72b2697efb0e55070f965"
+    },
+    {
+      "bytes": 873,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/userwireguard/go.sum",
+      "sha256": "a0f1fdc50b67dc08e03b7f0e7f6b83acc4722dfc47e29a9f77fe91e2b683ed0b"
+    },
+    {
+      "bytes": 1752,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/warp/go.mod",
+      "sha256": "8413b369e94cf2f76927ef8f5f91794fdd723dd169125b85e1f12d6244d94a0d"
+    },
+    {
+      "bytes": 7822,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/warp/go.sum",
+      "sha256": "5c4cc7a41a8364f54706216ad9554a219b3aba1b4600bd447e16b621ee41a441"
+    },
+    {
+      "bytes": 20593,
+      "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/receipt.json",
+      "sha256": "d0fc6021be65a0b0556989b398a8d5b3563da4d56ceb5a54e6e71a9eac67fba2"
+    },
+    {
+      "bytes": 9035,
+      "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/snapshot-receipt.json",
+      "sha256": "c714c4b75bb343b2885dd95859eca4bc2c6eaf44fcccadd3a26d28812948caa5"
+    },
+    {
+      "bytes": 15434687,
+      "path": "/usr/local/go/bin/go",
+      "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+    }
+  ],
+  "behavior": [
+    "Persistent monitor admission requires an explicit daemon volume declaration at the actual runtime boundary; canceled admission is a quiet joined stop.",
+    "Chain, validator and database-observer checkpoints require separately preprovisioned snapshot heads; missing retained members cannot default to fresh state.",
+    "Reserve pressure retains the same owner and completed bytes; actual uncertain writes join/close and reconcile only original exact pending bytes, at most three generations per role/controller lifetime.",
+    "Terminal validator/operator workers release their own checkpoint and metrics locks before reporting completion; unrelated roles keep observing until explicit parent cancellation joins them.",
+    "Terminal operator publication reports ownership-error rather than suggesting an active retry.",
+    "Public storage-inventory/storage-verify dispatch consumes exact external declaration/hash, rejects missing/canceled authority and short output, and returns restart_authorized=false."
+  ],
+  "causal_scope": [
+    "Close: exact18dc composition body with pure worker-return observers; both validator and operator lock-release controls fail normal/race.",
+    "Campaign cancel: exact e754 composition body, forwarding current required fixture context and observing its original cancel; one peer-preservation control fails normal/race.",
+    "Recovery: exact e754 validator worker body against current guarded stores; one exact lost-ack continuation control fails normal/race. These body overlays are not historical whole-program builds.",
+    "Earlier lost-checkpoint census normal failure and intermediate cancellation/output fixture failures remain separately retained; no retrospective whole-source qualification claim."
+  ],
+  "dependencies": [
+    {
+      "clean": true,
+      "head": "025802a50e2dc56dc56c3cb749db7375aa9f72be",
+      "module": "github.com/urnetwork/server",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/server",
+      "tree": "adf05777aca3ad4fb97c4befd2163a74064d635b"
+    },
+    {
+      "clean": true,
+      "head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "module": "github.com/urnetwork/warp",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    },
+    {
+      "clean": true,
+      "head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "module": "github.com/urnetwork/proxy",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    {
+      "clean": true,
+      "head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "module": "github.com/urnetwork/userwireguard",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    {
+      "clean": true,
+      "head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "module": "github.com/urnetwork/glog",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    {
+      "clean": true,
+      "head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "module": "github.com/urnetwork/goidenticons",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    {
+      "clean": true,
+      "head": "f1b445f9e8dafca790f7bc147430bc9c242b65e5",
+      "module": "github.com/centrifuge/go-substrate-rpc-client/v4",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/third_party/go-substrate-rpc-client",
+      "tree": "232a6b348eaa501a537ee104e3cb7b811dd3bb66"
+    },
+    {
+      "clean": true,
+      "head": "f1b445f9e8dafca790f7bc147430bc9c242b65e5",
+      "module": "gopkg.in/natefinch/npipe.v2",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint/third_party/npipe",
+      "tree": "232a6b348eaa501a537ee104e3cb7b811dd3bb66"
+    }
+  ],
+  "fixture": {
+    "cleanup_exit": 0,
+    "daemon": "e449fc4f-0462-4973-ae42-17df6c2796dc /var/lib/docker",
+    "label": "1633aa8812e7774ab76ac2bf991ec09c",
+    "owned_container": "37fc77fb977b8712215ee9d8566e6238248683765238f130f1e8cc21ec3ae27b",
+    "owned_network": "55ed4b9faed741f98c0e2dc77cb6019e3b82b9f4e92d3347c79bd818375be74c",
+    "postgres_image": "sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941",
+    "storage": "bounded tmpfs, read-only container root, random loopback PostgreSQL port; unique private ownership label; resident containers untouched"
+  },
+  "independent_primitive_receipts": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/receipt.json",
+      "scope": "native695 primitive only",
+      "sha256": "d0fc6021be65a0b0556989b398a8d5b3563da4d56ceb5a54e6e71a9eac67fba2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-snapshot-independent-20261002/snapshot-receipt.json",
+      "scope": "snapshot a5 primitive only",
+      "sha256": "c714c4b75bb343b2885dd95859eca4bc2c6eaf44fcccadd3a26d28812948caa5"
+    }
+  ],
+  "limits": [
+    "114 selected monitor/storage inspection roots per mode and mainnet package vet; not all mainnet tests, full SN, production RPC, deployment, or a composed release.",
+    "Author consumer execution only; independent monitor rerun remains separate. Native/snapshot independent receipts do not qualify consumers.",
+    "The three-generation automatic reconciliation bound is per process/controller lifetime; no campaign reset or anti-rollback proof against replacement of all valid predecessor bytes.",
+    "Inventory uses frozen Connect6cd file/root-generation scope. New native/snapshot/validator owner-attribute inventory, provisioning, capacity forecasting/rotation and cross-host/database restore remain open separate changes.",
+    "Xops deployment of reviewed declaration/hash assets and production startup remain unqualified. No live signing/broadcast/deploy/mount/service start occurred."
+  ],
+  "phases": [
+    {
+      "elapsed_seconds": 61.02972229,
+      "exit": 0,
+      "expectation_met": true,
+      "failures": null,
+      "phase": "normal",
+      "root_pass": [
+        "TestMonitorCanceledBeforeStorageAdmissionClosesQuietly",
+        "TestMonitorCancellationAtStorageAdmissionClosesQuietly",
+        "TestMonitorCheckpointClosedOwnerCannotOverwriteSuccessor",
+        "TestMonitorCheckpointMigratesLegacyFinalityWithoutInventingOutage",
+        "TestMonitorCheckpointMigratesV2WithoutInventingSuccess",
+        "TestMonitorCheckpointRejectsCorruptionAndWrongNetwork",
+        "TestMonitorCheckpointRejectsPartialInitialState",
+        "TestMonitorCheckpointRejectsSymlinkAndRelativePath",
+        "TestMonitorCheckpointReplacementCannotPublishFreshState",
+        "TestMonitorCheckpointRetainsFinalityAcrossRestart",
+        "TestMonitorCheckpointRetainsPhysicalDirectoryWhenAliasMoves",
+        "TestMonitorCommandPersistsAndResumesCheckpoint",
+        "TestMonitorDurableCensusRefusesLostCompletedCheckpoint",
+        "TestMonitorDurableReplacementRecoveryIsPerRoot",
+        "TestMonitorDurableReserveRecoveryRetainsSameOwner",
+        "TestMonitorInitialOutageSurvivesCommandRestart",
+        "TestMonitorMetricsBoundsAndRejectsUnknownEvents",
+        "TestMonitorMetricsCommandMarksIntegrityAndStallsCritical",
+        "TestMonitorMetricsCommandRetainsSuccessThroughOutageAndRecovery",
+        "TestMonitorMetricsCommandStopsOnPublicationFailure",
+        "TestMonitorMetricsSingleOwnerAndPathRefusals",
+        "TestMonitorNativeDeadlineCheckpointMigratesLegacyAndRejectsDowngrade",
+        "TestMonitorNativeDeadlineCommandAmbiguousCheckpointRetainsIncident",
+        "TestMonitorNativeDeadlineCommandForecastsAndCrosses",
+        "TestMonitorNativeDeadlineCommandKeepsRoleIncidentsSeparate",
+        "TestMonitorNativeDeadlineCommandRestartRetainsIncident",
+        "TestMonitorNativeDeadlineCommandRetainsFirstAndLastMisses",
+        "TestMonitorNativeDeadlineCommandStaleNativeCannotInventMiss",
+        "TestMonitorNativeDeadlineCommandUnavailableCannotInventMiss",
+        "TestMonitorNativeDeadlineForecastUsesNativeScheduleRules",
+        "TestMonitorNativeDeadlinePolicyRequiresBoundedExplicitMargin",
+        "TestMonitorOperatorCheckpointAndPolicySourceFence",
+        "TestMonitorOperatorCommandReadsProductionJournalAndRestartsOutage",
+        "TestMonitorOperatorCredentialFenceAndPublicationAmbiguity",
+        "TestMonitorOperatorFreshReadCannotRefreshLedgerProgress",
+        "TestMonitorOperatorOutageRestartPreservesDomainIncidents",
+        "TestMonitorOperatorPolicyBoundsCoverCombinedAndOperatorOnlyCensus",
+        "TestMonitorOperatorRefusesChangedIdentityClocksAndOriginalAge",
+        "TestMonitorOutputBlockedSinkPreservesRoleFilesAndShutdown",
+        "TestMonitorOutputEarlyAdmissionStillJoinsBlockedSink",
+        "TestMonitorOutputProducerClockAndFreshnessStayIndependent",
+        "TestMonitorOutputProducerCountersRespectInstanceAndRetainedState",
+        "TestMonitorPersistentLibraryRequiresExplicitVolume",
+        "TestMonitorPublicationsRetainCompleteBytesAfterAmbiguousSync",
+        "TestMonitorReadIncidentCheckpointRejectsCorruptAndForgedContinuity",
+        "TestMonitorReadIncidentCheckpointRejectsImpossibleRecoveryClocks",
+        "TestMonitorReadIncidentCommandCancellationPreservesOpenCheckpoint",
+        "TestMonitorReadIncidentCommandHistoryFitsExistingBudgets",
+        "TestMonitorReadIncidentCommandMigratesLegacyHealthyCheckpoint",
+        "TestMonitorReadIncidentCommandMigratesLegacyOpenOutage",
+        "TestMonitorReadIncidentCommandPublicationRetryKeepsIdentity",
+        "TestMonitorReadIncidentCommandRecoveryRecurrenceAndRestart",
+        "TestMonitorReadIncidentCommandRenewalKeepsOriginalAuthority",
+        "TestMonitorReadIncidentCommandSaturatesCountsAndRefusesSequenceExhaustion",
+        "TestMonitorReadOutageClockRollbackIsCritical",
+        "TestMonitorReadOutageCountsTheFirstRetryWindow",
+        "TestMonitorReadOutageEscalatesAndSurvivesRestart",
+        "TestMonitorRejectsAliasedCheckpointMetricsLockCollision",
+        "TestMonitorRejectsInconsistentRpcEvidence",
+        "TestMonitorRejectsTestnetRoute",
+        "TestMonitorRequiresMainnetChainId",
+        "TestMonitorRestartRetainsMetricsWhileInitialReadPending",
+        "TestMonitorServicesCommandAmbiguousCheckpointDoesNotConfirmExport",
+        "TestMonitorServicesCommandAmbiguousPublicationRetriesAndRecovers",
+        "TestMonitorServicesCommandBlockedSourcePreservesPeer",
+        "TestMonitorServicesCommandExporterFailurePreservesPeer",
+        "TestMonitorServicesCommandFutureClockAndRollbackRemainVisible",
+        "TestMonitorServicesCommandInitialOutageAndCheckpointCorruption",
+        "TestMonitorServicesCommandOutageAgeRecoveryAndRestart",
+        "TestMonitorServicesCommandOwnershipFailurePreservesPeerAndJoinsCancellation",
+        "TestMonitorServicesCommandRejectsInvalidFilesAndEverySourceMismatch",
+        "TestMonitorServicesCommandRejectsReplacedSourceThenReadsSuccessor",
+        "TestMonitorServicesCommandRejectsRoleOutputCollisionBeforeReads",
+        "TestMonitorServicesCommandRejectsSameIntentAgeRewrite",
+        "TestMonitorServicesCommandRenewalRetainsOriginalIntentThroughOutage",
+        "TestMonitorServicesCommandRestartPreservesMetricsUntilActualRead",
+        "TestMonitorServicesCommandRetainsAdmissionCleanupFailure",
+        "TestMonitorServicesCommandRetainsCleanupFailures",
+        "TestMonitorServicesCommandSeparatesBlockedChainAndRoleOutage",
+        "TestMonitorServicesCommandStaleHeartbeatAndUnknownSchedule",
+        "TestMonitorServicesFileCloseFailureAndCancellationWithholdBytes",
+        "TestMonitorServicesPolicyBoundsAndStrictWire",
+        "TestMonitorServicesPolicyRetainsReadCauseAndRejectsDuplicateRoles",
+        "TestMonitorStateDetectsFinalityStallAndConflict",
+        "TestMonitorSteeringLivenessCheckpointSemanticRefusalAndLegacy",
+        "TestMonitorSteeringLivenessCommandIncidentRecoveryAndRestart",
+        "TestMonitorSteeringLivenessCommandRoleIsolationAndWaiting",
+        "TestMonitorSteeringLivenessDoesNotAuthorizeRepair",
+        "TestMonitorSteeringLivenessIncidentSurvivesUncertaintyAndPolicyChange",
+        "TestMonitorSteeringLivenessMissingOutcomeAfterBaseline",
+        "TestMonitorSteeringLivenessPolicyBounds",
+        "TestMonitorSteeringLivenessPreservesSignedLegacyRepair",
+        "TestMonitorSteeringLivenessRecoveryRequiresLaterOutcome",
+        "TestMonitorSteeringLivenessRejectsSameInstanceBoundaryRewrite",
+        "TestMonitorSteeringLivenessStartupWaitsAndDisabledPolicy",
+        "TestMonitorStorageChainLostAckReopensOriginalCheckpoint",
+        "TestMonitorStorageChainReserveRetainsOwner",
+        "TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer",
+        "TestMonitorStorageCheckpointRecoveryBudgetIsPerRole",
+        "TestMonitorStorageLostMemberCannotBecomeFreshThroughWrappedAbsence",
+        "TestMonitorStorageOperatorLostAckRetainsIncident",
+        "TestMonitorStorageReserveRecoversOnSameOwner",
+        "TestMonitorStorageStoppedOperatorReleasesOwnersBeforePeerStops",
+        "TestMonitorStorageStoppedRoleReleasesOwnersBeforePeerStops",
+        "TestMonitorSuccessfulContinuityUsesCompletionTime",
+        "TestMonitorTempoDriftCommandUsesApprovedProfile",
+        "TestMonitorTempoDriftProfileRetainsLegacyAndRejectsUnknown",
+        "TestMonitorTempoDriftRootTempoIncidentSurvivesCheckpoint",
+        "TestStorageInspectionBoundsAndCancellationEmitNoReport",
+        "TestStorageInspectionBusyRootRetainsCustody",
+        "TestStorageInspectionPublicDispatchRequiresAndRetainsAuthority",
+        "TestStorageInspectionRejectsShortOutput",
+        "TestStorageInspectionRequiresExplicitDeclaration",
+        "TestStorageInspectionRetainedLocalVerification"
+      ],
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 162.997580145,
+      "exit": 0,
+      "expectation_met": true,
+      "failures": null,
+      "phase": "race",
+      "root_pass": [
+        "TestMonitorCanceledBeforeStorageAdmissionClosesQuietly",
+        "TestMonitorCancellationAtStorageAdmissionClosesQuietly",
+        "TestMonitorCheckpointClosedOwnerCannotOverwriteSuccessor",
+        "TestMonitorCheckpointMigratesLegacyFinalityWithoutInventingOutage",
+        "TestMonitorCheckpointMigratesV2WithoutInventingSuccess",
+        "TestMonitorCheckpointRejectsCorruptionAndWrongNetwork",
+        "TestMonitorCheckpointRejectsPartialInitialState",
+        "TestMonitorCheckpointRejectsSymlinkAndRelativePath",
+        "TestMonitorCheckpointReplacementCannotPublishFreshState",
+        "TestMonitorCheckpointRetainsFinalityAcrossRestart",
+        "TestMonitorCheckpointRetainsPhysicalDirectoryWhenAliasMoves",
+        "TestMonitorCommandPersistsAndResumesCheckpoint",
+        "TestMonitorDurableCensusRefusesLostCompletedCheckpoint",
+        "TestMonitorDurableReplacementRecoveryIsPerRoot",
+        "TestMonitorDurableReserveRecoveryRetainsSameOwner",
+        "TestMonitorInitialOutageSurvivesCommandRestart",
+        "TestMonitorMetricsBoundsAndRejectsUnknownEvents",
+        "TestMonitorMetricsCommandMarksIntegrityAndStallsCritical",
+        "TestMonitorMetricsCommandRetainsSuccessThroughOutageAndRecovery",
+        "TestMonitorMetricsCommandStopsOnPublicationFailure",
+        "TestMonitorMetricsSingleOwnerAndPathRefusals",
+        "TestMonitorNativeDeadlineCheckpointMigratesLegacyAndRejectsDowngrade",
+        "TestMonitorNativeDeadlineCommandAmbiguousCheckpointRetainsIncident",
+        "TestMonitorNativeDeadlineCommandForecastsAndCrosses",
+        "TestMonitorNativeDeadlineCommandKeepsRoleIncidentsSeparate",
+        "TestMonitorNativeDeadlineCommandRestartRetainsIncident",
+        "TestMonitorNativeDeadlineCommandRetainsFirstAndLastMisses",
+        "TestMonitorNativeDeadlineCommandStaleNativeCannotInventMiss",
+        "TestMonitorNativeDeadlineCommandUnavailableCannotInventMiss",
+        "TestMonitorNativeDeadlineForecastUsesNativeScheduleRules",
+        "TestMonitorNativeDeadlinePolicyRequiresBoundedExplicitMargin",
+        "TestMonitorOperatorCheckpointAndPolicySourceFence",
+        "TestMonitorOperatorCommandReadsProductionJournalAndRestartsOutage",
+        "TestMonitorOperatorCredentialFenceAndPublicationAmbiguity",
+        "TestMonitorOperatorFreshReadCannotRefreshLedgerProgress",
+        "TestMonitorOperatorOutageRestartPreservesDomainIncidents",
+        "TestMonitorOperatorPolicyBoundsCoverCombinedAndOperatorOnlyCensus",
+        "TestMonitorOperatorRefusesChangedIdentityClocksAndOriginalAge",
+        "TestMonitorOutputBlockedSinkPreservesRoleFilesAndShutdown",
+        "TestMonitorOutputEarlyAdmissionStillJoinsBlockedSink",
+        "TestMonitorOutputProducerClockAndFreshnessStayIndependent",
+        "TestMonitorOutputProducerCountersRespectInstanceAndRetainedState",
+        "TestMonitorPersistentLibraryRequiresExplicitVolume",
+        "TestMonitorPublicationsRetainCompleteBytesAfterAmbiguousSync",
+        "TestMonitorReadIncidentCheckpointRejectsCorruptAndForgedContinuity",
+        "TestMonitorReadIncidentCheckpointRejectsImpossibleRecoveryClocks",
+        "TestMonitorReadIncidentCommandCancellationPreservesOpenCheckpoint",
+        "TestMonitorReadIncidentCommandHistoryFitsExistingBudgets",
+        "TestMonitorReadIncidentCommandMigratesLegacyHealthyCheckpoint",
+        "TestMonitorReadIncidentCommandMigratesLegacyOpenOutage",
+        "TestMonitorReadIncidentCommandPublicationRetryKeepsIdentity",
+        "TestMonitorReadIncidentCommandRecoveryRecurrenceAndRestart",
+        "TestMonitorReadIncidentCommandRenewalKeepsOriginalAuthority",
+        "TestMonitorReadIncidentCommandSaturatesCountsAndRefusesSequenceExhaustion",
+        "TestMonitorReadOutageClockRollbackIsCritical",
+        "TestMonitorReadOutageCountsTheFirstRetryWindow",
+        "TestMonitorReadOutageEscalatesAndSurvivesRestart",
+        "TestMonitorRejectsAliasedCheckpointMetricsLockCollision",
+        "TestMonitorRejectsInconsistentRpcEvidence",
+        "TestMonitorRejectsTestnetRoute",
+        "TestMonitorRequiresMainnetChainId",
+        "TestMonitorRestartRetainsMetricsWhileInitialReadPending",
+        "TestMonitorServicesCommandAmbiguousCheckpointDoesNotConfirmExport",
+        "TestMonitorServicesCommandAmbiguousPublicationRetriesAndRecovers",
+        "TestMonitorServicesCommandBlockedSourcePreservesPeer",
+        "TestMonitorServicesCommandExporterFailurePreservesPeer",
+        "TestMonitorServicesCommandFutureClockAndRollbackRemainVisible",
+        "TestMonitorServicesCommandInitialOutageAndCheckpointCorruption",
+        "TestMonitorServicesCommandOutageAgeRecoveryAndRestart",
+        "TestMonitorServicesCommandOwnershipFailurePreservesPeerAndJoinsCancellation",
+        "TestMonitorServicesCommandRejectsInvalidFilesAndEverySourceMismatch",
+        "TestMonitorServicesCommandRejectsReplacedSourceThenReadsSuccessor",
+        "TestMonitorServicesCommandRejectsRoleOutputCollisionBeforeReads",
+        "TestMonitorServicesCommandRejectsSameIntentAgeRewrite",
+        "TestMonitorServicesCommandRenewalRetainsOriginalIntentThroughOutage",
+        "TestMonitorServicesCommandRestartPreservesMetricsUntilActualRead",
+        "TestMonitorServicesCommandRetainsAdmissionCleanupFailure",
+        "TestMonitorServicesCommandRetainsCleanupFailures",
+        "TestMonitorServicesCommandSeparatesBlockedChainAndRoleOutage",
+        "TestMonitorServicesCommandStaleHeartbeatAndUnknownSchedule",
+        "TestMonitorServicesFileCloseFailureAndCancellationWithholdBytes",
+        "TestMonitorServicesPolicyBoundsAndStrictWire",
+        "TestMonitorServicesPolicyRetainsReadCauseAndRejectsDuplicateRoles",
+        "TestMonitorStateDetectsFinalityStallAndConflict",
+        "TestMonitorSteeringLivenessCheckpointSemanticRefusalAndLegacy",
+        "TestMonitorSteeringLivenessCommandIncidentRecoveryAndRestart",
+        "TestMonitorSteeringLivenessCommandRoleIsolationAndWaiting",
+        "TestMonitorSteeringLivenessDoesNotAuthorizeRepair",
+        "TestMonitorSteeringLivenessIncidentSurvivesUncertaintyAndPolicyChange",
+        "TestMonitorSteeringLivenessMissingOutcomeAfterBaseline",
+        "TestMonitorSteeringLivenessPolicyBounds",
+        "TestMonitorSteeringLivenessPreservesSignedLegacyRepair",
+        "TestMonitorSteeringLivenessRecoveryRequiresLaterOutcome",
+        "TestMonitorSteeringLivenessRejectsSameInstanceBoundaryRewrite",
+        "TestMonitorSteeringLivenessStartupWaitsAndDisabledPolicy",
+        "TestMonitorStorageChainLostAckReopensOriginalCheckpoint",
+        "TestMonitorStorageChainReserveRetainsOwner",
+        "TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer",
+        "TestMonitorStorageCheckpointRecoveryBudgetIsPerRole",
+        "TestMonitorStorageLostMemberCannotBecomeFreshThroughWrappedAbsence",
+        "TestMonitorStorageOperatorLostAckRetainsIncident",
+        "TestMonitorStorageReserveRecoversOnSameOwner",
+        "TestMonitorStorageStoppedOperatorReleasesOwnersBeforePeerStops",
+        "TestMonitorStorageStoppedRoleReleasesOwnersBeforePeerStops",
+        "TestMonitorSuccessfulContinuityUsesCompletionTime",
+        "TestMonitorTempoDriftCommandUsesApprovedProfile",
+        "TestMonitorTempoDriftProfileRetainsLegacyAndRejectsUnknown",
+        "TestMonitorTempoDriftRootTempoIncidentSurvivesCheckpoint",
+        "TestStorageInspectionBoundsAndCancellationEmitNoReport",
+        "TestStorageInspectionBusyRootRetainsCustody",
+        "TestStorageInspectionPublicDispatchRequiresAndRetainsAuthority",
+        "TestStorageInspectionRejectsShortOutput",
+        "TestStorageInspectionRequiresExplicitDeclaration",
+        "TestStorageInspectionRetainedLocalVerification"
+      ],
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 8.922618877,
+      "exit": 0,
+      "expectation_met": true,
+      "failures": null,
+      "phase": "vet",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 28.324904343,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestMonitorStorageStoppedOperatorReleasesOwnersBeforePeerStops",
+        "TestMonitorStorageStoppedRoleReleasesOwnersBeforePeerStops"
+      ],
+      "phase": "close-normal",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 49.883917941,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestMonitorStorageStoppedOperatorReleasesOwnersBeforePeerStops",
+        "TestMonitorStorageStoppedRoleReleasesOwnersBeforePeerStops"
+      ],
+      "phase": "close-race",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 27.237124253,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestMonitorServicesCommandOwnershipFailurePreservesPeerAndJoinsCancellation"
+      ],
+      "phase": "cancel-normal",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 53.075727332,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestMonitorServicesCommandOwnershipFailurePreservesPeerAndJoinsCancellation"
+      ],
+      "phase": "cancel-race",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 27.843465739,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer"
+      ],
+      "phase": "resume-normal",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    },
+    {
+      "elapsed_seconds": 56.919836589,
+      "exit": 1,
+      "expectation_met": true,
+      "failures": [
+        "TestMonitorStorageCheckpointLostAckReopensExactBytesAndPreservesPeer"
+      ],
+      "phase": "resume-race",
+      "root_pass": null,
+      "skips": null,
+      "subtest_pass": null
+    }
+  ],
+  "preserved_failures": [
+    "First --internal Docker network preparation did not publish a loopback port; no tests ran, owned fixture cleanup0.",
+    "18dc full normal:109 pass and3 prior test expectation/admission-fixture failures, corrected without weakening custody.",
+    "441 full normal:113 pass and1 operator event truthfulness failure, corrected in f1b. Original phase output and owner cleanup remain unchanged."
+  ],
+  "schema": "mainnet-monitor-storage-custody-author-v1",
+  "source": {
+    "base": "b3c3d661849eeacbce7a395ed6829a8f45eb1e79",
+    "checkout_kind": "linked worktree in retained physical Git repository",
+    "clean": true,
+    "head": "f1b445f9e8dafca790f7bc147430bc9c242b65e5",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/monitor-custody-checkpoint",
+    "tree": "232a6b348eaa501a537ee104e3cb7b811dd3bb66"
+  },
+  "time": "2026-10-02T12:05:37.808407504Z",
+  "verdict": "PASS_SCOPED_AUTHOR_ONLY"
+}

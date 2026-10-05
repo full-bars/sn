@@ -67,6 +67,9 @@ func newDiskAttemptLedgerWithHooks(ctx context.Context, stateDir string, identit
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
+	if err := requireAttemptDurableReference(ctx, identity); err != nil {
+		return nil, err
+	}
 	if len(vsk) != ed25519.PrivateKeySize || !bytes.Equal(vsk, ed25519.NewKeyFromSeed(vsk[:ed25519.SeedSize])) {
 		return nil, errors.New("attempt ledger validator private key is invalid")
 	}
@@ -83,7 +86,7 @@ func newDiskAttemptLedgerWithHooks(ctx context.Context, stateDir string, identit
 	if limits.MaxRecordBytes == 0 || limits.MaxRecordBytes > maxInt/8 || limits.MaxRecordCount == 0 || limits.MaxRecordCount > maxInt || limits.MaxTrailCount == 0 || limits.MaxTrailCount > limits.MaxRecordCount || limits.MaxRawRecordBytes < limits.MaxRecordBytes || limits.MaxStorageBytes <= attemptStoreMetadataReserve || limits.MaxStorageFiles < 8 || uint64(len(identity.DeploymentID)) > limits.MaxRecordBytes || limits.MaxLegacyBytes == 0 || limits.MaxLegacyBytes >= maxInt || limits.MaxProofBytes == 0 || limits.MaxProofBytes >= maxInt {
 		return nil, errors.New("attempt ledger disk limits are incomplete or inconsistent")
 	}
-	directory, err := openAttemptLedgerDirectory(stateDir, hooks.Step)
+	directory, err := openAttemptLedgerDirectory(stateDir, hooks.Step, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +112,10 @@ func newDiskAttemptLedgerWithHooks(ctx context.Context, stateDir string, identit
 		return nil, err
 	}
 	entered = true
+	custody, err := openAttemptLedgerCustody(ctx, directory, identity, coordinator, limits)
+	if err != nil {
+		return nil, err
+	}
 	metadataLimit := limits.MaxRecordBytes*6 + 4096
 	markerRaw, err := directory.readSmall(attemptLedgerImportName, metadataLimit)
 	markerPresent := err == nil
@@ -187,7 +194,7 @@ func newDiskAttemptLedgerWithHooks(ctx context.Context, stateDir string, identit
 		MaxRecordBytes: limits.MaxRecordBytes, MaxRecordCount: limits.MaxRecordCount,
 		MaxTrailCount: limits.MaxTrailCount, MaxRawRecordBytes: limits.MaxRawRecordBytes,
 		MaxStorageBytes: limits.MaxStorageBytes, MaxStorageFiles: limits.MaxStorageFiles,
-	}, hooks.Store, directory.root)
+	}, hooks.Store, directory.root, custody)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +314,8 @@ func newDiskAttemptLedgerWithHooks(ctx context.Context, stateDir string, identit
 		return nil, err
 	}
 	ledger := &AttemptLedger{path: filepath.Join(directory.path, attemptLedgerLegacyName), identity: identity,
-		vsk: append(ed25519.PrivateKey(nil), vsk...), vpk: append(ed25519.PublicKey(nil), vpk...),
+		storageCtx: ctx,
+		vsk:        append(ed25519.PrivateKey(nil), vsk...), vpk: append(ed25519.PublicKey(nil), vpk...),
 		disk: store, diskLimits: limits, directory: directory, durableSequence: head.LastSequence}
 	ledger.initLifetime()
 	return ledger, nil

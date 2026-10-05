@@ -67,7 +67,10 @@ func validateCoordinatorRepairCarryPlan(plan *SetupPlan) error {
 		return nil
 	}
 	r, result := carry.Request.Request, carry.Result.Result
-	if carry.Schema != "urnetwork-coordinator-repair-carry-v1" || r.PlanHash == plan.PlanHash || !plan.allowedPlanHashes()[r.PlanHash] || r.ConfigHash != plan.ConfigHash || r.DeploymentID != plan.DeploymentID || r.Proxy != plan.Deployment.CoordinatorProxy || r.Vault != plan.Deployment.SettlementVault || r.Reserve != plan.Deployment.ReserveSink || r.Owner != common.HexToAddress(plan.Roles.Owner) || r.Deployer != common.HexToAddress(plan.Roles.Deployer) || plan.CoordinatorUpgrade != r.Upgrade {
+	// r.ConfigHash is the immutable source-plan configuration which signed the
+	// repair; a descendant plan can carry it after independently approving an
+	// operational configuration revision.
+	if carry.Schema != "urnetwork-coordinator-repair-carry-v1" || r.PlanHash == plan.PlanHash || !plan.allowedPlanHashes()[r.PlanHash] || r.DeploymentID != plan.DeploymentID || r.Proxy != plan.Deployment.CoordinatorProxy || r.Vault != plan.Deployment.SettlementVault || r.Reserve != plan.Deployment.ReserveSink || r.Owner != common.HexToAddress(plan.Roles.Owner) || r.Deployer != common.HexToAddress(plan.Roles.Deployer) || plan.CoordinatorUpgrade != r.Upgrade {
 		return errors.New("coordinator repair carry differs from its approved source or custody")
 	}
 	if r.Schema != "urnetwork-provisional-coordinator-repair-v1" || !r.Provisional || r.FinalAcceptance || !validCoordinatorRepairSHA256(r.ArtifactSHA256) || !validCoordinatorRepairSHA256(r.BudgetSHA256) || !validCanonicalHashHex(r.IdentityHash) || r.Upgrade.DeployerNonce <= r.OldUpgrade.DeployerNonce || r.Upgrade.DeployerNonce == ^uint64(0) {
@@ -130,7 +133,13 @@ func readCoordinatorRepairCarry(stateDir string, plan *SetupPlan, entries []Jour
 	if err != nil {
 		return nil, err
 	}
-	if source.CoordinatorRepairCarry != nil || !contractDeploymentAddressesEqual(source.Deployment, plan.Deployment) || !contractDeploymentRuntimeHashesCompatible(source.Deployment, plan.Deployment) || source.ConfigHash != plan.ConfigHash || !reflect.DeepEqual(source.Roles, plan.Roles) {
+	// The repair request remains bound to its source plan's ConfigHash. A
+	// successor may legitimately change only operational approvals (for
+	// example, a renewed testnet spending allowance) while retaining exactly
+	// the deployment, runtime bytes, roles and upgrade baseline below. Requiring
+	// the successor's whole config digest to match turned that harmless budget
+	// revision into a full historical-custody restart.
+	if source.CoordinatorRepairCarry != nil || !contractDeploymentAddressesEqual(source.Deployment, plan.Deployment) || !contractDeploymentRuntimeHashesCompatible(source.Deployment, plan.Deployment) || !reflect.DeepEqual(source.Roles, plan.Roles) {
 		return nil, errors.New("coordinator repair source changes retained custody")
 	}
 	baseline := plan.CoordinatorUpgradeBaseline
@@ -306,7 +315,12 @@ func authenticateCoordinatorRepairCarry(ctx context.Context, cfg *ResolvedConfig
 		return observation, err
 	}
 	r, result := observation.reference.Request.Request, observation.reference.Result.Result
-	if cfg.ChainID != plan.ChainID || cfg.ChainID != testnetChainID || cfg.Public == nil || cfg.Public.Chain.GenesisHash != plan.GenesisHash || plan.GenesisHash != testnetGenesis || cfg.ConfigHash != plan.ConfigHash {
+	// A completed repair remains bound to its original signed plan/configuration,
+	// while a later plan may revise independent off-chain operational capacity.
+	// Do not require cfg.ConfigHash here: it is deliberately different during a
+	// reviewed revision. The immutable deployment domain remains exact below and
+	// the carried request is separately tied to its source-plan hash.
+	if cfg.ChainID != plan.ChainID || cfg.ChainID != testnetChainID || cfg.Public == nil || cfg.Public.Chain.GenesisHash != plan.GenesisHash || plan.GenesisHash != testnetGenesis || cfg.Config == nil || cfg.Config.Deployment.DeploymentID != plan.DeploymentID || cfg.Netuid != plan.Netuid {
 		return nil, errors.New("coordinator repair configured strict domain differs")
 	}
 	for _, client := range []*ethclient.Client{operational, independent} {

@@ -1,0 +1,375 @@
+{
+  "actual_root_censuses": {
+    "normal": [
+      "TestHistoricalCaptureRequestPublicCommandUsesParentRuntimeAtUpgrade",
+      "TestHistoricalCaptureRequestClosingCanonicalAndRuntimeChangesRefuse",
+      "TestHistoricalCapturePublicCommandRetainsExactJobAndUnknownAuthority",
+      "TestHistoricalCaptureCancellationJoinsPartialProofOutput",
+      "TestHistoricalCaptureObservedZeroNeverSubstitutesForMissingRefund",
+      "TestHistoricalReplayJobReadFailureRetainsCauseWithoutInventingIdentity",
+      "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+      "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal"
+    ],
+    "race": [
+      "TestHistoricalCaptureRequestPublicCommandUsesParentRuntimeAtUpgrade",
+      "TestHistoricalCaptureRequestClosingCanonicalAndRuntimeChangesRefuse",
+      "TestHistoricalCapturePublicCommandRetainsExactJobAndUnknownAuthority",
+      "TestHistoricalCaptureCancellationJoinsPartialProofOutput",
+      "TestHistoricalCaptureObservedZeroNeverSubstitutesForMissingRefund",
+      "TestHistoricalReplayJobReadFailureRetainsCauseWithoutInventingIdentity",
+      "TestMonitorHistoryPublicInputObservationDiffersFromConflictingBytes",
+      "TestMonitorHistoryConfirmedReplacementRetainsIdentityRefusal"
+    ]
+  },
+  "bindings": [
+    {
+      "bytes": 25954,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector-ledger-snapshot.json",
+      "sha256": "d90bacf896fe093148ce0338950ab32f07956d1d9269e5b9687d6934c99f3228"
+    },
+    {
+      "bytes": 620,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/source-readback.json",
+      "sha256": "c739225f65ec31507561bd4b9eb164e5c40e40c7584f2a35604b5ec457236d94"
+    },
+    {
+      "bytes": 55356,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_collector.stdout",
+      "sha256": "88a1e7d3b3d23f25ddb923572ab05798bac949e69317d7df8c7cead4df5b807a"
+    },
+    {
+      "bytes": 11292,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/go.mod",
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "bytes": 66649,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/go.sum",
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    },
+    {
+      "bytes": 74862152,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/bin/collector-ad0d-normal-owned.test",
+      "sha256": "fc9921f15b037d1d3adf9f98cf20786f175e971fa0d7f471d22f50510ad72ae6"
+    },
+    {
+      "bytes": 100352808,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/bin/collector-ad0d-race-owned.test",
+      "sha256": "881d0adf662f49adf6a6454ff724460f0ef0113c292219799f86ac594a0d6f31"
+    },
+    {
+      "bytes": 845,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/archive_collector.json",
+      "sha256": "afb99af7e5844320ea3e736560a80a72ce5b188013ff405c995f0223fa05d6c2"
+    },
+    {
+      "bytes": 594,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/archive_collector.stdout",
+      "sha256": "36d3d4103ef34926934c043c6781a12c248e6e36c97e2f63ca46991d3e9ad322"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/archive_collector.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2695,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/archive_collector.resource.csv",
+      "sha256": "7fb632b76cc5adce676ebe09b5483da19b129e42183aa58a3c0439ddd9df0357"
+    },
+    {
+      "bytes": 1516,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/graph_collector.json",
+      "sha256": "947a3a14f52391eda7078dfdb3ff0b385e0298e4f5e03b6bab2f50a8843bf652"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_collector.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 704,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/graph_collector.resource.csv",
+      "sha256": "005ea4978cd372417105f026026bbe748459e11cc2eca0f7719c4fc140a92f78"
+    },
+    {
+      "bytes": 1711,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_normal_compile.json",
+      "sha256": "ecfb265a94d8d19c17fc90b6e75e3dccbcaa755ca33756e28316239547130dbc"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 55283,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_compile.resource.csv",
+      "sha256": "c21497afe6e411009cf7d6914b14525b1e7fd650cbc7f20d934e7960e2e42529"
+    },
+    {
+      "bytes": 2461,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_normal_test.json",
+      "sha256": "8817f4fd1211afea1291ba947328ebc38f9f2b2c9637e9f7aef6901ea768635f"
+    },
+    {
+      "bytes": 6093,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_test.stdout",
+      "sha256": "b232af9a2ebe8541f0d8bc4ca260d08cb3860ae83ddf797dd89b5d9e9f3b0c49"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_test.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 10096,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_normal_test.resource.csv",
+      "sha256": "56cce9f68928538ae55957d3626b5011d647d63bf6e802c07ead934691b744e7"
+    },
+    {
+      "bytes": 1718,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_race_compile.json",
+      "sha256": "a80191ede686130048541c0cd4f0d0c8392b92b0a3774a18adf367929903616d"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_compile.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 97403,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_compile.resource.csv",
+      "sha256": "e15c39cba18a4711fbc8c1059687f154c55ab2bd3b067e86f309b57d0c430b27"
+    },
+    {
+      "bytes": 2453,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_race_test.json",
+      "sha256": "764e5bbabcbc0c5fb7fb7feae04218f1bb333b72b5d25c0601dfed247429963e"
+    },
+    {
+      "bytes": 6111,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_test.stdout",
+      "sha256": "a2e2d5985dda75fe865c2ea643b34e6fa4664f383e7fbcaebd7a454e4d215414"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_test.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 51485,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_race_test.resource.csv",
+      "sha256": "9c4024aecdc506e89e92541fcc5c78c9d4501c6b3d85317f89fdbaaa9016613e"
+    },
+    {
+      "bytes": 1461,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/jobs/collector_vet.json",
+      "sha256": "4374e74e314b8149621d3518c2aad1a5b1624cddf573d4c83097ca953cbf22ee"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_vet.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_vet.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 6299,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/phases/collector_vet.resource.csv",
+      "sha256": "650b980de88a267ffc816ad332bea9f1e72e7880c2246f8c92b7dff7e567e130"
+    },
+    {
+      "bytes": 9116,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector-scoped-receipt.json",
+      "sha256": "a0bb9beaf326b288ca4e37bb8d2842517bbc27e4dbcb5a4f737b8279a17c5eaa"
+    },
+    {
+      "bytes": 5479,
+      "path": "mainnet/evidence/capture-currentad0-source-review-20261003.json",
+      "sha256": "6321ddce5062c20754f69e799b7160e351376cdab5b8aa492e5154a613b3a95c"
+    },
+    {
+      "bytes": 7742,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/historical_capture.go",
+      "sha256": "e6ae20e8f51d376e7aa93036b6eca5014fc34073700987de0a90fdc224fa5e6b"
+    },
+    {
+      "bytes": 1872,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/historical_capture_command.go",
+      "sha256": "b349e2c2df63d4eddf91a00915e184096e103f87f34e8340f2cfab16df263e26"
+    },
+    {
+      "bytes": 7651,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/historical_capture_request.go",
+      "sha256": "f745f4163bdabe0013682ca9876ad3c9c821b3e0be914cad48e32e0c10520b10"
+    },
+    {
+      "bytes": 2726,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/historical_capture_request_command.go",
+      "sha256": "dda75c0815c27f9ce0743a5db851ca854994790441aa9ca1aa4e8121eaaf1308"
+    },
+    {
+      "bytes": 12337,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/historical_capture_request_test.go",
+      "sha256": "e156007bf9d4b1294051042815352717652895eb271ac2e07adf17ba5e162fdb"
+    },
+    {
+      "bytes": 11823,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/historical_capture_test.go",
+      "sha256": "35cfe80fce400c6011934882bb362e7ccab26b668d9b1fd86a2f80031ca4e0ab"
+    },
+    {
+      "bytes": 14770,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/historical_replay.go",
+      "sha256": "a6c13fe37fbd8dbb897388b7ee29f202359402dce9e6a158b73a71c9ca52c1fc"
+    },
+    {
+      "bytes": 3140,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/historical_replay_supervisor.go",
+      "sha256": "eb02634d4a8ffba6931b31e36a591f1c133b8d138d9f5df4d65bf9e5196eec2b"
+    },
+    {
+      "bytes": 19576,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/historical_replay_test.go",
+      "sha256": "c6266993979eae237da0653a5ebf6bc27909ab00b01c1fdd64095a78defa6a81"
+    },
+    {
+      "bytes": 24443,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/mainnet/main.go",
+      "sha256": "24acb59548766826a2bd2a7f5a3e7fce532fda673d2be7e666b298c5db6902ff"
+    },
+    {
+      "bytes": 118692,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/tools/runtime-metadata-probe/Cargo.lock",
+      "sha256": "2bb8cb111ddc0200a3a9f07d241fde0f28855d240d9e9272fd767a1c2eb02067"
+    },
+    {
+      "bytes": 2260,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/tools/runtime-metadata-probe/Cargo.toml",
+      "sha256": "bc30d47798569c50a06051ab9c403aea65f7a13bcdb2e8caaafc9f9286f86cbc"
+    },
+    {
+      "bytes": 3257,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/tools/runtime-metadata-probe/HISTORICAL-CAPTURE.md",
+      "sha256": "3fd15393729c0e6b3f783dbf1b63f50cce02c57367f24e1d8c04d98dfe5f79b2"
+    },
+    {
+      "bytes": 1275,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/tools/runtime-metadata-probe/src/bin/runtime-historical-capture.rs",
+      "sha256": "100f3e0993d2d34eb48b60d1f74b29c8e251a1e623f42ef25ab9563f44908f60"
+    },
+    {
+      "bytes": 17651,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/tools/runtime-metadata-probe/src/historical.rs",
+      "sha256": "cbd6303ff4a5663a45e4bb3a51507d1863c3edf15c3d6291c41148325e07b08f"
+    },
+    {
+      "bytes": 21171,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/tools/runtime-metadata-probe/src/historical_capture.rs",
+      "sha256": "02847d4fe85f9982008d73010e68c57bfa76bac8e47057bfdd8d8752a9bf36a2"
+    },
+    {
+      "bytes": 25187,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+      "sha256": "7f4fff8fd567160dd515018c1aa4747141e215217da05af3bd1776bcb13b846b"
+    },
+    {
+      "bytes": 49273,
+      "path": "/mnt/data/sn-testnet/sol-mixed63-resource-review-20261003/collector/sn/tools/runtime-metadata-probe/src/historical_tests.rs",
+      "sha256": "692b62b86621c6d1601fa0ee9c3a3dbc2d94fd54c05c119bd034508fc08c444a"
+    },
+    {
+      "bytes": 51522,
+      "path": "mainnet/evidence/proof-capture550-qualification-20261003.json",
+      "sha256": "28f2db1d6f98e4a4ea8fe807623004c0da4bbe1c4d8547e3d1b6d56e702cde0a"
+    },
+    {
+      "bytes": 36942,
+      "path": "mainnet/evidence/capture-request971-final-review-20261003.json",
+      "sha256": "148dfbe1a0d331cbde272ae756bb45b611370771dee07265a3cc84d7dc5a56f6"
+    }
+  ],
+  "captured_utc": "2026-10-03T17:26:00.587709+00:00",
+  "component_evidence_retained": "Rust550 twelve positives/four controls/actual capture and Go971 ten positives/six controls retain exact qualified source scope. This current eight-root gate adds composition, not repeated component execution.",
+  "exact_changed_source_paths": [
+    "mainnet/historical_capture.go",
+    "mainnet/historical_capture_command.go",
+    "mainnet/historical_capture_request.go",
+    "mainnet/historical_capture_request_command.go",
+    "mainnet/historical_capture_request_test.go",
+    "mainnet/historical_capture_test.go",
+    "mainnet/historical_replay.go",
+    "mainnet/historical_replay_supervisor.go",
+    "mainnet/historical_replay_test.go",
+    "mainnet/main.go",
+    "tools/runtime-metadata-probe/Cargo.lock",
+    "tools/runtime-metadata-probe/Cargo.toml",
+    "tools/runtime-metadata-probe/HISTORICAL-CAPTURE.md",
+    "tools/runtime-metadata-probe/src/bin/runtime-historical-capture.rs",
+    "tools/runtime-metadata-probe/src/historical.rs",
+    "tools/runtime-metadata-probe/src/historical_capture.rs",
+    "tools/runtime-metadata-probe/src/historical_capture_tests.rs",
+    "tools/runtime-metadata-probe/src/historical_tests.rs"
+  ],
+  "limits": [
+    "No actual archive-parent witness, runtime472/source/callsite authority, independently admitted checkpoint/finality or native fee approval.",
+    "No Rust rebuild, broad all-role model suite, actual host rehearsal or live mainnet activation claimed.",
+    "This proves selected source scope, not the final38-requirement readiness audit."
+  ],
+  "normal_and_race_no_fail_or_skip": true,
+  "observed_cumulative_sampled_consumption_at_snapshot_bytes": 1702723584,
+  "owned_image_custody": {
+    "normal": {
+      "ctime_ns": 1791047077561829891,
+      "dev": 2081,
+      "gid": 1000,
+      "inode": 16965597,
+      "mode": "0o500",
+      "mtime_ns": 1791047076663865275,
+      "nlink": 1,
+      "sha256": "fc9921f15b037d1d3adf9f98cf20786f175e971fa0d7f471d22f50510ad72ae6",
+      "size": 74862152,
+      "uid": 1000
+    },
+    "race": {
+      "ctime_ns": 1791047449853281051,
+      "dev": 2081,
+      "gid": 1000,
+      "inode": 16965616,
+      "mode": "0o500",
+      "mtime_ns": 1791047448594329930,
+      "nlink": 1,
+      "sha256": "881d0adf662f49adf6a6454ff724460f0ef0113c292219799f86ac594a0d6f31",
+      "size": 100352808,
+      "uid": 1000
+    }
+  },
+  "review_note": "Collector snapshot contains baseline and per-phase low-water; root computed the observed cumulative value from those fields rather than assuming the mutable ledger schema. No source or test rerun.",
+  "schema": "urnetwork-root-current-collector-qualification-v1",
+  "seven_phases_terminal_zero": [
+    "archive_collector",
+    "graph_collector",
+    "collector_normal_compile",
+    "collector_normal_test",
+    "collector_race_compile",
+    "collector_race_test",
+    "collector_vet"
+  ],
+  "source_commit": "ad0d3125aa5b76ed4148f37c51f28bb866bd482a",
+  "source_tree": "f4abd3787603c1ccce3e6df3b4c8ac0877a23f59",
+  "status": "CURRENT_COMPOSED_SELECTED_SCOPE_QUALIFIED"
+}

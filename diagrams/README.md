@@ -9,7 +9,7 @@ A detailed, color-coded layout of the components and money flows described in
 splits by a governance share **θ** into two tiers of miner UIDs inside **one** mechanism:
 
 - **TAIL / pool** (`1−θ`): the contract-owned **miner-pool UID per NO**; validators weight it
-  `implied_usage × Qn` (implied usage = deposit ÷ conviction-tier rate — the contract weighs nothing,
+  `implied_usage × Qn` (implied usage = audited usage × baseline rate, or 1 for every pool at zero price — the contract weighs nothing,
   D25), settled to the 100k+ providers by **per-NO Merkle claim** — the low-barrier on-ramp / baseline.
 - **HEAD / top-level miners** (`θ`): the top ~200 fleets as **their own UIDs**, ranked and weighted by
   **routable-IP breadth** (split-adjusted distinct egress-IP count, D27 — no deposit, no quality term),
@@ -17,7 +17,7 @@ splits by a governance share **θ** into two tiers of miner UIDs inside **one** 
 
 Independent validators score **both** tiers into one commit-reveal weight vector (split by θ) → Yuma.
 The diagram also shows the ST contract internals (**deposits are conviction stake read from the
-`Deposited` events — no DT ledger**; the contract does custody + settlement only), the pool UIDs, the
+`Deposit` events — no DT ledger**; the contract does custody + settlement only), the pool UIDs, the
 Merkle payout roots, and the **buyback reserve** (every deposit staked + locked, §7.4); the provider
 lifecycle (start in a pool → graduate to a top slot → fall back if it slips); native validator
 dividends; and the off-chain `VALIDATOR.md` measurement trails. (The fee-funded effort bounty is

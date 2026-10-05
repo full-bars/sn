@@ -1,0 +1,101 @@
+# Provisional rules for an independent Mimir/Prometheus evaluator. Supply the
+# expected env/host/role census independently of each monitored machine.
+groups:
+  - name: sn-mainnet-validator-services
+    interval: 30s
+    rules:
+      - alert: SnMainnetValidatorMissing
+        expr: sn_mainnet_validator_expected == 1 unless on (env, host, role) sn_mainnet_validator_sample_timestamp_seconds
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator {{ $labels.role }} telemetry is absent on {{ $labels.host }}"
+      - alert: SnMainnetValidatorStale
+        expr: (sn_mainnet_validator_sample_timestamp_seconds > 0) and (time() - sn_mainnet_validator_sample_timestamp_seconds >= 120)
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator {{ $labels.role }} observations stopped on {{ $labels.host }}"
+      - alert: SnMainnetValidatorClockAhead
+        expr: sn_mainnet_validator_sample_timestamp_seconds > time() + 30
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator {{ $labels.role }} monitor clock is ahead on {{ $labels.host }}"
+      - alert: SnMainnetValidatorHeartbeatStale
+        expr: (sn_mainnet_validator_heartbeat_timestamp_seconds > 0) and (time() - sn_mainnet_validator_heartbeat_timestamp_seconds >= 120)
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator {{ $labels.role }} producer heartbeat is stale on {{ $labels.host }}"
+      - alert: SnMainnetValidatorExportUnconfirmed
+        expr: (sn_mainnet_validator_export_last_success_timestamp_seconds == 0) or (time() - sn_mainnet_validator_export_last_success_timestamp_seconds >= 120)
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator {{ $labels.role }} export acknowledgment is stale on {{ $labels.host }}"
+      - alert: SnMainnetValidatorCritical
+        expr: sn_mainnet_validator_severity == 2
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator {{ $labels.role }} observation reports a critical condition on {{ $labels.host }}"
+      - alert: SnMainnetValidatorWarning
+        expr: sn_mainnet_validator_severity == 1
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validator {{ $labels.role }} observation reports a warning on {{ $labels.host }}"
+      - alert: SnMainnetValidatorDomainUnknown
+        expr: sn_mainnet_validator_status == 9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validator {{ $labels.role }} protocol observations remain unknown on {{ $labels.host }}"
+      - alert: SnMainnetValidatorSteeringStalled
+        expr: sn_mainnet_validator_steering_liveness_unresolved == 1
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator {{ $labels.role }} steering loop has an unresolved responsiveness incident on {{ $labels.host }}"
+      - alert: SnMainnetValidatorSteeringWarning
+        expr: sn_mainnet_validator_steering_liveness_status == 4
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validator {{ $labels.role }} steering outcome is aging on {{ $labels.host }}"
+      - alert: SnMainnetValidatorSteeringUnknown
+        expr: (sn_mainnet_validator_steering_liveness_enabled == 1) and on (env, host, role) ((sn_mainnet_validator_steering_liveness_status == 1) or (sn_mainnet_validator_steering_liveness_status == 2) or (sn_mainnet_validator_steering_liveness_status == 6))
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validator {{ $labels.role }} steering responsiveness is unknown on {{ $labels.host }}"
+      - alert: SnMainnetValidatorNativeDeadlineWarning
+        expr: (sn_mainnet_validator_native_deadline_status == 6) and on (env, host, role) (sn_mainnet_validator_native_deadline_current == 1) and on (env, host, role) (sn_mainnet_validator_protocol_deadline_known == 1)
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validator {{ $labels.role }} native submission window is approaching on {{ $labels.host }}"
+      - alert: SnMainnetValidatorNativeDeadlineCritical
+        expr: (sn_mainnet_validator_native_deadline_status == 7) and on (env, host, role) (sn_mainnet_validator_native_deadline_current == 1) and on (env, host, role) (sn_mainnet_validator_protocol_deadline_known == 1)
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator {{ $labels.role }} native submission completion margin is exhausted on {{ $labels.host }}"
+      - alert: SnMainnetValidatorNativeWindowMissed
+        expr: sn_mainnet_validator_native_deadline_unresolved == 1
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator {{ $labels.role }} has an unresolved reported native window miss on {{ $labels.host }}"
+      - alert: SnMainnetValidatorNativeDeadlineUnknown
+        expr: (sn_mainnet_validator_native_deadline_status >= 1) and (sn_mainnet_validator_native_deadline_status <= 3) and on (env, host, role) (sn_mainnet_validator_native_deadline_enabled == 1)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validator {{ $labels.role }} native deadline evidence is unavailable on {{ $labels.host }}"

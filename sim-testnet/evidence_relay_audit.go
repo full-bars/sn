@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	validatorcomponent "github.com/urfoundation/sn/validator"
 )
 
@@ -36,13 +37,28 @@ func (self *evidenceRelayRuntime) advanceDepositAudits(completed map[evidenceRel
 	if err := self.checkHorizonBlock(block); err != nil {
 		return err
 	}
+	var inventories map[uint64]evidenceRelayStartupSourceInventory
+	if self.startupCache != nil && self.startupCache.hit {
+		inventories, err = self.evidenceRelayStartupInventories(self.ctx, self.horizon.maximum)
+		if err != nil {
+			return err
+		}
+	}
 	for index := range self.sources {
 		source := &self.sources[index]
-		manifests, err := validatorcomponent.DiscoverValidatorEvidenceDepositAuditV2Manifests(self.ctx, source.stateDir, source.bounds)
+		var manifests []validatorcomponent.ValidatorEvidenceDepositAuditV2Manifest
+		if self.startupCache != nil && self.startupCache.hit {
+			_, manifests, err = self.readEvidenceRelayStartupManifests(self.ctx, source, inventories[source.validatorId])
+		} else {
+			manifests, err = discoverEvidenceRelayAuditGenerations(self.ctx, source)
+		}
 		if err != nil {
 			return err
 		}
 		for _, manifest := range manifests {
+			if err := self.serviceRemainingRequests(); err != nil {
+				return err
+			}
 			if manifest.Decision.ValidatorID != source.validatorId {
 				return errors.New("evidence audit decision differs from its original configured validator")
 			}
@@ -58,16 +74,34 @@ func (self *evidenceRelayRuntime) advanceDepositAudits(completed map[evidenceRel
 				}
 				continue
 			}
-			if uint64(len(completed)) >= self.horizon.maximum {
+			if previous, found := self.policyGapAudits[key]; found {
+				if previous != identity {
+					return errors.New("evidence policy gap audit locator changes its immutable publication")
+				}
+				continue
+			}
+			if uint64(len(completed)+len(self.policyGapAudits)) >= self.horizon.maximum {
 				return errors.New("evidence audit completion owner exceeds its approved slot bound")
 			}
 			requests, err := self.readAuditPublication(self.ctx, source, &manifest, block, hash)
 			if err != nil {
 				return err
 			}
+			containsGap := false
 			for _, expected := range requests {
+				if err := self.serviceRemainingRequests(); err != nil {
+					return err
+				}
 				if err := self.horizon.admit(expected.Evidence.Header, block); err != nil {
 					return err
+				}
+				gap, err := self.retainHistoricalPolicyGap(self.ctx, source, fmt.Sprintf("0x%x", identity), expected)
+				if err != nil {
+					return err
+				}
+				if gap {
+					containsGap = true
+					continue
 				}
 				action, ownerPlanHash, err := self.executor.admitOwnedEvidenceRelayAction(self.ctx, expected)
 				if err != nil {
@@ -83,8 +117,28 @@ func (self *evidenceRelayRuntime) advanceDepositAudits(completed map[evidenceRel
 				if err := self.retainOwnedResult(ownerPlanHash, action, result); err != nil {
 					return err
 				}
+				if err := self.startupCache.rememberAction(ownerPlanHash, action, expected.Evidence.Header); err != nil {
+					return err
+				}
+			}
+			if containsGap {
+				if self.policyGapAudits == nil {
+					self.policyGapAudits = map[evidenceRelayAuditKey][32]byte{}
+				}
+				self.policyGapAudits[key] = identity
+				continue
+			}
+			checkpointIdentity, err := self.startupCache.completeAudit(self, source, &manifest)
+			if err != nil {
+				return err
+			}
+			if checkpointIdentity != identity {
+				return errors.New("evidence audit checkpoint identity changed")
 			}
 			completed[key] = identity
+			if self.startupCache != nil {
+				self.startupProgress = true
+			}
 		}
 	}
 	return self.ctx.Err()

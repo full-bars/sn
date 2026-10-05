@@ -38,6 +38,7 @@ type ValidatorUploadDeployment struct {
 	DeploymentBlock   uint64                       `json:"deployment_block" yaml:"deployment_block"`
 	NativeRuntime     crv4.RuntimeArtifactIdentity `json:"native_runtime" yaml:"native_runtime"`
 	MaximumSubnetUIDs uint32                       `json:"maximum_subnet_uids" yaml:"maximum_subnet_uids"`
+	productionRuntime *validatorUploadRuntimeAuthority
 }
 
 // All transport/lookup limits are independent of a discovered activation.
@@ -94,18 +95,25 @@ func ValidatorUploadNativeObserverContext(ctx context.Context, native *crv4.Chai
 	if native.GenesisHash != types.Hash(deployment.GenesisHash) {
 		return result, errors.New("validator staging native genesis differs")
 	}
+	if err := deployment.authenticateNativeRuntimeRouteContext(ctx, native); err != nil {
+		return result, err
+	}
 	hash, err := crv4.FinalizedHeadContext(ctx, native)
 	if err != nil {
 		return result, err
 	}
-	header, err := native.HeaderAtContext(ctx, hash)
+	number, _, err := native.CanonicalHeaderAtContext(ctx, hash)
 	if err != nil {
 		return result, err
 	}
-	if header == nil || header.Number == 0 {
+	if number == 0 {
 		return result, errors.New("validator staging finalized native header is absent")
 	}
-	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, native, hash, deployment.NativeRuntime)
+	allowed, err := deployment.runtimeArtifactsAt(number, false)
+	if err != nil {
+		return result, err
+	}
+	artifact, err := crv4.AuthenticateRuntimeArtifactAtContext(ctx, native, hash, allowed...)
 	if err != nil {
 		return result, err
 	}
@@ -131,14 +139,10 @@ func ValidatorUploadNativeObserverContext(ctx context.Context, native *crv4.Chai
 	if timestamp == 0 || timestamp > math.MaxInt64 {
 		return result, errors.New("validator staging native timestamp exceeds its bound")
 	}
-	var canonical string
-	if err := native.API.Client.CallContext(ctx, &canonical, "chain_getBlockHash", uint64(header.Number)); err != nil {
+	if err := native.CheckCanonicalBlockAtContext(ctx, hash, number); err != nil {
 		return result, err
 	}
-	if canonical != hash.Hex() {
-		return result, errors.New("validator staging native finalized hash changed")
-	}
-	return ValidatorUploadNativeObserver{Number: uint64(header.Number), Hash: hash, TimestampMillis: timestamp}, nil
+	return ValidatorUploadNativeObserver{Number: number, Hash: hash, TimestampMillis: timestamp}, nil
 }
 
 // Reads one complete finalized header through the bounded real RPC transport.
@@ -192,8 +196,11 @@ type ValidatorUploadActivationEvent struct {
 // These staging boundaries always consult the actual numbered RPC header.
 func (self *ChainClient) recheckValidatorUploadBlockContext(ctx context.Context, block uint64, expected [32]byte) error {
 	actual, err := self.BlockHashContext(ctx, block)
-	if err != nil || actual != expected {
-		return errors.Join(errors.New("validator staging canonical EVM boundary changed"), err)
+	if err != nil {
+		return err
+	}
+	if actual != expected {
+		return errors.New("validator staging canonical EVM boundary changed")
 	}
 	return ctx.Err()
 }
@@ -302,6 +309,9 @@ func (self *ChainClient) AuthenticateValidatorUploadActivationContext(ctx contex
 	if digest == ([32]byte{}) || observer.Number < deployment.DeploymentBlock || observer.Hash == ([32]byte{}) {
 		return result, errors.New("validator staging activation discovery is incomplete")
 	}
+	if err := deployment.authenticateNativeRuntimeRouteContext(ctx, native); err != nil {
+		return result, err
+	}
 	contract := stabi.NewSTValidatorEvidence()
 	outputs, err := self.batchCallsAtHashContext(ctx, observer.Number, observer.Hash, []chainBatchCall{{address: common.Address(deployment.Journal), calldata: contract.PackActivation(digest)}})
 	if err != nil {
@@ -338,8 +348,12 @@ func (self *ChainClient) AuthenticateValidatorUploadActivationContext(ctx contex
 	if err != nil {
 		return result, err
 	}
+	allowed, err := deployment.runtimeArtifactsAt(record.NativeBlock, true)
+	if err != nil {
+		return result, err
+	}
 	schedule, err := crv4.ReadValidatorScheduleAtContext(ctx, native, crv4.ValidatorScheduleQuery{GenesisHash: types.Hash(domain.GenesisHash), BlockHash: types.Hash(record.NativeHash),
-		BlockNumber: record.NativeBlock, Netuid: domain.Netuid, Hotkey: record.Hotkey, MaximumSubnetUIDs: deployment.MaximumSubnetUIDs}, HistoricalReleaseRuntimeArtifacts(deployment.NativeRuntime)...)
+		BlockNumber: record.NativeBlock, Netuid: domain.Netuid, Hotkey: record.Hotkey, MaximumSubnetUIDs: deployment.MaximumSubnetUIDs}, allowed...)
 	if err != nil {
 		return result, err
 	}

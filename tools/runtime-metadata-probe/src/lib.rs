@@ -7,6 +7,9 @@
 
 #![deny(unsafe_code)]
 
+pub mod replay;
+pub mod historical;
+
 use frame_metadata::{RuntimeMetadataPrefixed, META_RESERVED};
 use parity_scale_codec::Decode;
 use sc_executor::WasmExecutor;
@@ -24,7 +27,8 @@ use std::{error::Error, fmt, fs, path::Path};
 pub const POLKADOT_SDK_REVISION: &str = "cacb4310f20c7cac83eb3ccd8ed5a5ad4212608a";
 
 /// Release-bound runtime identity and exact artifact digests.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ExpectedRuntimeArtifact {
     /// Runtime family reported by `Core_version`.
     pub spec_name: String,

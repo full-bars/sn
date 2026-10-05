@@ -86,8 +86,8 @@ func TestSourceCommitmentRuntime461RejectsRetainedSignatureRelabeling(t *testing
 	}
 }
 
-// Reviewed encoding never admits an intermediate/future version or changed
-// metadata, genesis or transaction domain just because the source is similar.
+// Retained signatures never gain an intermediate/future signing domain or
+// changed metadata/genesis authority merely because the encoding is similar.
 func TestSourceCommitmentRuntime461RejectsAdjacentUnreviewedDomains(t *testing.T) {
 	prepared := sourceRuntime455PreparedTest(t, 461, nil)
 	for _, change := range []func(*Chain){
@@ -129,8 +129,8 @@ func TestSourceCommitmentRuntime461RejectsAdjacentUnreviewedDomains(t *testing.T
 		changed.RuntimeSpec = spec
 		copyPrepared := *prepared
 		copyPrepared.SourceCommitment = &changed
-		if _, _, _, err := preparedSourceEncoding(&copyPrepared); err == nil {
-			t.Fatalf("unreviewed runtime%d acquired offline encoding authority", spec)
+		if _, err := copyPrepared.Validate(); err == nil {
+			t.Fatalf("retained signature acquired runtime%d authority", spec)
 		}
 	}
 }

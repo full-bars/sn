@@ -1,13 +1,14 @@
 package onchain
 
-// api.go — the miner-facing submission API. The stdlib-built `provider claim` /
-// `provider bind-head` / `provider unbind-head` commands (package miner) pack
-// their calldata with sn/stabi + sn/merkle and, when handed an EVM key, sign and
-// broadcast it through these exported wrappers instead of shelling out to the
-// snclaim binary. The snclaim CLI handlers (cmdSubmit/cmdUnbindHead) route
-// through the same funcs, so there is a single packing + submission path.
+// api.go — the miner-facing submission API. The stdlib-built `provider claim`
+// and `provider fleet bind/revoke` commands (package miner) pack their calldata
+// with sn/stabi + sn/merkle and, when handed an EVM key, sign and broadcast it
+// through these exported wrappers instead of shelling out to the snclaim
+// binary. The snclaim CLI handler (cmdSubmit) routes through the same funcs,
+// so there is a single packing + submission path.
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/urfoundation/sn/protocol"
 	"github.com/urfoundation/sn/stabi"
@@ -41,6 +43,26 @@ func BuildBindHeadCalldata(hotkey, clientID [32]byte, sig []byte) ([]byte, error
 // BuildUnbindHeadCalldata ABI-packs unbindHead(hotkey) via the stabi bindings.
 func BuildUnbindHeadCalldata(hotkey [32]byte) ([]byte, error) {
 	return legacySTSubnet.TryPackUnbindHead(hotkey)
+}
+
+// DecodeClaimCalldata returns a canonical immutable-vault intent. Repacking
+// excludes trailing bytes and alternative ABI encodings from receipt recovery.
+func DecodeClaimCalldata(data []byte) (*ClaimIntent, error) {
+	if len(data) < 4 {
+		return nil, fmt.Errorf("claim calldata has no selector")
+	}
+	intent, err := decodeClaimCalldata(data)
+	if err != nil {
+		return nil, err
+	}
+	canonical, err := buildClaimCalldata(intent)
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(canonical, data) {
+		return nil, fmt.Errorf("claim calldata is not canonical")
+	}
+	return intent, nil
 }
 
 // BuildFleetBindingCalldata packs the release-1.0 many-to-one dual-signed
@@ -71,21 +93,27 @@ func LoadKeyFile(path string) (*ecdsa.PrivateKey, error) {
 // list, the signing key, ready-to-send calldata, and the usual chain-id / gas /
 // dry-run knobs.
 type SubmitParams struct {
-	Contract common.Address
-	Rpcs     []string
-	Key      *ecdsa.PrivateKey
-	Calldata []byte
-	ChainID  *big.Int // optional; when set, the rpc's chain id must match it
-	GasLimit uint64   // 0 = estimate + 20% headroom
-	DryRun   bool
+	Contract   common.Address
+	Rpcs       []string
+	Key        *ecdsa.PrivateKey
+	Calldata   []byte
+	ChainID    *big.Int // optional; when set, the rpc's chain id must match it
+	NonceFloor uint64   // optional durable minimum, owned by the calling relayer
+	GasLimit   uint64   // 0 = estimate + 20% headroom
+	DryRun     bool
+	// Additional owner authority on this exact connection: nil height means
+	// current finalized state; a receipt supplies its canonical inclusion height.
+	RuntimeAdmission func(context.Context, *ethclient.Client, *big.Int) error
 }
 
 // SubmitHooks make the signed-transaction durability boundary explicit for
 // long-running relayers. Prepared runs after signing and before broadcast;
 // Broadcast runs immediately after SendTransaction succeeds.
 type SubmitHooks struct {
-	Prepared  func(common.Hash, []byte) error
-	Broadcast func(common.Hash) error
+	Prepared func(common.Hash, []byte) error
+	// Commits an uncertain-send liability before the first network write.
+	BeforeBroadcast func(common.Hash) error
+	Broadcast       func(common.Hash) error
 }
 
 // Submit dials the first reachable rpc (failover), verifies the chain id, and
@@ -120,6 +148,11 @@ func submit(ctx context.Context, p SubmitParams, mkPrint intentPrinter, hooks Su
 	if p.ChainID != nil && chainID.Cmp(p.ChainID) != 0 {
 		return nil, fmt.Errorf("chain id mismatch: --chain_id=%s but %s reports %s", p.ChainID, rpcURL, chainID)
 	}
+	if p.RuntimeAdmission != nil {
+		if err := p.RuntimeAdmission(ctx, client, nil); err != nil {
+			return nil, fmt.Errorf("runtime admission before EVM preflight: %w", err)
+		}
+	}
 
 	var printIntent func(gasEst uint64, gasErr error)
 	if mkPrint != nil {
@@ -142,14 +175,24 @@ func submit(ctx context.Context, p SubmitParams, mkPrint intentPrinter, hooks Su
 		}
 	}
 
-	return runTx(ctx, client, chainID, txRequest{
-		contract:  p.Contract,
-		from:      from,
-		key:       p.Key,
-		calldata:  p.Calldata,
-		gasLimit:  p.GasLimit,
-		dryRun:    p.DryRun,
-		prepared:  hooks.Prepared,
-		broadcast: hooks.Broadcast,
+	receipt, err := runTx(ctx, client, chainID, txRequest{
+		contract:        p.Contract,
+		from:            from,
+		key:             p.Key,
+		calldata:        p.Calldata,
+		gasLimit:        p.GasLimit,
+		nonceFloor:      p.NonceFloor,
+		dryRun:          p.DryRun,
+		prepared:        hooks.Prepared,
+		beforeBroadcast: hooks.BeforeBroadcast,
+		broadcast:       hooks.Broadcast,
+		admitRuntime:    p.RuntimeAdmission,
 	}, printIntent)
+	if err != nil || receipt == nil || p.RuntimeAdmission == nil {
+		return receipt, err
+	}
+	if err := p.RuntimeAdmission(ctx, client, receipt.BlockNumber); err != nil {
+		return receipt, fmt.Errorf("runtime admission at EVM receipt: %w", err)
+	}
+	return receipt, nil
 }

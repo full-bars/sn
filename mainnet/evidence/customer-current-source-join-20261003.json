@@ -1,0 +1,18 @@
+{
+  "schema": "coordinator-customer-source-join-v1",
+  "source_join_path": "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-publication/evidence/source-join.json",
+  "source_join_sha256": "299dd35c6df0e3a380b543222afc6e75af5eef6a2a2aac98373ef671b94d9793",
+  "verified_source_counts": {
+    "server": 5380,
+    "connect": 3729,
+    "sdk": 680
+  },
+  "qualified_receipt_bindings": 6,
+  "status": "SOURCE_JOIN_ONLY_FINAL_MODULE_GATE_PENDING",
+  "limits": {
+    "server_tracked": "exact29ce published08d/SDK95 interim; final customer release must select SDK9ae/APIa53 successors after publication",
+    "sdk_test": "exact9ae imported-package qualification required against current APIa53/Connect08d non-API tree",
+    "sn_fence": "/mnt/data/sn-testnet/sol-server-published-08d-independent-20261003/evidence/source-readback.json",
+    "full_model": "pending eventual tracked-module successor; preserve historical original530/a85 scopes"
+  }
+}

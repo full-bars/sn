@@ -1,0 +1,240 @@
+{
+  "schema": "native-evm-current0f-source-review-v1",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn",
+    "commit": "0f8886946b7d58808ef9ae89dbdd968f31e77298",
+    "tree": "e1451e54384a531040c113163e58978761326816"
+  },
+  "intake_sha256": "573d12856107161937f38f01c70001e15bdd1f1307ca77599bcf199b6886b9fd",
+  "verified_artifact_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/durable_volume_owner.go",
+      "sha256": "ae9d14c677e8fb3a99271133626e6ed2df61b824c39eca9a3b264bb99d3d3792",
+      "bytes": 16672
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/evidence/native-monitor-archive-20261003.md",
+      "sha256": "1d05d07024a4fe65049442e28176eacb89bd0a5041c41a6f6900f71415c0ec54",
+      "bytes": 3436
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/evidence/native-monitor-catalog-20261003.md",
+      "sha256": "09c523deca16d9ba7bd39cafc218c6b172f67f77b941a086e998c8429ee55864",
+      "bytes": 4111
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/main.go",
+      "sha256": "281521d187bd6c700bc4d9c413b8454e7dfc69ba5632e01034e7ecc3751921e7",
+      "bytes": 24164
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_evm.go",
+      "sha256": "f461bbc0defc07a65c646401e022728eb218463ce72ac0124dc7ff7091793eba",
+      "bytes": 8182
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_evm_archive.go",
+      "sha256": "9879688623951c0f9d061ebab859c87d40fea84eceb26055256f14d3a8034cae",
+      "bytes": 10729
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_evm_archive_command.go",
+      "sha256": "bc46e90986d481f5682833445cd0e660baaea8d6593ab742ebddf55367484afa",
+      "bytes": 13277
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_evm_archive_review_test.go",
+      "sha256": "cd01af7e042e86500508c8576f7215df446bc9530cb978cbb9ceb3e20d31d5b7",
+      "bytes": 3648
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_evm_archive_test.go",
+      "sha256": "e00707f080fc59df9fa57bf09910d6c77481682ae7c4bdad7efcf2f9eb2faa10",
+      "bytes": 19207
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_evm_catalog.go",
+      "sha256": "5071f7d3f27b2f4a25484bc0146eb1b911cb0b39fd56a71e994b7107e344e39f",
+      "bytes": 17172
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_evm_catalog_test.go",
+      "sha256": "1b88c1df7577773f2d31813ceae871a3914aad0f984ed71701597b030f8c9557",
+      "bytes": 21577
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_evm_ledger.go",
+      "sha256": "0518f01e24633ce06f1a91952d609e0861bf9c8ec5affb05d1892e9986084da0",
+      "bytes": 21064
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_evm_worker.go",
+      "sha256": "24fd75a3dcd3094e0f8deb94fac90a9639bb9482ad8bcf784c3796921b875b53",
+      "bytes": 21469
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_native.go",
+      "sha256": "69a9297bdc75e94f13ca608d9a5cf53409566cca9c8d1709353eeb399a9e54fa",
+      "bytes": 23665
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_native_archive.go",
+      "sha256": "dae8c86f46cbbc6a0f484af5e66bcebe8672f4dd0d42043e07181ee45197885e",
+      "bytes": 7832
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_native_archive_command.go",
+      "sha256": "ec27cdb9e6b81144633e86f393f46c0fba209328e9decfa5e219a5de03d604bb",
+      "bytes": 15652
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_native_archive_test.go",
+      "sha256": "b9f8f7e7b3bebf1485c7ae68f8e883eed252f39e6b1e4062811b4bace56bafe4",
+      "bytes": 18412
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_native_catalog.go",
+      "sha256": "40a1f73880788c72acf310e04b131bf1f48e94b161d9820e10cba0987b64eff0",
+      "bytes": 16977
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_native_catalog_test.go",
+      "sha256": "e2bc3e5656021f9e90ce35d253187fdd4fd30613f6500c78bc17871b65ef5ad2",
+      "bytes": 21721
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_economic_native_worker.go",
+      "sha256": "f11b68eb2132780e15199fbf419f817a4f23cc21b01c30e7d8ff0392a474cb7c",
+      "bytes": 22422
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_history_archive.go",
+      "sha256": "04d1cae5d3a54dc6a965c33dfbe6fcfda9d302c2dc7bd437e7d9220d94629d9d",
+      "bytes": 4465
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/mainnet/monitor_history_catalog.go",
+      "sha256": "7229d167f1b26f35fa0754c3f8a53da6802a56f85f3c44e116b38c0ad492a2a9",
+      "bytes": 10020
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/jobs.json",
+      "sha256": "19625c447725129a6041f27cd4ab6f13f6fb73718bacdbde910a4e9faaaa8181",
+      "bytes": 2629
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/peer-graph.json",
+      "sha256": "558ab78ee85c3810bc0c30caf6569e70bad6b78aeda9da297dab8bf7ebefa7fb",
+      "bytes": 3499
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/compile-receipt.json",
+      "sha256": "7a693ea0d9f28a8baa2332b7596b48fdc80c322c38be5aecc514829fcf8d0bb5",
+      "bytes": 2826
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/source_join.go",
+      "sha256": "6f96bb9b2f89ba11cd1ad1c88889808295d0d564b8bf2b21eaf53240e8b115c7",
+      "bytes": 6237
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/source-join.json",
+      "sha256": "8fe79f5c5f167be6b4f31b5a75649a40d5a87e1bf6a259ad18b0f2612e2bc83f",
+      "bytes": 7623
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/source-manifest.json",
+      "sha256": "9fbe7cfbc18791b1b8c9c8e341a8610bec9b00e1cf3061719bff42235ad06ed8",
+      "bytes": 7447571
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/source-join.log",
+      "sha256": "e6c345640fa0c4124a0817868b4331cd430b4f361da754ff5a27be590e00e8ca",
+      "bytes": 75
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/source-join.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/deps.log",
+      "sha256": "c67cb81be39eb8d0b79109790b52bdc0c77c45d330000c79c029d5382f29a3b4",
+      "bytes": 28557
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/deps.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/modules.log",
+      "sha256": "d89640b23b582d340cfdc6a1eff4927119974fc1872911138f1b29adaf2a1dd5",
+      "bytes": 175080
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/modules.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/compile.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/go.mod",
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1",
+      "bytes": 11292
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/sn/go.sum",
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5",
+      "bytes": 66649
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/mainnet-compile.test",
+      "sha256": "ac6d87dc2b7d9d447773bea56548a65b612f48fb76a75a6d6f3646ddee18182d",
+      "bytes": 74717512
+    }
+  ],
+  "changed_source_files": [
+    "mainnet/durable_volume_owner.go",
+    "mainnet/evidence/native-monitor-archive-20261003.md",
+    "mainnet/evidence/native-monitor-catalog-20261003.md",
+    "mainnet/main.go",
+    "mainnet/monitor_economic_evm.go",
+    "mainnet/monitor_economic_evm_archive.go",
+    "mainnet/monitor_economic_evm_archive_command.go",
+    "mainnet/monitor_economic_evm_archive_review_test.go",
+    "mainnet/monitor_economic_evm_archive_test.go",
+    "mainnet/monitor_economic_evm_catalog.go",
+    "mainnet/monitor_economic_evm_catalog_test.go",
+    "mainnet/monitor_economic_evm_ledger.go",
+    "mainnet/monitor_economic_evm_worker.go",
+    "mainnet/monitor_economic_native.go",
+    "mainnet/monitor_economic_native_archive.go",
+    "mainnet/monitor_economic_native_archive_command.go",
+    "mainnet/monitor_economic_native_archive_test.go",
+    "mainnet/monitor_economic_native_catalog.go",
+    "mainnet/monitor_economic_native_catalog_test.go",
+    "mainnet/monitor_economic_native_worker.go",
+    "mainnet/monitor_history_archive.go",
+    "mainnet/monitor_history_catalog.go"
+  ],
+  "current_go_image_and_cargo_guards_retained": true,
+  "author_physical_census": {
+    "blobs": 20544,
+    "unchanged_current": 20522,
+    "exact_archive": 21,
+    "exact_main_dispatch_union": 1,
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/source-join.json",
+    "manifest": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-evm-current-guard/evidence/source-manifest.json"
+  },
+  "scope": "39 bound artifacts and22 actual changed Git source files verified; author full20544 source inventory is bound, not independently reread here. Source/compile only, no behavioral or runtime authority claim. Eight-root normal/race/vet qualification pending."
+}

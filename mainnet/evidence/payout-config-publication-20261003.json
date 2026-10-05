@@ -1,0 +1,27 @@
+{
+  "schema": "provider-cutover-config-publication-v1",
+  "status": "PUBLISHED_NOT_DEPLOYED",
+  "repository": "https://github.com/urnetwork/config",
+  "commit": "93dc65fd84da9a0f5423b5cab9bfc650692fded8",
+  "tree": "e4b9cc8eba3b3e6e2e837daf47ff7e312c1be301",
+  "path": "main/sn.yml",
+  "blob": "05b5603657f01dec2c5e88dd931a069adbc98f89",
+  "sha256": "b77872f2ce61dc66621ae1455b440a34766ffcaca198f4a20b36bdecb522c134",
+  "policy": {
+    "cutoff_utc": "2026-10-06T00:00:00Z",
+    "legacy_usdc": "finish_pre_cutoff_obligations",
+    "mainnet_activation": "blocked"
+  },
+  "publication": {
+    "fast_forward_merge": true,
+    "pull_rebase_exit": 0,
+    "push_exit": 0,
+    "remote_main_verified": true,
+    "worktree_clean": true
+  },
+  "limits": [
+    "No production worker adoption, schema migration, mainnet signing or deployment proven.",
+    "Activation remains blocked; mainnet readiness fields intentionally empty.",
+    "Frozen author/test config path retained byte-identical."
+  ]
+}

@@ -1,0 +1,261 @@
+{
+  "schema": "fee-consumer-original-failures-scoped-server-root-review-v1",
+  "observed_utc": "2026-10-04T05:08:19.573204+00:00",
+  "status": "SN_NORMAL_FAILED_SERVER_SELECTED_SCOPES_PASS_NOT_RELEASE_QUALIFIED",
+  "sn_head": "663a0ea299e21411a92b9eb064443d7cc9b0b851",
+  "server_head": "1709ffe03ffa59ae31441374f3e673793d099764",
+  "normal_sn": {
+    "receipt": {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-mainnet-46root-receipt.json",
+      "bytes": 17751,
+      "sha256": "8d4030db6cc995497f8394c425277dbc970fe36ebd6ff5edb4e7643c8fadefba"
+    },
+    "status": "FAIL",
+    "body_exit_code": 1,
+    "body_timed_out": false,
+    "census": {
+      "run": 46,
+      "pass": 28,
+      "fail": 18,
+      "skip": 0
+    },
+    "raw": {
+      "bytes": 53050,
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-mainnet-selected.jsonl",
+      "sha256": "ed322fe079e005314534539b38f639ecb8656a20ae2fa41b89359a32027df4a8"
+    },
+    "failed_root_outputs": {
+      "TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress": "=== RUN   TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress\n    economic_conservation_fee_worker_test.go:89: actual fee replay did not enter its owned process boundary native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationPublicSlowFeeReplayDoesNotStallSiblingProgress (7.05s)\n",
+      "TestEconomicConservationPublicMissingFeeRequestRecoversWithoutCursorRollback": "=== RUN   TestEconomicConservationPublicMissingFeeRequestRecoversWithoutCursorRollback\n    economic_conservation_fee_worker_test.go:178: real fee read did not retain missing/recovered source outcome 2 native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationPublicMissingFeeRequestRecoversWithoutCursorRollback (6.37s)\n",
+      "TestEconomicConservationPublicCancelJoinsHeldFeeReplayAfterHealthyPublication": "=== RUN   TestEconomicConservationPublicCancelJoinsHeldFeeReplayAfterHealthyPublication\n    economic_conservation_fee_worker_test.go:260: cancellation fixture never published healthy siblings before fee completion {native fee original evidence conflict\n        native fee independent semantics signature is invalid sha256:9c162f0a7ebf52d5b30b5025c1f6270252b9447de2a9a41fb82a6384c6ab5828 false [] <nil> <nil> urnetwork-economic-conservation-v1 sha256:788976afbdf3b333196b8f5d93bc35525fdb6161401e23cc99ada908e15e4872 {0x18787d75ac80 <nil> <nil> <nil> 101 0x18787d242320 0x18787d242370 {102 0xa7fe5f9c849c7c063bca2b96d84dea0d12704dff0079a19864a532aa0db0a902} <nil> 0x18787d92f6c8 1 sha256:f6b2050fb6d67bff0116a2a8eb39c3d668e290a6ca921d0b7064552ff4905cb8 98 0 [{0x18787d242410 0x18787d242460 {101 0x6156b782ee75c84f5cf4367f9a67a348a770187b0b93283407f9d8c4807ce043} 0xa401a649216d47590f1de85902d93d0b89b6169ae3b3780ff0fa71fcea22acc1 0x18787d73e840 <nil> <nil>}] 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 0001-01-01 00:00:00 +0000 UTC observed-economic-outcome-unresolved 0 63 785320} {{11 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23} <nil> 0x18787d92f6e0 sha256:e0e8aaeb1dc546fffcc608f454f4aaf4dda4d2a29874ca9ae3c1e5990cdb2252 1 sha256:87a4aa964ddac2fab16eac4204dc58b67459aaaf417a2f3bfd8171a8eefc64c0 0x18787d92f6f8 [{{11 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23} 0x26084f272f75d45c3948de887c6e4b538d87122bff0fbaa052569964e17be0ee 0 0 EmissionCaptured map[amount:20 epoch:2 noId:1 poolHotkey:0x1111111111111111111111111111111111111111111111111111111111111111] sha256:6501d855304bed682c3537f6927f768b30be32a385448f5c3184386951032fc1} {{11 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23} 0x26084f272f75d45c3948de887c6e4b538d87122bff0fbaa052569964e17be0ee 0 1 RootMissed map[carried:20 epoch:2 noId:1] sha256:6501d855304bed682c3537f6927f768b30be32a385448f5c3184386951032fc1} {{11 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23} 0x26084f272f75d45c3948de887c6e4b538d87122bff0fbaa052569964e17be0ee 0 2 Claimed map[amount:7 coldkey:0x7171717171717171717171717171717171717171717171717171717171717171 epoch:1 noId:1 relayer:0x38c58bC8691f4D5f0fa9e78f280c63583d235F62 shareBps:700] sha256:6501d855304bed682c3537f6927f768b30be32a385448f5c3184386951032fc1} {{11 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23} 0x26084f272f75d45c3948de887c6e4b538d87122bff0fbaa052569964e17be0ee 0 3 ClaimPaymentDeferred map[coldkey:0x7171717171717171717171717171717171717171717171717171717171717171 creditAlphaRao:12 minimumTransferTaoRao:10 reason:0 taoEquivalentRao:1] sha256:6501d855304bed682c3537f6927f768b30be32a385448f5c3184386951032fc1}] [{{11 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23} 0x26084f272f75d45c3948de887c6e4b538d87122bff0fbaa052569964e17be0ee 0 0x38c58bC8691f4D5f0fa9e78f280c63583d235F62 21000 2 42000 true sha256:6501d855304bed682c3537f6927f768b30be32a385448f5c3184386951032fc1}] 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 0001-01-01 00:00:00 +0000 UTC observed-economic-outcome-unresolved 0 59 <nil> <nil> 0x18787d2b4bf0} [{2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC  0 0 ok 0x18787da62000 [{1 false 0x18787dcda160 <nil> 2026-01-02 03:04:05 +0000 UTC 2026-01-02 03:04:05 +0000 UTC}] false}] 0x18787d92f710 [{{101 0x6156b782ee75c84f5cf4367f9a67a348a770187b0b93283407f9d8c4807ce043} 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23 sha256:377ed96f3fc92dddd18d4b179b495ca2aef878cdf2b5b0af67226ba1c58403ae} {{102 0xa7fe5f9c849c7c063bca2b96d84dea0d12704dff0079a19864a532aa0db0a902} 0x72330a394ddbdd1010b18e95852277e77da36aaf6f1cdcc0a9fc9757a5b355cd sha256:8d5eed481a26b47123f34af256d5df8af66ed3673204fa658ed1e78934b9a6fe}] [{sha256:1529347c55d19b138f5a9d2f3a0f044a8eda63e532e418d0eaae64f9d8ffbc46 {101 0x6156b782ee75c84f5cf4367f9a67a348a770187b0b93283407f9d8c4807ce043} sha256:a20d54245d1b10777055623212b28a634e9fbe4815449e20fd2ebde546e92760 sha256:377ed96f3fc92dddd18d4b179b495ca2aef878cdf2b5b0af67226ba1c58403ae sha256:1dd9f6f71e9756a58451690b157b7c36991fe4c34191d78a9004bcea5ec54220 0 {6 {0 0x1111111111111111111111111111111111111111111111111111111111111111 20 0x3333333333333333333333333333333333333333333333333333333333333333} native-miner-credit true 9 6 3 0} 0x18787d3d6280} {sha256:6d3726240d8caeaea0bdc59452ce4acf86992bdcb763ff4fefae9ca4bcf102e4 {101 0x6156b782ee75c84f5cf4367f9a67a348a770187b0b93283407f9d8c4807ce043} sha256:a20d54245d1b10777055623212b28a634e9fbe4815449e20fd2ebde546e92760 sha256:377ed96f3fc92dddd18d4b179b495ca2aef878cdf2b5b0af67226ba1c58403ae sha256:1dd9f6f71e9756a58451690b157b7c36991fe4c34191d78a9004bcea5ec54220 0 {7 {1 0x2222222222222222222222222222222222222222222222222222222222222222 21 0x3434343434343434343434343434343434343434343434343434343434343434} native-owner-recycle false 89 0 0 89} <nil>}] [{sha256:b2bbd96d36bbeb3a5bdae052e0d0cc241564eceeecd9dbc1b113cbda14b18560 {{11 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23} 0x26084f272f75d45c3948de887c6e4b538d87122bff0fbaa052569964e17be0ee 0 0 EmissionCaptured map[amount:20 epoch:2 noId:1 poolHotkey:0x1111111111111111111111111111111111111111111111111111111111111111] sha256:6501d855304bed682c3537f6927f768b30be32a385448f5c3184386951032fc1} 0x18787d92f728 [sha256:1529347c55d19b138f5a9d2f3a0f044a8eda63e532e418d0eaae64f9d8ffbc46] 0x18787d9bc260 0x18787d9bc270 <nil> source-difference-unresolved}] [{2/1 2 1 root-missed 20 <nil> 0   [{capture sha256:b2bbd96d36bbeb3a5bdae052e0d0cc241564eceeecd9dbc1b113cbda14b18560 20}]} {1/1 1 1 opening-obligation-unattributed 0 <nil> 7   []}] map[1:[{opening-carry-unattributed sha256:7f9b770adffefcf2eda3b9d3aff95ad1d141118f801eb82c9877e239f56712d8/1 30} {root-missed 2/1 20}]] [{sha256:04abab3802adc11dcc5b5cae0986df64375cb01ae6354207a675a3f2e1608eb9 {{11 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23} 0x26084f272f75d45c3948de887c6e4b538d87122bff0fbaa052569964e17be0ee 0 2 Claimed map[amount:7 coldkey:0x7171717171717171717171717171717171717171717171717171717171717171 epoch:1 noId:1 relayer:0x38c58bC8691f4D5f0fa9e78f280c63583d235F62 shareBps:700] sha256:6501d855304bed682c3537f6927f768b30be32a385448f5c3184386951032fc1} 1/1 opening-entitlement-unattributed}] map[0x7171717171717171717171717171717171717171717171717171717171717171:{5 [sha256:04abab3802adc11dcc5b5cae0986df64375cb01ae6354207a675a3f2e1608eb9]}] [] [{claim-conservation 1 sha256:04abab3802adc11dcc5b5cae0986df64375cb01ae6354207a675a3f2e1608eb9 original-acceptance-observed {urnetwork-claim-observation-v1 signed-receipt configured-rpc-assertion unverified 1 2026-01-02T03:04:05Z {964 0x0000000000000000000000000000000000001234 1 0x7171717171717171717171717171717171717171717171717171717171717171} 700 contract-accepted   <nil> 11 0xa3f73c5a0a73b92e7d95e7772e2bd9986e02bf648630d2624583d62022062e23 0x26084f272f75d45c3948de887c6e4b538d87122bff0fbaa052569964e17be0ee 0x38c58bc8691f4d5f0fa9e78f280c63583d235f62 7 deferred 12 }}] 2026-01-02 03:04:05 +0000 UTC   false false  sha256:3b66ab0d82bff6a72c9d6d1cf7f1de8aa96087ac5f4851a06525e65f1dd2148f map[] map[] map[] map[] <nil>}\n--- FAIL: TestEconomicConservationPublicCancelJoinsHeldFeeReplayAfterHealthyPublication (5.22s)\n",
+      "TestEconomicConservationFeeHandoffConflictPreservesLatestKnownProof": "=== RUN   TestEconomicConservationFeeHandoffConflictPreservesLatestKnownProof\n    economic_conservation_fee_worker_test.go:317: completed original fee verifier did not reach detached conservation state native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationFeeHandoffConflictPreservesLatestKnownProof (1.35s)\n",
+      "TestEconomicConservationConsumesOriginalNativeFeeProofAndKeepsPartialCensusUnknown": "=== RUN   TestEconomicConservationConsumesOriginalNativeFeeProofAndKeepsPartialCensusUnknown\n    economic_conservation_fees_test.go:35: completed original fee verifier did not reach detached conservation state native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationConsumesOriginalNativeFeeProofAndKeepsPartialCensusUnknown (1.30s)\n",
+      "TestEconomicConservationNativeFeeAbsenceAndObservedZeroStayDistinct": "=== RUN   TestEconomicConservationNativeFeeAbsenceAndObservedZeroStayDistinct\n    economic_conservation_fees_test.go:53: completed original fee verifier did not reach detached conservation state native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationNativeFeeAbsenceAndObservedZeroStayDistinct (1.55s)\n",
+      "TestEconomicConservationNativeFeeRetryDoesNotRerunOrRecount": "=== RUN   TestEconomicConservationNativeFeeRetryDoesNotRerunOrRecount\n    economic_conservation_fees_test.go:70: completed original fee verifier did not reach detached conservation state native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationNativeFeeRetryDoesNotRerunOrRecount (1.65s)\n",
+      "TestEconomicConservationNativeFeeOverlappingArchivesCountOriginalOnce": "=== RUN   TestEconomicConservationNativeFeeOverlappingArchivesCountOriginalOnce\n    economic_conservation_fees_test.go:83: completed original fee verifier did not reach detached conservation state native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationNativeFeeOverlappingArchivesCountOriginalOnce (1.65s)\n",
+      "TestEconomicConservationNativeFeeConflictingOriginalRefundCannotReplaceKnownEvidence": "=== RUN   TestEconomicConservationNativeFeeConflictingOriginalRefundCannotReplaceKnownEvidence\n    economic_conservation_fees_test.go:100: completed original fee verifier did not reach detached conservation state native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationNativeFeeConflictingOriginalRefundCannotReplaceKnownEvidence (1.42s)\n",
+      "TestEconomicConservationNativeFeeArchivedOriginalCannotDisappearFromRestoredHead": "=== RUN   TestEconomicConservationNativeFeeArchivedOriginalCannotDisappearFromRestoredHead\n    economic_conservation_fees_test.go:110: completed original fee verifier did not reach detached conservation state native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationNativeFeeArchivedOriginalCannotDisappearFromRestoredHead (1.63s)\n",
+      "TestEconomicConservationNativeFeeCapacityRefusalPreservesCompletePriorProofs": "=== RUN   TestEconomicConservationNativeFeeCapacityRefusalPreservesCompletePriorProofs\n    economic_conservation_fees_test.go:156: finite fee fixture did not reach capacity boundary native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationNativeFeeCapacityRefusalPreservesCompletePriorProofs (1.59s)\n",
+      "TestEconomicConservationNativeFeeCancellationPreservesCauseEvenForRetainedInput": "=== RUN   TestEconomicConservationNativeFeeCancellationPreservesCauseEvenForRetainedInput\n    economic_conservation_fees_test.go:164: completed original fee verifier did not reach detached conservation state native fee original evidence conflict\n        native fee independent semantics signature is invalid\n--- FAIL: TestEconomicConservationNativeFeeCancellationPreservesCauseEvenForRetainedInput (1.58s)\n",
+      "TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan": "=== RUN   TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan\n    economic_conservation_receipt_test.go:51: public archived receipt contradiction was overwritten or reached another source read 3  monitor durable custody identity changed\n        durable volume identity is lost\n        snapshot physical head differs\n        \n--- FAIL: TestEconomicConservationArchivedReceiptContradictionRefusesPublicReopenAndPlan (6.21s)\n",
+      "TestEconomicConservationPublicReceiptRefreshRetainsFirstArchiveBytes": "=== RUN   TestEconomicConservationPublicReceiptRefreshRetainsFirstArchiveBytes\n    economic_conservation_receipt_test.go:119: public conservation sample failed 3 \n--- FAIL: TestEconomicConservationPublicReceiptRefreshRetainsFirstArchiveBytes (6.08s)\n",
+      "TestEconomicNativeFeePublicAdmitsOriginalWithdrawalRefundOnly": "=== RUN   TestEconomicNativeFeePublicAdmitsOriginalWithdrawalRefundOnly\n    economic_native_fee_evidence_test.go:85: approved native fee pair was not retained in its original scope 1 native fee original evidence conflict\n        native fee independent semantics signature is invalid\n        \n--- FAIL: TestEconomicNativeFeePublicAdmitsOriginalWithdrawalRefundOnly (1.41s)\n",
+      "TestEconomicNativeFeePublicMissingRefundRemainsUnknown": "=== RUN   TestEconomicNativeFeePublicMissingRefundRemainsUnknown\n    economic_native_fee_evidence_test.go:105: fee approval invented a missing native refund 1 native fee original evidence conflict\n        native fee independent semantics signature is invalid\n        \n--- FAIL: TestEconomicNativeFeePublicMissingRefundRemainsUnknown (1.55s)\n",
+      "TestEconomicNativeFeePublicObservedZeroRefundStaysExplicit": "=== RUN   TestEconomicNativeFeePublicObservedZeroRefundStaysExplicit\n    economic_native_fee_evidence_test.go:118: explicit native zero refund was lost 1 native fee original evidence conflict\n        native fee independent semantics signature is invalid\n        \n--- FAIL: TestEconomicNativeFeePublicObservedZeroRefundStaysExplicit (1.44s)\n",
+      "TestEconomicNativeFeePublicRevertedCallRetainsSurvivingFee": "=== RUN   TestEconomicNativeFeePublicRevertedCallRetainsSurvivingFee\n    economic_native_fee_evidence_test.go:131: reverted call lost surviving original fee 1 native fee original evidence conflict\n        native fee independent semantics signature is invalid\n        \n--- FAIL: TestEconomicNativeFeePublicRevertedCallRetainsSurvivingFee (1.35s)\n"
+    }
+  },
+  "server_selected": [
+    {
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-strecovery-fee-receipt.json",
+        "bytes": 6635,
+        "sha256": "55d8a00b1c55e2382453eebc38c1f0f94639205e9603c8e3d7bd3df79a7b94d6"
+      },
+      "status": "PASS",
+      "body_exit_code": 0,
+      "body_timed_out": false,
+      "census": {
+        "run": 9,
+        "pass": 9,
+        "fail": 0,
+        "skip": 0
+      },
+      "raw": {
+        "bytes": 7338,
+        "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-strecovery-selected.jsonl",
+        "sha256": "d612b12c777205b0cdeab8d2551ab8c76f55a50ab8ac98340a1506b7ea439182"
+      },
+      "failed_root_outputs": {}
+    },
+    {
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/race-strecovery-fee-receipt.json",
+        "bytes": 6843,
+        "sha256": "fdc6df7098f7a70dac037b7ce0182dbb704e9714b65a5d925a40031a64bc9d22"
+      },
+      "status": "PASS",
+      "body_exit_code": 0,
+      "body_timed_out": false,
+      "census": {
+        "run": 10,
+        "pass": 10,
+        "fail": 0,
+        "skip": 0
+      },
+      "raw": {
+        "bytes": 7916,
+        "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/race-strecovery-selected.jsonl",
+        "sha256": "5c88b4e5371ec0db04a76e3c3317ea53f56e2ecbf60f8575d0d838994e86a301"
+      },
+      "failed_root_outputs": {}
+    },
+    {
+      "receipt": {
+        "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/fee-selected-vets-receipt.json",
+        "bytes": 2770,
+        "sha256": "a96827e1f9f367a5fe0b411215a3a51e2117169b17349cadcddcb5e0fdece7d7"
+      },
+      "status": "PASS",
+      "results": [
+        {
+          "argv": [
+            "go",
+            "vet",
+            "./mainnet"
+          ],
+          "exit_code": 0,
+          "timed_out": false
+        },
+        {
+          "argv": [
+            "go",
+            "vet",
+            "./strecovery"
+          ],
+          "exit_code": 0,
+          "timed_out": false
+        }
+      ]
+    }
+  ],
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-mainnet-selected.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-mainnet-selected.jsonl",
+      "bytes": 53050,
+      "sha256": "ed322fe079e005314534539b38f639ecb8656a20ae2fa41b89359a32027df4a8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-mainnet-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-mainnet-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/sn663-selected-mainnet-graph-receipt-v2.json",
+      "bytes": 11922,
+      "sha256": "d3a2124cb5fda4cfb8b0a413a155ee0d0ab0e315666e24edff3379ef7821bf24"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/sn663-mainnet-normal.test",
+      "bytes": 78557176,
+      "sha256": "866f58de43042428519d67e15540294ef2d0e48396e43f6e159e9e6fe8a3ec61"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/fee-selected-compile-receipt.json",
+      "bytes": 3381,
+      "sha256": "b49441ce0456ff4924b9a575a15f461a0b464f01dea622b9729f8e5149b53fc4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-final-source-integration-20261004/conservation-fee-continuation/evidence/selectors.json",
+      "bytes": 14386,
+      "sha256": "69e4928a189e0a84fec88935ed12ae95f1f766e0173e0621663a356ea26d6fba"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server964-export-receipt.json",
+      "bytes": 1635,
+      "sha256": "b077a455bad0b0058b8173add48108ca47c49515223ca97146f54815fc5d10e5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server-stage-receipt.json",
+      "bytes": 3017,
+      "sha256": "f7313c041c3a92afb2793deb0967d369c284ad66373d18262f7c8be5d954713c"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/source-stage-receipt.json",
+      "bytes": 1164,
+      "sha256": "0b771874d63bfe15fb6808ffb44df953b8a8af840ebfb6aaab061f1ed3a59cea"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-strecovery-selected.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-strecovery-selected.jsonl",
+      "bytes": 7338,
+      "sha256": "d612b12c777205b0cdeab8d2551ab8c76f55a50ab8ac98340a1506b7ea439182"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-strecovery-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/normal-strecovery-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-strecovery-normal.test",
+      "bytes": 61312816,
+      "sha256": "031f069fcfab70a900c82c4c1e210a60a1d50bd56add0508172ebbe1d237b079"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/race-strecovery-selected.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/race-strecovery-selected.jsonl",
+      "bytes": 7916,
+      "sha256": "5c88b4e5371ec0db04a76e3c3317ea53f56e2ecbf60f8575d0d838994e86a301"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/race-strecovery-compile.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/race-strecovery-compile.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/images/server1709-strecovery-race.test",
+      "bytes": 83685600,
+      "sha256": "3d6988e397016c64ffb3043d13a948d9656f765381d4b29c435d655949caaaf3"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/sn663-mainnet-vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/sn663-mainnet-vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-strecovery-vet.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-fee-consumer-663-20261004/evidence/server1709-strecovery-vet.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "triage": {
+    "signature": "NativeFee v1 production consumes bare canonical 128 hex. Test signer prepends 0x; ordinary positives fail before intended behavior. Retain production grammar and qualify formatter/public admission roundtrip in separate successor.",
+    "receipt_contradiction": "Raw checkpoint overwrite triggers physical custody rejection before intended logical contradiction. Correct fixture via owned publication; do not relax custody.",
+    "receipt_refresh": "Astra identified moving fixture StartedAt for fixed InstanceId; correction and public qualification remain pending.",
+    "operative_controls": "An omitted signature check still passed its selected root. That control is unqualified; correct causal reachability separately.",
+    "continuation": "Do not interrupt healthy complete model or original race batch. Retain all failures and successful independent scopes."
+  },
+  "scope_limits": [
+    "Synthetic Server fee-context/exporter qualification does not prove original-Wasm whole economic witness.",
+    "Server scoped normal/race and vets do not turn SN normal failure into a pass.",
+    "No mainnet signing, deployment, readiness approval or requirement closure."
+  ]
+}

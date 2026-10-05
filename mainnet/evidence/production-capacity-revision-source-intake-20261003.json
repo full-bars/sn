@@ -1,0 +1,279 @@
+{
+  "adjacent": {
+    "package": "./validator",
+    "roots": [
+      "TestProductionAuthorityHistoryReplaysOriginalAfterRuntimeUpgrade",
+      "TestProductionAuthorityHistoryContinuesWithoutAnotherDrain",
+      "TestProductionAuthorityHistoryDefaultLoaderSurvivesSourceLoss",
+      "TestProductionAuthorityHistoryRejectsSubstitutionAndScopeChanges"
+    ]
+  },
+  "bindings": {
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/go.work": {
+      "bytes": 71,
+      "sha256": "0379ab3de21ff31c444e0714360b94d16c44e957550525a4ae8a20bbfd113778"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/go.mod": {
+      "bytes": 11252,
+      "sha256": "95811a6ee608e4bc0bd423ffc12bad09c7d0f8a32d023a4a942c33dc28d3510f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/go.sum": {
+      "bytes": 65954,
+      "sha256": "3d369748c048e6d510b8b041d77b6c2d02cc2b4b8459245da31433c19406bf61"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/mainnet/durable_volume_owner.go": {
+      "bytes": 16574,
+      "sha256": "54146302bb0e7f9c19e877510400dc3aa0a7df5d20732eb5132a19393e77fd12"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/mainnet/evidence/validator-capacity-revision-20261003.md": {
+      "bytes": 2454,
+      "sha256": "c8b85646e7c858782a66c634748ae4efe367b3cdcef0e063fbb739dd10c9ea55"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/mainnet/main.go": {
+      "bytes": 23202,
+      "sha256": "77d0e9d7b91b1262669a6c2f2065ac8d29ec73c8b8bfa13cc00e02cae4957d2e"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/mainnet/validator_capacity_linux.go": {
+      "bytes": 2005,
+      "sha256": "b8f8dcb7f490636dca8e991dc0b1c894cb602b412d76adbf3977c515f1979308"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/mainnet/validator_capacity_other.go": {
+      "bytes": 358,
+      "sha256": "bd2a33c091b9dbd65da2b165f32233a5586174edc5635d0ff1853bbecb7bc10d"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/mainnet/validator_capacity_test.go": {
+      "bytes": 12424,
+      "sha256": "3bb64a0d9b39bf8b12260d4f790e10c0e7faa615d050381553b47d52c2e046a8"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/validator/config.go": {
+      "bytes": 25374,
+      "sha256": "a402a372e51d470591a09be84f232ac0199f0611c7aa34e6dfab745415a45eec"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/validator/config_evidence_v2.go": {
+      "bytes": 26682,
+      "sha256": "f58686ca7d888a40394396b29f62b68dc1529ff490d5eaf42d040908e4af6bdc"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/validator/production_authority_history.go": {
+      "bytes": 17746,
+      "sha256": "a61c9b569ad213bbd07712a887ed2d656d689f2632f9a55f90cc85da4c8fa11c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/validator/production_capacity.go": {
+      "bytes": 17577,
+      "sha256": "af0cc8e91e112c8e8aead35da9e2218a102232bfb373ea43f9ae0414fa6ae54c"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/validator/production_capacity_ledger_test.go": {
+      "bytes": 4590,
+      "sha256": "b93c9f4a95b11a65635722affa731325e8064976710e121c52913c30d281de49"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/validator/production_capacity_preview_linux.go": {
+      "bytes": 12478,
+      "sha256": "e83b0d25d4045dbe1fdf2391b2344a0cd438fdd797453ebc3e5d8f7ca2ebf7ad"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/validator/production_capacity_test.go": {
+      "bytes": 14253,
+      "sha256": "9097f44f0ba299d1b9546b5ca219186befeee031b853ac79fc7ada073a25b437"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn/validator/release_state_v2.go": {
+      "bytes": 9596,
+      "sha256": "96808c4e2f769186354be5cbee08cbd54e1d4117542ac588552b55b4631eba9f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-compile-jobs.json": {
+      "bytes": 2623,
+      "sha256": "8d425e4a322e770ae5cb4b1b89437e5a1d76f83769a18b967152a476f4af7a7f"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-mainnet-compile.json": {
+      "bytes": 1017,
+      "sha256": "7f5baa6de52bba2fe6d4abcd8f4513db70702c9eade5fb62dcaf875636bd993b"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-mainnet-compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-mainnet-preflight.json": {
+      "bytes": 892,
+      "sha256": "001e4d771afdec18d48adf405cd89e8bf26ba6539d1a8d90d7b358d9dab6b483"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-mainnet-preflight.log": {
+      "bytes": 3642083,
+      "sha256": "cd3aa17cd4088cccde0eba939a28fc515191d4e3a44313414fb7fe8f262afba6"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-validator-compile.json": {
+      "bytes": 1025,
+      "sha256": "b4cd0a012680ab061400cd02157b1db666fda954754ababd1751be88c0f656a9"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-validator-compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-validator-preflight.json": {
+      "bytes": 897,
+      "sha256": "a5f41b239b800ef69d77a71134bc354d7432e928d76f3646b29836378d82af23"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-validator-preflight.log": {
+      "bytes": 3135475,
+      "sha256": "202d8f3bc9003937703579a339281738e53c08fc2d238d0072a4102c0b5675c5"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-composition-compile.go": {
+      "bytes": 3641,
+      "sha256": "30190d80e34336046a0e3b961481bf5524745e7650ef7a1128336ec4b48bf577"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-current-peer-setup.json": {
+      "bytes": 3623,
+      "sha256": "8570b9315a3b54aad2eb96f2b68a3fd8379ce02c3afdb270f3b1480e2c93a377"
+    },
+    "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-capacity-b1-intake.go": {
+      "bytes": 5985,
+      "sha256": "f689038075f3755d2b45bb5688fca3f2290771ebdaa877fd885cf9b52560c6c0"
+    }
+  },
+  "causal": {
+    "expectedFailureBoundary": "production authority continuity changes policy, identity or custody",
+    "method": "Separate checkout of b1 with only validator/production_authority_history.go restored byte-exact from 39e. New fields, planner, helpers and tests remain fixed so baseline reaches old production continuity, rather than failing unknown-schema setup.",
+    "oldSource": "39e2744ae639711ab43c104d227cbfc2c213df33",
+    "paths": [
+      "validator/production_authority_history.go"
+    ],
+    "roots": [
+      "TestProductionCapacityLoaderPreservesOriginalAuthority",
+      "TestValidatorCapacityPreviewBindsJoinedRetainedCensus"
+    ]
+  },
+  "dependencies": {
+    "connect": {
+      "commit": "5c48c3e5f53b7f4654570193448b4da73b75aaff",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/connect",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/member-outer-head/connect",
+      "tree": "06a164cca3c72b776f69ec7ffd94b3c338ef622a"
+    },
+    "glog": {
+      "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/glog",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+      "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+    },
+    "goidenticons": {
+      "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/goidenticons",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+      "tree": "553487079352d9544edb62850328305e97668790"
+    },
+    "proxy": {
+      "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/proxy",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+      "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+    },
+    "server": {
+      "commit": "c2563f9a7ae7d6641569da6a1c22f772dc3793d6",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/server",
+      "physical": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/current-module/server",
+      "tree": "5c7fdda4cb10a199f8d66d9023543d8e83e41747"
+    },
+    "userwireguard": {
+      "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/userwireguard",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+      "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+    },
+    "warp": {
+      "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/warp",
+      "physical": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+      "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+    }
+  },
+  "executionOwner": "Sol via root",
+  "groups": [
+    {
+      "expectedPass": 7,
+      "package": "./validator",
+      "roots": [
+        "TestProductionCapacityLoaderPreservesOriginalAuthority",
+        "TestProductionCapacityRejectsIncompleteOrUnderbudgetedCensus",
+        "TestProductionCapacityRejectsEconomicAndResidentChanges",
+        "TestProductionCapacityHistoryRequiresEveryImmediatePredecessor",
+        "TestProductionCapacityRetainsOriginalSignedSidecar",
+        "TestProductionCapacityLegacyAndStrictOptionalGrammar",
+        "TestProductionCapacityRuntimeRetainsSignedPrefixAndLaterProgress"
+      ],
+      "selector": "^(TestProductionCapacityLoaderPreservesOriginalAuthority|TestProductionCapacityRejectsIncompleteOrUnderbudgetedCensus|TestProductionCapacityRejectsEconomicAndResidentChanges|TestProductionCapacityHistoryRequiresEveryImmediatePredecessor|TestProductionCapacityRetainsOriginalSignedSidecar|TestProductionCapacityLegacyAndStrictOptionalGrammar|TestProductionCapacityRuntimeRetainsSignedPrefixAndLaterProgress)$"
+    },
+    {
+      "expectedPass": 4,
+      "package": "./mainnet",
+      "roots": [
+        "TestValidatorCapacityPreviewBindsJoinedRetainedCensus",
+        "TestValidatorCapacityPreviewRequiresDeclarationAndExactInput",
+        "TestValidatorCapacityPreviewRefusesMissingCheckpointAndOwner",
+        "TestValidatorCapacityPreviewRefusesActiveOwnerCancellationAndShortOutput"
+      ],
+      "selector": "^(TestValidatorCapacityPreviewBindsJoinedRetainedCensus|TestValidatorCapacityPreviewRequiresDeclarationAndExactInput|TestValidatorCapacityPreviewRefusesMissingCheckpointAndOwner|TestValidatorCapacityPreviewRefusesActiveOwnerCancellationAndShortOutput)$"
+    }
+  ],
+  "limits": "Initial validator aggregate resource revision only. No live approval/signing/restart. Active population, per-record and transport authority fixed. Runtime prefix helper has a real signed-ledger control; full role startup, other-owner capacity revisions, historical performance/fairness and current published composition remain separate scopes.",
+  "modes": [
+    "normal",
+    "race"
+  ],
+  "root_verification": {
+    "artifact_bindings_rehashed": 29,
+    "changed_git_blobs_verified": [
+      "mainnet/durable_volume_owner.go",
+      "mainnet/evidence/validator-capacity-revision-20261003.md",
+      "mainnet/main.go",
+      "mainnet/validator_capacity_linux.go",
+      "mainnet/validator_capacity_other.go",
+      "mainnet/validator_capacity_test.go",
+      "validator/config.go",
+      "validator/config_evidence_v2.go",
+      "validator/production_authority_history.go",
+      "validator/production_capacity.go",
+      "validator/production_capacity_ledger_test.go",
+      "validator/production_capacity_preview_linux.go",
+      "validator/production_capacity_test.go",
+      "validator/release_state_v2.go"
+    ],
+    "clean_head_tree_verified": true,
+    "exact_changed_path_set_verified": true,
+    "intake_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-b1-intake.json",
+    "intake_sha256": "e6cc20b3e021d31bead7a861c87ac5612c290c218851db6a248c09759fe724d1",
+    "limits": "No behavior, old-source causal, race, current graph, deployment or all-role capacity qualification inferred.",
+    "module_bytes_unchanged": true,
+    "preflight_compile_exits": {
+      "capacity-b1-mainnet-compile": 0,
+      "capacity-b1-mainnet-preflight": 0,
+      "capacity-b1-validator-compile": 0,
+      "capacity-b1-validator-preflight": 0
+    }
+  },
+  "schema": "urnetwork-author-source-handoff-v1",
+  "source": {
+    "changedPaths": [
+      "mainnet/durable_volume_owner.go",
+      "mainnet/evidence/validator-capacity-revision-20261003.md",
+      "mainnet/main.go",
+      "mainnet/validator_capacity_linux.go",
+      "mainnet/validator_capacity_other.go",
+      "mainnet/validator_capacity_test.go",
+      "validator/config.go",
+      "validator/config_evidence_v2.go",
+      "validator/production_authority_history.go",
+      "validator/production_capacity.go",
+      "validator/production_capacity_ledger_test.go",
+      "validator/production_capacity_preview_linux.go",
+      "validator/production_capacity_test.go",
+      "validator/release_state_v2.go"
+    ],
+    "commit": "b1c5fb232508c80128902abe985dee7790a10077",
+    "moduleBytesUnchanged": true,
+    "parent": "39e2744ae639711ab43c104d227cbfc2c213df33",
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/sn",
+    "tree": "0409413c0982d406bea52bd4b66e3a752120a1fd"
+  },
+  "status": "SOURCE_PREFLIGHT_COMPILE_ONLY_BEHAVIOR_PENDING",
+  "vet": [
+    "./validator",
+    "./mainnet"
+  ],
+  "workspace": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-revision/go.work"
+}

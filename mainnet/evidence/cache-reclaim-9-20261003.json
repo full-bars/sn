@@ -1,0 +1,4076 @@
+{
+  "deleted_files": [
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/bd/bd7e4eb89089b961c3be235c2f2f8b7e0d19726bfb5d21a64a3c5683666d490d-d",
+      "Device": 2081,
+      "Inode": 119017337,
+      "Size": 91622796,
+      "Allocated": 91623424,
+      "Modified": 1790817050073069670,
+      "Changed": 1790817050071896472
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c2/c2fcd2c56b4d283b9be2fe53c36b13ce587026f4771530c83f3ce8176b2a64c0-d",
+      "Device": 2081,
+      "Inode": 119015599,
+      "Size": 91612860,
+      "Allocated": 91619328,
+      "Modified": 1790816306148181582,
+      "Changed": 1790816306147274854
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d7/d7832f7fb509197f0a08ae7e18f9546f0417834e6e05837a1bb471c58b5f582e-d",
+      "Device": 2081,
+      "Inode": 120899433,
+      "Size": 91072960,
+      "Allocated": 91074560,
+      "Modified": 1790814297270925238,
+      "Changed": 1790814297269986738
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/72/72902b97bdca2f74d607a72d49d53e65c3970af08801e545e87afef31956bd76-d",
+      "Device": 2081,
+      "Inode": 119850545,
+      "Size": 91066360,
+      "Allocated": 91070464,
+      "Modified": 1790813453546647943,
+      "Changed": 1790813453545461986
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/62/6250b538c1fa7c57304e308742321f8cbbaa4d5e56ec024a6ed408b21ad595b6-d",
+      "Device": 2081,
+      "Inode": 119850538,
+      "Size": 91014030,
+      "Allocated": 91021312,
+      "Modified": 1790812936327143662,
+      "Changed": 1790812936326163544
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/cd/cdc660d8ce9cd0420171faec3be6ad8b2c6ca930b6bc381b36968e60dc8f8ead-d",
+      "Device": 2081,
+      "Inode": 119016757,
+      "Size": 75645520,
+      "Allocated": 75653120,
+      "Modified": 1790816873993812549,
+      "Changed": 1790816873992948514
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b7/b77dc6e5054b687c6adb4ec4ad5bf2d4a5ea2655165d7995baeafb843ed23dc3-d",
+      "Device": 2081,
+      "Inode": 119017574,
+      "Size": 75645518,
+      "Allocated": 75653120,
+      "Modified": 1790817239468712923,
+      "Changed": 1790817239467848044
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3f/3f7294c3de5b3a756ec94ef37bd2c296ce76c00e9a71d3357e346641d0871bcc-d",
+      "Device": 2081,
+      "Inode": 119017512,
+      "Size": 75644984,
+      "Allocated": 75649024,
+      "Modified": 1790817203612332325,
+      "Changed": 1790817203611701747
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3d/3d4d942c72bb156045af273d75ba28399b9ff3f7d442fbec8df91dac78ce4315-d",
+      "Device": 2081,
+      "Inode": 119017393,
+      "Size": 75643646,
+      "Allocated": 75649024,
+      "Modified": 1790817132144079281,
+      "Changed": 1790817132142460691
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c8/c8e683fad20956bdaa15f32f33668d1bd87776eaeb73add09efe6be1fc58a0fb-d",
+      "Device": 2081,
+      "Inode": 119017455,
+      "Size": 75643420,
+      "Allocated": 75644928,
+      "Modified": 1790817170075533483,
+      "Changed": 1790817170074454529
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/fe/fe0c56ab0c3cc4f83dfd9c65fad5dea56b96925a7905ea26420e17bab702377c-d",
+      "Device": 2081,
+      "Inode": 119015869,
+      "Size": 75633484,
+      "Allocated": 75640832,
+      "Modified": 1790816501299757777,
+      "Changed": 1790816501298931251
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ae/ae89531cdbac6c189bf09445c5ea62fba61ff758042e1b8ba90fab2ab732c241-d",
+      "Device": 2081,
+      "Inode": 119015854,
+      "Size": 75633710,
+      "Allocated": 75640832,
+      "Modified": 1790816500624509850,
+      "Changed": 1790816500623982955
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/81/81e7834821839b35bb8d7cbf50ddf2fe634179302734381c0c1738b12885f9c3-d",
+      "Device": 2081,
+      "Inode": 119015861,
+      "Size": 75635048,
+      "Allocated": 75640832,
+      "Modified": 1790816501137016180,
+      "Changed": 1790816501135943730
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/fe/fe4f86687441eea91a19538fbb035d275d9d2f1ba8be5dcfc4525a43ca319f8b-d",
+      "Device": 2081,
+      "Inode": 119015870,
+      "Size": 75635582,
+      "Allocated": 75640832,
+      "Modified": 1790816501372873072,
+      "Changed": 1790816501371925662
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6b/6b1f6f1f69d387c2d20033d98ea4ae22180907c1aac70decbdd81e6e1f33f1b5-d",
+      "Device": 2081,
+      "Inode": 119014992,
+      "Size": 75635584,
+      "Allocated": 75636736,
+      "Modified": 1790816146171805919,
+      "Changed": 1790816146170317818
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/36/36d86b2c97dd2d29443237fa199b9cd4c13ea785eb443bc1a9b0c482fb756e6b-d",
+      "Device": 2081,
+      "Inode": 119014948,
+      "Size": 75634462,
+      "Allocated": 75636736,
+      "Modified": 1790816026685320778,
+      "Changed": 1790816026684503947
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1f/1fd55b81c6f14d144cc80ee57a5f778af20a35c3c37db0d99ab3f90c4c800b71-d",
+      "Device": 2081,
+      "Inode": 119014784,
+      "Size": 75596482,
+      "Allocated": 75603968,
+      "Modified": 1790815883033810046,
+      "Changed": 1790815883032197140
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c5/c58f77d63b9bf6c73b202511cf4553346a02925df007d9aeb1bbba2054a8e551-d",
+      "Device": 2081,
+      "Inode": 119013695,
+      "Size": 75597562,
+      "Allocated": 75603968,
+      "Modified": 1790815746528847914,
+      "Changed": 1790815746527656741
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/db/db5970a73e54ffb45373232744c4cea3483273d5f2b3cf5b4727a0bc716c307c-d",
+      "Device": 2081,
+      "Inode": 120506357,
+      "Size": 75335574,
+      "Allocated": 75337728,
+      "Modified": 1790815513651496520,
+      "Changed": 1790815513650264615
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/dc/dc3ddd59fac87d8d83099a0009fcf0c857015004aec0212b3ee8c6f1747cef2e-d",
+      "Device": 2081,
+      "Inode": 120899470,
+      "Size": 75179978,
+      "Allocated": 75186176,
+      "Modified": 1790814872381535732,
+      "Changed": 1790814872380211269
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f6/f6b008bb726d4ac1fb4af88ed75faae26fc1e22857cd508a7168d08938ab3ecf-d",
+      "Device": 2081,
+      "Inode": 119850644,
+      "Size": 75178540,
+      "Allocated": 75182080,
+      "Modified": 1790814928881957740,
+      "Changed": 1790814928880366021
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/bd/bdf2b90dab5d323bc268dd24020e397a9516c9f4c4f90915e5c5f7c1a0f1391f-d",
+      "Device": 2081,
+      "Inode": 120506114,
+      "Size": 75166164,
+      "Allocated": 75173888,
+      "Modified": 1790813580193295890,
+      "Changed": 1790813580192348885
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/2d/2d9c7fa66e8b9ba522d50052ff85c2edeaf654f43cfe2ae25fe582f84eaed0da-d",
+      "Device": 2081,
+      "Inode": 120506319,
+      "Size": 75172764,
+      "Allocated": 75173888,
+      "Modified": 1790814474124044880,
+      "Changed": 1790814474122214925
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/87/876931f3e1c5cbeb006d08775a64c0196dd840d0aaf2a5412775828167573d7f-d",
+      "Device": 2081,
+      "Inode": 120506280,
+      "Size": 75172788,
+      "Allocated": 75173888,
+      "Modified": 1790814213044534001,
+      "Changed": 1790814213043734714
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a8/a8cbd6059bb8265a7350174802b94a332a11b7d8f5622dcb0776f237e86fd32f-d",
+      "Device": 2081,
+      "Inode": 120899241,
+      "Size": 75166154,
+      "Allocated": 75173888,
+      "Modified": 1790813580713442823,
+      "Changed": 1790813580712331985
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/2a/2a3354cd460ad8468f14121383d5113b4b40797e9b5f756678b70db0b12922e7-d",
+      "Device": 2081,
+      "Inode": 120506296,
+      "Size": 75171368,
+      "Allocated": 75173888,
+      "Modified": 1790814313725721124,
+      "Changed": 1790814313724449821
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e5/e54c1b0d1a83f9dd5ac2584541440fdd99166f53a3b2c8354305b780d4161b9a-d",
+      "Device": 2081,
+      "Inode": 120506102,
+      "Size": 75166188,
+      "Allocated": 75173888,
+      "Modified": 1790813438920435707,
+      "Changed": 1790813438919936564
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1f/1f089204aafdc094cb550decb5baab64a2b9cddf0c44363483d1fa2f53c0dc2d-d",
+      "Device": 2081,
+      "Inode": 119850637,
+      "Size": 75172754,
+      "Allocated": 75173888,
+      "Modified": 1790814409822620243,
+      "Changed": 1790814409821313721
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9a/9ab2749ed1f97d37b55b48a8be29395c2b7e9d9ad2268aa1422ad82d21ac9a9a-d",
+      "Device": 2081,
+      "Inode": 120899330,
+      "Size": 75172788,
+      "Allocated": 75173888,
+      "Modified": 1790813990242969238,
+      "Changed": 1790813990242000189
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/fd/fdd80344991acabb5f81b7a37d6b859ef97a0e02d199ca1cbce136c608bb26ab-d",
+      "Device": 2081,
+      "Inode": 120506100,
+      "Size": 75164768,
+      "Allocated": 75169792,
+      "Modified": 1790813437889664515,
+      "Changed": 1790813437888970014
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/73/7371facfc12d504d1f4059b688c6341ce6318bac13064fcb46fb6d3c0d37c5c4-d",
+      "Device": 2081,
+      "Inode": 120506091,
+      "Size": 75166188,
+      "Allocated": 75169792,
+      "Modified": 1790813317978396083,
+      "Changed": 1790813317977857074
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/63/6331abc00132a4b1d73b8eea55a428683b12633d49d827ca1b6baf34fb59463e-d",
+      "Device": 2081,
+      "Inode": 119850634,
+      "Size": 75166830,
+      "Allocated": 75169792,
+      "Modified": 1790814356034590670,
+      "Changed": 1790814356034069140
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5c/5ce529ac153ce33c82f2e2b474469e5331378c07136f52032972274afc5c33f5-d",
+      "Device": 2081,
+      "Inode": 120506115,
+      "Size": 75160230,
+      "Allocated": 75165696,
+      "Modified": 1790813580551759630,
+      "Changed": 1790813580550337250
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/74/743a990e20f1c78b4bdf61c93aa38d686db6761c832b513028f1d9f40c9e4c25-d",
+      "Device": 2081,
+      "Inode": 120505999,
+      "Size": 75121984,
+      "Allocated": 75124736,
+      "Modified": 1790812641108280662,
+      "Changed": 1790812641107566992
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1d/1d5084f7dfee473b2ad891228732d42ecff76b1a60c843128c4ee077fb3f6089-d",
+      "Device": 2081,
+      "Inode": 120899108,
+      "Size": 75098338,
+      "Allocated": 75100160,
+      "Modified": 1790812520830764260,
+      "Changed": 1790812520829350451
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/37/379f1184a4a1b6a97c781d97c198205e57e86d5422502c2f3cba2f8ecc8755c6-d",
+      "Device": 2081,
+      "Inode": 120899102,
+      "Size": 75094090,
+      "Allocated": 75096064,
+      "Modified": 1790812429866388330,
+      "Changed": 1790812429865186572
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/75/754badff7ba9759ac948c1b41a15bc82b64d713de9a86229f73620557320989c-d",
+      "Device": 2081,
+      "Inode": 120899078,
+      "Size": 75080810,
+      "Allocated": 75083776,
+      "Modified": 1790812284174669114,
+      "Changed": 1790812284173671801
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f6/f671705acb36de678a083f5092a4170fe39151b7dc6b012757ef49ddd827f571-d",
+      "Device": 2081,
+      "Inode": 119850482,
+      "Size": 75019096,
+      "Allocated": 75022336,
+      "Modified": 1790812165464398691,
+      "Changed": 1790812165463260673
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f1/f179b9075bd4208e77aae382e24cdbf8e104798ec824a9adeccb9072536f1963-d",
+      "Device": 2081,
+      "Inode": 120899067,
+      "Size": 74897222,
+      "Allocated": 74899456,
+      "Modified": 1790811954067785183,
+      "Changed": 1790811954066451762
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d2/d2b11b7396315094202755ec5b7c76ad828198e666dae678da9cca15fbe9671f-d",
+      "Device": 2081,
+      "Inode": 120506263,
+      "Size": 54745166,
+      "Allocated": 54751232,
+      "Modified": 1790814151428523723,
+      "Changed": 1790814151427744573
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a5/a56a840517b0b529430d409785875ccbd1d2724bf8ed490084369b770aa850a9-d",
+      "Device": 2081,
+      "Inode": 119850530,
+      "Size": 54745130,
+      "Allocated": 54747136,
+      "Modified": 1790812788802930643,
+      "Changed": 1790812788801879898
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/76/7643943f4d9290483b2bf408cd54b45acded515b61f977d630c3f35054136882-d",
+      "Device": 2081,
+      "Inode": 119850574,
+      "Size": 49422178,
+      "Allocated": 49426432,
+      "Modified": 1790813916939079522,
+      "Changed": 1790813916937389127
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3c/3c63b5f6a5cf87e86da73cf8e6ba5c9da91115f2638147c66a344065d2232a6f-d",
+      "Device": 2081,
+      "Inode": 120899052,
+      "Size": 49422142,
+      "Allocated": 49422336,
+      "Modified": 1790811913187024228,
+      "Changed": 1790811913185611520
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/bd/bdc5c3a8442ccc72f0df92b75e71d13526ccc478e91eaf15f3001050fd588483-d",
+      "Device": 2081,
+      "Inode": 120506069,
+      "Size": 46822034,
+      "Allocated": 46829568,
+      "Modified": 1790812818563053519,
+      "Changed": 1790812818561930940
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/39/39a60569b14459b94af3900d0b22e913ae1dbf12708cd21da681e70e7b38735d-d",
+      "Device": 2081,
+      "Inode": 120506275,
+      "Size": 46822094,
+      "Allocated": 46829568,
+      "Modified": 1790814182954849711,
+      "Changed": 1790814182953716273
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f9/f9cc432785224093dc41097af0dfd85a38f174cfba3b17377756a9d0165f9164-d",
+      "Device": 2081,
+      "Inode": 119017256,
+      "Size": 44518030,
+      "Allocated": 44523520,
+      "Modified": 1790817013921049755,
+      "Changed": 1790817013919896169
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/15/1528dc040eb203a6e28f141185a5d50315b6d80eef81a15ee9d8d51b7a029109-d",
+      "Device": 2081,
+      "Inode": 119017680,
+      "Size": 44514232,
+      "Allocated": 44519424,
+      "Modified": 1790817478283856737,
+      "Changed": 1790817478282941829
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/8a/8aebdd5b3e18c7cca411c03b7e2926ec5ddba60ff83022091322938ac4fc0522-d",
+      "Device": 2081,
+      "Inode": 119015537,
+      "Size": 44513916,
+      "Allocated": 44515328,
+      "Modified": 1790816264788606963,
+      "Changed": 1790816264787158150
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c6/c6ef44cded6d9de684994ed71abf53dbd60f76736dd920c57ba276429c8a2aea-d",
+      "Device": 2081,
+      "Inode": 119017712,
+      "Size": 44512858,
+      "Allocated": 44515328,
+      "Modified": 1790817500849428861,
+      "Changed": 1790817500848849400
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/31/31bfc987c1913c07319a02ae0a1cfcb247f49174de99071fad27a0de8922c5b6-d",
+      "Device": 2081,
+      "Inode": 120506288,
+      "Size": 44418372,
+      "Allocated": 44425216,
+      "Modified": 1790814266324081426,
+      "Changed": 1790814266322996492
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/7a/7a5837c0de9fce20f03cc69efe1ebbe7d2996a8c8e59d289e10a609f9ec459a2-d",
+      "Device": 2081,
+      "Inode": 120506079,
+      "Size": 44415630,
+      "Allocated": 44417024,
+      "Modified": 1790812893903177257,
+      "Changed": 1790812893902522822
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/95/95e133820d6cad9d3ce3718eae2d3f15b36596fd213e67d6b5d06e13405f6126-d",
+      "Device": 2081,
+      "Inode": 120505930,
+      "Size": 43438458,
+      "Allocated": 43446272,
+      "Modified": 1790811925280085740,
+      "Changed": 1790811925278269932
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/99/990ed276075a4c8df47347d58f60725365d810935300d09086f96f85b2ccb705-d",
+      "Device": 2081,
+      "Inode": 119850581,
+      "Size": 43438518,
+      "Allocated": 43442176,
+      "Modified": 1790813933948471002,
+      "Changed": 1790813933947834848
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f5/f533296e22a55e0c6ee8ff777feea413547221580a7605b3aaca6f8c9b9c6f32-d",
+      "Device": 2081,
+      "Inode": 119015493,
+      "Size": 39430242,
+      "Allocated": 39436288,
+      "Modified": 1790816218642836769,
+      "Changed": 1790816218641698004
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/01/01d2d4ef6644703b6d37c91ed7c5fc8428b7856fc0bde001fd336326ec6dc64c-d",
+      "Device": 2081,
+      "Inode": 119017196,
+      "Size": 39434832,
+      "Allocated": 39436288,
+      "Modified": 1790816970144815597,
+      "Changed": 1790816970143359194
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/62/628fbde8fbe464e7b15fd86da0220603cef5198e46d3a5ede0079a87c0800683-d",
+      "Device": 2081,
+      "Inode": 119850535,
+      "Size": 39225840,
+      "Allocated": 39231488,
+      "Modified": 1790812849739311267,
+      "Changed": 1790812849738935384
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/90/90f64f5fcb68bd05a81934f98bbc4313e52251b7e1bc3c41ef2f0673396c6c6d-d",
+      "Device": 2081,
+      "Inode": 120899423,
+      "Size": 39228888,
+      "Allocated": 39231488,
+      "Modified": 1790814216254773442,
+      "Changed": 1790814216253630000
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/be/be73f5dd31348d4f446724201beef982c4df055c041a7f2da68dd2b9c2a1dc00-d",
+      "Device": 2081,
+      "Inode": 119016711,
+      "Size": 35521858,
+      "Allocated": 35528704,
+      "Modified": 1790816860543312716,
+      "Changed": 1790816860542752122
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6f/6f8edc7075e76b227cdc68ddced2e631fe6fc0295e58ab314a24f508b4784a00-d",
+      "Device": 2081,
+      "Inode": 119017230,
+      "Size": 35522034,
+      "Allocated": 35528704,
+      "Modified": 1790816999964063017,
+      "Changed": 1790816999962676342
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ae/ae82b8bb6c347984f64e896fc58d5a81e5e45dba106fdf5caa071c3074a0af80-d",
+      "Device": 2081,
+      "Inode": 119017297,
+      "Size": 35520996,
+      "Allocated": 35528704,
+      "Modified": 1790817029532636532,
+      "Changed": 1790817029532028943
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/dd/dd4056ed74ca4dca03234f4910effa495ea0bbe559872ff97259d59c8f2ba5b6-d",
+      "Device": 2081,
+      "Inode": 119017635,
+      "Size": 35520822,
+      "Allocated": 35524608,
+      "Modified": 1790817258753877855,
+      "Changed": 1790817258752859219
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e3/e37b06c6406891acba8e5fd6c7563eeecaf1fee08127abd7ec0a63aa041d3789-d",
+      "Device": 2081,
+      "Inode": 119016107,
+      "Size": 35516884,
+      "Allocated": 35520512,
+      "Modified": 1790816635657429239,
+      "Changed": 1790816635656175528
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b5/b5de249ada7bf16c2af62b54a6bff59042bebc5dbad5a3ebcd38a72ad9e6f0fd-d",
+      "Device": 2081,
+      "Inode": 119016105,
+      "Size": 35517920,
+      "Allocated": 35520512,
+      "Modified": 1790816635389865000,
+      "Changed": 1790816635388194013
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/fa/fa2fce8ba525b3c96da70ac3806f0c67e84804dba0910428213b2a8b50f49599-d",
+      "Device": 2081,
+      "Inode": 119014867,
+      "Size": 35517746,
+      "Allocated": 35520512,
+      "Modified": 1790816012906238067,
+      "Changed": 1790816012905954102
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9a/9a97f089f5116c9f44b336d6b6c94ad96310715562e92e1007c6f6cf36a9ab2c-d",
+      "Device": 2081,
+      "Inode": 119015794,
+      "Size": 35516708,
+      "Allocated": 35520512,
+      "Modified": 1790816481912046209,
+      "Changed": 1790816481910428314
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/cb/cbaa42bee1b32b40511a1f2f8f596f22a207b8d3f02e4de20cbb95109f3a6b44-d",
+      "Device": 2081,
+      "Inode": 119014732,
+      "Size": 35516240,
+      "Allocated": 35516416,
+      "Modified": 1790815856254720002,
+      "Changed": 1790815856254071987
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5e/5eb09d7478029f0fdf7b2ba4186de7a8fafcd48eadf8522ff779275214e9a1b8-d",
+      "Device": 2081,
+      "Inode": 120899325,
+      "Size": 35443532,
+      "Allocated": 35450880,
+      "Modified": 1790813969548962504,
+      "Changed": 1790813969547674687
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/78/78be54983c8e36df9a5e244b0a1babc8628d907a36fe2c3612a3b044f0772c97-d",
+      "Device": 2081,
+      "Inode": 120899192,
+      "Size": 35440790,
+      "Allocated": 35446784,
+      "Modified": 1790812814316239097,
+      "Changed": 1790812814316066410
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/31/31b9961649dd87e8c7278c4b852ac5feb137cd180bb6075c75e16cd4ea9fcecc-d",
+      "Device": 2081,
+      "Inode": 120506313,
+      "Size": 35439094,
+      "Allocated": 35442688,
+      "Modified": 1790814434248926257,
+      "Changed": 1790814434247516475
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a1/a1ccc2ff0b2e298b817211b8be800d19dd43fe2cb14f4c174336018c5980ca56-d",
+      "Device": 2081,
+      "Inode": 120505955,
+      "Size": 35440790,
+      "Allocated": 35442688,
+      "Modified": 1790812398306961905,
+      "Changed": 1790812398305164627
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/57/578742b04de16b978dc40f3da1e4373b5fe4bb472ecd81ee38e1a65db6a2e374-d",
+      "Device": 2081,
+      "Inode": 119016669,
+      "Size": 32991854,
+      "Allocated": 32993280,
+      "Modified": 1790816846279863436,
+      "Changed": 1790816846278610667
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/71/71bb7fd25394f6949d7902d16733cf2bbca03e58609a4cd63ffada10a603d744-d",
+      "Device": 2081,
+      "Inode": 119013772,
+      "Size": 32985310,
+      "Allocated": 32989184,
+      "Modified": 1790815841080980797,
+      "Changed": 1790815841079567740
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/59/594f6844ec0d26a9c105566beacac093b34a9000ba34969ec71c26214ea79d71-d",
+      "Device": 2081,
+      "Inode": 119014840,
+      "Size": 32987264,
+      "Allocated": 32989184,
+      "Modified": 1790815998301700621,
+      "Changed": 1790815998300431274
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/21/211796b723f9afa6757f1367880de5f2270ed9a94cebe9429e594c7c1331c058-d",
+      "Device": 2081,
+      "Inode": 120506196,
+      "Size": 32812634,
+      "Allocated": 32813056,
+      "Modified": 1790813950999829857,
+      "Changed": 1790813950998279218
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/8a/8a542d2f5d22a1a33e652300e5dfd569d9ba70ed1b51f141bd9f363a56bea8e4-d",
+      "Device": 2081,
+      "Inode": 120505995,
+      "Size": 32809586,
+      "Allocated": 32813056,
+      "Modified": 1790812594906118073,
+      "Changed": 1790812594905024363
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/50/502404eb92b30cc13627134d125940640d3f8c545fb06e90dd7d318a97e5302f-d",
+      "Device": 2081,
+      "Inode": 120899095,
+      "Size": 32808842,
+      "Allocated": 32808960,
+      "Modified": 1790812384697494013,
+      "Changed": 1790812384696585332
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d7/d74c37b0274c50781d1b30acfab33035f69ebba0bf30e4c35c1c085efa3891e6-d",
+      "Device": 2081,
+      "Inode": 119137075,
+      "Size": 32200924,
+      "Allocated": 32202752,
+      "Modified": 1790795923613439562,
+      "Changed": 1790795923612255969
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1c/1cf326c63777c591e7e72d8a515e5eccca3aebc753b3952b2dd5470d0d9bbd81-d",
+      "Device": 2081,
+      "Inode": 119134424,
+      "Size": 32198354,
+      "Allocated": 32198656,
+      "Modified": 1790792566982923370,
+      "Changed": 1790792566981957332
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/fd/fd263144a2b301ccd3dcca100c56f70aff7bdf5af5b96b810d32d9fbd1623c61-d",
+      "Device": 2081,
+      "Inode": 119134377,
+      "Size": 32198236,
+      "Allocated": 32198656,
+      "Modified": 1790792399845711167,
+      "Changed": 1790792399844415515
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a8/a810c48f1d533a26806053f8015f75dd78504f42310ea8f513f602b012086cb2-d",
+      "Device": 2081,
+      "Inode": 119138873,
+      "Size": 32192746,
+      "Allocated": 32194560,
+      "Modified": 1790797463546581146,
+      "Changed": 1790797463545219877
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d9/d9286cab5b7d521c74f04aa046d7790d09cecdadbc226811908a29e6f2ae362a-d",
+      "Device": 2081,
+      "Inode": 119140403,
+      "Size": 32192504,
+      "Allocated": 32194560,
+      "Modified": 1790800901427841982,
+      "Changed": 1790800901426348506
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/45/45f3b6fa0a4beb783b1facadfc32f2801f5ef5a86575888b23046572046f8861-d",
+      "Device": 2081,
+      "Inode": 119125746,
+      "Size": 32192248,
+      "Allocated": 32194560,
+      "Modified": 1790772886091337547,
+      "Changed": 1790772886090247622
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/78/78417c2e85178a26817de729d57ef7b0a25fa5c531fa6f5e8aa0c7b2d3229a8b-d",
+      "Device": 2081,
+      "Inode": 119126852,
+      "Size": 32190750,
+      "Allocated": 32194560,
+      "Modified": 1790776508797314525,
+      "Changed": 1790776508797059549
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5a/5a1658b291d068e936c2eb4e425707ea80f25617b7fa6a8236ae19c249fea953-d",
+      "Device": 2081,
+      "Inode": 119127471,
+      "Size": 32192248,
+      "Allocated": 32194560,
+      "Modified": 1790777292052293729,
+      "Changed": 1790777292051882478
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b8/b82212799ddb5cf29569c0b52aeb9831abb052d7a84b7b0d73f4cda78e3ea107-d",
+      "Device": 2081,
+      "Inode": 119125036,
+      "Size": 32190750,
+      "Allocated": 32194560,
+      "Modified": 1790772028047853112,
+      "Changed": 1790772028047066652
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/60/601657bc9641718ee1b2ecbad9a5f9f67397910be5b7e8b5a77c0e6f1ca675dc-d",
+      "Device": 2081,
+      "Inode": 119125337,
+      "Size": 32193246,
+      "Allocated": 32194560,
+      "Modified": 1790772321592898858,
+      "Changed": 1790772321591586259
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5e/5e004f3d3781fdce5627d762d3d9ad472c0ceea5aeffd73678566820d373b28a-d",
+      "Device": 2081,
+      "Inode": 119127082,
+      "Size": 32193246,
+      "Allocated": 32194560,
+      "Modified": 1790776842160506893,
+      "Changed": 1790776842160128892
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/90/903b0a5c9fd0682119d611c497742640e81b5dd9dc5d98536a9738bf030ef609-d",
+      "Device": 2081,
+      "Inode": 119127910,
+      "Size": 32191250,
+      "Allocated": 32194560,
+      "Modified": 1790777840632056180,
+      "Changed": 1790777840630877970
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a2/a24e70d97b42c8e09f58ba9362bf18d71a0bfe7faff7582aed66ae27eb62192e-d",
+      "Device": 2081,
+      "Inode": 119137822,
+      "Size": 32189752,
+      "Allocated": 32190464,
+      "Modified": 1790796655128322005,
+      "Changed": 1790796655127297731
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c2/c2294cd0f7377a1d29b99e3c8a2934c06c1089b3711d843eee7ca5e937436af5-d",
+      "Device": 2081,
+      "Inode": 119137204,
+      "Size": 32187756,
+      "Allocated": 32190464,
+      "Modified": 1790795985628097882,
+      "Changed": 1790795985626995536
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/87/8705541174a030af682cacf77644e65f656bc84119fbd9bce7a156dd514993d8-d",
+      "Device": 2081,
+      "Inode": 119134387,
+      "Size": 32188256,
+      "Allocated": 32190464,
+      "Modified": 1790792402353857294,
+      "Changed": 1790792402352320042
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a2/a2a1ac8747f2fb8fd5045d2773defa749239cbd68fe6f1844d40a37cb5223251-d",
+      "Device": 2081,
+      "Inode": 119126563,
+      "Size": 32190252,
+      "Allocated": 32190464,
+      "Modified": 1790776350866673178,
+      "Changed": 1790776350866124411
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ff/ffb6b9a73a9a5757bfdaf56047e1e5ea3f98d7a6a1b481a21654056334b9925a-d",
+      "Device": 2081,
+      "Inode": 119138742,
+      "Size": 32188754,
+      "Allocated": 32190464,
+      "Modified": 1790797443634244118,
+      "Changed": 1790797443633985701
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e6/e6eb567e24996238094016681eb4e2ef1abc49c22cb55a9965f941a6c11bec10-d",
+      "Device": 2081,
+      "Inode": 119124696,
+      "Size": 32188256,
+      "Allocated": 32190464,
+      "Modified": 1790771522968562342,
+      "Changed": 1790771522967307812
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6b/6b8837ef040be60497b12e821f0f7c39edaa010d5163e428263de4e8a8b7cf60-d",
+      "Device": 2081,
+      "Inode": 119131596,
+      "Size": 32187756,
+      "Allocated": 32190464,
+      "Modified": 1790786066249900452,
+      "Changed": 1790786066248183821
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/86/86e2a2292345538b41c1339d77a0acc8d16637b677ae5d0a79f636753aeea673-d",
+      "Device": 2081,
+      "Inode": 119139992,
+      "Size": 32187004,
+      "Allocated": 32190464,
+      "Modified": 1790800056618259783,
+      "Changed": 1790800056618161647
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/06/063d1211c83bede9d72e342046e17a21e2e6ff2dd98bac9b27caa4007b1c6a57-d",
+      "Device": 2081,
+      "Inode": 119140278,
+      "Size": 32188504,
+      "Allocated": 32190464,
+      "Modified": 1790800816055453916,
+      "Changed": 1790800816054568853
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a4/a4589d3ab271feb05d42c65d0d78448f811b4f633444c1198ff5bfc239d98780-d",
+      "Device": 2081,
+      "Inode": 119137948,
+      "Size": 32186758,
+      "Allocated": 32190464,
+      "Modified": 1790796706465254360,
+      "Changed": 1790796706464164728
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f6/f68326240e25a20aadc06fcd12e6604eb0db956b5957dbe1f7f279cdb8179406-d",
+      "Device": 2081,
+      "Inode": 119133057,
+      "Size": 32187258,
+      "Allocated": 32190464,
+      "Modified": 1790790805536089322,
+      "Changed": 1790790805534406264
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ba/bae093f32240e0d822bd3a16e241e7e498d88e6bfd6c1a973e041d61a36d7ec5-d",
+      "Device": 2081,
+      "Inode": 119138517,
+      "Size": 32190252,
+      "Allocated": 32190464,
+      "Modified": 1790797161034229446,
+      "Changed": 1790797161033944245
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/14/14c705de14ba8bd1bb28d897cbc072604b113e6cc8cc7dadf3738c3b8ef72306-d",
+      "Device": 2081,
+      "Inode": 119126345,
+      "Size": 32188256,
+      "Allocated": 32190464,
+      "Modified": 1790776210614317131,
+      "Changed": 1790776210613461349
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/97/97a533fd1be56c63116c419ae6b8391edcb720c901253c1f88b22ad6df1e5320-d",
+      "Device": 2081,
+      "Inode": 119131953,
+      "Size": 32190252,
+      "Allocated": 32190464,
+      "Modified": 1790787467507827228,
+      "Changed": 1790787467506322932
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/7f/7f4e6d43857f43a32f9d6c6522f7d408d08a184371e584e9b80aade9c9addd62-d",
+      "Device": 2081,
+      "Inode": 119127231,
+      "Size": 32189752,
+      "Allocated": 32190464,
+      "Modified": 1790777075620987802,
+      "Changed": 1790777075620007975
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/09/09d0d32090f4269643f2fe68af70e55de1abdad93b9b91e8b75455571e56bedd-d",
+      "Device": 2081,
+      "Inode": 119129140,
+      "Size": 32188754,
+      "Allocated": 32190464,
+      "Modified": 1790782551078425749,
+      "Changed": 1790782551077619634
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d6/d6e2135fa0baa6700138f5257614c2b6d3c0ae05680d14dbb20d7e2bc73552f1-d",
+      "Device": 2081,
+      "Inode": 119137528,
+      "Size": 32188754,
+      "Allocated": 32190464,
+      "Modified": 1790796329202475486,
+      "Changed": 1790796329201407766
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a8/a81679bc9c5a55b66bb54de45dae8964ce191085409192486551d50468d9432d-d",
+      "Device": 2081,
+      "Inode": 119131847,
+      "Size": 32189254,
+      "Allocated": 32190464,
+      "Modified": 1790787405443469066,
+      "Changed": 1790787405442590295
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/cf/cf8a3cf7df552c3842d5be7b67c1501a3f4431107b06649df2671c690b820a84-d",
+      "Device": 2081,
+      "Inode": 119124493,
+      "Size": 32189752,
+      "Allocated": 32190464,
+      "Modified": 1790771414080852594,
+      "Changed": 1790771414079323526
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/74/74dab022190b724e5f1f76ab18117db93fb83e4e1b354328818447b160b4d47e-d",
+      "Device": 2081,
+      "Inode": 119139950,
+      "Size": 32187004,
+      "Allocated": 32190464,
+      "Modified": 1790799599042837419,
+      "Changed": 1790799599041232399
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b7/b7e54214e7d3e2754b8ec9138fdfb8ba828256bc5077bd0c03292af054f89afe-d",
+      "Device": 2081,
+      "Inode": 119132446,
+      "Size": 32189254,
+      "Allocated": 32190464,
+      "Modified": 1790788347391985068,
+      "Changed": 1790788347391062266
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ab/ab94a62484f840d85a439cb1498d3b65b56afdefa99166eb5b95c111ab19d43a-d",
+      "Device": 2081,
+      "Inode": 119137068,
+      "Size": 32185262,
+      "Allocated": 32186368,
+      "Modified": 1790795911033817945,
+      "Changed": 1790795911032713930
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a5/a59adfa40e249ba6ce95a94385efda861b5a8954d8e88a7872d1dcd294dbfd05-d",
+      "Device": 2081,
+      "Inode": 119130639,
+      "Size": 32185262,
+      "Allocated": 32186368,
+      "Modified": 1790783484084931699,
+      "Changed": 1790783484083287334
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4a/4a0cd1a9cc3798991dfc4effd5785de18fb98426f4113add5742bbc643e05797-d",
+      "Device": 2081,
+      "Inode": 119123943,
+      "Size": 32185760,
+      "Allocated": 32186368,
+      "Modified": 1790770303749647353,
+      "Changed": 1790770303748311473
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/48/4875897bd862817a5a680e7ef7be3b478866031ee6a09198817c2812bab0d363-d",
+      "Device": 2081,
+      "Inode": 119130124,
+      "Size": 32186260,
+      "Allocated": 32186368,
+      "Modified": 1790782862288576537,
+      "Changed": 1790782862287181309
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1e/1eb2333bec3cc0fb4870f776148c2c9d8b9ec3f07ba9a131b6db50b8db24eed5-d",
+      "Device": 2081,
+      "Inode": 119132938,
+      "Size": 32183764,
+      "Allocated": 32186368,
+      "Modified": 1790790568385974631,
+      "Changed": 1790790568384553110
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ef/efc6127059e98a9c264fbe1370d7e8f34af517d03b869890c1a5dbcf1dc1d678-d",
+      "Device": 2081,
+      "Inode": 119137406,
+      "Size": 32185760,
+      "Allocated": 32186368,
+      "Modified": 1790796285908644580,
+      "Changed": 1790796285907998675
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/8e/8e5ba4cdb7c860d049c749ca31cea6759d78ce92f1403da18c5e44ef908bf19d-d",
+      "Device": 2081,
+      "Inode": 119133314,
+      "Size": 32185760,
+      "Allocated": 32186368,
+      "Modified": 1790791449617618040,
+      "Changed": 1790791449617069072
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/88/88a14c5522ddeeb42c49e46c6b9596a7a868afbe21a3b35bffdb0e6e63856001-d",
+      "Device": 2081,
+      "Inode": 119126158,
+      "Size": 32185760,
+      "Allocated": 32186368,
+      "Modified": 1790775360940868172,
+      "Changed": 1790775360939513125
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/60/60f701ecac5c14957e1aa92470447fb2f4a1d3f45231e6c6d8885b9d0455080d-d",
+      "Device": 2081,
+      "Inode": 119134745,
+      "Size": 32185760,
+      "Allocated": 32186368,
+      "Modified": 1790792685806598657,
+      "Changed": 1790792685806112797
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b1/b163af3b70407737dc701977943487c2a50a9ddb5eba945b2fcac0b882174fa0-d",
+      "Device": 2081,
+      "Inode": 119133523,
+      "Size": 32183266,
+      "Allocated": 32186368,
+      "Modified": 1790792060608607572,
+      "Changed": 1790792060607288950
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/68/683d9367a1cbe45fee75ea03bb631c06dd51e3ecc483a3de86052f2d68889a7c-d",
+      "Device": 2081,
+      "Inode": 119128747,
+      "Size": 32183764,
+      "Allocated": 32186368,
+      "Modified": 1790781864940060312,
+      "Changed": 1790781864938188783
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d7/d7450f3649662e8fe573e6c882114dc9dad6e09fa84dfaedb406a27323f1e6e3-d",
+      "Device": 2081,
+      "Inode": 119136773,
+      "Size": 32179772,
+      "Allocated": 32182272,
+      "Modified": 1790795168098274301,
+      "Changed": 1790795168098150417
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/46/46adea139fd035614734f2079c56b5fd8b70190ab24eeaaf3e0be8921e33658f-d",
+      "Device": 2081,
+      "Inode": 119136936,
+      "Size": 32182268,
+      "Allocated": 32182272,
+      "Modified": 1790795761792101478,
+      "Changed": 1790795761791130316
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5d/5d9792416661e0a0e7bcdd164503d4a252c316f1454465bedbbc7344b8b2e7d7-d",
+      "Device": 2081,
+      "Inode": 119135534,
+      "Size": 32178484,
+      "Allocated": 32182272,
+      "Modified": 1790793295256049374,
+      "Changed": 1790793295254881923
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/46/46f6e93eadba2f62f5631a1ed5a87b8272e8b645f1c1e9f1c2b4c58dad7a82e5-d",
+      "Device": 2081,
+      "Inode": 119136370,
+      "Size": 32181768,
+      "Allocated": 32182272,
+      "Modified": 1790794412881591400,
+      "Changed": 1790794412880409602
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/55/5577cfd7aac264cad3191077ca6c62d4286b8cc63c9705e8c4c8562c7b95e717-d",
+      "Device": 2081,
+      "Inode": 119133989,
+      "Size": 32180272,
+      "Allocated": 32182272,
+      "Modified": 1790792272309671089,
+      "Changed": 1790792272308265614
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0b/0b75ae5449f44d678021d56952355f9ae9430b46045aa73f7b6c7db7a48371e1-d",
+      "Device": 2081,
+      "Inode": 119132974,
+      "Size": 32169792,
+      "Allocated": 32169984,
+      "Modified": 1790790706527267773,
+      "Changed": 1790790706526498003
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/06/06ad9385a7e467717e2f0f0eb41a4d08151dbcfcb8f13b5bc427c90136a631e9-d",
+      "Device": 2081,
+      "Inode": 119133068,
+      "Size": 32159846,
+      "Allocated": 32161792,
+      "Modified": 1790790855862514776,
+      "Changed": 1790790855861785602
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/22/22badfa5119ee3b5862f3ee6b9f9e9ff26e313b711a53ad25fb433b4381005ef-d",
+      "Device": 2081,
+      "Inode": 119134038,
+      "Size": 32013096,
+      "Allocated": 32014336,
+      "Modified": 1790792284125424869,
+      "Changed": 1790792284124816689
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/32/32d83166056ff7682abd48050942b082d7ba126bf7156f9e6f87f17c37d09f60-d",
+      "Device": 2081,
+      "Inode": 119132945,
+      "Size": 31984774,
+      "Allocated": 31985664,
+      "Modified": 1790790580857434692,
+      "Changed": 1790790580856201299
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/31/31e0011116b7cde4c7f9398ffe800b41eadea7664435b1622c107750c28e5d81-d",
+      "Device": 2081,
+      "Inode": 119033503,
+      "Size": 31976096,
+      "Allocated": 31977472,
+      "Modified": 1790734732514663166,
+      "Changed": 1790734732514114151
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/19/194392b87e130a59b7e4c7e63f7df1b30b75fd8b1280f41dcaa4182f792f1c71-d",
+      "Device": 2081,
+      "Inode": 119465573,
+      "Size": 31976592,
+      "Allocated": 31977472,
+      "Modified": 1790718691840210338,
+      "Changed": 1790718691839928106
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/78/786406bf41492d4ac145609d7b032aef27b19d6ed3bbe290f328f2a8541567bb-d",
+      "Device": 2081,
+      "Inode": 119119827,
+      "Size": 31977086,
+      "Allocated": 31977472,
+      "Modified": 1790753023228009572,
+      "Changed": 1790753023226675292
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0b/0b37bc910cdfd6e9ad8a490b24be7a0a245df7c941ecf3ce909fbeacccb04677-d",
+      "Device": 2081,
+      "Inode": 38847066,
+      "Size": 31974612,
+      "Allocated": 31977472,
+      "Modified": 1790723870376032391,
+      "Changed": 1790723870375107670
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/91/91a7f460ac2ca33be2d6ec031e6c84a0fdf616e2fdfd832734ec2900cc5581d3-d",
+      "Device": 2081,
+      "Inode": 119047164,
+      "Size": 31974612,
+      "Allocated": 31977472,
+      "Modified": 1790741214961505782,
+      "Changed": 1790741214960324621
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3c/3cec8c4dcb5eeefea04c0d9101e45104bced31b4cdbef6153fa6123ef207f537-d",
+      "Device": 2081,
+      "Inode": 119119687,
+      "Size": 31974612,
+      "Allocated": 31977472,
+      "Modified": 1790752932941482894,
+      "Changed": 1790752932940580202
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1d/1d27e438e635f0ae77f820af1958ebb742b975a9601d0fd000ef36c266f634e1-d",
+      "Device": 2081,
+      "Inode": 119121352,
+      "Size": 31973622,
+      "Allocated": 31977472,
+      "Modified": 1790759300648105434,
+      "Changed": 1790759300646416740
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/87/87696d0b4f8acaf306d155e7377b1bdf7fb5812319aedfe3d80d403d8de37de4-d",
+      "Device": 2081,
+      "Inode": 119038570,
+      "Size": 31974116,
+      "Allocated": 31977472,
+      "Modified": 1790738000694186632,
+      "Changed": 1790738000693745762
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/8a/8aeb13b944f24387b9459db1279841da3fff993f512a24517be689410d5cabcb-d",
+      "Device": 2081,
+      "Inode": 119058012,
+      "Size": 31977086,
+      "Allocated": 31977472,
+      "Modified": 1790744996773667436,
+      "Changed": 1790744996772240184
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0d/0de3636d4a013b0a41615e0cb5f277466e998e11cef30a632ce652041f10b6e8-d",
+      "Device": 2081,
+      "Inode": 119054060,
+      "Size": 31975602,
+      "Allocated": 31977472,
+      "Modified": 1790743953452231485,
+      "Changed": 1790743953451937950
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d2/d29fdd1d5737208ac72a069d64742c25efcc952264888a30e38f186370c2af44-d",
+      "Device": 2081,
+      "Inode": 119120397,
+      "Size": 31974116,
+      "Allocated": 31977472,
+      "Modified": 1790756247136328780,
+      "Changed": 1790756247135663779
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/43/43c221b037dc25f89e58b6a092450c02c24b903bb9d84d987bd6d911b4ce785a-d",
+      "Device": 2081,
+      "Inode": 119120011,
+      "Size": 31970652,
+      "Allocated": 31973376,
+      "Modified": 1790753561599391806,
+      "Changed": 1790753561599057090
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/2b/2b6192a1b7bdedce837b9299bf3a87fd7181f0920e335d1d15497f6f7f1c56d3-d",
+      "Device": 2081,
+      "Inode": 119121178,
+      "Size": 31971146,
+      "Allocated": 31973376,
+      "Modified": 1790759149684178478,
+      "Changed": 1790759149683307920
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1e/1e4d334ca895cb6142cb99acba9023c18f7adf38509c0d9fef447d7afc51202a-d",
+      "Device": 2081,
+      "Inode": 119119223,
+      "Size": 31972136,
+      "Allocated": 31973376,
+      "Modified": 1790751829585604054,
+      "Changed": 1790751829584767897
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/81/81ca3f77d76a9de2fd61e8cad53f9c8fb2ca150ebf5557bd2e6583dcd88fbe79-d",
+      "Device": 2081,
+      "Inode": 119032002,
+      "Size": 31971146,
+      "Allocated": 31973376,
+      "Modified": 1790734556779454209,
+      "Changed": 1790734556778276089
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/db/db8503d83d25407bc3e5cd5a04faefa884d0312fe1d2234fe57eb341c02266ee-d",
+      "Device": 2081,
+      "Inode": 121553737,
+      "Size": 31970156,
+      "Allocated": 31973376,
+      "Modified": 1790721875718168727,
+      "Changed": 1790721875717743842
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c2/c2038266313d1d8d129d61d71e7faaf6f4ada33763697a210e07b513faab9d43-d",
+      "Device": 2081,
+      "Inode": 119014654,
+      "Size": 31970156,
+      "Allocated": 31973376,
+      "Modified": 1790729137449078301,
+      "Changed": 1790729137447613840
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/74/74a24c89310913e8eb927337af2e90b5c7481dc20e1a3c841b00c358127bf540-d",
+      "Device": 2081,
+      "Inode": 119119384,
+      "Size": 31969662,
+      "Allocated": 31973376,
+      "Modified": 1790752139840264679,
+      "Changed": 1790752139839702374
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ee/eeed20a5fc9980a791c1ec9c211a874e82713775437a51e14b502ae7202002fb-d",
+      "Device": 2081,
+      "Inode": 119119562,
+      "Size": 31972136,
+      "Allocated": 31973376,
+      "Modified": 1790752455433007926,
+      "Changed": 1790752455431203294
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/83/83a2689d29ec526ef969e0bc03303f1b22111bc2f4f01a83069a98e8250fc5ad-d",
+      "Device": 2081,
+      "Inode": 119052882,
+      "Size": 31970652,
+      "Allocated": 31973376,
+      "Modified": 1790743516281080779,
+      "Changed": 1790743516279379035
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/61/614b933fa9941d5f570620597689c82e173ed7f0e9e100e973bd784bf3f3934e-d",
+      "Device": 2081,
+      "Inode": 71873290,
+      "Size": 31972136,
+      "Allocated": 31973376,
+      "Modified": 1790717706888357591,
+      "Changed": 1790717706887245031
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9f/9f125e7be0610cdeee4853597da251312c20f5148ba33b7f99951846471f4396-d",
+      "Device": 2081,
+      "Inode": 119120562,
+      "Size": 31971642,
+      "Allocated": 31973376,
+      "Modified": 1790756410625839983,
+      "Changed": 1790756410625108335
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/01/01ccc314a919f1d556e6efefe8a9245fc8c6aa5d1c3c1f8043a51074b7afe854-d",
+      "Device": 2081,
+      "Inode": 119056954,
+      "Size": 31972136,
+      "Allocated": 31973376,
+      "Modified": 1790744478288577544,
+      "Changed": 1790744478287598781
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/05/054476246fe38a2e47bc86728abe0e2899d92b4bd64ae1245318f63b95993ac0-d",
+      "Device": 2081,
+      "Inode": 119040514,
+      "Size": 31969662,
+      "Allocated": 31973376,
+      "Modified": 1790739997360835089,
+      "Changed": 1790739997360047181
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/cf/cfa97cfa6cba96b2621fa4abecc80fcf0c85927dc2de4719e5e3bf501b46db8b-d",
+      "Device": 2081,
+      "Inode": 119025351,
+      "Size": 31970652,
+      "Allocated": 31973376,
+      "Modified": 1790730044474263914,
+      "Changed": 1790730044473697846
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b5/b5439aab0d347f5eb9b88df017a76757b87ba3c3324a21595075ff1a2c5e2576-d",
+      "Device": 2081,
+      "Inode": 119062227,
+      "Size": 31969662,
+      "Allocated": 31973376,
+      "Modified": 1790746253119970291,
+      "Changed": 1790746253118265756
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0b/0bc4ec33a39d2d3b47f0bc1888d5e9dd0fac417dc7729d4057c29d5c0cc740f9-d",
+      "Device": 2081,
+      "Inode": 38847044,
+      "Size": 31970652,
+      "Allocated": 31973376,
+      "Modified": 1790717516030493628,
+      "Changed": 1790717516029628772
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/55/553e3384f6f451b0ec268d5ae66b80806385be32d28cbddde2108f0fca493daf-d",
+      "Device": 2081,
+      "Inode": 119036321,
+      "Size": 31969166,
+      "Allocated": 31969280,
+      "Modified": 1790736609784864500,
+      "Changed": 1790736609783744132
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/db/db41b3b561f02fc21def53be10cd9df2dee9acdcb961987f174fbdad5dcc8add-d",
+      "Device": 2081,
+      "Inode": 121553733,
+      "Size": 31965206,
+      "Allocated": 31969280,
+      "Modified": 1790720886627731505,
+      "Changed": 1790720886626509314
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/fb/fbf76c26e5b502598fb7bdc88d8133d15b04e23227df0fc0447d65531f6a015a-d",
+      "Device": 2081,
+      "Inode": 119032814,
+      "Size": 31968672,
+      "Allocated": 31969280,
+      "Modified": 1790734693818204283,
+      "Changed": 1790734693817481737
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6c/6cbc57247d53153ea5b2da0590fd8e5ea739393d573f20a74f23ec9113604451-d",
+      "Device": 2081,
+      "Inode": 119045433,
+      "Size": 31967186,
+      "Allocated": 31969280,
+      "Modified": 1790741051326804395,
+      "Changed": 1790741051325269011
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/92/921a91c535cddf97f4b400cf16a34e88e9ac001b36564deee85312009f2e8300-d",
+      "Device": 2081,
+      "Inode": 119118493,
+      "Size": 31967186,
+      "Allocated": 31969280,
+      "Modified": 1790751453973616365,
+      "Changed": 1790751453972297013
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d9/d9668f4bb44d5ff668f3c8631b2c19980bacc6ec15eb7c111b4eb105717bf852-d",
+      "Device": 2081,
+      "Inode": 119117086,
+      "Size": 31968672,
+      "Allocated": 31969280,
+      "Modified": 1790748689764269773,
+      "Changed": 1790748689764092265
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/55/559957e943734285299920cc6e4da5b96583102c54acacc91e3dd1410a8a4d74-d",
+      "Device": 2081,
+      "Inode": 119120751,
+      "Size": 31967682,
+      "Allocated": 31969280,
+      "Modified": 1790757326133684826,
+      "Changed": 1790757326132797032
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/73/736c71f425cf0cca3e688e09078b8dfa382cdb45c6fea012d6a8a03e8f37fb28-d",
+      "Device": 2081,
+      "Inode": 66241192,
+      "Size": 31965206,
+      "Allocated": 31969280,
+      "Modified": 1790726778246829764,
+      "Changed": 1790726778246039717
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/62/62632a29ad57bab70cc74a026d2ad2088ddd2f6e6c3e9a56a83a5dda54c3c64e-d",
+      "Device": 2081,
+      "Inode": 119026237,
+      "Size": 31968176,
+      "Allocated": 31969280,
+      "Modified": 1790730243064640757,
+      "Changed": 1790730243063631761
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/37/3706e3108d7e0ce1e503bad99c823644a111380b45d4a3cb6a8a6083bfaacbdb-d",
+      "Device": 2081,
+      "Inode": 119055499,
+      "Size": 31968176,
+      "Allocated": 31969280,
+      "Modified": 1790744187299065708,
+      "Changed": 1790744187298127299
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4b/4b5abae81ad7e16f0c745f98dffa2ed1c0c2db0b91195947cd1dca33118bd5c3-d",
+      "Device": 2081,
+      "Inode": 119037398,
+      "Size": 31966692,
+      "Allocated": 31969280,
+      "Modified": 1790737838043582108,
+      "Changed": 1790737838043146649
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/bf/bf304247785b79b396e6ea686a316835f7779cc341c5fb511f6b272ae7036ce2-d",
+      "Device": 2081,
+      "Inode": 119112647,
+      "Size": 31968672,
+      "Allocated": 31969280,
+      "Modified": 1790748544555527161,
+      "Changed": 1790748544554517844
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c6/c6ef1e2ae3b967c6d2d6bb5bb226de9d3515da58661c2c73623dd2e6e5ff162e-d",
+      "Device": 2081,
+      "Inode": 119121543,
+      "Size": 31967186,
+      "Allocated": 31969280,
+      "Modified": 1790760377151219526,
+      "Changed": 1790760377151061718
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/12/122cf3033d86d4faef7177f13bc68f2394a814f89addc829d4f5357a843fa001-d",
+      "Device": 2081,
+      "Inode": 119120273,
+      "Size": 31969166,
+      "Allocated": 31969280,
+      "Modified": 1790755745425005443,
+      "Changed": 1790755745423914143
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/59/59c5276ab075e0347ef0317b9f3329720f840b55f5b1358831c6caaa91513f10-d",
+      "Device": 2081,
+      "Inode": 119121049,
+      "Size": 31968672,
+      "Allocated": 31969280,
+      "Modified": 1790758865136197728,
+      "Changed": 1790758865135265216
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d6/d60d686ce9eb931fa1779ba3eee2230a3b8fcfa8fcf0b503edf30f71b93359ea-d",
+      "Device": 2081,
+      "Inode": 119014088,
+      "Size": 31966692,
+      "Allocated": 31969280,
+      "Modified": 1790728932152754080,
+      "Changed": 1790728932151299508
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/04/04291e7f28c963d8936f060f4aac81befce6601b1a5430e0df87a677fcc0d5ad-d",
+      "Device": 2081,
+      "Inode": 119078852,
+      "Size": 31965702,
+      "Allocated": 31969280,
+      "Modified": 1790747878041488321,
+      "Changed": 1790747878040965543
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/fd/fdb51a2456b48ec76a3bc1f42eb43367d805b9c50232be59d98d7daace4258cf-d",
+      "Device": 2081,
+      "Inode": 38847073,
+      "Size": 31968672,
+      "Allocated": 31969280,
+      "Modified": 1790724391762742994,
+      "Changed": 1790724391761959030
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/57/578a259197c5f56c84af1fab269707dcffaac076e5f9a608831dd7c64846d475-d",
+      "Device": 2081,
+      "Inode": 119027848,
+      "Size": 31964216,
+      "Allocated": 31965184,
+      "Modified": 1790731397947857176,
+      "Changed": 1790731397946649794
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/7f/7f08a585c7a840683c1fe3767d2fcde176f4e39c827da795e5d5039882d19b19-d",
+      "Device": 2081,
+      "Inode": 119048996,
+      "Size": 31963226,
+      "Allocated": 31965184,
+      "Modified": 1790741475184112413,
+      "Changed": 1790741475182667805
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/71/71c5c20dda8e76dfb13cbcf70f0cf0b823836234a8c635639f62ecc20ccaaa7b-d",
+      "Device": 2081,
+      "Inode": 119041501,
+      "Size": 31962732,
+      "Allocated": 31965184,
+      "Modified": 1790740426752569113,
+      "Changed": 1790740426751342676
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a7/a7d20d49e601b04ee62f1953abfad7df8e2b3f71bbeb11a42d0538e1c4f26795-d",
+      "Device": 2081,
+      "Inode": 119034801,
+      "Size": 31964712,
+      "Allocated": 31965184,
+      "Modified": 1790735740133894906,
+      "Changed": 1790735740132413825
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4c/4c783f64394790513eea232a1e32c05a2e43d90ed5887a5d607d807200bf9db3-d",
+      "Device": 2081,
+      "Inode": 119059640,
+      "Size": 31964216,
+      "Allocated": 31965184,
+      "Modified": 1790745458972545653,
+      "Changed": 1790745458971541714
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/29/290abb3c24a3095dcce3383acc57828fb4744dab7826ac44ea3762ae664ab7e5-d",
+      "Device": 2081,
+      "Inode": 119117420,
+      "Size": 31904034,
+      "Allocated": 31907840,
+      "Modified": 1790693371000536433,
+      "Changed": 1790693370999380464
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f4/f4f3ea0bc59a8f3157e9d8aa949f9552a65fe5a22bdb82002bda6186c65691cb-d",
+      "Device": 2081,
+      "Inode": 119099932,
+      "Size": 31905448,
+      "Allocated": 31907840,
+      "Modified": 1790676675693481874,
+      "Changed": 1790676675693054951
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3e/3e76882984e91f64f77deda737893028f2df76a580fc7087b2e9cf821d6715f6-d",
+      "Device": 2081,
+      "Inode": 119117648,
+      "Size": 31901574,
+      "Allocated": 31903744,
+      "Modified": 1790693756561039569,
+      "Changed": 1790693756559617362
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/7d/7de7bec0e6d4d979e4babeeee52dee84b6b4678230fd6971a49a73bf0eee0c4d-d",
+      "Device": 2081,
+      "Inode": 119111431,
+      "Size": 31901574,
+      "Allocated": 31903744,
+      "Modified": 1790688760993258430,
+      "Changed": 1790688760993142797
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b3/b33626bc2c5439fff847c2edf29c8641124cc64dd515f329bfecaae57351fc29-d",
+      "Device": 2081,
+      "Inode": 119116275,
+      "Size": 31902558,
+      "Allocated": 31903744,
+      "Modified": 1790692994760064280,
+      "Changed": 1790692994759135615
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3a/3afa0174943c90022649f31923ddd77330eee40df768f76d78e151bf995d6fcd-d",
+      "Device": 2081,
+      "Inode": 119116642,
+      "Size": 31900590,
+      "Allocated": 31903744,
+      "Modified": 1790693145621735169,
+      "Changed": 1790693145620256722
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b4/b424449079fd9ef9aa3f3a93ecb4f773f8f22f358c9a57e503795803f8106ebe-d",
+      "Device": 2081,
+      "Inode": 119099433,
+      "Size": 31900036,
+      "Allocated": 31903744,
+      "Modified": 1790676466805557491,
+      "Changed": 1790676466804171566
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/39/39fd837533157b40ce634ecf651dd23cf8dea834dccdb1d628aab87c343f6707-d",
+      "Device": 2081,
+      "Inode": 119116085,
+      "Size": 31900098,
+      "Allocated": 31903744,
+      "Modified": 1790692933589711939,
+      "Changed": 1790692933588517164
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d9/d970589e8eeae7339b5fe9916af9ed7f3b22c0746b98c15d9803c3e62da16d63-d",
+      "Device": 2081,
+      "Inode": 119100419,
+      "Size": 31901512,
+      "Allocated": 31903744,
+      "Modified": 1790676888633875902,
+      "Changed": 1790676888632896731
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/61/61023880b60df2438a391e0fbe381cbef93e06773950230b3d4131dcd1f742c0-d",
+      "Device": 2081,
+      "Inode": 119112971,
+      "Size": 31900590,
+      "Allocated": 31903744,
+      "Modified": 1790689431954345780,
+      "Changed": 1790689431953336704
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f9/f991a391b68e3ea4f3459ad65ce3bf40df260d8de6eec4dd9c3601326d24ccea-d",
+      "Device": 2081,
+      "Inode": 119113149,
+      "Size": 31900098,
+      "Allocated": 31903744,
+      "Modified": 1790689548085845099,
+      "Changed": 1790689548084280101
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/09/09715c512ceda74f2fd5b8086d1a8807f3f322cbe41e30262f688f6817297090-d",
+      "Device": 2081,
+      "Inode": 119116820,
+      "Size": 31900098,
+      "Allocated": 31903744,
+      "Modified": 1790693241258948807,
+      "Changed": 1790693241257790775
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/21/212b6ed63c038a2bb46d7882e73bb3e1b824daac10960aefe79b1c9fb6de373d-d",
+      "Device": 2081,
+      "Inode": 119114821,
+      "Size": 31898130,
+      "Allocated": 31899648,
+      "Modified": 1790692247679710095,
+      "Changed": 1790692247679056704
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/55/55a8551fcdb6c260f766d7e1f21c05b40f5d2fb0bc76f53c96d555900933e143-d",
+      "Device": 2081,
+      "Inode": 119115889,
+      "Size": 31897146,
+      "Allocated": 31899648,
+      "Modified": 1790692834567489344,
+      "Changed": 1790692834566369088
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/12/12df7eeb1c2ecf720a72435872268abafe5a0b0408cad8622dd6d62f2f0b9f39-d",
+      "Device": 2081,
+      "Inode": 119099646,
+      "Size": 31897576,
+      "Allocated": 31899648,
+      "Modified": 1790676571453551648,
+      "Changed": 1790676571453104718
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/77/77d16be5085e733998675a8b1976b176aa683c117bed737becc660c26672b8ca-d",
+      "Device": 2081,
+      "Inode": 119114999,
+      "Size": 31897638,
+      "Allocated": 31899648,
+      "Modified": 1790692343522842030,
+      "Changed": 1790692343521375699
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/bd/bdd27a2b1106cab0602a9b350f74b03d568498ceba2a8532a997eeafc0c22a34-d",
+      "Device": 2081,
+      "Inode": 119115533,
+      "Size": 31896162,
+      "Allocated": 31899648,
+      "Modified": 1790692639084206873,
+      "Changed": 1790692639083958133
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4e/4e6fd4ffa485749896d3080dc1c8d051c8c17106ade2f763ed96f5e9180bf1ed-d",
+      "Device": 2081,
+      "Inode": 119115711,
+      "Size": 31899114,
+      "Allocated": 31899648,
+      "Modified": 1790692736591055032,
+      "Changed": 1790692736589175618
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3f/3feb9468a57c97b6e64f4c43adc252b22cc5b9e3f67877c2c6611eee6c50ea88-d",
+      "Device": 2081,
+      "Inode": 119114039,
+      "Size": 31897638,
+      "Allocated": 31899648,
+      "Modified": 1790690129735737108,
+      "Changed": 1790690129734259502
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/22/22c2a38307d1b873ecbaf543710ec3eb169184dbc5bfd980c6a67cc7cff7bb9a-d",
+      "Device": 2081,
+      "Inode": 119099211,
+      "Size": 31896100,
+      "Allocated": 31899648,
+      "Modified": 1790676361713942751,
+      "Changed": 1790676361712257104
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a3/a3a1f9fe0e45879afa2975163110d6dbd5f65d6e2d5bd9dea0cb7fb475ff4d45-d",
+      "Device": 2081,
+      "Inode": 119113327,
+      "Size": 31899606,
+      "Allocated": 31899648,
+      "Modified": 1790689666156315641,
+      "Changed": 1790689666155416449
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/98/983d4aaacdfd3df7e923c26cdf0e1809129272b353927f27e0cd9d47c0608d6c-d",
+      "Device": 2081,
+      "Inode": 119116998,
+      "Size": 31898130,
+      "Allocated": 31899648,
+      "Modified": 1790693336281245885,
+      "Changed": 1790693336280574709
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d2/d240a1f0ef1b8c95cca6fbc585ec167f326b71e7bd2920248747fdbc21ab8e3d-d",
+      "Device": 2081,
+      "Inode": 119114627,
+      "Size": 31896162,
+      "Allocated": 31899648,
+      "Modified": 1790692145184144120,
+      "Changed": 1790692145183977395
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6e/6ed789e5e3f46953b7afaf992b29a4b602cad3e36e8a3f31a742ea8d497d3d42-d",
+      "Device": 2081,
+      "Inode": 119115177,
+      "Size": 31898622,
+      "Allocated": 31899648,
+      "Modified": 1790692438624341736,
+      "Changed": 1790692438623711438
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/87/8760053c188061f3fd1e289b4ad035649968cbb86be778d1ec9d4c4c6bcfd4fd-d",
+      "Device": 2081,
+      "Inode": 119107857,
+      "Size": 31896654,
+      "Allocated": 31899648,
+      "Modified": 1790684059361378313,
+      "Changed": 1790684059360445423
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/26/26199ecff632f947ce7f6fca23ec11eb5d55bf99504a61d3f451c1a2d49db531-d",
+      "Device": 2081,
+      "Inode": 119113861,
+      "Size": 31895670,
+      "Allocated": 31899648,
+      "Modified": 1790690011070186291,
+      "Changed": 1790690011069467838
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/8c/8cc5184dbf9474ab76facb73ce757eace60735019e3ed7a76835aff0cf360f01-d",
+      "Device": 2081,
+      "Inode": 119116378,
+      "Size": 31897638,
+      "Allocated": 31899648,
+      "Modified": 1790693040031616638,
+      "Changed": 1790693040030372200
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/37/37cd7b1c75668d6d378a8d75458c0ace39365ddfd350faf70a2f1f7063c98396-d",
+      "Device": 2081,
+      "Inode": 119112228,
+      "Size": 31897638,
+      "Allocated": 31899648,
+      "Modified": 1790689095911061648,
+      "Changed": 1790689095910117959
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d0/d03e8662f5901253012e4df5800ac031391c58f68f98b26977ca6ea9b84cad00-d",
+      "Device": 2081,
+      "Inode": 119111716,
+      "Size": 31893702,
+      "Allocated": 31895552,
+      "Modified": 1790688876007850423,
+      "Changed": 1790688876007013484
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/07/071d7d73e4a3ba58c8b01a214618d31f261fa369a1dc20c719fab6fb428b82a3-d",
+      "Device": 2081,
+      "Inode": 119100194,
+      "Size": 31894624,
+      "Allocated": 31895552,
+      "Modified": 1790676779159553364,
+      "Changed": 1790676779159036208
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/89/892da6419195ac6b096cc4d8a04a1d2927282d9ae16b47a45346145b537d6f4b-d",
+      "Device": 2081,
+      "Inode": 119106870,
+      "Size": 31893210,
+      "Allocated": 31895552,
+      "Modified": 1790682868281815823,
+      "Changed": 1790682868280674650
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/29/291994df724d61ad1d7adac9e1c64170ff37218fea21f92d20d84490c03302f3-d",
+      "Device": 2081,
+      "Inode": 119112453,
+      "Size": 31894686,
+      "Allocated": 31895552,
+      "Modified": 1790689208647397686,
+      "Changed": 1790689208647074883
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5b/5b2da9733f3f4cfe84ca74feedb6952d03c2bcb6eac6efa749a82719914a05d9-d",
+      "Device": 2081,
+      "Inode": 119105378,
+      "Size": 31893702,
+      "Allocated": 31895552,
+      "Modified": 1790680563115682627,
+      "Changed": 1790680563114778487
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ee/ee991eab1b5dea559ef4daa19770367788827eddd0939b04510a8db73037136e-d",
+      "Device": 2081,
+      "Inode": 119107621,
+      "Size": 31894194,
+      "Allocated": 31895552,
+      "Modified": 1790683691414295076,
+      "Changed": 1790683691414150381
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6d/6d57885a076887150feba125ef83f3ff9bf94289817907cb87d7822da0cc8fa1-d",
+      "Device": 2081,
+      "Inode": 119104716,
+      "Size": 31893702,
+      "Allocated": 31895552,
+      "Modified": 1790679841653579774,
+      "Changed": 1790679841652488254
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/53/53424a322f4e6f4bb3ccab828ae51ddd90518a7e2b72972e42118f79b9e70629-d",
+      "Device": 2081,
+      "Inode": 119102761,
+      "Size": 31892226,
+      "Allocated": 31895552,
+      "Modified": 1790677768931514663,
+      "Changed": 1790677768931042960
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9b/9b956f5c469a366be256995d7f85f61efc391e5170f54740d115a3d6c2eacb55-d",
+      "Device": 2081,
+      "Inode": 119111934,
+      "Size": 31893702,
+      "Allocated": 31895552,
+      "Modified": 1790688987209771793,
+      "Changed": 1790688987209020881
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/cb/cbd7c63b98714cd80b3e6d4ad1db2858622737d5f9a8b3b236aee54947391387-d",
+      "Device": 2081,
+      "Inode": 119105162,
+      "Size": 31892718,
+      "Allocated": 31895552,
+      "Modified": 1790680329901357100,
+      "Changed": 1790680329900686962
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9f/9f1a90d4b503517f2842d8edf019dc01a13978b05de61c32a7c7e58f02afabf1-d",
+      "Device": 2081,
+      "Inode": 119113505,
+      "Size": 31894194,
+      "Allocated": 31895552,
+      "Modified": 1790689776355070876,
+      "Changed": 1790689776353157536
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6b/6b8ffc1a2213c1403001214bfd0e67bb82c1b06f0e4bcbda066f355643e6961c-d",
+      "Device": 2081,
+      "Inode": 119115355,
+      "Size": 31894686,
+      "Allocated": 31895552,
+      "Modified": 1790692544017074285,
+      "Changed": 1790692544015639521
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ac/accfdd04c9ab7e9ec2e138e90d7e3f23ed52716a95703d8d8251203bd8fc04bf-d",
+      "Device": 2081,
+      "Inode": 119095843,
+      "Size": 31894194,
+      "Allocated": 31895552,
+      "Modified": 1790672788324342768,
+      "Changed": 1790672788323599109
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0c/0c8a37e4dd3800118d99f11d28eaf2cd118060a66099140f8ab34f93032f23f1-d",
+      "Device": 2081,
+      "Inode": 119107371,
+      "Size": 31894194,
+      "Allocated": 31895552,
+      "Modified": 1790683342025941800,
+      "Changed": 1790683342025131711
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c4/c4f66875b176b3ee27a37d15a2f291b3447f091054bdd0318f6ecbeba3e7e43a-d",
+      "Device": 2081,
+      "Inode": 119112790,
+      "Size": 31895178,
+      "Allocated": 31895552,
+      "Modified": 1790689319907356303,
+      "Changed": 1790689319906521022
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4f/4f3d139f0b786c933450c2be8547ba07729a52e4c03e344b7579be3e222b6607-d",
+      "Device": 2081,
+      "Inode": 119113683,
+      "Size": 31893702,
+      "Allocated": 31895552,
+      "Modified": 1790689895417578581,
+      "Changed": 1790689895416660485
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/39/39e3dc80ad8bbceb0727aa774ec272d721567162d5eab0fbe09a4c894e472a42-d",
+      "Device": 2081,
+      "Inode": 119104927,
+      "Size": 31894194,
+      "Allocated": 31895552,
+      "Modified": 1790680085565994403,
+      "Changed": 1790680085565061788
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/dc/dc94e214aeccca66f6f734afe587bbfeb5845167aa8cd455c5a91134313047f4-d",
+      "Device": 2081,
+      "Inode": 119103208,
+      "Size": 31892226,
+      "Allocated": 31895552,
+      "Modified": 1790677895671390025,
+      "Changed": 1790677895670568476
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/82/823857422a9c939894175dfbdd2750888fdc2cdf9e8ddcb3afef17234c4195e8-d",
+      "Device": 2081,
+      "Inode": 119104493,
+      "Size": 31891242,
+      "Allocated": 31891456,
+      "Modified": 1790679729330471383,
+      "Changed": 1790679729329862615
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d5/d58a4f4d5e21af66880f03668b3efa405eeae40e570b1c264885fcb121299112-d",
+      "Device": 2081,
+      "Inode": 119095186,
+      "Size": 31887798,
+      "Allocated": 31891456,
+      "Modified": 1790672693740266656,
+      "Changed": 1790672693740045167
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e1/e149b5847b89a770ad161e1dbf28ba6cf86e08a83ef4e4b78dcba8a9d753c949-d",
+      "Device": 2081,
+      "Inode": 119103625,
+      "Size": 31891242,
+      "Allocated": 31891456,
+      "Modified": 1790678014873970221,
+      "Changed": 1790678014872313662
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/13/137a9e95124e9275123afd31c0e984aa637de73c827de0c0e674ad90e0592bc1-d",
+      "Device": 2081,
+      "Inode": 119109959,
+      "Size": 31890258,
+      "Allocated": 31891456,
+      "Modified": 1790685281664921946,
+      "Changed": 1790685281663691176
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/85/85c7187982acced980aac376ef18b2a0971105f624cc43c7fdd1e37244cdb4fb-d",
+      "Device": 2081,
+      "Inode": 119095839,
+      "Size": 31890750,
+      "Allocated": 31891456,
+      "Modified": 1790672787849382038,
+      "Changed": 1790672787848622388
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/52/52edcf747fd227f26d41eacac3b67d3ce0c07dd1ef3cc8f0688864f99461431b-d",
+      "Device": 2081,
+      "Inode": 119106310,
+      "Size": 31890750,
+      "Allocated": 31891456,
+      "Modified": 1790682199022690052,
+      "Changed": 1790682199021628534
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/26/26226bf96a7f2ae15f8dd665f677b93a9046e4ee9d2d13393b4cc00d60df7c54-d",
+      "Device": 2081,
+      "Inode": 119108856,
+      "Size": 31890750,
+      "Allocated": 31891456,
+      "Modified": 1790684769509816924,
+      "Changed": 1790684769508953334
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d7/d75e10b2ef8496ebe803fc39c27c0fa02057d7db3f11c314e0f269fa94d90e6f-d",
+      "Device": 2081,
+      "Inode": 119095837,
+      "Size": 31889274,
+      "Allocated": 31891456,
+      "Modified": 1790672787894833457,
+      "Changed": 1790672787893620182
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/54/541d7e0575f70609edde3d2a614db05278f9e61eea1a12f347705c55de0437f2-d",
+      "Device": 2081,
+      "Inode": 119105586,
+      "Size": 31890258,
+      "Allocated": 31891456,
+      "Modified": 1790680809613600266,
+      "Changed": 1790680809612388855
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f6/f62f1ceb0b8c4eb187215dfc9ca19170f9e5b9aee35346e2059a820cbe96af90-d",
+      "Device": 2081,
+      "Inode": 119109148,
+      "Size": 31888290,
+      "Allocated": 31891456,
+      "Modified": 1790684904205934411,
+      "Changed": 1790684904204925790
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/8c/8ca612f5ead1e70739da5cd58760f5c19dfb1bb9c77a9e54f27a25ef08eddf4a-d",
+      "Device": 2081,
+      "Inode": 119103205,
+      "Size": 31889766,
+      "Allocated": 31891456,
+      "Modified": 1790677894876037107,
+      "Changed": 1790677894874596748
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/8a/8a7a5d942eec8ef4f71cdcb5888f96e0426c47372c74914d4a3f7a438ec0301a-d",
+      "Device": 2081,
+      "Inode": 119103630,
+      "Size": 31888782,
+      "Allocated": 31891456,
+      "Modified": 1790678016023766915,
+      "Changed": 1790678016022272430
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/29/291de9a141c56ff858e82a969f133f37bb8b3692bb0c010ecc2e474b0bffe32f-d",
+      "Device": 2081,
+      "Inode": 119110252,
+      "Size": 31888782,
+      "Allocated": 31891456,
+      "Modified": 1790685410009186274,
+      "Changed": 1790685410008835965
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b3/b3aee2db5f94480bd65d712ad2e4d6d22cadc0e4be724c34835c5189cac8b879-d",
+      "Device": 2081,
+      "Inode": 119106538,
+      "Size": 31890750,
+      "Allocated": 31891456,
+      "Modified": 1790682523196639148,
+      "Changed": 1790682523195554279
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/73/73675d1c797c48da37feec653702a0b39b590fa6ce45f340ea2696cc432402e7-d",
+      "Device": 2081,
+      "Inode": 119095189,
+      "Size": 31886814,
+      "Allocated": 31887360,
+      "Modified": 1790672693981236130,
+      "Changed": 1790672693981036330
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e4/e45b06f48b0b43a73a353c3d56c3e911a05b3656eff7755148003c5e69b4f2e4-d",
+      "Device": 2081,
+      "Inode": 119109416,
+      "Size": 31883862,
+      "Allocated": 31887360,
+      "Modified": 1790685030103881043,
+      "Changed": 1790685030102567310
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f0/f04bc3198fee97d550bde3bb22fd520ba6c1a80208043b19d01f2bbde9d3b43c-d",
+      "Device": 2081,
+      "Inode": 119109695,
+      "Size": 31887306,
+      "Allocated": 31887360,
+      "Modified": 1790685149404305221,
+      "Changed": 1790685149403438519
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/05/05a9cf94d8b64795c4695b73928d4b3d2da6225c525544cfac5e406ca54f1a3f-d",
+      "Device": 2081,
+      "Inode": 119108159,
+      "Size": 31885830,
+      "Allocated": 31887360,
+      "Modified": 1790684535940742092,
+      "Changed": 1790684535939669917
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/38/38b13f309a325eea9c964fb3d7ac6f8bfad6b61730ded5d5e77b62aef5b365ae-d",
+      "Device": 2081,
+      "Inode": 119108564,
+      "Size": 31886814,
+      "Allocated": 31887360,
+      "Modified": 1790684653879268221,
+      "Changed": 1790684653878268824
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/aa/aade3acd40ac746b29f938b5917f96c2910c52fab962ce0734909ce0e2390e92-d",
+      "Device": 2081,
+      "Inode": 119095187,
+      "Size": 31884846,
+      "Allocated": 31887360,
+      "Modified": 1790672693840356605,
+      "Changed": 1790672693840041500
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b0/b081528a805f3911f7f5c6b6623d41680c547eb6da1199dd44d4869f93cf67e7-d",
+      "Device": 2081,
+      "Inode": 119094431,
+      "Size": 31885768,
+      "Allocated": 31887360,
+      "Modified": 1790671933294334443,
+      "Changed": 1790671933293927156
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4c/4c72f303bf92702cfa92cd9bf681b7d521fad23cdfb8543755091816a7315d27-d",
+      "Device": 2081,
+      "Inode": 119095848,
+      "Size": 31886814,
+      "Allocated": 31887360,
+      "Modified": 1790672788498286026,
+      "Changed": 1790672788497590583
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6e/6e4505449fb6f3d562e310c7d750ec30682b1c267417edd7db5603c0e0c72de1-d",
+      "Device": 2081,
+      "Inode": 119102762,
+      "Size": 31886814,
+      "Allocated": 31887360,
+      "Modified": 1790677768965114885,
+      "Changed": 1790677768964041803
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/35/35298e8eccc720a22d1068bccc7ffcae883f15a72e07578e429fb72243c5b943-d",
+      "Device": 2081,
+      "Inode": 119074745,
+      "Size": 31885768,
+      "Allocated": 31887360,
+      "Modified": 1790670991898437623,
+      "Changed": 1790670991897398108
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1a/1aa5f0c2c5336445a692a4210d4ef6780eb53be50e6d64da207a76a2f8e6fb79-d",
+      "Device": 2081,
+      "Inode": 119095188,
+      "Size": 31886814,
+      "Allocated": 31887360,
+      "Modified": 1790672693964732445,
+      "Changed": 1790672693964036953
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e4/e42ce9dd05ab13e58e5441478858c2076a015414af5113a38bca60ae580a74bd-d",
+      "Device": 2081,
+      "Inode": 119098743,
+      "Size": 31880848,
+      "Allocated": 31883264,
+      "Modified": 1790675613153759054,
+      "Changed": 1790675613152443633
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/2e/2efca96536bae3525a928b41f2e267f32ebcdaa5b1c71e9fea8b74d9608704d3-d",
+      "Device": 2081,
+      "Inode": 119071623,
+      "Size": 31875990,
+      "Allocated": 31879168,
+      "Modified": 1790666993725748362,
+      "Changed": 1790666993724920769
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ef/efff62d5997f46c1fde469acbb82231765b2fbddf550e0a36aeb53808b435070-d",
+      "Device": 2081,
+      "Inode": 119111057,
+      "Size": 31878942,
+      "Allocated": 31879168,
+      "Modified": 1790688305472424758,
+      "Changed": 1790688305471494864
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e3/e3c0f55922e4ca7251748aba3c8ca3e32085a3e9bd2e16f6bc1516e094547aca-d",
+      "Device": 2081,
+      "Inode": 119095875,
+      "Size": 31875436,
+      "Allocated": 31879168,
+      "Modified": 1790672802438607003,
+      "Changed": 1790672802437909427
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/fe/fe7e3b5fff5a961f0141700399756271e7a862247fa6fd395ea5c35027a84b0c-d",
+      "Device": 2081,
+      "Inode": 119065450,
+      "Size": 31878186,
+      "Allocated": 31879168,
+      "Modified": 1790656297503167705,
+      "Changed": 1790656297502806336
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/2e/2e7e9546bb3ff7748fba8505623594cff15fd840e0ae38ddc7165517621f0cf2-d",
+      "Device": 2081,
+      "Inode": 119117850,
+      "Size": 31876482,
+      "Allocated": 31879168,
+      "Modified": 1790694341962836326,
+      "Changed": 1790694341961755136
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1a/1a5b92eb728395b8e8f79a35e55cd0ce07e25fe76deb011b3041ff38ffe12a8e-d",
+      "Device": 2081,
+      "Inode": 119069189,
+      "Size": 31877466,
+      "Allocated": 31879168,
+      "Modified": 1790661780040931382,
+      "Changed": 1790661780039534267
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/72/72ad960a3c8aba1e347b3b01aea5d9a37157b94bbfd2b6e7fc115a61e33fe625-d",
+      "Device": 2081,
+      "Inode": 119072200,
+      "Size": 31877466,
+      "Allocated": 31879168,
+      "Modified": 1790667699322007364,
+      "Changed": 1790667699320661655
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b9/b92d581779a8a04af8ff1e8d639387023e8e6c8da744b6d523204a04574d8d11-d",
+      "Device": 2081,
+      "Inode": 119105824,
+      "Size": 31873960,
+      "Allocated": 31875072,
+      "Modified": 1790681380450821619,
+      "Changed": 1790681380449810503
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1c/1c9fc67715278902c9ebb82a866f2917768b4f850e4ee5455beb14ed63da706d-d",
+      "Device": 2081,
+      "Inode": 119107070,
+      "Size": 31874514,
+      "Allocated": 31875072,
+      "Modified": 1790682960609979804,
+      "Changed": 1790682960608229100
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9f/9ffd548f7ed0c4669f37e7c84b2baa56adbd13083b7d274de7333b7286a172f4-d",
+      "Device": 2081,
+      "Inode": 119114235,
+      "Size": 31874514,
+      "Allocated": 31875072,
+      "Modified": 1790690739116793380,
+      "Changed": 1790690739115660367
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/56/561ee130003b5887afb41405c992c21e3037999543bd8902bd1a13e3570734f9-d",
+      "Device": 2081,
+      "Inode": 119104239,
+      "Size": 31873530,
+      "Allocated": 31875072,
+      "Modified": 1790679220914002827,
+      "Changed": 1790679220913138191
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ef/ef38c1ed0ef849cc323fa41c94311d1b1c82ac02971bc8d2f7f248f04d17e539-d",
+      "Device": 2081,
+      "Inode": 119110523,
+      "Size": 31871500,
+      "Allocated": 31875072,
+      "Modified": 1790685886266641721,
+      "Changed": 1790685886265334802
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/51/51304064d4ac77b76735512ea233c71a897d99458a4ba3f93d903d3e90268c87-d",
+      "Device": 2081,
+      "Inode": 119110758,
+      "Size": 31871562,
+      "Allocated": 31875072,
+      "Modified": 1790687287358226675,
+      "Changed": 1790687287357996543
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/98/989d65a149464603c6f0a2bba05a5d93e638dc83ba3c130a7b295782ea7919bd-d",
+      "Device": 2081,
+      "Inode": 119103995,
+      "Size": 31871500,
+      "Allocated": 31875072,
+      "Modified": 1790678593757347358,
+      "Changed": 1790678593756262631
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0e/0e0caaccd2749749207b44faa8403668f626431489bcce26e3d83537f872e864-d",
+      "Device": 2081,
+      "Inode": 119114411,
+      "Size": 31874022,
+      "Allocated": 31875072,
+      "Modified": 1790691110610270685,
+      "Changed": 1790691110609530659
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/8f/8ffe721eb02f405299d7d9500f50f08195c203fa9a3f5fd77cc7fad9127e4837-d",
+      "Device": 2081,
+      "Inode": 119106748,
+      "Size": 31874514,
+      "Allocated": 31875072,
+      "Modified": 1790682762462822987,
+      "Changed": 1790682762461626103
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/45/45c7ec60d84e951d692a37113a0ec3eb351f07d7a9e46176594091da573c9f26-d",
+      "Device": 2081,
+      "Inode": 119100883,
+      "Size": 31871070,
+      "Allocated": 31875072,
+      "Modified": 1790681185257534113,
+      "Changed": 1790681185256857018
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/21/21f1e57d6cf34bdc1346bb707571154920c760f2711a502c784e17d58c600aee-d",
+      "Device": 2081,
+      "Inode": 119106045,
+      "Size": 31872546,
+      "Allocated": 31875072,
+      "Modified": 1790681609292696365,
+      "Changed": 1790681609291448267
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/87/876549a926a8c0f43fdb67331114aa4a4bacaf6ce34e76c0a0d37aab75f42a54-d",
+      "Device": 2081,
+      "Inode": 119071892,
+      "Size": 31869594,
+      "Allocated": 31870976,
+      "Modified": 1790667350459932691,
+      "Changed": 1790667350458777732
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/31/31c53a9bfccac5b3e41c7fe8325e4dce0432b78b2f28b4cc36bd8b796d80dbb8-d",
+      "Device": 2081,
+      "Inode": 119212204,
+      "Size": 31867800,
+      "Allocated": 31870976,
+      "Modified": 1790613086957459169,
+      "Changed": 1790613086956951043
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/66/662d546ef3686667cd529176a460a03b501709e1ee89af123af62ad520381cf4-d",
+      "Device": 2081,
+      "Inode": 119086098,
+      "Size": 31870086,
+      "Allocated": 31870976,
+      "Modified": 1790671150023371117,
+      "Changed": 1790671150022616307
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/51/51c8a301eed152ada47ac1623b9d7d3bf0495d929694733687e64f7808e2fd44-d",
+      "Device": 2081,
+      "Inode": 119212819,
+      "Size": 31868782,
+      "Allocated": 31870976,
+      "Modified": 1790613809368701371,
+      "Changed": 1790613809368073856
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/2d/2d4c9789c7ca18f16b7b4d4210cda356ade8601f370a41cd14af2731179813ed-d",
+      "Device": 2081,
+      "Inode": 119071267,
+      "Size": 31868118,
+      "Allocated": 31870976,
+      "Modified": 1790665367480089796,
+      "Changed": 1790665367478407711
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/2c/2c63bfcc36f6e1d6e9e3a487f3e2393fe3073454a271d389e3c9861cdf1fa1e1-d",
+      "Device": 2081,
+      "Inode": 119212391,
+      "Size": 31870046,
+      "Allocated": 31870976,
+      "Modified": 1790613292679465163,
+      "Changed": 1790613292679050798
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c9/c9f73bd9dbb03a7b6d4d9550d8c17484d5c797d76b9f976be361a4302c886d37-d",
+      "Device": 2081,
+      "Inode": 119068831,
+      "Size": 31867626,
+      "Allocated": 31870976,
+      "Modified": 1790661579224458004,
+      "Changed": 1790661579223800390
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/2a/2a8e077d73482886ade2ad5e31dd6a023534ae34391d0b66ae881e4b57a7426d-d",
+      "Device": 2081,
+      "Inode": 119098355,
+      "Size": 31864806,
+      "Allocated": 31866880,
+      "Modified": 1790674804878680388,
+      "Changed": 1790674804877518837
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e6/e64eb15a02f20305bf77e88e1f11022a21626f3bf2f10a18b4b6235cfa4782fd-d",
+      "Device": 2081,
+      "Inode": 119068756,
+      "Size": 31865590,
+      "Allocated": 31866880,
+      "Modified": 1790661509901017559,
+      "Changed": 1790661509899289211
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/db/db820b0507513f9619861bb4fa271e3aa925eef4ed63bfa54e3fbcc5fbeda353-d",
+      "Device": 2081,
+      "Inode": 119060420,
+      "Size": 31860436,
+      "Allocated": 31862784,
+      "Modified": 1790649633265442368,
+      "Changed": 1790649633264153251
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c4/c49a86b6da254b449b232a8e730376541c9328230df2af46fae91dd97afff230-d",
+      "Device": 2081,
+      "Inode": 119211795,
+      "Size": 31858962,
+      "Allocated": 31862784,
+      "Modified": 1790612181843130378,
+      "Changed": 1790612181842838588
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/71/7186730780918165abe7dcc6822c38c076ae05f495b5f76560218b2b4609fc3d-d",
+      "Device": 2081,
+      "Inode": 119034461,
+      "Size": 31859454,
+      "Allocated": 31862784,
+      "Modified": 1790647084975014638,
+      "Changed": 1790647084973471387
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/47/47460c2b93b5294d0b5f17b9b7fba096452d917af688b61e5fb9ec8a55bc68fa-d",
+      "Device": 2081,
+      "Inode": 119050317,
+      "Size": 31861908,
+      "Allocated": 31862784,
+      "Modified": 1790648166395332635,
+      "Changed": 1790648166394450168
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9a/9adf6e72d98c40a7f68b142fb0f52bc0695cdb177dda5dbdd2065e882815d62b-d",
+      "Device": 2081,
+      "Inode": 119015853,
+      "Size": 31860526,
+      "Allocated": 31862784,
+      "Modified": 1790643784406115863,
+      "Changed": 1790643784404994152
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/05/05f8e7e4633b78b9fd261395487dfb3a7a4e0c4ae1f3e4cdba4c5f41312a146c-d",
+      "Device": 2081,
+      "Inode": 119014933,
+      "Size": 31859744,
+      "Allocated": 31862784,
+      "Modified": 1790643556834817113,
+      "Changed": 1790643556833661778
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/68/686d88d3f607e46ff30adbbf5e90d06aea20c66f3dbacba4eb1d83d6166fe024-d",
+      "Device": 2081,
+      "Inode": 119213517,
+      "Size": 31859744,
+      "Allocated": 31862784,
+      "Modified": 1790618446946052264,
+      "Changed": 1790618446944870281
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0c/0ca4b8667769790ffc535399d2259be2d1f13c38f369fb152e009412a3538b97-d",
+      "Device": 2081,
+      "Inode": 119222423,
+      "Size": 31857398,
+      "Allocated": 31858688,
+      "Modified": 1790639674842567703,
+      "Changed": 1790639674841921246
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/26/26e32c15cc9788a94ba0894d3d51585add01ecc20ca504e0cba8479ef17ac2b9-d",
+      "Device": 2081,
+      "Inode": 119220936,
+      "Size": 31855052,
+      "Allocated": 31858688,
+      "Modified": 1790636295242021095,
+      "Changed": 1790636295240677022
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f0/f01396b75e8434aae513a742dfb5e47c4a0545929c820fbdc6c33b6a5ad797f0-d",
+      "Device": 2081,
+      "Inode": 119584392,
+      "Size": 31855834,
+      "Allocated": 31858688,
+      "Modified": 1790623497783125896,
+      "Changed": 1790623497783092494
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/63/630b495dcedd427bb809ef06c1fca6d342d7b27b3e90c28ee9406e86331498eb-d",
+      "Device": 2081,
+      "Inode": 119014202,
+      "Size": 31855034,
+      "Allocated": 31858688,
+      "Modified": 1790643373369734665,
+      "Changed": 1790643373368649691
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/41/410128f1f28fea12496a30367642f8048bade210385e721594ca363944bae874-d",
+      "Device": 2081,
+      "Inode": 119213151,
+      "Size": 31858180,
+      "Allocated": 31858688,
+      "Modified": 1790617530907884466,
+      "Changed": 1790617530906193830
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ee/eeeddfdd0da93847be506a3f6e25a67e84301624afaa73de9ac90e8acf19bb0c-d",
+      "Device": 2081,
+      "Inode": 119216629,
+      "Size": 31857398,
+      "Allocated": 31858688,
+      "Modified": 1790626138332217988,
+      "Changed": 1790626138331276705
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ce/ce3c2e8c0cd996af22e97430feac828a6e322c02a949bf706ffc763d6486fa6b-d",
+      "Device": 2081,
+      "Inode": 119217336,
+      "Size": 31855834,
+      "Allocated": 31858688,
+      "Modified": 1790629139496704429,
+      "Changed": 1790629139495187159
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/85/85173159ecc9f1003463257f1206a90c019b337cb1c53abad10a5d72e430c9dd-d",
+      "Device": 2081,
+      "Inode": 119213719,
+      "Size": 31857398,
+      "Allocated": 31858688,
+      "Modified": 1790618606401421482,
+      "Changed": 1790618606401024920
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ba/ba3305624c7744128938d1462f62ced3f79bdcdf63d5527ec6975d9dbd975a00-d",
+      "Device": 2081,
+      "Inode": 119216262,
+      "Size": 31856616,
+      "Allocated": 31858688,
+      "Modified": 1790625668744045316,
+      "Changed": 1790625668742412403
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5e/5ea489d815d95aa15b0471a8da5259f8dc0293d59888b9a8e9ef9ab299840e7c-d",
+      "Device": 2081,
+      "Inode": 119585134,
+      "Size": 31855834,
+      "Allocated": 31858688,
+      "Modified": 1790632354992353993,
+      "Changed": 1790632354992005455
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c0/c0c689c064373bf07487b4533eb01ba8c263c7bae3ea9599ab1e1202bebe6229-d",
+      "Device": 2081,
+      "Inode": 119214598,
+      "Size": 31855834,
+      "Allocated": 31858688,
+      "Modified": 1790622895757725923,
+      "Changed": 1790622895756436051
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/41/4163c46aa505e506c8ddb60509bd1f59215802911600ebc64f36a23044b5b298-d",
+      "Device": 2081,
+      "Inode": 119221263,
+      "Size": 31855834,
+      "Allocated": 31858688,
+      "Modified": 1790636423902812323,
+      "Changed": 1790636423901945271
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c5/c5e45e2c10a718852d159a2f608cd1d10f677726aeb8a0ec1ad30a94021bc258-d",
+      "Device": 2081,
+      "Inode": 119222066,
+      "Size": 31856616,
+      "Allocated": 31858688,
+      "Modified": 1790639288671958840,
+      "Changed": 1790639288670476914
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e6/e6f0410c864b33cc70812a8669871a00c72de7988e79523415d76b5b2553471f-d",
+      "Device": 2081,
+      "Inode": 119975013,
+      "Size": 31853488,
+      "Allocated": 31854592,
+      "Modified": 1790630738578576609,
+      "Changed": 1790630738577617580
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5f/5fe68b910440f19bb94c786d430b3a26ed541b26351c99ae3000c08012187b0d-d",
+      "Device": 2081,
+      "Inode": 119222834,
+      "Size": 31854270,
+      "Allocated": 31854592,
+      "Modified": 1790640698051984578,
+      "Changed": 1790640698050889648
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ef/ef85ea770cf1266d13e11193b0778e0268a14145a93852da9ab8d8800df27a03-d",
+      "Device": 2081,
+      "Inode": 119062190,
+      "Size": 31851598,
+      "Allocated": 31854592,
+      "Modified": 1790649946221055929,
+      "Changed": 1790649946219458597
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e7/e7168a27399f72ec22f9a3deb15392c03e59aae1a630ec80fd65bd1bef199643-d",
+      "Device": 2081,
+      "Inode": 119221873,
+      "Size": 31850616,
+      "Allocated": 31854592,
+      "Modified": 1790639113434581555,
+      "Changed": 1790639113434102862
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/19/19f0df5874b31ef3be6578ead89c21e45301472b5594188830d59a0399cd0cb8-d",
+      "Device": 2081,
+      "Inode": 119054193,
+      "Size": 31851106,
+      "Allocated": 31854592,
+      "Modified": 1790649039736872911,
+      "Changed": 1790649039735217324
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c1/c1d1184934d4ee9a5f42e1f3c96d8330058125e7bf2f1f9febe286c641ff0256-d",
+      "Device": 2081,
+      "Inode": 119215994,
+      "Size": 31853488,
+      "Allocated": 31854592,
+      "Modified": 1790625121037076211,
+      "Changed": 1790625121035744457
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9e/9e1d633b8f85e734a7916006f130e35dcbf530e4f60a5efe9585d0759738664c-d",
+      "Device": 2081,
+      "Inode": 119220505,
+      "Size": 31851924,
+      "Allocated": 31854592,
+      "Modified": 1790634631885491002,
+      "Changed": 1790634631884800431
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9e/9e2613b5bf42b33b3468f9a315b82fe4e4637540936d9b1fdc00bb6a92d9db77-d",
+      "Device": 2081,
+      "Inode": 119220742,
+      "Size": 31851598,
+      "Allocated": 31854592,
+      "Modified": 1790636129262648543,
+      "Changed": 1790636129261765568
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/cf/cf86b10c7526faa678d71dee32e310cc4fe9bb484f0236834ba0b0abc36bd216-d",
+      "Device": 2081,
+      "Inode": 119219728,
+      "Size": 31846450,
+      "Allocated": 31850496,
+      "Modified": 1790633142769024046,
+      "Changed": 1790633142767601288
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/21/21f52ecb7c6e619705a4fe856aa304988828a3e4f3d70cdb15b354f46e361012-d",
+      "Device": 2081,
+      "Inode": 119214172,
+      "Size": 31848796,
+      "Allocated": 31850496,
+      "Modified": 1790621383945365332,
+      "Changed": 1790621383944392887
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/bb/bb4cb9c55a5f71e9fb253f47bbfe3654c17e99be2b4423858881bddc4d209bd1-d",
+      "Device": 2081,
+      "Inode": 119221688,
+      "Size": 31850360,
+      "Allocated": 31850496,
+      "Modified": 1790637253364348046,
+      "Changed": 1790637253363309101
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/03/035f5bd68e2308667e0c8e88f2a6647f0350ba468da0a8cbe8617d4b460656e3-d",
+      "Device": 2081,
+      "Inode": 119070927,
+      "Size": 31850406,
+      "Allocated": 31850496,
+      "Modified": 1790685737632745834,
+      "Changed": 1790685737631320987
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0c/0ceb6cf11646a105a9e161b264e4999049c73b2337bac6d688817776198e8ea2-d",
+      "Device": 2081,
+      "Inode": 119063656,
+      "Size": 31846450,
+      "Allocated": 31850496,
+      "Modified": 1790655642601440415,
+      "Changed": 1790655642600206171
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4d/4db10e11a3e46f9e98d7cc07fc29a1f6faa975c2343b214ca4a0ac01fd0fed50-d",
+      "Device": 2081,
+      "Inode": 119221766,
+      "Size": 31849142,
+      "Allocated": 31850496,
+      "Modified": 1790637700395482221,
+      "Changed": 1790637700394757997
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/44/446628f8b3c05a2a6b8325d2a86423576ae9a405f0e110dbbbfef0566a72ab55-d",
+      "Device": 2081,
+      "Inode": 119585378,
+      "Size": 31846688,
+      "Allocated": 31850496,
+      "Modified": 1790634899923606093,
+      "Changed": 1790634899923023215
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/96/96fd6876c2c0d814c1bba74663b7d455478368805fbbf2c33bb413f4cd091192-d",
+      "Device": 2081,
+      "Inode": 119584904,
+      "Size": 31849142,
+      "Allocated": 31850496,
+      "Modified": 1790630730716646748,
+      "Changed": 1790630730715918838
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/7f/7fd9f086ef8ba80eb1e85f509b9312f243ea34710f8dcb2907c9649e83863b9c-d",
+      "Device": 2081,
+      "Inode": 119220191,
+      "Size": 31847232,
+      "Allocated": 31850496,
+      "Modified": 1790634002130660704,
+      "Changed": 1790634002130120823
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d6/d686beb3e2231efcbe740842f2bb82b4649f58a0c67e697bbc10278011f01ee5-d",
+      "Device": 2081,
+      "Inode": 119218302,
+      "Size": 31847232,
+      "Allocated": 31850496,
+      "Modified": 1790631237349017233,
+      "Changed": 1790631237347533291
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/01/0147db1e0dcf3c9cef2a1814c2aac2791be3198b24fc0e010e1af0a09265adb0-d",
+      "Device": 2081,
+      "Inode": 119219122,
+      "Size": 31847670,
+      "Allocated": 31850496,
+      "Modified": 1790632125864946596,
+      "Changed": 1790632125863429192
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/18/18b741d46ad07bb0056f1cc7b911bd82eddcd4299b314ea31756ca3a89d30cc9-d",
+      "Device": 2081,
+      "Inode": 119219804,
+      "Size": 31847670,
+      "Allocated": 31850496,
+      "Modified": 1790633411550910961,
+      "Changed": 1790633411549499907
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/74/74421ede296914c57867a0c6d9ca2fb77625cc4e2ee346f730fdea66a914a4b7-d",
+      "Device": 2081,
+      "Inode": 119218885,
+      "Size": 31848014,
+      "Allocated": 31850496,
+      "Modified": 1790631699692366421,
+      "Changed": 1790631699691870609
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/10/10a19bd6729fa08a3aabc552472f73cd686968522708a3583b066be56c8a1a7c-d",
+      "Device": 2081,
+      "Inode": 119132567,
+      "Size": 31844054,
+      "Allocated": 31846400,
+      "Modified": 1790788536897039843,
+      "Changed": 1790788536895182619
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f4/f49d8abebe9053bb7fb38eccd5fef9ac4c9608d69ba4fa4f573960c8874a589a-d",
+      "Device": 2081,
+      "Inode": 119132192,
+      "Size": 31843826,
+      "Allocated": 31846400,
+      "Modified": 1790787678543714427,
+      "Changed": 1790787678542601606
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/20/2076f63493cf8bceda9e4c719a07d8eb58f6471d0c6d79758ba9494eebfa0948-d",
+      "Device": 2081,
+      "Inode": 119132611,
+      "Size": 31842326,
+      "Allocated": 31846400,
+      "Modified": 1790788703594292097,
+      "Changed": 1790788703593357593
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0d/0d1808f55c34e2ad2aa3f613a297e83456cdccce04e55c27ccd1c488643e03b4-d",
+      "Device": 2081,
+      "Inode": 119131912,
+      "Size": 31844000,
+      "Allocated": 31846400,
+      "Modified": 1790787442645053155,
+      "Changed": 1790787442643231466
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/dd/ddb94cd9904fdf9846a91bd838535030cd334ad4bd19cfa21ea716d37e145c42-d",
+      "Device": 2081,
+      "Inode": 119131976,
+      "Size": 31844096,
+      "Allocated": 31846400,
+      "Modified": 1790787492467088044,
+      "Changed": 1790787492465410617
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6e/6ef63f930fc64eba04b80263530ebcc472cdafe860063849b378f206e49afeb2-d",
+      "Device": 2081,
+      "Inode": 119131853,
+      "Size": 31842424,
+      "Allocated": 31846400,
+      "Modified": 1790787417683949291,
+      "Changed": 1790787417683143258
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f0/f06dd286f4dd6d497e5bdde47435ca4c588693c84d4f36f7e98202c0e2b836f5-d",
+      "Device": 2081,
+      "Inode": 119132075,
+      "Size": 31844124,
+      "Allocated": 31846400,
+      "Modified": 1790787562240376514,
+      "Changed": 1790787562239858845
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a7/a71f2f65da17a8cabf28fc92b386cf38df793b47149b2f668e74a65de02f0422-d",
+      "Device": 2081,
+      "Inode": 119131985,
+      "Size": 31845066,
+      "Allocated": 31846400,
+      "Modified": 1790787496734571417,
+      "Changed": 1790787496733254590
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ce/cedf97ea4c395e03854f2334c3c033dda50be509807b7b5a1f2a0999da05e0c0-d",
+      "Device": 2081,
+      "Inode": 119132578,
+      "Size": 31843562,
+      "Allocated": 31846400,
+      "Modified": 1790788579653586880,
+      "Changed": 1790788579652849548
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/fd/fddaf6406f0f74955874762210264b01fc7e7f6cea956232ae7fe311c9945e71-d",
+      "Device": 2081,
+      "Inode": 119132524,
+      "Size": 31844116,
+      "Allocated": 31846400,
+      "Modified": 1790788424206921442,
+      "Changed": 1790788424205240527
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a3/a36be8ebb92eeef6d74b2a557c27516ae52f7aa70a12c450f8d93d4d21cecb42-d",
+      "Device": 2081,
+      "Inode": 119132622,
+      "Size": 31844110,
+      "Allocated": 31846400,
+      "Modified": 1790788744812318738,
+      "Changed": 1790788744811276555
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/28/287f7609aa96c97b55c163ff91473ee519dacb053b0870e4f95074a8a2579c8d-d",
+      "Device": 2081,
+      "Inode": 119132644,
+      "Size": 31843944,
+      "Allocated": 31846400,
+      "Modified": 1790788835729760701,
+      "Changed": 1790788835728802540
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c7/c7b57649886f4f120c4b5d5b293d10569e2b2fee8e2694359c067a062d9f3f78-d",
+      "Device": 2081,
+      "Inode": 119132127,
+      "Size": 31843994,
+      "Allocated": 31846400,
+      "Modified": 1790787631351097897,
+      "Changed": 1790787631349329635
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/47/47eae7b6f79f219029450031e0458e6cbde6cd3a87508904e2e29ec0f4ca72ce-d",
+      "Device": 2081,
+      "Inode": 119132589,
+      "Size": 31844240,
+      "Allocated": 31846400,
+      "Modified": 1790788621622039614,
+      "Changed": 1790788621620608662
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ab/abfe3b803a1d7838fdde9630ab71009563697fd3ffa7db8023d3f67c19d6784b-d",
+      "Device": 2081,
+      "Inode": 119132462,
+      "Size": 31842540,
+      "Allocated": 31846400,
+      "Modified": 1790788377465693303,
+      "Changed": 1790788377464957565
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/44/441c904ec61145edaba962bb3a79afa2e0805f243e70df5236252278a76e59af-d",
+      "Device": 2081,
+      "Inode": 119131668,
+      "Size": 31842942,
+      "Allocated": 31846400,
+      "Modified": 1790786974610659098,
+      "Changed": 1790786974609261193
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0b/0b97a88d03d06564b87cbc6a1ad1b2da7615c5a569950ed1edb4b38b8ecd1f50-d",
+      "Device": 2081,
+      "Inode": 119132633,
+      "Size": 31844124,
+      "Allocated": 31846400,
+      "Modified": 1790788795157771441,
+      "Changed": 1790788795156780460
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/67/6788a6e0c6b4c625cf6252b633fe48b5c5d1532db1cdc6e0f9e018454ea9df4d-d",
+      "Device": 2081,
+      "Inode": 119132150,
+      "Size": 31844006,
+      "Allocated": 31846400,
+      "Modified": 1790787655433380696,
+      "Changed": 1790787655432447892
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/95/954ca7e43cf64bcda2bad7cb4a6e35bbebdcdf96bc4185006b5cd58f41ba7974-d",
+      "Device": 2081,
+      "Inode": 119132061,
+      "Size": 31843446,
+      "Allocated": 31846400,
+      "Modified": 1790787538566894782,
+      "Changed": 1790787538565724861
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9a/9a2c451a28a3335019981f090aa839fb73e3139920f9cfcb845d93cb494841fe-d",
+      "Device": 2081,
+      "Inode": 119132099,
+      "Size": 31844142,
+      "Allocated": 31846400,
+      "Modified": 1790787585301038136,
+      "Changed": 1790787585300015091
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/45/45986415fd6631fbd61d347378a21453c723e1da14a55a3d68a07d42ce47230a-d",
+      "Device": 2081,
+      "Inode": 119132555,
+      "Size": 31844214,
+      "Allocated": 31846400,
+      "Modified": 1790788498778447320,
+      "Changed": 1790788498777308626
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c0/c0e3a509a447fb10708872e57bd1eef05542c55e626219aa96679e7bdb780d3a-d",
+      "Device": 2081,
+      "Inode": 119132046,
+      "Size": 31843936,
+      "Allocated": 31846400,
+      "Modified": 1790787516080007097,
+      "Changed": 1790787516078547258
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/de/de406564ef4e5a98f89bcc04d5048e58866ff9907fa0f2a83d6003c827382af9-d",
+      "Device": 2081,
+      "Inode": 119132600,
+      "Size": 31844260,
+      "Allocated": 31846400,
+      "Modified": 1790788663179322998,
+      "Changed": 1790788663178433795
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5e/5e0faa2b162c98c14085fd93e64d4c9c2632314d3965299b001b48e397dd1197-d",
+      "Device": 2081,
+      "Inode": 119131946,
+      "Size": 31840144,
+      "Allocated": 31842304,
+      "Modified": 1790787466475145427,
+      "Changed": 1790787466474360647
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5b/5bdd00fb5fb7390a34d9fcc41d0dac13c5ed84ca1fc426aece9417827b044da3-d",
+      "Device": 2081,
+      "Inode": 119583494,
+      "Size": 31841066,
+      "Allocated": 31842304,
+      "Modified": 1790603775539127450,
+      "Changed": 1790603775537586845
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ee/ee624aaaf59e3e4805ecfb05fd849482e777a20ff78ce349898b884ea110f1c1-d",
+      "Device": 2081,
+      "Inode": 119132540,
+      "Size": 31840260,
+      "Allocated": 31842304,
+      "Modified": 1790788461140748927,
+      "Changed": 1790788461139453919
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/83/83d02d67a6339272ef71af594e0260501299d588a5c028e37e173092d9bfc20e-d",
+      "Device": 2081,
+      "Inode": 119132113,
+      "Size": 31842210,
+      "Allocated": 31842304,
+      "Modified": 1790787608411403982,
+      "Changed": 1790787608410169322
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/cb/cb940a4a77d9314c7ad02e5516484ec379317778ece004a38bfa8d6e214cac8c-d",
+      "Device": 2081,
+      "Inode": 119207086,
+      "Size": 31832038,
+      "Allocated": 31834112,
+      "Modified": 1790591730628052619,
+      "Changed": 1790591730626235290
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/07/07960256994a77d01651bec937d6b2ca1d071fba7880f7a6638d7b3bea912311-d",
+      "Device": 2081,
+      "Inode": 119132980,
+      "Size": 31828542,
+      "Allocated": 31830016,
+      "Modified": 1790790719687213663,
+      "Changed": 1790790719687095089
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0a/0a20aceeaf2dcade9e4563e4e7a74a9542b3a0621f5ef4e3534390b29adde084-d",
+      "Device": 2081,
+      "Inode": 119205583,
+      "Size": 31823470,
+      "Allocated": 31825920,
+      "Modified": 1790591274471942004,
+      "Changed": 1790591274470855763
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/03/030c0b403656802a4b3e84ffd8e81c1057a2e77daeffa3bd359e2b80c1987129-d",
+      "Device": 2081,
+      "Inode": 119193976,
+      "Size": 31815680,
+      "Allocated": 31817728,
+      "Modified": 1790587589240864735,
+      "Changed": 1790587589239584019
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/bc/bc4ce231a111137c08d4468ad6f2987e29190d1ff7998247bd17eb777c6da837-d",
+      "Device": 2081,
+      "Inode": 119131654,
+      "Size": 31765930,
+      "Allocated": 31768576,
+      "Modified": 1790786568193820583,
+      "Changed": 1790786568192839932
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5c/5c9d1706e0b83c04a2e9c5ccec9c39898be5272a5e419ca2211c9a4d0032915e-d",
+      "Device": 2081,
+      "Inode": 119131615,
+      "Size": 31740344,
+      "Allocated": 31744000,
+      "Modified": 1790786393165715573,
+      "Changed": 1790786393165003643
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d0/d0debb4d064f42ddd5d2cc071c813272bc22f39aea162c2a59cd2f8e2968bceb-d",
+      "Device": 2081,
+      "Inode": 119188165,
+      "Size": 31711760,
+      "Allocated": 31715328,
+      "Modified": 1790583725178383892,
+      "Changed": 1790583725177992198
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/52/52b11b643bd7a0e7a6a54aca2233dc6bf702c6316617d22694f4b558d2e5e146-d",
+      "Device": 2081,
+      "Inode": 72390971,
+      "Size": 31597422,
+      "Allocated": 31600640,
+      "Modified": 1790724232781829621,
+      "Changed": 1790724232780865237
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/22/22906acb4a46f424a2552393ebbd5cd7e59d4d11323f31cf20c6a73ceb504e51-d",
+      "Device": 2081,
+      "Inode": 121160566,
+      "Size": 31597768,
+      "Allocated": 31600640,
+      "Modified": 1790724352009056588,
+      "Changed": 1790724352007220092
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/31/31b245e52eb961567b4fc6fa5c787fc5ffc977001a81cd703b6218a85b020059-d",
+      "Device": 2081,
+      "Inode": 119466024,
+      "Size": 31598014,
+      "Allocated": 31600640,
+      "Modified": 1790724573498352953,
+      "Changed": 1790724573497960937
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/cf/cf8d96d5bdc29f3aa7e8f978a43010ffeddf0baeab809fd579f5959e68b1766a-d",
+      "Device": 2081,
+      "Inode": 71873474,
+      "Size": 31598018,
+      "Allocated": 31600640,
+      "Modified": 1790724289291608521,
+      "Changed": 1790724289290164885
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/47/47b3099fc107a399fdca809e65084d9d5f098223659e4193acdd3e12b8af0b70-d",
+      "Device": 2081,
+      "Inode": 40419786,
+      "Size": 31597316,
+      "Allocated": 31600640,
+      "Modified": 1790724485080082590,
+      "Changed": 1790724485078922919
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/63/631456f8b8592d23dd33537bd61ada01ab18102c89c7d39a9df95ec82650544e-d",
+      "Device": 2081,
+      "Inode": 60736211,
+      "Size": 31597844,
+      "Allocated": 31600640,
+      "Modified": 1790724171787717718,
+      "Changed": 1790724171786638402
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ad/addd4fae3154993a20c9937d6b39a45727d799e81679e2a5eff79149656d4db3-d",
+      "Device": 2081,
+      "Inode": 119465906,
+      "Size": 31597998,
+      "Allocated": 31600640,
+      "Modified": 1790724092209769905,
+      "Changed": 1790724092208841479
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1f/1f39111e4d10e07b4928acf5380c08402dfa2914a84c6da242fc37844bbb9963-d",
+      "Device": 2081,
+      "Inode": 119465992,
+      "Size": 31598056,
+      "Allocated": 31600640,
+      "Modified": 1790724420811987610,
+      "Changed": 1790724420811024822
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f2/f2e83645e2bcb8f7f45c6db7b5820af9821925cc4aa39de3a589f37fc95e974f-d",
+      "Device": 2081,
+      "Inode": 119465887,
+      "Size": 31596226,
+      "Allocated": 31596544,
+      "Modified": 1790723964733414193,
+      "Changed": 1790723964733059981
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/03/03e2c150c12c7e1c90f1bb7358eaaec2abd21f42d8455f167b5c6276d9f1fca9-d",
+      "Device": 2081,
+      "Inode": 120636429,
+      "Size": 31595140,
+      "Allocated": 31596544,
+      "Modified": 1790722354081722514,
+      "Changed": 1790722354080870867
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e4/e419f89fe951db7cb9a02b094fcccd9319084fdf8bebe765c90e2d9a182f8e21-d",
+      "Device": 2081,
+      "Inode": 66110469,
+      "Size": 31595256,
+      "Allocated": 31596544,
+      "Modified": 1790724028862773743,
+      "Changed": 1790724028861493226
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6b/6b4aa79cae841120114ffe82c55fc74ebcd010bf4b1fc64b01e95b4c577dc87b-d",
+      "Device": 2081,
+      "Inode": 119065733,
+      "Size": 31568682,
+      "Allocated": 31571968,
+      "Modified": 1790581766746539750,
+      "Changed": 1790581766745413281
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/14/1470f7f8e4716f08e233fd5a42ef065c80bc3b440b7c58f16f7976f8a07061db-d",
+      "Device": 2081,
+      "Inode": 119131603,
+      "Size": 31452116,
+      "Allocated": 31453184,
+      "Modified": 1790786078695106939,
+      "Changed": 1790786078693768990
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/93/93b34ff4c678a969e34a8b6bedcdae6d78fbca0906f8c0fb06e4e0283afb7b39-d",
+      "Device": 2081,
+      "Inode": 119188955,
+      "Size": 31316576,
+      "Allocated": 31318016,
+      "Modified": 1790592317786451732,
+      "Changed": 1790592317786095442
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/58/58dbe672d30f96192a10c0cc7c0b0907dc92dbf9072c4be85c1dcf3ed1b7dace-d",
+      "Device": 2081,
+      "Inode": 119056647,
+      "Size": 31312442,
+      "Allocated": 31313920,
+      "Modified": 1790580120075521183,
+      "Changed": 1790580120074548818
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c0/c03b8040d7b7d0c8146f430871e6cb9e07cecc8a8e3b8a2291b72032fdc1f786-d",
+      "Device": 2081,
+      "Inode": 119131036,
+      "Size": 31097246,
+      "Allocated": 31100928,
+      "Modified": 1790783734685298787,
+      "Changed": 1790783734684193061
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ca/ca64c78b700fbf94c91653e8f3f5e1581558607986e8f68315500eb7f9b98bf4-d",
+      "Device": 2081,
+      "Inode": 119131069,
+      "Size": 31097426,
+      "Allocated": 31100928,
+      "Modified": 1790783848866594670,
+      "Changed": 1790783848865656759
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e9/e982ca791fbb0b8fb61b000e754a680f665ba9c617465d306dba63eee792cc62-d",
+      "Device": 2081,
+      "Inode": 119130178,
+      "Size": 31098218,
+      "Allocated": 31100928,
+      "Modified": 1790782887770816962,
+      "Changed": 1790782887769234875
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/41/417f3c5c3a206de41bfbefb4720f591cc7c6bbdb3ccdd01f55d4f30d7af8b769-d",
+      "Device": 2081,
+      "Inode": 119129773,
+      "Size": 31100166,
+      "Allocated": 31100928,
+      "Modified": 1790782751285382089,
+      "Changed": 1790782751284288965
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/85/8543c54955ad2de19c9dc10f0a929c95606b79d24d2839c1833ba6f216ba80b4-d",
+      "Device": 2081,
+      "Inode": 119131047,
+      "Size": 31097738,
+      "Allocated": 31100928,
+      "Modified": 1790783772586608505,
+      "Changed": 1790783772585683692
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3d/3db54f96177c5293a00577c11954da587b705f0e91920248a61e93a51d468a53-d",
+      "Device": 2081,
+      "Inode": 119129566,
+      "Size": 31099344,
+      "Allocated": 31100928,
+      "Modified": 1790782653857473464,
+      "Changed": 1790782653856870604
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1f/1fcb6ff8e8c5063fa4201abfa0f3ddce81014883ee50f092cf8ce357a9f51cd1-d",
+      "Device": 2081,
+      "Inode": 119131080,
+      "Size": 31097430,
+      "Allocated": 31100928,
+      "Modified": 1790783886179480910,
+      "Changed": 1790783886178180889
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c8/c8d1ee33e60c360d47b80729380226542f95cd72914717a4783cb69d17a78fc1-d",
+      "Device": 2081,
+      "Inode": 119129883,
+      "Size": 31100198,
+      "Allocated": 31100928,
+      "Modified": 1790782774519544028,
+      "Changed": 1790782774518431377
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/52/52f7cda66b592a795b2af8088b142a6d5433c7e2139aa33db26eead9e81f55bf-d",
+      "Device": 2081,
+      "Inode": 119129685,
+      "Size": 31100018,
+      "Allocated": 31100928,
+      "Modified": 1790782703314073196,
+      "Changed": 1790782703313055547
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/38/3862cb727630b945a189c071361e7669d7826d0182ec308f6e0aaf22d7f0b7eb-d",
+      "Device": 2081,
+      "Inode": 119129146,
+      "Size": 31097496,
+      "Allocated": 31100928,
+      "Modified": 1790782563024074104,
+      "Changed": 1790782563022185684
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/0e/0ef608f47dc3b70b9d75d4a6aaf4141bd21157c4a45d4a576d2da26c3ca7051e-d",
+      "Device": 2081,
+      "Inode": 119130078,
+      "Size": 31100198,
+      "Allocated": 31100928,
+      "Modified": 1790782820131773352,
+      "Changed": 1790782820130744332
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/05/05b55a6ac8155eb31254c58e775fa0efb21ed7bf63a21a1873346edae1e4e8b6-d",
+      "Device": 2081,
+      "Inode": 119129581,
+      "Size": 31098772,
+      "Allocated": 31100928,
+      "Modified": 1790782679170604891,
+      "Changed": 1790782679169942431
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/62/62325e5ef8dccee3c4ba9ff0d70eb23d6ae88d4041d8dbdbc0ed8c5ac9bbec28-d",
+      "Device": 2081,
+      "Inode": 119129719,
+      "Size": 31100510,
+      "Allocated": 31100928,
+      "Modified": 1790782727375267500,
+      "Changed": 1790782727374170182
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/da/da6c4feabf55159b16a8df057c7021450063270c1ad76053623ebb84f971c29b-d",
+      "Device": 2081,
+      "Inode": 119131091,
+      "Size": 31097426,
+      "Allocated": 31100928,
+      "Modified": 1790783923723268353,
+      "Changed": 1790783923722698701
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/26/266998ec0d12f0bcceaed372f680e24d09adbc141b586687be674f73e34a5b28-d",
+      "Device": 2081,
+      "Inode": 119129988,
+      "Size": 31100202,
+      "Allocated": 31100928,
+      "Modified": 1790782797080911894,
+      "Changed": 1790782797079597474
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/9a/9a8c3506fe384dfca73663f54479c70e1bd930bd873c3af30288a3f7f60dab78-d",
+      "Device": 2081,
+      "Inode": 119131058,
+      "Size": 31097394,
+      "Allocated": 31100928,
+      "Modified": 1790783809775324792,
+      "Changed": 1790783809774206266
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/de/ded245673e1e002d8f3af441c0b1a604a1f60718a9b7855ab90866b261742625-d",
+      "Device": 2081,
+      "Inode": 119130655,
+      "Size": 31094724,
+      "Allocated": 31096832,
+      "Modified": 1790783514446165469,
+      "Changed": 1790783514446051812
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/77/77b5b215ff553005377a2a0f0bf6d50a20d51ecb3e4382dc0f01e82bf6be23d7-d",
+      "Device": 2081,
+      "Inode": 119128958,
+      "Size": 31096238,
+      "Allocated": 31096832,
+      "Modified": 1790782234413440288,
+      "Changed": 1790782234412901757
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a1/a1021ea4c98e00c4ca8dbd73fdf9648224d6b519980574c260e048ec32d731f1-d",
+      "Device": 2081,
+      "Inode": 119128929,
+      "Size": 31093206,
+      "Allocated": 31096832,
+      "Modified": 1790782040672358071,
+      "Changed": 1790782040671504544
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/31/3184e933d15841efa67c4d28fa2cf7465ae25014fc198b510316972c0589dded-d",
+      "Device": 2081,
+      "Inode": 119128944,
+      "Size": 31093216,
+      "Allocated": 31096832,
+      "Modified": 1790782164005804221,
+      "Changed": 1790782164004334605
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/13/137fd0d7daf314604b84ac4770b3cc2f4c93055a10c802765d520eee21a6fa86-d",
+      "Device": 2081,
+      "Inode": 119131025,
+      "Size": 31096000,
+      "Allocated": 31096832,
+      "Modified": 1790783696952033028,
+      "Changed": 1790783696950699643
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d2/d216b4d0030caa75660e4c047b0e720270f7253dc7dc76f0c42e0c3f8a704133-d",
+      "Device": 2081,
+      "Inode": 119131008,
+      "Size": 31096572,
+      "Allocated": 31096832,
+      "Modified": 1790783662291142785,
+      "Changed": 1790783662291087183
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b3/b3fadc66f5ab3ef28669d235490c9171790f2842784175ad5fd1b7a0029f1895-d",
+      "Device": 2081,
+      "Inode": 119128836,
+      "Size": 31091490,
+      "Allocated": 31092736,
+      "Modified": 1790781954696000578,
+      "Changed": 1790781954694328663
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/67/67381f94f1498f2fc8d8552dc3ff6d07a595fae7fd7b3d1df192d7d68fcce5d8-d",
+      "Device": 2081,
+      "Inode": 119128770,
+      "Size": 31052988,
+      "Allocated": 31055872,
+      "Modified": 1790781876374948710,
+      "Changed": 1790781876373829940
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4d/4de5ec6d8304f5f35848d52eb65eb084e61ac86232e5be971de31be341009c96-d",
+      "Device": 2081,
+      "Inode": 119127999,
+      "Size": 30663606,
+      "Allocated": 30666752,
+      "Modified": 1790777975214358018,
+      "Changed": 1790777975214015626
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a4/a4745b612a637daa9860ed68b61548d412afdfef7f0b0d89c31f2b893fb561ef-d",
+      "Device": 2081,
+      "Inode": 119128087,
+      "Size": 30663672,
+      "Allocated": 30666752,
+      "Modified": 1790778256693808580,
+      "Changed": 1790778256692569032
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e8/e838511e62f5f50a7a89e9d93391aa3c6b374bab882d956d52347659feb1acc5-d",
+      "Device": 2081,
+      "Inode": 119128065,
+      "Size": 30663394,
+      "Allocated": 30666752,
+      "Modified": 1790778187332371128,
+      "Changed": 1790778187332065549
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1e/1eba8accca3826f99f8a5fa0d4afd405e0d95598b7f392aa7c681f44e030a9af-d",
+      "Device": 2081,
+      "Inode": 119127556,
+      "Size": 30662692,
+      "Allocated": 30666752,
+      "Modified": 1790777334992069403,
+      "Changed": 1790777334990868880
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/bb/bb1ace5eed9568e9c7e8024d222775d32ec6d855055e9e8d70a5532c80899c0f-d",
+      "Device": 2081,
+      "Inode": 119128054,
+      "Size": 30663514,
+      "Allocated": 30666752,
+      "Modified": 1790778152152070345,
+      "Changed": 1790778152150790432
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1c/1c1157116fbfd6d396c631e9a07fdcc7096cc5d7419b6b120134592862b29ffe-d",
+      "Device": 2081,
+      "Inode": 119128010,
+      "Size": 30663540,
+      "Allocated": 30666752,
+      "Modified": 1790778009387972855,
+      "Changed": 1790778009386454018
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3b/3b44dcbb878f4f4e130a9f99b8515187d5f77c6e89249c34abf727111a80d06f-d",
+      "Device": 2081,
+      "Inode": 119127462,
+      "Size": 30662686,
+      "Allocated": 30666752,
+      "Modified": 1790777288628921168,
+      "Changed": 1790777288627795351
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ae/ae2cfed844df1f1e0396942297d20ce1c1e1bd1b68e4a51dbd68f8033b306e47-d",
+      "Device": 2081,
+      "Inode": 119128032,
+      "Size": 30663546,
+      "Allocated": 30666752,
+      "Modified": 1790778081465896193,
+      "Changed": 1790778081464168902
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/58/58c7321f26255bf6a29d81b9f76c0b55a84f125faa1b8bd8ebe6779aa0fef1e4-d",
+      "Device": 2081,
+      "Inode": 119127988,
+      "Size": 30663610,
+      "Allocated": 30666752,
+      "Modified": 1790777938915564212,
+      "Changed": 1790777938914575351
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5e/5e576a2d11d52b176eca21e3266912fc23f495bcb70e91d687398de93c1c48f1-d",
+      "Device": 2081,
+      "Inode": 119128043,
+      "Size": 30663732,
+      "Allocated": 30666752,
+      "Modified": 1790778116773555758,
+      "Changed": 1790778116772493970
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5b/5bf7bb5d07678ba3e8253635a7c8ea04fb812cc0025f41aa89d9079e330ad817-d",
+      "Device": 2081,
+      "Inode": 119127394,
+      "Size": 30662756,
+      "Allocated": 30666752,
+      "Modified": 1790777241562282767,
+      "Changed": 1790777241561463319
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ac/ac6190c3c9447915ea2f8300cafe4aeab7ee0cbe0b5b322383e3f33e446e428b-d",
+      "Device": 2081,
+      "Inode": 119127621,
+      "Size": 30662660,
+      "Allocated": 30666752,
+      "Modified": 1790777382551343533,
+      "Changed": 1790777382550745630
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/2b/2b6e398715cfff398c5248ed7f60903182421c1677298bbfcd0af0b833e94067-d",
+      "Device": 2081,
+      "Inode": 119127703,
+      "Size": 30662818,
+      "Allocated": 30666752,
+      "Modified": 1790777453893381691,
+      "Changed": 1790777453892677912
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/61/61c478cbf0f5b34e7a430e727a3a0fc2a6fbd6888b90bd7a4357c1b617bea343-d",
+      "Device": 2081,
+      "Inode": 119127587,
+      "Size": 30662878,
+      "Allocated": 30666752,
+      "Modified": 1790777359158158601,
+      "Changed": 1790777359157341498
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f2/f27f9292b30ae5d248ca74df3f543ccceaf5c44888fa5fae80b529b9685de348-d",
+      "Device": 2081,
+      "Inode": 119127428,
+      "Size": 30662752,
+      "Allocated": 30666752,
+      "Modified": 1790777264958303946,
+      "Changed": 1790777264957157369
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/25/253ccce00a203a61877ecf4ae663c593015407952053b311568b5bc54c82561d-d",
+      "Device": 2081,
+      "Inode": 119127497,
+      "Size": 30664532,
+      "Allocated": 30666752,
+      "Modified": 1790777318294095303,
+      "Changed": 1790777318292508169
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/c1/c1ed97b5a6a91b665ae850c21a17f500f1b03cdf78ffab5422da0fbf10f7e133-d",
+      "Device": 2081,
+      "Inode": 119128021,
+      "Size": 30663144,
+      "Allocated": 30666752,
+      "Modified": 1790778045465044401,
+      "Changed": 1790778045463827056
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/7c/7ca5ec362c2acc53a3e380c0ba9f96ee5856a7bded940c2ecf0d69859d2b3c13-d",
+      "Device": 2081,
+      "Inode": 119127922,
+      "Size": 30662084,
+      "Allocated": 30662656,
+      "Modified": 1790777864042805764,
+      "Changed": 1790777864041598002
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f8/f899eaf0e00c94097337f4e48e3c72c27c27d8c9f68ada78be4fd01e2531675c-d",
+      "Device": 2081,
+      "Inode": 119127368,
+      "Size": 30660972,
+      "Allocated": 30662656,
+      "Modified": 1790777218268248702,
+      "Changed": 1790777218267706694
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/53/53c32ed9ae597bde6ea225dc85934a9e437d8dff63207a7fb22dafe89cca5258-d",
+      "Device": 2081,
+      "Inode": 119127655,
+      "Size": 30662540,
+      "Allocated": 30662656,
+      "Modified": 1790777406790454969,
+      "Changed": 1790777406790111533
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/5a/5a2a23c44a85530b26076c6e1ae2602afd46e898c2c148bf0c4f1b928d91caf4-d",
+      "Device": 2081,
+      "Inode": 119127488,
+      "Size": 30662290,
+      "Allocated": 30662656,
+      "Modified": 1790777313504708479,
+      "Changed": 1790777313503399415
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/78/78c1f0d715028113a51784fff00a9e974ebb3a63a3c4dc24d2eaa785bb7e2a79-d",
+      "Device": 2081,
+      "Inode": 119128076,
+      "Size": 30660396,
+      "Allocated": 30662656,
+      "Modified": 1790778224179928785,
+      "Changed": 1790778224178281178
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e7/e7e0b022bdc26b68c0de842ffd65e9901291da8f17617eafd67b4802780d0fa7-d",
+      "Device": 2081,
+      "Inode": 119127237,
+      "Size": 30662522,
+      "Allocated": 30662656,
+      "Modified": 1790777086441944255,
+      "Changed": 1790777086440584353
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/30/3092753d729b830d9d5a1d2cad84b13bfaca1b05d17c1cbdd709f2e20a668311-d",
+      "Device": 2081,
+      "Inode": 119127292,
+      "Size": 30661230,
+      "Allocated": 30662656,
+      "Modified": 1790777195185446239,
+      "Changed": 1790777195184889332
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b0/b0cea047041949e0e055b45d5a4174545476269b2a20ba9edd3c68e0ab6adde3-d",
+      "Device": 2081,
+      "Inode": 119127977,
+      "Size": 30661826,
+      "Allocated": 30662656,
+      "Modified": 1790777905045625929,
+      "Changed": 1790777905045060974
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/1a/1acae92e1548f2f2035fb19a24f210d1dd8d2c3aa8a8a3ebc97f013e14f7683e-d",
+      "Device": 2081,
+      "Inode": 119127669,
+      "Size": 30659542,
+      "Allocated": 30662656,
+      "Modified": 1790777430868317580,
+      "Changed": 1790777430867424167
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4a/4ab3092e990e7aa8782842f8d303eaa5332bb1727f68bb232f703a8b4d28c044-d",
+      "Device": 2081,
+      "Inode": 119126865,
+      "Size": 30635298,
+      "Allocated": 30638080,
+      "Modified": 1790776520829214826,
+      "Changed": 1790776520828595564
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a9/a919de15f0fe37c11090b9c10cb9e7b27e73bba13095ceee9789b2a6adb9c3cf-d",
+      "Device": 2081,
+      "Inode": 119126943,
+      "Size": 30635588,
+      "Allocated": 30638080,
+      "Modified": 1790776624269355052,
+      "Changed": 1790776624268596969
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/db/dbf0093d8edd945871c90e98475c2b605ad576c46de3c8e5e830073904698faa-d",
+      "Device": 2081,
+      "Inode": 119127094,
+      "Size": 30637602,
+      "Allocated": 30638080,
+      "Modified": 1790776870980878810,
+      "Changed": 1790776870980005197
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/44/448fc11ec15c8890e07f4cbcd3f0c3e084ef03f706a08b2cfba723d66fac47b5-d",
+      "Device": 2081,
+      "Inode": 119126748,
+      "Size": 30613968,
+      "Allocated": 30617600,
+      "Modified": 1790776483203916096,
+      "Changed": 1790776483203045720
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/31/31840a9a28124275abbff129933e676b9d5d46cd7486799d139bee8b963dd4f2-d",
+      "Device": 2081,
+      "Inode": 119126929,
+      "Size": 30614252,
+      "Allocated": 30617600,
+      "Modified": 1790776578258674562,
+      "Changed": 1790776578257377599
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e9/e9403930ea21b375e50415563cbec03d633a39688d89803c741f2ff6dce4b3ef-d",
+      "Device": 2081,
+      "Inode": 119126652,
+      "Size": 30614450,
+      "Allocated": 30617600,
+      "Modified": 1790776410805117791,
+      "Changed": 1790776410803828699
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/be/be380fc7e6a549829d9a28d0047c4ac1430ff3fd004bf0cf44819ecb6c8c966d-d",
+      "Device": 2081,
+      "Inode": 119126845,
+      "Size": 30614398,
+      "Allocated": 30617600,
+      "Modified": 1790776507267737668,
+      "Changed": 1790776507267118533
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/14/148e4edada51ad466a29456c8f0c64cd949d883cd9204af40562e399013f5467-d",
+      "Device": 2081,
+      "Inode": 119126897,
+      "Size": 30614590,
+      "Allocated": 30617600,
+      "Modified": 1790776531461352654,
+      "Changed": 1790776531460185362
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/38/38e5587bea9f99ae1362359b3bbf3b7ab987243912770e5ec301474bc628365c-d",
+      "Device": 2081,
+      "Inode": 119126732,
+      "Size": 30614378,
+      "Allocated": 30617600,
+      "Modified": 1790776458161067093,
+      "Changed": 1790776458160009508
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/eb/eb255ecace8c9a6d54a4ad10d2e8dc8012240f5dd3d695b896f51b7fbf4a5ab4-d",
+      "Device": 2081,
+      "Inode": 119126915,
+      "Size": 30614378,
+      "Allocated": 30617600,
+      "Modified": 1790776555640216285,
+      "Changed": 1790776555639251763
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/d2/d29d32682a90923242ef695e2364cc2b4beea77f4cf2ac2baf11869310216fc7-d",
+      "Device": 2081,
+      "Inode": 119126666,
+      "Size": 30614444,
+      "Allocated": 30617600,
+      "Modified": 1790776435784385361,
+      "Changed": 1790776435783869648
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/a4/a4b18b518e04325778b6c1507422e9ef681fd587c77b450183c142264747f776-d",
+      "Device": 2081,
+      "Inode": 119126218,
+      "Size": 30611142,
+      "Allocated": 30613504,
+      "Modified": 1790775880288629214,
+      "Changed": 1790775880287753166
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/cd/cdb4147eb34c43204490a58420c51ff05929f055418d7a57699933b6fe9674a8-d",
+      "Device": 2081,
+      "Inode": 119126569,
+      "Size": 30612922,
+      "Allocated": 30613504,
+      "Modified": 1790776362804359824,
+      "Changed": 1790776362803667828
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/aa/aafd75617c2964ac26999e2ff70c9e6a586d9392acd974ed0a1471d5772fe21d-d",
+      "Device": 2081,
+      "Inode": 119126626,
+      "Size": 30612664,
+      "Allocated": 30613504,
+      "Modified": 1790776387162745509,
+      "Changed": 1790776387161735180
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/4f/4f2ec97d02f03308e7b837e369734197321f69c22528d81832469f088b1d6de5-d",
+      "Device": 2081,
+      "Inode": 119126363,
+      "Size": 30613136,
+      "Allocated": 30613504,
+      "Modified": 1790776238539245305,
+      "Changed": 1790776238538403104
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/12/122325caaeb834331df87799eb1af20da56f144f756a229b941872b64b783d50-d",
+      "Device": 2081,
+      "Inode": 119126177,
+      "Size": 30595814,
+      "Allocated": 30597120,
+      "Modified": 1790775688819020120,
+      "Changed": 1790775688817602324
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b4/b4340710d63e50a2198b0276ac4ac4ddb852ca7dc41ef38dd45cce51902fc9bf-d",
+      "Device": 2081,
+      "Inode": 119018409,
+      "Size": 30487768,
+      "Allocated": 30490624,
+      "Modified": 1790555594446184380,
+      "Changed": 1790555594445974761
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/8b/8bc4f04e905cfcef69ba4c2aba26345f6a46d85deafcf5076e4428fcdc649839-d",
+      "Device": 2081,
+      "Inode": 119126165,
+      "Size": 30349358,
+      "Allocated": 30351360,
+      "Modified": 1790775372434109752,
+      "Changed": 1790775372432154718
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/32/326ebc9d3290cc0be22bb967627eb399dde00578129009bca9337a5049e08d51-d",
+      "Device": 2081,
+      "Inode": 119457364,
+      "Size": 30249978,
+      "Allocated": 30253056,
+      "Modified": 1790698715516236487,
+      "Changed": 1790698715516092341
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f9/f9731f4d56dc8e7bf96c967e2b93222c4c28a8839a5ae5281d333e977346a8bc-d",
+      "Device": 2081,
+      "Inode": 119461884,
+      "Size": 30251166,
+      "Allocated": 30253056,
+      "Modified": 1790702872441496007,
+      "Changed": 1790702872440458223
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/3e/3e7ee7bf7ad56fb6ba3cc851fef47babdb60887724c702f78db6e972e600b753-d",
+      "Device": 2081,
+      "Inode": 119462595,
+      "Size": 30250572,
+      "Allocated": 30253056,
+      "Modified": 1790703143219643478,
+      "Changed": 1790703143218469044
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/66/66597858a0eb6a76877579c9155cbf3313136b061166694da94b91edd4f1745f-d",
+      "Device": 2081,
+      "Inode": 119209367,
+      "Size": 30249032,
+      "Allocated": 30253056,
+      "Modified": 1790593349949930485,
+      "Changed": 1790593349948198748
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/18/18307f2fae9f6cb3b86778eeeab79ff520b975b8f729f439573fd6ee8e1ea288-d",
+      "Device": 2081,
+      "Inode": 7389405,
+      "Size": 30249086,
+      "Allocated": 30253056,
+      "Modified": 1790698781111074019,
+      "Changed": 1790698781109561299
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ab/abb801091f2b7b3754b357b92ac115276fc655a7eaf8e6f39e6330be9fe32661-d",
+      "Device": 2081,
+      "Inode": 119980451,
+      "Size": 30249978,
+      "Allocated": 30253056,
+      "Modified": 1790703076011343900,
+      "Changed": 1790703076010953268
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/e1/e14058e24743f27a967bb5c77ea227f0813d1dc8a94905e4715346346a97cd7f-d",
+      "Device": 2081,
+      "Inode": 119463147,
+      "Size": 30249384,
+      "Allocated": 30253056,
+      "Modified": 1790703347140994439,
+      "Changed": 1790703347139916880
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/00/003107d9b171d97934518ae383ddc4334945cc208f6f5a4450d762924996ac1d-d",
+      "Device": 2081,
+      "Inode": 119462958,
+      "Size": 30250274,
+      "Allocated": 30253056,
+      "Modified": 1790703278450773147,
+      "Changed": 1790703278449462940
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/58/58f84ec07328cd5049ddadb88fcd0f9f56bcf650ef7356d8e6c9002047ece9dc-d",
+      "Device": 2081,
+      "Inode": 119462786,
+      "Size": 30249680,
+      "Allocated": 30253056,
+      "Modified": 1790703212005551855,
+      "Changed": 1790703212004923787
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/f0/f04a0df2d03dfc90ad3efedebea97f2117c2c47f07b7f711964498155e670297-d",
+      "Device": 2081,
+      "Inode": 71868109,
+      "Size": 30249086,
+      "Allocated": 30253056,
+      "Modified": 1790699050598078964,
+      "Changed": 1790699050596175540
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/b6/b6b9f601f02a30dbb16382658f7c2081d1a210f1b9f930008addbdabcab432c9-d",
+      "Device": 2081,
+      "Inode": 71869624,
+      "Size": 30250572,
+      "Allocated": 30253056,
+      "Modified": 1790699914650681725,
+      "Changed": 1790699914650001823
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/6d/6d462c3a0d3aea643ac250b4d9e2cf22fba51609ffaea0c43445a7d471012318-d",
+      "Device": 2081,
+      "Inode": 119461698,
+      "Size": 30249384,
+      "Allocated": 30253056,
+      "Modified": 1790702805607825755,
+      "Changed": 1790702805606914095
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/ee/ee63273dd6da70ca3b6edb10138f7da039588232ce28ca0cbdccfc7ef1875319-d",
+      "Device": 2081,
+      "Inode": 66371963,
+      "Size": 30249680,
+      "Allocated": 30253056,
+      "Modified": 1790700320048043139,
+      "Changed": 1790700320046442768
+    },
+    {
+      "Path": "/mnt/data/sn-testnet/gocache/05/05d6414ee9e67b9a89b01799b97ab600d0568d46d6ea88498cdb831a0349e558-d",
+      "Device": 2081,
+      "Inode": 119456097,
+      "Size": 30250868,
+      "Allocated": 30253056,
+      "Modified": 1790698310502505220,
+      "Changed": 1790698310501765067
+    }
+  ],
+  "minimum_age_hours": 48,
+  "minimum_bytes": 8388608,
+  "plan_sha256": "f375ca3c60994fd9e6e88e502398039fdc469ea10c20fa75342954e052c3b57c",
+  "preserves": "active caches, source, evidence, modules and ELF executables",
+  "reclaimed_bytes": 16330846208,
+  "reference_scan_exit": 1,
+  "schema": "inactive-go-archive-reclaim-v2",
+  "status": "COMPLETE",
+  "bindings": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/process-census-apply.json": "fd0501ccb7e67850c5c47be4a5d2a56033b8b410b759172975e733c4c7bb5079",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/reference-scope.json": "cabb49896d9210f2ad0f65d26fd238ba5bb37cedf4c5023039a412645d4d82ca",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/reference-scan.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/reference-scan.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/reference-scan.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/receipt.json": "1441cf6a73884d0de49fe18639d4e507ca638c43abff56a646c46f8dd1d54066",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/process-census-plan.json": "19f8018a2e04e604c7a0da7d0d5db67c409258f4d4bbd41c3dff18711a9b0303",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/reclaim.go": "13a42197ba12e685545a93195ee93b16ef26cce6df1a5af93d2f297d004ddff5",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/candidate-paths.txt": "728309ae639593fc8cb6a17c96caec4bbf33e721b221a97c4d0dad57a3462cdd",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/reclaim": "31d6a810f5e6a592125192a3d86edafc9d2f798f67d7bd8991041ac5f33a9678",
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-9-20261003/plan.json": "f375ca3c60994fd9e6e88e502398039fdc469ea10c20fa75342954e052c3b57c"
+  },
+  "scope_limit": "Bounded <=5MiB receipt/manifest/plan/job/document/config reference scan; raw logs and generated runtime storage excluded. Privileged process census and physical archive identity repeated at apply."
+}

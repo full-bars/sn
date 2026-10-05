@@ -1,0 +1,205 @@
+{
+  "actual_owned_executable_and_ancestor_custody_verified": true,
+  "artifact_bindings_verified": 36,
+  "bindings": {
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/bin/runtime-historical-proof": {
+      "bytes": 45058440,
+      "sha256": "0babf7e7cdcaf5d628c25cac0a4ea90718b46ce1fdbef445c85a5392af9a3550"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/bin/sn-mainnet": {
+      "bytes": 53412064,
+      "sha256": "2f3f79cd3cc2d2d16b3b62f29a9ff826269eb6d2bccf2e7848895272ace044eb"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/cross-export/missing.expected.json": {
+      "bytes": 4151,
+      "sha256": "27e53da089be3160383fa72f2e2b7c84b7a19448b7db91b55db6d35dba0e1fbd"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/cross-export/missing.job.json": {
+      "bytes": 11072,
+      "sha256": "ec31596e5b1747fd94d5a27109bcd72faca76188d84bb6d41ab4897b82a472cf"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/cross-export/pair.expected.json": {
+      "bytes": 4916,
+      "sha256": "aaf43cc77d68f20249bb2587b9f3582111e87400bdc2fa7f7e3b334c04f388db"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/cross-export/pair.job.json": {
+      "bytes": 11649,
+      "sha256": "03adf29aba826927bd57b7bfdea49e24790fa8c5d4e01a20213dae8ac7396500"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/cross-export/zero.expected.json": {
+      "bytes": 4918,
+      "sha256": "4f686bda4cbce8cdfae546111c787282f1f3b2b886df1bd17973f115d5c913b8"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/cross-export/zero.job.json": {
+      "bytes": 11646,
+      "sha256": "bd42a1a564a9d6cd193c917afbf36ad89d8d37908452269525dae9b11a069107"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/build-go.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/build-go.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/build-go.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/build-rust.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/build-rust.stderr": {
+      "bytes": 3041,
+      "sha256": "0ff5b141ffd5fc5b6f8d1e524a803fd981b71a4c817dcbbbed1e67aeee3dd1da"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/build-rust.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-engine-custody.json": {
+      "bytes": 1734,
+      "sha256": "4eef92363d72b3ec50ee4bdd0de420991b1393e5185b37072f2e378bc3e4d5cc"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-engine-prepared.json": {
+      "bytes": 627,
+      "sha256": "ca717fb8410116bdfe4045b5ca5cbd4e818bef7d2543897a04198e682fbeae51"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-engine-result.json": {
+      "bytes": 1700,
+      "sha256": "7553ca0e548c21254ebaf1b43debef4d30b1b796f0eb872898c17ed77b9bcab3"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-export.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-export.stderr": {
+      "bytes": 3426,
+      "sha256": "04e3572e552d022c75f7039e6a71f4742ef942a5b4c968a1c506fd79a6ffefe0"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-export.stdout": {
+      "bytes": 182,
+      "sha256": "f1fc7959c18d946d045a4e675ef100010892651d7a32e279b70fbbbaca07b3da"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-fixed-missing.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-fixed-missing.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-fixed-missing.stdout": {
+      "bytes": 4152,
+      "sha256": "b07a6552d62e96f40e2c00e03c064ab8cb64975066284026ba233f55d4359169"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-fixed-pair.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-fixed-pair.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-fixed-pair.stdout": {
+      "bytes": 4917,
+      "sha256": "87ab510f35d2455aff053b11f25b969a8a97c6ba0c447ca51e73e3c741608421"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-fixed-zero.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-fixed-zero.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-fixed-zero.stdout": {
+      "bytes": 4919,
+      "sha256": "de50aff509b6368ed5deb757983eabcd478ef4fe1e9c7e4cd23f02296022d2f6"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-pair.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-pair.stderr": {
+      "bytes": 63,
+      "sha256": "c00bf1aa4df643d5eac526cd5905bce9523de92951dd0d84bb3fd5862e6b5b57"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/cross-pair.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/modules.jsonl": {
+      "bytes": 174032,
+      "sha256": "7a49f2447b73204c314bd5e0fe0ddb6242ebde9d3807a526aceaec87061ed5f0"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/source-readback.json": {
+      "bytes": 1058,
+      "sha256": "d94415bec93de2c7a97b4c0948edabb15ab1171f5a108397978319654d18217b"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/rust-source/runtime-metadata-probe/Cargo.lock": {
+      "bytes": 118683,
+      "sha256": "2440fcbe35c1a6359e78c4d42e9bbfca9c81c6afceccc0e2b7c8892648bb6e82"
+    },
+    "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/rust-source/runtime-metadata-probe/src/historical_tests.rs": {
+      "bytes": 38788,
+      "sha256": "b9ef8a74449519389c9bda9967db553d39fc214d22803ade824a11678991f21c"
+    }
+  },
+  "cases": {
+    "missing": {
+      "candidate": [
+        "1000",
+        null,
+        null,
+        "refund-unobserved"
+      ],
+      "exit": 0,
+      "job_sha256": "ec31596e5b1747fd94d5a27109bcd72faca76188d84bb6d41ab4897b82a472cf",
+      "native_fee_debit": null,
+      "runtime_admitted": false,
+      "typed_output_equal": true
+    },
+    "pair": {
+      "candidate": [
+        "1000",
+        "250",
+        "750",
+        "observed-pair-unadmitted"
+      ],
+      "exit": 0,
+      "job_sha256": "03adf29aba826927bd57b7bfdea49e24790fa8c5d4e01a20213dae8ac7396500",
+      "native_fee_debit": null,
+      "runtime_admitted": false,
+      "typed_output_equal": true
+    },
+    "zero": {
+      "candidate": [
+        "1000",
+        "0",
+        "1000",
+        "observed-pair-unadmitted"
+      ],
+      "exit": 0,
+      "job_sha256": "bd42a1a564a9d6cd193c917afbf36ad89d8d37908452269525dae9b11a069107",
+      "native_fee_debit": null,
+      "runtime_admitted": false,
+      "typed_output_equal": true
+    }
+  },
+  "initial_fixture_refusal_retained": "Cargo nlink2 build artifact refused; byte-identical owned nlink1 engine admitted. No production checks relaxed.",
+  "limits": [
+    "Actual Go/Rust commands on synthetic proof fixtures, not actual-chain runtime authority",
+    "Top-level native expenditure intentionally stays null",
+    "Original selected Go race has a separate unresolved deadline fixture failure",
+    "Full supported host surface, complete actual witness, original runtime callsite/source approval, failed refund branch coverage and finality remain open"
+  ],
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-historical-fee-caller-e274-independent-20261003/evidence/e274-cross-engine-receipt.json",
+    "sha256": "0f303ef2869a3700d83fc486bc65c18cc94e957bb0a2ae4d5fc80270ecf8eaf8"
+  },
+  "rust_component": "a7edc3df93033b0df1aab328bf1ed983301dede3",
+  "source_commit": "e274f89361749573e8f11bddff2506b77b39e9f0",
+  "status": "ROOT_VERIFIED_SCOPED_ACTUAL_COMMANDS"
+}

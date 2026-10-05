@@ -1,0 +1,147 @@
+{
+  "exits": [
+    {
+      "exit": 1,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/root-observer-baseline-normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "exit": 1,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/root-observer-baseline-race.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "exit": 1,
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/evidence/normal-22d4ee3e-delta.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    }
+  ],
+  "limits": [
+    "Original component qualification receipts remain valid only for their named selected scopes.",
+    "These are retained author causal logs with checked counts/hashes; no independent test rerun is claimed by this receipt.",
+    "Root observer and successor execution fixes remain separate unqualified source work; no production service, mount, signer, broadcast, deployment or activation occurred."
+  ],
+  "root": {
+    "commit": "ea2bb37f0d43e76d506f69c6f2ad8f95d91993a8",
+    "normal": {
+      "bytes": 7234,
+      "fail": [
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassivePreparationRequiresRetainedHead",
+        "TestDurableCompositionRootPersistentEntrypointsRequireDeclaration"
+      ],
+      "pass": null,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/root-observer-baseline-normal.jsonl",
+      "sha256": "b42e7236ca963af2ce4e39d8a092439cdc4e54214202d8974d27374c081e4b36",
+      "skip": null
+    },
+    "production_baseline": "f12c190757f5e88336257dd18b82707c02584e6f",
+    "race": {
+      "bytes": 7240,
+      "fail": [
+        "TestDurableCompositionPassiveBootstrapStartsRetainedMonitor",
+        "TestDurableCompositionPassivePreparationRequiresRetainedHead",
+        "TestDurableCompositionRootPersistentEntrypointsRequireDeclaration"
+      ],
+      "pass": null,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/integration/evidence/root-observer-baseline-race.jsonl",
+      "sha256": "88f31c2c7468f933182c898f6cd8271236aed5a30ff6656c7c9dcc132a11116c",
+      "skip": null
+    },
+    "tree": "fd6918422fa6b8731edc0b5adda7f77e3882c2bb"
+  },
+  "schema": "durable-composition-open-causes-v1",
+  "status": "CAUSAL_FAILURES_RETAINED_SUCCESSORS_UNQUALIFIED",
+  "successor_execution": {
+    "commit": "22d4ee3ed274b5ad4ecc14a30c656414809d8cc7",
+    "normal": {
+      "bytes": 87971,
+      "fail": [
+        "TestBootstrapContractAnchorInterruptedOutcomeRequiresBindingEvent",
+        "TestBootstrapContractInstallationLostBorrowedMarkerRefusesReadback",
+        "TestBootstrapContractInstallationPublicReadbackRecoversExactAnchor",
+        "TestBootstrapContractInstallationRejectsHiddenAndChangedStorage",
+        "TestBootstrapInstallationRejectsLostPreparationMarker",
+        "TestBootstrapSuccessorCanonicalAdapterBoundaries",
+        "TestBootstrapSuccessorCanonicalCommandExecutesAndRecovers",
+        "TestBootstrapSuccessorCanonicalCountedAuthoritySurvivesRestart",
+        "TestBootstrapSuccessorCanonicalInterruptedAuthorityPublication",
+        "TestBootstrapSuccessorExecutionAdoptsExactFloorsWithoutSending",
+        "TestBootstrapSuccessorExecutionCancellationAndMissingClaimFailClosed",
+        "TestBootstrapSuccessorExecutionCommandReconstructsAndRetainsV3Custody",
+        "TestBootstrapSuccessorExecutionConservesFundingAndAttemptCeilings",
+        "TestBootstrapSuccessorExecutionFencesCurrentAuthorityAndBothNonces",
+        "TestBootstrapSuccessorExecutionFencesRegistryReplacement",
+        "TestBootstrapSuccessorExecutionFreezesInterruptedOutcomeDuringOwnership",
+        "TestBootstrapSuccessorExecutionPendingOutcomeCannotBecomeAnotherSend",
+        "TestBootstrapSuccessorExecutionRechecksAfterReservation",
+        "TestBootstrapSuccessorExecutionReconcilesAmbiguousSendBeforeRetry",
+        "TestBootstrapSuccessorExecutionRecoversCountedAttemptInterruptions",
+        "TestBootstrapSuccessorExecutionRecoversInterruptedCanonicalOutcome",
+        "TestBootstrapSuccessorExecutionRecoversInterruptedCreation",
+        "TestBootstrapSuccessorExecutionRefusesMissingReboundAndUnsafeCustody",
+        "TestBootstrapSuccessorExecutionRequiresCanonicalEightReceiptAdoption",
+        "TestBootstrapSuccessorExecutionRequiresCanonicalInnerSuccessAndBinding",
+        "TestBootstrapSuccessorExecutionRetainsRevertedOuterAndLiveInnerClaim",
+        "TestBootstrapSuccessorExecutionSeparatelyFencesGlobalNonceDomains",
+        "TestBootstrapSuccessorExecutionSerializesRootAndRegistryOwners",
+        "TestBootstrapSuccessorExecutionStopsWhenCountedCustodyChangesBeforeSend",
+        "TestBootstrapSuccessorExecutionStopsWhenTerminalCustodyChangesBeforeResult",
+        "TestBootstrapSuccessorPreparationFencesRootReplacementDuringPublication",
+        "TestBootstrapSuccessorPreparationReaderRejectsUnsafeOrReplacedCustody",
+        "TestBootstrapSuccessorRejectsLostPreparationBeforeSend",
+        "TestBootstrapSuccessorRuntimeRevisionCommandPreservesUpgradeCustody",
+        "TestBootstrapSuccessorRuntimeRevisionConservesCustody",
+        "TestBootstrapSuccessorRuntimeRevisionOrdersInterruptedEvents",
+        "TestBootstrapSuccessorRuntimeRevisionRecoversPublication",
+        "TestBootstrapSuccessorRuntimeRevisionRejectsEventRollback",
+        "TestBootstrapSuccessorRuntimeRevisionRejectsLostAndForkedHistory",
+        "TestBootstrapSuccessorSafeCurrentCapabilityCommandPreservesExactSend",
+        "TestBootstrapSuccessorSafeCurrentCapabilityRequiresInstalledRoute",
+        "TestBootstrapSuccessorSafeCurrentPublicAcceptanceResumesExactCustody",
+        "TestBootstrapSuccessorSafeCurrentPublicCommandPreservesExactSend",
+        "TestBootstrapSuccessorSafeCurrentRevisionCannotEnableSubmission",
+        "TestBootstrapSuccessorSafeCurrentRevisionConservesCustody",
+        "TestBootstrapSuccessorSafeCurrentRevisionOrdersInterruptedEvents",
+        "TestBootstrapSuccessorSafeCurrentRevisionPreservesLegacyEncoding",
+        "TestBootstrapSuccessorSafeCurrentRevisionRecoversPublication",
+        "TestBootstrapSuccessorSafeCurrentRevisionRejectsEventSubstitution",
+        "TestBootstrapSuccessorSafeCurrentRevisionRejectsLostAndForkedHistory"
+      ],
+      "pass": [
+        "TestBootstrapContractAnchorRequiresExactBindingEvent",
+        "TestBootstrapSuccessorCanonicalExactPendingLookup",
+        "TestBootstrapSuccessorCanonicalIndependentAuthority",
+        "TestBootstrapSuccessorCanonicalOrphanAuthorityCannotEnableSubmission",
+        "TestBootstrapSuccessorCanonicalProvenanceBindsExactScope",
+        "TestBootstrapSuccessorCanonicalReceiptFields",
+        "TestBootstrapSuccessorCanonicalSafeAuthority",
+        "TestBootstrapSuccessorExecutionBindsSafeSignaturesAndOuterEnvelope",
+        "TestBootstrapSuccessorExecutionRequiresIndependentExactApproval",
+        "TestBootstrapSuccessorPreparationClaimsOnceAndResumesSameRoot",
+        "TestBootstrapSuccessorPreparationNeverOverwritesPublicationCollision",
+        "TestBootstrapSuccessorPreparationReaderFencesPublication",
+        "TestBootstrapSuccessorPreparationReaderRequiresCompleteClaim",
+        "TestBootstrapSuccessorPreparationRecoversEveryPublicationBoundary",
+        "TestBootstrapSuccessorPreparationRecoversOnlyExactPartialBytes",
+        "TestBootstrapSuccessorPreparationRefusesMissingOrReboundCustody",
+        "TestBootstrapSuccessorPreparationRejectsCopiedAndMovedPhysicalRoot",
+        "TestBootstrapSuccessorPreparationRejectsUnsafeFilesAndBounds",
+        "TestBootstrapSuccessorPreparationSerializesBeforeClaimPublication",
+        "TestBootstrapSuccessorRuntimeRevisionCurrentArtifactAdmission",
+        "TestBootstrapSuccessorRuntimeRevisionIndependentAuthority",
+        "TestBootstrapSuccessorSafeCurrentPolicyRequiresDistinctAuthority",
+        "TestBootstrapSuccessorSafeCurrentPublicAcceptanceSeparateDomain",
+        "TestBootstrapSuccessorSafeCurrentRevisionIndependentAcceptance",
+        "TestSafeCurrentPendingRecheckCannotClaimCompleteAuthority"
+      ],
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/fixture-successor/evidence/normal-22d4ee3e-delta.jsonl",
+      "sha256": "cd473423291ba75daba93776e1a2304f95e98bb18173d01fe0141874e59ae578",
+      "skip": null
+    },
+    "production_baseline": "eb0abe22b6cca75fd17bd349821cfaf8b22add18",
+    "tree": "ad057cbffda2cdb2af07fee76b6bf1258c5fba18",
+    "typed_identity_assertion_failures": 2,
+    "write_admission_failures": 48
+  }
+}

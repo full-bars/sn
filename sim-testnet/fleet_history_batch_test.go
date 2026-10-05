@@ -276,6 +276,7 @@ func TestHistoricalFleetAliasPreparationUsesRecordedBindingCall(t *testing.T) {
 func TestCarriedFleetHistoryBatchCachesOnlyExactVerifiedAction(t *testing.T) {
 	supersession := newFleetGenerationOneSupersessionFixture(t, "historical-alias-mirror")
 	cfg := supersession.cfg
+	cfg.WalletMaterial = "fleet-history-cache-fixture"
 	cfg.OperationalRPCMode = rpcModePublicOverride
 	for _, record := range []*ActionPostcondition{supersession.sourceRecord, supersession.installRecord, supersession.refreshRecord} {
 		record.OperationalRPCMode = rpcModePublicOverride
@@ -292,7 +293,7 @@ func TestCarriedFleetHistoryBatchCachesOnlyExactVerifiedAction(t *testing.T) {
 		role.ClientIDHex = fmt.Sprintf("%032x", member)
 		roles.Clients[label] = role
 	}
-	stateDir := t.TempDir()
+	stateDir := historicalAuditCacheTestStateDir(t)
 	if err := os.MkdirAll(stateDir+"/public", 0o755); err != nil {
 		t.Fatal(err)
 	}

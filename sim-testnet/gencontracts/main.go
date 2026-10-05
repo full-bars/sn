@@ -225,6 +225,17 @@ func canonicalArtifactHashForBytecode(a artifact, immutableReferences map[string
 }
 
 func main() {
+	if len(os.Args) == 5 && os.Args[1] == "--release-json" {
+		items := loadContractItems(os.Args[2])
+		retained, err := os.ReadFile(os.Args[3])
+		must(err)
+		items, err = preserveReviewedBytecode(os.Args[3], retained, items)
+		must(err)
+		encoded, err := renderReleaseJson(items)
+		must(err)
+		must(os.WriteFile(os.Args[4], encoded, 0600))
+		return
+	}
 	if len(os.Args) == 4 && os.Args[1] == "--check" {
 		must(checkGeneratedContracts(os.Args[2], os.Args[3]))
 		return
@@ -247,6 +258,43 @@ func main() {
 	formatted, err := renderContractArtifacts(items)
 	must(err)
 	must(os.WriteFile(out, formatted, 0o644))
+}
+
+// Export only the reviewed production artifacts after the existing source,
+// layout and retained-bytecode checks. No mainnet authority is created here.
+func renderReleaseJson(items []item) ([]byte, error) {
+	type releaseArtifact struct {
+		Name                string           `json:"name"`
+		Abi                 string           `json:"abi"`
+		Creation            string           `json:"creation"`
+		Runtime             string           `json:"runtime"`
+		RuntimeHash         string           `json:"runtime_hash"`
+		ArtifactHash        string           `json:"artifact_hash"`
+		StorageLayoutHash   string           `json:"storage_layout_hash"`
+		ImmutableReferences map[string][]int `json:"immutable_references"`
+	}
+	envelope := struct {
+		Schema    string            `json:"schema"`
+		Artifacts []releaseArtifact `json:"artifacts"`
+	}{Schema: "urnetwork-contract-release-artifacts-v1", Artifacts: []releaseArtifact{}}
+	seen := map[string]bool{}
+	wanted := map[string]bool{"ReserveSink": true, "SettlementVault": true, "Coordinator": true, "ERC1967Proxy": true, "ValidatorEvidence": true}
+	for _, artifact := range items {
+		if !artifact.Release {
+			continue
+		}
+		if seen[artifact.Name] || !wanted[artifact.Name] || artifact.Creation == "" || artifact.Runtime == "" {
+			return nil, errors.New("release export has duplicate or incomplete artifacts")
+		}
+		seen[artifact.Name] = true
+		envelope.Artifacts = append(envelope.Artifacts, releaseArtifact{Name: artifact.Name, Abi: artifact.ABI, Creation: artifact.Creation, Runtime: artifact.Runtime, RuntimeHash: artifact.RuntimeHash, ArtifactHash: artifact.ArtifactHash, StorageLayoutHash: artifact.StorageLayoutHash, ImmutableReferences: artifact.References})
+	}
+	if len(envelope.Artifacts) != 5 {
+		return nil, errors.New("release export requires exactly five production artifacts")
+	}
+	sort.Slice(envelope.Artifacts, func(i, j int) bool { return envelope.Artifacts[i].Name < envelope.Artifacts[j].Name })
+	raw, err := json.Marshal(envelope)
+	return append(raw, '\n'), err
 }
 
 func loadContractItems(root string) []item {

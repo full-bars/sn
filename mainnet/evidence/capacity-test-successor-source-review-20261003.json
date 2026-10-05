@@ -1,0 +1,53 @@
+{
+  "schema": "root-capacity-test-successor-review-v1",
+  "verified_bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-document-fixture/sn/mainnet/validator_capacity_test.go",
+      "bytes": 20307,
+      "sha256": "b8c11efe204a236eb8f09a688150f5d094d9e9e0a971bf8e74b0f4494e811d89"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-42ef-intake.json",
+      "bytes": 13059,
+      "sha256": "84b4d517e30878101fc5b6187b612e6f88b875de67486636479307499fa41f0d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-capacity-cd9-intake.go",
+      "bytes": 3873,
+      "sha256": "5b367996f5b4ec3c1722e43c7edff9dee0a1ef99d6cd1356cda7ae2774de94b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-cd9-intake.json",
+      "sha256": "7eb77026caf166531f433310810574df7df4a5d1cf8c98ba72828d02749709b4",
+      "bytes": 2894
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/capacity-completion-diagnostics/sn/mainnet/validator_capacity_test.go",
+      "bytes": 20362,
+      "sha256": "a49b61416b7ad9bea943065b3310f454d85e96d1c3cae6b79f2ebc8364241264"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-cd9-intake.json",
+      "bytes": 2894,
+      "sha256": "7eb77026caf166531f433310810574df7df4a5d1cf8c98ba72828d02749709b4"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-capacity-214-intake.go",
+      "bytes": 3315,
+      "sha256": "ae1489a3621b3915308a55890c08c524d3e54006568d1992bc772979f27685ee"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-214-intake.json",
+      "sha256": "db3d64951688c976915510d6f5ff33e5f87afdd535a5471480e704fa0f1fe736",
+      "bytes": 2414
+    }
+  ],
+  "source": "214a6b3d50b5f4ecd63e3841d65bc7818bb55a7a",
+  "scope": "Two sequential test-only successors over42ef; exactlyone test file changes at eachstep; allproduction/moduleblobs unchanged",
+  "review": "Valid canonical approval envelope and public LoadReleaseConfig baseline must succeed before negativefaults;exactexit2+zerooutput+specificcause+custodyguard oneachfault;shortwriterrequiresvalidbaseline;collectindependentdiagnosticmismatches",
+  "limits": [
+    "Source review only;Solnormal/race/vet pending",
+    "Original42ef/cd9 failures preserved",
+    "Finalreleasecomposition andlivecapacityadoption separate"
+  ]
+}

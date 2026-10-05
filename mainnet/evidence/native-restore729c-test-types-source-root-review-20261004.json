@@ -1,0 +1,55 @@
+{
+  "schema": "native-restore729c-test-types-source-root-review-v1",
+  "status": "SOURCE_REVIEWED_COMPILE_FIRST",
+  "source": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-test-types/sn",
+    "head": "729c5975fb7997b532a785d6acca0dc7661e5bfe",
+    "tree": "c70d07115e559ff8f918d05c3399701ad6a18e15",
+    "base": "a4990a2f1d76640eb8ed82f41e59946c08aa0a40",
+    "sparse": true,
+    "clean": true
+  },
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-test-types/sn/mainnet/economic_conservation_claim_window_test.go",
+      "bytes": 19925,
+      "sha256": "f90b6beac163381549e320933ce46f80d0a25f95f9225a4f28dd6b08efa63822",
+      "relative": "mainnet/economic_conservation_claim_window_test.go",
+      "git_blob": "210e7c63de455209096bde5d9ab412787af8d886"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-test-types/sn/mainnet/economic_native_producer_restore_test.go",
+      "bytes": 30105,
+      "sha256": "388180cf50d24cd570e04d532d6563b7f28c3f518b8709281dd5c88f4524b120",
+      "relative": "mainnet/economic_native_producer_restore_test.go",
+      "git_blob": "8cec6155001bb31fedf62b72c2dcc93fdd7e5a73"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/intake-v2.json",
+      "bytes": 7430,
+      "sha256": "95a00477ad058b2cae5aaf153bcf69857adbfee4f3c40c427a18c2d428643541"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-native-complete-restore-a499-20261004/evidence/a499-normal-compile.stderr",
+      "bytes": 1164,
+      "sha256": "38bf47f8b88dea00067b60ba8acda0946000d79c22f7d847ac7fbe5883892907"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-restore-test-types/evidence/qualification-recipe.json",
+      "bytes": 14818,
+      "sha256": "0f861fab4a920d3887ec5b3f7991e83a54ccc2a4a7460960e6f61cb9b8abb479"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/native-producer-complete-restore/evidence/operative-controls-v2.json",
+      "bytes": 7897,
+      "sha256": "04dbfd71665d73241bd9bd4dc4a0e263ec6962ddbbe64bc07febc5c3303a2c3d"
+    }
+  ],
+  "changed_paths": [
+    "mainnet/economic_conservation_claim_window_test.go",
+    "mainnet/economic_native_producer_restore_test.go"
+  ],
+  "review": "Read full two-file delta: acquire an addressable local state before pointer receiver call, pass the resident state address at four exact Claim capacity sites, and alter one typed parent digest byte rather than assign a string. Production/modules/Rust unchanged. Original six compile errors and zero-body outcomes retained.",
+  "scope": "Actual corrected image compile first, then exact original24roots plus resident Claim basis root per mode, vet and six production controls/mode. Use required qualified Corec618 and retained distinct capture/replay engines; no Rust rebuild.",
+  "whole_mainnet_complete": false
+}

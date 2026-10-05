@@ -1,0 +1,31 @@
+{
+  "schema": "mainnet-model4754-proposal-source-review-v1",
+  "status": "METADATA_REVIEW_ONLY_NOT_ADOPTED_NOT_EXECUTED",
+  "proposal_sha256": "09658a48181387734ed821322cacfebf0e8a3d97763ee60d99c6424457aa2258",
+  "overlay_sha256": "58dbc8c60e562c46a3e3fb921a3fe42f8cc2134dd3f5f206147cd97648cab4b6",
+  "all_four_backing_bytes_verified": true,
+  "virtual_added_files": [
+    "/mnt/data/sn-testnet/sol-server5f-full-model-plan-20261003/source/server/model/subscription_payout_debit_fixture_test.go"
+  ],
+  "selected_roots_exactly_once": {
+    "TestPaymentPlanSubsidy": 1,
+    "TestContractLifecycleEscrowBranchClockGuardRejectsMissingOrLateLocks": 1,
+    "TestContractLifecycleWritesUsePrimaryDatabaseClockAfterLocks": 1,
+    "TestContractPayoutParticipantMatrix": 1,
+    "TestCompanionContractPayoutParticipantsJoinByStreamId": 1,
+    "TestContractParticipantPayoutDisputeOutcomes": 1,
+    "TestContractExtenderPayoutParticipantMatrix": 1,
+    "TestCompanionContractExtenderPayoutPaysTheReversedParties": 1,
+    "TestContractPayoutPreservesSharedNetworkProviderUsage": 1,
+    "TestStatsProviderPayoutsPreserveSharedNetworkSettlement": 1,
+    "TestPaymentPlanSubsidyEqualWeight": 1,
+    "TestCreateTransferEscrowShrinkToFit": 1,
+    "TestAsyncDebitLostPostsReplayAndRedisPrecedence": 1,
+    "TestAsyncDebitCommittedBatchSurvivesRedisFailureAndLostAck": 1,
+    "TestAsyncDebitBusyGrantAdvancesFairCursor": 1,
+    "TestAsyncDebitRollbackCannotPublishOrConsume": 1
+  },
+  "resource_arithmetic_verified": true,
+  "dynamic_overlay_discovery_and_compilation_required": true,
+  "original_suite_must_complete_and_cleanup_first": true
+}

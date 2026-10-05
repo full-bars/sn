@@ -1,0 +1,54 @@
+{
+  "schema": "server5b-logical-workspace-recovery-root-review-v1",
+  "status": "CORRECTED_MECHANISM_ADOPTED_BODY_EXECUTION_PENDING",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/model-selected-job-v3.json",
+      "bytes": 12319,
+      "sha256": "786e652a681f2289de47d43a5c45fe0720a6e5b4fabd4b4078c687e57d81ccc9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/model-selected-adoption-v3.json",
+      "bytes": 488,
+      "sha256": "faf5002ca175db988302a174ce4e7a0363cd447b96562d4f9f4854ee1a5a9b56"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/run-selected-model-v3.py",
+      "bytes": 13580,
+      "sha256": "66c8c6e55cf2f4880e295d6b2b00094bf124b5b963244861e2bb2ba652164ced"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/run-selected-model-v3.sh",
+      "bytes": 4698,
+      "sha256": "faaca15b5480e8d3838095f1de04e75c6f5b4570fb1da32910a425d019f8bdb6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/go-v3.work",
+      "bytes": 1380,
+      "sha256": "9e273cffeca73d4e785badc4088a04e939d12c80c9822323dff84af2bbe813d7"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-fixture-import-graph-v3.receipt.json",
+      "bytes": 1268,
+      "sha256": "a80275b4bbd4bc6c386c161a8eaa18beb0c69f831f7167eedbcd10c2271ad613"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model-v3-graph-v2.receipt.json",
+      "bytes": 1440,
+      "sha256": "d9b6a10e27b50aa75f550eeae0d85f7521567db3d11624ae477235856b22e560"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/server5b/evidence/server5b-selected-model.terminal.json",
+      "bytes": 3728,
+      "sha256": "69772b0b112115184d95deabf5c11b22cc6a487ad2a2e6c8fdaa9d4a7c940969"
+    }
+  ],
+  "review": [
+    "Read exactv2\u2192v3 workfile/shell/Python deltas and verified26 complete job input hashes/device/inode/mode bindings. Protected source and model images unchanged;32 selected roots/mode unchanged.",
+    "Original refusal has zero model bodies and successful owned cleanup. Physical SN path already appeared in workfile, but helper launches under logical workspace/sn symlink; Go module matching refused that spelling.",
+    "Corrected use entry matches actual helper working-directory path. Actual helper import graph and852-package model graph bothPASS and bound in corrected job.",
+    "Original failure namespace preserved; fresh original-baseline resource guard and private service/image custody retained. Root created read-only adoption; Sol instructed tolaunch after guards."
+  ],
+  "lesson": "Preflight the actual startup helper command under the exact child working directory/GOWORK. Package-model compilation alone cannot establish helper module membership. Retain valid images across reversible fixture configuration repairs.",
+  "limits": "No selected model body PASS claimed. Pure setup refusal is not a production accounting failure."
+}

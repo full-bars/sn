@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 type carriedPreparationTest struct {
@@ -21,6 +22,52 @@ type carriedPreparationTest struct {
 	source   *SetupPlan
 	entries  []JournalEntry
 	records  []*ActionPostcondition
+}
+
+func TestCarriedActionVerificationWorkersBoundOwnedLANArchiveReads(t *testing.T) {
+	t.Parallel()
+	if got := carriedActionVerificationWorkersFor(&ResolvedConfig{OperationalRPCMode: rpcModeOwnedNode}); got != carriedActionOwnedVerificationWorkers {
+		t.Fatalf("owned LAN verification workers=%d want=%d", got, carriedActionOwnedVerificationWorkers)
+	}
+	if got := carriedActionVerificationWorkersFor(&ResolvedConfig{OperationalRPCMode: rpcModePublicOverride}); got != carriedActionVerificationWorkers {
+		t.Fatalf("public verification workers=%d want=%d", got, carriedActionVerificationWorkers)
+	}
+	if got := carriedActionVerificationWorkersFor(nil); got != carriedActionVerificationWorkers {
+		t.Fatalf("default verification workers=%d want=%d", got, carriedActionVerificationWorkers)
+	}
+}
+
+func TestPlanActionIndexUsesApprovedFirstAction(t *testing.T) {
+	first := Action{ID: "fleet.renew.1.1.commitment", IntentHash: "first"}
+	second := Action{ID: first.ID, IntentHash: "second"}
+	index := planActionIndex(&SetupPlan{Actions: []Action{first, second}})
+	if got, ok := index[first.ID]; !ok || got.ID != first.ID || got.IntentHash != first.IntentHash {
+		t.Fatalf("indexed action=%+v found=%t, want first approved action", got, ok)
+	}
+	if got := planActionIndex(nil); got != nil {
+		t.Fatalf("nil plan index=%v, want nil", got)
+	}
+}
+
+func TestVerifyCarriedActionWithTimeoutBoundsCachedFleetReads(t *testing.T) {
+	start := time.Now()
+	err := verifyCarriedActionWithTimeout(t.Context(), func(ctx context.Context) error {
+		deadline, ok := ctx.Deadline()
+		if !ok {
+			return errors.New("cached fleet verification has no deadline")
+		}
+		remaining := time.Until(deadline)
+		if remaining > carriedActionVerificationTimeout || remaining < carriedActionVerificationTimeout-time.Second {
+			return fmt.Errorf("cached fleet verification deadline remaining=%s, want about %s", remaining, carriedActionVerificationTimeout)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if elapsed := time.Since(start); elapsed > time.Second {
+		t.Fatalf("bounded cached fleet verification returned too slowly: %s", elapsed)
+	}
 }
 
 // The archived v1 approval exercises the real historical decoder and owned
@@ -447,5 +494,36 @@ func TestCarriedPreparationCanceledSourceReadRequiresFreshRetry(t *testing.T) {
 	}
 	if !reflect.DeepEqual(fixture.entries, executor.journal.Entries()) {
 		t.Error("canceled read or retry changed the retained journal")
+	}
+}
+
+func TestVerifyCarriedActionWithTimeoutExtendsOwnedLANHistoricalReads(t *testing.T) {
+	err := verifyCarriedActionWithTimeoutFor(t.Context(), &ResolvedConfig{OperationalRPCMode: rpcModeOwnedNode}, func(ctx context.Context) error {
+		deadline, ok := ctx.Deadline()
+		if !ok {
+			return errors.New("owned historical verification has no deadline")
+		}
+		remaining := time.Until(deadline)
+		if remaining > carriedActionOwnedVerificationTimeout || remaining < carriedActionOwnedVerificationTimeout-time.Second {
+			return fmt.Errorf("owned deadline remaining=%s, want about %s", remaining, carriedActionOwnedVerificationTimeout)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestVerifyCarriedActionWithTimeoutReturnsOwnedLANDeadlineWithoutRestarting(t *testing.T) {
+	calls := 0
+	err := verifyCarriedActionWithTimeoutFor(t.Context(), &ResolvedConfig{OperationalRPCMode: rpcModeOwnedNode}, func(context.Context) error {
+		calls++
+		if calls == 1 {
+			return context.DeadlineExceeded
+		}
+		return nil
+	})
+	if !errors.Is(err, context.DeadlineExceeded) || calls != 1 {
+		t.Fatalf("owned deadline repeated its action: error=%v calls=%d", err, calls)
 	}
 }

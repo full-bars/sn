@@ -1,0 +1,64 @@
+{
+  "schema": "principal-activationec242-stage-root-review-v1",
+  "status": "EXACT_SOURCE_STAGED_UNQUALIFIED",
+  "bindings": [
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/stage-receipt-v2.json",
+      "bytes": 5303,
+      "sha256": "4c7282c9731ef52cd33e36469314043ee78ab63189d06a24498a40264f70955c"
+    },
+    {
+      "bytes": 2098,
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/go-overlay.json",
+      "sha256": "bbea768bbc014bab07d103260e76195d1d6084a968f78b01b28a7a51af837b01"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/overlay-sources/mainnet/economic_conservation_fixture_protection_test.go",
+      "bytes": 1931,
+      "sha256": "644bafa7b394613c9b75ade45161cebb935376b880d7c005bfd23a1142057e0a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/overlay-sources/mainnet/economic_conservation_fixture_test.go",
+      "bytes": 12948,
+      "sha256": "617cb5aaf0a1a7f2797306e29739157369e8facd685cd657babe9bb4a03c3e9a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/overlay-sources/mainnet/economic_conservation_principal_activation_test.go",
+      "bytes": 1385,
+      "sha256": "86ba5234914ce5f48ef3ccdfa6754866ae98b8010559f7af70fc1fccf351806a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/overlay-sources/mainnet/economic_conservation_principal_custody_test.go",
+      "bytes": 3008,
+      "sha256": "859dc2d5b15fb7b9a1eee9a502f9690241117b93be946209cfe602929d2788d2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/overlay-sources/mainnet/economic_conservation_principal_test.go",
+      "bytes": 17089,
+      "sha256": "09b4bc791fd4bedfde12f2dfb912ee67715d5e6e80f9ae8bc3f86821b80c017e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/overlay-sources/mainnet/historical_replay.go",
+      "bytes": 18202,
+      "sha256": "239eb24da5cf24be1379e0b96f918f620398f5bda682dcacb986b2c159e0e21a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/overlay-sources/mainnet/historical_replay_diagnostic_test.go",
+      "bytes": 2294,
+      "sha256": "ec482b180db4fab019450d0a58a5662a7ee6e1d155ba9fae89830def2d0de1e2"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/overlay-sources/mainnet/historical_replay_test.go",
+      "bytes": 20190,
+      "sha256": "7d1fc1a281a64d57be53e04f09c98d028e401acff4c058fe6b44d5feedfb82a8"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/sol-economic-principal-dc1-20261004/fixtureec242-v2/overlay-sources/tools/runtime-metadata-probe/src/historical_native_execution_tests.rs",
+      "bytes": 25689,
+      "sha256": "518a9b9b584341af3d5dcd84c66f88b30a1d6552ccd835d8864740354234456a"
+    }
+  ],
+  "review": "Independently compare exact nine-path ec242-vs-physical-dc1 Git delta, all replacement bytes and base presence/hash. Eight Go replacements include four virtual new files; ninth path is Rust fixture test only. No compiler or body ran in this stage. Preserve unused partial v1 without treating it as bound source.",
+  "scope": "Reversible staging only; new principal fixtures need fresh Rust libtest/exporter, protected original production engines remain unchanged. No behavioral or deployment authority.",
+  "whole_mainnet_complete": false
+}

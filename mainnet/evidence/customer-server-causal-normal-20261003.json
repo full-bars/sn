@@ -1,0 +1,257 @@
+{
+  "bindings": {
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/fresh-provider-key.go": {
+      "bytes": 9457,
+      "sha256": "7a87afbfcdf3a4cb27fc327ab9b106d7660f14fdb1e76e27e904d3e6977966cb"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/known-challenge-resubmit.go": {
+      "bytes": 9195,
+      "sha256": "d20763738a4980338976972e658418a267019fa2a49212d42362895495bc838f"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/lost-cancellation-cause.go": {
+      "bytes": 9121,
+      "sha256": "ec75e7efe4bc39134c17775627c615b634084088c29fb46a065afd05b585bdfb"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/observe-guard-omitted.go": {
+      "bytes": 11699,
+      "sha256": "972b50d852b04dbfb6bf504f3471353279308ba0c31516e2885e7ec23db0ecf0"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/raw-digest-history-slots.go": {
+      "bytes": 11798,
+      "sha256": "ed618270117a89b608453463c11a1b5963f0747c086a15dc4bc07eba90babd77"
+    },
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/evidence/customer-530726fc/retained-terms-check-omitted.go": {
+      "bytes": 11770,
+      "sha256": "9b81f643e83c59690e7a1157b460a2b24d8daaacf3fd5673652b09b882213b53"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/causal-initial-setup.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/causal-initial-setup.txt": {
+      "bytes": 154,
+      "sha256": "2f45554a4d52c5c9c35940fac2c65fbce4007cc49e9b92b81b0989b8c764f271"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/causal-jobs.tsv": {
+      "bytes": 1373,
+      "sha256": "7d4320dc11a0947f884ebf8ee652f5e1be74ec15d6bb6cbbaef5eee13418aec2"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-fresh-provider-key.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-fresh-provider-key.jsonl": {
+      "bytes": 75555,
+      "sha256": "4a149d9d2ca3985f9ea8d8ae5e766c5ba2097780b1950997a2902b9c0b3cc702"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-fresh-provider-key.phase": {
+      "bytes": 131,
+      "sha256": "a838f39d7a67d1c4bb7b0aa2addeb02a50d98389cf09fa169914219e402ee361"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-fresh-provider-key.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-known-challenge-resubmit.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-known-challenge-resubmit.jsonl": {
+      "bytes": 40345,
+      "sha256": "d901d29cedbf9a7fd6d8b02af9d7c57afb10e057a816b278cb795e61b1320261"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-known-challenge-resubmit.phase": {
+      "bytes": 131,
+      "sha256": "793ee808a6f74634c7e74b530d91b0e53860fff1eca3e3f7575c3946053af0f4"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-known-challenge-resubmit.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-lost-cancellation-cause.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-lost-cancellation-cause.jsonl": {
+      "bytes": 41151,
+      "sha256": "2bd85a0cb2059ad2b0ea0c86407a54280fd1a5ee1398fb3dd63363af020f7c0a"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-lost-cancellation-cause.phase": {
+      "bytes": 131,
+      "sha256": "a4ec5465596532af256783361df1f03dc12228b5671fd626137e9e49ed7072a7"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-lost-cancellation-cause.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-observe-guard-omitted.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-observe-guard-omitted.jsonl": {
+      "bytes": 40171,
+      "sha256": "c211e5bee4b56e20c72f25119626120bc45489af42d33a2624a411d4b598d53b"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-observe-guard-omitted.phase": {
+      "bytes": 131,
+      "sha256": "ae9597f575e94d8470d2f5e344e60bd2e93cfcad1dd5c3cfebb8e572b667adeb"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-observe-guard-omitted.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-raw-digest-history-slots.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-raw-digest-history-slots.jsonl": {
+      "bytes": 40550,
+      "sha256": "72dabacc7312a2b06d7e7d140f2ccb502adb16ac647b390e6760ab587617e79d"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-raw-digest-history-slots.phase": {
+      "bytes": 131,
+      "sha256": "0c2140e23b254ed6afce80272dd37d66a8f922581e022debfd9a3718c13499c9"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-raw-digest-history-slots.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-retained-terms-check-omitted.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-retained-terms-check-omitted.jsonl": {
+      "bytes": 37979,
+      "sha256": "7bdcd8116088b18cd550b5d5c6c89f1d2800760581513c9f98bdd611260e75cd"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-retained-terms-check-omitted.phase": {
+      "bytes": 121,
+      "sha256": "1a6522fc39a7be70c5b186f613192cc2da98273522210b62f9ab699b7e64b586"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/customer-causal-normal-retained-terms-check-omitted.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/fresh-provider-key.overlay.json": {
+      "bytes": 255,
+      "sha256": "6a80f8c1491c7932a71f25695e094a43aee87de141788132dbbe2e92dfb91aac"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/known-challenge-resubmit.overlay.json": {
+      "bytes": 261,
+      "sha256": "7b54d66de6ac7a054d49d26ffad9acad21547d22e862b0a615ff6ebbf2fd176b"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/lost-cancellation-cause.overlay.json": {
+      "bytes": 260,
+      "sha256": "04f9acfb2b14c392935ab50804e0496c4fcdd334aa56a681d04d010974e9735e"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/observe-guard-omitted.overlay.json": {
+      "bytes": 253,
+      "sha256": "2f17609a2863b73f32e3bc4309f92bbc7acaafcd969bf0a893c0a825b096a957"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/qualification-receipt.json": {
+      "bytes": 9576,
+      "sha256": "cf1c683d486c009c11d05360996ccc194ac60e098ca46eb4aea24ef2654038c9"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/raw-digest-history-slots.overlay.json": {
+      "bytes": 256,
+      "sha256": "1f2f4088790949e198e2d43ea27f48a890b54aa52a659a6488316587eb99e1fe"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/retained-terms-check-omitted.overlay.json": {
+      "bytes": 260,
+      "sha256": "610c90e4b5e6ee07669b208c8b530edb3d7435235c512483ad58ec9823a1739f"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/run-causal-corrected.sh": {
+      "bytes": 3286,
+      "sha256": "e99dc568d026283ba40b3cd7566ed32f9f38c0cb1fa8e91bf77338eda6e23215"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/run-causal.sh": {
+      "bytes": 3290,
+      "sha256": "da428b4d6afd553a49dcab22121c0928ae16dd105ab0efa7f7d01fa0bf710ade"
+    },
+    "/mnt/data/sn-testnet/sol-customer-context-a85-independent-20261003/evidence/source-join.json": {
+      "bytes": 525,
+      "sha256": "b1120e7f8e0800c1388bcbe233e205ee7f20763772dcad27a3f3d784cf26ed4a"
+    }
+  },
+  "counts": {
+    "expected_failed_roots": 7,
+    "observed_failed_roots": 7,
+    "setup_failures": 0
+  },
+  "fixture_cleanup": 0,
+  "groups": [
+    {
+      "exit": 1,
+      "expected_causes": [
+        "retry changed logical transfer",
+        "simultaneous calls escaped one provider idempotency basis"
+      ],
+      "name": "fresh-provider-key",
+      "package": "./controller",
+      "roots": {
+        "TestCustomerChallengeConcurrentRetriesCannotMintDistinctChallenges": "fail",
+        "TestCustomerChallengeLostResponseReusesExactDurableKeyAndBody": "fail"
+      }
+    },
+    {
+      "exit": 1,
+      "expected_causes": [
+        "missing known challenge was accepted"
+      ],
+      "name": "known-challenge-resubmit",
+      "package": "./controller",
+      "roots": {
+        "TestCustomerChallengeKnownObservationFailureNeverFallsBackToPost": "fail"
+      }
+    },
+    {
+      "exit": 1,
+      "expected_causes": [
+        "canceled response was acknowledged without typed cause"
+      ],
+      "name": "lost-cancellation-cause",
+      "package": "./controller",
+      "roots": {
+        "TestCustomerChallengeCancellationAfterRealResponseRetainsOriginalRequest": "fail"
+      }
+    },
+    {
+      "exit": 1,
+      "expected_causes": [
+        "healthy repeated observation exhausted terminal custody capacity"
+      ],
+      "name": "raw-digest-history-slots",
+      "package": "./controller",
+      "roots": {
+        "TestCustomerChallengeRepeatedObservationPreservesTerminalCapacity": "fail"
+      }
+    },
+    {
+      "exit": 1,
+      "expected_causes": [
+        "known read wrote new evidence with a disabled custody guard"
+      ],
+      "name": "observe-guard-omitted",
+      "package": "./controller",
+      "roots": {
+        "TestCustomerChallengeKnownReadCannotMutateWithoutCustodyGuards": "fail"
+      }
+    },
+    {
+      "exit": 1,
+      "expected_causes": [
+        "same request accepted different intent"
+      ],
+      "name": "retained-terms-check-omitted",
+      "package": "./model",
+      "roots": {
+        "TestCustomerTransferRetainedTermsCannotChange": "fail"
+      }
+    }
+  ],
+  "initial_runner_setup_failure": "wrong root path, no tests or fixture started; preserved separately",
+  "kind": "operative omission/reintroduction controls, not whole historical source",
+  "production_identical": "530726fcd8067d2551ec45356096eab9e09f930c",
+  "schema": "sol-independent-customer-server-causal-normal-v1",
+  "source": "a85c3e3f88be183e895f735b459d3757ff75341e"
+}

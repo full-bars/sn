@@ -1,0 +1,17 @@
+{
+  "schema": "root-mainnet-local-gvisor-source-v1",
+  "scope": "Exact local fork materialization and tracked source verification only; no compilation, behavior or production release qualification",
+  "repo": "git@github.com:urnetwork/gvisor.git",
+  "branch": "go",
+  "commit": "21c2a5da852b7c92bc27573bd09ee8449d0fe605",
+  "tree": "e8600f8aaa2c86a52a59302d632a96a98060aeeb",
+  "physical_path": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/gvisor",
+  "logical_path": "/home/by/urnetwork/gvisor",
+  "selected_by_sn_commit": "7debae6dbb5a8312f5139890634c605aed1e0169",
+  "module": "gvisor.dev/gvisor",
+  "verified_entries": 2440,
+  "source_fence": {
+    "path": "/mnt/data/sn-testnet/mainnet-gvisor-fork-20261003/source-fence.json",
+    "sha256": "5606c5033f34a60aca7186add48739614472d06b93ab8cb67d1a7753f3a4181f"
+  }
+}

@@ -26,17 +26,20 @@ import (
 )
 
 const ReleaseValidatorSchemaVersion = 1
+const ReleaseMainnetProductionSchemaVersion = 3
+const maximumReleaseConfigBytes = 2 * 1024 * 1024
 
 type OperatorConfig struct {
-	NoID              uint64 `yaml:"no_id" json:"no_id"`
-	APIURL            string `yaml:"api_url" json:"api_url"`
-	ConnectURL        string `yaml:"connect_url" json:"connect_url"`
-	ArtifactSigner    string `yaml:"artifact_signer" json:"artifact_signer"`
-	StateDir          string `yaml:"state_dir" json:"state_dir"`
-	NetworkJWTFile    string `yaml:"network_jwt_file" json:"network_jwt_file"`
-	ClientJWTFile     string `yaml:"client_jwt_file" json:"client_jwt_file"`
-	ClientKeySeedFile string `yaml:"client_key_seed_file" json:"client_key_seed_file"`
-	Concurrency       int    `yaml:"concurrency" json:"concurrency"`
+	NoID                    uint64 `yaml:"no_id" json:"no_id"`
+	APIURL                  string `yaml:"api_url" json:"api_url"`
+	ConnectURL              string `yaml:"connect_url" json:"connect_url"`
+	ArtifactSigner          string `yaml:"artifact_signer" json:"artifact_signer"`
+	StateDir                string `yaml:"state_dir" json:"state_dir"`
+	NetworkJWTFile          string `yaml:"network_jwt_file" json:"network_jwt_file"`
+	ClientJWTFile           string `yaml:"client_jwt_file" json:"client_jwt_file"`
+	AllowClientRegistration bool   `yaml:"allow_client_registration,omitempty" json:"allow_client_registration,omitempty"`
+	ClientKeySeedFile       string `yaml:"client_key_seed_file" json:"client_key_seed_file"`
+	Concurrency             int    `yaml:"concurrency" json:"concurrency"`
 }
 
 type ReleaseConfig struct {
@@ -65,15 +68,57 @@ type ReleaseConfig struct {
 	TrailDepth          int                     `yaml:"trail_depth" json:"trail_depth"`
 	PollSeconds         int                     `yaml:"poll_seconds" json:"poll_seconds"`
 	VersionKey          uint64                  `yaml:"version_key" json:"version_key"`
+	PreviousPolicy      *protocol.Policy        `yaml:"previous_policy,omitempty" json:"previous_policy,omitempty"`
 	Policy              protocol.Policy         `yaml:"policy" json:"policy"`
 	Operators           []OperatorConfig        `yaml:"operators" json:"operators"`
 	EvidenceV2          ReleaseEvidenceV2Config `yaml:"evidence_v2" json:"evidence_v2"`
 
-	ProvisionalDeferClosedNativeInput bool `yaml:"provisional_defer_closed_native_input,omitempty" json:"provisional_defer_closed_native_input,omitempty"`
+	SourceRolePredecessorV2    *ReleaseEvidenceV2File             `yaml:"source_role_predecessor_v2,omitempty" json:"source_role_predecessor_v2,omitempty"`
+	OwnerRecycleApproval       *ReleaseOwnerRecycleApprovalConfig `yaml:"owner_recycle_approval,omitempty" json:"owner_recycle_approval,omitempty"`
+	MainnetRuntimeApprovals    []ReleaseEvidenceV2File            `yaml:"mainnet_runtime_approvals,omitempty" json:"mainnet_runtime_approvals,omitempty"`
+	ProductionRuntimeApprovals []ReleaseEvidenceV2File            `yaml:"production_runtime_approvals,omitempty" json:"production_runtime_approvals,omitempty"`
+	ProductionAuthorityHistory []ReleaseEvidenceV2File            `yaml:"production_authority_history,omitempty" json:"production_authority_history,omitempty"`
+	ProductionCapacityRevision *ProductionCapacityRevision        `yaml:"production_capacity_revision,omitempty" json:"production_capacity_revision,omitempty"`
+
+	ProvisionalDeferClosedNativeInput bool   `yaml:"provisional_defer_closed_native_input,omitempty" json:"provisional_defer_closed_native_input,omitempty"`
+	ProvisionalRuntimeCompatibility   string `yaml:"provisional_runtime_compatibility,omitempty" json:"provisional_runtime_compatibility,omitempty"`
 	historyAdoptionV2                 *ReleaseHistoryAdoptionV2
+	mainnetRuntimeHistory             *releaseMainnetRuntimeHistory
+	ownerRecycleProduction            *ownerRecycleProductionAuthority
+	productionRuntimeHistory          *releaseProductionRuntimeHistory
+	productionAuthorityHistory        *releaseProductionAuthorityHistory
 }
 
 func LoadReleaseConfig(path string) (*ReleaseConfig, error) {
+	return loadReleaseConfig(path, releaseConfigLoadMode{})
+}
+
+// LoadProvisionalActivationObservationConfig admits a retained testnet config
+// only for a hash-pinned, read-only activation observation. It accepts an
+// exact reviewed predecessor runtime, but never grants producer or archive
+// authority.
+func LoadProvisionalActivationObservationConfig(path string) (*ReleaseConfig, error) {
+	return loadReleaseConfig(path, releaseConfigLoadMode{provisionalActivationObservation: true})
+}
+
+// LoadReleaseConfigPreActivation admits a complete production configuration
+// whose evidence_v2 operator entries are not rendered yet (each names only its
+// no_id, optionally with the paths it wants). Every other rule is the strict
+// one. It serves the bootstrap commands (init, register, stake, activate,
+// status); RunRelease never uses it.
+func LoadReleaseConfigPreActivation(path string) (*ReleaseConfig, error) {
+	return loadReleaseConfig(path, releaseConfigLoadMode{preActivation: true})
+}
+
+// releaseConfigLoadMode selects which non-default admissions a loader grants.
+type releaseConfigLoadMode struct {
+	provisionalActivationObservation bool
+	preActivation                    bool
+	ownerRecycleAdmission            bool
+	mainnetRuntimeObservation        bool
+}
+
+func loadReleaseConfig(path string, mode releaseConfigLoadMode) (*ReleaseConfig, error) {
 	if strings.TrimSpace(path) == "" {
 		return nil, errors.New("validator config path is empty")
 	}
@@ -81,16 +126,34 @@ func LoadReleaseConfig(path string) (*ReleaseConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	b, err := os.ReadFile(abs)
+	file, err := os.Open(abs)
 	if err != nil {
 		return nil, err
 	}
-	return decodeReleaseConfigBytes(abs, b)
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil || !info.Mode().IsRegular() || info.Size() > maximumReleaseConfigBytes {
+		return nil, errors.Join(errors.New("validator config is not a bounded regular file"), err)
+	}
+	b, err := io.ReadAll(io.LimitReader(file, maximumReleaseConfigBytes+1))
+	if err != nil {
+		return nil, err
+	}
+	return decodeReleaseConfigBytesMode(abs, b, mode)
 }
 
 // The adoption caller must parse the same immutable bytes that its request
 // pins, rather than pair a prior parse with a later pathname read.
 func decodeReleaseConfigBytes(abs string, b []byte) (*ReleaseConfig, error) {
+	return decodeReleaseConfigBytesMode(abs, b, releaseConfigLoadMode{})
+}
+
+// Parse the exact borrowed document once, preserving the regular loader's
+// strict grammar and normalization without loading any approval or key.
+func decodeReleaseConfigDocument(abs string, b []byte) (*ReleaseConfig, error) {
+	if len(b) == 0 || len(b) > maximumReleaseConfigBytes {
+		return nil, errors.New("validator config is empty or exceeds its byte bound")
+	}
 	var cfg ReleaseConfig
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
@@ -107,10 +170,66 @@ func decodeReleaseConfigBytes(abs string, b []byte) (*ReleaseConfig, error) {
 	if err := ValidateReleaseEvidenceV2ConfigYAML(b); err != nil {
 		return nil, fmt.Errorf("decode validator config %s: %w", abs, err)
 	}
+	if err := validateProductionCapacityDocument(b); err != nil {
+		return nil, fmt.Errorf("decode validator capacity revision %s: %w", abs, err)
+	}
 	if err := cfg.normalize(filepath.Dir(abs)); err != nil {
 		return nil, err
 	}
-	if err := cfg.Validate(); err != nil {
+	return &cfg, nil
+}
+
+// Purpose-specific authority is installed only after the common byte decoder.
+func decodeReleaseConfigBytesMode(abs string, b []byte, mode releaseConfigLoadMode) (*ReleaseConfig, error) {
+	decoded, err := decodeReleaseConfigDocument(abs, b)
+	if err != nil {
+		return nil, err
+	}
+	cfg := *decoded
+	provisionalActivationObservation := mode.provisionalActivationObservation
+	if cfg.SchemaVersion == ReleaseMainnetProductionSchemaVersion {
+		if mode.mainnetRuntimeObservation || mode.ownerRecycleAdmission || mode.preActivation || mode.provisionalActivationObservation {
+			return nil, errors.New("mainnet production authority is restricted to the producer loader")
+		}
+		cfg.Coordinator = strings.ToLower(cfg.Coordinator)
+		cfg.SettlementVault = strings.ToLower(cfg.SettlementVault)
+		if err := loadOwnerRecycleProductionConfig(&cfg); err != nil {
+			return nil, fmt.Errorf("validator production config %s: %w", abs, err)
+		}
+		if err := loadReleaseProductionRuntimeHistory(&cfg); err != nil {
+			return nil, fmt.Errorf("validator production runtime history %s: %w", abs, err)
+		}
+		if err := loadReleaseProductionAuthorityHistory(&cfg); err != nil {
+			return nil, fmt.Errorf("validator production authority history %s: %w", abs, err)
+		}
+		if err := cfg.Validate(); err != nil {
+			return nil, fmt.Errorf("validator production config %s: %w", abs, err)
+		}
+	} else if mode.mainnetRuntimeObservation {
+		if err := loadReleaseMainnetRuntimeHistory(&cfg); err != nil {
+			return nil, fmt.Errorf("validator runtime observation config %s: %w", abs, err)
+		}
+		if err := cfg.validateWithMode(false, false, false, true); err != nil {
+			return nil, fmt.Errorf("validator runtime observation config %s: %w", abs, err)
+		}
+	} else if mode.ownerRecycleAdmission {
+		if err := validateOwnerRecycleApprovalScope(&cfg); err != nil {
+			return nil, fmt.Errorf("validator admission config %s: %w", abs, err)
+		}
+		if cfg.OwnerRecycleApproval.Approval != (ReleaseEvidenceV2File{}) {
+			if err := cfg.OwnerRecycleApproval.Approval.Validate(maximumOwnerRecycleApprovalBytes); err != nil {
+				return nil, fmt.Errorf("validator admission config %s: %w", abs, err)
+			}
+		}
+	} else if provisionalActivationObservation {
+		if err := cfg.validateProvisionalActivationObservation(); err != nil {
+			return nil, fmt.Errorf("validator config %s: %w", abs, err)
+		}
+	} else if mode.preActivation {
+		if err := cfg.validateWithMode(false, false, true, false); err != nil {
+			return nil, fmt.Errorf("validator config %s: %w", abs, err)
+		}
+	} else if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("validator config %s: %w", abs, err)
 	}
 	// Config accepts checksum-case addresses, while signed measurement identities
@@ -118,6 +237,11 @@ func decodeReleaseConfigBytes(abs string, b []byte) (*ReleaseConfig, error) {
 	// without rewriting the configured file or retained signed inputs.
 	cfg.Coordinator = strings.ToLower(cfg.Coordinator)
 	cfg.SettlementVault = strings.ToLower(cfg.SettlementVault)
+	if mode.mainnetRuntimeObservation {
+		if err := sealReleaseMainnetRuntimeHistory(&cfg); err != nil {
+			return nil, err
+		}
+	}
 	return &cfg, nil
 }
 
@@ -235,17 +359,65 @@ func (self ReleaseConfig) ValidateHistorical() error {
 	return self.validate(true)
 }
 
+// A retained provisional activation config is validated as an exact reviewed
+// predecessor. Its compatibility profile is permitted only for this read-only
+// observer, whose caller has already verified the immutable handoff.
+func (c ReleaseConfig) validateProvisionalActivationObservation() error {
+	return c.validateWithMode(true, true, false, false)
+}
+
 // Public archive replay authenticates an original configuration without
 // authorizing it as a current producer or changing its serialized identity.
 func (c ReleaseConfig) validate(historical bool) error {
-	if c.SchemaVersion != ReleaseValidatorSchemaVersion || c.Release != "1.0" {
-		return errors.New("schema_version must be 1 and release must be 1.0")
+	return c.validateWithMode(historical, false, false, false)
+}
+
+// preActivation admits unrendered evidence_v2 operator entries only; it grants
+// no runtime, history or producer authority.
+func (c ReleaseConfig) validateWithMode(historical, provisionalActivationObservation, preActivation, mainnetRuntimeObservation bool) error {
+	production := c.SchemaVersion == ReleaseMainnetProductionSchemaVersion
+	if c.ProductionCapacityRevision != nil && (!production || len(c.ProductionAuthorityHistory) == 0) {
+		return errors.New("capacity revision requires original independently approved production authority")
+	}
+	if production {
+		if provisionalActivationObservation || preActivation || mainnetRuntimeObservation {
+			return errors.New("mainnet production authority cannot authorize another config load purpose")
+		}
+		if err := validateOwnerRecycleProductionConfig(&c); err != nil {
+			return err
+		}
+		if err := validateReleaseProductionAuthorityHistory(&c); err != nil {
+			return err
+		}
+	} else if isOwnerRecycleProductionConfig(&c) {
+		return errors.New("production runtime authority requires an authenticated schema 3 config")
+	}
+	if mainnetRuntimeObservation {
+		if err := validateReleaseMainnetRuntimeHistoryScope(&c); err != nil {
+			return err
+		}
+	} else if err := rejectMainnetRuntimeObservationWrites(&c); err != nil {
+		return err
+	}
+	if (c.SchemaVersion != ReleaseValidatorSchemaVersion && !mainnetRuntimeObservation && !production) || c.Release != "1.0" {
+		return errors.New("schema_version must be 1 or authenticated production schema 3 and release must be 1.0")
 	}
 	if !c.Production {
 		return errors.New("release config must explicitly set production: true")
 	}
+	if c.OwnerRecycleApproval != nil {
+		if err := validateOwnerRecycleApprovalSelection(&c); err != nil {
+			return err
+		}
+	}
 	if c.ProvisionalDeferClosedNativeInput && !provisionalClosedNativeInputEnabled(&c) {
 		return errors.New("provisional closed native input deferral requires chain 945 and testnet policy")
+	}
+	if err := validateReleaseProvisionalRuntimeCompatibility(&c); err != nil {
+		return err
+	}
+	if historical && c.ProvisionalRuntimeCompatibility != "" && !provisionalActivationObservation {
+		return errors.New("provisional runtime compatibility cannot authorize a final historical archive")
 	}
 	if strings.TrimSpace(c.DeploymentID) == "" || strings.ContainsAny(c.DeploymentID, "/\\.") {
 		return errors.New("deployment_id must be one nonempty safe segment")
@@ -275,7 +447,9 @@ func (c ReleaseConfig) validate(historical bool) error {
 		validateRuntime = validateReleaseHistoricalNativeRuntimeConfig
 	}
 	if err := validateRuntime(&c); err != nil {
-		return err
+		if historical || c.ProvisionalRuntimeCompatibility == "" || validateReleaseProvisionalRuntimeCompatibility(&c) != nil {
+			return err
+		}
 	}
 	configuredPolicyHash, err := parseHash32("policy_hash", c.PolicyHash)
 	if err != nil {
@@ -290,6 +464,11 @@ func (c ReleaseConfig) validate(historical bool) error {
 	}
 	if policyHash != configuredPolicyHash {
 		return fmt.Errorf("policy hash mismatch: config has 0x%x, embedded policy hashes to 0x%x", configuredPolicyHash, policyHash)
+	}
+	if c.PreviousPolicy != nil {
+		if err := protocol.ValidateTestnetRateAmendment(c.PreviousPolicy, &c.Policy); err != nil {
+			return fmt.Errorf("previous policy: %w", err)
+		}
 	}
 	if len(c.RPC) == 0 || len(c.Substrate) == 0 {
 		return errors.New("at least one EVM and Substrate endpoint is required")
@@ -330,6 +509,9 @@ func (c ReleaseConfig) validate(historical bool) error {
 			return fmt.Errorf("operators[%d] has zero or duplicate no_id", i)
 		}
 		seenNO[op.NoID] = true
+		if op.AllowClientRegistration && c.SchemaVersion != ReleaseMainnetProductionSchemaVersion {
+			return fmt.Errorf("operators[%d].allow_client_registration requires independently approved production schema3", i)
+		}
 		if err := validateEndpoint(fmt.Sprintf("operators[%d].api_url", i), op.APIURL, "http", "https"); err != nil {
 			return err
 		}
@@ -380,6 +562,14 @@ func (c ReleaseConfig) validate(historical bool) error {
 		if !seenNO[id] {
 			return fmt.Errorf("controlled no_id %d is not in the operator directory", id)
 		}
+	}
+	if c.SourceRolePredecessorV2 != nil {
+		if err := c.SourceRolePredecessorV2.Validate(ReleaseSourceRolePredecessorV2MaximumBytes); err != nil {
+			return fmt.Errorf("source role predecessor: %w", err)
+		}
+	}
+	if preActivation {
+		return c.EvidenceV2.ValidatePreActivation(c.Operators, c.StateDir, c.HotkeySeedFile)
 	}
 	return c.EvidenceV2.Validate(c.Operators, c.StateDir, c.HotkeySeedFile)
 }

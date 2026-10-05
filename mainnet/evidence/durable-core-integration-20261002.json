@@ -1,0 +1,63 @@
+{
+  "additive_inventory_included": false,
+  "commit": "6d0eca1e77cc7f84ebd9615ec43cc876201a1f92",
+  "compiler": {
+    "path": "/usr/local/go/bin/go",
+    "sha256": "29e6e0b8be61beb1489ceae62b304343566de8a1dc700af74bde7aeb9c80ad45"
+  },
+  "downstream_adoption_qualification": false,
+  "full_connect_qualification": false,
+  "independent_core": {
+    "path": "/mnt/data/sn-testnet/sol-connect-durable-core-independent-20261002/receipt.json",
+    "sha256": "dcbe525ec9fd39d556a8b7d441bb58981d1b56a2866e2edab082d2c5cfdb61fc"
+  },
+  "only_added_paths": [
+    "durablevolume/config.go",
+    "durablevolume/host_linux.go",
+    "durablevolume/host_other.go",
+    "durablevolume/owner.go",
+    "durablevolume/owner_test.go"
+  ],
+  "peer_and_module_files_identical": true,
+  "phases": {
+    "normal": {
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "fail": 0,
+      "pass_roots": 22,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-integrated-normal.jsonl",
+      "sha256": "448c5cd7cf12329b1e568badeaa5152c4d4caadcf56ecab71d8cdc71d29e74c6",
+      "skip": 0
+    },
+    "race": {
+      "exit_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "fail": 0,
+      "pass_roots": 22,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-integrated-race.jsonl",
+      "sha256": "28f35d02624a5e7b623f20f6f600f2eeeecc282752097ec49a1182d9bc64cb7d",
+      "skip": 0
+    }
+  },
+  "production_deployment_qualification": false,
+  "qualified_core": "5930a97086733acd9ba5b09ab891dcd1b03be651",
+  "schema": "urnetwork-durable-core-integration-v1",
+  "sealed_utc": "2026-10-02T05:54:36.936037415Z",
+  "sealer_sha256": "cea9858c51b9ead88325571fae6f02de80385e3e35a623f72c2fdb248e0baa5a",
+  "source": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/connect-integration",
+  "source_files": {
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-integrated-nonstdlib.txt": "af0c676297b61ced45ccde63e49db04d3424838dbb9e948c39a45dca0b66c888",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-integrated-tool.txt": "1f142ac40586b04b560e1ffd409db2f992e287cb45d50772168248a9e674bd37",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-integrated-vet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-integrated-vet.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/evidence/guard-integrated-vet.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "durablevolume/config.go": "fcda82afeadc40172d553022e7cd8c89c450f52d5686f446822a8bc8c064410c",
+    "durablevolume/host_linux.go": "39c6c51e266486421e24a8c0ff3967ed313639eca5dc09936a4773910bb9d45f",
+    "durablevolume/host_other.go": "0cfc69f5270174b165f6979795d98dbc530126fa6d5b7b77e1e851110a05fc13",
+    "durablevolume/owner.go": "5b5d30756f444941e7febec67dace75fe2d708d363d910860b4f397f766229af",
+    "durablevolume/owner_test.go": "cc839e25807a4d5bd1879311d6cf47b706010da1f6ff968c9bff420a91b7ce60",
+    "go.mod": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7",
+    "go.sum": "ecad86b78034702a5b77f72188bceb624bb5d56c42cf2c611bbead85e1b3b693"
+  },
+  "status": "PASS_SCOPED_PEER_ONLY",
+  "tree": "be4115102ff64241afcbaeeb7e6312788aaa0d42",
+  "upstream_parent": "37153b2bbf10321558b0f20aa9c550a66f401477"
+}

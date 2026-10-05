@@ -1,0 +1,156 @@
+{
+  "control_manifest_sha256": "e2d38356f3445ac5fc179e85fd855ef22545f213145005864ce5bee087a9c5fa",
+  "controls": [
+    {
+      "assertion_excerpts": [
+        "circle_read_test.go:119: entity key did not survive transient read Bad status: 503 Service Unavailable temporary 1 1 0",
+        "circle_read_test.go:170: valid signed notification did not recover Bad status: 503 Service Unavailable temporary 1 1 0",
+        "circle_read_test.go:201: wallet read did not recover Bad status: 500 Internal Server Error temporary 1 1 0",
+        "circle_read_test.go:267: incomplete or speculative wallet census: [] err=Bad status: 503 Service Unavailable temporary calls=4 closed=4 tokens=1 waits=0",
+        "circle_read_test.go:599: transient 500 did not recover 65 Bad status: 500 Internal Server Error temporary 1"
+      ],
+      "intended_failed_roots": [
+        "TestCircleReadEntityKeyRetriesAndRejectsMalformedKey",
+        "TestCircleReadNotificationBindsKeyAndSignature",
+        "TestCircleReadWalletIdentityAndRequiredFields",
+        "TestCircleReadWalletAndBalancePaginationUsesResponseLinks",
+        "TestPaymentReadRetryAfterBoundsAndTransientInternalError"
+      ],
+      "kind": "explicit-operative-retry-omission-not-historical-body",
+      "name": "retry-omission",
+      "positive_pass_roots": [
+        "TestCircleReadMalformedBalancesNeverBecomeZero",
+        "TestPaymentReadCircleJoinedHardCauseDominatesRetry"
+      ],
+      "race_reports": 0
+    },
+    {
+      "assertion_excerpts": [
+        "circle_read_test.go:267: incomplete or speculative wallet census: [0xc0006a79d0] err=<nil> calls=2 closed=2 tokens=1 waits=0"
+      ],
+      "intended_failed_roots": [
+        "TestCircleReadWalletAndBalancePaginationUsesResponseLinks"
+      ],
+      "kind": "explicit-operative-next-link-omission",
+      "name": "link-omission",
+      "positive_pass_roots": [
+        "TestCircleReadWalletIdentityAppliesToEveryListMember"
+      ],
+      "race_reports": 0
+    },
+    {
+      "assertion_excerpts": [
+        "circle_read_test.go:416: nested balance read restarted the budget or lost body ownership 1m0s"
+      ],
+      "intended_failed_roots": [
+        "TestCircleReadCompositeOperationSharesOneBudget"
+      ],
+      "kind": "explicit-borrowed-owner-scope-omission",
+      "name": "nested-budget",
+      "positive_pass_roots": [
+        "TestCircleReadEarlierCallerDeadlineBoundsComposite"
+      ],
+      "race_reports": 0
+    },
+    {
+      "assertion_excerpts": [
+        "circle_read_test.go:602: valid retry-after ignored 65 1.909477164s"
+      ],
+      "intended_failed_roots": [
+        "TestPaymentReadRetryAfterBoundsAndTransientInternalError"
+      ],
+      "kind": "explicit-retry-after-pause-omission",
+      "name": "retry-after-omission",
+      "positive_pass_roots": [
+        "TestPaymentReadCirclePermanentResponsesDoNotRetry"
+      ],
+      "race_reports": 0
+    },
+    {
+      "assertion_excerpts": [
+        "circle_read_test.go:629: redirect received the authenticated request"
+      ],
+      "intended_failed_roots": [
+        "TestPaymentReadRedirectCannotForwardCredentials"
+      ],
+      "kind": "explicit-authenticated-redirect-policy-omission",
+      "name": "redirect-omission",
+      "positive_pass_roots": [],
+      "race_reports": 0
+    }
+  ],
+  "files": {
+    "evidence/controls/link-omission/link-omission.go": "f580e38d3d3ffb083abf4e72353d3ec523ae76bfb5260eccf2b7f31ddbd8aab3",
+    "evidence/controls/link-omission/overlay.json": "e13816ddc3e28ff64f3bc8e3d7ab782c52d176dd72a5e0fb57a67b2186ec18b4",
+    "evidence/controls/manifest.json": "e2d38356f3445ac5fc179e85fd855ef22545f213145005864ce5bee087a9c5fa",
+    "evidence/controls/nested-budget/nested-budget.go": "3f19a4bdf03b57ef16c534a1585e17a966a324cb77698f2491fc8c16e713eb50",
+    "evidence/controls/nested-budget/overlay.json": "009916e9a9e0116c66753e663cc07d4a5041541ca04ebaa5242c4fcb1134b34e",
+    "evidence/controls/redirect-omission/overlay.json": "043fee9c86c9ad97bff442ad861df77b60d4cc552c85a6e58c7ff7cdb99cfdca",
+    "evidence/controls/redirect-omission/redirect-omission.go": "291c62e1bf7a29812f889b3a8e77830a8cc45714a978d47e6a442e03cb38c434",
+    "evidence/controls/retry-after-omission/overlay.json": "712d237f0b112f1d3d386e6af4765925b7043dcc8c908ca13c43ed4108c62f8f",
+    "evidence/controls/retry-after-omission/retry-after-omission.go": "c6a4bf811f0d000620507793a38232f331adea954d0c315e8ecfbeab27b16bb5",
+    "evidence/controls/retry-omission/overlay.json": "90df3274ac99f61ec43f57d1b5505892b366a080db6c201677eb08e1b584b37c",
+    "evidence/controls/retry-omission/retry-omission.go": "90ffd429df7e52eead14a374352a6e32500496e45efcc20e33f97eabd04b664c",
+    "evidence/run-wallet-controls.sh": "9d75333992c1f7a848e423b375f4c3e1e351c49a993bdc7cc104f8d42ac66fa3",
+    "evidence/wallet-controls-race-geolite.log": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414",
+    "evidence/wallet-controls-race-jobs.tsv": "2f3e5c8aafd60d73bc3b0a5fc5152f4071d607429498141f42aab9bf1370b1fa",
+    "evidence/wallet-controls-race-link-omission-positive.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/wallet-controls-race-link-omission-positive.jsonl": "4c5a82fb7ee403032c213c51fb6903bd74a46a9346d46bea505d70038cd878f6",
+    "evidence/wallet-controls-race-link-omission-positive.phase": "f52be71f66778bcae8f82f12f2e844d7983d6a88d7c5019b901523508725ce9b",
+    "evidence/wallet-controls-race-link-omission-positive.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-link-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/wallet-controls-race-link-omission.jsonl": "03d1907c4d77e2c0d338025fa37e5f43dfb07fb48e75ebd1774d57f1edf25033",
+    "evidence/wallet-controls-race-link-omission.phase": "0a653886e88b2d6fb247df7040255d431c1887750a43c18a1e3933f5bd9bea15",
+    "evidence/wallet-controls-race-link-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-nested-budget-positive.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/wallet-controls-race-nested-budget-positive.jsonl": "1cc2f5ebdacdd34a542b4c9292b895676f171d7f39c7609ed5324da4153ee82a",
+    "evidence/wallet-controls-race-nested-budget-positive.phase": "339cbf3a39bbb8011055914663f840266d3b18ad2531052377b66e96db0b6b50",
+    "evidence/wallet-controls-race-nested-budget-positive.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-nested-budget.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/wallet-controls-race-nested-budget.jsonl": "8829a69f489795825d79ed8c1596f7fe0df686dfc71f93f8fb44ddca53742843",
+    "evidence/wallet-controls-race-nested-budget.phase": "145734df68e1e1030dc13e02ad8ec889b6d8a2a1269fee6a33a852779f52c6af",
+    "evidence/wallet-controls-race-nested-budget.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-network-cleanup.log": "38711849b21ebb6d9f05950365f4d21abcb6afc1a7389566aaf9297ca9d0e9b1",
+    "evidence/wallet-controls-race-network.id": "38711849b21ebb6d9f05950365f4d21abcb6afc1a7389566aaf9297ca9d0e9b1",
+    "evidence/wallet-controls-race-network.owner": "700c3cce2a3cb673ed662e50dfaf1f7dd675d965e137da2cb2c75ef08f9e190e",
+    "evidence/wallet-controls-race-redirect-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/wallet-controls-race-redirect-omission.jsonl": "4bd65976aacc76df670e624f33a905243acf49a8ceffc36da76e5c5cecfb3f05",
+    "evidence/wallet-controls-race-redirect-omission.phase": "cbb594ba0937881dafe08763f45e1bf1e0318e5250541d2e9c28f1d15004dc79",
+    "evidence/wallet-controls-race-redirect-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-retry-after-omission-positive.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/wallet-controls-race-retry-after-omission-positive.jsonl": "04abe09471bbffb33c340726b503087543fe68d38fb24700c6eb0a3e7bf9138d",
+    "evidence/wallet-controls-race-retry-after-omission-positive.phase": "0b8c373397ea550acb8d7c6c339a4308d2ebb3430297d576ef9149895d4176d1",
+    "evidence/wallet-controls-race-retry-after-omission-positive.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-retry-after-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/wallet-controls-race-retry-after-omission.jsonl": "759cf4bef120bf3bc001179b775deac07d1fe28aabf1aa27c116a2400ebec6e1",
+    "evidence/wallet-controls-race-retry-after-omission.phase": "c324c4d712e31c6000ae2829761504fbf010f33dc7c602d5cef71bb7afc1fa8f",
+    "evidence/wallet-controls-race-retry-after-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-retry-omission-positive.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/wallet-controls-race-retry-omission-positive.jsonl": "846996c8c697c077e3e806f0c5fc546ec5b9ee7c4c0ba056af2da4a33e3f16b3",
+    "evidence/wallet-controls-race-retry-omission-positive.phase": "4e6bafe1f3b8daa9b35db1b9a7e8436e523c18b0680ad4048e93d1d08856f756",
+    "evidence/wallet-controls-race-retry-omission-positive.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-retry-omission.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "evidence/wallet-controls-race-retry-omission.jsonl": "68f3326fb7a9e997e7582a885c7d7cfb3a62100f5ec96ea4057b96f7d93dd14e",
+    "evidence/wallet-controls-race-retry-omission.phase": "bc7596c54fb253c8387dde953d00c98c66154065915eaf3280cabc8d40f52ba4",
+    "evidence/wallet-controls-race-retry-omission.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-runner.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/wallet-controls-race-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/wallet-controls-race-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence/wallet-controls-race-services-start.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence/wallet-controls-race-test-env.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limits": [
+    "Explicit operative omissions, not historical source-body controls.",
+    "No live Circle API call or payout."
+  ],
+  "normal_receipt_sha256": "010fa79752ba4434df92bb1f844f374aca6abaa420c0f871ba1435315023e7c6",
+  "owned_fixture_cleanup_exit": 0,
+  "positive_pass_roots": 5,
+  "race_receipt_sha256": "9c9672a8fde2cf6ff772c745c82c63d873ac2f5117a9b7839033eda02fbc6ee1",
+  "schema": "sol-wallet-get-25f-causal-race-v1",
+  "source_commit": "25f617dc30ec49b5162d51082498beaef583bf00",
+  "source_tree": "74e91f4aab9c6eff3ed28f30c5888315e713e7cd",
+  "status": "PASS_SCOPED_CAUSAL_NEGATIVES",
+  "total_intended_failed_roots": 9
+}

@@ -1,0 +1,189 @@
+{
+  "abandoned_initial_plan": {
+    "path": "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-14-20261003/plan.json",
+    "reason": "Only two archives/26,976,256bytes; left unapplied in favor of larger inactive candidates."
+  },
+  "available_bytes_after_verification": 124623384576,
+  "caches": [
+    {
+      "archives": 64,
+      "cache": "/mnt/data/sn-testnet/mainnet-release-composition-20260930/go-cache",
+      "reclaimed_bytes": 1831743488
+    },
+    {
+      "archives": 29,
+      "cache": "/mnt/data/sn-testnet/owner-ledger-sdk-sol-20260930/gocache",
+      "reclaimed_bytes": 1210195968
+    },
+    {
+      "archives": 31,
+      "cache": "/mnt/data/sn-testnet/mainnet-runtime470-astra-20261001/go-cache",
+      "reclaimed_bytes": 1081974784
+    }
+  ],
+  "deleted_files": 124,
+  "files": {
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/candidate-paths.txt": {
+      "bytes": 8768,
+      "sha256": "4d8b8ad0e64a3b38580734143a9e2ae83f0927aa563afa89dcb85d2876eced45"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/candidate-union-paths.txt": {
+      "bytes": 16663,
+      "sha256": "cc0d1d1f3d48a83c578500b0bddce3dc60c7198ad339f3285899df2a5eda8242"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/plan.json": {
+      "bytes": 22081,
+      "sha256": "fd0a398702befa8be7876bb022d65c997029c76457712b22689090aa2091ce36"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "cbc427f63836e3a5260c7a85fc2642d5abaa45eb14318dabab085a707049dc0e"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "9d39a5dbcaa48855799ffe46c3ccf85e7fdd581b02a68896466ea40d0318f9e7"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/receipt.json": {
+      "bytes": 22324,
+      "sha256": "7b7aa93814cee18bb97802269768b83a3ed29e866da0454589222248a3ab4a74"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/reclaim": {
+      "bytes": 3849100,
+      "sha256": "cd3f4cbe209e7ff4ca88c6cd865e097e7fe73eed2193fb67493a9a0d0f4d9216"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/reclaim.go": {
+      "bytes": 7087,
+      "sha256": "3243987bc82a955f59d42fcb7874e2fc78e1f0e0dba2cb42decc0fa7d7ad53f7"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/reference-command.json": {
+      "bytes": 1022,
+      "sha256": "29a19be75f37c01deb6e5b12f33702900052e5f53f054a65c92a4a3cc7b7ff9d"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/reference-scan.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-15-20261003/reference-scope.json": {
+      "bytes": 815,
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/candidate-paths.txt": {
+      "bytes": 3741,
+      "sha256": "55c8182a359dab07a1a546b348bad249a60bc0354270647f29e1903ea6a7d61c"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/candidate-union-paths.txt": {
+      "bytes": 16663,
+      "sha256": "cc0d1d1f3d48a83c578500b0bddce3dc60c7198ad339f3285899df2a5eda8242"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/plan.json": {
+      "bytes": 9836,
+      "sha256": "850b89cb088a92786d8a3f659ee99f4caaa03d158b6d213ce54cec0bfeb4da1b"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "cbc427f63836e3a5260c7a85fc2642d5abaa45eb14318dabab085a707049dc0e"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "9d39a5dbcaa48855799ffe46c3ccf85e7fdd581b02a68896466ea40d0318f9e7"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/receipt.json": {
+      "bytes": 10087,
+      "sha256": "6ab15c9872aa9663b21cd0d9203d95e9abe9c6f21115f2a2f09d949ac4dd0a52"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/reclaim": {
+      "bytes": 3849100,
+      "sha256": "6b6e66dfba7057463680eb723b591f726e5350c55f71ec874bad3456f217116c"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/reclaim.go": {
+      "bytes": 7079,
+      "sha256": "6c6e36cc20613774dfc8aa09a6b043c68370410529adb38ed900a0989addd4d8"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/reference-command.json": {
+      "bytes": 1022,
+      "sha256": "29a19be75f37c01deb6e5b12f33702900052e5f53f054a65c92a4a3cc7b7ff9d"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/reference-scan.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-16-20261003/reference-scope.json": {
+      "bytes": 815,
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/candidate-paths.txt": {
+      "bytes": 4154,
+      "sha256": "7e80b1ce7d9a7aad1567e6b49e4a081b8e95dea44249f49f7838a1a85f0aba6a"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/candidate-union-paths.txt": {
+      "bytes": 16663,
+      "sha256": "cc0d1d1f3d48a83c578500b0bddce3dc60c7198ad339f3285899df2a5eda8242"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/plan.json": {
+      "bytes": 10664,
+      "sha256": "b6c9037f8f5b9a3f8952bd59c1792dbdc3214111e50fbf6589c17025c8a521e3"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/process-census-apply.json": {
+      "bytes": 73,
+      "sha256": "ed2b11de30f7e1219023b2d46656f7812febe8edcc2a40c9fd0582aabd6dcf4e"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/process-census-plan.json": {
+      "bytes": 73,
+      "sha256": "9d39a5dbcaa48855799ffe46c3ccf85e7fdd581b02a68896466ea40d0318f9e7"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/receipt.json": {
+      "bytes": 10910,
+      "sha256": "31345aa11bf4a500ae13215016f6fa9914ffd8763db45202b9e94a8c782e1c29"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/reclaim": {
+      "bytes": 3849068,
+      "sha256": "be120166eb6f5192e2e50c6bf989149b36e9dc0ab077aa48b210aadcdb6f2952"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/reclaim.go": {
+      "bytes": 7084,
+      "sha256": "f27765773b035b83cf605c0932f188bce00d9fe938451c746803b133fbe80604"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/reference-command.json": {
+      "bytes": 1022,
+      "sha256": "29a19be75f37c01deb6e5b12f33702900052e5f53f054a65c92a4a3cc7b7ff9d"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/reference-scan.exit": {
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/reference-scan.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/reference-scan.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "/mnt/data/sn-testnet/root-mainnet-cache-reclaim-17-20261003/reference-scope.json": {
+      "bytes": 815,
+      "sha256": "90807b090805696475a7c7f7f4f1c8fc4a6124ac28164f17a6604ca2ceef91b9"
+    }
+  },
+  "guards": "Same audited reclaim13 algorithm; only cacheRoot and taskRoot constants changed. Each named inactive cache passed privileged all-process checks before plan/apply, combined124-path declared metadata reference scan exit1/empty output, repeated single-link archive/physical identity checks and final absence verification. Active Sol cache, source, evidence, modules and ELF executables preserved.",
+  "minimum_age_hours": 48,
+  "minimum_bytes": 8388608,
+  "reclaimed_bytes": 4123914240,
+  "schema": "mainnet-multiple-inactive-cache-headroom-proof-v1",
+  "status": "VERIFIED_COMPLETE"
+}

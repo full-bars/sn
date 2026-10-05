@@ -1,0 +1,39 @@
+{
+  "schema": "native-continuous-producer-source-review-v1",
+  "status": "SOURCE_REVIEW_ONLY_NOT_QUALIFIED",
+  "sources": {
+    "sn": {
+      "commit": "b32a5e864756f008e8527556cd75d3ec1e28b26f",
+      "tree": "b6d560e734616bfe6a6fdd312145eaeef4e3c7f3"
+    },
+    "server": {
+      "commit": "8ebf05b2be9a39a040f1e0ad7566b7563509660f",
+      "tree": "229e61f35a441ed1e940b8bbb96befe183b16ef5"
+    }
+  },
+  "reviewed_source_blobs": {
+    "mainnet/economic_native_producer.go": "80848a56d16450e3e59de8bc75893138115dd16b",
+    "mainnet/economic_native_producer_authority.go": "afcbc00cf239a3f9975e00e08fd44eec4fe7eba7",
+    "mainnet/economic_native_producer_files_linux.go": "10c2c3169b8cee7ac29899e2ae3a2d1be58d9c6a",
+    "mainnet/historical_native_feed.go": "e30c7e7be91e6ec2dc7f14416914a6a26f3bcb35",
+    "mainnet/economic_native_producer_test.go": "803be56df94ce8a06ee7c3eeb7b5617414ea7c88",
+    "mainnet/historical_native_feed_test.go": "c875746df1c770d6927d94e890feb08ae99b47be"
+  },
+  "observations": [
+    "Producer requires exact retained predecessor and finality-certified raw parent/child headers; capture and replay are distinct approved engine protocols and compared on first use.",
+    "Retained input/job/completion references are hash checked rather than replacing missing authenticated history.",
+    "Certified descendant window is consumed before advancing GRANDPA authority anchor.",
+    "Native feed pins request, parent hash/root, child namespace and missing node; publishes bounded candidate nodes before ACK, with SDK traversal responsible for authenticity.",
+    "Pending publication retries sync the same inode before no-clobber rename and directory sync; equal visible bytes alone are insufficient."
+  ],
+  "remaining_requirements": [
+    "Qualify actual Rust capture and replay ELFs through public producer, restart, pending completion and canonical conflict tests.",
+    "Implement monotonic signed authority/runtime/resource renewal preserving original completion chain and history; current exact authority hash and maximum4096 jobs remain finite.",
+    "Qualify populated4096-provider proof sizing and actual VM capacity independently of synthetic EVM restore.",
+    "Join native accounting, vault and Claim conservation with actual fee/runtime authority and10/90 policy."
+  ],
+  "limits": [
+    "No compile, execution, live RPC or signing was performed for this source review.",
+    "Frozen source is not merged or approved for production deployment."
+  ]
+}

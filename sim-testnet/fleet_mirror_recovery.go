@@ -360,7 +360,9 @@ func validateFleetMirrorNativeEvidence(ctx context.Context, chain *crv4.Chain, c
 		return fmt.Errorf("authenticate fleet-mirror history at %s: %w", blockHash.Hex(), err)
 	}
 	historicalChain := *chain
-	bindAuthenticatedRuntime(&historicalChain, historicalRuntime)
+	if err := bindAuthenticatedRuntime(&historicalChain, historicalRuntime); err != nil {
+		return err
+	}
 	historical, err := historicalChain.FleetCommitmentAt(cfg.Netuid, hotkey, blockHash)
 	if err != nil {
 		return err
@@ -374,7 +376,9 @@ func validateFleetMirrorNativeEvidence(ctx context.Context, chain *crv4.Chain, c
 			return fmt.Errorf("authenticate fleet-mirror finalized runtime at %s: %w", finalizedHash.Hex(), err)
 		}
 		currentChain := *chain
-		bindAuthenticatedRuntime(&currentChain, currentRuntime)
+		if err := bindAuthenticatedRuntime(&currentChain, currentRuntime); err != nil {
+			return err
+		}
 		current, err := currentChain.FleetCommitmentAt(cfg.Netuid, hotkey, finalizedHash)
 		if err != nil || current.Hash != commitmentHash || current.CommitmentBlock != evidence.CommitmentBlock {
 			return stateMismatchError(err, "fleet-mirror current native commitment differs from block %d", evidence.CommitmentBlock)

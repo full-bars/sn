@@ -1,0 +1,47 @@
+{
+  "fixture": "owned PG18/Redis8, cleanup0",
+  "limits": [
+    "Three affected roots only; full model remains active in a distinct fixture."
+  ],
+  "race_reports": 0,
+  "roots": [
+    {
+      "exit": 0,
+      "fail": 0,
+      "jsonl_sha256": "32eb2599bb703d23de50a5bf73e1a9a9f06367f7159d7e5d7337f0204417a42d",
+      "package": "pass",
+      "pass": 1,
+      "race_reports": 0,
+      "roots": [
+        "TestProviderTransitionLegacyComponentsRetainOriginalAllocation"
+      ],
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "exit": 0,
+      "fail": 0,
+      "jsonl_sha256": "2642e334edbe5eb49c6b47f1e48a915b75d4c2fa692e5d3438b4dfce274d5954",
+      "package": "pass",
+      "pass": 2,
+      "race_reports": 0,
+      "roots": [
+        "TestAdvancePaymentWalletSafetyAndIdempotency",
+        "TestProviderTransitionHeldPaymentPostSchedulesBoundedContinuation"
+      ],
+      "skip": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "schema": "sol-provider-cutover-630-affected-race-v1",
+  "source": {
+    "module_graph_sha256": "05b2949a956b5a76d00efd3b2833bcee79c3d0ba8481f844113a1ed0befc88b7",
+    "server_commit": "630271301fdc18614cae6af76fed7d8c0c2c8ac4",
+    "server_tree": "efe622382434f641f93161eb64727db89d71b33c",
+    "source_fence_sha256": "d727a1b901d06b7e97ed0f6f47510c5b3bc6b6cbc9b51f650cc1c4b709f2e3c3"
+  },
+  "status": "PASS_SCOPED",
+  "total_fail": 0,
+  "total_pass": 3,
+  "total_skip": 0
+}

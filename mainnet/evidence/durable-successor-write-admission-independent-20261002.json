@@ -1,0 +1,205 @@
+{
+  "baseline_commit": "22d4ee3ed274b5ad4ecc14a30c656414809d8cc7",
+  "dependencies": {
+    "connect": {
+      "go_mod_sha256": "97a45595310400b9814f6f2d690a42b48606b36a98bbc14f48123c1af78497e7",
+      "head": "6cd720cf50a43530c298ed8f931e341b00e8913c",
+      "target": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/source/connect"
+    },
+    "glog": {
+      "go_mod_sha256": "5022a0fd461de289e6e84a4f0930a362613b5bcaaffe090a201e68b6714cb40b",
+      "head": "892ade4a6be396b32ea82a550f243190b5992180",
+      "target": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog"
+    },
+    "goidenticons": {
+      "go_mod_sha256": "67dd6efd0fafd9d54e4bbf953eb07c9526ba55ee0dd4eb3e752ef201f619f28c",
+      "head": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+      "target": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons"
+    },
+    "proxy": {
+      "go_mod_sha256": "bd538f2de13d314e5604022082b28bb692702e3b68aa869abf1df2dfeab3a4e1",
+      "head": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+      "target": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy"
+    },
+    "server": {
+      "go_mod_sha256": "a50c18b8e1ca83b8c9c0919a398261d4256a351da48e31f8435c49e97b00570b",
+      "head": "1b7cc78b2dc43f5191cc7b0d3d22f0754fedc662",
+      "target": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/source/server"
+    },
+    "userwireguard": {
+      "go_mod_sha256": "470b20749c9d46b715bce19db1e50618892417a2a4d72b2697efb0e55070f965",
+      "head": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+      "target": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard"
+    },
+    "warp": {
+      "go_mod_sha256": "8413b369e94cf2f76927ef8f5f91794fdd723dd169125b85e1f12d6244d94a0d",
+      "head": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+      "target": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp"
+    }
+  },
+  "limits": [
+    "Eight new fixed roots and two typed identity neighbors, each normal/race; no broader author 85/17 relabeling.",
+    "Old three-file overlay proves eight failures per mode; isolated old publication files prove six failures per mode.",
+    "Frozen f3 patch only; combined root observer/server composition remains unqualified.",
+    "No live signing, submission, deployment, or volume provisioning."
+  ],
+  "old_production_files": {
+    "bootstrap_successor_execution_directory.go": "9d5f0736ef0bb2e967b39ea8b2876891bcfa8e06c336b3e0de15e7e2c3b386e5",
+    "bootstrap_successor_preparation_reader.go": "0c5031b77ecc1521826146b296ba44a72874ddf67618321970fe7666fe34bc70",
+    "bootstrap_successor_preparation_store.go": "95ab802c93a869466754881972cfbce08addf1fa708a4ce14bf4499afe424c1f"
+  },
+  "schema": "sol-independent-f3-write-admission-v1",
+  "scopes": {
+    "fixed-new-normal": {
+      "elapsed_seconds": 231.17686581611633,
+      "exit_code": 0,
+      "fail": 0,
+      "log_sha256": "66e040e9f555d5a0b16c59e764e8420d17b30c6fee09682a291933b4ee73f23c",
+      "pass": 8,
+      "result_sha256": "d5971145923faf1c75af459f66d042cae475ca974e019b1fe1f67b87b30013f0",
+      "roots": [
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission",
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPublicExclusiveClaimRetainsWriteAdmission"
+      ],
+      "skip": 0
+    },
+    "fixed-new-race": {
+      "elapsed_seconds": 566.7672510147095,
+      "exit_code": 0,
+      "fail": 0,
+      "log_sha256": "1470def75120e370c7fa3d801b658ce275904dc8d47891c238cb3c03c97d7802",
+      "pass": 8,
+      "result_sha256": "4e588bfa68ff6a0e467b03f2cb1865e1d6d96d2216e7b383ad7cc96543b7e7a5",
+      "roots": [
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission",
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPublicExclusiveClaimRetainsWriteAdmission"
+      ],
+      "skip": 0
+    },
+    "fixed-typed-normal": {
+      "elapsed_seconds": 15.67183780670166,
+      "exit_code": 0,
+      "fail": 0,
+      "log_sha256": "ffd865555f04466f86bf1343e458598df09c0eb1f64dd52c932a597ea56dfe44",
+      "pass": 2,
+      "result_sha256": "c425bd8952e84adafea775b0c086f3c035d578d8f16e96933d86cef01594c3a3",
+      "roots": [
+        "TestBootstrapSuccessorExecutionRefusesMissingReboundAndUnsafeCustody",
+        "TestBootstrapSuccessorPreparationReaderRejectsUnsafeOrReplacedCustody"
+      ],
+      "skip": 0
+    },
+    "fixed-typed-race": {
+      "elapsed_seconds": 52.96430206298828,
+      "exit_code": 0,
+      "fail": 0,
+      "log_sha256": "602a76c648f76b42ab5d8f5d387c30496a49dc912828940dd35ee4cc011c7626",
+      "pass": 2,
+      "result_sha256": "643ae5a852ececfa02ae1a1e1967c67c83453bcd218b5066c112c5874502cf03",
+      "roots": [
+        "TestBootstrapSuccessorExecutionRefusesMissingReboundAndUnsafeCustody",
+        "TestBootstrapSuccessorPreparationReaderRejectsUnsafeOrReplacedCustody"
+      ],
+      "skip": 0
+    },
+    "old-publication-normal": {
+      "elapsed_seconds": 41.80504655838013,
+      "exit_code": 1,
+      "fail": 6,
+      "log_sha256": "dcec5ba0df0c824e58d7d7e42068b1925f5e882f2f68896bcf0998acb28a8aa7",
+      "pass": 0,
+      "result_sha256": "23315a4c824259adcee76b5d13582206aca14c594fe86719da441b463f70c8e5",
+      "roots": [
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage"
+      ],
+      "skip": 0
+    },
+    "old-publication-race": {
+      "elapsed_seconds": 69.93590950965881,
+      "exit_code": 1,
+      "fail": 6,
+      "log_sha256": "dce27448a43c26a73a65cfb82718390c85e551c5014aa572198ecb944dd80bb5",
+      "pass": 0,
+      "result_sha256": "3ebfb41ff9017360484ae0494c8d7e4ea0b307c1c0f7b97e0874d602bcc5181b",
+      "roots": [
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage"
+      ],
+      "skip": 0
+    },
+    "old3-normal": {
+      "elapsed_seconds": 115.33098125457764,
+      "exit_code": 1,
+      "fail": 8,
+      "log_sha256": "0ea3b8d3fc06d218b9136b689b61ab6ad5601add271ffa16c9639cbbf64620eb",
+      "pass": 0,
+      "result_sha256": "1cefd16a1ee3eb339f245ed97d175bbe54259ec3014faef2a654a82f6fd35cd2",
+      "roots": [
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission",
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPublicExclusiveClaimRetainsWriteAdmission"
+      ],
+      "skip": 0
+    },
+    "old3-race": {
+      "elapsed_seconds": 417.5798511505127,
+      "exit_code": 1,
+      "fail": 8,
+      "log_sha256": "8da1f785eca84c64ab8a5c661fc243ccb35fe6e2d4954217183a2b385e731867",
+      "pass": 0,
+      "result_sha256": "24ea7b13a0e1efa0c6ffc02d560173db6f3c345aee835f69a7d7212ccbeaaa29",
+      "roots": [
+        "TestBootstrapSuccessorExecutionDurableWriteAdmission",
+        "TestBootstrapSuccessorExecutionPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorExecutionPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPassiveDurableAdmissionHasNoWriteEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeClaimHasNoEffects",
+        "TestBootstrapSuccessorPreparationPressureBeforeCompletionRetainsPending",
+        "TestBootstrapSuccessorPreparationPressureRetainsEmptyClaimStage",
+        "TestBootstrapSuccessorPublicExclusiveClaimRetainsWriteAdmission"
+      ],
+      "skip": 0
+    }
+  },
+  "source": {
+    "blobs_verified": 19943,
+    "commit": "f3c8a618ecb5f636b538abef760135ce6203546d",
+    "jobs_sha256": "f0ae5945e6552f8ce9ad1e56e452121c0a8744e3b70784c3e4d943282cf5b817",
+    "tree": "a8d3c6269e29d47e6f40e8daf96c6fd99a29bca6",
+    "work_sha256": "12eb26f2f22e091886770892ea3bb3037c24f6d8380848bab6fb2457c8f489f2"
+  },
+  "source_tree": "a8d3c6269e29d47e6f40e8daf96c6fd99a29bca6",
+  "verdict": "PASS_SCOPED",
+  "vet": {
+    "exit_code": 0,
+    "free_after_bytes": 130541182976,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "matched": true
+  }
+}

@@ -37,10 +37,8 @@ runs = 48
 depth = 48
 fail_on_revert = false
 
-[rpc_endpoints]
-# PLAN.md §3.1 (live-checked 2026-07-01)
-testnet = "https://test.chain.opentensor.ai"  # chain id 945
-mainnet = "https://lite.chain.opentensor.ai"  # chain id 964
+# RPC URLs are explicit operator inputs. In particular, mainnet scripts must
+# use the approved Snow route and must not inherit a public endpoint alias.
 
 [fmt]
 line_length = 110

@@ -1,0 +1,22 @@
+{
+  "schema": "future-history-qualification-resource-extension-v1",
+  "observed_utc": "2026-10-04T18:26:20.338894+00:00",
+  "authorization": "Standing user automatic budget increases; future qualification only.",
+  "status": "ADOPTED_FUTURE_PHASES_ONLY",
+  "baseline_available_bytes": 113681502208,
+  "cap_bytes": 111669149696,
+  "resource_margin": 2,
+  "history_disk_forecast_bytes": 4294967296,
+  "compiler_disk_forecast_bytes": 6442450944,
+  "short_body_disk_forecasts_bytes": [
+    1073741824,
+    1073741824
+  ],
+  "minimum_available_bytes": 27782156288,
+  "minimum_memory_available_bytes": 124554051584,
+  "observed_available_bytes": 32880660480,
+  "observed_memory_available_bytes": 130887725056,
+  "physical_available_floor_bytes": 2012352512,
+  "scope": "One unchanged full129 history body, at most one warm Go compiler, and two bounded short bodies; original forecasts and2x margin unchanged. Fresh guards and explicit compilerhandoff required. Preserve current healthywork; no runningjob threshold rewrite. DB andRust requireseparate combinedadmission.",
+  "basis": "Remaining26 Servercontrol images/helpers and complete finalSNsource staging are additive to retained successful12images. This extension permits subsequent phases without resettingoriginal cumulative usage."
+}

@@ -1,0 +1,46 @@
+{
+  "files": {
+    "bringyourctl-2a": {
+      "bytes": 79388608,
+      "sha256": "fc9c381fc36accb464a69f12013c73a4e6c1ab0e67214a26541a72b78e4cf17f"
+    },
+    "composition-build.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "composition-build.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "composition-build.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "composition-vet.exit": {
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    "composition-vet.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "composition-vet.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "limits": [
+    "Compile and static analysis only; no CLI invocation or live payout."
+  ],
+  "offline_cli_binary": "bringyourctl-2a",
+  "packages": [
+    ".",
+    "./model",
+    "./controller",
+    "./taskworker/work",
+    "./bringyourctl"
+  ],
+  "schema": "sol-financial-get-2a-vet-build-v1",
+  "source_commit": "2a453df9bd7967776889b5f15cd8724d6f9255cb",
+  "status": "PASS_SCOPED"
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "native-pending-file-sync-source-finding-v1",
+  "status": "SOURCE_FINDING_FIX_AND_TESTS_PENDING",
+  "source_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/native-continuous-producer/sn/mainnet/economic_native_producer_files_linux.go",
+  "source_sha256": "63f3a56e6998cfae7a448df01aca6b939cdf594dc2dc8de7de42a7bcbc16ccf1",
+  "source_bytes": 13710,
+  "source_state": "moving unqualified worktree; hash pins inspected snapshot, not a release",
+  "finding": "New pending file branch returns on file.Sync failure while leaving complete visible bytes. EEXIST retry reads matching bytes and renames without retrying file.Sync. Later directory sync cannot establish previously failed file-data durability.",
+  "required_behavior": "Revalidate and sync the exact retained pending file before rename, preserving descriptor ownership, exact byte comparison and no-follow/type/bounds checks. Failed sync retains original evidence for another retry.",
+  "required_tests": [
+    "Explicit first file sync failure after complete write, followed by identical retry and successful file+directory durability sequence.",
+    "Incomplete pending bytes remain refused and unchanged.",
+    "Successful file sync followed by failed directory sync remains independently recoverable."
+  ],
+  "limits": [
+    "No behavioral execution or fix qualification in this review.",
+    "Existing mainnet runs and immutable evidence remain untouched.",
+    "Adjacent node and evidence publishers require review."
+  ]
+}

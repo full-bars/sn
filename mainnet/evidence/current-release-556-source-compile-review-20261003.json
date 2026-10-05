@@ -1,0 +1,249 @@
+{
+  "schema": "root-current-release-556-source-compile-review-v1",
+  "source": {
+    "changedFrom866": [
+      "mainnet/MAINNET.md",
+      "mainnet/PRELAUNCH-FIXES.md",
+      "mainnet/evidence/cache-reclaim-24-20261003.json",
+      "mainnet/evidence/capacity-public-completion-qualification-20261003.json",
+      "mainnet/evidence/capacity-test-successor-source-review-20261003.json",
+      "mainnet/evidence/current-readiness-checkpoint-20261003.json",
+      "mainnet/evidence/current-readiness-checkpoint-20261003.md",
+      "mainnet/evidence/evm-review-reuse-causal-qualification-20261003.json",
+      "mainnet/evidence/evm-review-reuse-selected-qualification-20261003.json",
+      "mainnet/evidence/monitor-policy-renewal-qualification-20261003.json",
+      "mainnet/evidence/monitor-progress-body-qualification-20261003.json",
+      "mainnet/monitor_economic_evm_resources.go",
+      "mainnet/monitor_economic_evm_review_reuse_test.go"
+    ],
+    "commit": "556e14767fddbaf4db469fb5f1019bcbdd2bc9ce",
+    "latestRootMainPreserved": "083b694f1c4ad6a51b53be1313204657b09f84ad",
+    "moduleBytesExactB18": true,
+    "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/publication-candidate/sn",
+    "physicalBlobs": 20461,
+    "priorFrozenJoin": "86639215a99565bca469e123e8bc53660f081ce2",
+    "qualifiedTwoFileIncrement": "8a2693c2c1cc48c69bd5e146ea3ab18d8abac6dc",
+    "tree": "32c3727d17f9252ee4073f3a853b9e41982f3424"
+  },
+  "intake_path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-intake.json",
+  "intake_sha256": "2dd479309b8a0048939528de96e664236a3e590db79d874ef20384ba45b1aa83",
+  "verified_artifacts": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/capacity-composition-compile.go",
+      "bytes": 3641,
+      "sha256": "30190d80e34336046a0e3b961481bf5524745e7650ef7a1128336ec4b48bf577"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/prepare-publication-556-graph.go",
+      "bytes": 3278,
+      "sha256": "74485f29b6b9742afd99e52af0d26c6e0d07a6cd28210a03aa32f20cab8da622"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-compile-jobs.json",
+      "bytes": 2234,
+      "sha256": "77c71ac3d4a371477143d739068a45705c2b0b6515125de8737a2510a36e903f"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-mainnet-compile.json",
+      "bytes": 954,
+      "sha256": "ce3cc7ba5b22cd668ec7dc4cb57af72036f999a35569b93b25a263c1376fb1bf"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-mainnet-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-modules.json",
+      "bytes": 781,
+      "sha256": "854356209ff4f9217e519952cac0d1c3e70658713fab8808bcafd53e0c6222e6"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-modules.log",
+      "bytes": 174978,
+      "sha256": "78b2b9c4d83e53cd2d83d3c7b62101f29aa3bf1f6f9ad9d0915fc89f5a37c3c5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-peer-graph.json",
+      "bytes": 2987,
+      "sha256": "67a567368a074ac5003d4986563a4ceffd7c96515a4b582f83715d990d1829a0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-preflight.json",
+      "bytes": 865,
+      "sha256": "5ec311db2848fad3d15fe4fad9828ec014820aab8a968bff8c5daa6cc46775a5"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-preflight.log",
+      "bytes": 35130,
+      "sha256": "75a757381235b7f3ad3b9d467994ea37c8948a39be9d5deb63f17d7bb23c4225"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/publication-556-source-manifest.json",
+      "bytes": 6214657,
+      "sha256": "a61a3988a48008f5fa71c8d833603c4c3ddc8075308ea197accc03bb8d470131"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-mainnet-compile.json",
+      "bytes": 927,
+      "sha256": "c4771918cce670e875af09fe909499ab5a2265ed22f36f8c42f5a3bd98cb22e9"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-mainnet-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-miner-compile.json",
+      "bytes": 919,
+      "sha256": "37c1db053733c2ff596b5a48a7570b86e2f2613268c76ae406aeb91729d5f9b0"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-miner-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-server-modules.json",
+      "bytes": 779,
+      "sha256": "52668def593273c4646ca47e403117812b2a522af2079e0af2c586e886c35665"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-server-modules.log",
+      "bytes": 177731,
+      "sha256": "b1cf681ea36c5e86b513b632d8e31172abb124d16cd5926b77be9ddf6627bc2d"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-server-preflight-corrected.json",
+      "bytes": 843,
+      "sha256": "5d5f9751f6a38c470859b605211f672787d79feafa69e60f22fce1c5068b9f3a"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-server-preflight-corrected.log",
+      "bytes": 36724,
+      "sha256": "ff282e8ea5e3da4f21e5807fa33bbc84413b7a8b8d1881f800b5480e343728db"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-server-preflight.json",
+      "bytes": 855,
+      "sha256": "119610c90d812095691cc924a1128ca170271a411d182d6ea086c3e77e488208"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-server-preflight.log",
+      "bytes": 135,
+      "sha256": "d4ca1455c66d6f1dc29fab28fbbaacbe1835aa75eb632f3322b6a1cdeea31718"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-server-source-manifest.json",
+      "bytes": 1573196,
+      "sha256": "4c10e6b7d2da7bb182c296b0ca7a2a8906f43dba326554e7cdaa367ad71ab8be"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-sn-modules.json",
+      "bytes": 767,
+      "sha256": "894f99d92ef3df1169cb7f9d69bb36504f0229ed81161c4b1511df83bb78c410"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-sn-modules.log",
+      "bytes": 174706,
+      "sha256": "de0dc12b6c49316e43ee74dd6c0260c033e01802d1c03895bcedae0e69c60715"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-sn-preflight.json",
+      "bytes": 851,
+      "sha256": "e5d21e216664cb7ffc0a6adbb508f213285dece37786155e2ac0867f922a8268"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-sn-preflight.log",
+      "bytes": 35130,
+      "sha256": "75a757381235b7f3ad3b9d467994ea37c8948a39be9d5deb63f17d7bb23c4225"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-sn-source-manifest.json",
+      "bytes": 6212596,
+      "sha256": "ab4f8458bc96bf1ea6327006303732976fe985d9af6eba47c6254e80515a1fbe"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-source-join.json",
+      "bytes": 14234,
+      "sha256": "d5487b7c69b2916c7d2847d4ffbd06f1c84dfa53413e52d8b59e922efed4459e"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-validator-compile.json",
+      "bytes": 935,
+      "sha256": "1215e05fd937cfbc125e5e45ed4b2247680075d12af4eb2fff98d778fb5d8616"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/ready-866-validator-compile.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/evidence/seal-publication-556-intake.go",
+      "bytes": 10191,
+      "sha256": "f400a7aa5c80aa6075d2ad351d640110468e386dd55e3c14ac0512b155e9dd52"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/publication-candidate/sn/go.mod",
+      "bytes": 11292,
+      "sha256": "90e18022cbdf37542f826fd7740ec2a9af2c61151325c8e7ff0b1ff2b6531af1"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-storage-owner-adoption-20261002/ledger-preparation/publication-candidate/sn/go.sum",
+      "bytes": 66649,
+      "sha256": "1a3f92b154a3a39ef2ff9b3f07dd6434536fd9440d06abefefcab517f591b1e5"
+    }
+  ],
+  "physical_blob_count": 20461,
+  "physical_git_blob_mode_sha256_verified": true,
+  "verified_jobs": "AllnewSNgraph/preflight/compile andold866compiledroles successful cleanunchanged source; preservedoldServermissingstorage setupfailure correctedwithoutsourceedit",
+  "scope": "Actual current-source joins: retained preparation/restore and native observation881 from b18; EVM81de+8a; HTTP retry and claim/provider policy1a98; capacity42ef plus test-only214. The bounded public roots exercise merged dispatcher/hooks/policy and retained owner constructors under published631/SDK9ae/SCTP644/gvisor21c2 and Server5f. Original component receipts remain distinct, no full history replay/requalification is requested.",
+  "groups": [
+    {
+      "Package": "./mainnet",
+      "Roots": [
+        "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment",
+        "TestMonitorEconomicEvmRetainedCheckpointRefusesNonAdjacentReviewReuse",
+        "TestMonitorEconomicRuntimePublicOldCheckpointUsesLargerOwnedBudget",
+        "TestMonitorClaimPublicRenewalRetainsOriginalLiability",
+        "TestMonitorProviderPublicBudgetRenewalKeepsIncidentAndRoster",
+        "TestMonitorProviderPublicRateLimitKeepsPeerCurrent",
+        "TestMonitorClaimPublicRateLimitKeepsPeerCurrent",
+        "TestValidatorCapacityPreviewBindsJoinedRetainedCensus",
+        "TestValidatorCapacityConfigRefusesAuthorityDriftAndRetainsOutputCustody",
+        "TestStoragePreparationNativeStartupObservationRetainsOriginalCustody",
+        "TestStoragePreparationRestoreCompleteUnionOpensAllOriginalOwners",
+        "TestBootstrapSuccessorOuterLocalRetainsOriginalOutcome"
+      ],
+      "ExpectedPass": 12
+    },
+    {
+      "Package": "./validator",
+      "Roots": [
+        "TestProductionCapacityRetainsOriginalSignedSidecar"
+      ],
+      "ExpectedPass": 1
+    },
+    {
+      "Package": "./miner",
+      "Roots": [
+        "TestMinerPreparationFleetActualConstructorKeepsFreshCustody",
+        "TestMinerPreparationClaimActualConstructorRetainsProgress"
+      ],
+      "ExpectedPass": 2
+    },
+    {
+      "Package": "./chain",
+      "Roots": [
+        "TestNativePreparationCheckpointRefusesRetainedIntent"
+      ],
+      "ExpectedPass": 1
+    }
+  ],
+  "limits": [
+    "Source+compileonly;independent16rootnormal/race/vetpending",
+    "Fullmainnet38requirement closure notclaimed",
+    "Nativearchive/replay/feeobserver separateincrements",
+    "Actualhost/custody/runtimeauthority/settlement notestablished"
+  ]
+}

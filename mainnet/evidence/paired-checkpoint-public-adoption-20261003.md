@@ -1,0 +1,13 @@
+# Paired checkpoint public adoption candidate
+
+This source continues the independently checked outer-copy scope `11e282dc` / Connect `5c48c3e5`. That scope retained both unfinished member-checkpoint images but did not qualify the public execution approval and reopen path. The candidate preserves those sources and the separate `b35`/`abb2` fixture corrections as ancestors.
+
+The previous local and nonce rebind builders required exactly one derivation. A restored unfinished outer checkpoint has two. The local public loader also opens a passive preparation reader, whose ordinary snapshot reader correctly refuses unfinished heads. Consequently, copying the original pair was insufficient for usable independent approval and continuation.
+
+The shared builder validates complete disjoint source coverage, every original and derived image, all fixed capacities and the original member bytes. It selects the retained next image by the original checkpoint inode, including when both images have identical hashes. Existing single-image approval serialization remains unchanged; the original restore-plan digest binds the complete pair. No execution signature, nonce, allowance or logical path is rewritten.
+
+The local passive loader receives a private read-only view only after that exact lineage passes. It holds both metadata descriptors and the original checkpoint under the shared root lock, rechecks named stat identity and checkpoint bytes, and refuses publication or completion synchronization. Ordinary readers retain their existing refusal. Only the approved exclusive owner invokes the existing bounded reconciliation. After that owner joins, ordinary authenticated-prefix inspection supports later reopen.
+
+Five deterministic new roots cover actual public local/nonce preview and repeated approved resume, the original interrupted terminal outcome, missing-image/foreign-approver refusal, unchanged-member byte-read counts, and sticky metadata/member loss. Real after-file-sync, exchange and directory-sync barriers retain the original pair. The public controls use only existing test APIs so they can discriminate the unchanged production parent. No behavioral result is asserted by this source note; independent normal/race/vet and causal outcomes must be recorded separately.
+
+This candidate does not implement joined capacity/retention revisions, relocate logical paths, authorize new production signatures, or qualify the final current published SN/Server/dependency composition. The separate retained-EVM observation candidate `5a0a8f66` and the Safe read-error follow-up are not part of this source.

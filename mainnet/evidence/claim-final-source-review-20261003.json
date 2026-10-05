@@ -1,0 +1,21 @@
+{
+  "schema": "mainnet-claim-final-source-review-v1",
+  "status": "SOURCE_ONLY_UNCOMPILED_UNQUALIFIED",
+  "intake_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/claim-restore-current/evidence/intake-v2.json",
+  "intake_sha256": "ba56ba5e4b811ce120c19be76a5590ab7acfe5a905b958d71c477a744c551de6",
+  "source_commit": "a550f73f13bf2bb19fa0dce0b1eb10c795e980af",
+  "source_tree": "5a4d3839b4c7115e212a5fbde88b0bad8f043489",
+  "changed_git_bindings_verified": 52,
+  "physical_intake_bindings_verified": 51,
+  "exact_selected_test_declarations": 65,
+  "primary_roots": 44,
+  "compatibility_roots": 21,
+  "operative_control_groups": 14,
+  "composed_source": "b704fcde2c5781fe98aaacc22d79c6c748e07ccc",
+  "sole_joined_source_exception": [
+    "mainnet/historical_replay_test.go"
+  ],
+  "component_tests_not_inherited": true,
+  "official_dependency_packaging_pending": true,
+  "actual_upload_contention_pending": true
+}

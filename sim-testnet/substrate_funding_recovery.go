@@ -350,9 +350,13 @@ func detectFinalizedSubstrateFundingRecovery(ctx context.Context, cfg *ResolvedC
 		return finalizedSubstrateFundingRecovery{}, fmt.Errorf("substrate-funding finalized transaction: %w", err)
 	}
 	recoveryChain := *chain
-	bindAuthenticatedRuntime(&recoveryChain, recoveryRuntime)
+	if err := bindAuthenticatedRuntime(&recoveryChain, recoveryRuntime); err != nil {
+		return finalizedSubstrateFundingRecovery{}, err
+	}
 	inclusionChain := *chain
-	bindAuthenticatedRuntime(&inclusionChain, inclusionRuntime)
+	if err := bindAuthenticatedRuntime(&inclusionChain, inclusionRuntime); err != nil {
+		return finalizedSubstrateFundingRecovery{}, err
+	}
 	roles, err := BuildRoleSecrets(cfg)
 	if err != nil {
 		return finalizedSubstrateFundingRecovery{}, err
@@ -380,7 +384,9 @@ func detectFinalizedSubstrateFundingRecovery(ctx context.Context, cfg *ResolvedC
 			return finalizedSubstrateFundingRecovery{}, fmt.Errorf("authenticate current substrate-funding runtime: %w", runtimeErr)
 		}
 		currentChain := *chain
-		bindAuthenticatedRuntime(&currentChain, currentRuntime)
+		if err := bindAuthenticatedRuntime(&currentChain, currentRuntime); err != nil {
+			return finalizedSubstrateFundingRecovery{}, err
+		}
 		currentBalance, err = readFreeBalanceAtHashContext(ctx, &currentChain, account, finalizedHash)
 		if err != nil {
 			return finalizedSubstrateFundingRecovery{}, fmt.Errorf("read substrate-funding current balance: %w", err)

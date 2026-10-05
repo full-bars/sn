@@ -1,0 +1,22 @@
+{
+  "schema": "root-qualified-archive-read-cause-main-merge-v1",
+  "merge": "4a27153f1a7b58b22251ea83c58d87db6f7ce52a",
+  "first_parent": "5b747e48190a832b36c93cd2247a77e8fb442fc0",
+  "candidate": "9d18176226dc3846f23efbdf055a4478964a730f",
+  "candidate_tree": "dbf38454325d07a5b418745e1eb741b647eaa5b9",
+  "changed_paths": [
+    "mainnet/monitor_economic_evm_archive_command.go",
+    "mainnet/monitor_economic_evm_catalog.go",
+    "mainnet/monitor_economic_native_archive_command.go",
+    "mainnet/monitor_economic_native_catalog.go",
+    "mainnet/monitor_history_archive.go",
+    "mainnet/monitor_history_read_cause_test.go",
+    "mainnet/monitor_services.go"
+  ],
+  "qualification_sha256": "da819c804adf6658387e65da8a16a3471505851c9e0362805abcb060d4dd0bf5",
+  "all_non_documentation_git_entries_match_candidate": true,
+  "product_qualification_retained": "Exact source and executable tests already qualified; newer plans and local proof documents retained.",
+  "limitations": [
+    "This increment distinguishes observation errors from authenticated conflicts; it does not grant automatic controller retry authority or establish complete production readiness."
+  ]
+}

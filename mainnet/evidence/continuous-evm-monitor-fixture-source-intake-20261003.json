@@ -1,0 +1,266 @@
+{
+  "causal": [
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "restart lost original carry, aggregate credit or exact transaction costs"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "original-cursor-reset",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/original-cursor-reset/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "economic ledger accepted a payment/carry authority substitution"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "contract-ledger-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/contract-ledger-omitted/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "receipt contradiction advanced affected EVM role"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "receipt-cumulative-gas-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/receipt-cumulative-gas-omitted/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "bounded EVM byte page stalled or lost complete original prefix"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "page-byte-budget-omitted",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/page-byte-budget-omitted/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "owned observations were promoted to independent economic authority"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "unproved-fee-authority",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/unproved-fee-authority/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "retained EVM checkpoint accepted resource shrink or identity replacement"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "acknowledged-resource-shrink",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/acknowledged-resource-shrink/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmResourceShrinkAndContractReplacementRefuseRetainedCheckpoint)$"
+    },
+    {
+      "classification": "operative invariant omission; not an old whole-source claim",
+      "expected_failed_roots": 1,
+      "intended_assertions": [
+        "unacknowledged resource renewal advertised a completed checkpoint"
+      ],
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "name": "resource-ack-before-publication",
+      "overlay": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/overlays/resource-ack-before-publication/overlay.json",
+      "package": "./mainnet",
+      "selector": "^(TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication)$"
+    }
+  ],
+  "causal_overlay_note": "Remap only overlay source paths to own corrected archive; every production blob equals0fb.",
+  "environment": {
+    "cache": "/mnt/data/sn-testnet/sol-server025-integration-independent-20261002/gocache",
+    "modulecache": "/mnt/data/sn-testnet/gomodcache",
+    "new_phase_free_floor_bytes": 118111600640,
+    "private_root_and_tmp": "0700",
+    "umask": "0077"
+  },
+  "files": [
+    {
+      "bytes": 19555,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-monitor/evidence/intake.json",
+      "sha256": "01f99a1535ec0136ce06d2c49192166c10fcccbd06700f23a6f26d09d9cb5890"
+    },
+    {
+      "bytes": 6700960,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-successor/evidence/source-readback.json",
+      "sha256": "ea1d43052a152060318c4ff668cbbb30ebeb08785795e4d850cdba0a25219e6c"
+    },
+    {
+      "bytes": 11942,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-successor/evidence/sn.mod",
+      "sha256": "a5569364a0af77ebd1822c9e5d1c8ff197cebfce0bd739562f17c1bbc39b7f9b"
+    },
+    {
+      "bytes": 66880,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-successor/evidence/sn.sum",
+      "sha256": "33f3678673582b4025543e9997e8ea7bec9e5147b8b33ba589fa90ccd9c07fe5"
+    },
+    {
+      "bytes": 27288,
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-successor/sn/mainnet/monitor_economic_evm_test.go",
+      "sha256": "059afdc96a97c6e6d43bd6f206869126f5396651ae73e3cdcd5934465f21390e"
+    }
+  ],
+  "jobs": [
+    {
+      "expected": 17,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./mainnet",
+      "roots": [
+        "TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment",
+        "TestMonitorEconomicEvmPublicPartialReceiptOutageKeepsOriginalCursor",
+        "TestMonitorEconomicEvmPublicLostCheckpointAckDoesNotRepeatPayment",
+        "TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole",
+        "TestMonitorEconomicEvmPublicReserveReadsActualPrincipalAndBacking",
+        "TestMonitorEconomicEvmReaderRequiresCompleteReceiptAndTransactionTries",
+        "TestMonitorEconomicEvmReaderRefusesChangedCursorAndCode",
+        "TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment",
+        "TestMonitorEconomicEvmPublicCapacityKeepsOriginalPendingRange",
+        "TestMonitorEconomicEvmPublicCancellationJoinsInFlightRead",
+        "TestMonitorEconomicEvmPolicyDoesNotBorrowDiscoveredContractIdentity",
+        "TestMonitorEconomicEvmReceiptFeeIncludesFailedExecution",
+        "TestMonitorEconomicEvmPublicReviewedResourceGrowthKeepsOriginalHistory",
+        "TestMonitorEconomicEvmResourceShrinkAndContractReplacementRefuseRetainedCheckpoint",
+        "TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication",
+        "TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues",
+        "TestMonitorEconomicEvmPublicHistoricalBacklogDoesNotResetOrRequireFullAncestry"
+      ],
+      "selector": "^(TestMonitorEconomicEvmPublicRestartRetainsCreditCarryAndAggregatePayment|TestMonitorEconomicEvmPublicPartialReceiptOutageKeepsOriginalCursor|TestMonitorEconomicEvmPublicLostCheckpointAckDoesNotRepeatPayment|TestMonitorEconomicEvmPublicReceiptContradictionStopsOnlyAffectedRole|TestMonitorEconomicEvmPublicReserveReadsActualPrincipalAndBacking|TestMonitorEconomicEvmReaderRequiresCompleteReceiptAndTransactionTries|TestMonitorEconomicEvmReaderRefusesChangedCursorAndCode|TestMonitorEconomicEvmLedgerSeparatesDeferredCreditAndAggregatePayment|TestMonitorEconomicEvmPublicCapacityKeepsOriginalPendingRange|TestMonitorEconomicEvmPublicCancellationJoinsInFlightRead|TestMonitorEconomicEvmPolicyDoesNotBorrowDiscoveredContractIdentity|TestMonitorEconomicEvmReceiptFeeIncludesFailedExecution|TestMonitorEconomicEvmPublicReviewedResourceGrowthKeepsOriginalHistory|TestMonitorEconomicEvmResourceShrinkAndContractReplacementRefuseRetainedCheckpoint|TestMonitorEconomicEvmResourceAcknowledgmentWaitsForDurablePublication|TestMonitorEconomicEvmPublicLargePageCommitsCompletePrefixThenContinues|TestMonitorEconomicEvmPublicHistoricalBacklogDoesNotResetOrRequireFullAncestry)$"
+    },
+    {
+      "expected": 9,
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./mainnet",
+      "roots": [
+        "TestEvmReadProfileKeepsMethodsScoped",
+        "TestEvmReadProfileAbsenceIsReceiptOnly",
+        "TestEvmReadProfileBoundsEveryReply",
+        "TestFinalizedMappingAuthenticatesUnequalHeightsAndExactRlp",
+        "TestEvmVaultLinkRequiresExactReceiptAndEvent",
+        "TestEvmEscrowRegisterRequiresExactReceiptAndEvent",
+        "TestEvmReserveLinkRequiresExactReceiptAndEvent",
+        "TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees",
+        "TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole"
+      ],
+      "selector": "^(TestEvmReadProfileKeepsMethodsScoped|TestEvmReadProfileAbsenceIsReceiptOnly|TestEvmReadProfileBoundsEveryReply|TestFinalizedMappingAuthenticatesUnequalHeightsAndExactRlp|TestEvmVaultLinkRequiresExactReceiptAndEvent|TestEvmEscrowRegisterRequiresExactReceiptAndEvent|TestEvmReserveLinkRequiresExactReceiptAndEvent|TestMonitorEconomicNativePublicRestartKeepsOriginalCursorAndFees|TestMonitorEconomicNativePublicLostCustodyStopsOnlyAffectedRole)$"
+    }
+  ],
+  "limits": [
+    "Append-only resource-review history remains separate successor work."
+  ],
+  "modfile": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-successor/evidence/sn.mod",
+  "qualification_graph": {
+    "local": {
+      "glog": {
+        "commit": "892ade4a6be396b32ea82a550f243190b5992180",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/glog",
+        "tree": "4b3c242905aed44db5879b3d22e860697f666abe"
+      },
+      "goidenticons": {
+        "commit": "325750b38314313dc5f44c880ab6f12f6c1ecb3c",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/goidenticons",
+        "tree": "553487079352d9544edb62850328305e97668790"
+      },
+      "proxy": {
+        "commit": "6204ae7df2a9868bbb3a7b61231917a36e4f5c9f",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/proxy",
+        "tree": "730ffeba453bea95f5f23fcf4b3fbc0b45f204ce"
+      },
+      "userwireguard": {
+        "commit": "85fb1ca4086fa5dbfcda526bec7a17a894e691b9",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/userwireguard",
+        "tree": "e83cf65488b192388571b25b1ac85ecebc36eea0"
+      },
+      "warp": {
+        "commit": "7498864c7cd3605aad3c43eabfab9008ed7f7228",
+        "path": "/mnt/data/sn-testnet/mainnet-mg06-release-astra-20261002/final-258e25b4-server0aa1e244/source/warp",
+        "tree": "5a54f2db5582403b7b732c8602adeabaacc1a269"
+      }
+    },
+    "origin": "/mnt/data/sn-testnet/sol-current-module-5def-independent-20261003/evidence/source-fence.json",
+    "published_versions": {
+      "github.com/pion/sctp": "v0.0.0-20261002163341-6443417d70dc",
+      "github.com/urnetwork/connect": "v0.0.0-20261003021534-5def2fa4391b",
+      "github.com/urnetwork/sdk": "v0.0.0-20261003021240-95ccd57da971"
+    },
+    "scope": "Existing published-floor modfile remapped to candidate SN and same exact Server/local modules; Sol must independently preflight current imported-package/module graph. No tracked module adoption or graph test inheritance.",
+    "server": {
+      "commit": "0e04f0381f813acff45b9c9af3d1a5b93e7d7ccf",
+      "git_blobs": 5369,
+      "tree": "ab30a9299bd9cf7b51ae4012b936ea6660555fa4"
+    }
+  },
+  "retained_failure": {
+    "cause": "peer.Current missing; no test root executed",
+    "path": "/mnt/data/sn-testnet/sol-economic-evm-monitor-0fb-independent-20261003/evidence/new17-normal.jsonl",
+    "receipt_sha256": "ff691be9985ecee51bab1aa9fa93f4f24e0c14efb38c3f3e3212a08295f40496"
+  },
+  "root_verification": {
+    "bindings_rehashed": 5,
+    "changed_git_blobs_verified": 1,
+    "classification": "SOURCE_VERIFIED_BEHAVIOR_PENDING",
+    "clean_head_tree_verified": true,
+    "intake_path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-successor/evidence/intake.json",
+    "intake_sha256": "53c5fb706be7fc0bba96806cdc205c01109e918564615c91dab923e97d4d14c1",
+    "production_and_modules_unchanged": true,
+    "review": "Healthy peer assertion now uses actual public serialized event fields and fresh heartbeat/resume barrier; original compiler failure remains separate. Resource review history is an independent pending successor.",
+    "test_only_changed_path": "mainnet/monitor_economic_evm_test.go"
+  },
+  "schema": "urnetwork-continuous-evm-test-correction-v1",
+  "source": {
+    "base": "0fb5db88f8c194dccae0b87e08900d4ab13f6f0a",
+    "head": "a9eff81353807067866a36034547d73d6298ab16",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-evm-successor/sn",
+    "tree": "2dc584435f366778b6ec726acb40d93800b89774"
+  },
+  "status": "FROZEN_TEST_ONLY_UNTESTED",
+  "vets": [
+    "./mainnet"
+  ]
+}

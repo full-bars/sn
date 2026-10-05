@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"path/filepath"
 	"slices"
 	"sync"
 	"time"
@@ -27,15 +28,18 @@ import (
 // Operators must provision enough finite scan capacity for their journal;
 // exceeding it refuses refresh rather than silently installing an allowlist.
 type ValidatorUploadAdmissionConfig struct {
-	Deployment         ValidatorUploadDeployment `json:"deployment" yaml:"deployment"`
-	ReplicaNoID        uint64                    `json:"replica_no_id" yaml:"replica_no_id"`
-	ActivationContexts []ReleaseEvidenceV2File   `json:"activation_contexts" yaml:"activation_contexts"`
+	Deployment              ValidatorUploadDeployment `json:"deployment" yaml:"deployment"`
+	ReplicaNoID             uint64                    `json:"replica_no_id" yaml:"replica_no_id"`
+	ActivationContexts      []ReleaseEvidenceV2File   `json:"activation_contexts" yaml:"activation_contexts"`
+	ProductionRuntimeConfig ReleaseEvidenceV2File     `json:"production_runtime_config,omitzero" yaml:"production_runtime_config,omitempty"`
 	// Provisional testnet continuity discovers only these exact references;
 	// their anchored authentication and current eligibility remain mandatory.
 	ProvisionalSeededDiscoveryOnly bool `json:"provisional_seeded_discovery_only,omitempty" yaml:"provisional_seeded_discovery_only,omitempty"`
 	// A separately authorized testnet staging allowance uses exact private
 	// context pins without asserting historical or current chain eligibility.
 	ProvisionalRetainedContextAuthority bool   `json:"provisional_retained_context_authority,omitempty" yaml:"provisional_retained_context_authority,omitempty"`
+	ProvisionalRuntimeCompatibility     string `json:"provisional_runtime_compatibility,omitempty" yaml:"provisional_runtime_compatibility,omitempty"`
+	RuntimeObservationDir               string `json:"runtime_observation_dir,omitempty" yaml:"runtime_observation_dir,omitempty"`
 	MaximumContextBytes                 uint64 `json:"maximum_context_bytes" yaml:"maximum_context_bytes"`
 	MaximumOwners                       uint64 `json:"maximum_owners" yaml:"maximum_owners"`
 	BlocksPerRange                      uint64 `json:"blocks_per_range" yaml:"blocks_per_range"`
@@ -54,6 +58,18 @@ type ValidatorUploadAdmissionConfig struct {
 func (self ValidatorUploadAdmissionConfig) Validate() error {
 	if err := self.Deployment.Validate(); err != nil {
 		return err
+	}
+	if self.Deployment.ChainID == 964 {
+		if err := self.ProductionRuntimeConfig.Validate(maximumReleaseConfigBytes); err != nil {
+			return fmt.Errorf("mainnet staging requires an independently pinned production runtime config: %w", err)
+		}
+	} else if self.ProductionRuntimeConfig != (ReleaseEvidenceV2File{}) {
+		return errors.New("production staging runtime authority requires mainnet chain 964")
+	}
+	if self.ProvisionalRuntimeCompatibility != "" || self.RuntimeObservationDir != "" {
+		if self.ProvisionalRuntimeCompatibility != crv4.ProvisionalRuntimeCompatibilityProfile || self.Deployment.ChainID != 945 || types.Hash(self.Deployment.GenesisHash).Hex() != provisionalRuntimeTestnetGenesis || !filepath.IsAbs(self.RuntimeObservationDir) {
+			return errors.New("provisional staging runtime requires the consumed profile, testnet chain 945, exact testnet genesis and absolute observation directory")
+		}
 	}
 	if self.ProvisionalSeededDiscoveryOnly && (self.Deployment.ChainID != 945 || len(self.ActivationContexts) == 0) {
 		return errors.New("provisional seeded discovery requires testnet chain 945 and explicit activation contexts")
@@ -166,6 +182,11 @@ func newValidatorUploadAdmissionState(ctx context.Context, chain *ChainClient, n
 		return nil, err
 	}
 	config.ActivationContexts = slices.Clone(config.ActivationContexts)
+	deployment, err := loadValidatorUploadRuntimeContext(ctx, config.Deployment, config.ProductionRuntimeConfig)
+	if err != nil {
+		return nil, err
+	}
+	config.Deployment = deployment
 	digests := make([][32]byte, 0, len(config.ActivationContexts))
 	seen := make(map[[32]byte]bool, len(config.ActivationContexts))
 	var retainedContexts []ReleaseEvidenceV2ActivationContext
@@ -192,6 +213,13 @@ func newValidatorUploadAdmissionState(ctx context.Context, chain *ChainClient, n
 		digests = append(digests, digest)
 		if config.ProvisionalRetainedContextAuthority {
 			retainedContexts = append(retainedContexts, parsed)
+		}
+	}
+	if config.ProvisionalRuntimeCompatibility != "" {
+		if err := native.EnableProvisionalRuntimeCompatibility(types.Hash(config.Deployment.GenesisHash), func(artifact crv4.AuthenticatedRuntimeArtifact) error {
+			return crv4.WriteProvisionalRuntimeObservation(config.RuntimeObservationDir, artifact)
+		}); err != nil {
+			return nil, err
 		}
 	}
 	ownerCtx, cancel := context.WithCancel(ctx)
@@ -389,6 +417,10 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 	if err != nil {
 		return err
 	}
+	currentRuntime, err := self.config.Deployment.runtimeArtifactsAt(nativeObserver.Number, false)
+	if err != nil {
+		return err
+	}
 	if now.Unix() <= 0 || observer.Timestamp > uint64(now.Unix()) || uint64(now.Unix())-observer.Timestamp >= self.config.MaximumHeadAgeSeconds ||
 		nativeObserver.TimestampMillis > uint64(now.UnixMilli()) || uint64(now.UnixMilli())-nativeObserver.TimestampMillis >= self.config.MaximumHeadAgeSeconds*1000 {
 		return errors.New("validator staging chain observer is stale or from the future")
@@ -423,7 +455,7 @@ func (self *ValidatorUploadAdmission) refresh(ctx context.Context, now time.Time
 		eligible, checked := current[record.Hotkey]
 		if !checked {
 			observation, err := crv4.ReadValidatorScheduleAtContext(ctx, self.native, crv4.ValidatorScheduleQuery{GenesisHash: types.Hash(self.config.Deployment.GenesisHash), BlockHash: nativeObserver.Hash,
-				BlockNumber: nativeObserver.Number, Netuid: self.config.Deployment.Netuid, Hotkey: record.Hotkey, MaximumSubnetUIDs: self.config.Deployment.MaximumSubnetUIDs}, self.config.Deployment.NativeRuntime)
+				BlockNumber: nativeObserver.Number, Netuid: self.config.Deployment.Netuid, Hotkey: record.Hotkey, MaximumSubnetUIDs: self.config.Deployment.MaximumSubnetUIDs}, currentRuntime...)
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}

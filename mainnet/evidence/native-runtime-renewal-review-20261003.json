@@ -1,0 +1,41 @@
+{
+  "schema": "coordinator-native-runtime-renewal-review-v1",
+  "source_commit": "00d7efcd18c3a4d08c2883de9c50bb6376cba716",
+  "files": [
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/monitor_economic_native.go",
+      "sha256": "7318c500c54bebe094f4f9e4a39df2834522d9bb56c1438f5132bb23fdb3c4da",
+      "bytes": 20127,
+      "git_blob": "063cb11254be1b2bc96996b3e381c2216abd6628"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/monitor_economic_native_worker.go",
+      "sha256": "40cadb7792aed06b16bc7dcdcade3095dd9a4438ba722641cc96bab934769831",
+      "bytes": 15961,
+      "git_blob": "b09ebb3b45cd9b1efd90e6d074f2331e319f6783"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/economic_emission_observe.go",
+      "sha256": "77b9cd49dc531d3434c2d90febe4c510d532733875648785d690181d796ab9df",
+      "bytes": 11531,
+      "git_blob": "114337caa88829bdcbfd98c3b202b14d625d8865"
+    },
+    {
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/economic-monitor/sn/mainnet/economic_emission.go",
+      "sha256": "6691669022aaa6adcfcb0e1759c9a07599a9c6059e224b2ac146dc262579deaa",
+      "bytes": 11093,
+      "git_blob": "000e793307f2f60e53c168e636fe6bea3611041b"
+    }
+  ],
+  "finding": "One runtime profile is provisioned into the chain adapter; initial metadata is compared to that tuple, and the complete policy hash binds retained checkpoint admission. Changing the approved runtime tuple cannot reopen that checkpoint as currently implemented.",
+  "classification": "source-demonstrated continuation gap; no observed live runtime failure or new causal test claimed",
+  "required_successor": [
+    "Bounded monotonic independently reviewed runtime/read-purpose catalog, preserving original network/generation/cursor/history/amounts.",
+    "Select exact parent-execution and post-state profiles at upgrade boundaries; retain historical profiles needed by unfinished work.",
+    "Approved catalog renewal must reopen retained progress without rescan/reset; unapproved profile stays unavailable while healthy peers continue."
+  ],
+  "limits": [
+    "Frozen00d fifty-root normal/race product qualification remains valid under its own fixed-profile scope.",
+    "Runtime artifact approval and independent native economic proofs remain separate."
+  ]
+}

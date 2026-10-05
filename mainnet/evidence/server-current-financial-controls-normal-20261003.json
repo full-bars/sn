@@ -1,0 +1,231 @@
+{
+  "schema": "root-server-current-financial-controls-normal-v1",
+  "source_commit": "5f2edd47402eecc684e4a7e9adaf554ae31aafcf",
+  "source_tree": "4728109a6e40394c56f50e14f2a66c24c6623d00",
+  "receipt": {
+    "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-three-controls-normal-receipt.json",
+    "bytes": 9776,
+    "sha256": "93da13dbbfa5af115d456904d94d77244992303ec5a912475e16446af218d2a3"
+  },
+  "verified_artifacts": [
+    {
+      "bytes": 1696,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/control-bindings.json",
+      "sha256": "503426d2751ffe87024a8d2947b22f678409a6c362c30d8532e7818f1aed5957"
+    },
+    {
+      "bytes": 1385055,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/source-readback.json",
+      "sha256": "179541df5508ae0f1006974de760fe870941f7d4719ed466a16c3b631b8a1382"
+    },
+    {
+      "bytes": 13952,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-selected22-normal-vet-receipt.json",
+      "sha256": "b31b98793d5584fdf39529f57b0b70253377866a672ba4febb406ff695bfeaf3"
+    },
+    {
+      "bytes": 11860,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-selected22-race-receipt.json",
+      "sha256": "5d2692b63cfc0bd200209922e6e60211e056e0c4d070347dfff4de518a4a40d6"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-network.id",
+      "sha256": "cbb6d65b1fed3c7e51023c76bea04caaa26d7604ce787f4003be252bc609207c"
+    },
+    {
+      "bytes": 33,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-network.owner",
+      "sha256": "e46525229795165168932106ffee5538fab03df98e623cc54a0818b1041ec3ec"
+    },
+    {
+      "bytes": 65,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-network-cleanup.log",
+      "sha256": "cbb6d65b1fed3c7e51023c76bea04caaa26d7604ce787f4003be252bc609207c"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-services-start.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-services-start.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-services-cleanup.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-services-cleanup.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-runner.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-test-env.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 49,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/evidence/server5f-controls-normal-geolite.log",
+      "sha256": "3e9ebcf03acb9d6e16468236f82ca3c46cc52dc2345b23caf66883b124dad414"
+    },
+    {
+      "bytes": 257,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/selection/overlay.json",
+      "sha256": "76bc48faa287c6290bb53565681fc3534714b097fcb3285267cf2b34c1c47c71"
+    },
+    {
+      "bytes": 55,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/selection/selector.txt",
+      "sha256": "37b1f7559b50f89e6606f53a846d4b67f564e32235e878773e47f02e38e941ad"
+    },
+    {
+      "bytes": 91,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/selection/normal.phase",
+      "sha256": "981a1fa0a47a358b3598f2dd85d908e22163ca4e1ea31d759cdbaa4465205e05"
+    },
+    {
+      "bytes": 42405,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/selection/normal.jsonl",
+      "sha256": "bb66e4050356b0af227244752aa0fff0ddc2214439791c4f31c1172da556c59d"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/selection/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/selection/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 254,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/recovery/overlay.json",
+      "sha256": "78c56e08fcdf112d638590445e1985339dbecc56fe5ba69d49880907bc4419cb"
+    },
+    {
+      "bytes": 175,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/recovery/selector.txt",
+      "sha256": "47761c0e9abd74138d39cea18078e9074a97d600cd45d1855851bd4f435d3426"
+    },
+    {
+      "bytes": 89,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/recovery/normal.phase",
+      "sha256": "5cd53ffe64e2f7124b7ed94c29cc11631d0233a360a38522883876790066704a"
+    },
+    {
+      "bytes": 116630,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/recovery/normal.jsonl",
+      "sha256": "60bcd0d57b2f8b80303fc3dd5a2b4661e3f0c8b5df64316190910ee41350380f"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/recovery/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/recovery/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "bytes": 260,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/hook/overlay.json",
+      "sha256": "cf0012fe4ff5db6406b5d73728bc03384562b4aa854c64058cff238864a79f52"
+    },
+    {
+      "bytes": 53,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/hook/selector.txt",
+      "sha256": "4452b2e042b9a89df6d2c11176f784b284a4903e79c262611eccb42efd589dee"
+    },
+    {
+      "bytes": 81,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/hook/normal.phase",
+      "sha256": "0aea495c6fb73a62a2dbb8317e66f98fb9cf65078f221f34e0ffcef25bcedd7b"
+    },
+    {
+      "bytes": 3071,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/hook/normal.jsonl",
+      "sha256": "3dfde4acac800ed75da388212e0c387399c972770e45bf3ddc90f084ab8ee3f6"
+    },
+    {
+      "bytes": 0,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/hook/normal.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/mnt/data/sn-testnet/sol-server-f024-5f-independent-20261003/controls/hook/normal.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    }
+  ],
+  "verified_controls": [
+    {
+      "control": "selection",
+      "failed_roots": [
+        "TestRedisCurrentJoinBoundedShrinkKeepsExactCustody"
+      ],
+      "intended_assertions": {
+        "TestRedisCurrentJoinBoundedShrinkKeepsExactCustody": "test_util.go:952: complete bounded census did not preserve shrink-to-fit <nil> Insufficient balance (3145728)."
+      },
+      "exact_one_file_overlay": true,
+      "exact_prior_git_file": {
+        "commit": "5089a9dde0ca5d60a8dda0493c861de53ed4e0c4",
+        "path": "model/subscription_redis_selection.go",
+        "sha256": "7a443c8f866d9149b73ba35dae208016be71d7440b42afd58543c1f5a01139b7"
+      }
+    },
+    {
+      "control": "recovery",
+      "failed_roots": [
+        "TestRedisCurrentJoinArchivedContractRetainsPendingDebit",
+        "TestRedisCurrentJoinRecoveryRetainsDebitAndAdvancesPeer",
+        "TestRedisCurrentJoinRecoveryUnderstandsReducedAppliedDebit"
+      ],
+      "intended_assertions": {
+        "TestRedisCurrentJoinArchivedContractRetainsPendingDebit": "test_util.go:952: archived history concealed pending consumption or invented changed custody Redis reservation marker or SQL custody does not match",
+        "TestRedisCurrentJoinRecoveryRetainsDebitAndAdvancesPeer": "test_util.go:952: fresh public recovery released consumed debt before SQL writeback 1000 1 0",
+        "TestRedisCurrentJoinRecoveryUnderstandsReducedAppliedDebit": "test_util.go:952: pending debit became absent or contradictory SQL custody Redis reservation marker or SQL custody does not match"
+      },
+      "exact_one_file_overlay": true,
+      "exact_prior_git_file": {
+        "commit": "5089a9dde0ca5d60a8dda0493c861de53ed4e0c4",
+        "path": "model/subscription_redis_recovery.go",
+        "sha256": "bb0e8fe5aef9101d9bdfe5c7c4f0c3fd18cc92346e43bfe54db52187186e15e3"
+      }
+    },
+    {
+      "control": "hook",
+      "failed_roots": [
+        "TestAsyncDebitReleaseHookFollowsDeclaredKeyCount"
+      ],
+      "intended_assertions": {
+        "TestAsyncDebitReleaseHookFollowsDeclaredKeyCount": "subscription_redis_current_join_test.go:223: lost-ack barrier did not follow actual Redis key count 5 1 <nil>"
+      },
+      "exact_one_file_overlay": true,
+      "exact_prior_git_file": {
+        "commit": "f024b11a7666d3ba0e1025c083123d32f01285c2",
+        "path": "model/subscription_transfer_debit_test.go",
+        "sha256": "b7e46a3ec5dcc08acb65606fd1d7b6942dbd46b142cf2ddc6c17d12328f7a6d3"
+      }
+    }
+  ],
+  "private_fixture_start_cleanup_runner_exit": 0,
+  "outcome": "Three exact single-prior-file controls compile and fail five roots at intended assertions",
+  "limits": [
+    "Normal controls only; race controls separate pending",
+    "No whole-parent causal claim",
+    "22normal/race product scope and full model remain separately verified",
+    "No live database migration, payment, deployment or final composed SN release"
+  ]
+}

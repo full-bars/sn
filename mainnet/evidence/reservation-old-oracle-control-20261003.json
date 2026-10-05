@@ -1,0 +1,66 @@
+{
+  "artifact_sha256": {
+    "overlay-old-oracle.json": "1e5d0c4bd58640becf7c8aac86e62edb1710cc9bbd646db6c651dff15b79e9f3",
+    "reservation-1d3c-old-oracle-normal-network-cleanup.log": "3cfd5bcf708eca6c0f04681c36f3caf4ad99569b4d1186cd82a81cb2cef177f3",
+    "reservation-1d3c-old-oracle-normal-runner.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "reservation-1d3c-old-oracle-normal-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "reservation-1d3c-old-oracle-normal-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reservation-1d3c-old-oracle-normal-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "reservation-1d3c-old-oracle-normal.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "reservation-1d3c-old-oracle-normal.jsonl": "919e8f0ad1406167c0c91468b2547bec7a3ba15279d4fc2cd137c64bf3b51b33",
+    "reservation-1d3c-old-oracle-normal.phase": "4c5163acd809318b277f6081d66492b2dbaca377973de731196004980edb2b98",
+    "reservation-1d3c-old-oracle-normal.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reservation-1d3c-old-oracle-race-network-cleanup.log": "cbb9454245566144f097499b478fe38c636cfdad159c5945bb587cf3bd91b4f8",
+    "reservation-1d3c-old-oracle-race-runner.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "reservation-1d3c-old-oracle-race-services-cleanup.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "reservation-1d3c-old-oracle-race-services-cleanup.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reservation-1d3c-old-oracle-race-services-start.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "reservation-1d3c-old-oracle-race.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "reservation-1d3c-old-oracle-race.jsonl": "0db1f76a14469718a94b8eb96135a595600ed47b9ab835f67cba2baacb127d7e",
+    "reservation-1d3c-old-oracle-race.phase": "bba193d98c5e139e604df6639d832d2413caa7b0081a4141bdbcb62a92b25c92",
+    "reservation-1d3c-old-oracle-race.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reservation-1d3c-product19-receipt.json": "6adebec2b2a437b6704f5039e6d37a24bafe0c9b5a0efde26c75c9ab56e04031",
+    "run-old-oracle-normal.sh": "7cda79be10ccd5db26380654eb3a976420e5319e0b3ba75f2a94d2b899ed1ecc",
+    "run-old-oracle-race.sh": "cfd9c624fd568fa755e03863e0c247761fede2e4cb340479618fa1b9a2d4ce18",
+    "selector-old-oracle.txt": "9d95473158411bd9190156c4eb58b5cd61505819bbdccfa9151f136ea31d20a5"
+  },
+  "assertion_strings_present_both_modes": true,
+  "classification": "EXPECTED_FAILURE_TEST_ORACLE",
+  "control_kind": "exact3f32 test-state reader body, not a production causal failure",
+  "intake_sha256": "6872cca5b6c8e047d16e7438c48607d60179ec8a37f54474e9cdbfa5991f2b99",
+  "intended_assertions": [
+    "public dispute reservation was not observed before settlement",
+    "mixed reservation oracle did not observe both owners"
+  ],
+  "limits": [
+    "The overlay restores only an older test-state reader/oracle, not old production behavior. Its red result documents previous undercounting of public versus legacy reservation.",
+    "Positive 1d3c selected19 normal/race pass in the separate bound receipt."
+  ],
+  "normal_failed_roots": [
+    "TestForceCloseDisputeSettlementFailureRollsBack",
+    "TestPublicDisputeAndLegacyPeerKeepSeparateReservations"
+  ],
+  "overlay_fixed_target_sha256": {
+    "/mnt/data/sn-testnet/sol-customer-reservation-oracles-1d3c-independent-20261003/source/server/model/subscription_force_close_dispute_test.go": "4e732bb91b50669fc09b4a87896a09d0c926184b1083e1e2da816bd4c2deaabc"
+  },
+  "overlay_replacement_sha256": {
+    "/mnt/data/sn-testnet/provider-usdc-transition-20261002/customer-reservation-oracles/evidence/old-oracle/subscription_force_close_dispute_test.go": "6d2c5bf759f00d40e42753c39988367b810d11d7e6e1d286c355585928f1961a"
+  },
+  "race_failed_roots": [
+    "TestForceCloseDisputeSettlementFailureRollsBack",
+    "TestPublicDisputeAndLegacyPeerKeepSeparateReservations"
+  ],
+  "root_verification": {
+    "artifact_bindings_rehashed": 23,
+    "normal_raw_failed": 2,
+    "normal_raw_passed": 0,
+    "normal_runner_exit": 1,
+    "race_raw_failed": 2,
+    "race_raw_passed": 0,
+    "race_runner_exit": 1,
+    "receipt_path": "/mnt/data/sn-testnet/sol-customer-reservation-oracles-1d3c-independent-20261003/evidence/reservation-1d3c-old-oracle-control-receipt.json",
+    "receipt_sha256": "7c8636d737c7efacb134db2909d2201910c485f0f64b7e7142e7a4aef3e4ba24"
+  },
+  "schema": "sol-reservation-1d3c-old-oracle-control-v1",
+  "source_commit": "1d3c275b698d58c528ff87ac24903e9da1b433ea"
+}

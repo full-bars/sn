@@ -653,11 +653,7 @@ func useValidatorStakeHTTPFixture(t *testing.T, fixture *validatorStakeTestFixtu
 			return
 		}
 		var raw json.RawMessage
-		var header types.Header
 		var result any = &raw
-		if rpcRequest.Method == "chain_getHeader" {
-			result = &header
-		}
 		err := func() error {
 			stateLock.Lock()
 			defer stateLock.Unlock()

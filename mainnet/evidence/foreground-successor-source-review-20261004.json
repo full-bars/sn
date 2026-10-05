@@ -1,0 +1,93 @@
+{
+  "schema": "foreground-successor-source-independent-review-v1",
+  "status": "SOURCE_ONLY_QUALIFICATION_IN_PROGRESS",
+  "intake": {
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-foreground-successor/evidence/intake.json",
+    "sha256": "73bd9f88b2c0e3e5cafd28b101358183ab6ce02700c675544afe756ecf67a0cb"
+  },
+  "source": {
+    "base": "0e5ace17d6cdd419331a3dbca13fb3ec96c67808",
+    "clean": true,
+    "head": "2477a2cac00115a8936230a731e76c0635341302",
+    "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-foreground-successor/sn",
+    "physical_archive_required": "Stage an independent complete Git source tree; sparse missing files are not missing source.",
+    "sparse": true,
+    "tree": "7b7664e97050338a5e172adbca02f0cb7a91cc80"
+  },
+  "changed": [
+    {
+      "base_blob": "5d52fff4b6d79422c6ab46fc1fa2647bcc4eef1b",
+      "bytes": 13333,
+      "git_blob": "83ca8f7fa63c026ab5ed68aa2ef5e34ba2433ee9",
+      "kind": "production",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-foreground-successor/sn/validator/attempt_cut_v2_seal.go",
+      "relative": "validator/attempt_cut_v2_seal.go",
+      "sha256": "60b2d2e2e5b672c273330ae0131b9c527a4e60c785de6f9a6083fa81daef0803"
+    },
+    {
+      "base_blob": "ad3aef3115836d312b160ecbb83c6da00abe7798",
+      "bytes": 28238,
+      "git_blob": "e13b44c37eaa04c496049d712a02cea419f37ec7",
+      "kind": "test",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-foreground-successor/sn/validator/attempt_cut_v2_seal_test.go",
+      "relative": "validator/attempt_cut_v2_seal_test.go",
+      "sha256": "d5481efaf534f53d37788e282ebb3b2426de8ba85e2dde06a4140d35d53f2cdb"
+    },
+    {
+      "base_blob": "3fc038d2ba7ec34cae96d774d21fa049ca431168",
+      "bytes": 27749,
+      "git_blob": "f391e5c9f80733cebe41de285824789e14dc7b1f",
+      "kind": "test",
+      "path": "/mnt/data/sn-testnet/mainnet-durable-volume-20261002/b6-foreground-successor/sn/validator/release_foreground_work_test.go",
+      "relative": "validator/release_foreground_work_test.go",
+      "sha256": "f32be6b4a5a7452b38b057276be6b700e5a429a9b01172e107a967378b1b8bcc"
+    }
+  ],
+  "observations": [
+    "Fixed captured prefix traversed through existing VPK signature-checked store.Read; sequence/prior-root/final-root and boundary checks remain.",
+    "Remote callbacks execute after record owner releases; no additional full-history buffer or walk iterator owner.",
+    "Ledger lifetime is retained while sealer callbacks run; owner cancellation is joined before releasing active ownership, with both results cleared on error.",
+    "Deterministic callback test probes actual walkGate before real RunTrail/proof projection and checks original32-record cut excludes new8 records.",
+    "Fixture reserves272 records/34 trails for136 intended records; unchanged128-record refusal is tested separately."
+  ],
+  "required_scope": [
+    {
+      "cwd": "<independent-full-source>/validator",
+      "modes": [
+        "normal",
+        "race"
+      ],
+      "package": "./validator",
+      "root_count": 20,
+      "roots": [
+        "TestReleaseForegroundProgressDuringBlockedHttpAndReplay",
+        "TestReleaseForegroundCancellationJoinsBlockedUploadWithoutLosingAppend",
+        "TestReleaseForegroundProgressDuringContinuousActualReplay",
+        "TestReleaseForegroundOriginalRecordCeilingStillRefusesAdditionalTrail",
+        "TestReleaseForegroundLedgerCloseCancelsAndJoinsHeldUpload",
+        "TestAttemptCutV2SealCallbackReleasesForegroundProjectionIterator",
+        "TestReleaseForegroundHeaderAllowanceMatchesActualPublicMetadata",
+        "TestReleaseForegroundCapacityRefusesBeforeBackgroundEffects",
+        "TestAttemptCutV2SealHeadSnapshotExcludesLaterAppends",
+        "TestAttemptCutV2SealObjectCallbackCanAppend",
+        "TestAttemptCutV2SealExactNoninitialPrefix",
+        "TestAttemptCutV2SealCheckedEmptyPrefix",
+        "TestAttemptCutV2SealBoundaryControls",
+        "TestAttemptCutV2SealRejectsExpectedContextContradictions",
+        "TestAttemptCutV2SealRejectsUnavailableOrLegacyLedger",
+        "TestAttemptCutV2SealCancellationAtOwnedBoundaries",
+        "TestAttemptCutV2SealReaderCloseFailurePreventsSignature",
+        "TestAttemptCutV2SealClosesScratchBeforeReturningHeader",
+        "TestDiskAttemptProofProjectionIncrementalWorkUsesOnlyNewRecords",
+        "TestDiskAttemptProofProjectionQueuedCallerCancelsWithoutJoiningOwner"
+      ],
+      "selector": "^(TestReleaseForegroundProgressDuringBlockedHttpAndReplay|TestReleaseForegroundCancellationJoinsBlockedUploadWithoutLosingAppend|TestReleaseForegroundProgressDuringContinuousActualReplay|TestReleaseForegroundOriginalRecordCeilingStillRefusesAdditionalTrail|TestReleaseForegroundLedgerCloseCancelsAndJoinsHeldUpload|TestAttemptCutV2SealCallbackReleasesForegroundProjectionIterator|TestReleaseForegroundHeaderAllowanceMatchesActualPublicMetadata|TestReleaseForegroundCapacityRefusesBeforeBackgroundEffects|TestAttemptCutV2SealHeadSnapshotExcludesLaterAppends|TestAttemptCutV2SealObjectCallbackCanAppend|TestAttemptCutV2SealExactNoninitialPrefix|TestAttemptCutV2SealCheckedEmptyPrefix|TestAttemptCutV2SealBoundaryControls|TestAttemptCutV2SealRejectsExpectedContextContradictions|TestAttemptCutV2SealRejectsUnavailableOrLegacyLedger|TestAttemptCutV2SealCancellationAtOwnedBoundaries|TestAttemptCutV2SealReaderCloseFailurePreventsSignature|TestAttemptCutV2SealClosesScratchBeforeReturningHeader|TestDiskAttemptProofProjectionIncrementalWorkUsesOnlyNewRecords|TestDiskAttemptProofProjectionQueuedCallerCancelsWithoutJoiningOwner)$",
+      "vet": true
+    }
+  ],
+  "limits": [
+    "Sparse author checkout modules verified through Git objects, not claimed physically present. Qualification requires complete independent source.",
+    "No build or test result claimed by this review.",
+    "Successor20-root normal/race, vet and two causal controls are pending."
+  ]
+}

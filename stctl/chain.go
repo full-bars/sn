@@ -19,6 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 
+	"github.com/urfoundation/sn/evmrpc"
 	"github.com/urfoundation/sn/stabi"
 )
 
@@ -52,7 +53,7 @@ func dialSession(cfg *Config) (*session, error) {
 	var errs []error
 	for _, url := range cfg.RpcUrls {
 		ctx, cancel := context.WithTimeout(context.Background(), dialTimeout)
-		client, err := ethclient.DialContext(ctx, url)
+		client, err := evmrpc.DialContext(ctx, url)
 		if err != nil {
 			cancel()
 			errs = append(errs, fmt.Errorf("%s: %w", url, err))
