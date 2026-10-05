@@ -274,6 +274,14 @@ func formerValue(old string, had bool) string {
 	return old
 }
 
+// onOff renders a boolean as the "on"/"off" strings the control keys use.
+func onOff(on bool) string {
+	if on {
+		return "on"
+	}
+	return "off"
+}
+
 var liveEffectKeys = map[string]bool{
 	"gomemlimit":                  true,
 	"gogc":                        true,
@@ -293,6 +301,9 @@ var liveEffectKeys = map[string]bool{
 	"hot_restart":                 true,
 	"metrics":                     true,
 	"metrics_listen":              true,
+	"h3":                          true,
+	"h3_datagram":                 true,
+	"h3_datagram_send":            true,
 }
 
 func needsRestart(key string) bool {
@@ -325,11 +336,15 @@ func validateControlValue(key, value string) error {
 		default:
 			return fmt.Errorf("%s: must be none, url, or all (got %q)", key, value)
 		}
-	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline":
+	case "fast_auth", "proxy_self_heal", "proxy_audit", "smart_dialer", "baseline", "h3_datagram", "h3_datagram_send":
 		switch valLower {
 		case "on", "off":
 		default:
 			return fmt.Errorf("%s: must be on or off (got %q)", key, value)
+		}
+	case "h3":
+		if _, _, err := parseH3Mode(value); err != nil {
+			return err
 		}
 	case "oom_cap":
 		switch valLower {
@@ -417,6 +432,14 @@ var liveDefaults = map[string]string{
 	"baseline": "on",
 	// Clearing the OOM cap key returns to the safe default: decide and log only.
 	"oom_cap": "shadow",
+	// Clearing h3_datagram stops offering DATAGRAM: it is an experiment and
+	// its default is off, with no environment variable behind it.
+	"h3_datagram": "off",
+	// Clearing h3_datagram_send stops sending datagrams: same default as above.
+	"h3_datagram_send": "off",
+	// Clearing h3 returns the identity set to the default: every identity runs
+	// H3, which is what sn did before this key existed.
+	"h3": "all",
 }
 
 func applyLiveDefault(key string) error {
@@ -918,6 +941,38 @@ func applyLiveSideEffect(key, value string) error {
 		baselineEnabled.Store(enabled)
 		controlApplyLog("⚙️ [control] applied baseline=%s (was %s); the existing %s is kept\n",
 			value, was, baselineFileName)
+	case "h3":
+		// The eligible set is a per-identity mode read when each platform
+		// transport is built, so a change reconnects the identities that join
+		// or leave the set and leaves the rest alone. See h3_mode.go.
+		previous, err := SetH3Mode(value)
+		if err != nil {
+			return err
+		}
+		controlApplyLog("⚙️ [control] applied h3=%s (was %s)\n", value, previous)
+	case "h3_datagram":
+		// The offer is read when an H3 connection dials, so this writes the
+		// live settings and kicks the transport: it closes the live connection
+		// and re-dials with the new setting. It does nothing while H3 itself is
+		// off. See h3_datagram.go.
+		enabled := strings.EqualFold(value, "on")
+		previous := SetH3DatagramOffer(enabled)
+		was := "off"
+		if previous {
+			was = "on"
+		}
+		controlApplyLog("⚙️ [control] applied h3_datagram=%s (was %s); the H3 connection re-dials to apply it\n", value, was)
+	case "h3_datagram_send":
+		// The send lane is chosen per message, so this takes effect at once
+		// with no reconnect. It only matters on an H3 connection where the
+		// server accepted the offer (h3_datagram).
+		enabled := strings.EqualFold(value, "on")
+		previous := SetH3DatagramSend(enabled)
+		was := "off"
+		if previous {
+			was = "on"
+		}
+		controlApplyLog("⚙️ [control] applied h3_datagram_send=%s (was %s)\n", value, was)
 	}
 	return nil
 }
@@ -1118,6 +1173,26 @@ func applyPersistedRuntimeTuning(state *controlState) {
 	}
 	if err := applyLiveSideEffect("baseline", v); err != nil {
 		controlLog("[control] failed to apply baseline=%s: %s\n", v, err)
+	}
+	// h3_datagram and h3_datagram_send have no environment default, so an
+	// unset key means off. Replay in BOTH directions so a restart matches the
+	// persisted value rather than leaving whatever the gate happened to hold.
+	dv, _ := state.get("h3_datagram")
+	if err := applyLiveSideEffect("h3_datagram", onOff(strings.EqualFold(dv, "on"))); err != nil {
+		controlLog("[control] failed to apply h3_datagram: %s\n", err)
+	}
+	sv, _ := state.get("h3_datagram_send")
+	if err := applyLiveSideEffect("h3_datagram_send", onOff(strings.EqualFold(sv, "on"))); err != nil {
+		controlLog("[control] failed to apply h3_datagram_send: %s\n", err)
+	}
+	// h3 has a default of all, so an unset key restores that rather than
+	// leaving the resolved mode at whatever a previous value set.
+	hv, ok := state.get("h3")
+	if !ok {
+		hv = liveDefaults["h3"]
+	}
+	if err := applyLiveSideEffect("h3", hv); err != nil {
+		controlLog("[control] failed to apply h3=%s: %s\n", hv, err)
 	}
 }
 

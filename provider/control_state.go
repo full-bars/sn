@@ -122,6 +122,9 @@ var controlKeys = map[string]bool{
 	"oom_cap":                     true,
 	"smart_dialer":                true,
 	"baseline":                    true,
+	"h3":                          true,
+	"h3_datagram":                 true,
+	"h3_datagram_send":            true,
 }
 
 // globalControlState is the single provider-wide instance. Set by

@@ -1274,6 +1274,9 @@ func cmdDashboard(args []string) error {
 		{"gomemlimit", "Go Memory Limit"},
 		{"gogc", "Go GC Percent"},
 		{"metrics", "Prometheus Metrics"},
+		{"h3_datagram", "H3 Datagram Offer"},
+		{"h3_datagram_send", "H3 Datagram Send"},
+		{"h3", "H3 Identity Set"},
 	}
 
 	for _, o := range overrides {

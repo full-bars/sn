@@ -94,8 +94,18 @@ func runHealthHeartbeat(ctx context.Context, startTime time.Time, profile string
 
 		healthLine := fmt.Sprintf("❤️ [health] uptime=%s profile=%s heap=%dMiB sys=%dMiB goroutines=%d connections=%d proxies=%d",
 			uptime, profile, heapMiB, sysMiB, runtime.NumGoroutine(), activeConnectionCount(), activeProxyConnections())
+		// The resolved H3 identity set: the mode value, the grand total of
+		// running identities that run H3, and how many of those are proxies.
+		// h3_set counts the direct identity on top of an `<int>` cap; h3_proxies
+		// counts the proxies only. See h3_mode.go.
+		healthLine += fmt.Sprintf(" h3=%s h3_set=%d h3_proxies=%d", H3ModeName(), H3SetSize(), H3ProxySetSize())
 		if dohFailures > 0 {
 			healthLine += fmt.Sprintf(" dns_failures=%d", dohFailures)
+		}
+		// QUIC DATAGRAM counters on the H3 connection, when the feature is on
+		// and a connection has carried something. See h3_datagram.go.
+		if dg, ok := h3DatagramStatsSnapshot(); ok {
+			healthLine += h3DatagramHealthSuffix(dg)
 		}
 		tlog("%s\n", healthLine)
 
